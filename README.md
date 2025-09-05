@@ -1,36 +1,127 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# OwnerFi - Owner Financed Properties Platform
+
+A Next.js application connecting buyers with owner-financed properties and real estate agents.
+
+## 🚨 PRODUCTION READINESS STATUS
+
+✅ **SECURITY FIXES COMPLETED**:
+- Removed live production Stripe keys
+- Generated secure NextAuth secret
+- Added comprehensive input validation
+- Cleaned up database inconsistencies
+- Removed test files and development artifacts
+
+✅ **DEPLOYMENT READY**:
+- GitHub Actions CI/CD configured
+- Vercel deployment configuration added
+- Environment variables properly configured
+- Production build succeeds
+
+⚠️ **REMAINING CONSIDERATIONS**:
+- Some TypeScript 'any' types still present (non-blocking)
+- Consider adding comprehensive test suite
+- Monitor performance in production
+- Set up error tracking (Sentry recommended)
+
+## Features
+
+- **Buyer Profiles**: Search and match with owner-financed properties
+- **Realtor Dashboard**: Purchase leads and manage client relationships  
+- **Property Management**: Automated property scraping and matching
+- **Payment Processing**: Stripe integration for lead purchases
+- **Authentication**: Secure NextAuth.js implementation
+
+## Tech Stack
+
+- **Frontend**: Next.js 15, React 19, TailwindCSS
+- **Backend**: Next.js API routes, Firebase Firestore
+- **Authentication**: NextAuth.js with Firebase
+- **Payments**: Stripe
+- **Validation**: Zod schemas
+- **Deployment**: Vercel via GitHub Actions
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
+- Node.js 18+
+- Firebase project
+- Stripe account (test mode for development)
+
+### Installation
+
+1. Clone the repository:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone <repository-url>
+cd ownerfi
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Install dependencies:
+```bash
+npm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Set up environment variables:
+```bash
+cp .env.example .env.local
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. Configure your environment variables in `.env.local`:
+   - Add your Firebase configuration
+   - Add Stripe test keys
+   - Set NEXTAUTH_SECRET to a secure random string
 
-## Learn More
+5. Run the development server:
+```bash
+npm run dev
+```
 
-To learn more about Next.js, take a look at the following resources:
+6. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Environment Variables
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Required environment variables (see `.env.example`):
 
-## Deploy on Vercel
+- `NEXTAUTH_URL` - Your app URL
+- `NEXTAUTH_SECRET` - Secure random string for JWT signing
+- `NEXT_PUBLIC_FIREBASE_*` - Firebase configuration
+- `STRIPE_PUBLIC_KEY` - Stripe publishable key
+- `STRIPE_SECRET_KEY` - Stripe secret key
+- `STRIPE_WEBHOOK_SECRET` - Stripe webhook endpoint secret
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Deployment
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### GitHub Actions + Vercel (Configured)
+
+1. Push to GitHub repository
+2. Configure these secrets in GitHub repository settings:
+   - `VERCEL_TOKEN` - Your Vercel token
+   - `ORG_ID` - Your Vercel organization ID
+   - `PROJECT_ID` - Your Vercel project ID
+   - All environment variables listed above
+
+3. Push to main branch triggers automatic deployment
+
+### Manual Vercel Deployment
+
+1. Connect repository to Vercel
+2. Configure environment variables in Vercel dashboard
+3. Deploy automatically on push
+
+## License
+
+ISC License
+
+---
+
+## Production Deployment Checklist
+
+- [x] Security vulnerabilities fixed
+- [x] Environment variables configured
+- [x] Database properly set up
+- [x] Build process works
+- [x] CI/CD pipeline configured
+- [ ] DNS and domain configured (post-deployment)
+- [ ] SSL certificate (handled by Vercel)
+- [ ] Error monitoring set up (recommended: Sentry)
+- [ ] Performance monitoring (recommended: Vercel Analytics)

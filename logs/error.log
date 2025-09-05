@@ -1,0 +1,4 @@
+{"context":{"action":"upload_properties","metadata":{"errorCount":1,"fileName":"opportunities.csv","totalRows":119}},"level":"error","message":"No valid properties found in CSV file","timestamp":"2025-09-05T17:05:52.631Z"}
+{"context":{"action":"upload_properties","metadata":{"errorCount":1,"fileName":"opportunities.csv","totalRows":119}},"level":"error","message":"No valid properties found in CSV file","timestamp":"2025-09-05T17:06:30.375Z"}
+{"context":{"action":"upload_properties","metadata":{"errorCount":1,"fileName":"opportunities.csv","totalRows":119}},"level":"error","message":"No valid properties found in CSV file","timestamp":"2025-09-05T17:16:28.646Z"}
+{"context":{"action":"upload_properties"},"error":{},"level":"error","message":"Excel upload failed","timestamp":"2025-09-05T17:42:36.260Z"}

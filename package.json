@@ -9,19 +9,40 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@faker-js/faker": "^10.0.0",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/multer": "^2.0.0",
+    "axios": "^1.11.0",
+    "bcryptjs": "^3.0.2",
+    "cheerio": "^1.1.2",
+    "faker": "^6.6.6",
+    "firebase": "^12.2.1",
+    "firebase-admin": "^13.5.0",
+    "multer": "^2.0.2",
+    "next": "15.5.2",
+    "next-auth": "^4.24.11",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "next": "15.5.2"
+    "stripe": "^18.5.0",
+    "use-debounce": "^10.0.6",
+    "winston": "^3.17.0",
+    "xlsx": "^0.18.5",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
-    "typescript": "^5",
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@tailwindcss/postcss": "^4",
-    "tailwindcss": "^4",
     "eslint": "^9",
     "eslint-config-next": "15.5.2",
-    "@eslint/eslintrc": "^3"
-  }
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  },
+  "description": "Owner financed properties platform",
+  "main": "index.js",
+  "keywords": ["real-estate", "owner-finance", "properties"],
+  "author": "",
+  "license": "ISC"
 }

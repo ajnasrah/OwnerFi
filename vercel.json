@@ -1,0 +1,51 @@
+{
+  "framework": "nextjs",
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
+  "installCommand": "npm install",
+  "regions": ["iad1"],
+  "env": {
+    "NODE_ENV": "production"
+  },
+  "functions": {
+    "src/app/api/**/*.ts": {
+      "maxDuration": 30
+    }
+  },
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET, POST, PUT, DELETE, OPTIONS" },
+        { "key": "Access-Control-Allow-Headers", "value": "Content-Type, Authorization" }
+      ]
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/dashboard/setup",
+      "has": [
+        {
+          "type": "query",
+          "key": "type",
+          "value": "buyer"
+        }
+      ],
+      "destination": "/buyer/register",
+      "permanent": false
+    },
+    {
+      "source": "/dashboard/setup",
+      "has": [
+        {
+          "type": "query",
+          "key": "type", 
+          "value": "realtor"
+        }
+      ],
+      "destination": "/realtor/setup",
+      "permanent": false
+    }
+  ]
+}

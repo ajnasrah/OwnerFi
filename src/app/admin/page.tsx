@@ -1,0 +1,642 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import { Header } from '@/components/ui/Header';
+import { Footer } from '@/components/ui/Footer';
+import { Button } from '@/components/ui/Button';
+
+export default function AdminDashboard() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const [activeTab, setActiveTab] = useState<'upload' | 'manage' | 'disputes' | 'contacts'>('upload');
+  const [file, setFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [result, setResult] = useState<any>(null);
+  const [properties, setProperties] = useState<any[]>([]);
+  const [loadingProperties, setLoadingProperties] = useState(false);
+  const [selectedProperties, setSelectedProperties] = useState<string[]>([]);
+  const [deleting, setDeleting] = useState(false);
+  const [disputes, setDisputes] = useState<any[]>([]);
+  const [loadingDisputes, setLoadingDisputes] = useState(false);
+  const [contacts, setContacts] = useState<any[]>([]);
+  const [loadingContacts, setLoadingContacts] = useState(false);
+
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/auth/signin');
+    }
+    
+    if (status === 'authenticated') {
+      if ((session?.user as any)?.role !== 'admin') {
+        if ((session?.user as any)?.role === 'buyer') {
+          router.push('/dashboard');
+        } else if ((session?.user as any)?.role === 'realtor') {
+          router.push('/realtor/dashboard');
+        } else {
+          router.push('/auth/signin');
+        }
+      }
+    }
+  }, [status, session, router]);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    setFile(selectedFile || null);
+    setResult(null);
+  };
+
+  const handleUpload = async () => {
+    if (!file) return;
+    
+    setUploading(true);
+    setResult(null);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch('/api/admin/upload-properties', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await response.json();
+      setResult(data);
+      
+      if (data.success) {
+        setFile(null);
+        if (e.target) (e.target as any).value = '';
+      }
+    } catch (error) {
+      setResult({ error: 'Upload failed' });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const fetchProperties = async () => {
+    setLoadingProperties(true);
+    try {
+      const response = await fetch('/api/admin/properties');
+      const data = await response.json();
+      if (data.properties) {
+        setProperties(data.properties);
+      }
+    } catch (error) {
+      console.error('Failed to fetch properties:', error);
+    } finally {
+      setLoadingProperties(false);
+    }
+  };
+
+  const handleSelectAll = () => {
+    if (selectedProperties.length === properties.length) {
+      setSelectedProperties([]);
+    } else {
+      setSelectedProperties(properties.map(p => p.id));
+    }
+  };
+
+  const handleSelectProperty = (propertyId: string) => {
+    setSelectedProperties(prev => 
+      prev.includes(propertyId) 
+        ? prev.filter(id => id !== propertyId)
+        : [...prev, propertyId]
+    );
+  };
+
+  const handleDeleteSelected = async () => {
+    if (selectedProperties.length === 0) return;
+    
+    const confirmDelete = confirm(`Are you sure you want to permanently delete ${selectedProperties.length} properties? This cannot be undone and will remove them from all user accounts.`);
+    if (!confirmDelete) return;
+    
+    setDeleting(true);
+    try {
+      for (const propertyId of selectedProperties) {
+        await fetch(`/api/admin/properties?propertyId=${propertyId}`, {
+          method: 'DELETE'
+        });
+      }
+      setSelectedProperties([]);
+      fetchProperties();
+      alert(`${selectedProperties.length} properties deleted successfully`);
+    } catch (error) {
+      console.error('Failed to delete properties:', error);
+      alert('Failed to delete some properties');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  // Dispute functions
+  const fetchDisputes = async () => {
+    setLoadingDisputes(true);
+    try {
+      const response = await fetch('/api/admin/disputes');
+      const data = await response.json();
+      setDisputes(data.disputes || []);
+    } catch (error) {
+      console.error('Failed to fetch disputes:', error);
+    } finally {
+      setLoadingDisputes(false);
+    }
+  };
+
+  const resolveDispute = async (disputeId: string, action: 'approve' | 'reject', refundCredits: number = 1) => {
+    try {
+      const response = await fetch('/api/admin/disputes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          disputeId,
+          action,
+          refundCredits
+        })
+      });
+
+      if (response.ok) {
+        alert(`Dispute ${action}d successfully`);
+        fetchDisputes();
+      }
+    } catch (error) {
+      alert('Failed to resolve dispute');
+    }
+  };
+
+  // Contact form functions
+  const fetchContacts = async () => {
+    setLoadingContacts(true);
+    try {
+      const response = await fetch('/api/admin/contacts');
+      const data = await response.json();
+      setContacts(data.contacts || []);
+    } catch (error) {
+      console.error('Failed to fetch contacts:', error);
+    } finally {
+      setLoadingContacts(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'manage') {
+      fetchProperties();
+    } else if (activeTab === 'disputes') {
+      fetchDisputes();
+    } else if (activeTab === 'contacts') {
+      fetchContacts();
+    }
+  }, [activeTab]);
+
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen bg-primary-bg flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-primary-bg flex flex-col">
+      <Header />
+      
+      <div className="flex-1 px-6 py-12">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-primary-text mb-2">Admin Dashboard</h1>
+            <p className="text-secondary-text">Manage properties and system settings</p>
+          </div>
+
+          {/* Tab Navigation */}
+          <div className="flex space-x-4 mb-8 justify-center">
+            <button
+              onClick={() => setActiveTab('upload')}
+              className={`px-6 py-3 rounded-lg font-medium transition-colors ${
+                activeTab === 'upload' 
+                  ? 'bg-blue-600 text-white' 
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+            >
+              📤 Upload Properties
+            </button>
+            <button
+              onClick={() => setActiveTab('manage')}
+              className={`px-6 py-3 rounded-lg font-medium transition-colors ${
+                activeTab === 'manage' 
+                  ? 'bg-blue-600 text-white' 
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+            >
+              🏠 Manage Properties
+            </button>
+            <button
+              onClick={() => setActiveTab('disputes')}
+              className={`px-6 py-3 rounded-lg font-medium transition-colors ${
+                activeTab === 'disputes' 
+                  ? 'bg-blue-600 text-white' 
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+            >
+              ⚖️ Disputes
+            </button>
+            <button
+              onClick={() => setActiveTab('contacts')}
+              className={`px-6 py-3 rounded-lg font-medium transition-colors ${
+                activeTab === 'contacts' 
+                  ? 'bg-blue-600 text-white' 
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+            >
+              📧 Contact Forms
+            </button>
+          </div>
+
+          {/* Upload Tab */}
+          {activeTab === 'upload' && (
+            <div className="bg-white rounded-xl p-6 shadow-lg">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-6">Upload Properties</h2>
+              
+              <div className="mb-6">
+                <label className="block text-lg font-medium text-gray-700 mb-3">
+                  Select CSV File
+                </label>
+                <input
+                  type="file"
+                  accept=".csv"
+                  onChange={handleFileChange}
+                  className="block w-full text-base text-gray-500 file:mr-4 file:py-3 file:px-6 file:rounded-xl file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-colors"
+                />
+              </div>
+
+              {file && (
+                <div className="mb-6 p-4 bg-blue-50 rounded-xl">
+                  <p className="text-blue-800 font-medium">File selected: {file.name}</p>
+                  <p className="text-blue-600 text-sm">Size: {(file.size / 1024).toFixed(1)} KB</p>
+                </div>
+              )}
+
+              <Button
+                onClick={handleUpload}
+                variant="primary"
+                size="lg"
+                disabled={!file || uploading}
+                className="w-full font-semibold text-lg py-5"
+              >
+                {uploading ? 'Uploading...' : 'Upload Properties'}
+              </Button>
+
+              {/* Upload Results */}
+              {result && (
+                <div className="mt-6">
+                  {result.error ? (
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                      <p className="text-red-800 font-medium">Error: {result.error}</p>
+                      {result.details && Array.isArray(result.details) && (
+                        <div className="mt-3">
+                          <p className="text-red-700 text-sm font-medium">Details:</p>
+                          <ul className="text-red-600 text-xs mt-1 space-y-1">
+                            {result.details.slice(0, 10).map((error: any, index: number) => (
+                              <li key={index}>
+                                {typeof error === 'string' ? error : `Error: ${error.message || error.error || 'Unknown error'}`}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-6">
+                      <h3 className="text-lg font-semibold text-green-800 mb-4">Upload Results</h3>
+                      
+                      <div className="grid grid-cols-2 gap-6 mb-6">
+                        <div className="text-center">
+                          <div className="text-3xl font-bold text-green-600">{result.summary?.totalRows || 0}</div>
+                          <div className="text-sm text-green-700">Total Rows</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-3xl font-bold text-green-600">{result.summary?.successfulInserts || 0}</div>
+                          <div className="text-sm text-green-700">Inserted</div>
+                        </div>
+                      </div>
+
+                      {result.insertedProperties && result.insertedProperties.length > 0 && (
+                        <div>
+                          <p className="font-medium text-green-800 mb-2">Sample Inserted Properties:</p>
+                          <div className="text-sm text-green-700 space-y-1">
+                            {result.insertedProperties.slice(0, 5).map((property: any, index: number) => (
+                              <div key={index}>
+                                {property.address}, {property.city}, {property.state}
+                              </div>
+                            ))}
+                            {result.insertedProperties.length > 5 && (
+                              <div>... and {result.insertedProperties.length - 5} more</div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Manage Properties Tab */}
+          {activeTab === 'manage' && (
+            <div className="bg-white rounded-xl p-6 shadow-lg">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-semibold text-gray-900">Manage Properties</h2>
+                <div className="flex items-center space-x-3">
+                  <span className="text-sm text-gray-600">{properties.length} properties</span>
+                  <button
+                    onClick={fetchProperties}
+                    disabled={loadingProperties}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400"
+                  >
+                    {loadingProperties ? 'Loading...' : 'Refresh'}
+                  </button>
+                </div>
+              </div>
+
+              {/* Bulk Actions */}
+              {properties.length > 0 && (
+                <div className="flex items-center justify-between bg-gray-50 rounded-lg p-4 mb-6">
+                  <div className="flex items-center space-x-4">
+                    <label className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        checked={selectedProperties.length === properties.length && properties.length > 0}
+                        onChange={handleSelectAll}
+                        className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      />
+                      <span className="text-gray-700">Select All ({properties.length})</span>
+                    </label>
+                    {selectedProperties.length > 0 && (
+                      <span className="text-blue-600 font-medium">
+                        {selectedProperties.length} selected
+                      </span>
+                    )}
+                  </div>
+                  
+                  {selectedProperties.length > 0 && (
+                    <button
+                      onClick={handleDeleteSelected}
+                      disabled={deleting}
+                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:bg-gray-400"
+                    >
+                      {deleting ? 'Deleting...' : `Permanently Delete ${selectedProperties.length} Properties`}
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {/* Properties Table */}
+              {loadingProperties ? (
+                <div className="text-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                  <p className="mt-4 text-gray-600">Loading properties...</p>
+                </div>
+              ) : properties.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="text-6xl mb-4">🏠</div>
+                  <h3 className="text-xl font-semibold text-gray-800 mb-2">No Properties Yet</h3>
+                  <p className="text-gray-600 mb-6">Upload a CSV file to add properties to your system</p>
+                  <button
+                    onClick={() => setActiveTab('upload')}
+                    className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    Upload Properties
+                  </button>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse bg-white rounded-lg overflow-hidden shadow">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="p-4 text-left border-b">
+                          <input
+                            type="checkbox"
+                            checked={selectedProperties.length === properties.length && properties.length > 0}
+                            onChange={handleSelectAll}
+                            className="w-4 h-4 text-blue-600 border-gray-300 rounded"
+                          />
+                        </th>
+                        <th className="p-4 text-left border-b font-semibold text-gray-700">Address</th>
+                        <th className="p-4 text-left border-b font-semibold text-gray-700">City, State</th>
+                        <th className="p-4 text-left border-b font-semibold text-gray-700">Price</th>
+                        <th className="p-4 text-left border-b font-semibold text-gray-700">Beds/Baths</th>
+                        <th className="p-4 text-left border-b font-semibold text-gray-700">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {properties.map((property) => (
+                        <tr key={property.id} className="border-b hover:bg-gray-50 transition-colors">
+                          <td className="p-4">
+                            <input
+                              type="checkbox"
+                              checked={selectedProperties.includes(property.id)}
+                              onChange={() => handleSelectProperty(property.id)}
+                              className="w-4 h-4 text-blue-600 border-gray-300 rounded"
+                            />
+                          </td>
+                          <td className="p-4">
+                            <div className="font-medium text-gray-900">{property.address}</div>
+                            {property.imageUrl && (
+                              <div className="text-xs text-green-600 mt-1">📷 Has image</div>
+                            )}
+                          </td>
+                          <td className="p-4 text-gray-700">{property.city}, {property.state} {property.zipCode}</td>
+                          <td className="p-4">
+                            <div className="font-semibold text-green-600">
+                              ${property.listPrice?.toLocaleString() || 'N/A'}
+                            </div>
+                            {property.monthlyPayment && (
+                              <div className="text-sm text-gray-500">
+                                ${property.monthlyPayment?.toLocaleString()}/mo
+                              </div>
+                            )}
+                          </td>
+                          <td className="p-4 text-gray-700">
+                            {property.bedrooms || 'N/A'} bed / {property.bathrooms || 'N/A'} bath
+                            {property.squareFeet > 0 && (
+                              <div className="text-sm text-gray-500">{property.squareFeet.toLocaleString()} sq ft</div>
+                            )}
+                          </td>
+                          <td className="p-4">
+                            <button
+                              onClick={async () => {
+                                const confirm = window.confirm(`Permanently delete ${property.address}? This cannot be undone.`);
+                                if (confirm) {
+                                  await fetch(`/api/admin/properties?propertyId=${property.id}`, { method: 'DELETE' });
+                                  fetchProperties();
+                                }
+                              }}
+                              className="px-3 py-1 bg-red-100 text-red-700 rounded text-sm hover:bg-red-200 transition-colors"
+                            >
+                              Delete
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Disputes Tab */}
+          {activeTab === 'disputes' && (
+            <div className="bg-white rounded-xl p-6 shadow-lg">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-2xl font-semibold text-gray-900">Lead Disputes</h2>
+                  <p className="text-gray-600">Manage realtor complaints and refund requests</p>
+                </div>
+                <button
+                  onClick={fetchDisputes}
+                  disabled={loadingDisputes}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400"
+                >
+                  {loadingDisputes ? 'Loading...' : 'Refresh'}
+                </button>
+              </div>
+
+              {loadingDisputes ? (
+                <div className="text-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                  <p className="mt-4 text-gray-600">Loading disputes...</p>
+                </div>
+              ) : disputes.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="text-6xl mb-4">⚖️</div>
+                  <h3 className="text-xl font-semibold text-gray-800 mb-2">No Disputes</h3>
+                  <p className="text-gray-600">No realtor disputes at this time</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {disputes.map((dispute) => (
+                    <div key={dispute.id} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                      <div className="flex justify-between items-start mb-4">
+                        <div>
+                          <h3 className="font-semibold text-gray-900">Dispute #{dispute.id}</h3>
+                          <p className="text-gray-600">Realtor: {dispute.realtorName}</p>
+                          <p className="text-gray-600">Lead: {dispute.buyerName} - {dispute.buyerCity}</p>
+                          <p className="text-sm text-gray-500">Submitted: {new Date(dispute.createdAt).toLocaleDateString()}</p>
+                        </div>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          dispute.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                          dispute.status === 'approved' ? 'bg-green-100 text-green-800' :
+                          'bg-red-100 text-red-800'
+                        }`}>
+                          {dispute.status}
+                        </span>
+                      </div>
+
+                      <div className="mb-4">
+                        <p className="font-medium text-gray-800 mb-2">Reason:</p>
+                        <p className="text-gray-700 bg-white p-3 rounded border">
+                          {dispute.reason || 'No reason provided'}
+                        </p>
+                      </div>
+
+                      {dispute.status === 'pending' && (
+                        <div className="flex items-center space-x-4">
+                          <div className="flex items-center space-x-2">
+                            <label className="text-sm text-gray-700">Credits to refund:</label>
+                            <select 
+                              id={`credits-${dispute.id}`}
+                              className="border border-gray-300 rounded px-2 py-1 text-sm"
+                              defaultValue="1"
+                            >
+                              <option value="1">1 Credit</option>
+                              <option value="2">2 Credits</option>
+                              <option value="3">3 Credits</option>
+                              <option value="5">5 Credits</option>
+                            </select>
+                          </div>
+                          <button
+                            onClick={() => {
+                              const creditsSelect = document.getElementById(`credits-${dispute.id}`) as HTMLSelectElement;
+                              const credits = parseInt(creditsSelect?.value || '1');
+                              resolveDispute(dispute.id, 'approve', credits);
+                            }}
+                            className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+                          >
+                            Approve & Refund Credits
+                          </button>
+                          <button
+                            onClick={() => resolveDispute(dispute.id, 'reject', 0)}
+                            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+                          >
+                            Reject Dispute
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Contact Forms Tab */}
+          {activeTab === 'contacts' && (
+            <div className="bg-white rounded-xl p-6 shadow-lg">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-2xl font-semibold text-gray-900">Contact Form Submissions</h2>
+                  <p className="text-gray-600">Messages from website contact forms</p>
+                </div>
+                <button
+                  onClick={fetchContacts}
+                  disabled={loadingContacts}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400"
+                >
+                  {loadingContacts ? 'Loading...' : 'Refresh'}
+                </button>
+              </div>
+
+              {loadingContacts ? (
+                <div className="text-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                  <p className="mt-4 text-gray-600">Loading contacts...</p>
+                </div>
+              ) : contacts.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="text-6xl mb-4">📧</div>
+                  <h3 className="text-xl font-semibold text-gray-800 mb-2">No Contact Forms</h3>
+                  <p className="text-gray-600">No contact form submissions yet</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {contacts.map((contact) => (
+                    <div key={contact.id} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                      <div className="flex justify-between items-start mb-3">
+                        <div>
+                          <h3 className="font-semibold text-gray-900">{contact.name}</h3>
+                          <p className="text-gray-600">{contact.email}</p>
+                          {contact.phone && <p className="text-gray-600">{contact.phone}</p>}
+                        </div>
+                        <span className="text-sm text-gray-500">
+                          {new Date(contact.createdAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <div className="bg-white p-3 rounded border">
+                        <p className="text-gray-700">{contact.message}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+      
+      <Footer />
+    </div>
+  );
+}

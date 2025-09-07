@@ -258,10 +258,13 @@ export default function BuyerLinkDashboard() {
       });
 
       const data = await response.json();
+      
+      console.log('🚨 Dispute API response:', data);
 
       if (data.error) {
-        setError(data.error);
-        setSuccessMessage('');
+        console.error('Dispute error:', data.error);
+        alert(`Dispute failed: ${data.error}`);
+        return;
       } else {
         setError('');
         setShowDisputeModal(false);

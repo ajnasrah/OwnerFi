@@ -5,13 +5,69 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
+// All 50 US States
+const ALL_US_STATES = [
+  { value: 'AL', label: 'Alabama' },
+  { value: 'AK', label: 'Alaska' },
+  { value: 'AZ', label: 'Arizona' },
+  { value: 'AR', label: 'Arkansas' },
+  { value: 'CA', label: 'California' },
+  { value: 'CO', label: 'Colorado' },
+  { value: 'CT', label: 'Connecticut' },
+  { value: 'DE', label: 'Delaware' },
+  { value: 'FL', label: 'Florida' },
+  { value: 'GA', label: 'Georgia' },
+  { value: 'HI', label: 'Hawaii' },
+  { value: 'ID', label: 'Idaho' },
+  { value: 'IL', label: 'Illinois' },
+  { value: 'IN', label: 'Indiana' },
+  { value: 'IA', label: 'Iowa' },
+  { value: 'KS', label: 'Kansas' },
+  { value: 'KY', label: 'Kentucky' },
+  { value: 'LA', label: 'Louisiana' },
+  { value: 'ME', label: 'Maine' },
+  { value: 'MD', label: 'Maryland' },
+  { value: 'MA', label: 'Massachusetts' },
+  { value: 'MI', label: 'Michigan' },
+  { value: 'MN', label: 'Minnesota' },
+  { value: 'MS', label: 'Mississippi' },
+  { value: 'MO', label: 'Missouri' },
+  { value: 'MT', label: 'Montana' },
+  { value: 'NE', label: 'Nebraska' },
+  { value: 'NV', label: 'Nevada' },
+  { value: 'NH', label: 'New Hampshire' },
+  { value: 'NJ', label: 'New Jersey' },
+  { value: 'NM', label: 'New Mexico' },
+  { value: 'NY', label: 'New York' },
+  { value: 'NC', label: 'North Carolina' },
+  { value: 'ND', label: 'North Dakota' },
+  { value: 'OH', label: 'Ohio' },
+  { value: 'OK', label: 'Oklahoma' },
+  { value: 'OR', label: 'Oregon' },
+  { value: 'PA', label: 'Pennsylvania' },
+  { value: 'RI', label: 'Rhode Island' },
+  { value: 'SC', label: 'South Carolina' },
+  { value: 'SD', label: 'South Dakota' },
+  { value: 'TN', label: 'Tennessee' },
+  { value: 'TX', label: 'Texas' },
+  { value: 'UT', label: 'Utah' },
+  { value: 'VT', label: 'Vermont' },
+  { value: 'VA', label: 'Virginia' },
+  { value: 'WA', label: 'Washington' },
+  { value: 'WV', label: 'West Virginia' },
+  { value: 'WI', label: 'Wisconsin' },
+  { value: 'WY', label: 'Wyoming' }
+];
+
 export default function RealtorSetup() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
-  // Form data for realtor profile
+  // Form data - pre-populate from existing user data
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -22,11 +78,10 @@ export default function RealtorSetup() {
     primaryCity: '',
     primaryState: '',
     serviceRadius: 25,
-    serviceStates: [] as string[],
-    serviceCities: '',
+    serviceCities: [] as string[],
   });
 
-  // City search functionality (same as buyer setup)
+  // City search functionality
   const [cityQuery, setCityQuery] = useState('');
   const [cityResults, setCityResults] = useState<any[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -39,28 +94,81 @@ export default function RealtorSetup() {
       router.push('/realtor/signin');
     }
     
-    // Strict role checking - realtors only
     if (status === 'authenticated' && session?.user?.role !== 'realtor') {
-      if (session?.user?.role === 'buyer') {
-        router.push('/dashboard');
-      } else {
-        router.push('/realtor/signin');
-      }
+      router.push('/dashboard');
+    }
+
+    if (status === 'authenticated' && session?.user?.role === 'realtor') {
+      loadExistingUserData();
     }
   }, [status, router, session]);
 
-  useEffect(() => {
-    if (session?.user?.name) {
-      const nameParts = session.user.name.split(' ');
-      setFormData(prev => ({
-        ...prev,
-        firstName: nameParts[0] || '',
-        lastName: nameParts.slice(1).join(' ') || '',
-      }));
-    }
-  }, [session]);
+  const loadExistingUserData = async () => {
+    try {
+      // Pre-fill form with existing data from database
+      if (session?.user?.id) {
+        try {
+          // Get user data directly from database using user ID
+          const userDoc = await fetch(`/api/users/${session.user.id}`);
+          if (userDoc.ok) {
+            const userData = await userDoc.json();
+            
+            if (userData.user) {
+              const name = userData.user.name || '';
+              const nameParts = name.split(' ');
+              
+              setFormData(prev => ({
+                ...prev,
+                firstName: nameParts[0] || '',
+                lastName: nameParts.slice(1).join(' ') || '',
+                phone: userData.user.phone || '',
+                company: userData.user.company || '',
+                licenseState: userData.user.licenseState || '',
+              }));
+              
+              console.log('📋 Pre-filled realtor data from database:', {
+                phone: userData.user.phone,
+                company: userData.user.company,
+                licenseState: userData.user.licenseState
+              });
+            }
+          }
+        } catch (error) {
+          console.warn('Could not fetch user data, using session fallback');
+          
+          // Fallback to session data
+          const name = session.user.name || '';
+          const nameParts = name.split(' ');
+          
+          setFormData(prev => ({
+            ...prev,
+            firstName: nameParts[0] || '',
+            lastName: nameParts.slice(1).join(' ') || '',
+            // These might be empty from session
+            phone: '',
+            company: '',
+            licenseState: '',
+          }));
+        }
+      }
 
-  // City search with timeout (same as buyer setup)
+      // Check if realtor profile already exists
+      const profileResponse = await fetch('/api/realtor/profile');
+      const profileData = await profileResponse.json();
+      
+      if (profileData.profile) {
+        // Profile exists, redirect to dashboard
+        router.push('/realtor/dashboard');
+      }
+      
+    } catch (error) {
+      console.error('Failed to load user data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // City search with timeout
   useEffect(() => {
     if (cityQuery.length >= 3 && !cityQuery.includes(', ')) {
       const timer = setTimeout(() => {
@@ -75,10 +183,8 @@ export default function RealtorSetup() {
 
   const searchCities = async (query: string) => {
     try {
-      console.log('Searching for:', query);
       const response = await fetch(`/api/cities/search?q=${encodeURIComponent(query)}`);
       const data = await response.json();
-      console.log('Results:', data.cities?.length || 0);
       
       setCityResults(data.cities || []);
       setShowDropdown(true);
@@ -89,57 +195,7 @@ export default function RealtorSetup() {
     }
   };
 
-  const loadNearbyCities = async (centerCity: any) => {
-    setLoadingNearby(true);
-    try {
-      if (!centerCity.lat || !centerCity.lng) {
-        setNearbyCities([{ 
-          name: centerCity.name, 
-          state: centerCity.state, 
-          isCenter: true, 
-          distance: 0 
-        }]);
-        return;
-      }
-
-      const response = await fetch(`/api/cities/nearby?lat=${centerCity.lat}&lng=${centerCity.lng}&radius=${formData.serviceRadius}`);
-      const data = await response.json();
-      
-      if (data.cities) {
-        const citiesWithCenter = [
-          { 
-            name: centerCity.name, 
-            state: centerCity.state, 
-            isCenter: true, 
-            distance: 0 
-          },
-          ...data.cities.filter((city: any) => 
-            !(city.name === centerCity.name && city.state === centerCity.state)
-          )
-        ];
-        setNearbyCities(citiesWithCenter);
-      } else {
-        setNearbyCities([{ 
-          name: centerCity.name, 
-          state: centerCity.state, 
-          isCenter: true, 
-          distance: 0 
-        }]);
-      }
-    } catch (err) {
-      console.error('Failed to load nearby cities:', err);
-      setNearbyCities([{ 
-        name: centerCity.name, 
-        state: centerCity.state, 
-        isCenter: true, 
-        distance: 0 
-      }]);
-    } finally {
-      setLoadingNearby(false);
-    }
-  };
-
-  const selectCity = (city: any) => {
+  const selectCity = async (city: any) => {
     setFormData(prev => ({
       ...prev,
       primaryCity: city.name,
@@ -149,56 +205,55 @@ export default function RealtorSetup() {
     setCityResults([]);
     setShowDropdown(false);
     setCitySelected(true);
-    loadNearbyCities(city);
-  };
-
-  const formatPhoneNumber = (value: string) => {
-    // Remove all non-digit characters
-    const phoneNumber = value.replace(/\D/g, '');
     
-    // Format as (XXX) XXX-XXXX
-    if (phoneNumber.length >= 6) {
-      return `(${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3, 6)}-${phoneNumber.slice(6, 10)}`;
-    } else if (phoneNumber.length >= 3) {
-      return `(${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3)}`;
-    } else {
-      return phoneNumber;
+    if (city.place_id) {
+      try {
+        const coordsResponse = await fetch(`/api/cities/coordinates?place_id=${city.place_id}`);
+        const coordsData = await coordsResponse.json();
+        
+        if (coordsData.lat && coordsData.lng) {
+          const nearbyResponse = await fetch(`/api/cities/nearby?lat=${coordsData.lat}&lng=${coordsData.lng}&radius=${formData.serviceRadius}`);
+          const nearbyData = await nearbyResponse.json();
+          
+          if (nearbyData.cities) {
+            setNearbyCities([
+              { name: city.name, state: city.state, isCenter: true, distance: 0, selected: true },
+              ...nearbyData.cities.map((c: any) => ({ ...c, selected: true }))
+            ]);
+            setFormData(prev => ({
+              ...prev,
+              serviceCities: [city.name, ...nearbyData.cities.map((c: any) => c.name)]
+            }));
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load nearby cities:', error);
+      }
     }
   };
 
   const handleInputChange = (field: string, value: any) => {
-    if (field === 'phone') {
-      const formatted = formatPhoneNumber(value);
-      setFormData(prev => ({ ...prev, [field]: formatted }));
-    } else {
-      setFormData(prev => ({ ...prev, [field]: value }));
-    }
+    setFormData(prev => ({ ...prev, [field]: value }));
     setError('');
-  };
-
-  const handleStateChange = (state: string, checked: boolean) => {
-    if (checked) {
-      setFormData(prev => ({
-        ...prev,
-        serviceStates: [...prev.serviceStates, state]
-      }));
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        serviceStates: prev.serviceStates.filter(s => s !== state)
-      }));
-    }
-    setError('');
+    setSuccess('');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setSaving(true);
     setError('');
+    setSuccess('');
 
-    if (!formData.firstName || !formData.lastName || !formData.phone || !formData.company || !formData.primaryCity || !formData.primaryState) {
-      setError('Please fill in all required fields including company/brokerage and primary service city');
-      setLoading(false);
+    // Validation
+    if (!formData.firstName || !formData.lastName || !formData.phone || !formData.company) {
+      setError('Please fill in all required fields');
+      setSaving(false);
+      return;
+    }
+
+    if (!formData.primaryCity || !formData.primaryState) {
+      setError('Please select your primary service city');
+      setSaving(false);
       return;
     }
 
@@ -206,328 +261,308 @@ export default function RealtorSetup() {
       const response = await fetch('/api/realtor/profile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          email: session?.user?.email,
-        }),
+        body: JSON.stringify(formData),
       });
 
       const data = await response.json();
-      
       if (data.error) {
         setError(data.error);
-        setLoading(false);
-        return;
+      } else {
+        setSuccess('Profile setup completed successfully!');
+        setTimeout(() => router.push('/realtor/dashboard'), 1500);
       }
-
-      // Redirect to Buyer Link dashboard
-      router.push('/realtor/dashboard');
-      
     } catch (err) {
-      setError('Failed to save profile. Please try again.');
-      setLoading(false);
+      setError('Failed to save profile');
+    } finally {
+      setSaving(false);
     }
   };
 
-  const US_STATES = [
-    'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
-    'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD',
-    'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ',
-    'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC',
-    'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'
-  ];
-
-  if (status === 'loading') {
+  if (status === 'loading' || loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading your information...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-          <div className="bg-blue-600 px-6 py-8 text-center">
-            <div className="text-white">
-              <div className="flex justify-between items-start mb-4">
-                <Link href="/" className="text-blue-100 hover:text-white text-sm">
-                  ← Home
-                </Link>
-                <div className="text-center flex-1">
-                  <h1 className="text-3xl font-bold mb-2">🏠 Buyer Link Setup</h1>
-                  <p className="text-blue-100">
-                    Complete your realtor profile to start accessing buyer leads
-                  </p>
-                </div>
-                <div className="w-16"></div> {/* Spacer for centering */}
-              </div>
-            </div>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+      <div className="px-4 py-8 sm:px-6 lg:px-8">
+        {/* Header */}
+        <div className="max-w-2xl mx-auto mb-8">
+          <div className="text-center">
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">
+              Complete Your Realtor Profile
+            </h1>
+            <p className="text-lg text-gray-600">
+              Set up your service area and start connecting with qualified buyers
+            </p>
           </div>
+        </div>
 
-          <form onSubmit={handleSubmit} className="p-6 space-y-6">
-            {error && (
-              <div className="bg-red-50 border border-red-200 rounded-md p-4">
-                <p className="text-red-800 text-sm">{error}</p>
-              </div>
-            )}
-
-            {/* Trial Benefits */}
-            <div className="bg-green-50 border border-green-200 rounded-md p-4">
-              <h3 className="font-medium text-green-900 mb-2">🎉 Your 7-Day Free Trial Includes:</h3>
-              <ul className="text-sm text-green-800 space-y-1">
-                <li>• 3 free buyer lead purchases</li>
-                <li>• Full access to Buyer Link dashboard</li>
-                <li>• View qualified buyer profiles with contact info</li>
-                <li>• Lead management and tracking tools</li>
-              </ul>
-            </div>
-
-            {/* Contact Information */}
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Contact Information</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">First Name *</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.firstName}
-                    onChange={(e) => handleInputChange('firstName', e.target.value)}
-                    className="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900 font-medium"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Last Name *</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.lastName}
-                    onChange={(e) => handleInputChange('lastName', e.target.value)}
-                    className="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900 font-medium"
-                  />
-                </div>
-              </div>
-              <div className="mt-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number *</label>
-                <input
-                  type="tel"
-                  required
-                  value={formData.phone}
-                  onChange={(e) => handleInputChange('phone', e.target.value)}
-                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900 font-medium"
-                  placeholder="(555) 123-4567"
-                />
-              </div>
-              <div className="mt-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Company/Brokerage *</label>
-                <input
-                  type="text"
-                  required
-                  value={formData.company}
-                  onChange={(e) => handleInputChange('company', e.target.value)}
-                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900 font-medium"
-                  placeholder="ABC Realty"
-                />
-              </div>
-            </div>
-
-            {/* License Information - Optional */}
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">License Information (Optional)</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">License Number</label>
-                  <input
-                    type="text"
-                    value={formData.licenseNumber}
-                    onChange={(e) => handleInputChange('licenseNumber', e.target.value)}
-                    className="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900 font-medium"
-                    placeholder="ABC123456"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">License State</label>
-                  <select
-                    value={formData.licenseState}
-                    onChange={(e) => handleInputChange('licenseState', e.target.value)}
-                    className="w-full p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900 font-medium"
-                  >
-                    <option value="">Select State</option>
-                    {US_STATES.map(state => (
-                      <option key={state} value={state}>{state}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            {/* Primary Service City */}
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">📍 Primary Service City</h2>
-              <p className="text-sm text-gray-600 mb-4">
-                This is your main service area. We'll show you buyer leads within {formData.serviceRadius} miles of this city.
-              </p>
+        {/* Form */}
+        <div className="max-w-2xl mx-auto">
+          <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+            <form onSubmit={handleSubmit} className="p-8 space-y-8">
               
-              {/* City Input with Autocomplete */}
-              <div className="relative mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  What city do you primarily work in? *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={cityQuery}
-                  onChange={(e) => {
-                    setCityQuery(e.target.value);
-                    setShowDropdown(true);
-                    setCitySelected(false);
-                  }}
-                  onFocus={() => setShowDropdown(true)}
-                  className={`w-full p-3 border rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900 font-medium ${
-                    citySelected ? 'border-green-500 bg-green-50' : 'border-gray-300'
-                  }`}
-                  placeholder="Enter your primary service city (e.g., Dallas, TX)"
-                />
-                {citySelected && (
-                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2 mt-6">
-                    <div className="bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center">
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                  </div>
-                )}
-                
-                {citySelected && (
-                  <p className="text-sm text-green-600 mt-2 font-medium">✓ City selected! Finding nearby cities...</p>
-                )}
-                
-                {/* City Dropdown */}
-                {cityResults.length > 0 && showDropdown && (
-                  <div className="absolute z-50 w-full mt-1 bg-white border-2 border-blue-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
-                    <div className="px-4 py-2 bg-blue-50 border-b border-blue-200">
-                      <p className="text-sm font-medium text-blue-900">Select your primary service city:</p>
-                    </div>
-                    {cityResults.map((city, index) => (
-                      <button
-                        key={`${city.name}-${city.state}-${index}`}
-                        type="button"
-                        onClick={() => selectCity(city)}
-                        className="w-full text-left px-4 py-3 hover:bg-green-50 focus:bg-green-50 focus:outline-none border-b border-gray-100 last:border-b-0 transition-colors"
-                      >
-                        <div className="font-medium text-gray-900">{city.name}, {city.state}</div>
-                        {city.population && (
-                          <div className="text-sm text-gray-500">Population: {city.population.toLocaleString()}</div>
-                        )}
-                        <div className="text-xs text-green-600 mt-1">→ Click to select and find service area</div>
-                      </button>
-                    ))}
-                  </div>
-                )}
-                
-                <p className="text-xs text-gray-500 mt-1">Start typing to search US cities</p>
-              </div>
-
-              {/* Service Radius - Adjustable Slider */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Service Radius: {formData.serviceRadius} miles
-                </label>
-                <div className="px-3">
-                  <input
-                    type="range"
-                    min="5"
-                    max="100"
-                    step="5"
-                    value={formData.serviceRadius}
-                    onChange={(e) => {
-                      const newRadius = parseInt(e.target.value);
-                      handleInputChange('serviceRadius', newRadius);
-                      // If a city is selected, reload nearby cities with new radius
-                      if (formData.primaryCity && formData.primaryState && nearbyCities.length > 0) {
-                        const centerCity = { 
-                          name: formData.primaryCity, 
-                          state: formData.primaryState,
-                          lat: nearbyCities[0]?.lat || 0,
-                          lng: nearbyCities[0]?.lng || 0
-                        };
-                        loadNearbyCities(centerCity);
-                      }
-                    }}
-                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
-                  />
-                  <div className="flex justify-between text-xs text-gray-500 mt-1">
-                    <span>5 miles</span>
-                    <span>25 miles</span>
-                    <span>50 miles</span>
-                    <span>100 miles</span>
-                  </div>
-                </div>
-                <div className="bg-green-50 p-3 rounded-md border border-green-200 mt-3">
-                  <p className="text-sm text-green-700">
-                    <strong>{formData.serviceRadius} mile service area</strong> - You'll receive buyer leads within this distance from {formData.primaryCity || 'your selected city'}
-                  </p>
-                </div>
-              </div>
-
-              {/* Selected City Display & Cities Within Radius */}
-              {formData.primaryCity && formData.primaryState && (
-                <div className="bg-blue-50 rounded-lg p-4 mb-6">
-                  <div className="mb-3">
-                    <h4 className="font-medium text-blue-900">Selected Service Area:</h4>
-                    <p className="text-blue-800">{formData.primaryCity}, {formData.primaryState}</p>
-                    <p className="text-sm text-blue-600">Service Radius: {formData.serviceRadius} miles</p>
-                  </div>
-                  
-                  <div>
-                    <h4 className="font-medium text-blue-900 mb-2">Cities within {formData.serviceRadius} miles:</h4>
-                    <div className="text-sm text-blue-800 space-y-1">
-                      {loadingNearby ? (
-                        <>
-                          <p>• {formData.primaryCity}, {formData.primaryState} (Center)</p>
-                          <p>• Loading nearby cities...</p>
-                        </>
-                      ) : (
-                        nearbyCities.map((city, index) => (
-                          <p key={index}>
-                            • {city.name}, {city.state} {city.isCenter ? '(Center)' : city.distance ? `(${city.distance} mi)` : ''}
-                          </p>
-                        ))
-                      )}
-                      <p className="text-xs text-blue-600 mt-2 italic">You'll receive buyer leads from ALL cities within this radius</p>
-                    </div>
+              {/* Error/Success Messages */}
+              {error && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <div className="flex items-center">
+                    <svg className="w-5 h-5 text-red-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                    <p className="text-red-800">{error}</p>
                   </div>
                 </div>
               )}
-            </div>
 
+              {success && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <div className="flex items-center">
+                    <svg className="w-5 h-5 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    <p className="text-green-800">{success}</p>
+                  </div>
+                </div>
+              )}
 
-            {/* Profile Preview */}
-            <div className="bg-blue-50 rounded-lg p-4">
-              <h3 className="font-medium text-blue-900 mb-2">Your Buyer Link Profile</h3>
-              <div className="text-blue-800 text-sm space-y-1">
-                <div>👤 {formData.firstName} {formData.lastName}</div>
-                <div>📞 {formData.phone || '[Phone Number]'}</div>
-                <div>🏢 {formData.company || '[Company/Brokerage]'}</div>
-                <div>📍 Service Area: {formData.primaryCity && formData.primaryState ? `${formData.primaryCity}, ${formData.primaryState} (${formData.serviceRadius} mile radius)` : '[Select Primary City]'}</div>
-                {formData.licenseNumber && (
-                  <div>📋 License: {formData.licenseNumber} {formData.licenseState && `(${formData.licenseState})`}</div>
-                )}
+              {/* Personal Information */}
+              <div className="space-y-6">
+                <div className="text-center pb-4 border-b border-gray-200">
+                  <h2 className="text-2xl font-bold text-gray-900">Personal Information</h2>
+                  <p className="text-gray-600 mt-2">Your basic contact details</p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      First Name *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.firstName}
+                      onChange={(e) => handleInputChange('firstName', e.target.value)}
+                      className="w-full p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                      placeholder="John"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Last Name *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.lastName}
+                      onChange={(e) => handleInputChange('lastName', e.target.value)}
+                      className="w-full p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                      placeholder="Smith"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Phone Number *
+                    </label>
+                    <input
+                      type="tel"
+                      required
+                      value={formData.phone}
+                      onChange={(e) => handleInputChange('phone', e.target.value)}
+                      className="w-full p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                      placeholder="(555) 123-4567"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Brokerage/Company *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.company}
+                      onChange={(e) => handleInputChange('company', e.target.value)}
+                      className="w-full p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                      placeholder="ABC Realty"
+                    />
+                  </div>
+                </div>
               </div>
-            </div>
 
-            <div className="pt-6 border-t">
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-blue-600 text-white py-3 px-6 rounded-md hover:bg-blue-700 transition-colors font-medium disabled:bg-gray-400"
-              >
-                {loading ? 'Setting Up Profile...' : 'Complete Setup & Start 7-Day Trial'}
-              </button>
-            </div>
-          </form>
+              {/* License Information */}
+              <div className="space-y-6">
+                <div className="text-center pb-4 border-b border-gray-200">
+                  <h2 className="text-2xl font-bold text-gray-900">License Information</h2>
+                  <p className="text-gray-600 mt-2">Your real estate license details</p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      License Number
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.licenseNumber}
+                      onChange={(e) => handleInputChange('licenseNumber', e.target.value)}
+                      className="w-full p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                      placeholder="123456789"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      License State *
+                    </label>
+                    <select
+                      required
+                      value={formData.licenseState}
+                      onChange={(e) => handleInputChange('licenseState', e.target.value)}
+                      className="w-full p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                    >
+                      <option value="">Select your license state...</option>
+                      {ALL_US_STATES.map(state => (
+                        <option key={state.value} value={state.value}>
+                          {state.label} ({state.value})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Service Area */}
+              <div className="space-y-6">
+                <div className="text-center pb-4 border-b border-gray-200">
+                  <h2 className="text-2xl font-bold text-gray-900">Service Area</h2>
+                  <p className="text-gray-600 mt-2">Where you help buyers find properties</p>
+                </div>
+
+                <div className="space-y-6">
+                  {/* Primary City Search */}
+                  <div className="relative">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Primary Service City *
+                    </label>
+                    <input
+                      type="text"
+                      value={cityQuery}
+                      onChange={(e) => {
+                        setCityQuery(e.target.value);
+                        setShowDropdown(true);
+                        setCitySelected(false);
+                      }}
+                      onFocus={() => setShowDropdown(true)}
+                      className="w-full p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                      placeholder="Enter city name (e.g., Jacksonville, FL)"
+                    />
+                    
+                    {/* City Dropdown */}
+                    {cityResults.length > 0 && showDropdown && (
+                      <div className="absolute z-50 w-full mt-2 bg-white border border-gray-300 rounded-xl shadow-lg max-h-64 overflow-y-auto">
+                        {cityResults.map((city, index) => (
+                          <button
+                            key={`${city.name}-${city.state}-${index}`}
+                            type="button"
+                            onClick={() => selectCity(city)}
+                            className="w-full text-left px-4 py-3 hover:bg-blue-50 focus:bg-blue-50 focus:outline-none border-b border-gray-100 last:border-b-0 transition-all"
+                          >
+                            <div className="font-medium text-gray-900">{city.name}, {city.state}</div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    
+                    {citySelected && (
+                      <div className="flex items-center mt-3 text-green-600">
+                        <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                        <p className="font-medium">City selected! Loading service area...</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Service Radius */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-4">
+                      Service Radius: <span className="text-blue-600 font-bold">{formData.serviceRadius} miles</span>
+                    </label>
+                    <input
+                      type="range"
+                      min="10"
+                      max="100"
+                      step="5"
+                      value={formData.serviceRadius}
+                      onChange={(e) => {
+                        const newRadius = parseInt(e.target.value);
+                        handleInputChange('serviceRadius', newRadius);
+                      }}
+                      className="w-full h-3 bg-blue-200 rounded-lg appearance-none cursor-pointer"
+                    />
+                    <div className="flex justify-between text-sm text-gray-500 mt-2">
+                      <span>10 mi</span>
+                      <span>25 mi</span>
+                      <span>50 mi</span>
+                      <span>100 mi</span>
+                    </div>
+                  </div>
+
+                  {/* Service Cities Preview */}
+                  {nearbyCities.length > 0 && (
+                    <div className="bg-blue-50 rounded-xl p-6 border border-blue-200">
+                      <h4 className="font-semibold text-blue-900 mb-4">Your Service Area</h4>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">
+                        {nearbyCities.slice(0, 12).map((city, index) => (
+                          <div key={index} className="flex items-center space-x-2">
+                            <div className={`w-3 h-3 rounded-full ${city.isCenter ? 'bg-blue-600' : 'bg-blue-400'}`}></div>
+                            <span className="text-blue-800">
+                              {city.name} {city.isCenter ? '(Center)' : `(${city.distance}mi)`}
+                            </span>
+                          </div>
+                        ))}
+                        {nearbyCities.length > 12 && (
+                          <div className="text-blue-600 font-medium">
+                            +{nearbyCities.length - 12} more cities
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Submit Button */}
+              <div className="text-center pt-6">
+                <button
+                  type="submit"
+                  disabled={saving || !formData.firstName || !formData.lastName || !formData.phone || !formData.company || !formData.primaryCity}
+                  className="w-full px-8 py-4 bg-blue-600 text-white text-lg font-semibold rounded-xl shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                >
+                  {saving ? (
+                    <span className="flex items-center justify-center">
+                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Setting Up Your Profile...
+                    </span>
+                  ) : (
+                    'Complete Setup'
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
     </div>

@@ -1,0 +1,87 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Users collection - users can only read/write their own data
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Buyer profiles - buyers can only access their own profile
+    match /buyerProfiles/{profileId} {
+      allow read, write: if request.auth != null && 
+        request.auth.token.role == 'buyer' &&
+        resource.data.userId == request.auth.uid;
+    }
+
+    // Realtor profiles - realtors can only access their own profile  
+    match /realtors/{realtorId} {
+      allow read, write: if request.auth != null &&
+        request.auth.token.role == 'realtor' &&
+        resource.data.userId == request.auth.uid;
+    }
+
+    // Properties - readable by authenticated users, writable by admins only
+    match /properties/{propertyId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && 
+        request.auth.token.role == 'admin';
+    }
+
+    // Property matches - buyers can only access their own matches
+    match /propertyMatches/{matchId} {
+      allow read, write: if request.auth != null &&
+        request.auth.token.role == 'buyer' &&
+        resource.data.buyerId == request.auth.uid;
+    }
+
+    // Property actions - buyers can only create actions for themselves
+    match /propertyActions/{actionId} {
+      allow read, write: if request.auth != null &&
+        request.auth.token.role == 'buyer' &&
+        resource.data.buyerId == request.auth.uid;
+    }
+
+    // Buyer lead purchases - realtors can only access their own purchases
+    match /buyerLeadPurchases/{purchaseId} {
+      allow read: if request.auth != null &&
+        request.auth.token.role == 'realtor' &&
+        resource.data.realtorId == request.auth.uid;
+      allow write: if request.auth != null &&
+        request.auth.token.role == 'realtor';
+    }
+
+    // Transactions - users can only read their own transactions
+    match /transactions/{transactionId} {
+      allow read: if request.auth != null &&
+        (resource.data.realtorId == request.auth.uid ||
+         resource.data.buyerId == request.auth.uid);
+      allow write: if request.auth != null;
+    }
+
+    // Disputes - realtors can only access their own disputes
+    match /disputes/{disputeId} {
+      allow read, write: if request.auth != null &&
+        request.auth.token.role == 'realtor' &&
+        resource.data.realtorId == request.auth.uid;
+    }
+
+    // Admin access for admin users only
+    match /admin/{document=**} {
+      allow read, write: if request.auth != null &&
+        request.auth.token.role == 'admin';
+    }
+
+    // Logs - admin only
+    match /logs/{logId} {
+      allow read: if request.auth != null &&
+        request.auth.token.role == 'admin';
+      allow write: if request.auth != null;
+    }
+
+    // Default: deny all other access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

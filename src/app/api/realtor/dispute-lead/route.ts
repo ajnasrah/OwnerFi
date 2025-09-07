@@ -62,6 +62,10 @@ export async function POST(request: NextRequest) {
           screenshotUrls.push(downloadUrl);
         } catch (uploadError) {
           console.error('Failed to upload screenshot:', uploadError);
+          // Return detailed error to help debug
+          return NextResponse.json({
+            error: `Screenshot upload failed: ${uploadError.message}. Please try smaller image files.`
+          }, { status: 400 });
         }
       }
     }

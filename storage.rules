@@ -1,0 +1,39 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Dispute files - only realtors can upload their own disputes
+    match /disputes/{realtorId}/{fileName} {
+      allow read, write: if request.auth != null &&
+        request.auth.token.role == 'realtor' &&
+        request.auth.uid == realtorId &&
+        resource.size < 5 * 1024 * 1024; // 5MB limit
+    }
+
+    // Property images - admins only
+    match /properties/{propertyId}/{fileName} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null &&
+        request.auth.token.role == 'admin' &&
+        resource.size < 10 * 1024 * 1024; // 10MB limit
+    }
+
+    // User profile images - users can only upload their own
+    match /profiles/{userId}/{fileName} {
+      allow read, write: if request.auth != null &&
+        request.auth.uid == userId &&
+        resource.size < 2 * 1024 * 1024; // 2MB limit
+    }
+
+    // Admin uploads
+    match /admin/{allPaths=**} {
+      allow read, write: if request.auth != null &&
+        request.auth.token.role == 'admin';
+    }
+
+    // Default: deny all other access
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -165,7 +165,7 @@ export default function ProfileSetup() {
     }
   };
 
-  const selectCity = (city: any) => {
+  const selectCity = async (city: any) => {
     setFormData(prev => ({
       ...prev,
       preferredCity: city.name,
@@ -175,7 +175,37 @@ export default function ProfileSetup() {
     setCityResults([]);
     setShowDropdown(false);
     setCitySelected(true);
-    loadNearbyCities(city);
+    
+    // Fetch coordinates first, then load nearby cities
+    if (city.place_id) {
+      try {
+        const response = await fetch(`/api/cities/coordinates?place_id=${city.place_id}`);
+        const cityWithCoords = await response.json();
+        console.log('🏙️ Coordinates API returned:', cityWithCoords);
+        
+        // Update the form data with the correct state from coordinates API
+        if (cityWithCoords.state) {
+          setFormData(prev => ({
+            ...prev,
+            preferredCity: cityWithCoords.name || city.name,
+            preferredState: cityWithCoords.state
+          }));
+        }
+        
+        if (cityWithCoords.lat && cityWithCoords.lng) {
+          loadNearbyCities(cityWithCoords);
+        } else {
+          // Fallback to just showing the selected city
+          loadNearbyCities(city);
+        }
+      } catch (err) {
+        console.error('Failed to fetch coordinates:', err);
+        // Fallback to just showing the selected city
+        loadNearbyCities(city);
+      }
+    } else {
+      loadNearbyCities(city);
+    }
   };
 
   const handleInputChange = (field: string, value: any) => {
@@ -448,13 +478,16 @@ export default function ProfileSetup() {
                             handleInputChange('searchRadius', newRadius);
                             // If a city is selected, reload nearby cities with new radius
                             if (formData.preferredCity && formData.preferredState && nearbyCities.length > 0) {
-                              const centerCity = { 
-                                name: formData.preferredCity, 
-                                state: formData.preferredState,
-                                lat: nearbyCities[0]?.lat || 0,
-                                lng: nearbyCities[0]?.lng || 0
-                              };
-                              loadNearbyCities(centerCity);
+                              const centerCity = nearbyCities.find(city => city.isCenter);
+                              if (centerCity && centerCity.lat && centerCity.lng) {
+                                const cityWithCoords = { 
+                                  name: centerCity.name, 
+                                  state: centerCity.state,
+                                  lat: centerCity.lat,
+                                  lng: centerCity.lng
+                                };
+                                loadNearbyCities(cityWithCoords);
+                              }
                             }
                             setCurrentStep(2);
                           }}

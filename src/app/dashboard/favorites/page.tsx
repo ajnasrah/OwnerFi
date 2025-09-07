@@ -25,8 +25,8 @@ export default function FavoritesPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [favoriteProperties, setFavoriteProperties] = useState<Property[]>([]);
-  const [rejectedProperties, setRejectedProperties] = useState<Property[]>([]);
-  const [showRejected, setShowRejected] = useState(false);
+  const [passedProperties, setPassedProperties] = useState<Property[]>([]);
+  const [showPassed, setShowPassed] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -43,14 +43,54 @@ export default function FavoritesPage() {
     if (status === 'unauthenticated') {
       router.push('/auth/signin');
     } else if (status === 'authenticated') {
-      // Load actual property details from localStorage
-      const savedProperties = JSON.parse(localStorage.getItem('favoriteProperties') || '[]');
-      const rejectedDetails = JSON.parse(localStorage.getItem('rejectedPropertyDetails') || '[]');
-      setFavoriteProperties(savedProperties);
-      setRejectedProperties(rejectedDetails);
-      setLoading(false);
+      // Load actual property details from database
+      fetchFavoriteProperties();
     }
   }, [status, router]);
+
+  const fetchFavoriteProperties = async () => {
+    try {
+      // Get buyer profile first
+      const profileResponse = await fetch('/api/buyer/profile');
+      const profileData = await profileResponse.json();
+      
+      if (!profileData.profile) {
+        setLoading(false);
+        return;
+      }
+
+      const buyerId = profileData.profile.id;
+      
+      // Get liked properties using new unified API
+      const likedResponse = await fetch(`/api/buyer/properties?buyerId=${buyerId}&status=liked`);
+      const likedData = await likedResponse.json();
+      
+      if (!likedData.error) {
+        setFavoriteProperties(likedData.properties || []);
+        console.log(`❤️ Loaded ${likedData.properties?.length || 0} liked properties`);
+      } else {
+        setFavoriteProperties([]);
+      }
+
+      // Get passed properties using new unified API
+      const passedResponse = await fetch(`/api/buyer/properties?buyerId=${buyerId}&status=disliked`);
+      const passedData = await passedResponse.json();
+      
+      if (!passedData.error) {
+        setPassedProperties(passedData.properties || []);
+        console.log(`👎 Loaded ${passedData.properties?.length || 0} passed properties`);
+      } else {
+        setPassedProperties([]);
+      }
+      
+    } catch (error) {
+      console.error('Failed to fetch properties:', error);
+      setFavoriteProperties([]);
+      setPassedProperties([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (status === 'loading' || loading) {
     return (
@@ -96,6 +136,22 @@ export default function FavoritesPage() {
                 <div className="text-center mb-4">
                   <h3 className="text-xl font-bold text-gray-900">{property.address}</h3>
                   <p className="text-gray-600">{property.city}, {property.state} {property.zipCode}</p>
+                  
+                  {/* More Details Link */}
+                  <a
+                    href={`https://www.google.com/search?q=${encodeURIComponent(`${property.address} ${property.city}, ${property.state} ${property.zipCode}`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center space-x-1 text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors mt-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    <span>More Details</span>
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                  </a>
                 </div>
 
                 {/* Key Financial Info */}
@@ -161,18 +217,18 @@ export default function FavoritesPage() {
         )}
         
         {/* Collapsible rejected properties section */}
-        {rejectedProperties.length > 0 && (
+        {passedProperties.length > 0 && (
           <div className="mt-8">
             <button
-              onClick={() => setShowRejected(!showRejected)}
+              onClick={() => setShowPassed(!showPassed)}
               className="w-full text-left bg-gray-100 hover:bg-gray-200 rounded-lg p-4 transition-colors"
             >
               <div className="flex items-center justify-between">
                 <span className="text-lg font-semibold text-gray-700">
-                  Properties I Don't Like ({rejectedProperties.length})
+                  Properties I Don't Like ({passedProperties.length})
                 </span>
                 <svg 
-                  className={`w-5 h-5 text-gray-500 transition-transform ${showRejected ? 'rotate-180' : ''}`} 
+                  className={`w-5 h-5 text-gray-500 transition-transform ${showPassed ? 'rotate-180' : ''}`} 
                   fill="none" 
                   stroke="currentColor" 
                   viewBox="0 0 24 24"
@@ -182,9 +238,9 @@ export default function FavoritesPage() {
               </div>
             </button>
             
-            {showRejected && (
+            {showPassed && (
               <div className="mt-4 space-y-4">
-                {rejectedProperties.map((property: Property) => (
+                {passedProperties.map((property: Property) => (
                   <div key={property.id} className="bg-red-50 rounded-xl p-4 border border-red-100">
                     <div className="flex justify-between items-center">
                       <div className="flex-1">
@@ -193,6 +249,22 @@ export default function FavoritesPage() {
                         <p className="text-gray-600 text-sm">
                           {property.bedrooms} bed • {property.bathrooms} bath • {property.squareFeet.toLocaleString()} sqft
                         </p>
+                        
+                        {/* More Details Link */}
+                        <a
+                          href={`https://www.google.com/search?q=${encodeURIComponent(`${property.address} ${property.city}, ${property.state} ${property.zipCode}`)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center space-x-1 text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors mt-2"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                          </svg>
+                          <span>More Details</span>
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                          </svg>
+                        </a>
                       </div>
                       <div className="text-right">
                         <div className="text-lg font-bold text-blue-600">
@@ -201,12 +273,45 @@ export default function FavoritesPage() {
                         <div className="text-sm text-orange-600">
                           {formatCurrency(property.downPaymentAmount)} down
                         </div>
-                        <button 
-                          onClick={() => setSelectedProperty(property)}
-                          className="mt-2 bg-white text-gray-700 border border-gray-300 px-3 py-1 rounded-lg text-sm hover:bg-gray-50 transition-colors"
-                        >
-                          View Details
-                        </button>
+                        <div className="mt-2 space-y-1">
+                          <button 
+                            onClick={() => setSelectedProperty(property)}
+                            className="w-full bg-white text-gray-700 border border-gray-300 px-3 py-1 rounded-lg text-sm hover:bg-gray-50 transition-colors"
+                          >
+                            View Details
+                          </button>
+                          <button 
+                            onClick={async () => {
+                              try {
+                                // Get buyer profile first to get buyerId
+                                const profileResponse = await fetch('/api/buyer/profile');
+                                const profileData = await profileResponse.json();
+                                
+                                if (profileData.profile) {
+                                  const response = await fetch('/api/property-actions', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ 
+                                      buyerId: profileData.profile.id,
+                                      propertyId: property.id, 
+                                      action: 'undo_pass' 
+                                    })
+                                  });
+                                  
+                                  if (response.ok) {
+                                    setPassedProperties(prev => prev.filter(p => p.id !== property.id));
+                                    console.log('✅ Property restored to matches');
+                                  }
+                                }
+                              } catch (error) {
+                                console.error('Failed to restore property:', error);
+                              }
+                            }}
+                            className="w-full bg-green-100 text-green-700 border border-green-300 px-3 py-1 rounded-lg text-sm hover:bg-green-200 transition-colors"
+                          >
+                            ↩️ Restore to Matches
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>

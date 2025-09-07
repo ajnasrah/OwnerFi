@@ -66,6 +66,13 @@ export default function BuyerSettings() {
       const data = await response.json();
       
       if (data.profile) {
+        console.log('🔍 Settings loading profile data:', {
+          firstName: data.profile.firstName,
+          lastName: data.profile.lastName, 
+          phone: data.profile.phone,
+          preferredCity: data.profile.preferredCity
+        });
+        
         // Populate form with existing data
         setFormData({
           firstName: data.profile.firstName || '',
@@ -82,10 +89,29 @@ export default function BuyerSettings() {
           smsNotifications: data.profile.smsNotifications ?? false,
         });
         
+        console.log('📝 Form data after setting:', {
+          firstName: data.profile.firstName || '',
+          phone: data.profile.phone || ''
+        });
+        
         // Set city query for display
         if (data.profile.preferredCity && data.profile.preferredState) {
           setCityQuery(`${data.profile.preferredCity}, ${data.profile.preferredState}`);
           setCitySelected(true);
+          
+          // Load saved cities from database so they show up immediately  
+          const savedCitiesList = data.profile.cities || data.profile.searchAreaCities || [];
+          if (savedCitiesList && savedCitiesList.length > 0) {
+            const savedCities = savedCitiesList.map((cityName: string, index: number) => ({
+              name: cityName,
+              state: data.profile.preferredState,
+              isCenter: cityName === data.profile.preferredCity,
+              distance: cityName === data.profile.preferredCity ? 0 : null,
+              selected: true // All cities selected by default
+            }));
+            setNearbyCities(savedCities);
+            console.log('🏙️ Loaded saved cities:', savedCities.map(c => c.name));
+          }
         }
       }
     } catch (err) {
@@ -171,17 +197,71 @@ export default function BuyerSettings() {
     }
   };
 
-  const selectCity = (city: any) => {
-    setFormData(prev => ({
-      ...prev,
-      preferredCity: city.name,
-      preferredState: city.state
-    }));
-    setCityQuery(`${city.name}, ${city.state}`);
-    setCityResults([]);
-    setShowDropdown(false);
-    setCitySelected(true);
-    loadNearbyCities(city);
+  const selectCity = async (city: any) => {
+    // Clear old data first
+    setNearbyCities([]);
+    setLoadingNearby(true);
+    
+    // Fetch coordinates to get correct state and city data
+    if (city.place_id) {
+      try {
+        const response = await fetch(`/api/cities/coordinates?place_id=${city.place_id}`);
+        const cityWithCoords = await response.json();
+        console.log('🏙️ Settings - Coordinates API returned:', cityWithCoords);
+        
+        // Update form data with correct city and state from API
+        const finalCityData = {
+          name: cityWithCoords.name || city.name,
+          state: cityWithCoords.state || city.state,
+          lat: cityWithCoords.lat,
+          lng: cityWithCoords.lng
+        };
+        
+        setFormData(prev => ({
+          ...prev,
+          preferredCity: finalCityData.name,
+          preferredState: finalCityData.state
+        }));
+        
+        setCityQuery(`${finalCityData.name}, ${finalCityData.state}`);
+        setCityResults([]);
+        setShowDropdown(false);
+        setCitySelected(true);
+        
+        // Load nearby cities with correct coordinates
+        if (finalCityData.lat && finalCityData.lng) {
+          loadNearbyCities(finalCityData);
+        } else {
+          setLoadingNearby(false);
+        }
+        
+      } catch (err) {
+        console.error('Failed to fetch coordinates in settings:', err);
+        // Fallback to original data
+        setFormData(prev => ({
+          ...prev,
+          preferredCity: city.name,
+          preferredState: city.state
+        }));
+        setCityQuery(`${city.name}, ${city.state}`);
+        setCityResults([]);
+        setShowDropdown(false);
+        setCitySelected(true);
+        loadNearbyCities(city);
+      }
+    } else {
+      // No place_id, use original data
+      setFormData(prev => ({
+        ...prev,
+        preferredCity: city.name,
+        preferredState: city.state
+      }));
+      setCityQuery(`${city.name}, ${city.state}`);
+      setCityResults([]);
+      setShowDropdown(false);
+      setCitySelected(true);
+      loadNearbyCities(city);
+    }
   };
 
   const formatPhoneNumber = (value: string) => {
@@ -228,7 +308,10 @@ export default function BuyerSettings() {
       const response = await fetch('/api/buyer/profile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          cities: nearbyCities.filter(city => city.selected !== false).map(city => city.name) // All selected cities
+        }),
       });
 
       const data = await response.json();
@@ -589,21 +672,49 @@ export default function BuyerSettings() {
                   </div>
                   
                   <div>
-                    <h4 className="font-semibold text-white mb-2">Cities within {formData.searchRadius} miles:</h4>
-                    <div className="text-sm text-blue-100 space-y-1">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="font-semibold text-white">Search Area Cities:</h4>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          // Select all cities
+                          setNearbyCities(prev => prev.map(city => ({ ...city, selected: true })));
+                        }}
+                        className="px-3 py-1 bg-white/20 hover:bg-white/30 text-white text-sm rounded-lg transition-colors"
+                      >
+                        Select All
+                      </button>
+                    </div>
+                    <div className="text-sm text-blue-100">
                       {loadingNearby ? (
-                        <>
+                        <div className="space-y-2">
                           <p>• {formData.preferredCity}, {formData.preferredState} (Center)</p>
                           <p>• Loading nearby cities...</p>
-                        </>
+                        </div>
                       ) : (
-                        nearbyCities.map((city, index) => (
-                          <p key={index}>
-                            • {city.name}, {city.state} {city.isCenter ? '(Center)' : city.distance ? `(${city.distance} mi)` : ''}
-                          </p>
-                        ))
+                        <>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2">
+                            {nearbyCities.map((city, index) => (
+                              <label key={index} className="flex items-center space-x-3 cursor-pointer hover:bg-white/10 rounded px-2 py-1">
+                                <input
+                                  type="checkbox"
+                                  checked={city.selected !== false} // Default to selected
+                                  onChange={(e) => {
+                                    setNearbyCities(prev => prev.map((c, i) => 
+                                      i === index ? { ...c, selected: e.target.checked } : c
+                                    ));
+                                  }}
+                                  className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 flex-shrink-0"
+                                />
+                                <span className="truncate">
+                                  {city.name}, {city.state} {city.isCenter ? '(Center)' : city.distance ? `(${city.distance} mi)` : ''}
+                                </span>
+                              </label>
+                            ))}
+                          </div>
+                          <p className="text-xs text-blue-200 mt-3 italic">Only checked cities will be included in your property search</p>
+                        </>
                       )}
-                      <p className="text-xs text-blue-200 mt-2 italic">We'll find properties in ALL cities within this radius</p>
                     </div>
                   </div>
                 </div>

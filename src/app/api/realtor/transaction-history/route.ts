@@ -79,8 +79,7 @@ export async function GET(request: NextRequest) {
         timestamp: purchase.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
         details: {
           buyerName: buyerName,
-          buyerCity: buyerLocation,
-          purchasePrice: purchase.purchasePrice || 8.00
+          buyerCity: buyerLocation
         }
       });
     }
@@ -102,14 +101,12 @@ export async function GET(request: NextRequest) {
         creditsChange: tx.credits || 0,
         runningBalance: currentBalance, // Simplified
         timestamp: tx.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
-        details: {
-          purchasePrice: tx.amount || 0
-        }
+        details: {}
       });
     });
 
     // Add trial credits as first transaction with correct amount
-    const trialCredits = realtorProfile?.trialCredits || 727;
+    const trialCredits = 3;
     transactions.unshift({
       id: 'trial-credits',
       type: 'trial_credit',

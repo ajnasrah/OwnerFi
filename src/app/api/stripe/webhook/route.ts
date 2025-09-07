@@ -27,13 +27,12 @@ export async function POST(request: NextRequest) {
   let event;
 
   try {
-    // For testing, try to parse as JSON first, then fall back to signature verification
-    if (signature === 'test') {
-      event = JSON.parse(body);
-      console.log('Using test webhook data');
-    } else {
-      event = stripe.webhooks.constructEvent(body, signature, endpointSecret);
+    // Always verify webhook signature for security
+    if (!signature || !endpointSecret) {
+      throw new Error('Missing webhook signature or endpoint secret');
     }
+    
+    event = stripe.webhooks.constructEvent(body, signature, endpointSecret);
   } catch (err) {
     console.error('Webhook signature verification failed:', err);
     return NextResponse.json(

@@ -15,10 +15,11 @@ export async function POST(request: NextRequest) {
   try {
     const { email, secretKey } = await request.json();
 
-    // Security check
-    if (secretKey !== 'make-admin-2025') {
+    // Secure admin authentication
+    const adminSecret = process.env.ADMIN_SECRET;
+    if (!adminSecret || secretKey !== adminSecret) {
       return NextResponse.json(
-        { error: 'Invalid secret key' },
+        { error: 'Unauthorized access' },
         { status: 403 }
       );
     }

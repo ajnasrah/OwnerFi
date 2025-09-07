@@ -290,46 +290,77 @@ export default function RealtorSettings() {
       return;
     }
     
-    if (!tier.stripePrice) {
-      return;
-    }
-    
-    // Determine which price to use based on billing type
-    let priceId = tier.stripePrice;
-    if (billingType === 'annual' && tier.stripePriceAnnual) {
-      priceId = tier.stripePriceAnnual;
-    }
-    
     try {
       setSaving(true);
-      const response = await fetch('/api/stripe/checkout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          priceId: priceId,
-          planId: tier.id,
-          billingType: billingType,
-          successUrl: `${window.location.origin}/realtor/settings?success=true&plan=${tier.id}#subscription`,
-          cancelUrl: `${window.location.origin}/realtor/settings?canceled=true#subscription`
-        }),
-      });
       
-      const data = await response.json();
-      
-      if (data.error) {
-        setError(data.error);
+      // Route to different endpoints based on tier type
+      if (tier.isPayPerLead && tier.id === 'payAsYouGo') {
+        // Single credit purchase - one-time payment
+        const response = await fetch('/api/stripe/one-time-purchase', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            credits: 1,
+            amount: 300
+          }),
+        });
+        
+        const data = await response.json();
+        
+        if (data.error) {
+          setError(data.error);
+          setSaving(false);
+          return;
+        }
+        
+        // Redirect to Stripe Checkout
+        if (data.url) {
+          window.location.href = data.url;
+        }
+        
+      } else if (tier.stripePrice) {
+        // Subscription plans - recurring payments
+        let priceId = tier.stripePrice;
+        if (billingType === 'annual' && tier.stripePriceAnnual) {
+          priceId = tier.stripePriceAnnual;
+        }
+        
+        const response = await fetch('/api/stripe/checkout', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            priceId: priceId,
+            planId: tier.id,
+            billingType: billingType,
+            successUrl: `${window.location.origin}/realtor/settings?success=true&plan=${tier.id}#subscription`,
+            cancelUrl: `${window.location.origin}/realtor/settings?canceled=true#subscription`
+          }),
+        });
+        
+        const data = await response.json();
+        
+        if (data.error) {
+          setError(data.error);
+          setSaving(false);
+          return;
+        }
+        
+        // Redirect to Stripe Checkout
+        if (data.url) {
+          window.location.href = data.url;
+        }
+      } else {
+        setError('Payment method not configured for this plan');
         setSaving(false);
         return;
       }
       
-      // Redirect to Stripe Checkout
-      if (data.url) {
-        window.location.href = data.url;
-      }
     } catch (err) {
-      setError('Failed to start subscription process. Please try again.');
+      setError(tier.isPayPerLead ? 'Failed to process credit purchase. Please try again.' : 'Failed to start subscription process. Please try again.');
       setSaving(false);
     }
   };
@@ -868,12 +899,21 @@ export default function RealtorSettings() {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                           });
+                          
+                          if (!response.ok) {
+                            // Handle subscription not found gracefully
+                            setError('No active subscription found. Please purchase a subscription first to access billing management.');
+                            return;
+                          }
+                          
                           const data = await response.json();
                           if (data.url) {
                             window.location.href = data.url;
+                          } else {
+                            setError('No active subscription found. Please purchase a subscription first to access billing management.');
                           }
                         } catch (err) {
-                          setError('Failed to open billing portal');
+                          setError('No active subscription found. Please purchase a subscription first to access billing management.');
                         }
                       }}
                       className="bg-accent-primary text-surface-bg px-6 py-3 rounded-lg font-semibold hover:bg-accent-hover transition-colors shadow-soft"

@@ -297,6 +297,34 @@ export const SAMPLE_PROPERTIES: Property[] = [
 ];
 
 // Calculate matches for all properties (to be used by APIs)
-export function calculateBuyerPropertyMatches(buyer: BuyerProfile): PropertyMatchResult {
-  return PropertyMatcher.calculateMatches(buyer, SAMPLE_PROPERTIES);
+export async function calculateBuyerPropertyMatches(buyer: BuyerProfile): Promise<PropertyMatchResult> {
+  // Import Firebase here to avoid circular dependencies
+  const { db } = await import('./firebase');
+  const { collection, query, where, getDocs } = await import('firebase/firestore');
+  
+  try {
+    // Get active properties from Firebase
+    const propertiesQuery = query(
+      collection(db, 'properties'),
+      where('isActive', '==', true)
+    );
+    const propertyDocs = await getDocs(propertiesQuery);
+    
+    const properties: Property[] = propertyDocs.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    } as Property));
+    
+    // If no properties in Firebase, fall back to sample data for testing
+    if (properties.length === 0) {
+      console.warn('No properties found in Firebase, using sample data');
+      return PropertyMatcher.calculateMatches(buyer, SAMPLE_PROPERTIES);
+    }
+    
+    return PropertyMatcher.calculateMatches(buyer, properties);
+  } catch (error) {
+    console.error('Error fetching properties for matching:', error);
+    // Fallback to sample data on error
+    return PropertyMatcher.calculateMatches(buyer, SAMPLE_PROPERTIES);
+  }
 }

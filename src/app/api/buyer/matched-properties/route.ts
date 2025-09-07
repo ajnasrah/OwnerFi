@@ -26,14 +26,20 @@ export async function GET(request: NextRequest) {
       'Nashville': ['Nashville', 'Franklin', 'Murfreesboro', 'Hendersonville'],
       'Jackson': ['Jackson'],
       'Atlanta': ['Atlanta'],
-      'Houston': ['Houston'],
-      'Tampa': ['Tampa']
+      'Houston': ['Houston', 'Katy', 'Spring', 'Pearland', 'Sugar Land'],
+      'Dallas': ['Dallas', 'Plano', 'Irving', 'Garland', 'Mesquite', 'Carrollton', 'Richardson', 'Lewisville', 'Allen', 'Frisco'],
+      'Austin': ['Austin', 'Round Rock', 'Cedar Park', 'Pflugerville', 'Georgetown'],
+      'San Antonio': ['San Antonio', 'Schertz', 'New Braunfels', 'Converse'],
+      'Tampa': ['Tampa', 'St. Petersburg', 'Clearwater', 'Largo'],
+      'Miami': ['Miami', 'Miami Beach', 'Coral Gables', 'Homestead'],
+      'Orlando': ['Orlando', 'Winter Park', 'Kissimmee', 'Sanford'],
+      'Phoenix': ['Phoenix', 'Scottsdale', 'Tempe', 'Mesa', 'Glendale', 'Anthem', 'Casa Grande', 'Golden Valley']
     };
     
     // Fetch properties from Firebase
     const propertiesQuery = query(
       collection(db, 'properties'),
-      where('status', '==', 'active')
+      where('isActive', '==', true)
     );
     
     const propertiesSnapshot = await getDocs(propertiesQuery);
@@ -44,8 +50,14 @@ export async function GET(request: NextRequest) {
 
     const allowedCities = cityMapping[city] || [city];
     let filteredProperties = allProperties.filter((property: any) => {
-      // City filter
-      if (!allowedCities.includes(property.city)) return false;
+      // City filter - first check exact matches, then partial matches
+      const exactMatch = allowedCities.includes(property.city);
+      const partialMatch = !exactMatch && allowedCities.some(allowedCity => 
+        property.city.toLowerCase().includes(allowedCity.toLowerCase()) ||
+        allowedCity.toLowerCase().includes(property.city.toLowerCase())
+      );
+      
+      if (!exactMatch && !partialMatch) return false;
       
       // Budget filters - properties must be WITHIN user's budget
       if (maxMonthly && property.monthlyPayment > maxMonthly) return false;
@@ -67,10 +79,10 @@ export async function GET(request: NextRequest) {
         allowedCities.includes(property.city)
       );
       
-      // If still no matches, show all as ultimate fallback
+      // If still no matches in the requested city, return empty array instead of showing all properties
       if (filteredProperties.length === 0) {
-        console.log(`No properties found for ${city}, showing all properties as fallback`);
-        filteredProperties = allProperties;
+        console.log(`No properties found for ${city}, returning empty results`);
+        filteredProperties = [];
       }
     }
     

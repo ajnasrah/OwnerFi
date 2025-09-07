@@ -63,16 +63,19 @@ export interface GHLCSVRow {
 export async function parseGHLCSV(csvContent: string): Promise<{
   success: Property[];
   errors: string[];
+  duplicates: string[];
   totalRows: number;
 }> {
   const success: Property[] = [];
   const errors: string[] = [];
+  const duplicates: string[] = [];
+  const seenAddresses = new Set<string>();
   
   // Parse CSV content handling multi-line descriptions
   const allRows = parseCSVContent(csvContent);
   
   if (allRows.length < 2) {
-    return { success, errors: ['CSV file is empty or has no data rows'], totalRows: 0 };
+    return { success, errors: ['CSV file is empty or has no data rows'], duplicates, totalRows: 0 };
   }
 
   // Get headers and clean them
@@ -99,6 +102,7 @@ export async function parseGHLCSV(csvContent: string): Promise<{
     return { 
       success, 
       errors: [`Missing required columns: ${missingColumns.join(', ')}`], 
+      duplicates,
       totalRows: allRows.length - 1 
     };
   }
@@ -123,7 +127,15 @@ export async function parseGHLCSV(csvContent: string): Promise<{
       // Extract and validate property data (now async)
       const propertyData = await mapGHLRowToProperty(rowData, i + 1, headers);
       if (propertyData) {
-        success.push(propertyData);
+        // Check for duplicates within this CSV
+        const normalizedAddress = propertyData.address.toLowerCase().replace(/[^a-z0-9]/g, '');
+        
+        if (seenAddresses.has(normalizedAddress)) {
+          duplicates.push(`Row ${i + 1}: Duplicate address "${propertyData.address}" - skipping duplicate`);
+        } else {
+          seenAddresses.add(normalizedAddress);
+          success.push(propertyData);
+        }
       }
     } catch (error) {
       // Log error but continue processing - don't stop for individual failures
@@ -132,7 +144,7 @@ export async function parseGHLCSV(csvContent: string): Promise<{
     }
   }
 
-  return { success, errors, totalRows: allRows.length - 1 };
+  return { success, errors, duplicates, totalRows: allRows.length - 1 };
 }
 
 function parseCSVContent(csvContent: string): string[][] {
@@ -207,13 +219,13 @@ async function mapGHLRowToProperty(row: any, rowNumber: number, headers: string[
 
   console.log(`Processing row ${rowNumber}: ${fullAddress}`);
 
-  // Extract price
-  const listPrice = parseFloat(priceColumn ? (row[priceColumn] || '0') : '0');
+  // Extract price - reject if missing with clear error
+  const rawPrice = priceColumn ? (row[priceColumn] || '').trim() : '';
+  const listPrice = parseFloat(rawPrice || '0');
   
-  // Skip rows without price (but don't error)
-  if (listPrice <= 0) {
-    console.log(`Skipping row ${rowNumber}: Invalid price "${priceColumn ? row[priceColumn] : 'N/A'}" for ${fullAddress}`);
-    return null;
+  // Reject properties with missing or invalid prices
+  if (!rawPrice || rawPrice === '' || listPrice <= 0) {
+    throw new Error(`Missing or invalid price "${rawPrice || 'EMPTY'}" - Price is required for ${fullAddress}`);
   }
 
   // Use Google Maps to parse the complete address (non-blocking)
@@ -262,9 +274,9 @@ async function mapGHLRowToProperty(row: any, rowNumber: number, headers: string[
     }
   }
 
-  // Extract other fields with N/A defaults if missing
-  const bedrooms = parseInt(row.bedrooms || '0') || 0;
-  const bathrooms = parseFloat(row.bathrooms || '0') || 0;
+  // Extract other fields with sensible defaults if missing
+  const bedrooms = parseInt(row.bedrooms || '0') || 2; // Default to 2 bedrooms
+  const bathrooms = parseFloat(row.bathrooms || '0') || 1; // Default to 1 bathroom
   const squareFeet = parseInt(row.livingArea || '0') || 0;
   const yearBuilt = parseInt(row.yearBuilt || '0') || 0;
 
@@ -308,15 +320,32 @@ async function mapGHLRowToProperty(row: any, rowNumber: number, headers: string[
     }
   }
 
+  // Create TRULY unique ID based on normalized address to prevent ALL duplicates
+  const normalizedAddress = fullAddress.toLowerCase()
+    .replace(/[^a-z0-9]/g, '') // Remove all non-alphanumeric
+    .substring(0, 30); // Keep first 30 chars
+  
+  const normalizedCity = city.toLowerCase().replace(/[^a-z]/g, '');
+  const normalizedState = state.toLowerCase().replace(/[^a-z]/g, '');
+  
+  // This ID will be IDENTICAL for the same property regardless of upload order/contact ID
+  // Make sure ID is Firebase-compatible (no special chars, not too long)
+  let uniqueId = `${normalizedAddress}_${normalizedCity}_${normalizedState}`;
+  
+  // Ensure Firebase compatibility - max 1500 chars, alphanumeric + underscore only
+  uniqueId = uniqueId.substring(0, 100); // Limit length
+  
+  console.log(`Generated property ID: ${uniqueId} for ${fullAddress}`);
+  
   // Create the property object - handle your actual CSV structure
   return {
-    id: `ghl_${row['Contact ID'] || Date.now()}_${rowNumber}`,
+    id: uniqueId,
     address: address || fullAddress,
     city,
     state: state || 'FL',
     zipCode: zipCode || 'N/A',
-    bedrooms: bedrooms || 0, // Show 0 if missing, don't force minimum
-    bathrooms: bathrooms || 0, // Show 0 if missing, don't force minimum  
+    bedrooms: bedrooms, // Already defaulted to 2 if missing
+    bathrooms: bathrooms, // Already defaulted to 1 if missing  
     squareFeet: squareFeet || 0, // Show 0 if missing
     listPrice: financials.listPrice,
     downPaymentAmount: financials.downPaymentAmount,

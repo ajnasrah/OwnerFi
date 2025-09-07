@@ -199,7 +199,7 @@ export default function PropertyListings() {
         </div>
         
         <div className="text-center mt-10">
-          <Button variant="primary" size="lg" href="/unified-signup" className="w-full font-semibold text-lg py-4 min-h-[56px]">
+          <Button variant="primary" size="lg" href="/unified-signup?userType=buyer" className="w-full font-semibold text-lg py-4 min-h-[56px]">
             Take the First Step 🏡
           </Button>
           <p className="text-sm text-muted-text mt-3">Takes less than 2 minutes • Completely free • No obligations</p>
@@ -248,14 +248,15 @@ export default function PropertyListings() {
             // Override with diverse locations
             const locations = [
               { city: "Atlanta", state: "GA" },
-              { city: "Houston", state: "TX" },
+              { city: "Memphis", state: "TN" },
               { city: "Tampa", state: "FL" }
             ];
             
             const location = locations[index] || { city: property.city, state: property.state };
             
             // Override prices and calculate realistic payments
-            const adjustedPrice = property.listPrice + 200000; // Raise by $200k
+            const specificPrices = [347500, 275000, 399000]; // Atlanta, Memphis, Tampa
+            const adjustedPrice = specificPrices[index] || (property.listPrice + 200000);
             const downPaymentPercentages = [0.10, 0.05, 0.15];
             const downPaymentAmount = adjustedPrice * downPaymentPercentages[index];
             
@@ -291,7 +292,7 @@ export default function PropertyListings() {
         </div>
         
         <div className="text-center">
-          <Button variant="primary" size="lg" href="/unified-signup" className="w-full font-semibold text-lg py-4 min-h-[56px]">
+          <Button variant="primary" size="lg" href="/unified-signup?userType=buyer" className="w-full font-semibold text-lg py-4 min-h-[56px]">
             Find My Dream Home ✨
           </Button>
           <p className="text-sm text-muted-text mt-3">Join 2,000+ families who found hope through OwnerFi</p>

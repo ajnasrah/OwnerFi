@@ -1,12 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSessionWithRole } from '@/lib/auth-utils';
-import { PRICING_TIERS } from '@/lib/pricing';
 import { 
+  collection, 
+  query, 
+  where, 
+  getDocs,
   doc,
   getDoc,
-  updateDoc
+  updateDoc,
+  increment
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { logInfo, logError } from '@/lib/logger';
 import Stripe from 'stripe';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -24,23 +29,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { priceId, planId, billingType, successUrl, cancelUrl } = await request.json();
-
-    // Validate the plan
-    const tier = PRICING_TIERS[planId];
-    if (!tier) {
+    const { credits, amount } = await request.json();
+    
+    // Validate request
+    if (!credits || !amount || credits !== 1 || amount !== 300) {
       return NextResponse.json(
-        { error: 'Invalid plan selected' },
+        { error: 'Invalid purchase: Only 1 credit for $300 allowed' },
         { status: 400 }
       );
-    }
-
-    // Determine the correct price ID based on billing type
-    let finalPriceId = priceId;
-    if (billingType === 'annual' && tier.stripePriceAnnual) {
-      finalPriceId = tier.stripePriceAnnual;
-    } else if (billingType === 'monthly' && tier.stripePrice) {
-      finalPriceId = tier.stripePrice;
     }
 
     // Get user's stored Stripe customer ID
@@ -79,39 +75,47 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Determine checkout mode based on plan type
-    const isSubscription = tier.isRecurringPrice || tier.isRecurringAnnual;
-    const checkoutMode = isSubscription ? 'subscription' : 'payment';
-
+    // Create one-time payment checkout
     const checkoutSession = await stripe.checkout.sessions.create({
-      mode: checkoutMode,
+      mode: 'payment', // ONE-TIME payment, not subscription
       payment_method_types: ['card'],
       customer: stripeCustomerId || undefined,
       customer_email: stripeCustomerId ? undefined : session.user.email,
       line_items: [
         {
-          // Use the appropriate price ID
           price_data: {
             currency: 'usd',
             product_data: {
-              name: `${tier.name} - ${billingType === 'annual' ? 'Annual' : 'Monthly'} Package`,
-              description: tier.features.join(', ')
+              name: 'Single Credit Purchase',
+              description: '1 buyer lead credit for immediate use'
             },
-            unit_amount: billingType === 'annual' ? Math.round(tier.monthlyPrice * 12 * 0.5) * 100 : tier.monthlyPrice * 100 // Convert to cents
+            unit_amount: 30000 // $300.00 in cents
           },
           quantity: 1,
         },
       ],
       metadata: {
-        userId: session.user.id,
-        userEmail: session.user.email,
-        planId: planId,
-        billingType: billingType || 'monthly',
-        type: billingType === 'annual' ? 'annual_purchase' : tier.isPayPerLead ? 'credit_purchase' : 'monthly_purchase',
+        userId: session.user.id!,
+        userEmail: session.user.email!,
+        planId: 'payAsYouGo',
+        type: 'credit_purchase',
+        credits: '1',
+        amount: '300',
         customerId: stripeCustomerId || 'unknown'
       },
-      success_url: successUrl || `${process.env.NEXTAUTH_URL}/realtor/settings?success=true`,
-      cancel_url: cancelUrl || `${process.env.NEXTAUTH_URL}/realtor/settings?canceled=true`,
+      success_url: `${process.env.NEXTAUTH_URL}/realtor/settings?success=credit&credits=1`,
+      cancel_url: `${process.env.NEXTAUTH_URL}/realtor/settings?canceled=true`,
+    });
+
+    await logInfo('Single credit checkout created', {
+      action: 'single_credit_checkout',
+      userId: session.user.id,
+      userType: 'realtor',
+      metadata: {
+        amount: 300,
+        credits: 1,
+        sessionId: checkoutSession.id
+      }
     });
 
     return NextResponse.json({ 
@@ -120,24 +124,16 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Stripe checkout error:', error);
-    console.error('Error details:', {
-      message: (error as Error).message,
-      stack: (error as Error).stack,
-      priceId: finalPriceId,
-      planId,
-      billingType
-    });
+    console.error('Single credit purchase error:', error);
+    
+    await logError('Single credit purchase failed', {
+      action: 'single_credit_purchase_error'
+    }, error as Error);
     
     return NextResponse.json(
       { 
-        error: 'Failed to create checkout session',
-        details: (error as Error).message,
-        debug: process.env.NODE_ENV === 'development' ? {
-          priceId: finalPriceId,
-          planId,
-          hasStripeKey: !!process.env.STRIPE_SECRET_KEY
-        } : undefined
+        error: 'Failed to create credit purchase',
+        details: (error as Error).message
       },
       { status: 500 }
     );

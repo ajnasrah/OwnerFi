@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Header } from '@/components/ui/Header';
 import { Footer } from '@/components/ui/Footer';
@@ -62,15 +62,23 @@ export default function AdminDashboard() {
         body: formData,
       });
 
+      if (!response.ok) {
+        const errorData = await response.json();
+        setResult({ error: errorData.error || `HTTP ${response.status}: ${response.statusText}` });
+        return;
+      }
+
       const data = await response.json();
       setResult(data);
       
       if (data.success) {
         setFile(null);
-        if (e.target) (e.target as any).value = '';
+        // Clear the file input
+        const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+        if (fileInput) fileInput.value = '';
       }
     } catch (error) {
-      setResult({ error: 'Upload failed' });
+      setResult({ error: `Upload failed: ${(error as Error).message}` });
     } finally {
       setUploading(false);
     }
@@ -204,7 +212,13 @@ export default function AdminDashboard() {
       
       <div className="flex-1 px-6 py-12">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-8">
+          <div className="text-center mb-8 relative">
+            <button
+              onClick={() => signOut({ callbackUrl: '/' })}
+              className="absolute top-0 right-0 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm"
+            >
+              Sign Out
+            </button>
             <h1 className="text-3xl font-bold text-primary-text mb-2">Admin Dashboard</h1>
             <p className="text-secondary-text">Manage properties and system settings</p>
           </div>
@@ -321,6 +335,48 @@ export default function AdminDashboard() {
                         </div>
                       </div>
 
+                      {/* Parse Errors Section */}
+                      {result.parseErrors && result.parseErrors.length > 0 && (
+                        <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                          <h4 className="font-medium text-yellow-800 mb-2">
+                            ⚠️ Parse Errors ({result.parseErrors.length} rows skipped):
+                          </h4>
+                          <div className="text-sm text-yellow-700 space-y-1 max-h-32 overflow-y-auto">
+                            {result.parseErrors.slice(0, 10).map((error: string, index: number) => (
+                              <div key={index} className="font-mono text-xs bg-yellow-100 p-2 rounded">
+                                {error}
+                              </div>
+                            ))}
+                            {result.parseErrors.length > 10 && (
+                              <div className="text-yellow-600 text-xs italic">
+                                ... and {result.parseErrors.length - 10} more errors
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Duplicates Section */}
+                      {result.duplicates && result.duplicates.length > 0 && (
+                        <div className="mb-6 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                          <h4 className="font-medium text-orange-800 mb-2">
+                            🔄 Duplicates Detected ({result.duplicates.length} rows skipped):
+                          </h4>
+                          <div className="text-sm text-orange-700 space-y-1 max-h-32 overflow-y-auto">
+                            {result.duplicates.slice(0, 10).map((duplicate: string, index: number) => (
+                              <div key={index} className="font-mono text-xs bg-orange-100 p-2 rounded">
+                                {duplicate}
+                              </div>
+                            ))}
+                            {result.duplicates.length > 10 && (
+                              <div className="text-orange-600 text-xs italic">
+                                ... and {result.duplicates.length - 10} more duplicates
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
                       {result.insertedProperties && result.insertedProperties.length > 0 && (
                         <div>
                           <p className="font-medium text-green-800 mb-2">Sample Inserted Properties:</p>
@@ -349,7 +405,30 @@ export default function AdminDashboard() {
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-semibold text-gray-900">Manage Properties</h2>
                 <div className="flex items-center space-x-3">
-                  <span className="text-sm text-gray-600">{properties.length} properties</span>
+                  <span className="text-sm text-gray-600">
+                    Showing {properties.length} properties {/* TODO: Show total when available */}
+                  </span>
+                  <button
+                    onClick={async () => {
+                      if (confirm('⚠️ This will DELETE ALL PROPERTIES from the database. Are you sure?')) {
+                        try {
+                          const response = await fetch('/api/admin/clean-database', { method: 'POST' });
+                          const data = await response.json();
+                          if (data.success) {
+                            alert(`✅ ${data.message}`);
+                            fetchProperties();
+                          } else {
+                            alert(`❌ Error: ${data.error}`);
+                          }
+                        } catch (error) {
+                          alert(`❌ Failed to clean database: ${error}`);
+                        }
+                      }
+                    }}
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
+                  >
+                    🗑️ Clean All
+                  </button>
                   <button
                     onClick={fetchProperties}
                     disabled={loadingProperties}

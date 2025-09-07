@@ -1,42 +1,21 @@
+// Simplified transaction history - just return basic transaction data
 import { NextRequest, NextResponse } from 'next/server';
 import { 
   collection, 
   query, 
   where, 
-  getDocs, 
-  orderBy, 
-  limit as firestoreLimit,
-  doc,
-  getDoc
+  getDocs,
+  limit as firestoreLimit
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { getSessionWithRole } from '@/lib/auth-utils';
-import { logError } from '@/lib/logger';
-
-interface TransactionHistory {
-  id: string;
-  type: 'lead_purchase' | 'credit_purchase' | 'subscription_credit' | 'trial_credit';
-  description: string;
-  creditsChange: number; // Positive for additions, negative for purchases
-  runningBalance: number;
-  timestamp: string;
-  details?: {
-    buyerName?: string;
-    buyerCity?: string;
-    purchasePrice?: number;
-    subscriptionPlan?: string;
-  };
-}
 
 export async function GET(request: NextRequest) {
   try {
     const session = await getSessionWithRole('realtor');
     
     if (!session?.user?.email) {
-      return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
     // Get realtor profile
@@ -47,19 +26,16 @@ export async function GET(request: NextRequest) {
     const realtorDocs = await getDocs(realtorsQuery);
 
     if (realtorDocs.empty) {
-      return NextResponse.json(
-        { error: 'Realtor profile not found' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Realtor profile not found' }, { status: 400 });
     }
 
     const realtorDoc = realtorDocs.docs[0];
     const realtorId = realtorDoc.id;
+    const currentBalance = realtorDoc.data()?.credits || 0;
 
-    // Get transaction history from multiple sources
-    const transactions: TransactionHistory[] = [];
+    const transactions = [];
 
-    // 1. Lead Purchases (credits spent) - Remove problematic orderBy
+    // Get lead purchases (credits spent)
     const purchasesQuery = query(
       collection(db, 'buyerLeadPurchases'),
       where('realtorId', '==', realtorId),
@@ -67,120 +43,103 @@ export async function GET(request: NextRequest) {
     );
     const purchasesDocs = await getDocs(purchasesQuery);
 
-    for (const purchaseDoc of purchasesDocs.docs) {
-      const purchase = purchaseDoc.data();
+    // Process each lead purchase and get actual buyer details
+    for (const doc of purchasesDocs.docs) {
+      const purchase = doc.data();
       
-      // Get buyer details
-      const buyerDoc = await getDoc(doc(db, 'buyerProfiles', purchase.buyerId));
-      const buyerData = buyerDoc.exists() ? buyerDoc.data() : null;
+      // Get actual buyer details from buyerProfiles
+      let buyerName = purchase.buyerName || 'Unknown Buyer';
+      let buyerLocation = 'Unknown';
+      
+      if (purchase.buyerId) {
+        try {
+          const buyerQuery = query(
+            collection(db, 'buyerProfiles'),
+            where('__name__', '==', purchase.buyerId)
+          );
+          const buyerDocs = await getDocs(buyerQuery);
+          
+          if (!buyerDocs.empty) {
+            const buyer = buyerDocs.docs[0].data();
+            buyerName = `${buyer.firstName || 'Unknown'} ${buyer.lastName || 'Buyer'}`;
+            buyerLocation = `${buyer.preferredCity || 'Unknown'}, ${buyer.preferredState || ''}`;
+          }
+        } catch (error) {
+          console.error('Failed to get buyer details:', error);
+        }
+      }
       
       transactions.push({
-        id: purchaseDoc.id,
+        id: doc.id,
         type: 'lead_purchase',
-        description: `Purchased lead: ${buyerData?.firstName || 'Unknown'} ${buyerData?.lastName || 'Buyer'}`,
+        description: `Purchased lead: ${buyerName}`,
         creditsChange: -(purchase.creditsCost || 1),
-        runningBalance: 0, // Will calculate later
-        timestamp: purchase.createdAt?.toDate?.()?.toISOString() || purchase.purchasedAt,
+        runningBalance: currentBalance,
+        timestamp: purchase.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
         details: {
-          buyerName: `${buyerData?.firstName || 'Unknown'} ${buyerData?.lastName || 'Buyer'}`,
-          buyerCity: `${buyerData?.preferredCity || 'Unknown'}, ${buyerData?.preferredState || ''}`.trim().replace(', ', ''),
+          buyerName: buyerName,
+          buyerCity: buyerLocation,
           purchasePrice: purchase.purchasePrice || 8.00
         }
       });
     }
 
-    // 2. Credit Purchases/Subscriptions (credits added) - Remove problematic orderBy
-    const subscriptionsQuery = query(
-      collection(db, 'realtorSubscriptions'),
-      where('realtorId', '==', realtorId)
+    // Get credit additions from transactions collection
+    const transactionsQuery = query(
+      collection(db, 'transactions'),
+      where('realtorId', '==', realtorId),
+      firestoreLimit(50)
     );
-    const subscriptionDocs = await getDocs(subscriptionsQuery);
+    const transactionDocs = await getDocs(transactionsQuery);
 
-    for (const subDoc of subscriptionDocs.docs) {
-      const subscription = subDoc.data();
-      
-      if (subscription.plan === 'trial') {
-        transactions.push({
-          id: `trial-${subDoc.id}`,
-          type: 'trial_credit',
-          description: 'Free trial credits',
-          creditsChange: subscription.creditsPerMonth || 3,
-          runningBalance: 0,
-          timestamp: subscription.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
-          details: {
-            subscriptionPlan: 'Free Trial'
-          }
-        });
-      } else if (subscription.status === 'active') {
-        transactions.push({
-          id: `sub-${subDoc.id}`,
-          type: 'subscription_credit',
-          description: `Monthly credits - ${subscription.plan}`,
-          creditsChange: subscription.creditsPerMonth || 0,
-          runningBalance: 0,
-          timestamp: subscription.currentPeriodStart?.toDate?.()?.toISOString() || new Date().toISOString(),
-          details: {
-            subscriptionPlan: subscription.plan
-          }
-        });
-      }
-    }
-
-    // 3. Manual Credit Purchases (if any exist) - Remove problematic orderBy
-    const creditPurchasesQuery = query(
-      collection(db, 'creditPurchases'),
-      where('realtorId', '==', realtorId)
-    );
-    const creditDocs = await getDocs(creditPurchasesQuery);
-
-    for (const creditDoc of creditDocs.docs) {
-      const purchase = creditDoc.data();
-      
+    transactionDocs.docs.forEach(doc => {
+      const tx = doc.data();
       transactions.push({
-        id: creditDoc.id,
+        id: doc.id,
         type: 'credit_purchase',
-        description: `Purchased ${purchase.creditsAmount} credits`,
-        creditsChange: purchase.creditsAmount || 0,
-        runningBalance: 0,
-        timestamp: purchase.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
+        description: tx.description || `Added ${tx.credits} credits`,
+        creditsChange: tx.credits || 0,
+        runningBalance: currentBalance, // Simplified
+        timestamp: tx.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
         details: {
-          purchasePrice: purchase.amount || 0
+          purchasePrice: tx.amount || 0
         }
       });
-    }
+    });
 
-    // Sort all transactions by timestamp (newest first)
-    transactions.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    // Add trial credits as first transaction
+    transactions.unshift({
+      id: 'trial-credits',
+      type: 'trial_credit',
+      description: 'Trial credits',
+      creditsChange: 3,
+      runningBalance: 0, // Will be calculated
+      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // 1 day ago
+      details: {}
+    });
 
-    // Calculate running balances (working backwards from current balance)
-    const currentBalance = realtorDoc.data()?.credits || 0;
-    let runningBalance = currentBalance;
+    // Sort chronologically (oldest first) for calculation
+    transactions.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 
-    // Work forwards through transactions to calculate running balance at each point
-    for (let i = transactions.length - 1; i >= 0; i--) {
-      runningBalance -= transactions[i].creditsChange;
-      transactions[i].runningBalance = runningBalance + transactions[i].creditsChange;
-    }
+    // Calculate running balance starting from 0
+    let balance = 0;
+    transactions.forEach(transaction => {
+      balance += transaction.creditsChange;
+      transaction.runningBalance = balance;
+    });
+
+    // Reverse for display (newest first)
+    transactions.reverse();
 
     return NextResponse.json({
-      transactions: transactions.slice(0, 20), // Return last 20 transactions
-      currentBalance,
-      totalSpent: transactions
-        .filter(t => t.creditsChange < 0)
-        .reduce((sum, t) => sum + Math.abs(t.creditsChange), 0),
-      totalEarned: transactions
-        .filter(t => t.creditsChange > 0)
-        .reduce((sum, t) => sum + t.creditsChange, 0)
+      transactions: transactions.slice(0, 20),
+      currentBalance: balance,
+      totalSpent: transactions.filter(t => t.creditsChange < 0).reduce((sum, t) => sum + Math.abs(t.creditsChange), 0),
+      totalEarned: transactions.filter(t => t.creditsChange > 0).reduce((sum, t) => sum + t.creditsChange, 0)
     });
 
   } catch (error) {
-    await logError('Failed to fetch transaction history', error, {
-      action: 'transaction_history_error'
-    });
-
-    return NextResponse.json(
-      { error: 'Failed to load transaction history' },
-      { status: 500 }
-    );
+    console.error('Transaction history error:', error);
+    return NextResponse.json({ error: 'Failed to load transaction history' }, { status: 500 });
   }
 }

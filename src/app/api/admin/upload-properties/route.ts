@@ -72,7 +72,9 @@ export async function POST(request: NextRequest) {
     
     for (const property of parseResult.success) {
       try {
-        // Save to Firebase properties collection
+        console.log(`Attempting to insert property: ${property.id} - ${property.address}`);
+        
+        // Simplified write without existence check for debugging
         await setDoc(doc(db, 'properties', property.id), {
           ...property,
           createdAt: serverTimestamp(),
@@ -80,6 +82,8 @@ export async function POST(request: NextRequest) {
           status: 'active',
           source: 'csv-upload'
         });
+        
+        console.log(`Successfully inserted: ${property.id}`);
         
         insertedProperties.push({
           id: property.id,
@@ -89,14 +93,24 @@ export async function POST(request: NextRequest) {
         });
         
       } catch (error) {
+        console.error('Firebase write error for property:', property.address, error);
+        
         await logError('Failed to insert property', {
           action: 'insert_property',
-          metadata: { property: property.address }
+          metadata: { 
+            property: property.address,
+            propertyId: property.id,
+            errorType: (error as Error).name,
+            errorMessage: (error as Error).message,
+            errorStack: (error as Error).stack
+          }
         }, error as Error);
         
         insertErrors.push({
           property: property.address,
-          error: (error as Error).message
+          propertyId: property.id,
+          error: (error as Error).message,
+          errorType: (error as Error).name
         });
       }
     }
@@ -119,9 +133,11 @@ export async function POST(request: NextRequest) {
         successfulParsing: parseResult.success.length,
         successfulInserts: insertedProperties.length,
         parseErrors: parseResult.errors.length,
+        duplicatesSkipped: parseResult.duplicates?.length || 0,
         insertErrors: insertErrors.length
       },
       parseErrors: parseResult.errors,
+      duplicates: parseResult.duplicates || [],
       insertErrors,
       insertedProperties: insertedProperties.map(p => ({
         id: p.id,

@@ -25,21 +25,34 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
-    const { 
-      transactionId, 
-      reason, 
-      explanation, 
-      contactAttempts, 
-      evidence,
-      buyerName,
-      purchaseDate 
-    } = body;
+    // Handle FormData for file uploads
+    const formData = await request.formData();
+    const transactionId = formData.get('transactionId') as string;
+    const reason = formData.get('reason') as string;
+    const explanation = formData.get('explanation') as string;
+    const contactAttempts = formData.get('contactAttempts') as string;
+    const evidence = formData.get('evidence') as string;
+    const buyerName = formData.get('buyerName') as string;
+    const purchaseDate = formData.get('purchaseDate') as string;
+    const screenshotCount = parseInt(formData.get('screenshotCount') as string || '0');
+    
+    // Collect uploaded screenshots
+    const screenshots = [];
+    for (let i = 0; i < screenshotCount; i++) {
+      const screenshot = formData.get(`screenshot_${i}`) as File;
+      if (screenshot) {
+        screenshots.push({
+          name: screenshot.name,
+          size: screenshot.size,
+          type: screenshot.type
+        });
+      }
+    }
 
     // Validation
-    if (!transactionId || !reason || !explanation) {
+    if (!transactionId || !reason || !explanation || screenshotCount < 3) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: 'Missing required fields. Need reason, explanation, and at least 3 screenshots showing contact attempts.' },
         { status: 400 }
       );
     }

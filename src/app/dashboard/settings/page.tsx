@@ -236,6 +236,17 @@ export default function BuyerSettings() {
         setError(data.error);
       } else {
         setSuccess('Preferences updated successfully!');
+        
+        // Trigger dashboard refresh by dispatching a custom event
+        window.dispatchEvent(new CustomEvent('preferencesUpdated', {
+          detail: { 
+            preferredCity: formData.preferredCity,
+            preferredState: formData.preferredState,
+            maxMonthlyPayment: formData.maxMonthlyPayment,
+            maxDownPayment: formData.maxDownPayment
+          }
+        }));
+        
         // Don't redirect - let them stay and make more changes
       }
     } catch (err) {

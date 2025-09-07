@@ -64,13 +64,25 @@ export async function POST(request: NextRequest) {
     const nameParts = userName.split(' ');
     const defaultFirstName = firstName || nameParts[0] || '';
     const defaultLastName = lastName || nameParts.slice(1).join(' ') || '';
+    
+    // Get phone and other data from user record if not provided in request
+    let defaultPhone = phone;
+    if (!defaultPhone) {
+      try {
+        const userDoc = await getDoc(doc(db, 'users', session.user.id!));
+        const userData = userDoc.exists() ? userDoc.data() : null;
+        defaultPhone = userData?.phone || null;
+      } catch (error) {
+        console.error('Failed to get user phone:', error);
+      }
+    }
 
     const buyerData = {
       userId: session.user.id!,
       firstName: defaultFirstName,
       lastName: defaultLastName,
       email: session.user.email!,
-      phone: phone || null,
+      phone: defaultPhone,
       maxMonthlyPayment: Number(maxMonthlyPayment),
       maxDownPayment: Number(maxDownPayment),
       preferredCity,

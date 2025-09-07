@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
     // Fetch properties from Firebase
     const propertiesQuery = query(
       collection(db, 'properties'),
-      where('status', '==', 'active'),
+      where('isActive', '==', true),
       firestoreLimit(limit)
     );
     

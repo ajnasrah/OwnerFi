@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
@@ -77,7 +77,8 @@ export default function BuyerLinkDashboard() {
     reason: '',
     explanation: '',
     contactAttempts: '',
-    evidence: ''
+    evidence: '',
+    screenshots: [] as File[]
   });
 
   useEffect(() => {
@@ -172,8 +173,20 @@ export default function BuyerLinkDashboard() {
         return;
       }
       
-      // Refresh dashboard data to show updated credits and leads
-      await loadDashboardData();
+      // Update state smoothly instead of harsh page reload
+      const purchasedLead = availableLeads.find(lead => lead.id === leadId);
+      if (purchasedLead) {
+        // Move lead from available to purchased
+        setAvailableLeads(prev => prev.filter(lead => lead.id !== leadId));
+        setPurchasedLeads(prev => [...prev, { ...purchasedLead, fullContactAccess: true }]);
+        
+        // Update credit balance
+        if (profile) {
+          setProfile(prev => prev ? { ...prev, credits: prev.credits - 1 } : prev);
+        }
+      }
+      
+      setError('✅ Lead purchased successfully! Contact information is now available in your purchased leads.');
       
     } catch (err) {
       setError('Failed to purchase lead. Please try again.');
@@ -189,29 +202,37 @@ export default function BuyerLinkDashboard() {
       reason: '',
       explanation: '',
       contactAttempts: '',
-      evidence: ''
+      evidence: '',
+      screenshots: []
     });
   };
 
   const submitDispute = async () => {
-    if (!selectedTransaction || !disputeForm.reason || !disputeForm.explanation) {
-      setError('Please fill in all required fields');
+    if (!selectedTransaction || !disputeForm.reason || !disputeForm.explanation || disputeForm.screenshots.length < 3) {
+      setError('Please fill in all required fields and upload at least 3 screenshots showing contact attempts');
       return;
     }
 
     try {
+      // Upload screenshots first
+      const formData = new FormData();
+      formData.append('transactionId', selectedTransaction.id);
+      formData.append('reason', disputeForm.reason);
+      formData.append('explanation', disputeForm.explanation);
+      formData.append('contactAttempts', disputeForm.contactAttempts);
+      formData.append('evidence', disputeForm.evidence);
+      formData.append('buyerName', selectedTransaction.details?.buyerName || '');
+      formData.append('purchaseDate', selectedTransaction.timestamp);
+      
+      // Add all screenshots
+      disputeForm.screenshots.forEach((file, index) => {
+        formData.append(`screenshot_${index}`, file);
+      });
+      formData.append('screenshotCount', disputeForm.screenshots.length.toString());
+
       const response = await fetch('/api/realtor/dispute-lead', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          transactionId: selectedTransaction.id,
-          reason: disputeForm.reason,
-          explanation: disputeForm.explanation,
-          contactAttempts: disputeForm.contactAttempts,
-          evidence: disputeForm.evidence,
-          buyerName: selectedTransaction.details?.buyerName,
-          purchaseDate: selectedTransaction.timestamp
-        }),
+        body: formData, // Send as FormData to handle file uploads
       });
 
       const data = await response.json();
@@ -277,15 +298,23 @@ export default function BuyerLinkDashboard() {
               <span className="text-sm font-medium">Home</span>
             </Link>
             
-            <Link 
-              href="/realtor/settings" 
-              className="flex items-center space-x-2 text-surface-bg/80 hover:text-surface-bg bg-white/10 rounded-lg px-3 py-2"
-            >
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
-              </svg>
-              <span className="text-sm font-medium">Settings</span>
-            </Link>
+            <div className="flex items-center space-x-3">
+              <Link 
+                href="/realtor/settings" 
+                className="flex items-center space-x-2 text-surface-bg/80 hover:text-surface-bg bg-white/10 rounded-lg px-3 py-2"
+              >
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+                </svg>
+                <span className="text-sm font-medium">Settings</span>
+              </Link>
+              <button
+                onClick={() => signOut({ callbackUrl: '/' })}
+                className="px-3 py-2 bg-red-500/20 hover:bg-red-500/30 text-surface-bg rounded-lg text-sm font-medium transition-colors"
+              >
+                Sign Out
+              </button>
+            </div>
           </div>
           
           {/* Welcome Header */}
@@ -529,7 +558,7 @@ export default function BuyerLinkDashboard() {
                               <span>Purchasing...</span>
                             </div>
                           ) : (
-                            <span>Purchase Contact Info (1 Credit)</span>
+                            <span>Accept Buyer (1 Credit)</span>
                           )}
                         </button>
                       </div>
@@ -576,7 +605,7 @@ export default function BuyerLinkDashboard() {
                 </div>
                 <h3 className="font-semibold text-primary-text mb-2 text-lg">No purchased leads yet</h3>
                 <p className="text-secondary-text">
-                  Your purchased leads will appear here with full contact details
+                  Your accepted buyers will appear here with full contact details and property recommendations
                 </p>
               </div>
             ) : (
@@ -611,15 +640,39 @@ export default function BuyerLinkDashboard() {
                           </div>
                         </div>
                         
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+                        <div className="flex flex-col space-y-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:space-y-0 text-sm">
                           <div className="bg-surface-bg/70 rounded-lg p-3">
-                            <div className="flex items-center space-x-2 mb-1">
-                              <svg className="w-4 h-4 text-accent-success" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
-                              </svg>
-                              <span className="font-medium text-primary-text">Phone</span>
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center space-x-2">
+                                <svg className="w-4 h-4 text-accent-success" fill="currentColor" viewBox="0 0 20 20">
+                                  <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
+                                </svg>
+                                <span className="font-medium text-primary-text">Contact Info</span>
+                              </div>
+                              <div className="flex space-x-2">
+                                <button
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(lead.phone || '');
+                                    alert('Copied to clipboard!');
+                                  }}
+                                  className="px-3 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg text-sm font-medium transition-colors"
+                                  title="Copy phone number"
+                                >
+                                  Copy
+                                </button>
+                                <button
+                                  onClick={() => window.open(`sms:${lead.phone}?body=Hi ${lead.firstName}, I'm reaching out regarding your home search in ${lead.preferredCity}. I have some great properties that match your criteria. When would be a good time to discuss?`, '_blank')}
+                                  className="px-3 py-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg text-sm font-medium transition-colors"
+                                  title="Send text message"
+                                >
+                                  Text
+                                </button>
+                              </div>
                             </div>
-                            <div className="font-semibold text-accent-success">{lead.phone}</div>
+                            <div className="space-y-1">
+                              <div className="font-semibold text-accent-success">{lead.phone || 'No phone'}</div>
+                              <div className="text-xs text-gray-600 truncate">{lead.email}</div>
+                            </div>
                           </div>
                           
                           <div className="bg-surface-bg/70 rounded-lg p-3">
@@ -629,7 +682,10 @@ export default function BuyerLinkDashboard() {
                               </svg>
                               <span className="font-medium text-primary-text">Budget</span>
                             </div>
-                            <div className="font-semibold text-primary-text">{formatCurrency(lead.maxMonthlyPayment)}/mo</div>
+                            <div className="space-y-1">
+                              <div className="font-semibold text-primary-text">{formatCurrency(lead.maxMonthlyPayment)}/mo</div>
+                              <div className="text-sm text-gray-600">{formatCurrency(lead.maxDownPayment)} max down</div>
+                            </div>
                           </div>
                           
                           <div className="bg-surface-bg/70 rounded-lg p-3">
@@ -641,6 +697,27 @@ export default function BuyerLinkDashboard() {
                             </div>
                             <div className="font-semibold text-primary-text">{lead.preferredCity}, {lead.preferredState}</div>
                           </div>
+                        </div>
+                        
+                        {/* Property Matches Section */}
+                        <div className="mt-4 flex items-center justify-between bg-blue-50 rounded-lg p-3">
+                          <div>
+                            <div className="text-sm font-medium text-blue-800">
+                              {lead.matchedProperties || 0} Available Properties
+                            </div>
+                            <div className="text-xs text-blue-600">
+                              {lead.perfectMatches || 0} perfect • {lead.goodMatches || 0} good matches
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => {
+                              // Open property viewer for this buyer
+                              window.open(`/realtor/buyer-properties?buyerId=${lead.id}`, '_blank');
+                            }}
+                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                          >
+                            View Properties
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -828,14 +905,60 @@ export default function BuyerLinkDashboard() {
 
               <div>
                 <label className="block text-sm font-medium text-primary-text mb-2">
-                  Evidence/Proof
+                  Required Screenshots/Evidence * (Minimum 3)
                 </label>
-                <textarea
-                  value={disputeForm.evidence}
-                  onChange={(e) => setDisputeForm(prev => ({...prev, evidence: e.target.value}))}
-                  className="w-full p-3 border border-neutral-border rounded-lg focus:ring-accent-primary focus:border-accent-primary h-20"
-                  placeholder="Any additional evidence (screenshots, call logs, email bouncebacks, etc.)"
-                />
+                <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-sm text-blue-800 mb-2">
+                    <strong>Upload screenshots showing you contacted the buyer at least 3 times:</strong>
+                  </p>
+                  <ul className="text-xs text-blue-700 space-y-1">
+                    <li>• Call logs with timestamps</li>
+                    <li>• Text message conversations</li>
+                    <li>• Email attempts and responses/bounces</li>
+                    <li>• Social media contact attempts</li>
+                    <li>• Any other communication proof</li>
+                  </ul>
+                </div>
+                <div className="space-y-3">
+                  <input
+                    type="file"
+                    accept="image/*,.png,.jpg,.jpeg"
+                    multiple
+                    required
+                    onChange={(e) => {
+                      const files = Array.from(e.target.files || []);
+                      setDisputeForm(prev => ({...prev, screenshots: [...prev.screenshots, ...files]}));
+                    }}
+                    className="w-full p-3 border border-neutral-border rounded-lg focus:ring-accent-primary focus:border-accent-primary file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                  />
+                  <p className="text-xs text-gray-600">
+                    💡 Tip: Hold Ctrl/Cmd to select multiple screenshots at once, or click "Choose Files" multiple times to add more
+                  </p>
+                  {disputeForm.screenshots.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setDisputeForm(prev => ({...prev, screenshots: []}))}
+                      className="text-xs text-red-600 hover:text-red-700 underline"
+                    >
+                      Clear all screenshots
+                    </button>
+                  )}
+                </div>
+                {disputeForm.screenshots.length > 0 && (
+                  <div className="mt-2">
+                    <p className="text-sm text-green-600 font-medium">
+                      {disputeForm.screenshots.length} screenshot{disputeForm.screenshots.length > 1 ? 's' : ''} selected
+                    </p>
+                    <div className="text-xs text-gray-600 space-y-1 mt-1">
+                      {disputeForm.screenshots.map((file, index) => (
+                        <div key={index}>📎 {file.name} ({Math.round(file.size/1024)}KB)</div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {disputeForm.screenshots.length < 3 && (
+                  <p className="text-xs text-red-600 mt-2">⚠️ Minimum 3 screenshots required to show contact attempts</p>
+                )}
               </div>
 
               <div className="bg-accent-warm/10 border border-accent-warm/20 rounded-lg p-4">
@@ -859,10 +982,10 @@ export default function BuyerLinkDashboard() {
               </button>
               <button
                 onClick={submitDispute}
-                disabled={!disputeForm.reason || !disputeForm.explanation}
+                disabled={!disputeForm.reason || !disputeForm.explanation || disputeForm.screenshots.length < 3}
                 className="bg-accent-danger text-surface-bg px-6 py-2 rounded-lg font-semibold hover:bg-red-600 disabled:bg-neutral-border disabled:cursor-not-allowed transition-colors"
               >
-                Submit Dispute
+                Submit Dispute ({disputeForm.screenshots.length}/3 screenshots)
               </button>
             </div>
           </div>

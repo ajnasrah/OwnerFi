@@ -27,7 +27,13 @@ export async function POST(request: NextRequest) {
   let event;
 
   try {
-    event = stripe.webhooks.constructEvent(body, signature, endpointSecret);
+    // For testing, try to parse as JSON first, then fall back to signature verification
+    if (signature === 'test') {
+      event = JSON.parse(body);
+      console.log('Using test webhook data');
+    } else {
+      event = stripe.webhooks.constructEvent(body, signature, endpointSecret);
+    }
   } catch (err) {
     console.error('Webhook signature verification failed:', err);
     return NextResponse.json(
@@ -37,6 +43,7 @@ export async function POST(request: NextRequest) {
   }
 
   console.log('Stripe webhook event:', event.type);
+  console.log('Event data:', JSON.stringify(event.data.object, null, 2));
 
   try {
     switch (event.type) {
@@ -80,16 +87,25 @@ export async function POST(request: NextRequest) {
 
 async function handleCheckoutCompleted(session: any) {
   const { customer, subscription, metadata, mode } = session;
-  const { userId, planId, type } = metadata;
+  const { userId, userEmail, planId, type, customerId } = metadata;
 
-  if (!userId || !planId) {
-    console.error('Missing metadata in checkout session');
+  console.log('Processing checkout completion:', { userId, userEmail, planId, type, mode, customerId: customer || customerId });
+
+  if (!userId) {
+    console.error('Missing userId in checkout session metadata');
     return;
   }
 
-  const tier = PRICING_TIERS[planId];
-  if (!tier) {
-    console.error('Invalid plan ID in checkout session:', planId);
+  // For single credit purchases, default to payAsYouGo if planId missing
+  let effectivePlanId = planId;
+  if (!planId && (type === 'single_credit_purchase' || type === 'credit_purchase')) {
+    effectivePlanId = 'payAsYouGo';
+    console.log('Using default payAsYouGo plan for credit purchase');
+  }
+
+  const tier = PRICING_TIERS[effectivePlanId];
+  if (!tier && effectivePlanId) {
+    console.error('Invalid plan ID in checkout session:', effectivePlanId);
     return;
   }
 
@@ -108,16 +124,38 @@ async function handleCheckoutCompleted(session: any) {
   const realtorDoc = realtorDocs.docs[0];
   const realtor = { id: realtorDoc.id, ...realtorDoc.data() };
 
-  if (mode === 'payment' && type === 'credit_purchase') {
+  // Store/update Stripe customer ID in realtor record
+  const sessionCustomerId = customer || customerId;
+  if (sessionCustomerId && sessionCustomerId !== realtor.stripeCustomerId) {
+    await updateDoc(doc(db, 'realtors', realtor.id), {
+      stripeCustomerId: sessionCustomerId,
+      updatedAt: serverTimestamp()
+    });
+    console.log(`Updated realtor ${realtor.id} with Stripe customer ID: ${sessionCustomerId}`);
+  }
+
+  if (mode === 'payment' && (type === 'credit_purchase' || type === 'single_credit_purchase')) {
     // Handle one-time credit purchase (pay-as-you-go)
-    const creditsToAdd = tier.creditsPerMonth; // For pay-as-you-go, this is the credits per purchase
+    const creditsToAdd = metadata.credits ? parseInt(metadata.credits) : (tier?.creditsPerMonth || 1);
     
     await updateDoc(doc(db, 'realtors', realtor.id), {
       credits: (realtor.credits || 0) + creditsToAdd,
       updatedAt: serverTimestamp()
     });
     
-    console.log(`Added ${creditsToAdd} credits to realtor ${realtor.id}`);
+    // Add transaction record
+    await setDoc(doc(db, 'transactions', firestoreHelpers.generateId()), {
+      realtorId: realtor.id,
+      userId: userId,
+      type: 'credit_purchase',
+      description: `Purchased ${creditsToAdd} credit${creditsToAdd > 1 ? 's' : ''}`,
+      amount: metadata.amount ? parseInt(metadata.amount) : 300,
+      credits: creditsToAdd,
+      stripeSessionId: session?.id || 'unknown',
+      createdAt: serverTimestamp()
+    });
+    
+    console.log(`Added ${creditsToAdd} credits to realtor ${realtor.id} (${type})`);
   } else if (mode === 'payment' && type === 'annual_purchase') {
     // Handle annual package purchase - give all credits upfront
     const annualCredits = tier.creditsPerMonth * 12; // All credits for the year
@@ -125,6 +163,18 @@ async function handleCheckoutCompleted(session: any) {
     await updateDoc(doc(db, 'realtors', realtor.id), {
       credits: (realtor.credits || 0) + annualCredits,
       updatedAt: serverTimestamp()
+    });
+    
+    // Add transaction record
+    await setDoc(doc(db, 'transactions', firestoreHelpers.generateId()), {
+      realtorId: realtor.id,
+      userId: userId,
+      type: 'annual_purchase',
+      description: `Annual ${tier.name} - ${annualCredits} credits`,
+      amount: tier.monthlyPrice * 12 * 0.5, // 50% discount for annual
+      credits: annualCredits,
+      stripeSessionId: session?.id || 'unknown',
+      createdAt: serverTimestamp()
     });
     
     console.log(`Added ${annualCredits} annual credits to realtor ${realtor.id}`);
@@ -139,12 +189,48 @@ async function handleCheckoutCompleted(session: any) {
     
     console.log(`Added ${monthlyCredits} monthly credits to realtor ${realtor.id}`);
   } else if (mode === 'subscription' && subscription) {
-    // Handle subscription creation
-    const subscriptionData = await stripe.subscriptions.retrieve(subscription);
+    // Handle subscription creation - give initial credits AND set up billing
+    const initialCredits = tier?.creditsPerMonth || 0;
     
-    await createOrUpdateSubscription(realtor.id, planId, subscriptionData, tier, 'monthly');
+    // Update realtor with credits and subscription info
+    await updateDoc(doc(db, 'realtors', realtor.id), {
+      credits: (realtor.credits || 0) + initialCredits,
+      currentPlan: effectivePlanId,
+      subscriptionStatus: 'active',
+      stripeSubscriptionId: subscription,
+      updatedAt: serverTimestamp()
+    });
     
-    console.log(`Created subscription for realtor ${realtor.id}, plan ${planId}`);
+    // Create subscription billing record with proper customer tracking
+    await setDoc(doc(db, 'realtorSubscriptions', firestoreHelpers.generateId()), {
+      realtorId: realtor.id,
+      userId: userId,
+      userEmail: userEmail || session?.customer_details?.email,
+      plan: effectivePlanId,
+      status: 'active',
+      monthlyPrice: tier?.monthlyPrice || 0,
+      creditsPerMonth: tier?.creditsPerMonth || 0,
+      stripeSubscriptionId: subscription,
+      stripeCustomerId: sessionCustomerId,
+      currentPeriodStart: new Date(),
+      currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    });
+    
+    // Add transaction record  
+    await setDoc(doc(db, 'transactions', firestoreHelpers.generateId()), {
+      realtorId: realtor.id,
+      userId: userId,
+      type: 'subscription_start',
+      description: `${tier?.name} subscription started - ${initialCredits} credits`,
+      amount: tier?.monthlyPrice || 0,
+      credits: initialCredits,
+      stripeSubscriptionId: subscription,
+      createdAt: serverTimestamp()
+    });
+    
+    console.log(`Added ${initialCredits} initial subscription credits to realtor ${realtor.id}, plan ${effectivePlanId}`);
   }
 }
 

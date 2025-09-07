@@ -42,7 +42,7 @@ export function Hero({
               <Button 
                 variant="primary" 
                 size="lg"
-                href="/unified-signup"
+                href="/unified-signup?userType=buyer"
                 className="w-full text-lg py-5 font-semibold min-h-[56px] shadow-medium"
               >
                 🏠 I Need a Home (Start Here)
@@ -50,7 +50,7 @@ export function Hero({
               <Button 
                 variant="outline" 
                 size="lg"
-                href="/unified-signup"
+                href="/unified-signup?userType=realtor"
                 className="w-full text-lg py-5 font-semibold min-h-[56px]"
               >
                 💼 I Help Families Find Homes

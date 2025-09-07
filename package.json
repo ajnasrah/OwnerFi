@@ -42,7 +42,11 @@
   },
   "description": "Owner financed properties platform",
   "main": "index.js",
-  "keywords": ["real-estate", "owner-finance", "properties"],
+  "keywords": [
+    "real-estate",
+    "owner-finance",
+    "properties"
+  ],
   "author": "",
   "license": "ISC"
 }

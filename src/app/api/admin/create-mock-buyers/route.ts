@@ -1,5 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/lib/auth';
 import { unifiedDb } from '@/lib/unified-db';
+import { 
+  collection, 
+  query,
+  getDocs,
+  doc,
+  setDoc,
+  serverTimestamp
+} from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { faker } from '@faker-js/faker';
 
 interface MockBuyer {
   firstName: string;
@@ -91,40 +103,91 @@ const mockBuyers: MockBuyer[] = [
 
 export async function POST(request: NextRequest) {
   try {
+    // Admin access control
+    const session = await getServerSession(authOptions);
+    
+    if (!session?.user || (session.user as any).role !== 'admin') {
+      return NextResponse.json(
+        { error: 'Access denied. Admin access required.' },
+        { status: 403 }
+      );
+    }
+
+    const { count } = await request.json();
+    const buyersToCreate = count || 50;
+
+    // Get existing properties to create realistic buyers
+    const propertiesSnapshot = await getDocs(query(collection(db, 'properties')));
+    const properties = propertiesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+    if (properties.length === 0) {
+      return NextResponse.json({ error: 'No properties found. Upload properties first.' }, { status: 400 });
+    }
+
+    const locations = [...new Set(properties.map(p => `${p.city}, ${p.state}`))];
+    const priceRanges = properties.map(p => p.monthlyPayment).filter(p => p > 0).sort((a, b) => a - b);
+    
+    console.log(`Creating ${buyersToCreate} buyers across ${locations.length} cities`);
+    
     const createdLeads = [];
 
-    for (const buyer of mockBuyers) {
-      // Create a user account for each buyer
+    // Create realistic buyers based on actual property data
+    for (let i = 0; i < buyersToCreate; i++) {
+      const [city, state] = faker.helpers.arrayElement(locations).split(', ');
+      const targetMonthly = faker.number.int({ min: Math.max(priceRanges[0] - 500, 500), max: priceRanges[priceRanges.length-1] + 1000 });
+      
+      const firstName = faker.person.firstName();
+      const lastName = faker.person.lastName();
+      const email = `${firstName.toLowerCase()}.${lastName.toLowerCase()}${i}@${faker.helpers.arrayElement(['gmail.com', 'yahoo.com', 'outlook.com'])}`;
+      
+      // Create user account
       const user = await unifiedDb.users.create({
-        name: `${buyer.firstName} ${buyer.lastName}`,
-        email: buyer.email,
+        name: `${firstName} ${lastName}`,
+        email: email,
         role: 'buyer',
-        languages: ['English']
+        languages: faker.helpers.arrayElements(['English', 'Spanish'], { min: 1, max: 2 })
       });
 
-      // Create buyer profile
+      // Create buyer profile  
       const buyerProfile = await unifiedDb.buyerProfiles.create({
         userId: user.id,
-        firstName: buyer.firstName,
-        lastName: buyer.lastName,
-        phone: buyer.phone,
-        maxMonthlyPayment: buyer.maxMonthlyPayment,
-        maxDownPayment: buyer.maxDownPayment,
-        preferredCity: buyer.preferredCity,
-        preferredState: buyer.preferredState,
-        searchRadius: buyer.searchRadius,
-        minBedrooms: buyer.minBedrooms,
-        minBathrooms: buyer.minBathrooms,
-        matchedProperties: buyer.matchedProperties,
+        firstName,
+        lastName, 
+        phone: faker.phone.number('(###) ###-####'),
+        maxMonthlyPayment: targetMonthly,
+        maxDownPayment: faker.number.int({ min: 5000, max: 100000 }),
+        preferredCity: city,
+        preferredState: state,
+        searchRadius: faker.number.int({ min: 15, max: 50 }),
+        minBedrooms: faker.helpers.weighted([{ weight: 30, value: 1 }, { weight: 50, value: 2 }, { weight: 20, value: 3 }]),
+        minBathrooms: faker.helpers.weighted([{ weight: 60, value: 1 }, { weight: 40, value: 2 }]),
         emailNotifications: true,
-        smsNotifications: false,
+        smsNotifications: faker.datatype.boolean({ probability: 0.6 }),
         profileComplete: true,
-        isActive: true
+        creditScore: faker.number.int({ min: 580, max: 750 }),
+        monthlyIncome: faker.number.int({ min: 3000, max: 12000 }),
+        currentlyRenting: faker.datatype.boolean({ probability: 0.7 }),
+        hasChildren: faker.datatype.boolean({ probability: 0.4 }),
+        notes: faker.helpers.arrayElement([
+          'First-time buyer, excited about homeownership',
+          'Young family looking for good schools',
+          'Self-employed, flexible on timing',
+          'Relocating for new job opportunity',
+          'Credit recovery journey, motivated buyer',
+          'Growing family needs more space',
+          'Recent divorce, fresh start needed',
+          'Investment property interest',
+          'Military family, used to moves',
+          'Empty nesters looking to downsize'
+        ])
       });
 
       createdLeads.push({
-        ...buyerProfile,
-        user: user
+        id: buyerProfile.id,
+        name: `${firstName} ${lastName}`,
+        email,
+        city: `${city}, ${state}`,
+        budget: `$${targetMonthly}/mo`
       });
     }
 

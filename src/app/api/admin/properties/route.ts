@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const limit = parseInt(searchParams.get('limit') || '50');
+    const limit = parseInt(searchParams.get('limit') || '200');
     const status = searchParams.get('status') || 'all';
     
     // Build query
@@ -55,10 +55,16 @@ export async function GET(request: NextRequest) {
       updatedAt: doc.data().updatedAt?.toDate?.()?.toISOString() || doc.data().updatedAt
     }));
 
+    // Get actual total count (not limited)
+    const totalQuery = query(collection(db, 'properties'));
+    const totalSnapshot = await getDocs(totalQuery);
+    const actualTotal = totalSnapshot.size;
+    
     return NextResponse.json({ 
       properties,
       count: properties.length,
-      total: propertiesSnapshot.size 
+      total: actualTotal,
+      showing: `${properties.length} of ${actualTotal} properties`
     });
 
   } catch (error) {

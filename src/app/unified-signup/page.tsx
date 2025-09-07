@@ -1,12 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { signIn } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
 export default function UnifiedSignup() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [step, setStep] = useState(1); // 1: Role selection, 2: Form, 3: Success
   const [userType, setUserType] = useState<'buyer' | 'realtor' | null>(null);
   const [loading, setLoading] = useState(false);
@@ -29,6 +30,15 @@ export default function UnifiedSignup() {
     company: '',
     licenseState: '',
   });
+
+  // Check for userType parameter and skip role selection if provided
+  useEffect(() => {
+    const userTypeParam = searchParams.get('userType');
+    if (userTypeParam === 'buyer' || userTypeParam === 'realtor') {
+      setUserType(userTypeParam);
+      setStep(2);
+    }
+  }, [searchParams]);
 
   const handleRoleSelection = (role: 'buyer' | 'realtor') => {
     setUserType(role);

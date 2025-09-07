@@ -2,16 +2,21 @@ import { NextRequest, NextResponse } from 'next/server';
 import { hash } from 'bcryptjs';
 import { unifiedDb, generateId } from '@/lib/unified-db';
 import { logError, logInfo } from '@/lib/logger';
+import Stripe from 'stripe';
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: '2024-06-20',
+});
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, email, password, role } = body;
+    const { name, email, password, phone, company, licenseState, role } = body;
 
     // Validation
-    if (!name || !email || !password) {
+    if (!name || !email || !password || !phone) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: 'Missing required fields: name, email, password, and phone are required' },
         { status: 400 }
       );
     }
@@ -36,11 +41,15 @@ export async function POST(request: NextRequest) {
     // Hash password
     const hashedPassword = await hash(password, 12);
 
-    // Create user account
+    // Create user account - Stripe customer will be created on first payment
     const newUser = await unifiedDb.users.create({
       name: name.trim(),
       email: email.toLowerCase().trim(),
       password: hashedPassword,
+      phone: phone.trim(),
+      company: company?.trim() || null,
+      licenseState: licenseState?.trim() || null,
+      stripeCustomerId: null, // Will be populated on first payment
       role: 'realtor'
     });
 

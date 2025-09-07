@@ -38,6 +38,7 @@ export default function BuyerDashboard() {
   const [loading, setLoading] = useState(true);
   const [dataLoaded, setDataLoaded] = useState(false);
   const [error, setError] = useState('');
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -64,6 +65,13 @@ export default function BuyerDashboard() {
     }
   }, [status, router, session]);
 
+  // Refresh properties when profile changes or when returning to this page
+  useEffect(() => {
+    if (profile) {
+      fetchMatchedProperties();
+    }
+  }, [profile?.preferredCity, profile?.preferredState, profile?.maxMonthlyPayment, profile?.maxDownPayment]);
+
   // Refresh favorites and re-fetch properties when returning to this page
   useEffect(() => {
     const handleFocus = () => {
@@ -78,8 +86,38 @@ export default function BuyerDashboard() {
       }
     };
 
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && profile) {
+        fetchProfile();
+      }
+    };
+
+    // Listen for storage changes (when settings are updated in another tab/window)
+    const handleStorageChange = () => {
+      if (profile) {
+        fetchProfile();
+      }
+    };
+
+    // Listen for preferences updates (when settings are saved)
+    const handlePreferencesUpdated = (event: CustomEvent) => {
+      console.log('Preferences updated, refreshing properties...', event.detail);
+      if (profile) {
+        fetchProfile();
+      }
+    };
+
     window.addEventListener('focus', handleFocus);
-    return () => window.removeEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('preferencesUpdated', handlePreferencesUpdated as EventListener);
+    
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('preferencesUpdated', handlePreferencesUpdated as EventListener);
+    };
   }, [profile]);
 
   const fetchProfile = async () => {
@@ -106,6 +144,7 @@ export default function BuyerDashboard() {
 
   const fetchMatchedProperties = async () => {
     try {
+      setRefreshing(true);
       const params = new URLSearchParams({
         city: profile?.preferredCity || 'Memphis',
         radius: profile?.searchRadius?.toString() || '25'
@@ -127,8 +166,14 @@ export default function BuyerDashboard() {
         params.append('minBathrooms', profile.minBathrooms.toString());
       }
       
-      const response = await fetch(`/api/buyer/matched-properties?${params}`);
+      const apiUrl = `/api/buyer/matched-properties?${params}`;
+      console.log('Fetching properties with URL:', apiUrl);
+      console.log('Profile data:', profile);
+      
+      const response = await fetch(apiUrl);
       const data = await response.json();
+      
+      console.log('API response:', data);
       
       if (data.error) {
         setError(data.error);
@@ -137,6 +182,8 @@ export default function BuyerDashboard() {
       }
     } catch (err) {
       setError('Failed to load matched properties');
+    } finally {
+      setRefreshing(false);
     }
   };
 

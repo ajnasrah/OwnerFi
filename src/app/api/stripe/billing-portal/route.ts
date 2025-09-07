@@ -8,6 +8,7 @@ import {
   getDocs,
   updateDoc,
   doc,
+  getDoc,
   serverTimestamp
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -42,19 +43,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    let customerId = null;
+    // Get customer ID from multiple sources
+    let customerId = realtor.stripeCustomerId;
     
-    // Try to get customer ID from subscription data
-    if (realtor.subscriptionData) {
+    // If not in realtor record, check user record
+    if (!customerId) {
       try {
-        const subscriptionData = JSON.parse(realtor.subscriptionData);
-        customerId = subscriptionData.customerId;
+        const userDoc = await getDoc(doc(db, 'users', session.user.id!));
+        const userData = userDoc.exists() ? userDoc.data() : null;
+        customerId = userData?.stripeCustomerId;
       } catch (e) {
-        console.error('Failed to parse subscription data:', e);
+        console.error('Failed to get user data:', e);
       }
     }
 
-    // If no customer ID found, try to find customer by email
+    // If still no customer ID found, try to find customer by email
     if (!customerId) {
       try {
         const customers = await stripe.customers.list({
@@ -64,6 +67,12 @@ export async function POST(request: NextRequest) {
         
         if (customers.data.length > 0) {
           customerId = customers.data[0].id;
+          
+          // Store the found customer ID for future use
+          await updateDoc(doc(db, 'realtors', realtor.id), {
+            stripeCustomerId: customerId,
+            updatedAt: serverTimestamp()
+          });
         }
       } catch (e) {
         console.error('Failed to find customer by email:', e);
@@ -83,20 +92,11 @@ export async function POST(request: NextRequest) {
         });
         customerId = customer.id;
         
-        // Save the customer ID for future use
-        const subscriptionData = realtor.subscriptionData 
-          ? JSON.parse(realtor.subscriptionData)
-          : {};
-        
-        if (realtor) {
-          await updateDoc(doc(db, 'realtors', realtor.id), {
-            subscriptionData: JSON.stringify({
-              ...subscriptionData,
-              customerId: customerId
-            }),
-            updatedAt: serverTimestamp()
-          });
-        }
+        // Save the customer ID directly in realtor record
+        await updateDoc(doc(db, 'realtors', realtor.id), {
+          stripeCustomerId: customerId,
+          updatedAt: serverTimestamp()
+        });
 
       } catch (e) {
         console.error('Failed to create customer:', e);
@@ -121,15 +121,40 @@ export async function POST(request: NextRequest) {
     } catch (stripeError: any) {
       console.error('Stripe billing portal error:', stripeError);
       return NextResponse.json(
-        { error: 'Failed to create billing portal session' },
+        { 
+          error: 'Failed to create billing portal session',
+          details: stripeError.message,
+          debug: process.env.NODE_ENV === 'development' ? {
+            customerId,
+            hasRealtor: !!realtor,
+            errorType: stripeError.type
+          } : undefined
+        },
         { status: 500 }
       );
     }
 
   } catch (error) {
     console.error('Billing portal error:', error);
+    
+    // Handle role validation errors specifically
+    if ((error as Error).message.includes('Access denied') || (error as Error).message.includes('Not authenticated')) {
+      return NextResponse.json(
+        { error: 'Access denied. Realtor access required.' },
+        { status: 403 }
+      );
+    }
+    
     return NextResponse.json(
-      { error: 'Failed to create billing portal session' },
+      { 
+        error: 'Failed to create billing portal session',
+        details: (error as Error).message,
+        debug: process.env.NODE_ENV === 'development' ? {
+          userEmail: session?.user?.email,
+          errorName: (error as Error).name,
+          errorStack: (error as Error).stack
+        } : undefined
+      },
       { status: 500 }
     );
   }

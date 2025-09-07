@@ -22,6 +22,11 @@ export default function AdminDashboard() {
   const [loadingDisputes, setLoadingDisputes] = useState(false);
   const [contacts, setContacts] = useState<any[]>([]);
   const [loadingContacts, setLoadingContacts] = useState(false);
+  
+  // Edit modal state
+  const [editingProperty, setEditingProperty] = useState<any>(null);
+  const [editForm, setEditForm] = useState<any>({});
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -145,11 +150,61 @@ export default function AdminDashboard() {
     try {
       const response = await fetch('/api/admin/disputes');
       const data = await response.json();
-      setDisputes(data.disputes || []);
+      // Combine pending and resolved disputes
+      const allDisputes = [
+        ...(data.pendingDisputes || []),
+        ...(data.resolvedDisputes || [])
+      ];
+      setDisputes(allDisputes);
     } catch (error) {
       console.error('Failed to fetch disputes:', error);
     } finally {
       setLoadingDisputes(false);
+    }
+  };
+
+  // Property edit functions
+  const handleEditProperty = (property: any) => {
+    setEditingProperty(property);
+    setEditForm({
+      address: property.address || '',
+      city: property.city || '',
+      state: property.state || '',
+      zipCode: property.zipCode || '',
+      bedrooms: property.bedrooms || 0,
+      bathrooms: property.bathrooms || 0,
+      squareFeet: property.squareFeet || 0,
+      listPrice: property.listPrice || 0,
+      downPaymentAmount: property.downPaymentAmount || 0,
+      monthlyPayment: property.monthlyPayment || 0,
+      interestRate: property.interestRate || 0,
+      termYears: property.termYears || 30,
+      description: property.description || '',
+      imageUrl: property.imageUrl || '',
+      isActive: property.isActive !== false
+    });
+  };
+
+  const handleSaveProperty = async () => {
+    if (!editingProperty) return;
+    
+    try {
+      const response = await fetch(`/api/admin/properties/${editingProperty.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editForm)
+      });
+      
+      if (response.ok) {
+        alert('Property updated successfully');
+        setEditingProperty(null);
+        fetchProperties();
+      } else {
+        const error = await response.json();
+        alert(`Failed to update: ${error.error}`);
+      }
+    } catch (error) {
+      alert('Failed to update property');
     }
   };
 
@@ -175,10 +230,27 @@ export default function AdminDashboard() {
   };
 
   // Contact form functions
+  const handleSignOut = async () => {
+    try {
+      setIsSigningOut(true);
+      await signOut({ 
+        redirect: false 
+      });
+      router.push('/');
+    } catch (error) {
+      console.error('Sign out error:', error);
+      setIsSigningOut(false);
+    }
+  };
+
   const fetchContacts = async () => {
     setLoadingContacts(true);
     try {
       const response = await fetch('/api/admin/contacts');
+      if (!response.ok) {
+        console.error('Failed to fetch contacts:', response.status);
+        return;
+      }
       const data = await response.json();
       setContacts(data.contacts || []);
     } catch (error) {
@@ -214,10 +286,11 @@ export default function AdminDashboard() {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-8 relative">
             <button
-              onClick={() => signOut({ callbackUrl: '/' })}
-              className="absolute top-0 right-0 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm"
+              onClick={handleSignOut}
+              disabled={isSigningOut}
+              className="absolute top-0 right-0 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
-              Sign Out
+              {isSigningOut ? 'Signing out...' : 'Sign Out'}
             </button>
             <h1 className="text-3xl font-bold text-primary-text mb-2">Admin Dashboard</h1>
             <p className="text-secondary-text">Manage properties and system settings</p>
@@ -502,6 +575,7 @@ export default function AdminDashboard() {
                             className="w-4 h-4 text-blue-600 border-gray-300 rounded"
                           />
                         </th>
+                        <th className="p-4 text-left border-b font-semibold text-gray-700">Image</th>
                         <th className="p-4 text-left border-b font-semibold text-gray-700">Address</th>
                         <th className="p-4 text-left border-b font-semibold text-gray-700">City, State</th>
                         <th className="p-4 text-left border-b font-semibold text-gray-700">Price</th>
@@ -521,10 +595,21 @@ export default function AdminDashboard() {
                             />
                           </td>
                           <td className="p-4">
-                            <div className="font-medium text-gray-900">{property.address}</div>
-                            {property.imageUrl && (
-                              <div className="text-xs text-green-600 mt-1">📷 Has image</div>
+                            {property.imageUrl ? (
+                              <img 
+                                src={property.imageUrl} 
+                                alt={property.address}
+                                className="w-20 h-16 object-cover rounded cursor-pointer hover:opacity-80"
+                                onClick={() => window.open(property.imageUrl, '_blank')}
+                              />
+                            ) : (
+                              <div className="w-20 h-16 bg-gray-200 rounded flex items-center justify-center text-gray-400">
+                                No Image
+                              </div>
                             )}
+                          </td>
+                          <td className="p-4">
+                            <div className="font-medium text-gray-900">{property.address}</div>
                           </td>
                           <td className="p-4 text-gray-700">{property.city}, {property.state} {property.zipCode}</td>
                           <td className="p-4">
@@ -544,18 +629,26 @@ export default function AdminDashboard() {
                             )}
                           </td>
                           <td className="p-4">
-                            <button
-                              onClick={async () => {
-                                const confirm = window.confirm(`Permanently delete ${property.address}? This cannot be undone.`);
-                                if (confirm) {
-                                  await fetch(`/api/admin/properties?propertyId=${property.id}`, { method: 'DELETE' });
-                                  fetchProperties();
-                                }
-                              }}
-                              className="px-3 py-1 bg-red-100 text-red-700 rounded text-sm hover:bg-red-200 transition-colors"
-                            >
-                              Delete
-                            </button>
+                            <div className="flex space-x-2">
+                              <button
+                                onClick={() => handleEditProperty(property)}
+                                className="px-3 py-1 bg-blue-100 text-blue-700 rounded text-sm hover:bg-blue-200 transition-colors"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                onClick={async () => {
+                                  const confirm = window.confirm(`Permanently delete ${property.address}? This cannot be undone.`);
+                                  if (confirm) {
+                                    await fetch(`/api/admin/properties?propertyId=${property.id}`, { method: 'DELETE' });
+                                    fetchProperties();
+                                  }
+                                }}
+                                className="px-3 py-1 bg-red-100 text-red-700 rounded text-sm hover:bg-red-200 transition-colors"
+                              >
+                                Delete
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -600,10 +693,21 @@ export default function AdminDashboard() {
                     <div key={dispute.id} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
                       <div className="flex justify-between items-start mb-4">
                         <div>
-                          <h3 className="font-semibold text-gray-900">Dispute #{dispute.id}</h3>
-                          <p className="text-gray-600">Realtor: {dispute.realtorName}</p>
-                          <p className="text-gray-600">Lead: {dispute.buyerName} - {dispute.buyerCity}</p>
-                          <p className="text-sm text-gray-500">Submitted: {new Date(dispute.createdAt).toLocaleDateString()}</p>
+                          <h3 className="font-semibold text-gray-900">Dispute #{dispute.id.substring(0, 8)}...</h3>
+                          <div className="mt-2 space-y-1">
+                            <p className="text-gray-800 font-medium">📋 Transaction Details:</p>
+                            <p className="text-gray-600">• Realtor: {dispute.realtorName} ({dispute.realtorEmail})</p>
+                            <p className="text-gray-600">• Purchase Date: {new Date(dispute.purchaseDate).toLocaleDateString()}</p>
+                          </div>
+                          <div className="mt-2 space-y-1">
+                            <p className="text-gray-800 font-medium">👤 Buyer Information:</p>
+                            <p className="text-gray-600">• Name: {dispute.buyerName}</p>
+                            <p className="text-gray-600">• Phone: {dispute.buyerPhone || 'Not provided'}</p>
+                            <p className="text-gray-600">• Email: {dispute.buyerEmail || 'Not provided'}</p>
+                            <p className="text-gray-600">• Location: {dispute.buyerCity}, {dispute.buyerState}</p>
+                            <p className="text-gray-600">• Budget: ${dispute.maxMonthlyPayment}/mo, ${dispute.maxDownPayment} down</p>
+                          </div>
+                          <p className="text-sm text-gray-500 mt-2">Submitted: {new Date(dispute.submittedAt).toLocaleString()}</p>
                         </div>
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                           dispute.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
@@ -616,10 +720,40 @@ export default function AdminDashboard() {
 
                       <div className="mb-4">
                         <p className="font-medium text-gray-800 mb-2">Reason:</p>
-                        <p className="text-gray-700 bg-white p-3 rounded border">
-                          {dispute.reason || 'No reason provided'}
-                        </p>
+                        <div className="text-gray-700 bg-white p-3 rounded border">
+                          <p className="font-semibold">
+                            {dispute.reason === 'no_response' ? '❌ No Response from Buyer' :
+                             dispute.reason === 'wrong_info' ? '⚠️ Wrong/Invalid Information' :
+                             dispute.reason === 'not_interested' ? '🚫 Buyer Not Interested' :
+                             dispute.reason === 'other' ? '📝 Other Reason' :
+                             dispute.reason || 'No reason provided'}
+                          </p>
+                          {dispute.explanation && (
+                            <p className="mt-2 text-sm">{dispute.explanation}</p>
+                          )}
+                          {dispute.contactAttempts && (
+                            <p className="mt-2 text-sm text-gray-600">
+                              <strong>Contact Attempts:</strong> {dispute.contactAttempts}
+                            </p>
+                          )}
+                        </div>
                       </div>
+                      {dispute.evidence && dispute.evidence.length > 0 && (
+                        <div className="mb-4">
+                          <p className="font-medium text-gray-800 mb-2">Evidence Images:</p>
+                          <div className="flex flex-wrap gap-2">
+                            {dispute.evidence.map((imageUrl: string, index: number) => (
+                              <img 
+                                key={index}
+                                src={imageUrl} 
+                                alt={`Evidence ${index + 1}`}
+                                className="w-32 h-24 object-cover rounded border cursor-pointer hover:opacity-80"
+                                onClick={() => window.open(imageUrl, '_blank')}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      )}
 
                       {dispute.status === 'pending' && (
                         <div className="flex items-center space-x-4">
@@ -714,6 +848,222 @@ export default function AdminDashboard() {
           )}
         </div>
       </div>
+      
+      {/* Edit Property Modal */}
+      {editingProperty && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">Edit Property</h2>
+              <button
+                onClick={() => setEditingProperty(null)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              {/* Property ID (read-only) */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Property ID</label>
+                <input
+                  type="text"
+                  value={editingProperty.id}
+                  disabled
+                  className="w-full p-2 border rounded bg-gray-100 text-gray-500"
+                />
+              </div>
+              
+              {/* Address */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                <input
+                  type="text"
+                  value={editForm.address}
+                  onChange={(e) => setEditForm({ ...editForm, address: e.target.value })}
+                  className="w-full p-2 border rounded"
+                />
+              </div>
+              
+              {/* City, State, Zip in a row */}
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
+                  <input
+                    type="text"
+                    value={editForm.city}
+                    onChange={(e) => setEditForm({ ...editForm, city: e.target.value })}
+                    className="w-full p-2 border rounded"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">State</label>
+                  <input
+                    type="text"
+                    value={editForm.state}
+                    onChange={(e) => setEditForm({ ...editForm, state: e.target.value })}
+                    className="w-full p-2 border rounded"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Zip Code</label>
+                  <input
+                    type="text"
+                    value={editForm.zipCode}
+                    onChange={(e) => setEditForm({ ...editForm, zipCode: e.target.value })}
+                    className="w-full p-2 border rounded"
+                  />
+                </div>
+              </div>
+              
+              {/* Beds, Baths, Sq Ft */}
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Bedrooms</label>
+                  <input
+                    type="number"
+                    value={editForm.bedrooms}
+                    onChange={(e) => setEditForm({ ...editForm, bedrooms: parseInt(e.target.value) })}
+                    className="w-full p-2 border rounded"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Bathrooms</label>
+                  <input
+                    type="number"
+                    step="0.5"
+                    value={editForm.bathrooms}
+                    onChange={(e) => setEditForm({ ...editForm, bathrooms: parseFloat(e.target.value) })}
+                    className="w-full p-2 border rounded"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Square Feet</label>
+                  <input
+                    type="number"
+                    value={editForm.squareFeet}
+                    onChange={(e) => setEditForm({ ...editForm, squareFeet: parseInt(e.target.value) })}
+                    className="w-full p-2 border rounded"
+                  />
+                </div>
+              </div>
+              
+              {/* Financial Info */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">List Price</label>
+                  <input
+                    type="number"
+                    value={editForm.listPrice}
+                    onChange={(e) => setEditForm({ ...editForm, listPrice: parseFloat(e.target.value) })}
+                    className="w-full p-2 border rounded"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Down Payment</label>
+                  <input
+                    type="number"
+                    value={editForm.downPaymentAmount}
+                    onChange={(e) => setEditForm({ ...editForm, downPaymentAmount: parseFloat(e.target.value) })}
+                    className="w-full p-2 border rounded"
+                  />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Monthly Payment</label>
+                  <input
+                    type="number"
+                    value={editForm.monthlyPayment}
+                    onChange={(e) => setEditForm({ ...editForm, monthlyPayment: parseFloat(e.target.value) })}
+                    className="w-full p-2 border rounded"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Interest Rate (%)</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={editForm.interestRate}
+                    onChange={(e) => setEditForm({ ...editForm, interestRate: parseFloat(e.target.value) })}
+                    className="w-full p-2 border rounded"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Term (Years)</label>
+                  <input
+                    type="number"
+                    value={editForm.termYears}
+                    onChange={(e) => setEditForm({ ...editForm, termYears: parseInt(e.target.value) })}
+                    className="w-full p-2 border rounded"
+                  />
+                </div>
+              </div>
+              
+              {/* Description */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <textarea
+                  value={editForm.description}
+                  onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                  className="w-full p-2 border rounded"
+                  rows={3}
+                />
+              </div>
+              
+              {/* Image URL */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Image URL</label>
+                <input
+                  type="text"
+                  value={editForm.imageUrl}
+                  onChange={(e) => setEditForm({ ...editForm, imageUrl: e.target.value })}
+                  className="w-full p-2 border rounded"
+                />
+                {editForm.imageUrl && (
+                  <img 
+                    src={editForm.imageUrl} 
+                    alt="Preview" 
+                    className="mt-2 w-full h-48 object-cover rounded"
+                  />
+                )}
+              </div>
+              
+              {/* Active Status */}
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="isActive"
+                  checked={editForm.isActive}
+                  onChange={(e) => setEditForm({ ...editForm, isActive: e.target.checked })}
+                  className="w-4 h-4 text-blue-600 border-gray-300 rounded"
+                />
+                <label htmlFor="isActive" className="ml-2 text-sm font-medium text-gray-700">
+                  Property is Active
+                </label>
+              </div>
+              
+              {/* Action Buttons */}
+              <div className="flex justify-end space-x-3 pt-4">
+                <button
+                  onClick={() => setEditingProperty(null)}
+                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveProperty}
+                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       
       <Footer />
     </div>

@@ -6,6 +6,7 @@ import {
   doc,
   updateDoc,
   getDoc,
+  setDoc,
   orderBy,
   where,
   serverTimestamp
@@ -26,13 +27,48 @@ export async function GET(request: NextRequest) {
     );
     const disputeDocs = await getDocs(disputesQuery);
 
-    const disputes = disputeDocs.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      submittedAt: doc.data().submittedAt?.toDate?.()?.toISOString() || doc.data().submittedAt,
-      createdAt: doc.data().createdAt?.toDate?.()?.toISOString() || doc.data().createdAt,
-      updatedAt: doc.data().updatedAt?.toDate?.()?.toISOString() || doc.data().updatedAt,
-      resolvedAt: doc.data().resolvedAt?.toDate?.()?.toISOString() || doc.data().resolvedAt
+    // Fetch disputes and enhance with buyer details
+    const disputes = await Promise.all(disputeDocs.docs.map(async (docSnapshot) => {
+      const disputeData = docSnapshot.data();
+      let buyerDetails = null;
+      
+      // Try to fetch the related purchase to get buyer ID
+      if (disputeData.transactionId) {
+        try {
+          const purchaseDoc = await getDoc(doc(db, 'buyerLeadPurchases', disputeData.transactionId));
+          if (purchaseDoc.exists()) {
+            const purchaseData = purchaseDoc.data();
+            
+            // Fetch buyer profile
+            if (purchaseData.buyerId) {
+              const buyerDoc = await getDoc(doc(db, 'buyerProfiles', purchaseData.buyerId));
+              if (buyerDoc.exists()) {
+                const buyer = buyerDoc.data();
+                buyerDetails = {
+                  buyerPhone: buyer.phone || 'No phone',
+                  buyerEmail: buyer.email || 'No email',
+                  buyerCity: buyer.preferredCity || 'Unknown',
+                  buyerState: buyer.preferredState || '',
+                  maxMonthlyPayment: buyer.maxMonthlyPayment || 0,
+                  maxDownPayment: buyer.maxDownPayment || 0
+                };
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching buyer details for dispute:', error);
+        }
+      }
+      
+      return {
+        id: docSnapshot.id,
+        ...disputeData,
+        ...buyerDetails,
+        submittedAt: disputeData.submittedAt?.toDate?.()?.toISOString() || disputeData.submittedAt,
+        createdAt: disputeData.createdAt?.toDate?.()?.toISOString() || disputeData.createdAt,
+        updatedAt: disputeData.updatedAt?.toDate?.()?.toISOString() || disputeData.updatedAt,
+        resolvedAt: disputeData.resolvedAt?.toDate?.()?.toISOString() || disputeData.resolvedAt
+      };
     }));
 
     // Group by status
@@ -89,16 +125,22 @@ export async function POST(request: NextRequest) {
     }
 
     const dispute = disputeDoc.data();
+    
+    // Allow re-processing approved disputes if they don't have refund amounts
+    if (dispute.status === 'approved' && !dispute.refundAmount && refundCredits > 0) {
+      console.log('Re-processing approved dispute to add missing refund');
+    }
 
     // Update dispute status
-    const updateData = {
+    const updateData: any = {
       status: action === 'refund' ? 'refunded' : action === 'approve' ? 'approved' : 'denied',
       adminNotes: adminNotes || '',
       resolvedAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     };
 
-    if (action === 'refund' && refundCredits) {
+    // Refund credits when approving or explicitly refunding
+    if ((action === 'approve' || action === 'refund') && refundCredits > 0) {
       updateData.refundAmount = refundCredits;
       
       // Add credits back to realtor account
@@ -108,6 +150,17 @@ export async function POST(request: NextRequest) {
         await updateDoc(doc(db, 'realtors', dispute.realtorId), {
           credits: currentCredits + refundCredits,
           updatedAt: serverTimestamp()
+        });
+        
+        // Create a transaction record for the refund
+        await setDoc(doc(collection(db, 'transactions')), {
+          realtorId: dispute.realtorId,
+          type: 'dispute_refund',
+          description: `Refund for dispute #${disputeId.substring(0, 8)}`,
+          credits: refundCredits,
+          amount: 0, // No money transaction, just credits
+          status: 'completed',
+          createdAt: serverTimestamp()
         });
       }
     }

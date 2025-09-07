@@ -80,7 +80,8 @@ export async function POST(request: NextRequest) {
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
           status: 'active',
-          source: 'csv-upload'
+          source: 'csv-upload',
+          isActive: true // Ensure this flag is set for the matching service
         });
         
         console.log(`Successfully inserted: ${property.id}`);

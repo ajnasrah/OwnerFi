@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { PRICING_TIERS, PricingTier } from '@/lib/pricing';
+import AccountStatus from './AccountStatus';
 
 interface RealtorProfile {
   id: string;
@@ -139,7 +140,7 @@ export default function RealtorSettings() {
                 ) || cityData.cities[0]; // Fallback to first result
                 
                 if (centerCity && centerCity.lat && centerCity.lng) {
-                  loadNearbyCities(centerCity, data.profile.serviceRadius || 25);
+                  loadNearbyCities(centerCity, data.profile.serviceRadius || 40);
                 }
               }
             } catch (err) {
@@ -181,7 +182,7 @@ export default function RealtorSettings() {
     }
   };
 
-  const selectCity = (city: any) => {
+  const selectCity = async (city: any) => {
     setProfile(prev => prev ? ({
       ...prev,
       primaryCity: city.name,
@@ -192,8 +193,27 @@ export default function RealtorSettings() {
     setShowDropdown(false);
     setCitySelected(true);
     
+    // Get coordinates if not already available
+    let cityWithCoords = city;
+    if (!city.lat || !city.lng) {
+      try {
+        const coordsResponse = await fetch(`/api/cities/coordinates?place_id=${city.place_id}`);
+        const coordsData = await coordsResponse.json();
+        
+        if (coordsData.lat && coordsData.lng) {
+          cityWithCoords = {
+            ...city,
+            lat: coordsData.lat,
+            lng: coordsData.lng
+          };
+        }
+      } catch (err) {
+        console.error('Failed to get coordinates:', err);
+      }
+    }
+    
     // Load nearby cities for the newly selected city
-    loadNearbyCities(city, profile?.serviceRadius || 25);
+    loadNearbyCities(cityWithCoords, profile?.serviceRadius || 40);
     
     // Clear previously selected service cities since the area changed
     setSelectedServiceCities([]);
@@ -228,6 +248,14 @@ export default function RealtorSettings() {
           )
         ];
         setNearbyCities(citiesWithCenter);
+        
+        // AUTO-SELECT ALL CITIES BY DEFAULT
+        const allCityStrings = data.cities.map((city: any) => `${city.name}, ${city.state}`);
+        setSelectedServiceCities(allCityStrings);
+        if (profile) {
+          setProfile(prev => prev ? ({...prev, serviceCities: JSON.stringify(allCityStrings)}) : null);
+        }
+        
       } else {
         setNearbyCities([{ 
           name: centerCity.name, 
@@ -327,6 +355,8 @@ export default function RealtorSettings() {
           priceId = tier.stripePriceAnnual;
         }
         
+        console.log('Starting checkout for:', { planId: tier.id, priceId, billingType });
+        
         const response = await fetch('/api/stripe/checkout', {
           method: 'POST',
           headers: {
@@ -343,8 +373,11 @@ export default function RealtorSettings() {
         
         const data = await response.json();
         
+        console.log('Checkout response:', data);
+        
         if (data.error) {
-          setError(data.error);
+          console.error('Checkout error:', data);
+          setError(`Subscription error: ${data.error}${data.details ? ` - ${data.details}` : ''}`);
           setSaving(false);
           return;
         }
@@ -868,89 +901,14 @@ export default function RealtorSettings() {
               </div>
             </div>
 
-            {/* Subscription Management */}
-            {(profile as any).subscription?.status === 'active' && (
-              <div className="bg-surface-bg rounded-xl shadow-soft border border-neutral-border p-6 mb-6">
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between">
-                  <div>
-                    <h3 className="text-xl font-bold text-primary-text mb-2">Subscription Management</h3>
-                    <p className="text-secondary-text mb-4">Manage your current subscription</p>
-                    
-                    <div className="bg-accent-success/10 border border-accent-success/20 rounded-lg p-4 mb-4">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <svg className="w-5 h-5 text-accent-success" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                        </svg>
-                        <span className="font-semibold text-accent-success">Active Subscription</span>
-                      </div>
-                      <div className="text-sm text-secondary-text space-y-1">
-                        <p><span className="font-medium">Plan:</span> {(profile as any).subscription?.planName || 'Professional'}</p>
-                        <p><span className="font-medium">Status:</span> {(profile as any).subscription?.status}</p>
-                        <p><span className="font-medium">Next billing:</span> {new Date((profile as any).subscription?.currentPeriodEnd || Date.now()).toLocaleDateString()}</p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex flex-col space-y-3">
-                    <button
-                      onClick={async () => {
-                        try {
-                          const response = await fetch('/api/stripe/billing-portal', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                          });
-                          
-                          if (!response.ok) {
-                            // Handle subscription not found gracefully
-                            setError('No active subscription found. Please purchase a subscription first to access billing management.');
-                            return;
-                          }
-                          
-                          const data = await response.json();
-                          if (data.url) {
-                            window.location.href = data.url;
-                          } else {
-                            setError('No active subscription found. Please purchase a subscription first to access billing management.');
-                          }
-                        } catch (err) {
-                          setError('No active subscription found. Please purchase a subscription first to access billing management.');
-                        }
-                      }}
-                      className="bg-accent-primary text-surface-bg px-6 py-3 rounded-lg font-semibold hover:bg-accent-hover transition-colors shadow-soft"
-                    >
-                      🔗 Manage Billing
-                    </button>
-                    <button
-                      onClick={async () => {
-                        if (confirm('Are you sure you want to cancel your subscription? You will lose access to premium features at the end of your current billing period.')) {
-                          try {
-                            setSaving(true);
-                            const response = await fetch('/api/stripe/cancel-subscription', {
-                              method: 'POST',
-                              headers: { 'Content-Type': 'application/json' },
-                            });
-                            const data = await response.json();
-                            if (data.error) {
-                              setError(data.error);
-                            } else {
-                              setSuccess('Subscription cancelled successfully. You will retain access until the end of your current billing period.');
-                              loadProfile(); // Refresh profile data
-                            }
-                          } catch (err) {
-                            setError('Failed to cancel subscription');
-                          } finally {
-                            setSaving(false);
-                          }
-                        }
-                      }}
-                      className="bg-accent-danger/10 text-accent-danger border border-accent-danger/20 px-6 py-3 rounded-lg font-semibold hover:bg-accent-danger/20 transition-colors"
-                    >
-                      ❌ Cancel Subscription
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
+            {/* Account Status */}
+            <AccountStatus 
+              profile={profile}
+              setError={setError}
+              setSuccess={setSuccess}
+              setSaving={setSaving}
+              loadProfile={loadProfile}
+            />
 
             {/* Subscription Plans */}
             <div className="bg-surface-bg rounded-xl shadow-soft border border-neutral-border p-6">
@@ -984,9 +942,9 @@ export default function RealtorSettings() {
                 </div>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {Object.values(PRICING_TIERS).map((tier: PricingTier) => (
-                  <div key={tier.id} className={`relative border rounded-xl p-6 transition-all hover:shadow-medium ${
+                  <div key={tier.id} className={`relative border rounded-xl p-6 transition-all hover:shadow-medium flex flex-col h-full ${
                     tier.id === 'professional' 
                       ? 'border-2 border-accent-primary bg-gradient-to-br from-accent-primary/5 to-accent-primary/10' 
                       : tier.isPayPerLead
@@ -1025,7 +983,7 @@ export default function RealtorSettings() {
                       </div>
                     </div>
                     
-                    <div className="mb-6">
+                    <div className="mb-6 min-h-[100px] flex flex-col justify-center">
                       {tier.isEnterprise ? (
                         <div>
                           <div className="text-3xl font-bold text-purple-600 mb-1">Custom</div>
@@ -1064,19 +1022,22 @@ export default function RealtorSettings() {
                       )}
                     </div>
                     
-                    <div className="space-y-3 mb-6">
-                      {tier.features.map((feature, index) => (
-                        <div key={index} className="flex items-start space-x-2">
-                          <svg className="w-4 h-4 text-accent-success mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                          </svg>
-                          <span className="text-sm text-secondary-text">{feature}</span>
-                        </div>
-                      ))}
+                    <div className="flex-1 mb-6">
+                      <div className="space-y-3 min-h-[140px]">
+                        {tier.features.map((feature, index) => (
+                          <div key={index} className="flex items-start space-x-2">
+                            <svg className="w-4 h-4 text-accent-success mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                            <span className="text-sm text-secondary-text">{feature}</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                     
-                    <button 
-                      className={`w-full py-3 px-4 rounded-lg font-semibold text-sm transition-all transform hover:scale-[1.02] active:scale-[0.98] ${
+                    <div className="mt-auto">
+                      <button 
+                        className={`w-full py-3 px-4 rounded-lg font-semibold text-sm transition-all transform hover:scale-[1.02] active:scale-[0.98] ${
                         tier.isEnterprise 
                           ? 'bg-purple-600 text-surface-bg hover:bg-purple-700 shadow-soft'
                           : tier.id === 'customPropertyService'
@@ -1088,7 +1049,6 @@ export default function RealtorSettings() {
                           : 'bg-neutral-border text-secondary-text cursor-not-allowed'
                       }`}
                       onClick={() => handlePlanSelection(tier)}
-                      disabled={!tier.isEnterprise && tier.id !== 'customPropertyService' && !tier.stripePrice}
                     >
                       {tier.isEnterprise 
                         ? '📞 Contact Sales'
@@ -1099,7 +1059,8 @@ export default function RealtorSettings() {
                         : tier.stripePrice
                         ? '🚀 Subscribe Now'
                         : '⏳ Coming Soon'}
-                    </button>
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>

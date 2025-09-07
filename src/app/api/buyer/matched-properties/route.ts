@@ -1,105 +1,75 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { 
-  collection, 
-  query, 
-  where, 
-  getDocs,
-  orderBy 
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import { mockBuyers } from '@/lib/mock-data';
+import UnifiedMatchingService from '@/lib/unified-matching-service';
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const city = searchParams.get('city') || 'Memphis';
-    const radius = parseInt(searchParams.get('radius') || '25');
-    const maxMonthly = searchParams.get('maxMonthly') ? parseInt(searchParams.get('maxMonthly')!) : null;
-    const maxDown = searchParams.get('maxDown') ? parseInt(searchParams.get('maxDown')!) : null;
-    const minBedrooms = searchParams.get('minBedrooms') ? parseInt(searchParams.get('minBedrooms')!) : null;
-    const minBathrooms = searchParams.get('minBathrooms') ? parseInt(searchParams.get('minBathrooms')!) : null;
+    const state = searchParams.get('state') || 'TN';
+    const radius = parseInt(searchParams.get('radius') || '40');
+    const maxMonthly = parseInt(searchParams.get('maxMonthly') || '5000');
+    const maxDown = parseInt(searchParams.get('maxDown') || '100000');
+    const minBedrooms = searchParams.get('minBedrooms') ? parseInt(searchParams.get('minBedrooms')!) : undefined;
+    const minBathrooms = searchParams.get('minBathrooms') ? parseInt(searchParams.get('minBathrooms')!) : undefined;
+    const minPrice = searchParams.get('minPrice') ? parseInt(searchParams.get('minPrice')!) : undefined;
+    const maxPrice = searchParams.get('maxPrice') ? parseInt(searchParams.get('maxPrice')!) : undefined;
     
-    // Simple filtering based on city for now
-    // In real app, would use lat/lng distance calculations
-    const cityMapping: { [key: string]: string[] } = {
-      'Memphis': ['Memphis', 'Southaven', 'West Memphis', 'Forest City', 'Collierville'],
-      'Nashville': ['Nashville', 'Franklin', 'Murfreesboro', 'Hendersonville'],
-      'Jackson': ['Jackson'],
-      'Atlanta': ['Atlanta'],
-      'Houston': ['Houston', 'Katy', 'Spring', 'Pearland', 'Sugar Land'],
-      'Dallas': ['Dallas', 'Plano', 'Irving', 'Garland', 'Mesquite', 'Carrollton', 'Richardson', 'Lewisville', 'Allen', 'Frisco'],
-      'Austin': ['Austin', 'Round Rock', 'Cedar Park', 'Pflugerville', 'Georgetown'],
-      'San Antonio': ['San Antonio', 'Schertz', 'New Braunfels', 'Converse'],
-      'Tampa': ['Tampa', 'St. Petersburg', 'Clearwater', 'Largo'],
-      'Miami': ['Miami', 'Miami Beach', 'Coral Gables', 'Homestead'],
-      'Orlando': ['Orlando', 'Winter Park', 'Kissimmee', 'Sanford'],
-      'Phoenix': ['Phoenix', 'Scottsdale', 'Tempe', 'Mesa', 'Glendale', 'Anthem', 'Casa Grande', 'Golden Valley']
+    // Build buyer location (for anonymous searches, we need to calculate cities)
+    const buyerLocation = {
+      centerCity: city,
+      centerState: state,
+      searchRadius: radius,
+      serviceCities: [city] // For now, just use center city. In real app, this would be pre-calculated
     };
-    
-    // Fetch properties from Firebase
-    const propertiesQuery = query(
-      collection(db, 'properties'),
-      where('isActive', '==', true)
+
+    // Use unified service to find properties for buyer
+    const matchingProperties = await UnifiedMatchingService.findPropertiesForBuyer(
+      buyerLocation,
+      { maxMonthlyPayment: maxMonthly, maxDownPayment: maxDown, minPrice, maxPrice },
+      { minBedrooms, minBathrooms }
     );
-    
-    const propertiesSnapshot = await getDocs(propertiesQuery);
-    const allProperties = propertiesSnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
+
+    // Format response
+    const properties = matchingProperties.map(property => ({
+      id: property.id,
+      address: property.address,
+      city: property.city,
+      state: property.state,
+      zipCode: property.zipCode,
+      bedrooms: property.bedrooms,
+      bathrooms: property.bathrooms,
+      squareFeet: property.squareFeet,
+      listPrice: property.listPrice,
+      downPaymentAmount: property.downPaymentAmount,
+      monthlyPayment: property.monthlyPayment,
+      interestRate: property.interestRate,
+      termYears: property.termYears,
+      imageUrl: property.imageUrl,
+      description: property.description,
+      distance: 0, // Would calculate if needed
+      matchScore: 85 // Default good match score
     }));
 
-    const allowedCities = cityMapping[city] || [city];
-    let filteredProperties = allProperties.filter((property: any) => {
-      // City filter - first check exact matches, then partial matches
-      const exactMatch = allowedCities.includes(property.city);
-      const partialMatch = !exactMatch && allowedCities.some(allowedCity => 
-        property.city.toLowerCase().includes(allowedCity.toLowerCase()) ||
-        allowedCity.toLowerCase().includes(property.city.toLowerCase())
-      );
-      
-      if (!exactMatch && !partialMatch) return false;
-      
-      // Budget filters - properties must be WITHIN user's budget
-      if (maxMonthly && property.monthlyPayment > maxMonthly) return false;
-      if (maxDown && property.downPaymentAmount > maxDown) return false;
-      
-      // Bedroom filter - property must have AT LEAST this many bedrooms
-      if (minBedrooms && property.bedrooms < minBedrooms) return false;
-      
-      // Bathroom filter - property must have AT LEAST this many bathrooms  
-      if (minBathrooms && property.bathrooms < minBathrooms) return false;
-      
-      return true;
-    });
-    
-    // If no properties match all criteria, show city matches only (ignore budget/bed/bath filters)
-    if (filteredProperties.length === 0) {
-      console.log(`No properties match all criteria for ${city}, showing city matches only`);
-      filteredProperties = allProperties.filter((property: any) => 
-        allowedCities.includes(property.city)
-      );
-      
-      // If still no matches in the requested city, return empty array instead of showing all properties
-      if (filteredProperties.length === 0) {
-        console.log(`No properties found for ${city}, returning empty results`);
-        filteredProperties = [];
-      }
-    }
-    
     return NextResponse.json({
-      properties: filteredProperties,
-      summary: {
-        totalMatches: filteredProperties.length,
-        searchCenter: `${city}, TN`,
-        searchRadius: radius,
+      properties,
+      totalMatches: properties.length,
+      exactCityMatches: properties.filter(p => p.city.toLowerCase() === city.toLowerCase()).length,
+      nearbyMatches: properties.filter(p => p.city.toLowerCase() !== city.toLowerCase()).length,
+      searchCriteria: {
+        city,
+        state,
+        radius,
+        maxMonthly,
+        maxDown,
+        minBedrooms,
+        minBathrooms
       }
     });
 
   } catch (error) {
-    console.error('Failed to fetch matched properties:', error);
-
+    console.error('Buyer matched properties error:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch properties' },
+      { error: 'Failed to find matching properties' },
       { status: 500 }
     );
   }

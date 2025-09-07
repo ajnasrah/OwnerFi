@@ -69,6 +69,7 @@ export default function BuyerLinkDashboard() {
   const [purchasedLeads, setPurchasedLeads] = useState<PurchasedLead[]>([]);
   const [purchaseLoading, setPurchaseLoading] = useState<string | null>(null);
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const [transactionHistory, setTransactionHistory] = useState<TransactionHistory[]>([]);
   const [showHistory, setShowHistory] = useState(false);
   const [showDisputeModal, setShowDisputeModal] = useState(false);
@@ -106,8 +107,8 @@ export default function BuyerLinkDashboard() {
     try {
       setLoading(true);
       
-      // Load realtor profile
-      const profileResponse = await fetch('/api/realtor/profile');
+      // Load realtor profile with cache busting
+      const profileResponse = await fetch(`/api/realtor/profile?t=${Date.now()}`);
       const profileData = await profileResponse.json();
       
       if (!profileData.profile) {
@@ -208,8 +209,29 @@ export default function BuyerLinkDashboard() {
   };
 
   const submitDispute = async () => {
-    if (!selectedTransaction || !disputeForm.reason || !disputeForm.explanation || disputeForm.screenshots.length < 3) {
-      setError('Please fill in all required fields and upload at least 3 screenshots showing contact attempts');
+    // Validate all required fields
+    if (!selectedTransaction) {
+      setError('No transaction selected');
+      return;
+    }
+    
+    if (!disputeForm.reason) {
+      setError('Please select a reason for the dispute');
+      return;
+    }
+    
+    if (!disputeForm.explanation || disputeForm.explanation.trim().length < 20) {
+      setError('Please provide a detailed explanation (minimum 20 characters)');
+      return;
+    }
+    
+    if (!disputeForm.contactAttempts || disputeForm.contactAttempts.trim().length < 10) {
+      setError('Please describe your contact attempts with dates/times');
+      return;
+    }
+    
+    if (disputeForm.screenshots.length < 3) {
+      setError('Please upload at least 3 screenshots showing your contact attempts');
       return;
     }
 
@@ -239,11 +261,14 @@ export default function BuyerLinkDashboard() {
 
       if (data.error) {
         setError(data.error);
+        setSuccessMessage('');
       } else {
         setError('');
         setShowDisputeModal(false);
-        setError('✅ Dispute submitted successfully. We will review and respond within 24 hours.');
+        setSuccessMessage('✅ Dispute submitted successfully. We will review and respond within 24 hours.');
         await loadDashboardData();
+        // Clear success message after 5 seconds
+        setTimeout(() => setSuccessMessage(''), 5000);
       }
     } catch (err) {
       setError('Failed to submit dispute. Please try again.');
@@ -309,7 +334,14 @@ export default function BuyerLinkDashboard() {
                 <span className="text-sm font-medium">Settings</span>
               </Link>
               <button
-                onClick={() => signOut({ callbackUrl: '/' })}
+                onClick={async () => {
+                  try {
+                    await signOut({ redirect: false });
+                    router.push('/');
+                  } catch (error) {
+                    console.error('Sign out error:', error);
+                  }
+                }}
                 className="px-3 py-2 bg-red-500/20 hover:bg-red-500/30 text-surface-bg rounded-lg text-sm font-medium transition-colors"
               >
                 Sign Out
@@ -325,6 +357,10 @@ export default function BuyerLinkDashboard() {
             <p className="text-surface-bg/80 text-sm">
               Your professional lead management center
             </p>
+            {/* Debug info - remove in production */}
+            <div className="text-xs text-surface-bg/60 mt-1">
+              Account: {profile?.email || 'Loading...'} | Credits: {profile?.credits} | Profile ID: {profile?.id?.substring(0, 8)}
+            </div>
           </div>
         </div>
       </div>
@@ -367,6 +403,12 @@ export default function BuyerLinkDashboard() {
           </div>
         )}
 
+        {successMessage && (
+          <div className="mb-6 bg-green-500/10 border border-green-500/20 rounded-xl p-4">
+            <p className="text-green-600 text-sm font-medium">{successMessage}</p>
+          </div>
+        )}
+
         {/* Trial Status Banner */}
         {profile?.isOnTrial && (
           <div className="mb-6 bg-gradient-to-r from-accent-success/10 to-accent-primary/10 border border-accent-success/20 rounded-xl p-5">
@@ -381,7 +423,7 @@ export default function BuyerLinkDashboard() {
                   <h3 className="font-semibold text-accent-success text-lg">Free Trial Active</h3>
                 </div>
                 <p className="text-secondary-text">
-                  <span className="font-medium text-primary-text">{getTrialDaysRemaining()} days remaining</span> with {profile.credits} free credits to get you started.
+                  <span className="font-medium text-primary-text">{getTrialDaysRemaining()} days remaining</span> with {profile.credits} credits available.
                 </p>
               </div>
               <Link
@@ -893,23 +935,24 @@ export default function BuyerLinkDashboard() {
 
               <div>
                 <label className="block text-sm font-medium text-primary-text mb-2">
-                  Contact Attempts
+                  Contact Attempts *
                 </label>
                 <textarea
                   value={disputeForm.contactAttempts}
                   onChange={(e) => setDisputeForm(prev => ({...prev, contactAttempts: e.target.value}))}
                   className="w-full p-3 border border-neutral-border rounded-lg focus:ring-accent-primary focus:border-accent-primary h-20"
                   placeholder="List dates/times you attempted to contact the buyer (e.g., Called 12/1 2pm, 12/2 10am, texted 12/3...)"
+                  required
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-primary-text mb-2">
-                  Required Screenshots/Evidence * (Minimum 3)
+                  Required Screenshots/Evidence * (Minimum 3, no maximum)
                 </label>
                 <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                   <p className="text-sm text-blue-800 mb-2">
-                    <strong>Upload screenshots showing you contacted the buyer at least 3 times:</strong>
+                    <strong>Upload screenshots showing you contacted the buyer (minimum 3, upload as many as you have):</strong>
                   </p>
                   <ul className="text-xs text-blue-700 space-y-1">
                     <li>• Call logs with timestamps</li>
@@ -932,7 +975,7 @@ export default function BuyerLinkDashboard() {
                     className="w-full p-3 border border-neutral-border rounded-lg focus:ring-accent-primary focus:border-accent-primary file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                   />
                   <p className="text-xs text-gray-600">
-                    💡 Tip: Hold Ctrl/Cmd to select multiple screenshots at once, or click "Choose Files" multiple times to add more
+                    💡 Tip: Upload as many screenshots as you have! Hold Ctrl/Cmd to select multiple files at once, or click "Choose Files" multiple times to add more evidence
                   </p>
                   {disputeForm.screenshots.length > 0 && (
                     <button
@@ -957,7 +1000,7 @@ export default function BuyerLinkDashboard() {
                   </div>
                 )}
                 {disputeForm.screenshots.length < 3 && (
-                  <p className="text-xs text-red-600 mt-2">⚠️ Minimum 3 screenshots required to show contact attempts</p>
+                  <p className="text-xs text-red-600 mt-2">⚠️ Minimum 3 screenshots required (you can upload as many as needed)</p>
                 )}
               </div>
 
@@ -982,10 +1025,10 @@ export default function BuyerLinkDashboard() {
               </button>
               <button
                 onClick={submitDispute}
-                disabled={!disputeForm.reason || !disputeForm.explanation || disputeForm.screenshots.length < 3}
+                disabled={!disputeForm.reason || !disputeForm.explanation || !disputeForm.contactAttempts || disputeForm.screenshots.length < 3}
                 className="bg-accent-danger text-surface-bg px-6 py-2 rounded-lg font-semibold hover:bg-red-600 disabled:bg-neutral-border disabled:cursor-not-allowed transition-colors"
               >
-                Submit Dispute ({disputeForm.screenshots.length}/3 screenshots)
+                Submit Dispute ({disputeForm.screenshots.length} screenshots)
               </button>
             </div>
           </div>

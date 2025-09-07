@@ -344,6 +344,8 @@ async function mapGHLRowToProperty(row: any, rowNumber: number, headers: string[
     city,
     state: state || 'FL',
     zipCode: zipCode || 'N/A',
+    latitude: latitude, // Include coordinates for matching service
+    longitude: longitude, // Include coordinates for matching service
     bedrooms: bedrooms, // Already defaulted to 2 if missing
     bathrooms: bathrooms, // Already defaulted to 1 if missing  
     squareFeet: squareFeet || 0, // Show 0 if missing

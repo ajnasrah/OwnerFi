@@ -9,7 +9,8 @@ import {
   getDocs,
   getDoc
 } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { db, storage } from '@/lib/firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { getSessionWithRole } from '@/lib/auth-utils';
 import { logError, logInfo } from '@/lib/logger';
 import { firestoreHelpers } from '@/lib/firestore';
@@ -36,23 +37,47 @@ export async function POST(request: NextRequest) {
     const purchaseDate = formData.get('purchaseDate') as string;
     const screenshotCount = parseInt(formData.get('screenshotCount') as string || '0');
     
-    // Collect uploaded screenshots
-    const screenshots = [];
+    // Collect and upload screenshots to Firebase Storage
+    const screenshotUrls = [];
     for (let i = 0; i < screenshotCount; i++) {
       const screenshot = formData.get(`screenshot_${i}`) as File;
-      if (screenshot) {
-        screenshots.push({
-          name: screenshot.name,
-          size: screenshot.size,
-          type: screenshot.type
-        });
+      if (screenshot && screenshot.size > 0) {
+        try {
+          // Convert File to buffer
+          const bytes = await screenshot.arrayBuffer();
+          const buffer = Buffer.from(bytes);
+          
+          // Create a unique filename
+          const timestamp = Date.now();
+          const filename = `disputes/${transactionId}/${timestamp}_${i}_${screenshot.name}`;
+          
+          // Upload to Firebase Storage
+          const storageRef = ref(storage, filename);
+          const snapshot = await uploadBytes(storageRef, buffer, {
+            contentType: screenshot.type || 'image/jpeg'
+          });
+          
+          // Get the download URL
+          const downloadUrl = await getDownloadURL(snapshot.ref);
+          screenshotUrls.push(downloadUrl);
+        } catch (uploadError) {
+          console.error('Failed to upload screenshot:', uploadError);
+        }
       }
     }
 
     // Validation
-    if (!transactionId || !reason || !explanation || screenshotCount < 3) {
+    if (!transactionId || !reason || !explanation) {
       return NextResponse.json(
-        { error: 'Missing required fields. Need reason, explanation, and at least 3 screenshots showing contact attempts.' },
+        { error: 'Missing required fields. Need reason and explanation.' },
+        { status: 400 }
+      );
+    }
+    
+    // Validate screenshots were uploaded
+    if (screenshotUrls.length < 3) {
+      return NextResponse.json(
+        { error: `Please upload at least 3 screenshots showing contact attempts. Only ${screenshotUrls.length} were uploaded successfully.` },
         { status: 400 }
       );
     }
@@ -112,7 +137,8 @@ export async function POST(request: NextRequest) {
       reason: reason,
       explanation: explanation,
       contactAttempts: contactAttempts || '',
-      evidence: evidence || '',
+      evidence: screenshotUrls, // Store the actual screenshot URLs
+      screenshotCount: screenshotUrls.length,
       status: 'pending',
       submittedAt: serverTimestamp(),
       createdAt: serverTimestamp(),

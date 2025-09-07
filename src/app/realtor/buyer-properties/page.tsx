@@ -33,6 +33,7 @@ export default function BuyerPropertiesView() {
   const [buyer, setBuyer] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [outsideCriteria, setOutsideCriteria] = useState(false);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -66,13 +67,14 @@ export default function BuyerPropertiesView() {
       setBuyer(buyerData.buyer);
       
       // Then get their matched properties
-      const propertiesResponse = await fetch(`/api/buyer/matched-properties?city=${buyerData.buyer.preferredCity}&maxMonthly=${buyerData.buyer.maxMonthlyPayment}&maxDown=${buyerData.buyer.maxDownPayment}&minBedrooms=${buyerData.buyer.minBedrooms || ''}&minBathrooms=${buyerData.buyer.minBathrooms || ''}`);
+      const propertiesResponse = await fetch(`/api/buyer/matched-properties?city=${buyerData.buyer.preferredCity}&state=${buyerData.buyer.preferredState || 'TX'}&radius=${buyerData.buyer.searchRadius || 25}&maxMonthly=${buyerData.buyer.maxMonthlyPayment}&maxDown=${buyerData.buyer.maxDownPayment}&minBedrooms=${buyerData.buyer.minBedrooms || ''}&minBathrooms=${buyerData.buyer.minBathrooms || ''}`);
       const propertiesData = await propertiesResponse.json();
       
       if (propertiesData.error) {
         setError(propertiesData.error);
       } else {
         setProperties(propertiesData.properties || []);
+        setOutsideCriteria(propertiesData.summary?.outsideCriteria || false);
       }
     } catch (err) {
       setError('Failed to load buyer properties');

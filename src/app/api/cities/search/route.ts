@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { cityCache } from '@/lib/cache';
-import { externalApiLimiter } from '@/lib/rate-limiter';
 
 export async function GET(request: NextRequest) {
   try {
@@ -8,129 +6,67 @@ export async function GET(request: NextRequest) {
     const query = searchParams.get('q');
     const limit = parseInt(searchParams.get('limit') || '10');
 
-    if (!query || query.length < 3) {
+    if (!query || query.length < 2) {
       return NextResponse.json({ cities: [] });
     }
 
-    // Check cache first
-    const cacheKey = `search:${query}:${limit}`;
-    const cached = cityCache.get(cacheKey);
-    if (cached) {
-      return NextResponse.json(cached);
+    const googleApiKey = process.env.GOOGLE_MAPS_API_KEY;
+    
+    if (!googleApiKey) {
+      throw new Error('Google API key not configured');
     }
 
-    // Check rate limit for external API calls
-    const clientIp = request.headers.get('x-forwarded-for') || 'localhost';
-    const canMakeRequest = await externalApiLimiter.check(clientIp);
-    
-    if (!canMakeRequest) {
-      // If rate limited, use fallback
-      console.log('Rate limited, using local fallback');
-      const { searchCities } = await import('@/lib/cities');
-      const results = searchCities(query, limit);
-      
-      const fallbackResult = { 
-        cities: results.map(city => ({
-          name: city.name,
-          state: city.state,
-          fullName: `${city.name}, ${city.state}`,
-          lat: city.lat,
-          lng: city.lng,
-          population: city.population
-        }))
-      };
-      
-      cityCache.set(cacheKey, fallbackResult, 600000); // Cache for 10 minutes
-      return NextResponse.json(fallbackResult);
-    }
-
-    // Use Nominatim (OpenStreetMap) free geocoding API for all US cities
-    const nominatimUrl = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=${limit}&countrycodes=us&city=${encodeURIComponent(query)}`;
-    
-    try {
-      const response = await fetch(nominatimUrl, {
+    // SUPER FAST: Use only Autocomplete API, no Details API calls
+    const response = await fetch(
+      `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(query)}&types=(cities)&components=country:us&key=${googleApiKey}`,
+      {
         headers: {
-          'User-Agent': 'OwnerFi-App/1.0'
+          'Accept': 'application/json',
         }
-      });
-      
-      if (!response.ok) {
-        throw new Error('Nominatim API error');
       }
-      
-      const data = await response.json();
-      
-      // Filter and format results
-      const cities = data
-        .filter((item: any) => {
-          // Include any place with an address in the US
-          return item.address && 
-                 item.address.country_code === 'us' &&
-                 item.address.state &&
-                 (item.address.city || item.address.town || item.address.village || item.name);
-        })
-        .map((item: any) => {
-          const cityName = item.address.city || item.address.town || item.address.village || item.name;
-          const stateAbbr = getStateAbbreviation(item.address.state);
-          
-          return {
-            name: cityName,
-            state: stateAbbr,
-            fullName: `${cityName}, ${stateAbbr}`,
-            lat: parseFloat(item.lat),
-            lng: parseFloat(item.lon),
-            importance: item.importance || 0
-          };
-        })
-        .filter((city: any) => city.state && city.name && city.name.length > 0)
-        .sort((a: any, b: any) => b.importance - a.importance);
+    );
 
-      // Cache the results
-      const result = { cities };
-      cityCache.set(cacheKey, result, 1800000); // Cache for 30 minutes
-      
-      return NextResponse.json(result);
-      
-    } catch (apiError) {
-      // Fallback to our local database if external API fails
-      console.log('External API failed, using fallback');
-      const { searchCities } = await import('@/lib/cities');
-      const results = searchCities(query, limit);
-      
-      return NextResponse.json({ 
-        cities: results.map(city => ({
-          name: city.name,
-          state: city.state,
-          fullName: `${city.name}, ${city.state}`,
-          lat: city.lat,
-          lng: city.lng,
-          population: city.population
-        }))
-      });
+    if (!response.ok) {
+      throw new Error(`Google API error: ${response.status}`);
     }
+
+    const data = await response.json();
+
+    if (data.error_message) {
+      throw new Error(`Google API error: ${data.error_message}`);
+    }
+
+    // Fast processing - no additional API calls needed for autocomplete
+    const cities = [];
+    
+    for (const prediction of data.predictions?.slice(0, limit) || []) {
+      // Parse city and state from description
+      const description = prediction.description || '';
+      const parts = description.split(', ');
+      
+      if (parts.length >= 2) {
+        const cityName = parts[0];
+        const state = parts[1];
+        
+        // Store place_id for coordinate lookup when user selects this city
+        cities.push({
+          name: cityName,
+          state: state,
+          fullName: `${cityName}, ${state}`,
+          place_id: prediction.place_id, // Store for later coordinate lookup
+          lat: null, // Will be fetched when user selects
+          lng: null
+        });
+      }
+    }
+
+    return NextResponse.json({ cities });
 
   } catch (error) {
+    console.error('City search error:', error);
     return NextResponse.json(
-      { error: 'Search failed', details: (error as Error).message },
+      { error: 'Search failed', cities: [] },
       { status: 500 }
     );
   }
-}
-
-// Convert full state names to abbreviations
-function getStateAbbreviation(stateName: string): string {
-  const stateMap: { [key: string]: string } = {
-    'Alabama': 'AL', 'Alaska': 'AK', 'Arizona': 'AZ', 'Arkansas': 'AR', 'California': 'CA',
-    'Colorado': 'CO', 'Connecticut': 'CT', 'Delaware': 'DE', 'Florida': 'FL', 'Georgia': 'GA',
-    'Hawaii': 'HI', 'Idaho': 'ID', 'Illinois': 'IL', 'Indiana': 'IN', 'Iowa': 'IA',
-    'Kansas': 'KS', 'Kentucky': 'KY', 'Louisiana': 'LA', 'Maine': 'ME', 'Maryland': 'MD',
-    'Massachusetts': 'MA', 'Michigan': 'MI', 'Minnesota': 'MN', 'Mississippi': 'MS', 'Missouri': 'MO',
-    'Montana': 'MT', 'Nebraska': 'NE', 'Nevada': 'NV', 'New Hampshire': 'NH', 'New Jersey': 'NJ',
-    'New Mexico': 'NM', 'New York': 'NY', 'North Carolina': 'NC', 'North Dakota': 'ND', 'Ohio': 'OH',
-    'Oklahoma': 'OK', 'Oregon': 'OR', 'Pennsylvania': 'PA', 'Rhode Island': 'RI', 'South Carolina': 'SC',
-    'South Dakota': 'SD', 'Tennessee': 'TN', 'Texas': 'TX', 'Utah': 'UT', 'Vermont': 'VT',
-    'Virginia': 'VA', 'Washington': 'WA', 'West Virginia': 'WV', 'Wisconsin': 'WI', 'Wyoming': 'WY'
-  };
-  
-  return stateMap[stateName] || stateName;
 }

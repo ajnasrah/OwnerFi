@@ -1,4 +1,3 @@
-// Simplified realtor leads API - just return available buyers without complex matching
 import { NextRequest, NextResponse } from 'next/server';
 import { 
   collection, 
@@ -9,6 +8,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { getSessionWithRole } from '@/lib/auth-utils';
+import UnifiedMatchingService from '@/lib/unified-matching-service';
 
 export async function GET(request: NextRequest) {
   try {
@@ -19,66 +19,42 @@ export async function GET(request: NextRequest) {
     }
 
     // Get realtor profile
-    const realtorsQuery = query(
+    const realtorQuery = query(
       collection(db, 'realtors'),
       where('userId', '==', session.user.id!)
     );
-    const realtorDocs = await getDocs(realtorsQuery);
-
+    const realtorDocs = await getDocs(realtorQuery);
+    
     if (realtorDocs.empty) {
-      return NextResponse.json({ error: 'Realtor profile not found' }, { status: 400 });
+      return NextResponse.json({ error: 'Realtor profile not found' }, { status: 404 });
     }
 
-    // Get purchased leads
-    const realtorId = realtorDocs.docs[0].id;
+    const realtorProfile = realtorDocs.docs[0].data();
+    
+    // Build realtor location from profile
+    const realtorLocation = {
+      centerCity: realtorProfile?.primaryCity || 'Dallas',
+      centerState: realtorProfile?.primaryState || 'TX', 
+      searchRadius: realtorProfile?.serviceRadius || 40,
+      serviceCities: parseServiceCities(realtorProfile?.serviceCities) || [realtorProfile?.primaryCity || 'Dallas']
+    };
+
+    // Get purchased buyer IDs
     const purchasedQuery = query(
       collection(db, 'buyerLeadPurchases'),
-      where('realtorId', '==', realtorId)
+      where('realtorId', '==', realtorDocs.docs[0].id)
     );
     const purchasedDocs = await getDocs(purchasedQuery);
     const purchasedBuyerIds = purchasedDocs.docs.map(doc => doc.data().buyerId);
 
-    // Get all buyers
-    const buyersQuery = query(
-      collection(db, 'buyerProfiles'),
-      where('profileComplete', '==', true),
-      firestoreLimit(50)
-    );
-    const buyerDocs = await getDocs(buyersQuery);
+    // Use unified service to find matching buyers
+    const matchingBuyers = await UnifiedMatchingService.findBuyersForRealtor(realtorLocation);
 
     const availableLeads = [];
     const purchasedLeads = [];
 
-    // Get realtor's service area
-    const realtorProfile = realtorDocs.docs[0].data();
-    const realtorServiceArea = realtorProfile?.serviceArea || '';
-    let realtorCity = 'Dallas'; // Default
-    let realtorState = 'TX';
-    
-    // Parse service area like "Dallas, TX (25 mi)"
-    const serviceMatch = realtorServiceArea.match(/^(.+?),\s*([A-Z]{2})/);
-    if (serviceMatch) {
-      realtorCity = serviceMatch[1].trim();
-      realtorState = serviceMatch[2].trim();
-    }
-
-    buyerDocs.docs.forEach(buyerDoc => {
-      const buyer = { id: buyerDoc.id, ...buyerDoc.data() };
-      
-      // Only show buyers in realtor's service area
-      const buyerCity = buyer.preferredCity || '';
-      const buyerState = buyer.preferredState || '';
-      
-      // Geographic filtering - only show buyers in same city/state
-      const isInServiceArea = buyerCity.toLowerCase().includes(realtorCity.toLowerCase()) || 
-                              buyerState === realtorState;
-      
-      if (!isInServiceArea) {
-        return; // Skip buyers outside service area
-      }
-      
-      const alreadyPurchased = purchasedBuyerIds.includes(buyerDoc.id);
-      
+    // Separate into available vs purchased
+    for (const buyer of matchingBuyers) {
       const leadData = {
         id: buyer.id,
         firstName: buyer.firstName || 'Unknown',
@@ -89,28 +65,56 @@ export async function GET(request: NextRequest) {
         maxDownPayment: buyer.maxDownPayment || 0,
         preferredCity: buyer.preferredCity || 'Unknown',
         preferredState: buyer.preferredState || 'Unknown',
-        matchedProperties: 3,
-        perfectMatches: 1,
-        goodMatches: 2,
+        searchRadius: buyer.searchRadius || 25,
+        minBedrooms: buyer.minBedrooms,
+        minBathrooms: buyer.minBathrooms,
+        matchedProperties: buyer.matchedProperties,
+        perfectMatches: buyer.exactCityMatches,
+        goodMatches: buyer.nearbyMatches,
         matchPercentage: 75,
-        languages: buyer.languages || ['English']
+        languages: buyer.languages || ['English'],
+        createdAt: buyer.createdAt || new Date().toISOString()
       };
 
+      const alreadyPurchased = purchasedBuyerIds.includes(buyer.id);
+      
       if (alreadyPurchased) {
         purchasedLeads.push(leadData);
       } else {
         availableLeads.push(leadData);
       }
-    });
+    }
 
     return NextResponse.json({
       availableLeads,
       purchasedLeads,
-      credits: realtorDocs.docs[0].data()?.credits || 0
+      credits: realtorProfile?.credits || 0,
+      serviceArea: {
+        city: realtorLocation.centerCity,
+        state: realtorLocation.centerState,
+        cities: realtorLocation.serviceCities
+      }
     });
 
   } catch (error) {
-    console.error('Simple leads API error:', error);
+    console.error('Leads API error:', error);
     return NextResponse.json({ error: 'Failed to load leads' }, { status: 500 });
   }
+}
+
+// Helper function to parse service cities from profile
+function parseServiceCities(serviceCitiesData: any): string[] | null {
+  if (!serviceCitiesData) return null;
+  
+  try {
+    if (Array.isArray(serviceCitiesData)) {
+      return serviceCitiesData;
+    } else if (typeof serviceCitiesData === 'string') {
+      return JSON.parse(serviceCitiesData);
+    }
+  } catch (error) {
+    console.warn('Error parsing service cities:', error);
+  }
+  
+  return null;
 }

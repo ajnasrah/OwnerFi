@@ -1,0 +1,79 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/lib/auth';
+import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+
+// GET single property
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user || (session.user as any).role !== 'admin') {
+      return NextResponse.json(
+        { error: 'Admin access required' },
+        { status: 403 }
+      );
+    }
+
+    const propertyDoc = await getDoc(doc(db, 'properties', params.id));
+    
+    if (!propertyDoc.exists()) {
+      return NextResponse.json(
+        { error: 'Property not found' },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({
+      id: propertyDoc.id,
+      ...propertyDoc.data()
+    });
+  } catch (error) {
+    console.error('Error fetching property:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch property' },
+      { status: 500 }
+    );
+  }
+}
+
+// UPDATE property
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user || (session.user as any).role !== 'admin') {
+      return NextResponse.json(
+        { error: 'Admin access required' },
+        { status: 403 }
+      );
+    }
+
+    const updates = await request.json();
+    
+    // Remove id from updates if present
+    delete updates.id;
+    
+    // Update the property
+    await updateDoc(doc(db, 'properties', params.id), {
+      ...updates,
+      updatedAt: serverTimestamp()
+    });
+
+    return NextResponse.json({ 
+      success: true,
+      message: 'Property updated successfully'
+    });
+  } catch (error) {
+    console.error('Error updating property:', error);
+    return NextResponse.json(
+      { error: 'Failed to update property' },
+      { status: 500 }
+    );
+  }
+}

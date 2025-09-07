@@ -215,11 +215,26 @@ export class SystemValidator {
         });
       } else {
         // Import matching function dynamically
-        const { calculateBuyerPropertyMatches } = await import('./property-matcher');
+        const { PropertyMatchingService, BuyerCriteria } = await import('./property-matching-service');
         
         // Test with first buyer
         const testBuyer = { id: buyerDocs.docs[0].id, ...buyerDocs.docs[0].data() } as any;
-        const matchResult = await calculateBuyerPropertyMatches(testBuyer);
+        
+        // Convert to BuyerCriteria format
+        const buyerCriteria: BuyerCriteria = {
+          id: testBuyer.id,
+          preferredCity: testBuyer.preferredCity || '',
+          preferredState: testBuyer.preferredState || '',
+          searchRadius: testBuyer.searchRadius || 25,
+          maxMonthlyPayment: testBuyer.maxMonthlyPayment || 0,
+          maxDownPayment: testBuyer.maxDownPayment || 0,
+          minBedrooms: testBuyer.minBedrooms,
+          minBathrooms: testBuyer.minBathrooms,
+          minPrice: testBuyer.minPrice,
+          maxPrice: testBuyer.maxPrice
+        };
+        
+        const matchResult = await PropertyMatchingService.calculateBuyerMatches(buyerCriteria);
         
         results.push({
           category: 'Matching',
@@ -229,8 +244,9 @@ export class SystemValidator {
           details: {
             buyerId: testBuyer.id,
             totalMatches: matchResult.totalMatches,
-            perfectMatches: matchResult.perfectMatches,
-            goodMatches: matchResult.goodMatches
+            exactCityMatches: matchResult.exactCityMatches,
+            nearbyMatches: matchResult.nearbyMatches,
+            stateMatches: matchResult.stateMatches
           }
         });
       }

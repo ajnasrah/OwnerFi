@@ -1,12 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSessionWithRole } from '@/lib/auth-utils';
 import { PRICING_TIERS } from '@/lib/pricing';
-import { 
-  doc,
-  getDoc,
-  updateDoc
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import Stripe from 'stripe';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -43,62 +37,17 @@ export async function POST(request: NextRequest) {
       finalPriceId = tier.stripePrice;
     }
 
-    // Get user's stored Stripe customer ID
-    const userDoc = await getDoc(doc(db, 'users', session.user.id!));
-    const userData = userDoc.exists() ? userDoc.data() : null;
-    let stripeCustomerId = userData?.stripeCustomerId;
-
-    // If no customer ID stored, try to find or create one
-    if (!stripeCustomerId) {
-      try {
-        const customers = await stripe.customers.list({
-          email: session.user.email,
-          limit: 1
-        });
-        
-        if (customers.data.length > 0) {
-          stripeCustomerId = customers.data[0].id;
-        } else {
-          const customer = await stripe.customers.create({
-            email: session.user.email,
-            name: session.user.name || 'Unknown',
-            metadata: {
-              userId: session.user.id!,
-              userType: 'realtor'
-            }
-          });
-          stripeCustomerId = customer.id;
-        }
-
-        // Update user record with customer ID
-        await updateDoc(doc(db, 'users', session.user.id!), {
-          stripeCustomerId: stripeCustomerId
-        });
-      } catch (error) {
-        console.error('Customer lookup/creation failed:', error);
-      }
-    }
-
-    // Determine checkout mode based on plan type
-    const isSubscription = tier.isRecurringPrice || tier.isRecurringAnnual;
-    const checkoutMode = isSubscription ? 'subscription' : 'payment';
-
+    // Determine checkout mode - subscription for recurring, payment for one-time
+    const isRecurring = tier.isRecurringPrice || (billingType === 'monthly' && !tier.isPayPerLead);
+    const checkoutMode = isRecurring ? 'subscription' : 'payment';
+    
     const checkoutSession = await stripe.checkout.sessions.create({
       mode: checkoutMode,
       payment_method_types: ['card'],
-      customer: stripeCustomerId || undefined,
-      customer_email: stripeCustomerId ? undefined : session.user.email,
+      customer_email: session.user.email,
       line_items: [
         {
-          // Use the appropriate price ID
-          price_data: {
-            currency: 'usd',
-            product_data: {
-              name: `${tier.name} - ${billingType === 'annual' ? 'Annual' : 'Monthly'} Package`,
-              description: tier.features.join(', ')
-            },
-            unit_amount: billingType === 'annual' ? Math.round(tier.monthlyPrice * 12 * 0.5) * 100 : tier.monthlyPrice * 100 // Convert to cents
-          },
+          price: finalPriceId,
           quantity: 1,
         },
       ],
@@ -107,8 +56,7 @@ export async function POST(request: NextRequest) {
         userEmail: session.user.email,
         planId: planId,
         billingType: billingType || 'monthly',
-        type: billingType === 'annual' ? 'annual_purchase' : tier.isPayPerLead ? 'credit_purchase' : 'monthly_purchase',
-        customerId: stripeCustomerId || 'unknown'
+        type: isRecurring ? 'subscription' : (billingType === 'annual' ? 'annual_purchase' : tier.isPayPerLead ? 'credit_purchase' : 'monthly_purchase')
       },
       success_url: successUrl || `${process.env.NEXTAUTH_URL}/realtor/settings?success=true`,
       cancel_url: cancelUrl || `${process.env.NEXTAUTH_URL}/realtor/settings?canceled=true`,
@@ -121,24 +69,8 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Stripe checkout error:', error);
-    console.error('Error details:', {
-      message: (error as Error).message,
-      stack: (error as Error).stack,
-      priceId: finalPriceId,
-      planId,
-      billingType
-    });
-    
     return NextResponse.json(
-      { 
-        error: 'Failed to create checkout session',
-        details: (error as Error).message,
-        debug: process.env.NODE_ENV === 'development' ? {
-          priceId: finalPriceId,
-          planId,
-          hasStripeKey: !!process.env.STRIPE_SECRET_KEY
-        } : undefined
-      },
+      { error: 'Failed to create checkout session' },
       { status: 500 }
     );
   }

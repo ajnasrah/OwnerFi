@@ -31,7 +31,8 @@ export async function GET(request: NextRequest) {
 
     const realtorDoc = realtorDocs.docs[0];
     const realtorId = realtorDoc.id;
-    const currentBalance = realtorDoc.data()?.credits || 0;
+    const realtorProfile = realtorDoc.data();
+    const currentBalance = realtorProfile?.credits || 0;
 
     const transactions = [];
 
@@ -107,33 +108,35 @@ export async function GET(request: NextRequest) {
       });
     });
 
-    // Add trial credits as first transaction
+    // Add trial credits as first transaction with correct amount
+    const trialCredits = realtorProfile?.trialCredits || 727;
     transactions.unshift({
       id: 'trial-credits',
       type: 'trial_credit',
-      description: 'Trial credits',
-      creditsChange: 3,
+      description: `Trial credits (${trialCredits} credits)`,
+      creditsChange: trialCredits,
       runningBalance: 0, // Will be calculated
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // 1 day ago
+      timestamp: realtorProfile?.createdAt?.toDate?.()?.toISOString() || new Date(Date.now() - 1000 * 60 * 60 * 24 * 7).toISOString(),
       details: {}
     });
 
-    // Sort chronologically (oldest first) for calculation
-    transactions.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+    // Sort chronologically (newest first) for display
+    transactions.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
-    // Calculate running balance starting from 0
-    let balance = 0;
-    transactions.forEach(transaction => {
-      balance += transaction.creditsChange;
-      transaction.runningBalance = balance;
-    });
-
-    // Reverse for display (newest first)
-    transactions.reverse();
+    // Calculate running balance backwards from current balance
+    // Show the balance AFTER each transaction (where credits went)
+    let runningBalance = currentBalance;
+    for (let i = 0; i < transactions.length; i++) {
+      // For each transaction, first adjust the balance by the inverse of the change
+      // to get what it was before, then set that as the running balance after the transaction
+      const balanceAfterTransaction = runningBalance;
+      runningBalance -= transactions[i].creditsChange;
+      transactions[i].runningBalance = balanceAfterTransaction;
+    }
 
     return NextResponse.json({
       transactions: transactions.slice(0, 20),
-      currentBalance: balance,
+      currentBalance: currentBalance,
       totalSpent: transactions.filter(t => t.creditsChange < 0).reduce((sum, t) => sum + Math.abs(t.creditsChange), 0),
       totalEarned: transactions.filter(t => t.creditsChange > 0).reduce((sum, t) => sum + t.creditsChange, 0)
     });

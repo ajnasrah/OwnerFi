@@ -140,6 +140,7 @@ async function handleCheckoutCompleted(session: any) {
     
     await updateDoc(doc(db, 'realtors', realtor.id), {
       credits: (realtor.credits || 0) + creditsToAdd,
+      isOnTrial: false,
       updatedAt: serverTimestamp()
     });
     
@@ -162,6 +163,29 @@ async function handleCheckoutCompleted(session: any) {
     
     await updateDoc(doc(db, 'realtors', realtor.id), {
       credits: (realtor.credits || 0) + annualCredits,
+      currentPlan: effectivePlanId,
+      subscriptionStatus: 'active',
+      isOnTrial: false,
+      updatedAt: serverTimestamp()
+    });
+    
+    // Create annual subscription record
+    const yearStart = new Date();
+    const yearEnd = new Date();
+    yearEnd.setFullYear(yearEnd.getFullYear() + 1); // 1 year from now
+    
+    await setDoc(doc(db, 'realtorSubscriptions', firestoreHelpers.generateId()), {
+      realtorId: realtor.id,
+      userId: userId,
+      userEmail: userEmail || session?.customer_details?.email,
+      plan: effectivePlanId,
+      status: 'active',
+      monthlyPrice: tier?.monthlyPrice || 0,
+      creditsPerMonth: tier?.creditsPerMonth || 0,
+      currentPeriodStart: yearStart,
+      currentPeriodEnd: yearEnd,
+      isAnnual: true,
+      createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     });
     
@@ -184,6 +208,29 @@ async function handleCheckoutCompleted(session: any) {
     
     await updateDoc(doc(db, 'realtors', realtor.id), {
       credits: (realtor.credits || 0) + monthlyCredits,
+      currentPlan: effectivePlanId,
+      subscriptionStatus: 'active',
+      isOnTrial: false,
+      updatedAt: serverTimestamp()
+    });
+    
+    // Create monthly subscription record
+    const monthStart = new Date();
+    const monthEnd = new Date();
+    monthEnd.setDate(monthEnd.getDate() + 30); // 30 days
+    
+    await setDoc(doc(db, 'realtorSubscriptions', firestoreHelpers.generateId()), {
+      realtorId: realtor.id,
+      userId: userId,
+      userEmail: userEmail || session?.customer_details?.email,
+      plan: effectivePlanId,
+      status: 'active',
+      monthlyPrice: tier?.monthlyPrice || 0,
+      creditsPerMonth: tier?.creditsPerMonth || 0,
+      currentPeriodStart: monthStart,
+      currentPeriodEnd: monthEnd,
+      isAnnual: false,
+      createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     });
     
@@ -198,10 +245,15 @@ async function handleCheckoutCompleted(session: any) {
       currentPlan: effectivePlanId,
       subscriptionStatus: 'active',
       stripeSubscriptionId: subscription,
+      isOnTrial: false,
       updatedAt: serverTimestamp()
     });
     
     // Create subscription billing record with proper customer tracking
+    const periodStart = new Date();
+    const periodEnd = new Date();
+    periodEnd.setDate(periodEnd.getDate() + 30); // 30 days
+    
     await setDoc(doc(db, 'realtorSubscriptions', firestoreHelpers.generateId()), {
       realtorId: realtor.id,
       userId: userId,
@@ -212,8 +264,8 @@ async function handleCheckoutCompleted(session: any) {
       creditsPerMonth: tier?.creditsPerMonth || 0,
       stripeSubscriptionId: subscription,
       stripeCustomerId: sessionCustomerId,
-      currentPeriodStart: new Date(),
-      currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+      currentPeriodStart: periodStart,
+      currentPeriodEnd: periodEnd,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     });

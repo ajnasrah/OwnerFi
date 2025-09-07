@@ -42,38 +42,65 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if they have a subscription
-    let subscriptionData = null;
-    if (realtor.subscriptionData) {
-      try {
-        subscriptionData = JSON.parse(realtor.subscriptionData);
-      } catch (e) {
-        console.error('Failed to parse subscription data:', e);
-      }
-    }
-
-    if (!subscriptionData?.subscriptionId) {
+    // Check if they're on a trial
+    if (realtor.isOnTrial) {
       return NextResponse.json(
-        { error: 'No active subscription found' },
+        { error: 'You are currently on a free trial. No subscription to cancel.' },
+        { status: 400 }
+      );
+    }
+    
+    // Check if they have a Stripe subscription ID
+    let stripeSubscriptionId = realtor.stripeSubscriptionId;
+    let subscriptionDocId = null;
+    
+    // Also check in realtorSubscriptions collection
+    const subscriptionsQuery = query(
+      collection(db, 'realtorSubscriptions'),
+      where('realtorId', '==', realtor.id),
+      where('status', '==', 'active')
+    );
+    const subscriptionDocs = await getDocs(subscriptionsQuery);
+    
+    if (!subscriptionDocs.empty) {
+      const subscriptionDoc = subscriptionDocs.docs[0];
+      const subscription = subscriptionDoc.data();
+      
+      // Check if this is a trial subscription
+      if (subscription.plan === 'trial') {
+        return NextResponse.json(
+          { error: 'You are currently on a free trial. No paid subscription to cancel.' },
+          { status: 400 }
+        );
+      }
+      
+      stripeSubscriptionId = subscription.stripeSubscriptionId || stripeSubscriptionId;
+      subscriptionDocId = subscriptionDoc.id;
+    }
+    
+    if (!stripeSubscriptionId) {
+      return NextResponse.json(
+        { error: 'No active paid subscription found' },
         { status: 400 }
       );
     }
 
     // Cancel the subscription in Stripe
     try {
-      const canceledSubscription = await stripe.subscriptions.cancel(subscriptionData.subscriptionId);
+      const canceledSubscription = await stripe.subscriptions.cancel(stripeSubscriptionId);
       
-      // Update the subscription data in our database
-      const updatedSubscriptionData = {
-        ...subscriptionData,
-        status: 'canceled',
-        canceledAt: canceledSubscription.canceled_at,
-        cancelAtPeriodEnd: true
-      };
-
-      if (realtor) {
-        await updateDoc(doc(db, 'realtors', realtor.id), {
-          subscriptionData: JSON.stringify(updatedSubscriptionData),
+      // Update the realtor record
+      await updateDoc(doc(db, 'realtors', realtor.id), {
+        subscriptionStatus: 'canceled',
+        updatedAt: serverTimestamp()
+      });
+      
+      // Update the subscription record if it exists
+      if (subscriptionDocId) {
+        await updateDoc(doc(db, 'realtorSubscriptions', subscriptionDocId), {
+          status: 'canceled',
+          canceledAt: new Date(canceledSubscription.canceled_at! * 1000),
+          cancelAtPeriodEnd: true,
           updatedAt: serverTimestamp()
         });
       }

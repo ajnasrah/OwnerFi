@@ -91,6 +91,7 @@ export async function POST(request: NextRequest) {
     if (existingProfiles.empty) {
       // Create new realtor profile
       const realtorId = firestoreHelpers.generateId();
+      const now = new Date();
       const trialEndDate = new Date();
       trialEndDate.setDate(trialEndDate.getDate() + 7); // 7 day trial
 
@@ -99,7 +100,7 @@ export async function POST(request: NextRequest) {
         id: realtorId,
         credits: 3, // 3 free trial credits
         isOnTrial: true,
-        trialStartDate: serverTimestamp(),
+        trialStartDate: now,
         trialEndDate: trialEndDate,
         profileComplete: true,
         createdAt: serverTimestamp()
@@ -114,7 +115,7 @@ export async function POST(request: NextRequest) {
         status: 'active',
         monthlyPrice: 0,
         creditsPerMonth: 3,
-        currentPeriodStart: serverTimestamp(),
+        currentPeriodStart: now,
         currentPeriodEnd: trialEndDate,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
@@ -203,11 +204,12 @@ export async function GET(request: NextRequest) {
     let subscription = null;
     if (!subscriptionDocs.empty) {
       const subDoc = subscriptionDocs.docs[0];
+      const subData = subDoc.data();
       subscription = {
-        plan: subDoc.data().plan,
-        status: subDoc.data().status,
-        monthlyPrice: subDoc.data().monthlyPrice,
-        currentPeriodEnd: subDoc.data().currentPeriodEnd
+        plan: subData.plan,
+        status: subData.status,
+        monthlyPrice: subData.monthlyPrice,
+        currentPeriodEnd: subData.currentPeriodEnd?.toDate?.()?.toISOString() || subData.currentPeriodEnd
       };
     }
 

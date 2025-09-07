@@ -1,153 +1,134 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { cityCache } from '@/lib/cache';
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const lat = parseFloat(searchParams.get('lat') || '0');
     const lng = parseFloat(searchParams.get('lng') || '0');
-    const radius = parseInt(searchParams.get('radius') || '50');
+    const radius = parseInt(searchParams.get('radius') || '25');
 
     if (!lat || !lng) {
       return NextResponse.json({ error: 'Missing latitude or longitude' }, { status: 400 });
     }
 
-    // Check cache first - round coordinates to reduce cache misses
-    const roundedLat = Math.round(lat * 100) / 100;
-    const roundedLng = Math.round(lng * 100) / 100;
-    const cacheKey = `nearby:${roundedLat}:${roundedLng}:${radius}`;
-    const cached = cityCache.get(cacheKey);
-    if (cached) {
-      return NextResponse.json(cached);
-    }
-
-    // Expanded search to get more cities in the area
-    const searchRadius = radius * 0.015; // Convert miles to approximate degrees for wider search
-    const nominatimQueries = [
-      // Search for cities in general area
-      `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=100&countrycodes=us&q=city&bounded=1&viewbox=${lng-searchRadius},${lat+searchRadius},${lng+searchRadius},${lat-searchRadius}`,
-      // Search for towns in general area  
-      `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=100&countrycodes=us&q=town&bounded=1&viewbox=${lng-searchRadius},${lat+searchRadius},${lng+searchRadius},${lat-searchRadius}`,
-      // Search for villages/communities
-      `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=100&countrycodes=us&q=village&bounded=1&viewbox=${lng-searchRadius},${lat+searchRadius},${lng+searchRadius},${lat-searchRadius}`,
-    ];
+    const googleApiKey = process.env.GOOGLE_MAPS_API_KEY;
     
-    try {
-      let allResults: any[] = [];
-      
-      // Fetch from multiple search queries to get more comprehensive results
-      for (const url of nominatimQueries) {
-        try {
-          const response = await fetch(url, {
-            headers: {
-              'User-Agent': 'OwnerFi-App/1.0'
-            }
-          });
-          
-          if (response.ok) {
-            const data = await response.json();
-            allResults = [...allResults, ...data];
-          }
-        } catch (queryError) {
-          console.warn('One search query failed, continuing with others');
-        }
-        
-        // Small delay between requests to be respectful to API
-        await new Promise(resolve => setTimeout(resolve, 100));
-      }
-      
-      // Remove duplicates and filter/calculate distances
-      const uniqueCities = new Map();
-      
-      allResults
-        .filter((item: any) => {
-          return item.address && 
-                 item.address.country_code === 'us' &&
-                 item.address.state &&
-                 (item.address.city || item.address.town || item.address.village || item.name);
-        })
-        .forEach((item: any) => {
-          const cityName = item.address.city || item.address.town || item.address.village || item.name;
-          const stateAbbr = getStateAbbreviation(item.address.state);
-          const cityLat = parseFloat(item.lat);
-          const cityLng = parseFloat(item.lon);
-          const distance = calculateDistance(lat, lng, cityLat, cityLng);
-          
-          // Only include cities within radius
-          if (distance <= radius && cityName && cityName.length > 0) {
-            const key = `${cityName.toLowerCase()}-${stateAbbr}`;
-            
-            if (!uniqueCities.has(key) || uniqueCities.get(key).distance > distance) {
-              uniqueCities.set(key, {
-                name: cityName,
-                state: stateAbbr,
-                fullName: `${cityName}, ${stateAbbr}`,
-                lat: cityLat,
-                lng: cityLng,
-                distance: Math.round(distance * 10) / 10, // Round to 1 decimal
-                importance: item.importance || 0
-              });
-            }
-          }
-        });
-
-      // Convert to array and sort by distance
-      const cities = Array.from(uniqueCities.values())
-        .sort((a: any, b: any) => a.distance - b.distance)
-        .slice(0, 30); // Increased limit to 30 cities
-
-      // Cache the results
-      const result = { cities };
-      cityCache.set(cacheKey, result, 1800000); // Cache for 30 minutes
-      
-      return NextResponse.json(result);
-      
-    } catch (apiError) {
-      return NextResponse.json(
-        { error: 'Failed to fetch nearby cities', details: (apiError as Error).message },
-        { status: 500 }
-      );
+    if (!googleApiKey) {
+      throw new Error('Google API key not configured');
     }
+
+    const radiusMeters = radius * 1609.34; // Convert miles to meters
+    const allCities = new Map();
+
+    // FAST STRATEGY: Parallel API calls for better coverage and speed
+    const searchPromises = [
+      // Primary locality search
+      fetch(`https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=${radiusMeters}&type=locality&key=${googleApiKey}`),
+      
+      // Secondary searches for more coverage
+      fetch(`https://maps.googleapis.com/maps/api/place/textsearch/json?query=city&location=${lat},${lng}&radius=${radiusMeters}&type=locality&key=${googleApiKey}`),
+      
+      fetch(`https://maps.googleapis.com/maps/api/place/textsearch/json?query=town&location=${lat},${lng}&radius=${radiusMeters}&type=locality&key=${googleApiKey}`)
+    ];
+
+    // Execute all searches in parallel for speed
+    const responses = await Promise.allSettled(searchPromises);
+
+    for (const response of responses) {
+      if (response.status === 'fulfilled' && response.value.ok) {
+        try {
+          const data = await response.value.json();
+          
+          for (const place of data.results || []) {
+            if (place.geometry?.location && place.name) {
+              const distance = calculateDistance(
+                lat, lng,
+                place.geometry.location.lat,
+                place.geometry.location.lng
+              );
+              
+              // Use slightly larger radius for edge cases like Fort Worth suburbs
+              if (distance <= radius + 2) { // +2 miles buffer for suburbs
+                const state = extractStateFromAddress(place.vicinity || place.formatted_address || '');
+                
+                if (state) {
+                  const key = `${place.name.toLowerCase()}-${state}`;
+                  
+                  // Only include if within actual radius or if it's a major city slightly outside
+                  const shouldInclude = distance <= radius || 
+                    (distance <= radius + 5 && isMajorCity(place.name));
+                  
+                  if (shouldInclude && (!allCities.has(key) || allCities.get(key).distance > distance)) {
+                    allCities.set(key, {
+                      name: place.name,
+                      state: state,
+                      fullName: `${place.name}, ${state}`,
+                      lat: place.geometry.location.lat,
+                      lng: place.geometry.location.lng,
+                      distance: Math.round(distance * 10) / 10
+                    });
+                  }
+                }
+              }
+            }
+          }
+        } catch (parseError) {
+          console.warn('Error parsing API response:', parseError);
+        }
+      }
+    }
+
+    // Convert to array and sort alphabetically
+    const cities = Array.from(allCities.values())
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .slice(0, 50);
+
+    console.log(`Found ${cities.length} cities within ${radius} miles`);
+
+    return NextResponse.json({ cities });
 
   } catch (error) {
+    console.error('Nearby cities error:', error);
     return NextResponse.json(
-      { error: 'Search failed', details: (error as Error).message },
+      { error: 'Failed to fetch nearby cities' },
       { status: 500 }
     );
   }
 }
 
-// Calculate distance between two points using Haversine formula
+// Check if a city is considered major (should be included even if slightly outside radius)
+function isMajorCity(cityName: string): boolean {
+  const majorCities = [
+    'Fort Worth', 'Arlington', 'Grand Prairie', 'Irving', 'Garland', 
+    'Plano', 'McKinney', 'Mesquite', 'Carrollton', 'Richardson',
+    'Frisco', 'Allen', 'Denton', 'Lewisville'
+  ];
+  
+  return majorCities.some(major => 
+    cityName.toLowerCase().includes(major.toLowerCase())
+  );
+}
+
+// Calculate distance between coordinates
 function calculateDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
   const R = 3959; // Earth's radius in miles
-  const dLat = toRad(lat2 - lat1);
-  const dLng = toRad(lng2 - lng1);
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  
   const a = 
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * 
-    Math.sin(dLng / 2) * Math.sin(dLng / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+    Math.sin(dLng/2) * Math.sin(dLng/2);
+  
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
   return R * c;
 }
 
-function toRad(deg: number): number {
-  return deg * (Math.PI / 180);
-}
-
-// Convert full state names to abbreviations
-function getStateAbbreviation(stateName: string): string {
-  const stateMap: { [key: string]: string } = {
-    'Alabama': 'AL', 'Alaska': 'AK', 'Arizona': 'AZ', 'Arkansas': 'AR', 'California': 'CA',
-    'Colorado': 'CO', 'Connecticut': 'CT', 'Delaware': 'DE', 'Florida': 'FL', 'Georgia': 'GA',
-    'Hawaii': 'HI', 'Idaho': 'ID', 'Illinois': 'IL', 'Indiana': 'IN', 'Iowa': 'IA',
-    'Kansas': 'KS', 'Kentucky': 'KY', 'Louisiana': 'LA', 'Maine': 'ME', 'Maryland': 'MD',
-    'Massachusetts': 'MA', 'Michigan': 'MI', 'Minnesota': 'MN', 'Mississippi': 'MS', 'Missouri': 'MO',
-    'Montana': 'MT', 'Nebraska': 'NE', 'Nevada': 'NV', 'New Hampshire': 'NH', 'New Jersey': 'NJ',
-    'New Mexico': 'NM', 'New York': 'NY', 'North Carolina': 'NC', 'North Dakota': 'ND', 'Ohio': 'OH',
-    'Oklahoma': 'OK', 'Oregon': 'OR', 'Pennsylvania': 'PA', 'Rhode Island': 'RI', 'South Carolina': 'SC',
-    'South Dakota': 'SD', 'Tennessee': 'TN', 'Texas': 'TX', 'Utah': 'UT', 'Vermont': 'VT',
-    'Virginia': 'VA', 'Washington': 'WA', 'West Virginia': 'WV', 'Wisconsin': 'WI', 'Wyoming': 'WY'
-  };
+// Extract state from address string
+function extractStateFromAddress(address: string): string | null {
+  const stateMatch = address.match(/,\s*([A-Z]{2})\s*\d/) || 
+                    address.match(/,\s*([A-Z]{2})$/) ||
+                    address.match(/\b(TX|TN|FL|GA|CA|AZ|CO|NV|IL|NY|NC|VA)\b/);
   
-  return stateMap[stateName] || stateName;
+  return stateMatch ? stateMatch[1] : null;
 }

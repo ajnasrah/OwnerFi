@@ -29,7 +29,7 @@ export default function LikedProperties() {
   const router = useRouter();
   
   const [properties, setProperties] = useState<Property[]>([]);
-  const [profile, setProfile] = useState<any>(null);
+  const [profile, setProfile] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 

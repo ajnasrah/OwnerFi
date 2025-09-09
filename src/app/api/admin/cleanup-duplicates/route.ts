@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
     const allProperties = propertiesSnapshot.docs.map(doc => ({
       id: doc.id,
       docRef: doc.ref,
-      ...doc.data()
+      ...(doc.data() as Record<string, unknown>)
     }));
 
     console.log(`Found ${allProperties.length} total properties`);
@@ -62,8 +62,8 @@ export async function POST(request: NextRequest) {
     duplicateGroups.forEach(([_address, properties]) => {
       // Sort by creation date, keep the newest
       properties.sort((a, b) => {
-        const aTime = a.createdAt?.toDate?.() || new Date(a.createdAt) || new Date(0);
-        const bTime = b.createdAt?.toDate?.() || new Date(b.createdAt) || new Date(0);
+        const aTime = (a as any).createdAt?.toDate?.() || new Date((a as any).createdAt) || new Date(0);
+        const bTime = (b as any).createdAt?.toDate?.() || new Date((b as any).createdAt) || new Date(0);
         return bTime.getTime() - aTime.getTime();
       });
 

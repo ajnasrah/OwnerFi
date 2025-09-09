@@ -42,8 +42,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       subscriptionId: subscription.id,
-      status: subscription.status,
-      currentPeriodEnd: new Date(subscription.currentPeriodEnd * 1000).toISOString()
+      status: subscription.status
     });
     
   } catch (error) {

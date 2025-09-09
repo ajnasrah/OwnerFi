@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     const buyersWithUsers = [];
     for (const buyer of buyerProfiles) {
       let user = null;
-      if (buyer.userId) {
+      if ('userId' in buyer && buyer.userId) {
         const userQuery = query(collection(firebaseDb, 'users'), where('id', '==', buyer.userId));
         const userDocs = await getDocs(userQuery);
         if (!userDocs.empty) {

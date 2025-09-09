@@ -169,10 +169,8 @@ export async function POST(request: NextRequest) {
 
     await logInfo('Dispute resolved by admin', {
       action: 'dispute_resolved',
-      disputeId: disputeId,
       resolution: action,
-      refundCredits: refundCredits || 0,
-      realtorId: dispute.realtorId
+      refundCredits: refundCredits || 0
     });
 
     return NextResponse.json({

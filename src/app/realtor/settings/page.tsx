@@ -7,6 +7,18 @@ import Link from 'next/link';
 import { PRICING_TIERS, PricingTier } from '@/lib/pricing';
 import AccountStatus from './AccountStatus';
 
+interface City {
+  name: string;
+  state: string;
+  latitude?: number;
+  longitude?: number;
+}
+
+interface Subscription {
+  status: string;
+  currentPeriodEnd: string;
+}
+
 interface RealtorProfile {
   id: string;
   firstName: string;
@@ -23,6 +35,7 @@ interface RealtorProfile {
   isOnTrial: boolean;
   trialEndDate: string;
   profileComplete: boolean;
+  subscription?: Subscription;
 }
 
 export default function RealtorSettings() {
@@ -38,10 +51,10 @@ export default function RealtorSettings() {
 
   // City search functionality
   const [cityQuery, setCityQuery] = useState('');
-  const [cityResults, setCityResults] = useState<any[]>([]);
+  const [cityResults, setCityResults] = useState<City[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [citySelected, setCitySelected] = useState(false);
-  const [nearbyCities, setNearbyCities] = useState<any[]>([]);
+  const [nearbyCities, setNearbyCities] = useState<City[]>([]);
   const [loadingNearby, setLoadingNearby] = useState(false);
   
   // Additional cities functionality - auto-populated from radius
@@ -134,7 +147,7 @@ export default function RealtorSettings() {
               
               if (cityData.cities && cityData.cities.length > 0) {
                 // Find the city that matches both name and state
-                const centerCity = cityData.cities.find((city: any) => 
+                const centerCity = cityData.cities.find((city: City) => 
                   city.name.toLowerCase() === data.profile.primaryCity.toLowerCase() && 
                   city.state === data.profile.primaryState
                 ) || cityData.cities[0]; // Fallback to first result
@@ -182,7 +195,7 @@ export default function RealtorSettings() {
     }
   };
 
-  const selectCity = async (city: any) => {
+  const selectCity = async (city: City) => {
     setProfile(prev => prev ? ({
       ...prev,
       primaryCity: city.name,
@@ -219,7 +232,7 @@ export default function RealtorSettings() {
     setSelectedServiceCities([]);
   };
 
-  const loadNearbyCities = async (centerCity: any, radius: number) => {
+  const loadNearbyCities = async (centerCity: City, radius: number) => {
     setLoadingNearby(true);
     try {
       if (!centerCity.lat || !centerCity.lng) {
@@ -243,14 +256,14 @@ export default function RealtorSettings() {
             isCenter: true, 
             distance: 0 
           },
-          ...data.cities.filter((city: any) => 
+          ...data.cities.filter((city: City) => 
             !(city.name === centerCity.name && city.state === centerCity.state)
           )
         ];
         setNearbyCities(citiesWithCenter);
         
         // AUTO-SELECT ALL CITIES BY DEFAULT
-        const allCityStrings = data.cities.map((city: any) => `${city.name}, ${city.state}`);
+        const allCityStrings = data.cities.map((city: City) => `${city.name}, ${city.state}`);
         setSelectedServiceCities(allCityStrings);
         if (profile) {
           setProfile(prev => prev ? ({...prev, serviceCities: JSON.stringify(allCityStrings)}) : null);
@@ -288,7 +301,7 @@ export default function RealtorSettings() {
     }
   };
 
-  const handleInputChange = (field: string, value: any) => {
+  const handleInputChange = (field: string, value: string | number) => {
     if (field === 'phone') {
       const formatted = formatPhoneNumber(value);
       setProfile(prev => prev ? ({ ...prev, [field]: formatted }) : null);
@@ -807,7 +820,7 @@ export default function RealtorSettings() {
                     )}
                     
                     <p className="text-xs text-blue-600 mt-3 italic">
-                      You'll receive buyer leads from selected cities within your service radius
+                      You&apos;ll receive buyer leads from selected cities within your service radius
                     </p>
                   </div>
                 </div>
@@ -864,10 +877,10 @@ export default function RealtorSettings() {
                   <div className="text-right">
                     <div className={`text-xl font-bold ${
                       profile.isOnTrial ? 'text-accent-success' : 
-                      (profile as any).subscription?.status === 'active' ? 'text-accent-primary' : 'text-secondary-text'
+                      profile.subscription?.status === 'active' ? 'text-accent-primary' : 'text-secondary-text'
                     }`}>
                       {profile.isOnTrial ? 'Trial' : 
-                       (profile as any).subscription?.status === 'active' ? 'Pro' : 'Free'}
+                       profile.subscription?.status === 'active' ? 'Pro' : 'Free'}
                     </div>
                   </div>
                 </div>
@@ -877,9 +890,9 @@ export default function RealtorSettings() {
                     {getTrialDaysRemaining()} days remaining
                   </p>
                 )}
-                {(profile as any).subscription?.status === 'active' && (
+                {profile.subscription?.status === 'active' && (
                   <p className="text-sm text-secondary-text mt-1">
-                    Renews {new Date((profile as any).subscription.currentPeriodEnd).toLocaleDateString()}
+                    Renews {new Date(profile.subscription!.currentPeriodEnd).toLocaleDateString()}
                   </p>
                 )}
               </div>

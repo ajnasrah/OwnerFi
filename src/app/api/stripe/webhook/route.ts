@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({ received: true });
 }
 
-async function handleCheckoutCompleted(session: any) {
+async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const { customer, subscription, metadata, mode } = session;
   const { userId, userEmail, planId, type, customerId } = metadata;
 
@@ -285,13 +285,13 @@ async function handleCheckoutCompleted(session: any) {
   }
 }
 
-async function handleSubscriptionCreated(subscription: any) {
+async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
   // This is usually handled in checkout.session.completed
   // But we can handle it here as a fallback
   console.log('Subscription created:', subscription.id);
 }
 
-async function handleSubscriptionUpdated(subscription: any) {
+async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
   // Handle subscription changes (plan changes, status updates)
   const subscriptionsQuery = query(
     collection(db, 'realtorSubscriptions'),
@@ -316,7 +316,7 @@ async function handleSubscriptionUpdated(subscription: any) {
   console.log(`Updated subscription ${subscription.id} to status ${subscription.status}`);
 }
 
-async function handleSubscriptionDeleted(subscription: any) {
+async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
   // Handle subscription cancellation
   const subscriptionsQuery = query(
     collection(db, 'realtorSubscriptions'),
@@ -335,7 +335,7 @@ async function handleSubscriptionDeleted(subscription: any) {
   console.log(`Canceled subscription ${subscription.id}`);
 }
 
-async function handlePaymentSucceeded(invoice: any) {
+async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
   // Handle successful recurring payments
   const subscriptionId = invoice.subscription;
   
@@ -375,7 +375,7 @@ async function handlePaymentSucceeded(invoice: any) {
   }
 }
 
-async function handlePaymentFailed(invoice: any) {
+async function handlePaymentFailed(invoice: Stripe.Invoice) {
   // Handle failed payments
   console.log('Payment failed for invoice:', invoice.id);
   
@@ -386,7 +386,7 @@ async function handlePaymentFailed(invoice: any) {
   }
 }
 
-async function createOrUpdateSubscription(realtorId: string, planId: string, stripeSubscription: any, tier: any) {
+async function createOrUpdateSubscription(realtorId: string, planId: string, stripeSubscription: Stripe.Subscription, tier: typeof PRICING_TIERS[keyof typeof PRICING_TIERS]) {
   const subscriptionData = {
     realtorId,
     plan: planId,

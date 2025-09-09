@@ -137,7 +137,7 @@ export async function getNearbyCitiesDirect(
 /**
  * Fallback to static cities database when API fails
  */
-function getFallbackCities(cityName: string, state: string, radiusMiles: number): string[] {
+async function getFallbackCities(cityName: string, state: string, radiusMiles: number): Promise<string[]> {
   try {
     const { getCitiesWithinRadius } = await import('./cities');
     const nearbyCities = getCitiesWithinRadius(cityName, state, radiusMiles);

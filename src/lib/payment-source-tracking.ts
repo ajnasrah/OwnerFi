@@ -1,5 +1,26 @@
 // Payment Source Tracking - Distinguish imported vs calculated values
 
+interface PropertyData {
+  listPrice?: number;
+  interestRate?: number;
+  termYears?: number;
+  downPaymentAmount?: number;
+  downPaymentPercent?: number;
+  monthlyPayment?: number;
+}
+
+interface PropertyFinancialResult {
+  listPrice: number;
+  interestRate: number;
+  termYears: number;
+  downPaymentAmount: number;
+  downPaymentPercent: number;
+  monthlyPayment: number;
+  loanAmount: number;
+  paymentMetadata: PaymentMetadata;
+  [key: string]: unknown;
+}
+
 export interface PaymentMetadata {
   monthlyPayment: {
     value: number;
@@ -22,8 +43,8 @@ export interface PaymentMetadata {
 /**
  * Enhanced property financial calculation with source tracking
  */
-export function calculatePropertyFinancialsWithTracking(data: any): any {
-  const result: any = {
+export function calculatePropertyFinancialsWithTracking(data: PropertyData): PropertyFinancialResult {
+  const result: Record<string, unknown> = {
     listPrice: data.listPrice || 0,
     interestRate: data.interestRate || 7.0,
     termYears: data.termYears || 20,
@@ -164,7 +185,7 @@ export function getPaymentDisplayInfo(paymentMetadata: PaymentMetadata) {
 /**
  * Validate if imported payment makes sense vs calculated payment
  */
-export function validateImportedPayment(property: any): {
+export function validateImportedPayment(property: PropertyData): {
   monthlyPaymentValid: boolean;
   monthlyPaymentDifference: number;
   recommendedPayment: number;

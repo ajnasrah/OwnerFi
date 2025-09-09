@@ -248,6 +248,5 @@ export const unifiedDb = {
   }
 };
 
-// Export the unified database functions
-export { unifiedDb };
+// Export convenience function
 export const generateId = unifiedDb.generateId;

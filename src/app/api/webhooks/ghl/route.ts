@@ -18,6 +18,14 @@ import {
 } from '@/lib/property-calculations';
 import { queueNearbyCitiesForProperty } from '@/lib/property-enhancement';
 
+interface GHLWebhookData {
+  id: string;
+  type: string;
+  customFields?: Record<string, string>;
+  name?: string;
+  [key: string]: unknown;
+}
+
 // GoHighLevel webhook handler for property listings
 export async function POST(request: NextRequest) {
   try {
@@ -74,7 +82,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function handlePropertyListing(data: any) {
+async function handlePropertyListing(data: GHLWebhookData) {
   try {
     const customFields = data.customFields || {};
     
@@ -152,7 +160,7 @@ async function handlePropertyListing(data: any) {
       zipCode: rawPropertyData.zipCode,
       
       // Property details
-      propertyType: rawPropertyData.homeType as any,
+      propertyType: rawPropertyData.homeType as 'house' | 'condo' | 'townhouse' | 'mobile' | 'multi-family' | 'land' || 'house',
       bedrooms: rawPropertyData.bedrooms,
       bathrooms: rawPropertyData.bathrooms,
       squareFeet: rawPropertyData.squareFeet,
@@ -265,7 +273,7 @@ async function handlePropertyListing(data: any) {
   }
 }
 
-async function handlePropertyDeletion(data: any) {
+async function handlePropertyDeletion(data: GHLWebhookData) {
   try {
     // Find and update property status
     const propertyQuery = query(

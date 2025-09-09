@@ -48,9 +48,9 @@ export async function POST(request: NextRequest) {
     const propertiesToProcess = snapshot.docs
       .map(doc => ({ 
         id: doc.id, 
-        city: doc.data().city?.split(',')[0].trim(),
-        state: doc.data().state,
-        hasNearbyCities: doc.data().nearbyCities?.length > 0
+        city: (doc.data() as any).city?.split(',')[0].trim(),
+        state: (doc.data() as any).state,
+        hasNearbyCities: (doc.data() as any).nearbyCities?.length > 0
       }))
       .filter(p => p.city && p.state && (force || !p.hasNearbyCities));
 

@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     const addressGroups: Record<string, Array<typeof allProperties[0]>> = {};
     
     allProperties.forEach(property => {
-      const normalizedAddress = property.address?.toLowerCase()
+      const normalizedAddress = (property as any).address?.toLowerCase()
         .replace(/\s+/g, ' ')
         .replace(/[.,]/g, '')
         .trim() || 'unknown';

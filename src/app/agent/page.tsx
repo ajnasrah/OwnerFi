@@ -522,7 +522,7 @@ export default function AgentPortal() {
                           {lead.matchedProperties.slice(0, 4).map((property, index) => (
                             <div key={index} className="flex justify-between">
                               <span>{property.address}, {property.city}</span>
-                              <span>{formatCurrency(property.listPrice)}</span>
+                              <span>{formatCurrency((property as any).listPrice || 0)}</span>
                             </div>
                           ))}
                           {lead.matchedProperties.length > 4 && (

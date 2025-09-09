@@ -89,7 +89,7 @@ export class FirebaseDB {
 
   static async queryDocuments<T>(
     collectionName: string,
-    conditions: { field: string; operator: any; value: any }[],
+    conditions: { field: string; operator: string; value: unknown }[],
     limitCount?: number
   ): Promise<T[]> {
     let q = query(collection(db, collectionName));
@@ -228,7 +228,7 @@ export class FirebaseDB {
     name: string;
     password: string;
     role: 'buyer' | 'realtor';
-    profileData: any;
+    profileData: Record<string, unknown>;
   }): Promise<{ user: User; profile: BuyerProfile | RealtorProfile }> {
     
     return runTransaction(db, async (transaction) => {

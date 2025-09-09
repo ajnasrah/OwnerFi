@@ -14,7 +14,7 @@ if (getApps().length === 0) {
   // });
 }
 
-export async function getFirebaseUser(request: NextRequest): Promise<any> {
+export async function getFirebaseUser(request: NextRequest): Promise<Record<string, unknown> | null> {
   try {
     // Get the authorization header
     const authorization = request.headers.get('authorization');
@@ -48,6 +48,6 @@ export async function getSessionWithRole(requiredRole: string) {
 }
 
 // Role validation
-export function validateUserRole(user: any, requiredRole: string): boolean {
+export function validateUserRole(user: Record<string, unknown>, requiredRole: string): boolean {
   return user?.role === requiredRole;
 }

@@ -45,7 +45,7 @@ export class DatabaseCleanup {
       result.recordsProcessed = buyerDocs.docs.length;
       
       // Group buyers by email
-      const buyersByEmail: { [email: string]: any[] } = {};
+      const buyersByEmail: { [email: string]: Record<string, unknown>[] } = {};
       
       buyerDocs.docs.forEach(doc => {
         const data = doc.data();
@@ -189,7 +189,7 @@ export class DatabaseCleanup {
 
       for (const buyerDoc of buyerDocs.docs) {
         const buyer = buyerDoc.data();
-        const updates: any = {};
+        const updates: Record<string, unknown> = {};
         
         // Add default values for missing fields
         if (!buyer.languages || !Array.isArray(buyer.languages)) {
@@ -247,7 +247,7 @@ export class DatabaseCleanup {
 
       for (const realtorDoc of realtorDocs.docs) {
         const realtor = realtorDoc.data();
-        const updates: any = {};
+        const updates: Record<string, unknown> = {};
         
         if (!realtor.languages || !Array.isArray(realtor.languages)) {
           updates.languages = ['English'];

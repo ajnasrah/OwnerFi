@@ -43,7 +43,9 @@ export async function POST(request: NextRequest) {
       success: true,
       subscriptionId: subscription.id,
       status: subscription.status,
-      currentPeriodEnd: new Date(subscription.current_period_end * 1000).toISOString()
+      currentPeriodEnd: (subscription as any).current_period_end
+        ? new Date((subscription as any).current_period_end * 1000).toISOString()
+        : null
     });
     
   } catch (error) {

@@ -410,7 +410,7 @@ export default function AdminDashboard() {
                         <div className="mt-3">
                           <p className="text-red-700 text-sm font-medium">Details:</p>
                           <ul className="text-red-600 text-xs mt-1 space-y-1">
-                            {result.details.slice(0, 10).map((error: string, index: number) => (
+                            {result.details.slice(0, 10).map((error: string | { message?: string; error?: string }, index: number) => (
                               <li key={index}>
                                 {typeof error === 'string' ? error : `Error: ${error.message || error.error || 'Unknown error'}`}
                               </li>
@@ -766,11 +766,11 @@ export default function AdminDashboard() {
                           )}
                         </div>
                       </div>
-                      {dispute.evidence && dispute.evidence.length > 0 && (
+                      {dispute.evidence && Array.isArray(dispute.evidence) && dispute.evidence.length > 0 && (
                         <div className="mb-4">
                           <p className="font-medium text-gray-800 mb-2">Evidence Images:</p>
                           <div className="flex flex-wrap gap-2">
-                            {dispute.evidence.map((imageUrl: string, index: number) => (
+                            {(dispute.evidence as string[])?.map((imageUrl: string, index: number) => (
                               <Image 
                                 key={index}
                                 src={imageUrl} 

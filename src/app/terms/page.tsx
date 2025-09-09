@@ -18,8 +18,8 @@ export default function TermsOfService() {
             <ul className="space-y-2 text-blue-700">
               <li>• <strong>We connect buyers with real estate agents</strong> - that's our business model</li>
               <li>• <strong>Your contact info will be sold to licensed realtors</strong> who may call/text/email you</li>
-              <li>• <strong>We don't guarantee property accuracy</strong> - always verify everything yourself</li>
-              <li>• <strong>We're not your agent, broker, or advisor</strong> - we're just a lead generation platform</li>
+              <li>• <strong>We don&apos;t guarantee property accuracy</strong> - always verify everything yourself</li>
+              <li>• <strong>We&apos;re not your agent, broker, or advisor</strong> - we&apos;re just a lead generation platform</li>
               <li>• <strong>Do your own homework</strong> before making any real estate decisions</li>
               <li>• <strong>All sales are final</strong> - no refunds on lead purchases</li>
             </ul>

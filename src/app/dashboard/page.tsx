@@ -443,7 +443,7 @@ export default function BuyerDashboardV2() {
               </div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">No properties found</h3>
               <p className="text-gray-600 mb-6">
-                We couldn't find any properties in {profile?.city} that match your budget.
+                We couldn&apos;t find any properties in {profile?.city} that match your budget.
               </p>
               <button 
                 onClick={() => router.push('/dashboard/settings')}

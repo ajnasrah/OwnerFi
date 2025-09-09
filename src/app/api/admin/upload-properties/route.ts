@@ -11,13 +11,14 @@ import {
 import { db } from '@/lib/firebase';
 import { logError, logInfo } from '@/lib/logger';
 import { queueNearbyCitiesForProperty } from '@/lib/property-enhancement';
+import { ExtendedSession } from '@/types/session';
 
 export async function POST(request: NextRequest) {
   try {
     // Strict admin access control
     const session = await getServerSession(authOptions);
     
-    if (!session?.user || (session.user as any).role !== 'admin') {
+    if (!session?.user || (session as ExtendedSession).user.role !== 'admin') {
       return NextResponse.json(
         { error: 'Access denied. Admin access required.' },
         { status: 403 }

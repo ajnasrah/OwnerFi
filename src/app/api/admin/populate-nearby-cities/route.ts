@@ -10,6 +10,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { getCityCoordinates } from '@/lib/cities';
+import { ExtendedSession } from '@/types/session';
 
 /**
  * ADMIN ONLY: Populate nearbyCities field for all properties
@@ -20,7 +21,7 @@ export async function POST(request: NextRequest) {
     // Admin access control
     const session = await getServerSession(authOptions);
     
-    if (!session?.user || (session.user as any).role !== 'admin') {
+    if (!session?.user || (session as ExtendedSession).user.role !== 'admin') {
       return NextResponse.json(
         { error: 'Access denied. Admin access required.' },
         { status: 403 }

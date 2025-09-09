@@ -7,16 +7,16 @@ export interface APIError {
   message: string;
   statusCode: number;
   userMessage: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export class OwnerFiError extends Error {
   public code: string;
   public statusCode: number;
   public userMessage: string;
-  public metadata?: Record<string, any>;
+  public metadata?: Record<string, unknown>;
 
-  constructor(code: string, message: string, statusCode: number, userMessage: string, metadata?: Record<string, any>) {
+  constructor(code: string, message: string, statusCode: number, userMessage: string, metadata?: Record<string, unknown>) {
     super(message);
     this.code = code;
     this.statusCode = statusCode;
@@ -166,7 +166,7 @@ export const ErrorTypes = {
 // Error handler function for API routes
 export async function handleAPIError(
   error: unknown,
-  context: { action: string; userId?: string; metadata?: Record<string, any> }
+  context: { action: string; userId?: string; metadata?: Record<string, unknown> }
 ): Promise<NextResponse> {
   
   let apiError: APIError;
@@ -226,13 +226,13 @@ export async function handleAPIError(
 }
 
 // Throw custom error helper
-export function throwError(errorType: keyof typeof ErrorTypes, metadata?: Record<string, any>): never {
+export function throwError(errorType: keyof typeof ErrorTypes, metadata?: Record<string, unknown>): never {
   const error = ErrorTypes[errorType];
   throw new OwnerFiError(error.code, error.message, error.statusCode, error.userMessage, metadata);
 }
 
 // Validation helpers
-export function validateRequired(data: Record<string, any>, fields: string[]): void {
+export function validateRequired(data: Record<string, unknown>, fields: string[]): void {
   const missing = fields.filter(field => !data[field] || data[field] === '');
   if (missing.length > 0) {
     throwError('MISSING_REQUIRED_FIELDS', { missingFields: missing });

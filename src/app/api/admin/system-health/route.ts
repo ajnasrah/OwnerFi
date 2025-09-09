@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
+import { ExtendedSession } from '@/types/session';
 
 // GET - Run system health check
 export async function GET(request: NextRequest) {
@@ -8,7 +9,7 @@ export async function GET(request: NextRequest) {
     // Check if user is admin (basic check)
     const session = await getServerSession(authOptions);
     
-    if (!session?.user || (session.user as any).role !== 'admin') {
+    if (!session?.user || (session as ExtendedSession).user.role !== 'admin') {
       return NextResponse.json(
         { error: 'Admin access required' },
         { status: 403 }
@@ -43,7 +44,7 @@ export async function POST(request: NextRequest) {
     // Check if user is admin
     const session = await getServerSession(authOptions);
     
-    if (!session?.user || (session.user as any).role !== 'admin') {
+    if (!session?.user || (session as ExtendedSession).user.role !== 'admin') {
       return NextResponse.json(
         { error: 'Admin access required' },
         { status: 403 }

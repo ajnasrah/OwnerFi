@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSessionWithRole } from '@/lib/auth-utils';
 import { unifiedDb } from '@/lib/unified-db';
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const resolvedParams = await params;
     // Get session to verify user is accessing their own data  
     const session = await getSessionWithRole('realtor');
     
@@ -15,7 +16,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     }
 
     // Verify user is accessing their own data
-    if (session.user.id !== params.id) {
+    if (session.user.id !== resolvedParams.id) {
       return NextResponse.json(
         { error: 'Access denied - can only access your own data' },
         { status: 403 }
@@ -23,7 +24,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     }
 
     // Get user data from database
-    const user = await unifiedDb.users.findById(params.id);
+    const user = await unifiedDb.users.findById(resolvedParams.id);
     
     if (!user) {
       return NextResponse.json(

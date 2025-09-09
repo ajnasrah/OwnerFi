@@ -14,6 +14,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { logError, logInfo } from '@/lib/logger';
+import { ExtendedSession } from '@/types/session';
 
 // Get all properties for admin management
 export async function GET(request: NextRequest) {
@@ -21,7 +22,7 @@ export async function GET(request: NextRequest) {
     // Admin access control
     const session = await getServerSession(authOptions);
     
-    if (!session?.user || (session.user as any).role !== 'admin') {
+    if (!session?.user || (session as ExtendedSession).user.role !== 'admin') {
       return NextResponse.json(
         { error: 'Access denied. Admin access required.' },
         { status: 403 }
@@ -84,7 +85,7 @@ export async function PUT(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     
-    if (!session?.user || (session.user as any).role !== 'admin') {
+    if (!session?.user || (session as ExtendedSession).user.role !== 'admin') {
       return NextResponse.json(
         { error: 'Access denied. Admin access required.' },
         { status: 403 }
@@ -136,7 +137,7 @@ export async function DELETE(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     
-    if (!session?.user || (session.user as any).role !== 'admin') {
+    if (!session?.user || (session as ExtendedSession).user.role !== 'admin') {
       return NextResponse.json(
         { error: 'Access denied. Admin access required.' },
         { status: 403 }

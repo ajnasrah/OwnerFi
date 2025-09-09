@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
     // Admin access control
     const session = await getServerSession(authOptions);
     
-    if (!session?.user || (session.user as any).role !== 'admin') {
+    if (!session?.user || (session.user as { role?: string }).role !== 'admin') {
       return NextResponse.json(
         { error: 'Access denied. Admin access required.' },
         { status: 403 }

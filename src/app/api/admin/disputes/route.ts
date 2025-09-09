@@ -12,7 +12,6 @@ import {
   serverTimestamp
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { getSessionWithRole } from '@/lib/auth-utils';
 import { logError, logInfo } from '@/lib/logger';
 
 // GET - Fetch all disputes for admin review
@@ -133,7 +132,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Update dispute status
-    const updateData: any = {
+    const updateData: Record<string, unknown> = {
       status: action === 'refund' ? 'refunded' : action === 'approve' ? 'approved' : 'denied',
       adminNotes: adminNotes || '',
       resolvedAt: serverTimestamp(),

@@ -6,7 +6,6 @@ import {
   query, 
   getDocs,
   doc,
-  deleteDoc,
   writeBatch
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -16,7 +15,7 @@ export async function POST(request: NextRequest) {
     // Admin access control
     const session = await getServerSession(authOptions);
     
-    if (!session?.user || (session.user as any).role !== 'admin') {
+    if (!session?.user || (session.user as { role?: string }).role !== 'admin') {
       return NextResponse.json(
         { error: 'Access denied. Admin access required.' },
         { status: 403 }
@@ -36,7 +35,7 @@ export async function POST(request: NextRequest) {
     console.log(`Found ${allProperties.length} total properties`);
 
     // Group by address (normalize addresses for comparison)
-    const addressGroups: { [key: string]: any[] } = {};
+    const addressGroups: Record<string, Array<typeof allProperties[0]>> = {};
     
     allProperties.forEach(property => {
       const normalizedAddress = property.address?.toLowerCase()
@@ -60,7 +59,7 @@ export async function POST(request: NextRequest) {
     const batch = writeBatch(db);
 
     // For each duplicate group, keep the most recent one and delete others
-    duplicateGroups.forEach(([address, properties]) => {
+    duplicateGroups.forEach(([_address, properties]) => {
       // Sort by creation date, keep the newest
       properties.sort((a, b) => {
         const aTime = a.createdAt?.toDate?.() || new Date(a.createdAt) || new Date(0);

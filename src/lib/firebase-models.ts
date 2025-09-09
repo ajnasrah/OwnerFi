@@ -14,6 +14,19 @@ export interface User {
   updatedAt: Timestamp;
 }
 
+// Buyer search criteria (nested within BuyerProfile)
+export interface BuyerSearchCriteria {
+  cities?: string[];
+  state?: string;
+  maxMonthlyPayment?: number;
+  maxDownPayment?: number;
+  minBedrooms?: number;
+  minBathrooms?: number;
+  minPrice?: number;
+  maxPrice?: number;
+  minSquareFeet?: number;
+}
+
 // Buyer profile (linked to User via userId)
 export interface BuyerProfile {
   id: string;
@@ -35,6 +48,11 @@ export interface BuyerProfile {
   smsNotifications: boolean;
   profileComplete: boolean;
   isActive: boolean;
+  searchCriteria?: BuyerSearchCriteria; // Enhanced search criteria
+  matchedPropertyIds?: string[]; // Cached property matches
+  likedPropertyIds?: string[]; // Liked properties
+  passedPropertyIds?: string[]; // Passed properties
+  lastMatchUpdate?: Timestamp;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
@@ -92,8 +110,14 @@ export interface LeadDispute {
   realtorName: string;
   realtorEmail: string;
   buyerName: string;
+  buyerPhone?: string;
+  buyerEmail?: string;
+  buyerCity?: string;
+  buyerState?: string;
+  maxMonthlyPayment?: number;
+  maxDownPayment?: number;
   purchaseDate: string;
-  reason: 'no_response' | 'invalid_contact' | 'not_qualified' | 'already_working' | 'false_information' | 'duplicate' | 'other';
+  reason: 'no_response' | 'invalid_contact' | 'not_qualified' | 'already_working' | 'false_information' | 'duplicate' | 'wrong_info' | 'not_interested' | 'other';
   explanation: string;
   contactAttempts?: string;
   evidence?: string;

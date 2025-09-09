@@ -10,7 +10,14 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('upload');
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [result, setResult] = useState<{ error?: string; success?: string; processed?: number } | null>(null);
+  const [result, setResult] = useState<{ 
+    error?: string; 
+    success?: string; 
+    processed?: number;
+    summary?: {
+      successfulInserts?: number;
+    };
+  } | null>(null);
   const [properties, setProperties] = useState<Array<{ id: string; address: string; city: string; state: string; listPrice: number; isActive: boolean }>>([]);
   const [loadingProperties, setLoadingProperties] = useState(false);
   const [selectedProperties, setSelectedProperties] = useState<string[]>([]);

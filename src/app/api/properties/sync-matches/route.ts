@@ -12,6 +12,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import UnifiedMatchingService from '@/lib/unified-matching-service';
+import { Property, BuyerProfile } from '@/lib/firebase-models';
 
 // Sync property matches across all buyers when properties change
 export async function POST(request: NextRequest) {
@@ -106,7 +107,7 @@ async function removePropertyFromAllBuyers(propertyId: string) {
 }
 
 // Add new property to buyers whose criteria it matches
-async function addPropertyToMatchingBuyers(property: any) {
+async function addPropertyToMatchingBuyers(property: Property & { id: string }) {
   try {
     // Get all buyer profiles
     const allBuyersQuery = query(collection(db, 'buyerProfiles'));
@@ -142,7 +143,7 @@ async function addPropertyToMatchingBuyers(property: any) {
 }
 
 // Check if a property matches a buyer's criteria
-async function checkPropertyMatchesBuyer(property: any, buyerData: any): Promise<boolean> {
+async function checkPropertyMatchesBuyer(property: Property & { id: string }, buyerData: BuyerProfile): Promise<boolean> {
   try {
     // Location match - use buyer's stored cities from searchCriteria
     const criteria = buyerData.searchCriteria || {};

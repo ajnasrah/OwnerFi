@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
  */
 export async function GET() {
   try {
-    const citiesData = require('cities.json');
+    const citiesData = await import('cities.json');
     
     // Sample first 5 entries to understand structure
     const sampleEntries = citiesData.slice(0, 5);

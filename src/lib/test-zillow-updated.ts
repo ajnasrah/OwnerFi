@@ -74,11 +74,11 @@ export async function testTennesseeUpdated() {
       if (result.totalFound > 0) {
 
         // Save URLs for Apify use
-        const fs = require('fs').promises;
+        const fs = await import('fs');
         const timestamp = new Date().toISOString().slice(0, 16).replace(/:/g, '-');
         const filename = `tennessee-owner-finance-${timestamp}.txt`;
         
-        await fs.writeFile(filename, result.propertyUrls.join('\n'));
+        await fs.promises.writeFile(filename, result.propertyUrls.join('\n'));
       }
 
       return result;
@@ -114,7 +114,6 @@ export function showSearchUrl() {
 }
 
 // Run test if called directly
-if (require.main === module) {
-  showSearchUrl();
-  testUpdatedZillowScraper();
-}
+// Removed module check - use direct function calls instead
+// showSearchUrl();
+// testUpdatedZillowScraper();

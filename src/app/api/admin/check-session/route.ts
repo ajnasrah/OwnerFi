@@ -8,8 +8,9 @@ import {
   getDocs
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { ExtendedSession } from '@/types/session';
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     
@@ -23,7 +24,7 @@ export async function GET(request: NextRequest) {
     // Find realtor profile for this user
     const realtorsQuery = query(
       collection(db, 'realtors'),
-      where('userId', '==', session.user.id!)
+      where('userId', '==', (session as ExtendedSession).user.id)
     );
     const realtorDocs = await getDocs(realtorsQuery);
     
@@ -42,10 +43,10 @@ export async function GET(request: NextRequest) {
       authenticated: true,
       session: {
         user: {
-          id: session.user.id,
-          email: session.user.email,
-          name: session.user.name,
-          role: session.user.role
+          id: (session as ExtendedSession).user.id,
+          email: (session as ExtendedSession).user.email,
+          name: (session as ExtendedSession).user.name,
+          role: (session as ExtendedSession).user.role
         }
       },
       realtorProfile,

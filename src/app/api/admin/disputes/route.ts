@@ -169,8 +169,11 @@ export async function POST(request: NextRequest) {
 
     await logInfo('Dispute resolved by admin', {
       action: 'dispute_resolved',
-      resolution: action,
-      refundCredits: refundCredits || 0
+      metadata: {
+        resolution: action,
+        refundCredits: refundCredits || 0,
+        disputeId: disputeId
+      }
     });
 
     return NextResponse.json({
@@ -180,9 +183,9 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    await logError('Failed to resolve dispute', error, {
+    await logError('Failed to resolve dispute', {
       action: 'admin_dispute_resolve_error'
-    });
+    }, error as Error);
 
     return NextResponse.json(
       { error: 'Failed to resolve dispute' },

@@ -75,11 +75,11 @@ export function CityAutocomplete({
       if (response.ok) {
         const data = await response.json();
         const filtered = data
-          .filter((city: any) => 
+          .filter((city: { name?: string; description?: string; state?: string }) => 
             city.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
             city.description?.toLowerCase().includes(searchQuery.toLowerCase())
           )
-          .map((city: any) => ({
+          .map((city: { name?: string; description?: string; state?: string }) => ({
             name: city.name || city.description,
             state: city.state || '',
             displayName: city.description || city.name

@@ -19,7 +19,7 @@ import { db } from '@/lib/firebase';
 export async function batchGetDocuments(
   collectionName: string, 
   ids: string[]
-): Promise<any[]> {
+): Promise<Record<string, unknown>[]> {
   if (ids.length === 0) return [];
 
   const results = [];
@@ -55,7 +55,7 @@ export async function searchProperties(criteria: {
   maxDownPayment?: number;
   minBedrooms?: number;
   minBathrooms?: number;
-}): Promise<any[]> {
+}): Promise<Record<string, unknown>[]> {
   
   const constraints: QueryConstraint[] = [
     where('isActive', '==', true),
@@ -113,7 +113,7 @@ export async function searchProperties(criteria: {
  */
 export async function batchUpdatePropertyMatches(updates: Array<{
   buyerId: string;
-  matches: any[];
+  matches: Record<string, unknown>[];
 }>): Promise<void> {
   
   // Process in parallel for performance
@@ -132,10 +132,10 @@ export async function batchUpdatePropertyMatches(updates: Array<{
 /**
  * Efficient user lookup with caching
  */
-const userCache = new Map<string, any>();
+const userCache = new Map<string, Record<string, unknown>>();
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
-export async function getCachedUser(userId: string): Promise<any | null> {
+export async function getCachedUser(userId: string): Promise<Record<string, unknown> | null> {
   // Check cache first
   const cached = userCache.get(userId);
   if (cached && (Date.now() - cached.timestamp) < CACHE_TTL) {

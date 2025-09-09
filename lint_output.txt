@@ -25,7 +25,7 @@
   9:27  warning  '_request' is defined but never used  @typescript-eslint/no-unused-vars
 
 /Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/admin/check-session/route.ts
-  12:27  warning  '_request' is defined but never used  @typescript-eslint/no-unused-vars
+  13:27  warning  '_request' is defined but never used  @typescript-eslint/no-unused-vars
 
 /Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/admin/clean-database/route.ts
   12:28  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
@@ -79,28 +79,17 @@
   6:3   warning  'updateDoc' is defined but never used    @typescript-eslint/no-unused-vars
 
 /Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/admin/populate-nearby-cities/route.ts
-   18:28  warning  'request' is defined but never used       @typescript-eslint/no-unused-vars
-   23:44  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  100:23  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-
-/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/admin/properties/[id]/route.ts
-  14:44  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  50:44  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   19:28  warning  'request' is defined but never used       @typescript-eslint/no-unused-vars
+  101:23  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
 
 /Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/admin/properties/route.ts
-   11:3   warning  'orderBy' is defined but never used       @typescript-eslint/no-unused-vars
-   24:44  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-   87:44  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  139:44  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  11:3  warning  'orderBy' is defined but never used  @typescript-eslint/no-unused-vars
 
 /Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/admin/system-health/route.ts
-   6:27  warning  'request' is defined but never used       @typescript-eslint/no-unused-vars
-  11:44  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  46:44  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  7:27  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
 
 /Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/admin/upload-properties/route.ts
-   6:3   warning  'collection' is defined but never used    @typescript-eslint/no-unused-vars
-  20:44  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  6:3  warning  'collection' is defined but never used  @typescript-eslint/no-unused-vars
 
 /Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/agent/leads/route.ts
    6:27  warning  'request' is defined but never used       @typescript-eslint/no-unused-vars
@@ -175,11 +164,6 @@
   7:3   warning  'orderBy' is defined but never used         @typescript-eslint/no-unused-vars
   8:12  warning  'firestoreLimit' is defined but never used  @typescript-eslint/no-unused-vars
 
-/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/properties/sync-matches/route.ts
-  109:54  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  145:52  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  145:68  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-
 /Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/property-matching/calculate/route.ts
   4:3  warning  'setDoc' is defined but never used  @typescript-eslint/no-unused-vars
 
@@ -236,15 +220,7 @@
   11:3  warning  'increment' is defined but never used   @typescript-eslint/no-unused-vars
 
 /Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/stripe/webhook/route.ts
-   87:49   error    Unexpected any. Specify a different type                @typescript-eslint/no-explicit-any
-  288:56   error    Unexpected any. Specify a different type                @typescript-eslint/no-explicit-any
-  294:56   error    Unexpected any. Specify a different type                @typescript-eslint/no-explicit-any
-  319:56   error    Unexpected any. Specify a different type                @typescript-eslint/no-explicit-any
-  338:48   error    Unexpected any. Specify a different type                @typescript-eslint/no-explicit-any
-  378:45   error    Unexpected any. Specify a different type                @typescript-eslint/no-explicit-any
-  389:16   warning  'createOrUpdateSubscription' is defined but never used  @typescript-eslint/no-unused-vars
-  389:98   error    Unexpected any. Specify a different type                @typescript-eslint/no-explicit-any
-  389:109  error    Unexpected any. Specify a different type                @typescript-eslint/no-explicit-any
+  389:16  warning  'createOrUpdateSubscription' is defined but never used  @typescript-eslint/no-unused-vars
 
 /Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/test/100-user-nearby-cities-test/route.ts
   182:11  error    Unexpected any. Specify a different type              @typescript-eslint/no-explicit-any
@@ -287,7 +263,6 @@
 
 /Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/test/debug-cities-json/route.ts
    1:10  warning  'NextRequest' is defined but never used   @typescript-eslint/no-unused-vars
-   8:24  error    A `require()` style import is forbidden   @typescript-eslint/no-require-imports
   14:48  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
   17:57  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
   20:53  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
@@ -336,7 +311,7 @@
   1:10  warning  'NextRequest' is defined but never used  @typescript-eslint/no-unused-vars
 
 /Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/users/[id]/route.ts
-  36:13  warning  'password' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  37:13  warning  'password' is assigned a value but never used  @typescript-eslint/no-unused-vars
 
 /Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/webhooks/ghl/route.ts
    77:44  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
@@ -445,23 +420,10 @@
   138:49  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
 
 /Users/abdullahabunasrah/Desktop/ownerfi/src/app/realtor/settings/page.tsx
-   41:50  error    Unexpected any. Specify a different type                                                                        @typescript-eslint/no-explicit-any
-   44:52  error    Unexpected any. Specify a different type                                                                        @typescript-eslint/no-explicit-any
-   68:6   warning  React Hook useEffect has a missing dependency: 'loadProfile'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
-  137:64  error    Unexpected any. Specify a different type                                                                        @typescript-eslint/no-explicit-any
-  152:14  warning  'err' is defined but never used                                                                                 @typescript-eslint/no-unused-vars
-  185:35  error    Unexpected any. Specify a different type                                                                        @typescript-eslint/no-explicit-any
-  222:47  error    Unexpected any. Specify a different type                                                                        @typescript-eslint/no-explicit-any
-  246:40  error    Unexpected any. Specify a different type                                                                        @typescript-eslint/no-explicit-any
-  253:55  error    Unexpected any. Specify a different type                                                                        @typescript-eslint/no-explicit-any
-  291:52  error    Unexpected any. Specify a different type                                                                        @typescript-eslint/no-explicit-any
-  395:14  warning  'err' is defined but never used                                                                                 @typescript-eslint/no-unused-vars
-  428:14  warning  'err' is defined but never used                                                                                 @typescript-eslint/no-unused-vars
-  810:26  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`                                                 react/no-unescaped-entities
-  867:35  error    Unexpected any. Specify a different type                                                                        @typescript-eslint/no-explicit-any
-  870:36  error    Unexpected any. Specify a different type                                                                        @typescript-eslint/no-explicit-any
-  880:30  error    Unexpected any. Specify a different type                                                                        @typescript-eslint/no-explicit-any
-  882:50  error    Unexpected any. Specify a different type                                                                        @typescript-eslint/no-explicit-any
+   81:6   warning  React Hook useEffect has a missing dependency: 'loadProfile'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  165:14  warning  'err' is defined but never used                                                                                 @typescript-eslint/no-unused-vars
+  408:14  warning  'err' is defined but never used                                                                                 @typescript-eslint/no-unused-vars
+  441:14  warning  'err' is defined but never used                                                                                 @typescript-eslint/no-unused-vars
 
 /Users/abdullahabunasrah/Desktop/ownerfi/src/app/realtor/setup/page.tsx
     6:8   warning  'Link' is defined but never used                                                                                         @typescript-eslint/no-unused-vars
@@ -560,11 +522,8 @@
   52:101  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
 
 /Users/abdullahabunasrah/Desktop/ownerfi/src/lib/auth.ts
-   5:3   warning  'doc' is defined but never used           @typescript-eslint/no-unused-vars
-   6:3   warning  'getDoc' is defined but never used        @typescript-eslint/no-unused-vars
-  69:31  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  75:26  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  76:26  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  5:3  warning  'doc' is defined but never used     @typescript-eslint/no-unused-vars
+  6:3  warning  'getDoc' is defined but never used  @typescript-eslint/no-unused-vars
 
 /Users/abdullahabunasrah/Desktop/ownerfi/src/lib/background-jobs.ts
   100:27  warning  'batch' is assigned a value but never used  @typescript-eslint/no-unused-vars
@@ -641,13 +600,6 @@
    92:56  error    Unexpected any. Specify a different type            @typescript-eslint/no-explicit-any
   231:18  error    Unexpected any. Specify a different type            @typescript-eslint/no-explicit-any
 
-/Users/abdullahabunasrah/Desktop/ownerfi/src/lib/firebase-models.ts
-  187:29  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  210:35  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  217:43  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  231:45  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  258:51  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-
 /Users/abdullahabunasrah/Desktop/ownerfi/src/lib/firestore.ts
     5:3   warning  'getDocs' is defined but never used       @typescript-eslint/no-unused-vars
     6:3   warning  'addDoc' is defined but never used        @typescript-eslint/no-unused-vars
@@ -676,59 +628,14 @@
 /Users/abdullahabunasrah/Desktop/ownerfi/src/lib/ghl-csv-parser.ts
    11:3   warning  'getStreetViewImageByAddress' is defined but never used    @typescript-eslint/no-unused-vars
    12:3   warning  'enhancePropertyWithGoogleMaps' is defined but never used  @typescript-eslint/no-unused-vars
-  114:22  error    Unexpected any. Specify a different type                   @typescript-eslint/no-explicit-any
-  202:41  error    Unexpected any. Specify a different type                   @typescript-eslint/no-explicit-any
   250:12  warning  'error' is defined but never used                          @typescript-eslint/no-unused-vars
   281:9   warning  'yearBuilt' is assigned a value but never used             @typescript-eslint/no-unused-vars
-  364:41  error    Unexpected any. Specify a different type                   @typescript-eslint/no-explicit-any
-
-/Users/abdullahabunasrah/Desktop/ownerfi/src/lib/ghl-property-mapping.ts
-   95:39  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  139:43  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-
-/Users/abdullahabunasrah/Desktop/ownerfi/src/lib/google-maps-service.ts
-   58:36  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  183:17  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-
-/Users/abdullahabunasrah/Desktop/ownerfi/src/lib/logger.ts
-  28:29  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-
-/Users/abdullahabunasrah/Desktop/ownerfi/src/lib/matching-algorithm.ts
-  14:14  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
 
 /Users/abdullahabunasrah/Desktop/ownerfi/src/lib/matching.ts
-   4:10   warning  'calculateDistance' is defined but never used  @typescript-eslint/no-unused-vars
-  21:43   error    Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
-  21:55   error    Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
-  21:107  error    Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
-
-/Users/abdullahabunasrah/Desktop/ownerfi/src/lib/payment-source-tracking.ts
-   25:63  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-   25:69  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-   26:17  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  167:51  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-
-/Users/abdullahabunasrah/Desktop/ownerfi/src/lib/production-logger.ts
-  10:13  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  46:35  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  56:35  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  66:34  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  66:49  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  76:36  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  89:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  97:42  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-
-/Users/abdullahabunasrah/Desktop/ownerfi/src/lib/property-calculations.ts
-  129:55  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  41:10  warning  'calculateDistance' is defined but never used  @typescript-eslint/no-unused-vars
 
 /Users/abdullahabunasrah/Desktop/ownerfi/src/lib/property-enhancement.ts
   5:10  warning  'getNearbyCitiesDirect' is defined but never used  @typescript-eslint/no-unused-vars
-
-/Users/abdullahabunasrah/Desktop/ownerfi/src/lib/property-schema.ts
-  103:35  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-
-/Users/abdullahabunasrah/Desktop/ownerfi/src/lib/property-scraper.ts
-  201:61  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
 
 /Users/abdullahabunasrah/Desktop/ownerfi/src/lib/property-search-optimized.ts
   119:17  warning  '_doc' is assigned a value but never used  @typescript-eslint/no-unused-vars
@@ -746,43 +653,15 @@
   121:36  warning  'propertyId' is defined but never used   @typescript-eslint/no-unused-vars
   121:56  warning  'action' is defined but never used       @typescript-eslint/no-unused-vars
 
-/Users/abdullahabunasrah/Desktop/ownerfi/src/lib/radius-matching.ts
-  73:46  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  73:67  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  73:73  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-
-/Users/abdullahabunasrah/Desktop/ownerfi/src/lib/scraper-test.ts
-  26:13  warning  'displayCount' is assigned a value but never used  @typescript-eslint/no-unused-vars
-  33:12  warning  'error' is defined but never used                  @typescript-eslint/no-unused-vars
-  66:13  warning  'urls' is assigned a value but never used          @typescript-eslint/no-unused-vars
-  66:61  error    Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
-
 /Users/abdullahabunasrah/Desktop/ownerfi/src/lib/simple-auth.ts
   13:12  warning  '_error' is defined but never used  @typescript-eslint/no-unused-vars
   26:12  warning  '_error' is defined but never used  @typescript-eslint/no-unused-vars
 
 /Users/abdullahabunasrah/Desktop/ownerfi/src/lib/system-validator.ts
   216:42  warning  'BuyerCriteria' is assigned a value but never used  @typescript-eslint/no-unused-vars
-  219:88  error    Unexpected any. Specify a different type            @typescript-eslint/no-explicit-any
-
-/Users/abdullahabunasrah/Desktop/ownerfi/src/lib/tennessee-scraper-test.ts
-  11:11  warning  '_duration' is assigned a value but never used      @typescript-eslint/no-unused-vars
-  14:11  warning  '_displayCount' is assigned a value but never used  @typescript-eslint/no-unused-vars
-  30:12  warning  '_error' is defined but never used                  @typescript-eslint/no-unused-vars
-  42:11  warning  '_duration' is assigned a value but never used      @typescript-eslint/no-unused-vars
-  45:11  warning  '_displayCount' is assigned a value but never used  @typescript-eslint/no-unused-vars
-  49:12  warning  '_error' is defined but never used                  @typescript-eslint/no-unused-vars
-  77:13  warning  '_urls' is assigned a value but never used          @typescript-eslint/no-unused-vars
-  84:12  warning  '_error' is defined but never used                  @typescript-eslint/no-unused-vars
-
-/Users/abdullahabunasrah/Desktop/ownerfi/src/lib/test-zillow-updated.ts
-   71:11  warning  'duration' is assigned a value but never used  @typescript-eslint/no-unused-vars
-   77:20  error    A `require()` style import is forbidden        @typescript-eslint/no-require-imports
-  112:9   warning  'url' is assigned a value but never used       @typescript-eslint/no-unused-vars
-  112:27  error    Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
 
 /Users/abdullahabunasrah/Desktop/ownerfi/src/lib/zillow-scraper.ts
   189:16  warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
 
-✖ 499 problems (250 errors, 249 warnings)
+✖ 410 problems (174 errors, 236 warnings)
 

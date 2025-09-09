@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { Button } from './Button';
+import { ExtendedSession } from '@/types/session';
 
 interface HeaderProps {
   className?: string;
@@ -39,8 +40,8 @@ export function Header({ className = '' }: HeaderProps) {
                   variant="primary" 
                   size="sm" 
                   href={
-                    (session.user as any)?.role === 'admin' ? '/admin' :
-                    (session.user as any)?.role === 'realtor' ? '/realtor/dashboard' : '/dashboard'
+                    (session as ExtendedSession)?.user?.role === 'admin' ? '/admin' :
+                    (session as ExtendedSession)?.user?.role === 'realtor' ? '/realtor/dashboard' : '/dashboard'
                   } 
                   className="font-semibold"
                 >

@@ -51,7 +51,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
             <div className="text-6xl mb-4">⚠️</div>
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Something went wrong</h2>
             <p className="text-gray-600 mb-6">
-              We've been notified and are working to fix this issue. Please try refreshing the page.
+              We&apos;ve been notified and are working to fix this issue. Please try refreshing the page.
             </p>
             <button
               onClick={() => window.location.reload()}
@@ -94,7 +94,7 @@ export function withErrorBoundary<T extends object>(
 
 // Hook for error handling in functional components
 export function useErrorHandler() {
-  const handleError = React.useCallback((error: Error, context?: any) => {
+  const handleError = React.useCallback((error: Error, context?: Record<string, unknown>) => {
     logError('Component error caught', error, context);
     
     // In development, throw to trigger error boundary

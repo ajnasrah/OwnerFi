@@ -168,7 +168,7 @@ export default function UnifiedSignup() {
                       </svg>
                     </div>
                     <div>
-                      <div className="font-semibold text-primary-text text-lg">I'm looking to buy a home</div>
+                      <div className="font-semibold text-primary-text text-lg">I&apos;m looking to buy a home</div>
                       <div className="text-secondary-text text-sm">Browse owner-financed properties in your area</div>
                     </div>
                   </div>
@@ -185,7 +185,7 @@ export default function UnifiedSignup() {
                       </svg>
                     </div>
                     <div>
-                      <div className="font-semibold text-primary-text text-lg">I'm a real estate agent</div>
+                      <div className="font-semibold text-primary-text text-lg">I&apos;m a real estate agent</div>
                       <div className="text-secondary-text text-sm">Access qualified buyer leads ready for owner financing</div>
                     </div>
                   </div>

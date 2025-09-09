@@ -11,8 +11,8 @@ export default function RealtorBuyerPropertiesView() {
   const searchParams = useSearchParams();
   const buyerId = searchParams.get('buyerId');
   
-  const [properties, setProperties] = useState<any[]>([]);
-  const [buyer, setBuyer] = useState<any>(null);
+  const [properties, setProperties] = useState<Record<string, unknown>[]>([]);
+  const [buyer, setBuyer] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selectedTab, setSelectedTab] = useState<'pending' | 'liked' | 'disliked'>('pending');
@@ -147,7 +147,7 @@ export default function RealtorBuyerPropertiesView() {
                 <button
                   key={tab.key}
                   onClick={() => {
-                    setSelectedTab(tab.key as any);
+                    setSelectedTab(tab.key as 'pending' | 'liked' | 'disliked');
                     loadPropertiesForTab(tab.key);
                   }}
                   className={`flex-1 px-4 py-3 rounded-lg font-medium transition-all ${

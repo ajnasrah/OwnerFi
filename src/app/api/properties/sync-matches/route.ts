@@ -144,19 +144,20 @@ async function addPropertyToMatchingBuyers(property: any) {
 // Check if a property matches a buyer's criteria
 async function checkPropertyMatchesBuyer(property: any, buyerData: any): Promise<boolean> {
   try {
-    // Location match - use buyer's stored cities
-    const buyerCities = buyerData.cities || buyerData.searchAreaCities || [buyerData.preferredCity];
+    // Location match - use buyer's stored cities from searchCriteria
+    const criteria = buyerData.searchCriteria || {};
+    const buyerCities = criteria.cities || [buyerData.preferredCity]; // fallback to flat field
     const locationMatch = buyerCities.some((cityName: string) =>
       property.city.toLowerCase() === cityName.toLowerCase() &&
-      property.state === buyerData.preferredState
+      property.state === (criteria.state || buyerData.preferredState)
     );
     
     if (!locationMatch) return false;
 
-    // Budget match
+    // Budget match - read from nested structure
     const budgetMatch = 
-      property.monthlyPayment <= (buyerData.maxMonthlyPayment || 0) &&
-      property.downPaymentAmount <= (buyerData.maxDownPayment || 0);
+      property.monthlyPayment <= (criteria.maxMonthlyPayment || buyerData.maxMonthlyPayment || 0) &&
+      property.downPaymentAmount <= (criteria.maxDownPayment || buyerData.maxDownPayment || 0);
     
     if (!budgetMatch) return false;
 
@@ -190,18 +191,19 @@ export async function GET() {
       const buyerData = buyerDoc.data();
       
       // Use the existing matching logic to get fresh matches
+      const criteria = buyerData.searchCriteria || {};
       const buyerLocation = {
-        centerCity: buyerData.preferredCity,
-        centerState: buyerData.preferredState,
-        searchRadius: buyerData.searchRadius || 25,
-        serviceCities: buyerData.searchAreaCities || [buyerData.preferredCity]
+        centerCity: criteria.cities?.[0] || buyerData.preferredCity || '',
+        centerState: criteria.state || buyerData.preferredState || '',
+        searchRadius: criteria.searchRadius || buyerData.searchRadius || 25,
+        serviceCities: criteria.cities || buyerData.searchAreaCities || [buyerData.preferredCity]
       };
 
       const matchingProperties = await UnifiedMatchingService.findPropertiesForBuyer(
         buyerLocation,
         {
-          maxMonthlyPayment: buyerData.maxMonthlyPayment || 0,
-          maxDownPayment: buyerData.maxDownPayment || 0
+          maxMonthlyPayment: criteria.maxMonthlyPayment || buyerData.maxMonthlyPayment || 0,
+          maxDownPayment: criteria.maxDownPayment || buyerData.maxDownPayment || 0
         },
         {
           minBedrooms: buyerData.minBedrooms,

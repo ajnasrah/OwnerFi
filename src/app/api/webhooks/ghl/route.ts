@@ -16,6 +16,7 @@ import {
   calculatePropertyFinancials, 
   validatePropertyFinancials 
 } from '@/lib/property-calculations';
+import { queueNearbyCitiesForProperty } from '@/lib/property-enhancement';
 
 // GoHighLevel webhook handler for property listings
 export async function POST(request: NextRequest) {
@@ -119,7 +120,7 @@ async function handlePropertyListing(data: any) {
       downPaymentPercent: rawPropertyData.downPaymentPercent,
       monthlyPayment: rawPropertyData.monthlyPayment,
       interestRate: rawPropertyData.interestRate,
-      termYears: 30, // Default to 30 years if not specified
+      termYears: 20, // Default to 20 years if not specified
       balloonPayment: rawPropertyData.balloonPayment > 0 ? rawPropertyData.balloonPayment : undefined
     });
 
@@ -213,12 +214,16 @@ async function handlePropertyListing(data: any) {
     const existingDocs = await getDocs(existingQuery);
 
     if (existingDocs.empty) {
-      // Create new property
+      // FAST: Create property immediately, queue nearby cities for background processing
       await setDoc(doc(db, 'properties', propertyData.id!), {
         ...propertyData,
+        nearbyCities: [], // Empty initially, populated by background job
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       });
+      
+      // Queue nearby cities population (non-blocking)
+      queueNearbyCitiesForProperty(propertyData.id!, propertyData.city, propertyData.state);
       
       await logInfo('Created new property from GHL', {
         action: 'property_created',

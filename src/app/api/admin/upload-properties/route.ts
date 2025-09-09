@@ -10,6 +10,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { logError, logInfo } from '@/lib/logger';
+import { queueNearbyCitiesForProperty } from '@/lib/property-enhancement';
 
 export async function POST(request: NextRequest) {
   try {
@@ -74,15 +75,19 @@ export async function POST(request: NextRequest) {
       try {
         console.log(`Attempting to insert property: ${property.id} - ${property.address}`);
         
-        // Simplified write without existence check for debugging
+        // FAST: Create property immediately without waiting for nearby cities
         await setDoc(doc(db, 'properties', property.id), {
           ...property,
+          nearbyCities: [], // Empty initially, populated by background job
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
           status: 'active',
           source: 'csv-upload',
           isActive: true // Ensure this flag is set for the matching service
         });
+        
+        // Queue nearby cities population (non-blocking)
+        queueNearbyCitiesForProperty(property.id, property.city, property.state);
         
         console.log(`Successfully inserted: ${property.id}`);
         

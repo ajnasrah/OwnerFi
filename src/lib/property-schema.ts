@@ -15,6 +15,7 @@ export interface PropertyListing {
   longitude?: number;                  // GPS coordinates for mapping
   county?: string;                     // County name
   neighborhood?: string;               // Neighborhood/subdivision name
+  nearbyCities?: string[];             // Cities within 30-mile radius for similar property searches
   
   // Property Details
   propertyType: 'single-family' | 'condo' | 'townhouse' | 'mobile-home' | 'multi-family' | 'land';

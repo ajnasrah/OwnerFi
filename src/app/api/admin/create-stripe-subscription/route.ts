@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     const { customerId, priceId, planId } = await request.json();
     
     // Create the subscription in Stripe
-    const subscription = await stripe.subscriptions.create({
+    const subscription: Stripe.Subscription = await stripe.subscriptions.create({
       customer: customerId,
       items: [
         {

@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
     console.log(`📊 Found ${propertiesWithCityAsNearby.length} properties that consider ${searchCity} as nearby`);
     
     // Group by the property's actual city
-    const propertiesByActualCity: Record<string, any[]> = {};
+    const propertiesByActualCity: Record<string, Record<string, unknown>[]> = {};
     propertiesWithCityAsNearby.forEach(property => {
       const actualCity = property.city?.split(',')[0].trim();
       if (!propertiesByActualCity[actualCity]) {

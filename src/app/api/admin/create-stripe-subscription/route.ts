@@ -8,7 +8,7 @@ import {
 import { db } from '@/lib/firebase';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-08-27.basil',
+  apiVersion: '2024-06-20',
 });
 
 export async function POST(request: NextRequest) {
@@ -43,9 +43,7 @@ export async function POST(request: NextRequest) {
       success: true,
       subscriptionId: subscription.id,
       status: subscription.status,
-      currentPeriodEnd: (subscription as any).current_period_end
-        ? new Date((subscription as any).current_period_end * 1000).toISOString()
-        : null
+      currentPeriodEnd: new Date(subscription.current_period_end * 1000).toISOString()
     });
     
   } catch (error) {

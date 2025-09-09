@@ -63,7 +63,10 @@ export async function GET(request: NextRequest) {
           if (!buyerDocs.empty) {
             const buyer = buyerDocs.docs[0].data();
             buyerName = `${buyer.firstName || 'Unknown'} ${buyer.lastName || 'Buyer'}`;
-            buyerLocation = `${buyer.preferredCity || 'Unknown'}, ${buyer.preferredState || ''}`;
+            // Read location from nested searchCriteria structure
+            const primaryCity = buyer.searchCriteria?.cities?.[0] || 'Unknown';
+            const primaryState = buyer.searchCriteria?.state || '';
+            buyerLocation = `${primaryCity}, ${primaryState}`;
           }
         } catch (error) {
           console.error('Failed to get buyer details:', error);

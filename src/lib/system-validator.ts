@@ -3,20 +3,18 @@ import {
   collection, 
   query, 
   where, 
-  getDocs, 
-  doc, 
-  getDoc,
+  getDocs,
   limit as firestoreLimit
 } from 'firebase/firestore';
 import { db } from './firebase';
-import { logInfo, logError } from './logger';
+import { logInfo } from './logger';
 
 export interface ValidationResult {
   category: string;
   test: string;
   status: 'pass' | 'fail' | 'warning';
   message: string;
-  details?: any;
+  details?: Record<string, unknown>;
   fix?: string;
 }
 

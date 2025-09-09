@@ -1,4 +1,5 @@
 import { scrapeTennesseeOwnerFinance, scrapeStateOwnerFinance } from './zillow-scraper';
+import { promises as fs } from 'fs';
 
 // Test function for Tennessee owner finance scraping
 export async function testTennesseeScraping() {
@@ -7,13 +8,13 @@ export async function testTennesseeScraping() {
     const startTime = Date.now();
     const propertyUrls = await scrapeTennesseeOwnerFinance(700000, 50);
     const endTime = Date.now();
-    const duration = Math.round((endTime - startTime) / 1000);
+    const _duration = Math.round((endTime - startTime) / 1000);
 
     // Display first 10 URLs as examples
-    const displayCount = Math.min(10, propertyUrls.length);
+    const _displayCount = Math.min(10, propertyUrls.length);
 
     // Save URLs to file for use with Apify
-    const fs = require('fs').promises;
+    // Using imported fs promises
     const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
     const filename = `tennessee-owner-finance-urls-${timestamp}.txt`;
     
@@ -26,7 +27,7 @@ export async function testTennesseeScraping() {
       filename
     };
 
-  } catch (error) {
+  } catch (_error) {
     return null;
   }
 }
@@ -38,14 +39,14 @@ export async function testStateScraping(state: string = 'Tennessee', maxPrice: n
     const startTime = Date.now();
     const result = await scrapeStateOwnerFinance(state, maxPrice, maxPages);
     const endTime = Date.now();
-    const duration = Math.round((endTime - startTime) / 1000);
+    const _duration = Math.round((endTime - startTime) / 1000);
 
     // Display first 5 URLs
-    const displayCount = Math.min(5, result.allUrls.length);
+    const _displayCount = Math.min(5, result.allUrls.length);
 
     return result;
 
-  } catch (error) {
+  } catch (_error) {
     return null;
   }
 }
@@ -73,14 +74,14 @@ export async function testTennesseeAPI(baseUrl: string = 'http://localhost:3000'
 
     if (response.ok && data.success) {
       // Show first 3 URLs
-      const urls = data.data.propertyUrls.slice(0, 3);
+      const _urls = data.data.propertyUrls.slice(0, 3);
 
       return data;
     } else {
       return null;
     }
 
-  } catch (error) {
+  } catch (_error) {
     return null;
   }
 }

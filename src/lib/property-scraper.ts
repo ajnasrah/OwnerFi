@@ -118,7 +118,7 @@ export class PropertyScraper {
         metadata: { searchUrl, criteria, maxPages }
       });
 
-      let allProperties: ScrapedProperty[] = [];
+      const allProperties: ScrapedProperty[] = [];
       
       for (let page = 1; page <= maxPages; page++) {
         const pageUrl = page > 1 ? `${searchUrl}&page=${page}` : searchUrl;

@@ -1,9 +1,9 @@
 // Script to fix trial dates for existing accounts
-const admin = require('firebase-admin');
+import admin from 'firebase-admin';
+import serviceAccount from './serviceAccountKey.json' assert { type: 'json' };
 
 // Initialize Firebase Admin SDK
 if (!admin.apps.length) {
-  const serviceAccount = require('./serviceAccountKey.json');
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
     storageBucket: 'ownerfi-e9b1c.appspot.com'

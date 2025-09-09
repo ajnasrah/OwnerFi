@@ -4,8 +4,8 @@
  * Run this once to migrate existing buyer profiles to the new architecture
  */
 
-const { initializeApp } = require('firebase/app');
-const { getFirestore, collection, getDocs, doc, updateDoc, serverTimestamp } = require('firebase/firestore');
+import { initializeApp } from 'firebase/app';
+import { getFirestore, collection, getDocs, doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 
 const firebaseConfig = {
   // Your Firebase config here

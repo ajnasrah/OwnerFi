@@ -26,6 +26,23 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" data-scroll-behavior="smooth">
+      <head>
+        <script
+          src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCelger3EPc8GzTOQq7-cv6tUeVh_XN9jE&libraries=places&callback=initMap"
+          async
+          defer
+        />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              function initMap() {
+                window.googleMapsLoaded = true;
+                window.dispatchEvent(new Event('googleMapsLoaded'));
+              }
+            `
+          }}
+        />
+      </head>
       <body
         className={`${inter.variable} ${geistMono.variable} antialiased`}
       >

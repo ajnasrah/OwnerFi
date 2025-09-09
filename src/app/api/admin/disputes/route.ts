@@ -44,13 +44,14 @@ export async function GET(request: NextRequest) {
               const buyerDoc = await getDoc(doc(db, 'buyerProfiles', purchaseData.buyerId));
               if (buyerDoc.exists()) {
                 const buyer = buyerDoc.data();
+                const criteria = buyer.searchCriteria || {};
                 buyerDetails = {
                   buyerPhone: buyer.phone || 'No phone',
                   buyerEmail: buyer.email || 'No email',
-                  buyerCity: buyer.preferredCity || 'Unknown',
-                  buyerState: buyer.preferredState || '',
-                  maxMonthlyPayment: buyer.maxMonthlyPayment || 0,
-                  maxDownPayment: buyer.maxDownPayment || 0
+                  buyerCity: criteria.cities?.[0] || buyer.preferredCity || 'Unknown',
+                  buyerState: criteria.state || buyer.preferredState || '',
+                  maxMonthlyPayment: criteria.maxMonthlyPayment || buyer.maxMonthlyPayment || 0,
+                  maxDownPayment: criteria.maxDownPayment || buyer.maxDownPayment || 0
                 };
               }
             }

@@ -127,9 +127,9 @@ export async function POST(request: NextRequest) {
       purchasePrice: dollarCost,
       remainingCredits: realtorProfile.credits - creditCost,
       metadata: {
-        buyerCity: buyerProfile.preferredCity,
-        buyerState: buyerProfile.preferredState,
-        buyerBudget: buyerProfile.maxMonthlyPayment
+        buyerCity: buyerProfile.searchCriteria?.cities?.[0] || 'Unknown',
+        buyerState: buyerProfile.searchCriteria?.state || '',
+        buyerBudget: buyerProfile.searchCriteria?.maxMonthlyPayment || 0
       }
     });
 
@@ -141,8 +141,8 @@ export async function POST(request: NextRequest) {
       buyerInfo: {
         name: `${buyerProfile.firstName} ${buyerProfile.lastName}`,
         phone: buyerProfile.phone,
-        city: `${buyerProfile.preferredCity}, ${buyerProfile.preferredState}`,
-        budget: `$${buyerProfile.maxMonthlyPayment}/month, $${buyerProfile.maxDownPayment} down`
+        city: `${buyerProfile.searchCriteria?.cities?.[0] || 'Unknown'}, ${buyerProfile.searchCriteria?.state || ''}`,
+        budget: `$${buyerProfile.searchCriteria?.maxMonthlyPayment || 0}/month, $${buyerProfile.searchCriteria?.maxDownPayment || 0} down`
       }
     });
 

@@ -177,3 +177,4 @@
 {"context":{},"error":{"action":"buyer_profile_error"},"level":"error","message":"Failed to save buyer profile","timestamp":"2025-09-07T06:47:01.764Z"}
 {"context":{},"error":{"action":"buyer_profile_error"},"level":"error","message":"Failed to save buyer profile","timestamp":"2025-09-07T06:47:13.217Z"}
 {"context":{},"error":{"action":"buyer_profile_error"},"level":"error","message":"Failed to save buyer profile","timestamp":"2025-09-07T06:48:09.278Z"}
+{"context":{},"error":{"action":"dispute_submission_error"},"level":"error","message":"Failed to submit dispute","timestamp":"2025-09-09T16:04:16.169Z"}

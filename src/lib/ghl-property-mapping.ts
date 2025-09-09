@@ -100,7 +100,7 @@ export function mapGHLToProperty(ghlData: GHLPropertyData): Partial<Property> {
     downPaymentPercent: parseFloat(cf.down_payment_percent || '10'),
     monthlyPayment: parseInt(cf.monthly_payment || '0'),
     interestRate: parseFloat(cf.interest_rate || '7.0'),
-    termYears: parseInt(cf.loan_term_years || '30'),
+    termYears: parseInt(cf.loan_term_years || '20'),
     balloonPayment: cf.balloon_payment ? parseInt(cf.balloon_payment) : undefined,
     balloonYears: cf.balloon_years ? parseInt(cf.balloon_years) : undefined,
     

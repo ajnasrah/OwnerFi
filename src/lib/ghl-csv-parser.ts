@@ -287,7 +287,7 @@ async function mapGHLRowToProperty(row: any, rowNumber: number, headers: string[
     downPaymentPercent: parseFloat(row['down payment '] || '0'),
     monthlyPayment: parseFloat(row['Monthly payment '] || '0'),
     interestRate: parseFloat(row['Interest rate '] || '6.0'), // Default to 6% for owner financing
-    termYears: 30, // Default to 30 years
+    termYears: 20, // Default to 20 years
     balloonPayment: parseFloat(row['Balloon '] || '0') || undefined
   };
 

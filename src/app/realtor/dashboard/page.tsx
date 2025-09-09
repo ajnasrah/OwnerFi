@@ -78,8 +78,7 @@ export default function BuyerLinkDashboard() {
     reason: '',
     explanation: '',
     contactAttempts: '',
-    evidence: '',
-    screenshots: [] as File[]
+    evidence: ''
   });
 
   useEffect(() => {
@@ -203,8 +202,7 @@ export default function BuyerLinkDashboard() {
       reason: '',
       explanation: '',
       contactAttempts: '',
-      evidence: '',
-      screenshots: []
+      evidence: ''
     });
   };
 
@@ -220,41 +218,26 @@ export default function BuyerLinkDashboard() {
       return;
     }
     
-    if (!disputeForm.explanation || disputeForm.explanation.trim().length < 20) {
-      setError('Please provide a detailed explanation (minimum 20 characters)');
+    if (!disputeForm.explanation || disputeForm.explanation.trim().length === 0) {
+      setError('Please provide an explanation');
       return;
     }
     
-    if (!disputeForm.contactAttempts || disputeForm.contactAttempts.trim().length < 10) {
-      setError('Please describe your contact attempts with dates/times');
-      return;
-    }
     
-    if (disputeForm.screenshots.length < 3) {
-      setError('Please upload at least 3 screenshots showing your contact attempts');
-      return;
-    }
 
     try {
-      // Upload screenshots first
-      const formData = new FormData();
-      formData.append('transactionId', selectedTransaction.id);
-      formData.append('reason', disputeForm.reason);
-      formData.append('explanation', disputeForm.explanation);
-      formData.append('contactAttempts', disputeForm.contactAttempts);
-      formData.append('evidence', disputeForm.evidence);
-      formData.append('buyerName', selectedTransaction.details?.buyerName || '');
-      formData.append('purchaseDate', selectedTransaction.timestamp);
-      
-      // Add all screenshots
-      disputeForm.screenshots.forEach((file, index) => {
-        formData.append(`screenshot_${index}`, file);
-      });
-      formData.append('screenshotCount', disputeForm.screenshots.length.toString());
-
       const response = await fetch('/api/realtor/dispute-lead', {
         method: 'POST',
-        body: formData, // Send as FormData to handle file uploads
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          transactionId: selectedTransaction.id,
+          reason: disputeForm.reason,
+          explanation: disputeForm.explanation,
+          contactAttempts: disputeForm.contactAttempts,
+          evidence: disputeForm.evidence,
+          buyerName: selectedTransaction.details?.buyerName || '',
+          purchaseDate: selectedTransaction.timestamp
+        })
       });
 
       const data = await response.json();
@@ -538,7 +521,7 @@ export default function BuyerLinkDashboard() {
                           </div>
                         </div>
                         
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 text-sm">
                           <div className="bg-surface-bg/50 rounded-lg p-3">
                             <div className="flex items-center space-x-2 mb-1">
                               <svg className="w-4 h-4 text-accent-success" fill="currentColor" viewBox="0 0 20 20">
@@ -685,7 +668,7 @@ export default function BuyerLinkDashboard() {
                           </div>
                         </div>
                         
-                        <div className="flex flex-col space-y-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:space-y-0 text-sm">
+                        <div className="flex flex-col space-y-3 lg:grid lg:grid-cols-3 lg:gap-4 lg:space-y-0 text-sm">
                           <div className="bg-surface-bg/70 rounded-lg p-3">
                             <div className="flex items-center justify-between mb-2">
                               <div className="flex items-center space-x-2">
@@ -949,63 +932,6 @@ export default function BuyerLinkDashboard() {
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-primary-text mb-2">
-                  Required Screenshots/Evidence * (Minimum 3, no maximum)
-                </label>
-                <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                  <p className="text-sm text-blue-800 mb-2">
-                    <strong>Upload screenshots showing you contacted the buyer (minimum 3, upload as many as you have):</strong>
-                  </p>
-                  <ul className="text-xs text-blue-700 space-y-1">
-                    <li>• Call logs with timestamps</li>
-                    <li>• Text message conversations</li>
-                    <li>• Email attempts and responses/bounces</li>
-                    <li>• Social media contact attempts</li>
-                    <li>• Any other communication proof</li>
-                  </ul>
-                </div>
-                <div className="space-y-3">
-                  <input
-                    type="file"
-                    accept="image/*,.png,.jpg,.jpeg"
-                    multiple
-                    required
-                    onChange={(e) => {
-                      const files = Array.from(e.target.files || []);
-                      setDisputeForm(prev => ({...prev, screenshots: [...prev.screenshots, ...files]}));
-                    }}
-                    className="w-full p-3 border border-neutral-border rounded-lg focus:ring-accent-primary focus:border-accent-primary file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                  />
-                  <p className="text-xs text-gray-600">
-                    💡 Tip: Upload as many screenshots as you have! Hold Ctrl/Cmd to select multiple files at once, or click "Choose Files" multiple times to add more evidence
-                  </p>
-                  {disputeForm.screenshots.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => setDisputeForm(prev => ({...prev, screenshots: []}))}
-                      className="text-xs text-red-600 hover:text-red-700 underline"
-                    >
-                      Clear all screenshots
-                    </button>
-                  )}
-                </div>
-                {disputeForm.screenshots.length > 0 && (
-                  <div className="mt-2">
-                    <p className="text-sm text-green-600 font-medium">
-                      {disputeForm.screenshots.length} screenshot{disputeForm.screenshots.length > 1 ? 's' : ''} selected
-                    </p>
-                    <div className="text-xs text-gray-600 space-y-1 mt-1">
-                      {disputeForm.screenshots.map((file, index) => (
-                        <div key={index}>📎 {file.name} ({Math.round(file.size/1024)}KB)</div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {disputeForm.screenshots.length < 3 && (
-                  <p className="text-xs text-red-600 mt-2">⚠️ Minimum 3 screenshots required (you can upload as many as needed)</p>
-                )}
-              </div>
 
               <div className="bg-accent-warm/10 border border-accent-warm/20 rounded-lg p-4">
                 <div className="flex items-start space-x-2">
@@ -1028,10 +954,10 @@ export default function BuyerLinkDashboard() {
               </button>
               <button
                 onClick={submitDispute}
-                disabled={!disputeForm.reason || !disputeForm.explanation || !disputeForm.contactAttempts || disputeForm.screenshots.length < 3}
+                disabled={!disputeForm.reason || !disputeForm.explanation}
                 className="bg-accent-danger text-surface-bg px-6 py-2 rounded-lg font-semibold hover:bg-red-600 disabled:bg-neutral-border disabled:cursor-not-allowed transition-colors"
               >
-                Submit Dispute ({disputeForm.screenshots.length} screenshots)
+                Submit Dispute
               </button>
             </div>
           </div>

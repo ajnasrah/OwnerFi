@@ -69,8 +69,13 @@ async function callOverpassAPI(lat: number, lng: number, radius: number): Promis
     const data = await response.json();
     
     return data.elements
-      .filter((element: any) => element.tags && element.tags.name)
-      .map((element: any) => {
+      .filter((element: { tags?: { name?: string } }) => element.tags && element.tags.name)
+      .map((element: { 
+        tags: { name: string; 'addr:state'?: string; state?: string; place?: string };
+        lat?: number;
+        center?: { lat: number; lon: number };
+        lon?: number;
+      }) => {
         const elementLat = element.lat || element.center?.lat;
         const elementLng = element.lon || element.center?.lon;
         
@@ -87,8 +92,8 @@ async function callOverpassAPI(lat: number, lng: number, radius: number): Promis
           type: element.tags.place
         };
       })
-      .filter((city: any) => city && city.name && city.distance <= radius)
-      .sort((a: any, b: any) => a.distance - b.distance);
+      .filter((city): city is CityWithDistance => city && city.name && city.distance <= radius)
+      .sort((a, b) => a.distance - b.distance);
 
   } catch (error) {
     console.error('Overpass API error:', error);
@@ -134,12 +139,12 @@ export async function getNearbyCitiesDirect(
  */
 function getFallbackCities(cityName: string, state: string, radiusMiles: number): string[] {
   try {
-    const { getCitiesWithinRadius } = require('./cities');
+    const { getCitiesWithinRadius } = await import('./cities');
     const nearbyCities = getCitiesWithinRadius(cityName, state, radiusMiles);
     
     const cityNames = nearbyCities
-      .filter((city: any) => city.name.toLowerCase() !== cityName.toLowerCase())
-      .map((city: any) => city.name)
+      .filter((city: { name: string }) => city.name.toLowerCase() !== cityName.toLowerCase())
+      .map((city: { name: string }) => city.name)
       .slice(0, 20); // Static DB has fewer cities
     
     console.log(`📍 Fallback: Found ${cityNames.length} cities for ${cityName}, ${state}`);

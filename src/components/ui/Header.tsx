@@ -8,7 +8,7 @@ interface HeaderProps {
 }
 
 export function Header({ className = '' }: HeaderProps) {
-  const { data: session, status } = useSession();
+  const { data: session } = useSession();
 
   return (
     <header className={`bg-surface-bg shadow-soft border-b border-neutral-border sticky top-0 z-50 ${className}`}>
@@ -34,14 +34,27 @@ export function Header({ className = '' }: HeaderProps) {
           {/* Dynamic navigation based on auth status */}
           <div className="flex items-center space-x-2">
             {session?.user ? (
-              <Button 
-                variant="primary" 
-                size="sm" 
-                href={session.user.role === 'realtor' ? '/realtor/dashboard' : '/dashboard'} 
-                className="font-semibold"
-              >
-                Dashboard
-              </Button>
+              <>
+                <Button 
+                  variant="primary" 
+                  size="sm" 
+                  href={
+                    (session.user as any)?.role === 'admin' ? '/admin' :
+                    (session.user as any)?.role === 'realtor' ? '/realtor/dashboard' : '/dashboard'
+                  } 
+                  className="font-semibold"
+                >
+                  Dashboard
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  href="/api/auth/signout" 
+                  className="font-semibold"
+                >
+                  Sign Out
+                </Button>
+              </>
             ) : (
               <>
                 <Button variant="ghost" size="sm" href="/auth/signin" className="hidden sm:inline-flex">

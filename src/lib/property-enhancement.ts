@@ -107,14 +107,14 @@ export function getNearbyCitiesWithDistance(
  * Enhance property with nearby cities data
  * This function only adds data to property objects, doesn't modify storage
  */
-export function enhancePropertyWithNearbyCities(property: any): any {
+export function enhancePropertyWithNearbyCities(property: Record<string, unknown>): Record<string, unknown> {
   if (!property.city || !property.state) {
     return property;
   }
 
   // Add nearby cities array if not already present
   if (!property.nearbyCities) {
-    property.nearbyCities = getNearbyCitiesForProperty(property.city, property.state);
+    property.nearbyCities = getNearbyCitiesForProperty(property.city as string, property.state as string);
   }
 
   return property;
@@ -123,7 +123,7 @@ export function enhancePropertyWithNearbyCities(property: any): any {
 /**
  * Bulk enhance multiple properties with nearby cities
  */
-export function enhancePropertiesWithNearbyCities(properties: any[]): any[] {
+export function enhancePropertiesWithNearbyCities(properties: Record<string, unknown>[]): Record<string, unknown>[] {
   return properties.map(property => enhancePropertyWithNearbyCities(property));
 }
 
@@ -152,11 +152,11 @@ export async function expandSearchToNearbyCitiesAPI(
       throw new Error('Failed to fetch nearby cities');
     }
     
-    const data = await response.json();
+    const data = await response.json() as { cities: Array<{ name: string }> };
     
     // Extract city names from the comprehensive results
     const allCityNames = data.cities
-      .map((city: any) => city.name)
+      .map((city) => city.name)
       .filter((name: string) => name && name.trim().length > 0);
     
     // Remove duplicates and include original city

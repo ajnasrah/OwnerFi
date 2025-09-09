@@ -2,11 +2,10 @@ import {
   collection, 
   query, 
   where, 
-  getDocs,
-  orderBy,
-  limit as firestoreLimit
+  getDocs
 } from 'firebase/firestore';
 import { db } from './firebase';
+import { BuyerProfile, RealtorProfile, Property } from './firebase-models';
 
 interface RealtorLocation {
   centerCity: string;
@@ -44,7 +43,7 @@ class UnifiedMatchingService {
       const matchedBuyers = [];
       
       for (const buyerDoc of buyerDocs.docs) {
-        const buyerData = { id: buyerDoc.id, ...buyerDoc.data() } as any;
+        const buyerData = { id: buyerDoc.id, ...buyerDoc.data() } as BuyerProfile & { id: string };
         
         // Filter by state first
         if (buyerData.searchCriteria?.state !== realtorLocation.centerState) continue;
@@ -85,7 +84,7 @@ class UnifiedMatchingService {
   }
 
   // Calculate real-time property matches for a buyer
-  private static async calculateRealTimePropertyMatches(buyerData: any): Promise<number> {
+  private static async calculateRealTimePropertyMatches(buyerData: BuyerProfile & { id: string }): Promise<number> {
     try {
       const buyerCities = buyerData.searchCriteria?.cities || [];
       const buyerState = buyerData.searchCriteria?.state;
@@ -103,7 +102,7 @@ class UnifiedMatchingService {
       
       let matchCount = 0;
       for (const doc of propertyDocs.docs) {
-        const property = doc.data() as any;
+        const property = doc.data() as Property;
         
         // Check if property matches buyer criteria
         const cityMatch = buyerCities.some(city => 
@@ -143,7 +142,7 @@ class UnifiedMatchingService {
       const matchedProperties = [];
       
       for (const propertyDoc of propertyDocs.docs) {
-        const propertyData = { id: propertyDoc.id, ...propertyDoc.data() } as any;
+        const propertyData = { id: propertyDoc.id, ...propertyDoc.data() } as Property & { id: string };
         
         // Filter by isActive in JavaScript instead of query
         if (!propertyData.isActive) continue;
@@ -194,7 +193,7 @@ class UnifiedMatchingService {
       const matchedRealtors = [];
       
       for (const realtorDoc of realtorDocs.docs) {
-        const realtorData = { id: realtorDoc.id, ...realtorDoc.data() } as any;
+        const realtorData = { id: realtorDoc.id, ...realtorDoc.data() } as RealtorProfile & { id: string };
         
         // Filter by isActive in JavaScript instead of query
         if (!realtorData.isActive) continue;

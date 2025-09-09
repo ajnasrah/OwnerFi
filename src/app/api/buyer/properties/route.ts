@@ -6,6 +6,7 @@ import {
 import { db } from '@/lib/firebase';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { Property } from '@/lib/firebase-models';
 
 /**
  * BUYER PROPERTY API WITH NEARBY CITIES
@@ -49,10 +50,10 @@ export async function GET(request: NextRequest) {
 
     // Get ALL properties
     const snapshot = await getDocs(collection(db, 'properties'));
-    const allProperties = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const allProperties = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Property & { id: string }));
     
     // 1. DIRECT MATCHES: Properties IN the search city AND state
-    const directProperties = allProperties.filter(property => {
+    const directProperties = allProperties.filter((property: Property & { id: string }) => {
       const propertyCity = property.city?.split(',')[0].trim();
       return propertyCity?.toLowerCase() === searchCity.toLowerCase() && 
              property.state === searchState &&
@@ -62,7 +63,7 @@ export async function GET(request: NextRequest) {
     });
     
     // 2. NEARBY MATCHES: Properties FROM other cities IN SAME STATE that consider search city nearby
-    const nearbyProperties = allProperties.filter(property => {
+    const nearbyProperties = allProperties.filter((property: Property & { id: string }) => {
       const propertyCity = property.city?.split(',')[0].trim();
       
       // Must be different city but SAME STATE

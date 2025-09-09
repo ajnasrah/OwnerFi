@@ -178,7 +178,7 @@ export default function AdminDashboard() {
       downPaymentAmount: property.downPaymentAmount || 0,
       monthlyPayment: property.monthlyPayment || 0,
       interestRate: property.interestRate || 0,
-      termYears: property.termYears || 30,
+      termYears: property.termYears || 20,
       description: property.description || '',
       imageUrl: property.imageUrl || '',
       isActive: property.isActive !== false

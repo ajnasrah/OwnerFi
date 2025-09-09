@@ -61,19 +61,19 @@ export async function GET(request: NextRequest) {
         lastName: buyer.lastName || 'Buyer',
         phone: buyer.phone || 'No phone',
         email: buyer.email || 'No email',
-        maxMonthlyPayment: buyer.maxMonthlyPayment || 0,
-        maxDownPayment: buyer.maxDownPayment || 0,
-        preferredCity: buyer.preferredCity || 'Unknown',
-        preferredState: buyer.preferredState || 'Unknown',
-        searchRadius: buyer.searchRadius || 25,
-        minBedrooms: buyer.minBedrooms,
-        minBathrooms: buyer.minBathrooms,
+        maxMonthlyPayment: buyer.searchCriteria?.maxMonthlyPayment || 0,
+        maxDownPayment: buyer.searchCriteria?.maxDownPayment || 0,
+        preferredCity: buyer.searchCriteria?.cities?.[0] || 'Unknown',
+        preferredState: buyer.searchCriteria?.state || 'Unknown',
+        searchRadius: buyer.searchCriteria?.searchRadius || 25,
+        minBedrooms: buyer.searchCriteria?.minBedrooms,
+        minBathrooms: buyer.searchCriteria?.minBathrooms,
         matchedProperties: buyer.matchedProperties,
         perfectMatches: buyer.exactCityMatches,
         goodMatches: buyer.nearbyMatches,
         matchPercentage: 75,
         languages: buyer.languages || ['English'],
-        createdAt: buyer.createdAt || new Date().toISOString()
+        createdAt: buyer.createdAt?.toDate ? buyer.createdAt.toDate().toISOString() : new Date().toISOString()
       };
 
       const alreadyPurchased = purchasedBuyerIds.includes(buyer.id);

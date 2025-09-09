@@ -1,5 +1,5 @@
 // Comprehensive US Cities Service - Using cities.json database
-const citiesData = require('cities.json');
+import citiesData from 'cities.json';
 
 interface City {
   name: string;
@@ -13,10 +13,16 @@ interface CityWithDistance extends City {
   distance: number;
 }
 
-// Filter to get only US cities (admin1 is already state abbreviation)
-const usCities: City[] = citiesData
-  .filter((city: any) => city.country === 'US')
-  .map((city: any) => ({
+// Filter to get only US cities (admin1 is already state abbreviation)  
+const usCities: City[] = (citiesData as Array<{
+  name: string;
+  country: string;
+  admin1: string;
+  lat: string;
+  lng: string;
+}>)
+  .filter((city) => city.country === 'US')
+  .map((city) => ({
     name: city.name,
     country: city.country,
     state: city.admin1, // admin1 is already the state abbreviation (GA, TX, FL, etc.)

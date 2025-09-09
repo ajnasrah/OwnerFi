@@ -1,5 +1,5 @@
 // Background job system for async property processing
-import { collection, doc, updateDoc, serverTimestamp, writeBatch } from 'firebase/firestore';
+import { doc, updateDoc, serverTimestamp, writeBatch } from 'firebase/firestore';
 import { db } from './firebase';
 import { getNearbyCitiesDirect } from './cities-service';
 

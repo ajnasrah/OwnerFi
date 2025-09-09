@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
 
     // Get ALL properties
     const snapshot = await getDocs(collection(db, 'properties'));
-    const allProperties = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }) as any);
+    const allProperties = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     
     // 1. DIRECT MATCHES: Properties IN the search city AND state
     const directProperties = allProperties.filter(property => {

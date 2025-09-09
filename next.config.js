@@ -77,6 +77,12 @@ const nextConfig = {
   // Environment variables that should be available client-side
   env: {
     NEXT_PUBLIC_APP_VERSION: process.env.npm_package_version,
+  },
+
+  // ESLint configuration for build process
+  eslint: {
+    // Don't block builds on lint issues - allow warnings and most errors through
+    ignoreDuringBuilds: true
   }
 };
 

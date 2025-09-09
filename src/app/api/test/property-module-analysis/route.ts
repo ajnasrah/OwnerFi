@@ -58,7 +58,7 @@ export async function GET() {
   }
 }
 
-function analyzeDataQuality(properties: any[]) {
+function analyzeDataQuality(properties: Record<string, unknown>[]) {
   const requiredFields = ['address', 'city', 'state', 'bedrooms', 'bathrooms', 'listPrice', 'monthlyPayment'];
   const optionalFields = ['zipCode', 'squareFeet', 'description', 'imageUrl', 'latitude', 'longitude'];
   
@@ -85,8 +85,8 @@ function analyzeDataQuality(properties: any[]) {
   };
 }
 
-function analyzeGeographicDistribution(properties: any[]) {
-  const stateDistribution: Record<string, any> = {};
+function analyzeGeographicDistribution(properties: Record<string, unknown>[]) {
+  const stateDistribution: Record<string, Record<string, unknown>> = {};
   const cityDistribution: Record<string, number> = {};
   
   properties.forEach(property => {
@@ -130,7 +130,7 @@ function analyzeGeographicDistribution(properties: any[]) {
   };
 }
 
-function analyzeFinancialData(properties: any[]) {
+function analyzeFinancialData(properties: Record<string, unknown>[]) {
   const financialMetrics = {
     listPrice: [],
     monthlyPayment: [],
@@ -165,11 +165,11 @@ function analyzeFinancialData(properties: any[]) {
   };
 }
 
-function analyzeNearbyCitiesCoverage(properties: any[]) {
+function analyzeNearbyCitiesCoverage(properties: Record<string, unknown>[]) {
   const withNearbyCities = properties.filter(p => p.nearbyCities && p.nearbyCities.length > 0);
   const nearbyCitiesCounts = properties.map(p => p.nearbyCities?.length || 0);
   
-  const coverageByCity = properties.reduce((acc: Record<string, any>, property) => {
+  const coverageByCity = properties.reduce((acc: Record<string, Record<string, unknown>>, property) => {
     const city = `${property.city?.split(',')[0].trim()}, ${property.state}`;
     if (!acc[city]) {
       acc[city] = {
@@ -198,14 +198,14 @@ function analyzeNearbyCitiesCoverage(properties: any[]) {
   };
 }
 
-function calculateDataQualityScore(fieldCompleteness: any, requiredFields: string[], optionalFields: string[]): number {
+function calculateDataQualityScore(fieldCompleteness: Record<string, unknown>, requiredFields: string[], optionalFields: string[]): number {
   const requiredScore = requiredFields.reduce((sum, field) => sum + (fieldCompleteness[field]?.percentage || 0), 0) / requiredFields.length;
   const optionalScore = optionalFields.reduce((sum, field) => sum + (fieldCompleteness[field]?.percentage || 0), 0) / optionalFields.length;
   
   return Math.round((requiredScore * 0.8) + (optionalScore * 0.2)); // 80% weight on required, 20% on optional
 }
 
-function generateOverallAssessment(dataQuality: any, geoDistribution: any, financialAnalysis: any, nearbyCitiesAnalysis: any) {
+function generateOverallAssessment(dataQuality: Record<string, unknown>, geoDistribution: Record<string, unknown>, financialAnalysis: Record<string, unknown>, nearbyCitiesAnalysis: Record<string, unknown>) {
   const scores = {
     dataQuality: dataQuality.dataQualityScore,
     geoCoverage: Math.min(100, (geoDistribution.totalStates / 10) * 100), // Expect 10+ states for good coverage
@@ -224,7 +224,7 @@ function generateOverallAssessment(dataQuality: any, geoDistribution: any, finan
   };
 }
 
-function generateRecommendations(properties: any[]): string[] {
+function generateRecommendations(properties: Record<string, unknown>[]): string[] {
   const recommendations: string[] = [];
   
   const withoutImages = properties.filter(p => !p.imageUrl || !p.photos?.length).length;
@@ -253,7 +253,7 @@ function getGrade(score: number): string {
   return 'D';
 }
 
-function getStrengths(scores: any): string[] {
+function getStrengths(scores: Record<string, unknown>): string[] {
   const strengths = [];
   if (scores.dataQuality >= 80) strengths.push('High data quality');
   if (scores.geoCoverage >= 70) strengths.push('Good geographic coverage');
@@ -262,7 +262,7 @@ function getStrengths(scores: any): string[] {
   return strengths;
 }
 
-function getWeaknesses(scores: any): string[] {
+function getWeaknesses(scores: Record<string, unknown>): string[] {
   const weaknesses = [];
   if (scores.dataQuality < 70) weaknesses.push('Data quality needs improvement');
   if (scores.geoCoverage < 50) weaknesses.push('Limited geographic coverage');

@@ -11,13 +11,13 @@ export async function GET() {
     const sampleEntries = citiesData.slice(0, 5);
     
     // Count US entries
-    const usEntries = citiesData.filter((city: any) => city.country === 'US' || city.country === 'United States').slice(0, 10);
+    const usEntries = citiesData.filter((city: Record<string, unknown>) => city.country === 'US' || city.country === 'United States').slice(0, 10);
     
     // Show different country values
-    const countries = [...new Set(citiesData.map((city: any) => city.country))].slice(0, 10);
+    const countries = [...new Set(citiesData.map((city: Record<string, unknown>) => city.country))].slice(0, 10);
     
     // Show first few Atlanta entries
-    const atlantaEntries = citiesData.filter((city: any) => 
+    const atlantaEntries = citiesData.filter((city: Record<string, unknown>) => 
       city.name && city.name.toLowerCase().includes('atlanta')
     ).slice(0, 5);
     
@@ -25,13 +25,13 @@ export async function GET() {
       totalCities: citiesData.length,
       sampleEntries: sampleEntries,
       countries: countries,
-      usEntriesCount: citiesData.filter((city: any) => city.country === 'US' || city.country === 'United States').length,
+      usEntriesCount: citiesData.filter((city: Record<string, unknown>) => city.country === 'US' || city.country === 'United States').length,
       usEntriesSample: usEntries,
       atlantaEntries: atlantaEntries,
       dataStructure: {
         fields: sampleEntries.length > 0 ? Object.keys(sampleEntries[0]) : [],
-        hasLatLng: sampleEntries.some((city: any) => city.lat && city.lng),
-        hasCoordinates: sampleEntries.some((city: any) => city.latitude && city.longitude)
+        hasLatLng: sampleEntries.some((city: Record<string, unknown>) => city.lat && city.lng),
+        hasCoordinates: sampleEntries.some((city: Record<string, unknown>) => city.latitude && city.longitude)
       }
     });
     

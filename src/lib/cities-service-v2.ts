@@ -34,7 +34,7 @@ export function getNearbyCitiesUltraFast(
 /**
  * Test the comprehensive database coverage
  */
-export function testComprehensiveDatabase(): any {
+export function testComprehensiveDatabase(): Record<string, unknown> {
   const testCities = [
     { city: 'Atlanta', state: 'GA' },
     { city: 'Dallas', state: 'TX' },

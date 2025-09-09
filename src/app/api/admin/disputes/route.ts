@@ -88,9 +88,9 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    await logError('Failed to fetch disputes', error, {
+    await logError('Failed to fetch disputes', {
       action: 'admin_disputes_fetch_error'
-    });
+    }, error as Error);
 
     return NextResponse.json(
       { error: 'Failed to load disputes' },

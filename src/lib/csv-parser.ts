@@ -32,7 +32,7 @@ export interface ParseResult {
   success: ParsedProperty[];
   errors: Array<{
     row: number;
-    data: any;
+    data: Record<string, unknown>;
     errors: string[];
   }>;
   totalRows: number;
@@ -52,7 +52,7 @@ const REQUIRED_COLUMNS = [
   'termYears'
 ];
 
-function parseCSV(csvText: string): any[] {
+function parseCSV(csvText: string): Record<string, unknown>[] {
   const lines = csvText.split('\n').filter(line => line.trim());
   if (lines.length < 2) return [];
   
@@ -61,7 +61,7 @@ function parseCSV(csvText: string): any[] {
   
   for (let i = 1; i < lines.length; i++) {
     const values = lines[i].split(',').map(v => v.trim());
-    const row: any = {};
+    const row: Record<string, unknown> = {};
     
     headers.forEach((header, index) => {
       row[header] = values[index] || '';
@@ -73,7 +73,7 @@ function parseCSV(csvText: string): any[] {
   return rows;
 }
 
-function validateRow(row: any, rowIndex: number): string[] {
+function validateRow(row: Record<string, unknown>, rowIndex: number): string[] {
   const errors: string[] = [];
   
   // Check required fields

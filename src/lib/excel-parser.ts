@@ -33,7 +33,7 @@ export interface ParseResult {
   success: ParsedProperty[];
   errors: Array<{
     row: number;
-    data: any;
+    data: Record<string, unknown>;
     errors: string[];
   }>;
   totalRows: number;
@@ -104,7 +104,7 @@ function mapColumnName(col: string): string {
   return COLUMN_MAPPINGS[normalized] || normalized;
 }
 
-function validateRow(row: any, rowIndex: number): string[] {
+function validateRow(row: Record<string, unknown>, rowIndex: number): string[] {
   const errors: string[] = [];
   
   // Check required fields
@@ -165,8 +165,8 @@ export function parseExcelFile(buffer: Buffer): ParseResult {
   };
   
   for (let i = 0; i < rawData.length; i++) {
-    const rawRow = rawData[i] as any;
-    const mappedRow: any = {};
+    const rawRow = rawData[i] as Record<string, unknown>;
+    const mappedRow: Record<string, unknown> = {};
     
     // Map column names to our expected format
     Object.keys(rawRow).forEach(originalCol => {

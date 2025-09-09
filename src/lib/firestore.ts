@@ -34,8 +34,8 @@ export interface FirestoreUser {
   email: string;
   role: 'buyer' | 'realtor' | 'admin';
   password?: string; // Only for creation, don't store
-  createdAt: any;
-  updatedAt: any;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
 }
 
 export interface FirestoreRealtor {
@@ -55,12 +55,12 @@ export interface FirestoreRealtor {
   serviceCities?: string[]; // Array instead of JSON string
   credits: number;
   isOnTrial: boolean;
-  trialStartDate: any;
-  trialEndDate: any;
+  trialStartDate: Timestamp;
+  trialEndDate: Timestamp;
   isActive: boolean;
   profileComplete: boolean;
-  createdAt: any;
-  updatedAt: any;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
 }
 
 export interface FirestoreBuyerProfile {
@@ -80,8 +80,8 @@ export interface FirestoreBuyerProfile {
   minPrice?: number;
   maxPrice?: number;
   profileComplete: boolean;
-  createdAt: any;
-  updatedAt: any;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
 }
 
 export interface FirestoreProperty {
@@ -101,8 +101,8 @@ export interface FirestoreProperty {
   monthlyPayment: number;
   downPaymentAmount: number;
   description?: string;
-  createdAt: any;
-  updatedAt: any;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
 }
 
 export interface FirestorePropertyMatch {
@@ -111,7 +111,7 @@ export interface FirestorePropertyMatch {
   buyerId: string;
   matchedOn: Record<string, boolean>; // Object instead of JSON string
   matchScore: number;
-  createdAt: any;
+  createdAt: Timestamp;
 }
 
 export interface FirestoreSubscription {
@@ -123,10 +123,10 @@ export interface FirestoreSubscription {
   creditsPerMonth?: number;
   stripeCustomerId?: string;
   stripeSubscriptionId?: string;
-  currentPeriodStart?: any;
-  currentPeriodEnd?: any;
-  createdAt: any;
-  updatedAt: any;
+  currentPeriodStart?: Timestamp;
+  currentPeriodEnd?: Timestamp;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
 }
 
 // Helper functions for common operations
@@ -136,7 +136,7 @@ export const firestoreHelpers = {
   
   // Timestamp helpers
   now: () => serverTimestamp(),
-  toDate: (timestamp: any) => timestamp?.toDate?.() || new Date(timestamp),
+  toDate: (timestamp: Timestamp | string | null) => timestamp?.toDate?.() || new Date(timestamp || Date.now()),
   
   // Collection helpers
   getCollection: (collectionName: string) => collection(db, collectionName),
@@ -150,7 +150,7 @@ export const firestoreHelpers = {
   createBatch: () => writeBatch(db),
   
   // Query builders
-  queryWhere: (collectionName: string, field: string, operator: any, value: any) => 
+  queryWhere: (collectionName: string, field: string, operator: '==' | '!=' | '<' | '<=' | '>' | '>=' | 'in' | 'not-in' | 'array-contains' | 'array-contains-any', value: unknown) => 
     query(collection(db, collectionName), where(field, operator, value)),
     
   queryLimit: (collectionName: string, limitCount: number) =>

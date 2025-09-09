@@ -216,7 +216,7 @@ export class SystemValidator {
         const { PropertyMatchingService, BuyerCriteria } = await import('./property-matching-service');
         
         // Test with first buyer
-        const testBuyer = { id: buyerDocs.docs[0].id, ...buyerDocs.docs[0].data() } as any;
+        const testBuyer = { id: buyerDocs.docs[0].id, ...buyerDocs.docs[0].data() } as Record<string, unknown> & { id: string };
         
         // Convert to BuyerCriteria format
         const buyerCriteria: BuyerCriteria = {

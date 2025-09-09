@@ -198,7 +198,7 @@ export class PropertyScraper {
   }
 
   // Method to scrape a specific property listing page for detailed info
-  async scrapePropertyDetails(propertyUrl: string): Promise<any> {
+  async scrapePropertyDetails(propertyUrl: string): Promise<Record<string, unknown>> {
     try {
       const response = await axios.get(propertyUrl, {
         headers: this.headers,

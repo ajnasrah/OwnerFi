@@ -25,7 +25,7 @@ interface LogContext {
   userId?: string;
   userType?: 'buyer' | 'agent' | 'admin';
   action?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export async function logToDatabase(

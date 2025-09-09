@@ -126,7 +126,7 @@ export function calculateLoanAmount(
 /**
  * Process GHL webhook data and calculate all missing financial fields
  */
-export function processGHLPropertyFinancials(ghlData: any): PropertyFinancials {
+export function processGHLPropertyFinancials(ghlData: { customFields?: Record<string, string> }): PropertyFinancials {
   const cf = ghlData.customFields || {};
   
   const rawData: PartialPropertyData = {

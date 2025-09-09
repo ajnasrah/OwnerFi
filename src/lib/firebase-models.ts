@@ -208,7 +208,7 @@ export interface SystemLog {
   action: string;
   message: string;
   userId?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   error?: {
     message: string;
     stack?: string;
@@ -231,41 +231,43 @@ export const COLLECTIONS = {
 } as const;
 
 // Type guards for runtime validation
-export function isValidUser(data: any): data is User {
-  return data && 
-    typeof data.email === 'string' &&
-    typeof data.name === 'string' &&
-    ['buyer', 'realtor', 'admin'].includes(data.role);
+export function isValidUser(data: unknown): data is User {
+  return data !== null && typeof data === 'object' && 
+    typeof (data as Record<string, unknown>).email === 'string' &&
+    typeof (data as Record<string, unknown>).name === 'string' &&
+    ['buyer', 'realtor', 'admin'].includes((data as Record<string, unknown>).role as string);
 }
 
-export function isValidBuyerProfile(data: any): data is BuyerProfile {
-  return data && 
-    typeof data.userId === 'string' &&
-    typeof data.firstName === 'string' &&
-    typeof data.lastName === 'string' &&
-    typeof data.email === 'string' &&
-    typeof data.preferredCity === 'string' &&
-    typeof data.preferredState === 'string' &&
-    typeof data.maxMonthlyPayment === 'number' &&
-    typeof data.maxDownPayment === 'number' &&
-    Array.isArray(data.languages) &&
-    typeof data.profileComplete === 'boolean';
+export function isValidBuyerProfile(data: unknown): data is BuyerProfile {
+  const obj = data as Record<string, unknown>;
+  return data !== null && typeof data === 'object' && 
+    typeof obj.userId === 'string' &&
+    typeof obj.firstName === 'string' &&
+    typeof obj.lastName === 'string' &&
+    typeof obj.email === 'string' &&
+    typeof obj.preferredCity === 'string' &&
+    typeof obj.preferredState === 'string' &&
+    typeof obj.maxMonthlyPayment === 'number' &&
+    typeof obj.maxDownPayment === 'number' &&
+    Array.isArray(obj.languages) &&
+    typeof obj.profileComplete === 'boolean';
 }
 
-export function isValidRealtorProfile(data: any): data is RealtorProfile {
-  return data &&
-    typeof data.userId === 'string' &&
-    typeof data.firstName === 'string' &&
-    typeof data.lastName === 'string' &&
-    typeof data.email === 'string' &&
-    typeof data.company === 'string' &&
-    typeof data.primaryCity === 'string' &&
-    typeof data.primaryState === 'string' &&
-    Array.isArray(data.serviceStates) &&
-    Array.isArray(data.serviceCities) &&
-    Array.isArray(data.languages) &&
-    typeof data.credits === 'number' &&
-    typeof data.profileComplete === 'boolean';
+export function isValidRealtorProfile(data: unknown): data is RealtorProfile {
+  const obj = data as Record<string, unknown>;
+  return data !== null && typeof data === 'object' &&
+    typeof obj.userId === 'string' &&
+    typeof obj.firstName === 'string' &&
+    typeof obj.lastName === 'string' &&
+    typeof obj.email === 'string' &&
+    typeof obj.company === 'string' &&
+    typeof obj.primaryCity === 'string' &&
+    typeof obj.primaryState === 'string' &&
+    Array.isArray(obj.serviceStates) &&
+    Array.isArray(obj.serviceCities) &&
+    Array.isArray(obj.languages) &&
+    typeof obj.credits === 'number' &&
+    typeof obj.profileComplete === 'boolean';
 }
 
 // Helper to generate consistent IDs
@@ -279,10 +281,11 @@ export function createTimestamp(): Timestamp {
 }
 
 // Data transformation helpers
-export function convertTimestampToDate(timestamp: any): string {
+export function convertTimestampToDate(timestamp: unknown): string {
   if (!timestamp) return new Date().toISOString();
-  if (timestamp.toDate && typeof timestamp.toDate === 'function') {
-    return timestamp.toDate().toISOString();
+  const ts = timestamp as { toDate?: () => Date };
+  if (ts.toDate && typeof ts.toDate === 'function') {
+    return ts.toDate().toISOString();
   }
   if (typeof timestamp === 'string') return timestamp;
   return new Date().toISOString();

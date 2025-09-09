@@ -1,5 +1,42 @@
 import { unifiedDb } from './unified-db';
 
+interface PropertyForMatching {
+  id: string;
+  monthlyPayment: number;
+  downPaymentAmount: number;
+  latitude?: number;
+  longitude?: number;
+  city: string;
+  state: string;
+  bedrooms: number;
+  bathrooms: number;
+}
+
+interface BuyerForMatching {
+  id: string;
+  maxMonthlyPayment: number;
+  maxDownPayment: number;
+  preferredCity: string;
+  preferredState: string;
+  searchRadius: number;
+  latitude?: number;
+  longitude?: number;
+  minBedrooms?: number;
+  minBathrooms?: number;
+}
+
+interface MatchResult {
+  matches: boolean;
+  score: number;
+  matchedOn: {
+    monthly_payment: boolean;
+    down_payment: boolean;
+    location: boolean;
+    bedrooms: boolean;
+    bathrooms: boolean;
+  };
+}
+
 // Calculate distance between two points using Haversine formula
 function calculateDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
   const R = 3959; // Earth's radius in miles
@@ -18,7 +55,7 @@ function toRad(deg: number): number {
 }
 
 // Check if a property matches a buyer's criteria
-export function isPropertyMatch(property: any, buyer: any): { matches: boolean; score: number; matchedOn: any } {
+export function isPropertyMatch(property: PropertyForMatching, buyer: BuyerForMatching): MatchResult {
   const matchedOn = {
     monthly_payment: false,
     down_payment: false,

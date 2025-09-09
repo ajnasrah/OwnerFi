@@ -111,7 +111,7 @@ export async function parseGHLCSV(csvContent: string): Promise<{
   for (let i = 1; i < allRows.length; i++) {
     try {
       const values = allRows[i];
-      const rowData: any = {};
+      const rowData: Record<string, string> = {};
       
       // Map values to headers
       headers.forEach((header, index) => {
@@ -199,7 +199,7 @@ function parseCSVLine(line: string): string[] {
   return values;
 }
 
-async function mapGHLRowToProperty(row: any, rowNumber: number, headers: string[]): Promise<Property | null> {
+async function mapGHLRowToProperty(row: Record<string, string>, rowNumber: number, headers: string[]): Promise<Property | null> {
   // Find the address column (flexible matching)
   const addressColumn = headers.find(h => /Property Address/i.test(h));
   const cityColumn = headers.find(h => /Property city/i.test(h));
@@ -361,7 +361,7 @@ async function mapGHLRowToProperty(row: any, rowNumber: number, headers: string[
 }
 
 // Function to generate a sample row for testing
-export function generateSampleGHLRow(): any {
+export function generateSampleGHLRow(): Record<string, string> {
   return {
     'Opportunity Name': 'Sample Property Listing',
     'Contact Name': 'John Seller',

@@ -100,7 +100,7 @@ export interface PropertyListing {
   ghlData?: {                          // Raw GoHighLevel data
     contactId: string;
     opportunityId?: string;
-    customFields?: Record<string, any>;
+    customFields?: Record<string, unknown>;
     tags?: string[];
   };
 }

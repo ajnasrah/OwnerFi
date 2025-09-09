@@ -70,7 +70,7 @@ export async function isPropertyWithinRadius(
 }
 
 // Apply buyer's filter to properties
-export function applyBuyerFilter(properties: any[], buyerProfile: any): any[] {
+export function applyBuyerFilter(properties: Record<string, unknown>[], buyerProfile: Record<string, unknown>): Record<string, unknown>[] {
   return properties.filter(property => {
     // Monthly payment filter
     if (buyerProfile.maxMonthlyPayment && property.monthlyPayment > buyerProfile.maxMonthlyPayment) {

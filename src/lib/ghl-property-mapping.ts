@@ -92,7 +92,7 @@ export function mapGHLToProperty(ghlData: GHLPropertyData): Partial<Property> {
     squareFeet: parseInt(cf.square_feet || '0'),
     lotSize: parseInt(cf.lot_size || '0'),
     yearBuilt: parseInt(cf.year_built || '0'),
-    propertyType: cf.property_type as any || 'single-family',
+    propertyType: (cf.property_type as 'house' | 'condo' | 'townhouse' | 'mobile' | 'multi-family' | 'land') || 'house',
     
     // Financial terms
     listPrice: parseInt(cf.list_price || '0'),
@@ -136,7 +136,7 @@ export function mapGHLToProperty(ghlData: GHLPropertyData): Partial<Property> {
   };
 }
 
-function buildFeaturesArray(customFields: any): string[] {
+function buildFeaturesArray(customFields: Record<string, string>): string[] {
   const features: string[] = [];
   
   if (customFields.garage_spaces && parseInt(customFields.garage_spaces) > 0) {

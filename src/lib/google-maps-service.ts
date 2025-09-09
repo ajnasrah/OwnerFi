@@ -55,7 +55,7 @@ export async function parseAddress(fullAddress: string): Promise<AddressParsingR
     };
 
     // Parse components
-    components.forEach((component: any) => {
+    components.forEach((component: { types: string[], long_name: string, short_name: string }) => {
       const types = component.types;
       
       if (types.includes('street_number')) {
@@ -180,7 +180,7 @@ export async function enhancePropertyWithGoogleMaps(property: {
   streetViewImageUrl?: string;
   enhancedImageUrl?: string;
 }> {
-  const result: any = {};
+  const result: Record<string, unknown> = {};
 
   // Parse address if city/state/zip are missing or incomplete
   if (!property.city || !property.state || !property.zipCode) {
@@ -194,9 +194,10 @@ export async function enhancePropertyWithGoogleMaps(property: {
   if (!property.imageUrl) {
     if (result.parsedAddress) {
       // Use coordinates from parsed address
+      const addr = result.parsedAddress as { latitude: number; longitude: number };
       result.streetViewImageUrl = getStreetViewImage(
-        result.parsedAddress.latitude,
-        result.parsedAddress.longitude,
+        addr.latitude,
+        addr.longitude,
         { size: '800x500', fov: 90, heading: 0, pitch: 10 }
       );
     } else {

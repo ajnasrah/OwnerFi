@@ -166,10 +166,10 @@ export const unifiedDb = {
       return { ...agentData, id };
     },
     
-    async findByEmail(email: string) {
+    async findByEmail(email: string): Promise<(RealtorProfile & { id: string }) | null> {
       const agentsQuery = query(collection(firebaseDb, 'agents'), where('email', '==', email));
       const agentDocs = await getDocs(agentsQuery);
-      return agentDocs.empty ? null : { id: agentDocs.docs[0].id, ...agentDocs.docs[0].data() };
+      return agentDocs.empty ? null : { id: agentDocs.docs[0].id, ...agentDocs.docs[0].data() } as RealtorProfile & { id: string };
     },
     
     async findById(id: string) {

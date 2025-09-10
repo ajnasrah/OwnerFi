@@ -64,8 +64,8 @@ export class DatabaseCleanup {
         if (buyers.length > 1) {
           // Sort by createdAt, keep the oldest (most complete profile)
           buyers.sort((a, b) => {
-            const aDate = a.createdAt?.toDate?.() || new Date(0);
-            const bDate = b.createdAt?.toDate?.() || new Date(0);
+            const aDate = (a.createdAt as any)?.toDate?.() || new Date(0);
+            const bDate = (b.createdAt as any)?.toDate?.() || new Date(0);
             return aDate.getTime() - bDate.getTime();
           });
 
@@ -76,7 +76,7 @@ export class DatabaseCleanup {
 
           // Delete duplicate profiles
           for (const duplicate of duplicates) {
-            await deleteDoc(doc(db, 'buyerProfiles', duplicate.id));
+            await deleteDoc(doc(db, 'buyerProfiles', String(duplicate.id)));
             result.recordsDeleted++;
             result.details?.push(`Deleted duplicate buyer ${duplicate.id} (${duplicate.firstName} ${duplicate.lastName})`);
           }

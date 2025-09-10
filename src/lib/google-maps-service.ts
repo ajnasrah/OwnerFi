@@ -141,7 +141,12 @@ export function getStreetViewImage(
 /**
  * Generate Street View image URL from address string
  */
-export function getStreetViewImageByAddress(address: string, options = {}): string {
+export function getStreetViewImageByAddress(address: string, options: {
+  size?: string;
+  fov?: number;
+  heading?: number;
+  pitch?: number;
+} = {}): string {
   const apiKey = process.env.GOOGLE_MAPS_API_KEY;
   
   if (!apiKey) {

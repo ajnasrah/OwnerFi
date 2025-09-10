@@ -14,6 +14,7 @@ import { db } from '@/lib/firebase';
 import { PRICING_TIERS } from '@/lib/pricing';
 import { firestoreHelpers } from '@/lib/firestore';
 import Stripe from 'stripe';
+import { RealtorProfile } from '@/lib/firebase-models';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-08-27.basil',
@@ -121,7 +122,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   }
 
   const realtorDoc = realtorDocs.docs[0];
-  const realtor = { id: realtorDoc.id, ...realtorDoc.data() };
+  const realtor = { id: realtorDoc.id, ...realtorDoc.data() } as RealtorProfile;
 
   // Store/update Stripe customer ID in realtor record
   const sessionCustomerId = customer || customerId;
@@ -308,8 +309,8 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
   
   await updateDoc(doc(db, 'realtorSubscriptions', subscriptionDoc.id), {
     status: subscription.status === 'active' ? 'active' : 'canceled',
-    currentPeriodStart: new Date(subscription.current_period_start * 1000),
-    currentPeriodEnd: new Date(subscription.current_period_end * 1000),
+    currentPeriodStart: new Date((subscription as any).current_period_start * 1000),
+    currentPeriodEnd: new Date((subscription as any).current_period_end * 1000),
     updatedAt: serverTimestamp()
   });
 
@@ -337,7 +338,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
 
 async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
   // Handle successful recurring payments
-  const subscriptionId = invoice.subscription;
+  const subscriptionId = (invoice as any).subscription;
   
   if (!subscriptionId) return;
 
@@ -379,7 +380,7 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
   // Handle failed payments
   console.log('Payment failed for invoice:', invoice.id);
   
-  const subscriptionId = invoice.subscription;
+  const subscriptionId = (invoice as any).subscription;
   if (subscriptionId) {
     // You might want to send an email notification here
     console.log(`Payment failed for subscription ${subscriptionId}`);
@@ -395,8 +396,8 @@ async function createOrUpdateSubscription(realtorId: string, planId: string, str
     creditsPerMonth: tier.creditsPerMonth,
     stripeCustomerId: stripeSubscription.customer,
     stripeSubscriptionId: stripeSubscription.id,
-    currentPeriodStart: new Date(stripeSubscription.current_period_start * 1000),
-    currentPeriodEnd: new Date(stripeSubscription.current_period_end * 1000),
+    currentPeriodStart: new Date((stripeSubscription as any).current_period_start * 1000),
+    currentPeriodEnd: new Date((stripeSubscription as any).current_period_end * 1000),
     updatedAt: serverTimestamp()
   };
 

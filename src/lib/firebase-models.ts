@@ -8,6 +8,10 @@ export interface User {
   id: string;
   email: string;
   name: string; 
+  phone?: string; // Optional phone number
+  company?: string; // Optional company name
+  licenseState?: string; // Optional license state
+  stripeCustomerId?: string; // Optional Stripe customer ID
   role: 'buyer' | 'realtor' | 'admin';
   password: string; // Only for creation, removed after hashing
   createdAt: Timestamp;
@@ -87,6 +91,9 @@ export interface RealtorProfile {
   trialEndDate: Timestamp;
   profileComplete: boolean;
   isActive: boolean;
+  // Stripe integration fields
+  stripeCustomerId?: string;
+  stripeSubscriptionId?: string;
   // Performance metrics
   avgResponseTimeHours?: number;
   successRate?: number; // 0-100 percentage

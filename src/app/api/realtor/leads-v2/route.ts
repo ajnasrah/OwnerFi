@@ -72,9 +72,7 @@ export async function GET(request: NextRequest) {
           matchPercentage: matchResult.percentage,
           matchReasoning: matchResult.reasoning,
           distanceMiles: matchResult.distanceMiles,
-          propertyMatches: propertyMatchCount,
-          createdAt: convertTimestampToDate(buyer.createdAt),
-          updatedAt: convertTimestampToDate(buyer.updatedAt)
+          propertyMatches: propertyMatchCount
         });
       }
     }

@@ -69,7 +69,7 @@ export const firebaseAuth = {
       await signOut(auth);
       return { error: null };
     } catch (error: unknown) {
-      return { error: error.message };
+      return { error: (error as Error).message };
     }
   },
 

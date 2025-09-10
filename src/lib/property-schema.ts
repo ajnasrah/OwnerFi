@@ -6,6 +6,9 @@ export interface PropertyListing {
   mlsNumber?: string;                  // MLS listing number (if available)
   ghlContactId?: string;               // GoHighLevel contact ID for lead tracking
   
+  // Index signature for Record<string, unknown> compatibility
+  [key: string]: unknown;
+  
   // Address & Location
   address: string;                     // Street address
   city: string;                        // City name
@@ -105,6 +108,8 @@ export interface PropertyListing {
     opportunityId?: string;
     customFields?: Record<string, unknown>;
     tags?: string[];
+    leadValue?: number;
+    buyersCompensation?: string;
   };
 }
 

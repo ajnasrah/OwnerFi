@@ -1,6 +1,23 @@
 // GoHighLevel to OwnerFi Property Field Mapping
 // Based on common GHL property management workflows
 
+// Helper function to map property types
+function mapPropertyType(propertyType: string): 'single-family' | 'condo' | 'townhouse' | 'mobile-home' | 'multi-family' | 'land' {
+  switch (propertyType?.toLowerCase()) {
+    case 'house':
+      return 'single-family';
+    case 'mobile':
+      return 'mobile-home';
+    case 'condo':
+    case 'townhouse':
+    case 'multi-family':
+    case 'land':
+      return propertyType as 'condo' | 'townhouse' | 'multi-family' | 'land';
+    default:
+      return 'single-family';
+  }
+}
+
 export interface GHLPropertyData {
   // Contact Information (from GHL Contact)
   contactId: string;
@@ -94,7 +111,7 @@ export function mapGHLToProperty(ghlData: GHLPropertyData): Partial<PropertyList
     squareFeet: parseInt(cf.square_feet || '0'),
     lotSize: parseInt(cf.lot_size || '0'),
     yearBuilt: parseInt(cf.year_built || '0'),
-    propertyType: (cf.property_type as 'house' | 'condo' | 'townhouse' | 'mobile' | 'multi-family' | 'land') || 'house',
+    propertyType: mapPropertyType(cf.property_type as string) || 'single-family',
     
     // Financial terms
     listPrice: parseInt(cf.list_price || '0'),

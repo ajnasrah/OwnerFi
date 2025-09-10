@@ -15,7 +15,8 @@ import {
   writeBatch,
   serverTimestamp,
   runTransaction,
-  Timestamp
+  Timestamp,
+  WhereFilterOp
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { 
@@ -89,7 +90,7 @@ export class FirebaseDB {
 
   static async queryDocuments<T>(
     collectionName: string,
-    conditions: { field: string; operator: string; value: unknown }[],
+    conditions: { field: string; operator: WhereFilterOp; value: unknown }[],
     limitCount?: number
   ): Promise<T[]> {
     let q = query(collection(db, collectionName));
@@ -211,7 +212,7 @@ export class FirebaseDB {
     return this.createDocument<LeadPurchase>(COLLECTIONS.LEAD_PURCHASES, {
       ...purchaseData,
       status: 'purchased',
-      purchasedAt: serverTimestamp()
+      purchasedAt: serverTimestamp() as unknown as Timestamp
     });
   }
 

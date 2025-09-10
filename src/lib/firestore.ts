@@ -136,7 +136,12 @@ export const firestoreHelpers = {
   
   // Timestamp helpers
   now: () => serverTimestamp(),
-  toDate: (timestamp: Timestamp | string | null) => timestamp?.toDate?.() || new Date(timestamp || Date.now()),
+  toDate: (timestamp: Timestamp | string | null) => {
+    if (timestamp && typeof timestamp === 'object' && 'toDate' in timestamp) {
+      return timestamp.toDate();
+    }
+    return new Date(timestamp || Date.now());
+  },
   
   // Collection helpers
   getCollection: (collectionName: string) => collection(db, collectionName),

@@ -209,7 +209,7 @@ export async function handleAPIError(
       ...context.metadata,
       errorCode: apiError.code
     }
-  }, error);
+  }, error as Error);
 
   // Return appropriate response
   return NextResponse.json(

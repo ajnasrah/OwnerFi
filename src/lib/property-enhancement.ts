@@ -5,6 +5,7 @@ import { getCitiesWithinRadius, calculateDistance, getCityCoordinates } from './
 import { getNearbyCitiesDirect } from './cities-service';
 import { queueNearbyCitiesJob } from './background-jobs';
 import { getNearbyCitiesUltraFast } from './cities-service-v2';
+import { PropertyListing } from './property-schema';
 
 /**
  * FAST: Queue nearby cities population for background processing
@@ -107,7 +108,7 @@ export function getNearbyCitiesWithDistance(
  * Enhance property with nearby cities data
  * This function only adds data to property objects, doesn't modify storage
  */
-export function enhancePropertyWithNearbyCities(property: Record<string, unknown>): Record<string, unknown> {
+export function enhancePropertyWithNearbyCities(property: PropertyListing & { id: string }): PropertyListing & { id: string } {
   if (!property.city || !property.state) {
     return property;
   }
@@ -123,7 +124,7 @@ export function enhancePropertyWithNearbyCities(property: Record<string, unknown
 /**
  * Bulk enhance multiple properties with nearby cities
  */
-export function enhancePropertiesWithNearbyCities(properties: Record<string, unknown>[]): Record<string, unknown>[] {
+export function enhancePropertiesWithNearbyCities(properties: (PropertyListing & { id: string })[]): (PropertyListing & { id: string })[] {
   return properties.map(property => enhancePropertyWithNearbyCities(property));
 }
 

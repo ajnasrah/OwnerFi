@@ -57,7 +57,9 @@ export async function POST(request: NextRequest) {
       action: 'realtor_signup',
       userId: newUser.id,
       userType: 'realtor',
-      email: email.toLowerCase()
+      metadata: {
+        email: email.toLowerCase()
+      }
     });
 
     return NextResponse.json({

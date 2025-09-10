@@ -213,36 +213,41 @@ export default function BuyerDashboardV2() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col mobile-safe-area prevent-overscroll">
       <Header />
       
-      <main className="flex-1 px-4 py-8">
-        <div className="max-w-7xl mx-auto">
-          {/* Clean Header */}
-          <div className="mb-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">
+      <main className="flex-1 mobile-content">
+        <div className="mobile-container">
+          {/* Mobile-Optimized Header */}
+          <div className="mb-4">
+            <div className="flex flex-col gap-3">
+              <div className="flex-1">
+                <h1 className="text-2xl font-bold" style={{color: 'var(--primary-text)'}}>
                   {profile?.city}
                 </h1>
                 {propertyBreakdown && (propertyBreakdown.direct > 0 || propertyBreakdown.nearby > 0) && (
-                  <p className="text-gray-600 mt-1">
+                  <p style={{color: 'var(--secondary-text)', fontSize: 'var(--text-sm)'}} className="mt-1">
                     {propertyBreakdown.direct + propertyBreakdown.nearby} properties found
                   </p>
                 )}
               </div>
-              <div className="flex space-x-2">
+              <div className="mobile-grid" style={{gridTemplateColumns: '1fr 1fr', gap: 'var(--space-2)'}}>
                 <Link 
                   href="/dashboard/liked"
-                  className="bg-white border border-gray-200 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors text-sm"
+                  className="mobile-button secondary"
+                  style={{fontSize: 'var(--text-sm)'}}
                 >
-                  ♥ Saved ({likedProperties.length})
+                  <span>♥</span>
+                  <span className="mobile-only">({likedProperties.length})</span>
+                  <span className="desktop-only">Saved ({likedProperties.length})</span>
                 </Link>
                 <Link 
                   href="/dashboard/settings"
-                  className="bg-white border border-gray-200 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors text-sm"
+                  className="mobile-button secondary"
+                  style={{fontSize: 'var(--text-sm)'}}
                 >
-                  ⚙ Settings
+                  <span>⚙</span>
+                  <span className="desktop-only">Settings</span>
                 </Link>
               </div>
             </div>
@@ -250,17 +255,17 @@ export default function BuyerDashboardV2() {
 
           {/* Error State */}
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-              <p className="text-red-800">{error}</p>
+            <div className="alert error">
+              <p>{error}</p>
             </div>
           )}
 
-          {/* Tinder-Style Property Browser */}
+          {/* Mobile-Optimized Property Browser */}
           {properties.length > 0 ? (
-            <div className="relative h-[calc(100vh-300px)] min-h-[600px] flex items-center justify-center">
+            <div className="relative" style={{height: 'calc(100vh - 200px)', minHeight: '500px', maxHeight: '700px', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
               
               {/* Property Card Stack */}
-              <div className="relative w-full max-w-md mx-auto h-full">
+              <div className="relative w-full h-full" style={{maxWidth: '380px', margin: '0 auto'}}>
                 {properties.map((property, index) => {
                   const isActive = index === currentPropertyIndex;
                   const isPrevious = index === currentPropertyIndex - 1;
@@ -268,17 +273,18 @@ export default function BuyerDashboardV2() {
                   
                   if (!isActive && !isPrevious && !isNext) return null;
                   
-                  let cardClasses = "absolute inset-0 bg-white rounded-2xl shadow-xl transition-all duration-300 ";
-                  let cardStyle = {};
+                  let cardClasses = "absolute inset-0 mobile-card transition-all duration-300 ";
+                  let cardStyle: any = {borderRadius: 'var(--radius-xl)', boxShadow: 'var(--shadow-large)'};
                   
                   if (isActive) {
                     cardClasses += `z-20 transform ${swipeDirection === 'left' ? '-translate-x-2 rotate-3' : swipeDirection === 'right' ? 'translate-x-2 -rotate-3' : 'translate-x-0 rotate-0'}`;
+                    cardStyle.zIndex = 20;
                   } else if (isNext) {
                     cardClasses += "z-10 transform scale-95 translate-y-2";
-                    cardStyle = { opacity: 0.8 };
+                    cardStyle = { ...cardStyle, opacity: 0.8, zIndex: 10, transform: 'scale(0.95) translateY(8px)' };
                   } else if (isPrevious) {
                     cardClasses += "z-10 transform scale-95 -translate-y-2";
-                    cardStyle = { opacity: 0.8 };
+                    cardStyle = { ...cardStyle, opacity: 0.8, zIndex: 10, transform: 'scale(0.95) translateY(-8px)' };
                   }
                   
                   return (
@@ -291,71 +297,70 @@ export default function BuyerDashboardV2() {
                       onTouchEnd={isActive ? onTouchEnd : undefined}
                     >
                       {/* Property Image */}
-                      <div className="relative h-3/5 overflow-hidden rounded-t-2xl">
+                      <div className="relative overflow-hidden" style={{height: '60%', borderTopLeftRadius: 'var(--radius-xl)', borderTopRightRadius: 'var(--radius-xl)'}}>
                         <img
                           src={
                             property.zillowImageUrl || 
                             property.imageUrl ||
-                            `https://maps.googleapis.com/maps/api/streetview?size=600x400&location=${encodeURIComponent(property.address + ', ' + property.city + ', ' + property.state)}&key=AIzaSyCelger3EPc8GzTOQq7-cv6tUeVh_XN9jE`
+                            `https://maps.googleapis.com/maps/api/streetview?size=400x300&location=${encodeURIComponent(property.address + ', ' + property.city + ', ' + property.state)}&key=AIzaSyCelger3EPc8GzTOQq7-cv6tUeVh_XN9jE`
                           }
                           alt={property.address}
                           className="w-full h-full object-cover"
+                          loading="lazy"
                           onError={(e) => {
                             const target = e.target as HTMLImageElement;
-                            target.src = `https://maps.googleapis.com/maps/api/streetview?size=600x400&location=${encodeURIComponent(property.address + ', ' + property.city + ', ' + property.state)}&key=AIzaSyCelger3EPc8GzTOQq7-cv6tUeVh_XN9jE`;
+                            target.src = `https://maps.googleapis.com/maps/api/streetview?size=400x300&location=${encodeURIComponent(property.address + ', ' + property.city + ', ' + property.state)}&key=AIzaSyCelger3EPc8GzTOQq7-cv6tUeVh_XN9jE`;
                           }}
                         />
                         
                         {/* Nearby Tag */}
                         {property.displayTag && (
-                          <div className="absolute top-4 right-4 bg-blue-600 text-white text-sm px-3 py-1 rounded-full font-medium">
+                          <div className="absolute" style={{top: 'var(--space-3)', right: 'var(--space-3)', background: 'var(--accent-primary)', color: 'white', fontSize: 'var(--text-xs)', padding: 'var(--space-1) var(--space-2)', borderRadius: '999px', fontWeight: '500'}}>
                             {property.displayTag}
                           </div>
                         )}
-                        
-                        {/* Clean image without text overlay */}
                       </div>
                       
                       {/* Property Details */}
-                      <div className="h-2/5 p-4">
+                      <div className="overflow-y-auto" style={{height: '40%', padding: 'var(--space-3)'}}>
                         {/* Address and Location */}
-                        <div className="mb-4">
-                          <h2 className="text-xl font-bold text-gray-900 mb-1">{property.address}</h2>
-                          <p className="text-gray-600">{property.city}, {property.state}</p>
+                        <div style={{marginBottom: 'var(--space-3)'}}>
+                          <h2 style={{fontSize: 'var(--text-lg)', fontWeight: '700', color: 'var(--primary-text)', marginBottom: 'var(--space-1)', lineHeight: '1.25'}}>{property.address}</h2>
+                          <p style={{color: 'var(--secondary-text)', fontSize: 'var(--text-sm)'}}>{property.city}, {property.state}</p>
                           {property.matchReason && property.resultType === 'nearby' && (
-                            <p className="text-blue-600 text-sm font-medium mt-1">
+                            <p style={{color: 'var(--accent-primary)', fontSize: 'var(--text-xs)', fontWeight: '500', marginTop: 'var(--space-1)'}}>
                               📍 {property.matchReason}
                             </p>
                           )}
                         </div>
 
-                        <div className="grid grid-cols-3 gap-2 text-center mb-4">
-                          <div className="bg-gray-100 rounded-lg py-2">
-                            <div className="text-lg font-bold text-gray-900">{property.bedrooms}</div>
-                            <div className="text-xs text-gray-600">beds</div>
+                        <div className="mobile-grid" style={{gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--space-2)', textAlign: 'center', marginBottom: 'var(--space-3)'}}>
+                          <div style={{background: 'var(--neutral-hover)', borderRadius: 'var(--radius-md)', padding: 'var(--space-2)'}}>
+                            <div style={{fontSize: 'var(--text-base)', fontWeight: '700', color: 'var(--primary-text)'}}>{property.bedrooms}</div>
+                            <div style={{fontSize: 'var(--text-xs)', color: 'var(--secondary-text)'}}>beds</div>
                           </div>
-                          <div className="bg-gray-100 rounded-lg py-2">
-                            <div className="text-lg font-bold text-gray-900">{property.bathrooms}</div>
-                            <div className="text-xs text-gray-600">baths</div>
+                          <div style={{background: 'var(--neutral-hover)', borderRadius: 'var(--radius-md)', padding: 'var(--space-2)'}}>
+                            <div style={{fontSize: 'var(--text-base)', fontWeight: '700', color: 'var(--primary-text)'}}>{property.bathrooms}</div>
+                            <div style={{fontSize: 'var(--text-xs)', color: 'var(--secondary-text)'}}>baths</div>
                           </div>
-                          <div className="bg-gray-100 rounded-lg py-2">
-                            <div className="text-lg font-bold text-gray-900">{property.squareFeet?.toLocaleString()}</div>
-                            <div className="text-xs text-gray-600">sq ft</div>
+                          <div style={{background: 'var(--neutral-hover)', borderRadius: 'var(--radius-md)', padding: 'var(--space-2)'}}>
+                            <div style={{fontSize: 'var(--text-base)', fontWeight: '700', color: 'var(--primary-text)'}}>{property.squareFeet?.toLocaleString()}</div>
+                            <div style={{fontSize: 'var(--text-xs)', color: 'var(--secondary-text)'}}>sq ft</div>
                           </div>
                         </div>
                         
-                        <div className="space-y-2 text-sm">
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">List Price <span className="text-xs opacity-60">est.</span></span>
-                            <span className="font-semibold">${property.listPrice?.toLocaleString()}</span>
+                        <div style={{display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', fontSize: 'var(--text-xs)'}}>
+                          <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                            <span style={{color: 'var(--secondary-text)'}}>List Price <span style={{opacity: '0.6'}}>est.</span></span>
+                            <span style={{fontWeight: '600', fontSize: 'var(--text-sm)', color: 'var(--primary-text)'}}>${property.listPrice?.toLocaleString()}</span>
                           </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Monthly <span className="text-xs opacity-60">est.</span></span>
-                            <span className="font-semibold text-green-600">${property.monthlyPayment?.toLocaleString()}</span>
+                          <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                            <span style={{color: 'var(--secondary-text)'}}>Monthly <span style={{opacity: '0.6'}}>est.</span></span>
+                            <span style={{fontWeight: '600', fontSize: 'var(--text-sm)', color: 'var(--accent-success)'}}>${property.monthlyPayment?.toLocaleString()}</span>
                           </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Down Payment <span className="text-xs opacity-60">est.</span></span>
-                            <span className="font-semibold text-blue-600">${property.downPaymentAmount?.toLocaleString()}</span>
+                          <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                            <span style={{color: 'var(--secondary-text)'}}>Down Payment <span style={{opacity: '0.6'}}>est.</span></span>
+                            <span style={{fontWeight: '600', fontSize: 'var(--text-sm)', color: 'var(--accent-primary)'}}>${property.downPaymentAmount?.toLocaleString()}</span>
                           </div>
                         </div>
                       </div>
@@ -365,19 +370,32 @@ export default function BuyerDashboardV2() {
               </div>
               
               
-              {/* Property Counter - Moved above action buttons */}
-              <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-30 bg-black/70 text-white px-3 py-1 rounded-full text-sm">
+              {/* Property Counter */}
+              <div className="absolute" style={{top: 'var(--space-4)', left: '50%', transform: 'translateX(-50%)', zIndex: '30', background: 'rgba(0,0,0,0.7)', color: 'white', padding: 'var(--space-1) var(--space-3)', borderRadius: '999px', fontSize: 'var(--text-xs)', fontWeight: '500'}}>
                 {currentPropertyIndex + 1} of {properties.length}
               </div>
               
-              {/* Navigation Arrows at Bottom Corners */}
+              {/* Navigation Arrows - Optimized for Touch */}
               <button
                 onClick={goToPrevious}
                 disabled={currentPropertyIndex === 0}
-                className="absolute bottom-6 left-6 z-30 w-12 h-12 bg-white shadow-lg rounded-full flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                className="absolute touch-target"
+                style={{
+                  bottom: '80px',
+                  left: 'var(--space-4)',
+                  zIndex: '30',
+                  background: 'var(--surface-bg)',
+                  boxShadow: 'var(--shadow-medium)',
+                  borderRadius: '50%',
+                  border: 'none',
+                  cursor: currentPropertyIndex === 0 ? 'not-allowed' : 'pointer',
+                  opacity: currentPropertyIndex === 0 ? '0.3' : '1',
+                  color: 'var(--secondary-text)',
+                  transition: 'all 0.2s ease'
+                }}
                 title="Previous Property"
               >
-                <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg style={{width: '20px', height: '20px'}} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
               </button>
@@ -385,26 +403,44 @@ export default function BuyerDashboardV2() {
               <button
                 onClick={goToNext}
                 disabled={currentPropertyIndex === properties.length - 1}
-                className="absolute bottom-6 right-6 z-30 w-12 h-12 bg-white shadow-lg rounded-full flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                className="absolute touch-target"
+                style={{
+                  bottom: '80px',
+                  right: 'var(--space-4)',
+                  zIndex: '30',
+                  background: 'var(--surface-bg)',
+                  boxShadow: 'var(--shadow-medium)',
+                  borderRadius: '50%',
+                  border: 'none',
+                  cursor: currentPropertyIndex === properties.length - 1 ? 'not-allowed' : 'pointer',
+                  opacity: currentPropertyIndex === properties.length - 1 ? '0.3' : '1',
+                  color: 'var(--secondary-text)',
+                  transition: 'all 0.2s ease'
+                }}
                 title="Next Property"
               >
-                <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg style={{width: '20px', height: '20px'}} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               </button>
 
-              {/* Minimal Action Buttons */}
-              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 flex space-x-4">
+              {/* Mobile-Optimized Action Buttons */}
+              <div className="absolute" style={{bottom: 'var(--space-4)', left: '50%', transform: 'translateX(-50%)', zIndex: '30', display: 'flex', gap: 'var(--space-3)'}}>
                 <button 
                   onClick={() => toggleLike(properties[currentPropertyIndex].id)}
-                  className={`w-16 h-16 rounded-full shadow-lg transition-all ${
-                    likedProperties.includes(properties[currentPropertyIndex].id)
-                      ? 'bg-red-500 text-white'
-                      : 'bg-white text-red-500 border-2 border-red-200'
-                  }`}
+                  className="touch-target"
+                  style={{
+                    borderRadius: '50%',
+                    boxShadow: 'var(--shadow-medium)',
+                    border: likedProperties.includes(properties[currentPropertyIndex].id) ? 'none' : '2px solid #fecaca',
+                    background: likedProperties.includes(properties[currentPropertyIndex].id) ? 'var(--accent-danger)' : 'var(--surface-bg)',
+                    color: likedProperties.includes(properties[currentPropertyIndex].id) ? 'white' : 'var(--accent-danger)',
+                    transition: 'all 0.2s ease',
+                    cursor: 'pointer'
+                  }}
                   title={likedProperties.includes(properties[currentPropertyIndex].id) ? 'Saved' : 'Save Property'}
                 >
-                  <span className="text-2xl">
+                  <span style={{fontSize: 'var(--text-xl)'}}>
                     {likedProperties.includes(properties[currentPropertyIndex].id) ? '♥' : '♡'}
                   </span>
                 </button>
@@ -415,29 +451,39 @@ export default function BuyerDashboardV2() {
                     const message = `I'm interested in the property at ${property.address}, ${property.city}, ${property.state}. I found this deal through OwnerFi.`;
                     window.open(`sms:+1234567890&body=${encodeURIComponent(message)}`, '_self');
                   }}
-                  className="w-16 h-16 bg-blue-500 text-white rounded-full shadow-lg transition-all hover:bg-blue-600 flex items-center justify-center"
+                  className="touch-target"
+                  style={{
+                    background: 'var(--accent-primary)',
+                    color: 'white',
+                    borderRadius: '50%',
+                    boxShadow: 'var(--shadow-medium)',
+                    border: 'none',
+                    transition: 'all 0.2s ease',
+                    cursor: 'pointer'
+                  }}
                   title="Contact Agent"
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg style={{width: '20px', height: '20px'}} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                   </svg>
                 </button>
               </div>
             </div>
           ) : (
-            <div className="text-center py-12">
-              <div className="text-gray-400 mb-4">
-                <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div style={{textAlign: 'center', padding: 'var(--space-8) var(--space-4)'}}>
+              <div style={{color: 'var(--muted-text)', marginBottom: 'var(--space-6)'}}>
+                <svg style={{width: '48px', height: '48px', margin: '0 auto'}} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-6m-6 0H3m6 0v-3.87a3.5 3.5 0 11-4.24 0V21m11-3v3a2 2 0 01-2 2H9a2 2 0 01-2-2v-3m14 0V9a2 2 0 00-2-2H5a2 2 0 00-2 2v10m14 0H5" />
                 </svg>
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No properties found</h3>
-              <p className="text-gray-600 mb-6">
+              <h3 style={{fontSize: 'var(--text-lg)', fontWeight: '500', color: 'var(--primary-text)', marginBottom: 'var(--space-2)'}}>No properties found</h3>
+              <p style={{color: 'var(--secondary-text)', marginBottom: 'var(--space-6)', fontSize: 'var(--text-sm)'}}>
                 We couldn&apos;t find any properties in {profile?.city} that match your budget.
               </p>
               <button 
                 onClick={() => router.push('/dashboard/settings')}
-                className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                className="mobile-button primary"
+                style={{width: '100%'}}
               >
                 Update Search Criteria
               </button>

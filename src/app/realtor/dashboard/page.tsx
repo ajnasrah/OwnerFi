@@ -302,10 +302,10 @@ export default function BuyerLinkDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-primary-bg">
+    <div className="min-h-screen bg-primary-bg mobile-safe-area prevent-overscroll">
       {/* Mobile-First Header */}
-      <div className="bg-gradient-to-r from-accent-primary to-accent-success shadow-medium">
-        <div className="px-6 py-4">
+      <div className="mobile-header bg-gradient-to-r from-accent-primary to-accent-success shadow-medium">
+        <div className="mobile-container">
           {/* Navigation */}
           <div className="flex items-center justify-between mb-4">
             <Link href="/" className="flex items-center space-x-2 text-surface-bg/80 hover:text-surface-bg">
@@ -357,9 +357,10 @@ export default function BuyerLinkDashboard() {
         </div>
       </div>
 
-      <div className="px-6 py-6 max-w-7xl mx-auto">
-        {/* Compact Stats - Only What Matters */}
-        <div className="grid grid-cols-2 gap-3 mb-4 max-w-lg">
+      <div className="mobile-content">
+        <div className="mobile-container">
+          {/* Compact Stats - Only What Matters */}
+        <div className="mobile-grid gap-3 mb-4 max-w-lg">
           <div className="bg-surface-bg rounded-lg p-3 shadow-soft border border-neutral-border h-20">
             <div className="flex items-center space-x-3 h-full">
               <div className="w-8 h-8 bg-accent-primary/10 rounded-lg flex items-center justify-center">
@@ -969,6 +970,8 @@ export default function BuyerLinkDashboard() {
           </div>
         </div>
       )}
+        </div>
+      </div>
     </div>
   );
 }

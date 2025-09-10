@@ -166,9 +166,9 @@ export const unifiedDb = {
       return agentDocs.empty ? null : { id: agentDocs.docs[0].id, ...agentDocs.docs[0].data() } as RealtorProfile & { id: string };
     },
     
-    async findById(id: string) {
+    async findById(id: string): Promise<(RealtorProfile & { id: string }) | null> {
       const agentDoc = await getDoc(doc(firebaseDb, 'agents', id));
-      return agentDoc.exists() ? { id: agentDoc.id, ...agentDoc.data() } : null;
+      return agentDoc.exists() ? { id: agentDoc.id, ...agentDoc.data() } as RealtorProfile & { id: string } : null;
     },
 
     async update(id: string, data: Partial<Omit<RealtorProfile, 'id' | 'createdAt' | 'updatedAt'>>) {

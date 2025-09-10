@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
         phone: agentData.phone,
         company: agentData.company,
         licenseNumber: agentData.licenseNumber,
-        serviceStates: JSON.parse(agentData.serviceStates || '[]'),
+        serviceStates: agentData.serviceStates || [],
         credits: agentData.credits,
         isActive: agentData.isActive,
       }

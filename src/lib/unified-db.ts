@@ -130,7 +130,7 @@ export const unifiedDb = {
       });
       
       // Queue nearby cities population (non-blocking)
-      queueNearbyCitiesForProperty(id, propertyData.city, propertyData.state);
+      queueNearbyCitiesForProperty(id, propertyData.city as string, propertyData.state as string);
       
       return { ...propertyData, id, nearbyCities: [] };
     },

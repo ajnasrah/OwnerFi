@@ -9,22 +9,9 @@ import { Hero } from '@/components/ui/Hero';
 import { Newsletter } from '@/components/ui/Newsletter';
 import { Footer } from '@/components/ui/Footer';
 
-interface Property {
-  id: string;
-  address: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  bedrooms: number;
-  bathrooms: number;
-  squareFeet: number;
-  listPrice: number;
-  downPaymentAmount: number;
-  monthlyPayment: number;
-  interestRate: number;
-  termYears: number;
-  description?: string;
-}
+import { PropertyListing } from '@/lib/property-schema';
+
+type Property = PropertyListing;
 
 export default function PropertyListings() {
   const [properties, setProperties] = useState<Property[]>([]);

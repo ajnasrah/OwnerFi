@@ -89,7 +89,7 @@ export default function BuyerSettings() {
 
   const handleInputChange = (field: string, value: string | number) => {
     if (field === 'phone') {
-      const formatted = formatPhoneNumber(value);
+      const formatted = formatPhoneNumber(String(value));
       setFormData(prev => ({ ...prev, [field]: formatted }));
     } else {
       setFormData(prev => ({ ...prev, [field]: value }));

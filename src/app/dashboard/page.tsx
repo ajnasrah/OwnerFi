@@ -18,25 +18,15 @@ import { Footer } from '@/components/ui/Footer';
  * NO complex matching, NO realtor dependencies.
  */
 
-interface Property {
-  id: string;
-  address: string;
-  city: string;
-  state: string;
-  listPrice: number;
-  monthlyPayment: number;
-  downPaymentAmount: number;
-  bedrooms: number;
-  bathrooms: number;
-  squareFeet: number;
-  description?: string;
+import { PropertyListing } from '@/lib/property-schema';
+
+type Property = PropertyListing & {
   zillowImageUrl?: string;
   imageUrl?: string;
-  // Nearby cities functionality
   resultType?: 'direct' | 'nearby';
   displayTag?: string | null;
   matchReason?: string;
-}
+};
 
 interface BuyerProfile {
   id: string;

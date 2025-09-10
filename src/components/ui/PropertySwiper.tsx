@@ -3,13 +3,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from './Button';
 
-import { PropertyListingListing } from '@/lib/property-schema';
+import { PropertyListing } from '@/lib/property-schema';
 
 interface PropertyListingSwiperProps {
-  properties: PropertyListingListing[];
-  onLike: (property: PropertyListingListing) => void;
-  onPass: (property: PropertyListingListing) => void;
-  onFavorite: (property: PropertyListingListing) => void;
+  properties: PropertyListing[];
+  onLike: (property: PropertyListing) => void;
+  onPass: (property: PropertyListing) => void;
+  onFavorite: (property: PropertyListing) => void;
   favorites: string[];
   passedIds?: string[];
   isLoading?: boolean;

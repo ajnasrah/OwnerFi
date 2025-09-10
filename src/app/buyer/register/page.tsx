@@ -7,21 +7,13 @@ import { useDebounce } from 'use-debounce';
 interface City {
   name: string;
   state: string;
+  population?: number;
+  distance?: number;
 }
 
-interface Property {
-  id: string;
-  address: string;
-  city: string;
-  state: string;
-  bedrooms: number;
-  bathrooms: number;
-  squareFeet: number;
-  listPrice: number;
-  monthlyPayment: number;
-  downPaymentAmount: number;
-  isActive: boolean;
-}
+import { PropertyListing } from '@/lib/property-schema';
+
+type Property = PropertyListing;
 
 export default function BuyerRegistration() {
   const [step, setStep] = useState(1);

@@ -2,7 +2,6 @@
 // Only modifies property data, does not touch buyer or realtor modules
 
 import { getCitiesWithinRadius, calculateDistance, getCityCoordinates } from './cities';
-import { getNearbyCitiesDirect } from './cities-service';
 import { queueNearbyCitiesJob } from './background-jobs';
 import { getNearbyCitiesUltraFast } from './cities-service-v2';
 import { PropertyListing } from './property-schema';

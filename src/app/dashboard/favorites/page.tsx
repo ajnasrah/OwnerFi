@@ -6,20 +6,9 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 
-interface Property {
-  id: string;
-  address: string;
-  city: string;
-  state: string;
-  bedrooms: number;
-  bathrooms: number;
-  squareFeet: number;
-  listPrice: number;
-  downPaymentAmount: number;
-  monthlyPayment: number;
-  interestRate: number;
-  termYears: number;
-}
+import { PropertyListing } from '@/lib/property-schema';
+
+type Property = PropertyListing;
 
 export default function FavoritesPage() {
   const { data: session, status } = useSession();

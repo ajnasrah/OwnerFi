@@ -5,14 +5,44 @@ import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
+interface BuyerData {
+  firstName: string;
+  lastName: string;
+  phone: string;
+  searchCriteria?: {
+    cities?: string[];
+    state?: string;
+    maxMonthlyPayment?: number;
+    maxDownPayment?: number;
+  };
+}
+
+interface Property {
+  id: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  listPrice?: number;
+  monthlyPayment?: number;
+  downPaymentAmount?: number;
+  bedrooms?: number;
+  bathrooms?: number;
+  squareFeet?: number;
+  imageUrls?: string[];
+  description?: string;
+  buyerStatus?: 'liked' | 'disliked' | 'pending';
+  matchScore?: number;
+}
+
 export default function RealtorBuyerPropertiesView() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
   const buyerId = searchParams.get('buyerId');
   
-  const [properties, setProperties] = useState<Record<string, unknown>[]>([]);
-  const [buyer, setBuyer] = useState<Record<string, unknown> | null>(null);
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [buyer, setBuyer] = useState<BuyerData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selectedTab, setSelectedTab] = useState<'pending' | 'liked' | 'disliked'>('pending');
@@ -111,7 +141,7 @@ export default function RealtorBuyerPropertiesView() {
           
           <div className="bg-white rounded-xl p-6 shadow-sm">
             <h1 className="text-2xl font-bold text-gray-900 mb-4">
-              Properties for {capitalizeFirstLetter(buyer.firstName)} {capitalizeFirstLetter(buyer.lastName)}
+              Properties for {capitalizeFirstLetter(String(buyer.firstName))} {capitalizeFirstLetter(String(buyer.lastName))}
             </h1>
             
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">

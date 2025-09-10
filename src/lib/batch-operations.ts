@@ -9,9 +9,13 @@ import {
   where, 
   getDocs,
   documentId,
-  QueryConstraint 
+  QueryConstraint,
+  doc,
+  updateDoc,
+  serverTimestamp
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { PropertyListing } from './property-schema';
 
 /**
  * Batch fetch documents by IDs (eliminates N+1 queries)
@@ -76,32 +80,32 @@ export async function searchProperties(criteria: {
   let properties = snapshot.docs.map(doc => ({
     id: doc.id,
     ...doc.data()
-  }));
+  })) as (PropertyListing & { id: string })[];
 
   // Apply remaining filters in JavaScript (on smaller dataset)
   if (criteria.cities && criteria.cities.length > 0) {
     properties = properties.filter(property => 
       criteria.cities!.some(city => 
-        property.city.toLowerCase() === city.toLowerCase()
+(property as PropertyListing).city.toLowerCase() === city.toLowerCase()
       )
     );
   }
 
   if (criteria.maxDownPayment) {
     properties = properties.filter(property => 
-      property.downPaymentAmount <= criteria.maxDownPayment!
+(property as PropertyListing).downPaymentAmount <= criteria.maxDownPayment!
     );
   }
 
   if (criteria.minBedrooms) {
     properties = properties.filter(property => 
-      property.bedrooms >= criteria.minBedrooms!
+(property as PropertyListing).bedrooms >= criteria.minBedrooms!
     );
   }
 
   if (criteria.minBathrooms) {
     properties = properties.filter(property => 
-      property.bathrooms >= criteria.minBathrooms!
+(property as PropertyListing).bathrooms >= criteria.minBathrooms!
     );
   }
 
@@ -118,8 +122,8 @@ export async function batchUpdatePropertyMatches(updates: Array<{
   
   // Process in parallel for performance
   const updatePromises = updates.map(async ({ buyerId, matches }) => {
-    const updateDoc = doc(collection(db, 'buyerProfiles'), buyerId);
-    await updateDoc(updateDoc, {
+    const updateDocRef = doc(collection(db, 'buyerProfiles'), buyerId);
+    await updateDoc(updateDocRef, {
       propertyMatches: matches,
       lastMatchUpdate: serverTimestamp(),
       updatedAt: serverTimestamp()

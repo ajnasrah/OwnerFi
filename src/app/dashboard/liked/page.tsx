@@ -7,21 +7,23 @@ import Link from 'next/link';
 import { Header } from '@/components/ui/Header';
 import { Footer } from '@/components/ui/Footer';
 
-interface Property {
-  id: string;
-  address: string;
-  city: string;
-  state: string;
-  listPrice: number;
-  monthlyPayment: number;
-  downPaymentAmount: number;
-  bedrooms: number;
-  bathrooms: number;
-  squareFeet: number;
-  description?: string;
+import { PropertyListing } from '@/lib/property-schema';
+
+type Property = PropertyListing & {
+  isLiked: boolean;
   zillowImageUrl?: string;
   imageUrl?: string;
-  isLiked: boolean;
+};
+
+interface BuyerProfile {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  city: string;
+  maxMonthlyPayment?: number;
+  maxDownPayment?: number;
+  likedProperties?: string[];
 }
 
 export default function LikedProperties() {
@@ -29,7 +31,7 @@ export default function LikedProperties() {
   const router = useRouter();
   
   const [properties, setProperties] = useState<Property[]>([]);
-  const [profile, setProfile] = useState<Record<string, unknown> | null>(null);
+  const [profile, setProfile] = useState<BuyerProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -122,7 +124,7 @@ export default function LikedProperties() {
                 </p>
               </div>
               <Link 
-                href="/dashboard/v2"
+                href="/dashboard"
                 className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
               >
                 ← Back to All Properties
@@ -247,7 +249,7 @@ export default function LikedProperties() {
                 Start browsing properties and click the "Like" button to save them here.
               </p>
               <Link 
-                href="/dashboard/v2"
+                href="/dashboard"
                 className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
               >
                 Browse Properties

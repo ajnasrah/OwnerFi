@@ -1,6 +1,6 @@
 
 import Link from 'next/link';
-import { useSession } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
 import { Button } from './Button';
 import { ExtendedSession } from '@/types/session';
 
@@ -50,7 +50,7 @@ export function Header({ className = '' }: HeaderProps) {
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  href="/api/auth/signout" 
+                  onClick={() => signOut({ callbackUrl: '/' })}
                   className="font-semibold"
                 >
                   Sign Out

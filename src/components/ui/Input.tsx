@@ -2,6 +2,7 @@
 
 interface InputProps {
   label?: string;
+  name?: string;
   type?: 'text' | 'email' | 'password' | 'number' | 'tel';
   placeholder?: string;
   value?: string;
@@ -15,6 +16,7 @@ interface InputProps {
 
 export function Input({
   label,
+  name,
   type = 'text',
   placeholder,
   value,
@@ -34,6 +36,7 @@ export function Input({
         </label>
       )}
       <input
+        name={name}
         type={type}
         placeholder={placeholder}
         value={value}

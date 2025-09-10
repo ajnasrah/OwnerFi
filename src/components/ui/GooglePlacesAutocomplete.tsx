@@ -2,6 +2,14 @@
 
 import { useEffect, useRef } from 'react';
 
+// Extend window to include Google Maps
+declare global {
+  interface Window {
+    google: typeof google;
+    googleMapsLoaded?: Event;
+  }
+}
+
 interface GooglePlacesAutocompleteProps {
   value: string;
   onChange: (city: string) => void;

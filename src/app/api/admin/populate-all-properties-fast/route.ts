@@ -45,16 +45,16 @@ export async function POST() {
         
         try {
           // Check if already has comprehensive nearby cities data
-          if ('nearbyCities' in property && property.nearbyCities && property.nearbyCities.length > 20 && 'nearbyCitiesSource' in property && property.nearbyCitiesSource === 'comprehensive-database') {
+          if ('nearbyCities' in property && property.nearbyCities && Array.isArray(property.nearbyCities) && property.nearbyCities.length > 20 && 'nearbyCitiesSource' in property && property.nearbyCitiesSource === 'comprehensive-database') {
             skipped++;
             results.push({
               id: property.id,
-              address: property.address,
-              city: property.city,
-              state: property.state,
+              address: (property as any).address,
+              city: (property as any).city,
+              state: (property as any).state,
               status: 'skipped',
               reason: 'already has comprehensive data',
-              nearbyCitiesCount: property.nearbyCities.length
+              nearbyCitiesCount: (property.nearbyCities as any[]).length
             });
             continue;
           }

@@ -1,16 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSessionWithRole } from '@/lib/auth-utils';
-import { 
-  collection, 
-  query, 
-  where, 
-  getDocs,
-  doc,
-  getDoc,
-  updateDoc,
-  increment
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { adminDb } from '@/lib/firebase-admin';
 import { logInfo, logError } from '@/lib/logger';
 import Stripe from 'stripe';
 
@@ -18,18 +7,26 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-08-27.basil',
 });
 
+// Force dynamic rendering to prevent build-time Firebase evaluation
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
-    const session = await getSessionWithRole('realtor');
-    
-    if (!session?.user?.email) {
+    if (!adminDb) {
       return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 }
+        { error: 'Database not available' },
+        { status: 503 }
       );
     }
 
-    const { credits, amount } = await request.json();
+    const { userId, userEmail, credits, amount } = await request.json();
+    
+    if (!userId || !userEmail) {
+      return NextResponse.json(
+        { error: 'Missing userId or userEmail' },
+        { status: 400 }
+      );
+    }
     
     // Validate request
     if (!credits || !amount || credits !== 1 || amount !== 300) {
@@ -40,15 +37,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Get user's stored Stripe customer ID
-    const userDoc = await getDoc(doc(db, 'users', session.user.id!));
-    const userData = userDoc.exists() ? userDoc.data() : null;
+    const userDoc = await adminDb.collection('users').doc(userId).get();
+    const userData = userDoc.exists ? userDoc.data() : null;
     let stripeCustomerId = userData?.stripeCustomerId;
 
     // If no customer ID stored, try to find or create one
     if (!stripeCustomerId) {
       try {
         const customers = await stripe.customers.list({
-          email: session.user.email,
+          email: userEmail,
           limit: 1
         });
         
@@ -56,10 +53,10 @@ export async function POST(request: NextRequest) {
           stripeCustomerId = customers.data[0].id;
         } else {
           const customer = await stripe.customers.create({
-            email: session.user.email,
-            name: session.user.name || 'Unknown',
+            email: userEmail,
+            name: 'Unknown',
             metadata: {
-              userId: session.user.id!,
+              userId: userId,
               userType: 'realtor'
             }
           });
@@ -67,7 +64,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Update user record with customer ID
-        await updateDoc(doc(db, 'users', session.user.id!), {
+        await adminDb.collection('users').doc(userId).update({
           stripeCustomerId: stripeCustomerId
         });
       } catch (error) {
@@ -80,7 +77,7 @@ export async function POST(request: NextRequest) {
       mode: 'payment', // ONE-TIME payment, not subscription
       payment_method_types: ['card'],
       customer: stripeCustomerId || undefined,
-      customer_email: stripeCustomerId ? undefined : session.user.email,
+      customer_email: stripeCustomerId ? undefined : userEmail,
       line_items: [
         {
           price_data: {
@@ -95,8 +92,8 @@ export async function POST(request: NextRequest) {
         },
       ],
       metadata: {
-        userId: session.user.id!,
-        userEmail: session.user.email!,
+        userId: userId,
+        userEmail: userEmail!,
         planId: 'payAsYouGo',
         type: 'credit_purchase',
         credits: '1',
@@ -109,7 +106,7 @@ export async function POST(request: NextRequest) {
 
     await logInfo('Single credit checkout created', {
       action: 'single_credit_checkout',
-      userId: session.user.id,
+      userId: userId,
       userType: 'realtor',
       metadata: {
         amount: 300,

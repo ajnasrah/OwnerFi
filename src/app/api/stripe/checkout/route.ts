@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSessionWithRole } from '@/lib/auth-utils';
 import { PRICING_TIERS } from '@/lib/pricing';
 import Stripe from 'stripe';
 
@@ -9,16 +8,14 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getSessionWithRole('realtor');
+    const { userEmail, userId, priceId, planId, billingType, successUrl, cancelUrl } = await request.json();
     
-    if (!session?.user?.email) {
+    if (!userEmail || !userId) {
       return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 }
+        { error: 'Missing userEmail or userId' },
+        { status: 400 }
       );
     }
-
-    const { priceId, planId, billingType, successUrl, cancelUrl } = await request.json();
 
     // Validate the plan
     const tier = PRICING_TIERS[planId];
@@ -44,7 +41,7 @@ export async function POST(request: NextRequest) {
     const checkoutSession = await stripe.checkout.sessions.create({
       mode: checkoutMode,
       payment_method_types: ['card'],
-      customer_email: session.user.email,
+      customer_email: userEmail,
       line_items: [
         {
           price: finalPriceId,
@@ -52,8 +49,8 @@ export async function POST(request: NextRequest) {
         },
       ],
       metadata: {
-        userId: session.user.id,
-        userEmail: session.user.email,
+        userId: userId,
+        userEmail: userEmail,
         planId: planId,
         billingType: billingType || 'monthly',
         type: isRecurring ? 'subscription' : (billingType === 'annual' ? 'annual_purchase' : tier.isPayPerLead ? 'credit_purchase' : 'monthly_purchase')

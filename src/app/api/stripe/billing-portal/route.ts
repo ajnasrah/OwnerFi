@@ -1,41 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSessionWithRole } from '@/lib/auth-utils';
 import Stripe from 'stripe';
-import { 
-  collection, 
-  query, 
-  where, 
-  getDocs,
-  updateDoc,
-  doc,
-  getDoc,
-  serverTimestamp
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { adminDb } from '@/lib/firebase-admin';
 import { RealtorProfile } from '@/lib/firebase-models';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-08-27.basil',
 });
 
+// Force dynamic rendering to prevent build-time Firebase evaluation
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
-    const session = await getSessionWithRole('realtor');
+    const { userId, userEmail } = await request.json();
     
-    if (!session?.user?.email || !session?.user?.id) {
+    if (!userId || !userEmail) {
       return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 }
+        { error: 'Missing userId or userEmail' },
+        { status: 400 }
+      );
+    }
+
+    if (!adminDb) {
+      return NextResponse.json(
+        { error: 'Database not available' },
+        { status: 503 }
       );
     }
 
     // Get the realtor's profile to find their customer ID
-    const realtorsQuery = query(
-      collection(db, 'realtors'),
-      where('userId', '==', session.user.id!)
-    );
-    const realtorDocs = await getDocs(realtorsQuery);
-    const realtor = realtorDocs.empty ? null : { id: realtorDocs.docs[0].id, ...realtorDocs.docs[0].data() } as RealtorProfile;
+    const realtorsSnapshot = await adminDb.collection('realtors').where('userId', '==', userId).get();
+    const realtor = realtorsSnapshot.empty ? null : { id: realtorsSnapshot.docs[0].id, ...realtorsSnapshot.docs[0].data() } as RealtorProfile;
 
     if (!realtor) {
       return NextResponse.json(
@@ -50,8 +45,8 @@ export async function POST(request: NextRequest) {
     // If not in realtor record, check user record
     if (!customerId) {
       try {
-        const userDoc = await getDoc(doc(db, 'users', session.user.id!));
-        const userData = userDoc.exists() ? userDoc.data() : null;
+        const userDoc = await adminDb.collection('users').doc(userId).get();
+        const userData = userDoc.exists ? userDoc.data() : null;
         customerId = userData?.stripeCustomerId;
       } catch (e) {
         console.error('Failed to get user data:', e);
@@ -62,7 +57,7 @@ export async function POST(request: NextRequest) {
     if (!customerId) {
       try {
         const customers = await stripe.customers.list({
-          email: session.user.email,
+          email: userEmail,
           limit: 1
         });
         
@@ -70,9 +65,9 @@ export async function POST(request: NextRequest) {
           customerId = customers.data[0].id;
           
           // Store the found customer ID for future use
-          await updateDoc(doc(db, 'realtors', realtor.id), {
+          await adminDb.collection('realtors').doc(realtor.id).update({
             stripeCustomerId: customerId,
-            updatedAt: serverTimestamp()
+            updatedAt: new Date()
           });
         }
       } catch (e) {
@@ -84,19 +79,19 @@ export async function POST(request: NextRequest) {
     if (!customerId) {
       try {
         const customer = await stripe.customers.create({
-          email: session.user.email,
+          email: userEmail,
           name: `${realtor.firstName} ${realtor.lastName}`.trim(),
           metadata: {
-            userId: session.user.id,
+            userId: userId,
             userRole: 'realtor'
           }
         });
         customerId = customer.id;
         
         // Save the customer ID directly in realtor record
-        await updateDoc(doc(db, 'realtors', realtor.id), {
+        await adminDb.collection('realtors').doc(realtor.id).update({
           stripeCustomerId: customerId,
-          updatedAt: serverTimestamp()
+          updatedAt: new Date()
         });
 
       } catch (e) {

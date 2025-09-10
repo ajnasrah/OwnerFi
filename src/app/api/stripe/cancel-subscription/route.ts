@@ -1,40 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSessionWithRole } from '@/lib/auth-utils';
 import Stripe from 'stripe';
-import { 
-  collection, 
-  query, 
-  where, 
-  getDocs, 
-  updateDoc, 
-  doc, 
-  serverTimestamp 
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { adminDb } from '@/lib/firebase-admin';
 import { RealtorProfile } from '@/lib/firebase-models';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-08-27.basil',
 });
 
+// Force dynamic rendering to prevent build-time Firebase evaluation
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
-    const session = await getSessionWithRole('realtor');
+    const { userId } = await request.json();
     
-    if (!session?.user?.email || !session?.user?.id) {
+    if (!userId) {
       return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 }
+        { error: 'Missing userId' },
+        { status: 400 }
+      );
+    }
+
+    if (!adminDb) {
+      return NextResponse.json(
+        { error: 'Database not available' },
+        { status: 503 }
       );
     }
 
     // Get the realtor's profile to find their subscription
-    const realtorsQuery = query(
-      collection(db, 'realtors'),
-      where('userId', '==', session.user.id!)
-    );
-    const realtorDocs = await getDocs(realtorsQuery);
-    const realtor = realtorDocs.empty ? null : { id: realtorDocs.docs[0].id, ...realtorDocs.docs[0].data() } as RealtorProfile;
+    const realtorsSnapshot = await adminDb.collection('realtors').where('userId', '==', userId).get();
+    const realtor = realtorsSnapshot.empty ? null : { id: realtorsSnapshot.docs[0].id, ...realtorsSnapshot.docs[0].data() } as RealtorProfile;
 
     if (!realtor) {
       return NextResponse.json(
@@ -56,12 +52,11 @@ export async function POST(request: NextRequest) {
     let subscriptionDocId = null;
     
     // Also check in realtorSubscriptions collection
-    const subscriptionsQuery = query(
-      collection(db, 'realtorSubscriptions'),
-      where('realtorId', '==', realtor.id),
-      where('status', '==', 'active')
-    );
-    const subscriptionDocs = await getDocs(subscriptionsQuery);
+    const subscriptionsSnapshot = await adminDb.collection('realtorSubscriptions')
+      .where('realtorId', '==', realtor.id)
+      .where('status', '==', 'active')
+      .get();
+    const subscriptionDocs = subscriptionsSnapshot;
     
     if (!subscriptionDocs.empty) {
       const subscriptionDoc = subscriptionDocs.docs[0];
@@ -91,18 +86,18 @@ export async function POST(request: NextRequest) {
       const canceledSubscription = await stripe.subscriptions.cancel(stripeSubscriptionId);
       
       // Update the realtor record
-      await updateDoc(doc(db, 'realtors', realtor.id), {
+      await adminDb.collection('realtors').doc(realtor.id).update({
         subscriptionStatus: 'canceled',
-        updatedAt: serverTimestamp()
+        updatedAt: new Date()
       });
       
       // Update the subscription record if it exists
       if (subscriptionDocId) {
-        await updateDoc(doc(db, 'realtorSubscriptions', subscriptionDocId), {
+        await adminDb.collection('realtorSubscriptions').doc(subscriptionDocId).update({
           status: 'canceled',
           canceledAt: new Date(canceledSubscription.canceled_at! * 1000),
           cancelAtPeriodEnd: true,
-          updatedAt: serverTimestamp()
+          updatedAt: new Date()
         });
       }
 

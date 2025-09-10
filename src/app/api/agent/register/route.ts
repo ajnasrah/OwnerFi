@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
         phone: phone || null,
         company: company || null,
         licenseNumber: licenseNumber || null,
-        serviceStates: JSON.stringify(serviceStates),
+        serviceStates: serviceStates,
         isActive: true
       });
 
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
         phone: phone || null,
         company: company || null,
         licenseNumber: licenseNumber || null,
-        serviceStates: JSON.stringify(serviceStates),
+        serviceStates: serviceStates,
         serviceCities: null, // Can be expanded later
         isActive: true,
         credits: 5, // Give new agents 5 free credits

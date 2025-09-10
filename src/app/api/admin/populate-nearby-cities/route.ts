@@ -11,6 +11,7 @@ import {
 import { db } from '@/lib/firebase';
 import { getCityCoordinates } from '@/lib/cities';
 import { ExtendedSession } from '@/types/session';
+import { PropertyListing } from '@/lib/property-schema';
 
 /**
  * ADMIN ONLY: Populate nearbyCities field for all properties
@@ -30,7 +31,7 @@ export async function POST(request: NextRequest) {
 
     // Get all properties
     const propertiesSnapshot = await getDocs(collection(db, 'properties'));
-    const properties = propertiesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const properties = propertiesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as PropertyListing & { id: string }));
 
     let processed = 0;
     let updated = 0;

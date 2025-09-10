@@ -18,23 +18,23 @@ const hasFirebaseConfig = !!(
   process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
 );
 
-const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || 'AIzaSyCQHuVyvvvV-V3zW-iuqKMqPlRa5P4b2fE',
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || 'ownerfi-95aa0.firebaseapp.com',
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'ownerfi-95aa0',
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || 'ownerfi-95aa0.firebasestorage.app',
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || '229249732230',
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || '1:229249732230:web:13376f1c0bd9fa95700b07'
-};
-
 // Initialize Firebase (only once) - skip during build if no config available
 let app = null;
 let db = null;
 let auth = null;
 let storage = null;
 
-if (hasFirebaseConfig || process.env.NODE_ENV !== 'production') {
+if (hasFirebaseConfig) {
   try {
+    const firebaseConfig = {
+      apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY!,
+      authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN!,
+      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!,
+      storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET!,
+      messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID!,
+      appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID!
+    };
+
     app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
     db = getFirestore(app);
     auth = getAuth(app);

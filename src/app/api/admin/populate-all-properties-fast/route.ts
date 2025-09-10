@@ -8,7 +8,7 @@ import {
   writeBatch
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { Property } from '@/lib/firebase-models';
+import { PropertyListing } from '@/lib/property-schema';
 import { populateNearbyCitiesForPropertyFast } from '@/lib/property-enhancement';
 
 /**
@@ -23,7 +23,7 @@ export async function POST() {
     
     // Get ALL properties
     const snapshot = await getDocs(collection(db, 'properties'));
-    const properties = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Property & { id: string }));
+    const properties = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as PropertyListing & { id: string }));
     
     console.log(`🏠 Found ${properties.length} total properties to process`);
 

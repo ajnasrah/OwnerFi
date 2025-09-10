@@ -146,7 +146,8 @@ export async function expandSearchToNearbyCitiesAPI(
     }
 
     // Call the comprehensive within-radius API
-    const response = await fetch(`http://localhost:3001/api/cities/within-radius?lat=${cityCoords.lat}&lng=${cityCoords.lng}&radius=${radiusMiles}`);
+    const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3001';
+    const response = await fetch(`${baseUrl}/api/cities/within-radius?lat=${cityCoords.lat}&lng=${cityCoords.lng}&radius=${radiusMiles}`);
     
     if (!response.ok) {
       throw new Error('Failed to fetch nearby cities');

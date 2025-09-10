@@ -78,7 +78,9 @@ export async function POST(request: NextRequest) {
     
     await logInfo('Fixed trial dates for realtors', {
       action: 'fix_trial_dates',
-      count: results.length
+      metadata: {
+        count: results.length
+      }
     });
     
     return NextResponse.json({

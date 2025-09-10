@@ -1,21 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { 
-  collection, 
-  query, 
-  where, 
-  getDocs,
-  doc,
-  updateDoc,
-  serverTimestamp
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-
+import { adminDb } from '@/lib/firebase-admin';
 /**
  * Automatically generate and save Google Street View images for ALL properties
  * Run this periodically or when new properties are added
  */
 
 export async function POST() {
+    // Check if Firebase Admin is initialized
+    if (!adminDb) {
+      return NextResponse.json({ error: 'Database connection not available' }, { status: 503 });
+    }
+
   try {
     const googleApiKey = process.env.GOOGLE_MAPS_API_KEY;
     
@@ -26,11 +21,7 @@ export async function POST() {
     console.log('🔄 Starting automatic Street View image generation for all properties...');
 
     // Get ALL properties without imageUrl
-    const propertiesQuery = query(
-      collection(db, 'properties'),
-      where('isActive', '==', true)
-    );
-    const propertiesSnapshot = await getDocs(propertiesQuery);
+    const propertiesSnapshot = await adminDb.collection('properties').where('isActive', '==', true).get();
     
     const propertiesNeedingImages = propertiesSnapshot.docs.filter(doc => 
       !doc.data().imageUrl || doc.data().imageType !== 'street_view'
@@ -63,12 +54,12 @@ export async function POST() {
         
         if (testResponse.ok) {
           // Save the Street View URL to property database
-          await updateDoc(doc(db, 'properties', propertyId), {
+          await adminDb.collection('properties').doc(propertyId).update({
             imageUrl: streetViewUrl,
             imageType: 'street_view',
-            imageGeneratedAt: serverTimestamp(),
+            imageGeneratedAt: new Date(),
             address: propertyData.address, // Ensure address is clean
-            updatedAt: serverTimestamp()
+            updatedAt: new Date()
           });
 
           console.log(`✅ Generated and saved Street View for: ${address}`);

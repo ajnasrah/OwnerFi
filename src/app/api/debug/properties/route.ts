@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { collection, getDocs, limit } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import { PropertyListing } from '@/lib/property-schema';
+import { adminDb } from '@/lib/firebase-admin';
 
 export async function GET(request: NextRequest) {
+    // Check if Firebase Admin is initialized
+    if (!adminDb) {
+      return NextResponse.json({ error: 'Database connection not available' }, { status: 503 });
+    }
+
   try {
-    const propertiesSnapshot = await getDocs(
-      collection(db, 'properties')
+    const propertiesSnapshot = await 
+      adminDb.collection('properties'.get()
     );
     
     const properties = propertiesSnapshot.docs.map(doc => ({

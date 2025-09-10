@@ -1,17 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { 
-  collection, 
-  query, 
-  where,
-  getDocs,
-  doc,
-  updateDoc,
-  deleteDoc,
-  serverTimestamp
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-
+import { adminDb } from '@/lib/firebase-admin';
 export async function POST(request: NextRequest) {
+    // Check if Firebase Admin is initialized
+    if (!adminDb) {
+      return NextResponse.json({ error: 'Database connection not available' }, { status: 503 });
+    }
+
   try {
     const body = await request.json();
     const { keepAccountId, transferCredits } = body;
@@ -24,8 +18,8 @@ export async function POST(request: NextRequest) {
     }
     
     // Find all Abdullah accounts
-    const realtorsQuery = query(collection(db, 'realtors'));
-    const realtorDocs = await getDocs(realtorsQuery);
+    const realtorsQuery = query(adminDb.collection('realtors'));
+    const realtorDocs = await realtorsQuery.get();
     
     const accounts = [];
     let mainAccount = null;
@@ -74,13 +68,13 @@ export async function POST(request: NextRequest) {
         });
         
         // Delete the duplicate account
-        await deleteDoc(doc(db, 'realtors', account.id));
+        await deleteDoc(adminDb.collection('realtors').doc(account.id));
       }
       
       // Update main account with consolidated credits
-      await updateDoc(doc(db, 'realtors', keepAccountId), {
+      await adminDb.collection('realtors').doc(keepAccountId).update({
         credits: mainAccount.credits + totalCreditsTransferred,
-        updatedAt: serverTimestamp()
+        updatedAt: new Date()
       });
     }
     

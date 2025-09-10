@@ -1,20 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { 
-  doc, 
-  updateDoc, 
-  collection, 
-  query, 
-  where, 
-  getDocs 
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-
+import { adminDb } from '@/lib/firebase-admin';
 /**
  * Generate Google Street View images for properties without imageUrl
  * Cache the generated URLs in the database
  */
 
 export async function POST(request: NextRequest) {
+    // Check if Firebase Admin is initialized
+    if (!adminDb) {
+      return NextResponse.json({ error: 'Database connection not available' }, { status: 503 });
+    }
+
   try {
     const { propertyId } = await request.json();
     
@@ -23,11 +19,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get property data
-    const propertyQuery = query(
-      collection(db, 'properties'),
-      where('__name__', '==', propertyId)
-    );
-    const propertyDocs = await getDocs(propertyQuery);
+    const propertyDocs = await adminDb.collection('properties').where('__name__', '==', propertyId).get();
 
     if (propertyDocs.empty) {
       return NextResponse.json({ error: 'Property not found' }, { status: 404 });
@@ -58,7 +50,7 @@ export async function POST(request: NextRequest) {
     console.log(`🏠 Generated Street View image for: ${address}`);
 
     // Update property with the generated imageUrl to cache it
-    await updateDoc(doc(db, 'properties', propertyId), {
+    await adminDb.collection('properties').doc(propertyId).update({
       imageUrl: streetViewUrl,
       imageGeneratedAt: new Date().toISOString(),
       imageType: 'street_view'
@@ -88,11 +80,7 @@ export async function GET() {
     console.log('🔄 Starting batch Street View image generation...');
 
     // Get all properties without imageUrl
-    const propertiesQuery = query(
-      collection(db, 'properties'),
-      where('isActive', '==', true)
-    );
-    const propertiesSnapshot = await getDocs(propertiesQuery);
+    const propertiesSnapshot = await adminDb.collection('properties').where('isActive', '==', true).get();
     
     const propertiesWithoutImages = propertiesSnapshot.docs.filter(doc => 
       !doc.data().imageUrl

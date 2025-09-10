@@ -1,16 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
-import { 
-  collection, 
-  query, 
-  getDocs,
-  doc,
-  writeBatch
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-
+import { adminDb } from '@/lib/firebase-admin';
 export async function POST(request: NextRequest) {
+    // Check if Firebase Admin is initialized
+    if (!adminDb) {
+      return NextResponse.json({ error: 'Database connection not available' }, { status: 503 });
+    }
+
   try {
     // Admin access control
     const session = await getServerSession(authOptions);
@@ -23,8 +20,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Get all properties
-    const propertiesQuery = query(collection(db, 'properties'));
-    const propertiesSnapshot = await getDocs(propertiesQuery);
+    const propertiesQuery = query(adminDb.collection('properties'));
+    const propertiesSnapshot = await propertiesQuery.get();
     
     const allProperties = propertiesSnapshot.docs.map(doc => ({
       id: doc.id,
@@ -56,7 +53,7 @@ export async function POST(request: NextRequest) {
     console.log(`Found ${duplicateGroups.length} duplicate groups`);
 
     let deletedCount = 0;
-    const batch = writeBatch(db);
+    const batch = writeBatch(adminDb);
 
     // For each duplicate group, keep the most recent one and delete others
     duplicateGroups.forEach(([_address, properties]) => {

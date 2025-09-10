@@ -1,21 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { 
-  collection, 
-  query, 
-  where, 
-  getDocs,
-  doc,
-  updateDoc,
-  arrayUnion,
-  arrayRemove,
-  serverTimestamp
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { ExtendedSession } from '@/types/session';
+import { adminDb } from '@/lib/firebase-admin';
 
 export async function POST(request: NextRequest) {
+    // Check if Firebase Admin is initialized
+    if (!adminDb) {
+      return NextResponse.json({ error: 'Database connection not available' }, { status: 503 });
+    }
+
   try {
     const session = await getServerSession(authOptions) as ExtendedSession;
     
@@ -32,11 +26,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get buyer profile
-    const profilesQuery = query(
-      collection(db, 'buyerProfiles'),
-      where('userId', '==', session.user.id)
-    );
-    const snapshot = await getDocs(profilesQuery);
+    const snapshot = await adminDb.collection('buyerProfiles').where('userId', '==', session.user.id).get();
 
     if (snapshot.empty) {
       return NextResponse.json({ 
@@ -50,13 +40,13 @@ export async function POST(request: NextRequest) {
     if (action === 'like') {
       await updateDoc(profileDoc.ref, {
         likedProperties: arrayUnion(propertyId),
-        updatedAt: serverTimestamp()
+        updatedAt: new Date()
       });
       console.log(`❤️ LIKED property ${propertyId} for buyer ${session.user.id}`);
     } else if (action === 'unlike') {
       await updateDoc(profileDoc.ref, {
         likedProperties: arrayRemove(propertyId),
-        updatedAt: serverTimestamp()
+        updatedAt: new Date()
       });
       console.log(`💔 UNLIKED property ${propertyId} for buyer ${session.user.id}`);
     }

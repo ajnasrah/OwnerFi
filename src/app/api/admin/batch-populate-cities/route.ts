@@ -1,21 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
-import { 
-  collection, 
-  getDocs,
-  query,
-  where,
-  limit
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import { batchProcessNearbyCities } from '@/lib/background-jobs';
+import { adminDb } from '@/lib/firebase-admin';
 
 /**
  * ADMIN: Batch process nearby cities for all properties
  * OPTIMIZED: Uses parallel processing, batch writes, and rate limiting
  */
 export async function POST(request: NextRequest) {
+    // Check if Firebase Admin is initialized
+    if (!adminDb) {
+      return NextResponse.json({ error: 'Database connection not available' }, { status: 503 });
+    }
+
   try {
     // Admin access control
     const session = await getServerSession(authOptions);
@@ -35,16 +33,16 @@ export async function POST(request: NextRequest) {
     
     if (force) {
       // Process all properties
-      propertiesQuery = query(collection(db, 'properties'));
+      propertiesQuery = query(adminDb.collection('properties'));
     } else {
       // Only process properties without nearbyCities
       propertiesQuery = query(
-        collection(db, 'properties'),
+        adminDb.collection('properties'),
         where('nearbyCitiesUpdatedAt', '==', null)
       );
     }
 
-    const snapshot = await getDocs(propertiesQuery);
+    const snapshot = await propertiesQuery.get();
     const propertiesToProcess = snapshot.docs
       .map(doc => ({ 
         id: doc.id, 

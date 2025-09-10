@@ -1,17 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { 
-  collection, 
-  query, 
-  where, 
-  getDocs,
-  doc,
-  setDoc,
-  serverTimestamp
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import { logInfo, logError } from '@/lib/logger';
+import { adminDb } from '@/lib/firebase-admin';
 
 export async function POST(request: NextRequest) {
+    // Check if Firebase Admin is initialized
+    if (!adminDb) {
+      return NextResponse.json({ error: 'Database connection not available' }, { status: 503 });
+    }
+
   try {
     const { email } = await request.json();
 
@@ -24,10 +20,10 @@ export async function POST(request: NextRequest) {
 
     // Check if user exists
     const usersQuery = query(
-      collection(db, 'users'),
+      adminDb.collection('users'),
       where('email', '==', email.toLowerCase())
     );
-    const userDocs = await getDocs(usersQuery);
+    const userDocs = await usersQuery.get();
 
     if (userDocs.empty) {
       // Don't reveal that user doesn't exist for security
@@ -44,13 +40,13 @@ export async function POST(request: NextRequest) {
     const resetExpires = new Date(Date.now() + 3600000); // 1 hour from now
 
     // Save reset token to database
-    await setDoc(doc(db, 'passwordResets', resetToken), {
+    await adminDb.collection('passwordResets').doc(resetToken).set({
       userId: user.id,
       email: email.toLowerCase(),
       token: resetToken,
       expires: resetExpires,
       used: false,
-      createdAt: serverTimestamp()
+      createdAt: new Date()
     });
 
     // Send email using Firebase extension or function
@@ -58,7 +54,7 @@ export async function POST(request: NextRequest) {
     
     try {
       // Try to send email via Firebase extension (trigger-email)
-      await setDoc(doc(db, 'mail', resetToken), {
+      await adminDb.collection('mail').doc(resetToken).set({
         to: [email.toLowerCase()],
         message: {
           subject: 'Reset your password - OwnerFi',

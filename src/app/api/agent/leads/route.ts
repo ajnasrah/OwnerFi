@@ -1,14 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { collection, getDocs, query, where } from 'firebase/firestore';
-import { db as firebaseDb } from '@/lib/firebase';
 import { logError, logInfo } from '@/lib/logger';
 import { BuyerProfile } from '@/lib/firebase-models';
+import { adminDb } from '@/lib/firebase-admin';
 
 export async function GET(request: NextRequest) {
+    // Check if Firebase Admin is initialized
+    if (!adminDb) {
+      return NextResponse.json({ error: 'Database connection not available' }, { status: 503 });
+    }
+
   try {
     // Get all buyers who haven't been sold yet
     const buyersQuery = query(collection(firebaseDb, 'buyerProfiles'), where('hasBeenSold', '==', false));
-    const buyerDocs = await getDocs(buyersQuery);
+    const buyerDocs = await buyersQuery.get();
     const availableBuyers = buyerDocs.docs.map(doc => ({ id: doc.id, ...doc.data() } as BuyerProfile & { id: string }));
     
     // For each buyer, get their matched properties (simplified for Firebase conversion)

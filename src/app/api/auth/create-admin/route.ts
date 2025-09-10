@@ -1,19 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { hash } from 'bcryptjs';
-import { 
-  collection, 
-  query, 
-  where, 
-  getDocs,
-  doc,
-  setDoc,
-  serverTimestamp
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import { logInfo, logError } from '@/lib/logger';
+import { adminDb } from '@/lib/firebase-admin';
 
 // One-time admin account creation (for development)
 export async function POST(request: NextRequest) {
+    // Check if Firebase Admin is initialized
+    if (!adminDb) {
+      return NextResponse.json({ error: 'Database connection not available' }, { status: 503 });
+    }
+
   try {
     const { email, password, secretKey } = await request.json();
 
@@ -34,10 +30,10 @@ export async function POST(request: NextRequest) {
 
     // Check if user already exists
     const usersQuery = query(
-      collection(db, 'users'),
+      adminDb.collection('users'),
       where('email', '==', email.toLowerCase())
     );
-    const existingUsers = await getDocs(usersQuery);
+    const existingUsers = await usersQuery.get();
 
     if (!existingUsers.empty) {
       return NextResponse.json(
@@ -50,15 +46,15 @@ export async function POST(request: NextRequest) {
     const hashedPassword = await hash(password, 12);
     
     // Create admin user
-    const userId = doc(collection(db, 'users')).id;
-    await setDoc(doc(db, 'users', userId), {
+    const userId = doc(adminDb.collection('users')).id;
+    await adminDb.collection('users').doc(userId).set({
       id: userId,
       email: email.toLowerCase(),
       name: 'Admin User',
       role: 'admin',
       password: hashedPassword,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
+      createdAt: new Date(),
+      updatedAt: new Date()
     });
 
     await logInfo('Admin account created', {

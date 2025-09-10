@@ -1,13 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { collection, getDocs, query, where } from 'firebase/firestore';
-import { db as firebaseDb } from '@/lib/firebase';
 import { BuyerProfile, User } from '@/lib/firebase-models';
+import { adminDb } from '@/lib/firebase-admin';
 
 export async function GET(request: NextRequest) {
+    // Check if Firebase Admin is initialized
+    if (!adminDb) {
+      return NextResponse.json({ error: 'Database connection not available' }, { status: 503 });
+    }
+
   try {
     // Get all buyer profiles
     const buyersQuery = query(collection(firebaseDb, 'buyerProfiles'));
-    const buyerDocs = await getDocs(buyersQuery);
+    const buyerDocs = await buyersQuery.get();
     const buyerProfiles = buyerDocs.docs.map(doc => ({ id: doc.id, ...doc.data() } as BuyerProfile));
 
     // Get users for each buyer
@@ -16,7 +20,7 @@ export async function GET(request: NextRequest) {
       let user = null;
       if ('userId' in buyer && buyer.userId) {
         const userQuery = query(collection(firebaseDb, 'users'), where('id', '==', buyer.userId));
-        const userDocs = await getDocs(userQuery);
+        const userDocs = await userQuery.get();
         if (!userDocs.empty) {
           user = { id: userDocs.docs[0].id, ...userDocs.docs[0].data() } as User;
         }

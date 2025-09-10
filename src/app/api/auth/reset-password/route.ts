@@ -1,19 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { 
-  collection, 
-  query, 
-  where, 
-  getDocs,
-  doc,
-  getDoc,
-  updateDoc,
-  deleteDoc
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import { logInfo, logError } from '@/lib/logger';
 import bcrypt from 'bcryptjs';
+import { adminDb } from '@/lib/firebase-admin';
 
 export async function POST(request: NextRequest) {
+    // Check if Firebase Admin is initialized
+    if (!adminDb) {
+      return NextResponse.json({ error: 'Database connection not available' }, { status: 503 });
+    }
+
   try {
     const { token, password } = await request.json();
 
@@ -32,7 +27,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get the reset token document
-    const resetDoc = await getDoc(doc(db, 'passwordResets', token));
+    const resetDoc = await adminDb.collection('passwordResets').doc(token).get();
     
     if (!resetDoc.exists()) {
       return NextResponse.json(
@@ -49,7 +44,7 @@ export async function POST(request: NextRequest) {
     
     if (now > expiresAt) {
       // Clean up expired token
-      await deleteDoc(doc(db, 'passwordResets', token));
+      await deleteDoc(adminDb.collection('passwordResets').doc(token));
       return NextResponse.json(
         { error: 'Reset token has expired' },
         { status: 400 }
@@ -65,11 +60,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get user document
-    const userQuery = query(
-      collection(db, 'users'),
-      where('email', '==', resetData.email)
-    );
-    const userDocs = await getDocs(userQuery);
+    const userDocs = await adminDb.collection('users').where('email', '==', resetData.email).get();
 
     if (userDocs.empty) {
       return NextResponse.json(
@@ -91,7 +82,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Mark token as used
-    await updateDoc(doc(db, 'passwordResets', token), {
+    await adminDb.collection('passwordResets').doc(token).update({
       used: true,
       usedAt: new Date()
     });

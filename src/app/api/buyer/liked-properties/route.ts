@@ -1,17 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { 
-  collection, 
-  query, 
-  where, 
-  getDocs,
-  documentId
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { ExtendedSession } from '@/types/session';
+import { adminDb } from '@/lib/firebase-admin';
 
 export async function GET(request: NextRequest) {
+    // Check if Firebase Admin is initialized
+    if (!adminDb) {
+      return NextResponse.json({ error: 'Database connection not available' }, { status: 503 });
+    }
+
   try {
     const session = await getServerSession(authOptions) as ExtendedSession;
     
@@ -20,11 +18,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get buyer profile with liked properties
-    const profilesQuery = query(
-      collection(db, 'buyerProfiles'),
-      where('userId', '==', session.user.id)
-    );
-    const snapshot = await getDocs(profilesQuery);
+    const snapshot = await adminDb.collection('buyerProfiles').where('userId', '==', session.user.id).get();
 
     if (snapshot.empty) {
       return NextResponse.json({ 
@@ -51,11 +45,11 @@ export async function GET(request: NextRequest) {
       const batch = likedPropertyIds.slice(i, i + 10);
       
       const batchQuery = query(
-        collection(db, 'properties'),
+        adminDb.collection('properties'),
         where(documentId(), 'in', batch)
       );
       
-      const batchSnapshot = await getDocs(batchQuery);
+      const batchSnapshot = await batchQuery.get();
       const batchProperties = batchSnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),

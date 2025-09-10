@@ -1,18 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { 
-  collection, 
-  query, 
-  getDocs, 
-  orderBy,
-  doc,
-  deleteDoc
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
+import { adminDb } from '@/lib/firebase-admin';
 
 // GET - Fetch all contact form submissions
 export async function GET(request: NextRequest) {
+    // Check if Firebase Admin is initialized
+    if (!adminDb) {
+      return NextResponse.json({ error: 'Database connection not available' }, { status: 503 });
+    }
+
   try {
     const session = await getServerSession(authOptions);
     
@@ -24,10 +21,10 @@ export async function GET(request: NextRequest) {
     }
 
     const contactsQuery = query(
-      collection(db, 'contactSubmissions'),
+      adminDb.collection('contactSubmissions'),
       orderBy('createdAt', 'desc')
     );
-    const contactDocs = await getDocs(contactsQuery);
+    const contactDocs = await contactsQuery.get();
 
     const contacts = contactDocs.docs.map(doc => ({
       id: doc.id,
@@ -72,7 +69,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    await deleteDoc(doc(db, 'contactSubmissions', contactId));
+    await deleteDoc(adminDb.collection('contactSubmissions').doc(contactId));
 
     return NextResponse.json({
       success: true,

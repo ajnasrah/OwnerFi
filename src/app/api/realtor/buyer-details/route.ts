@@ -1,16 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { 
-  collection, 
-  query, 
-  where, 
-  getDocs,
-  doc,
-  getDoc
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import { getSessionWithRole } from '@/lib/auth-utils';
+import { adminDb } from '@/lib/firebase-admin';
 
 export async function GET(request: NextRequest) {
+    // Check if Firebase Admin is initialized
+    if (!adminDb) {
+      return NextResponse.json({ error: 'Database connection not available' }, { status: 503 });
+    }
+
   try {
     // Enforce realtor role only
     const session = await getSessionWithRole('realtor');
@@ -33,7 +30,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get buyer profile
-    const buyerDoc = await getDoc(doc(db, 'buyerProfiles', buyerId));
+    const buyerDoc = await adminDb.collection('buyerProfiles').doc(buyerId).get();
     
     if (!buyerDoc.exists()) {
       return NextResponse.json(

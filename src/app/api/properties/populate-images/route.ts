@@ -1,21 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { 
-  collection, 
-  query, 
-  where, 
-  getDocs,
-  doc,
-  updateDoc,
-  serverTimestamp
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-
+import { adminDb } from '@/lib/firebase-admin';
 /**
  * One-time script to populate all properties with imageUrls
  * Generates Google Street View images and saves them permanently to database
  */
 
 export async function POST() {
+    // Check if Firebase Admin is initialized
+    if (!adminDb) {
+      return NextResponse.json({ error: 'Database connection not available' }, { status: 503 });
+    }
+
   try {
     const googleApiKey = process.env.GOOGLE_MAPS_API_KEY;
     
@@ -26,11 +21,7 @@ export async function POST() {
     console.log('🔄 Populating properties with permanent Street View images...');
 
     // Get ALL properties without imageUrl
-    const propertiesQuery = query(
-      collection(db, 'properties'),
-      where('isActive', '==', true)
-    );
-    const propertiesSnapshot = await getDocs(propertiesQuery);
+    const propertiesSnapshot = await adminDb.collection('properties').where('isActive', '==', true).get();
     
     const propertiesWithoutImages = propertiesSnapshot.docs.filter(doc => 
       !doc.data().imageUrl
@@ -57,8 +48,8 @@ export async function POST() {
         await updateDoc(propertyDoc.ref, {
           imageUrl: streetViewImageUrl,
           imageType: 'street_view_generated',
-          imageGeneratedAt: serverTimestamp(),
-          updatedAt: serverTimestamp()
+          imageGeneratedAt: new Date(),
+          updatedAt: new Date()
         });
 
         console.log(`✅ Saved permanent image for: ${propertyData.address}, ${propertyData.city}`);
@@ -96,8 +87,8 @@ export async function POST() {
 export async function GET() {
   try {
     // Count properties with and without images
-    const allPropertiesSnapshot = await getDocs(query(
-      collection(db, 'properties'),
+    const allPropertiesSnapshot = await query(
+      adminDb.collection('properties'.get(),
       where('isActive', '==', true)
     ));
     

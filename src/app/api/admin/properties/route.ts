@@ -1,23 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
-import { 
-  collection, 
-  query, 
-  getDocs,
-  doc,
-  updateDoc,
-  deleteDoc,
-  orderBy,
-  limit as firestoreLimit,
-  where
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import { logError, logInfo } from '@/lib/logger';
 import { ExtendedSession } from '@/types/session';
+import { adminDb } from '@/lib/firebase-admin';
 
 // Get all properties for admin management
 export async function GET(request: NextRequest) {
+    // Check if Firebase Admin is initialized
+    if (!adminDb) {
+      return NextResponse.json({ error: 'Database connection not available' }, { status: 503 });
+    }
+
   try {
     // Admin access control
     const session = await getServerSession(authOptions);
@@ -34,12 +28,12 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status') || 'all';
     
     // Build query
-    let propertiesQuery = query(collection(db, 'properties'));
+    let propertiesQuery = query(adminDb.collection('properties'));
     
     // Filter by status if specified
     if (status !== 'all') {
       propertiesQuery = query(
-        collection(db, 'properties'),
+        adminDb.collection('properties'),
         where('status', '==', status)
       );
     }
@@ -47,7 +41,7 @@ export async function GET(request: NextRequest) {
     // Add limit
     propertiesQuery = query(propertiesQuery, firestoreLimit(limit));
     
-    const propertiesSnapshot = await getDocs(propertiesQuery);
+    const propertiesSnapshot = await propertiesQuery.get();
     const properties = propertiesSnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data(),
@@ -57,8 +51,8 @@ export async function GET(request: NextRequest) {
     }));
 
     // Get actual total count (not limited)
-    const totalQuery = query(collection(db, 'properties'));
-    const totalSnapshot = await getDocs(totalQuery);
+    const totalQuery = query(adminDb.collection('properties'));
+    const totalSnapshot = await totalQuery.get();
     const actualTotal = totalSnapshot.size;
     
     return NextResponse.json({ 
@@ -102,7 +96,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Update property in Firebase
-    await updateDoc(doc(db, 'properties', propertyId), {
+    await adminDb.collection('properties').doc(propertyId).update({
       ...updates,
       updatedAt: new Date()
     });
@@ -155,7 +149,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Completely delete the property from Firebase
-    await deleteDoc(doc(db, 'properties', propertyId));
+    await deleteDoc(adminDb.collection('properties').doc(propertyId));
 
     await logInfo('Property deleted by admin', {
       action: 'admin_property_delete',

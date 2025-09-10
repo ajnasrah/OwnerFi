@@ -1,22 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { 
-  collection, 
-  doc, 
-  getDoc, 
-  getDocs, 
-  setDoc, 
-  updateDoc, 
-  query, 
-  where, 
-  serverTimestamp 
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import { logError, logInfo } from '@/lib/logger';
 import { getSessionWithRole } from '@/lib/auth-utils';
 import { firestoreHelpers } from '@/lib/firestore';
 import { RealtorProfile, BuyerProfile } from '@/lib/firebase-models';
+import { adminDb } from '@/lib/firebase-admin';
 
 export async function POST(request: NextRequest) {
+    // Check if Firebase Admin is initialized
+    if (!adminDb) {
+      return NextResponse.json({ error: 'Database connection not available' }, { status: 503 });
+    }
+
   try {
     // Enforce realtor role only
     const session = await getSessionWithRole('realtor');
@@ -39,11 +33,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get realtor profile
-    const realtorsQuery = query(
-      collection(db, 'realtors'),
-      where('userId', '==', session.user.id!)
-    );
-    const realtorDocs = await getDocs(realtorsQuery);
+    const realtorDocs = await adminDb.collection('realtors').where('userId', '==', session.user.id!).get();
 
     if (realtorDocs.empty) {
       return NextResponse.json(
@@ -71,7 +61,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if buyer profile exists
-    const buyerDoc = await getDoc(doc(db, 'buyerProfiles', leadId));
+    const buyerDoc = await adminDb.collection('buyerProfiles').doc(leadId).get();
     
     if (!buyerDoc.exists()) {
       return NextResponse.json(
@@ -84,11 +74,11 @@ export async function POST(request: NextRequest) {
 
     // Check if realtor has already purchased this lead
     const existingPurchaseQuery = query(
-      collection(db, 'buyerLeadPurchases'),
+      adminDb.collection('buyerLeadPurchases'),
       where('realtorId', '==', realtorDoc.id),
       where('buyerId', '==', leadId)
     );
-    const existingPurchaseDocs = await getDocs(existingPurchaseQuery);
+    const existingPurchaseDocs = await existingPurchaseQuery.get();
 
     if (!existingPurchaseDocs.empty) {
       return NextResponse.json(
@@ -103,21 +93,21 @@ export async function POST(request: NextRequest) {
     const dollarCost = 8.00; // $8 per lead (for tracking)
 
     // Create the purchase record
-    await setDoc(doc(db, 'buyerLeadPurchases', purchaseId), {
+    await adminDb.collection('buyerLeadPurchases').doc(purchaseId).set({
       id: purchaseId,
       realtorId: realtorDoc.id,
       buyerId: leadId,
       creditsCost: creditCost,
       purchasePrice: dollarCost,
       status: 'purchased',
-      purchasedAt: serverTimestamp(),
-      createdAt: serverTimestamp()
+      purchasedAt: new Date(),
+      createdAt: new Date()
     });
 
     // Deduct credits from realtor
-    await updateDoc(doc(db, 'realtors', realtorDoc.id), {
+    await adminDb.collection('realtors').doc(realtorDoc.id).update({
       credits: realtorProfile.credits - creditCost,
-      updatedAt: serverTimestamp()
+      updatedAt: new Date()
     });
 
     await logInfo('Realtor purchased buyer lead', {

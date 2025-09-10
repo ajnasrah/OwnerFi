@@ -1,24 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { 
-  collection, 
-  query, 
-  where,
-  getDocs,
-  doc,
-  updateDoc,
-  serverTimestamp
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import { logInfo } from '@/lib/logger';
+import { adminDb } from '@/lib/firebase-admin';
 
 export async function POST(request: NextRequest) {
+    // Check if Firebase Admin is initialized
+    if (!adminDb) {
+      return NextResponse.json({ error: 'Database connection not available' }, { status: 503 });
+    }
+
   try {
     // Find all realtors on trial
-    const realtorsQuery = query(
-      collection(db, 'realtors'),
-      where('isOnTrial', '==', true)
-    );
-    const realtorDocs = await getDocs(realtorsQuery);
+    const realtorDocs = await adminDb.collection('realtors').where('isOnTrial', '==', true).get();
     
     const results = [];
     
@@ -43,26 +35,26 @@ export async function POST(request: NextRequest) {
       trialEnd.setDate(trialEnd.getDate() + 7);
       
       // Update realtor document
-      await updateDoc(doc(db, 'realtors', realtorDoc.id), {
+      await adminDb.collection('realtors').doc(realtorDoc.id).update({
         trialStartDate: trialStart,
         trialEndDate: trialEnd,
-        updatedAt: serverTimestamp()
+        updatedAt: new Date()
       });
       
       // Update subscription record
       const subscriptionQuery = query(
-        collection(db, 'realtorSubscriptions'),
+        adminDb.collection('realtorSubscriptions'),
         where('realtorId', '==', realtorDoc.id),
         where('plan', '==', 'trial')
       );
-      const subscriptionDocs = await getDocs(subscriptionQuery);
+      const subscriptionDocs = await subscriptionQuery.get();
       
       if (!subscriptionDocs.empty) {
         const subDoc = subscriptionDocs.docs[0];
-        await updateDoc(doc(db, 'realtorSubscriptions', subDoc.id), {
+        await adminDb.collection('realtorSubscriptions').doc(subDoc.id).update({
           currentPeriodStart: trialStart,
           currentPeriodEnd: trialEnd,
-          updatedAt: serverTimestamp()
+          updatedAt: new Date()
         });
       }
       

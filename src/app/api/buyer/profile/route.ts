@@ -1,15 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { 
-  collection, 
-  query, 
-  where, 
-  getDocs,
-  doc,
-  setDoc,
-  updateDoc,
-  serverTimestamp
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { adminDb } from '@/lib/firebase-admin';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { unifiedDb } from '@/lib/unified-db';
@@ -26,6 +16,11 @@ import { ExtendedSession } from '@/types/session';
  */
 
 export async function GET(request: NextRequest) {
+    // Check if Firebase Admin is initialized
+    if (!adminDb) {
+      return NextResponse.json({ error: 'Database connection not available' }, { status: 503 });
+    }
+
   try {
     const session = await getServerSession(authOptions) as ExtendedSession;
     
@@ -34,11 +29,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get buyer profile
-    const profilesQuery = query(
-      collection(db, 'buyerProfiles'),
-      where('userId', '==', session.user.id)
-    );
-    const snapshot = await getDocs(profilesQuery);
+    const snapshot = await adminDb.collection('buyerProfiles').where('userId', '==', session.user.id).get();
 
     if (snapshot.empty) {
       return NextResponse.json({ profile: null });
@@ -104,26 +95,22 @@ export async function POST(request: NextRequest) {
       
       // Metadata
       profileComplete: true,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
+      createdAt: new Date(),
+      updatedAt: new Date()
     };
 
     console.log(`💾 SAVING BUYER PROFILE: ${profileData.firstName} ${profileData.lastName} in ${city}`);
     console.log(`💰 Budget: $${profileData.maxMonthlyPayment}/mo, $${profileData.maxDownPayment} down`);
 
     // Find existing profile or create new one
-    const existingQuery = query(
-      collection(db, 'buyerProfiles'),
-      where('userId', '==', session.user.id)
-    );
-    const existing = await getDocs(existingQuery);
+    const existing = await adminDb.collection('buyerProfiles').where('userId', '==', session.user.id).get();
 
     let buyerId: string;
 
     if (existing.empty) {
       // Create new profile
       buyerId = `buyer_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      await setDoc(doc(db, 'buyerProfiles', buyerId), {
+      await adminDb.collection('buyerProfiles').doc(buyerId).set({
         ...profileData,
         id: buyerId
       });
@@ -131,7 +118,7 @@ export async function POST(request: NextRequest) {
     } else {
       // Update existing profile
       buyerId = existing.docs[0].id;
-      await updateDoc(doc(db, 'buyerProfiles', buyerId), profileData);
+      await adminDb.collection('buyerProfiles').doc(buyerId).update(profileData);
       console.log('✅ UPDATED buyer profile');
     }
 

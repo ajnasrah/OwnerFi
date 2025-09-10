@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
-import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import { ExtendedSession } from '@/types/session';
+import { adminDb } from '@/lib/firebase-admin';
 
 // GET single property
 export async function GET(
@@ -20,7 +19,7 @@ export async function GET(
       );
     }
 
-    const propertyDoc = await getDoc(doc(db, 'properties', resolvedParams.id));
+    const propertyDoc = await adminDb.collection('properties').doc(resolvedParams.id).get();
     
     if (!propertyDoc.exists()) {
       return NextResponse.json(
@@ -63,9 +62,9 @@ export async function PUT(
     delete updates.id;
     
     // Update the property
-    await updateDoc(doc(db, 'properties', resolvedParams.id), {
+    await adminDb.collection('properties').doc(resolvedParams.id).update({
       ...updates,
-      updatedAt: serverTimestamp()
+      updatedAt: new Date()
     });
 
     return NextResponse.json({ 

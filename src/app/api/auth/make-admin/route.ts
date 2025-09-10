@@ -1,17 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { 
-  collection, 
-  query, 
-  where, 
-  getDocs,
-  doc,
-  updateDoc,
-  serverTimestamp
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-
+import { adminDb } from '@/lib/firebase-admin';
 // One-time function to make existing user an admin
 export async function POST(request: NextRequest) {
+    // Check if Firebase Admin is initialized
+    if (!adminDb) {
+      return NextResponse.json({ error: 'Database connection not available' }, { status: 503 });
+    }
+
   try {
     const { email, secretKey } = await request.json();
 
@@ -26,10 +21,10 @@ export async function POST(request: NextRequest) {
 
     // Find the user
     const usersQuery = query(
-      collection(db, 'users'),
+      adminDb.collection('users'),
       where('email', '==', email.toLowerCase())
     );
-    const userDocs = await getDocs(usersQuery);
+    const userDocs = await usersQuery.get();
 
     if (userDocs.empty) {
       return NextResponse.json(
@@ -41,9 +36,9 @@ export async function POST(request: NextRequest) {
     const userDoc = userDocs.docs[0];
     
     // Update user role to admin
-    await updateDoc(doc(db, 'users', userDoc.id), {
+    await adminDb.collection('users').doc(userDoc.id).update({
       role: 'admin',
-      updatedAt: serverTimestamp()
+      updatedAt: new Date()
     });
 
     return NextResponse.json({

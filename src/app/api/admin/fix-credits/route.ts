@@ -1,31 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { 
-  doc,
-  updateDoc,
-  setDoc,
-  serverTimestamp
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import { firestoreHelpers } from '@/lib/firestore';
+import { adminDb } from '@/lib/firebase-admin';
 
 export async function POST(request: NextRequest) {
+    // Check if Firebase Admin is initialized
+    if (!adminDb) {
+      return NextResponse.json({ error: 'Database connection not available' }, { status: 503 });
+    }
+
   try {
     // Add back 10 credits to your account
     const realtorId = 'idjfqlXrzobyRoFVRTUO';
     
-    await updateDoc(doc(db, 'realtors', realtorId), {
+    await adminDb.collection('realtors').doc(realtorId).update({
       credits: 758, // 748 + 10 Professional credits
-      updatedAt: serverTimestamp()
+      updatedAt: new Date()
     });
     
     // Add transaction record
-    await setDoc(doc(db, 'transactions', firestoreHelpers.generateId()), {
+    await setDoc(adminDb.collection('transactions').doc(firestoreHelpers.generateId()), {
       realtorId: realtorId,
       type: 'credit_adjustment',
       description: 'Added Professional Package credits (10 credits)',
       amount: 0,
       credits: 10,
-      createdAt: serverTimestamp()
+      createdAt: new Date()
     });
     
     return NextResponse.json({

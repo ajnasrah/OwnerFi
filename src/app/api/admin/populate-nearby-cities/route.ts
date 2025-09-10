@@ -1,23 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
-import { 
-  collection, 
-  getDocs, 
-  doc, 
-  updateDoc,
-  serverTimestamp
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import { getCityCoordinates } from '@/lib/cities';
 import { ExtendedSession } from '@/types/session';
 import { PropertyListing } from '@/lib/property-schema';
+import { adminDb } from '@/lib/firebase-admin';
 
 /**
  * ADMIN ONLY: Populate nearbyCities field for all properties
  * This ensures every property has cities within 30-mile radius for similar property searches
  */
 export async function POST(request: NextRequest) {
+    // Check if Firebase Admin is initialized
+    if (!adminDb) {
+      return NextResponse.json({ error: 'Database connection not available' }, { status: 503 });
+    }
+
   try {
     // Admin access control
     const session = await getServerSession(authOptions);
@@ -30,7 +28,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get all properties
-    const propertiesSnapshot = await getDocs(collection(db, 'properties'));
+    const propertiesSnapshot = await adminDb.collection('properties').get();
     const properties = propertiesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as PropertyListing & { id: string }));
 
     let processed = 0;
@@ -107,9 +105,9 @@ export async function POST(request: NextRequest) {
           .slice(0, 50); // Limit to 50 nearby cities to keep data manageable
 
         // Update the property with nearbyCities
-        await updateDoc(doc(db, 'properties', property.id), {
+        await adminDb.collection('properties').doc(property.id).update({
           nearbyCities: nearbyCities,
-          nearbyCitiesUpdatedAt: serverTimestamp()
+          nearbyCitiesUpdatedAt: new Date()
         });
 
         updated++;

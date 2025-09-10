@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { collection, getDocs, query, where, limit } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import { PropertyListing } from '@/lib/property-schema';
+import { adminDb } from '@/lib/firebase-admin';
 
 export async function GET(request: NextRequest) {
+    // Check if Firebase Admin is initialized
+    if (!adminDb) {
+      return NextResponse.json({ error: 'Database connection not available' }, { status: 503 });
+    }
+
   try {
     // Get all properties to debug
-    const allPropertiesSnapshot = await getDocs(collection(db, 'properties'));
+    const allPropertiesSnapshot = await adminDb.collection('properties').get();
     const allProperties = allPropertiesSnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
@@ -17,8 +21,8 @@ export async function GET(request: NextRequest) {
     const cityCounts = {};
     
     for (const city of cities) {
-      const citySnapshot = await getDocs(
-        query(collection(db, 'properties'), where('city', '==', city), limit(5))
+      const citySnapshot = await 
+        query(adminDb.collection('properties'.get(), where('city', '==', city), limit(5))
       );
       cityCounts[city] = citySnapshot.docs.length;
     }

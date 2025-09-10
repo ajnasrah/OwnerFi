@@ -1,16 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { 
-  collection, 
-  query, 
-  where, 
-  getDocs,
-  limit as firestoreLimit
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import { getSessionWithRole } from '@/lib/auth-utils';
 import UnifiedMatchingService from '@/lib/unified-matching-service';
+import { adminDb } from '@/lib/firebase-admin';
 
 export async function GET(request: NextRequest) {
+    // Check if Firebase Admin is initialized
+    if (!adminDb) {
+      return NextResponse.json({ error: 'Database connection not available' }, { status: 503 });
+    }
+
   try {
     const session = await getSessionWithRole('realtor');
     
@@ -19,11 +17,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get realtor profile
-    const realtorQuery = query(
-      collection(db, 'realtors'),
-      where('userId', '==', session.user.id!)
-    );
-    const realtorDocs = await getDocs(realtorQuery);
+    const realtorDocs = await adminDb.collection('realtors').where('userId', '==', session.user.id!).get();
     
     if (realtorDocs.empty) {
       return NextResponse.json({ error: 'Realtor profile not found' }, { status: 404 });
@@ -40,11 +34,7 @@ export async function GET(request: NextRequest) {
     };
 
     // Get purchased buyer IDs
-    const purchasedQuery = query(
-      collection(db, 'buyerLeadPurchases'),
-      where('realtorId', '==', realtorDocs.docs[0].id)
-    );
-    const purchasedDocs = await getDocs(purchasedQuery);
+    const purchasedDocs = await adminDb.collection('buyerLeadPurchases').where('realtorId', '==', realtorDocs.docs[0].id).get();
     const purchasedBuyerIds = purchasedDocs.docs.map(doc => doc.data().buyerId);
 
     // Use unified service to find matching buyers

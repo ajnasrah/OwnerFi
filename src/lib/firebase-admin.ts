@@ -12,25 +12,38 @@ if (getApps().length === 0) {
 
     console.log('🔥 Firebase Admin SDK initialization attempt:', {
       hasProjectId: !!projectId,
-      hasPrivateKey: !!privateKey,
+      hasPrivateKey: !!privateKey && privateKey.length > 100,
       hasClientEmail: !!clientEmail,
-      NODE_ENV: process.env.NODE_ENV
+      NODE_ENV: process.env.NODE_ENV,
+      projectIdValue: projectId,
+      clientEmailValue: clientEmail
     });
 
     if (!projectId || !privateKey || !clientEmail) {
-      console.warn('🔥 Firebase Admin SDK environment variables are missing, skipping initialization');
+      console.error('🔥 Firebase Admin SDK environment variables missing:', {
+        FIREBASE_PROJECT_ID: !!projectId,
+        FIREBASE_PRIVATE_KEY: !!privateKey,
+        FIREBASE_CLIENT_EMAIL: !!clientEmail
+      });
+      console.warn('🔥 Skipping Firebase Admin SDK initialization due to missing credentials');
     } else {
+      const cleanPrivateKey = privateKey.replace(/\\n/g, '\n');
+      
       initializeApp({
         credential: cert({
           projectId,
-          privateKey: privateKey.replace(/\\n/g, '\n'),
+          privateKey: cleanPrivateKey,
           clientEmail,
         })
       });
-      console.log('🔥 Firebase Admin SDK initialized successfully');
+      console.log('🔥 Firebase Admin SDK initialized successfully with project:', projectId);
     }
   } catch (error) {
-    console.warn('🔥 Firebase Admin SDK initialization failed:', error.message);
+    console.error('🔥 Firebase Admin SDK initialization failed:', {
+      message: error.message,
+      code: error.code,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
     // Don't re-throw - allow build to continue
   }
 }

@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { collection, getDocs, query, where } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-
+import { adminDb } from '@/lib/firebase-admin';
 export async function GET() {
+    // Check if Firebase Admin is initialized
+    if (!adminDb) {
+      return NextResponse.json({ error: 'Database connection not available' }, { status: 503 });
+    }
+
   try {
     // Check for Dallas properties with different variations
     const dallasVariations = [
@@ -16,8 +19,8 @@ export async function GET() {
     const results = {};
     
     for (const cityName of dallasVariations) {
-      const snapshot = await getDocs(
-        query(collection(db, 'properties'), where('city', '==', cityName))
+      const snapshot = await 
+        query(adminDb.collection('properties'.get(), where('city', '==', cityName))
       );
       
       if (snapshot.docs.length > 0) {
@@ -34,7 +37,7 @@ export async function GET() {
     }
 
     // Also check for properties that contain "Dallas" 
-    const allSnapshot = await getDocs(collection(db, 'properties'));
+    const allSnapshot = await adminDb.collection('properties').get();
     const dallasLike = allSnapshot.docs
       .filter(doc => doc.data().city?.toLowerCase().includes('dallas'))
       .map(doc => ({

@@ -1,28 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { 
-  collection, 
-  getDocs,
-  doc,
-  updateDoc,
-  serverTimestamp,
-  writeBatch
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import { PropertyListing } from '@/lib/property-schema';
 import { populateNearbyCitiesForPropertyFast } from '@/lib/property-enhancement';
+import { adminDb } from '@/lib/firebase-admin';
 
 /**
  * ULTRA FAST: Populate nearby cities for ALL properties using comprehensive database
  * NO API CALLS - Pure JavaScript calculations
  */
 export async function POST() {
+    // Check if Firebase Admin is initialized
+    if (!adminDb) {
+      return NextResponse.json({ error: 'Database connection not available' }, { status: 503 });
+    }
+
   try {
     const startTime = Date.now();
     
     console.log('🚀 ULTRA FAST BATCH: Processing ALL properties with comprehensive database...');
     
     // Get ALL properties
-    const snapshot = await getDocs(collection(db, 'properties'));
+    const snapshot = await adminDb.collection('properties').get();
     const properties = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as PropertyListing & { id: string }));
     
     console.log(`🏠 Found ${properties.length} total properties to process`);
@@ -38,7 +35,7 @@ export async function POST() {
     // Process in batches for optimal Firestore performance
     for (let i = 0; i < properties.length; i += batchSize) {
       const batch = properties.slice(i, i + batchSize);
-      const firestoreBatch = writeBatch(db);
+      const firestoreBatch = writeBatch(adminDb);
       
       console.log(`📦 Processing batch ${Math.floor(i/batchSize) + 1}/${Math.ceil(properties.length/batchSize)} (${batch.length} properties)`);
       
@@ -81,10 +78,10 @@ export async function POST() {
           const calcTime = Date.now() - calcStartTime;
 
           // Add to Firestore batch
-          const propertyRef = doc(db, 'properties', property.id);
+          const propertyRef = adminDb.collection('properties').doc(property.id);
           firestoreBatch.update(propertyRef, {
             nearbyCities: nearbyCities,
-            nearbyCitiesUpdatedAt: serverTimestamp(),
+            nearbyCitiesUpdatedAt: new Date(),
             nearbyCitiesSource: 'comprehensive-database'
           });
 

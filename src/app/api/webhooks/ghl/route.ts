@@ -1,17 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { 
-  collection, 
-  doc, 
-  setDoc, 
-  updateDoc, 
-  query, 
-  where, 
-  getDocs,
-  serverTimestamp 
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import { PropertyListing } from '@/lib/property-schema';
 import { logInfo, logError } from '@/lib/logger';
+import { adminDb } from '@/lib/firebase-admin';
 import { 
   calculatePropertyFinancials, 
   validatePropertyFinancials 
@@ -28,6 +18,11 @@ interface GHLWebhookData {
 
 // GoHighLevel webhook handler for property listings
 export async function POST(request: NextRequest) {
+    // Check if Firebase Admin is initialized
+    if (!adminDb) {
+      return NextResponse.json({ error: 'Database connection not available' }, { status: 503 });
+    }
+
   try {
     // Verify webhook signature
     const signature = request.headers.get('x-ghl-signature');
@@ -217,19 +212,17 @@ async function handlePropertyListing(data: GHLWebhookData) {
     }
 
     // Check if property already exists
-    const existingQuery = query(
-      collection(db, 'properties'),
-      where('sourceId', '==', String(data.contactId))
-    );
-    const existingDocs = await getDocs(existingQuery);
+    const existingDocs = await adminDb.collection('properties')
+      .where('sourceId', '==', String(data.contactId))
+      .get();
 
     if (existingDocs.empty) {
       // FAST: Create property immediately, queue nearby cities for background processing
-      await setDoc(doc(db, 'properties', propertyData.id!), {
+      await adminDb.collection('properties').doc(propertyData.id!).set({
         ...propertyData,
         nearbyCities: [], // Empty initially, populated by background job
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
+        createdAt: new Date(),
+        updatedAt: new Date()
       });
       
       // Queue nearby cities population (non-blocking)
@@ -247,9 +240,9 @@ async function handlePropertyListing(data: GHLWebhookData) {
     } else {
       // Update existing property
       const existingDoc = existingDocs.docs[0];
-      await updateDoc(doc(db, 'properties', existingDoc.id), {
+      await adminDb.collection('properties').doc(existingDoc.id).update({
         ...propertyData,
-        updatedAt: serverTimestamp()
+        updatedAt: new Date()
       });
       
       await logInfo('Updated property from GHL', {
@@ -278,17 +271,15 @@ async function handlePropertyListing(data: GHLWebhookData) {
 async function handlePropertyDeletion(data: GHLWebhookData) {
   try {
     // Find and update property status
-    const propertyQuery = query(
-      collection(db, 'properties'),
-      where('sourceId', '==', String(data.contactId))
-    );
-    const propertyDocs = await getDocs(propertyQuery);
+    const propertyDocs = await adminDb.collection('properties')
+      .where('sourceId', '==', String(data.contactId))
+      .get();
 
     if (!propertyDocs.empty) {
       const propertyDoc = propertyDocs.docs[0];
-      await updateDoc(doc(db, 'properties', propertyDoc.id), {
+      await adminDb.collection('properties').doc(propertyDoc.id).update({
         status: 'withdrawn',
-        updatedAt: serverTimestamp()
+        updatedAt: new Date()
       });
 
       // Clean up from all user accounts

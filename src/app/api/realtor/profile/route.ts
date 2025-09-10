@@ -1,22 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { 
-  doc, 
-  getDoc, 
-  setDoc, 
-  updateDoc, 
-  collection, 
-  query, 
-  where, 
-  getDocs,
-  serverTimestamp 
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import { logError, logInfo } from '@/lib/logger';
 import { getSessionWithRole } from '@/lib/auth-utils';
 import { firestoreHelpers } from '@/lib/firestore';
 import { RealtorProfile } from '@/lib/firebase-models';
+import { adminDb } from '@/lib/firebase-admin';
 
 export async function POST(request: NextRequest) {
+    // Check if Firebase Admin is initialized
+    if (!adminDb) {
+      return NextResponse.json({ error: 'Database connection not available' }, { status: 503 });
+    }
+
   try {
     // Enforce realtor role only
     const session = await getSessionWithRole('realtor');
@@ -65,11 +59,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Check if profile already exists
-    const realtorsQuery = query(
-      collection(db, 'realtors'),
-      where('userId', '==', session.user.id!)
-    );
-    const existingProfiles = await getDocs(realtorsQuery);
+    const existingProfiles = await adminDb.collection('realtors').where('userId', '==', session.user.id!).get();
 
     const realtorData = {
       userId: session.user.id!,
@@ -86,7 +76,7 @@ export async function POST(request: NextRequest) {
       serviceStates: serviceStates || [],
       serviceCities: serviceCities || [],
       isActive: true,
-      updatedAt: serverTimestamp()
+      updatedAt: new Date()
     };
 
     if (existingProfiles.empty) {
@@ -96,7 +86,7 @@ export async function POST(request: NextRequest) {
       const trialEndDate = new Date();
       trialEndDate.setDate(trialEndDate.getDate() + 7); // 7 day trial
 
-      await setDoc(doc(db, 'realtors', realtorId), {
+      await adminDb.collection('realtors').doc(realtorId).set({
         ...realtorData,
         id: realtorId,
         credits: 3, // 3 free trial credits
@@ -104,12 +94,12 @@ export async function POST(request: NextRequest) {
         trialStartDate: now,
         trialEndDate: trialEndDate,
         profileComplete: true,
-        createdAt: serverTimestamp()
+        createdAt: new Date()
       });
 
       // Create trial subscription record
       const subscriptionId = firestoreHelpers.generateId();
-      await setDoc(doc(db, 'realtorSubscriptions', subscriptionId), {
+      await adminDb.collection('realtorSubscriptions').doc(subscriptionId).set({
         id: subscriptionId,
         realtorId: realtorId,
         plan: 'trial',
@@ -118,8 +108,8 @@ export async function POST(request: NextRequest) {
         creditsPerMonth: 3,
         currentPeriodStart: now,
         currentPeriodEnd: trialEndDate,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
+        createdAt: new Date(),
+        updatedAt: new Date()
       });
 
       await logInfo('Created new realtor profile with trial', {
@@ -135,7 +125,7 @@ export async function POST(request: NextRequest) {
     } else {
       // Update existing profile
       const existingDoc = existingProfiles.docs[0];
-      await updateDoc(doc(db, 'realtors', existingDoc.id), realtorData);
+      await adminDb.collection('realtors').doc(existingDoc.id).update(realtorData);
       
       await logInfo('Updated realtor profile', {
         action: 'realtor_profile_update',
@@ -182,11 +172,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get realtor profile
-    const realtorsQuery = query(
-      collection(db, 'realtors'),
-      where('userId', '==', session.user.id!)
-    );
-    const realtorDocs = await getDocs(realtorsQuery);
+    const realtorDocs = await adminDb.collection('realtors').where('userId', '==', session.user.id!).get();
 
     if (realtorDocs.empty) {
       return NextResponse.json({ profile: null });
@@ -196,11 +182,7 @@ export async function GET(request: NextRequest) {
     const profile = { id: realtorDoc.id, ...realtorDoc.data() } as RealtorProfile;
 
     // Get subscription information
-    const subscriptionsQuery = query(
-      collection(db, 'realtorSubscriptions'),
-      where('realtorId', '==', realtorDoc.id)
-    );
-    const subscriptionDocs = await getDocs(subscriptionsQuery);
+    const subscriptionDocs = await adminDb.collection('realtorSubscriptions').where('realtorId', '==', realtorDoc.id).get();
     
     let subscription = null;
     if (!subscriptionDocs.empty) {

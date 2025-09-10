@@ -1,16 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { 
-  doc, 
-  setDoc, 
-  updateDoc,
-  collection, 
-  query, 
-  where, 
-  getDocs,
-  serverTimestamp 
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import { firestoreHelpers } from '@/lib/firestore';
+import { adminDb } from '@/lib/firebase-admin';
 
 /**
  * CLEAN PROPERTY ACTIONS API
@@ -20,6 +10,11 @@ import { firestoreHelpers } from '@/lib/firestore';
  */
 
 export async function POST(request: NextRequest) {
+    // Check if Firebase Admin is initialized
+    if (!adminDb) {
+      return NextResponse.json({ error: 'Database connection not available' }, { status: 503 });
+    }
+
   try {
     const { buyerId, propertyId, action } = await request.json();
     
@@ -31,11 +26,11 @@ export async function POST(request: NextRequest) {
 
     // Find the property match record
     const matchQuery = query(
-      collection(db, 'propertyMatches'),
+      adminDb.collection('propertyMatches'),
       where('buyerId', '==', buyerId),
       where('propertyId', '==', propertyId)
     );
-    const matchDocs = await getDocs(matchQuery);
+    const matchDocs = await matchQuery.get();
 
     if (matchDocs.empty) {
       return NextResponse.json({ error: 'Property match not found' }, { status: 404 });
@@ -66,19 +61,19 @@ export async function POST(request: NextRequest) {
     await updateDoc(matchDoc.ref, {
       status: newStatus,
       lastActionAt: new Date().toISOString(),
-      updatedAt: serverTimestamp()
+      updatedAt: new Date()
     });
 
     // Create action history record (immutable event log)
     const actionId = firestoreHelpers.generateId();
-    await setDoc(doc(collection(db, 'propertyActions'), actionId), {
+    await setDoc(doc(adminDb.collection('propertyActions'), actionId), {
       id: actionId,
       buyerId: buyerId,
       propertyId: propertyId,
       action: action,
       timestamp: new Date().toISOString(),
       source: 'dashboard',
-      createdAt: serverTimestamp()
+      createdAt: new Date()
     });
 
     console.log(`✅ Updated property status to: ${newStatus}`);

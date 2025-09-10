@@ -1,16 +1,13 @@
 // Simplified transaction history - just return basic transaction data
 import { NextRequest, NextResponse } from 'next/server';
-import { 
-  collection, 
-  query, 
-  where, 
-  getDocs,
-  limit as firestoreLimit
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import { getSessionWithRole } from '@/lib/auth-utils';
 
 export async function GET(request: NextRequest) {
+    // Check if Firebase Admin is initialized
+    if (!adminDb) {
+      return NextResponse.json({ error: 'Database connection not available' }, { status: 503 });
+    }
+
   try {
     const session = await getSessionWithRole('realtor');
     
@@ -19,11 +16,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get realtor profile
-    const realtorsQuery = query(
-      collection(db, 'realtors'),
-      where('userId', '==', session.user.id!)
-    );
-    const realtorDocs = await getDocs(realtorsQuery);
+    const realtorDocs = await adminDb.collection('realtors').where('userId', '==', session.user.id!).get();
 
     if (realtorDocs.empty) {
       return NextResponse.json({ error: 'Realtor profile not found' }, { status: 400 });
@@ -38,11 +31,11 @@ export async function GET(request: NextRequest) {
 
     // Get lead purchases (credits spent)
     const purchasesQuery = query(
-      collection(db, 'buyerLeadPurchases'),
+      adminDb.collection('buyerLeadPurchases'),
       where('realtorId', '==', realtorId),
       firestoreLimit(50)
     );
-    const purchasesDocs = await getDocs(purchasesQuery);
+    const purchasesDocs = await purchasesQuery.get();
 
     // Process each lead purchase and get actual buyer details
     for (const doc of purchasesDocs.docs) {
@@ -54,11 +47,7 @@ export async function GET(request: NextRequest) {
       
       if (purchase.buyerId) {
         try {
-          const buyerQuery = query(
-            collection(db, 'buyerProfiles'),
-            where('__name__', '==', purchase.buyerId)
-          );
-          const buyerDocs = await getDocs(buyerQuery);
+          const buyerDocs = await adminDb.collection('buyerProfiles').where('__name__', '==', purchase.buyerId).get();
           
           if (!buyerDocs.empty) {
             const buyer = buyerDocs.docs[0].data();
@@ -89,11 +78,11 @@ export async function GET(request: NextRequest) {
 
     // Get credit additions from transactions collection
     const transactionsQuery = query(
-      collection(db, 'transactions'),
+      adminDb.collection('transactions'),
       where('realtorId', '==', realtorId),
       firestoreLimit(50)
     );
-    const transactionDocs = await getDocs(transactionsQuery);
+    const transactionDocs = await transactionsQuery.get();
 
     transactionDocs.docs.forEach(doc => {
       const tx = doc.data();

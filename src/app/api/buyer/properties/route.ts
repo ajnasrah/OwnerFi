@@ -1,9 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { 
-  collection, 
-  getDocs
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { adminDb } from '@/lib/firebase-admin';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { PropertyListing } from "@/lib/property-schema";
@@ -48,9 +44,14 @@ export async function GET(request: NextRequest) {
 
     console.log(`🔍 BUYER SEARCH WITH NEARBY: ${searchCity}, Monthly: $${maxMonthly}, Down: $${maxDown}`);
 
-    // Get ALL properties
-    const snapshot = await getDocs(collection(db, 'properties'));
-    const allProperties = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as PropertyListing & { id: string }));
+    // Check if Firebase Admin is initialized
+    if (!adminDb) {
+      return NextResponse.json({ error: 'Database connection not available' }, { status: 503 });
+    }
+
+    // Get ALL properties using Firebase Admin
+    const snapshot = await adminDb.collection('properties').get();
+    const allProperties = snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() } as PropertyListing & { id: string }));
     
     // 1. DIRECT MATCHES: Properties IN the search city AND state
     const directProperties = allProperties.filter((property: PropertyListing & { id: string }) => {

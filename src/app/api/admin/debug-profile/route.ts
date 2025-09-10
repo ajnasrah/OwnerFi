@@ -1,20 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { 
-  collection, 
-  query, 
-  where,
-  getDocs
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-
+import { adminDb } from '@/lib/firebase-admin';
 export async function GET(request: NextRequest) {
+    // Check if Firebase Admin is initialized
+    if (!adminDb) {
+      return NextResponse.json({ error: 'Database connection not available' }, { status: 503 });
+    }
+
   try {
     // Get all realtors with abdullah@prosway.com
-    const realtorsQuery = query(
-      collection(db, 'realtors'),
-      where('email', '==', 'abdullah@prosway.com')
-    );
-    const realtorDocs = await getDocs(realtorsQuery);
+    const realtorDocs = await adminDb.collection('realtors').where('email', '==', 'abdullah@prosway.com').get();
     
     const profiles = realtorDocs.docs.map(doc => ({
       id: doc.id,

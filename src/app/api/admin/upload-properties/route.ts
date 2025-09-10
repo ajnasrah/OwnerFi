@@ -2,18 +2,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { parseGHLCSV } from '@/lib/ghl-csv-parser';
-import { 
-  collection, 
-  doc, 
-  setDoc, 
-  serverTimestamp 
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import { logError, logInfo } from '@/lib/logger';
 import { queueNearbyCitiesForProperty } from '@/lib/property-enhancement';
 import { ExtendedSession } from '@/types/session';
+import { adminDb } from '@/lib/firebase-admin';
 
 export async function POST(request: NextRequest) {
+    // Check if Firebase Admin is initialized
+    if (!adminDb) {
+      return NextResponse.json({ error: 'Database connection not available' }, { status: 503 });
+    }
+
   try {
     // Strict admin access control
     const session = await getServerSession(authOptions);
@@ -77,11 +76,11 @@ export async function POST(request: NextRequest) {
         console.log(`Attempting to insert property: ${property.id} - ${property.address}`);
         
         // FAST: Create property immediately without waiting for nearby cities
-        await setDoc(doc(db, 'properties', property.id), {
+        await adminDb.collection('properties').doc(property.id).set({
           ...property,
           nearbyCities: [], // Empty initially, populated by background job
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
+          createdAt: new Date(),
+          updatedAt: new Date(),
           status: 'active',
           source: 'csv-upload',
           isActive: true // Ensure this flag is set for the matching service

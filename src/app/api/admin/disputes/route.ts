@@ -1,30 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { 
-  collection, 
-  query, 
-  getDocs, 
-  doc,
-  updateDoc,
-  getDoc,
-  setDoc,
-  orderBy,
-  where,
-  serverTimestamp
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import { logError, logInfo } from '@/lib/logger';
+import { adminDb } from '@/lib/firebase-admin';
 
 // GET - Fetch all disputes for admin review
 export async function GET(request: NextRequest) {
+    // Check if Firebase Admin is initialized
+    if (!adminDb) {
+      return NextResponse.json({ error: 'Database connection not available' }, { status: 503 });
+    }
+
   try {
     // TODO: Add admin role check when admin auth is implemented
     // For now, this is open for development
     
     const disputesQuery = query(
-      collection(db, 'leadDisputes'),
+      adminDb.collection('leadDisputes'),
       orderBy('submittedAt', 'desc')
     );
-    const disputeDocs = await getDocs(disputesQuery);
+    const disputeDocs = await disputesQuery.get();
 
     // Fetch disputes and enhance with buyer details
     const disputes = await Promise.all(disputeDocs.docs.map(async (docSnapshot) => {
@@ -34,13 +27,13 @@ export async function GET(request: NextRequest) {
       // Try to fetch the related purchase to get buyer ID
       if (disputeData.transactionId) {
         try {
-          const purchaseDoc = await getDoc(doc(db, 'buyerLeadPurchases', disputeData.transactionId));
+          const purchaseDoc = await adminDb.collection('buyerLeadPurchases').doc(disputeData.transactionId).get();
           if (purchaseDoc.exists()) {
             const purchaseData = purchaseDoc.data();
             
             // Fetch buyer profile
             if (purchaseData.buyerId) {
-              const buyerDoc = await getDoc(doc(db, 'buyerProfiles', purchaseData.buyerId));
+              const buyerDoc = await adminDb.collection('buyerProfiles').doc(purchaseData.buyerId).get();
               if (buyerDoc.exists()) {
                 const buyer = buyerDoc.data();
                 const criteria = buyer.searchCriteria || {};
@@ -115,7 +108,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get dispute details
-    const disputeDoc = await getDoc(doc(db, 'leadDisputes', disputeId));
+    const disputeDoc = await adminDb.collection('leadDisputes').doc(disputeId).get();
     
     if (!disputeDoc.exists()) {
       return NextResponse.json(
@@ -135,8 +128,8 @@ export async function POST(request: NextRequest) {
     const updateData: Record<string, unknown> = {
       status: action === 'refund' ? 'refunded' : action === 'approve' ? 'approved' : 'denied',
       adminNotes: adminNotes || '',
-      resolvedAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
+      resolvedAt: new Date(),
+      updatedAt: new Date()
     };
 
     // Refund credits when approving or explicitly refunding
@@ -144,28 +137,28 @@ export async function POST(request: NextRequest) {
       updateData.refundAmount = refundCredits;
       
       // Add credits back to realtor account
-      const realtorDoc = await getDoc(doc(db, 'realtors', dispute.realtorId));
+      const realtorDoc = await adminDb.collection('realtors').doc(dispute.realtorId).get();
       if (realtorDoc.exists()) {
         const currentCredits = realtorDoc.data()?.credits || 0;
-        await updateDoc(doc(db, 'realtors', dispute.realtorId), {
+        await adminDb.collection('realtors').doc(dispute.realtorId).update({
           credits: currentCredits + refundCredits,
-          updatedAt: serverTimestamp()
+          updatedAt: new Date()
         });
         
         // Create a transaction record for the refund
-        await setDoc(doc(collection(db, 'transactions')), {
+        await setDoc(doc(adminDb.collection('transactions')), {
           realtorId: dispute.realtorId,
           type: 'dispute_refund',
           description: `Refund for dispute #${disputeId.substring(0, 8)}`,
           credits: refundCredits,
           amount: 0, // No money transaction, just credits
           status: 'completed',
-          createdAt: serverTimestamp()
+          createdAt: new Date()
         });
       }
     }
 
-    await updateDoc(doc(db, 'leadDisputes', disputeId), updateData);
+    await adminDb.collection('leadDisputes').doc(disputeId).update(updateData);
 
     await logInfo('Dispute resolved by admin', {
       action: 'dispute_resolved',

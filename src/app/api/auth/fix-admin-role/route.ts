@@ -1,22 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { 
-  collection, 
-  query, 
-  where, 
-  getDocs,
-  updateDoc
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import { logInfo, logError } from '@/lib/logger';
+import { adminDb } from '@/lib/firebase-admin';
 
 export async function POST(request: NextRequest) {
+    // Check if Firebase Admin is initialized
+    if (!adminDb) {
+      return NextResponse.json({ error: 'Database connection not available' }, { status: 503 });
+    }
+
   try {
     // Find admin user by email
-    const usersQuery = query(
-      collection(db, 'users'),
-      where('email', '==', 'admin@prosway.com')
-    );
-    const userDocs = await getDocs(usersQuery);
+    const userDocs = await adminDb.collection('users').where('email', '==', 'admin@prosway.com').get();
 
     if (userDocs.empty) {
       return NextResponse.json(

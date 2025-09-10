@@ -6,7 +6,7 @@ import {
 import { db } from '@/lib/firebase';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { PropertyListing } from "@/lib/property-schema"';
+import { PropertyListing } from "@/lib/property-schema";
 
 /**
  * BUYER PROPERTY API WITH NEARBY CITIES

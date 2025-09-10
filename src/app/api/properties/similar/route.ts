@@ -9,7 +9,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { expandSearchToNearbyCities, enhancePropertyWithNearbyCities } from '@/lib/property-enhancement';
-import { PropertyListing } from "@/lib/property-schema"';
+import { PropertyListing } from "@/lib/property-schema";
 
 /**
  * SIMILAR PROPERTIES API

@@ -7,7 +7,7 @@ import { db } from '@/lib/firebase';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { getCitiesWithinRadius } from '@/lib/cities';
-import { PropertyListing } from "@/lib/property-schema"';
+import { PropertyListing } from "@/lib/property-schema";
 
 /**
  * BUYER NEARBY PROPERTIES API

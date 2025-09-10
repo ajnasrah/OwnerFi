@@ -41,8 +41,10 @@ let adminAuth: any = null;
 
 try {
   if (getApps().length > 0) {
-    adminDb = getFirestore();
-    adminAuth = getAuth();
+    const app = getApps()[0];
+    adminDb = getFirestore(app);
+    adminAuth = getAuth(app);
+    console.log('🔥 Firebase Admin services initialized');
   } else {
     console.warn('🔥 Firebase Admin services not available - no initialized apps');
   }

@@ -1,11 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { 
-  doc,
-  updateDoc,
-  serverTimestamp
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { adminDb } from '@/lib/firebase-admin';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-08-27.basil',
@@ -13,6 +8,14 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 export async function POST(request: NextRequest) {
   try {
+    // Check if Firebase Admin SDK is available
+    if (!adminDb) {
+      return NextResponse.json(
+        { error: 'Firebase Admin SDK not initialized' },
+        { status: 503 }
+      );
+    }
+
     const { customerId, priceId, planId } = await request.json();
     
     // Create the subscription in Stripe
@@ -30,13 +33,13 @@ export async function POST(request: NextRequest) {
       }
     });
     
-    // Update realtor with subscription ID
-    await updateDoc(doc(db, 'realtors', 'idjfqlXrzobyRoFVRTUO'), {
+    // Update realtor with subscription ID using Admin SDK
+    await adminDb.collection('realtors').doc('idjfqlXrzobyRoFVRTUO').update({
       stripeSubscriptionId: subscription.id,
       stripeCustomerId: customerId,
       currentPlan: planId,
       subscriptionStatus: 'active',
-      updatedAt: serverTimestamp()
+      updatedAt: new Date()
     });
     
     return NextResponse.json({

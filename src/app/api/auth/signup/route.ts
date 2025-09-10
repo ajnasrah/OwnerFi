@@ -49,6 +49,7 @@ export async function POST(request: NextRequest) {
       name: fullName.trim(),
       email: email.toLowerCase().trim(),
       password: hashedPassword,
+      phone: phone?.trim(),
       role: userType || 'buyer'
     });
 

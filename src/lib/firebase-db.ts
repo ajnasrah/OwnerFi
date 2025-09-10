@@ -42,12 +42,20 @@ import { PropertyListing } from './property-schema';
 // Generic database operations
 export class FirebaseDB {
   
+  private static checkFirebase() {
+    if (!db) {
+      throw new Error('Firebase not initialized');
+    }
+  }
+  
   // Generic document operations
   static async createDocument<T>(
     collectionName: string, 
     data: Omit<T, 'id' | 'createdAt' | 'updatedAt'>,
     customId?: string
   ): Promise<T> {
+    FirebaseDB.checkFirebase();
+    
     const id = customId || generateFirebaseId();
     const now = serverTimestamp();
     

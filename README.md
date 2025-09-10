@@ -125,3 +125,4 @@ ISC License
 - [ ] SSL certificate (handled by Vercel)
 - [ ] Error monitoring set up (recommended: Sentry)
 - [ ] Performance monitoring (recommended: Vercel Analytics)
+# Force deployment Wed Sep 10 15:14:50 CDT 2025

@@ -8,6 +8,14 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 export async function POST(request: NextRequest) {
   try {
+    // Check if Firebase Admin SDK is available
+    if (!adminDb) {
+      return NextResponse.json(
+        { error: 'Firebase Admin SDK not initialized' },
+        { status: 503 }
+      );
+    }
+
     const { customerId, priceId, planId } = await request.json();
     
     // Create the subscription in Stripe

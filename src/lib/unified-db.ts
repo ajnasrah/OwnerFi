@@ -13,15 +13,9 @@ import {
   serverTimestamp 
 } from 'firebase/firestore';
 import { db as firebaseDb } from './firebase';
+import { RealtorProfile, BuyerProfile, PropertyMatch, RealtorSubscription, User } from './firebase-models';
+import { PropertyListing } from './property-schema';
 import { queueNearbyCitiesForProperty } from './property-enhancement';
-import { 
-  User, 
-  BuyerProfile, 
-  RealtorProfile, 
-  Property, 
-  PropertyMatch,
-  RealtorSubscription
-} from './firebase-models';
 
 // Replace the old db import with this unified Firebase-only implementation
 export const unifiedDb = {
@@ -123,7 +117,7 @@ export const unifiedDb = {
       return propertyDocs.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     },
     
-    async create(propertyData: Omit<Property, 'id' | 'createdAt' | 'updatedAt'>) {
+    async create(propertyData: Omit<PropertyListing, 'id' | 'createdAt' | 'updatedAt'>) {
       const id = unifiedDb.generateId();
       
       // FAST: Create property immediately without waiting

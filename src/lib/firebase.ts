@@ -52,6 +52,7 @@ if (hasFirebaseConfig) {
   console.log('🔥 Skipping Firebase client initialization - missing environment variables');
 }
 
+// Safe exports - these can be null if Firebase isn't initialized
 export { db, auth, storage };
 
 export default app;

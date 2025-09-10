@@ -28,6 +28,10 @@ export const firebaseAuth = {
   // Sign up with email/password
   async signUp(email: string, password: string, role: 'buyer' | 'realtor', additionalData: Record<string, unknown> = {}) {
     try {
+      if (!auth || !db) {
+        return { user: null, error: 'Firebase not initialized' };
+      }
+      
       // Create Firebase user
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
@@ -50,6 +54,10 @@ export const firebaseAuth = {
   // Sign in with email/password
   async signIn(email: string, password: string) {
     try {
+      if (!auth || !db) {
+        return { user: null, error: 'Firebase not initialized' };
+      }
+      
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
       
@@ -66,6 +74,10 @@ export const firebaseAuth = {
   // Sign out
   async signOut() {
     try {
+      if (!auth) {
+        return { error: 'Firebase not initialized' };
+      }
+      
       await signOut(auth);
       return { error: null };
     } catch (error: unknown) {
@@ -75,6 +87,10 @@ export const firebaseAuth = {
 
   // Get current user with role
   async getCurrentUser(): Promise<AuthUser | null> {
+    if (!auth || !db) {
+      return null;
+    }
+    
     return new Promise((resolve) => {
       const unsubscribe = onAuthStateChanged(auth, async (user) => {
         unsubscribe();
@@ -99,6 +115,11 @@ export const firebaseAuth = {
 
   // Auth state listener
   onAuthStateChange(callback: (user: AuthUser | null) => void) {
+    if (!auth || !db) {
+      callback(null);
+      return () => {}; // Return empty unsubscribe function
+    }
+    
     return onAuthStateChanged(auth, async (user) => {
       if (!user) {
         callback(null);

@@ -12,9 +12,10 @@ import {
   serverTimestamp
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { RealtorProfile } from '@/lib/firebase-models';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-06-20',
+  apiVersion: '2025-08-27.basil',
 });
 
 export async function POST(request: NextRequest) {
@@ -34,7 +35,7 @@ export async function POST(request: NextRequest) {
       where('userId', '==', session.user.id!)
     );
     const realtorDocs = await getDocs(realtorsQuery);
-    const realtor = realtorDocs.empty ? null : { id: realtorDocs.docs[0].id, ...realtorDocs.docs[0].data() };
+    const realtor = realtorDocs.empty ? null : { id: realtorDocs.docs[0].id, ...realtorDocs.docs[0].data() } as RealtorProfile;
 
     if (!realtor) {
       return NextResponse.json(
@@ -150,7 +151,6 @@ export async function POST(request: NextRequest) {
         error: 'Failed to create billing portal session',
         details: (error as Error).message,
         debug: process.env.NODE_ENV === 'development' ? {
-          userEmail: session?.user?.email,
           errorName: (error as Error).name,
           errorStack: (error as Error).stack
         } : undefined

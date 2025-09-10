@@ -9,22 +9,9 @@ import { Hero } from '@/components/ui/Hero';
 import { Newsletter } from '@/components/ui/Newsletter';
 import { Footer } from '@/components/ui/Footer';
 
-interface Property {
-  id: string;
-  address: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  bedrooms: number;
-  bathrooms: number;
-  squareFeet: number;
-  listPrice: number;
-  downPaymentAmount: number;
-  monthlyPayment: number;
-  interestRate: number;
-  termYears: number;
-  description?: string;
-}
+import { PropertyListing } from '@/lib/property-schema';
+
+type Property = PropertyListing;
 
 export default function PropertyListings() {
   const [properties, setProperties] = useState<Property[]>([]);
@@ -260,10 +247,10 @@ export default function PropertyListings() {
             const downPaymentPercentages = [0.10, 0.05, 0.15];
             const downPaymentAmount = adjustedPrice * downPaymentPercentages[index];
             
-            // Calculate realistic monthly payments (30-year owner financing at ~8% interest)
+            // Calculate realistic monthly payments (20-year owner financing at ~8% interest)
             const loanAmount = adjustedPrice - downPaymentAmount;
             const monthlyRate = 0.08 / 12; // 8% annual rate / 12 months
-            const numPayments = 30 * 12; // 30 years
+            const numPayments = 20 * 12; // 20 years
             const monthlyPayment = loanAmount * (monthlyRate * Math.pow(1 + monthlyRate, numPayments)) / (Math.pow(1 + monthlyRate, numPayments) - 1);
             
             return (

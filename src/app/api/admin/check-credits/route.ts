@@ -2,12 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { 
   collection, 
   query, 
-  where,
   getDocs
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // Find all realtors with your email/name
     const realtorsQuery = query(

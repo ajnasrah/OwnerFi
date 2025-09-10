@@ -34,7 +34,7 @@ export function calculatePropertyFinancials(data: PartialPropertyData): Property
   let downPaymentPercent = data.downPaymentPercent || 0;
   let monthlyPayment = data.monthlyPayment || 0;
   const interestRate = data.interestRate || 7.0; // Default 7% if not provided
-  const termYears = data.termYears || 30; // Default 30 years
+  const termYears = data.termYears || 20; // Default 20 years
 
   // Calculate missing down payment fields
   if (listPrice > 0) {
@@ -126,7 +126,7 @@ export function calculateLoanAmount(
 /**
  * Process GHL webhook data and calculate all missing financial fields
  */
-export function processGHLPropertyFinancials(ghlData: any): PropertyFinancials {
+export function processGHLPropertyFinancials(ghlData: { customFields?: Record<string, string> }): PropertyFinancials {
   const cf = ghlData.customFields || {};
   
   const rawData: PartialPropertyData = {
@@ -135,7 +135,7 @@ export function processGHLPropertyFinancials(ghlData: any): PropertyFinancials {
     downPaymentPercent: parseFloat(cf.down_payment_percent || '0'),
     monthlyPayment: parseFloat(cf.monthly_payment || '0'),
     interestRate: parseFloat(cf.interest_rate || '7.0'),
-    termYears: parseInt(cf.loan_term_years || '30'),
+    termYears: parseInt(cf.loan_term_years || '20'),
     balloonPayment: cf.balloon_payment ? parseFloat(cf.balloon_payment) : undefined,
     balloonYears: cf.balloon_years ? parseInt(cf.balloon_years) : undefined
   };

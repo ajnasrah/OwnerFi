@@ -33,7 +33,7 @@ export interface ParseResult {
   success: ParsedProperty[];
   errors: Array<{
     row: number;
-    data: any;
+    data: Record<string, unknown>;
     errors: string[];
   }>;
   totalRows: number;
@@ -104,7 +104,7 @@ function mapColumnName(col: string): string {
   return COLUMN_MAPPINGS[normalized] || normalized;
 }
 
-function validateRow(row: any, rowIndex: number): string[] {
+function validateRow(row: Record<string, unknown>, rowIndex: number): string[] {
   const errors: string[] = [];
   
   // Check required fields
@@ -132,7 +132,7 @@ function validateRow(row: any, rowIndex: number): string[] {
   }
   
   // Validate state format (2 letters)
-  if (row.state && !/^[A-Z]{2}$/i.test(row.state)) {
+  if (row.state && !/^[A-Z]{2}$/i.test(String(row.state))) {
     errors.push('State must be a 2-letter code (e.g., TX, FL, GA)');
   }
   
@@ -165,8 +165,8 @@ export function parseExcelFile(buffer: Buffer): ParseResult {
   };
   
   for (let i = 0; i < rawData.length; i++) {
-    const rawRow = rawData[i] as any;
-    const mappedRow: any = {};
+    const rawRow = rawData[i] as Record<string, unknown>;
+    const mappedRow: Record<string, unknown> = {};
     
     // Map column names to our expected format
     Object.keys(rawRow).forEach(originalCol => {
@@ -199,13 +199,13 @@ export function parseExcelFile(buffer: Buffer): ParseResult {
       
       // Parse images
       const imagesArray = mappedRow.images 
-        ? mappedRow.images.split(',').map((url: string) => url.trim()).filter(Boolean)
+        ? String(mappedRow.images).split(',').map((url: string) => url.trim()).filter(Boolean)
         : [];
       
       const parsedProperty: ParsedProperty = {
-        address: mappedRow.address,
-        city: mappedRow.city,
-        state: mappedRow.state.toUpperCase(),
+        address: String(mappedRow.address || ''),
+        city: String(mappedRow.city || ''),
+        state: String(mappedRow.state || '').toUpperCase(),
         zipCode: mappedRow.zipCode.toString(),
         bedrooms: Number(mappedRow.bedrooms),
         bathrooms: Number(mappedRow.bathrooms),
@@ -219,8 +219,8 @@ export function parseExcelFile(buffer: Buffer): ParseResult {
         lotSize: mappedRow.lotSize ? Number(mappedRow.lotSize) : undefined,
         balloonPayment: mappedRow.balloonPayment ? Number(mappedRow.balloonPayment) : undefined,
         buyersCompensation: mappedRow.buyersCompensation ? Number(mappedRow.buyersCompensation) : undefined,
-        description: mappedRow.description || undefined,
-        images: mappedRow.images || undefined,
+        description: mappedRow.description ? String(mappedRow.description) : undefined,
+        images: mappedRow.images ? String(mappedRow.images) : undefined,
         imagesArray
       };
       

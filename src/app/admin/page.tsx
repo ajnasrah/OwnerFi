@@ -6,6 +6,14 @@ import { useRouter } from 'next/navigation';
 import { Header } from '@/components/ui/Header';
 import { Footer } from '@/components/ui/Footer';
 import { Button } from '@/components/ui/Button';
+import { LeadDispute } from '@/lib/firebase-models';
+import { PropertyListing } from '@/lib/property-schema';
+
+// Extended Property interface for admin with legacy imageUrl field
+interface AdminProperty extends PropertyListing {
+  imageUrl?: string; // Legacy field for backward compatibility
+}
+import Image from 'next/image';
 
 export default function AdminDashboard() {
   const { data: session, status } = useSession();
@@ -13,19 +21,37 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<'upload' | 'manage' | 'disputes' | 'contacts'>('upload');
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [result, setResult] = useState<any>(null);
-  const [properties, setProperties] = useState<any[]>([]);
+  const [result, setResult] = useState<{
+    error?: string;
+    details?: string[];
+    success?: boolean;
+    summary?: {
+      totalRows?: number;
+      successfulInserts?: number;
+    };
+    parseErrors?: string[];
+    duplicates?: string[];
+    insertedProperties?: AdminProperty[];
+  } | null>(null);
+  const [properties, setProperties] = useState<AdminProperty[]>([]);
   const [loadingProperties, setLoadingProperties] = useState(false);
   const [selectedProperties, setSelectedProperties] = useState<string[]>([]);
   const [deleting, setDeleting] = useState(false);
-  const [disputes, setDisputes] = useState<any[]>([]);
+  const [disputes, setDisputes] = useState<LeadDispute[]>([]);
   const [loadingDisputes, setLoadingDisputes] = useState(false);
-  const [contacts, setContacts] = useState<any[]>([]);
+  const [contacts, setContacts] = useState<{
+    id: string;
+    name: string;
+    email: string;
+    phone?: string;
+    message: string;
+    createdAt: string;
+  }[]>([]);
   const [loadingContacts, setLoadingContacts] = useState(false);
   
   // Edit modal state
-  const [editingProperty, setEditingProperty] = useState<any>(null);
-  const [editForm, setEditForm] = useState<any>({});
+  const [editingProperty, setEditingProperty] = useState<AdminProperty | null>(null);
+  const [editForm, setEditForm] = useState<Partial<AdminProperty>>({});
   const [isSigningOut, setIsSigningOut] = useState(false);
 
   useEffect(() => {
@@ -34,10 +60,11 @@ export default function AdminDashboard() {
     }
     
     if (status === 'authenticated') {
-      if ((session?.user as any)?.role !== 'admin') {
-        if ((session?.user as any)?.role === 'buyer') {
+      const userRole = (session?.user as { role?: string })?.role;
+      if (userRole !== 'admin') {
+        if (userRole === 'buyer') {
           router.push('/dashboard');
-        } else if ((session?.user as any)?.role === 'realtor') {
+        } else if (userRole === 'realtor') {
           router.push('/realtor/dashboard');
         } else {
           router.push('/auth/signin');
@@ -164,7 +191,7 @@ export default function AdminDashboard() {
   };
 
   // Property edit functions
-  const handleEditProperty = (property: any) => {
+  const handleEditProperty = (property: AdminProperty) => {
     setEditingProperty(property);
     setEditForm({
       address: property.address || '',
@@ -178,7 +205,7 @@ export default function AdminDashboard() {
       downPaymentAmount: property.downPaymentAmount || 0,
       monthlyPayment: property.monthlyPayment || 0,
       interestRate: property.interestRate || 0,
-      termYears: property.termYears || 30,
+      termYears: property.termYears || 20,
       description: property.description || '',
       imageUrl: property.imageUrl || '',
       isActive: property.isActive !== false
@@ -203,7 +230,7 @@ export default function AdminDashboard() {
         const error = await response.json();
         alert(`Failed to update: ${error.error}`);
       }
-    } catch (error) {
+    } catch (_error) {
       alert('Failed to update property');
     }
   };
@@ -224,7 +251,7 @@ export default function AdminDashboard() {
         alert(`Dispute ${action}d successfully`);
         fetchDisputes();
       }
-    } catch (error) {
+    } catch (_error) {
       alert('Failed to resolve dispute');
     }
   };
@@ -384,7 +411,7 @@ export default function AdminDashboard() {
                         <div className="mt-3">
                           <p className="text-red-700 text-sm font-medium">Details:</p>
                           <ul className="text-red-600 text-xs mt-1 space-y-1">
-                            {result.details.slice(0, 10).map((error: any, index: number) => (
+                            {result.details.slice(0, 10).map((error: string | { message?: string; error?: string }, index: number) => (
                               <li key={index}>
                                 {typeof error === 'string' ? error : `Error: ${error.message || error.error || 'Unknown error'}`}
                               </li>
@@ -454,7 +481,7 @@ export default function AdminDashboard() {
                         <div>
                           <p className="font-medium text-green-800 mb-2">Sample Inserted Properties:</p>
                           <div className="text-sm text-green-700 space-y-1">
-                            {result.insertedProperties.slice(0, 5).map((property: any, index: number) => (
+                            {result.insertedProperties.slice(0, 5).map((property: AdminProperty, index: number) => (
                               <div key={index}>
                                 {property.address}, {property.city}, {property.state}
                               </div>
@@ -596,11 +623,13 @@ export default function AdminDashboard() {
                           </td>
                           <td className="p-4">
                             {property.imageUrl ? (
-                              <img 
-                                src={property.imageUrl} 
+                              <Image 
+                                src={property.imageUrl || '/placeholder-house.jpg'} 
                                 alt={property.address}
+                                width={80}
+                                height={64}
                                 className="w-20 h-16 object-cover rounded cursor-pointer hover:opacity-80"
-                                onClick={() => window.open(property.imageUrl, '_blank')}
+                                onClick={() => window.open(property.imageUrl || '', '_blank')}
                               />
                             ) : (
                               <div className="w-20 h-16 bg-gray-200 rounded flex items-center justify-center text-gray-400">
@@ -624,7 +653,7 @@ export default function AdminDashboard() {
                           </td>
                           <td className="p-4 text-gray-700">
                             {property.bedrooms || 'N/A'} bed / {property.bathrooms || 'N/A'} bath
-                            {property.squareFeet > 0 && (
+                            {property.squareFeet && property.squareFeet > 0 && (
                               <div className="text-sm text-gray-500">{property.squareFeet.toLocaleString()} sq ft</div>
                             )}
                           </td>
@@ -707,7 +736,7 @@ export default function AdminDashboard() {
                             <p className="text-gray-600">• Location: {dispute.buyerCity}, {dispute.buyerState}</p>
                             <p className="text-gray-600">• Budget: ${dispute.maxMonthlyPayment}/mo, ${dispute.maxDownPayment} down</p>
                           </div>
-                          <p className="text-sm text-gray-500 mt-2">Submitted: {new Date(dispute.submittedAt).toLocaleString()}</p>
+                          <p className="text-sm text-gray-500 mt-2">Submitted: {dispute.submittedAt?.toDate?.()?.toLocaleString() || 'N/A'}</p>
                         </div>
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                           dispute.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
@@ -738,15 +767,17 @@ export default function AdminDashboard() {
                           )}
                         </div>
                       </div>
-                      {dispute.evidence && dispute.evidence.length > 0 && (
+                      {dispute.evidence && Array.isArray(dispute.evidence) && dispute.evidence.length > 0 && (
                         <div className="mb-4">
                           <p className="font-medium text-gray-800 mb-2">Evidence Images:</p>
                           <div className="flex flex-wrap gap-2">
-                            {dispute.evidence.map((imageUrl: string, index: number) => (
-                              <img 
+                            {(dispute.evidence as string[])?.map((imageUrl: string, index: number) => (
+                              <Image 
                                 key={index}
                                 src={imageUrl} 
                                 alt={`Evidence ${index + 1}`}
+                                width={128}
+                                height={96}
                                 className="w-32 h-24 object-cover rounded border cursor-pointer hover:opacity-80"
                                 onClick={() => window.open(imageUrl, '_blank')}
                               />
@@ -1023,9 +1054,11 @@ export default function AdminDashboard() {
                   className="w-full p-2 border rounded"
                 />
                 {editForm.imageUrl && (
-                  <img 
-                    src={editForm.imageUrl} 
+                  <Image 
+                    src={editForm.imageUrl || '/placeholder-house.jpg'} 
                     alt="Preview" 
+                    width={400}
+                    height={192}
                     className="mt-2 w-full h-48 object-cover rounded"
                   />
                 )}

@@ -11,9 +11,10 @@ import {
   serverTimestamp 
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { RealtorProfile } from '@/lib/firebase-models';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-06-20',
+  apiVersion: '2025-08-27.basil',
 });
 
 export async function POST(request: NextRequest) {
@@ -33,7 +34,7 @@ export async function POST(request: NextRequest) {
       where('userId', '==', session.user.id!)
     );
     const realtorDocs = await getDocs(realtorsQuery);
-    const realtor = realtorDocs.empty ? null : { id: realtorDocs.docs[0].id, ...realtorDocs.docs[0].data() };
+    const realtor = realtorDocs.empty ? null : { id: realtorDocs.docs[0].id, ...realtorDocs.docs[0].data() } as RealtorProfile;
 
     if (!realtor) {
       return NextResponse.json(
@@ -108,7 +109,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ 
         success: true,
         message: 'Subscription cancelled successfully. You will retain access until the end of your current billing period.',
-        endsAt: canceledSubscription.current_period_end ? new Date(canceledSubscription.current_period_end * 1000) : null
+        endsAt: (canceledSubscription as any).current_period_end ? new Date((canceledSubscription as any).current_period_end * 1000) : null
       });
 
     } catch (stripeError: any) {

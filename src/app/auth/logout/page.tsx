@@ -30,7 +30,7 @@ export default function LogoutSuccess() {
         </h1>
         
         <p className="text-gray-600 mb-8 leading-relaxed">
-          Thank you for using OwnerFi. You've been safely signed out of your account.
+          Thank you for using OwnerFi. You&apos;ve been safely signed out of your account.
         </p>
         
         <div className="space-y-4">

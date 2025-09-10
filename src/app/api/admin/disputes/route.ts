@@ -12,7 +12,6 @@ import {
   serverTimestamp
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { getSessionWithRole } from '@/lib/auth-utils';
 import { logError, logInfo } from '@/lib/logger';
 
 // GET - Fetch all disputes for admin review
@@ -44,13 +43,14 @@ export async function GET(request: NextRequest) {
               const buyerDoc = await getDoc(doc(db, 'buyerProfiles', purchaseData.buyerId));
               if (buyerDoc.exists()) {
                 const buyer = buyerDoc.data();
+                const criteria = buyer.searchCriteria || {};
                 buyerDetails = {
                   buyerPhone: buyer.phone || 'No phone',
                   buyerEmail: buyer.email || 'No email',
-                  buyerCity: buyer.preferredCity || 'Unknown',
-                  buyerState: buyer.preferredState || '',
-                  maxMonthlyPayment: buyer.maxMonthlyPayment || 0,
-                  maxDownPayment: buyer.maxDownPayment || 0
+                  buyerCity: criteria.cities?.[0] || buyer.preferredCity || 'Unknown',
+                  buyerState: criteria.state || buyer.preferredState || '',
+                  maxMonthlyPayment: criteria.maxMonthlyPayment || buyer.maxMonthlyPayment || 0,
+                  maxDownPayment: criteria.maxDownPayment || buyer.maxDownPayment || 0
                 };
               }
             }
@@ -88,9 +88,9 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    await logError('Failed to fetch disputes', error, {
+    await logError('Failed to fetch disputes', {
       action: 'admin_disputes_fetch_error'
-    });
+    }, error as Error);
 
     return NextResponse.json(
       { error: 'Failed to load disputes' },
@@ -132,7 +132,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Update dispute status
-    const updateData: any = {
+    const updateData: Record<string, unknown> = {
       status: action === 'refund' ? 'refunded' : action === 'approve' ? 'approved' : 'denied',
       adminNotes: adminNotes || '',
       resolvedAt: serverTimestamp(),
@@ -169,10 +169,11 @@ export async function POST(request: NextRequest) {
 
     await logInfo('Dispute resolved by admin', {
       action: 'dispute_resolved',
-      disputeId: disputeId,
-      resolution: action,
-      refundCredits: refundCredits || 0,
-      realtorId: dispute.realtorId
+      metadata: {
+        resolution: action,
+        refundCredits: refundCredits || 0,
+        disputeId: disputeId
+      }
     });
 
     return NextResponse.json({
@@ -182,9 +183,9 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    await logError('Failed to resolve dispute', error, {
+    await logError('Failed to resolve dispute', {
       action: 'admin_dispute_resolve_error'
-    });
+    }, error as Error);
 
     return NextResponse.json(
       { error: 'Failed to resolve dispute' },

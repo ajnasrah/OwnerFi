@@ -23,9 +23,9 @@ const logger = winston.createLogger({
 
 interface LogContext {
   userId?: string;
-  userType?: 'buyer' | 'agent' | 'admin';
+  userType?: 'buyer' | 'agent' | 'admin' | 'realtor';
   action?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export async function logToDatabase(

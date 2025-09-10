@@ -10,8 +10,15 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('upload');
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [result, setResult] = useState<any>(null);
-  const [properties, setProperties] = useState<any[]>([]);
+  const [result, setResult] = useState<{ 
+    error?: string; 
+    success?: string; 
+    processed?: number;
+    summary?: {
+      successfulInserts?: number;
+    };
+  } | null>(null);
+  const [properties, setProperties] = useState<Array<{ id: string; address: string; city: string; state: string; listPrice: number; isActive: boolean }>>([]);
   const [loadingProperties, setLoadingProperties] = useState(false);
   const [selectedProperties, setSelectedProperties] = useState<string[]>([]);
 
@@ -19,7 +26,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/auth/signin');
-    } else if (status === 'authenticated' && (session?.user as any)?.role !== 'admin') {
+    } else if (status === 'authenticated' && (session?.user as { role?: string })?.role !== 'admin') {
       router.push('/');
     }
   }, [status, session, router]);
@@ -42,7 +49,7 @@ export default function AdminDashboard() {
 
       const data = await response.json();
       setResult(data);
-    } catch (error) {
+    } catch (_error) {
       setResult({ error: 'Upload failed' });
     } finally {
       setUploading(false);
@@ -84,7 +91,7 @@ export default function AdminDashboard() {
       setSelectedProperties([]);
       fetchProperties();
       alert('Properties deleted successfully');
-    } catch (error) {
+    } catch (_error) {
       alert('Failed to delete properties');
     }
   };

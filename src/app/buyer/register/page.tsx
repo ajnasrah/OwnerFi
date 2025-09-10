@@ -4,6 +4,17 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useDebounce } from 'use-debounce';
 
+interface City {
+  name: string;
+  state: string;
+  population?: number;
+  distance?: number;
+}
+
+import { PropertyListing } from '@/lib/property-schema';
+
+type Property = PropertyListing;
+
 export default function BuyerRegistration() {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -29,15 +40,15 @@ export default function BuyerRegistration() {
     maxDownPayment: '',
   });
 
-  const [matchedProperties, setMatchedProperties] = useState<any[]>([]);
+  const [matchedProperties, setMatchedProperties] = useState<Property[]>([]);
   
   // City autocomplete
   const [cityQuery, setCityQuery] = useState('');
   const [debouncedCityQuery] = useDebounce(cityQuery, 300);
-  const [cityResults, setCityResults] = useState<any[]>([]);
+  const [cityResults, setCityResults] = useState<City[]>([]);
   const [showCityDropdown, setShowCityDropdown] = useState(false);
 
-  const handleInputChange = (field: string, value: any) => {
+  const handleInputChange = (field: string, value: string | number) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     setError(null);
   };
@@ -71,7 +82,7 @@ export default function BuyerRegistration() {
     }
   }, [debouncedCityQuery]);
 
-  const handleCitySelect = (city: any) => {
+  const handleCitySelect = (city: City) => {
     setFormData(prev => ({
       ...prev,
       preferredCity: city.name,

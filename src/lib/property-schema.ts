@@ -6,6 +6,9 @@ export interface PropertyListing {
   mlsNumber?: string;                  // MLS listing number (if available)
   ghlContactId?: string;               // GoHighLevel contact ID for lead tracking
   
+  // Index signature for Record<string, unknown> compatibility
+  [key: string]: unknown;
+  
   // Address & Location
   address: string;                     // Street address
   city: string;                        // City name
@@ -15,6 +18,9 @@ export interface PropertyListing {
   longitude?: number;                  // GPS coordinates for mapping
   county?: string;                     // County name
   neighborhood?: string;               // Neighborhood/subdivision name
+  nearbyCities?: string[];             // Cities within 30-mile radius for similar property searches
+  nearbyCitiesSource?: string;         // Source of nearby cities data ('comprehensive-database', 'api', etc.)
+  nearbyCitiesUpdatedAt?: any;         // Timestamp when nearby cities were last updated
   
   // Property Details
   propertyType: 'single-family' | 'condo' | 'townhouse' | 'mobile-home' | 'multi-family' | 'land';
@@ -63,6 +69,7 @@ export interface PropertyListing {
   
   // Listing Management
   status: 'active' | 'pending' | 'sold' | 'withdrawn' | 'expired';
+  isActive: boolean;                   // Whether property is actively listed
   dateAdded: string;                   // ISO date when added to platform
   lastUpdated: string;                 // ISO date of last update
   expirationDate?: string;             // When listing expires
@@ -99,8 +106,10 @@ export interface PropertyListing {
   ghlData?: {                          // Raw GoHighLevel data
     contactId: string;
     opportunityId?: string;
-    customFields?: Record<string, any>;
+    customFields?: Record<string, unknown>;
     tags?: string[];
+    leadValue?: number;
+    buyersCompensation?: string;
   };
 }
 

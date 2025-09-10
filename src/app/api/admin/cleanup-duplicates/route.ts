@@ -6,7 +6,6 @@ import {
   query, 
   getDocs,
   doc,
-  deleteDoc,
   writeBatch
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -16,7 +15,7 @@ export async function POST(request: NextRequest) {
     // Admin access control
     const session = await getServerSession(authOptions);
     
-    if (!session?.user || (session.user as any).role !== 'admin') {
+    if (!session?.user || (session.user as { role?: string }).role !== 'admin') {
       return NextResponse.json(
         { error: 'Access denied. Admin access required.' },
         { status: 403 }
@@ -30,16 +29,16 @@ export async function POST(request: NextRequest) {
     const allProperties = propertiesSnapshot.docs.map(doc => ({
       id: doc.id,
       docRef: doc.ref,
-      ...doc.data()
+      ...(doc.data() as Record<string, unknown>)
     }));
 
     console.log(`Found ${allProperties.length} total properties`);
 
     // Group by address (normalize addresses for comparison)
-    const addressGroups: { [key: string]: any[] } = {};
+    const addressGroups: Record<string, Array<typeof allProperties[0]>> = {};
     
     allProperties.forEach(property => {
-      const normalizedAddress = property.address?.toLowerCase()
+      const normalizedAddress = (property as any).address?.toLowerCase()
         .replace(/\s+/g, ' ')
         .replace(/[.,]/g, '')
         .trim() || 'unknown';
@@ -60,11 +59,11 @@ export async function POST(request: NextRequest) {
     const batch = writeBatch(db);
 
     // For each duplicate group, keep the most recent one and delete others
-    duplicateGroups.forEach(([address, properties]) => {
+    duplicateGroups.forEach(([_address, properties]) => {
       // Sort by creation date, keep the newest
       properties.sort((a, b) => {
-        const aTime = a.createdAt?.toDate?.() || new Date(a.createdAt) || new Date(0);
-        const bTime = b.createdAt?.toDate?.() || new Date(b.createdAt) || new Date(0);
+        const aTime = (a as any).createdAt?.toDate?.() || new Date((a as any).createdAt) || new Date(0);
+        const bTime = (b as any).createdAt?.toDate?.() || new Date((b as any).createdAt) || new Date(0);
         return bTime.getTime() - aTime.getTime();
       });
 

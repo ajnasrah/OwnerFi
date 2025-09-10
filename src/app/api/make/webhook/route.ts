@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    let results = [];
+    const results = [];
     let processed = 0;
     let errors = 0;
 

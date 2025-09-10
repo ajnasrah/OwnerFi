@@ -14,6 +14,7 @@ import { db } from '@/lib/firebase';
 import { logError, logInfo } from '@/lib/logger';
 import { getSessionWithRole } from '@/lib/auth-utils';
 import { firestoreHelpers } from '@/lib/firestore';
+import { RealtorProfile, BuyerProfile } from '@/lib/firebase-models';
 
 export async function POST(request: NextRequest) {
   try {
@@ -52,7 +53,7 @@ export async function POST(request: NextRequest) {
     }
 
     const realtorDoc = realtorDocs.docs[0];
-    const realtorProfile = { id: realtorDoc.id, ...realtorDoc.data() };
+    const realtorProfile = { id: realtorDoc.id, ...realtorDoc.data() } as RealtorProfile;
 
     if (!realtorProfile.profileComplete) {
       return NextResponse.json(
@@ -79,7 +80,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const buyerProfile = { id: buyerDoc.id, ...buyerDoc.data() };
+    const buyerProfile = { id: buyerDoc.id, ...buyerDoc.data() } as BuyerProfile;
 
     // Check if realtor has already purchased this lead
     const existingPurchaseQuery = query(
@@ -121,15 +122,16 @@ export async function POST(request: NextRequest) {
 
     await logInfo('Realtor purchased buyer lead', {
       action: 'lead_purchase',
-      realtorId: realtorProfile.id,
-      buyerId: leadId,
-      creditsCost: creditCost,
-      purchasePrice: dollarCost,
-      remainingCredits: realtorProfile.credits - creditCost,
+      userId: session.user.id,
       metadata: {
-        buyerCity: buyerProfile.preferredCity,
-        buyerState: buyerProfile.preferredState,
-        buyerBudget: buyerProfile.maxMonthlyPayment
+        realtorId: realtorProfile.id,
+        buyerId: leadId,
+        creditsCost: creditCost,
+        purchasePrice: dollarCost,
+        remainingCredits: realtorProfile.credits - creditCost,
+        buyerCity: buyerProfile.searchCriteria?.cities?.[0] || 'Unknown',
+        buyerState: buyerProfile.searchCriteria?.state || '',
+        buyerBudget: buyerProfile.searchCriteria?.maxMonthlyPayment || 0
       }
     });
 
@@ -141,8 +143,8 @@ export async function POST(request: NextRequest) {
       buyerInfo: {
         name: `${buyerProfile.firstName} ${buyerProfile.lastName}`,
         phone: buyerProfile.phone,
-        city: `${buyerProfile.preferredCity}, ${buyerProfile.preferredState}`,
-        budget: `$${buyerProfile.maxMonthlyPayment}/month, $${buyerProfile.maxDownPayment} down`
+        city: `${buyerProfile.preferredCity || 'Unknown'}, ${buyerProfile.preferredState || ''}`,
+        budget: `$${buyerProfile.maxMonthlyPayment || 0}/month, $${buyerProfile.maxDownPayment || 0} down`
       }
     });
 

@@ -10,6 +10,7 @@ import {
   getDocs
 } from 'firebase/firestore';
 import { db } from './firebase';
+import { ExtendedUser } from '@/types/session';
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -66,14 +67,14 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.role = (user as any).role;
+        token.role = (user as ExtendedUser).role;
       }
       return token;
     },
     async session({ session, token }) {
       if (token && session.user) {
-        (session.user as any).id = token.sub!;
-        (session.user as any).role = token.role as string;
+        (session.user as ExtendedUser).id = token.sub!;
+        (session.user as ExtendedUser).role = token.role as 'buyer' | 'realtor' | 'admin';
       }
       return session;
     },

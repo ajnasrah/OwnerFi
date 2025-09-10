@@ -45,7 +45,7 @@ export class DatabaseCleanup {
       result.recordsProcessed = buyerDocs.docs.length;
       
       // Group buyers by email
-      const buyersByEmail: { [email: string]: any[] } = {};
+      const buyersByEmail: { [email: string]: Record<string, unknown>[] } = {};
       
       buyerDocs.docs.forEach(doc => {
         const data = doc.data();
@@ -64,8 +64,8 @@ export class DatabaseCleanup {
         if (buyers.length > 1) {
           // Sort by createdAt, keep the oldest (most complete profile)
           buyers.sort((a, b) => {
-            const aDate = a.createdAt?.toDate?.() || new Date(0);
-            const bDate = b.createdAt?.toDate?.() || new Date(0);
+            const aDate = (a.createdAt as any)?.toDate?.() || new Date(0);
+            const bDate = (b.createdAt as any)?.toDate?.() || new Date(0);
             return aDate.getTime() - bDate.getTime();
           });
 
@@ -76,7 +76,7 @@ export class DatabaseCleanup {
 
           // Delete duplicate profiles
           for (const duplicate of duplicates) {
-            await deleteDoc(doc(db, 'buyerProfiles', duplicate.id));
+            await deleteDoc(doc(db, 'buyerProfiles', String(duplicate.id)));
             result.recordsDeleted++;
             result.details?.push(`Deleted duplicate buyer ${duplicate.id} (${duplicate.firstName} ${duplicate.lastName})`);
           }
@@ -86,13 +86,15 @@ export class DatabaseCleanup {
       result.success = true;
       await logInfo('Database cleanup: duplicate buyers removed', {
         action: result.action,
-        recordsProcessed: result.recordsProcessed,
-        recordsDeleted: result.recordsDeleted
+        metadata: {
+          recordsProcessed: result.recordsProcessed,
+          recordsDeleted: result.recordsDeleted
+        }
       });
 
     } catch (error) {
       result.errors.push(`Failed to remove duplicate buyers: ${(error as Error).message}`);
-      await logError('Database cleanup failed', error, { action: result.action });
+      await logError('Database cleanup failed', { action: result.action }, error);
     }
 
     return result;
@@ -155,13 +157,15 @@ export class DatabaseCleanup {
       result.success = true;
       await logInfo('Database cleanup: orphaned lead purchases removed', {
         action: result.action,
-        recordsProcessed: result.recordsProcessed,
-        recordsDeleted: result.recordsDeleted
+        metadata: {
+          recordsProcessed: result.recordsProcessed,
+          recordsDeleted: result.recordsDeleted
+        }
       });
 
     } catch (error) {
       result.errors.push(`Failed to cleanup orphaned purchases: ${(error as Error).message}`);
-      await logError('Database cleanup failed', error, { action: result.action });
+      await logError('Database cleanup failed', { action: result.action }, error);
     }
 
     return result;
@@ -189,7 +193,7 @@ export class DatabaseCleanup {
 
       for (const buyerDoc of buyerDocs.docs) {
         const buyer = buyerDoc.data();
-        const updates: any = {};
+        const updates: Record<string, unknown> = {};
         
         // Add default values for missing fields
         if (!buyer.languages || !Array.isArray(buyer.languages)) {
@@ -247,7 +251,7 @@ export class DatabaseCleanup {
 
       for (const realtorDoc of realtorDocs.docs) {
         const realtor = realtorDoc.data();
-        const updates: any = {};
+        const updates: Record<string, unknown> = {};
         
         if (!realtor.languages || !Array.isArray(realtor.languages)) {
           updates.languages = ['English'];
@@ -298,13 +302,15 @@ export class DatabaseCleanup {
 
       await logInfo('Database cleanup: incomplete profiles fixed', {
         action: result.action,
-        recordsProcessed: result.recordsProcessed,
-        recordsUpdated: result.recordsUpdated
+        metadata: {
+          recordsProcessed: result.recordsProcessed,
+          recordsUpdated: result.recordsUpdated
+        }
       });
 
     } catch (error) {
       result.errors.push(`Failed to fix incomplete profiles: ${(error as Error).message}`);
-      await logError('Database cleanup failed', error, { action: result.action });
+      await logError('Database cleanup failed', { action: result.action }, error);
     }
 
     return result;
@@ -371,13 +377,15 @@ export class DatabaseCleanup {
 
       await logInfo('Database cleanup: test data removed', {
         action: result.action,
-        recordsProcessed: result.recordsProcessed,
-        recordsDeleted: result.recordsDeleted
+        metadata: {
+          recordsProcessed: result.recordsProcessed,
+          recordsDeleted: result.recordsDeleted
+        }
       });
 
     } catch (error) {
       result.errors.push(`Failed to remove test data: ${(error as Error).message}`);
-      await logError('Database cleanup failed', error, { action: result.action });
+      await logError('Database cleanup failed', { action: result.action }, error);
     }
 
     return result;

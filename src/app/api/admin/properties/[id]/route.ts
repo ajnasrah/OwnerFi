@@ -3,22 +3,24 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { ExtendedSession } from '@/types/session';
 
 // GET single property
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const resolvedParams = await params;
     const session = await getServerSession(authOptions);
-    if (!session?.user || (session.user as any).role !== 'admin') {
+    if (!session?.user || (session as ExtendedSession).user.role !== 'admin') {
       return NextResponse.json(
         { error: 'Admin access required' },
         { status: 403 }
       );
     }
 
-    const propertyDoc = await getDoc(doc(db, 'properties', params.id));
+    const propertyDoc = await getDoc(doc(db, 'properties', resolvedParams.id));
     
     if (!propertyDoc.exists()) {
       return NextResponse.json(
@@ -43,11 +45,12 @@ export async function GET(
 // UPDATE property
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const resolvedParams = await params;
     const session = await getServerSession(authOptions);
-    if (!session?.user || (session.user as any).role !== 'admin') {
+    if (!session?.user || (session as ExtendedSession).user.role !== 'admin') {
       return NextResponse.json(
         { error: 'Admin access required' },
         { status: 403 }
@@ -60,7 +63,7 @@ export async function PUT(
     delete updates.id;
     
     // Update the property
-    await updateDoc(doc(db, 'properties', params.id), {
+    await updateDoc(doc(db, 'properties', resolvedParams.id), {
       ...updates,
       updatedAt: serverTimestamp()
     });

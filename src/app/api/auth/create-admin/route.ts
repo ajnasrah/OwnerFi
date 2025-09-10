@@ -64,7 +64,9 @@ export async function POST(request: NextRequest) {
     await logInfo('Admin account created', {
       action: 'admin_account_created',
       userId: userId,
-      email: email.toLowerCase()
+      metadata: {
+        email: email.toLowerCase()
+      }
     });
 
     return NextResponse.json({

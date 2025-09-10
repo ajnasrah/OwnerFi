@@ -1,7 +1,7 @@
 // CSV Parser for GoHighLevel Property Template
 // Maps your exact CSV columns to property data
 
-import { Property } from './mock-data';
+import { PropertyListing } from './property-schema';
 import { 
   calculatePropertyFinancials, 
   validatePropertyFinancials 
@@ -61,12 +61,12 @@ export interface GHLCSVRow {
 }
 
 export async function parseGHLCSV(csvContent: string): Promise<{
-  success: Property[];
+  success: PropertyListing[];
   errors: string[];
   duplicates: string[];
   totalRows: number;
 }> {
-  const success: Property[] = [];
+  const success: PropertyListing[] = [];
   const errors: string[] = [];
   const duplicates: string[] = [];
   const seenAddresses = new Set<string>();
@@ -111,7 +111,7 @@ export async function parseGHLCSV(csvContent: string): Promise<{
   for (let i = 1; i < allRows.length; i++) {
     try {
       const values = allRows[i];
-      const rowData: any = {};
+      const rowData: Record<string, string> = {};
       
       // Map values to headers
       headers.forEach((header, index) => {
@@ -199,7 +199,7 @@ function parseCSVLine(line: string): string[] {
   return values;
 }
 
-async function mapGHLRowToProperty(row: any, rowNumber: number, headers: string[]): Promise<Property | null> {
+async function mapGHLRowToProperty(row: Record<string, string>, rowNumber: number, headers: string[]): Promise<PropertyListing | null> {
   // Find the address column (flexible matching)
   const addressColumn = headers.find(h => /Property Address/i.test(h));
   const cityColumn = headers.find(h => /Property city/i.test(h));
@@ -287,7 +287,7 @@ async function mapGHLRowToProperty(row: any, rowNumber: number, headers: string[
     downPaymentPercent: parseFloat(row['down payment '] || '0'),
     monthlyPayment: parseFloat(row['Monthly payment '] || '0'),
     interestRate: parseFloat(row['Interest rate '] || '6.0'), // Default to 6% for owner financing
-    termYears: 30, // Default to 30 years
+    termYears: 20, // Default to 20 years
     balloonPayment: parseFloat(row['Balloon '] || '0') || undefined
   };
 
@@ -346,22 +346,31 @@ async function mapGHLRowToProperty(row: any, rowNumber: number, headers: string[
     zipCode: zipCode || 'N/A',
     latitude: latitude, // Include coordinates for matching service
     longitude: longitude, // Include coordinates for matching service
+    propertyType: 'single-family' as const,
     bedrooms: bedrooms, // Already defaulted to 2 if missing
     bathrooms: bathrooms, // Already defaulted to 1 if missing  
     squareFeet: squareFeet || 0, // Show 0 if missing
     listPrice: financials.listPrice,
     downPaymentAmount: financials.downPaymentAmount,
+    downPaymentPercent: financials.downPaymentPercent,
     monthlyPayment: financials.monthlyPayment,
     interestRate: financials.interestRate,
     termYears: financials.termYears,
+    imageUrls: imageUrl ? [imageUrl] : [],
     description: (row['description '] || '').trim() || `Beautiful ${bedrooms} bedroom, ${bathrooms} bathroom home in ${city}`,
-    imageUrl: imageUrl || undefined,
+    status: 'active' as const,
+    isActive: true,
+    dateAdded: new Date().toISOString(),
+    lastUpdated: new Date().toISOString(),
+    priority: 1,
+    featured: false,
+    source: 'ghl-webhook' as const,
     distance: 0 // Will be calculated based on user location later
   };
 }
 
 // Function to generate a sample row for testing
-export function generateSampleGHLRow(): any {
+export function generateSampleGHLRow(): Record<string, string> {
   return {
     'Opportunity Name': 'Sample Property Listing',
     'Contact Name': 'John Seller',

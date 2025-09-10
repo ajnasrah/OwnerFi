@@ -1,14 +1,15 @@
 
 import Link from 'next/link';
-import { useSession } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
 import { Button } from './Button';
+import { ExtendedSession } from '@/types/session';
 
 interface HeaderProps {
   className?: string;
 }
 
 export function Header({ className = '' }: HeaderProps) {
-  const { data: session, status } = useSession();
+  const { data: session } = useSession();
 
   return (
     <header className={`bg-surface-bg shadow-soft border-b border-neutral-border sticky top-0 z-50 ${className}`}>
@@ -34,14 +35,27 @@ export function Header({ className = '' }: HeaderProps) {
           {/* Dynamic navigation based on auth status */}
           <div className="flex items-center space-x-2">
             {session?.user ? (
-              <Button 
-                variant="primary" 
-                size="sm" 
-                href={session.user.role === 'realtor' ? '/realtor/dashboard' : '/dashboard'} 
-                className="font-semibold"
-              >
-                Dashboard
-              </Button>
+              <>
+                <Button 
+                  variant="primary" 
+                  size="sm" 
+                  href={
+                    (session as ExtendedSession)?.user?.role === 'admin' ? '/admin' :
+                    (session as ExtendedSession)?.user?.role === 'realtor' ? '/realtor/dashboard' : '/dashboard'
+                  } 
+                  className="font-semibold"
+                >
+                  Dashboard
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => signOut({ callbackUrl: '/' })}
+                  className="font-semibold"
+                >
+                  Sign Out
+                </Button>
+              </>
             ) : (
               <>
                 <Button variant="ghost" size="sm" href="/auth/signin" className="hidden sm:inline-flex">

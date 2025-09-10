@@ -16,6 +16,15 @@ import {
   calculatePropertyFinancials, 
   validatePropertyFinancials 
 } from '@/lib/property-calculations';
+import { queueNearbyCitiesForProperty } from '@/lib/property-enhancement';
+
+interface GHLWebhookData {
+  id: string;
+  type: string;
+  customFields?: Record<string, string>;
+  name?: string;
+  [key: string]: unknown;
+}
 
 // GoHighLevel webhook handler for property listings
 export async function POST(request: NextRequest) {
@@ -73,17 +82,17 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function handlePropertyListing(data: any) {
+async function handlePropertyListing(data: GHLWebhookData) {
   try {
     const customFields = data.customFields || {};
     
     // Map GHL CSV columns to our system (based on your template)
     const rawPropertyData = {
       // Basic property info
-      address: customFields['Property Address'] || data.address1 || '',
-      city: customFields['Property city'] || data.city || '',
-      state: customFields.state || data.state || '',
-      zipCode: customFields['Zip code'] || data.postalCode || '',
+      address: String(customFields['Property Address'] || (data as any).address1 || ''),
+      city: String(customFields['Property city'] || (data as any).city || ''),
+      state: String(customFields.state || (data as any).state || ''),
+      zipCode: String(customFields['Zip code'] || (data as any).postalCode || ''),
       
       // Property details
       bedrooms: parseInt(customFields.bedrooms || '0'),
@@ -119,7 +128,7 @@ async function handlePropertyListing(data: any) {
       downPaymentPercent: rawPropertyData.downPaymentPercent,
       monthlyPayment: rawPropertyData.monthlyPayment,
       interestRate: rawPropertyData.interestRate,
-      termYears: 30, // Default to 30 years if not specified
+      termYears: 20, // Default to 20 years if not specified
       balloonPayment: rawPropertyData.balloonPayment > 0 ? rawPropertyData.balloonPayment : undefined
     });
 
@@ -151,7 +160,9 @@ async function handlePropertyListing(data: any) {
       zipCode: rawPropertyData.zipCode,
       
       // Property details
-      propertyType: rawPropertyData.homeType as any,
+      propertyType: (rawPropertyData.homeType === 'house' ? 'single-family' : 
+                   rawPropertyData.homeType === 'mobile' ? 'mobile-home' : 
+                   rawPropertyData.homeType as 'single-family' | 'condo' | 'townhouse' | 'mobile-home' | 'multi-family' | 'land') || 'single-family',
       bedrooms: rawPropertyData.bedrooms,
       bathrooms: rawPropertyData.bathrooms,
       squareFeet: rawPropertyData.squareFeet,
@@ -171,12 +182,12 @@ async function handlePropertyListing(data: any) {
       imageUrls: rawPropertyData.imageUrl ? [rawPropertyData.imageUrl] : [],
       
       // Description and marketing
-      description: rawPropertyData.description,
+      description: String(rawPropertyData.description || ''),
       
       // Owner information (from GHL contact)
-      ownerName: `${data.firstName || ''} ${data.lastName || ''}`.trim(),
-      ownerPhone: data.phone || '',
-      ownerEmail: data.email || '',
+      ownerName: `${(data as any).firstName || ''} ${(data as any).lastName || ''}`.trim(),
+      ownerPhone: String((data as any).phone || ''),
+      ownerEmail: String((data as any).email || ''),
       
       // Listing management
       status: 'active' as const,
@@ -185,12 +196,12 @@ async function handlePropertyListing(data: any) {
       
       // Integration data
       source: 'ghl-webhook' as const,
-      sourceId: data.contactId,
+      sourceId: String(data.contactId),
       ghlData: {
-        contactId: data.contactId,
-        opportunityId: data.opportunityId,
+        contactId: String(data.contactId),
+        opportunityId: String((data as any).opportunityId || ''),
         customFields: customFields,
-        tags: data.tags || [],
+        tags: Array.isArray((data as any).tags) ? (data as any).tags : [],
         leadValue: rawPropertyData.leadValue,
         buyersCompensation: rawPropertyData.buyersCompensation
       },
@@ -208,17 +219,21 @@ async function handlePropertyListing(data: any) {
     // Check if property already exists
     const existingQuery = query(
       collection(db, 'properties'),
-      where('sourceId', '==', data.contactId)
+      where('sourceId', '==', String(data.contactId))
     );
     const existingDocs = await getDocs(existingQuery);
 
     if (existingDocs.empty) {
-      // Create new property
+      // FAST: Create property immediately, queue nearby cities for background processing
       await setDoc(doc(db, 'properties', propertyData.id!), {
         ...propertyData,
+        nearbyCities: [], // Empty initially, populated by background job
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       });
+      
+      // Queue nearby cities population (non-blocking)
+      queueNearbyCitiesForProperty(propertyData.id!, propertyData.city, propertyData.state);
       
       await logInfo('Created new property from GHL', {
         action: 'property_created',
@@ -248,7 +263,7 @@ async function handlePropertyListing(data: any) {
 
     // Clean up user favorites/rejected if property was deleted from source
     if (data.type === 'ContactDelete') {
-      await cleanupDeletedPropertyFromUsers(data.contactId);
+      await cleanupDeletedPropertyFromUsers(String(data.contactId));
     }
 
   } catch (error) {
@@ -260,12 +275,12 @@ async function handlePropertyListing(data: any) {
   }
 }
 
-async function handlePropertyDeletion(data: any) {
+async function handlePropertyDeletion(data: GHLWebhookData) {
   try {
     // Find and update property status
     const propertyQuery = query(
       collection(db, 'properties'),
-      where('sourceId', '==', data.contactId)
+      where('sourceId', '==', String(data.contactId))
     );
     const propertyDocs = await getDocs(propertyQuery);
 
@@ -277,7 +292,7 @@ async function handlePropertyDeletion(data: any) {
       });
 
       // Clean up from all user accounts
-      await cleanupDeletedPropertyFromUsers(data.contactId);
+      await cleanupDeletedPropertyFromUsers(String(data.contactId));
       
       await logInfo('Deleted property from GHL', {
         action: 'property_deleted',

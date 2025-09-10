@@ -32,7 +32,7 @@ export interface ParseResult {
   success: ParsedProperty[];
   errors: Array<{
     row: number;
-    data: any;
+    data: Record<string, unknown>;
     errors: string[];
   }>;
   totalRows: number;
@@ -52,7 +52,7 @@ const REQUIRED_COLUMNS = [
   'termYears'
 ];
 
-function parseCSV(csvText: string): any[] {
+function parseCSV(csvText: string): Record<string, unknown>[] {
   const lines = csvText.split('\n').filter(line => line.trim());
   if (lines.length < 2) return [];
   
@@ -61,7 +61,7 @@ function parseCSV(csvText: string): any[] {
   
   for (let i = 1; i < lines.length; i++) {
     const values = lines[i].split(',').map(v => v.trim());
-    const row: any = {};
+    const row: Record<string, unknown> = {};
     
     headers.forEach((header, index) => {
       row[header] = values[index] || '';
@@ -73,7 +73,7 @@ function parseCSV(csvText: string): any[] {
   return rows;
 }
 
-function validateRow(row: any, rowIndex: number): string[] {
+function validateRow(row: Record<string, unknown>, rowIndex: number): string[] {
   const errors: string[] = [];
   
   // Check required fields
@@ -101,7 +101,7 @@ function validateRow(row: any, rowIndex: number): string[] {
   }
   
   // Validate state format (2 letters)
-  if (row.state && !/^[A-Z]{2}$/i.test(row.state)) {
+  if (row.state && !/^[A-Z]{2}$/i.test(String(row.state))) {
     errors.push('State must be a 2-letter code (e.g., TX, FL, GA)');
   }
   
@@ -156,15 +156,15 @@ export function parseCSVFile(buffer: Buffer): ParseResult {
       const monthlyPayment = calculateMonthlyPayment(financedAmount, interestRate, termYears);
       
       // Parse images
-      const imagesArray = rawRow.images 
+      const imagesArray = rawRow.images && typeof rawRow.images === 'string'
         ? rawRow.images.split(',').map((url: string) => url.trim()).filter(Boolean)
         : [];
       
       const parsedProperty: ParsedProperty = {
-        address: rawRow.address,
-        city: rawRow.city,
-        state: rawRow.state.toUpperCase(),
-        zipCode: rawRow.zipCode.toString(),
+        address: String(rawRow.address || ''),
+        city: String(rawRow.city || ''),
+        state: String(rawRow.state || '').toUpperCase(),
+        zipCode: String(rawRow.zipCode || ''),
         bedrooms: Number(rawRow.bedrooms),
         bathrooms: Number(rawRow.bathrooms),
         squareFeet: Number(rawRow.squareFeet),
@@ -177,8 +177,8 @@ export function parseCSVFile(buffer: Buffer): ParseResult {
         lotSize: rawRow.lotSize ? Number(rawRow.lotSize) : undefined,
         balloonPayment: rawRow.balloonPayment ? Number(rawRow.balloonPayment) : undefined,
         buyersCompensation: rawRow.buyersCompensation ? Number(rawRow.buyersCompensation) : undefined,
-        description: rawRow.description || undefined,
-        images: rawRow.images || undefined,
+        description: typeof rawRow.description === 'string' ? rawRow.description : undefined,
+        images: typeof rawRow.images === 'string' ? rawRow.images : undefined,
         imagesArray
       };
       

@@ -28,7 +28,7 @@ export function Newsletter({ className = '' }: NewsletterProps) {
     <section className={`py-12 px-6 bg-surface-bg ${className}`}>
       <div className="text-center mb-8">
         <h2 className="text-3xl font-bold text-primary-text mb-4">
-          Don't Miss Out
+          Don&apos;t Miss Out
         </h2>
         <p className="text-lg text-secondary-text leading-relaxed">
           New homes get added daily. Be the first to know when something perfect for you becomes available.
@@ -40,7 +40,7 @@ export function Newsletter({ className = '' }: NewsletterProps) {
           <div className="text-center">
             <div className="text-4xl mb-4">✨</div>
             <p className="text-accent-primary text-xl font-semibold">
-              You're all set! We'll be in touch.
+              You&apos;re all set! We&apos;ll be in touch.
             </p>
           </div>
         ) : (

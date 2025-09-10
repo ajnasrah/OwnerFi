@@ -12,6 +12,8 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import UnifiedMatchingService from '@/lib/unified-matching-service';
+import { BuyerProfile } from '@/lib/firebase-models';
+import { PropertyListing } from '@/lib/property-schema';
 
 // Sync property matches across all buyers when properties change
 export async function POST(request: NextRequest) {
@@ -106,7 +108,7 @@ async function removePropertyFromAllBuyers(propertyId: string) {
 }
 
 // Add new property to buyers whose criteria it matches
-async function addPropertyToMatchingBuyers(property: any) {
+async function addPropertyToMatchingBuyers(property: PropertyListing & { id: string }) {
   try {
     // Get all buyer profiles
     const allBuyersQuery = query(collection(db, 'buyerProfiles'));
@@ -118,7 +120,7 @@ async function addPropertyToMatchingBuyers(property: any) {
       const buyerData = buyerDoc.data();
       
       // Check if this property matches the buyer's criteria
-      const matches = await checkPropertyMatchesBuyer(property, buyerData);
+      const matches = await checkPropertyMatchesBuyer(property, buyerData as BuyerProfile);
       
       if (matches) {
         const buyerRef = doc(db, 'buyerProfiles', buyerDoc.id);
@@ -142,21 +144,22 @@ async function addPropertyToMatchingBuyers(property: any) {
 }
 
 // Check if a property matches a buyer's criteria
-async function checkPropertyMatchesBuyer(property: any, buyerData: any): Promise<boolean> {
+async function checkPropertyMatchesBuyer(property: PropertyListing & { id: string }, buyerData: BuyerProfile): Promise<boolean> {
   try {
-    // Location match - use buyer's stored cities
-    const buyerCities = buyerData.cities || buyerData.searchAreaCities || [buyerData.preferredCity];
+    // Location match - use buyer's stored cities from searchCriteria
+    const criteria = buyerData.searchCriteria || {};
+    const buyerCities = criteria.cities || [buyerData.preferredCity]; // fallback to flat field
     const locationMatch = buyerCities.some((cityName: string) =>
       property.city.toLowerCase() === cityName.toLowerCase() &&
-      property.state === buyerData.preferredState
+      property.state === (criteria.state || buyerData.preferredState)
     );
     
     if (!locationMatch) return false;
 
-    // Budget match
+    // Budget match - read from nested structure
     const budgetMatch = 
-      property.monthlyPayment <= (buyerData.maxMonthlyPayment || 0) &&
-      property.downPaymentAmount <= (buyerData.maxDownPayment || 0);
+      property.monthlyPayment <= (criteria.maxMonthlyPayment || buyerData.maxMonthlyPayment || 0) &&
+      property.downPaymentAmount <= (criteria.maxDownPayment || buyerData.maxDownPayment || 0);
     
     if (!budgetMatch) return false;
 
@@ -190,18 +193,19 @@ export async function GET() {
       const buyerData = buyerDoc.data();
       
       // Use the existing matching logic to get fresh matches
+      const criteria = buyerData.searchCriteria || {};
       const buyerLocation = {
-        centerCity: buyerData.preferredCity,
-        centerState: buyerData.preferredState,
-        searchRadius: buyerData.searchRadius || 25,
-        serviceCities: buyerData.searchAreaCities || [buyerData.preferredCity]
+        centerCity: criteria.cities?.[0] || buyerData.preferredCity || '',
+        centerState: criteria.state || buyerData.preferredState || '',
+        searchRadius: criteria.searchRadius || buyerData.searchRadius || 25,
+        serviceCities: criteria.cities || buyerData.searchAreaCities || [buyerData.preferredCity]
       };
 
       const matchingProperties = await UnifiedMatchingService.findPropertiesForBuyer(
         buyerLocation,
         {
-          maxMonthlyPayment: buyerData.maxMonthlyPayment || 0,
-          maxDownPayment: buyerData.maxDownPayment || 0
+          maxMonthlyPayment: criteria.maxMonthlyPayment || buyerData.maxMonthlyPayment || 0,
+          maxDownPayment: criteria.maxDownPayment || buyerData.maxDownPayment || 0
         },
         {
           minBedrooms: buyerData.minBedrooms,

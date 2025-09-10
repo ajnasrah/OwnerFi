@@ -1,157 +1,150 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { 
-  doc, 
-  setDoc, 
-  updateDoc, 
   collection, 
   query, 
   where, 
   getDocs,
-  serverTimestamp 
+  doc,
+  setDoc,
+  updateDoc,
+  serverTimestamp
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { getSessionWithRole } from '@/lib/auth-utils';
-import { firestoreHelpers } from '@/lib/firestore';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+import { unifiedDb } from '@/lib/unified-db';
+import { ExtendedSession } from '@/types/session';
 
 /**
- * CLEAN BUYER PROFILE API
+ * SIMPLIFIED BUYER PROFILE API
  * 
- * Purpose: ONLY handle buyer profile data (preferences)
- * Does NOT handle property matching (separate system)
+ * Stores ONLY essential buyer data:
+ * - Contact info (from user record)
+ * - Search preferences (city, budgets)
+ * 
+ * NO realtor matching, NO complex algorithms, NO dependencies.
  */
-
-export async function POST(request: NextRequest) {
-  try {
-    const session = await getSessionWithRole('buyer');
-    
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
-    }
-
-    const body = await request.json();
-    
-    const {
-      firstName,
-      lastName, 
-      phone,
-      maxMonthlyPayment,
-      maxDownPayment,
-      preferredCity,
-      preferredState,
-      searchRadius,
-      minBedrooms,
-      minBathrooms,
-      cities
-    } = body;
-
-    // Simple validation
-    if (!maxMonthlyPayment || !maxDownPayment || !preferredCity || !preferredState) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
-    }
-
-    // Get user info from session
-    const userName = session.user.name || '';
-    const nameParts = userName.split(' ');
-
-    // Clean profile data structure
-    const profileData = {
-      userId: session.user.id,
-      firstName: firstName || nameParts[0] || '',
-      lastName: lastName || nameParts.slice(1).join(' ') || '',
-      email: session.user.email!,
-      phone: phone || '',
-      
-      // Search criteria (clean structure)
-      searchCriteria: {
-        cities: cities || [preferredCity],
-        state: preferredState,
-        maxMonthlyPayment: Number(maxMonthlyPayment),
-        maxDownPayment: Number(maxDownPayment),
-        minBedrooms: minBedrooms ? Number(minBedrooms) : null,
-        minBathrooms: minBathrooms ? Number(minBathrooms) : null,
-        searchRadius: searchRadius || 25
-      },
-      
-      profileComplete: true,
-      updatedAt: serverTimestamp()
-    };
-
-    // Find existing profile
-    const profilesQuery = query(
-      collection(db, 'buyerProfiles'),
-      where('userId', '==', session.user.id)
-    );
-    const existingProfiles = await getDocs(profilesQuery);
-
-    let buyerId;
-    
-    if (existingProfiles.empty) {
-      // Create new profile
-      buyerId = firestoreHelpers.generateId();
-      await setDoc(doc(db, 'buyerProfiles', buyerId), {
-        ...profileData,
-        id: buyerId,
-        createdAt: serverTimestamp()
-      });
-      console.log('✅ Created buyer profile');
-    } else {
-      // Update existing profile
-      buyerId = existingProfiles.docs[0].id;
-      await updateDoc(doc(db, 'buyerProfiles', buyerId), profileData);
-      console.log('✅ Updated buyer profile');
-    }
-
-    // Trigger background property matching (non-blocking)
-    try {
-      await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/property-matching/calculate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ buyerId })
-      });
-      console.log('🔄 Triggered background property matching');
-    } catch (error) {
-      console.warn('Background matching failed (non-critical):', error);
-    }
-
-    return NextResponse.json({
-      success: true,
-      message: 'Profile saved successfully',
-      buyerId
-    });
-
-  } catch (error) {
-    console.error('Profile save error:', error);
-    return NextResponse.json({ error: 'Failed to save profile' }, { status: 500 });
-  }
-}
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getSessionWithRole('buyer');
+    const session = await getServerSession(authOptions) as ExtendedSession;
     
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+    if (!session?.user || session.user.role !== 'buyer') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Get buyer profile
     const profilesQuery = query(
       collection(db, 'buyerProfiles'),
       where('userId', '==', session.user.id)
     );
-    const profileDocs = await getDocs(profilesQuery);
+    const snapshot = await getDocs(profilesQuery);
 
-    if (profileDocs.empty) {
+    if (snapshot.empty) {
       return NextResponse.json({ profile: null });
     }
 
     const profile = {
-      id: profileDocs.docs[0].id,
-      ...profileDocs.docs[0].data()
+      id: snapshot.docs[0].id,
+      ...snapshot.docs[0].data()
     };
 
     return NextResponse.json({ profile });
 
   } catch (error) {
-    console.error('Profile load error:', error);
+    console.error('🚨 Get buyer profile error:', error);
     return NextResponse.json({ error: 'Failed to load profile' }, { status: 500 });
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions) as ExtendedSession;
+    
+    if (!session?.user || session.user.role !== 'buyer') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const {
+      firstName,
+      lastName,
+      phone,
+      city,
+      state,
+      maxMonthlyPayment,
+      maxDownPayment
+    } = body;
+
+    // Validate required fields
+    if (!city || !state || !maxMonthlyPayment || !maxDownPayment) {
+      return NextResponse.json({ 
+        error: 'Missing required: city, state, maxMonthlyPayment, maxDownPayment' 
+      }, { status: 400 });
+    }
+
+    // Get user contact info from database if not provided
+    const userRecord = await unifiedDb.users.findById(session.user.id);
+    
+    // Simple profile structure - ONLY what buyers need
+    const profileData = {
+      userId: session.user.id,
+      
+      // Contact info (try request first, fallback to user record)
+      firstName: firstName || userRecord?.name?.split(' ')[0] || '',
+      lastName: lastName || userRecord?.name?.split(' ').slice(1).join(' ') || '',
+      email: session.user.email!,
+      phone: phone || '',
+      
+      // Search criteria - the ONLY thing that matters for matching
+      city: city,
+      state: state,
+      maxMonthlyPayment: Number(maxMonthlyPayment),
+      maxDownPayment: Number(maxDownPayment),
+      
+      // Metadata
+      profileComplete: true,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    };
+
+    console.log(`💾 SAVING BUYER PROFILE: ${profileData.firstName} ${profileData.lastName} in ${city}`);
+    console.log(`💰 Budget: $${profileData.maxMonthlyPayment}/mo, $${profileData.maxDownPayment} down`);
+
+    // Find existing profile or create new one
+    const existingQuery = query(
+      collection(db, 'buyerProfiles'),
+      where('userId', '==', session.user.id)
+    );
+    const existing = await getDocs(existingQuery);
+
+    let buyerId: string;
+
+    if (existing.empty) {
+      // Create new profile
+      buyerId = `buyer_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      await setDoc(doc(db, 'buyerProfiles', buyerId), {
+        ...profileData,
+        id: buyerId
+      });
+      console.log('✅ CREATED new buyer profile');
+    } else {
+      // Update existing profile
+      buyerId = existing.docs[0].id;
+      await updateDoc(doc(db, 'buyerProfiles', buyerId), profileData);
+      console.log('✅ UPDATED buyer profile');
+    }
+
+    return NextResponse.json({ 
+      success: true,
+      buyerId,
+      message: 'Profile saved successfully'
+    });
+
+  } catch (error) {
+    console.error('🚨 Save buyer profile error:', error);
+    return NextResponse.json({ 
+      error: 'Failed to save profile' 
+    }, { status: 500 });
   }
 }

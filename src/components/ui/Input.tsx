@@ -2,6 +2,7 @@
 
 interface InputProps {
   label?: string;
+  name?: string;
   type?: 'text' | 'email' | 'password' | 'number' | 'tel';
   placeholder?: string;
   value?: string;
@@ -10,10 +11,12 @@ interface InputProps {
   disabled?: boolean;
   className?: string;
   error?: string;
+  autoComplete?: string;
 }
 
 export function Input({
   label,
+  name,
   type = 'text',
   placeholder,
   value,
@@ -21,7 +24,8 @@ export function Input({
   required,
   disabled,
   className = '',
-  error
+  error,
+  autoComplete
 }: InputProps) {
   return (
     <div className={`${className}`}>
@@ -32,12 +36,14 @@ export function Input({
         </label>
       )}
       <input
+        name={name}
         type={type}
         placeholder={placeholder}
         value={value}
         onChange={onChange}
         required={required}
         disabled={disabled}
+        autoComplete={autoComplete}
         className={`w-full px-4 py-3 text-base border rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-accent-orange focus:border-transparent ${
           error 
             ? 'border-red-300 bg-red-50' 

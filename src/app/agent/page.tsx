@@ -19,7 +19,14 @@ interface Buyer {
   maxDownPayment: number;
   createdAt: string;
   hasBeenSold: boolean;
-  matchedProperties: any[];
+  matchedProperties: Array<{
+    id: string;
+    address: string;
+    city: string;
+    state: string;
+    monthlyPayment: number;
+    downPaymentAmount: number;
+  }>;
 }
 
 interface Agent {
@@ -310,7 +317,7 @@ export default function AgentPortal() {
               {/* Service States */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Service States * (Select all where you're licensed)
+                  Service States * (Select all where you&apos;re licensed)
                 </label>
                 <div className="grid grid-cols-3 gap-3">
                   {['TX', 'FL', 'GA'].map(state => (
@@ -340,7 +347,7 @@ export default function AgentPortal() {
                 <h3 className="font-medium text-blue-900 mb-2">How It Works</h3>
                 <ul className="text-blue-800 text-sm space-y-1">
                   <li>• View qualified buyer leads looking for owner-financed homes</li>
-                  <li>• See exactly which properties they're matched to</li>
+                  <li>• See exactly which properties they&apos;re matched to</li>
                   <li>• Purchase leads for 1 credit each</li>
                   <li>• Get full buyer contact info and property details</li>
                   <li>• Start with 5 free credits, then buy more as needed</li>
@@ -515,7 +522,7 @@ export default function AgentPortal() {
                           {lead.matchedProperties.slice(0, 4).map((property, index) => (
                             <div key={index} className="flex justify-between">
                               <span>{property.address}, {property.city}</span>
-                              <span>{formatCurrency(property.listPrice)}</span>
+                              <span>{formatCurrency((property as any).listPrice || 0)}</span>
                             </div>
                           ))}
                           {lead.matchedProperties.length > 4 && (

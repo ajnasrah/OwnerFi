@@ -53,20 +53,71 @@ export async function POST(request: NextRequest) {
       createdAt: serverTimestamp()
     });
 
-    // In a real app, you would send an email here
-    // For now, we'll log the reset link
+    // Send email using Firebase extension or function
     const resetLink = `${process.env.NEXTAUTH_URL}/auth/reset-password?token=${resetToken}`;
     
-    await logInfo('Password reset requested', {
-      action: 'password_reset_request',
-      userId: user.id,
-      email: email.toLowerCase(),
-      metadata: {
-        resetToken,
-        resetLink, // In production, this would be sent via email
-        expiresAt: resetExpires.toISOString()
-      }
-    });
+    try {
+      // Try to send email via Firebase extension (trigger-email)
+      await setDoc(doc(db, 'mail', resetToken), {
+        to: [email.toLowerCase()],
+        message: {
+          subject: 'Reset your password - OwnerFi',
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h2>Password Reset Request</h2>
+              <p>You requested to reset your password for your OwnerFi account.</p>
+              <p>Click the button below to reset your password:</p>
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${resetLink}" style="background-color: #3B82F6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
+                  Reset Password
+                </a>
+              </div>
+              <p>Or copy and paste this link in your browser:</p>
+              <p style="word-break: break-all; color: #666;">${resetLink}</p>
+              <p><small>This link will expire in 1 hour.</small></p>
+              <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
+              <p style="color: #666; font-size: 14px;">
+                If you didn't request this password reset, please ignore this email.
+              </p>
+            </div>
+          `,
+          text: `
+Password Reset Request
+
+You requested to reset your password for your OwnerFi account.
+
+Click this link to reset your password: ${resetLink}
+
+This link will expire in 1 hour.
+
+If you didn't request this password reset, please ignore this email.
+          `
+        }
+      });
+      
+      await logInfo('Password reset email sent', {
+        action: 'password_reset_email_sent',
+        userId: user.id,
+        metadata: {
+          resetToken,
+          email: email.toLowerCase(),
+          expiresAt: resetExpires.toISOString()
+        }
+      });
+      
+    } catch (emailError) {
+      // Fallback: log the reset link if email fails
+      await logError('Email sending failed, logging reset link', {
+        action: 'password_reset_email_fallback',
+        userId: user.id,
+        metadata: {
+          resetToken,
+          resetLink,
+          email: email.toLowerCase(),
+          expiresAt: resetExpires.toISOString()
+        }
+      }, emailError as Error);
+    }
 
     // For development, return the reset link
     // In production, this would just confirm email was sent

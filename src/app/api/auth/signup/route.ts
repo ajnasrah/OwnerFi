@@ -5,7 +5,7 @@ import { logError, logInfo } from '@/lib/logger';
 import Stripe from 'stripe';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-06-20',
+  apiVersion: '2025-08-27.basil',
 });
 
 export async function POST(request: NextRequest) {
@@ -49,17 +49,17 @@ export async function POST(request: NextRequest) {
       name: fullName.trim(),
       email: email.toLowerCase().trim(),
       password: hashedPassword,
-      phone: phone.trim(),
-      stripeCustomerId: null, // Will be populated on first payment
-      role: userType || 'buyer',
-      languages: languages || ['English']
+      role: userType || 'buyer'
     });
 
     await logInfo('Created new buyer account', {
       action: 'buyer_signup',
       userId: newUser.id,
       userType: userType || 'buyer',
-      languages: languages || ['English']
+      metadata: {
+        phone: phone.trim(),
+        languages: languages || ['English']
+      }
     });
 
     return NextResponse.json({

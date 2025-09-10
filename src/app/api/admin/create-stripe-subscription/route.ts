@@ -8,7 +8,7 @@ import {
 import { db } from '@/lib/firebase';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-06-20',
+  apiVersion: '2025-08-27.basil',
 });
 
 export async function POST(request: NextRequest) {
@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     const { customerId, priceId, planId } = await request.json();
     
     // Create the subscription in Stripe
-    const subscription = await stripe.subscriptions.create({
+    const subscription: Stripe.Subscription = await stripe.subscriptions.create({
       customer: customerId,
       items: [
         {
@@ -42,8 +42,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       subscriptionId: subscription.id,
-      status: subscription.status,
-      currentPeriodEnd: new Date(subscription.current_period_end * 1000).toISOString()
+      status: subscription.status
     });
     
   } catch (error) {

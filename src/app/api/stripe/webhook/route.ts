@@ -14,9 +14,10 @@ import { db } from '@/lib/firebase';
 import { PRICING_TIERS } from '@/lib/pricing';
 import { firestoreHelpers } from '@/lib/firestore';
 import Stripe from 'stripe';
+import { RealtorProfile } from '@/lib/firebase-models';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-06-20',
+  apiVersion: '2025-08-27.basil',
 });
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
@@ -84,7 +85,7 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({ received: true });
 }
 
-async function handleCheckoutCompleted(session: any) {
+async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const { customer, subscription, metadata, mode } = session;
   const { userId, userEmail, planId, type, customerId } = metadata;
 
@@ -121,7 +122,7 @@ async function handleCheckoutCompleted(session: any) {
   }
 
   const realtorDoc = realtorDocs.docs[0];
-  const realtor = { id: realtorDoc.id, ...realtorDoc.data() };
+  const realtor = { id: realtorDoc.id, ...realtorDoc.data() } as RealtorProfile;
 
   // Store/update Stripe customer ID in realtor record
   const sessionCustomerId = customer || customerId;
@@ -285,13 +286,13 @@ async function handleCheckoutCompleted(session: any) {
   }
 }
 
-async function handleSubscriptionCreated(subscription: any) {
+async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
   // This is usually handled in checkout.session.completed
   // But we can handle it here as a fallback
   console.log('Subscription created:', subscription.id);
 }
 
-async function handleSubscriptionUpdated(subscription: any) {
+async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
   // Handle subscription changes (plan changes, status updates)
   const subscriptionsQuery = query(
     collection(db, 'realtorSubscriptions'),
@@ -308,15 +309,15 @@ async function handleSubscriptionUpdated(subscription: any) {
   
   await updateDoc(doc(db, 'realtorSubscriptions', subscriptionDoc.id), {
     status: subscription.status === 'active' ? 'active' : 'canceled',
-    currentPeriodStart: new Date(subscription.current_period_start * 1000),
-    currentPeriodEnd: new Date(subscription.current_period_end * 1000),
+    currentPeriodStart: new Date((subscription as any).current_period_start * 1000),
+    currentPeriodEnd: new Date((subscription as any).current_period_end * 1000),
     updatedAt: serverTimestamp()
   });
 
   console.log(`Updated subscription ${subscription.id} to status ${subscription.status}`);
 }
 
-async function handleSubscriptionDeleted(subscription: any) {
+async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
   // Handle subscription cancellation
   const subscriptionsQuery = query(
     collection(db, 'realtorSubscriptions'),
@@ -335,9 +336,9 @@ async function handleSubscriptionDeleted(subscription: any) {
   console.log(`Canceled subscription ${subscription.id}`);
 }
 
-async function handlePaymentSucceeded(invoice: any) {
+async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
   // Handle successful recurring payments
-  const subscriptionId = invoice.subscription;
+  const subscriptionId = (invoice as any).subscription;
   
   if (!subscriptionId) return;
 
@@ -375,18 +376,18 @@ async function handlePaymentSucceeded(invoice: any) {
   }
 }
 
-async function handlePaymentFailed(invoice: any) {
+async function handlePaymentFailed(invoice: Stripe.Invoice) {
   // Handle failed payments
   console.log('Payment failed for invoice:', invoice.id);
   
-  const subscriptionId = invoice.subscription;
+  const subscriptionId = (invoice as any).subscription;
   if (subscriptionId) {
     // You might want to send an email notification here
     console.log(`Payment failed for subscription ${subscriptionId}`);
   }
 }
 
-async function createOrUpdateSubscription(realtorId: string, planId: string, stripeSubscription: any, tier: any) {
+async function createOrUpdateSubscription(realtorId: string, planId: string, stripeSubscription: Stripe.Subscription, tier: typeof PRICING_TIERS[keyof typeof PRICING_TIERS]) {
   const subscriptionData = {
     realtorId,
     plan: planId,
@@ -395,8 +396,8 @@ async function createOrUpdateSubscription(realtorId: string, planId: string, str
     creditsPerMonth: tier.creditsPerMonth,
     stripeCustomerId: stripeSubscription.customer,
     stripeSubscriptionId: stripeSubscription.id,
-    currentPeriodStart: new Date(stripeSubscription.current_period_start * 1000),
-    currentPeriodEnd: new Date(stripeSubscription.current_period_end * 1000),
+    currentPeriodStart: new Date((stripeSubscription as any).current_period_start * 1000),
+    currentPeriodEnd: new Date((stripeSubscription as any).current_period_end * 1000),
     updatedAt: serverTimestamp()
   };
 

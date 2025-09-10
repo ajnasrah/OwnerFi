@@ -1,23 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db as firebaseDb } from '@/lib/firebase';
+import { BuyerProfile, User } from '@/lib/firebase-models';
 
 export async function GET(request: NextRequest) {
   try {
     // Get all buyer profiles
     const buyersQuery = query(collection(firebaseDb, 'buyerProfiles'));
     const buyerDocs = await getDocs(buyersQuery);
-    const buyerProfiles = buyerDocs.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const buyerProfiles = buyerDocs.docs.map(doc => ({ id: doc.id, ...doc.data() } as BuyerProfile));
 
     // Get users for each buyer
     const buyersWithUsers = [];
     for (const buyer of buyerProfiles) {
       let user = null;
-      if (buyer.userId) {
+      if ('userId' in buyer && buyer.userId) {
         const userQuery = query(collection(firebaseDb, 'users'), where('id', '==', buyer.userId));
         const userDocs = await getDocs(userQuery);
         if (!userDocs.empty) {
-          user = { id: userDocs.docs[0].id, ...userDocs.docs[0].data() };
+          user = { id: userDocs.docs[0].id, ...userDocs.docs[0].data() } as User;
         }
       }
       buyersWithUsers.push({ buyer, user });
@@ -29,8 +30,8 @@ export async function GET(request: NextRequest) {
         id: b.buyer.id,
         name: `${b.buyer.firstName} ${b.buyer.lastName}`,
         phone: b.buyer.phone,
-        budget: `$${b.buyer.maxMonthlyPayment}/month, $${b.buyer.maxDownPayment} down`,
-        location: `${b.buyer.preferredCity}, ${b.buyer.preferredState}`,
+        budget: `$${b.buyer.searchCriteria?.maxMonthlyPayment || b.buyer.maxMonthlyPayment || 0}/month, $${b.buyer.searchCriteria?.maxDownPayment || b.buyer.maxDownPayment || 0} down`,
+        location: `${b.buyer.searchCriteria?.cities?.[0] || b.buyer.preferredCity || 'Unknown'}, ${b.buyer.searchCriteria?.state || b.buyer.preferredState || ''}`,
         radius: `${b.buyer.searchRadius} miles`,
         isActive: b.buyer.isActive,
         profileComplete: b.buyer.profileComplete,

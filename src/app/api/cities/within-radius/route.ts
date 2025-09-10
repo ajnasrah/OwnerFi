@@ -1,5 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+interface OverpassElement {
+  id: number;
+  type: string;
+  lat?: number;
+  lon?: number;
+  center?: {
+    lat: number;
+    lon: number;
+  };
+  tags?: {
+    name?: string;
+    place?: string;
+    state?: string;
+    'addr:state'?: string;
+  };
+}
+
+interface OverpassResponse {
+  elements: OverpassElement[];
+}
+
+interface CityResult {
+  name: string;
+  lat: number;
+  lng: number;
+  distance: number;
+  type: string;
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -38,12 +67,12 @@ export async function GET(request: NextRequest) {
         throw new Error('Overpass API error');
       }
 
-      const data = await response.json();
+      const data: OverpassResponse = await response.json();
       
       // Process and filter results
       const cities = data.elements
-        .filter((element: any) => element.tags && element.tags.name)
-        .map((element: any) => {
+        .filter((element: OverpassElement) => element.tags && element.tags.name)
+        .map((element: OverpassElement) => {
           const elementLat = element.lat || element.center?.lat;
           const elementLng = element.lon || element.center?.lon;
           
@@ -61,8 +90,8 @@ export async function GET(request: NextRequest) {
             type: element.tags.place
           };
         })
-        .filter((city: any) => city && city.name && city.distance <= radius)
-        .sort((a: any, b: any) => a.distance - b.distance);
+        .filter((city: CityResult | null) => city && city.name && city.distance <= radius)
+        .sort((a: CityResult, b: CityResult) => a.distance - b.distance);
 
       return NextResponse.json({
         centerCity: { lat, lng },

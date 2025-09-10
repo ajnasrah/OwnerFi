@@ -1,18 +1,48 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
-export default function RealtorBuyerPropertiesView() {
+interface BuyerData {
+  firstName: string;
+  lastName: string;
+  phone: string;
+  searchCriteria?: {
+    cities?: string[];
+    state?: string;
+    maxMonthlyPayment?: number;
+    maxDownPayment?: number;
+  };
+}
+
+interface Property {
+  id: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  listPrice?: number;
+  monthlyPayment?: number;
+  downPaymentAmount?: number;
+  bedrooms?: number;
+  bathrooms?: number;
+  squareFeet?: number;
+  imageUrls?: string[];
+  description?: string;
+  buyerStatus?: 'liked' | 'disliked' | 'pending';
+  matchScore?: number;
+}
+
+function BuyerPropertiesContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
   const buyerId = searchParams.get('buyerId');
   
-  const [properties, setProperties] = useState<any[]>([]);
-  const [buyer, setBuyer] = useState<any>(null);
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [buyer, setBuyer] = useState<BuyerData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selectedTab, setSelectedTab] = useState<'pending' | 'liked' | 'disliked'>('pending');
@@ -111,7 +141,7 @@ export default function RealtorBuyerPropertiesView() {
           
           <div className="bg-white rounded-xl p-6 shadow-sm">
             <h1 className="text-2xl font-bold text-gray-900 mb-4">
-              Properties for {capitalizeFirstLetter(buyer.firstName)} {capitalizeFirstLetter(buyer.lastName)}
+              Properties for {capitalizeFirstLetter(String(buyer.firstName))} {capitalizeFirstLetter(String(buyer.lastName))}
             </h1>
             
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
@@ -147,7 +177,7 @@ export default function RealtorBuyerPropertiesView() {
                 <button
                   key={tab.key}
                   onClick={() => {
-                    setSelectedTab(tab.key as any);
+                    setSelectedTab(tab.key as 'pending' | 'liked' | 'disliked');
                     loadPropertiesForTab(tab.key);
                   }}
                   className={`flex-1 px-4 py-3 rounded-lg font-medium transition-all ${
@@ -268,5 +298,15 @@ export default function RealtorBuyerPropertiesView() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function RealtorBuyerPropertiesView() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+    </div>}>
+      <BuyerPropertiesContent />
+    </Suspense>
   );
 }

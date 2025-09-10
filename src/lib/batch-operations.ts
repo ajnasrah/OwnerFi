@@ -8,10 +8,29 @@ import {
   query, 
   where, 
   getDocs,
+  getDoc,
   documentId,
-  QueryConstraint 
+  QueryConstraint,
+  doc,
+  updateDoc,
+  serverTimestamp
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { PropertyListing } from './property-schema';
+
+/**
+ * Type guard to check if a value is a non-empty string
+ */
+function isValidString(value: unknown): value is string {
+  return typeof value === 'string' && value.trim().length > 0;
+}
+
+/**
+ * Type guard to check if a value is a positive number
+ */
+function isPositiveNumber(value: unknown): value is number {
+  return typeof value === 'number' && value > 0 && !isNaN(value);
+}
 
 /**
  * Batch fetch documents by IDs (eliminates N+1 queries)
@@ -19,7 +38,7 @@ import { db } from '@/lib/firebase';
 export async function batchGetDocuments(
   collectionName: string, 
   ids: string[]
-): Promise<any[]> {
+): Promise<Record<string, unknown>[]> {
   if (ids.length === 0) return [];
 
   const results = [];
@@ -48,14 +67,20 @@ export async function batchGetDocuments(
 /**
  * Optimized property search with proper indexing
  */
-export async function searchProperties(criteria: {
+interface SearchCriteria {
   state: string;
   cities?: string[];
   maxMonthlyPayment?: number;
   maxDownPayment?: number;
   minBedrooms?: number;
   minBathrooms?: number;
-}): Promise<any[]> {
+}
+
+export async function searchProperties(criteria: SearchCriteria): Promise<Record<string, unknown>[]> {
+  // Validate required criteria
+  if (!isValidString(criteria.state)) {
+    throw new Error('State is required and must be a valid string');
+  }
   
   const constraints: QueryConstraint[] = [
     where('isActive', '==', true),
@@ -76,32 +101,32 @@ export async function searchProperties(criteria: {
   let properties = snapshot.docs.map(doc => ({
     id: doc.id,
     ...doc.data()
-  }));
+  })) as (PropertyListing & { id: string })[];
 
   // Apply remaining filters in JavaScript (on smaller dataset)
   if (criteria.cities && criteria.cities.length > 0) {
     properties = properties.filter(property => 
       criteria.cities!.some(city => 
-        property.city.toLowerCase() === city.toLowerCase()
+(property as PropertyListing).city.toLowerCase() === city.toLowerCase()
       )
     );
   }
 
   if (criteria.maxDownPayment) {
     properties = properties.filter(property => 
-      property.downPaymentAmount <= criteria.maxDownPayment!
+(property as PropertyListing).downPaymentAmount <= criteria.maxDownPayment!
     );
   }
 
   if (criteria.minBedrooms) {
     properties = properties.filter(property => 
-      property.bedrooms >= criteria.minBedrooms!
+(property as PropertyListing).bedrooms >= criteria.minBedrooms!
     );
   }
 
   if (criteria.minBathrooms) {
     properties = properties.filter(property => 
-      property.bathrooms >= criteria.minBathrooms!
+(property as PropertyListing).bathrooms >= criteria.minBathrooms!
     );
   }
 
@@ -113,13 +138,13 @@ export async function searchProperties(criteria: {
  */
 export async function batchUpdatePropertyMatches(updates: Array<{
   buyerId: string;
-  matches: any[];
+  matches: Record<string, unknown>[];
 }>): Promise<void> {
   
   // Process in parallel for performance
   const updatePromises = updates.map(async ({ buyerId, matches }) => {
-    const updateDoc = doc(collection(db, 'buyerProfiles'), buyerId);
-    await updateDoc(updateDoc, {
+    const updateDocRef = doc(collection(db, 'buyerProfiles'), buyerId);
+    await updateDoc(updateDocRef, {
       propertyMatches: matches,
       lastMatchUpdate: serverTimestamp(),
       updatedAt: serverTimestamp()
@@ -132,10 +157,10 @@ export async function batchUpdatePropertyMatches(updates: Array<{
 /**
  * Efficient user lookup with caching
  */
-const userCache = new Map<string, any>();
+const userCache = new Map<string, { data: Record<string, unknown> | null; timestamp: number }>();
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
-export async function getCachedUser(userId: string): Promise<any | null> {
+export async function getCachedUser(userId: string): Promise<Record<string, unknown> | null> {
   // Check cache first
   const cached = userCache.get(userId);
   if (cached && (Date.now() - cached.timestamp) < CACHE_TTL) {

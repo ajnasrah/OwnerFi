@@ -8,6 +8,7 @@ import { Header } from '@/components/ui/Header';
 import { Footer } from '@/components/ui/Footer';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { isExtendedSession } from '@/types/session';
 
 export default function SignIn() {
   const [email, setEmail] = useState('');
@@ -33,14 +34,18 @@ export default function SignIn() {
       } else {
         // Get the session to determine user role
         const session = await getSession();
-        if (session?.user?.role === 'buyer') {
-          router.push('/dashboard');
-        } else if (session?.user?.role === 'realtor') {
-          router.push('/realtor/dashboard');
-        } else if (session?.user?.role === 'admin' && session?.user?.email === 'admin@prosway.com') {
-          router.push('/admin');
+        if (isExtendedSession(session)) {
+          if (session.user.role === 'buyer') {
+            router.push('/dashboard');
+          } else if (session.user.role === 'realtor') {
+            router.push('/realtor/dashboard');
+          } else if (session.user.role === 'admin' && session.user.email === 'admin@prosway.com') {
+            router.push('/admin');
+          } else {
+            router.push('/dashboard');
+          }
         } else {
-          // Default to buyer dashboard for unknown roles or non-admin users
+          // Default to buyer dashboard for sessions without role
           router.push('/dashboard');
         }
       }
@@ -101,6 +106,12 @@ export default function SignIn() {
               >
                 {loading ? 'Signing in...' : 'Sign In'}
               </Button>
+
+              <div className="text-center mt-4">
+                <Link href="/auth/forgot-password" className="text-sm text-blue-600 hover:text-blue-500">
+                  Forgot password?
+                </Link>
+              </div>
             </form>
           </div>
 

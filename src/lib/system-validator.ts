@@ -3,20 +3,18 @@ import {
   collection, 
   query, 
   where, 
-  getDocs, 
-  doc, 
-  getDoc,
+  getDocs,
   limit as firestoreLimit
 } from 'firebase/firestore';
 import { db } from './firebase';
-import { logInfo, logError } from './logger';
+import { logInfo } from './logger';
 
 export interface ValidationResult {
   category: string;
   test: string;
   status: 'pass' | 'fail' | 'warning';
   message: string;
-  details?: any;
+  details?: Record<string, unknown>;
   fix?: string;
 }
 
@@ -214,40 +212,14 @@ export class SystemValidator {
           fix: 'Create buyer profiles or run test data generation'
         });
       } else {
-        // Import matching function dynamically
-        const { PropertyMatchingService, BuyerCriteria } = await import('./property-matching-service');
-        
-        // Test with first buyer
-        const testBuyer = { id: buyerDocs.docs[0].id, ...buyerDocs.docs[0].data() } as any;
-        
-        // Convert to BuyerCriteria format
-        const buyerCriteria: BuyerCriteria = {
-          id: testBuyer.id,
-          preferredCity: testBuyer.preferredCity || '',
-          preferredState: testBuyer.preferredState || '',
-          searchRadius: testBuyer.searchRadius || 25,
-          maxMonthlyPayment: testBuyer.maxMonthlyPayment || 0,
-          maxDownPayment: testBuyer.maxDownPayment || 0,
-          minBedrooms: testBuyer.minBedrooms,
-          minBathrooms: testBuyer.minBathrooms,
-          minPrice: testBuyer.minPrice,
-          maxPrice: testBuyer.maxPrice
-        };
-        
-        const matchResult = await PropertyMatchingService.calculateBuyerMatches(buyerCriteria);
-        
+        // Skip matching service test since property-matching-service doesn't exist
+        // TODO: Implement property matching service
         results.push({
           category: 'Matching',
           test: 'Property Matching Algorithm',
-          status: 'pass',
-          message: `Successfully matched ${matchResult.totalMatches} properties for test buyer`,
-          details: {
-            buyerId: testBuyer.id,
-            totalMatches: matchResult.totalMatches,
-            exactCityMatches: matchResult.exactCityMatches,
-            nearbyMatches: matchResult.nearbyMatches,
-            stateMatches: matchResult.stateMatches
-          }
+          status: 'warning',
+          message: 'Property matching service not implemented',
+          fix: 'Implement PropertyMatchingService module'
         });
       }
     } catch (error) {
@@ -296,7 +268,7 @@ export class SystemValidator {
     try {
       const Stripe = (await import('stripe')).default;
       const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-        apiVersion: '2024-06-20',
+        apiVersion: '2025-08-27.basil',
       });
 
       // Test API connectivity with a simple request
@@ -458,8 +430,10 @@ export class SystemValidator {
     // Log the results
     await logInfo('System health check completed', {
       action: 'system_health_check',
-      overall: healthReport.overall,
-      summary: healthReport.summary
+      metadata: {
+        overall: healthReport.overall,
+        summary: healthReport.summary
+      }
     });
 
     console.log(`System health check completed: ${overall}`);

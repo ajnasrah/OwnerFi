@@ -144,8 +144,10 @@ export async function POST(request: NextRequest) {
     await logInfo(`Created ${body.role} account with atomic transaction`, {
       action: `${body.role}_signup_atomic`,
       userId: result.user.id,
-      profileId: result.profile.id,
-      email: body.email
+      metadata: {
+        profileId: result.profile.id,
+        email: body.email
+      }
     });
 
     return NextResponse.json({
@@ -157,9 +159,9 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    await logError('Atomic signup failed', error as Error, {
+    await logError('Atomic signup failed', {
       action: 'signup_atomic_error'
-    });
+    }, error as Error);
 
     return NextResponse.json(
       { error: 'Failed to create account. Please try again.' },

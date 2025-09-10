@@ -223,7 +223,7 @@ export class ZillowScraper {
         metadata: { searchUrl, criteria, maxPages }
       });
 
-      let allPropertyUrls: string[] = [];
+      const allPropertyUrls: string[] = [];
       
       for (let page = 1; page <= maxPages; page++) {
         let pageUrl = searchUrl;

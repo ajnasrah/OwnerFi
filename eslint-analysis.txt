@@ -1,0 +1,414 @@
+ESLint Analysis Results - 435 problems (199 errors, 236 warnings)
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/admin/admin-simple.tsx
+  52:14  warning  '_error' is defined but never used  @typescript-eslint/no-unused-vars
+  94:14  warning  '_error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/admin/page.tsx
+  232:14  warning  '_error' is defined but never used  @typescript-eslint/no-unused-vars
+  253:14  warning  '_error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/agent/page.tsx
+   68:6   warning  React Hook useEffect has a missing dependency: 'fetchAgentData'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+   81:14  warning  'err' is defined but never used                                                                                    @typescript-eslint/no-unused-vars
+   98:14  warning  'err' is defined but never used                                                                                    @typescript-eslint/no-unused-vars
+  132:14  warning  'err' is defined but never used                                                                                    @typescript-eslint/no-unused-vars
+  175:14  warning  'err' is defined but never used                                                                                    @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/admin/batch-populate-cities/route.ts
+  9:3  warning  'limit' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/admin/check-credits/route.ts
+  9:27  warning  '_request' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/admin/check-session/route.ts
+  13:27  warning  '_request' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/admin/clean-database/route.ts
+  12:28  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/admin/cleanup-duplicates/route.ts
+   8:3   warning  'doc' is defined but never used       @typescript-eslint/no-unused-vars
+  13:28  warning  'request' is defined but never used   @typescript-eslint/no-unused-vars
+  54:17  warning  'address' is defined but never used   @typescript-eslint/no-unused-vars
+  62:31  warning  '_address' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/admin/consolidate-accounts/route.ts
+  5:3  warning  'where' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/admin/contacts/route.ts
+  15:27  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/admin/create-mock-buyer/route.ts
+  5:28  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/admin/create-mock-buyers/route.ts
+   9:3  warning  'doc' is defined but never used                   @typescript-eslint/no-unused-vars
+  29:7  warning  '_mockBuyers' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/admin/debug-buyers/route.ts
+  5:27  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/admin/debug-profile/route.ts
+  10:27  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/admin/debug-realtors/route.ts
+  5:27  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/admin/disputes/route.ts
+  11:3   warning  'where' is defined but never used    @typescript-eslint/no-unused-vars
+  18:27  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/admin/find-stripe-customer/route.ts
+  14:27  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/admin/fix-credits/route.ts
+  11:28  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/admin/fix-trial-dates/route.ts
+  14:28  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/admin/mock-buyers/route.ts
+  4:27  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/admin/populate-all-properties-fast/route.ts
+  1:10  warning  'NextRequest' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/admin/populate-properties/route.ts
+   1:10  warning  'NextRequest' is defined but never used           @typescript-eslint/no-unused-vars
+   3:28  warning  'request' is defined but never used               @typescript-eslint/no-unused-vars
+  20:12  warning  'error' is defined but never used                 @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/admin/prelist-properties/route.ts
+  1:10  warning  'NextRequest' is defined but never used  @typescript-eslint/no-unused-vars
+  8:28  warning  'request' is defined but never used      @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/admin/process-csv/route.ts
+  7:28  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/admin/property-details/route.ts
+   5:27  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/admin/realtor-activity/route.ts
+   5:27  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/admin/statistics/route.ts
+   3:27  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/admin/test-csv/route.ts
+  3:10  warning  'NextRequest' is defined but never used  @typescript-eslint/no-unused-vars
+  5:28  warning  'request' is defined but never used      @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/admin/test-database/route.ts
+   5:28  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/admin/test-enhanced-matching/route.ts
+   5:28  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/admin/test-geoapify/route.ts
+   7:28  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/admin/test-matching/route.ts
+  11:28  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/admin/test-property-search/route.ts
+   8:28  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/admin/test-property-system/route.ts
+   4:28  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/admin/test-scraping/route.ts
+   5:28  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/admin/test-system-validator/route.ts
+   5:28  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/admin/transaction-summary/route.ts
+  10:27  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/agent/properties/route.ts
+   84:12  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/agent/user-credit-info/route.ts
+  13:27  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/auth/login/route.ts
+  36:12  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/auth/register/route.ts
+  60:12  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/auth/session/route.ts
+  17:12  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/buyers/add-buyer/route.ts
+  46:12  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/buyers/fetch-buyers/route.ts
+  21:12  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/buyers/update-buyer/route.ts
+  74:12  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/buyers/upload-csv/route.ts
+   51:12  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/chat/send-message/route.ts
+  34:12  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/contacts/route.ts
+  11:12  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+  29:12  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/credit-info/route.ts
+  15:12  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/deals/send-dispute/route.ts
+  33:12  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/marketing/route.ts
+  17:17  warning  'buyerId' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/payment/create-payment-intent/route.ts
+  35:12  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/payment/get-default-source/route.ts
+  26:12  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/properties/by-city/[city]/route.ts
+  21:12  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/properties/by-id/[id]/route.ts
+  23:12  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/properties/count-by-location/route.ts
+  24:12  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/properties/get-batch/route.ts
+  43:12  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/properties/get-matched-buyers/route.ts
+  42:12  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/properties/get-unique-cities/route.ts
+  15:12  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/properties/property-details/route.ts
+  54:12  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/properties/search/route.ts
+  23:12  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/properties/status-tracking/route.ts
+  23:12  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/properties/update-property/route.ts
+  68:12  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/realtors/activity/route.ts
+  25:12  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/realtors/fetch-realtors/route.ts
+  21:12  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/realtors/realtor-info/route.ts
+  22:12  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/status/search/route.ts
+  22:12  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/stripe/create-customer/route.ts
+  34:12  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/stripe/create-setup-intent/route.ts
+  44:12  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/stripe/save-payment-method/route.ts
+  50:12  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/stripe/webhook/route.ts
+   93:20  warning  'event' is defined but never used                                                         @typescript-eslint/no-unused-vars
+   93:27  warning  'session' is defined but never used                                                       @typescript-eslint/no-unused-vars
+  114:20  warning  'event' is defined but never used                                                         @typescript-eslint/no-unused-vars
+  114:27  warning  'session' is defined but never used                                                       @typescript-eslint/no-unused-vars
+  128:20  warning  'event' is defined but never used                                                         @typescript-eslint/no-unused-vars
+  128:27  warning  'session' is defined but never used                                                       @typescript-eslint/no-unused-vars
+  194:16  warning  'error' is defined but never used                                                         @typescript-eslint/no-unused-vars
+  222:12  error    Do not use 'any' as a type. Instead, use a specific type                                 @typescript-eslint/no-explicit-any
+  224:29  error    Do not use 'any' as a type. Instead, use a specific type                                 @typescript-eslint/no-explicit-any
+  231:24  error    Do not use 'any' as a type. Instead, use a specific type                                 @typescript-eslint/no-explicit-any
+  238:44  error    Do not use 'any' as a type. Instead, use a specific type                                 @typescript-eslint/no-explicit-any
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/users/get-user/route.ts
+  19:12  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/users/update-profile/route.ts
+  32:12  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/users/update-user/route.ts
+  26:12  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/billing/page.tsx
+  50:8  warning  React Hook useEffect has missing dependencies: 'fetchCreditInfo', 'fetchDefaultPaymentMethod', and 'session'. Either include them or remove the dependency array. If 'fetchCreditInfo' and 'fetchDefaultPaymentMethod' change too often, find the parent component that defines them and wrap them in useCallback  react-hooks/exhaustive-deps
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/buyer-analysis/page.tsx
+  47:8  warning  React Hook useEffect has a missing dependency: 'fetchBuyers'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/dashboard/page.tsx
+   70:8   warning  React Hook useEffect has a missing dependency: 'fetchData'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  173:14  warning  'error' is defined but never used                                                                           @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/deals/page.tsx
+   48:8   warning  React Hook useEffect has a missing dependency: 'fetchRealtors'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  150:14  warning  'error' is defined but never used                                                                              @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/globals.css
+   15:1  warning  Unexpected unknown rule "scrollbar-width"    unknown-rules
+  173:1  warning  Unexpected unknown property "color-scheme"  unknown-properties
+  263:3  warning  Unexpected unknown property "scrollbar-color"  unknown-properties
+  309:3  warning  Unexpected unknown property "scrollbar-color"  unknown-properties
+  331:3  warning  Unexpected unknown property "scrollbar-color"  unknown-properties
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/page.tsx
+   32:8   warning  React Hook useEffect has missing dependencies: 'fetchCities', 'fetchProperties', and 'session'. Either include them or remove the dependency array. If 'fetchCities' and 'fetchProperties' change too often, find the parent component that defines them and wrap them in useCallback  react-hooks/exhaustive-deps
+  108:14  warning  'error' is defined but never used                                                                                                                                                                                                                   @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/payments/page.tsx
+   41:6   warning  React Hook useEffect has missing dependencies: 'fetchPaymentHistory' and 'session'. Either include them or remove the dependency array. If 'fetchPaymentHistory' changes too often, find the parent component that defines it and wrap it in useCallback  react-hooks/exhaustive-deps
+  100:14  warning  'error' is defined but never used                                                                                                                                                                                                                                 @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/property-analysis/page.tsx
+   59:8   warning  React Hook useEffect has missing dependencies: 'fetchPropertyCounts' and 'session'. Either include them or remove the dependency array. If 'fetchPropertyCounts' changes too often, find the parent component that defines it and wrap it in useCallback  react-hooks/exhaustive-deps
+  134:14  warning  'error' is defined but never used                                                                                                                                                                                                                             @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/property-details/[id]/page.tsx
+   29:8   warning  React Hook useEffect has a missing dependency: 'fetchPropertyDetails'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+   74:14  warning  'error' is defined but never used                                                                                       @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/property-search/page.tsx
+  164:8  warning  React Hook useEffect has a missing dependency: 'fetchProperties'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/realtor-activity/page.tsx
+   51:6   warning  React Hook useEffect has missing dependencies: 'fetchActivityData' and 'session'. Either include them or remove the dependency array. If 'fetchActivityData' changes too often, find the parent component that defines it and wrap it in useCallback  react-hooks/exhaustive-deps
+  134:14  warning  'error' is defined but never used                                                                                                                                                                                                                               @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/signup/page.tsx
+   23:10  warning  'router' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/transaction-history/page.tsx
+   66:8   warning  React Hook useEffect has missing dependencies: 'fetchTransactionHistory' and 'session'. Either include them or remove the dependency array. If 'fetchTransactionHistory' changes too often, find the parent component that defines it and wrap it in useCallback  react-hooks/exhaustive-deps
+  145:14  warning  'error' is defined but never used                                                                                                                                                                                                                                     @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/user-management/page.tsx
+   82:8   warning  React Hook useEffect has missing dependencies: 'fetchRealtors' and 'session'. Either include them or remove the dependency array. If 'fetchRealtors' changes too often, find the parent component that defines it and wrap it in useCallback  react-hooks/exhaustive-deps
+  174:14  warning  'error' is defined but never used                                                                                                                                                                                                                          @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/components/BuyerModal.tsx
+  34:10  warning  'router' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/components/EditPropertyModal.tsx
+  52:12  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/components/PropertyActionModal.tsx
+  31:12  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/components/PropertyCard.tsx
+  117:32  warning  Unescaped entity '&gt;'. Use `&amp;gt;` instead  react/no-unescaped-entities
+  138:12  warning  'error' is defined but never used                @typescript-eslint/no-unused-vars
+  152:12  warning  'error' is defined but never used                @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/components/PropertyForm.tsx
+  80:8  warning  React Hook useEffect has a missing dependency: 'getCities'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/components/PropertyModal.tsx
+  29:12  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/components/PropertyTable.tsx
+   86:37  warning  '_property' is defined but never used           @typescript-eslint/no-unused-vars
+   86:57  warning  'index' is defined but never used               @typescript-eslint/no-unused-vars
+  215:12  warning  'error' is defined but never used               @typescript-eslint/no-unused-vars
+  239:12  warning  'error' is defined but never used               @typescript-eslint/no-unused-vars
+  253:14  warning  'error' is defined but never used               @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/lib/api-helpers.ts
+  34:30  warning  'apiKey' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/lib/automated-system.ts
+  31:3   warning  'ObjectId' is defined but never used                          @typescript-eslint/no-unused-vars
+  75:19  warning  'buyerId' is assigned a value but never used                  @typescript-eslint/no-unused-vars
+  76:23  warning  'profileData' is assigned a value but never used              @typescript-eslint/no-unused-vars
+  79:14  warning  'processingResult' is assigned a value but never used         @typescript-eslint/no-unused-vars
+  86:18  warning  'activityResult' is assigned a value but never used           @typescript-eslint/no-unused-vars
+  90:21  warning  'notificationResult' is assigned a value but never used       @typescript-eslint/no-unused-vars
+  93:23  warning  'analyticsResult' is assigned a value but never used          @typescript-eslint/no-unused-vars
+  96:13  warning  'final' is assigned a value but never used                    @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/lib/buyer-matching.ts
+  1:31  warning  'connectToDB' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/lib/data-tracker.ts
+   36:3   warning  'Timestamp' is defined but never used     @typescript-eslint/no-unused-vars
+   37:14  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   38:14  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   58:19  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   59:17  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   62:14  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   63:14  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   83:14  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   84:14  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  104:14  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  105:14  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  114:14  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  126:24  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  127:22  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  128:14  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  129:14  error    Unexpected any. Specify a
+
+
+
+
+... [continuing content from the truncated lint output]
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/lib/ghl-csv-parser.ts
+   11:3   warning  'getStreetViewImageByAddress' is defined but never used    @typescript-eslint/no-unused-vars
+   12:3   warning  'enhancePropertyWithGoogleMaps' is defined but never used  @typescript-eslint/no-unused-vars
+  250:12  warning  'error' is defined but never used                          @typescript-eslint/no-unused-vars
+  281:9   warning  'yearBuilt' is assigned a value but never used             @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/lib/matching.ts
+  41:10  warning  'calculateDistance' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/lib/payment-source-tracking.ts
+   25:63  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   25:69  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   26:17  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  167:51  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/lib/property-enhancement.ts
+  5:10  warning  'getNearbyCitiesDirect' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/lib/property-search-optimized.ts
+  119:17  warning  '_doc' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/lib/property-system.ts
+   79:33  warning  'buyerId' is defined but never used      @typescript-eslint/no-unused-vars
+   79:50  warning  'profileData' is defined but never used  @typescript-eslint/no-unused-vars
+   87:41  warning  'buyerId' is defined but never used      @typescript-eslint/no-unused-vars
+   96:37  warning  'buyerId' is defined but never used      @typescript-eslint/no-unused-vars
+   96:54  warning  'propertyId' is defined but never used   @typescript-eslint/no-unused-vars
+   96:74  warning  'action' is defined but never used       @typescript-eslint/no-unused-vars
+  104:35  warning  'buyerId' is defined but never used      @typescript-eslint/no-unused-vars
+  104:52  warning  'status' is defined but never used       @typescript-eslint/no-unused-vars
+  113:45  warning  'buyerId' is defined but never used      @typescript-eslint/no-unused-vars
+  121:36  warning  'propertyId' is defined but never used   @typescript-eslint/no-unused-vars
+  121:56  warning  'action' is defined but never used       @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/lib/simple-auth.ts
+  13:12  warning  '_error' is defined but never used  @typescript-eslint/no-unused-vars
+  26:12  warning  '_error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/lib/system-validator.ts
+  216:42  warning  'BuyerCriteria' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/Users/abdullahabunasrah/Desktop/ownerfi/src/lib/zillow-scraper.ts
+  189:16  warning  'e' is defined but never used  @typescript-eslint/no-unused-vars

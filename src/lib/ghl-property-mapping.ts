@@ -1,6 +1,23 @@
 // GoHighLevel to OwnerFi Property Field Mapping
 // Based on common GHL property management workflows
 
+// Helper function to map property types
+function mapPropertyType(propertyType: string): 'single-family' | 'condo' | 'townhouse' | 'mobile-home' | 'multi-family' | 'land' {
+  switch (propertyType?.toLowerCase()) {
+    case 'house':
+      return 'single-family';
+    case 'mobile':
+      return 'mobile-home';
+    case 'condo':
+    case 'townhouse':
+    case 'multi-family':
+    case 'land':
+      return propertyType as 'condo' | 'townhouse' | 'multi-family' | 'land';
+    default:
+      return 'single-family';
+  }
+}
+
 export interface GHLPropertyData {
   // Contact Information (from GHL Contact)
   contactId: string;
@@ -75,8 +92,10 @@ export interface GHLPropertyData {
   opportunityValue?: number;
 }
 
-// Mapping function to convert GHL data to our Property schema
-export function mapGHLToProperty(ghlData: GHLPropertyData): Partial<Property> {
+// Mapping function to convert GHL data to our PropertyListing schema
+import { PropertyListing } from './property-schema';
+
+export function mapGHLToProperty(ghlData: GHLPropertyData): Partial<PropertyListing> {
   const cf = ghlData.customFields;
   
   return {
@@ -92,7 +111,7 @@ export function mapGHLToProperty(ghlData: GHLPropertyData): Partial<Property> {
     squareFeet: parseInt(cf.square_feet || '0'),
     lotSize: parseInt(cf.lot_size || '0'),
     yearBuilt: parseInt(cf.year_built || '0'),
-    propertyType: cf.property_type as any || 'single-family',
+    propertyType: mapPropertyType(cf.property_type as string) || 'single-family',
     
     // Financial terms
     listPrice: parseInt(cf.list_price || '0'),
@@ -100,7 +119,7 @@ export function mapGHLToProperty(ghlData: GHLPropertyData): Partial<Property> {
     downPaymentPercent: parseFloat(cf.down_payment_percent || '10'),
     monthlyPayment: parseInt(cf.monthly_payment || '0'),
     interestRate: parseFloat(cf.interest_rate || '7.0'),
-    termYears: parseInt(cf.loan_term_years || '30'),
+    termYears: parseInt(cf.loan_term_years || '20'),
     balloonPayment: cf.balloon_payment ? parseInt(cf.balloon_payment) : undefined,
     balloonYears: cf.balloon_years ? parseInt(cf.balloon_years) : undefined,
     
@@ -136,7 +155,7 @@ export function mapGHLToProperty(ghlData: GHLPropertyData): Partial<Property> {
   };
 }
 
-function buildFeaturesArray(customFields: any): string[] {
+function buildFeaturesArray(customFields: Record<string, string>): string[] {
   const features: string[] = [];
   
   if (customFields.garage_spaces && parseInt(customFields.garage_spaces) > 0) {

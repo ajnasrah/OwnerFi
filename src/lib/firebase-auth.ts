@@ -26,7 +26,7 @@ export interface AuthUser extends User {
 // Auth context for React components
 export const firebaseAuth = {
   // Sign up with email/password
-  async signUp(email: string, password: string, role: 'buyer' | 'realtor', additionalData: any = {}) {
+  async signUp(email: string, password: string, role: 'buyer' | 'realtor', additionalData: Record<string, unknown> = {}) {
     try {
       // Create Firebase user
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -42,8 +42,8 @@ export const firebaseAuth = {
       });
       
       return { user: { ...user, role }, error: null };
-    } catch (error: any) {
-      return { user: null, error: error.message };
+    } catch (error: unknown) {
+      return { user: null, error: (error as Error).message };
     }
   },
 
@@ -58,8 +58,8 @@ export const firebaseAuth = {
       const role = userDoc.exists() ? userDoc.data().role : null;
       
       return { user: { ...user, role }, error: null };
-    } catch (error: any) {
-      return { user: null, error: error.message };
+    } catch (error: unknown) {
+      return { user: null, error: (error as Error).message };
     }
   },
 
@@ -68,8 +68,8 @@ export const firebaseAuth = {
     try {
       await signOut(auth);
       return { error: null };
-    } catch (error: any) {
-      return { error: error.message };
+    } catch (error: unknown) {
+      return { error: (error as Error).message };
     }
   },
 

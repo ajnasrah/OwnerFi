@@ -7,7 +7,7 @@ interface AuthContextType {
   user: AuthUser | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ user: AuthUser | null; error: string | null }>;
-  signUp: (email: string, password: string, role: 'buyer' | 'realtor', additionalData?: any) => Promise<{ user: AuthUser | null; error: string | null }>;
+  signUp: (email: string, password: string, role: 'buyer' | 'realtor', additionalData?: Record<string, unknown>) => Promise<{ user: AuthUser | null; error: string | null }>;
   signOut: () => Promise<{ error: string | null }>;
 }
 
@@ -49,7 +49,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return result;
   };
 
-  const signUp = async (email: string, password: string, role: 'buyer' | 'realtor', additionalData: any = {}) => {
+  const signUp = async (email: string, password: string, role: 'buyer' | 'realtor', additionalData: Record<string, unknown> = {}) => {
     setLoading(true);
     const result = await firebaseAuth.signUp(email, password, role, additionalData);
     if (result.user) {

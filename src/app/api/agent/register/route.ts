@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { unifiedDb } from '@/lib/unified-db';
 import { logError, logInfo } from '@/lib/logger';
+import { Timestamp } from 'firebase/firestore';
 
 export async function POST(request: NextRequest) {
   try {
@@ -46,7 +47,7 @@ export async function POST(request: NextRequest) {
         phone: phone || null,
         company: company || null,
         licenseNumber: licenseNumber || null,
-        serviceStates: JSON.stringify(serviceStates),
+        serviceStates: serviceStates,
         isActive: true
       });
 
@@ -58,18 +59,28 @@ export async function POST(request: NextRequest) {
         userType: 'agent'
       });
     } else {
-      // Create new agent
+      // Create new agent with required defaults
       agent = await unifiedDb.agents.create({
+        userId: '', // Will be set after user creation
         email,
         firstName,
         lastName,
-        phone: phone || null,
-        company: company || null,
+        phone: phone || '',
+        company: company || '',
         licenseNumber: licenseNumber || null,
-        serviceStates: JSON.stringify(serviceStates),
-        serviceCities: null, // Can be expanded later
-        isActive: true,
+        licenseState: null,
+        primaryCity: '', // To be set during profile completion
+        primaryState: serviceStates[0] || '', // Use first service state as primary
+        serviceRadius: 25, // Default 25 mile radius
+        serviceStates: serviceStates,
+        serviceCities: [], // Can be expanded later
+        languages: ['English'], // Default to English
         credits: 5, // Give new agents 5 free credits
+        isOnTrial: true,
+        trialStartDate: Timestamp.now(),
+        trialEndDate: Timestamp.fromDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)), // 30 days
+        profileComplete: false,
+        isActive: true
       });
 
       await logInfo('Created new agent', {

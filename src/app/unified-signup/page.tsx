@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
-export default function UnifiedSignup() {
+function UnifiedSignupContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [step, setStep] = useState(1); // 1: Role selection, 2: Form, 3: Success
@@ -168,7 +168,7 @@ export default function UnifiedSignup() {
                       </svg>
                     </div>
                     <div>
-                      <div className="font-semibold text-primary-text text-lg">I'm looking to buy a home</div>
+                      <div className="font-semibold text-primary-text text-lg">I&apos;m looking to buy a home</div>
                       <div className="text-secondary-text text-sm">Browse owner-financed properties in your area</div>
                     </div>
                   </div>
@@ -185,7 +185,7 @@ export default function UnifiedSignup() {
                       </svg>
                     </div>
                     <div>
-                      <div className="font-semibold text-primary-text text-lg">I'm a real estate agent</div>
+                      <div className="font-semibold text-primary-text text-lg">I&apos;m a real estate agent</div>
                       <div className="text-secondary-text text-sm">Access qualified buyer leads ready for owner financing</div>
                     </div>
                   </div>
@@ -448,5 +448,17 @@ export default function UnifiedSignup() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function UnifiedSignup() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-primary-bg flex items-center justify-center py-12 px-4">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-primary"></div>
+      </div>
+    }>
+      <UnifiedSignupContent />
+    </Suspense>
   );
 }

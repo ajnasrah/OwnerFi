@@ -11,7 +11,7 @@ interface BuyerProfile {
   minBedrooms?: number;
   minBathrooms?: number;
   profileComplete: boolean;
-  createdAt: any;
+  createdAt: Date | string;
 }
 
 interface RealtorProfile {

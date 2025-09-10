@@ -5,6 +5,15 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
+interface City {
+  name: string;
+  state: string;
+  selected?: boolean;
+  place_id?: string;
+  isCenter?: boolean;
+  distance?: number;
+}
+
 // All 50 US States
 const ALL_US_STATES = [
   { value: 'AL', label: 'Alabama' },
@@ -83,10 +92,10 @@ export default function RealtorSetup() {
 
   // City search functionality
   const [cityQuery, setCityQuery] = useState('');
-  const [cityResults, setCityResults] = useState<any[]>([]);
+  const [cityResults, setCityResults] = useState<City[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [citySelected, setCitySelected] = useState(false);
-  const [nearbyCities, setNearbyCities] = useState<any[]>([]);
+  const [nearbyCities, setNearbyCities] = useState<City[]>([]);
   const [loadingNearby, setLoadingNearby] = useState(false);
 
   useEffect(() => {
@@ -195,7 +204,7 @@ export default function RealtorSetup() {
     }
   };
 
-  const selectCity = async (city: any) => {
+  const selectCity = async (city: City) => {
     setFormData(prev => ({
       ...prev,
       primaryCity: city.name,
@@ -218,11 +227,11 @@ export default function RealtorSetup() {
           if (nearbyData.cities) {
             setNearbyCities([
               { name: city.name, state: city.state, isCenter: true, distance: 0, selected: true },
-              ...nearbyData.cities.map((c: any) => ({ ...c, selected: true }))
+              ...nearbyData.cities.map((c: City) => ({ ...c, selected: true }))
             ]);
             setFormData(prev => ({
               ...prev,
-              serviceCities: [city.name, ...nearbyData.cities.map((c: any) => c.name)]
+              serviceCities: [city.name, ...nearbyData.cities.map((c: City) => c.name)]
             }));
           }
         }
@@ -232,7 +241,7 @@ export default function RealtorSetup() {
     }
   };
 
-  const handleInputChange = (field: string, value: any) => {
+  const handleInputChange = (field: string, value: string | number) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     setError('');
     setSuccess('');

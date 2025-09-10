@@ -72,11 +72,7 @@ export async function GET(request: NextRequest) {
           matchPercentage: matchResult.percentage,
           matchReasoning: matchResult.reasoning,
           distanceMiles: matchResult.distanceMiles,
-          propertyMatches: propertyMatchCount,
-          createdAt: convertTimestampToDate(buyer.createdAt),
-          updatedAt: convertTimestampToDate(buyer.updatedAt),
-          trialStartDate: convertTimestampToDate(buyer.trialStartDate),
-          trialEndDate: convertTimestampToDate(buyer.trialEndDate)
+          propertyMatches: propertyMatchCount
         });
       }
     }
@@ -90,9 +86,11 @@ export async function GET(request: NextRequest) {
     await logInfo('Realtor leads fetched successfully', {
       action: 'realtor_leads_fetch',
       userId: session.user.id,
-      realtorId: realtorProfile.id,
-      availableCount: availableLeads.length,
-      purchasedCount: purchasedLeadsWithDetails.length
+      metadata: {
+        realtorId: realtorProfile.id,
+        availableCount: availableLeads.length,
+        purchasedCount: purchasedLeadsWithDetails.length
+      }
     });
 
     return NextResponse.json({
@@ -108,9 +106,9 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    await logError('Failed to fetch realtor leads', error as Error, {
+    await logError('Failed to fetch realtor leads', {
       action: 'realtor_leads_error'
-    });
+    }, error as Error);
 
     return NextResponse.json(
       { error: 'Failed to load leads' },

@@ -118,7 +118,7 @@ export class PropertyScraper {
         metadata: { searchUrl, criteria, maxPages }
       });
 
-      let allProperties: ScrapedProperty[] = [];
+      const allProperties: ScrapedProperty[] = [];
       
       for (let page = 1; page <= maxPages; page++) {
         const pageUrl = page > 1 ? `${searchUrl}&page=${page}` : searchUrl;
@@ -198,7 +198,7 @@ export class PropertyScraper {
   }
 
   // Method to scrape a specific property listing page for detailed info
-  async scrapePropertyDetails(propertyUrl: string): Promise<any> {
+  async scrapePropertyDetails(propertyUrl: string): Promise<Record<string, unknown>> {
     try {
       const response = await axios.get(propertyUrl, {
         headers: this.headers,

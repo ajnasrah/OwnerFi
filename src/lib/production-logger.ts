@@ -7,7 +7,7 @@ interface LogEntry {
   level: 'info' | 'warn' | 'error' | 'debug';
   message: string;
   timestamp: string;
-  context?: any;
+  context?: Record<string, unknown>;
   userId?: string;
   action?: string;
 }
@@ -43,7 +43,7 @@ class ProductionLogger {
     }
   }
 
-  info(message: string, context?: any, userId?: string): void {
+  info(message: string, context?: Record<string, unknown>, userId?: string): void {
     this.formatLog({
       level: 'info',
       message,
@@ -53,7 +53,7 @@ class ProductionLogger {
     });
   }
 
-  warn(message: string, context?: any, userId?: string): void {
+  warn(message: string, context?: Record<string, unknown>, userId?: string): void {
     this.formatLog({
       level: 'warn',
       message,
@@ -63,17 +63,17 @@ class ProductionLogger {
     });
   }
 
-  error(message: string, error?: any, context?: any, userId?: string): void {
+  error(message: string, error?: unknown, context?: Record<string, unknown>, userId?: string): void {
     this.formatLog({
       level: 'error',
       message,
       timestamp: new Date().toISOString(),
-      context: { ...context, error: error?.message || error },
+      context: { ...context, error: (error as Error)?.message || error },
       userId
     });
   }
 
-  debug(message: string, context?: any): void {
+  debug(message: string, context?: Record<string, unknown>): void {
     // Only log debug in development
     if (this.isDevelopment) {
       this.formatLog({
@@ -86,7 +86,7 @@ class ProductionLogger {
   }
 
   // Business action logging
-  userAction(action: string, userId: string, context?: any): void {
+  userAction(action: string, userId: string, context?: Record<string, unknown>): void {
     this.info(`User action: ${action}`, context, userId);
   }
 
@@ -94,7 +94,7 @@ class ProductionLogger {
     this.info(`API ${method} ${endpoint}`, { responseTime: `${responseTime}ms` }, userId);
   }
 
-  securityEvent(event: string, context?: any, userId?: string): void {
+  securityEvent(event: string, context?: Record<string, unknown>, userId?: string): void {
     this.warn(`Security event: ${event}`, context, userId);
   }
 }

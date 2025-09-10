@@ -98,10 +98,10 @@ export const unifiedDb = {
       return buyerDoc.exists() ? { id: buyerDoc.id, ...buyerDoc.data() } as BuyerProfile & { id: string } : null;
     },
 
-    async findAllActive() {
+    async findAllActive(): Promise<(BuyerProfile & { id: string })[]> {
       const buyersQuery = query(collection(firebaseDb, 'buyerProfiles'), where('isActive', '==', true));
       const buyerDocs = await getDocs(buyersQuery);
-      return buyerDocs.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      return buyerDocs.docs.map(doc => ({ id: doc.id, ...doc.data() } as BuyerProfile & { id: string }));
     }
   },
   

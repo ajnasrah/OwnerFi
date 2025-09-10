@@ -1,0 +1,104 @@
+src/app/api/admin/disputes/route.ts(75,52): error TS2339: Property 'status' does not exist on type '{ submittedAt: any; createdAt: any; updatedAt: any; resolvedAt: any; buyerPhone?: any; buyerEmail?: any; buyerCity?: any; buyerState?: any; maxMonthlyPayment?: any; maxDownPayment?: any; id: string; }'.
+src/app/api/admin/disputes/route.ts(76,53): error TS2339: Property 'status' does not exist on type '{ submittedAt: any; createdAt: any; updatedAt: any; resolvedAt: any; buyerPhone?: any; buyerEmail?: any; buyerCity?: any; buyerState?: any; maxMonthlyPayment?: any; maxDownPayment?: any; id: string; }'.
+src/app/api/admin/disputes/route.ts(84,42): error TS2339: Property 'status' does not exist on type '{ submittedAt: any; createdAt: any; updatedAt: any; resolvedAt: any; buyerPhone?: any; buyerEmail?: any; buyerCity?: any; buyerState?: any; maxMonthlyPayment?: any; maxDownPayment?: any; id: string; }'.
+src/app/api/admin/disputes/route.ts(85,40): error TS2339: Property 'status' does not exist on type '{ submittedAt: any; createdAt: any; updatedAt: any; resolvedAt: any; buyerPhone?: any; buyerEmail?: any; buyerCity?: any; buyerState?: any; maxMonthlyPayment?: any; maxDownPayment?: any; id: string; }'.
+src/app/api/admin/disputes/route.ts(86,42): error TS2339: Property 'status' does not exist on type '{ submittedAt: any; createdAt: any; updatedAt: any; resolvedAt: any; buyerPhone?: any; buyerEmail?: any; buyerCity?: any; buyerState?: any; maxMonthlyPayment?: any; maxDownPayment?: any; id: string; }'.
+src/app/api/agent/register/route.ts(71,9): error TS2322: Type 'null' is not assignable to type 'string | undefined'.
+src/app/api/agent/register/route.ts(96,13): error TS18047: 'agent' is possibly 'null'.
+src/app/api/agent/register/route.ts(97,20): error TS18047: 'agent' is possibly 'null'.
+src/app/api/agent/register/route.ts(98,19): error TS18047: 'agent' is possibly 'null'.
+src/app/api/agent/register/route.ts(99,16): error TS18047: 'agent' is possibly 'null'.
+src/app/api/agent/register/route.ts(100,16): error TS18047: 'agent' is possibly 'null'.
+src/app/api/agent/register/route.ts(101,18): error TS18047: 'agent' is possibly 'null'.
+src/app/api/agent/register/route.ts(102,24): error TS18047: 'agent' is possibly 'null'.
+src/app/api/agent/register/route.ts(103,35): error TS18047: 'agent' is possibly 'null'.
+src/app/api/agent/register/route.ts(103,35): error TS2345: Argument of type 'string[]' is not assignable to parameter of type 'string'.
+src/app/api/agent/register/route.ts(104,18): error TS18047: 'agent' is possibly 'null'.
+src/app/api/agent/register/route.ts(105,19): error TS18047: 'agent' is possibly 'null'.
+src/app/api/cities/within-radius/route.ts(85,19): error TS18048: 'element.tags' is possibly 'undefined'.
+src/app/api/cities/within-radius/route.ts(86,20): error TS18048: 'element.tags' is possibly 'undefined'.
+src/app/api/cities/within-radius/route.ts(86,50): error TS18048: 'element.tags' is possibly 'undefined'.
+src/app/api/cities/within-radius/route.ts(90,19): error TS18048: 'element.tags' is possibly 'undefined'.
+src/app/api/cities/within-radius/route.ts(93,17): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(predicate: (value: { name: string | undefined; state: string; lat: number; lng: number; distance: number; type: string | undefined; } | null, index: number, array: ({ name: string | undefined; state: string; lat: number; lng: number; distance: number; type: string | undefined; } | null)[]) => value is { ...; } | null, thisArg?: any): ({ ...; } | null)[]', gave the following error.
+    Argument of type '(city: CityResult | null) => boolean | "" | null' is not assignable to parameter of type '(value: { name: string | undefined; state: string; lat: number; lng: number; distance: number; type: string | undefined; } | null, index: number, array: ({ name: string | undefined; state: string; lat: number; lng: number; distance: number; type: string | undefined; } | null)[]) => value is { ...; } | null'.
+      Types of parameters 'city' and 'value' are incompatible.
+        Type '{ name: string | undefined; state: string; lat: number; lng: number; distance: number; type: string | undefined; } | null' is not assignable to type 'CityResult | null'.
+          Type '{ name: string | undefined; state: string; lat: number; lng: number; distance: number; type: string | undefined; }' is not assignable to type 'CityResult'.
+            Types of property 'name' are incompatible.
+              Type 'string | undefined' is not assignable to type 'string'.
+                Type 'undefined' is not assignable to type 'string'.
+  Overload 2 of 2, '(predicate: (value: { name: string | undefined; state: string; lat: number; lng: number; distance: number; type: string | undefined; } | null, index: number, array: ({ name: string | undefined; state: string; lat: number; lng: number; distance: number; type: string | undefined; } | null)[]) => unknown, thisArg?: any): ({ ...; } | null)[]', gave the following error.
+    Argument of type '(city: CityResult | null) => boolean | "" | null' is not assignable to parameter of type '(value: { name: string | undefined; state: string; lat: number; lng: number; distance: number; type: string | undefined; } | null, index: number, array: ({ name: string | undefined; state: string; lat: number; lng: number; distance: number; type: string | undefined; } | null)[]) => unknown'.
+      Types of parameters 'city' and 'value' are incompatible.
+        Type '{ name: string | undefined; state: string; lat: number; lng: number; distance: number; type: string | undefined; } | null' is not assignable to type 'CityResult | null'.
+          Type '{ name: string | undefined; state: string; lat: number; lng: number; distance: number; type: string | undefined; }' is not assignable to type 'CityResult'.
+            Types of property 'name' are incompatible.
+              Type 'string | undefined' is not assignable to type 'string'.
+                Type 'undefined' is not assignable to type 'string'.
+src/app/api/cities/within-radius/route.ts(94,15): error TS2345: Argument of type '(a: CityResult, b: CityResult) => number' is not assignable to parameter of type '(a: { name: string | undefined; state: string; lat: number; lng: number; distance: number; type: string | undefined; } | null, b: { name: string | undefined; state: string; lat: number; lng: number; distance: number; type: string | undefined; } | null) => number'.
+  Types of parameters 'a' and 'a' are incompatible.
+    Type '{ name: string | undefined; state: string; lat: number; lng: number; distance: number; type: string | undefined; } | null' is not assignable to type 'CityResult'.
+      Type 'null' is not assignable to type 'CityResult'.
+src/app/api/debug/check-properties/route.ts(23,7): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '{}'.
+  No index signature with a parameter of type 'string' was found on type '{}'.
+src/app/api/debug/check-properties/route.ts(47,14): error TS18046: 'error' is of type 'unknown'.
+src/app/api/debug/dallas-properties/route.ts(24,9): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '{}'.
+  No index signature with a parameter of type 'string' was found on type '{}'.
+src/app/api/debug/dallas-properties/route.ts(55,39): error TS18046: 'error' is of type 'unknown'.
+src/app/api/debug/properties/route.ts(29,39): error TS18046: 'error' is of type 'unknown'.
+src/app/api/properties/auto-generate-images/route.ts(77,32): error TS2345: Argument of type '{ propertyId: string; address: string; status: string; imageUrl: string; }' is not assignable to parameter of type 'never'.
+src/app/api/properties/auto-generate-images/route.ts(86,32): error TS2345: Argument of type '{ propertyId: string; address: string; status: string; error: string; }' is not assignable to parameter of type 'never'.
+src/app/api/properties/auto-generate-images/route.ts(100,30): error TS2345: Argument of type '{ propertyId: string; status: string; error: any; }' is not assignable to parameter of type 'never'.
+src/app/api/properties/auto-generate-images/route.ts(103,18): error TS18046: 'error' is of type 'unknown'.
+src/app/api/properties/generate-street-view/route.ts(145,18): error TS18046: 'error' is of type 'unknown'.
+src/app/api/property-matching/calculate/route.ts(73,46): error TS7006: Parameter 'city' implicitly has an 'any' type.
+src/app/api/realtor/dispute-lead/route.ts(134,8): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'Error | undefined'.
+src/app/api/realtor/leads/route.ts(68,45): error TS2339: Property 'searchRadius' does not exist on type 'BuyerSearchCriteria'.
+src/app/api/realtor/profile/route.ts(163,8): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'Error | undefined'.
+src/app/api/realtor/profile/route.ts(240,8): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'Error | undefined'.
+src/app/api/realtor/signup/route.ts(52,7): error TS2322: Type 'null' is not assignable to type 'string | undefined'.
+src/app/api/stripe/webhook/route.ts(90,11): error TS2339: Property 'userId' does not exist on type 'Metadata | null'.
+src/app/api/stripe/webhook/route.ts(90,19): error TS2339: Property 'userEmail' does not exist on type 'Metadata | null'.
+src/app/api/stripe/webhook/route.ts(90,30): error TS2339: Property 'planId' does not exist on type 'Metadata | null'.
+src/app/api/stripe/webhook/route.ts(90,38): error TS2339: Property 'type' does not exist on type 'Metadata | null'.
+src/app/api/stripe/webhook/route.ts(90,44): error TS2339: Property 'customerId' does not exist on type 'Metadata | null'.
+src/app/api/stripe/webhook/route.ts(139,26): error TS18047: 'metadata' is possibly 'null'.
+src/app/api/stripe/webhook/route.ts(139,54): error TS18047: 'metadata' is possibly 'null'.
+src/app/api/stripe/webhook/route.ts(153,15): error TS18047: 'metadata' is possibly 'null'.
+src/app/api/stripe/webhook/route.ts(153,42): error TS18047: 'metadata' is possibly 'null'.
+src/app/api/webhooks/ghl/route.ts(236,73): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+src/app/buyer/register/page.tsx(233,34): error TS18048: 'property.squareFeet' is possibly 'undefined'.
+src/app/dashboard/favorites/page.tsx(173,72): error TS18048: 'property.squareFeet' is possibly 'undefined'.
+src/app/dashboard/favorites/page.tsx(239,82): error TS18048: 'property.squareFeet' is possibly 'undefined'.
+src/app/dashboard/favorites/page.tsx(344,72): error TS18048: 'selectedProperty.squareFeet' is possibly 'undefined'.
+src/app/page.tsx(266,111): error TS18048: 'property.squareFeet' is possibly 'undefined'.
+src/app/realtor/dashboard/page.tsx(504,64): error TS18048: 'lead.perfectMatches' is possibly 'undefined'.
+src/app/test-checkout/page.tsx(40,35): error TS18046: 'error' is of type 'unknown'.
+src/lib/cities-service.ts(95,16): error TS7006: Parameter 'city' implicitly has an 'any' type.
+src/lib/cities-service.ts(96,14): error TS7006: Parameter 'a' implicitly has an 'any' type.
+src/lib/cities-service.ts(96,17): error TS7006: Parameter 'b' implicitly has an 'any' type.
+src/lib/database-cleanup.ts(97,76): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'Error | undefined'.
+src/lib/database-cleanup.ts(168,76): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'Error | undefined'.
+src/lib/database-cleanup.ts(313,76): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'Error | undefined'.
+src/lib/database-cleanup.ts(388,76): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'Error | undefined'.
+src/lib/excel-parser.ts(209,18): error TS18046: 'mappedRow.zipCode' is of type 'unknown'.
+src/lib/firebase-db.ts(61,47): error TS2345: Argument of type 'T' is not assignable to parameter of type 'WithFieldValue<DocumentData>'.
+  Type 'T' is not assignable to type '{ [x: string]: any; }'.
+src/lib/firebase-db.ts(351,43): error TS2345: Argument of type 'string' is not assignable to parameter of type 'never'.
+src/lib/ghl-csv-parser.ts(92,9): error TS7034: Variable 'missingColumns' implicitly has type 'any[]' in some locations where its type cannot be determined.
+src/lib/ghl-csv-parser.ts(104,45): error TS7005: Variable 'missingColumns' implicitly has an 'any[]' type.
+src/lib/matching.ts(158,55): error TS2345: Argument of type '{ propertyId: string; buyerId: string; matchedOn: string; matchScore: number; isActive: boolean; matchedAt: string; }[]' is not assignable to parameter of type 'Omit<PropertyMatch, "id" | "createdAt">[]'.
+  Type '{ propertyId: string; buyerId: string; matchedOn: string; matchScore: number; isActive: boolean; matchedAt: string; }' is missing the following properties from type 'Omit<PropertyMatch, "id" | "createdAt">': withinBudget, withinRadius, meetsRequirements
+src/lib/matching.ts(196,55): error TS2345: Argument of type '{ propertyId: string; buyerId: string; matchedOn: string; matchScore: number; isActive: boolean; matchedAt: string; }[]' is not assignable to parameter of type 'Omit<PropertyMatch, "id" | "createdAt">[]'.
+  Type '{ propertyId: string; buyerId: string; matchedOn: string; matchScore: number; isActive: boolean; matchedAt: string; }' is missing the following properties from type 'Omit<PropertyMatch, "id" | "createdAt">': withinBudget, withinRadius, meetsRequirements
+src/lib/radius-matching.ts(76,43): error TS18046: 'property.monthlyPayment' is of type 'unknown'.
+src/lib/radius-matching.ts(81,40): error TS18046: 'property.downPaymentAmount' is of type 'unknown'.
+src/lib/radius-matching.ts(86,37): error TS18046: 'property.bedrooms' is of type 'unknown'.
+src/lib/radius-matching.ts(91,38): error TS18046: 'property.bathrooms' is of type 'unknown'.
+src/lib/simple-auth.ts(10,7): error TS2322: Type '{ id: string; name?: string | null | undefined; email?: string | null | undefined; image?: string | null | undefined; role?: string | undefined; } | null' is not assignable to type '{ id?: string | undefined; email?: string | undefined; role?: string | undefined; } | null'.
+  Type '{ id: string; name?: string | null | undefined; email?: string | null | undefined; image?: string | null | undefined; role?: string | undefined; }' is not assignable to type '{ id?: string | undefined; email?: string | undefined; role?: string | undefined; }'.
+    Types of property 'email' are incompatible.
+      Type 'string | null | undefined' is not assignable to type 'string | undefined'.
+        Type 'null' is not assignable to type 'string | undefined'.

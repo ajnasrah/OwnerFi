@@ -140,7 +140,10 @@ export const firestoreHelpers = {
     if (timestamp && typeof timestamp === 'object' && 'toDate' in timestamp) {
       return timestamp.toDate();
     }
-    return new Date(timestamp || Date.now());
+    if (typeof timestamp === 'string' || typeof timestamp === 'number') {
+      return new Date(timestamp);
+    }
+    return new Date(Date.now());
   },
   
   // Collection helpers

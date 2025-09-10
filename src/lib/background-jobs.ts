@@ -3,13 +3,16 @@ import { doc, updateDoc, serverTimestamp, writeBatch } from 'firebase/firestore'
 import { db } from './firebase';
 import { getNearbyCitiesDirect } from './cities-service';
 
+type JobType = 'populate_nearby_cities';
+type JobStatus = 'pending' | 'processing' | 'completed' | 'failed';
+
 interface BackgroundJob {
   id: string;
-  type: 'populate_nearby_cities';
+  type: JobType;
   propertyId: string;
   city: string;
   state: string;
-  status: 'pending' | 'processing' | 'completed' | 'failed';
+  status: JobStatus;
   createdAt: Date;
   completedAt?: Date;
   error?: string;
@@ -97,11 +100,11 @@ export async function batchProcessNearbyCities(properties: Array<{id: string, ci
   
   console.log(`🔢 Processing ${properties.length} properties in ${batches.length} batches`);
   
-  for (const [batchIndex, batch] of batches.entries()) {
+  for (const [batchIndex, propertyBatch] of batches.entries()) {
     console.log(`📦 Processing batch ${batchIndex + 1}/${batches.length}`);
     
     // Process batch in parallel
-    const promises = batch.map(async property => {
+    const promises = propertyBatch.map(async property => {
       try {
         const nearbyCities = await getNearbyCitiesDirect(property.city, property.state, 30);
         return { propertyId: property.id, nearbyCities, success: true };

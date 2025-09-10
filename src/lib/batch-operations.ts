@@ -8,6 +8,7 @@ import {
   query, 
   where, 
   getDocs,
+  getDoc,
   documentId,
   QueryConstraint,
   doc,
@@ -16,6 +17,20 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { PropertyListing } from './property-schema';
+
+/**
+ * Type guard to check if a value is a non-empty string
+ */
+function isValidString(value: unknown): value is string {
+  return typeof value === 'string' && value.trim().length > 0;
+}
+
+/**
+ * Type guard to check if a value is a positive number
+ */
+function isPositiveNumber(value: unknown): value is number {
+  return typeof value === 'number' && value > 0 && !isNaN(value);
+}
 
 /**
  * Batch fetch documents by IDs (eliminates N+1 queries)
@@ -52,14 +67,20 @@ export async function batchGetDocuments(
 /**
  * Optimized property search with proper indexing
  */
-export async function searchProperties(criteria: {
+interface SearchCriteria {
   state: string;
   cities?: string[];
   maxMonthlyPayment?: number;
   maxDownPayment?: number;
   minBedrooms?: number;
   minBathrooms?: number;
-}): Promise<Record<string, unknown>[]> {
+}
+
+export async function searchProperties(criteria: SearchCriteria): Promise<Record<string, unknown>[]> {
+  // Validate required criteria
+  if (!isValidString(criteria.state)) {
+    throw new Error('State is required and must be a valid string');
+  }
   
   const constraints: QueryConstraint[] = [
     where('isActive', '==', true),
@@ -136,7 +157,7 @@ export async function batchUpdatePropertyMatches(updates: Array<{
 /**
  * Efficient user lookup with caching
  */
-const userCache = new Map<string, Record<string, unknown>>();
+const userCache = new Map<string, { data: Record<string, unknown> | null; timestamp: number }>();
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 export async function getCachedUser(userId: string): Promise<Record<string, unknown> | null> {

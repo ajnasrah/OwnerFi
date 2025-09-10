@@ -40,10 +40,10 @@ export function PropertyListingSwiper({ properties, onLike, onPass, onFavorite, 
     }
   }, [safeIndex, currentIndex]);
 
-  // ONLY use database imageUrl (no API calls)
-  const getHousePhoto = (property: PropertyListing) => {
-    // All properties should have imageUrl saved in database
-    return property.imageUrl || '/placeholder-house.jpg'; // Simple fallback
+  // ONLY use database imageUrls (no API calls)
+  const getHousePhoto = (property: PropertyListing): string => {
+    // All properties should have imageUrls saved in database
+    return property.imageUrls?.[0] || '/placeholder-house.jpg'; // Simple fallback
   };
 
   // Loading state

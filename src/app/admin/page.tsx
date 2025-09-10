@@ -653,7 +653,7 @@ export default function AdminDashboard() {
                           </td>
                           <td className="p-4 text-gray-700">
                             {property.bedrooms || 'N/A'} bed / {property.bathrooms || 'N/A'} bath
-                            {property.squareFeet > 0 && (
+                            {property.squareFeet && property.squareFeet > 0 && (
                               <div className="text-sm text-gray-500">{property.squareFeet.toLocaleString()} sq ft</div>
                             )}
                           </td>

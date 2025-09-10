@@ -39,6 +39,7 @@ interface RealtorProfile {
   id: string;
   firstName: string;
   lastName: string;
+  email: string;
   credits: number;
   isOnTrial: boolean;
   trialEndDate: string;
@@ -178,7 +179,12 @@ export default function BuyerLinkDashboard() {
       if (purchasedLead) {
         // Move lead from available to purchased
         setAvailableLeads(prev => prev.filter(lead => lead.id !== leadId));
-        setPurchasedLeads(prev => [...prev, { ...purchasedLead, fullContactAccess: true }]);
+        setPurchasedLeads(prev => [...prev, { 
+          ...purchasedLead, 
+          fullContactAccess: true,
+          purchasedAt: new Date().toISOString(),
+          status: 'active'
+        }]);
         
         // Update credit balance
         if (profile) {

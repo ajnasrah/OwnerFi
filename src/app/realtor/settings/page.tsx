@@ -10,8 +10,13 @@ import AccountStatus from './AccountStatus';
 interface City {
   name: string;
   state: string;
+  lat?: number;
+  lng?: number;
   latitude?: number;
   longitude?: number;
+  place_id?: string;
+  isCenter?: boolean;
+  distance?: number;
 }
 
 interface Subscription {
@@ -290,8 +295,8 @@ export default function RealtorSettings() {
     }
   };
 
-  const formatPhoneNumber = (value: string) => {
-    const phoneNumber = value.replace(/\D/g, '');
+  const formatPhoneNumber = (value: string | number): string => {
+    const phoneNumber = String(value).replace(/\D/g, '');
     if (phoneNumber.length >= 6) {
       return `(${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3, 6)}-${phoneNumber.slice(6, 10)}`;
     } else if (phoneNumber.length >= 3) {
@@ -312,7 +317,7 @@ export default function RealtorSettings() {
       if (field === 'serviceRadius' && profile?.primaryCity && profile?.primaryState && nearbyCities.length > 0) {
         const centerCity = nearbyCities.find(city => city.isCenter);
         if (centerCity) {
-          loadNearbyCities(centerCity, value);
+          loadNearbyCities(centerCity, Number(value));
         }
       }
     }

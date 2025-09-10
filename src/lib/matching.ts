@@ -177,7 +177,7 @@ export async function matchPropertyToBuyers(propertyId: string) {
     const matches = [];
     
     for (const buyer of allBuyers) {
-      const matchResult = isPropertyMatch(property as PropertyForMatching, buyer);
+      const matchResult = isPropertyMatch(property as PropertyForMatching, buyer as BuyerForMatching);
       
       if (matchResult.matches) {
         matches.push({

@@ -9,6 +9,9 @@ interface City {
   name: string;
   state: string;
   selected?: boolean;
+  place_id?: string;
+  isCenter?: boolean;
+  distance?: number;
 }
 
 // All 50 US States

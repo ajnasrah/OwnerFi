@@ -346,16 +346,25 @@ async function mapGHLRowToProperty(row: Record<string, string>, rowNumber: numbe
     zipCode: zipCode || 'N/A',
     latitude: latitude, // Include coordinates for matching service
     longitude: longitude, // Include coordinates for matching service
+    propertyType: 'single-family' as const,
     bedrooms: bedrooms, // Already defaulted to 2 if missing
     bathrooms: bathrooms, // Already defaulted to 1 if missing  
     squareFeet: squareFeet || 0, // Show 0 if missing
     listPrice: financials.listPrice,
     downPaymentAmount: financials.downPaymentAmount,
+    downPaymentPercent: financials.downPaymentPercent,
     monthlyPayment: financials.monthlyPayment,
     interestRate: financials.interestRate,
     termYears: financials.termYears,
+    imageUrls: imageUrl ? [imageUrl] : [],
     description: (row['description '] || '').trim() || `Beautiful ${bedrooms} bedroom, ${bathrooms} bathroom home in ${city}`,
-    imageUrl: imageUrl || undefined,
+    status: 'active' as const,
+    isActive: true,
+    dateAdded: new Date().toISOString(),
+    lastUpdated: new Date().toISOString(),
+    priority: 1,
+    featured: false,
+    source: 'ghl-webhook' as const,
     distance: 0 // Will be calculated based on user location later
   };
 }

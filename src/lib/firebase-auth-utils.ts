@@ -4,14 +4,18 @@ import { initializeApp, getApps, cert } from 'firebase-admin/app';
 
 // Initialize Firebase Admin (server-side)
 if (getApps().length === 0) {
-  // For now, we'll skip admin initialization until service account is set up
-  // initializeApp({
-  //   credential: cert({
-  //     projectId: process.env.FIREBASE_PROJECT_ID,
-  //     privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-  //     clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-  //   })
-  // });
+  try {
+    initializeApp({
+      credential: cert({
+        projectId: process.env.FIREBASE_PROJECT_ID || 'ownerfi-95aa0',
+        privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n') || '',
+        clientEmail: process.env.FIREBASE_CLIENT_EMAIL || 'firebase-adminsdk-fbsvc@ownerfi-95aa0.iam.gserviceaccount.com',
+      })
+    });
+    console.log('🔥 Firebase Admin SDK initialized successfully');
+  } catch (error) {
+    console.warn('🔥 Firebase Admin SDK initialization failed:', error.message);
+  }
 }
 
 export async function getFirebaseUser(request: NextRequest): Promise<Record<string, unknown> | null> {

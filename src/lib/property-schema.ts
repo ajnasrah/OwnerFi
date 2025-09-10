@@ -66,6 +66,7 @@ export interface PropertyListing {
   
   // Listing Management
   status: 'active' | 'pending' | 'sold' | 'withdrawn' | 'expired';
+  isActive: boolean;                   // Whether property is actively listed
   dateAdded: string;                   // ISO date when added to platform
   lastUpdated: string;                 // ISO date of last update
   expirationDate?: string;             // When listing expires

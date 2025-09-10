@@ -6,10 +6,11 @@ import { useRouter } from 'next/navigation';
 import { Header } from '@/components/ui/Header';
 import { Footer } from '@/components/ui/Footer';
 import { Button } from '@/components/ui/Button';
-import { Property, LeadDispute } from '@/lib/firebase-models';
+import { LeadDispute } from '@/lib/firebase-models';
+import { PropertyListing } from '@/lib/property-schema';
 
 // Extended Property interface for admin with legacy imageUrl field
-interface AdminProperty extends Property {
+interface AdminProperty extends PropertyListing {
   imageUrl?: string; // Legacy field for backward compatibility
 }
 import Image from 'next/image';

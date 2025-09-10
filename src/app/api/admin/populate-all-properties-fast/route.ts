@@ -31,6 +31,7 @@ export async function POST() {
     let updated = 0;
     let skipped = 0;
     let errors = 0;
+    let batchOperations = 0;
     const results = [];
     const batchSize = 500; // Firestore batch limit
 
@@ -87,6 +88,7 @@ export async function POST() {
             nearbyCitiesSource: 'comprehensive-database'
           });
 
+          batchOperations++;
           updated++;
           results.push({
             id: property.id,
@@ -111,11 +113,12 @@ export async function POST() {
         }
       }
 
-      // Commit the batch
-      if (firestoreBatch._mutations && firestoreBatch._mutations.length > 0) {
+      // Commit the batch if there are operations
+      if (batchOperations > 0) {
         try {
           await firestoreBatch.commit();
-          console.log(`✅ Committed batch ${Math.floor(i/batchSize) + 1} successfully`);
+          console.log(`✅ Committed batch ${Math.floor(i/batchSize) + 1} with ${batchOperations} operations`);
+          batchOperations = 0; // Reset for next batch
         } catch (error) {
           console.error(`❌ Batch commit failed:`, error);
         }

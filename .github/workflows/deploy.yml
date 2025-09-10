@@ -9,6 +9,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    environment: NEXT_PUBLIC_FIREBASE_API_KEY
     
     steps:
     - uses: actions/checkout@v4
@@ -47,6 +48,7 @@ jobs:
   deploy:
     needs: test
     runs-on: ubuntu-latest
+    environment: NEXT_PUBLIC_FIREBASE_API_KEY
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     
     steps:

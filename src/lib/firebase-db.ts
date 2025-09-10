@@ -24,7 +24,6 @@ import {
   RealtorProfile, 
   LeadPurchase, 
   LeadDispute, 
-  Property, 
   PropertyMatch, 
   RealtorSubscription, 
   Transaction, 
@@ -37,6 +36,7 @@ import {
   createTimestamp,
   convertTimestampToDate
 } from './firebase-models';
+import { PropertyListing } from './property-schema';
 
 // Generic database operations
 export class FirebaseDB {

@@ -13,6 +13,7 @@ import { db } from '@/lib/firebase';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { unifiedDb } from '@/lib/unified-db';
+import { ExtendedSession } from '@/types/session';
 
 /**
  * SIMPLIFIED BUYER PROFILE API
@@ -26,7 +27,7 @@ import { unifiedDb } from '@/lib/unified-db';
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession(authOptions) as ExtendedSession;
     
     if (!session?.user || session.user.role !== 'buyer') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -58,7 +59,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession(authOptions) as ExtendedSession;
     
     if (!session?.user || session.user.role !== 'buyer') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -93,7 +94,7 @@ export async function POST(request: NextRequest) {
       firstName: firstName || userRecord?.name?.split(' ')[0] || '',
       lastName: lastName || userRecord?.name?.split(' ').slice(1).join(' ') || '',
       email: session.user.email!,
-      phone: phone || userRecord?.phone || '',
+      phone: phone || '',
       
       // Search criteria - the ONLY thing that matters for matching
       city: city,

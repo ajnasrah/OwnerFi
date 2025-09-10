@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { collection, getDocs, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { PropertyListing } from '@/lib/property-schema';
 
 export async function GET(request: NextRequest) {
   try {
@@ -11,7 +12,7 @@ export async function GET(request: NextRequest) {
     const properties = propertiesSnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
-    }));
+    } as PropertyListing));
 
     return NextResponse.json({
       total: properties.length,

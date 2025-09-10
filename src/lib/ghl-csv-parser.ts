@@ -1,7 +1,7 @@
 // CSV Parser for GoHighLevel Property Template
 // Maps your exact CSV columns to property data
 
-import { Property } from './mock-data';
+import { PropertyListing } from './property-schema';
 import { 
   calculatePropertyFinancials, 
   validatePropertyFinancials 
@@ -61,12 +61,12 @@ export interface GHLCSVRow {
 }
 
 export async function parseGHLCSV(csvContent: string): Promise<{
-  success: Property[];
+  success: PropertyListing[];
   errors: string[];
   duplicates: string[];
   totalRows: number;
 }> {
-  const success: Property[] = [];
+  const success: PropertyListing[] = [];
   const errors: string[] = [];
   const duplicates: string[] = [];
   const seenAddresses = new Set<string>();
@@ -199,7 +199,7 @@ function parseCSVLine(line: string): string[] {
   return values;
 }
 
-async function mapGHLRowToProperty(row: Record<string, string>, rowNumber: number, headers: string[]): Promise<Property | null> {
+async function mapGHLRowToProperty(row: Record<string, string>, rowNumber: number, headers: string[]): Promise<PropertyListing | null> {
   // Find the address column (flexible matching)
   const addressColumn = headers.find(h => /Property Address/i.test(h));
   const cityColumn = headers.find(h => /Property city/i.test(h));

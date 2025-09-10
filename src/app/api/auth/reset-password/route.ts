@@ -99,8 +99,8 @@ export async function POST(request: NextRequest) {
     await logInfo('Password reset completed', {
       action: 'password_reset_completed',
       userId: userDoc.id,
-      email: resetData.email,
       metadata: {
+        email: resetData.email,
         tokenUsed: token
       }
     });

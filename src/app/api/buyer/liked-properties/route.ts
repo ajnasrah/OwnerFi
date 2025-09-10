@@ -9,10 +9,11 @@ import {
 import { db } from '@/lib/firebase';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { ExtendedSession } from '@/types/session';
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession(authOptions) as ExtendedSession;
     
     if (!session?.user || session.user.role !== 'buyer') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

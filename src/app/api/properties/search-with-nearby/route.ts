@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { PropertyListing } from '@/lib/property-schema';
 
 /**
  * PROPERTY SEARCH WITH NEARBY FUNCTIONALITY
@@ -28,7 +29,7 @@ export async function GET(request: NextRequest) {
 
     // Get all properties
     const snapshot = await getDocs(collection(db, 'properties'));
-    const allProperties = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const allProperties = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as PropertyListing));
     
     // 1. DIRECT MATCHES: Properties IN the search city
     const directProperties = allProperties.filter(property => {

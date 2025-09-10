@@ -202,11 +202,14 @@ export async function handleAPIError(
   }
 
   // Log the error
-  await logError(`${context.action}_error`, error, {
-    ...context.metadata,
-    errorCode: apiError.code,
-    userId: context.userId
-  });
+  await logError(`${context.action}_error`, {
+    userId: context.userId,
+    action: context.action,
+    metadata: {
+      ...context.metadata,
+      errorCode: apiError.code
+    }
+  }, error);
 
   // Return appropriate response
   return NextResponse.json(

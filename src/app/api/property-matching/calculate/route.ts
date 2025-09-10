@@ -11,6 +11,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { firestoreHelpers } from '@/lib/firestore';
+import { PropertyListing } from '@/lib/property-schema';
 
 /**
  * BACKGROUND PROPERTY MATCHING CALCULATOR
@@ -57,7 +58,7 @@ export async function POST(request: NextRequest) {
     const allProperties = propertiesSnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
-    }));
+    } as PropertyListing));
 
     console.log(`📦 Found ${allProperties.length} total properties in ${criteria.state}`);
 

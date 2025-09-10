@@ -14,6 +14,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { getSessionWithRole } from '@/lib/auth-utils';
 import { logError, logInfo } from '@/lib/logger';
 import { firestoreHelpers } from '@/lib/firestore';
+import { RealtorProfile } from '@/lib/firebase-models';
 
 export async function POST(request: NextRequest) {
   try {
@@ -61,7 +62,7 @@ export async function POST(request: NextRequest) {
     }
 
     const realtorDoc = realtorDocs.docs[0];
-    const realtorProfile = { id: realtorDoc.id, ...realtorDoc.data() };
+    const realtorProfile = { id: realtorDoc.id, ...realtorDoc.data() } as RealtorProfile;
 
     // Verify the transaction belongs to this realtor
     const purchaseDoc = await getDoc(doc(db, 'buyerLeadPurchases', transactionId));
@@ -111,11 +112,11 @@ export async function POST(request: NextRequest) {
 
     await logInfo('Lead dispute submitted', {
       action: 'lead_dispute_submitted',
-      disputeId: disputeId,
-      realtorId: realtorDoc.id,
-      transactionId: transactionId,
-      reason: reason,
       metadata: {
+        disputeId: disputeId,
+        realtorId: realtorDoc.id,
+        transactionId: transactionId,
+        reason: reason,
         buyerName,
         realtorEmail: realtorProfile.email
       }
@@ -128,9 +129,9 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    await logError('Failed to submit dispute', error, {
+    await logError('Failed to submit dispute', {
       action: 'dispute_submission_error'
-    });
+    }, error);
 
     return NextResponse.json(
       { error: 'Failed to submit dispute. Please try again.' },

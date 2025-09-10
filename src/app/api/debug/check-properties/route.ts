@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { collection, getDocs, query, where, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { PropertyListing } from '@/lib/property-schema';
 
 export async function GET(request: NextRequest) {
   try {
@@ -9,7 +10,7 @@ export async function GET(request: NextRequest) {
     const allProperties = allPropertiesSnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
-    }));
+    } as PropertyListing & { id: string }));
 
     // Check specific cities
     const cities = ['Dallas', 'Austin', 'Houston', 'Fort Worth', 'San Antonio'];

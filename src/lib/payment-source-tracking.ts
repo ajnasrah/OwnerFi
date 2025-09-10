@@ -44,7 +44,7 @@ export interface PaymentMetadata {
  * Enhanced property financial calculation with source tracking
  */
 export function calculatePropertyFinancialsWithTracking(data: PropertyData): PropertyFinancialResult {
-  const result: Record<string, unknown> = {
+  const result: Partial<PropertyFinancialResult> = {
     listPrice: data.listPrice || 0,
     interestRate: data.interestRate || 7.0,
     termYears: data.termYears || 20,
@@ -77,8 +77,8 @@ export function calculatePropertyFinancialsWithTracking(data: PropertyData): Pro
     };
     
     // Calculate percentage from imported amount
-    if (result.listPrice > 0) {
-      result.downPaymentPercent = (data.downPaymentAmount / result.listPrice) * 100;
+    if ((result.listPrice ?? 0) > 0) {
+      result.downPaymentPercent = ((data.downPaymentAmount ?? 0) / (result.listPrice ?? 1)) * 100;
       paymentMetadata.downPaymentPercent = {
         value: result.downPaymentPercent,
         source: 'calculated',
@@ -95,7 +95,7 @@ export function calculatePropertyFinancialsWithTracking(data: PropertyData): Pro
     };
     
     // Calculate amount from imported percentage
-    result.downPaymentAmount = result.listPrice * (data.downPaymentPercent / 100);
+    result.downPaymentAmount = (result.listPrice ?? 0) * ((data.downPaymentPercent ?? 0) / 100);
     paymentMetadata.downPaymentAmount = {
       value: result.downPaymentAmount,
       source: 'calculated',
@@ -105,7 +105,7 @@ export function calculatePropertyFinancialsWithTracking(data: PropertyData): Pro
   } else {
     // ❌ NEITHER PROVIDED - Default to 10%
     result.downPaymentPercent = 10;
-    result.downPaymentAmount = result.listPrice * 0.10;
+    result.downPaymentAmount = (result.listPrice ?? 0) * 0.10;
     paymentMetadata.downPaymentPercent = {
       value: 10,
       source: 'calculated',
@@ -129,10 +129,10 @@ export function calculatePropertyFinancialsWithTracking(data: PropertyData): Pro
     
   } else {
     // ❌ MISSING - Calculate using mortgage formula
-    const loanAmount = result.listPrice - result.downPaymentAmount;
-    if (loanAmount > 0 && result.interestRate > 0 && result.termYears > 0) {
-      const monthlyRate = result.interestRate / 100 / 12;
-      const numPayments = result.termYears * 12;
+    const loanAmount = (result.listPrice ?? 0) - (result.downPaymentAmount ?? 0);
+    if (loanAmount > 0 && (result.interestRate ?? 0) > 0 && (result.termYears ?? 0) > 0) {
+      const monthlyRate = (result.interestRate ?? 0) / 100 / 12;
+      const numPayments = (result.termYears ?? 0) * 12;
       
       if (monthlyRate === 0) {
         result.monthlyPayment = loanAmount / numPayments;
@@ -141,7 +141,7 @@ export function calculatePropertyFinancialsWithTracking(data: PropertyData): Pro
           (monthlyRate * Math.pow(1 + monthlyRate, numPayments)) / 
           (Math.pow(1 + monthlyRate, numPayments) - 1);
       }
-      result.monthlyPayment = Math.round(result.monthlyPayment * 100) / 100;
+      result.monthlyPayment = Math.round((result.monthlyPayment ?? 0) * 100) / 100;
     } else {
       result.monthlyPayment = 0;
     }
@@ -153,10 +153,10 @@ export function calculatePropertyFinancialsWithTracking(data: PropertyData): Pro
     };
   }
 
-  result.loanAmount = result.listPrice - result.downPaymentAmount;
+  result.loanAmount = (result.listPrice ?? 0) - (result.downPaymentAmount ?? 0);
   result.paymentMetadata = paymentMetadata;
 
-  return result;
+  return result as PropertyFinancialResult;
 }
 
 /**
@@ -191,7 +191,7 @@ export function validateImportedPayment(property: PropertyData): {
   recommendedPayment: number;
   trustImported: boolean;
 } {
-  const loanAmount = property.listPrice - property.downPaymentAmount;
+  const loanAmount = (property.listPrice || 0) - (property.downPaymentAmount || 0);
   const monthlyRate = (property.interestRate || 7.0) / 100 / 12;
   const numPayments = (property.termYears || 20) * 12;
   
@@ -203,8 +203,8 @@ export function validateImportedPayment(property: PropertyData): {
     calculatedPayment = Math.round(calculatedPayment * 100) / 100;
   }
   
-  const difference = Math.abs(calculatedPayment - property.monthlyPayment);
-  const percentageDiff = (difference / Math.max(property.monthlyPayment, 1)) * 100;
+  const difference = Math.abs(calculatedPayment - (property.monthlyPayment || 0));
+  const percentageDiff = (difference / Math.max(property.monthlyPayment || 1, 1)) * 100;
   
   return {
     monthlyPaymentValid: percentageDiff < 10, // Within 10% is acceptable

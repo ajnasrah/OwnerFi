@@ -8,6 +8,8 @@
  * 4. Both buyers and realtors read from the same data sources
  */
 
+import { PropertyListing } from './property-schema';
+
 export interface BuyerProfile {
   id: string;
   userId: string;
@@ -88,6 +90,7 @@ export class PropertySystemService {
     // Run in background, not blocking user interactions
     // Calculate match scores and reasons
     // Store in separate 'propertyMatches' collection
+    return [];
   }
   
   /**
@@ -101,18 +104,19 @@ export class PropertySystemService {
   /**
    * Display: Get properties for buyer (dashboard view)
    */
-  static async getBuyerProperties(buyerId: string, status?: string): Promise<Property[]> {
+  static async getBuyerProperties(buyerId: string, status?: string): Promise<PropertyListing[]> {
     // Read from propertyMatches collection with status filter
     // Fetch property details for matched IDs
     // Return full property objects
+    return [];
   }
   
   /**
    * Display: Get buyer's properties for realtor (realtor view) 
    */
-  static async getBuyerPropertiesForRealtor(buyerId: string): Promise<Property[]> {
+  static async getBuyerPropertiesForRealtor(buyerId: string): Promise<PropertyListing[]> {
     // Identical logic to getBuyerProperties - same data source
-    // Include buyer action status for each property
+    return [];
   }
   
   /**

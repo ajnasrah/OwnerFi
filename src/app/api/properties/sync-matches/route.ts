@@ -12,7 +12,8 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import UnifiedMatchingService from '@/lib/unified-matching-service';
-import { Property, BuyerProfile } from '@/lib/firebase-models';
+import { BuyerProfile } from '@/lib/firebase-models';
+import { PropertyListing } from '@/lib/property-schema';
 
 // Sync property matches across all buyers when properties change
 export async function POST(request: NextRequest) {
@@ -119,7 +120,7 @@ async function addPropertyToMatchingBuyers(property: PropertyListing & { id: str
       const buyerData = buyerDoc.data();
       
       // Check if this property matches the buyer's criteria
-      const matches = await checkPropertyMatchesBuyer(property, buyerData);
+      const matches = await checkPropertyMatchesBuyer(property, buyerData as BuyerProfile);
       
       if (matches) {
         const buyerRef = doc(db, 'buyerProfiles', buyerDoc.id);

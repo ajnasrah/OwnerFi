@@ -8,7 +8,9 @@ import {
   startAfter,
   getDocs,
   QueryConstraint,
-  DocumentSnapshot
+  DocumentSnapshot,
+  QueryDocumentSnapshot,
+  DocumentData
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { getNearbyCitiesDirect } from './cities-service';
@@ -91,7 +93,7 @@ export async function searchPropertiesOptimized(
       id: doc.id, 
       ...doc.data(),
       _doc: doc // Keep document reference for pagination
-    }));
+    } as PropertyListing & { id: string; _doc: QueryDocumentSnapshot<DocumentData, DocumentData> }));
     
     // Check if we have more results
     const hasNextPage = properties.length > resultLimit;

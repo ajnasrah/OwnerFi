@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
     const propertiesByCity: Record<string, PropertyListing[]> = {};
     
     snapshot.docs.forEach(doc => {
-      const property = { id: doc.id, ...doc.data() };
+      const property = { id: doc.id, ...doc.data() } as PropertyListing & { id: string };
       
       if (property.isActive === false) return;
       

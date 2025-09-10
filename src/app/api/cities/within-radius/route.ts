@@ -12,6 +12,8 @@ interface OverpassElement {
   tags?: {
     name?: string;
     place?: string;
+    state?: string;
+    'addr:state'?: string;
   };
 }
 

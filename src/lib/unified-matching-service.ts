@@ -5,7 +5,8 @@ import {
   getDocs
 } from 'firebase/firestore';
 import { db } from './firebase';
-import { BuyerProfile, RealtorProfile, Property } from './firebase-models';
+import { BuyerProfile, RealtorProfile } from './firebase-models';
+import { PropertyListing } from './property-schema';
 
 interface RealtorLocation {
   centerCity: string;
@@ -102,7 +103,7 @@ class UnifiedMatchingService {
       
       let matchCount = 0;
       for (const doc of propertyDocs.docs) {
-        const property = doc.data() as Property;
+        const property = doc.data() as PropertyListing;
         
         // Check if property matches buyer criteria
         const cityMatch = buyerCities.some(city => 
@@ -129,7 +130,7 @@ class UnifiedMatchingService {
   static async findPropertiesForBuyer(
     buyerLocation: BuyerLocation, 
     buyerCriteria: BuyerCriteria,
-    propertyCriteria: PropertyListingCriteria = {}
+    propertyCriteria: PropertyCriteria = {}
   ) {
     try {
       // Query properties in the buyer's state  

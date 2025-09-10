@@ -75,8 +75,10 @@ export interface GHLPropertyData {
   opportunityValue?: number;
 }
 
-// Mapping function to convert GHL data to our Property schema
-export function mapGHLToProperty(ghlData: GHLPropertyData): Partial<Property> {
+// Mapping function to convert GHL data to our PropertyListing schema
+import { PropertyListing } from './property-schema';
+
+export function mapGHLToProperty(ghlData: GHLPropertyData): Partial<PropertyListing> {
   const cf = ghlData.customFields;
   
   return {

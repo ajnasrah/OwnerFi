@@ -3,19 +3,19 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from './Button';
 
-import { Property } from '@/lib/mock-data';
+import { PropertyListingListing } from '@/lib/property-schema';
 
-interface PropertySwiperProps {
-  properties: Property[];
-  onLike: (property: Property) => void;
-  onPass: (property: Property) => void;
-  onFavorite: (property: Property) => void;
+interface PropertyListingSwiperProps {
+  properties: PropertyListingListing[];
+  onLike: (property: PropertyListingListing) => void;
+  onPass: (property: PropertyListingListing) => void;
+  onFavorite: (property: PropertyListingListing) => void;
   favorites: string[];
   passedIds?: string[];
   isLoading?: boolean;
 }
 
-export function PropertySwiper({ properties, onLike, onPass, onFavorite, favorites, passedIds = [], isLoading = false }: PropertySwiperProps) {
+export function PropertyListingSwiper({ properties, onLike, onPass, onFavorite, favorites, passedIds = [], isLoading = false }: PropertyListingSwiperProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
@@ -31,7 +31,7 @@ export function PropertySwiper({ properties, onLike, onPass, onFavorite, favorit
   // Auto-adjust index if current property was filtered out
   const safeIndex = currentIndex >= visibleProperties.length ? 
     Math.max(0, visibleProperties.length - 1) : currentIndex;
-  const currentProperty = visibleProperties[safeIndex];
+  const currentPropertyListing = visibleProperties[safeIndex];
   
   // Update index if it was adjusted
   useEffect(() => {
@@ -41,7 +41,7 @@ export function PropertySwiper({ properties, onLike, onPass, onFavorite, favorit
   }, [safeIndex, currentIndex]);
 
   // ONLY use database imageUrl (no API calls)
-  const getHousePhoto = (property: Property) => {
+  const getHousePhoto = (property: PropertyListing) => {
     // All properties should have imageUrl saved in database
     return property.imageUrl || '/placeholder-house.jpg'; // Simple fallback
   };
@@ -64,7 +64,7 @@ export function PropertySwiper({ properties, onLike, onPass, onFavorite, favorit
   }
 
   // No properties message
-  if (!currentProperty || visibleProperties.length === 0) {
+  if (!currentPropertyListing || visibleProperties.length === 0) {
     return (
       <div className="flex-1 flex items-center justify-center p-6">
         <div className="text-center max-w-md">
@@ -89,7 +89,7 @@ export function PropertySwiper({ properties, onLike, onPass, onFavorite, favorit
   }
 
   // Simple next property function
-  const handleNextProperty = () => {
+  const handleNextPropertyListing = () => {
     if (currentIndex < visibleProperties.length - 1) {
       setCurrentIndex(prev => prev + 1);
     } else {
@@ -102,25 +102,25 @@ export function PropertySwiper({ properties, onLike, onPass, onFavorite, favorit
   const handleMouseMove = () => {};
   const handleMouseUp = () => {};
 
-  const isFavorited = favorites.includes(currentProperty.id);
+  const isFavorited = favorites.includes(currentPropertyListing.id);
 
   return (
     <div className="flex-1 flex flex-col relative overflow-hidden">
-      {/* Mobile-First Property Card */}
+      {/* Mobile-First PropertyListing Card */}
       <div className="flex-1 p-4">
         <div 
           ref={cardRef}
           className="relative w-full h-full bg-white rounded-3xl shadow-lg overflow-hidden"
         >
-          {/* Property Image - Large and Prominent */}
+          {/* PropertyListing Image - Large and Prominent */}
           <div className="relative h-80">
             <img
-              src={getHousePhoto(currentProperty)}
-              alt={`${currentProperty.address}`}
+              src={getHousePhoto(currentPropertyListing)}
+              alt={`${currentPropertyListing.address}`}
               className="w-full h-full object-cover"
             />
 
-            {/* Property Counter */}
+            {/* PropertyListing Counter */}
             <div className="absolute top-4 left-4 bg-black/50 text-white px-3 py-1 rounded-full text-sm font-medium">
               {currentIndex + 1} of {visibleProperties.length}
             </div>
@@ -131,7 +131,7 @@ export function PropertySwiper({ properties, onLike, onPass, onFavorite, favorit
             </div>
           </div>
 
-          {/* Property Navigation Row - Clean and Simple */}
+          {/* PropertyListing Navigation Row - Clean and Simple */}
           <div className="px-6 py-4 border-b border-gray-100">
             <div className="flex items-center justify-between">
               <button 
@@ -163,7 +163,7 @@ export function PropertySwiper({ properties, onLike, onPass, onFavorite, favorit
             </div>
           </div>
 
-          {/* Property Details */}
+          {/* PropertyListing Details */}
           <div className="p-6 space-y-6">
             {/* Price & Address Section */}
             <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
@@ -171,29 +171,29 @@ export function PropertySwiper({ properties, onLike, onPass, onFavorite, favorit
                 <div className="flex-1">
                   <div className="text-sm text-slate-600 mb-1">Asking Price</div>
                   <div className="text-2xl font-bold text-slate-900">
-                    ${currentProperty.listPrice?.toLocaleString()}
+                    ${currentPropertyListing.listPrice?.toLocaleString()}
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-lg font-semibold text-slate-700">{currentProperty.address}</div>
-                  <div className="text-base text-slate-600">{currentProperty.city}, {currentProperty.state} {currentProperty.zipCode}</div>
+                  <div className="text-lg font-semibold text-slate-700">{currentPropertyListing.address}</div>
+                  <div className="text-base text-slate-600">{currentPropertyListing.city}, {currentPropertyListing.state} {currentPropertyListing.zipCode}</div>
                 </div>
               </div>
             </div>
 
-            {/* Property Features Section */}
+            {/* PropertyListing Features Section */}
             <div className="bg-slate-100 rounded-xl p-4 border border-slate-300">
               <div className="grid grid-cols-3 gap-4 text-center">
                 <div>
-                  <div className="text-2xl font-bold text-slate-800">{currentProperty.bedrooms}</div>
+                  <div className="text-2xl font-bold text-slate-800">{currentPropertyListing.bedrooms}</div>
                   <div className="text-base text-slate-600">Bedrooms</div>
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-slate-800">{currentProperty.bathrooms}</div>
+                  <div className="text-2xl font-bold text-slate-800">{currentPropertyListing.bathrooms}</div>
                   <div className="text-base text-slate-600">Bathrooms</div>
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-slate-800">{currentProperty.squareFeet?.toLocaleString()}</div>
+                  <div className="text-2xl font-bold text-slate-800">{currentPropertyListing.squareFeet?.toLocaleString()}</div>
                   <div className="text-base text-slate-600">Sq Ft</div>
                 </div>
               </div>
@@ -207,7 +207,7 @@ export function PropertySwiper({ properties, onLike, onPass, onFavorite, favorit
                 <div className="flex justify-between items-center border-b border-blue-200 pb-1">
                   <span className="text-base text-blue-700 font-medium">Monthly Payment:</span>
                   <div className="text-right">
-                    <div className="text-2xl font-bold text-blue-800">${currentProperty.monthlyPayment?.toLocaleString()}/mo</div>
+                    <div className="text-2xl font-bold text-blue-800">${currentPropertyListing.monthlyPayment?.toLocaleString()}/mo</div>
                     <div className="text-sm text-blue-600">est</div>
                   </div>
                 </div>
@@ -215,7 +215,7 @@ export function PropertySwiper({ properties, onLike, onPass, onFavorite, favorit
                 <div className="flex justify-between items-center border-b border-blue-200 pb-1">
                   <span className="text-base text-blue-700 font-medium">Down Payment:</span>
                   <div className="text-right">
-                    <div className="text-2xl font-bold text-blue-800">${currentProperty.downPaymentAmount?.toLocaleString()}</div>
+                    <div className="text-2xl font-bold text-blue-800">${currentPropertyListing.downPaymentAmount?.toLocaleString()}</div>
                     <div className="text-sm text-blue-600">est</div>
                   </div>
                 </div>
@@ -223,7 +223,7 @@ export function PropertySwiper({ properties, onLike, onPass, onFavorite, favorit
                 <div className="flex justify-between items-center border-b border-blue-200 pb-1">
                   <span className="text-base text-blue-700 font-medium">Interest Rate:</span>
                   <div className="text-right">
-                    <div className="text-2xl font-bold text-blue-800">{currentProperty.interestRate}%</div>
+                    <div className="text-2xl font-bold text-blue-800">{currentPropertyListing.interestRate}%</div>
                     <div className="text-sm text-blue-600">est</div>
                   </div>
                 </div>
@@ -231,7 +231,7 @@ export function PropertySwiper({ properties, onLike, onPass, onFavorite, favorit
                 <div className="flex justify-between items-center pt-1">
                   <span className="text-base text-blue-700 font-medium">Term Length:</span>
                   <div className="text-right">
-                    <div className="text-2xl font-bold text-blue-800">{currentProperty.termYears} years</div>
+                    <div className="text-2xl font-bold text-blue-800">{currentPropertyListing.termYears} years</div>
                     <div className="text-sm text-blue-600">est</div>
                   </div>
                 </div>
@@ -241,7 +241,7 @@ export function PropertySwiper({ properties, onLike, onPass, onFavorite, favorit
             {/* More Details Link */}
             <div className="text-center mb-4">
               <a
-                href={`https://www.google.com/search?q=${encodeURIComponent(`${currentProperty.address} ${currentProperty.city}, ${currentProperty.state} ${currentProperty.zipCode}`)}`}
+                href={`https://www.google.com/search?q=${encodeURIComponent(`${currentPropertyListing.address} ${currentPropertyListing.city}, ${currentPropertyListing.state} ${currentPropertyListing.zipCode}`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center space-x-2 text-blue-600 hover:text-blue-800 font-medium transition-colors"
@@ -260,10 +260,10 @@ export function PropertySwiper({ properties, onLike, onPass, onFavorite, favorit
             <div className="flex space-x-4">
               <button
                 onClick={() => {
-                  onPass(currentProperty);
+                  onPass(currentPropertyListing);
                   setShowToast({ type: 'deleted', show: true });
                   setTimeout(() => setShowToast({ type: 'deleted', show: false }), 2000);
-                  handleNextProperty();
+                  handleNextPropertyListing();
                 }}
                 className={`flex-1 py-4 px-6 rounded-xl font-semibold transition-all ${
                   buttonPressed === 'pass' 
@@ -275,7 +275,7 @@ export function PropertySwiper({ properties, onLike, onPass, onFavorite, favorit
               </button>
               <button
                 onClick={() => {
-                  onLike(currentProperty);
+                  onLike(currentPropertyListing);
                   setShowToast({ type: 'saved', show: true });
                   setTimeout(() => setShowToast({ type: 'saved', show: false }), 2000);
                   // Don't auto-advance for likes
@@ -297,7 +297,7 @@ export function PropertySwiper({ properties, onLike, onPass, onFavorite, favorit
                   ? 'bg-green-500' 
                   : 'bg-red-500'
               }`}>
-                {showToast.type === 'saved' ? '✅ Property Saved!' : '🗑️ Property Deleted!'}
+                {showToast.type === 'saved' ? '✅ PropertyListing Saved!' : '🗑️ PropertyListing Deleted!'}
               </div>
             )}
           </div>

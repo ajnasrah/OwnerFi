@@ -217,7 +217,7 @@ export class SystemValidator {
         results.push({
           category: 'Matching',
           test: 'Property Matching Algorithm',
-          status: 'skip',
+          status: 'warning',
           message: 'Property matching service not implemented',
           fix: 'Implement PropertyMatchingService module'
         });
@@ -430,8 +430,10 @@ export class SystemValidator {
     // Log the results
     await logInfo('System health check completed', {
       action: 'system_health_check',
-      overall: healthReport.overall,
-      summary: healthReport.summary
+      metadata: {
+        overall: healthReport.overall,
+        summary: healthReport.summary
+      }
     });
 
     console.log(`System health check completed: ${overall}`);

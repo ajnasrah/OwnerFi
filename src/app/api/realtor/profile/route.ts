@@ -14,6 +14,7 @@ import { db } from '@/lib/firebase';
 import { logError, logInfo } from '@/lib/logger';
 import { getSessionWithRole } from '@/lib/auth-utils';
 import { firestoreHelpers } from '@/lib/firestore';
+import { RealtorProfile } from '@/lib/firebase-models';
 
 export async function POST(request: NextRequest) {
   try {
@@ -157,9 +158,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    await logError('Failed to save realtor profile', error, {
+    await logError('Failed to save realtor profile', {
       action: 'realtor_profile_error'
-    });
+    }, error);
 
     return NextResponse.json(
       { error: 'Failed to save profile. Please try again.' },
@@ -192,7 +193,7 @@ export async function GET(request: NextRequest) {
     }
 
     const realtorDoc = realtorDocs.docs[0];
-    const profile = { id: realtorDoc.id, ...realtorDoc.data() };
+    const profile = { id: realtorDoc.id, ...realtorDoc.data() } as RealtorProfile;
 
     // Get subscription information
     const subscriptionsQuery = query(
@@ -234,9 +235,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    await logError('Failed to fetch realtor profile', error, {
+    await logError('Failed to fetch realtor profile', {
       action: 'realtor_profile_fetch_error'
-    });
+    }, error);
 
     return NextResponse.json(
       { error: 'Failed to load profile. Please try again.' },

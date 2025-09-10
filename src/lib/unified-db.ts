@@ -135,15 +135,15 @@ export const unifiedDb = {
       return { ...propertyData, id, nearbyCities: [] };
     },
 
-    async findById(id: string) {
+    async findById(id: string): Promise<(PropertyListing & { id: string }) | null> {
       const propertyDoc = await getDoc(doc(firebaseDb, 'properties', id));
-      return propertyDoc.exists() ? { id: propertyDoc.id, ...propertyDoc.data() } : null;
+      return propertyDoc.exists() ? { id: propertyDoc.id, ...propertyDoc.data() } as PropertyListing & { id: string } : null;
     },
 
-    async findAllActive() {
+    async findAllActive(): Promise<(PropertyListing & { id: string })[]> {
       const propertiesQuery = query(collection(firebaseDb, 'properties'), where('isActive', '==', true));
       const propertyDocs = await getDocs(propertiesQuery);
-      return propertyDocs.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      return propertyDocs.docs.map(doc => ({ id: doc.id, ...doc.data() } as PropertyListing & { id: string }));
     }
   },
 
@@ -228,7 +228,7 @@ export const unifiedDb = {
       // Get property details for each match
       const matches = [];
       for (const matchDoc of matchDocs.docs) {
-        const matchData = { id: matchDoc.id, ...matchDoc.data() };
+        const matchData = { id: matchDoc.id, ...matchDoc.data() } as PropertyMatch;
         const property = await unifiedDb.properties.findById(matchData.propertyId);
         if (property) {
           matches.push({

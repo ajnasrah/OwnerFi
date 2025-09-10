@@ -35,15 +35,15 @@ export const unifiedDb = {
       return { ...userData, id };
     },
     
-    async findByEmail(email: string) {
+    async findByEmail(email: string): Promise<(User & { id: string }) | null> {
       const usersQuery = query(collection(firebaseDb, 'users'), where('email', '==', email));
       const userDocs = await getDocs(usersQuery);
-      return userDocs.empty ? null : { id: userDocs.docs[0].id, ...userDocs.docs[0].data() };
+      return userDocs.empty ? null : { id: userDocs.docs[0].id, ...userDocs.docs[0].data() } as User & { id: string };
     },
     
-    async findById(id: string) {
+    async findById(id: string): Promise<(User & { id: string }) | null> {
       const userDoc = await getDoc(doc(firebaseDb, 'users', id));
-      return userDoc.exists() ? { id: userDoc.id, ...userDoc.data() } : null;
+      return userDoc.exists() ? { id: userDoc.id, ...userDoc.data() } as User & { id: string } : null;
     }
   },
   
@@ -60,10 +60,10 @@ export const unifiedDb = {
       return { ...realtorData, id };
     },
     
-    async findByUserId(userId: string) {
+    async findByUserId(userId: string): Promise<(RealtorProfile & { id: string }) | null> {
       const realtorsQuery = query(collection(firebaseDb, 'realtors'), where('userId', '==', userId));
       const realtorDocs = await getDocs(realtorsQuery);
-      return realtorDocs.empty ? null : { id: realtorDocs.docs[0].id, ...realtorDocs.docs[0].data() };
+      return realtorDocs.empty ? null : { id: realtorDocs.docs[0].id, ...realtorDocs.docs[0].data() } as RealtorProfile & { id: string };
     },
     
     async update(id: string, data: Partial<Omit<RealtorProfile, 'id' | 'createdAt' | 'updatedAt'>>) {
@@ -87,15 +87,15 @@ export const unifiedDb = {
       return { ...buyerData, id };
     },
     
-    async findByUserId(userId: string) {
+    async findByUserId(userId: string): Promise<(BuyerProfile & { id: string }) | null> {
       const buyersQuery = query(collection(firebaseDb, 'buyerProfiles'), where('userId', '==', userId));
       const buyerDocs = await getDocs(buyersQuery);
-      return buyerDocs.empty ? null : { id: buyerDocs.docs[0].id, ...buyerDocs.docs[0].data() };
+      return buyerDocs.empty ? null : { id: buyerDocs.docs[0].id, ...buyerDocs.docs[0].data() } as BuyerProfile & { id: string };
     },
 
-    async findById(id: string) {
+    async findById(id: string): Promise<(BuyerProfile & { id: string }) | null> {
       const buyerDoc = await getDoc(doc(firebaseDb, 'buyerProfiles', id));
-      return buyerDoc.exists() ? { id: buyerDoc.id, ...buyerDoc.data() } : null;
+      return buyerDoc.exists() ? { id: buyerDoc.id, ...buyerDoc.data() } as BuyerProfile & { id: string } : null;
     },
 
     async findAllActive() {

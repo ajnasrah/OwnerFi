@@ -205,7 +205,7 @@ function UnifiedSignupContent() {
 
           {/* Step 2: Registration Form */}
           {step === 2 && userType && (
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-8">
               {error && (
                 <div className="bg-accent-danger/10 border border-accent-danger/20 rounded-md p-4">
                   <p className="text-accent-danger text-sm">{error}</p>
@@ -215,7 +215,7 @@ function UnifiedSignupContent() {
               {/* Basic Info - Both Users */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-primary-text mb-1">
+                  <label className="block text-sm font-medium text-primary-text mb-2">
                     First Name
                   </label>
                   <input
@@ -228,7 +228,7 @@ function UnifiedSignupContent() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-primary-text mb-1">
+                  <label className="block text-sm font-medium text-primary-text mb-2">
                     Last Name
                   </label>
                   <input
@@ -243,7 +243,7 @@ function UnifiedSignupContent() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-primary-text mb-1">
+                <label className="block text-sm font-medium text-primary-text mb-2">
                   Email Address
                 </label>
                 <input
@@ -257,7 +257,7 @@ function UnifiedSignupContent() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-primary-text mb-1">
+                <label className="block text-sm font-medium text-primary-text mb-2">
                   Phone Number
                 </label>
                 <input
@@ -272,7 +272,7 @@ function UnifiedSignupContent() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-primary-text mb-1">
+                  <label className="block text-sm font-medium text-primary-text mb-2">
                     Password
                   </label>
                   <input
@@ -285,7 +285,7 @@ function UnifiedSignupContent() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-primary-text mb-1">
+                  <label className="block text-sm font-medium text-primary-text mb-2">
                     Confirm Password
                   </label>
                   <input
@@ -384,12 +384,12 @@ function UnifiedSignupContent() {
               {/* Buyer-Specific Fields */}
               {userType === 'buyer' && (
                 <div>
-                  <label className="block text-sm font-medium text-primary-text mb-1">
+                  <label className="block text-sm font-medium text-primary-text mb-3">
                     Preferred Languages
                   </label>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 gap-3">
                     {['English', 'Spanish', 'French', 'German'].map(lang => (
-                      <label key={lang} className="flex items-center space-x-2">
+                      <label key={lang} className="flex items-center space-x-2 py-1">
                         <input
                           type="checkbox"
                           checked={formData.languages.includes(lang)}

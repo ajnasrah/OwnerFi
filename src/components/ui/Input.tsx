@@ -10,6 +10,7 @@ interface InputProps {
   disabled?: boolean;
   className?: string;
   error?: string;
+  autoComplete?: string;
 }
 
 export function Input({
@@ -21,7 +22,8 @@ export function Input({
   required,
   disabled,
   className = '',
-  error
+  error,
+  autoComplete
 }: InputProps) {
   return (
     <div className={`${className}`}>
@@ -38,6 +40,7 @@ export function Input({
         onChange={onChange}
         required={required}
         disabled={disabled}
+        autoComplete={autoComplete}
         className={`w-full px-4 py-3 text-base border rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-accent-orange focus:border-transparent ${
           error 
             ? 'border-red-300 bg-red-50' 

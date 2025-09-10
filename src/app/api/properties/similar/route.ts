@@ -9,7 +9,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { expandSearchToNearbyCities, enhancePropertyWithNearbyCities } from '@/lib/property-enhancement';
-import { Property } from '@/lib/firebase-models';
+import { PropertyListing } from "@/lib/property-schema"';
 
 /**
  * SIMILAR PROPERTIES API
@@ -48,8 +48,8 @@ export async function GET(request: NextRequest) {
     const snapshot = await getDocs(collection(db, 'properties'));
     
     const similarProperties = snapshot.docs
-      .map(doc => ({ id: doc.id, ...doc.data() } as Property & { id: string }))
-      .filter((property: Property & { id: string }) => {
+      .map(doc => ({ id: doc.id, ...doc.data() } as PropertyListing & { id: string }))
+      .filter((property: PropertyListing & { id: string }) => {
         // Exclude the original property
         if (property.id === propertyId) return false;
         

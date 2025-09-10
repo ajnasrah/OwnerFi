@@ -1,23 +1,5 @@
-// Property interface and mock data
+// Mock data file - Property interface moved to /lib/property-schema.ts as PropertyListing
+import { PropertyListing } from './property-schema';
 
-export interface Property {
-  id: string;
-  address: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  bedrooms: number;
-  bathrooms: number;
-  squareFeet: number;
-  listPrice: number;
-  downPaymentAmount: number;
-  monthlyPayment: number;
-  interestRate: number;
-  termYears: number;
-  description: string;
-  distance?: number;
-  imageUrl?: string;
-}
-
-// Mock properties cleared - upload real properties via admin panel
-export const mockProperties: Property[] = [];
+// Mock properties cleared - upload real properties via admin panel  
+export const mockProperties: PropertyListing[] = [];

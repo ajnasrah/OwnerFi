@@ -52,6 +52,13 @@ export interface BuyerProfile {
   matchedPropertyIds?: string[]; // Cached property matches
   likedPropertyIds?: string[]; // Liked properties
   passedPropertyIds?: string[]; // Passed properties
+  
+  // Additional fields found in codebase
+  minPrice?: number; // Minimum property price
+  maxPrice?: number; // Maximum property price  
+  hasBeenSold?: boolean; // Whether buyer has purchased
+  preferredStates?: string; // JSON string of preferred states array
+  preferredCities?: string; // JSON string of preferred cities array
   lastMatchUpdate?: Timestamp;
   createdAt: Timestamp;
   updatedAt: Timestamp;
@@ -130,29 +137,8 @@ export interface LeadDispute {
   updatedAt: Timestamp;
 }
 
-// Property listing
-export interface Property {
-  id: string;
-  address: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  latitude?: number;
-  longitude?: number;
-  bedrooms: number;
-  bathrooms: number;
-  squareFeet: number;
-  listPrice: number;
-  downPaymentAmount: number;
-  monthlyPayment: number;
-  interestRate: number; // Percentage like 6.5
-  termYears: number;
-  description?: string;
-  photos?: string[]; // URLs
-  isActive: boolean;
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
-}
+// Note: Property interface moved to /lib/property-schema.ts as PropertyListing
+// Use PropertyListing from property-schema.ts for all property operations
 
 // Property-buyer match
 export interface PropertyMatch {

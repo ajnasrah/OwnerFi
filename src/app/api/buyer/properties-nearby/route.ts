@@ -7,7 +7,7 @@ import { db } from '@/lib/firebase';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { getCitiesWithinRadius } from '@/lib/cities';
-import { Property } from '@/lib/firebase-models';
+import { PropertyListing } from "@/lib/property-schema"';
 
 /**
  * BUYER NEARBY PROPERTIES API
@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
 
     // Get all properties and group by city
     const snapshot = await getDocs(collection(db, 'properties'));
-    const propertiesByCity: Record<string, Property[]> = {};
+    const propertiesByCity: Record<string, PropertyListing[]> = {};
     
     snapshot.docs.forEach(doc => {
       const property = { id: doc.id, ...doc.data() };

@@ -129,7 +129,7 @@ class UnifiedMatchingService {
   static async findPropertiesForBuyer(
     buyerLocation: BuyerLocation, 
     buyerCriteria: BuyerCriteria,
-    propertyCriteria: PropertyCriteria = {}
+    propertyCriteria: PropertyListingCriteria = {}
   ) {
     try {
       // Query properties in the buyer's state  
@@ -142,7 +142,7 @@ class UnifiedMatchingService {
       const matchedProperties = [];
       
       for (const propertyDoc of propertyDocs.docs) {
-        const propertyData = { id: propertyDoc.id, ...propertyDoc.data() } as Property & { id: string };
+        const propertyData = { id: propertyDoc.id, ...propertyDoc.data() } as PropertyListing & { id: string };
         
         // Filter by isActive in JavaScript instead of query
         if (!propertyData.isActive) continue;

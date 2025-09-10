@@ -16,6 +16,8 @@ export interface PropertyListing {
   county?: string;                     // County name
   neighborhood?: string;               // Neighborhood/subdivision name
   nearbyCities?: string[];             // Cities within 30-mile radius for similar property searches
+  nearbyCitiesSource?: string;         // Source of nearby cities data ('comprehensive-database', 'api', etc.)
+  nearbyCitiesUpdatedAt?: any;         // Timestamp when nearby cities were last updated
   
   // Property Details
   propertyType: 'single-family' | 'condo' | 'townhouse' | 'mobile-home' | 'multi-family' | 'land';

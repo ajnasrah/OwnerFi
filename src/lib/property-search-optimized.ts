@@ -12,7 +12,7 @@ import {
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { getNearbyCitiesDirect } from './cities-service';
-import { Property } from './firebase-models';
+import { PropertyListing } from "./property-schema";
 
 export interface PropertySearchCriteria {
   cities: string[]; // Multiple cities to search
@@ -26,7 +26,7 @@ export interface PropertySearchCriteria {
 }
 
 export interface PropertySearchResult {
-  properties: (Property & { id: string })[];
+  properties: (PropertyListing & { id: string })[];
   totalFound: number;
   hasNextPage: boolean;
   lastDoc?: DocumentSnapshot;
@@ -172,9 +172,9 @@ export async function searchPropertiesWithNearby(
  * FAST: Get similar properties using optimized search
  */
 export async function getSimilarProperties(
-  originalProperty: Property & { id: string },
+  originalProperty: PropertyListing & { id: string },
   limit: number = 10
-): Promise<(Property & { id: string })[]> {
+): Promise<(PropertyListing & { id: string })[]> {
   try {
     // Get nearby cities for the original property
     const nearbyCities = await getNearbyCitiesDirect(

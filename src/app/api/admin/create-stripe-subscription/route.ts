@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { adminDb } from '@/lib/firebase-admin';
+import { getAdminDb } from '@/lib/firebase-admin';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-08-27.basil',
@@ -8,7 +8,9 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 export async function POST(request: NextRequest) {
   try {
-    // Check if Firebase Admin SDK is available
+    // Get Firebase Admin DB with lazy initialization
+    const adminDb = await getAdminDb();
+    
     if (!adminDb) {
       return NextResponse.json(
         { error: 'Firebase Admin SDK not initialized' },

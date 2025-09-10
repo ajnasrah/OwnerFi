@@ -8,6 +8,7 @@ import {
   writeBatch
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { Property } from '@/lib/firebase-models';
 import { populateNearbyCitiesForPropertyFast } from '@/lib/property-enhancement';
 
 /**
@@ -22,7 +23,7 @@ export async function POST() {
     
     // Get ALL properties
     const snapshot = await getDocs(collection(db, 'properties'));
-    const properties = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const properties = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Property & { id: string }));
     
     console.log(`🏠 Found ${properties.length} total properties to process`);
 
@@ -45,16 +46,16 @@ export async function POST() {
         
         try {
           // Check if already has comprehensive nearby cities data
-          if ('nearbyCities' in property && property.nearbyCities && Array.isArray(property.nearbyCities) && property.nearbyCities.length > 20 && 'nearbyCitiesSource' in property && property.nearbyCitiesSource === 'comprehensive-database') {
+          if (property.nearbyCities && Array.isArray(property.nearbyCities) && property.nearbyCities.length > 20 && property.nearbyCitiesSource === 'comprehensive-database') {
             skipped++;
             results.push({
               id: property.id,
-              address: (property as any).address,
-              city: (property as any).city,
-              state: (property as any).state,
+              address: property.address,
+              city: property.city,
+              state: property.state,
               status: 'skipped',
               reason: 'already has comprehensive data',
-              nearbyCitiesCount: (property.nearbyCities as any[]).length
+              nearbyCitiesCount: property.nearbyCities.length
             });
             continue;
           }

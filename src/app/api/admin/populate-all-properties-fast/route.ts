@@ -46,7 +46,7 @@ export async function POST() {
         
         try {
           // Check if already has comprehensive nearby cities data
-          if (property.nearbyCities && Array.isArray(property.nearbyCities) && property.nearbyCities.length > 20 && property.nearbyCitiesSource === 'comprehensive-database') {
+          if (property.nearbyCities && Array.isArray(property.nearbyCities) && property.nearbyCities.length > 20) {
             skipped++;
             results.push({
               id: property.id,

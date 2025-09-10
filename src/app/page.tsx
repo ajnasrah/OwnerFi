@@ -52,7 +52,7 @@ export default function HomePage() {
           <h1 style={{
             fontSize: 'var(--text-4xl)',
             fontWeight: 'var(--font-extrabold)',
-            color: 'var(--gray-900)',
+            color: 'var(--blue-950)',
             marginBottom: 'var(--space-4)',
             lineHeight: '1.1'
           }}>
@@ -61,7 +61,7 @@ export default function HomePage() {
           
           <p style={{
             fontSize: 'var(--text-lg)',
-            color: 'var(--gray-600)',
+            color: 'var(--blue-700)',
             marginBottom: 'var(--space-8)',
             lineHeight: '1.5'
           }}>
@@ -113,7 +113,7 @@ export default function HomePage() {
           <h2 style={{
             fontSize: 'var(--text-3xl)',
             fontWeight: 'var(--font-bold)',
-            color: 'var(--gray-900)',
+            color: 'var(--blue-950)',
             marginBottom: 'var(--space-4)'
           }}>
             We See You. We Believe in You.
@@ -121,7 +121,7 @@ export default function HomePage() {
           
           <p style={{
             fontSize: 'var(--text-base)',
-            color: 'var(--gray-600)',
+            color: 'var(--blue-700)',
             lineHeight: '1.6',
             marginBottom: 'var(--space-8)'
           }}>
@@ -139,13 +139,13 @@ export default function HomePage() {
       {/* How It Works */}
       <section style={{
         padding: 'var(--space-16) var(--space-4)',
-        background: 'var(--gray-50)'
+        background: 'var(--blue-50)'
       }}>
         <div style={{maxWidth: '340px', margin: '0 auto'}}>
           <h2 style={{
             fontSize: 'var(--text-3xl)',
             fontWeight: 'var(--font-bold)',
-            color: 'var(--gray-900)',
+            color: 'var(--blue-950)',
             textAlign: 'center',
             marginBottom: 'var(--space-2)'
           }}>
@@ -154,7 +154,7 @@ export default function HomePage() {
           
           <p style={{
             fontSize: 'var(--text-base)',
-            color: 'var(--gray-600)',
+            color: 'var(--blue-700)',
             textAlign: 'center',
             marginBottom: 'var(--space-12)'
           }}>
@@ -183,14 +183,14 @@ export default function HomePage() {
                 <h3 style={{
                   fontSize: 'var(--text-lg)',
                   fontWeight: 'var(--font-semibold)',
-                  color: 'var(--gray-900)',
+                  color: 'var(--blue-950)',
                   marginBottom: 'var(--space-2)'
                 }}>
                   Share Your Story
                 </h3>
                 <p style={{
                   fontSize: 'var(--text-sm)',
-                  color: 'var(--gray-600)',
+                  color: 'var(--blue-700)',
                   lineHeight: '1.5'
                 }}>
                   Tell us about your life, your needs, and what home means to you. No judgment, just understanding.
@@ -219,14 +219,14 @@ export default function HomePage() {
                 <h3 style={{
                   fontSize: 'var(--text-lg)',
                   fontWeight: 'var(--font-semibold)',
-                  color: 'var(--gray-900)',
+                  color: 'var(--blue-950)',
                   marginBottom: 'var(--space-2)'
                 }}>
                   We Find Your Perfect Match
                 </h3>
                 <p style={{
                   fontSize: 'var(--text-sm)',
-                  color: 'var(--gray-600)',
+                  color: 'var(--blue-700)',
                   lineHeight: '1.5'
                 }}>
                   Real homes. Real owners willing to finance. Real opportunities that traditional lending can't touch.
@@ -255,14 +255,14 @@ export default function HomePage() {
                 <h3 style={{
                   fontSize: 'var(--text-lg)',
                   fontWeight: 'var(--font-semibold)',
-                  color: 'var(--gray-900)',
+                  color: 'var(--blue-950)',
                   marginBottom: 'var(--space-2)'
                 }}>
                   Move In
                 </h3>
                 <p style={{
                   fontSize: 'var(--text-sm)',
-                  color: 'var(--gray-600)',
+                  color: 'var(--blue-700)',
                   lineHeight: '1.5'
                 }}>
                   Direct owner financing means faster closings, flexible terms, and a path home that actually works for you.
@@ -305,7 +305,7 @@ export default function HomePage() {
             padding: 'var(--space-4) var(--space-8)',
             fontSize: 'var(--text-lg)',
             fontWeight: 'var(--font-semibold)',
-            color: 'var(--gray-900)',
+            color: 'var(--blue-950)',
             background: 'var(--white)',
             borderRadius: 'var(--radius-lg)',
             textDecoration: 'none',
@@ -328,7 +328,7 @@ export default function HomePage() {
       {/* Footer */}
       <footer style={{
         padding: 'var(--space-8) var(--space-4)',
-        background: 'var(--gray-50)',
+        background: 'var(--blue-50)',
         borderTop: '1px solid var(--gray-200)'
       }}>
         <div style={{maxWidth: '340px', margin: '0 auto', textAlign: 'center'}}>

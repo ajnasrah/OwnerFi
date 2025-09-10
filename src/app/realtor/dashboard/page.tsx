@@ -106,7 +106,7 @@ export default function RealtorDashboard() {
       {/* Header */}
       <header style={{
         padding: 'var(--mobile-padding)',
-        borderBottom: '1px solid var(--gray-200)',
+        borderBottom: '1px solid var(--blue-200)',
         background: 'var(--primary)',
         color: 'white'
       }}>
@@ -154,7 +154,7 @@ export default function RealtorDashboard() {
       {/* Stats */}
       <div style={{
         padding: 'var(--mobile-padding)',
-        background: 'var(--gray-50)'
+        background: 'var(--blue-50)'
       }}>
         <div className="grid grid-cols-2 gap-4">
           <div className="card text-center p-4">
@@ -168,7 +168,7 @@ export default function RealtorDashboard() {
             </div>
             <div style={{
               fontSize: 'var(--text-sm)',
-              color: 'var(--gray-600)'
+              color: 'var(--blue-600)'
             }}>
               Credits Available
             </div>
@@ -185,7 +185,7 @@ export default function RealtorDashboard() {
             </div>
             <div style={{
               fontSize: 'var(--text-sm)',
-              color: 'var(--gray-600)'
+              color: 'var(--blue-600)'
             }}>
               Purchased Leads
             </div>
@@ -224,13 +224,13 @@ export default function RealtorDashboard() {
                       <h3 style={{
                         fontSize: 'var(--text-lg)',
                         fontWeight: 'var(--font-semibold)',
-                        color: 'var(--gray-900)'
+                        color: 'var(--blue-950)'
                       }}>
                         {lead.firstName} {lead.lastName}
                       </h3>
                       <p style={{
                         fontSize: 'var(--text-sm)',
-                        color: 'var(--gray-600)'
+                        color: 'var(--blue-600)'
                       }}>
                         {lead.preferredCity}, {lead.preferredState}
                       </p>
@@ -252,7 +252,7 @@ export default function RealtorDashboard() {
                       <div style={{
                         fontSize: 'var(--text-base)',
                         fontWeight: 'var(--font-semibold)',
-                        color: 'var(--gray-900)'
+                        color: 'var(--blue-950)'
                       }}>
                         ${lead.maxMonthlyPayment?.toLocaleString()}
                       </div>
@@ -267,7 +267,7 @@ export default function RealtorDashboard() {
                       <div style={{
                         fontSize: 'var(--text-base)',
                         fontWeight: 'var(--font-semibold)',
-                        color: 'var(--gray-900)'
+                        color: 'var(--blue-950)'
                       }}>
                         ${lead.maxDownPayment?.toLocaleString()}
                       </div>
@@ -322,7 +322,7 @@ export default function RealtorDashboard() {
                     <h3 style={{
                       fontSize: 'var(--text-base)',
                       fontWeight: 'var(--font-semibold)',
-                      color: 'var(--gray-900)'
+                      color: 'var(--blue-950)'
                     }}>
                       {lead.firstName} {lead.lastName}
                     </h3>
@@ -340,7 +340,7 @@ export default function RealtorDashboard() {
                   
                   <div style={{
                     fontSize: 'var(--text-sm)',
-                    color: 'var(--gray-600)',
+                    color: 'var(--blue-600)',
                     marginBottom: 'var(--space-2)'
                   }}>
                     📧 {lead.email}
@@ -348,7 +348,7 @@ export default function RealtorDashboard() {
                   
                   <div style={{
                     fontSize: 'var(--text-sm)',
-                    color: 'var(--gray-600)'
+                    color: 'var(--blue-600)'
                   }}>
                     📱 {lead.phone}
                   </div>

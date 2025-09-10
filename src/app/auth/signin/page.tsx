@@ -55,7 +55,7 @@ export default function SignIn() {
       {/* Simple Header */}
       <header style={{
         padding: 'var(--mobile-padding)',
-        borderBottom: '1px solid var(--gray-200)'
+        borderBottom: '1px solid var(--blue-200)'
       }}>
         <div className="flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
@@ -73,7 +73,7 @@ export default function SignIn() {
             <span style={{
               fontSize: 'var(--text-xl)',
               fontWeight: 'var(--font-bold)',
-              color: 'var(--gray-900)'
+              color: 'var(--blue-950)'
             }}>
               OwnerFi
             </span>
@@ -99,7 +99,7 @@ export default function SignIn() {
           </h1>
           <p style={{
             fontSize: 'var(--text-base)',
-            color: 'var(--gray-600)'
+            color: 'var(--blue-600)'
           }}>
             Sign in to continue your home search
           </p>
@@ -125,7 +125,7 @@ export default function SignIn() {
               display: 'block',
               fontSize: 'var(--text-sm)',
               fontWeight: 'var(--font-medium)',
-              color: 'var(--gray-700)',
+              color: 'var(--blue-700)',
               marginBottom: 'var(--space-2)'
             }}>
               Email
@@ -146,7 +146,7 @@ export default function SignIn() {
               display: 'block',
               fontSize: 'var(--text-sm)',
               fontWeight: 'var(--font-medium)',
-              color: 'var(--gray-700)',
+              color: 'var(--blue-700)',
               marginBottom: 'var(--space-2)'
             }}>
               Password
@@ -221,7 +221,7 @@ export default function SignIn() {
         }}>
           <p style={{
             fontSize: 'var(--text-xs)',
-            color: 'var(--gray-500)',
+            color: 'var(--blue-500)',
             lineHeight: '1.5'
           }}>
             By signing in, you agree to our{' '}

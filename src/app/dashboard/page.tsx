@@ -167,7 +167,7 @@ export default function Dashboard() {
             </h2>
             <p style={{
               fontSize: 'var(--text-base)',
-              color: 'var(--gray-600)',
+              color: 'var(--blue-600)',
               marginBottom: 'var(--space-8)'
             }}>
               We couldn't find any properties in {profile?.city} that match your budget.
@@ -188,7 +188,7 @@ export default function Dashboard() {
       {/* Clean Header - NO OVERLAYS */}
       <header style={{
         padding: 'var(--space-4)',
-        borderBottom: '1px solid var(--gray-200)',
+        borderBottom: '1px solid var(--blue-200)',
         background: 'var(--white)'
       }}>
         <div className="flex items-center justify-between">
@@ -196,13 +196,13 @@ export default function Dashboard() {
             <h1 style={{
               fontSize: 'var(--text-xl)',
               fontWeight: 'var(--font-bold)',
-              color: 'var(--gray-900)'
+              color: 'var(--blue-950)'
             }}>
               {profile?.city}
             </h1>
             <p style={{
               fontSize: 'var(--text-sm)',
-              color: 'var(--gray-500)'
+              color: 'var(--blue-500)'
             }}>
               {properties.length} properties found
             </p>
@@ -221,13 +221,13 @@ export default function Dashboard() {
       {/* Property Counter - Simple, Clean */}
       <div style={{
         padding: 'var(--space-3) var(--space-4)',
-        background: 'var(--gray-50)',
-        borderBottom: '1px solid var(--gray-200)',
+        background: 'var(--blue-50)',
+        borderBottom: '1px solid var(--blue-200)',
         textAlign: 'center'
       }}>
         <span style={{
           fontSize: 'var(--text-sm)',
-          color: 'var(--gray-600)',
+          color: 'var(--blue-600)',
           fontWeight: 'var(--font-medium)'
         }}>
           Property {currentIndex + 1} of {properties.length}
@@ -274,7 +274,7 @@ export default function Dashboard() {
           <h2 style={{
             fontSize: 'var(--text-xl)',
             fontWeight: 'var(--font-bold)',
-            color: 'var(--gray-900)',
+            color: 'var(--blue-950)',
             marginBottom: 'var(--space-1)'
           }}>
             {currentProperty.address}
@@ -282,7 +282,7 @@ export default function Dashboard() {
           
           <p style={{
             fontSize: 'var(--text-base)',
-            color: 'var(--gray-600)',
+            color: 'var(--blue-600)',
             marginBottom: 'var(--space-4)'
           }}>
             {currentProperty.city}, {currentProperty.state}
@@ -294,13 +294,13 @@ export default function Dashboard() {
               <div style={{
                 fontSize: 'var(--text-2xl)',
                 fontWeight: 'var(--font-bold)',
-                color: 'var(--gray-900)'
+                color: 'var(--blue-950)'
               }}>
                 {currentProperty.bedrooms}
               </div>
               <div style={{
                 fontSize: 'var(--text-sm)',
-                color: 'var(--gray-500)'
+                color: 'var(--blue-500)'
               }}>
                 Beds
               </div>
@@ -310,13 +310,13 @@ export default function Dashboard() {
               <div style={{
                 fontSize: 'var(--text-2xl)',
                 fontWeight: 'var(--font-bold)',
-                color: 'var(--gray-900)'
+                color: 'var(--blue-950)'
               }}>
                 {currentProperty.bathrooms}
               </div>
               <div style={{
                 fontSize: 'var(--text-sm)',
-                color: 'var(--gray-500)'
+                color: 'var(--blue-500)'
               }}>
                 Baths
               </div>
@@ -326,13 +326,13 @@ export default function Dashboard() {
               <div style={{
                 fontSize: 'var(--text-2xl)',
                 fontWeight: 'var(--font-bold)',
-                color: 'var(--gray-900)'
+                color: 'var(--blue-950)'
               }}>
                 {currentProperty.squareFeet?.toLocaleString() || 'N/A'}
               </div>
               <div style={{
                 fontSize: 'var(--text-sm)',
-                color: 'var(--gray-500)'
+                color: 'var(--blue-500)'
               }}>
                 Sq Ft
               </div>
@@ -346,7 +346,7 @@ export default function Dashboard() {
               <span style={{
                 fontSize: 'var(--text-lg)',
                 fontWeight: 'var(--font-semibold)',
-                color: 'var(--gray-900)'
+                color: 'var(--blue-950)'
               }}>
                 ${currentProperty.listPrice?.toLocaleString()}
               </span>

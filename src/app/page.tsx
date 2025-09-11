@@ -60,12 +60,12 @@ export default function HomePage() {
         </div>
       </nav>
 
-      {/* COMPACT HERO SECTION */}
-      <div className="relative py-20 overflow-hidden">
+      {/* COMPACT HERO SECTION - Half the space */}
+      <div className="relative py-10 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900"></div>
         
         <div className="relative max-w-4xl mx-auto px-6 text-center">
-          <div className="space-y-12">
+          <div className="space-y-6">
             {/* Compact Heading */}
             <div className="space-y-6">
               <div className="inline-block px-3 py-1 bg-emerald-500/10 border border-emerald-400/30 rounded-full text-emerald-400 text-sm font-medium">

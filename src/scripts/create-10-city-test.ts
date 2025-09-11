@@ -194,7 +194,7 @@ async function create10CityTest() {
     
     // Detailed city breakdown
     results.cityResults.forEach(city => {
-      const status = city.localMatchesFound > 0 ? '✅' : '❌';
+      const status = (city.localMatchesFound ?? 0) > 0 ? '✅' : '❌';
     });
     
     

@@ -4,6 +4,9 @@
   "devCommand": "npm run dev",
   "installCommand": "npm install",
   "regions": ["iad1"],
+  "git": {
+    "deploymentEnabled": false
+  },
   "env": {
     "NODE_ENV": "production"
   },

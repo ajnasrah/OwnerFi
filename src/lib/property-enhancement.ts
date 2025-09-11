@@ -4,6 +4,7 @@
 import { getCitiesWithinRadius, calculateDistance, getCityCoordinates } from './cities';
 import { queueNearbyCitiesJob } from './background-jobs';
 import { getNearbyCitiesUltraFast } from './cities-service-v2';
+import { getCitiesNearProperty } from './comprehensive-us-cities';
 import { PropertyListing } from './property-schema';
 
 /**
@@ -19,14 +20,25 @@ export function queueNearbyCitiesForProperty(
 }
 
 /**
- * ULTRA FAST: Get nearby cities immediately using comprehensive database
- * NO API CALLS - Pure JavaScript calculation
+ * COMPREHENSIVE: Get nearby cities using complete US database
+ * Works for ANY city in America - no manual curation needed
  */
 export async function populateNearbyCitiesForPropertyFast(
   propertyCity: string,
   propertyState: string,
   radiusMiles: number = 30
 ): Promise<string[]> {
+  // Use comprehensive database first (covers all US cities)
+  try {
+    const comprehensiveResults = await getCitiesNearProperty(propertyCity, propertyState, radiusMiles);
+    if (comprehensiveResults.length > 0) {
+      return comprehensiveResults;
+    }
+  } catch (error) {
+    console.warn('Comprehensive database failed, falling back to limited database:', error);
+  }
+  
+  // Fallback to limited database if needed
   const nearbyCities = await getNearbyCitiesUltraFast(propertyCity, propertyState, radiusMiles);
   return nearbyCities.map(city => city.name);
 }
@@ -66,7 +78,7 @@ export function getNearbyCitiesForProperty(
       .map(city => city.name)
       .slice(0, 20); // Limit to 20 nearby cities
       
-  } catch (error) {
+  } catch {
     return [];
   }
 }
@@ -96,7 +108,7 @@ export function getNearbyCitiesWithDistance(
       .sort((a, b) => a.distance - b.distance)
       .slice(0, 20);
       
-  } catch (error) {
+  } catch {
     return [];
   }
 }
@@ -163,7 +175,7 @@ export async function expandSearchToNearbyCitiesAPI(
     
     return uniqueCities;
     
-  } catch (error) {
+  } catch {
     // Fallback to limited database
     return expandSearchToNearbyCities(propertyCity, propertyState, radiusMiles);
   }

@@ -156,7 +156,7 @@ async function create10CityTest() {
         
         if (localMatches.length > 0) {
           results.successfulMatches++;
-          localMatches.forEach(match => {
+          localMatches.forEach(() => {
           });
         } else {
           results.failedMatches++;
@@ -174,17 +174,17 @@ async function create10CityTest() {
     // Test: Dallas realtor should NOT see Memphis buyers
     const dallasRealtorProfile = { cities: ['Dallas'], languages: ['English'], state: 'TX' };
     const memphisMatches = await ConsolidatedLeadSystem.findAvailableLeads(dallasRealtorProfile);
-    const memphisBuyersFound = memphisMatches.filter(m => m.city === 'Memphis');
+    memphisMatches.filter(m => m.city === 'Memphis');
     
     
     // Test: Memphis realtor should NOT see Dallas buyers  
     const memphisRealtorProfile = { cities: ['Memphis'], languages: ['English'], state: 'TN' };
     const dallasMatches = await ConsolidatedLeadSystem.findAvailableLeads(memphisRealtorProfile);
-    const dallasBuyersFound = dallasMatches.filter(m => m.city === 'Dallas');
+    dallasMatches.filter(m => m.city === 'Dallas');
     
     
     // Step 4: Get final statistics
-    const stats = await ConsolidatedLeadSystem.getSystemStatistics();
+    await ConsolidatedLeadSystem.getSystemStatistics();
     
     // Step 5: Summary report
     
@@ -193,8 +193,8 @@ async function create10CityTest() {
     }
     
     // Detailed city breakdown
-    results.cityResults.forEach(city => {
-      const status = (city.localMatchesFound ?? 0) > 0 ? '✅' : '❌';
+    results.cityResults.forEach(() => {
+      // Status check logic would go here
     });
     
     
@@ -209,7 +209,7 @@ async function create10CityTest() {
     if (overallSuccess) {
     }
     
-  } catch (error) {
+  } catch {
     process.exit(1);
   }
 }

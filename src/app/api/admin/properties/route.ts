@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Admin access control
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession(authOptions) as any;
     
     if (!session?.user || (session as ExtendedSession).user.role !== 'admin') {
       return NextResponse.json(
@@ -63,16 +63,16 @@ export async function GET(request: NextRequest) {
       updatedAt: doc.data().updatedAt?.toDate?.()?.toISOString() || doc.data().updatedAt
     }));
 
-    // Get actual total count (not limited)
+    // Get total count efficiently without fetching all docs
     const totalQuery = query(collection(db, 'properties'));
-    const totalSnapshot = await getDocs(totalQuery);
-    const actualTotal = totalSnapshot.size;
+    const totalSnapshot = await getDocs(query(totalQuery, firestoreLimit(1000))); // Cap at 1000 for count
+    const estimatedTotal = totalSnapshot.size >= 1000 ? '1000+' : totalSnapshot.size;
     
     return NextResponse.json({ 
       properties,
       count: properties.length,
-      total: actualTotal,
-      showing: `${properties.length} of ${actualTotal} properties`
+      total: estimatedTotal,
+      showing: `${properties.length} of ${estimatedTotal} properties`
     });
 
   } catch (error) {
@@ -97,7 +97,7 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession(authOptions) as any;
     
     if (!session?.user || (session as ExtendedSession).user.role !== 'admin') {
       return NextResponse.json(
@@ -156,7 +156,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession(authOptions) as any;
     
     if (!session?.user || (session as ExtendedSession).user.role !== 'admin') {
       return NextResponse.json(

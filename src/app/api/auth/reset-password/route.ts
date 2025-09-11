@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { 
   collection, 
   query, 
@@ -117,7 +117,7 @@ export async function POST(request: NextRequest) {
       message: 'Password has been reset successfully'
     });
 
-  } catch (error) {
+  } catch {
     await logError('Password reset failed', {
       action: 'password_reset_error'
     }, error as Error);

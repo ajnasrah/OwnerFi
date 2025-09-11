@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
       hasMore: cities.length === limit
     });
 
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: 'City search failed. Please try again.' },
       { status: 500 }

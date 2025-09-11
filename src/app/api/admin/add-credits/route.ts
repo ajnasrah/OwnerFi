@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
+import { ExtendedSession } from '@/types/session';
 import { 
   collection, 
   query, 
@@ -15,7 +16,7 @@ import { getSafeDb } from '@/lib/firebase-safe';
 export async function POST(request: NextRequest) {
   try {
     // Admin access control
-    const session = await getServerSession(authOptions) as any as any;
+    const session = await getServerSession(authOptions) as ExtendedSession;
     
     if (!session?.user || session.user?.role !== 'admin') {
       return NextResponse.json(

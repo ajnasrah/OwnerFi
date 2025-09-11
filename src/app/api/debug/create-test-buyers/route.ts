@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { ConsolidatedLeadSystem } from '@/lib/consolidated-lead-system';
 
-export async function POST(request: NextRequest) {
+export async function POST() {
   try {
     const testBuyers = [
       {
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
       try {
         const profileId = await ConsolidatedLeadSystem.createBuyerProfile(buyer);
         results.push({ success: true, profileId, buyer: buyer.firstName });
-      } catch (error) {
+      } catch {
         results.push({ success: false, error: (error as Error).message || 'Unknown error', buyer: buyer.firstName });
       }
     }
@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
       results: results
     });
 
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Failed' }, { status: 500 });
   }
 }

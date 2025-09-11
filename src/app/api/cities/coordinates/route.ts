@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
 
     throw new Error('No location data found');
 
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: 'Failed to get coordinates' },
       { status: 500 }

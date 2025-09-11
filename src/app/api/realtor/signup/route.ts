@@ -1,7 +1,7 @@
 // SINGLE REALTOR SIGNUP API - Everything in one endpoint
 // Creates user account + validates city + finds nearby cities + saves to Firebase
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { hash } from 'bcryptjs';
 import { FirebaseDB } from '@/lib/firebase-db';
 import { 

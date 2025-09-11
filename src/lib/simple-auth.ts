@@ -1,11 +1,12 @@
 // NextRequest import removed as it's unused
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from './auth';
+import { ExtendedSession } from '@/types/session';
 
 // Simple auth wrapper that doesn't throw errors
 export async function getSessionSafe(): Promise<{ user: { id?: string; email?: string; role?: string } | null; isAuthenticated: boolean }> {
   try {
-    const session = await getServerSession(authOptions) as any;
+    const session = await getServerSession(authOptions) as ExtendedSession;
     return {
       user: session?.user ? {
         id: session.user.id,
@@ -14,7 +15,7 @@ export async function getSessionSafe(): Promise<{ user: { id?: string; email?: s
       } : null,
       isAuthenticated: !!session?.user
     };
-  } catch (_error) {
+  } catch {
     return {
       user: null,
       isAuthenticated: false
@@ -27,7 +28,7 @@ export async function hasRole(requiredRole: string): Promise<boolean> {
   try {
     const { user, isAuthenticated } = await getSessionSafe();
     return isAuthenticated && user?.role === requiredRole;
-  } catch (_error) {
+  } catch {
     return false;
   }
 }

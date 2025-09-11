@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 
 interface OverpassElement {
   id: number;
@@ -101,7 +101,7 @@ export async function GET(request: NextRequest) {
         cities: cities.slice(0, 100) // Limit to 100 cities
       });
 
-    } catch (apiError) {
+    } catch (_apiError) {
       // Fallback to simple radius calculation using major cities
       return NextResponse.json({
         centerCity: { lat, lng },

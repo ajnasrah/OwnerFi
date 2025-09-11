@@ -353,8 +353,8 @@ export class FirebaseDB {
       const profileCollection = user.role === 'buyer' ? 
         COLLECTIONS.BUYER_PROFILES : COLLECTIONS.REALTOR_PROFILES;
       
-      const profiles = await this.queryDocuments<any>(
-        profileCollection as any,
+      const profiles = await this.queryDocuments<BuyerProfile | RealtorProfile>(
+        profileCollection,
         [{ field: 'userId', operator: '==', value: user.id }],
         1
       );

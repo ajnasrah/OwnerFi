@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { 
   collection, 
   query, 
@@ -25,7 +25,7 @@ import { ExtendedSession } from '@/types/session';
  * NO realtor matching, NO complex algorithms, NO dependencies.
  */
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     if (!db) {
       return NextResponse.json(
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const session = await getServerSession(authOptions) as any as ExtendedSession;
+    const session = await getServerSession(authOptions) as ExtendedSession | null;
     
     if (!session?.user || session.user.role !== 'buyer') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ profile });
 
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Failed to load profile' }, { status: 500 });
   }
 }
@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const session = await getServerSession(authOptions) as any as ExtendedSession;
+    const session = await getServerSession(authOptions) as ExtendedSession | null;
     
     if (!session?.user || session.user.role !== 'buyer') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -179,7 +179,7 @@ export async function POST(request: NextRequest) {
       message: 'Profile saved successfully'
     });
 
-  } catch (error) {
+  } catch {
     return NextResponse.json({ 
       error: 'Failed to save profile' 
     }, { status: 500 });

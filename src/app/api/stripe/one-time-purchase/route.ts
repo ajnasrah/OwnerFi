@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getSessionWithRole } from '@/lib/auth-utils';
 import { 
   collection, 
@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
         await updateDoc(doc(db, 'users', session.user.id!), {
           stripeCustomerId: stripeCustomerId
         });
-      } catch (error) {
+      } catch {
       }
     }
 
@@ -129,7 +129,7 @@ export async function POST(request: NextRequest) {
       sessionId: checkoutSession.id 
     });
 
-  } catch (error) {
+  } catch {
     
     await logError('Single credit purchase failed', {
       action: 'single_credit_purchase_error'

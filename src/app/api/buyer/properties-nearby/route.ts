@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { 
   collection, 
   getDocs
@@ -6,6 +6,7 @@ import {
 import { db } from '@/lib/firebase';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
+import { ExtendedSession } from '@/types/session';
 import { getCitiesWithinRadius } from '@/lib/cities';
 import { PropertyListing } from "@/lib/property-schema";
 
@@ -25,7 +26,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const session = await getServerSession(authOptions) as any;
+    const session = await getServerSession(authOptions) as ExtendedSession | null;
     
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -84,7 +85,7 @@ export async function GET(request: NextRequest) {
 
     // Filter cities that have at least minProperties (default 3)
     const citiesWithSufficientProperties = Object.entries(propertiesByCity)
-      .filter(([cityName, properties]) => properties.length >= minProperties)
+      .filter(([_cityName, properties]) => properties.length >= minProperties)
       .map(([cityName, properties]) => ({
         cityName,
         state: properties[0]?.state || state,
@@ -100,7 +101,7 @@ export async function GET(request: NextRequest) {
     
     // Also include cities with fewer properties for context
     const citiesWithFewProperties = Object.entries(propertiesByCity)
-      .filter(([cityName, properties]) => properties.length > 0 && properties.length < minProperties)
+      .filter(([_cityName, properties]) => properties.length > 0 && properties.length < minProperties)
       .map(([cityName, properties]) => ({
         cityName,
         state: properties[0]?.state || state,

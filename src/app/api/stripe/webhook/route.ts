@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { FirebaseDB } from '@/lib/firebase-db';
 import Stripe from 'stripe';
+import { User } from '@/lib/firebase-models';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-08-27.basil',
@@ -65,7 +66,7 @@ export async function POST(request: NextRequest) {
       
       default:
     }
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: 'Webhook handler failed' },
       { status: 500 }
@@ -97,12 +98,12 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     }
 
     // Add credits to realtor account using new system
-    const currentCredits = (userData as any).realtorData?.credits || 0;
+    const currentCredits = (userData as User & { realtorData?: any }).realtorData?.credits || 0;
     const creditsToAdd = parseInt(credits || creditPackage.credits.toString());
     const newCredits = currentCredits + creditsToAdd;
 
     const updatedRealtorData = {
-      ...(userData as any).realtorData || {},
+      ...(userData as User & { realtorData?: any }).realtorData || {},
       credits: newCredits,
       lastPurchase: new Date(),
       updatedAt: new Date()
@@ -140,7 +141,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       createdAt: new Date()
     });
     
-  } catch (error) {
+  } catch {
     // Log error but don't fail the webhook
   }
 }
@@ -217,7 +218,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
 
 async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
   try {
-    const subscriptionId = (invoice as any).subscription;
+    const subscriptionId = (invoice as any).subscription as string;
     
     if (!subscriptionId) return;
 
@@ -281,7 +282,7 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
 
 async function handlePaymentFailed(invoice: Stripe.Invoice) {
   try {
-    const subscriptionId = (invoice as any).subscription;
+    const subscriptionId = (invoice as any).subscription as string;
     
     if (!subscriptionId) return;
 

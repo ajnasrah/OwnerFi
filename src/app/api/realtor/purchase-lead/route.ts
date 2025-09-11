@@ -1,7 +1,7 @@
 // LEAD PURCHASE API - Atomic transaction for purchasing buyer leads
 // Deducts 1 credit and creates lead purchase record
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getSessionWithRole } from '@/lib/auth-utils';
 import { FirebaseDB } from '@/lib/firebase-db';
 import { Timestamp } from 'firebase/firestore';
@@ -189,7 +189,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(response);
 
-  } catch (error) {
+  } catch {
     await logError('Lead purchase failed', {
       action: 'lead_purchase_error'
     }, error as Error);

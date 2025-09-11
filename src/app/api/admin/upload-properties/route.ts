@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { 
@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Strict admin access control
-    const session = await getServerSession(authOptions) as any;
+    const session = await getServerSession(authOptions) as ExtendedSession | null;
     
     if (!session?.user || (session as ExtendedSession).user.role !== 'admin') {
       return NextResponse.json(
@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
     });
     
     // Basic CSV parsing (simplified without GHL dependency)
-    const csvContent = buffer.toString('utf-8');
+    const _csvContent = buffer.toString('utf-8');
     const parseResult: { 
       success: PropertyListing[], 
       errors: string[], 

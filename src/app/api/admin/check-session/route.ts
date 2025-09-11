@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { 
@@ -10,9 +10,9 @@ import {
 import { db } from '@/lib/firebase';
 import { ExtendedSession } from '@/types/session';
 
-export async function GET(_request: NextRequest) {
+export async function GET() {
   try {
-    const session = await getServerSession(authOptions) as any;
+    const session = await getServerSession(authOptions) as ExtendedSession;
     
     if (!session) {
       return NextResponse.json({ 
@@ -31,7 +31,7 @@ export async function GET(_request: NextRequest) {
     // Find realtor profile for this user
     const realtorsQuery = query(
       collection(db, 'realtors'),
-      where('userId', '==', (session as ExtendedSession).user.id)
+      where('userId', '==', session.user.id)
     );
     const realtorDocs = await getDocs(realtorsQuery);
     
@@ -50,10 +50,10 @@ export async function GET(_request: NextRequest) {
       authenticated: true,
       session: {
         user: {
-          id: (session as ExtendedSession).user.id,
-          email: (session as ExtendedSession).user.email,
-          name: (session as ExtendedSession).user.name,
-          role: (session as ExtendedSession).user.role
+          id: session.user.id,
+          email: session.user.email,
+          name: session.user.name,
+          role: session.user.role
         }
       },
       realtorProfile,
@@ -61,7 +61,7 @@ export async function GET(_request: NextRequest) {
       profileCount: realtorDocs.docs.length
     });
     
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: 'Failed to check session' },
       { status: 500 }

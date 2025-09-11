@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { 
   collection, 
   query, 
@@ -11,7 +11,7 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { ExtendedSession } from '@/types/session';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     if (!db) {
       return NextResponse.json(
@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const session = await getServerSession(authOptions) as any as ExtendedSession;
+    const session = await getServerSession(authOptions) as ExtendedSession | null;
     
     if (!session?.user || session.user.role !== 'buyer') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -79,7 +79,7 @@ export async function GET(request: NextRequest) {
       total: allProperties.length
     });
 
-  } catch (error) {
+  } catch {
     return NextResponse.json({ 
       error: 'Failed to load liked properties',
       likedProperties: []

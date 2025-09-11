@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { 
   doc, 
   setDoc, 
@@ -155,7 +155,7 @@ export async function POST(request: NextRequest) {
       goodMatches: matches.filter(m => m.matchScore >= 70 && m.matchScore < 90).length
     });
 
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Failed to calculate matches' }, { status: 500 });
   }
 }

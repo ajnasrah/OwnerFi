@@ -16,7 +16,7 @@ interface CityWithDistance extends USCity {
 }
 
 // Complete US cities database (will be populated from USGS/comprehensive source)
-let usCitiesDatabase: Map<string, USCity[]> = new Map();
+const usCitiesDatabase: Map<string, USCity[]> = new Map();
 let isDatabaseLoaded = false;
 
 /**

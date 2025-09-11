@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { signIn, getSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { isExtendedSession } from '@/types/session';
+import { isExtendedSession, ExtendedSession } from '@/types/session';
 
 export default function SignIn() {
   const [email, setEmail] = useState('');
@@ -30,11 +30,12 @@ export default function SignIn() {
       } else {
         const session = await getSession();
         if (isExtendedSession(session as any)) {
-          if ((session as any)?.user?.role === 'buyer') {
+          const extendedSession = session as ExtendedSession;
+          if (extendedSession.user.role === 'buyer') {
             router.push('/dashboard');
-          } else if ((session as any)?.user?.role === 'realtor') {
+          } else if (extendedSession.user.role === 'realtor') {
             router.push('/realtor-dashboard');
-          } else if ((session as any)?.user?.role === 'admin' && (session as any)?.user?.email === 'admin@prosway.com') {
+          } else if (extendedSession.user.role === 'admin' && extendedSession.user.email === 'admin@prosway.com') {
             router.push('/admin');
           } else {
             router.push('/dashboard');
@@ -52,34 +53,27 @@ export default function SignIn() {
 
   return (
     <div className="min-h-screen bg-slate-900">
-      {/* Dark Header */}
-      <header className="bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50 px-6 py-4">
-        <div className="flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-lg flex items-center justify-center shadow-lg">
-              <span className="text-white font-bold text-lg">O</span>
+      <div style={{ paddingTop: '2rem', paddingBottom: '2rem' }} className="px-6">
+        <div className="max-w-md mx-auto w-full">
+          <div className="bg-slate-800/50 backdrop-blur-lg border border-slate-700/50 rounded-2xl p-8 shadow-2xl">
+            {/* Welcome */}
+            <div className="text-center mb-8">
+              <h1 className="text-3xl font-bold text-white mb-3">
+                Welcome back
+              </h1>
+              <p className="text-lg text-white font-normal mb-4">
+                Sign in to access your property matches
+              </p>
+              <p className="text-white">
+                Don't have an account?{' '}
+                <Link href="/signup" className="text-emerald-400 hover:text-emerald-300 font-semibold transition-colors">
+                  Sign Up
+                </Link>
+              </p>
             </div>
-            <span className="text-xl font-bold text-white">
-              OwnerFi
-            </span>
-          </Link>
-        </div>
-      </header>
 
-      {/* Main Content */}
-      <main className="px-6 py-12 max-w-md mx-auto">
-        {/* Welcome */}
-        <div className="text-center mb-10">
-          <h1 className="text-3xl font-bold text-white mb-3">
-            Welcome back
-          </h1>
-          <p className="text-lg text-white font-normal">
-            Sign in to access your property matches
-          </p>
-        </div>
-
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="mb-10">
+            {/* Form */}
+            <form onSubmit={handleSubmit} className="mb-6">
           {error && (
             <div className="p-4 mb-6 bg-red-600/20 backdrop-blur-lg border border-red-500/30 rounded-xl text-red-300 font-semibold">
               {error}
@@ -139,40 +133,24 @@ export default function SignIn() {
               Forgot password?
             </Link>
           </div>
-        </form>
+            </form>
 
-        {/* Sign Up Options */}
-        <div>
-          <div className="flex items-center mb-6">
-            <div className="flex-1 h-px bg-slate-700"></div>
-            <span className="px-4 text-white font-medium">Don't have an account?</span>
-            <div className="flex-1 h-px bg-slate-700"></div>
-          </div>
-          
-          <div className="space-y-4">
-            <a href="/signup" className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-300 hover:scale-105 flex items-center justify-center shadow-2xl shadow-emerald-500/25">
-              I'm looking for a home
-            </a>
-            <a href="/realtor-signup" className="w-full bg-slate-800/50 backdrop-blur-lg border-2 border-slate-600/50 hover:border-slate-500 text-white hover:text-white py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-300 hover:bg-slate-700/50 flex items-center justify-center">
-              I'm a real estate agent
-            </a>
+            {/* Footer */}
+            <div className="mt-8 text-center">
+              <p className="text-xs text-white leading-relaxed">
+                By signing in, you agree to our{' '}
+                <Link href="/terms" className="text-emerald-400 hover:text-emerald-300 transition-colors">
+                  Terms
+                </Link>{' '}
+                and{' '}
+                <Link href="/privacy" className="text-emerald-400 hover:text-emerald-300 transition-colors">
+                  Privacy Policy
+                </Link>
+              </p>
+            </div>
           </div>
         </div>
-
-        {/* Footer */}
-        <div className="mt-12 text-center">
-          <p className="text-xs text-white leading-relaxed">
-            By signing in, you agree to our{' '}
-            <Link href="/terms" className="text-emerald-400 hover:text-emerald-300 transition-colors">
-              Terms
-            </Link>{' '}
-            and{' '}
-            <Link href="/privacy" className="text-emerald-400 hover:text-emerald-300 transition-colors">
-              Privacy Policy
-            </Link>
-          </p>
-        </div>
-      </main>
+      </div>
     </div>
   );
 }

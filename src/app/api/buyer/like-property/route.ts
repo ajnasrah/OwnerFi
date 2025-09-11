@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { 
   collection, 
   query, 
@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const session = await getServerSession(authOptions) as any as ExtendedSession;
+    const session = await getServerSession(authOptions) as ExtendedSession | null;
     
     if (!session?.user || session.user.role !== 'buyer') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
       propertyId 
     });
 
-  } catch (error) {
+  } catch {
     return NextResponse.json({ 
       error: 'Failed to update property preference' 
     }, { status: 500 });

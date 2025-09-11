@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getSessionWithRole } from '@/lib/auth-utils';
 import { FirebaseDB } from '@/lib/firebase-db';
 import { db } from '@/lib/firebase';
@@ -64,7 +64,7 @@ export async function GET(_: NextRequest) {
 
     return NextResponse.json({ subscriptions: formattedSubscriptions });
 
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: 'Failed to fetch subscriptions' },
       { status: 500 }
@@ -188,7 +188,7 @@ export async function POST(_: NextRequest) {
       );
     }
 
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { 
         error: 'Failed to create billing portal session',

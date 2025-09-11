@@ -107,33 +107,27 @@ export default function RealtorSignup() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900" style={{zoom: '0.8'}}>
-      {/* Header */}
-      <header className="bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50 px-6 py-4">
-        <div className="flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-lg flex items-center justify-center shadow-lg">
-              <span className="text-white font-bold text-lg">O</span>
-            </div>
-            <span className="text-xl font-bold text-white">
-              OwnerFi
-            </span>
-          </Link>
-          <Link
-            href="/auth/signin"
-            className="text-slate-300 hover:text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors hover:bg-slate-700/50"
-          >
-            Sign In
-          </Link>
-        </div>
-      </header>
-
-      <div className="flex flex-col justify-center px-6" style={{height: 'calc(100vh - 80px)'}}>
+    <div className="min-h-screen bg-slate-900">
+      <div className="py-8 px-6">
         <div className="max-w-md mx-auto w-full">
           <div className="bg-slate-800/50 backdrop-blur-lg border border-slate-700/50 rounded-2xl p-8">
             <div className="text-center mb-8">
               <h1 className="text-3xl font-bold text-white mb-3">Join as a realtor</h1>
-              <p className="text-white font-normal">Get qualified buyer leads for owner-financed properties</p>
+              <p className="text-white font-normal mb-4">Get qualified buyer leads for owner-financed properties</p>
+              <div className="space-y-2">
+                <p className="text-white">
+                  Already have an account?{' '}
+                  <Link href="/auth/signin" className="text-emerald-400 hover:text-emerald-300 font-semibold transition-colors">
+                    Sign In
+                  </Link>
+                </p>
+                <p className="text-sm text-white">
+                  Looking for a home instead?{' '}
+                  <Link href="/signup" className="text-blue-400 hover:text-blue-300 font-semibold transition-colors">
+                    Find Your Home
+                  </Link>
+                </p>
+              </div>
             </div>
 
             {error && (
@@ -216,24 +210,6 @@ export default function RealtorSignup() {
                 />
               </div>
 
-              <div className="bg-emerald-500/10 border border-emerald-400/30 rounded-xl p-4">
-                <h3 className="font-bold text-white mb-3">Realtor benefits:</h3>
-                <ul className="space-y-2 text-sm text-white">
-                  <li className="flex items-center">
-                    <div className="w-2 h-2 bg-emerald-400 rounded-full mr-3"></div>
-                    Pre-qualified buyer leads
-                  </li>
-                  <li className="flex items-center">
-                    <div className="w-2 h-2 bg-emerald-400 rounded-full mr-3"></div>
-                    Direct contact information
-                  </li>
-                  <li className="flex items-center">
-                    <div className="w-2 h-2 bg-emerald-400 rounded-full mr-3"></div>
-                    Affordable lead pricing
-                  </li>
-                </ul>
-              </div>
-
               <button
                 type="submit"
                 disabled={loading}
@@ -243,20 +219,24 @@ export default function RealtorSignup() {
               </button>
             </form>
 
-            <div className="mt-8 text-center space-y-4">
-              <p className="text-white">
-                Already have an account?{' '}
-                <Link href="/auth/signin" className="text-emerald-400 hover:text-emerald-300 font-semibold transition-colors">
-                  Sign In
-                </Link>
-              </p>
-              <p className="text-sm text-white">
-                Looking for a home instead?{' '}
-                <Link href="/signup" className="text-blue-400 hover:text-blue-300 font-semibold transition-colors">
-                  Find Your Home
-                </Link>
-              </p>
+            <div className="mt-6 bg-emerald-500/10 border border-emerald-400/30 rounded-xl p-4">
+              <h3 className="font-bold text-white mb-3">What you get:</h3>
+              <ul className="space-y-2 text-sm text-white">
+                <li className="flex items-center">
+                  <div className="w-2 h-2 bg-emerald-400 rounded-full mr-3"></div>
+                  Pre-qualified buyer leads
+                </li>
+                <li className="flex items-center">
+                  <div className="w-2 h-2 bg-emerald-400 rounded-full mr-3"></div>
+                  Direct contact information
+                </li>
+                <li className="flex items-center">
+                  <div className="w-2 h-2 bg-emerald-400 rounded-full mr-3"></div>
+                  Affordable lead pricing
+                </li>
+              </ul>
             </div>
+
           </div>
         </div>
       </div>

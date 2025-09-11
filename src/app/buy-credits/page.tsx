@@ -4,11 +4,27 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
+interface ActiveSubscription {
+  id: string;
+  status: string;
+  current_period_end: number;
+  credits?: number;
+  price?: number;
+  items?: {
+    data: Array<{
+      price?: {
+        nickname?: string;
+      };
+    }>;
+  };
+  cancel_at_period_end?: boolean;
+}
+
 export default function BuyCredits() {
   const router = useRouter();
   const [selectedPack, setSelectedPack] = useState('4_credits');
   const [loading, setLoading] = useState(false);
-  const [activeSubscriptions, setActiveSubscriptions] = useState<any[]>([]);
+  const [activeSubscriptions, setActiveSubscriptions] = useState<ActiveSubscription[]>([]);
   const [loadingSubscriptions, setLoadingSubscriptions] = useState(true);
   const [canceling, setCanceling] = useState('');
 
@@ -83,7 +99,7 @@ export default function BuyCredits() {
       } else {
         alert('Failed to cancel subscription');
       }
-    } catch (error) {
+    } catch {
       alert('Failed to cancel subscription');
     } finally {
       setCanceling('');
@@ -112,7 +128,7 @@ export default function BuyCredits() {
         alert('Error creating checkout');
       }
       
-    } catch (error) {
+    } catch {
       alert('Purchase failed');
     } finally {
       setLoading(false);
@@ -149,7 +165,7 @@ export default function BuyCredits() {
           <div className="mb-4">
             <h3 className="text-base font-semibold text-white mb-2">Active Subscriptions</h3>
             <div className="space-y-2">
-              {activeSubscriptions.map((subscription: any) => (
+              {activeSubscriptions.map((subscription) => (
                 <div
                   key={subscription.id}
                   className="p-4 bg-blue-500/10 border border-blue-400/30 rounded-xl"

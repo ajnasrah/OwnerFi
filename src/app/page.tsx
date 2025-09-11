@@ -69,7 +69,7 @@ export default function HomePage() {
               Connect directly with homeowners who offer financing
             </p>
 
-            <div className="space-y-8 mb-8">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem', marginBottom: '2rem' }}>
               <Link
                 href="/signup"
                 className="w-full block bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-300 hover:scale-[1.02] shadow-lg hover:shadow-xl"
@@ -138,14 +138,14 @@ export default function HomePage() {
       </div>
 
       {/* Customer Success Stories */}
-      <section className="py-16">
+      <section style={{ padding: '4rem 0' }}>
         <div className="max-w-6xl mx-auto px-6">
-          <div className="text-center mb-12">
-            <h2 className="text-2xl font-bold text-white mb-3">Real Families, Real Stories</h2>
+          <div className="text-center" style={{ marginBottom: '3rem' }}>
+            <h2 className="text-2xl font-bold text-white" style={{ marginBottom: '1rem' }}>Real Families, Real Stories</h2>
             <p className="text-slate-400">From stuck renting to proud homeowners</p>
           </div>
           
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-3" style={{ gap: '2rem' }}>
             <div className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300">
               <div className="flex items-center gap-1 mb-4">
                 {[...Array(5)].map((_, i) => (
@@ -216,10 +216,10 @@ export default function HomePage() {
       </section>
 
       {/* How It Works - Card-Based Design */}
-      <section className="py-16">
+      <section style={{ padding: '4rem 0' }}>
         <div className="max-w-6xl mx-auto px-6">
           
-          <div className="grid lg:grid-cols-2 gap-16">
+          <div className="grid lg:grid-cols-2" style={{ gap: '4rem' }}>
             
             {/* For Buyers Card */}
             <div className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-8 shadow-2xl hover:shadow-emerald-500/10 transition-all duration-300">
@@ -231,7 +231,7 @@ export default function HomePage() {
                 <p className="text-slate-400 text-sm">Skip the banks, work directly with owners</p>
               </div>
               
-              <div className="space-y-6 mb-8">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginBottom: '2rem' }}>
                 <div className="flex items-start gap-3">
                   <div className="w-6 h-6 bg-emerald-400/20 rounded-lg flex items-center justify-center mt-1 flex-shrink-0">
                     <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
@@ -283,7 +283,7 @@ export default function HomePage() {
                 <p className="text-slate-400 text-sm">Turn owner-financed deals into commissions</p>
               </div>
               
-              <div className="space-y-6 mb-8">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginBottom: '2rem' }}>
                 <div className="flex items-start gap-3">
                   <div className="w-6 h-6 bg-blue-400/20 rounded-lg flex items-center justify-center mt-1 flex-shrink-0">
                     <div className="w-2 h-2 bg-blue-400 rounded-full"></div>

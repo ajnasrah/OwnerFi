@@ -17,10 +17,6 @@ import { RealtorProfile, BuyerProfile, PropertyMatch, RealtorSubscription, User 
 import { PropertyListing } from './property-schema';
 import { queueNearbyCitiesForProperty } from './property-enhancement';
 
-// Check if Firebase is available during runtime
-const isFirebaseAvailable = () => {
-  return typeof window !== 'undefined' || process.env.NODE_ENV === 'development' || firebaseDb !== null;
-};
 
 // Replace the old db import with this unified Firebase-only implementation
 export const unifiedDb = {
@@ -196,6 +192,16 @@ export const unifiedDb = {
       const propertiesQuery = query(collection(firebaseDb, 'properties'), where('isActive', '==', true));
       const propertyDocs = await getDocs(propertiesQuery);
       return propertyDocs.docs.map(doc => ({ id: doc.id, ...doc.data() } as PropertyListing & { id: string }));
+    },
+
+    async update(id: string, data: Partial<Omit<PropertyListing, 'id' | 'createdAt' | 'updatedAt'>>) {
+      if (!firebaseDb) {
+        throw new Error('Firebase not initialized - missing environment variables');
+      }
+      await updateDoc(doc(firebaseDb, 'properties', id), {
+        ...data,
+        updatedAt: serverTimestamp()
+      });
     }
   },
 

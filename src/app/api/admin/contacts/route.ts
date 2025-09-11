@@ -21,9 +21,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession(authOptions) as any;
     
-    if (!session?.user || (session.user as { role?: string }).role !== 'admin') {
+    if (!session?.user || session.user?.role !== 'admin') {
       return NextResponse.json(
         { error: 'Admin access required' },
         { status: 403 }
@@ -66,9 +66,9 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession(authOptions) as any;
     
-    if (!session?.user || (session.user as { role?: string }).role !== 'admin') {
+    if (!session?.user || session.user?.role !== 'admin') {
       return NextResponse.json(
         { error: 'Admin access required' },
         { status: 403 }

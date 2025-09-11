@@ -125,6 +125,10 @@ html {
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
   overflow-x: hidden;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background-color: #0f172a !important;
 }
 
 body {
@@ -132,14 +136,16 @@ body {
   font-size: var(--text-base);
   font-weight: var(--font-normal);
   line-height: 1.6;
-  color: var(--blue-950);
-  background-color: var(--primary-bg);
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
   font-feature-settings: "kern" 1;
   -webkit-font-feature-settings: "kern" 1;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background-color: #0f172a !important;
 }
 
 /* Typography System */
@@ -148,7 +154,6 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: var(--font-bold);
   line-height: 1.2;
   margin: 0;
-  color: var(--gray-900);
 }
 
 h1 { font-size: var(--text-4xl); font-weight: var(--font-extrabold); }
@@ -160,7 +165,6 @@ h6 { font-size: var(--text-base); font-weight: var(--font-medium); }
 
 p {
   margin: 0;
-  color: var(--gray-600);
   line-height: 1.6;
 }
 

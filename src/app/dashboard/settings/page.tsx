@@ -30,8 +30,8 @@ export default function BuyerSettings() {
     }
     
     // Strict role checking - buyers only
-    if (status === 'authenticated' && session?.user?.role !== 'buyer') {
-      if (session?.user?.role === 'realtor') {
+    if (status === 'authenticated' && (session?.user as any)?.role !== 'buyer') {
+      if ((session?.user as any)?.role === 'realtor') {
         router.push('/realtor/dashboard');
       } else {
         router.push('/auth/signin');
@@ -41,7 +41,7 @@ export default function BuyerSettings() {
 
   // Load existing buyer profile data
   useEffect(() => {
-    if (status === 'authenticated' && session?.user?.role === 'buyer') {
+    if (status === 'authenticated' && (session?.user as any)?.role === 'buyer') {
       loadProfile();
     }
   }, [status, session]);
@@ -240,7 +240,7 @@ export default function BuyerSettings() {
               
               {/* Monthly Payment */}
               <div>
-                <label className="block text-sm font-semibold text-slate-300 mb-3">
+                <label className="block text-sm font-semibold text-white mb-3">
                   Maximum Monthly Payment
                 </label>
                 <div className="bg-emerald-500/10 border border-emerald-400/30 rounded-xl p-4">
@@ -263,7 +263,7 @@ export default function BuyerSettings() {
 
               {/* Down Payment */}
               <div>
-                <label className="block text-sm font-semibold text-slate-300 mb-3">
+                <label className="block text-sm font-semibold text-white mb-3">
                   Maximum Down Payment
                 </label>
                 <div className="bg-emerald-500/10 border border-emerald-400/30 rounded-xl p-4">

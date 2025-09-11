@@ -10,7 +10,7 @@ import {
   serverTimestamp
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { getServerSession } from 'next-auth';
+import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { unifiedDb } from '@/lib/unified-db';
 import { ExtendedSession } from '@/types/session';
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const session = await getServerSession(authOptions) as ExtendedSession;
+    const session = await getServerSession(authOptions) as any as ExtendedSession;
     
     if (!session?.user || session.user.role !== 'buyer') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const session = await getServerSession(authOptions) as ExtendedSession;
+    const session = await getServerSession(authOptions) as any as ExtendedSession;
     
     if (!session?.user || session.user.role !== 'buyer') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -184,4 +184,16 @@ export async function POST(request: NextRequest) {
       error: 'Failed to save profile' 
     }, { status: 500 });
   }
+}
+
+export async function OPTIONS(request: NextRequest) {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Credentials': 'true',
+      'Access-Control-Allow-Origin': request.headers.get('origin') || '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization, Cookie',
+    },
+  });
 }

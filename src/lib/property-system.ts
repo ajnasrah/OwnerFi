@@ -78,7 +78,7 @@ export class PropertySystemService {
   /**
    * Step 1: Save buyer search preferences (simple, fast)
    */
-  static async saveBuyerProfile(buyerId: string, profileData: Partial<BuyerProfile>): Promise<void> {
+  static async saveBuyerProfile(_buyerId: string, _profileData: Partial<BuyerProfile>): Promise<void> {
     // ONLY save profile data - no complex calculations
     // Trigger background matching job separately
   }
@@ -86,7 +86,7 @@ export class PropertySystemService {
   /**
    * Step 2: Background job to calculate property matches
    */
-  static async calculatePropertyMatches(buyerId: string): Promise<PropertyMatch[]> {
+  static async calculatePropertyMatches(_buyerId: string): Promise<PropertyMatch[]> {
     // Run in background, not blocking user interactions
     // Calculate match scores and reasons
     // Store in separate 'propertyMatches' collection
@@ -96,7 +96,7 @@ export class PropertySystemService {
   /**
    * Step 3: Record property actions (immutable events)
    */
-  static async recordPropertyAction(buyerId: string, propertyId: string, action: string): Promise<void> {
+  static async recordPropertyAction(_buyerId: string, _propertyId: string, _action: string): Promise<void> {
     // Store as immutable event in 'propertyActions' collection
     // Update current status in 'propertyMatches' collection
   }
@@ -104,7 +104,7 @@ export class PropertySystemService {
   /**
    * Display: Get properties for buyer (dashboard view)
    */
-  static async getBuyerProperties(buyerId: string, status?: string): Promise<PropertyListing[]> {
+  static async getBuyerProperties(_buyerId: string, _status?: string): Promise<PropertyListing[]> {
     // Read from propertyMatches collection with status filter
     // Fetch property details for matched IDs
     // Return full property objects
@@ -114,7 +114,7 @@ export class PropertySystemService {
   /**
    * Display: Get buyer's properties for realtor (realtor view) 
    */
-  static async getBuyerPropertiesForRealtor(buyerId: string): Promise<PropertyListing[]> {
+  static async getBuyerPropertiesForRealtor(_buyerId: string): Promise<PropertyListing[]> {
     // Identical logic to getBuyerProperties - same data source
     return [];
   }
@@ -122,7 +122,7 @@ export class PropertySystemService {
   /**
    * Maintenance: Sync property matches when properties change
    */
-  static async syncPropertyMatches(propertyId: string, action: 'add' | 'update' | 'delete'): Promise<void> {
+  static async syncPropertyMatches(_propertyId: string, _action: 'add' | 'update' | 'delete'): Promise<void> {
     // Update all buyer matches when property database changes
   }
 }

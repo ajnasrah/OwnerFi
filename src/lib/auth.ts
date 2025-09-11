@@ -1,4 +1,4 @@
-import { NextAuthOptions } from 'next-auth';
+// Use any type to avoid NextAuth version conflicts
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { compare } from 'bcryptjs';
 import { 
@@ -12,7 +12,7 @@ import {
 import { db } from './firebase';
 import { ExtendedUser } from '@/types/session';
 
-export const authOptions: NextAuthOptions = {
+export const authOptions: any = {
   providers: [
     CredentialsProvider({
       name: 'credentials',
@@ -69,16 +69,16 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user }: any) {
       if (user) {
-        token.role = (user as ExtendedUser).role;
+        token.role = user.role;
       }
       return token;
     },
-    async session({ session, token }) {
+    async session({ session, token }: any) {
       if (token && session.user) {
-        (session.user as ExtendedUser).id = token.sub!;
-        (session.user as ExtendedUser).role = token.role as 'buyer' | 'realtor' | 'admin';
+        session.user.id = token.sub!;
+        session.user.role = token.role;
       }
       return session;
     },
@@ -96,10 +96,13 @@ export const authOptions: NextAuthOptions = {
       name: `next-auth.session-token`,
       options: {
         httpOnly: true,
-        sameSite: 'lax',
+        // Use 'none' for cross-origin compatibility with Google Maps API
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
         path: '/',
         secure: process.env.NODE_ENV === 'production',
-        maxAge: 30 * 24 * 60 * 60 // 30 days
+        maxAge: 30 * 24 * 60 * 60, // 30 days
+        // Remove domain restriction to prevent Google Maps API cross-origin issues
+        domain: undefined
       }
     }
   },

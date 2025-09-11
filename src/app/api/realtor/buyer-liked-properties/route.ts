@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
+import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { FirebaseDB } from '@/lib/firebase-db';
 import { ExtendedSession } from '@/types/session';
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions) as ExtendedSession;
+    const session = await getServerSession(authOptions) as any as ExtendedSession;
     
     if (!session?.user || session.user.role !== 'realtor') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -34,29 +34,44 @@ export async function GET(request: NextRequest) {
           firstName: (buyerProfile as any).firstName,
           lastName: (buyerProfile as any).lastName
         },
-        likedProperties: [] 
+        properties: [] 
       });
     }
 
-    // Fetch property details for all liked properties
-    const propertyPromises = likedPropertyIds.map(async (propertyId: string) => {
+    // Fetch property details directly from properties database
+    const likedProperties = [];
+    
+    for (const propertyId of likedPropertyIds) {
       try {
-        const property = await FirebaseDB.getDocument('properties', propertyId);
-        return property;
+        const property = await FirebaseDB.getDocument('properties', propertyId) as any;
+        if (property) {
+          // Format property data with all needed fields
+          likedProperties.push({
+            id: propertyId,
+            address: property.address || '',
+            city: property.city || '',
+            state: property.state || '',
+            bedrooms: property.bedrooms || 0,
+            bathrooms: property.bathrooms || 0,
+            squareFeet: property.squareFeet || 0,
+            listPrice: property.listPrice || 0,
+            monthlyPayment: property.monthlyPayment || 0,
+            downPaymentAmount: property.downPaymentAmount || 0,
+            imageUrl: property.imageUrl || property.zillowImageUrl,
+            ...property
+          });
+        }
       } catch (err) {
-        return null;
+        console.error(`Failed to load property ${propertyId}:`, err);
       }
-    });
-
-    const properties = await Promise.all(propertyPromises);
-    const validProperties = properties.filter(p => p !== null);
+    }
 
     return NextResponse.json({
       buyer: {
         firstName: (buyerProfile as any).firstName,
         lastName: (buyerProfile as any).lastName
       },
-      likedProperties: validProperties
+      properties: likedProperties
     });
 
   } catch (error) {

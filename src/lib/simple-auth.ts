@@ -5,7 +5,7 @@ import { authOptions } from './auth';
 // Simple auth wrapper that doesn't throw errors
 export async function getSessionSafe(): Promise<{ user: { id?: string; email?: string; role?: string } | null; isAuthenticated: boolean }> {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession(authOptions) as any;
     return {
       user: session?.user ? {
         id: session.user.id,

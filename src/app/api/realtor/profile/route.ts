@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
+import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { FirebaseDB } from '@/lib/firebase-db';
 import { ExtendedSession } from '@/types/session';
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions) as ExtendedSession;
+    const session = await getServerSession(authOptions) as any as ExtendedSession;
     
     if (!session?.user || session.user.role !== 'realtor') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

@@ -34,6 +34,7 @@ async function loadComprehensiveUSCitiesDatabase(): Promise<void> {
     
     // Parse CSV content
     const lines = csvContent.split('\n');
+    const headers = lines[0].split(',');
     
     // Clear and rebuild database organized by state
     usCitiesDatabase.clear();
@@ -72,6 +73,16 @@ async function loadComprehensiveUSCitiesDatabase(): Promise<void> {
     }
     
     console.log(`✅ Loaded ${totalCities} cities across ${usCitiesDatabase.size} states`);
+    
+    // Log stats by state
+    console.log('Cities per state:');
+    Array.from(usCitiesDatabase.entries())
+      .sort((a, b) => b[1].length - a[1].length)
+      .slice(0, 10)
+      .forEach(([state, cities]) => {
+        console.log(`  ${state}: ${cities.length} cities`);
+      });
+    
     isDatabaseLoaded = true;
     
   } catch (error) {
@@ -82,6 +93,7 @@ async function loadComprehensiveUSCitiesDatabase(): Promise<void> {
 
 /**
  * Get ALL cities within radius from any point in the US
+ * This is the main function that replaces our limited manual database
  */
 export async function getAllUSCitiesWithinRadius(
   centerLat: number,
@@ -89,13 +101,30 @@ export async function getAllUSCitiesWithinRadius(
   radiusMiles: number = 30
 ): Promise<CityWithDistance[]> {
   
+  // Ensure database is loaded
   await loadComprehensiveUSCitiesDatabase();
   
   const nearbyCities: CityWithDistance[] = [];
   
-  // Search through all states
-  for (const [, cities] of usCitiesDatabase.entries()) {
+  // Calculate rough bounding box for efficiency (approximate)
+  const latRange = radiusMiles / 69; // Rough miles per degree of latitude
+  const lngRange = radiusMiles / (69 * Math.cos(centerLat * Math.PI / 180));
+  
+  const minLat = centerLat - latRange;
+  const maxLat = centerLat + latRange;
+  const minLng = centerLng - lngRange;
+  const maxLng = centerLng + lngRange;
+  
+  // Search through all states (could be optimized to nearby states only)
+  for (const [stateCode, cities] of usCitiesDatabase.entries()) {
     for (const city of cities) {
+      // Quick bounding box filter first
+      if (city.latitude < minLat || city.latitude > maxLat ||
+          city.longitude < minLng || city.longitude > maxLng) {
+        continue;
+      }
+      
+      // Precise distance calculation for candidates
       const distance = calculateHaversineDistance(
         centerLat, centerLng, 
         city.latitude, city.longitude
@@ -107,6 +136,54 @@ export async function getAllUSCitiesWithinRadius(
           distance: Math.round(distance * 100) / 100
         });
       }
+    }
+  }
+  
+  // Sort by distance
+  return nearbyCities.sort((a, b) => a.distance - b.distance);
+}
+
+/**
+ * State-optimized version: Get cities within radius, focusing on specific state first
+ */
+export async function getCitiesWithinRadiusByState(
+  centerLat: number,
+  centerLng: number,
+  primaryStateCode: string,
+  radiusMiles: number = 30
+): Promise<CityWithDistance[]> {
+  
+  await loadComprehensiveUSCitiesDatabase();
+  
+  const nearbyCities: CityWithDistance[] = [];
+  
+  // Helper function to search cities in a state
+  const searchInState = (stateCode: string) => {
+    const cities = usCitiesDatabase.get(stateCode.toUpperCase());
+    if (!cities) return;
+    
+    for (const city of cities) {
+      const distance = calculateHaversineDistance(
+        centerLat, centerLng,
+        city.latitude, city.longitude
+      );
+      
+      if (distance <= radiusMiles) {
+        nearbyCities.push({
+          ...city,
+          distance: Math.round(distance * 100) / 100
+        });
+      }
+    }
+  };
+  
+  // Search primary state first
+  searchInState(primaryStateCode);
+  
+  // Search neighboring states (all states for now, could be optimized)
+  for (const [stateCode] of usCitiesDatabase.entries()) {
+    if (stateCode !== primaryStateCode.toUpperCase()) {
+      searchInState(stateCode);
     }
   }
   
@@ -124,6 +201,7 @@ export async function getCitiesNearProperty(
   
   await loadComprehensiveUSCitiesDatabase();
   
+  // Find the property's city in our database
   const stateCities = usCitiesDatabase.get(propertyStateCode.toUpperCase());
   if (!stateCities) {
     console.warn(`State not found: ${propertyStateCode}`);
@@ -139,17 +217,22 @@ export async function getCitiesNearProperty(
     return [];
   }
   
+  // Get all cities within radius
   const nearbyCities = await getAllUSCitiesWithinRadius(
     propertyCity.latitude,
     propertyCity.longitude,
     radiusMiles
   );
   
+  // Return just the city names (excluding the property city itself)
   return nearbyCities
     .filter(city => city.city.toLowerCase() !== propertyCityName.toLowerCase())
     .map(city => city.city);
 }
 
+/**
+ * Accurate distance calculation using Haversine formula
+ */
 function calculateHaversineDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
   const R = 3959; // Earth's radius in miles
   const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -162,7 +245,10 @@ function calculateHaversineDistance(lat1: number, lng1: number, lat2: number, ln
   return R * c;
 }
 
-export async function getDatabaseStats() {
+/**
+ * Get database statistics
+ */
+export async function getDatabaseStats(): Promise<{totalCities: number, stateCount: number, stateStats: {[key: string]: number}}> {
   await loadComprehensiveUSCitiesDatabase();
   
   let totalCities = 0;
@@ -173,5 +259,47 @@ export async function getDatabaseStats() {
     stateStats[stateCode] = cities.length;
   }
   
-  return { totalCities, stateCount: usCitiesDatabase.size, stateStats };
+  return {
+    totalCities,
+    stateCount: usCitiesDatabase.size,
+    stateStats
+  };
+}
+
+/**
+ * Test function to verify database coverage for a specific location
+ */
+export async function testLocationCoverage(
+  cityName: string,
+  stateCode: string,
+  radiusMiles: number = 30
+): Promise<{
+  found: boolean,
+  cityCoordinates?: {lat: number, lng: number},
+  nearbyCitiesCount: number,
+  sampleNearbyCities: string[]
+}> {
+  
+  await loadComprehensiveUSCitiesDatabase();
+  
+  const stateCities = usCitiesDatabase.get(stateCode.toUpperCase());
+  if (!stateCities) {
+    return { found: false, nearbyCitiesCount: 0, sampleNearbyCities: [] };
+  }
+  
+  const city = stateCities.find(c => c.city.toLowerCase() === cityName.toLowerCase());
+  if (!city) {
+    return { found: false, nearbyCitiesCount: 0, sampleNearbyCities: [] };
+  }
+  
+  const nearbyCities = await getAllUSCitiesWithinRadius(
+    city.latitude, city.longitude, radiusMiles
+  );
+  
+  return {
+    found: true,
+    cityCoordinates: { lat: city.latitude, lng: city.longitude },
+    nearbyCitiesCount: nearbyCities.length,
+    sampleNearbyCities: nearbyCities.slice(0, 10).map(c => `${c.city}, ${c.stateCode}`)
+  };
 }

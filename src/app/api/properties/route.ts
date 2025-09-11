@@ -19,12 +19,13 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const limit = parseInt(searchParams.get('limit') || '20');
+    const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 100); // Cap at 100 for performance
     
-    // Fetch properties from Firebase
+    // Fetch properties from Firebase with proper indexing
     const propertiesQuery = query(
       collection(db, 'properties'),
       where('isActive', '==', true),
+      orderBy('createdAt', 'desc'), // Add ordering for consistent pagination
       firestoreLimit(limit)
     );
     

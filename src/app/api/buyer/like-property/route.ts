@@ -11,7 +11,7 @@ import {
   serverTimestamp
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { getServerSession } from 'next-auth';
+import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { ExtendedSession } from '@/types/session';
 
@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const session = await getServerSession(authOptions) as ExtendedSession;
+    const session = await getServerSession(authOptions) as any as ExtendedSession;
     
     if (!session?.user || session.user.role !== 'buyer') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

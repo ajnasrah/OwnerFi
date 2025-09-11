@@ -122,7 +122,7 @@ export async function searchPropertiesOptimized(
     
     return {
       properties: properties.map(p => {
-        const { _doc, ...property } = p; // Remove document reference from result
+        const { _doc: _, ...property } = p; // Remove document reference from result
         return property;
       }),
       totalFound: properties.length,
@@ -209,7 +209,7 @@ export async function getSimilarProperties(
     
     return similarProperties;
     
-  } catch (error) {
+  } catch {
     return [];
   }
 }

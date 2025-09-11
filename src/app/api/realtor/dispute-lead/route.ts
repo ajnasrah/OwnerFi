@@ -50,6 +50,24 @@ export async function POST(request: NextRequest) {
 
     const purchase = purchases[0] as any;
 
+    // Get full buyer details from buyerProfiles
+    const buyerProfile = await FirebaseDB.getDocument('buyerProfiles', buyerId);
+    
+    if (!buyerProfile) {
+      return NextResponse.json(
+        { error: 'Buyer profile not found' },
+        { status: 404 }
+      );
+    }
+
+    // Get realtor details from realtor profile
+    const realtorProfile = await FirebaseDB.queryDocuments(
+      'realtors',
+      [{ field: 'userId', operator: '==', value: session.user.id }]
+    );
+    
+    const realtor = realtorProfile.length > 0 ? realtorProfile[0] : null;
+
     // Check if already disputed
     const existingDisputes = await FirebaseDB.queryDocuments(
       'leadDisputes',
@@ -66,7 +84,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create dispute record
+    // Create comprehensive dispute record with all required fields
     const disputeData = {
       realtorUserId: session.user.id,
       buyerId: buyerId,
@@ -74,10 +92,25 @@ export async function POST(request: NextRequest) {
       reason: reason,
       description: description,
       status: 'pending',
-      buyerName: purchase.buyerName,
-      buyerCity: purchase.buyerCity,
-      buyerState: purchase.buyerState,
+      
+      // Complete buyer information
+      buyerName: `${(buyerProfile as any).firstName} ${(buyerProfile as any).lastName}`,
+      buyerPhone: (buyerProfile as any).phone,
+      buyerEmail: (buyerProfile as any).email,
+      buyerCity: (buyerProfile as any).city,
+      buyerState: (buyerProfile as any).state,
+      maxMonthlyPayment: (buyerProfile as any).maxMonthlyPayment,
+      maxDownPayment: (buyerProfile as any).maxDownPayment,
+      
+      // Realtor information
+      realtorName: realtor ? `${(realtor as any).firstName} ${(realtor as any).lastName}` : session.user.email || 'Unknown Realtor',
+      realtorEmail: session.user.email,
+      
+      // Purchase information
+      purchaseDate: purchase.createdAt || new Date().toISOString(),
       creditsCost: purchase.creditsCost || 1,
+      
+      // Timestamps
       submittedAt: Timestamp.now(),
       createdAt: Timestamp.now()
     };

@@ -29,12 +29,12 @@ export default function SignIn() {
         setError('Invalid email or password');
       } else {
         const session = await getSession();
-        if (isExtendedSession(session)) {
-          if (session.user.role === 'buyer') {
+        if (isExtendedSession(session as any)) {
+          if ((session as any)?.user?.role === 'buyer') {
             router.push('/dashboard');
-          } else if (session.user.role === 'realtor') {
+          } else if ((session as any)?.user?.role === 'realtor') {
             router.push('/realtor-dashboard');
-          } else if (session.user.role === 'admin' && session.user.email === 'admin@prosway.com') {
+          } else if ((session as any)?.user?.role === 'admin' && (session as any)?.user?.email === 'admin@prosway.com') {
             router.push('/admin');
           } else {
             router.push('/dashboard');
@@ -73,7 +73,7 @@ export default function SignIn() {
           <h1 className="text-3xl font-bold text-white mb-3">
             Welcome back
           </h1>
-          <p className="text-lg text-slate-300 font-normal">
+          <p className="text-lg text-white font-normal">
             Sign in to access your property matches
           </p>
         </div>
@@ -87,7 +87,7 @@ export default function SignIn() {
           )}
           
           <div className="mb-6">
-            <label className="block text-sm font-semibold text-slate-300 mb-3">
+            <label className="block text-sm font-semibold mb-3" style={{color: 'white'}}>
               Email address
             </label>
             <input
@@ -102,7 +102,7 @@ export default function SignIn() {
           </div>
 
           <div className="mb-8">
-            <label className="block text-sm font-semibold text-slate-300 mb-3">
+            <label className="block text-sm font-semibold mb-3" style={{color: 'white'}}>
               Password
             </label>
             <input
@@ -145,7 +145,7 @@ export default function SignIn() {
         <div>
           <div className="flex items-center mb-6">
             <div className="flex-1 h-px bg-slate-700"></div>
-            <span className="px-4 text-slate-400 font-medium">Don't have an account?</span>
+            <span className="px-4 text-white font-medium">Don't have an account?</span>
             <div className="flex-1 h-px bg-slate-700"></div>
           </div>
           
@@ -153,7 +153,7 @@ export default function SignIn() {
             <a href="/signup" className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-300 hover:scale-105 flex items-center justify-center shadow-2xl shadow-emerald-500/25">
               I'm looking for a home
             </a>
-            <a href="/realtor-signup" className="w-full bg-slate-800/50 backdrop-blur-lg border-2 border-slate-600/50 hover:border-slate-500 text-slate-300 hover:text-white py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-300 hover:bg-slate-700/50 flex items-center justify-center">
+            <a href="/realtor-signup" className="w-full bg-slate-800/50 backdrop-blur-lg border-2 border-slate-600/50 hover:border-slate-500 text-white hover:text-white py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-300 hover:bg-slate-700/50 flex items-center justify-center">
               I'm a real estate agent
             </a>
           </div>
@@ -161,7 +161,7 @@ export default function SignIn() {
 
         {/* Footer */}
         <div className="mt-12 text-center">
-          <p className="text-xs text-slate-500 leading-relaxed">
+          <p className="text-xs text-white leading-relaxed">
             By signing in, you agree to our{' '}
             <Link href="/terms" className="text-emerald-400 hover:text-emerald-300 transition-colors">
               Terms

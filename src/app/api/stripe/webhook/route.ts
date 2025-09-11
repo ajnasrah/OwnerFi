@@ -164,22 +164,22 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
       console.warn(`No user found for subscription ${subscription.id}`);
       return;
     }
+
+    const user = users[0];
+    const updatedRealtorData = {
+      ...user.realtorData || {},
+      subscriptionStatus: subscription.status === 'active' ? 'active' : 'canceled',
+      updatedAt: new Date()
+    };
+
+    await FirebaseDB.updateDocument('users', user.id, {
+      realtorData: updatedRealtorData,
+      updatedAt: new Date()
+    });
   } catch (error) {
     console.error('Error in handleSubscriptionUpdated:', error);
     throw error;
   }
-
-  const user = users[0];
-  const updatedRealtorData = {
-    ...user.realtorData || {},
-    subscriptionStatus: subscription.status === 'active' ? 'active' : 'canceled',
-    updatedAt: new Date()
-  };
-
-  await FirebaseDB.updateDocument('users', user.id, {
-    realtorData: updatedRealtorData,
-    updatedAt: new Date()
-  });
 }
 
 async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
@@ -196,23 +196,23 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
       console.warn(`No user found for subscription deletion ${subscription.id}`);
       return;
     }
+
+    const user = users[0];
+    const updatedRealtorData = {
+      ...user.realtorData || {},
+      subscriptionStatus: 'canceled',
+      stripeSubscriptionId: null,
+      updatedAt: new Date()
+    };
+
+    await FirebaseDB.updateDocument('users', user.id, {
+      realtorData: updatedRealtorData,
+      updatedAt: new Date()
+    });
   } catch (error) {
     console.error('Error in handleSubscriptionDeleted:', error);
     throw error;
   }
-
-  const user = users[0];
-  const updatedRealtorData = {
-    ...user.realtorData || {},
-    subscriptionStatus: 'canceled',
-    stripeSubscriptionId: null,
-    updatedAt: new Date()
-  };
-
-  await FirebaseDB.updateDocument('users', user.id, {
-    realtorData: updatedRealtorData,
-    updatedAt: new Date()
-  });
 }
 
 async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
@@ -233,50 +233,50 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
       console.warn(`No user found for payment success ${subscriptionId}`);
       return;
     }
+
+    const user = users[0];
+    const realtorData = user.realtorData || {};
+    const creditPackId = realtorData.currentPlan;
+    
+    // Find the credit package to get credits
+    const creditPackage = CREDIT_PACKAGES[creditPackId as keyof typeof CREDIT_PACKAGES];
+    if (!creditPackage || !creditPackage.recurring) {
+      return;
+    }
+
+    // Add monthly credits for recurring subscriptions
+    const currentCredits = realtorData.credits || 0;
+    const newCredits = currentCredits + creditPackage.credits;
+
+    const updatedRealtorData = {
+      ...realtorData,
+      credits: newCredits,
+      lastRenewal: new Date(),
+      updatedAt: new Date()
+    };
+
+    await FirebaseDB.updateDocument('users', user.id, {
+      realtorData: updatedRealtorData,
+      updatedAt: new Date()
+    });
+
+    // Create renewal transaction record
+    await FirebaseDB.createDocument('realtorTransactions', {
+      realtorUserId: user.id,
+      type: 'subscription_renewal',
+      description: `Monthly renewal - ${creditPackage.name} - ${creditPackage.credits} credits`,
+      creditsChange: creditPackage.credits,
+      runningBalance: newCredits,
+      stripeInvoiceId: invoice.id,
+      stripeSubscriptionId: subscriptionId,
+      amount: (invoice.amount_paid || 0) / 100,
+      creditPackageId: creditPackId,
+      createdAt: new Date()
+    });
   } catch (error) {
     console.error('Error in handlePaymentSucceeded:', error);
     throw error;
   }
-
-  const user = users[0];
-  const realtorData = user.realtorData || {};
-  const creditPackId = realtorData.currentPlan;
-  
-  // Find the credit package to get credits
-  const creditPackage = CREDIT_PACKAGES[creditPackId as keyof typeof CREDIT_PACKAGES];
-  if (!creditPackage || !creditPackage.recurring) {
-    return;
-  }
-
-  // Add monthly credits for recurring subscriptions
-  const currentCredits = realtorData.credits || 0;
-  const newCredits = currentCredits + creditPackage.credits;
-
-  const updatedRealtorData = {
-    ...realtorData,
-    credits: newCredits,
-    lastRenewal: new Date(),
-    updatedAt: new Date()
-  };
-
-  await FirebaseDB.updateDocument('users', user.id, {
-    realtorData: updatedRealtorData,
-    updatedAt: new Date()
-  });
-
-  // Create renewal transaction record
-  await FirebaseDB.createDocument('realtorTransactions', {
-    realtorUserId: user.id,
-    type: 'subscription_renewal',
-    description: `Monthly renewal - ${creditPackage.name} - ${creditPackage.credits} credits`,
-    creditsChange: creditPackage.credits,
-    runningBalance: newCredits,
-    stripeInvoiceId: invoice.id,
-    stripeSubscriptionId: subscriptionId,
-    amount: (invoice.amount_paid || 0) / 100,
-    creditPackageId: creditPackId,
-    createdAt: new Date()
-  });
 }
 
 async function handlePaymentFailed(invoice: Stripe.Invoice) {
@@ -297,34 +297,34 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
       console.warn(`No user found for payment failure ${subscriptionId}`);
       return;
     }
+
+    const user = users[0];
+    const updatedRealtorData = {
+      ...user.realtorData || {},
+      subscriptionStatus: 'payment_failed',
+      lastPaymentFailed: new Date(),
+      updatedAt: new Date()
+    };
+
+    await FirebaseDB.updateDocument('users', user.id, {
+      realtorData: updatedRealtorData,
+      updatedAt: new Date()
+    });
+
+    // Log the failed payment
+    await FirebaseDB.createDocument('realtorTransactions', {
+      realtorUserId: user.id,
+      type: 'payment_failed',
+      description: 'Monthly subscription payment failed',
+      stripeInvoiceId: invoice.id,
+      stripeSubscriptionId: subscriptionId,
+      amount: (invoice.amount_due || 0) / 100,
+      createdAt: new Date()
+    });
   } catch (error) {
     console.error('Error in handlePaymentFailed:', error);
     throw error;
   }
-
-  const user = users[0];
-  const updatedRealtorData = {
-    ...user.realtorData || {},
-    subscriptionStatus: 'payment_failed',
-    lastPaymentFailed: new Date(),
-    updatedAt: new Date()
-  };
-
-  await FirebaseDB.updateDocument('users', user.id, {
-    realtorData: updatedRealtorData,
-    updatedAt: new Date()
-  });
-
-  // Log the failed payment
-  await FirebaseDB.createDocument('realtorTransactions', {
-    realtorUserId: user.id,
-    type: 'payment_failed',
-    description: 'Monthly subscription payment failed',
-    stripeInvoiceId: invoice.id,
-    stripeSubscriptionId: subscriptionId,
-    amount: (invoice.amount_due || 0) / 100,
-    createdAt: new Date()
-  });
 }
 
 // This function is no longer needed - all subscription logic is handled in the new system

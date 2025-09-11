@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { FirebaseDB } from '@/lib/firebase-db';
 import { ConsolidatedLeadSystem } from '@/lib/consolidated-lead-system';
 
@@ -92,7 +92,7 @@ export async function GET() {
       }
     });
 
-  } catch {
+  } catch (error) {
     return NextResponse.json({ 
       error: 'Analysis failed',
       details: (error as Error).message

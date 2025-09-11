@@ -209,7 +209,7 @@ export async function getSimilarProperties(
     
     return similarProperties;
     
-  } catch {
+  } catch (error) {
     return [];
   }
 }

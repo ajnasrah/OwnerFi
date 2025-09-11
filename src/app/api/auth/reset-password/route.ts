@@ -117,7 +117,7 @@ export async function POST(request: NextRequest) {
       message: 'Password has been reset successfully'
     });
 
-  } catch {
+  } catch (error) {
     await logError('Password reset failed', {
       action: 'password_reset_error'
     }, error as Error);

@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
       redirectTo: (userType || 'buyer') === 'buyer' ? '/dashboard/setup' : '/realtor-dashboard'
     });
 
-  } catch {
+  } catch (error) {
     await logError('Failed to create buyer account', {
       action: 'buyer_signup_error'
     }, error as Error);

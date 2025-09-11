@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { FirebaseDB } from '@/lib/firebase-db';
 
 export async function GET() {
@@ -36,7 +36,7 @@ export async function GET() {
       realtors: realtorList
     });
     
-  } catch {
+  } catch (error) {
     return NextResponse.json({ 
       error: 'Failed', 
       details: (error as Error).message 

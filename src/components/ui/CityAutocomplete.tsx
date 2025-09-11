@@ -89,7 +89,7 @@ export function CityAutocomplete({
         setCities(filtered);
         setShowDropdown(filtered.length > 0);
       }
-    } catch {
+    } catch (error) {
       // Error handled silently
     } finally {
       setLoading(false);

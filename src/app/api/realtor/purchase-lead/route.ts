@@ -189,7 +189,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(response);
 
-  } catch {
+  } catch (error) {
     await logError('Lead purchase failed', {
       action: 'lead_purchase_error'
     }, error as Error);

@@ -32,7 +32,7 @@ export default function TestCheckout() {
       } else {
         setResult(`API Error: ${JSON.stringify(data, null, 2)}`);
       }
-    } catch {
+    } catch (error) {
       setResult(`Network Error: ${(error as Error).message}`);
     } finally {
       setLoading(false);

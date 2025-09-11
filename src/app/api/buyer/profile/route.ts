@@ -58,7 +58,7 @@ export async function GET() {
 
     return NextResponse.json({ profile });
 
-  } catch {
+  } catch (error) {
     return NextResponse.json({ error: 'Failed to load profile' }, { status: 500 });
   }
 }
@@ -179,7 +179,7 @@ export async function POST(request: NextRequest) {
       message: 'Profile saved successfully'
     });
 
-  } catch {
+  } catch (error) {
     return NextResponse.json({ 
       error: 'Failed to save profile' 
     }, { status: 500 });

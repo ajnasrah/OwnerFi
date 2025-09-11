@@ -78,7 +78,7 @@ export function getNearbyCitiesForProperty(
       .map(city => city.name)
       .slice(0, 20); // Limit to 20 nearby cities
       
-  } catch {
+  } catch (error) {
     return [];
   }
 }
@@ -108,7 +108,7 @@ export function getNearbyCitiesWithDistance(
       .sort((a, b) => a.distance - b.distance)
       .slice(0, 20);
       
-  } catch {
+  } catch (error) {
     return [];
   }
 }
@@ -175,7 +175,7 @@ export async function expandSearchToNearbyCitiesAPI(
     
     return uniqueCities;
     
-  } catch {
+  } catch (error) {
     // Fallback to limited database
     return expandSearchToNearbyCities(propertyCity, propertyState, radiusMiles);
   }

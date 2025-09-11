@@ -1,7 +1,7 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { FirebaseDB } from '@/lib/firebase-db';
 
-export async function POST() {
+export async function POST(request: NextRequest) {
   try {
     const { email } = await request.json();
     
@@ -62,7 +62,7 @@ export async function POST() {
       fullRealtorData: realtorData
     });
     
-  } catch {
+  } catch (error) {
     return NextResponse.json({ 
       error: 'Failed', 
       details: (error as Error).message 

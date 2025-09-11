@@ -1,7 +1,7 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { ConsolidatedLeadSystem } from '@/lib/consolidated-lead-system';
 
-export async function POST() {
+export async function POST(request: NextRequest) {
   try {
     const testBuyers = [
       {
@@ -39,7 +39,7 @@ export async function POST() {
           buyer: buyer.firstName,
           city: buyer.city.split(',')[0]
         });
-      } catch {
+      } catch (error) {
         results.push({ 
           success: false, 
           error: (error as Error).message || 'Unknown error', 
@@ -54,7 +54,7 @@ export async function POST() {
       results: results
     });
 
-  } catch {
+  } catch (error) {
     return NextResponse.json({ 
       error: 'Failed', 
       details: (error as Error).message 

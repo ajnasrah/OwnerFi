@@ -64,7 +64,7 @@ export async function GET(_: NextRequest) {
 
     return NextResponse.json({ subscriptions: formattedSubscriptions });
 
-  } catch {
+  } catch (error) {
     return NextResponse.json(
       { error: 'Failed to fetch subscriptions' },
       { status: 500 }
@@ -188,7 +188,7 @@ export async function POST(_: NextRequest) {
       );
     }
 
-  } catch {
+  } catch (error) {
     return NextResponse.json(
       { 
         error: 'Failed to create billing portal session',

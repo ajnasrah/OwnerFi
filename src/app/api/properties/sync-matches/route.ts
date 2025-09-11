@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
       message: `Property matches synced for ${action} action`
     });
 
-  } catch {
+  } catch (error) {
     return NextResponse.json(
       { error: 'Failed to sync property matches' },
       { status: 500 }
@@ -105,7 +105,7 @@ async function removePropertyFromAllBuyers(propertyId: string) {
 
     await Promise.all(updatePromises);
     
-  } catch {
+  } catch (error) {
     throw error;
   }
 }
@@ -139,7 +139,7 @@ async function addPropertyToMatchingBuyers(property: PropertyListing & { id: str
 
     await Promise.all(updatePromises);
     
-  } catch {
+  } catch (error) {
     throw error;
   }
 }
@@ -173,7 +173,7 @@ async function checkPropertyMatchesBuyer(property: PropertyListing & { id: strin
     
     return requirementsMatch;
     
-  } catch {
+  } catch (error) {
     return false;
   }
 }
@@ -251,7 +251,7 @@ export async function GET() {
       message: `Refreshed matches for ${refreshedCount} buyers`
     });
 
-  } catch {
+  } catch (error) {
     return NextResponse.json(
       { error: 'Failed to refresh matches' },
       { status: 500 }

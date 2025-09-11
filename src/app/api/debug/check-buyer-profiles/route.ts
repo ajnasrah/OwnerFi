@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { FirebaseDB } from '@/lib/firebase-db';
 import { ConsolidatedLeadSystem } from '@/lib/consolidated-lead-system';
 
@@ -31,7 +31,7 @@ export async function GET() {
       systemStats: stats
     });
 
-  } catch {
+  } catch (error) {
     return NextResponse.json({ error: 'Failed', details: (error as Error).message }, { status: 500 });
   }
 }

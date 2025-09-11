@@ -74,7 +74,7 @@ export async function GET(request: NextRequest) {
       properties: likedProperties
     });
 
-  } catch {
+  } catch (error) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

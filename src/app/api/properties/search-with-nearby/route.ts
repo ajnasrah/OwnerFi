@@ -129,7 +129,7 @@ export async function GET(request: NextRequest) {
       }
     });
 
-  } catch {
+  } catch (error) {
     return NextResponse.json({ 
       error: 'Search failed',
       details: (error as Error).message

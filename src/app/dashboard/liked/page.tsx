@@ -83,7 +83,7 @@ export default function LikedProperties() {
       if (response.ok) {
         setProperties(prev => prev.filter(p => p.id !== propertyId));
       }
-    } catch {
+    } catch (error) {
     }
   };
 

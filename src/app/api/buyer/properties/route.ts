@@ -122,7 +122,7 @@ export async function GET(request: NextRequest) {
       
       let displayTag = '❤️ Liked';
       let matchReason = 'Previously liked';
-      let sortOrder = 0; // Highest priority
+      const sortOrder = 0; // Highest priority
       
       if (!meetsCurrentBudget) {
         displayTag = '❤️ Liked (Over Budget)';

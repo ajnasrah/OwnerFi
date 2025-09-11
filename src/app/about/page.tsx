@@ -30,7 +30,7 @@ export default function AboutPage() {
         <div className="text-center mb-16">
           <h1 className="text-4xl font-bold text-white mb-6">About OwnerFi</h1>
           <p className="text-xl text-slate-300 leading-relaxed max-w-3xl mx-auto">
-            We're bridging the gap between families who deserve homeownership and property owners willing to offer creative financing solutions.
+            We&apos;re bridging the gap between families who deserve homeownership and property owners willing to offer creative financing solutions.
           </p>
         </div>
 
@@ -40,10 +40,10 @@ export default function AboutPage() {
             <h2 className="text-3xl font-bold text-white mb-6">Our Mission</h2>
             <p className="text-slate-300 text-lg leading-relaxed mb-6">
               Traditional lending has failed millions of good families. Self-employed entrepreneurs, people with medical debt, 
-              families who faced financial hardship during life's unexpected challenges - they all deserve a path to homeownership.
+              families who faced financial hardship during life&apos;s unexpected challenges - they all deserve a path to homeownership.
             </p>
             <p className="text-slate-300 text-lg leading-relaxed">
-              We believe homeownership shouldn't be limited to those with perfect credit scores. 
+              We believe homeownership shouldn&apos;t be limited to those with perfect credit scores.
               OwnerFi connects these deserving families with property owners who are willing to offer direct financing, 
               creating win-win opportunities for everyone involved.
             </p>
@@ -52,7 +52,7 @@ export default function AboutPage() {
 
         {/* What We Do */}
         <div className="mb-16">
-          <h2 className="text-3xl font-bold text-white mb-8 text-center">What We're Building</h2>
+          <h2 className="text-3xl font-bold text-white mb-8 text-center">What We&apos;re Building</h2>
           
           <div className="grid md:grid-cols-2 gap-8">
             <div className="bg-slate-800/30 border border-slate-700/50 rounded-2xl p-6">
@@ -86,7 +86,7 @@ export default function AboutPage() {
                 </li>
                 <li className="flex items-start gap-3">
                   <div className="w-2 h-2 bg-blue-400 rounded-full mt-2 flex-shrink-0"></div>
-                  <span>Close deals that traditional financing couldn't handle</span>
+                  <span>Close deals that traditional financing couldn&apos;t handle</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <div className="w-2 h-2 bg-blue-400 rounded-full mt-2 flex-shrink-0"></div>
@@ -103,7 +103,7 @@ export default function AboutPage() {
 
         {/* The Problem We're Solving */}
         <div className="mb-16">
-          <h2 className="text-3xl font-bold text-white mb-8 text-center">The Problem We're Solving</h2>
+          <h2 className="text-3xl font-bold text-white mb-8 text-center">The Problem We&apos;re Solving</h2>
           
           <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-8">
             <div className="grid md:grid-cols-3 gap-8 text-center">
@@ -123,9 +123,9 @@ export default function AboutPage() {
             
             <div className="mt-8 text-center">
               <p className="text-slate-300 text-lg leading-relaxed">
-                Millions of hardworking families are stuck in the rental cycle, paying someone else's mortgage 
+                Millions of hardworking families are stuck in the rental cycle, paying someone else&apos;s mortgage 
                 while building no equity for themselves. Traditional banking serves only those with perfect credit histories, 
-                leaving behind good people who've faced life's challenges.
+                leaving behind good people who&apos;ve faced life&apos;s challenges.
               </p>
             </div>
           </div>
@@ -204,7 +204,7 @@ export default function AboutPage() {
         <div className="text-center">
           <h2 className="text-3xl font-bold text-white mb-6">Ready to Be Part of the Solution?</h2>
           <p className="text-slate-300 text-lg mb-8 max-w-2xl mx-auto">
-            Whether you're a family seeking homeownership or a real estate professional looking to help more clients, 
+            Whether you&apos;re a family seeking homeownership or a real estate professional looking to help more clients,
             OwnerFi provides the tools and connections you need.
           </p>
           

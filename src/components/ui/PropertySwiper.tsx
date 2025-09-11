@@ -70,14 +70,14 @@ export function PropertyListingSwiper({ properties, onLike, onPass, onFavorite, 
         <div className="text-center max-w-md">
           <div className="text-6xl mb-4">🔍</div>
           <h2 className="text-2xl font-semibold text-gray-900 mb-4">
-            We're On It!
+            We&apos;re On It!
           </h2>
           <p className="text-gray-600 mb-6 leading-relaxed">
-            We don't have properties matching your criteria at the moment, but we're constantly adding new owner-financed properties to our platform.
+            We don&apos;t have properties matching your criteria at the moment, but we&apos;re constantly adding new owner-financed properties to our platform.
           </p>
           <div className="bg-blue-50 rounded-lg p-4 mb-6">
             <p className="text-blue-800 font-medium">
-              💡 We'll notify you as soon as properties become available in your area!
+              💡 We&apos;ll notify you as soon as properties become available in your area!
             </p>
           </div>
           <Button variant="primary" href="/dashboard/settings">

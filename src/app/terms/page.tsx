@@ -18,7 +18,7 @@ export default function TermsOfService() {
           <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-8">
             <h2 className="text-2xl font-semibold text-blue-800 mb-4">📋 What You Need to Know (Plain English)</h2>
             <ul className="space-y-2 text-blue-700">
-              <li>• <strong>We connect buyers with real estate agents</strong> - that's our business model</li>
+              <li>• <strong>We connect buyers with real estate agents</strong> - that&apos;s our business model</li>
               <li>• <strong>Your contact info will be sold to licensed realtors</strong> who may call/text/email you</li>
               <li>• <strong>We don&apos;t guarantee property accuracy</strong> - always verify everything yourself</li>
               <li>• <strong>We&apos;re not your agent, broker, or advisor</strong> - we&apos;re just a lead generation platform</li>

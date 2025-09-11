@@ -378,7 +378,7 @@ export default function Dashboard() {
           {/* Contact Button */}
           <button 
             onClick={() => {
-              const message = `I'm interested in ${currentProperty.address}, ${currentProperty.city}, ${currentProperty.state}. Found through OwnerFi.`;
+              const message = `I&apos;m interested in ${currentProperty.address}, ${currentProperty.city}, ${currentProperty.state}. Found through OwnerFi.`;
               window.open(`sms:+1234567890&body=${encodeURIComponent(message)}`, '_self');
             }}
             className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white rounded-xl flex items-center justify-center transition-all shadow-2xl shadow-emerald-500/25 transform active:scale-95 hover:scale-110 border-2 border-emerald-400/30"

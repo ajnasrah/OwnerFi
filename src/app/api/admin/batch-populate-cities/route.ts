@@ -33,13 +33,11 @@ export async function POST(request: NextRequest) {
     
     if (force) {
       // Process all properties
-      propertiesQuery = query(adminDb.collection('properties'));
+      propertiesQuery = adminDb.collection('properties');
     } else {
       // Only process properties without nearbyCities
-      propertiesQuery = query(
-        adminDb.collection('properties'),
-        where('nearbyCitiesUpdatedAt', '==', null)
-      );
+      propertiesQuery = adminDb.collection('properties')
+        .where('nearbyCitiesUpdatedAt', '==', null);
     }
 
     const snapshot = await propertiesQuery.get();

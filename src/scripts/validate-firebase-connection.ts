@@ -27,7 +27,7 @@ async function validateFirebaseConnection() {
       timestamp: new Date().toISOString()
     };
     
-    const testDoc = await FirebaseDB.createDocument('_test_validation', testData);
+    const testDoc = await FirebaseDB.createDocument('_test_validation', testData) as any;
     
     // Clean up test document
     await FirebaseDB.deleteDocument('_test_validation', testDoc.id);

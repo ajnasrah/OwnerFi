@@ -101,7 +101,7 @@ export class DatabaseCleanup {
 
     } catch (error) {
       result.errors.push(`Failed to remove duplicate buyers: ${(error as Error).message}`);
-      await logError('Database cleanup failed', { action: result.action }, error);
+      await logError('Database cleanup failed', { action: result.action }, error as Error);
     }
 
     return result;
@@ -179,7 +179,7 @@ export class DatabaseCleanup {
 
     } catch (error) {
       result.errors.push(`Failed to cleanup orphaned purchases: ${(error as Error).message}`);
-      await logError('Database cleanup failed', { action: result.action }, error);
+      await logError('Database cleanup failed', { action: result.action }, error as Error);
     }
 
     return result;
@@ -334,7 +334,7 @@ export class DatabaseCleanup {
 
     } catch (error) {
       result.errors.push(`Failed to fix incomplete profiles: ${(error as Error).message}`);
-      await logError('Database cleanup failed', { action: result.action }, error);
+      await logError('Database cleanup failed', { action: result.action }, error as Error);
     }
 
     return result;
@@ -419,7 +419,7 @@ export class DatabaseCleanup {
 
     } catch (error) {
       result.errors.push(`Failed to remove test data: ${(error as Error).message}`);
-      await logError('Database cleanup failed', { action: result.action }, error);
+      await logError('Database cleanup failed', { action: result.action }, error as Error);
     }
 
     return result;

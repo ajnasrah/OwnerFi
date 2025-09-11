@@ -66,7 +66,7 @@ export class FirebaseDB {
       updatedAt: now
     } as T;
 
-    await setDoc(doc(db!, collectionName, id), docData);
+    await setDoc(doc(db!, collectionName, id), docData as any);
     return docData;
   }
 
@@ -342,8 +342,8 @@ export class FirebaseDB {
     fixed: number;
   }> {
     const results = {
-      usersWithoutProfiles: [],
-      profilesWithoutUsers: [],
+      usersWithoutProfiles: [] as string[],
+      profilesWithoutUsers: [] as string[],
       fixed: 0
     };
     
@@ -353,8 +353,8 @@ export class FirebaseDB {
       const profileCollection = user.role === 'buyer' ? 
         COLLECTIONS.BUYER_PROFILES : COLLECTIONS.REALTOR_PROFILES;
       
-      const profiles = await this.queryDocuments(
-        profileCollection,
+      const profiles = await this.queryDocuments<any>(
+        profileCollection as any,
         [{ field: 'userId', operator: '==', value: user.id }],
         1
       );

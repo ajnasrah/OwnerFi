@@ -154,7 +154,7 @@ export async function batchUpdatePropertyMatches(updates: Array<{
   
   // Process in parallel for performance
   const updatePromises = updates.map(async ({ buyerId, matches }) => {
-    const updateDocRef = doc(collection(db, 'buyerProfiles'), buyerId);
+    const updateDocRef = doc(collection(db!, 'buyerProfiles'), buyerId);
     await updateDoc(updateDocRef, {
       propertyMatches: matches,
       lastMatchUpdate: serverTimestamp(),

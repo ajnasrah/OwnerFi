@@ -44,6 +44,9 @@ export async function logToDatabase(
   error?: Error
 ) {
   try {
+    if (!firebaseDb) {
+      throw new Error('Firebase not initialized');
+    }
     const id = doc(collection(firebaseDb, 'systemLogs')).id;
     await setDoc(doc(firebaseDb, 'systemLogs', id), {
       id,

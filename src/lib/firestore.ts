@@ -42,7 +42,7 @@ export const firestoreHelpers = {
     try {
       const db = getSafeDb();
       const docRef = doc(db, collectionName, docId);
-      await setDoc(docRef, data);
+      await setDoc(docRef, data as any);
     } catch (error) {
       throw error;
     }

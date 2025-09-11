@@ -38,14 +38,14 @@ export default function LikedProperties() {
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/auth/signin');
-    } else if (status === 'authenticated' && isExtendedSession(session as any) && (session as any)?.user?.role !== 'buyer') {
+    } else if (status === 'authenticated' && isExtendedSession(session) && (session as ExtendedSession)?.user?.role !== 'buyer') {
       router.push('/auth/signin');
     }
   }, [status, session, router]);
 
   // Load liked properties
   useEffect(() => {
-    if (status === 'authenticated' && isExtendedSession(session as any) && (session as any)?.user?.role === 'buyer') {
+    if (status === 'authenticated' && isExtendedSession(session) && (session as ExtendedSession)?.user?.role === 'buyer') {
       loadLikedProperties();
     }
   }, [status, session]);

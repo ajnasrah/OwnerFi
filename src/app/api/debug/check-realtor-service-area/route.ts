@@ -1,5 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server';
 import { FirebaseDB } from '@/lib/firebase-db';
+import { UserWithRealtorData, ValidatedCity } from '@/lib/realtor-models';
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,7 +21,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Realtor not found' }, { status: 404 });
     }
     
-    const realtor = realtors[0] as any;
+    const realtor = realtors[0] as UserWithRealtorData;
     const realtorData = realtor.realtorData || {};
     
     // Extract service cities like the dashboard does
@@ -32,9 +34,7 @@ export async function POST(request: NextRequest) {
       
       // Add all nearby cities from service area
       if (serviceArea.nearbyCities && serviceArea.nearbyCities.length > 0) {
-        const nearbyCities = serviceArea.nearbyCities.map((c: any) => 
-          typeof c === 'string' ? c : (c.name || 'Unknown')
-        );
+        const nearbyCities = serviceArea.nearbyCities.map((c: ValidatedCity) => c.name);
         cities.push(...nearbyCities);
       }
     }

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
+import { ExtendedSession } from '@/types/session';
 import { useRouter } from 'next/navigation';
 import { GooglePlacesAutocomplete } from '@/components/ui/GooglePlacesAutocomplete';
 import Link from 'next/link';
@@ -23,7 +24,7 @@ export default function BuyerSetup() {
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/signup');
-    } else if (status === 'authenticated' && (session?.user as any)?.role !== 'buyer') {
+    } else if (status === 'authenticated' && (session as ExtendedSession)?.user?.role !== 'buyer') {
       router.push('/realtor-signup');
     }
   }, [status, session, router]);

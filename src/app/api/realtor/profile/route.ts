@@ -3,10 +3,11 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { FirebaseDB } from '@/lib/firebase-db';
 import { ExtendedSession } from '@/types/session';
+import { UserWithRealtorData } from '@/lib/realtor-models';
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions) as any as ExtendedSession;
+    const session = await getServerSession(authOptions) as ExtendedSession;
     
     if (!session?.user || session.user.role !== 'realtor') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -19,7 +20,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    const realtorData = (userData as any).realtorData || {};
+    const realtorData = (userData as UserWithRealtorData).realtorData || {};
     
     return NextResponse.json({
       success: true,
@@ -41,7 +42,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions) as any as ExtendedSession;
+    const session = await getServerSession(authOptions) as ExtendedSession;
     
     if (!session?.user || session.user.role !== 'realtor') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -78,10 +79,10 @@ export async function POST(request: NextRequest) {
 
     // Update realtor data in user document
     const updatedRealtorData = {
-      ...(userData as any).realtorData || {},
-      firstName: (userData as any).name?.split(' ')[0] || '',
-      lastName: (userData as any).name?.split(' ').slice(1).join(' ') || '',
-      email: (userData as any).email,
+      ...(userData as UserWithRealtorData).realtorData || {},
+      firstName: (userData as UserWithRealtorData).email?.split('@')[0] || '',
+      lastName: '',
+      email: (userData as UserWithRealtorData).email,
       serviceArea: serviceArea,
       // ALSO save in the format dashboard expects
       targetCity: targetCity,
@@ -89,8 +90,8 @@ export async function POST(request: NextRequest) {
       totalCitiesServed: totalCitiesServed,
       profileComplete: true,
       isActive: true,
-      credits: (userData as any).realtorData?.credits || 3,
-      isOnTrial: (userData as any).realtorData?.isOnTrial ?? true,
+      credits: (userData as UserWithRealtorData).realtorData?.credits || 3,
+      isOnTrial: (userData as UserWithRealtorData).realtorData?.isOnTrial ?? true,
       updatedAt: new Date()
     };
 
@@ -115,7 +116,7 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions) as any as ExtendedSession;
+    const session = await getServerSession(authOptions) as ExtendedSession;
     
     if (!session?.user || session.user.role !== 'realtor') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -135,7 +136,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    const currentRealtorData = (userData as any).realtorData || {};
+    const currentRealtorData = (userData as UserWithRealtorData).realtorData || {};
     const currentServiceCities = currentRealtorData.serviceCities || [];
 
     // Remove the specified city
@@ -144,7 +145,7 @@ export async function DELETE(request: NextRequest) {
     // Update the service area structure as well
     const updatedServiceArea = {
       ...currentRealtorData.serviceArea,
-      nearbyCities: currentRealtorData.serviceArea?.nearbyCities?.filter((city: any) => 
+      nearbyCities: currentRealtorData.serviceArea?.nearbyCities?.filter(city => 
         `${city.name}, ${city.state}` !== cityToRemove
       ) || [],
       totalCitiesServed: updatedServiceCities.length,

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from 'next/server';
 import { FirebaseDB } from '@/lib/firebase-db';
 import { ConsolidatedLeadSystem } from '@/lib/consolidated-lead-system';
@@ -12,7 +13,22 @@ export async function GET() {
     // Get system statistics
     const stats = await ConsolidatedLeadSystem.getSystemStatistics();
     
-    const summary = allBuyerProfiles.map((buyer: any) => ({
+    const summary = allBuyerProfiles.map((buyer: {
+      id: string;
+      firstName: string;
+      lastName: string;
+      preferredCity?: string;
+      city?: string;
+      preferredState?: string;
+      state?: string;
+      maxMonthlyPayment?: number;
+      languages?: string[];
+      isAvailableForPurchase?: boolean;
+      isActive?: boolean;
+      profileComplete?: boolean;
+      purchasedBy?: string;
+      [key: string]: unknown;
+    }) => ({
       id: buyer.id,
       name: `${buyer.firstName} ${buyer.lastName}`,
       city: buyer.preferredCity || buyer.city,

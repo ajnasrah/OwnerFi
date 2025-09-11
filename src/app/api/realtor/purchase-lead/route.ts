@@ -50,7 +50,13 @@ export async function POST(request: NextRequest) {
 
     // Get user document with embedded realtor data
     const userData = await FirebaseDB.getDocument('users', session.user.id);
-    const user = userData as any; // TODO: Add proper typing
+    const user = userData as {
+      role: string;
+      realtorData?: {
+        credits: number;
+        [key: string]: unknown;
+      };
+    };
     
     if (!user || user.role !== 'realtor' || !user.realtorData) {
       return NextResponse.json(
@@ -69,7 +75,19 @@ export async function POST(request: NextRequest) {
 
     // Get buyer details from consolidated buyerProfiles collection
     const buyerData = await FirebaseDB.getDocument('buyerProfiles', leadId);
-    const buyer = buyerData as any; // TODO: Add proper typing
+    const buyer = buyerData as {
+      firstName: string;
+      lastName: string;
+      email: string;
+      phone: string;
+      preferredCity?: string;
+      city?: string;
+      preferredState?: string;
+      state?: string;
+      maxMonthlyPayment: number;
+      maxDownPayment: number;
+      isAvailableForPurchase?: boolean;
+    };
     
     if (!buyer) {
       return NextResponse.json(

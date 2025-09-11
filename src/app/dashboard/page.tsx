@@ -50,14 +50,14 @@ export default function Dashboard() {
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/');
-    } else if (status === 'authenticated' && isExtendedSession(session as any) && (session as any)?.user?.role !== 'buyer') {
+    } else if (status === 'authenticated' && isExtendedSession(session) && (session as ExtendedSession)?.user?.role !== 'buyer') {
       router.push('/');
     }
   }, [status, session, router]);
 
   // Load data
   useEffect(() => {
-    if (status === 'authenticated' && isExtendedSession(session as any) && (session as any)?.user?.role === 'buyer') {
+    if (status === 'authenticated' && isExtendedSession(session) && (session as ExtendedSession)?.user?.role === 'buyer') {
       loadData();
     }
   }, [status, session]);

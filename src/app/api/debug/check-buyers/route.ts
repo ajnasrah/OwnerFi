@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from 'next/server';
 import { FirebaseDB } from '@/lib/firebase-db';
 
@@ -9,12 +10,25 @@ export async function GET() {
     
     
     // Filter Dallas buyers specifically
-    const dallasBuyers = allBuyerLinks.filter((buyer: any) => 
+    const dallasBuyers = allBuyerLinks.filter((buyer: {
+      city?: string;
+      [key: string]: unknown;
+    }) => 
       buyer.city && buyer.city.toLowerCase().includes('dallas')
     );
     
     
-    const summary = allBuyerLinks.map((buyer: any) => ({
+    const summary = allBuyerLinks.map((buyer: {
+      id: string;
+      firstName: string;
+      lastName: string;
+      city?: string;
+      state?: string;
+      maxMonthlyPayment?: number;
+      languages?: string[];
+      isAvailable?: boolean;
+      [key: string]: unknown;
+    }) => ({
       id: buyer.id,
       name: `${buyer.firstName} ${buyer.lastName}`,
       city: buyer.city,

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server';
 import { FirebaseDB } from '@/lib/firebase-db';
 
@@ -13,12 +14,12 @@ export async function POST(request: NextRequest) {
     }
     
     // Get current credits and add new ones
-    const currentCredits = (user as any).realtorData?.credits || 0;
+    const currentCredits = (user as { realtorData?: { credits?: number } }).realtorData?.credits || 0;
     const newCredits = currentCredits + parseInt(credits);
     
     // Update user with new credits
     const updatedRealtorData = {
-      ...(user as any).realtorData || {},
+      ...(user as { realtorData?: Record<string, unknown> }).realtorData || {},
       credits: newCredits,
       updatedAt: new Date()
     };

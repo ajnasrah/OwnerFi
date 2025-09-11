@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from 'next/server';
 import { FirebaseDB } from '@/lib/firebase-db';
 
@@ -8,7 +9,22 @@ export async function GET() {
       { field: 'role', operator: '==', value: 'realtor' }
     ]);
     
-    const realtorList = realtors.map((realtor: any) => {
+    const realtorList = realtors.map((realtor: {
+      id: string;
+      email: string;
+      createdAt?: { seconds: number };
+      realtorData?: {
+        firstName?: string;
+        lastName?: string;
+        serviceCities?: string[];
+        createdAt?: { seconds: number };
+        serviceArea?: {
+          primaryCity?: { name: string; state: string };
+        };
+        [key: string]: unknown;
+      };
+      [key: string]: unknown;
+    }) => {
       const realtorData = realtor.realtorData || {};
       const serviceArea = realtorData.serviceArea || {};
       

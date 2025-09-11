@@ -66,7 +66,7 @@ export class FirebaseDB {
       updatedAt: now
     } as T;
 
-    await setDoc(doc(db!, collectionName, id), docData as any);
+    await setDoc(doc(db!, collectionName, id), docData as Record<string, unknown>);
     return docData;
   }
 

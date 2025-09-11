@@ -3,6 +3,7 @@
 
 import { FirebaseDB } from './firebase-db';
 import { Timestamp } from 'firebase/firestore';
+import { LeadPurchase, BuyerProfile } from './firebase-models';
 
 export interface MigrationResult {
   success: boolean;
@@ -36,21 +37,21 @@ export class BuyerSystemMigration {
       
       
       // Step 2: Create mappings
-      const linksByUserId = new Map<string, any>();
-      const linksById = new Map<string, any>();
-      const profilesByUserId = new Map<string, any>();
+      const linksByUserId = new Map<string, BuyerProfile>();
+      const linksById = new Map<string, BuyerProfile>();
+      const profilesByUserId = new Map<string, BuyerProfile>();
       
-      buyerLinks.forEach((link: any) => {
+      buyerLinks.forEach((link: BuyerProfile) => {
         linksByUserId.set(link.userId, link);
         linksById.set(link.id, link);
       });
       
-      buyerProfiles.forEach((profile: any) => {
+      buyerProfiles.forEach((profile: BuyerProfile) => {
         profilesByUserId.set(profile.userId, profile);
       });
       
       // Step 3: Enhance existing buyerProfiles
-      for (const profile of buyerProfiles as any[]) {
+      for (const profile of buyerProfiles as BuyerProfile[]) {
         try {
           const linkData = linksByUserId.get(profile.userId);
           
@@ -101,9 +102,9 @@ export class BuyerSystemMigration {
       }
       
       // Step 4: Create missing profiles from orphaned buyerLinks
-      const existingUserIds = new Set((buyerProfiles as any[]).map(p => p.userId));
+      const existingUserIds = new Set((buyerProfiles as BuyerProfile[]).map(p => p.userId));
       
-      for (const link of buyerLinks as any[]) {
+      for (const link of buyerLinks as BuyerProfile[]) {
         if (!existingUserIds.has(link.userId)) {
           try {
             const newProfile = await this.createBuyerProfileFromLink(link);
@@ -118,9 +119,9 @@ export class BuyerSystemMigration {
       }
       
       // Step 5: Update lead purchase references
-      for (const purchase of leadPurchases as any[]) {
+      for (const purchase of leadPurchases as LeadPurchase[]) {
         try {
-          const linkId = (purchase as any).buyerId;
+          const linkId = purchase.buyerId;
           const linkData = linksById.get(linkId);
           
           if (linkData) {
@@ -128,7 +129,7 @@ export class BuyerSystemMigration {
             const matchingProfile = profilesByUserId.get(linkData.userId);
             
             if (matchingProfile) {
-              await FirebaseDB.updateDocument('leadPurchases', (purchase as any).id, {
+              await FirebaseDB.updateDocument('leadPurchases', purchase.id, {
                 buyerId: matchingProfile.id,
                 originalBuyerLinkId: linkId, // Keep reference for audit
                 migratedAt: Timestamp.now(),
@@ -137,12 +138,12 @@ export class BuyerSystemMigration {
               
               result.purchasesUpdated++;
             } else {
-              result.errors.push(`No profile found for purchase ${(purchase as any).id} with linkId ${linkId}`);
+              result.errors.push(`No profile found for purchase ${purchase.id} with linkId ${linkId}`);
             }
           }
           
         } catch (error) {
-          const errorMsg = `Failed to update purchase ${(purchase as any).id}: ${(error as Error).message}`;
+          const errorMsg = `Failed to update purchase ${purchase.id}: ${(error as Error).message}`;
           result.errors.push(errorMsg);
         }
       }
@@ -171,7 +172,7 @@ export class BuyerSystemMigration {
   }
   
   // Helper: Create buyer profile from buyerLink data
-  private static async createBuyerProfileFromLink(link: any): Promise<any> {
+  private static async createBuyerProfileFromLink(link: BuyerProfile): Promise<BuyerProfile> {
     const profileData = {
       userId: link.userId,
       firstName: link.firstName,
@@ -269,7 +270,7 @@ export class BuyerSystemMigration {
       let withLikedPropsCount = 0;
       
       for (const profile of buyerProfiles) {
-        const p = profile as any;
+        const p = profile;
         
         // Check required fields exist
         if (!p.city || !p.state) {
@@ -293,11 +294,11 @@ export class BuyerSystemMigration {
       // Check lead purchases reference buyerProfiles not buyerLinks
       let validPurchaseRefs = 0;
       for (const purchase of leadPurchases) {
-        const p = purchase as any;
+        const p = purchase;
         const buyerId = p.buyerId;
         
         // Should reference a buyerProfile, not a buyerLink
-        const referencedProfile = buyerProfiles.find((bp: any) => bp.id === buyerId);
+        const referencedProfile = buyerProfiles.find((bp: BuyerProfile) => bp.id === buyerId);
         if (referencedProfile) {
           validPurchaseRefs++;
         } else {

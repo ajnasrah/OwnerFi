@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+import { ExtendedSession } from '@/types/session';
 import { getCitiesWithinRadiusComprehensive } from '@/lib/comprehensive-cities';
 import { GooglePlacesAutocomplete } from '@/components/ui/GooglePlacesAutocomplete';
 import Link from 'next/link';
@@ -27,7 +28,7 @@ export default function RealtorSettings() {
     
     if (status === 'unauthenticated') {
       router.push('/realtor-signup');
-    } else if (status === 'authenticated' && (session?.user as any)?.role !== 'realtor') {
+    } else if (status === 'authenticated' && (session as ExtendedSession)?.user?.role !== 'realtor') {
       router.push('/signup');
     }
   }, [status, session, router, sessionCheckPaused]);

@@ -3,6 +3,7 @@ import { getSessionWithRole } from '@/lib/auth-utils';
 import { FirebaseDB } from '@/lib/firebase-db';
 import { Timestamp } from 'firebase/firestore';
 import { logError, logInfo } from '@/lib/logger';
+import { BuyerProfile, RealtorProfile, LeadPurchase, LeadDispute } from '@/lib/firebase-models';
 
 interface DisputeLeadRequest {
   buyerId: string;
@@ -48,7 +49,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const purchase = purchases[0] as any;
+    const purchase = purchases[0] as LeadPurchase;
 
     // Get full buyer details from buyerProfiles
     const buyerProfile = await FirebaseDB.getDocument('buyerProfiles', buyerId);
@@ -77,7 +78,7 @@ export async function POST(request: NextRequest) {
       ]
     );
 
-    if (existingDisputes.some((d: any) => d.status === 'pending')) {
+    if (existingDisputes.some((d: LeadDispute) => d.status === 'pending')) {
       return NextResponse.json(
         { error: 'You already have a pending dispute for this lead' },
         { status: 400 }
@@ -94,21 +95,21 @@ export async function POST(request: NextRequest) {
       status: 'pending',
       
       // Complete buyer information
-      buyerName: `${(buyerProfile as any).firstName} ${(buyerProfile as any).lastName}`,
-      buyerPhone: (buyerProfile as any).phone,
-      buyerEmail: (buyerProfile as any).email,
-      buyerCity: (buyerProfile as any).city,
-      buyerState: (buyerProfile as any).state,
-      maxMonthlyPayment: (buyerProfile as any).maxMonthlyPayment,
-      maxDownPayment: (buyerProfile as any).maxDownPayment,
+      buyerName: `${(buyerProfile as BuyerProfile).firstName} ${(buyerProfile as BuyerProfile).lastName}`,
+      buyerPhone: (buyerProfile as BuyerProfile).phone,
+      buyerEmail: (buyerProfile as BuyerProfile).email,
+      buyerCity: (buyerProfile as BuyerProfile).city,
+      buyerState: (buyerProfile as BuyerProfile).state,
+      maxMonthlyPayment: (buyerProfile as BuyerProfile).maxMonthlyPayment,
+      maxDownPayment: (buyerProfile as BuyerProfile).maxDownPayment,
       
       // Realtor information
-      realtorName: realtor ? `${(realtor as any).firstName} ${(realtor as any).lastName}` : session.user.email || 'Unknown Realtor',
+      realtorName: realtor ? `${(realtor as RealtorProfile).firstName} ${(realtor as RealtorProfile).lastName}` : session.user.email || 'Unknown Realtor',
       realtorEmail: session.user.email,
       
       // Purchase information
-      purchaseDate: purchase.createdAt || new Date().toISOString(),
-      creditsCost: purchase.creditsCost || 1,
+      purchaseDate: purchase.createdAt ? purchase.createdAt.toDate().toISOString() : new Date().toISOString(),
+      creditsCost: purchase.creditsCost,
       
       // Timestamps
       submittedAt: Timestamp.now(),

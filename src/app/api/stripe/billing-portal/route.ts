@@ -3,6 +3,7 @@ import { getSessionWithRole } from '@/lib/auth-utils';
 import { FirebaseDB } from '@/lib/firebase-db';
 import { db } from '@/lib/firebase';
 import Stripe from 'stripe';
+import { UserWithRealtorData } from '@/lib/realtor-models';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-08-27.basil',
@@ -35,7 +36,7 @@ export async function GET(_: NextRequest) {
       return NextResponse.json({ subscriptions: [] });
     }
 
-    const realtorData = (userData as any).realtorData;
+    const realtorData = (userData as UserWithRealtorData).realtorData;
     if (!realtorData?.stripeCustomerId) {
       return NextResponse.json({ subscriptions: [] });
     }
@@ -56,7 +57,7 @@ export async function GET(_: NextRequest) {
     const formattedSubscriptions = subscriptions.data.map(sub => ({
       id: sub.id,
       status: sub.status,
-      current_period_end: (sub as any).current_period_end,
+      current_period_end: sub.current_period_end,
       credits: sub.metadata.credits ? parseInt(sub.metadata.credits) : 0,
       price: sub.items.data[0]?.price.unit_amount ? (sub.items.data[0].price.unit_amount / 100) : 0,
       plan: currentPlan
@@ -92,7 +93,7 @@ export async function POST(_: NextRequest) {
       );
     }
 
-    const realtorData = (userData as any).realtorData;
+    const realtorData = (userData as UserWithRealtorData).realtorData;
     
     // Only allow billing portal access if user has active subscription
     const currentPlan = realtorData?.currentPlan;
@@ -139,7 +140,7 @@ export async function POST(_: NextRequest) {
       try {
         const customer = await stripe.customers.create({
           email: session.user.email,
-          name: (userData as any).name || session.user.email,
+          name: (userData as UserWithRealtorData).email || session.user.email,
           metadata: {
             userId: session.user.id,
             userRole: 'realtor'
@@ -178,11 +179,11 @@ export async function POST(_: NextRequest) {
         url: portalSession.url 
       });
 
-    } catch (stripeError: any) {
+    } catch (stripeError: unknown) {
       return NextResponse.json(
         { 
           error: 'Failed to create billing portal session',
-          details: stripeError.message
+          details: (stripeError as Error).message
         },
         { status: 500 }
       );

@@ -42,7 +42,7 @@ export const firestoreHelpers = {
     try {
       const db = getSafeDb();
       const docRef = doc(db, collectionName, docId);
-      await setDoc(docRef, data as any);
+      await setDoc(docRef, data as DocumentData);
     } catch (error) {
       throw error;
     }
@@ -95,7 +95,7 @@ export const firestoreHelpers = {
       let q = query(collectionRef, where(field, operator, value));
       
       if (orderByField) {
-        q = query(q, orderBy(orderByField));
+        q = query(q, firestoreOrderBy(orderByField));
       }
       
       if (limitCount) {

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from 'next/server';
 import { FirebaseDB } from '@/lib/firebase-db';
 
@@ -7,7 +8,11 @@ export async function POST() {
     // Get all Dallas buyers
     const allBuyers = await FirebaseDB.queryDocuments('buyerProfiles', []);
     
-    const dallasBuyers = allBuyers.filter((buyer: any) => {
+    const dallasBuyers = allBuyers.filter((buyer: {
+      preferredCity?: string;
+      city?: string;
+      [key: string]: unknown;
+    }) => {
       const city = buyer.preferredCity || buyer.city || '';
       return city.toLowerCase().includes('dallas');
     });
@@ -16,7 +21,26 @@ export async function POST() {
     const fixes = [];
     
     for (const buyer of dallasBuyers) {
-      const buyerData = buyer as any;
+      const buyerData = buyer as {
+        id: string;
+        firstName: string;
+        lastName: string;
+        preferredCity?: string;
+        city?: string;
+        preferredState?: string;
+        state?: string;
+        isAvailableForPurchase?: boolean;
+        isActive?: boolean;
+        profileComplete?: boolean;
+        languages?: string[];
+        leadPrice?: number;
+        likedPropertyIds?: string[];
+        passedPropertyIds?: string[];
+        matchedPropertyIds?: string[];
+        purchasedBy?: string;
+        purchasedAt?: unknown;
+        [key: string]: unknown;
+      };
       
       try {
         // Check what needs fixing

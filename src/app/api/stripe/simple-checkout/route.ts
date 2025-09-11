@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
+import { ExtendedSession } from '@/types/session';
 import Stripe from 'stripe';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -17,9 +18,9 @@ const CREDIT_PACKAGES = {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions) as any;
+    const session = await getServerSession(authOptions) as ExtendedSession;
     
-    if (!session?.user?.email || (session.user as any).role !== 'realtor') {
+    if (!session?.user?.email || session.user.role !== 'realtor') {
       return NextResponse.json({ error: 'Realtor access required' }, { status: 401 });
     }
 

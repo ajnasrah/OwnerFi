@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from 'next/server';
 import { FirebaseDB } from '@/lib/firebase-db';
 import { ConsolidatedLeadSystem } from '@/lib/consolidated-lead-system';
@@ -19,7 +20,20 @@ export async function GET() {
     const debugResults = [];
     
     for (const realtorUser of realtorUsers) {
-      const realtor = realtorUser as any;
+      const realtor = realtorUser as {
+        id: string;
+        name: string;
+        realtorData?: {
+          serviceArea?: {
+            primaryCity?: { name: string; state: string };
+            nearbyCities?: Array<{ name?: string } | string>;
+          };
+          serviceCities?: string[];
+          languages?: string[];
+          [key: string]: unknown;
+        };
+        [key: string]: unknown;
+      };
       
       
       if (!realtor.realtorData?.serviceArea?.primaryCity) {
@@ -41,7 +55,9 @@ export async function GET() {
         cities = [serviceArea.primaryCity.name];
         
         if (serviceArea.nearbyCities && serviceArea.nearbyCities.length > 0) {
-          const nearbyCities = serviceArea.nearbyCities.map((c: any) => c.name || c);
+          const nearbyCities = serviceArea.nearbyCities.map((c: { name?: string } | string) => 
+            typeof c === 'string' ? c : (c.name || 'Unknown')
+          );
           cities.push(...nearbyCities);
         }
       }
@@ -62,7 +78,13 @@ export async function GET() {
       
       
       // Check which buyers should match
-      const potentialBuyers = allBuyers.filter((buyer: any) => {
+      const potentialBuyers = allBuyers.filter((buyer: {
+        preferredCity?: string;
+        city?: string;
+        preferredState?: string;
+        state?: string;
+        [key: string]: unknown;
+      }) => {
         const buyerCity = buyer.preferredCity || buyer.city;
         const buyerState = buyer.preferredState || buyer.state;
         
@@ -88,7 +110,16 @@ export async function GET() {
           state: m.state,
           score: m.matchScore
         })),
-        buyers: potentialBuyers.map((b: any) => ({
+        buyers: potentialBuyers.map((b: {
+          id: string;
+          firstName: string;
+          lastName: string;
+          preferredCity?: string;
+          city?: string;
+          preferredState?: string;
+          state?: string;
+          [key: string]: unknown;
+        }) => ({
           id: b.id,
           name: `${b.firstName} ${b.lastName}`,
           city: b.preferredCity || b.city,

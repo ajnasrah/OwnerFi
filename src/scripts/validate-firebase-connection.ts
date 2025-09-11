@@ -30,7 +30,7 @@ async function validateFirebaseConnection() {
     const testDoc = await FirebaseDB.createDocument('_test_validation', testData);
     
     // Clean up test document
-    await FirebaseDB.deleteDocument('_test_validation', (testDoc as any).id);
+    await FirebaseDB.deleteDocument('_test_validation', (testDoc as { id: string }).id);
     
     
     // Recommendations

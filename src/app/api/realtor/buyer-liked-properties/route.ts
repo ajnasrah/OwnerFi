@@ -3,10 +3,12 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { FirebaseDB } from '@/lib/firebase-db';
 import { ExtendedSession } from '@/types/session';
+import { BuyerProfile } from '@/lib/firebase-models';
+import { PropertyListing } from '@/lib/property-schema';
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions) as any as ExtendedSession;
+    const session = await getServerSession(authOptions) as ExtendedSession;
     
     if (!session?.user || session.user.role !== 'realtor') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -26,13 +28,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Buyer not found' }, { status: 404 });
     }
 
-    const likedPropertyIds = (buyerProfile as any).likedProperties || [];
+    const likedPropertyIds = (buyerProfile as BuyerProfile).likedProperties || [];
     
     if (likedPropertyIds.length === 0) {
       return NextResponse.json({ 
         buyer: {
-          firstName: (buyerProfile as any).firstName,
-          lastName: (buyerProfile as any).lastName
+          firstName: (buyerProfile as BuyerProfile).firstName,
+          lastName: (buyerProfile as BuyerProfile).lastName
         },
         properties: [] 
       });
@@ -43,7 +45,7 @@ export async function GET(request: NextRequest) {
     
     for (const propertyId of likedPropertyIds) {
       try {
-        const property = await FirebaseDB.getDocument('properties', propertyId) as any;
+        const property = await FirebaseDB.getDocument('properties', propertyId) as PropertyListing;
         if (property) {
           // Format property data with all needed fields
           likedProperties.push({
@@ -68,8 +70,8 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       buyer: {
-        firstName: (buyerProfile as any).firstName,
-        lastName: (buyerProfile as any).lastName
+        firstName: (buyerProfile as BuyerProfile).firstName,
+        lastName: (buyerProfile as BuyerProfile).lastName
       },
       properties: likedProperties
     });

@@ -98,12 +98,12 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     }
 
     // Add credits to realtor account using new system
-    const currentCredits = (userData as User & { realtorData?: any }).realtorData?.credits || 0;
+    const currentCredits = (userData as User & { realtorData?: { credits?: number; [key: string]: unknown } }).realtorData?.credits || 0;
     const creditsToAdd = parseInt(credits || creditPackage.credits.toString());
     const newCredits = currentCredits + creditsToAdd;
 
     const updatedRealtorData = {
-      ...(userData as User & { realtorData?: any }).realtorData || {},
+      ...(userData as User & { realtorData?: Record<string, unknown> }).realtorData || {},
       credits: newCredits,
       lastPurchase: new Date(),
       updatedAt: new Date()

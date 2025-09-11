@@ -1,4 +1,3 @@
-// Use any type to avoid NextAuth version conflicts
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { compare } from 'bcryptjs';
 import { 
@@ -11,8 +10,9 @@ import {
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { ExtendedUser } from '@/types/session';
+import type { NextAuthOptions } from 'next-auth';
 
-export const authOptions: any = {
+export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
       name: 'credentials',
@@ -69,13 +69,16 @@ export const authOptions: any = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user }: any) {
+    async jwt({ token, user }: { token: Record<string, unknown>; user?: ExtendedUser }) {
       if (user) {
         token.role = user.role;
       }
       return token;
     },
-    async session({ session, token }: any) {
+    async session({ session, token }: { 
+      session: { user?: { id?: string; role?: string; [key: string]: unknown }; [key: string]: unknown }; 
+      token: { sub?: string; role?: string; [key: string]: unknown }; 
+    }) {
       if (token && session.user) {
         session.user.id = token.sub;
         session.user.role = token.role;

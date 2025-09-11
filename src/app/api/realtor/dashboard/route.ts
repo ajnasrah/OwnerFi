@@ -7,10 +7,52 @@ import { FirebaseDB } from '@/lib/firebase-db';
 import { RealtorDataHelper } from '@/lib/realtor-models';
 import { logError, logInfo } from '@/lib/logger';
 
+interface LeadData {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  city: string;
+  state: string;
+  maxMonthlyPayment: number;
+  maxDownPayment: number;
+  languages: string[];
+  matchScore: number;
+  matchReasons: string[];
+  likedPropertiesCount: number;
+  leadPrice: number;
+  createdAt: Date | string;
+}
+
+interface OwnedBuyer {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  city: string;
+  state: string;
+  maxMonthlyPayment: number;
+  maxDownPayment: number;
+  purchasedAt: string;
+  status: string;
+}
+
+interface Transaction {
+  id: string;
+  type: string;
+  description: string;
+  creditsChange: number;
+  runningBalance: number;
+  createdAt: string;
+  details: Record<string, unknown>;
+}
+
 interface DashboardData {
-  availableLeads: any[];
-  ownedBuyers: any[];
-  transactions: any[];
+  availableLeads: LeadData[];
+  ownedBuyers: OwnedBuyer[];
+  transactions: Transaction[];
   realtorData: {
     firstName: string;
     lastName: string;
@@ -38,7 +80,19 @@ export async function GET(request: NextRequest) {
 
     // Get user document with embedded realtor data
     const userData = await FirebaseDB.getDocument('users', session.user.id);
-    const user = userData as any; // TODO: Add proper typing
+    const user = userData as {
+      role: string;
+      realtorData: {
+        firstName: string;
+        lastName: string;
+        credits: number;
+        isOnTrial: boolean;
+        serviceArea: {
+          primaryCity: { name: string; state: string };
+          totalCitiesServed: number;
+        };
+      };
+    };
     
     if (!user || user.role !== 'realtor' || !user.realtorData) {
       return NextResponse.json(
@@ -104,7 +158,7 @@ export async function GET(request: NextRequest) {
 }
 
 // Get available buyer leads for this realtor
-async function getAvailableLeads(userId: string, realtorData: any): Promise<any[]> {
+async function getAvailableLeads(userId: string, realtorData: Record<string, unknown>): Promise<LeadData[]> {
   try {
     // Get all complete buyer profiles
     const allBuyers = await FirebaseDB.getCompleteBuyers();
@@ -114,7 +168,7 @@ async function getAvailableLeads(userId: string, realtorData: any): Promise<any[
       'leadPurchases',
       [{ field: 'realtorUserId', operator: '==', value: userId }]
     );
-    const purchasedBuyerIds = purchasedLeads.map((p: any) => p.buyerId);
+    const purchasedBuyerIds = purchasedLeads.map((p: { buyerId: string; [key: string]: unknown }) => p.buyerId);
 
     // Get realtor's service cities
     const serviceCities = RealtorDataHelper.getAllCitiesServed(realtorData);
@@ -183,7 +237,7 @@ async function getAvailableLeads(userId: string, realtorData: any): Promise<any[
 }
 
 // Get buyers owned by this realtor
-async function getOwnedBuyers(userId: string): Promise<any[]> {
+async function getOwnedBuyers(userId: string): Promise<OwnedBuyer[]> {
   try {
     // Get all lead purchases by this realtor
     const purchases = await FirebaseDB.queryDocuments(
@@ -195,8 +249,19 @@ async function getOwnedBuyers(userId: string): Promise<any[]> {
 
     for (const purchase of purchases) {
       // Get buyer details
-      const buyerData = await FirebaseDB.getDocument('buyerProfiles', (purchase as any).buyerId);
-      const buyer = buyerData as any; // TODO: Add proper typing
+      const buyerData = await FirebaseDB.getDocument('buyerProfiles', (purchase as { buyerId: string; [key: string]: unknown }).buyerId);
+      const buyer = buyerData as {
+        id: string;
+        firstName: string;
+        lastName: string;
+        email: string;
+        phone: string;
+        preferredCity: string;
+        preferredState: string;
+        maxMonthlyPayment: number;
+        maxDownPayment: number;
+        [key: string]: unknown;
+      };
       
       if (buyer) {
         const ownedBuyer = {
@@ -209,8 +274,8 @@ async function getOwnedBuyers(userId: string): Promise<any[]> {
           state: buyer.preferredState,
           maxMonthlyPayment: buyer.maxMonthlyPayment,
           maxDownPayment: buyer.maxDownPayment,
-          purchasedAt: (purchase as any).purchasedAt?.toDate ? (purchase as any).purchasedAt.toDate().toISOString() : new Date().toISOString(),
-          status: (purchase as any).status || 'purchased'
+          purchasedAt: (purchase as { purchasedAt?: { toDate: () => Date }; [key: string]: unknown }).purchasedAt?.toDate ? (purchase as { purchasedAt: { toDate: () => Date }; [key: string]: unknown }).purchasedAt.toDate().toISOString() : new Date().toISOString(),
+          status: (purchase as { status?: string; [key: string]: unknown }).status || 'purchased'
         };
 
         ownedBuyers.push(ownedBuyer);
@@ -228,7 +293,7 @@ async function getOwnedBuyers(userId: string): Promise<any[]> {
 }
 
 // Get transaction history for this realtor
-async function getTransactionHistory(userId: string): Promise<any[]> {
+async function getTransactionHistory(userId: string): Promise<Transaction[]> {
   try {
     // Get all transactions for this realtor
     const transactions = await FirebaseDB.queryDocuments(
@@ -237,7 +302,16 @@ async function getTransactionHistory(userId: string): Promise<any[]> {
       50 // Limit to last 50 transactions
     );
 
-    return transactions.map((transaction: any) => ({
+    return transactions.map((transaction: {
+      id: string;
+      type: string;
+      description: string;
+      creditsChange: number;
+      runningBalance: number;
+      createdAt?: { toDate: () => Date };
+      details?: Record<string, unknown>;
+      [key: string]: unknown;
+    }) => ({
       id: transaction.id,
       type: transaction.type,
       description: transaction.description,

@@ -1,7 +1,7 @@
 // LEAD PURCHASE API - Atomic transaction for purchasing buyer leads
 // Deducts 1 credit and creates lead purchase record
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getSessionWithRole } from '@/lib/auth-utils';
 import { FirebaseDB } from '@/lib/firebase-db';
 import { Timestamp } from 'firebase/firestore';

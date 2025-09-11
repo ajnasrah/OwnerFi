@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { FirebaseDB } from '@/lib/firebase-db';
 import Stripe from 'stripe';
 import { User } from '@/lib/firebase-models';

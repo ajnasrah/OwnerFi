@@ -1,7 +1,7 @@
 // REALTOR DASHBOARD API - Single endpoint for all dashboard data
 // Returns available leads, owned buyers, and transaction history
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getSessionWithRole } from '@/lib/auth-utils';
 import { FirebaseDB } from '@/lib/firebase-db';
 import { RealtorDataHelper } from '@/lib/realtor-models';

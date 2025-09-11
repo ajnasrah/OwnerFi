@@ -1,7 +1,7 @@
 // SIMPLE CONSOLIDATION TEST - Browser-accessible endpoint for testing
 // Creates Dallas buyer + Memphis buyer, then tests realtor matching
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { ConsolidatedLeadSystem } from '@/lib/consolidated-lead-system';
 import { FirebaseDB } from '@/lib/firebase-db';
 import { BuyerProfile, User } from '@/lib/firebase-models';

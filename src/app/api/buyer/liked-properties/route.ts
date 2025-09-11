@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { ExtendedSession } from '@/types/session';
 import { adminDb } from '@/lib/firebase-admin';
+import { FieldPath } from 'firebase-admin/firestore';
 
 export async function GET(request: NextRequest) {
     // Check if Firebase Admin is initialized
@@ -44,12 +45,10 @@ export async function GET(request: NextRequest) {
     for (let i = 0; i < likedPropertyIds.length; i += 10) {
       const batch = likedPropertyIds.slice(i, i + 10);
       
-      const batchQuery = query(
-        adminDb.collection('properties'),
-        where(documentId(), 'in', batch)
-      );
+      const batchSnapshot = await adminDb.collection('properties')
+        .where(FieldPath.documentId(), 'in', batch)
+        .get();
       
-      const batchSnapshot = await batchQuery.get();
       const batchProperties = batchSnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),

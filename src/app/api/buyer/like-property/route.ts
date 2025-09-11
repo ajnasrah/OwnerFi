@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { ExtendedSession } from '@/types/session';
 import { adminDb } from '@/lib/firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 
 export async function POST(request: NextRequest) {
     // Check if Firebase Admin is initialized
@@ -38,14 +39,14 @@ export async function POST(request: NextRequest) {
 
     // Update liked properties array
     if (action === 'like') {
-      await updateDoc(profileDoc.ref, {
-        likedProperties: arrayUnion(propertyId),
+      await profileDoc.ref.update({
+        likedProperties: FieldValue.arrayUnion(propertyId),
         updatedAt: new Date()
       });
       console.log(`❤️ LIKED property ${propertyId} for buyer ${session.user.id}`);
     } else if (action === 'unlike') {
-      await updateDoc(profileDoc.ref, {
-        likedProperties: arrayRemove(propertyId),
+      await profileDoc.ref.update({
+        likedProperties: FieldValue.arrayRemove(propertyId),
         updatedAt: new Date()
       });
       console.log(`💔 UNLIKED property ${propertyId} for buyer ${session.user.id}`);

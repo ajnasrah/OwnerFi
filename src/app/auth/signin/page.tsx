@@ -137,7 +137,7 @@ export default function SignIn() {
               required
               autoComplete="email"
               placeholder="your@email.com"
-              className="input"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
             />
           </div>
 
@@ -158,14 +158,14 @@ export default function SignIn() {
               required
               autoComplete="current-password"
               placeholder="Your password"
-              className="input"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
             />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="btn-primary btn-lg w-full"
+            className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:bg-gray-400"
             style={{marginBottom: 'var(--space-4)'}}
           >
             {loading ? (
@@ -205,10 +205,10 @@ export default function SignIn() {
           </p>
           
           <div style={{display: 'flex', flexDirection: 'column', gap: 'var(--space-3)'}}>
-            <a href="/unified-signup" className="btn-primary btn-lg w-full">
+            <a href="/unified-signup" className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center justify-center">
               🏠 I'm Looking for a Home
             </a>
-            <a href="/unified-signup" className="btn-secondary btn-lg w-full">
+            <a href="/unified-signup" className="w-full bg-gray-100 text-gray-700 py-3 px-4 rounded-lg hover:bg-gray-200 transition-colors font-medium flex items-center justify-center border">
               🤝 I'm a Real Estate Professional
             </a>
           </div>

@@ -1,9 +1,42 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 export default function HomePage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
+  // Redirect signed-in users to their dashboard
+  useEffect(() => {
+    if (status === 'authenticated' && session?.user) {
+      if (session.user.role === 'buyer') {
+        router.push('/dashboard');
+      } else if (session.user.role === 'realtor') {
+        router.push('/realtor/dashboard');
+      } else {
+        router.push('/dashboard');
+      }
+    }
+  }, [status, session, router]);
+
+  // Show loading state while checking auth
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-700 font-medium">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show different header for signed-in users
+  const isSignedIn = status === 'authenticated' && session?.user;
+
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
@@ -37,7 +70,45 @@ export default function HomePage() {
             </span>
           </div>
           <div className="flex gap-2">
-            <a href="/auth/signin" className="btn-ghost btn-sm">Sign In</a>
+            {isSignedIn ? (
+              <a 
+                href={session?.user?.role === 'realtor' ? '/realtor/dashboard' : '/dashboard'} 
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '8px 16px',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  color: 'white',
+                  background: '#3B82F6',
+                  borderRadius: '8px',
+                  textDecoration: 'none',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                Go to Dashboard
+              </a>
+            ) : (
+              <a 
+                href="/auth/signin" 
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '8px 16px',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  color: '#374151',
+                  background: 'transparent',
+                  borderRadius: '8px',
+                  textDecoration: 'none',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                Sign In
+              </a>
+            )}
           </div>
         </div>
       </header>
@@ -73,10 +144,44 @@ export default function HomePage() {
           </p>
           
           <div style={{display: 'flex', flexDirection: 'column', gap: 'var(--space-4)'}}>
-            <a href="/unified-signup" className="btn-primary btn-lg w-full">
+            <a href="/unified-signup" style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              minHeight: '60px',
+              padding: '16px 32px',
+              fontSize: '18px',
+              fontWeight: '600',
+              color: 'white',
+              background: 'linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%)',
+              borderRadius: '16px',
+              textDecoration: 'none',
+              transition: 'all 0.3s ease',
+              width: '100%',
+              border: 'none',
+              boxShadow: '0 4px 15px rgba(59, 130, 246, 0.4)',
+              transform: 'translateY(0)'
+            }}>
               🏠 I Need a Home (Start Here)
             </a>
-            <a href="/unified-signup" className="btn-secondary btn-lg w-full">
+            <a href="/unified-signup" style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              minHeight: '60px',
+              padding: '16px 32px',
+              fontSize: '18px',
+              fontWeight: '600',
+              color: '#1E293B',
+              background: 'white',
+              borderRadius: '16px',
+              textDecoration: 'none',
+              transition: 'all 0.3s ease',
+              width: '100%',
+              border: '2px solid #E2E8F0',
+              boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
+              transform: 'translateY(0)'
+            }}>
               🏠 I Help Families Find Homes
             </a>
           </div>

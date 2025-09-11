@@ -4,8 +4,6 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Header } from '@/components/ui/Header';
-import { Footer } from '@/components/ui/Footer';
 
 import { PropertyListing } from '@/lib/property-schema';
 
@@ -93,65 +91,58 @@ export default function LikedProperties() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col">
-        <Header />
-        <main className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading your liked properties...</p>
-          </div>
-        </main>
-        <Footer />
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading your liked properties...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
-      
-      <main className="flex-1 px-4 py-8">
-        <div className="max-w-7xl mx-auto">
-          {/* Header */}
-          <div className="mb-8">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">
-                  ❤️ Liked Properties
-                </h1>
-                <p className="text-gray-600 mt-2">
-                  Properties you've saved for consideration
-                </p>
-              </div>
-              <Link 
-                href="/dashboard"
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                ← Back to All Properties
-              </Link>
-            </div>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      {/* Header with Navigation */}
+      <header className="relative z-20 bg-white/80 backdrop-blur-lg border-b border-white/20 px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-lg font-bold text-gray-900">Saved Homes</h1>
+            <p className="text-xs text-gray-500 mt-1">
+              {properties.length} saved {properties.length === 1 ? 'property' : 'properties'}
+            </p>
           </div>
-
-          {/* Debug Profile Info */}
-          {profile && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-              <h3 className="font-medium text-blue-900 mb-2">Your Profile</h3>
-              <div className="text-sm text-blue-800">
-                <p><strong>Name:</strong> {profile.firstName} {profile.lastName}</p>
-                <p><strong>Email:</strong> {profile.email}</p>
-                <p><strong>Phone:</strong> {profile.phone || 'Not provided'}</p>
-                <p><strong>City:</strong> {profile.city}</p>
-                <p><strong>Max Monthly:</strong> ${profile.maxMonthlyPayment?.toLocaleString()}</p>
-                <p><strong>Max Down:</strong> ${profile.maxDownPayment?.toLocaleString()}</p>
-                <p><strong>Liked Properties:</strong> {profile.likedProperties?.length || 0}</p>
+          
+          <div className="flex space-x-6">
+            <Link href="/dashboard" className="flex flex-col items-center">
+              <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+                <span className="text-gray-600 text-lg">🏠</span>
               </div>
-            </div>
-          )}
-
+              <span className="text-xs font-medium text-gray-500 mt-1">Browse</span>
+            </Link>
+            
+            <Link href="/dashboard/liked" className="flex flex-col items-center">
+              <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center shadow-lg">
+                <span className="text-white text-lg">♥</span>
+              </div>
+              <span className="text-xs font-medium text-blue-600 mt-1">Saved</span>
+            </Link>
+            
+            <Link href="/dashboard/settings" className="flex flex-col items-center">
+              <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+                <span className="text-gray-600 text-lg">⚙</span>
+              </div>
+              <span className="text-xs font-medium text-gray-500 mt-1">Settings</span>
+            </Link>
+          </div>
+        </div>
+      </header>
+      
+      <main className="px-4 pb-8 pt-6">
+        <div className="max-w-7xl mx-auto">
           {/* Error State */}
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-              <p className="text-red-800">{error}</p>
+            <div className="bg-red-900/20 border border-red-700 rounded-lg p-4 mb-6">
+              <p className="text-red-300">{error}</p>
             </div>
           )}
 
@@ -159,7 +150,7 @@ export default function LikedProperties() {
           {properties.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {properties.map((property) => (
-                <div key={property.id} className="bg-white rounded-lg shadow-md overflow-hidden border-2 border-red-200">
+                <div key={property.id} className="bg-white rounded-xl shadow-lg overflow-hidden">
                   {/* Property Image */}
                   <div className="w-full h-48 bg-gray-200 overflow-hidden relative">
                     <img
@@ -175,8 +166,8 @@ export default function LikedProperties() {
                         target.src = `https://maps.googleapis.com/maps/api/streetview?size=400x300&location=${encodeURIComponent(property.address + ', ' + property.city + ', ' + property.state)}&key=AIzaSyCelger3EPc8GzTOQq7-cv6tUeVh_XN9jE`;
                       }}
                     />
-                    <div className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-medium">
-                      ❤️ Liked
+                    <div className="absolute top-3 right-3 bg-red-500 text-white px-3 py-2 rounded-full text-sm font-bold shadow-lg">
+                      ❤️ Saved
                     </div>
                   </div>
                   
@@ -259,7 +250,6 @@ export default function LikedProperties() {
         </div>
       </main>
 
-      <Footer />
     </div>
   );
 }

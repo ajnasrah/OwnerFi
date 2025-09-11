@@ -24,7 +24,6 @@ export default function BuyerSettings() {
     maxDownPayment: '',
   });
 
-
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/auth/signin');
@@ -74,7 +73,6 @@ export default function BuyerSettings() {
       setLoading(false);
     }
   };
-
 
   const formatPhoneNumber = (value: string) => {
     const phoneNumber = value.replace(/\D/g, '');
@@ -137,8 +135,6 @@ export default function BuyerSettings() {
         setTimeout(() => {
           router.push('/dashboard');
         }, 1500);
-        
-        // Don't redirect - let them stay and make more changes
       }
     } catch (err) {
       setError('Failed to save preferences');
@@ -149,122 +145,171 @@ export default function BuyerSettings() {
 
   if (status === 'loading' || loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-700 font-medium">Loading settings...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-md mx-auto px-4">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Update Search Preferences  
-          </h1>
-          <p className="text-gray-600">
-            Change your city or budget to see different properties.
-          </p>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      {/* Header with Navigation */}
+      <header className="relative z-20 bg-white/80 backdrop-blur-lg border-b border-white/20 px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-lg font-bold text-gray-900">Settings</h1>
+            <p className="text-xs text-gray-500 mt-1">Update your search preferences</p>
+          </div>
+          
+          <div className="flex space-x-6">
+            <Link href="/dashboard" className="flex flex-col items-center">
+              <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+                <span className="text-gray-600 text-lg">🏠</span>
+              </div>
+              <span className="text-xs font-medium text-gray-500 mt-1">Browse</span>
+            </Link>
+            
+            <Link href="/dashboard/liked" className="flex flex-col items-center">
+              <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+                <span className="text-gray-600 text-lg">♥</span>
+              </div>
+              <span className="text-xs font-medium text-gray-500 mt-1">Saved</span>
+            </Link>
+            
+            <Link href="/dashboard/settings" className="flex flex-col items-center">
+              <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center shadow-lg">
+                <span className="text-white text-lg">⚙</span>
+              </div>
+              <span className="text-xs font-medium text-blue-600 mt-1">Settings</span>
+            </Link>
+          </div>
         </div>
+      </header>
 
-        <div className="bg-white rounded-lg shadow-md p-8">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Back Link */}
-            <div className="text-center">
-              <Link 
-                href="/dashboard"
-                className="text-blue-600 hover:text-blue-500 font-medium text-sm"
-              >
-                ← Back to Properties
-              </Link>
+      {/* Main Content */}
+      <main className="px-4 pt-12 pb-12">
+        <div className="max-w-md mx-auto">
+          
+          {/* Settings Card */}
+          <div className="bg-white rounded-3xl shadow-2xl overflow-hidden p-8">
+            <div className="text-center mb-8">
+              <h2 className="text-xl font-bold text-gray-900 mb-2">
+                Update Search Preferences  
+              </h2>
+              <p className="text-gray-600 text-sm">
+                Change your city or budget to see different properties.
+              </p>
             </div>
 
-            {error && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                <p className="text-red-800 text-sm">{error}</p>
-              </div>
-            )}
-
-            {success && (
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <p className="text-green-800 text-sm">{success}</p>
-              </div>
-            )}
-
-            {/* City */}
-            <GooglePlacesAutocomplete
-              label="What city are you looking in? *"
-              value={formData.city}
-              onChange={(city) => setFormData(prev => ({ ...prev, city }))}
-              placeholder="Type city name..."
-            />
-
-            {/* Monthly Payment Budget */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Maximum monthly payment you can afford? *
-              </label>
-              <div className="relative">
-                <span className="absolute left-3 top-3 text-gray-500">$</span>
-                <input
-                  type="number"
-                  required
-                  min="1"
-                  step="1"
-                  value={formData.maxMonthlyPayment}
-                  onChange={(e) => setFormData(prev => ({ ...prev, maxMonthlyPayment: e.target.value }))}
-                  className="w-full pl-8 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="2000"
-                />
-              </div>
-              <p className="text-xs text-gray-500 mt-1">This includes principal, interest, insurance, and taxes</p>
-            </div>
-
-            {/* Down Payment Budget */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Maximum down payment you can make? *
-              </label>
-              <div className="relative">
-                <span className="absolute left-3 top-3 text-gray-500">$</span>
-                <input
-                  type="number"
-                  required
-                  min="1"
-                  step="1"
-                  value={formData.maxDownPayment}
-                  onChange={(e) => setFormData(prev => ({ ...prev, maxDownPayment: e.target.value }))}
-                  className="w-full pl-8 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="50000"
-                />
-              </div>
-              <p className="text-xs text-gray-500 mt-1">The upfront payment you can afford to make</p>
-            </div>
-
-            {/* Submit */}
-            <button
-              type="submit"
-              disabled={saving}
-              className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
-            >
-              {saving ? (
-                <span className="flex items-center justify-center">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Updating...
-                </span>
-              ) : (
-                'Update Preferences'
+            <form onSubmit={handleSubmit} className="space-y-8">
+              {error && (
+                <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                  <p className="text-red-600 text-sm">{error}</p>
+                </div>
               )}
-            </button>
-          </form>
-        </div>
 
-        <div className="text-center mt-6">
-          <p className="text-xs text-gray-500">
-            Changes will show new properties that match your updated criteria.
-          </p>
+              {success && (
+                <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+                  <p className="text-green-600 text-sm">{success}</p>
+                </div>
+              )}
+
+              {/* City */}
+              <div>
+                <GooglePlacesAutocomplete
+                  label="What city are you looking in? *"
+                  value={formData.city}
+                  onChange={(city) => setFormData(prev => ({ ...prev, city }))}
+                  placeholder="Type city name..."
+                />
+              </div>
+
+              {/* Monthly Payment Budget */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-800 mb-3">
+                  Monthly Budget *
+                </label>
+                <div className="bg-gray-50 rounded-2xl p-4 focus-within:bg-white focus-within:shadow-lg transition-all">
+                  <div className="flex items-center">
+                    <span className="text-2xl font-bold text-gray-600 mr-2">$</span>
+                    <input
+                      type="text"
+                      required
+                      value={formData.maxMonthlyPayment ? Number(formData.maxMonthlyPayment).toLocaleString() : ''}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/[^\d]/g, '');
+                        setFormData(prev => ({ ...prev, maxMonthlyPayment: value }));
+                      }}
+                      className="flex-1 text-2xl font-bold text-gray-900 bg-transparent border-none outline-none placeholder-gray-400"
+                      placeholder="1,500"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2">Monthly payment you can afford</p>
+                </div>
+              </div>
+
+              {/* Down Payment Budget */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-800 mb-3">
+                  Down Payment *
+                </label>
+                <div className="bg-gray-50 rounded-2xl p-4 focus-within:bg-white focus-within:shadow-lg transition-all">
+                  <div className="flex items-center">
+                    <span className="text-2xl font-bold text-gray-600 mr-2">$</span>
+                    <input
+                      type="text"
+                      required
+                      value={formData.maxDownPayment ? Number(formData.maxDownPayment).toLocaleString() : ''}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/[^\d]/g, '');
+                        setFormData(prev => ({ ...prev, maxDownPayment: value }));
+                      }}
+                      className="flex-1 text-2xl font-bold text-gray-900 bg-transparent border-none outline-none placeholder-gray-400"
+                      placeholder="30,000"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2">Upfront payment you can make</p>
+                </div>
+              </div>
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                disabled={saving}
+                className="w-full bg-blue-600 text-white py-4 px-4 rounded-2xl hover:bg-blue-700 transition-colors font-semibold text-lg disabled:bg-gray-400 disabled:cursor-not-allowed shadow-lg transform active:scale-95"
+              >
+                {saving ? (
+                  <span className="flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                    Updating...
+                  </span>
+                ) : (
+                  'Update Preferences'
+                )}
+              </button>
+
+              {/* Back Link */}
+              <div className="text-center pt-6">
+                <Link 
+                  href="/dashboard"
+                  className="text-blue-600 hover:text-blue-700 font-medium text-sm"
+                >
+                  ← Back to Properties
+                </Link>
+              </div>
+            </form>
+          </div>
+
+          <div className="text-center mt-8">
+            <p className="text-xs text-gray-500">
+              Changes will show new properties that match your updated criteria.
+            </p>
+          </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

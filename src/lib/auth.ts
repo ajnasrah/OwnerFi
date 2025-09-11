@@ -32,6 +32,10 @@ export const authOptions: NextAuthOptions = {
         const password = credentials.password as string;
 
         // Sign in logic - look up user in Firebase
+        if (!db) {
+          return null;
+        }
+        
         const usersQuery = query(
           collection(db, 'users'),
           where('email', '==', email)

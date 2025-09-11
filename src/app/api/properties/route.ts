@@ -11,6 +11,13 @@ import { db } from '@/lib/firebase';
 
 export async function GET(request: NextRequest) {
   try {
+    if (!db) {
+      return NextResponse.json(
+        { error: 'Database not available' },
+        { status: 500 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit') || '20');
     
@@ -36,7 +43,6 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Failed to fetch properties:', error);
 
     return NextResponse.json(
       { error: 'Failed to fetch properties' },

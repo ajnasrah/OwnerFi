@@ -1,15 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Production optimizations
-  swcMinify: true,
   compress: true,
   
   // Bundle optimization
   experimental: {
-    optimizeCss: true,
-    turbotrace: {
-      logLevel: 'error'
-    }
+    optimizeCss: true
   },
 
   // Image optimization

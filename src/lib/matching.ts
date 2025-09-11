@@ -149,6 +149,9 @@ export async function matchBuyerToProperties(buyerId: string) {
           matchScore: matchResult.score,
           isActive: true,
           matchedAt: new Date().toISOString(),
+          withinBudget: true,
+          withinRadius: true,
+          meetsRequirements: true
         });
       }
     }
@@ -187,6 +190,9 @@ export async function matchPropertyToBuyers(propertyId: string) {
           matchScore: matchResult.score,
           isActive: true,
           matchedAt: new Date().toISOString(),
+          withinBudget: true,
+          withinRadius: true,
+          meetsRequirements: true
         });
       }
     }

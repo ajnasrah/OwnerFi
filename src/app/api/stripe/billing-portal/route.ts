@@ -20,6 +20,13 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 export async function POST(request: NextRequest) {
   try {
+    if (!db) {
+      return NextResponse.json(
+        { error: 'Database not available' },
+        { status: 500 }
+      );
+    }
+
     const session = await getSessionWithRole('realtor');
     
     if (!session?.user?.email || !session?.user?.id) {
@@ -54,7 +61,6 @@ export async function POST(request: NextRequest) {
         const userData = userDoc.exists() ? userDoc.data() : null;
         customerId = userData?.stripeCustomerId;
       } catch (e) {
-        console.error('Failed to get user data:', e);
       }
     }
 
@@ -76,7 +82,6 @@ export async function POST(request: NextRequest) {
           });
         }
       } catch (e) {
-        console.error('Failed to find customer by email:', e);
       }
     }
 
@@ -100,7 +105,6 @@ export async function POST(request: NextRequest) {
         });
 
       } catch (e) {
-        console.error('Failed to create customer:', e);
         return NextResponse.json(
           { error: 'Failed to create customer account' },
           { status: 500 }
@@ -120,7 +124,6 @@ export async function POST(request: NextRequest) {
       });
 
     } catch (stripeError: any) {
-      console.error('Stripe billing portal error:', stripeError);
       return NextResponse.json(
         { 
           error: 'Failed to create billing portal session',
@@ -136,7 +139,6 @@ export async function POST(request: NextRequest) {
     }
 
   } catch (error) {
-    console.error('Billing portal error:', error);
     
     // Handle role validation errors specifically
     if ((error as Error).message.includes('Access denied') || (error as Error).message.includes('Not authenticated')) {

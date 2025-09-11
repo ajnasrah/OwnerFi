@@ -4,7 +4,6 @@ export interface PropertyListing {
   // Core Identification
   id: string;                          // Unique property ID
   mlsNumber?: string;                  // MLS listing number (if available)
-  ghlContactId?: string;               // GoHighLevel contact ID for lead tracking
   
   // Index signature for Record<string, unknown> compatibility
   [key: string]: unknown;
@@ -20,7 +19,7 @@ export interface PropertyListing {
   neighborhood?: string;               // Neighborhood/subdivision name
   nearbyCities?: string[];             // Cities within 30-mile radius for similar property searches
   nearbyCitiesSource?: string;         // Source of nearby cities data ('comprehensive-database', 'api', etc.)
-  nearbyCitiesUpdatedAt?: any;         // Timestamp when nearby cities were last updated
+  nearbyCitiesUpdatedAt?: string | number | Date;         // Timestamp when nearby cities were last updated
   
   // Property Details
   propertyType: 'single-family' | 'condo' | 'townhouse' | 'mobile-home' | 'multi-family' | 'land';
@@ -101,16 +100,8 @@ export interface PropertyListing {
   };
   
   // Integration Data
-  source: 'manual' | 'ghl-webhook' | 'import' | 'scraper';
+  source: 'manual' | 'import' | 'scraper';
   sourceId?: string;                   // Original ID from source system
-  ghlData?: {                          // Raw GoHighLevel data
-    contactId: string;
-    opportunityId?: string;
-    customFields?: Record<string, unknown>;
-    tags?: string[];
-    leadValue?: number;
-    buyersCompensation?: string;
-  };
 }
 
 // Database schema for property filtering and search

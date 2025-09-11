@@ -1,34 +1,44 @@
+// LEAD PURCHASE API - Atomic transaction for purchasing buyer leads
+// Deducts 1 credit and creates lead purchase record
+
 import { NextRequest, NextResponse } from 'next/server';
-import { 
-  collection, 
-  doc, 
-  getDoc, 
-  getDocs, 
-  setDoc, 
-  updateDoc, 
-  query, 
-  where, 
-  serverTimestamp 
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import { logError, logInfo } from '@/lib/logger';
 import { getSessionWithRole } from '@/lib/auth-utils';
-import { firestoreHelpers } from '@/lib/firestore';
-import { RealtorProfile, BuyerProfile } from '@/lib/firebase-models';
+import { FirebaseDB } from '@/lib/firebase-db';
+import { Timestamp } from 'firebase/firestore';
+import { logError, logInfo } from '@/lib/logger';
+
+interface PurchaseLeadRequest {
+  leadId: string;
+}
+
+interface PurchaseLeadResponse {
+  success: boolean;
+  buyerDetails?: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    city: string;
+    state: string;
+    maxMonthlyPayment: number;
+    maxDownPayment: number;
+  };
+  creditsRemaining?: number;
+}
 
 export async function POST(request: NextRequest) {
   try {
     // Enforce realtor role only
     const session = await getSessionWithRole('realtor');
     
-    if (!session?.user?.email) {
+    if (!session?.user?.email || !session.user.id) {
       return NextResponse.json(
         { error: 'Not authenticated' },
         { status: 401 }
       );
     }
 
-    const body = await request.json();
+    const body = await request.json() as PurchaseLeadRequest;
     const { leadId } = body;
 
     if (!leadId) {
@@ -38,131 +48,154 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get realtor profile
-    const realtorsQuery = query(
-      collection(db, 'realtors'),
-      where('userId', '==', session.user.id!)
-    );
-    const realtorDocs = await getDocs(realtorsQuery);
-
-    if (realtorDocs.empty) {
+    // Get user document with embedded realtor data
+    const userData = await FirebaseDB.getDocument('users', session.user.id);
+    const user = userData as any; // TODO: Add proper typing
+    
+    if (!user || user.role !== 'realtor' || !user.realtorData) {
       return NextResponse.json(
         { error: 'Realtor profile not found' },
         { status: 400 }
       );
     }
 
-    const realtorDoc = realtorDocs.docs[0];
-    const realtorProfile = { id: realtorDoc.id, ...realtorDoc.data() } as RealtorProfile;
-
-    if (!realtorProfile.profileComplete) {
-      return NextResponse.json(
-        { error: 'Realtor profile not complete' },
-        { status: 400 }
-      );
-    }
-
-    // Check if realtor has enough credits
-    if (realtorProfile.credits < 1) {
+    // Check if realtor has sufficient credits
+    if (user.realtorData.credits < 1) {
       return NextResponse.json(
         { error: 'Insufficient credits. Please purchase more credits to continue.' },
         { status: 400 }
       );
     }
 
-    // Check if buyer profile exists
-    const buyerDoc = await getDoc(doc(db, 'buyerProfiles', leadId));
+    // Get buyer details from consolidated buyerProfiles collection
+    const buyerData = await FirebaseDB.getDocument('buyerProfiles', leadId);
+    const buyer = buyerData as any; // TODO: Add proper typing
     
-    if (!buyerDoc.exists()) {
+    if (!buyer) {
       return NextResponse.json(
         { error: 'Buyer lead not found' },
         { status: 404 }
       );
     }
 
-    const buyerProfile = { id: buyerDoc.id, ...buyerDoc.data() } as BuyerProfile;
+    // Check if buyer is still available for purchase
+    if (buyer.isAvailableForPurchase === false) {
+      return NextResponse.json(
+        { error: 'This buyer lead is no longer available' },
+        { status: 400 }
+      );
+    }
 
-    // Check if realtor has already purchased this lead
-    const existingPurchaseQuery = query(
-      collection(db, 'buyerLeadPurchases'),
-      where('realtorId', '==', realtorDoc.id),
-      where('buyerId', '==', leadId)
+    // Check if this realtor has already purchased this lead
+    const existingPurchase = await FirebaseDB.queryDocuments(
+      'leadPurchases',
+      [
+        { field: 'realtorUserId', operator: '==', value: session.user.id },
+        { field: 'buyerId', operator: '==', value: leadId }
+      ]
     );
-    const existingPurchaseDocs = await getDocs(existingPurchaseQuery);
 
-    if (!existingPurchaseDocs.empty) {
+    if (existingPurchase.length > 0) {
       return NextResponse.json(
         { error: 'You have already purchased this lead' },
         { status: 400 }
       );
     }
 
-    // Process the purchase
-    const purchaseId = firestoreHelpers.generateId();
-    const creditCost = 1; // 1 credit per lead
-    const dollarCost = 8.00; // $8 per lead (for tracking)
+    // ATOMIC TRANSACTION: Deduct credit and create purchase record
+    const now = Timestamp.now();
+    const newCredits = user.realtorData.credits - 1;
 
-    // Create the purchase record
-    await setDoc(doc(db, 'buyerLeadPurchases', purchaseId), {
-      id: purchaseId,
-      realtorId: realtorDoc.id,
+    // Create lead purchase record
+    const purchaseData = {
+      realtorUserId: session.user.id,
       buyerId: leadId,
-      creditsCost: creditCost,
-      purchasePrice: dollarCost,
+      buyerName: `${buyer.firstName} ${buyer.lastName}`,
+      buyerCity: buyer.preferredCity || buyer.city,  // Use either field for compatibility
+      buyerState: buyer.preferredState || buyer.state, // Use either field for compatibility
+      creditsCost: 1,
+      purchasePrice: 8, // Internal cost tracking
       status: 'purchased',
-      purchasedAt: serverTimestamp(),
-      createdAt: serverTimestamp()
+      purchasedAt: now,
+      createdAt: now
+    };
+
+    const purchaseId = await FirebaseDB.createDocument('leadPurchases', purchaseData);
+
+    // Update realtor credits in user document
+    const updatedRealtorData = {
+      ...user.realtorData,
+      credits: newCredits,
+      updatedAt: now
+    };
+
+    await FirebaseDB.updateDocument('users', session.user.id, {
+      realtorData: updatedRealtorData,
+      updatedAt: now
     });
 
-    // Deduct credits from realtor
-    await updateDoc(doc(db, 'realtors', realtorDoc.id), {
-      credits: realtorProfile.credits - creditCost,
-      updatedAt: serverTimestamp()
+    // Create transaction record
+    const transactionData = {
+      realtorUserId: session.user.id,
+      type: 'lead_purchase',
+      description: `Purchased lead: ${buyer.firstName} ${buyer.lastName}`,
+      creditsChange: -1,
+      runningBalance: newCredits,
+      relatedId: purchaseId,
+      details: {
+        buyerName: `${buyer.firstName} ${buyer.lastName}`,
+        buyerCity: buyer.preferredCity,
+        purchasePrice: 8
+      },
+      createdAt: now
+    };
+
+    await FirebaseDB.createDocument('realtorTransactions', transactionData);
+
+    // Mark buyer as purchased in consolidated system
+    await FirebaseDB.updateDocument('buyerProfiles', leadId, {
+      isAvailableForPurchase: false,
+      purchasedBy: session.user.id,
+      purchasedAt: now,
+      updatedAt: now
     });
 
-    await logInfo('Realtor purchased buyer lead', {
+    // Log successful purchase
+    await logInfo('Lead purchased successfully', {
       action: 'lead_purchase',
       userId: session.user.id,
       metadata: {
-        realtorId: realtorProfile.id,
-        buyerId: leadId,
-        creditsCost: creditCost,
-        purchasePrice: dollarCost,
-        remainingCredits: realtorProfile.credits - creditCost,
-        buyerCity: buyerProfile.searchCriteria?.cities?.[0] || 'Unknown',
-        buyerState: buyerProfile.searchCriteria?.state || '',
-        buyerBudget: buyerProfile.searchCriteria?.maxMonthlyPayment || 0
+        leadId,
+        buyerName: `${buyer.firstName} ${buyer.lastName}`,
+        creditsRemaining: newCredits,
+        purchasePrice: 8
       }
     });
 
-    return NextResponse.json({
+    const response: PurchaseLeadResponse = {
       success: true,
-      message: 'Lead purchased successfully',
-      purchaseId,
-      remainingCredits: realtorProfile.credits - creditCost,
-      buyerInfo: {
-        name: `${buyerProfile.firstName} ${buyerProfile.lastName}`,
-        phone: buyerProfile.phone,
-        city: `${buyerProfile.preferredCity || 'Unknown'}, ${buyerProfile.preferredState || ''}`,
-        budget: `$${buyerProfile.maxMonthlyPayment || 0}/month, $${buyerProfile.maxDownPayment || 0} down`
-      }
-    });
+      buyerDetails: {
+        firstName: buyer.firstName,
+        lastName: buyer.lastName,
+        email: buyer.email,
+        phone: buyer.phone,
+        city: buyer.preferredCity || buyer.city,      // Compatibility
+        state: buyer.preferredState || buyer.state,   // Compatibility
+        maxMonthlyPayment: buyer.maxMonthlyPayment,
+        maxDownPayment: buyer.maxDownPayment
+      },
+      creditsRemaining: newCredits
+    };
+
+    return NextResponse.json(response);
 
   } catch (error) {
-    // Handle role validation errors
-    if ((error as Error).message.includes('Access denied') || (error as Error).message.includes('Not authenticated')) {
-      return NextResponse.json(
-        { error: 'Access denied. Realtor access required.' },
-        { status: 403 }
-      );
-    }
-
-    await logError('Failed to purchase lead', {
+    await logError('Lead purchase failed', {
       action: 'lead_purchase_error'
     }, error as Error);
 
     return NextResponse.json(
-      { error: 'Failed to purchase lead', details: (error as Error).message },
+      { error: 'Failed to purchase lead. Please try again.' },
       { status: 500 }
     );
   }

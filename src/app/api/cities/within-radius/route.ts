@@ -23,6 +23,7 @@ interface OverpassResponse {
 
 interface CityResult {
   name: string;
+  state: string;
   lat: number;
   lng: number;
   distance: number;
@@ -82,16 +83,16 @@ export async function GET(request: NextRequest) {
           const distance = calculateDistance(lat, lng, elementLat, elementLng);
           
           return {
-            name: element.tags.name,
-            state: element.tags['addr:state'] || element.tags.state || 'Unknown',
+            name: element.tags?.name || 'Unknown',
+            state: element.tags?.['addr:state'] || element.tags?.state || 'Unknown',
             lat: elementLat,
             lng: elementLng,
             distance: Math.round(distance * 10) / 10,
-            type: element.tags.place
+            type: element.tags?.place || 'city'
           };
         })
-        .filter((city: CityResult | null) => city && city.name && city.distance <= radius)
-        .sort((a: CityResult, b: CityResult) => a.distance - b.distance);
+        .filter((city): city is CityResult => city !== null && city.name !== 'Unknown' && city.distance <= radius)
+        .sort((a, b) => a.distance - b.distance);
 
       return NextResponse.json({
         centerCity: { lat, lng },

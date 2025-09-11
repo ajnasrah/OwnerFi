@@ -62,7 +62,6 @@ export function GoogleCityAutocomplete({ value, onChange, label, placeholder = "
         setShowDropdown(cityNames.length > 0);
       }
     } catch (error) {
-      console.error('City search failed:', error);
       setSuggestions([]);
       setShowDropdown(false);
     } finally {

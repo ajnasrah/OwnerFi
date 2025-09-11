@@ -1,6 +1,6 @@
 // Lazy initialization to prevent build-time Firebase imports
-let adminDb: any = null;
-let adminAuth: any = null;
+let adminDb: unknown = null;
+let adminAuth: unknown = null;
 let isInitialized = false;
 
 async function initializeAdminSDK() {
@@ -19,15 +19,8 @@ async function initializeAdminSDK() {
       const privateKey = process.env.FIREBASE_PRIVATE_KEY;
       const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
 
-      console.log('🔥 Firebase Admin SDK initialization attempt:', {
-        hasProjectId: !!projectId,
-        hasPrivateKey: !!privateKey,
-        hasClientEmail: !!clientEmail,
-        NODE_ENV: process.env.NODE_ENV
-      });
 
       if (!projectId || !privateKey || !clientEmail) {
-        console.warn('🔥 Firebase Admin SDK environment variables are missing, skipping initialization');
         isInitialized = true;
         return { adminDb: null, adminAuth: null };
       }
@@ -39,16 +32,13 @@ async function initializeAdminSDK() {
           clientEmail,
         })
       });
-      console.log('🔥 Firebase Admin SDK initialized successfully');
     }
 
     const app = getApps()[0];
     adminDb = getFirestore(app);
     adminAuth = getAuth(app);
-    console.log('🔥 Firebase Admin services initialized');
     
   } catch (error) {
-    console.warn('🔥 Firebase Admin SDK initialization failed:', error.message);
     adminDb = null;
     adminAuth = null;
   }

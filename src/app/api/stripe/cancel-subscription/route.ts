@@ -10,7 +10,7 @@ import {
   doc, 
   serverTimestamp 
 } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getSafeDb } from '@/lib/firebase-safe';
 import { RealtorProfile } from '@/lib/firebase-models';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -29,6 +29,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get the realtor's profile to find their subscription
+    const db = getSafeDb();
     const realtorsQuery = query(
       collection(db, 'realtors'),
       where('userId', '==', session.user.id!)
@@ -112,10 +113,9 @@ export async function POST(request: NextRequest) {
         endsAt: (canceledSubscription as any).current_period_end ? new Date((canceledSubscription as any).current_period_end * 1000) : null
       });
 
-    } catch (stripeError: any) {
-      console.error('Stripe cancellation error:', stripeError);
+    } catch (stripeError: unknown) {
       
-      if (stripeError.code === 'resource_missing') {
+      if ((stripeError as Stripe.errors.StripeError).code === 'resource_missing') {
         return NextResponse.json(
           { error: 'Subscription not found in Stripe. It may have already been cancelled.' },
           { status: 404 }
@@ -129,7 +129,6 @@ export async function POST(request: NextRequest) {
     }
 
   } catch (error) {
-    console.error('Cancel subscription error:', error);
     return NextResponse.json(
       { error: 'Failed to cancel subscription' },
       { status: 500 }

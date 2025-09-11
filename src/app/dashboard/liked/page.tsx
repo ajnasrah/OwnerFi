@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
@@ -62,11 +62,9 @@ export default function LikedProperties() {
         setProperties(data.likedProperties || []);
         setProfile(data.profile);
         
-        console.log(`❤️ LOADED ${data.likedProperties?.length || 0} liked properties`);
       }
 
     } catch (err) {
-      console.error('Failed to load liked properties:', err);
       setError('Failed to load your liked properties');
     } finally {
       setLoading(false);
@@ -85,54 +83,66 @@ export default function LikedProperties() {
         setProperties(prev => prev.filter(p => p.id !== propertyId));
       }
     } catch (error) {
-      console.error('Failed to remove like:', error);
     }
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading your liked properties...</p>
+          <div className="w-16 h-16 border-4 border-emerald-400 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
+          <div className="text-2xl font-bold text-white mb-2">LOADING SAVED HOMES</div>
+          <p className="text-slate-400 font-medium">Finding your liked properties...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-slate-900">
       {/* Header with Navigation */}
-      <header className="relative z-20 bg-white/80 backdrop-blur-lg border-b border-white/20 px-6 py-4">
+      <header className="relative z-20 bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50 px-6 py-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-lg font-bold text-gray-900">Saved Homes</h1>
-            <p className="text-xs text-gray-500 mt-1">
-              {properties.length} saved {properties.length === 1 ? 'property' : 'properties'}
+            <h1 className="text-xl font-black text-white">SAVED HOMES</h1>
+            <p className="text-sm text-slate-400 mt-1 font-semibold">
+              {properties.length} SAVED {properties.length === 1 ? 'PROPERTY' : 'PROPERTIES'}
             </p>
           </div>
           
-          <div className="flex space-x-6">
-            <Link href="/dashboard" className="flex flex-col items-center">
-              <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                <span className="text-gray-600 text-lg">🏠</span>
-              </div>
-              <span className="text-xs font-medium text-gray-500 mt-1">Browse</span>
-            </Link>
+          <div className="flex items-center space-x-6">
+            <div className="flex space-x-4">
+              <Link href="/dashboard" className="flex flex-col items-center group">
+                <div className="w-12 h-12 bg-slate-700/50 hover:bg-slate-600/50 rounded-xl flex items-center justify-center transition-colors group-hover:scale-110">
+                  <span className="text-slate-300 text-xl">🏠</span>
+                </div>
+                <span className="text-xs font-bold text-slate-400 mt-1">BROWSE</span>
+              </Link>
+              
+              <Link href="/dashboard/liked" className="flex flex-col items-center group">
+                <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                  <span className="text-white text-xl">♥</span>
+                </div>
+                <span className="text-xs font-bold text-emerald-400 mt-1">SAVED</span>
+              </Link>
+              
+              <Link href="/dashboard/settings" className="flex flex-col items-center group">
+                <div className="w-12 h-12 bg-slate-700/50 hover:bg-slate-600/50 rounded-xl flex items-center justify-center transition-colors group-hover:scale-110">
+                  <span className="text-slate-300 text-xl">⚙</span>
+                </div>
+                <span className="text-xs font-bold text-slate-400 mt-1">SETTINGS</span>
+              </Link>
+            </div>
             
-            <Link href="/dashboard/liked" className="flex flex-col items-center">
-              <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center shadow-lg">
-                <span className="text-white text-lg">♥</span>
+            <button
+              onClick={() => signOut({ callbackUrl: '/auth/signin' })}
+              className="flex flex-col items-center group"
+            >
+              <div className="w-12 h-12 bg-slate-700/50 hover:bg-red-600/30 rounded-xl flex items-center justify-center transition-all group-hover:scale-110 duration-300">
+                <span className="text-slate-300 group-hover:text-red-400 text-xl transition-colors">⏻</span>
               </div>
-              <span className="text-xs font-medium text-blue-600 mt-1">Saved</span>
-            </Link>
-            
-            <Link href="/dashboard/settings" className="flex flex-col items-center">
-              <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                <span className="text-gray-600 text-lg">⚙</span>
-              </div>
-              <span className="text-xs font-medium text-gray-500 mt-1">Settings</span>
-            </Link>
+              <span className="text-xs font-bold text-slate-400 group-hover:text-red-400 mt-1 transition-colors">LOGOUT</span>
+            </button>
           </div>
         </div>
       </header>
@@ -141,8 +151,8 @@ export default function LikedProperties() {
         <div className="max-w-7xl mx-auto">
           {/* Error State */}
           {error && (
-            <div className="bg-red-900/20 border border-red-700 rounded-lg p-4 mb-6">
-              <p className="text-red-300">{error}</p>
+            <div className="bg-red-600/20 backdrop-blur-lg border border-red-500/30 rounded-xl p-4 mb-6">
+              <p className="text-red-300 font-semibold">{error}</p>
             </div>
           )}
 
@@ -150,78 +160,83 @@ export default function LikedProperties() {
           {properties.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {properties.map((property) => (
-                <div key={property.id} className="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div key={property.id} className="bg-slate-800/50 backdrop-blur-lg border border-slate-700/50 rounded-2xl overflow-hidden shadow-2xl">
                   {/* Property Image */}
-                  <div className="w-full h-48 bg-gray-200 overflow-hidden relative">
+                  <div className="w-full h-48 bg-slate-700 overflow-hidden relative">
                     <img
                       src={
                         property.zillowImageUrl || 
                         property.imageUrl ||
-                        `https://maps.googleapis.com/maps/api/streetview?size=400x300&location=${encodeURIComponent(property.address + ', ' + property.city + ', ' + property.state)}&key=AIzaSyCelger3EPc8GzTOQq7-cv6tUeVh_XN9jE`
+                        `https://maps.googleapis.com/maps/api/streetview?size=400x300&location=${encodeURIComponent(property.address + ', ' + property.city + ', ' + property.state)}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`
                       }
                       alt={property.address}
                       className="w-full h-full object-cover"
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
-                        target.src = `https://maps.googleapis.com/maps/api/streetview?size=400x300&location=${encodeURIComponent(property.address + ', ' + property.city + ', ' + property.state)}&key=AIzaSyCelger3EPc8GzTOQq7-cv6tUeVh_XN9jE`;
+                        target.src = `https://maps.googleapis.com/maps/api/streetview?size=400x300&location=${encodeURIComponent(property.address + ', ' + property.city + ', ' + property.state)}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`;
                       }}
                     />
-                    <div className="absolute top-3 right-3 bg-red-500 text-white px-3 py-2 rounded-full text-sm font-bold shadow-lg">
-                      ❤️ Saved
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"></div>
+                    <div className="absolute top-3 right-3 bg-gradient-to-r from-red-500 to-red-600 text-white px-3 py-2 rounded-xl text-sm font-bold shadow-xl border border-red-400/30">
+                      ❤️ SAVED
                     </div>
                   </div>
                   
                   <div className="p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                      {property.address}
+                    <h3 className="text-lg font-bold text-white mb-2">
+                      {property.address.toUpperCase()}
                     </h3>
-                    <p className="text-gray-600 mb-4">
+                    <p className="text-slate-300 mb-4 font-semibold">
                       {property.city}, {property.state}
                     </p>
                     
-                    <div className="space-y-2 mb-4">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">List Price:</span>
-                        <span className="font-semibold">${property.listPrice?.toLocaleString()}</span>
+                    <div className="space-y-3 mb-4">
+                      <div className="flex justify-between items-center">
+                        <span className="text-slate-400 font-semibold">List Price:</span>
+                        <span className="font-bold text-white text-lg">${property.listPrice?.toLocaleString()}</span>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Monthly Payment:</span>
-                        <span className="font-semibold text-green-600">${property.monthlyPayment?.toLocaleString()}/mo</span>
+                      <div className="flex justify-between items-center">
+                        <span className="text-slate-400 font-semibold">Monthly:</span>
+                        <span className="font-bold text-emerald-400 text-lg">${Math.ceil(property.monthlyPayment || 0).toLocaleString()} est</span>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Down Payment:</span>
-                        <span className="font-semibold text-blue-600">${property.downPaymentAmount?.toLocaleString()}</span>
+                      <div className="flex justify-between items-center">
+                        <span className="text-slate-400 font-semibold">Down:</span>
+                        <span className="font-bold text-blue-400 text-lg">${property.downPaymentAmount?.toLocaleString()} est</span>
                       </div>
                     </div>
 
-                    <div className="flex justify-between text-sm text-gray-600 mb-4">
-                      <span>{property.bedrooms} bed</span>
-                      <span>{property.bathrooms} bath</span>
-                      <span>{property.squareFeet?.toLocaleString()} sq ft</span>
+                    <div className="flex justify-between text-sm text-slate-400 mb-4 font-semibold">
+                      <span>{property.bedrooms} BED</span>
+                      <span>{property.bathrooms} BATH</span>
+                      <span>{property.squareFeet?.toLocaleString()} SQ FT</span>
                     </div>
 
-                    {property.description && (
-                      <p className="text-gray-700 text-sm mb-4 line-clamp-3">
-                        {property.description}
-                      </p>
-                    )}
-
-                    <div className="flex space-x-2">
+                    <div className="grid grid-cols-3 gap-2">
                       <button 
                         onClick={() => removeLike(property.id)}
-                        className="flex-1 bg-red-100 text-red-700 py-2 px-4 rounded-lg hover:bg-red-200 transition-colors"
+                        className="bg-red-600/20 hover:bg-red-600/30 text-red-400 py-2 px-3 rounded-lg transition-all hover:scale-105 font-bold border border-red-500/30 text-sm"
                       >
-                        💔 Remove
+                        REMOVE
                       </button>
                       
                       <button 
                         onClick={() => {
-                          const message = `I'm interested in the property at ${property.address}, ${property.city}, ${property.state}`;
+                          const message = `I'm interested in the property at ${property.address}, ${property.city}, ${property.state}. Found through OwnerFi.`;
                           window.open(`sms:+1234567890&body=${encodeURIComponent(message)}`, '_self');
                         }}
-                        className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
+                        className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white py-2 px-3 rounded-lg transition-all hover:scale-105 font-bold text-sm"
                       >
-                        Contact Agent
+                        CONTACT
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          const searchQuery = `${property.address}, ${property.city}, ${property.state}`;
+                          window.open(`https://www.google.com/search?q=${encodeURIComponent(searchQuery)}`, '_blank');
+                        }}
+                        className="bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 py-2 px-3 rounded-lg transition-all hover:scale-105 font-bold text-sm border border-blue-500/30"
+                      >
+                        MORE INFO
                       </button>
                     </div>
                   </div>
@@ -229,21 +244,22 @@ export default function LikedProperties() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-12">
-              <div className="text-gray-400 mb-4">
-                <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                </svg>
+            <div className="text-center py-16">
+              <div className="w-24 h-24 bg-slate-700/30 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <span className="text-4xl">💔</span>
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No liked properties yet</h3>
-              <p className="text-gray-600 mb-6">
-                Start browsing properties and click the "Like" button to save them here.
+              <h3 className="text-2xl font-black text-white mb-4">NO SAVED PROPERTIES</h3>
+              <p className="text-slate-300 mb-8 font-medium text-lg">
+                Start browsing and save properties you like to see them here.
               </p>
               <Link 
                 href="/dashboard"
-                className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 rounded-xl font-bold text-lg transition-all duration-300 hover:scale-105 shadow-2xl shadow-emerald-500/25"
               >
-                Browse Properties
+                BROWSE PROPERTIES
+                <svg className="ml-2 w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
               </Link>
             </div>
           )}

@@ -66,12 +66,13 @@ export class FirebaseDB {
       updatedAt: now
     } as T;
 
-    await setDoc(doc(db, collectionName, id), docData);
+    await setDoc(doc(db!, collectionName, id), docData as any);
     return docData;
   }
 
   static async getDocument<T>(collectionName: string, id: string): Promise<T | null> {
-    const docRef = doc(db, collectionName, id);
+    FirebaseDB.checkFirebase();
+    const docRef = doc(db!, collectionName, id);
     const docSnap = await getDoc(docRef);
     
     if (!docSnap.exists()) return null;
@@ -84,7 +85,8 @@ export class FirebaseDB {
     id: string, 
     updates: Partial<T>
   ): Promise<void> {
-    const docRef = doc(db, collectionName, id);
+    FirebaseDB.checkFirebase();
+    const docRef = doc(db!, collectionName, id);
     await updateDoc(docRef, {
       ...updates,
       updatedAt: serverTimestamp()
@@ -92,7 +94,8 @@ export class FirebaseDB {
   }
 
   static async deleteDocument(collectionName: string, id: string): Promise<void> {
-    const docRef = doc(db, collectionName, id);
+    FirebaseDB.checkFirebase();
+    const docRef = doc(db!, collectionName, id);
     await deleteDoc(docRef);
   }
 
@@ -101,7 +104,8 @@ export class FirebaseDB {
     conditions: { field: string; operator: WhereFilterOp; value: unknown }[],
     limitCount?: number
   ): Promise<T[]> {
-    let q = query(collection(db, collectionName));
+    FirebaseDB.checkFirebase();
+    let q = query(collection(db!, collectionName));
     
     // Add where conditions
     for (const condition of conditions) {
@@ -122,7 +126,7 @@ export class FirebaseDB {
     email: string;
     name: string;
     password: string;
-    role: 'buyer' | 'realtor' | 'admin';
+    role: 'buyer' | 'realtor' | 'admin' | 'pending';
   }): Promise<User> {
     const user = await this.createDocument<User>(COLLECTIONS.USERS, userData);
     
@@ -239,8 +243,8 @@ export class FirebaseDB {
     role: 'buyer' | 'realtor';
     profileData: Record<string, unknown>;
   }): Promise<{ user: User; profile: BuyerProfile | RealtorProfile }> {
-    
-    return runTransaction(db, async (transaction) => {
+    FirebaseDB.checkFirebase();
+    return runTransaction(db!, async (transaction) => {
       // Create user first
       const userId = generateFirebaseId();
       const user: User = {
@@ -267,8 +271,8 @@ export class FirebaseDB {
       };
       
       // Write both documents atomically
-      const userRef = doc(db, COLLECTIONS.USERS, userId);
-      const profileRef = doc(db, profileCollection, profileId);
+      const userRef = doc(db!, COLLECTIONS.USERS, userId);
+      const profileRef = doc(db!, profileCollection, profileId);
       
       transaction.set(userRef, user);
       transaction.set(profileRef, profile);
@@ -284,10 +288,10 @@ export class FirebaseDB {
     creditsCost: number;
     purchasePrice: number;
   }): Promise<{ purchase: LeadPurchase; newBalance: number }> {
-    
-    return runTransaction(db, async (transaction) => {
+    FirebaseDB.checkFirebase();
+    return runTransaction(db!, async (transaction) => {
       // Get current realtor profile
-      const realtorRef = doc(db, COLLECTIONS.REALTOR_PROFILES, data.realtorId);
+      const realtorRef = doc(db!, COLLECTIONS.REALTOR_PROFILES, data.realtorId);
       const realtorSnap = await transaction.get(realtorRef);
       
       if (!realtorSnap.exists()) {
@@ -319,7 +323,7 @@ export class FirebaseDB {
       const newBalance = realtorData.credits - data.creditsCost;
       
       // Write both updates atomically
-      const purchaseRef = doc(db, COLLECTIONS.LEAD_PURCHASES, purchaseId);
+      const purchaseRef = doc(db!, COLLECTIONS.LEAD_PURCHASES, purchaseId);
       
       transaction.set(purchaseRef, purchase);
       transaction.update(realtorRef, {
@@ -338,8 +342,8 @@ export class FirebaseDB {
     fixed: number;
   }> {
     const results = {
-      usersWithoutProfiles: [],
-      profilesWithoutUsers: [],
+      usersWithoutProfiles: [] as string[],
+      profilesWithoutUsers: [] as string[],
       fixed: 0
     };
     
@@ -349,8 +353,8 @@ export class FirebaseDB {
       const profileCollection = user.role === 'buyer' ? 
         COLLECTIONS.BUYER_PROFILES : COLLECTIONS.REALTOR_PROFILES;
       
-      const profiles = await this.queryDocuments(
-        profileCollection,
+      const profiles = await this.queryDocuments<any>(
+        profileCollection as any,
         [{ field: 'userId', operator: '==', value: user.id }],
         1
       );

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { GooglePlacesAutocomplete } from '@/components/ui/GooglePlacesAutocomplete';
@@ -155,86 +155,97 @@ export default function BuyerSettings() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-slate-900">
       {/* Header with Navigation */}
-      <header className="relative z-20 bg-white/80 backdrop-blur-lg border-b border-white/20 px-6 py-4">
+      <header className="relative z-20 bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50 px-6 py-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-lg font-bold text-gray-900">Settings</h1>
-            <p className="text-xs text-gray-500 mt-1">Update your search preferences</p>
+            <h1 className="text-xl font-black text-white">SETTINGS</h1>
+            <p className="text-sm text-slate-400 mt-1 font-semibold">UPDATE YOUR SEARCH PREFERENCES</p>
           </div>
           
-          <div className="flex space-x-6">
-            <Link href="/dashboard" className="flex flex-col items-center">
-              <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                <span className="text-gray-600 text-lg">🏠</span>
-              </div>
-              <span className="text-xs font-medium text-gray-500 mt-1">Browse</span>
-            </Link>
+          <div className="flex items-center space-x-6">
+            <div className="flex space-x-4">
+              <Link href="/dashboard" className="flex flex-col items-center group">
+                <div className="w-12 h-12 bg-slate-700/50 hover:bg-slate-600/50 rounded-xl flex items-center justify-center transition-colors group-hover:scale-110">
+                  <span className="text-slate-300 text-xl">🏠</span>
+                </div>
+                <span className="text-xs font-bold text-slate-400 mt-1">BROWSE</span>
+              </Link>
+              
+              <Link href="/dashboard/liked" className="flex flex-col items-center group">
+                <div className="w-12 h-12 bg-slate-700/50 hover:bg-slate-600/50 rounded-xl flex items-center justify-center transition-colors group-hover:scale-110">
+                  <span className="text-slate-300 text-xl">♥</span>
+                </div>
+                <span className="text-xs font-bold text-slate-400 mt-1">SAVED</span>
+              </Link>
+              
+              <Link href="/dashboard/settings" className="flex flex-col items-center group">
+                <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                  <span className="text-white text-xl">⚙</span>
+                </div>
+                <span className="text-xs font-bold text-emerald-400 mt-1">SETTINGS</span>
+              </Link>
+            </div>
             
-            <Link href="/dashboard/liked" className="flex flex-col items-center">
-              <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                <span className="text-gray-600 text-lg">♥</span>
+            <button
+              onClick={() => signOut({ callbackUrl: '/auth/signin' })}
+              className="flex flex-col items-center group"
+            >
+              <div className="w-12 h-12 bg-slate-700/50 hover:bg-red-600/30 rounded-xl flex items-center justify-center transition-all group-hover:scale-110 duration-300">
+                <span className="text-slate-300 group-hover:text-red-400 text-xl transition-colors">⏻</span>
               </div>
-              <span className="text-xs font-medium text-gray-500 mt-1">Saved</span>
-            </Link>
-            
-            <Link href="/dashboard/settings" className="flex flex-col items-center">
-              <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center shadow-lg">
-                <span className="text-white text-lg">⚙</span>
-              </div>
-              <span className="text-xs font-medium text-blue-600 mt-1">Settings</span>
-            </Link>
+              <span className="text-xs font-bold text-slate-400 group-hover:text-red-400 mt-1 transition-colors">LOGOUT</span>
+            </button>
           </div>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="px-4 pt-12 pb-12">
-        <div className="max-w-md mx-auto">
+      {/* Main Content - COMPLETELY REDESIGNED */}
+      <main className="px-4 pt-8 pb-8">
+        <div className="max-w-lg mx-auto">
           
-          {/* Settings Card */}
-          <div className="bg-white rounded-3xl shadow-2xl overflow-hidden p-8">
-            <div className="text-center mb-8">
-              <h2 className="text-xl font-bold text-gray-900 mb-2">
-                Update Search Preferences  
-              </h2>
-              <p className="text-gray-600 text-sm">
-                Change your city or budget to see different properties.
+          <form onSubmit={handleSubmit} className="space-y-8">
+            {/* Status Messages */}
+            {error && (
+              <div className="bg-red-600/20 backdrop-blur-lg border border-red-500/30 rounded-xl p-4">
+                <p className="text-red-300 font-semibold">{error}</p>
+              </div>
+            )}
+
+            {success && (
+              <div className="bg-green-600/20 backdrop-blur-lg border border-green-500/30 rounded-xl p-4">
+                <p className="text-green-300 font-semibold">{success}</p>
+              </div>
+            )}
+
+            {/* City Selection */}
+            <div className="bg-slate-800/50 backdrop-blur-lg border border-slate-700/50 rounded-2xl p-6">
+              <label className="block text-lg font-bold text-white mb-4">
+                SEARCH LOCATION
+              </label>
+              <GooglePlacesAutocomplete
+                value={formData.city}
+                onChange={(city) => setFormData(prev => ({ ...prev, city }))}
+                placeholder="Dallas, TX"
+              />
+              <p className="text-sm text-slate-400 mt-3 font-medium">
+                Enter the city where you want to find properties
               </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-8">
-              {error && (
-                <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-                  <p className="text-red-600 text-sm">{error}</p>
-                </div>
-              )}
-
-              {success && (
-                <div className="bg-green-50 border border-green-200 rounded-xl p-4">
-                  <p className="text-green-600 text-sm">{success}</p>
-                </div>
-              )}
-
-              {/* City */}
+            {/* Budget Settings */}
+            <div className="bg-slate-800/50 backdrop-blur-lg border border-slate-700/50 rounded-2xl p-6 space-y-6">
+              <h3 className="text-lg font-bold text-white">BUDGET LIMITS</h3>
+              
+              {/* Monthly Payment */}
               <div>
-                <GooglePlacesAutocomplete
-                  label="What city are you looking in? *"
-                  value={formData.city}
-                  onChange={(city) => setFormData(prev => ({ ...prev, city }))}
-                  placeholder="Type city name..."
-                />
-              </div>
-
-              {/* Monthly Payment Budget */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-800 mb-3">
-                  Monthly Budget *
+                <label className="block text-sm font-semibold text-slate-300 mb-3">
+                  Maximum Monthly Payment
                 </label>
-                <div className="bg-gray-50 rounded-2xl p-4 focus-within:bg-white focus-within:shadow-lg transition-all">
+                <div className="bg-emerald-500/10 border border-emerald-400/30 rounded-xl p-4">
                   <div className="flex items-center">
-                    <span className="text-2xl font-bold text-gray-600 mr-2">$</span>
+                    <span className="text-2xl font-bold text-emerald-400 mr-2">$</span>
                     <input
                       type="text"
                       required
@@ -243,22 +254,21 @@ export default function BuyerSettings() {
                         const value = e.target.value.replace(/[^\d]/g, '');
                         setFormData(prev => ({ ...prev, maxMonthlyPayment: value }));
                       }}
-                      className="flex-1 text-2xl font-bold text-gray-900 bg-transparent border-none outline-none placeholder-gray-400"
+                      className="flex-1 text-2xl font-bold text-white bg-transparent border-none outline-none placeholder-slate-400"
                       placeholder="1,500"
                     />
                   </div>
-                  <p className="text-xs text-gray-500 mt-2">Monthly payment you can afford</p>
                 </div>
               </div>
 
-              {/* Down Payment Budget */}
+              {/* Down Payment */}
               <div>
-                <label className="block text-sm font-semibold text-gray-800 mb-3">
-                  Down Payment *
+                <label className="block text-sm font-semibold text-slate-300 mb-3">
+                  Maximum Down Payment
                 </label>
-                <div className="bg-gray-50 rounded-2xl p-4 focus-within:bg-white focus-within:shadow-lg transition-all">
+                <div className="bg-emerald-500/10 border border-emerald-400/30 rounded-xl p-4">
                   <div className="flex items-center">
-                    <span className="text-2xl font-bold text-gray-600 mr-2">$</span>
+                    <span className="text-2xl font-bold text-emerald-400 mr-2">$</span>
                     <input
                       type="text"
                       required
@@ -267,47 +277,30 @@ export default function BuyerSettings() {
                         const value = e.target.value.replace(/[^\d]/g, '');
                         setFormData(prev => ({ ...prev, maxDownPayment: value }));
                       }}
-                      className="flex-1 text-2xl font-bold text-gray-900 bg-transparent border-none outline-none placeholder-gray-400"
+                      className="flex-1 text-2xl font-bold text-white bg-transparent border-none outline-none placeholder-slate-400"
                       placeholder="30,000"
                     />
                   </div>
-                  <p className="text-xs text-gray-500 mt-2">Upfront payment you can make</p>
                 </div>
               </div>
+            </div>
 
-              {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={saving}
-                className="w-full bg-blue-600 text-white py-4 px-4 rounded-2xl hover:bg-blue-700 transition-colors font-semibold text-lg disabled:bg-gray-400 disabled:cursor-not-allowed shadow-lg transform active:scale-95"
-              >
-                {saving ? (
-                  <span className="flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                    Updating...
-                  </span>
-                ) : (
-                  'Update Preferences'
-                )}
-              </button>
-
-              {/* Back Link */}
-              <div className="text-center pt-6">
-                <Link 
-                  href="/dashboard"
-                  className="text-blue-600 hover:text-blue-700 font-medium text-sm"
-                >
-                  ← Back to Properties
-                </Link>
-              </div>
-            </form>
-          </div>
-
-          <div className="text-center mt-8">
-            <p className="text-xs text-gray-500">
-              Changes will show new properties that match your updated criteria.
-            </p>
-          </div>
+            {/* Save Button */}
+            <button
+              type="submit"
+              disabled={saving}
+              className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white py-4 px-6 rounded-xl font-bold text-lg transition-all duration-300 hover:scale-105 shadow-2xl shadow-emerald-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {saving ? (
+                <span className="flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                  UPDATING PREFERENCES...
+                </span>
+              ) : (
+                'UPDATE SEARCH PREFERENCES'
+              )}
+            </button>
+          </form>
         </div>
       </main>
     </div>

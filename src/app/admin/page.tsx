@@ -125,7 +125,6 @@ export default function AdminDashboard() {
         setProperties(data.properties);
       }
     } catch (error) {
-      console.error('Failed to fetch properties:', error);
     } finally {
       setLoadingProperties(false);
     }
@@ -164,7 +163,6 @@ export default function AdminDashboard() {
       fetchProperties();
       alert(`${selectedProperties.length} properties deleted successfully`);
     } catch (error) {
-      console.error('Failed to delete properties:', error);
       alert('Failed to delete some properties');
     } finally {
       setDeleting(false);
@@ -184,7 +182,6 @@ export default function AdminDashboard() {
       ];
       setDisputes(allDisputes);
     } catch (error) {
-      console.error('Failed to fetch disputes:', error);
     } finally {
       setLoadingDisputes(false);
     }
@@ -265,7 +262,6 @@ export default function AdminDashboard() {
       });
       router.push('/');
     } catch (error) {
-      console.error('Sign out error:', error);
       setIsSigningOut(false);
     }
   };
@@ -275,13 +271,11 @@ export default function AdminDashboard() {
     try {
       const response = await fetch('/api/admin/contacts');
       if (!response.ok) {
-        console.error('Failed to fetch contacts:', response.status);
         return;
       }
       const data = await response.json();
       setContacts(data.contacts || []);
     } catch (error) {
-      console.error('Failed to fetch contacts:', error);
     } finally {
       setLoadingContacts(false);
     }

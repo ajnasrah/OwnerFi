@@ -18,6 +18,13 @@ import { PropertyListing } from "@/lib/property-schema";
 
 export async function GET(request: NextRequest) {
   try {
+    if (!db) {
+      return NextResponse.json(
+        { error: 'Database not available' },
+        { status: 500 }
+      );
+    }
+
     const session = await getServerSession(authOptions);
     
     if (!session?.user) {
@@ -38,12 +45,10 @@ export async function GET(request: NextRequest) {
       }, { status: 400 });
     }
 
-    console.log(`🌍 NEARBY SEARCH: Looking for cities around ${centerCity}, ${state} within ${radiusMiles} miles`);
 
     // Get all cities within radius using existing fast database
     const nearbyCities = getCitiesWithinRadius(centerCity, state, radiusMiles);
     
-    console.log(`📍 Found ${nearbyCities.length} cities to search: ${nearbyCities.map(c => c.name).slice(0, 5).join(', ')}...`);
 
     // Get all properties and group by city
     const snapshot = await getDocs(collection(db, 'properties'));
@@ -92,7 +97,6 @@ export async function GET(request: NextRequest) {
       }))
       .sort((a, b) => b.propertyCount - a.propertyCount); // Cities with most properties first
 
-    console.log(`✅ FOUND ${citiesWithSufficientProperties.length} cities with ${minProperties}+ properties`);
     
     // Also include cities with fewer properties for context
     const citiesWithFewProperties = Object.entries(propertiesByCity)
@@ -137,7 +141,6 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('🚨 Nearby properties search error:', error);
     return NextResponse.json({ 
       error: 'Failed to search nearby properties',
       details: (error as Error).message

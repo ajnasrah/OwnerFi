@@ -11,13 +11,19 @@ import {
   serverTimestamp 
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import UnifiedMatchingService from '@/lib/unified-matching-service';
+import { isPropertyMatch } from '@/lib/matching';
 import { BuyerProfile } from '@/lib/firebase-models';
 import { PropertyListing } from '@/lib/property-schema';
 
 // Sync property matches across all buyers when properties change
 export async function POST(request: NextRequest) {
   try {
+    if (!db) {
+      return NextResponse.json(
+        { error: 'Database not available' },
+        { status: 500 }
+      );
+    }
     const body = await request.json();
     const { action, propertyId, propertyData } = body;
     // action: 'delete', 'add', 'update'
@@ -69,7 +75,6 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Property sync error:', error);
     return NextResponse.json(
       { error: 'Failed to sync property matches' },
       { status: 500 }
@@ -82,14 +87,14 @@ async function removePropertyFromAllBuyers(propertyId: string) {
   try {
     // Get all buyer profiles that have this property in their matches
     const buyersQuery = query(
-      collection(db, 'buyerProfiles'),
+      collection(db!, 'buyerProfiles'),
       where('matchedPropertyIds', 'array-contains', propertyId)
     );
     const buyerDocs = await getDocs(buyersQuery);
 
     // Update each buyer profile to remove the property
     const updatePromises = buyerDocs.docs.map(buyerDoc => {
-      const buyerRef = doc(db, 'buyerProfiles', buyerDoc.id);
+      const buyerRef = doc(db!, 'buyerProfiles', buyerDoc.id);
       return updateDoc(buyerRef, {
         matchedPropertyIds: arrayRemove(propertyId),
         likedPropertyIds: arrayRemove(propertyId), // Also remove from likes
@@ -99,10 +104,8 @@ async function removePropertyFromAllBuyers(propertyId: string) {
     });
 
     await Promise.all(updatePromises);
-    console.log(`Removed property ${propertyId} from ${buyerDocs.docs.length} buyer profiles`);
     
   } catch (error) {
-    console.error('Error removing property from buyers:', error);
     throw error;
   }
 }
@@ -111,7 +114,7 @@ async function removePropertyFromAllBuyers(propertyId: string) {
 async function addPropertyToMatchingBuyers(property: PropertyListing & { id: string }) {
   try {
     // Get all buyer profiles
-    const allBuyersQuery = query(collection(db, 'buyerProfiles'));
+    const allBuyersQuery = query(collection(db!, 'buyerProfiles'));
     const buyerDocs = await getDocs(allBuyersQuery);
 
     const updatePromises = [];
@@ -123,7 +126,7 @@ async function addPropertyToMatchingBuyers(property: PropertyListing & { id: str
       const matches = await checkPropertyMatchesBuyer(property, buyerData as BuyerProfile);
       
       if (matches) {
-        const buyerRef = doc(db, 'buyerProfiles', buyerDoc.id);
+        const buyerRef = doc(db!, 'buyerProfiles', buyerDoc.id);
         updatePromises.push(
           updateDoc(buyerRef, {
             matchedPropertyIds: arrayUnion(property.id),
@@ -135,10 +138,8 @@ async function addPropertyToMatchingBuyers(property: PropertyListing & { id: str
     }
 
     await Promise.all(updatePromises);
-    console.log(`Added property ${property.id} to ${updatePromises.length} matching buyer profiles`);
     
   } catch (error) {
-    console.error('Error adding property to buyers:', error);
     throw error;
   }
 }
@@ -173,7 +174,6 @@ async function checkPropertyMatchesBuyer(property: PropertyListing & { id: strin
     return requirementsMatch;
     
   } catch (error) {
-    console.error('Error checking property match:', error);
     return false;
   }
 }
@@ -184,7 +184,7 @@ export async function GET() {
     // This can be called periodically to refresh all buyer matches
     // Useful for cleaning up stale data or after system updates
     
-    const allBuyersQuery = query(collection(db, 'buyerProfiles'));
+    const allBuyersQuery = query(collection(db!, 'buyerProfiles'));
     const buyerDocs = await getDocs(allBuyersQuery);
     
     let refreshedCount = 0;
@@ -201,22 +201,42 @@ export async function GET() {
         serviceCities: criteria.cities || buyerData.searchAreaCities || [buyerData.preferredCity]
       };
 
-      const matchingProperties = await UnifiedMatchingService.findPropertiesForBuyer(
-        buyerLocation,
-        {
-          maxMonthlyPayment: criteria.maxMonthlyPayment || buyerData.maxMonthlyPayment || 0,
-          maxDownPayment: criteria.maxDownPayment || buyerData.maxDownPayment || 0
-        },
-        {
-          minBedrooms: buyerData.minBedrooms,
-          minBathrooms: buyerData.minBathrooms
-        }
-      );
+      // Get all properties and filter using existing matching logic
+      const propertiesQuery = query(collection(db!, 'properties'));
+      const propertiesSnapshot = await getDocs(propertiesQuery);
+      
+      const matchingProperties = propertiesSnapshot.docs
+        .map(doc => ({ id: doc.id, ...doc.data() } as PropertyListing))
+        .filter(property => {
+          // Use the isPropertyMatch function with proper data structure
+          const propertyForMatching = {
+            id: property.id,
+            monthlyPayment: property.monthlyPayment || 0,
+            downPaymentAmount: property.downPaymentAmount || 0,
+            city: property.city || '',
+            state: property.state || '',
+            bedrooms: property.bedrooms || 0,
+            bathrooms: property.bathrooms || 0
+          };
+          
+          const buyerForMatching = {
+            id: buyerData.id,
+            maxMonthlyPayment: criteria.maxMonthlyPayment || buyerData.maxMonthlyPayment || 0,
+            maxDownPayment: criteria.maxDownPayment || buyerData.maxDownPayment || 0,
+            preferredCity: buyerData.preferredCity || '',
+            preferredState: buyerData.preferredState || '',
+            searchRadius: criteria.searchRadius || buyerData.searchRadius || 25,
+            minBedrooms: buyerData.minBedrooms,
+            minBathrooms: buyerData.minBathrooms
+          };
+          
+          return isPropertyMatch(propertyForMatching, buyerForMatching).matches;
+        });
 
       const matchedIds = matchingProperties.map(p => p.id);
       
       // Update the buyer's matched properties
-      const buyerRef = doc(db, 'buyerProfiles', buyerDoc.id);
+      const buyerRef = doc(db!, 'buyerProfiles', buyerDoc.id);
       await updateDoc(buyerRef, {
         matchedPropertyIds: matchedIds,
         lastMatchUpdate: serverTimestamp(),
@@ -232,7 +252,6 @@ export async function GET() {
     });
 
   } catch (error) {
-    console.error('Refresh matches error:', error);
     return NextResponse.json(
       { error: 'Failed to refresh matches' },
       { status: 500 }

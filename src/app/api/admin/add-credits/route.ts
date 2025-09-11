@@ -10,7 +10,7 @@ import {
   updateDoc,
   serverTimestamp 
 } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getSafeDb } from '@/lib/firebase-safe';
 
 export async function POST(request: NextRequest) {
   try {
@@ -34,6 +34,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Find realtor by email
+    const db = getSafeDb();
     const usersQuery = query(
       collection(db, 'users'),
       where('email', '==', realtorEmail),
@@ -83,7 +84,6 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Failed to add credits:', error);
     return NextResponse.json(
       { error: 'Failed to add credits', details: (error as Error).message },
       { status: 500 }

@@ -25,7 +25,6 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('System health check failed:', error);
     
     return NextResponse.json(
       { 
@@ -87,7 +86,6 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Database cleanup failed:', error);
     
     return NextResponse.json(
       { 

@@ -118,7 +118,6 @@ export function getStreetViewImage(
   const apiKey = process.env.GOOGLE_MAPS_API_KEY;
   
   if (!apiKey) {
-    console.warn('Google Maps API key not configured for Street View images');
     return '';
   }
 

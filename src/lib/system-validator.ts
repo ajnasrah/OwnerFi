@@ -35,6 +35,17 @@ export class SystemValidator {
   static async validateDatabase(): Promise<ValidationResult[]> {
     const results: ValidationResult[] = [];
     
+    if (!db) {
+      results.push({
+        category: 'Database',
+        test: 'Firebase Connection',
+        status: 'fail',
+        message: 'Firestore database is not initialized',
+        fix: 'Check Firebase configuration and environment variables'
+      });
+      return results;
+    }
+    
     // Test 1: Firebase connection
     try {
       const testQuery = query(collection(db, 'properties'), firestoreLimit(1));
@@ -187,6 +198,17 @@ export class SystemValidator {
   static async validatePropertyMatching(): Promise<ValidationResult[]> {
     const results: ValidationResult[] = [];
     
+    if (!db) {
+      results.push({
+        category: 'Matching',
+        test: 'Property Matching Algorithm',
+        status: 'fail',
+        message: 'Firestore database is not initialized',
+        fix: 'Check Firebase configuration and environment variables'
+      });
+      return results;
+    }
+    
     try {
       // Get sample data for testing
       const propertiesQuery = query(collection(db, 'properties'), firestoreLimit(5));
@@ -323,6 +345,17 @@ export class SystemValidator {
     }
 
     // Test 2: User data integrity
+    if (!db) {
+      results.push({
+        category: 'Authentication',
+        test: 'User Data Integrity',
+        status: 'fail',
+        message: 'Firestore database is not initialized',
+        fix: 'Check Firebase configuration and environment variables'
+      });
+      return results;
+    }
+    
     try {
       const usersQuery = query(collection(db, 'users'), firestoreLimit(10));
       const userDocs = await getDocs(usersQuery);
@@ -371,7 +404,6 @@ export class SystemValidator {
 
   // Run comprehensive system health check
   static async runSystemHealthCheck(): Promise<SystemHealth> {
-    console.log('Starting comprehensive system health check...');
     
     const allResults: ValidationResult[] = [];
     
@@ -436,8 +468,6 @@ export class SystemValidator {
       }
     });
 
-    console.log(`System health check completed: ${overall}`);
-    console.log(`Results: ${summary.passed} passed, ${summary.warnings} warnings, ${summary.failed} failed`);
 
     return healthReport;
   }

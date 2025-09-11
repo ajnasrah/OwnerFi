@@ -56,7 +56,6 @@ export default function FavoritesPage() {
       
       if (!likedData.error) {
         setFavoriteProperties(likedData.properties || []);
-        console.log(`❤️ Loaded ${likedData.properties?.length || 0} liked properties`);
       } else {
         setFavoriteProperties([]);
       }
@@ -67,13 +66,11 @@ export default function FavoritesPage() {
       
       if (!passedData.error) {
         setPassedProperties(passedData.properties || []);
-        console.log(`👎 Loaded ${passedData.properties?.length || 0} passed properties`);
       } else {
         setPassedProperties([]);
       }
       
     } catch (error) {
-      console.error('Failed to fetch properties:', error);
       setFavoriteProperties([]);
       setPassedProperties([]);
     } finally {
@@ -170,7 +167,7 @@ export default function FavoritesPage() {
                     <div className="text-xs text-gray-600">Bathrooms</div>
                   </div>
                   <div>
-                    <div className="text-2xl font-bold text-gray-800">{property.squareFeet.toLocaleString()}</div>
+                    <div className="text-2xl font-bold text-gray-800">{property.squareFeet?.toLocaleString() || 'N/A'}</div>
                     <div className="text-xs text-gray-600">Sq Ft</div>
                   </div>
                 </div>
@@ -236,7 +233,7 @@ export default function FavoritesPage() {
                         <h3 className="font-semibold text-gray-800">{property.address}</h3>
                         <p className="text-gray-600 text-sm">{property.city}, {property.state}</p>
                         <p className="text-gray-600 text-sm">
-                          {property.bedrooms} bed • {property.bathrooms} bath • {property.squareFeet.toLocaleString()} sqft
+                          {property.bedrooms} bed • {property.bathrooms} bath • {property.squareFeet?.toLocaleString() || 'N/A'} sqft
                         </p>
                         
                         {/* More Details Link */}
@@ -289,11 +286,9 @@ export default function FavoritesPage() {
                                   
                                   if (response.ok) {
                                     setPassedProperties(prev => prev.filter(p => p.id !== property.id));
-                                    console.log('✅ Property restored to matches');
                                   }
                                 }
                               } catch (error) {
-                                console.error('Failed to restore property:', error);
                               }
                             }}
                             className="w-full bg-green-100 text-green-700 border border-green-300 px-3 py-1 rounded-lg text-sm hover:bg-green-200 transition-colors"
@@ -341,7 +336,7 @@ export default function FavoritesPage() {
                     <div className="text-xs text-gray-600">Bathrooms</div>
                   </div>
                   <div>
-                    <div className="text-2xl font-bold text-gray-800">{selectedProperty.squareFeet.toLocaleString()}</div>
+                    <div className="text-2xl font-bold text-gray-800">{selectedProperty.squareFeet?.toLocaleString() || 'N/A'}</div>
                     <div className="text-xs text-gray-600">Sq Ft</div>
                   </div>
                 </div>

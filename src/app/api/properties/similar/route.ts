@@ -22,6 +22,13 @@ import { PropertyListing } from "@/lib/property-schema";
 
 export async function GET(request: NextRequest) {
   try {
+    if (!db) {
+      return NextResponse.json(
+        { error: 'Database not available' },
+        { status: 500 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const propertyId = searchParams.get('propertyId');
     const city = searchParams.get('city');
@@ -37,12 +44,10 @@ export async function GET(request: NextRequest) {
       }, { status: 400 });
     }
 
-    console.log(`🔍 SIMILAR SEARCH: ${city}, ${state} - Price: $${listPrice}, Beds: ${bedrooms}, Baths: ${bathrooms}`);
 
     // Get all cities within 30-mile radius
     const searchCities = expandSearchToNearbyCities(city, state, 30);
     
-    console.log(`📍 Searching in ${searchCities.length} cities: ${searchCities.join(', ')}`);
 
     // Get all properties and filter in JavaScript (since we need complex city matching)
     const snapshot = await getDocs(collection(db, 'properties'));
@@ -91,7 +96,6 @@ export async function GET(request: NextRequest) {
       // Enhance each property with nearby cities data
       .map(property => enhancePropertyWithNearbyCities(property));
 
-    console.log(`✅ FOUND ${similarProperties.length} similar properties`);
 
     return NextResponse.json({
       originalProperty: { city, state, listPrice, bedrooms, bathrooms },
@@ -102,7 +106,6 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('🚨 Similar properties search error:', error);
     return NextResponse.json({ 
       error: 'Failed to find similar properties',
       properties: []

@@ -8,6 +8,13 @@ import { db } from '@/lib/firebase';
 
 export async function GET(_request: NextRequest) {
   try {
+    if (!db) {
+      return NextResponse.json(
+        { error: 'Database not available' },
+        { status: 500 }
+      );
+    }
+
     // Find all realtors with your email/name
     const realtorsQuery = query(
       collection(db, 'realtors')
@@ -65,7 +72,6 @@ export async function GET(_request: NextRequest) {
     });
     
   } catch (error) {
-    console.error('Failed to check credits:', error);
     return NextResponse.json(
       { error: 'Failed to check credits' },
       { status: 500 }

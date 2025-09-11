@@ -43,6 +43,10 @@ export async function searchPropertiesOptimized(
 ): Promise<PropertySearchResult> {
   const startTime = Date.now();
   
+  if (!db) {
+    throw new Error('Firestore database is not initialized');
+  }
+  
   try {
     // Build Firestore query constraints
     const constraints: QueryConstraint[] = [];
@@ -128,7 +132,6 @@ export async function searchPropertiesOptimized(
     };
     
   } catch (error) {
-    console.error('Optimized property search error:', error);
     throw error;
   }
 }
@@ -146,9 +149,8 @@ export async function searchPropertiesWithNearby(
   try {
     // Get all cities to search (center + nearby)
     const nearbyCities = await getNearbyCitiesDirect(centerCity, state, 30);
-    const allCities = [centerCity, ...nearbyCities];
+    const allCities = [centerCity, ...nearbyCities.map(city => city.name)];
     
-    console.log(`🔍 Searching ${allCities.length} cities for properties`);
     
     // Use optimized search with all cities
     const result = await searchPropertiesOptimized({
@@ -165,7 +167,6 @@ export async function searchPropertiesWithNearby(
     };
     
   } catch (error) {
-    console.error('Property search with nearby cities error:', error);
     throw error;
   }
 }
@@ -178,14 +179,19 @@ export async function getSimilarProperties(
   limit: number = 10
 ): Promise<(PropertyListing & { id: string })[]> {
   try {
+    const propertyCity = originalProperty.city?.split(',')[0].trim();
+    if (!propertyCity) {
+      return [];
+    }
+    
     // Get nearby cities for the original property
     const nearbyCities = await getNearbyCitiesDirect(
-      originalProperty.city?.split(',')[0].trim(),
+      propertyCity,
       originalProperty.state,
       30
     );
     
-    const searchCities = [originalProperty.city?.split(',')[0].trim(), ...nearbyCities];
+    const searchCities = [propertyCity, ...nearbyCities.map(city => city.name)];
     
     // Search for similar properties
     const result = await searchPropertiesOptimized({
@@ -204,7 +210,6 @@ export async function getSimilarProperties(
     return similarProperties;
     
   } catch (error) {
-    console.error('Similar properties search error:', error);
     return [];
   }
 }

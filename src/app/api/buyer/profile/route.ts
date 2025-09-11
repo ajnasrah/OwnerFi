@@ -27,6 +27,13 @@ import { ExtendedSession } from '@/types/session';
 
 export async function GET(request: NextRequest) {
   try {
+    if (!db) {
+      return NextResponse.json(
+        { error: 'Database not available' },
+        { status: 500 }
+      );
+    }
+
     const session = await getServerSession(authOptions) as ExtendedSession;
     
     if (!session?.user || session.user.role !== 'buyer') {
@@ -52,13 +59,19 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ profile });
 
   } catch (error) {
-    console.error('🚨 Get buyer profile error:', error);
     return NextResponse.json({ error: 'Failed to load profile' }, { status: 500 });
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
+    if (!db) {
+      return NextResponse.json(
+        { error: 'Database not available' },
+        { status: 500 }
+      );
+    }
+
     const session = await getServerSession(authOptions) as ExtendedSession;
     
     if (!session?.user || session.user.role !== 'buyer') {
@@ -66,6 +79,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
+    
     const {
       firstName,
       lastName,
@@ -75,6 +89,7 @@ export async function POST(request: NextRequest) {
       maxMonthlyPayment,
       maxDownPayment
     } = body;
+
 
     // Validate required fields
     if (!city || !state || !maxMonthlyPayment || !maxDownPayment) {
@@ -86,7 +101,7 @@ export async function POST(request: NextRequest) {
     // Get user contact info from database if not provided
     const userRecord = await unifiedDb.users.findById(session.user.id);
     
-    // Simple profile structure - ONLY what buyers need
+    // Consolidated profile structure - includes lead selling fields
     const profileData = {
       userId: session.user.id,
       
@@ -96,20 +111,43 @@ export async function POST(request: NextRequest) {
       email: session.user.email!,
       phone: phone || '',
       
-      // Search criteria - the ONLY thing that matters for matching
-      city: city,
-      state: state,
+      // Location (both formats for compatibility)
+      preferredCity: city,
+      preferredState: state,
+      city: city,                    // API compatibility
+      state: state,                  // API compatibility
+      searchRadius: 25,
+      
+      // Budget constraints
       maxMonthlyPayment: Number(maxMonthlyPayment),
       maxDownPayment: Number(maxDownPayment),
       
-      // Metadata
+      // Communication preferences
+      languages: ['English'],
+      emailNotifications: true,
+      smsNotifications: true,
+      
+      // System fields
       profileComplete: true,
+      isActive: true,
+      
+      // Property interaction arrays
+      matchedPropertyIds: [],
+      likedPropertyIds: [],
+      passedPropertyIds: [],
+      
+      // Lead selling fields
+      isAvailableForPurchase: true,
+      leadPrice: 1,
+      
+      // Activity tracking
+      lastActiveAt: serverTimestamp(),
+      
+      // Metadata
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     };
 
-    console.log(`💾 SAVING BUYER PROFILE: ${profileData.firstName} ${profileData.lastName} in ${city}`);
-    console.log(`💰 Budget: $${profileData.maxMonthlyPayment}/mo, $${profileData.maxDownPayment} down`);
 
     // Find existing profile or create new one
     const existingQuery = query(
@@ -127,13 +165,13 @@ export async function POST(request: NextRequest) {
         ...profileData,
         id: buyerId
       });
-      console.log('✅ CREATED new buyer profile');
     } else {
       // Update existing profile
       buyerId = existing.docs[0].id;
       await updateDoc(doc(db, 'buyerProfiles', buyerId), profileData);
-      console.log('✅ UPDATED buyer profile');
     }
+
+    // Lead selling fields are now part of the main profile - no separate buyerLinks needed
 
     return NextResponse.json({ 
       success: true,
@@ -142,7 +180,6 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('🚨 Save buyer profile error:', error);
     return NextResponse.json({ 
       error: 'Failed to save profile' 
     }, { status: 500 });

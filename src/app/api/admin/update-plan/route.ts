@@ -12,6 +12,13 @@ import { db } from '@/lib/firebase';
 
 export async function POST(request: NextRequest) {
   try {
+    if (!db) {
+      return NextResponse.json(
+        { error: 'Database not available' },
+        { status: 500 }
+      );
+    }
+
     const { realtorId, plan } = await request.json();
     
     // Update realtor document
@@ -41,7 +48,6 @@ export async function POST(request: NextRequest) {
     });
     
   } catch (error) {
-    console.error('Failed to update plan:', error);
     return NextResponse.json(
       { error: 'Failed to update plan' },
       { status: 500 }

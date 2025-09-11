@@ -21,6 +21,13 @@ import { PropertyListing } from "@/lib/property-schema";
 
 export async function GET(request: NextRequest) {
   try {
+    if (!db) {
+      return NextResponse.json(
+        { error: 'Database not available' },
+        { status: 500 }
+      );
+    }
+
     const session = await getServerSession(authOptions);
     
     if (!session?.user) {
@@ -46,7 +53,6 @@ export async function GET(request: NextRequest) {
     const searchCity = city.split(',')[0].trim();
     const searchState = state;
 
-    console.log(`🔍 BUYER SEARCH WITH NEARBY: ${searchCity}, Monthly: $${maxMonthly}, Down: $${maxDown}`);
 
     // Get ALL properties
     const snapshot = await getDocs(collection(db, 'properties'));
@@ -110,7 +116,6 @@ export async function GET(request: NextRequest) {
     })
     .slice(0, pageSize);
 
-    console.log(`✅ FOUND ${directProperties.length} direct + ${nearbyProperties.length} nearby = ${allResults.length} total properties`);
 
     return NextResponse.json({
       properties: allResults,
@@ -127,7 +132,6 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('🚨 Buyer properties error:', error);
     return NextResponse.json({ 
       error: 'Failed to load properties',
       properties: [],

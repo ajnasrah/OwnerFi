@@ -90,7 +90,7 @@ export function CityAutocomplete({
         setShowDropdown(filtered.length > 0);
       }
     } catch (error) {
-      console.error('City search failed:', error);
+      // Error handled silently
     } finally {
       setLoading(false);
     }

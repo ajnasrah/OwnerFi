@@ -31,7 +31,6 @@ const usCities: City[] = (citiesData as Array<{
   }))
   .filter((city: City) => city.state && city.lat && city.lng); // Valid data only
 
-console.log(`🇺🇸 Loaded ${usCities.length} US cities from comprehensive database`);
 
 /**
  * Calculate distance between two points using Haversine formula
@@ -74,7 +73,6 @@ export function getCitiesWithinRadiusComprehensive(
   // Find center city coordinates
   const centerCoords = getCityCoordinatesComprehensive(centerCity, centerState);
   if (!centerCoords) {
-    console.warn(`Center city not found: ${centerCity}, ${centerState}`);
     return [];
   }
 
@@ -89,7 +87,6 @@ export function getCitiesWithinRadiusComprehensive(
     .sort((a, b) => a.distance - b.distance);
 
   const endTime = Date.now() - startTime;
-  console.log(`🚀 FAST: Found ${nearbyCities.length} cities within ${radiusMiles} miles of ${centerCity}, ${centerState} in ${endTime}ms`);
 
   return nearbyCities;
 }

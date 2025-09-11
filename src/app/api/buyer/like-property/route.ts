@@ -17,6 +17,13 @@ import { ExtendedSession } from '@/types/session';
 
 export async function POST(request: NextRequest) {
   try {
+    if (!db) {
+      return NextResponse.json(
+        { error: 'Database not available' },
+        { status: 500 }
+      );
+    }
+
     const session = await getServerSession(authOptions) as ExtendedSession;
     
     if (!session?.user || session.user.role !== 'buyer') {
@@ -52,13 +59,11 @@ export async function POST(request: NextRequest) {
         likedProperties: arrayUnion(propertyId),
         updatedAt: serverTimestamp()
       });
-      console.log(`❤️ LIKED property ${propertyId} for buyer ${session.user.id}`);
     } else if (action === 'unlike') {
       await updateDoc(profileDoc.ref, {
         likedProperties: arrayRemove(propertyId),
         updatedAt: serverTimestamp()
       });
-      console.log(`💔 UNLIKED property ${propertyId} for buyer ${session.user.id}`);
     }
 
     return NextResponse.json({ 
@@ -68,7 +73,6 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('🚨 Like property error:', error);
     return NextResponse.json({ 
       error: 'Failed to update property preference' 
     }, { status: 500 });

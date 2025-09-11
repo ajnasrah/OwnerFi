@@ -152,102 +152,90 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* How It Works - For Buyers */}
-      <section className="bg-slate-800/30 py-16">
-        <div className="max-w-4xl mx-auto px-6">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-white mb-4">How It Works for Buyers</h2>
-            <p className="text-slate-300 text-lg">Simple steps to find your dream home with flexible financing</p>
-          </div>
+      {/* How It Works - Clean Design */}
+      <section className="bg-slate-800/20 py-20">
+        <div className="max-w-6xl mx-auto px-8">
           
-          <div className="grid md:grid-cols-3 gap-8">
-            {/* Step 1 */}
-            <div className="text-center">
-              <div className="w-16 h-16 bg-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6">
-                <span className="text-white text-2xl font-bold">1</span>
-              </div>
-              <h3 className="text-xl font-semibold text-white mb-4">Tell Us What You Want</h3>
-              <p className="text-slate-300 leading-relaxed">
-                Share your budget, preferred location, and what kind of home you're looking for. No credit checks required.
-              </p>
+          {/* For Buyers */}
+          <div className="mb-20">
+            <div className="text-center mb-16">
+              <h2 className="text-2xl font-bold text-emerald-400 mb-3">For Home Buyers</h2>
+              <p className="text-slate-300 text-base max-w-2xl mx-auto">Find your dream home with flexible owner financing</p>
             </div>
-
-            {/* Step 2 */}
-            <div className="text-center">
-              <div className="w-16 h-16 bg-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6">
-                <span className="text-white text-2xl font-bold">2</span>
+            
+            <div className="grid md:grid-cols-3 gap-12">
+              <div className="text-center">
+                <div className="w-12 h-12 bg-emerald-500/20 border-2 border-emerald-400 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <span className="text-emerald-400 text-lg font-bold">1</span>
+                </div>
+                <h3 className="text-lg font-semibold text-white mb-3">Set Preferences</h3>
+                <p className="text-slate-400 text-sm leading-relaxed">
+                  Tell us your budget and location preferences. No credit check required.
+                </p>
               </div>
-              <h3 className="text-xl font-semibold text-white mb-4">Browse Owner-Financed Homes</h3>
-              <p className="text-slate-300 leading-relaxed">
-                View properties from homeowners willing to offer direct financing. Skip the banks and deal directly with sellers.
-              </p>
-            </div>
 
-            {/* Step 3 */}
-            <div className="text-center">
-              <div className="w-16 h-16 bg-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6">
-                <span className="text-white text-2xl font-bold">3</span>
+              <div className="text-center">
+                <div className="w-12 h-12 bg-emerald-500/20 border-2 border-emerald-400 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <span className="text-emerald-400 text-lg font-bold">2</span>
+                </div>
+                <h3 className="text-lg font-semibold text-white mb-3">Browse Properties</h3>
+                <p className="text-slate-400 text-sm leading-relaxed">
+                  View owner-financed homes that match your criteria. Direct from sellers.
+                </p>
               </div>
-              <h3 className="text-xl font-semibold text-white mb-4">Connect & Close</h3>
-              <p className="text-slate-300 leading-relaxed">
-                Work directly with property owners to negotiate terms that work for both of you. Faster closings, flexible terms.
-              </p>
+
+              <div className="text-center">
+                <div className="w-12 h-12 bg-emerald-500/20 border-2 border-emerald-400 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <span className="text-emerald-400 text-lg font-bold">3</span>
+                </div>
+                <h3 className="text-lg font-semibold text-white mb-3">Connect & Close</h3>
+                <p className="text-slate-400 text-sm leading-relaxed">
+                  Work directly with owners for flexible terms and faster closings.
+                </p>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
 
-      {/* How It Works - For Realtors */}
-      <section className="bg-slate-900 py-16">
-        <div className="max-w-4xl mx-auto px-6">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-white mb-4">How It Works for Realtors</h2>
-            <p className="text-slate-300 text-lg">Get qualified buyer leads for owner-financed properties</p>
-          </div>
-          
-          <div className="grid md:grid-cols-3 gap-8">
-            {/* Step 1 */}
-            <div className="text-center">
-              <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-6">
-                <span className="text-white text-2xl font-bold">1</span>
-              </div>
-              <h3 className="text-xl font-semibold text-white mb-4">Set Your Service Area</h3>
-              <p className="text-slate-300 leading-relaxed">
-                Define the cities and regions where you want to receive buyer leads. Focus on your target markets.
-              </p>
+          {/* For Realtors */}
+          <div>
+            <div className="text-center mb-16">
+              <h2 className="text-2xl font-bold text-blue-400 mb-3">For Real Estate Agents</h2>
+              <p className="text-slate-300 text-base max-w-2xl mx-auto">Get qualified buyer leads for owner-financed properties</p>
             </div>
-
-            {/* Step 2 */}
-            <div className="text-center">
-              <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-6">
-                <span className="text-white text-2xl font-bold">2</span>
+            
+            <div className="grid md:grid-cols-3 gap-12">
+              <div className="text-center">
+                <div className="w-12 h-12 bg-blue-500/20 border-2 border-blue-400 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <span className="text-blue-400 text-lg font-bold">1</span>
+                </div>
+                <h3 className="text-lg font-semibold text-white mb-3">Set Service Area</h3>
+                <p className="text-slate-400 text-sm leading-relaxed">
+                  Define your target cities and regions for receiving buyer leads.
+                </p>
               </div>
-              <h3 className="text-xl font-semibold text-white mb-4">Receive Qualified Leads</h3>
-              <p className="text-slate-300 leading-relaxed">
-                Get pre-qualified buyers actively looking for owner-financed properties in your area. No cold calling needed.
-              </p>
-            </div>
 
-            {/* Step 3 */}
-            <div className="text-center">
-              <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-6">
-                <span className="text-white text-2xl font-bold">3</span>
+              <div className="text-center">
+                <div className="w-12 h-12 bg-blue-500/20 border-2 border-blue-400 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <span className="text-blue-400 text-lg font-bold">2</span>
+                </div>
+                <h3 className="text-lg font-semibold text-white mb-3">Get Qualified Leads</h3>
+                <p className="text-slate-400 text-sm leading-relaxed">
+                  Receive pre-qualified buyers looking for owner financing in your area.
+                </p>
               </div>
-              <h3 className="text-xl font-semibold text-white mb-4">Earn More Commissions</h3>
-              <p className="text-slate-300 leading-relaxed">
-                Help buyers find owner-financed properties and earn commissions on deals that traditional financing couldn't close.
-              </p>
+
+              <div className="text-center">
+                <div className="w-12 h-12 bg-blue-500/20 border-2 border-blue-400 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <span className="text-blue-400 text-lg font-bold">3</span>
+                </div>
+                <h3 className="text-lg font-semibold text-white mb-3">Earn Commissions</h3>
+                <p className="text-slate-400 text-sm leading-relaxed">
+                  Close deals that traditional financing couldn't handle.
+                </p>
+              </div>
             </div>
           </div>
-          
-          <div className="text-center mt-12">
-            <Link
-              href="/realtor-signup"
-              className="inline-block bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 text-white py-4 px-8 rounded-xl font-semibold text-lg transition-all duration-300 hover:scale-[1.02] shadow-lg"
-            >
-              Start Getting Leads
-            </Link>
-          </div>
+
         </div>
       </section>
 

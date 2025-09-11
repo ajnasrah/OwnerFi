@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { FirebaseDB } from '@/lib/firebase-db';
 
 export async function POST() {
@@ -71,7 +71,7 @@ export async function POST() {
           
         }
         
-      } catch (error) {
+      } catch {
         fixes.push({
           id: buyerData.id,
           name: `${buyerData.firstName} ${buyerData.lastName}`,
@@ -87,7 +87,7 @@ export async function POST() {
       fixes
     });
 
-  } catch (error) {
+  } catch {
     return NextResponse.json({ 
       error: 'Fix failed',
       details: (error as Error).message

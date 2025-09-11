@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { 
   collection, 
   query, 
@@ -6,7 +6,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
-export async function GET(_request: NextRequest) {
+export async function GET() {
   try {
     if (!db) {
       return NextResponse.json(
@@ -71,7 +71,7 @@ export async function GET(_request: NextRequest) {
       recentTransactions: creditTransactions.slice(0, 10)
     });
     
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: 'Failed to check credits' },
       { status: 500 }

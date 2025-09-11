@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { ExtendedSession, isExtendedSession } from '@/types/session';
 
 export default function HomePage() {
   const { data: session, status } = useSession();
@@ -13,9 +14,12 @@ export default function HomePage() {
   const getDashboardUrl = () => {
     if (status !== 'authenticated' || !session?.user) return null;
     
-    if ((session.user as any).role === 'buyer') return '/dashboard';
-    if ((session.user as any).role === 'realtor') return '/realtor-dashboard';
-    if ((session.user as any).role === 'admin') return '/admin';
+    if (isExtendedSession(session as any)) {
+      const extendedSession = session as ExtendedSession;
+      if (extendedSession.user.role === 'buyer') return '/dashboard';
+      if (extendedSession.user.role === 'realtor') return '/realtor-dashboard';
+      if (extendedSession.user.role === 'admin') return '/admin';
+    }
     return '/dashboard';
   };
 
@@ -42,7 +46,7 @@ export default function HomePage() {
           {status === 'authenticated' ? (
             <Link
               href={getDashboardUrl() || '/dashboard'}
-              className="bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+              className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white px-4 py-2 rounded-xl font-semibold text-sm transition-all duration-300 hover:scale-105 shadow-lg shadow-emerald-500/25"
             >
               Go to Dashboard
             </Link>

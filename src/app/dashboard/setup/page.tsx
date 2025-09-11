@@ -104,24 +104,23 @@ export default function BuyerSetup() {
       </header>
 
       {/* Main Content */}
-      <div className="flex flex-col justify-center min-h-[calc(100vh-80px)] px-4">
+      <div style={{ paddingTop: '2rem', paddingBottom: '2rem' }} className="px-6">
         <div className="max-w-md mx-auto w-full">
-          
-          <div className="bg-slate-800/50 backdrop-blur-lg border border-slate-700/50 rounded-xl p-6">
-            <div className="text-center mb-6">
-              <h1 className="text-2xl font-bold text-white mb-2">Set Your Preferences</h1>
-              <p className="text-slate-300 text-sm">Tell us what you're looking for</p>
+          <div className="bg-slate-800/50 backdrop-blur-lg border border-slate-700/50 rounded-2xl p-8 shadow-2xl">
+            <div className="text-center mb-8">
+              <h1 className="text-3xl font-bold text-white mb-3">Set Your Preferences</h1>
+              <p className="text-lg text-white font-normal mb-4">Tell us what you're looking for</p>
             </div>
 
             {error && (
-              <div className="bg-red-500/20 border border-red-400/30 rounded-lg p-3 mb-4">
-                <p className="text-red-300 text-sm">{error}</p>
+              <div className="p-4 mb-6 bg-red-600/20 backdrop-blur-lg border border-red-500/30 rounded-xl text-red-300 font-semibold">
+                {error}
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-white mb-2">Search Location</label>
+                <label className="block text-sm font-semibold mb-3" style={{color: 'white'}}>Search Location</label>
                 <GooglePlacesAutocomplete
                   value={formData.city}
                   onChange={(city) => setFormData(prev => ({ ...prev, city }))}
@@ -130,37 +129,37 @@ export default function BuyerSetup() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-white mb-2">
+                <label className="block text-sm font-semibold mb-3" style={{color: 'white'}}>
                   Maximum Monthly Payment
                 </label>
                 <input
                   type="number"
                   value={formData.maxMonthlyPayment}
                   onChange={(e) => setFormData(prev => ({ ...prev, maxMonthlyPayment: e.target.value }))}
-                  className="w-full p-3 bg-slate-700/50 border border-slate-600 rounded-lg focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 text-white placeholder-slate-400"
+                  className="w-full px-4 py-4 bg-emerald-500/10 border border-emerald-400/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 text-white placeholder-slate-400 font-normal"
                   placeholder="2000"
                   min="1"
                   required
                 />
-                <p className="text-slate-400 text-xs mt-1">
+                <p className="text-slate-400 text-sm mt-2">
                   This includes principal, interest, insurance, and taxes
                 </p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-white mb-2">
+                <label className="block text-sm font-semibold mb-3" style={{color: 'white'}}>
                   Maximum Down Payment
                 </label>
                 <input
                   type="number"
                   value={formData.maxDownPayment}
                   onChange={(e) => setFormData(prev => ({ ...prev, maxDownPayment: e.target.value }))}
-                  className="w-full p-3 bg-slate-700/50 border border-slate-600 rounded-lg focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 text-white placeholder-slate-400"
+                  className="w-full px-4 py-4 bg-emerald-500/10 border border-emerald-400/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 text-white placeholder-slate-400 font-normal"
                   placeholder="50000"
                   min="1"
                   required
                 />
-                <p className="text-slate-400 text-xs mt-1">
+                <p className="text-slate-400 text-sm mt-2">
                   The upfront payment you can afford to make
                 </p>
               </div>
@@ -168,7 +167,7 @@ export default function BuyerSetup() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-3 px-4 rounded-lg font-medium transition-colors disabled:opacity-50 mt-6"
+                className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-300 hover:scale-105 shadow-2xl shadow-emerald-500/25 disabled:opacity-50 disabled:cursor-not-allowed mt-8"
               >
                 {loading ? 'Setting up...' : 'Show Me Properties'}
               </button>

@@ -84,7 +84,7 @@ export function GooglePlacesAutocomplete({
                 });
               });
             }
-          } catch (error) {
+          } catch {
             console.error('Place selection error:', error);
           }
         });
@@ -94,7 +94,7 @@ export function GooglePlacesAutocomplete({
             google.maps.event.removeListener(listener);
           }
         };
-      } catch (error) {
+      } catch {
         console.error('Autocomplete initialization failed:', error);
         setMapsLoadError(true);
         setIsLoading(false);
@@ -159,7 +159,7 @@ export function GooglePlacesAutocomplete({
           type="text"
           value={value}
           onChange={handleInputChange}
-          className="w-full p-3 bg-slate-700/50 border border-slate-600 rounded-lg focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 text-white placeholder-slate-400"
+          className="w-full px-4 py-4 bg-emerald-500/10 border border-emerald-400/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 text-white placeholder-slate-400 font-normal"
           placeholder={isLoading ? "Loading maps..." : placeholder}
           disabled={isLoading}
         />

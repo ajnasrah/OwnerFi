@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { ExtendedSession, isExtendedSession } from '@/types/session';
 
 interface BuyerProfile {
   id: string;
@@ -31,7 +32,8 @@ interface Property {
   imageUrl?: string;
   displayTag?: string;
   matchReason?: string;
-  resultType?: 'direct' | 'nearby';
+  resultType?: 'direct' | 'nearby' | 'liked';
+  isLiked?: boolean;
 }
 
 export default function Dashboard() {
@@ -48,14 +50,14 @@ export default function Dashboard() {
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/');
-    } else if (status === 'authenticated' && (session?.user as any)?.role !== 'buyer') {
+    } else if (status === 'authenticated' && isExtendedSession(session as any) && (session as any)?.user?.role !== 'buyer') {
       router.push('/');
     }
   }, [status, session, router]);
 
   // Load data
   useEffect(() => {
-    if (status === 'authenticated' && (session?.user as any)?.role === 'buyer') {
+    if (status === 'authenticated' && isExtendedSession(session as any) && (session as any)?.user?.role === 'buyer') {
       loadData();
     }
   }, [status, session]);
@@ -107,7 +109,7 @@ export default function Dashboard() {
           setLikedProperties(prev => [...prev, propertyId]);
         }
       }
-    } catch (error) {
+    } catch {
       // Error updating like status
     }
   };
@@ -242,12 +244,30 @@ export default function Dashboard() {
               {/* Gradient Overlay */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
               
-              {/* Like Badge */}
-              {likedProperties.includes(currentProperty.id) && (
-                <div className="absolute top-4 right-4 bg-gradient-to-r from-red-500 to-red-600 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-xl border border-red-400/30">
-                  ❤️ SAVED
-                </div>
-              )}
+              {/* Property Tags */}
+              <div className="absolute top-4 right-4 flex flex-col gap-2">
+                {/* Display Tag (liked, nearby, etc.) */}
+                {currentProperty.displayTag && (
+                  <div className={`px-4 py-2 rounded-xl text-sm font-bold shadow-xl border ${
+                    currentProperty.displayTag.includes('❤️') 
+                      ? 'bg-gradient-to-r from-red-500 to-red-600 text-white border-red-400/30'
+                      : currentProperty.displayTag === 'Nearby'
+                      ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white border-blue-400/30'
+                      : currentProperty.displayTag.includes('Over Budget')
+                      ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white border-orange-400/30'
+                      : 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white border-emerald-400/30'
+                  }`}>
+                    {currentProperty.displayTag}
+                  </div>
+                )}
+                
+                {/* Legacy Like Badge - show only if no displayTag with heart */}
+                {likedProperties.includes(currentProperty.id) && !currentProperty.displayTag?.includes('❤️') && (
+                  <div className="bg-gradient-to-r from-red-500 to-red-600 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-xl border border-red-400/30">
+                    ❤️ SAVED
+                  </div>
+                )}
+              </div>
               
               {/* Property Title Overlay */}
               <div className="absolute bottom-4 left-4 right-4 text-white">

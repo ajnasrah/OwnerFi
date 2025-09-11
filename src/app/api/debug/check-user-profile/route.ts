@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { FirebaseDB } from '@/lib/firebase-db';
 
-export async function POST(request: NextRequest) {
+export async function POST() {
   try {
     const { email } = await request.json();
     
@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
       buyerLinks: buyerLinks
     });
 
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Failed' }, { status: 500 });
   }
 }

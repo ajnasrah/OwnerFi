@@ -12,10 +12,13 @@ export default function RealtorSettings() {
   const { data: session, status } = useSession();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const [targetCity, setTargetCity] = useState('');
   const [nearbyCities, setNearbyCities] = useState<Array<{name: string, state: string, distance: number}>>([]);
   const [selectedCities, setSelectedCities] = useState<Set<string>>(new Set());
   const [sessionCheckPaused, setSessionCheckPaused] = useState(false);
+  const [currentSavedCities, setCurrentSavedCities] = useState<string[]>([]);
+  const [loadingCurrentCities, setLoadingCurrentCities] = useState(true);
 
   // Auth check with session-safe handling  
   useEffect(() => {
@@ -41,6 +44,56 @@ export default function RealtorSettings() {
     return () => window.removeEventListener('googleMapsReady', handleGoogleMapsInteraction);
   }, []);
 
+  // Fetch current saved cities
+  useEffect(() => {
+    if (status === 'authenticated' && session?.user) {
+      fetchCurrentCities();
+    }
+  }, [status, session]);
+
+  const fetchCurrentCities = async () => {
+    try {
+      setLoadingCurrentCities(true);
+      const response = await fetch('/api/realtor/profile');
+      const data = await response.json();
+      
+      if (data.success) {
+        setCurrentSavedCities(data.data.serviceCities || []);
+        setTargetCity(data.data.targetCity || '');
+      }
+    } catch (err) {
+      console.error('Failed to fetch current cities:', err);
+    } finally {
+      setLoadingCurrentCities(false);
+    }
+  };
+
+  const handleRemoveCity = async (cityToRemove: string) => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/realtor/profile', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cityToRemove })
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        setCurrentSavedCities(data.updatedServiceCities);
+        setError('');
+        setSuccessMessage('City removed successfully!');
+        setTimeout(() => setSuccessMessage(''), 3000);
+      } else {
+        setError('Failed to remove city');
+      }
+    } catch (err) {
+      setError('Failed to remove city');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (status === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-900">
@@ -52,6 +105,7 @@ export default function RealtorSettings() {
   const handleCitySearch = () => {
     if (!targetCity.trim()) {
       setError('Please enter a target city');
+      setSuccessMessage('');
       return;
     }
 
@@ -68,8 +122,10 @@ export default function RealtorSettings() {
       setSelectedCities(allCityKeys);
       
       setError('');
+      setSuccessMessage('');
     } catch (err) {
       setError('City not found. Please try again.');
+      setSuccessMessage('');
     }
   };
 
@@ -118,7 +174,14 @@ export default function RealtorSettings() {
       });
 
       if (response.ok) {
-        router.push('/realtor-dashboard');
+        // Refresh the current cities list
+        await fetchCurrentCities();
+        // Clear the new cities selection
+        setNearbyCities([]);
+        setSelectedCities(new Set());
+        setTargetCity('');
+        setSuccessMessage('Cities saved successfully!');
+        setTimeout(() => setSuccessMessage(''), 3000);
       } else {
         setError('Failed to save settings');
       }
@@ -159,8 +222,70 @@ export default function RealtorSettings() {
           </div>
         )}
 
-        {/* City Input */}
+        {successMessage && (
+          <div className="bg-emerald-500/20 border border-emerald-400/30 rounded-lg p-3 mb-4">
+            <p className="text-emerald-300 text-sm">{successMessage}</p>
+          </div>
+        )}
+
+        {/* Current Saved Cities */}
+        {loadingCurrentCities ? (
+          <div className="mb-6">
+            <h3 className="text-white font-medium mb-3">Current Cities</h3>
+            <div className="bg-slate-800/50 border border-slate-700/50 rounded-lg p-4 text-center">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-emerald-400 mx-auto"></div>
+              <p className="text-slate-400 text-sm mt-2">Loading cities...</p>
+            </div>
+          </div>
+        ) : currentSavedCities.length > 0 ? (
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-white font-medium">
+                Current Cities ({currentSavedCities.length})
+              </h3>
+              <button
+                onClick={fetchCurrentCities}
+                className="text-emerald-400 hover:text-emerald-300 text-xs font-medium"
+              >
+                Refresh
+              </button>
+            </div>
+            <div className="bg-slate-800/50 border border-slate-700/50 rounded-lg p-3 max-h-48 overflow-y-auto">
+              <div className="space-y-2">
+                {[...currentSavedCities].sort().map((city) => (
+                  <div
+                    key={city}
+                    className="flex items-center justify-between p-2 rounded-lg hover:bg-slate-700/30 transition-colors"
+                  >
+                    <span className="text-white text-sm">{city}</span>
+                    <button
+                      onClick={() => handleRemoveCity(city)}
+                      disabled={loading}
+                      className="text-red-400 hover:text-red-300 text-xs font-medium disabled:opacity-50"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <p className="text-slate-400 text-xs mt-2">
+              Click "Remove" next to any city you no longer want to serve
+            </p>
+          </div>
+        ) : (
+          <div className="mb-6">
+            <h3 className="text-white font-medium mb-3">Current Cities</h3>
+            <div className="bg-slate-800/50 border border-slate-700/50 rounded-lg p-4 text-center">
+              <p className="text-slate-400 text-sm">No cities saved yet</p>
+              <p className="text-slate-500 text-xs mt-1">Use the form below to add cities to your service area</p>
+            </div>
+          </div>
+        )}
+
+        {/* Add New Cities */}
         <div className="mb-4">
+          <h3 className="text-white font-medium mb-3">Add New Cities</h3>
           <label className="block text-sm font-medium text-white mb-2">Primary City</label>
           <div className="flex gap-2">
             <div className="flex-1">

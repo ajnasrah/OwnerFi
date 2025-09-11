@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { 
@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Admin access control
-    const session = await getServerSession(authOptions) as any;
+    const session = await getServerSession(authOptions) as ExtendedSession | null;
     
     if (!session?.user || (session as ExtendedSession).user.role !== 'admin') {
       return NextResponse.json(
@@ -97,7 +97,7 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const session = await getServerSession(authOptions) as any;
+    const session = await getServerSession(authOptions) as ExtendedSession | null;
     
     if (!session?.user || (session as ExtendedSession).user.role !== 'admin') {
       return NextResponse.json(
@@ -156,7 +156,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const session = await getServerSession(authOptions) as any;
+    const session = await getServerSession(authOptions) as ExtendedSession | null;
     
     if (!session?.user || (session as ExtendedSession).user.role !== 'admin') {
       return NextResponse.json(

@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { ConsolidatedLeadSystem } from '@/lib/consolidated-lead-system';
 import { FirebaseDB } from '@/lib/firebase-db';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // Test Memphis realtor profile
     const memphisRealtorProfile = {
@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
       }))
     });
 
-  } catch (error) {
+  } catch {
     return NextResponse.json({ 
       error: 'Failed', 
       details: (error as Error).message 

@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { FirebaseDB } from '@/lib/firebase-db';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // Get all realtors
     const realtors = await FirebaseDB.queryDocuments('users', [
@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
       realtors: realtorList
     });
     
-  } catch (error) {
+  } catch {
     return NextResponse.json({ 
       error: 'Failed', 
       details: (error as Error).message 

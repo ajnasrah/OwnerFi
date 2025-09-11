@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { 
   collection, 
   query, 
@@ -15,7 +15,7 @@ import { db } from '@/lib/firebase';
 import { logError, logInfo } from '@/lib/logger';
 
 // GET - Fetch all disputes for admin review
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     if (!db) {
       return NextResponse.json(
@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
               }
             }
           }
-        } catch (error) {
+        } catch {
         }
       }
       

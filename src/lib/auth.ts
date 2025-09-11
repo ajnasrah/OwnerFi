@@ -77,7 +77,7 @@ export const authOptions: any = {
     },
     async session({ session, token }: any) {
       if (token && session.user) {
-        session.user.id = token.sub!;
+        session.user.id = token.sub;
         session.user.role = token.role;
       }
       return session;
@@ -87,7 +87,7 @@ export const authOptions: any = {
     signIn: '/auth/signin',
   },
   session: {
-    strategy: 'jwt',
+    strategy: 'jwt' as const,
     maxAge: 30 * 24 * 60 * 60, // 30 days
     updateAge: 24 * 60 * 60, // 24 hours
   },

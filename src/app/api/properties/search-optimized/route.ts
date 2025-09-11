@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
+import { ExtendedSession } from '@/types/session';
 import { searchPropertiesWithNearby } from '@/lib/property-search-optimized';
 
 /**
@@ -18,7 +19,7 @@ export async function GET(request: NextRequest) {
   const startTime = Date.now();
   
   try {
-    const session = await getServerSession(authOptions) as any;
+    const session = await getServerSession(authOptions) as ExtendedSession | null;
     
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

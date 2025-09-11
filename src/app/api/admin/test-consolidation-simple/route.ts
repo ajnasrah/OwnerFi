@@ -1,9 +1,10 @@
 // SIMPLE CONSOLIDATION TEST - Browser-accessible endpoint for testing
 // Creates Dallas buyer + Memphis buyer, then tests realtor matching
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { ConsolidatedLeadSystem } from '@/lib/consolidated-lead-system';
 import { FirebaseDB } from '@/lib/firebase-db';
+import { BuyerProfile, User } from '@/lib/firebase-models';
 
 interface TestBuyer {
   id: string;
@@ -172,8 +173,22 @@ async function createDallasMemphisTest() {
 async function testMatching() {
   
   const results = {
-    dallasRealtorMatches: [] as any[],
-    memphisRealtorMatches: [] as any[],
+    dallasRealtorMatches: [] as Array<{
+      id: string;
+      name: string;
+      city: string;
+      state: string;
+      score: number;
+      reasons: string[];
+    }>,
+    memphisRealtorMatches: [] as Array<{
+      id: string;
+      name: string;
+      city: string;
+      state: string;
+      score: number;
+      reasons: string[];
+    }>,
     crossStateTest: {
       dallasRealtorInMemphis: 0,
       memphisRealtorInDallas: 0
@@ -258,7 +273,7 @@ async function testMatching() {
     else results.summary.failed++;
     
     
-  } catch (error) {
+  } catch {
     results.summary.failed++;
   }
   
@@ -302,7 +317,7 @@ async function cleanupTestData() {
     const testBuyers = await FirebaseDB.queryDocuments('buyerProfiles', []);
     
     for (const buyer of testBuyers) {
-      const b = buyer as any;
+      const b = buyer as BuyerProfile & { id: string };
       if (b.email && (b.email.includes('.test') || b.email.includes('ownerfi.test'))) {
         await FirebaseDB.deleteDocument('buyerProfiles', b.id);
         results.buyersDeleted++;
@@ -315,7 +330,7 @@ async function cleanupTestData() {
     ]);
     
     for (const realtor of testRealtors) {
-      const r = realtor as any;
+      const r = realtor as User & { id: string };
       if (r.email && (r.email.includes('.test') || r.id.includes('test_'))) {
         await FirebaseDB.deleteDocument('users', r.id);
         results.realtorsDeleted++;

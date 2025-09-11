@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { FirebaseDB } from '@/lib/firebase-db';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     
     // Get all buyer links
@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
       buyers: summary
     });
 
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Failed' }, { status: 500 });
   }
 }

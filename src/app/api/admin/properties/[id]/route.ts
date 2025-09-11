@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
@@ -19,7 +19,7 @@ export async function GET(
     }
 
     const resolvedParams = await params;
-    const session = await getServerSession(authOptions) as any;
+    const session = await getServerSession(authOptions) as ExtendedSession | null;
     if (!session?.user || (session as ExtendedSession).user.role !== 'admin') {
       return NextResponse.json(
         { error: 'Admin access required' },
@@ -62,7 +62,7 @@ export async function PUT(
     }
 
     const resolvedParams = await params;
-    const session = await getServerSession(authOptions) as any;
+    const session = await getServerSession(authOptions) as ExtendedSession | null;
     if (!session?.user || (session as ExtendedSession).user.role !== 'admin') {
       return NextResponse.json(
         { error: 'Admin access required' },

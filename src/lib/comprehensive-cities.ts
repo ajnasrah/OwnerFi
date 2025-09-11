@@ -66,7 +66,7 @@ export function getCityCoordinatesComprehensive(cityName: string, state: string)
 export function getCitiesWithinRadiusComprehensive(
   centerCity: string, 
   centerState: string, 
-  radiusMiles: number = 30
+  radiusMiles: number = 35
 ): CityWithDistance[] {
   const startTime = Date.now();
   
@@ -97,7 +97,7 @@ export function getCitiesWithinRadiusComprehensive(
 export function getNearbyCityNamesForProperty(
   propertyCity: string,
   propertyState: string,
-  radiusMiles: number = 30,
+  radiusMiles: number = 35,
   maxCities: number = 100
 ): string[] {
   const nearbyCities = getCitiesWithinRadiusComprehensive(propertyCity, propertyState, radiusMiles);
@@ -114,7 +114,7 @@ export function getNearbyCityNamesForProperty(
 export function getCitiesWithDistancesForDisplay(
   centerCity: string,
   centerState: string,
-  radiusMiles: number = 30,
+  radiusMiles: number = 35,
   limit: number = 20
 ): CityWithDistance[] {
   return getCitiesWithinRadiusComprehensive(centerCity, centerState, radiusMiles)

@@ -1,4 +1,4 @@
-import { collection, doc, getDoc, setDoc, updateDoc, deleteDoc, query, where, getDocs, orderBy, limit, DocumentReference, DocumentData, QuerySnapshot } from 'firebase/firestore';
+import { collection, doc, getDoc, setDoc, updateDoc, deleteDoc, query, where, getDocs, orderBy as firestoreOrderBy, limit, DocumentReference, DocumentData, QuerySnapshot } from 'firebase/firestore';
 import { getSafeDb } from './firebase-safe';
 
 /**

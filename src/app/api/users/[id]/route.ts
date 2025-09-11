@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getSessionWithRole } from '@/lib/auth-utils';
 import { unifiedDb } from '@/lib/unified-db';
 
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       user: userData
     });
 
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: 'Failed to fetch user data' },
       { status: 500 }

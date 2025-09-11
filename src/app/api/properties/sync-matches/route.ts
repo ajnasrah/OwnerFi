@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { 
   collection, 
   query, 
@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
       message: `Property matches synced for ${action} action`
     });
 
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: 'Failed to sync property matches' },
       { status: 500 }
@@ -105,7 +105,7 @@ async function removePropertyFromAllBuyers(propertyId: string) {
 
     await Promise.all(updatePromises);
     
-  } catch (error) {
+  } catch {
     throw error;
   }
 }
@@ -139,7 +139,7 @@ async function addPropertyToMatchingBuyers(property: PropertyListing & { id: str
 
     await Promise.all(updatePromises);
     
-  } catch (error) {
+  } catch {
     throw error;
   }
 }
@@ -173,7 +173,7 @@ async function checkPropertyMatchesBuyer(property: PropertyListing & { id: strin
     
     return requirementsMatch;
     
-  } catch (error) {
+  } catch {
     return false;
   }
 }
@@ -251,7 +251,7 @@ export async function GET() {
       message: `Refreshed matches for ${refreshedCount} buyers`
     });
 
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: 'Failed to refresh matches' },
       { status: 500 }

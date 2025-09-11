@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { ConsolidatedLeadSystem } from '@/lib/consolidated-lead-system';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // Test realtor profiles for each city
     const realtorProfiles = [
@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
         });
         
         
-      } catch (error) {
+      } catch {
         results.push({
           realtor: realtorProfile.name,
           error: (error as Error).message
@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
       testResults: results
     });
 
-  } catch (error) {
+  } catch {
     return NextResponse.json({ 
       error: 'Failed', 
       details: (error as Error).message 

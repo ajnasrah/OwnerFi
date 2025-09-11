@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { ExtendedSession, isExtendedSession } from '@/types/session';
 
 import { PropertyListing } from '@/lib/property-schema';
 
@@ -37,14 +38,14 @@ export default function LikedProperties() {
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/auth/signin');
-    } else if (status === 'authenticated' && (session?.user as any)?.role !== 'buyer') {
+    } else if (status === 'authenticated' && isExtendedSession(session as any) && (session as any)?.user?.role !== 'buyer') {
       router.push('/auth/signin');
     }
   }, [status, session, router]);
 
   // Load liked properties
   useEffect(() => {
-    if (status === 'authenticated' && (session?.user as any)?.role === 'buyer') {
+    if (status === 'authenticated' && isExtendedSession(session as any) && (session as any)?.user?.role === 'buyer') {
       loadLikedProperties();
     }
   }, [status, session]);
@@ -82,7 +83,7 @@ export default function LikedProperties() {
       if (response.ok) {
         setProperties(prev => prev.filter(p => p.id !== propertyId));
       }
-    } catch (error) {
+    } catch {
     }
   };
 

@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { FirebaseDB } from '@/lib/firebase-db';
 import { ConsolidatedLeadSystem } from '@/lib/consolidated-lead-system';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     
     // Get all buyer profiles
@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
       systemStats: stats
     });
 
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Failed', details: (error as Error).message }, { status: 500 });
   }
 }

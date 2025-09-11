@@ -514,7 +514,7 @@ export default function AdminDashboard() {
                           } else {
                             alert(`❌ Error: ${data.error}`);
                           }
-                        } catch {
+                        } catch (error) {
                           alert(`❌ Failed to clean database: ${error}`);
                         }
                       }

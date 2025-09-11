@@ -40,7 +40,7 @@ export default function AboutPage() {
             <h2 className="text-3xl font-bold text-white mb-6">Our Mission</h2>
             <p className="text-slate-300 text-lg leading-relaxed mb-6">
               Traditional lending has failed millions of good families. Self-employed entrepreneurs, people with medical debt, 
-              families who faced financial hardship during life's unexpected challenges - they all deserve a path to homeownership.
+              families who faced financial hardship during life&apos;s unexpected challenges - they all deserve a path to homeownership.
             </p>
             <p className="text-slate-300 text-lg leading-relaxed">
               We believe homeownership shouldn&apos;t be limited to those with perfect credit scores. 
@@ -123,7 +123,7 @@ export default function AboutPage() {
             
             <div className="mt-8 text-center">
               <p className="text-slate-300 text-lg leading-relaxed">
-                Millions of hardworking families are stuck in the rental cycle, paying someone else's mortgage 
+                Millions of hardworking families are stuck in the rental cycle, paying someone else&apos;s mortgage 
                 while building no equity for themselves. Traditional banking serves only those with perfect credit histories, 
                 leaving behind good people who&apos;ve faced life&apos;s challenges.
               </p>

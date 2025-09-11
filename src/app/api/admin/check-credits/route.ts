@@ -71,7 +71,7 @@ export async function GET() {
       recentTransactions: creditTransactions.slice(0, 10)
     });
     
-  } catch {
+  } catch (error) {
     return NextResponse.json(
       { error: 'Failed to check credits' },
       { status: 500 }

@@ -35,7 +35,7 @@ export async function POST() {
       buyerLinks: buyerLinks
     });
 
-  } catch {
+  } catch (error) {
     return NextResponse.json({ error: 'Failed' }, { status: 500 });
   }
 }

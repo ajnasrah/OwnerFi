@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getSessionWithRole } from '@/lib/auth-utils';
 import Stripe from 'stripe';
 import { 
@@ -128,7 +128,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-  } catch {
+  } catch (error) {
     return NextResponse.json(
       { error: 'Failed to cancel subscription' },
       { status: 500 }

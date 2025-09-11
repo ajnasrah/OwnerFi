@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { 
   collection, 
   query, 
@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
       propertyId 
     });
 
-  } catch {
+  } catch (error) {
     return NextResponse.json({ 
       error: 'Failed to update property preference' 
     }, { status: 500 });

@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { PropertyListing } from '@/lib/property-schema';
@@ -129,7 +129,7 @@ export async function GET(request: NextRequest) {
       }
     });
 
-  } catch {
+  } catch (error) {
     return NextResponse.json({ 
       error: 'Search failed',
       details: (error as Error).message

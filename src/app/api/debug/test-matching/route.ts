@@ -44,7 +44,7 @@ export async function GET() {
         });
         
         
-      } catch {
+      } catch (error) {
         results.push({
           realtor: realtorProfile.name,
           error: (error as Error).message
@@ -57,7 +57,7 @@ export async function GET() {
       testResults: results
     });
 
-  } catch {
+  } catch (error) {
     return NextResponse.json({ 
       error: 'Failed', 
       details: (error as Error).message 

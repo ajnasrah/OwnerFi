@@ -84,7 +84,7 @@ export function GooglePlacesAutocomplete({
                 });
               });
             }
-          } catch {
+          } catch (error) {
             console.error('Place selection error:', error);
           }
         });
@@ -94,7 +94,7 @@ export function GooglePlacesAutocomplete({
             google.maps.event.removeListener(listener);
           }
         };
-      } catch {
+      } catch (error) {
         console.error('Autocomplete initialization failed:', error);
         setMapsLoadError(true);
         setIsLoading(false);

@@ -61,7 +61,7 @@ export function GoogleCityAutocomplete({ value, onChange, label, placeholder = "
         setSuggestions(cityNames);
         setShowDropdown(cityNames.length > 0);
       }
-    } catch {
+    } catch (error) {
       setSuggestions([]);
       setShowDropdown(false);
     } finally {

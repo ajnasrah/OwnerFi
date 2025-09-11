@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getSessionWithRole } from '@/lib/auth-utils';
 import { FirebaseDB } from '@/lib/firebase-db';
 import { Timestamp } from 'firebase/firestore';
@@ -134,7 +134,7 @@ export async function POST(request: NextRequest) {
       message: 'Dispute submitted successfully. Our team will review it within 24-48 hours.'
     });
 
-  } catch {
+  } catch (error) {
     await logError('Lead dispute submission failed', {
       action: 'dispute_submission_error'
     }, error as Error);

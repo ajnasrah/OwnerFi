@@ -103,7 +103,7 @@ export async function GET() {
       debugResults
     });
 
-  } catch {
+  } catch (error) {
     return NextResponse.json({ error: 'Debug failed' }, { status: 500 });
   }
 }

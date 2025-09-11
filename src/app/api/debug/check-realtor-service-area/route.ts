@@ -62,7 +62,7 @@ export async function POST() {
       fullRealtorData: realtorData
     });
     
-  } catch {
+  } catch (error) {
     return NextResponse.json({ 
       error: 'Failed', 
       details: (error as Error).message 

@@ -92,7 +92,7 @@ export async function GET() {
       }
     });
 
-  } catch {
+  } catch (error) {
     return NextResponse.json({ 
       error: 'Analysis failed',
       details: (error as Error).message

@@ -109,7 +109,7 @@ export default function Dashboard() {
           setLikedProperties(prev => [...prev, propertyId]);
         }
       }
-    } catch {
+    } catch (error) {
       // Error updating like status
     }
   };

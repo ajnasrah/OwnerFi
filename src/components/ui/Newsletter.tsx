@@ -19,7 +19,7 @@ export function Newsletter({ className = '' }: NewsletterProps) {
       await new Promise(resolve => setTimeout(resolve, 1000));
       setStatus('success');
       setEmail('');
-    } catch {
+    } catch (error) {
       setStatus('error');
     }
   };

@@ -67,7 +67,7 @@ export async function POST() {
       try {
         const profileId = await ConsolidatedLeadSystem.createBuyerProfile(buyer);
         results.push({ success: true, profileId, buyer: buyer.firstName });
-      } catch {
+      } catch (error) {
         results.push({ success: false, error: (error as Error).message || 'Unknown error', buyer: buyer.firstName });
       }
     }
@@ -78,7 +78,7 @@ export async function POST() {
       results: results
     });
 
-  } catch {
+  } catch (error) {
     return NextResponse.json({ error: 'Failed' }, { status: 500 });
   }
 }

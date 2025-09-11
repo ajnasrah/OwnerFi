@@ -31,7 +31,7 @@ export async function GET() {
       systemStats: stats
     });
 
-  } catch {
+  } catch (error) {
     return NextResponse.json({ error: 'Failed', details: (error as Error).message }, { status: 500 });
   }
 }

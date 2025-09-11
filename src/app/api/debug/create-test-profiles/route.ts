@@ -39,7 +39,7 @@ export async function POST() {
           buyer: buyer.firstName,
           city: buyer.city.split(',')[0]
         });
-      } catch {
+      } catch (error) {
         results.push({ 
           success: false, 
           error: (error as Error).message || 'Unknown error', 
@@ -54,7 +54,7 @@ export async function POST() {
       results: results
     });
 
-  } catch {
+  } catch (error) {
     return NextResponse.json({ 
       error: 'Failed', 
       details: (error as Error).message 

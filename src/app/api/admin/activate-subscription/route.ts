@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { 
   doc,
   updateDoc,
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
       newCredits: 748 + creditsToAdd
     });
     
-  } catch {
+  } catch (error) {
     return NextResponse.json(
       { error: 'Failed to activate subscription' },
       { status: 500 }

@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { 
   collection, 
   getDocs,
@@ -105,7 +105,7 @@ export async function GET(request: NextRequest) {
       properties: similarProperties
     });
 
-  } catch {
+  } catch (error) {
     return NextResponse.json({ 
       error: 'Failed to find similar properties',
       properties: []

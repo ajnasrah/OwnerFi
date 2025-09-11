@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { 
   collection, 
   query, 
@@ -141,7 +141,7 @@ If you didn't request this password reset, please ignore this email.
       message: 'If an account with this email exists, reset instructions have been sent.'
     });
 
-  } catch {
+  } catch (error) {
     await logError('Password reset failed', {
       action: 'password_reset_error'
     }, error as Error);

@@ -99,7 +99,7 @@ export default function BuyCredits() {
       } else {
         alert('Failed to cancel subscription');
       }
-    } catch {
+    } catch (error) {
       alert('Failed to cancel subscription');
     } finally {
       setCanceling('');
@@ -128,7 +128,7 @@ export default function BuyCredits() {
         alert('Error creating checkout');
       }
       
-    } catch {
+    } catch (error) {
       alert('Purchase failed');
     } finally {
       setLoading(false);

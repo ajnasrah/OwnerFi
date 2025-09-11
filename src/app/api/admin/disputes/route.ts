@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { 
   collection, 
   query, 
@@ -62,7 +62,7 @@ export async function GET() {
               }
             }
           }
-        } catch {
+        } catch (error) {
         }
       }
       

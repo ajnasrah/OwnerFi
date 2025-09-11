@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { FirebaseDB } from '@/lib/firebase-db';
 import Stripe from 'stripe';
 import { User } from '@/lib/firebase-models';
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
       
       default:
     }
-  } catch {
+  } catch (error) {
     return NextResponse.json(
       { error: 'Webhook handler failed' },
       { status: 500 }
@@ -141,7 +141,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       createdAt: new Date()
     });
     
-  } catch {
+  } catch (error) {
     // Log error but don't fail the webhook
   }
 }

@@ -71,7 +71,7 @@ export async function POST() {
           
         }
         
-      } catch {
+      } catch (error) {
         fixes.push({
           id: buyerData.id,
           name: `${buyerData.firstName} ${buyerData.lastName}`,
@@ -87,7 +87,7 @@ export async function POST() {
       fixes
     });
 
-  } catch {
+  } catch (error) {
     return NextResponse.json({ 
       error: 'Fix failed',
       details: (error as Error).message

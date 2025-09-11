@@ -70,7 +70,7 @@ export default function FavoritesPage() {
         setPassedProperties([]);
       }
       
-    } catch {
+    } catch (error) {
       setFavoriteProperties([]);
       setPassedProperties([]);
     } finally {
@@ -288,7 +288,7 @@ export default function FavoritesPage() {
                                     setPassedProperties(prev => prev.filter(p => p.id !== property.id));
                                   }
                                 }
-                              } catch {
+                              } catch (error) {
                               }
                             }}
                             className="w-full bg-green-100 text-green-700 border border-green-300 px-3 py-1 rounded-lg text-sm hover:bg-green-200 transition-colors"

@@ -36,7 +36,7 @@ export async function GET() {
       realtors: realtorList
     });
     
-  } catch {
+  } catch (error) {
     return NextResponse.json({ 
       error: 'Failed', 
       details: (error as Error).message 

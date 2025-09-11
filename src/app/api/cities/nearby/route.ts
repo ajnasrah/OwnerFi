@@ -85,7 +85,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ cities });
 
-  } catch {
+  } catch (error) {
     return NextResponse.json(
       { error: 'Failed to fetch nearby cities' },
       { status: 500 }

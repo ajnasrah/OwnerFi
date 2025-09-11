@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getSessionWithRole } from '@/lib/auth-utils';
 import Stripe from 'stripe';
 
@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
       sessionId: checkoutSession.id
     });
 
-  } catch {
+  } catch (error) {
     return NextResponse.json(
       { error: 'Failed to create checkout session' },
       { status: 500 }

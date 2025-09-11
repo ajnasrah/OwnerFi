@@ -109,7 +109,7 @@ export default function AdminDashboard() {
         const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
         if (fileInput) fileInput.value = '';
       }
-    } catch {
+    } catch (error) {
       setResult({ error: `Upload failed: ${(error as Error).message}` });
     } finally {
       setUploading(false);
@@ -124,7 +124,7 @@ export default function AdminDashboard() {
       if (data.properties) {
         setProperties(data.properties);
       }
-    } catch {
+    } catch (error) {
     } finally {
       setLoadingProperties(false);
     }
@@ -162,7 +162,7 @@ export default function AdminDashboard() {
       setSelectedProperties([]);
       fetchProperties();
       alert(`${selectedProperties.length} properties deleted successfully`);
-    } catch {
+    } catch (error) {
       alert('Failed to delete some properties');
     } finally {
       setDeleting(false);
@@ -181,7 +181,7 @@ export default function AdminDashboard() {
         ...(data.resolvedDisputes || [])
       ];
       setDisputes(allDisputes);
-    } catch {
+    } catch (error) {
     } finally {
       setLoadingDisputes(false);
     }
@@ -227,7 +227,7 @@ export default function AdminDashboard() {
         const error = await response.json();
         alert(`Failed to update: ${error.error}`);
       }
-    } catch {
+    } catch (error) {
       alert('Failed to update property');
     }
   };
@@ -248,7 +248,7 @@ export default function AdminDashboard() {
         alert(`Dispute ${action}d successfully`);
         fetchDisputes();
       }
-    } catch {
+    } catch (error) {
       alert('Failed to resolve dispute');
     }
   };
@@ -261,7 +261,7 @@ export default function AdminDashboard() {
         redirect: false 
       });
       router.push('/');
-    } catch {
+    } catch (error) {
       setIsSigningOut(false);
     }
   };
@@ -275,7 +275,7 @@ export default function AdminDashboard() {
       }
       const data = await response.json();
       setContacts(data.contacts || []);
-    } catch {
+    } catch (error) {
     } finally {
       setLoadingContacts(false);
     }
@@ -514,7 +514,7 @@ export default function AdminDashboard() {
                           } else {
                             alert(`❌ Error: ${data.error}`);
                           }
-                        } catch {
+                        } catch (error) {
                           alert(`❌ Failed to clean database: ${error}`);
                         }
                       }

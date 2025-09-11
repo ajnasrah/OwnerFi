@@ -30,7 +30,7 @@ export async function GET() {
       buyers: summary
     });
 
-  } catch {
+  } catch (error) {
     return NextResponse.json({ error: 'Failed' }, { status: 500 });
   }
 }

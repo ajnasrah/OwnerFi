@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { FirebaseDB } from '@/lib/firebase-db';
@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
       }
     });
 
-  } catch {
+  } catch (error) {
     return NextResponse.json(
       { error: 'Failed to fetch profile data' },
       { status: 500 }
@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
       message: 'Settings saved successfully'
     });
 
-  } catch {
+  } catch (error) {
     return NextResponse.json(
       { error: 'Failed to save settings' },
       { status: 500 }
@@ -171,7 +171,7 @@ export async function DELETE(request: NextRequest) {
       updatedServiceCities: updatedServiceCities
     });
 
-  } catch {
+  } catch (error) {
     return NextResponse.json(
       { error: 'Failed to remove city' },
       { status: 500 }

@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
   // Dynamic imports to avoid build-time Firebase initialization
@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
       redirectTo: (userType || 'buyer') === 'buyer' ? '/dashboard/setup' : '/realtor-dashboard'
     });
 
-  } catch {
+  } catch (error) {
     await logError('Failed to create buyer account', {
       action: 'buyer_signup_error'
     }, error as Error);

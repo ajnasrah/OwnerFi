@@ -1,7 +1,7 @@
 // REALTOR DASHBOARD API - Single endpoint for all dashboard data
 // Returns available leads, owned buyers, and transaction history
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getSessionWithRole } from '@/lib/auth-utils';
 import { FirebaseDB } from '@/lib/firebase-db';
 import { RealtorDataHelper } from '@/lib/realtor-models';
@@ -91,7 +91,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(dashboardData);
 
-  } catch {
+  } catch (error) {
     await logError('Failed to load realtor dashboard', {
       action: 'realtor_dashboard_error'
     }, error as Error);
@@ -177,7 +177,7 @@ async function getAvailableLeads(userId: string, realtorData: any): Promise<any[
 
     return availableLeads.slice(0, 20); // Limit to 20 most recent
 
-  } catch {
+  } catch (error) {
     return [];
   }
 }
@@ -222,7 +222,7 @@ async function getOwnedBuyers(userId: string): Promise<any[]> {
 
     return ownedBuyers;
 
-  } catch {
+  } catch (error) {
     return [];
   }
 }
@@ -247,7 +247,7 @@ async function getTransactionHistory(userId: string): Promise<any[]> {
       details: transaction.details || {}
     }));
 
-  } catch {
+  } catch (error) {
     return [];
   }
 }
@@ -319,7 +319,7 @@ async function getMatchedBuyerLeads(realtorData: {
     
     return convertedLeads;
     
-  } catch {
+  } catch (error) {
     // Fallback to empty array if matching fails
     return [];
   }

@@ -138,7 +138,7 @@ export default function HomePage() {
       </div>
 
       {/* Customer Success Stories */}
-      <section style={{ padding: '3rem 0' }}>
+      <section style={{ padding: '2rem 0' }}>
         <div className="max-w-6xl mx-auto px-6">
           
           {/* Big Card Container for Reviews */}
@@ -225,7 +225,7 @@ export default function HomePage() {
       </section>
 
       {/* How It Works - Card-Based Design */}
-      <section style={{ padding: '3rem 0' }}>
+      <section style={{ padding: '2rem 0' }}>
         <div className="max-w-6xl mx-auto px-6">
           
           <div className="grid lg:grid-cols-2" style={{ gap: '4rem' }}>
@@ -339,7 +339,7 @@ export default function HomePage() {
       </section>
 
       {/* About Us Section */}
-      <section style={{ padding: '3rem 0' }}>
+      <section style={{ padding: '2rem 0' }}>
         <div className="max-w-6xl mx-auto px-6">
           <div className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-8 shadow-2xl">
             <div className="text-center mb-8">
@@ -407,7 +407,7 @@ export default function HomePage() {
       </section>
 
       {/* About the Founder Section */}
-      <section style={{ padding: '3rem 0' }}>
+      <section style={{ padding: '2rem 0' }}>
         <div className="max-w-6xl mx-auto px-6">
           <div className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-8 shadow-2xl">
             <div className="text-center mb-8">

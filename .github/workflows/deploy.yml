@@ -44,6 +44,7 @@ jobs:
         STRIPE_PUBLIC_KEY: ${{ secrets.STRIPE_PUBLIC_KEY }}
         STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
         STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
+        NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: ${{ secrets.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY }}
 
   deploy:
     needs: test
@@ -84,6 +85,7 @@ jobs:
         STRIPE_PUBLIC_KEY: ${{ secrets.STRIPE_PUBLIC_KEY }}
         STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
         STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
+        NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: ${{ secrets.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY }}
     
     - name: Build project
       run: npm run build
@@ -102,6 +104,7 @@ jobs:
         STRIPE_PUBLIC_KEY: ${{ secrets.STRIPE_PUBLIC_KEY }}
         STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
         STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
+        NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: ${{ secrets.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY }}
     
     # Deploy to Vercel - Temporarily disabled until we get ORG_ID and PROJECT_ID
     # - name: Deploy to Vercel

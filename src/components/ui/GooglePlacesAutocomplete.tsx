@@ -28,6 +28,9 @@ export function GooglePlacesAutocomplete({
   const [mapsLoadError, setMapsLoadError] = useState(false);
   const [mapsLoaded, setMapsLoaded] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Check if Google Maps API key is available
+  const hasGoogleMapsKey = typeof window !== 'undefined' && process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
   useEffect(() => {
     const initAutocomplete = () => {

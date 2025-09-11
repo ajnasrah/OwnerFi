@@ -29,7 +29,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white">
+    <div className="bg-slate-900 text-white">
       {/* Clean Header */}
       <nav className="bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50 px-4 py-4">
         <div className="flex justify-between items-center max-w-md mx-auto">
@@ -58,8 +58,8 @@ export default function HomePage() {
       </nav>
 
       {/* Hero Section - Compact */}
-      <div className="flex flex-col min-h-[calc(100vh-220px)] px-6" style={{ paddingTop: '3rem' }}>
-        <div className="flex-1 flex flex-col justify-center max-w-md mx-auto text-center">
+      <div className="flex flex-col px-6" style={{ paddingTop: '3rem', paddingBottom: '3rem', minHeight: 'auto' }}>
+        <div className="max-w-md mx-auto text-center">
           <div className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-8 shadow-2xl">
             
             <h1 className="text-3xl font-bold text-white leading-tight mb-4">
@@ -138,7 +138,7 @@ export default function HomePage() {
       </div>
 
       {/* Customer Success Stories */}
-      <section style={{ padding: '5rem 0' }}>
+      <section style={{ padding: '3rem 0' }}>
         <div className="max-w-6xl mx-auto px-6">
           
           {/* Big Card Container for Reviews */}
@@ -225,14 +225,14 @@ export default function HomePage() {
       </section>
 
       {/* How It Works - Card-Based Design */}
-      <section style={{ padding: '6rem 0' }}>
+      <section style={{ padding: '3rem 0' }}>
         <div className="max-w-6xl mx-auto px-6">
           
-          <div className="grid lg:grid-cols-2" style={{ gap: '2rem' }}>
+          <div className="grid lg:grid-cols-2" style={{ gap: '4rem' }}>
             
             {/* For Buyers Card */}
-            <div className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-6 shadow-2xl hover:shadow-emerald-500/10 transition-all duration-300">
-              <div className="text-center mb-6">
+            <div className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-8 shadow-2xl hover:shadow-emerald-500/10 transition-all duration-300">
+              <div className="text-center mb-8">
                 <div className="inline-block bg-emerald-500/20 px-4 py-2 rounded-full border border-emerald-400/30 mb-4">
                   <span className="text-emerald-400 font-semibold text-sm">FOR HOME BUYERS</span>
                 </div>
@@ -283,8 +283,8 @@ export default function HomePage() {
             </div>
 
             {/* For Realtors Card */}
-            <div className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-6 shadow-2xl hover:shadow-blue-500/10 transition-all duration-300">
-              <div className="text-center mb-6">
+            <div className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-8 shadow-2xl hover:shadow-blue-500/10 transition-all duration-300">
+              <div className="text-center mb-8">
                 <div className="inline-block bg-blue-500/20 px-4 py-2 rounded-full border border-blue-400/30 mb-4">
                   <span className="text-blue-400 font-semibold text-sm">FOR REAL ESTATE AGENTS</span>
                 </div>
@@ -339,7 +339,7 @@ export default function HomePage() {
       </section>
 
       {/* About Us Section */}
-      <section style={{ padding: '5rem 0' }}>
+      <section style={{ padding: '3rem 0' }}>
         <div className="max-w-6xl mx-auto px-6">
           <div className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-8 shadow-2xl">
             <div className="text-center mb-8">
@@ -407,7 +407,7 @@ export default function HomePage() {
       </section>
 
       {/* About the Founder Section */}
-      <section style={{ padding: '5rem 0' }}>
+      <section style={{ padding: '3rem 0' }}>
         <div className="max-w-6xl mx-auto px-6">
           <div className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-8 shadow-2xl">
             <div className="text-center mb-8">

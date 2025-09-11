@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Strict admin access control
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession(authOptions) as any;
     
     if (!session?.user || (session as ExtendedSession).user.role !== 'admin') {
       return NextResponse.json(

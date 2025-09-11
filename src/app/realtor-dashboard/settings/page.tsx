@@ -2,16 +2,52 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { getCitiesWithinRadiusComprehensive } from '@/lib/comprehensive-cities';
 import { GooglePlacesAutocomplete } from '@/components/ui/GooglePlacesAutocomplete';
+import Link from 'next/link';
 
 export default function RealtorSettings() {
   const router = useRouter();
+  const { data: session, status } = useSession();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [targetCity, setTargetCity] = useState('');
   const [nearbyCities, setNearbyCities] = useState<Array<{name: string, state: string, distance: number}>>([]);
   const [selectedCities, setSelectedCities] = useState<Set<string>>(new Set());
+  const [sessionCheckPaused, setSessionCheckPaused] = useState(false);
+
+  // Auth check with session-safe handling  
+  useEffect(() => {
+    // Don't redirect during Google Maps interactions
+    if (sessionCheckPaused) return;
+    
+    if (status === 'unauthenticated') {
+      router.push('/realtor-signup');
+    } else if (status === 'authenticated' && (session?.user as any)?.role !== 'realtor') {
+      router.push('/signup');
+    }
+  }, [status, session, router, sessionCheckPaused]);
+
+  // Pause session checks during form interactions
+  useEffect(() => {
+    const handleGoogleMapsInteraction = () => {
+      setSessionCheckPaused(true);
+      // Resume checks after 2 seconds
+      setTimeout(() => setSessionCheckPaused(false), 2000);
+    };
+
+    window.addEventListener('googleMapsReady', handleGoogleMapsInteraction);
+    return () => window.removeEventListener('googleMapsReady', handleGoogleMapsInteraction);
+  }, []);
+
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-900">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-400"></div>
+      </div>
+    );
+  }
 
   const handleCitySearch = () => {
     if (!targetCity.trim()) {
@@ -20,61 +56,57 @@ export default function RealtorSettings() {
     }
 
     try {
-      // Parse city and state
       const cityParts = targetCity.split(',');
-      const city = cityParts[0]?.trim().toLowerCase().replace(/\b\w/g, l => l.toUpperCase()); // Proper case
+      const city = cityParts[0]?.trim().toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
       const state = cityParts[1]?.trim().toUpperCase() || 'TX';
 
-      
-      // Get cities within 30 miles
       const cities = getCitiesWithinRadiusComprehensive(city, state, 30);
-      
-      
       setNearbyCities(cities);
       
       // Select all cities by default
-      const allCityNames = cities.map(c => `${c.name}, ${c.state}`);
-      setSelectedCities(new Set(allCityNames));
+      const allCityKeys = new Set(cities.map(city => `${city.name}, ${city.state}`));
+      setSelectedCities(allCityKeys);
       
       setError('');
-      
     } catch (err) {
-      setError('Failed to find nearby cities. Please check city format (e.g., "Dallas, TX")');
+      setError('City not found. Please try again.');
     }
   };
 
-  const toggleCity = (cityName: string, state: string) => {
-    const fullName = `${cityName}, ${state}`;
-    const newSelected = new Set(selectedCities);
-    
-    if (newSelected.has(fullName)) {
-      newSelected.delete(fullName);
-    } else {
-      newSelected.add(fullName);
-    }
-    
-    setSelectedCities(newSelected);
+  const selectAllCities = () => {
+    const allCityKeys = new Set(nearbyCities.map(city => `${city.name}, ${city.state}`));
+    setSelectedCities(allCityKeys);
   };
 
-  const selectAll = () => {
-    const allCityNames = nearbyCities.map(c => `${c.name}, ${c.state}`);
-    setSelectedCities(new Set(allCityNames));
-  };
-
-  const deselectAll = () => {
+  const deselectAllCities = () => {
     setSelectedCities(new Set());
   };
 
-  const saveSettings = async () => {
+  const handleCityToggle = (cityKey: string) => {
+    const newSelected = new Set(selectedCities);
+    if (newSelected.has(cityKey)) {
+      newSelected.delete(cityKey);
+    } else {
+      newSelected.add(cityKey);
+    }
+    setSelectedCities(newSelected);
+  };
+
+  const handleSave = async () => {
     if (selectedCities.size === 0) {
-      setError('Please select at least one city to serve');
+      setError('Please select at least one city');
       return;
     }
 
     setLoading(true);
-    
+    setError('');
+
     try {
-      // Save realtor service areas
+      const selectedCitiesList = Array.from(selectedCities).map(cityKey => {
+        const city = nearbyCities.find(c => `${c.name}, ${c.state}` === cityKey);
+        return city;
+      }).filter(Boolean);
+
       const response = await fetch('/api/realtor/profile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -85,15 +117,11 @@ export default function RealtorSettings() {
         })
       });
 
-      const data = await response.json();
-
-      if (data.error) {
-        setError(data.error);
+      if (response.ok) {
+        router.push('/realtor-dashboard');
       } else {
-        // Force redirect using window.location to ensure it works
-        window.location.href = '/realtor-dashboard';
+        setError('Failed to save settings');
       }
-      
     } catch (err) {
       setError('Failed to save settings');
     } finally {
@@ -102,26 +130,39 @@ export default function RealtorSettings() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-slate-900 flex flex-col" style={{height: '100vh', overflow: 'hidden'}}>
+      {/* Header */}
+      <header className="bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50 p-4">
+        <div className="flex items-center justify-between max-w-md mx-auto">
+          <Link href="/realtor-dashboard" className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-sm">O</span>
+            </div>
+            <span className="text-lg font-bold text-white">OwnerFi</span>
+          </Link>
+          <span className="text-slate-400 text-sm">Settings</span>
+        </div>
+      </header>
+
+      {/* Main Content - Single Screen */}
+      <div className="flex-1 px-4 py-4 max-w-md mx-auto w-full">
         
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Realtor Settings</h1>
-          <p className="text-gray-600">Set up your service areas to connect with local buyers</p>
+        {/* Title */}
+        <div className="text-center mb-6">
+          <h1 className="text-xl font-bold text-white mb-1">Service Area</h1>
+          <p className="text-slate-300 text-sm">Set up your coverage area</p>
         </div>
 
         {error && (
-          <div className="bg-red-100 border border-red-300 rounded-lg p-4 mb-6">
-            <p className="text-red-700">{error}</p>
+          <div className="bg-red-500/20 border border-red-400/30 rounded-lg p-3 mb-4">
+            <p className="text-red-300 text-sm">{error}</p>
           </div>
         )}
 
-        {/* Target City Input */}
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Target City</h2>
-          
-          <div className="flex gap-4">
+        {/* City Input */}
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-white mb-2">Primary City</label>
+          <div className="flex gap-2">
             <div className="flex-1">
               <GooglePlacesAutocomplete
                 value={targetCity}
@@ -131,91 +172,83 @@ export default function RealtorSettings() {
             </div>
             <button
               onClick={handleCitySearch}
-              className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors font-medium"
+              className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-3 rounded-lg font-medium transition-colors"
             >
-              Find Nearby Cities
+              Find
             </button>
           </div>
-          
-          <p className="text-sm text-gray-500 mt-2">
-            Enter your primary city to find all cities within 30 miles
-          </p>
         </div>
 
         {/* Cities Selection */}
         {nearbyCities.length > 0 && (
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold text-gray-900">
-                Service Areas ({selectedCities.size} of {nearbyCities.length} selected)
-              </h2>
-              
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-white font-medium">
+                Select Cities to Serve ({selectedCities.size} selected)
+              </h3>
               <div className="flex gap-2">
                 <button
-                  onClick={selectAll}
-                  className="bg-green-100 text-green-700 px-4 py-2 rounded-lg hover:bg-green-200 transition-colors text-sm font-medium"
+                  onClick={selectAllCities}
+                  className="text-emerald-400 hover:text-emerald-300 text-xs font-medium"
                 >
                   Select All
                 </button>
+                <span className="text-slate-600">|</span>
                 <button
-                  onClick={deselectAll}
-                  className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
+                  onClick={deselectAllCities}
+                  className="text-slate-400 hover:text-white text-xs font-medium"
                 >
-                  Deselect All
+                  Clear
                 </button>
               </div>
             </div>
-            
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 max-h-96 overflow-y-auto">
-              {nearbyCities.map((city) => {
-                const fullName = `${city.name}, ${city.state}`;
-                const isSelected = selectedCities.has(fullName);
-                
-                return (
-                  <label
-                    key={fullName}
-                    className={`flex items-center p-3 rounded-lg border cursor-pointer transition-colors ${
-                      isSelected 
-                        ? 'bg-green-50 border-green-300' 
-                        : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
-                    }`}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={isSelected}
-                      onChange={() => toggleCity(city.name, city.state)}
-                      className="mr-3 h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
-                    />
-                    <div className="flex-1">
-                      <div className="font-medium text-gray-900">{city.name}</div>
-                      <div className="text-xs text-gray-500">{city.distance.toFixed(1)} miles</div>
-                    </div>
-                  </label>
-                );
-              })}
-            </div>
-            
-            {/* Save Button */}
-            <div className="mt-6 pt-6 border-t border-gray-200">
-              <button
-                onClick={saveSettings}
-                disabled={loading || selectedCities.size === 0}
-                className="w-full bg-green-600 text-white py-3 px-6 rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? 'Saving...' : `Save Service Areas (${selectedCities.size} cities)`}
-              </button>
+            <div className="bg-slate-800/50 border border-slate-700/50 rounded-lg p-3 max-h-64 overflow-y-auto">
+              <div className="space-y-2">
+                {nearbyCities.map((city) => {
+                  const cityKey = `${city.name}, ${city.state}`;
+                  const isSelected = selectedCities.has(cityKey);
+                  
+                  return (
+                    <label
+                      key={cityKey}
+                      className="flex items-center justify-between p-2 rounded-lg cursor-pointer hover:bg-slate-700/30 transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => handleCityToggle(cityKey)}
+                          className="w-4 h-4 text-emerald-500 bg-slate-700 border-slate-600 rounded focus:ring-emerald-400 focus:ring-2"
+                        />
+                        <span className="text-white text-sm">{city.name}, {city.state}</span>
+                      </div>
+                      <span className="text-slate-400 text-xs">{city.distance.toFixed(1)} mi</span>
+                    </label>
+                  );
+                })}
+              </div>
             </div>
           </div>
         )}
 
-        {/* Back Link */}
-        <div className="text-center mt-8">
-          <button
-            onClick={() => router.push('/realtor-dashboard')}
-            className="text-gray-600 hover:text-gray-800"
+        {/* Action Buttons */}
+        <div className="space-y-3">
+          {selectedCities.size > 0 && (
+            <button
+              onClick={handleSave}
+              disabled={loading}
+              className="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-3 px-4 rounded-lg font-medium transition-colors disabled:opacity-50"
+            >
+              {loading ? 'Saving...' : `Save ${selectedCities.size} Cities`}
+            </button>
+          )}
+          
+          <Link
+            href="/realtor-dashboard"
+            className="block w-full text-center text-slate-400 hover:text-white py-2 transition-colors"
           >
             ← Back to Dashboard
-          </button>
+          </Link>
         </div>
       </div>
     </div>

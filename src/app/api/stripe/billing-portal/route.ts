@@ -1,32 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSessionWithRole } from '@/lib/auth-utils';
+import { FirebaseDB } from '@/lib/firebase-db';
 import Stripe from 'stripe';
-import { 
-  collection, 
-  query, 
-  where, 
-  getDocs,
-  updateDoc,
-  doc,
-  getDoc,
-  serverTimestamp
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import { RealtorProfile } from '@/lib/firebase-models';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-08-27.basil',
 });
 
-export async function POST(request: NextRequest) {
-  try {
-    if (!db) {
-      return NextResponse.json(
-        { error: 'Database not available' },
-        { status: 500 }
-      );
-    }
+// Credit packages that have subscriptions (only 4 and 10 credit packages)
+const SUBSCRIPTION_PACKAGES = ['4_credits', '10_credits'];
 
+export async function GET(_: NextRequest) {
+  try {
     const session = await getSessionWithRole('realtor');
     
     if (!session?.user?.email || !session?.user?.id) {
@@ -36,35 +21,84 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get the realtor's profile to find their customer ID
-    const realtorsQuery = query(
-      collection(db, 'realtors'),
-      where('userId', '==', session.user.id!)
-    );
-    const realtorDocs = await getDocs(realtorsQuery);
-    const realtor = realtorDocs.empty ? null : { id: realtorDocs.docs[0].id, ...realtorDocs.docs[0].data() } as RealtorProfile;
+    // Get user data from new system
+    const userData = await FirebaseDB.getDocument('users', session.user.id!);
+    if (!userData) {
+      return NextResponse.json({ subscriptions: [] });
+    }
 
-    if (!realtor) {
+    const realtorData = (userData as any).realtorData;
+    if (!realtorData?.stripeCustomerId) {
+      return NextResponse.json({ subscriptions: [] });
+    }
+
+    // Only show subscriptions if user has a subscription plan (4 or 10 credits)
+    const currentPlan = realtorData.currentPlan;
+    if (!currentPlan || !SUBSCRIPTION_PACKAGES.includes(currentPlan)) {
+      return NextResponse.json({ subscriptions: [] });
+    }
+
+    // Get active subscriptions from Stripe
+    const subscriptions = await stripe.subscriptions.list({
+      customer: realtorData.stripeCustomerId,
+      status: 'active',
+      limit: 10
+    });
+
+    const formattedSubscriptions = subscriptions.data.map(sub => ({
+      id: sub.id,
+      status: sub.status,
+      current_period_end: (sub as any).current_period_end,
+      credits: sub.metadata.credits ? parseInt(sub.metadata.credits) : 0,
+      price: sub.items.data[0]?.price.unit_amount ? (sub.items.data[0].price.unit_amount / 100) : 0,
+      plan: currentPlan
+    }));
+
+    return NextResponse.json({ subscriptions: formattedSubscriptions });
+
+  } catch (error) {
+    return NextResponse.json(
+      { error: 'Failed to fetch subscriptions' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(_: NextRequest) {
+  try {
+    const session = await getSessionWithRole('realtor');
+    
+    if (!session?.user?.email || !session?.user?.id) {
       return NextResponse.json(
-        { error: 'Realtor profile not found' },
+        { error: 'Not authenticated' },
+        { status: 401 }
+      );
+    }
+
+    // Get user data from new system
+    const userData = await FirebaseDB.getDocument('users', session.user.id!);
+    if (!userData) {
+      return NextResponse.json(
+        { error: 'User profile not found' },
         { status: 404 }
       );
     }
 
-    // Get customer ID from multiple sources
-    let customerId = realtor.stripeCustomerId;
+    const realtorData = (userData as any).realtorData;
     
-    // If not in realtor record, check user record
-    if (!customerId) {
-      try {
-        const userDoc = await getDoc(doc(db, 'users', session.user.id!));
-        const userData = userDoc.exists() ? userDoc.data() : null;
-        customerId = userData?.stripeCustomerId;
-      } catch (e) {
-      }
+    // Only allow billing portal access if user has active subscription
+    const currentPlan = realtorData?.currentPlan;
+    if (!currentPlan || !SUBSCRIPTION_PACKAGES.includes(currentPlan)) {
+      return NextResponse.json(
+        { error: 'No active subscription found' },
+        { status: 400 }
+      );
     }
 
-    // If still no customer ID found, try to find customer by email
+    // Get customer ID
+    let customerId = realtorData?.stripeCustomerId;
+
+    // If no customer ID found, try to find customer by email
     if (!customerId) {
       try {
         const customers = await stripe.customers.list({
@@ -76,12 +110,19 @@ export async function POST(request: NextRequest) {
           customerId = customers.data[0].id;
           
           // Store the found customer ID for future use
-          await updateDoc(doc(db, 'realtors', realtor.id), {
+          const updatedRealtorData = {
+            ...realtorData || {},
             stripeCustomerId: customerId,
-            updatedAt: serverTimestamp()
+            updatedAt: new Date()
+          };
+
+          await FirebaseDB.updateDocument('users', session.user.id!, {
+            realtorData: updatedRealtorData,
+            updatedAt: new Date()
           });
         }
       } catch (e) {
+        // Handle error silently
       }
     }
 
@@ -90,7 +131,7 @@ export async function POST(request: NextRequest) {
       try {
         const customer = await stripe.customers.create({
           email: session.user.email,
-          name: `${realtor.firstName} ${realtor.lastName}`.trim(),
+          name: (userData as any).name || session.user.email,
           metadata: {
             userId: session.user.id,
             userRole: 'realtor'
@@ -98,10 +139,16 @@ export async function POST(request: NextRequest) {
         });
         customerId = customer.id;
         
-        // Save the customer ID directly in realtor record
-        await updateDoc(doc(db, 'realtors', realtor.id), {
+        // Save the customer ID in user record
+        const updatedRealtorData = {
+          ...realtorData || {},
           stripeCustomerId: customerId,
-          updatedAt: serverTimestamp()
+          updatedAt: new Date()
+        };
+
+        await FirebaseDB.updateDocument('users', session.user.id!, {
+          realtorData: updatedRealtorData,
+          updatedAt: new Date()
         });
 
       } catch (e) {
@@ -116,7 +163,7 @@ export async function POST(request: NextRequest) {
     try {
       const portalSession = await stripe.billingPortal.sessions.create({
         customer: customerId,
-        return_url: `${process.env.NEXTAUTH_URL}/realtor/settings#subscription`,
+        return_url: `${process.env.NEXTAUTH_URL}/realtor-dashboard?portal=closed`,
       });
 
       return NextResponse.json({ 
@@ -127,35 +174,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { 
           error: 'Failed to create billing portal session',
-          details: stripeError.message,
-          debug: process.env.NODE_ENV === 'development' ? {
-            customerId,
-            hasRealtor: !!realtor,
-            errorType: stripeError.type
-          } : undefined
+          details: stripeError.message
         },
         { status: 500 }
       );
     }
 
   } catch (error) {
-    
-    // Handle role validation errors specifically
-    if ((error as Error).message.includes('Access denied') || (error as Error).message.includes('Not authenticated')) {
-      return NextResponse.json(
-        { error: 'Access denied. Realtor access required.' },
-        { status: 403 }
-      );
-    }
-    
     return NextResponse.json(
       { 
         error: 'Failed to create billing portal session',
-        details: (error as Error).message,
-        debug: process.env.NODE_ENV === 'development' ? {
-          errorName: (error as Error).name,
-          errorStack: (error as Error).stack
-        } : undefined
+        details: (error as Error).message
       },
       { status: 500 }
     );

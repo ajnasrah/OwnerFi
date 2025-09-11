@@ -29,16 +29,15 @@ interface OwnedBuyer {
   state: string;
   maxMonthlyPayment: number;
   maxDownPayment: number;
-  purchasedAt: string;
-  status: 'purchased' | 'contacted' | 'converted' | 'refunded';
+  purchaseDate: string;
 }
 
 interface Transaction {
   id: string;
-  type: 'lead_purchase' | 'credit_purchase' | 'subscription_credit' | 'trial_credit' | 'refund';
   description: string;
   creditsChange: number;
   runningBalance: number;
+  type: string;
   createdAt: string;
 }
 
@@ -64,36 +63,30 @@ export default function RealtorDashboard() {
   const [loading, setLoading] = useState(true);
   const [purchaseLoading, setPurchaseLoading] = useState<string | null>(null);
   const [error, setError] = useState('');
-  const [viewingProperties, setViewingProperties] = useState<{
-    buyer: {
-      id: string;
-      firstName: string;
-      lastName: string;
-    };
-    properties: {
-      id: string;
-      address: string;
-      city: string;
-      state: string;
-      listPrice?: number;
-      monthlyPayment?: number;
-      downPaymentAmount?: number;
-      bedrooms?: number;
-      bathrooms?: number;
-      squareFeet?: number;
-    }[];
-  } | null>(null);
+  const [disputeModal, setDisputeModal] = useState<{
+    buyer: OwnedBuyer | null;
+    reason: string;
+    description: string;
+    submitting: boolean;
+  }>({
+    buyer: null,
+    reason: '',
+    description: '',
+    submitting: false
+  });
 
+  // Auth check
   useEffect(() => {
     if (status === 'unauthenticated') {
-      router.push('/');
-    } else if (status === 'authenticated' && session?.user?.role !== 'realtor') {
+      router.push('/auth/signin');
+    } else if (status === 'authenticated' && (session?.user as any)?.role !== 'realtor') {
       router.push('/');
     }
   }, [status, session, router]);
 
+  // Load dashboard data
   useEffect(() => {
-    if (status === 'authenticated' && session?.user?.role === 'realtor') {
+    if (status === 'authenticated' && (session?.user as any)?.role === 'realtor') {
       loadDashboardData();
     }
   }, [status, session]);
@@ -102,34 +95,22 @@ export default function RealtorDashboard() {
     try {
       setLoading(true);
       const response = await fetch('/api/realtor/dashboard');
-      
-      if (!response.ok) {
-        throw new Error('Failed to load dashboard data');
-      }
-      
       const data = await response.json();
-      setDashboardData(data);
       
-      // Auto-switch to 'owned' tab if no available leads but has purchased leads
-      if (data.availableLeads.length === 0 && data.ownedBuyers.length > 0) {
-        setActiveTab('owned');
+      if (data.error) {
+        setError(data.error);
+      } else {
+        setDashboardData(data);
       }
     } catch (err) {
-      setError('Failed to load dashboard.');
+      setError('Failed to load dashboard data');
     } finally {
       setLoading(false);
     }
   };
 
-  const purchaseLead = async (leadId: string, leadName: string) => {
-    if (!dashboardData || dashboardData.realtorData.credits < 1) {
-      setError('Insufficient credits.');
-      return;
-    }
-
+  const purchaseLead = async (leadId: string) => {
     setPurchaseLoading(leadId);
-    setError('');
-
     try {
       const response = await fetch('/api/realtor/purchase-lead', {
         method: 'POST',
@@ -137,31 +118,68 @@ export default function RealtorDashboard() {
         body: JSON.stringify({ leadId })
       });
 
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error);
-
-      await loadDashboardData();
-      alert(`Successfully purchased lead for ${leadName}!`);
-    } catch (err) {
-      setError('Failed to purchase lead');
+      const result = await response.json();
+      
+      if (result.success) {
+        await loadDashboardData(); // Refresh data
+      } else {
+        alert(result.error || 'Failed to purchase lead');
+      }
+    } catch (error) {
+      alert('Purchase failed');
     } finally {
       setPurchaseLoading(null);
     }
   };
 
-  const viewBuyerProperties = async (buyerId: string) => {
-    try {
-      const response = await fetch(`/api/realtor/buyer-liked-properties?buyerId=${buyerId}`);
-      const data = await response.json();
-      
-      if (data.error) {
-        alert(`Error: ${data.error}`);
-        return;
-      }
+  const openDisputeModal = (buyer: OwnedBuyer) => {
+    setDisputeModal({
+      buyer,
+      reason: '',
+      description: '',
+      submitting: false
+    });
+  };
 
-      setViewingProperties(data);
-    } catch (err) {
-      alert('Failed to load buyer properties');
+  const closeDisputeModal = () => {
+    setDisputeModal({
+      buyer: null,
+      reason: '',
+      description: '',
+      submitting: false
+    });
+  };
+
+  const submitDispute = async () => {
+    if (!disputeModal.buyer || !disputeModal.reason || !disputeModal.description) {
+      return;
+    }
+
+    setDisputeModal(prev => ({ ...prev, submitting: true }));
+
+    try {
+      const response = await fetch('/api/realtor/dispute-lead', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          buyerId: disputeModal.buyer.id,
+          reason: disputeModal.reason,
+          description: disputeModal.description
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        closeDisputeModal();
+        await loadDashboardData(); // Refresh data
+      } else {
+        alert(result.error || 'Failed to submit dispute');
+      }
+    } catch (error) {
+      alert('Failed to submit dispute');
+    } finally {
+      setDisputeModal(prev => ({ ...prev, submitting: false }));
     }
   };
 
@@ -169,20 +187,24 @@ export default function RealtorDashboard() {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-emerald-400 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
-          <div className="text-2xl font-bold text-white">LOADING DASHBOARD</div>
+          <div className="w-12 h-12 border-4 border-emerald-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="text-white font-medium">Loading dashboard...</div>
         </div>
       </div>
     );
   }
 
-  if (!dashboardData) {
+  if (error || !dashboardData) {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-red-400 mb-6 text-lg">{error || 'Failed to load dashboard'}</p>
-          <button onClick={loadDashboardData} className="bg-emerald-500 text-white px-8 py-3 rounded-xl font-bold">
-            TRY AGAIN
+          <div className="text-red-400 text-xl mb-4">⚠️</div>
+          <div className="text-white font-medium">{error || 'Failed to load dashboard'}</div>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-4 bg-emerald-500 text-white px-4 py-2 rounded-lg hover:bg-emerald-600"
+          >
+            Retry
           </button>
         </div>
       </div>
@@ -191,131 +213,132 @@ export default function RealtorDashboard() {
 
   return (
     <div className="min-h-screen bg-slate-900">
-      {/* HEADER */}
-      <header className="bg-slate-800/50 border-b border-slate-700/50 px-6 py-4">
-        <div className="space-y-4">
-          {/* Top Row - Logo + 4 Buttons */}
-          <div className="flex items-center justify-between">
-            <Link href="/">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-lg">O</span>
-                </div>
-                <span className="text-xl font-bold text-white">OwnerFi</span>
-              </div>
-            </Link>
-            
-            <div className="flex gap-3">
-              <Link href="/realtor-dashboard" className="w-10 h-10 bg-emerald-500 rounded-lg flex items-center justify-center">
-                <span className="text-white">📊</span>
-              </Link>
-              <Link href="/buy-credits" className="w-10 h-10 bg-slate-600 hover:bg-orange-500 rounded-lg flex items-center justify-center transition-colors">
-                <span className="text-white">💳</span>
-              </Link>
-              <Link href="/realtor-dashboard/settings" className="w-10 h-10 bg-slate-600 hover:bg-slate-500 rounded-lg flex items-center justify-center transition-colors">
-                <span className="text-white">⚙</span>
-              </Link>
-              <button onClick={() => signOut({ callbackUrl: '/' })} className="w-10 h-10 bg-slate-600 hover:bg-red-500 rounded-lg flex items-center justify-center transition-colors">
-                <span className="text-white">⏻</span>
-              </button>
+      {/* Clean Header */}
+      <header className="bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50">
+        {/* Top Row - Logo and Actions */}
+        <div className="px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-sm">O</span>
             </div>
+            <span className="text-lg font-bold text-white">OwnerFi</span>
           </div>
           
-          {/* Bottom Row - Welcome + Credits */}
-          <div className="flex items-center justify-between">
-            <div className="text-slate-300">
-              Welcome, <span className="text-white font-bold">Abdullah</span>
-            </div>
-            <div className="text-emerald-400 font-bold text-lg">
-              {dashboardData.realtorData.credits} credits
-            </div>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/buy-credits"
+              className="bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
+            >
+              {dashboardData.realtorData.credits} Credits
+            </Link>
+            <Link
+              href="/realtor-dashboard/settings"
+              className="text-slate-400 hover:text-white transition-colors p-1.5"
+              title="Settings"
+            >
+              ⚙️
+            </Link>
+            <button
+              onClick={() => signOut({ callbackUrl: '/auth/signin' })}
+              className="text-slate-400 hover:text-red-400 transition-colors p-1.5"
+              title="Logout"
+            >
+              ⏻
+            </button>
           </div>
+        </div>
+        
+        {/* Bottom Row - Welcome */}
+        <div className="px-4 pb-3">
+          <div className="text-slate-300 text-sm">Welcome back, <span className="text-white font-medium">{dashboardData.realtorData.firstName}</span></div>
         </div>
       </header>
 
-      {error && (
-        <div className="max-w-4xl mx-auto px-4 pt-4">
-          <div className="bg-red-500/20 border border-red-400/30 text-red-300 px-4 py-3 rounded-xl">{error}</div>
-        </div>
-      )}
-
-      {/* MINIMAL DASHBOARD */}
-      <main className="max-w-7xl mx-auto px-6 py-8">
+      {/* Main Content */}
+      <main className="max-w-6xl mx-auto p-4">
         
-        {/* Simple Tabs */}
-        <div className="flex gap-4 mb-8">
-          <button
-            onClick={() => setActiveTab('available')}
-            className={`px-4 py-2 rounded-lg transition-all ${
-              activeTab === 'available' 
-                ? 'bg-emerald-600 text-white' 
-                : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-            }`}
-          >
-            Available ({dashboardData.availableLeads.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('owned')}
-            className={`px-4 py-2 rounded-lg transition-all ${
-              activeTab === 'owned' 
-                ? 'bg-emerald-600 text-white' 
-                : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-            }`}
-          >
-            Purchased ({dashboardData.ownedBuyers.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('transactions')}
-            className={`px-4 py-2 rounded-lg transition-all ${
-              activeTab === 'transactions' 
-                ? 'bg-emerald-600 text-white' 
-                : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-            }`}
-          >
-            History ({dashboardData.transactions.length})
-          </button>
+        {/* Clean Navigation */}
+        <div className="bg-slate-800/30 rounded-xl p-1 mb-6">
+          <div className="flex">
+            <button
+              onClick={() => setActiveTab('available')}
+              className={`flex-1 text-center py-3 px-4 rounded-lg font-medium transition-all ${
+                activeTab === 'available' 
+                  ? 'bg-emerald-500 text-white shadow-lg' 
+                  : 'text-slate-300 hover:text-white'
+              }`}
+            >
+              Available ({dashboardData.availableLeads.length})
+            </button>
+            <button
+              onClick={() => setActiveTab('owned')}
+              className={`flex-1 text-center py-3 px-4 rounded-lg font-medium transition-all ${
+                activeTab === 'owned' 
+                  ? 'bg-emerald-500 text-white shadow-lg' 
+                  : 'text-slate-300 hover:text-white'
+              }`}
+            >
+              Purchased ({dashboardData.ownedBuyers.length})
+            </button>
+            <button
+              onClick={() => setActiveTab('transactions')}
+              className={`flex-1 text-center py-3 px-4 rounded-lg font-medium transition-all ${
+                activeTab === 'transactions' 
+                  ? 'bg-emerald-500 text-white shadow-lg' 
+                  : 'text-slate-300 hover:text-white'
+              }`}
+            >
+              History ({dashboardData.transactions.length})
+            </button>
+          </div>
         </div>
 
-        {/* Clean Content Area */}
-        <div className="bg-slate-800/30 rounded-xl overflow-hidden">
+        {/* Content Area */}
+        <div className="bg-slate-800/30 rounded-xl p-6">
           
-          {/* Available Leads - SCALABLE TABLE */}
+          {/* Available Leads */}
           {activeTab === 'available' && (
-            <div className="p-6">
+            <div>
               {dashboardData.availableLeads.length === 0 ? (
                 <div className="text-center py-16">
-                  <div className="text-slate-300 mb-4 text-6xl">📭</div>
-                  <h3 className="text-xl font-semibold text-slate-200 mb-2">No leads available</h3>
-                  <p className="text-slate-300">New buyer leads will appear here when they register in your area.</p>
+                  <div className="text-6xl mb-4">📭</div>
+                  <h3 className="text-xl font-bold text-white mb-2">No leads available</h3>
+                  <p className="text-slate-400">New buyer leads will appear here when they register in your area.</p>
                 </div>
               ) : (
-                <div className="max-w-2xl mx-auto space-y-3">
+                <div className="grid gap-4 md:grid-cols-2">
                   {dashboardData.availableLeads.map((lead) => (
-                    <div key={lead.id} className="bg-slate-700/30 border border-slate-600/50 rounded-lg p-4 hover:bg-slate-700/40 transition-colors">
-                      <div className="flex items-center justify-between mb-3">
+                    <div key={lead.id} className="bg-slate-800/50 border border-slate-700/50 rounded-lg p-4">
+                      <div className="flex items-start justify-between mb-3">
                         <div>
-                          <h3 className="font-medium text-white text-lg">{lead.firstName} {lead.lastName}</h3>
-                          <div className="text-slate-300 text-sm">{lead.city}, {lead.state}</div>
+                          <h4 className="text-white font-bold text-lg">
+                            {lead.firstName} {lead.lastName}
+                          </h4>
+                          <p className="text-slate-400 text-sm">{lead.city}, {lead.state}</p>
                         </div>
-                        <div className="text-right">
-                          <span className="bg-emerald-500/20 text-emerald-400 px-2 py-1 rounded text-xs font-bold">
-                            {lead.matchPercentage || 85}% match
-                          </span>
-                        </div>
+                        <span className="bg-emerald-500/20 text-emerald-400 px-2 py-1 rounded text-xs font-medium">
+                          New Lead
+                        </span>
                       </div>
                       
-                      <div className="flex items-center justify-between">
-                        <div className="text-sm">
-                          <span className="text-emerald-400 font-semibold">${lead.maxMonthlyPayment.toLocaleString()}/mo</span>
-                          <span className="text-slate-400 mx-2">•</span>
-                          <span className="text-blue-400 font-semibold">${lead.maxDownPayment.toLocaleString()} down</span>
+                      <div className="grid grid-cols-2 gap-3 mb-4">
+                        <div className="bg-slate-700/50 rounded-lg p-3 text-center">
+                          <div className="text-slate-400 text-xs">Budget Down</div>
+                          <div className="text-white font-bold">${lead.maxDownPayment.toLocaleString()}</div>
                         </div>
+                        <div className="bg-slate-700/50 rounded-lg p-3 text-center">
+                          <div className="text-slate-400 text-xs">Budget Payment</div>
+                          <div className="text-white font-bold">${lead.maxMonthlyPayment.toLocaleString()}</div>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-2">
                         <button
-                          onClick={() => purchaseLead(lead.id, `${lead.firstName} ${lead.lastName}`)}
-                          disabled={purchaseLoading === lead.id || dashboardData.realtorData.credits < 1}
-                          className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg font-semibold transition-colors disabled:opacity-50"
+                          onClick={() => purchaseLead(lead.id)}
+                          disabled={purchaseLoading === lead.id}
+                          className="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-2 px-4 rounded-lg font-medium transition-colors disabled:opacity-50"
                         >
-                          {purchaseLoading === lead.id ? 'Buying...' : 'Buy (1 Credit)'}
+                          {purchaseLoading === lead.id ? 'Purchasing...' : 'Purchase Lead'}
                         </button>
                       </div>
                     </div>
@@ -325,68 +348,65 @@ export default function RealtorDashboard() {
             </div>
           )}
 
-          {/* Purchased Leads - SCALABLE TABLE */}
+          {/* Purchased Buyers */}
           {activeTab === 'owned' && (
-            <div className="p-6">
+            <div>
               {dashboardData.ownedBuyers.length === 0 ? (
                 <div className="text-center py-16">
-                  <div className="text-slate-300 mb-4 text-6xl">👥</div>
-                  <h3 className="text-xl font-semibold text-slate-200 mb-2">No purchased leads</h3>
-                  <p className="text-slate-300">Purchased leads will appear here with full contact details.</p>
+                  <div className="text-6xl mb-4">👥</div>
+                  <h3 className="text-xl font-bold text-white mb-2">No purchased leads</h3>
+                  <p className="text-slate-400">Leads you purchase will appear here for ongoing communication.</p>
                 </div>
               ) : (
-                <div className="max-w-2xl mx-auto space-y-3">
+                <div className="grid gap-4 md:grid-cols-2">
                   {dashboardData.ownedBuyers.map((buyer) => (
-                    <div key={buyer.id} className="bg-slate-700/30 border border-slate-600/50 rounded-lg p-4">
-                      <div className="grid grid-cols-2 gap-4 mb-3">
+                    <div key={buyer.id} className="bg-slate-800/50 border border-slate-700/50 rounded-lg p-4">
+                      <div className="flex items-start justify-between mb-3">
                         <div>
-                          <h3 className="font-medium text-white text-lg">{buyer.firstName} {buyer.lastName}</h3>
-                          <div className="text-slate-300 text-sm">{buyer.city}, {buyer.state}</div>
+                          <h4 className="text-white font-bold text-lg">
+                            {buyer.firstName} {buyer.lastName}
+                          </h4>
+                          <p className="text-slate-400 text-sm">{buyer.city}, {buyer.state}</p>
+                          <p className="text-emerald-400 text-sm font-medium">{buyer.phone}</p>
+                          <p className="text-emerald-400 text-sm font-medium">{buyer.email}</p>
                         </div>
-                        <div className="text-right">
-                          <span className={`px-2 py-1 rounded text-xs font-semibold ${
-                            buyer.status === 'purchased' ? 'bg-yellow-500/20 text-yellow-400' :
-                            buyer.status === 'contacted' ? 'bg-blue-500/20 text-blue-400' :
-                            buyer.status === 'converted' ? 'bg-green-500/20 text-green-400' :
-                            'bg-red-500/20 text-red-400'
-                          }`}>
-                            {buyer.status}
-                          </span>
-                          <div className="text-slate-400 text-xs mt-1">
-                            {new Date(buyer.purchasedAt).toLocaleDateString()}
-                          </div>
-                        </div>
+                        <span className="bg-blue-500/20 text-blue-400 px-2 py-1 rounded text-xs font-medium">
+                          Owned
+                        </span>
                       </div>
                       
-                      <div className="grid grid-cols-2 gap-4 mb-3">
-                        <div>
-                          <div className="text-emerald-300 text-sm font-normal">{buyer.email}</div>
-                          <div className="text-blue-300 text-sm font-normal">{buyer.phone}</div>
+                      <div className="grid grid-cols-2 gap-3 mb-4">
+                        <div className="bg-slate-700/50 rounded-lg p-3 text-center">
+                          <div className="text-slate-400 text-xs">Budget Down</div>
+                          <div className="text-white font-bold">${buyer.maxDownPayment.toLocaleString()}</div>
                         </div>
-                        <div className="text-right">
-                          <div className="text-emerald-300 font-medium">${buyer.maxMonthlyPayment.toLocaleString()}/mo</div>
-                          <div className="text-blue-300 text-sm">${buyer.maxDownPayment.toLocaleString()} down</div>
+                        <div className="bg-slate-700/50 rounded-lg p-3 text-center">
+                          <div className="text-slate-400 text-xs">Budget Payment</div>
+                          <div className="text-white font-bold">${buyer.maxMonthlyPayment.toLocaleString()}</div>
                         </div>
                       </div>
-                      
-                      <div className="grid grid-cols-3 gap-2">
-                        <a 
-                          href={`sms:${buyer.phone}?body=${encodeURIComponent(`Hey ${buyer.firstName}, this is ${dashboardData.realtorData.firstName} from OwnerFi. I see you're interested in owner-financed properties in ${buyer.city}. When would you like to see some options?`)}`}
-                          className="bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 py-2 px-3 rounded text-center text-sm font-semibold transition-colors"
-                        >
-                          Text
-                        </a>
-                        <button 
-                          onClick={() => viewBuyerProperties(buyer.id)}
-                          className="bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 py-2 px-3 rounded text-center text-sm font-semibold transition-colors"
-                        >
-                          Properties
-                        </button>
-                        <button 
-                          onClick={() => {
-                            alert(`Dispute feature coming soon for ${buyer.firstName} ${buyer.lastName}`);
-                          }}
-                          className="bg-red-600/20 hover:bg-red-600/30 text-red-400 py-2 px-3 rounded text-center text-sm font-semibold transition-colors"
+
+                      <div className="space-y-2">
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => {
+                              const searchQuery = `${buyer.firstName} ${buyer.lastName} ${buyer.city} ${buyer.state} real estate owner financing`;
+                              window.open(`https://www.google.com/search?q=${encodeURIComponent(searchQuery)}`, '_blank');
+                            }}
+                            className="flex-1 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 py-2 px-3 rounded-lg text-sm font-medium transition-colors"
+                          >
+                            View More Details
+                          </button>
+                          <a
+                            href={`sms:${buyer.phone}&body=${encodeURIComponent("Hi, I see you're interested in owner finance properties through OwnerFi, how is everything going so far?")}`}
+                            className="flex-1 bg-green-500/20 hover:bg-green-500/30 text-green-400 py-2 px-3 rounded-lg text-sm font-medium transition-colors text-center"
+                          >
+                            Text
+                          </a>
+                        </div>
+                        <button
+                          onClick={() => openDisputeModal(buyer)}
+                          className="w-full bg-red-500/20 hover:bg-red-500/30 text-red-400 py-2 px-3 rounded-lg text-sm font-medium transition-colors"
                         >
                           Dispute
                         </button>
@@ -398,131 +418,120 @@ export default function RealtorDashboard() {
             </div>
           )}
 
-          {/* Transaction History - SCALABLE TABLE */}
+          {/* Transaction History */}
           {activeTab === 'transactions' && (
-            <div className="p-6">
+            <div>
               {dashboardData.transactions.length === 0 ? (
                 <div className="text-center py-16">
-                  <div className="text-slate-300 mb-4 text-6xl">📊</div>
-                  <h3 className="text-xl font-semibold text-slate-200 mb-2">No transactions</h3>
-                  <p className="text-slate-300">Transaction history will appear as you purchase leads and credits.</p>
+                  <div className="text-6xl mb-4">📊</div>
+                  <h3 className="text-xl font-bold text-white mb-2">No transactions</h3>
+                  <p className="text-slate-400">Transaction history will appear as you purchase leads and credits.</p>
                 </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-slate-700/50">
-                        <th className="text-left py-3 text-slate-400 font-semibold text-sm">DESCRIPTION</th>
-                        <th className="text-right py-3 text-slate-400 font-semibold text-sm">CREDITS</th>
-                        <th className="text-right py-3 text-slate-400 font-semibold text-sm">BALANCE</th>
-                        <th className="text-right py-3 text-slate-400 font-semibold text-sm">TYPE</th>
-                        <th className="text-right py-3 text-slate-400 font-semibold text-sm">DATE</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {dashboardData.transactions.map((transaction) => (
-                        <tr key={transaction.id} className="border-b border-slate-700/30 hover:bg-slate-700/20">
-                          <td className="py-4 text-slate-300">
-                            {transaction.description}
-                          </td>
-                          <td className="py-4 text-right">
-                            <span className={`font-semibold ${transaction.creditsChange > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                              {transaction.creditsChange > 0 ? '+' : ''}{transaction.creditsChange}
-                            </span>
-                          </td>
-                          <td className="py-4 text-right text-white font-semibold">
-                            {transaction.runningBalance}
-                          </td>
-                          <td className="py-4 text-right">
-                            <span className={`px-2 py-1 rounded text-xs font-semibold ${
-                              transaction.type === 'lead_purchase' ? 'bg-red-500/20 text-red-400' :
-                              transaction.type === 'credit_purchase' ? 'bg-green-500/20 text-green-400' :
-                              'bg-blue-500/20 text-blue-400'
-                            }`}>
-                              {transaction.type.replace('_', ' ')}
-                            </span>
-                          </td>
-                          <td className="py-4 text-right text-slate-300 text-sm">
-                            {new Date(transaction.createdAt).toLocaleDateString()}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          )}
-
-        </div>
-      </main>
-
-      {/* Buyer Liked Properties Modal */}
-      {viewingProperties && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-slate-800 border border-slate-700 rounded-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
-            <div className="p-6 border-b border-slate-700">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-white">
-                  {viewingProperties.buyer.firstName}'s Liked Properties
-                </h2>
-                <button 
-                  onClick={() => setViewingProperties(null)}
-                  className="text-slate-400 hover:text-white"
-                >
-                  ✕
-                </button>
-              </div>
-            </div>
-            
-            <div className="p-6 overflow-y-auto max-h-[60vh]">
-              {viewingProperties.properties.length === 0 ? (
-                <div className="text-center py-12">
-                  <div className="text-slate-400 mb-4 text-4xl">💔</div>
-                  <h3 className="text-lg font-semibold text-white mb-2">No liked properties</h3>
-                  <p className="text-slate-400">This buyer hasn't liked any properties yet.</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {viewingProperties.properties.map((property) => (
-                    <div key={property.id} className="bg-slate-700/30 border border-slate-600/50 rounded-xl overflow-hidden">
-                      <div className="grid grid-cols-3 gap-4 p-4">
-                        <div className="col-span-2">
-                          <h3 className="font-semibold text-white mb-1">{property.address}</h3>
-                          <p className="text-slate-300 text-sm mb-2">{property.city}, {property.state}</p>
-                          <div className="space-y-1 text-sm">
-                            <div className="text-slate-300">
-                              <span className="text-emerald-400">${property.listPrice?.toLocaleString()}</span> list price
-                            </div>
-                            <div className="text-slate-300">
-                              <span className="text-emerald-400">${Math.ceil(property.monthlyPayment || 0).toLocaleString()}</span>/mo est
-                            </div>
-                            <div className="text-slate-300">
-                              <span className="text-blue-400">${property.downPaymentAmount?.toLocaleString()}</span> down est
+                <div className="space-y-3">
+                  {dashboardData.transactions.map((transaction) => (
+                    <div key={transaction.id} className="bg-slate-800/50 border border-slate-700/50 rounded-lg p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                            transaction.type === 'lead_purchase' ? 'bg-red-500/20 text-red-400' :
+                            transaction.type === 'credit_purchase' ? 'bg-emerald-500/20 text-emerald-400' :
+                            'bg-blue-500/20 text-blue-400'
+                          }`}>
+                            {transaction.type === 'lead_purchase' ? '📞' : 
+                             transaction.type === 'credit_purchase' ? '💳' : '🔄'}
+                          </div>
+                          <div>
+                            <div className="text-white font-medium">{transaction.description}</div>
+                            <div className="text-slate-400 text-sm">
+                              {new Date(transaction.createdAt).toLocaleDateString()}
                             </div>
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="text-sm text-slate-300 mb-3">
-                            <div>{property.bedrooms} bed</div>
-                            <div>{property.bathrooms} bath</div>
-                            <div>{property.squareFeet?.toLocaleString()} sq ft</div>
+                          <div className={`font-bold text-lg ${transaction.creditsChange > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                            {transaction.creditsChange > 0 ? '+' : ''}{transaction.creditsChange}
                           </div>
-                          <button
-                            onClick={() => {
-                              const searchQuery = `${property.address}, ${property.city}, ${property.state}`;
-                              window.open(`https://www.google.com/search?q=${encodeURIComponent(searchQuery)}`, '_blank');
-                            }}
-                            className="bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 px-3 py-2 rounded text-sm font-semibold transition-colors w-full"
-                          >
-                            Google Search
-                          </button>
+                          <div className="text-slate-400 text-sm">Balance: {transaction.runningBalance}</div>
                         </div>
                       </div>
                     </div>
                   ))}
                 </div>
               )}
+            </div>
+          )}
+        </div>
+      </main>
+
+      {/* Dispute Modal */}
+      {disputeModal.buyer && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-slate-800 border border-slate-700 rounded-xl p-6 max-w-md w-full">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-white">Dispute Lead</h3>
+              <button
+                onClick={closeDisputeModal}
+                className="text-slate-400 hover:text-white text-xl"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <div className="mb-4">
+              <div className="text-white font-medium mb-1">
+                {disputeModal.buyer.firstName} {disputeModal.buyer.lastName}
+              </div>
+              <div className="text-slate-400 text-sm">
+                {disputeModal.buyer.city}, {disputeModal.buyer.state}
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-white text-sm font-medium mb-2">Reason</label>
+                <select
+                  value={disputeModal.reason}
+                  onChange={(e) => setDisputeModal(prev => ({ ...prev, reason: e.target.value }))}
+                  className="w-full bg-slate-700/50 border border-slate-600 rounded-lg p-3 text-white"
+                >
+                  <option value="">Select reason</option>
+                  <option value="no_response">No response</option>
+                  <option value="invalid_contact">Invalid contact info</option>
+                  <option value="not_qualified">Not qualified</option>
+                  <option value="already_working">Already working with another agent</option>
+                  <option value="false_information">False information</option>
+                  <option value="duplicate">Duplicate lead</option>
+                  <option value="not_interested">Not interested</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-white text-sm font-medium mb-2">Description</label>
+                <textarea
+                  value={disputeModal.description}
+                  onChange={(e) => setDisputeModal(prev => ({ ...prev, description: e.target.value }))}
+                  className="w-full bg-slate-700/50 border border-slate-600 rounded-lg p-3 text-white h-24 resize-none"
+                  placeholder="Please provide details about the issue..."
+                />
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={closeDisputeModal}
+                  className="flex-1 bg-slate-700 hover:bg-slate-600 text-white py-2 px-4 rounded-lg font-medium transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={submitDispute}
+                  disabled={!disputeModal.reason || !disputeModal.description || disputeModal.submitting}
+                  className="flex-1 bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg font-medium transition-colors disabled:opacity-50"
+                >
+                  {disputeModal.submitting ? 'Submitting...' : 'Submit Dispute'}
+                </button>
+              </div>
             </div>
           </div>
         </div>

@@ -48,14 +48,14 @@ export default function Dashboard() {
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/');
-    } else if (status === 'authenticated' && session?.user?.role !== 'buyer') {
+    } else if (status === 'authenticated' && (session?.user as any)?.role !== 'buyer') {
       router.push('/');
     }
   }, [status, session, router]);
 
   // Load data
   useEffect(() => {
-    if (status === 'authenticated' && session?.user?.role === 'buyer') {
+    if (status === 'authenticated' && (session?.user as any)?.role === 'buyer') {
       loadData();
     }
   }, [status, session]);
@@ -166,7 +166,7 @@ export default function Dashboard() {
   const currentProperty = properties[currentIndex];
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white" style={{zoom: '0.9'}}>
+    <div className="min-h-screen bg-slate-900 text-white" style={{zoom: '0.85'}}>
       {/* Dark Header */}
       <header className="relative z-20 bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50 px-6 py-4">
         <div className="flex items-center justify-between">

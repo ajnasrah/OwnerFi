@@ -37,14 +37,14 @@ export default function LikedProperties() {
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/auth/signin');
-    } else if (status === 'authenticated' && session?.user?.role !== 'buyer') {
+    } else if (status === 'authenticated' && (session?.user as any)?.role !== 'buyer') {
       router.push('/auth/signin');
     }
   }, [status, session, router]);
 
   // Load liked properties
   useEffect(() => {
-    if (status === 'authenticated' && session?.user?.role === 'buyer') {
+    if (status === 'authenticated' && (session?.user as any)?.role === 'buyer') {
       loadLikedProperties();
     }
   }, [status, session]);

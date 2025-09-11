@@ -19,7 +19,7 @@ export async function GET(
     }
 
     const resolvedParams = await params;
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession(authOptions) as any;
     if (!session?.user || (session as ExtendedSession).user.role !== 'admin') {
       return NextResponse.json(
         { error: 'Admin access required' },
@@ -62,7 +62,7 @@ export async function PUT(
     }
 
     const resolvedParams = await params;
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession(authOptions) as any;
     if (!session?.user || (session as ExtendedSession).user.role !== 'admin') {
       return NextResponse.json(
         { error: 'Admin access required' },

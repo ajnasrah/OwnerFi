@@ -15,9 +15,9 @@ import { getSafeDb } from '@/lib/firebase-safe';
 export async function POST(request: NextRequest) {
   try {
     // Admin access control
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession(authOptions) as any as any;
     
-    if (!session?.user || (session.user as { role?: string }).role !== 'admin') {
+    if (!session?.user || session.user?.role !== 'admin') {
       return NextResponse.json(
         { error: 'Access denied. Admin access required.' },
         { status: 403 }

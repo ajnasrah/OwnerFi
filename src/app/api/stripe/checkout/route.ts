@@ -1,11 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSessionWithRole } from '@/lib/auth-utils';
-import { PRICING_TIERS } from '@/lib/pricing';
 import Stripe from 'stripe';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-08-27.basil',
 });
+
+// New credit package system - matches simple-checkout
+const CREDIT_PACKAGES = {
+  '1_credit': { credits: 1, price: 300, name: '1 Lead Credit', recurring: false },
+  '4_credits': { credits: 4, price: 500, name: '4 Lead Credits (Monthly)', recurring: true },
+  '10_credits': { credits: 10, price: 1000, name: '10 Lead Credits (Monthly)', recurring: true },
+  '60_credits': { credits: 60, price: 3000, name: '60 Lead Credits', recurring: false },
+};
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,53 +25,47 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { priceId, planId, billingType, successUrl, cancelUrl } = await request.json();
-
-    // Validate the plan
-    const tier = PRICING_TIERS[planId];
-    if (!tier) {
-      return NextResponse.json(
-        { error: 'Invalid plan selected' },
-        { status: 400 }
-      );
-    }
-
-    // Determine the correct price ID based on billing type
-    let finalPriceId = priceId;
-    if (billingType === 'annual' && tier.stripePriceAnnual) {
-      finalPriceId = tier.stripePriceAnnual;
-    } else if (billingType === 'monthly' && tier.stripePrice) {
-      finalPriceId = tier.stripePrice;
-    }
-
-    // Determine checkout mode - subscription for recurring, payment for one-time
-    const isRecurring = tier.isRecurringPrice || (billingType === 'monthly' && !tier.isPayPerLead);
-    const checkoutMode = isRecurring ? 'subscription' : 'payment';
+    const { creditPackId, successUrl, cancelUrl } = await request.json();
     
+    const package_ = CREDIT_PACKAGES[creditPackId as keyof typeof CREDIT_PACKAGES];
+    if (!package_) {
+      return NextResponse.json({ error: 'Invalid credit package' }, { status: 400 });
+    }
+
+    // Create Stripe checkout session
     const checkoutSession = await stripe.checkout.sessions.create({
-      mode: checkoutMode,
       payment_method_types: ['card'],
+      mode: package_.recurring ? 'subscription' : 'payment',
       customer_email: session.user.email,
+      metadata: {
+        userId: session.user.id!,
+        userEmail: session.user.email,
+        creditPackId: creditPackId,
+        credits: package_.credits.toString()
+      },
       line_items: [
         {
-          price: finalPriceId,
+          price_data: {
+            currency: 'usd',
+            ...(package_.recurring ? {
+              recurring: { interval: 'month' },
+            } : {}),
+            product_data: {
+              name: package_.name,
+              description: `${package_.credits} buyer lead credits${package_.recurring ? ' (renews monthly)' : ''}`,
+            },
+            unit_amount: package_.price * 100, // Convert to cents
+          },
           quantity: 1,
         },
       ],
-      metadata: {
-        userId: session.user.id,
-        userEmail: session.user.email,
-        planId: planId,
-        billingType: billingType || 'monthly',
-        type: isRecurring ? 'subscription' : (billingType === 'annual' ? 'annual_purchase' : tier.isPayPerLead ? 'credit_purchase' : 'monthly_purchase')
-      },
-      success_url: successUrl || `${process.env.NEXTAUTH_URL}/realtor/settings?success=true`,
-      cancel_url: cancelUrl || `${process.env.NEXTAUTH_URL}/realtor/settings?canceled=true`,
+      success_url: successUrl || `${process.env.NEXTAUTH_URL}/realtor-dashboard?payment=success&credits=${package_.credits}`,
+      cancel_url: cancelUrl || `${process.env.NEXTAUTH_URL}/buy-credits?payment=cancelled`,
     });
 
-    return NextResponse.json({ 
-      url: checkoutSession.url,
-      sessionId: checkoutSession.id 
+    return NextResponse.json({
+      checkoutUrl: checkoutSession.url,
+      sessionId: checkoutSession.id
     });
 
   } catch (error) {

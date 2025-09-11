@@ -149,12 +149,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(response, { status: 201 });
 
   } catch (error) {
+    console.error('Realtor registration error:', error);
     await logError('Realtor registration failed', {
       action: 'realtor_registration_error'
     }, error as Error);
 
     return NextResponse.json(
-      { error: 'Registration failed. Please try again.' },
+      { 
+        error: 'Registration failed. Please try again.',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     );
   }

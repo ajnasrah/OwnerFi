@@ -3,22 +3,10 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { Header } from '@/components/ui/Header';
-import { Footer } from '@/components/ui/Footer';
 import { GooglePlacesAutocomplete } from '@/components/ui/GooglePlacesAutocomplete';
+import Link from 'next/link';
 
-/**
- * SIMPLIFIED BUYER SETUP
- * 
- * Collects ONLY the 3 essential criteria:
- * 1. City
- * 2. Monthly payment budget
- * 3. Down payment budget
- * 
- * NO complex forms, NO realtor stuff, NO overcomplicated logic.
- */
-
-export default function BuyerSetupV2() {
+export default function BuyerSetup() {
   const { data: session, status } = useSession();
   const router = useRouter();
   
@@ -34,18 +22,25 @@ export default function BuyerSetupV2() {
   // Auth check
   useEffect(() => {
     if (status === 'unauthenticated') {
-      router.push('/');
-    } else if (status === 'authenticated' && session?.user?.role !== 'buyer') {
-      router.push('/');
+      router.push('/signup');
+    } else if (status === 'authenticated' && (session?.user as any)?.role !== 'buyer') {
+      router.push('/realtor-signup');
     }
   }, [status, session, router]);
+
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-900">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-400"></div>
+      </div>
+    );
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
-    // Simple validation
     if (!formData.city || !formData.maxMonthlyPayment || !formData.maxDownPayment) {
       setError('Please fill in all fields');
       setLoading(false);
@@ -62,13 +57,10 @@ export default function BuyerSetupV2() {
     }
 
     try {
-
-      // Parse city and state from the city field
       const cityParts = formData.city.split(',');
       const city = cityParts[0]?.trim() || formData.city;
-      const state = cityParts[1]?.trim() || 'TX'; // Default to TX
+      const state = cityParts[1]?.trim() || 'TX';
 
-      
       const response = await fetch('/api/buyer/profile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -95,99 +87,93 @@ export default function BuyerSetupV2() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
-      
-      <main className="flex-1 flex items-center justify-center px-4 py-12">
-        <div className="max-w-md w-full">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Find Your Perfect Home
-            </h1>
-            <p className="text-gray-600">
-              Tell us what you're looking for and we'll show you all available properties.
-            </p>
-          </div>
+    <div className="min-h-screen bg-slate-900" style={{zoom: '0.8'}}>
+      {/* Header */}
+      <header className="bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50 p-4">
+        <div className="flex items-center justify-between max-w-md mx-auto">
+          <Link href="/" className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-sm">O</span>
+            </div>
+            <span className="text-lg font-bold text-white">OwnerFi</span>
+          </Link>
+          <span className="text-slate-400 text-sm">Setup</span>
+        </div>
+      </header>
 
-          <div className="bg-white rounded-lg shadow-md p-8">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {error && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                  <p className="text-red-800 text-sm">{error}</p>
-                </div>
-              )}
+      {/* Main Content */}
+      <div className="flex flex-col justify-center min-h-[calc(100vh-80px)] px-4">
+        <div className="max-w-md mx-auto w-full">
+          
+          <div className="bg-slate-800/50 backdrop-blur-lg border border-slate-700/50 rounded-xl p-6">
+            <div className="text-center mb-6">
+              <h1 className="text-2xl font-bold text-white mb-2">Set Your Preferences</h1>
+              <p className="text-slate-300 text-sm">Tell us what you're looking for</p>
+            </div>
 
-              {/* City */}
-              <GooglePlacesAutocomplete
-                label="What city are you looking in? *"
-                value={formData.city}
-                onChange={(city) => setFormData(prev => ({ ...prev, city }))}
-                placeholder="Type city name..."
-              />
+            {error && (
+              <div className="bg-red-500/20 border border-red-400/30 rounded-lg p-3 mb-4">
+                <p className="text-red-300 text-sm">{error}</p>
+              </div>
+            )}
 
-              {/* Monthly Payment Budget */}
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Maximum monthly payment you can afford? *
+                <label className="block text-sm font-medium text-white mb-2">Search Location</label>
+                <GooglePlacesAutocomplete
+                  value={formData.city}
+                  onChange={(city) => setFormData(prev => ({ ...prev, city }))}
+                  placeholder="Dallas, TX"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-white mb-2">
+                  Maximum Monthly Payment
                 </label>
                 <input
                   type="number"
-                  required
-                  min="1"
-                  step="1"
                   value={formData.maxMonthlyPayment}
                   onChange={(e) => setFormData(prev => ({ ...prev, maxMonthlyPayment: e.target.value }))}
-                  className="w-full pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full p-3 bg-slate-700/50 border border-slate-600 rounded-lg focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 text-white placeholder-slate-400"
                   placeholder="2000"
+                  min="1"
+                  required
                 />
-                <p className="text-xs text-gray-500 mt-1">This includes principal, interest, insurance, and taxes</p>
+                <p className="text-slate-400 text-xs mt-1">
+                  This includes principal, interest, insurance, and taxes
+                </p>
               </div>
 
-              {/* Down Payment Budget */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Maximum down payment you can make? *
+                <label className="block text-sm font-medium text-white mb-2">
+                  Maximum Down Payment
                 </label>
                 <input
                   type="number"
-                  required
-                  min="1"
-                  step="1"
                   value={formData.maxDownPayment}
                   onChange={(e) => setFormData(prev => ({ ...prev, maxDownPayment: e.target.value }))}
-                  className="w-full pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full p-3 bg-slate-700/50 border border-slate-600 rounded-lg focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 text-white placeholder-slate-400"
                   placeholder="50000"
+                  min="1"
+                  required
                 />
-                <p className="text-xs text-gray-500 mt-1">The upfront payment you can afford to make</p>
+                <p className="text-slate-400 text-xs mt-1">
+                  The upfront payment you can afford to make
+                </p>
               </div>
 
-              {/* Submit */}
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
+                className="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-3 px-4 rounded-lg font-medium transition-colors disabled:opacity-50 mt-6"
               >
-                {loading ? (
-                  <span className="flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Setting up...
-                  </span>
-                ) : (
-                  'Show Me Properties'
-                )}
+                {loading ? 'Setting up...' : 'Show Me Properties'}
               </button>
             </form>
           </div>
-
-          <div className="text-center mt-6">
-            <p className="text-xs text-gray-500">
-              We'll show you every property that matches your criteria - no complex algorithms, just simple matching.
-            </p>
-          </div>
         </div>
-      </main>
-
-      <Footer />
+      </div>
     </div>
   );
 }

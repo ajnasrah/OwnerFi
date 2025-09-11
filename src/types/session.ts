@@ -1,4 +1,4 @@
-import { Session } from 'next-auth';
+import type { Session } from 'next-auth';
 
 // Extended user interface for NextAuth sessions
 export interface ExtendedUser {

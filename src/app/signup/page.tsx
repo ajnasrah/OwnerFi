@@ -51,26 +51,47 @@ export default function SignUp() {
 
       const data = await response.json();
       
-      if (data.error) {
-        setError(data.error);
+      if (!response.ok || data.error) {
+        setError(data.error || 'Failed to create account');
         setLoading(false);
         return;
       }
 
-      // Auto-sign in after successful registration
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      const signInResult = await signIn('credentials', {
-        email: formData.email,
-        password: formData.password,
-        redirect: false,
-      });
-
-      if (signInResult?.error) {
-        router.push('/auth/signin');
-      } else {
-        router.push('/dashboard/setup');
+      if (!data.success) {
+        setError('Account creation failed. Please try again.');
+        setLoading(false);
+        return;
       }
+
+      // Wait for database sync and attempt auto-signin with retries
+      let signInAttempts = 0;
+      const maxAttempts = 3;
+      let signInResult;
+
+      while (signInAttempts < maxAttempts) {
+        // Wait before attempt (longer delays for subsequent attempts)
+        await new Promise(resolve => setTimeout(resolve, (signInAttempts + 1) * 1000));
+        
+        signInResult = await signIn('credentials', {
+          email: formData.email,
+          password: formData.password,
+          redirect: false,
+        });
+
+        if (signInResult?.ok && !signInResult.error) {
+          // Success! Proceed to setup
+          router.push('/dashboard/setup');
+          return;
+        }
+
+        signInAttempts++;
+      }
+
+      // All attempts failed - account created but auto-signin didn't work
+      setError('Account created successfully! Please sign in with your credentials.');
+      setTimeout(() => {
+        router.push('/auth/signin');
+      }, 2000);
       
     } catch (err) {
       setError('Something went wrong. Please try again.');
@@ -84,7 +105,7 @@ export default function SignUp() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900">
+    <div className="min-h-screen bg-slate-900" style={{zoom: '0.8'}}>
       {/* Dark Header */}
       <header className="bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50 px-6 py-4">
         <div className="flex items-center justify-between">
@@ -105,11 +126,12 @@ export default function SignUp() {
         </div>
       </header>
 
-      <div className="max-w-md mx-auto pt-8 pb-12 px-6">
+      <div className="flex flex-col justify-center px-6" style={{height: 'calc(100vh - 80px)'}}>
+        <div className="max-w-md mx-auto w-full">
         <div className="bg-slate-800/50 backdrop-blur-lg border border-slate-700/50 rounded-2xl p-8">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-white mb-3">Find your home</h1>
-            <p className="text-slate-300 font-normal">Join thousands who found homes through owner financing</p>
+            <p className="text-white font-normal">Join thousands who found homes through owner financing</p>
           </div>
 
           {error && (
@@ -120,7 +142,7 @@ export default function SignUp() {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="block text-sm font-semibold text-slate-300 mb-3">Full name</label>
+              <label className="block text-sm font-semibold text-white mb-3">Full name</label>
               <input
                 type="text"
                 required
@@ -132,7 +154,7 @@ export default function SignUp() {
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-slate-300 mb-3">Email address</label>
+              <label className="block text-sm font-semibold text-white mb-3">Email address</label>
               <input
                 type="email"
                 required
@@ -144,7 +166,7 @@ export default function SignUp() {
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-slate-300 mb-3">Phone number</label>
+              <label className="block text-sm font-semibold text-white mb-3">Phone number</label>
               <input
                 type="tel"
                 required
@@ -156,7 +178,7 @@ export default function SignUp() {
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-slate-300 mb-3">Password</label>
+              <label className="block text-sm font-semibold text-white mb-3">Password</label>
               <input
                 type="password"
                 required
@@ -168,7 +190,7 @@ export default function SignUp() {
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-slate-300 mb-3">Confirm password</label>
+              <label className="block text-sm font-semibold text-white mb-3">Confirm password</label>
               <input
                 type="password"
                 required
@@ -181,7 +203,7 @@ export default function SignUp() {
 
             <div className="bg-emerald-500/10 border border-emerald-400/30 rounded-xl p-4">
               <h3 className="font-bold text-white mb-3">What you get:</h3>
-              <ul className="space-y-2 text-sm text-slate-300">
+              <ul className="space-y-2 text-sm text-white">
                 <li className="flex items-center">
                   <div className="w-2 h-2 bg-emerald-400 rounded-full mr-3"></div>
                   Direct access to owner-financed homes
@@ -206,23 +228,21 @@ export default function SignUp() {
             </button>
           </form>
 
-          <div className="mt-8 text-center">
-            <p className="text-slate-400">
+          <div className="mt-8 text-center space-y-4">
+            <p className="text-white">
               Already have an account?{' '}
               <Link href="/auth/signin" className="text-emerald-400 hover:text-emerald-300 font-semibold transition-colors">
                 Sign In
               </Link>
             </p>
-          </div>
-
-          <div className="mt-4 text-center">
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-white">
               Real estate professional?{' '}
               <Link href="/realtor-signup" className="text-blue-400 hover:text-blue-300 font-semibold transition-colors">
                 Join as a Realtor
               </Link>
             </p>
           </div>
+        </div>
         </div>
       </div>
     </div>

@@ -216,24 +216,6 @@ export default function RealtorSignup() {
                 />
               </div>
 
-              <div className="bg-emerald-500/10 border border-emerald-400/30 rounded-xl p-4">
-                <h3 className="font-bold text-white mb-3">Realtor benefits:</h3>
-                <ul className="space-y-2 text-sm text-white">
-                  <li className="flex items-center">
-                    <div className="w-2 h-2 bg-emerald-400 rounded-full mr-3"></div>
-                    Pre-qualified buyer leads
-                  </li>
-                  <li className="flex items-center">
-                    <div className="w-2 h-2 bg-emerald-400 rounded-full mr-3"></div>
-                    Direct contact information
-                  </li>
-                  <li className="flex items-center">
-                    <div className="w-2 h-2 bg-emerald-400 rounded-full mr-3"></div>
-                    Affordable lead pricing
-                  </li>
-                </ul>
-              </div>
-
               <button
                 type="submit"
                 disabled={loading}
@@ -242,6 +224,24 @@ export default function RealtorSignup() {
                 {loading ? 'Creating account...' : 'Start getting leads'}
               </button>
             </form>
+
+            <div className="mt-6 bg-emerald-500/10 border border-emerald-400/30 rounded-xl p-4">
+              <h3 className="font-bold text-white mb-3">What you get:</h3>
+              <ul className="space-y-2 text-sm text-white">
+                <li className="flex items-center">
+                  <div className="w-2 h-2 bg-emerald-400 rounded-full mr-3"></div>
+                  Pre-qualified buyer leads
+                </li>
+                <li className="flex items-center">
+                  <div className="w-2 h-2 bg-emerald-400 rounded-full mr-3"></div>
+                  Direct contact information
+                </li>
+                <li className="flex items-center">
+                  <div className="w-2 h-2 bg-emerald-400 rounded-full mr-3"></div>
+                  Affordable lead pricing
+                </li>
+              </ul>
+            </div>
 
             <div className="mt-8 text-center space-y-4">
               <p className="text-white">

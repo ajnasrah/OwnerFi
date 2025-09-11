@@ -219,7 +219,7 @@ export default function HomePage() {
       <section className="py-16">
         <div className="max-w-6xl mx-auto px-6">
           
-          <div className="grid lg:grid-cols-2 gap-8">
+          <div className="grid lg:grid-cols-2 gap-16">
             
             {/* For Buyers Card */}
             <div className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-8 shadow-2xl hover:shadow-emerald-500/10 transition-all duration-300">

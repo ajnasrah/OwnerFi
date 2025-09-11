@@ -4,10 +4,6 @@ import { useState } from 'react';
 import { signIn, getSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Header } from '@/components/ui/Header';
-import { Footer } from '@/components/ui/Footer';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
 import { isExtendedSession } from '@/types/session';
 
 export default function SignIn() {
@@ -32,7 +28,6 @@ export default function SignIn() {
       if (result?.error) {
         setError('Invalid email or password');
       } else {
-        // Get the session to determine user role
         const session = await getSession();
         if (isExtendedSession(session)) {
           if (session.user.role === 'buyer') {
@@ -45,7 +40,6 @@ export default function SignIn() {
             router.push('/dashboard');
           }
         } else {
-          // Default to buyer dashboard for sessions without role
           router.push('/dashboard');
         }
       }
@@ -57,112 +51,190 @@ export default function SignIn() {
   };
 
   return (
-    <div className="min-h-screen bg-primary-bg flex flex-col">
-      <Header />
-      
-      <div className="flex-1 px-6 py-12">
-        <div className="w-full">
-          {/* Welcome section */}
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-primary-text mb-2">Welcome Back</h1>
-            <p className="text-lg text-secondary-text">Sign in to find your perfect home</p>
-          </div>
-
-          {/* Form */}
-          <div className="bg-surface-bg rounded-xl p-6 shadow-soft">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {error && (
-                <div className="bg-error-bg border border-accent-primary/20 rounded-lg p-4">
-                  <p className="text-accent-primary">{error}</p>
-                </div>
-              )}
-              
-              <Input
-                label="Email address"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                autoComplete="email"
-                placeholder="your@email.com"
-              />
-
-              <Input
-                label="Password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                autoComplete="current-password"
-                placeholder="Your password"
-              />
-
-              <Button
-                type="submit"
-                variant="primary"
-                size="lg"
-                disabled={loading}
-                className="w-full font-semibold text-lg py-5"
-              >
-                {loading ? 'Signing in...' : 'Sign In'}
-              </Button>
-
-              <div className="text-center mt-4">
-                <Link href="/auth/forgot-password" className="text-sm text-blue-600 hover:text-blue-500">
-                  Forgot password?
-                </Link>
-              </div>
-            </form>
-          </div>
-
-          {/* Sign up options */}
-          <div className="mt-8">
-            <div className="text-center mb-6">
-              <p className="text-lg font-medium text-primary-text">Don't have an account?</p>
+    <div className="min-h-screen bg-white">
+      {/* Simple Header */}
+      <header style={{
+        padding: 'var(--mobile-padding)',
+        borderBottom: '1px solid var(--blue-200)'
+      }}>
+        <div className="flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2">
+            <div style={{
+              width: '32px',
+              height: '32px',
+              background: 'var(--primary)',
+              borderRadius: 'var(--radius-lg)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              🏠
             </div>
-            
-            <div className="space-y-4">
-              <Button
-                variant="secondary"
-                size="lg"
-                href="/unified-signup"
-                className="w-full font-semibold text-lg py-5"
-              >
-                🏠 I'm Looking for a Home
-              </Button>
-              
-              <Button
-                variant="outline"
-                size="lg"
-                href="/unified-signup"
-                className="w-full font-semibold text-lg py-5"
-              >
-                🤝 I'm a Real Estate Professional
-              </Button>
+            <span style={{
+              fontSize: 'var(--text-xl)',
+              fontWeight: 'var(--font-bold)',
+              color: 'var(--blue-950)'
+            }}>
+              OwnerFi
+            </span>
+          </Link>
+        </div>
+      </header>
+
+      {/* Main Content - Perfect for 380px */}
+      <main style={{
+        padding: 'var(--space-8) var(--mobile-padding)',
+        maxWidth: 'var(--mobile-content-width)',
+        margin: '0 auto'
+      }}>
+        {/* Welcome */}
+        <div className="text-center mb-8">
+          <h1 style={{
+            fontSize: 'var(--text-3xl)',
+            fontWeight: 'var(--font-bold)',
+            color: 'var(--gray-900)',
+            marginBottom: 'var(--space-2)'
+          }}>
+            Welcome Back
+          </h1>
+          <p style={{
+            fontSize: 'var(--text-base)',
+            color: 'var(--blue-600)'
+          }}>
+            Sign in to continue your home search
+          </p>
+        </div>
+
+        {/* Form */}
+        <form onSubmit={handleSubmit} style={{marginBottom: 'var(--space-8)'}}>
+          {error && (
+            <div style={{
+              padding: 'var(--space-4)',
+              marginBottom: 'var(--space-4)',
+              background: 'rgb(239 68 68 / 0.1)',
+              border: '1px solid rgb(239 68 68 / 0.2)',
+              borderRadius: 'var(--radius-lg)',
+              color: '#991b1b'
+            }}>
+              {error}
             </div>
+          )}
+          
+          <div style={{marginBottom: 'var(--space-4)'}}>
+            <label style={{
+              display: 'block',
+              fontSize: 'var(--text-sm)',
+              fontWeight: 'var(--font-medium)',
+              color: 'var(--blue-700)',
+              marginBottom: 'var(--space-2)'
+            }}>
+              Email
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              autoComplete="email"
+              placeholder="your@email.com"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+            />
           </div>
 
-          {/* Footer links */}
-          <div className="mt-8 text-center space-y-4">
-            <p className="text-sm text-secondary-text">
-              By signing in, you agree to our{' '}
-              <Link href="/terms" className="text-accent-primary hover:text-accent-hover underline">
-                Terms of Service
-              </Link>{' '}
-              and{' '}
-              <Link href="/privacy" className="text-accent-primary hover:text-accent-hover underline">
-                Privacy Policy
-              </Link>
-            </p>
-            
-            <Link href="/" className="text-accent-primary hover:text-accent-hover">
-              ← Back to home page
+          <div style={{marginBottom: 'var(--space-6)'}}>
+            <label style={{
+              display: 'block',
+              fontSize: 'var(--text-sm)',
+              fontWeight: 'var(--font-medium)',
+              color: 'var(--blue-700)',
+              marginBottom: 'var(--space-2)'
+            }}>
+              Password
+            </label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              autoComplete="current-password"
+              placeholder="Your password"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:bg-gray-400"
+            style={{marginBottom: 'var(--space-4)'}}
+          >
+            {loading ? (
+              <span className="flex items-center justify-center gap-2">
+                <span className="loading"></span>
+                Signing in...
+              </span>
+            ) : (
+              'Sign In'
+            )}
+          </button>
+
+          <div className="text-center">
+            <Link 
+              href="/auth/forgot-password" 
+              style={{
+                fontSize: 'var(--text-sm)',
+                color: 'var(--primary)',
+                textDecoration: 'none'
+              }}
+            >
+              Forgot password?
             </Link>
           </div>
+        </form>
+
+        {/* Sign Up Options */}
+        <div>
+          <p style={{
+            fontSize: 'var(--text-base)',
+            fontWeight: 'var(--font-medium)',
+            color: 'var(--gray-900)',
+            textAlign: 'center',
+            marginBottom: 'var(--space-4)'
+          }}>
+            Don't have an account?
+          </p>
+          
+          <div style={{display: 'flex', flexDirection: 'column', gap: 'var(--space-3)'}}>
+            <a href="/unified-signup" className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center justify-center">
+              🏠 I'm Looking for a Home
+            </a>
+            <a href="/unified-signup" className="w-full bg-gray-100 text-gray-700 py-3 px-4 rounded-lg hover:bg-gray-200 transition-colors font-medium flex items-center justify-center border">
+              🤝 I'm a Real Estate Professional
+            </a>
+          </div>
         </div>
-      </div>
-      
-      <Footer />
+
+        {/* Footer */}
+        <div style={{
+          marginTop: 'var(--space-12)',
+          textAlign: 'center'
+        }}>
+          <p style={{
+            fontSize: 'var(--text-xs)',
+            color: 'var(--blue-500)',
+            lineHeight: '1.5'
+          }}>
+            By signing in, you agree to our{' '}
+            <Link href="/terms" style={{color: 'var(--primary)', textDecoration: 'none'}}>
+              Terms
+            </Link>{' '}
+            and{' '}
+            <Link href="/privacy" style={{color: 'var(--primary)', textDecoration: 'none'}}>
+              Privacy Policy
+            </Link>
+          </p>
+        </div>
+      </main>
     </div>
   );
 }

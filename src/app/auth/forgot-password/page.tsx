@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Button } from '@/components/ui/Button';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
@@ -39,8 +38,8 @@ export default function ForgotPassword() {
 
   if (sent) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4">
-        <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4 py-8">
+        <div className="w-full max-w-lg bg-white rounded-3xl shadow-2xl p-10">
           <div className="text-center">
             <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -51,16 +50,19 @@ export default function ForgotPassword() {
             <p className="text-gray-600 mb-6">
               We've sent password reset instructions to <strong>{email}</strong>
             </p>
-            <div className="space-y-3">
-              <Button variant="primary" href="/auth/signin" className="w-full">
+            <div className="space-y-4">
+              <a 
+                href="/auth/signin"
+                className="w-full bg-blue-600 text-white py-4 px-4 rounded-2xl hover:bg-blue-700 transition-colors font-semibold text-lg shadow-lg transform active:scale-95 flex items-center justify-center"
+              >
                 Return to Sign In
-              </Button>
+              </a>
               <button
                 onClick={() => {
                   setSent(false);
                   setEmail('');
                 }}
-                className="w-full text-blue-600 hover:text-blue-700 text-sm"
+                className="w-full text-blue-600 hover:text-blue-700 text-sm font-medium py-2"
               >
                 Try a different email
               </button>
@@ -72,8 +74,8 @@ export default function ForgotPassword() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4">
-      <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4 py-8">
+      <div className="w-full max-w-lg bg-white rounded-3xl shadow-2xl p-10">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-800 mb-2">Reset Password</h1>
           <p className="text-gray-600">
@@ -81,15 +83,15 @@ export default function ForgotPassword() {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-8">
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-              <p className="text-red-800 text-sm">{error}</p>
+            <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+              <p className="text-red-600 text-sm">{error}</p>
             </div>
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-semibold text-gray-800 mb-3">
               Email Address
             </label>
             <input
@@ -97,22 +99,28 @@ export default function ForgotPassword() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500 text-lg"
               placeholder="Enter your email address"
             />
           </div>
 
-          <Button
+          <button
             type="submit"
-            variant="primary"
             disabled={loading}
-            className="w-full py-4 text-lg"
+            className="w-full bg-blue-600 text-white py-4 px-4 rounded-2xl hover:bg-blue-700 transition-colors font-semibold text-lg disabled:bg-gray-400 disabled:cursor-not-allowed shadow-lg transform active:scale-95"
           >
-            {loading ? 'Sending...' : 'Send Reset Instructions'}
-          </Button>
+            {loading ? (
+              <span className="flex items-center justify-center">
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                Sending...
+              </span>
+            ) : (
+              'Send Reset Instructions'
+            )}
+          </button>
 
           <div className="text-center">
-            <Link href="/auth/signin" className="text-blue-600 hover:text-blue-700 text-sm">
+            <Link href="/auth/signin" className="text-blue-600 hover:text-blue-700 font-medium text-sm">
               ← Back to Sign In
             </Link>
           </div>

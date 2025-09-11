@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { hash } from 'bcryptjs';
-import { unifiedDb } from '@/lib/unified-db';
-import { logError, logInfo } from '@/lib/logger';
-import Stripe from 'stripe';
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-08-27.basil',
-});
 
 export async function POST(request: NextRequest) {
+  // Dynamic imports to avoid build-time Firebase initialization
+  const { hash } = await import('bcryptjs');
+  const { unifiedDb } = await import('@/lib/unified-db');
+  const { logError, logInfo } = await import('@/lib/logger');
+  const Stripe = (await import('stripe')).default;
+
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+    apiVersion: '2025-08-27.basil',
+  });
   try {
     const body = await request.json();
     const { name, firstName, lastName, email, password, phone, userType, languages } = body;

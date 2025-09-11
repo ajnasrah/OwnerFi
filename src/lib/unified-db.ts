@@ -17,14 +17,27 @@ import { RealtorProfile, BuyerProfile, PropertyMatch, RealtorSubscription, User 
 import { PropertyListing } from './property-schema';
 import { queueNearbyCitiesForProperty } from './property-enhancement';
 
+// Check if Firebase is available during runtime
+const isFirebaseAvailable = () => {
+  return typeof window !== 'undefined' || process.env.NODE_ENV === 'development' || firebaseDb !== null;
+};
+
 // Replace the old db import with this unified Firebase-only implementation
 export const unifiedDb = {
   // Generate ID
-  generateId: () => doc(collection(firebaseDb, 'temp')).id,
+  generateId: () => {
+    if (!firebaseDb) {
+      return 'temp-id-' + Math.random().toString(36).substr(2, 9);
+    }
+    return doc(collection(firebaseDb, 'temp')).id;
+  },
   
   // Users
   users: {
     async create(userData: Omit<User, 'id' | 'createdAt' | 'updatedAt'>) {
+      if (!firebaseDb) {
+        throw new Error('Firebase not initialized - missing environment variables');
+      }
       const id = unifiedDb.generateId();
       await setDoc(doc(firebaseDb, 'users', id), {
         ...userData,
@@ -36,12 +49,18 @@ export const unifiedDb = {
     },
     
     async findByEmail(email: string): Promise<(User & { id: string }) | null> {
+      if (!firebaseDb) {
+        throw new Error('Firebase not initialized - missing environment variables');
+      }
       const usersQuery = query(collection(firebaseDb, 'users'), where('email', '==', email));
       const userDocs = await getDocs(usersQuery);
       return userDocs.empty ? null : { id: userDocs.docs[0].id, ...userDocs.docs[0].data() } as User & { id: string };
     },
     
     async findById(id: string): Promise<(User & { id: string }) | null> {
+      if (!firebaseDb) {
+        throw new Error('Firebase not initialized - missing environment variables');
+      }
       const userDoc = await getDoc(doc(firebaseDb, 'users', id));
       return userDoc.exists() ? { id: userDoc.id, ...userDoc.data() } as User & { id: string } : null;
     }

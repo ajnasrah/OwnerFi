@@ -109,7 +109,7 @@ export default function AdminDashboard() {
         const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
         if (fileInput) fileInput.value = '';
       }
-    } catch (error) {
+    } catch {
       setResult({ error: `Upload failed: ${(error as Error).message}` });
     } finally {
       setUploading(false);
@@ -514,7 +514,7 @@ export default function AdminDashboard() {
                           } else {
                             alert(`❌ Error: ${data.error}`);
                           }
-                        } catch (error) {
+                        } catch {
                           alert(`❌ Failed to clean database: ${error}`);
                         }
                       }

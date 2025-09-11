@@ -43,7 +43,7 @@ export default function AboutPage() {
               families who faced financial hardship during life&apos;s unexpected challenges - they all deserve a path to homeownership.
             </p>
             <p className="text-slate-300 text-lg leading-relaxed">
-              We believe homeownership shouldn&apos;t be limited to those with perfect credit scores. 
+              We believe homeownership shouldn&apos;t be limited to those with perfect credit scores.
               OwnerFi connects these deserving families with property owners who are willing to offer direct financing, 
               creating win-win opportunities for everyone involved.
             </p>
@@ -204,7 +204,7 @@ export default function AboutPage() {
         <div className="text-center">
           <h2 className="text-3xl font-bold text-white mb-6">Ready to Be Part of the Solution?</h2>
           <p className="text-slate-300 text-lg mb-8 max-w-2xl mx-auto">
-            Whether you&apos;re a family seeking homeownership or a real estate professional looking to help more clients, 
+            Whether you&apos;re a family seeking homeownership or a real estate professional looking to help more clients,
             OwnerFi provides the tools and connections you need.
           </p>
           

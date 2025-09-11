@@ -398,7 +398,7 @@ export default function RealtorDashboard() {
                             View More Details
                           </button>
                           <a
-                            href={`sms:${buyer.phone}&body=${encodeURIComponent("Hi, I see you're interested in owner finance properties through OwnerFi, how is everything going so far?")}`}
+                            href={`sms:${buyer.phone}&body=${encodeURIComponent("Hi, I see you&apos;re interested in owner finance properties through OwnerFi, how is everything going so far?")}`}
                             className="flex-1 bg-green-500/20 hover:bg-green-500/30 text-green-400 py-2 px-3 rounded-lg text-sm font-medium transition-colors text-center"
                           >
                             Text

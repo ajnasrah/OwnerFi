@@ -85,7 +85,7 @@ export default function HomePage() {
                 href="/realtor-signup"
                 className="w-full block bg-transparent border-2 border-slate-500 hover:border-slate-400 hover:bg-slate-700/30 text-white py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-300 hover:scale-[1.02]"
               >
-                I'm a Real Estate Agent
+                I&apos;m a Real Estate Agent
               </Link>
             </div>
 
@@ -162,7 +162,7 @@ export default function HomePage() {
                   ))}
                 </div>
                 <p className="text-slate-300 text-sm leading-relaxed mb-3">
-                  "Stuck renting for 8 years after my credit got destroyed. Every bank said no. OwnerFi connected us with a seller who understood. Now we're homeowners!"
+                  "Stuck renting for 8 years after my credit got destroyed. Every bank said no. OwnerFi connected us with a seller who understood. Now we&apos;re homeowners!"
                 </p>
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-full flex items-center justify-center">
@@ -184,7 +184,7 @@ export default function HomePage() {
                   ))}
                 </div>
                 <p className="text-slate-300 text-sm leading-relaxed mb-3">
-                  "Self-employed contractors - lenders couldn't understand our income. We thought homeownership was impossible. OwnerFi closed in 3 weeks!"
+                  "Self-employed contractors - lenders couldn&apos;t understand our income. We thought homeownership was impossible. OwnerFi closed in 3 weeks!"
                 </p>
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-full flex items-center justify-center">
@@ -323,7 +323,7 @@ export default function HomePage() {
                   </div>
                   <div>
                     <h3 className="text-white font-semibold mb-1">Earn Commissions</h3>
-                    <p className="text-slate-400 text-sm">Close deals traditional lenders can't.</p>
+                    <p className="text-slate-400 text-sm">Close deals traditional lenders can&apos;t.</p>
                   </div>
                 </div>
               </div>
@@ -357,7 +357,7 @@ export default function HomePage() {
               <div>
                 <h3 className="text-xl font-semibold text-emerald-400 mb-4">Our Mission</h3>
                 <p className="text-slate-300 leading-relaxed mb-4">
-                  We believe homeownership shouldn't be limited by traditional banking requirements. OwnerFi creates a direct marketplace where creditworthy families can connect with homeowners offering flexible financing solutions.
+                  We believe homeownership shouldn&apos;t be limited by traditional banking requirements. OwnerFi creates a direct marketplace where creditworthy families can connect with homeowners offering flexible financing solutions.
                 </p>
                 <p className="text-slate-300 leading-relaxed">
                   No more credit score gatekeeping. No more endless bank paperwork. Just real people helping real families achieve the American dream of homeownership.
@@ -404,7 +404,7 @@ export default function HomePage() {
               <p className="text-slate-300 text-lg mb-2">
                 <span className="text-emerald-400 font-bold">1,247</span> families have found their dream homes through owner financing
               </p>
-              <p className="text-slate-400">Join the movement that's changing how America buys homes</p>
+              <p className="text-slate-400">Join the movement that&apos;s changing how America buys homes</p>
             </div>
           </div>
         </div>
@@ -430,24 +430,24 @@ export default function HomePage() {
               <div className="flex-1">
                 <h3 className="text-2xl font-bold text-white mb-4">Abdullah Abunasrah</h3>
                 <p className="text-slate-300 leading-relaxed mb-4">
-                  I got tired of watching good families get told "NO" by banks. You pay $2,000 in rent every month without any problems. But when you ask for a $1,700 house payment? "Sorry, you don't qualify."
+                  I got tired of watching good families get told "NO" by banks. You pay $2,000 in rent every month without any problems. But when you ask for a $1,700 house payment? "Sorry, you don&apos;t qualify."
                 </p>
                 <p className="text-slate-300 leading-relaxed mb-4">
                   <strong className="text-white">That makes no sense to me. So I decided to fix it.</strong>
                 </p>
                 <p className="text-slate-300 leading-relaxed mb-4">
-                  Here's what I believe: If you can pay rent, you can own a home. If you work hard and take care of your family, you deserve a chance. Banks shouldn't be the ones deciding if you get to live the American Dream.
+                  Here&apos;s what I believe: If you can pay rent, you can own a home. If you work hard and take care of your family, you deserve a chance. Banks shouldn&apos;t be the ones deciding if you get to live the American Dream.
                 </p>
                 <p className="text-slate-300 leading-relaxed mb-4">
                   OwnerFi connects you directly with home sellers who understand your story. No more credit score games. No more mountains of paperwork. Just real people helping real families get the keys to their own home.
                 </p>
                 <p className="text-slate-300 leading-relaxed mb-6">
-                  Every month you pay rent, you're buying someone else a house. With OwnerFi, you can buy your own house instead. Your kids deserve to grow up in a home you own, not one you rent.
+                  Every month you pay rent, you&apos;re buying someone else a house. With OwnerFi, you can buy your own house instead. Your kids deserve to grow up in a home you own, not one you rent.
                 </p>
                 
                 <div className="bg-slate-700/40 border border-slate-600/30 rounded-xl p-4">
                   <p className="text-emerald-400 font-bold text-center text-lg">
-                    "Every working family deserves their own home. I'm here to make that happen."
+                    "Every working family deserves their own home. I&apos;m here to make that happen."
                   </p>
                 </div>
               </div>

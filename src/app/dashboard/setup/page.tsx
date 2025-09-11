@@ -109,7 +109,7 @@ export default function BuyerSetup() {
           <div className="bg-slate-800/50 backdrop-blur-lg border border-slate-700/50 rounded-2xl p-8 shadow-2xl">
             <div className="text-center mb-8">
               <h1 className="text-3xl font-bold text-white mb-3">Set Your Preferences</h1>
-              <p className="text-lg text-white font-normal mb-4">Tell us what you're looking for</p>
+              <p className="text-lg text-white font-normal mb-4">Tell us what you&apos;re looking for</p>
             </div>
 
             {error && (

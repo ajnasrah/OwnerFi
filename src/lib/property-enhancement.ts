@@ -22,12 +22,13 @@ export function queueNearbyCitiesForProperty(
  * ULTRA FAST: Get nearby cities immediately using comprehensive database
  * NO API CALLS - Pure JavaScript calculation
  */
-export function populateNearbyCitiesForPropertyFast(
+export async function populateNearbyCitiesForPropertyFast(
   propertyCity: string,
   propertyState: string,
   radiusMiles: number = 30
-): string[] {
-  return getNearbyCitiesUltraFast(propertyCity, propertyState, radiusMiles);
+): Promise<string[]> {
+  const nearbyCities = await getNearbyCitiesUltraFast(propertyCity, propertyState, radiusMiles);
+  return nearbyCities.map(city => city.name);
 }
 
 /**

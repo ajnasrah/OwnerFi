@@ -7,7 +7,11 @@ export async function getSessionSafe(): Promise<{ user: { id?: string; email?: s
   try {
     const session = await getServerSession(authOptions);
     return {
-      user: session?.user || null,
+      user: session?.user ? {
+        id: session.user.id,
+        email: session.user.email || undefined,
+        role: session.user.role
+      } : null,
       isAuthenticated: !!session?.user
     };
   } catch (_error) {

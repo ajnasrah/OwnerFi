@@ -3,8 +3,8 @@ name: Deploy to Production
 on:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
+  # Removed pull_request trigger to prevent Vercel deployments on PRs
+  # PRs will only run local testing, not deployment
 
 jobs:
   test:

@@ -57,10 +57,6 @@ export default function BuyerSetup() {
     }
 
     try {
-      const cityParts = formData.city.split(',');
-      const city = cityParts[0]?.trim() || formData.city;
-      const state = cityParts[1]?.trim() || 'TX';
-
       // Parse city and state from the city field
       const cityParts = formData.city.split(',');
       const city = cityParts[0]?.trim() || formData.city;

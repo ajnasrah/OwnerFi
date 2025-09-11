@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSessionWithRole } from '@/lib/auth-utils';
 import { FirebaseDB } from '@/lib/firebase-db';
+import { db } from '@/lib/firebase';
 import Stripe from 'stripe';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {

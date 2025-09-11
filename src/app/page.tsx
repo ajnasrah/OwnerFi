@@ -58,7 +58,7 @@ export default function HomePage() {
       </nav>
 
       {/* Hero Section - Compact */}
-      <div className="flex flex-col min-h-[calc(100vh-240px)] px-6">
+      <div className="flex flex-col min-h-[calc(100vh-220px)] px-6" style={{ paddingTop: '3rem' }}>
         <div className="flex-1 flex flex-col justify-center max-w-md mx-auto text-center">
           <div className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-8 shadow-2xl">
             
@@ -140,78 +140,87 @@ export default function HomePage() {
       {/* Customer Success Stories */}
       <section style={{ padding: '4rem 0' }}>
         <div className="max-w-6xl mx-auto px-6">
-          <div className="text-center" style={{ marginBottom: '3rem' }}>
-            <h2 className="text-2xl font-bold text-white" style={{ marginBottom: '1rem' }}>Real Families, Real Stories</h2>
-            <p className="text-slate-400">From stuck renting to proud homeowners</p>
+          
+          {/* Big Card Container for Reviews */}
+          <div className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/50 rounded-3xl p-8 shadow-2xl">
+            <div className="text-center" style={{ marginBottom: '2rem' }}>
+              <h2 className="text-2xl font-bold text-white" style={{ marginBottom: '0.5rem' }}>Real Families, Real Stories</h2>
+              <p className="text-slate-400">From stuck renting to proud homeowners</p>
+            </div>
+            
+            <div className="grid md:grid-cols-3" style={{ gap: '1rem' }}>
+              <div className="bg-slate-700/40 border border-slate-600/30 rounded-xl p-5 hover:bg-slate-700/50 transition-all duration-300">
+                <div className="flex items-center gap-1 mb-3">
+                  {[...Array(5)].map((_, i) => (
+                    <svg key={i} className="w-4 h-4 text-emerald-400 fill-current" viewBox="0 0 20 20">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                  ))}
+                </div>
+                <p className="text-slate-300 text-sm leading-relaxed mb-3">
+                  "Stuck renting for 8 years after my credit got destroyed. Every bank said no. OwnerFi connected us with a seller who understood. Now we're homeowners!"
+                </p>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-full flex items-center justify-center">
+                    <span className="text-white text-xs font-bold">MJ</span>
+                  </div>
+                  <div>
+                    <p className="text-white text-sm font-semibold">Maria & Jose</p>
+                    <p className="text-slate-400 text-xs">Dallas, TX</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-slate-700/40 border border-slate-600/30 rounded-xl p-5 hover:bg-slate-700/50 transition-all duration-300">
+                <div className="flex items-center gap-1 mb-3">
+                  {[...Array(5)].map((_, i) => (
+                    <svg key={i} className="w-4 h-4 text-emerald-400 fill-current" viewBox="0 0 20 20">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                  ))}
+                </div>
+                <p className="text-slate-300 text-sm leading-relaxed mb-3">
+                  "Self-employed contractors - lenders couldn't understand our income. We thought homeownership was impossible. OwnerFi closed in 3 weeks!"
+                </p>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-full flex items-center justify-center">
+                    <span className="text-white text-xs font-bold">DK</span>
+                  </div>
+                  <div>
+                    <p className="text-white text-sm font-semibold">David & Karen</p>
+                    <p className="text-slate-400 text-xs">Memphis, TN</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-slate-700/40 border border-slate-600/30 rounded-xl p-5 hover:bg-slate-700/50 transition-all duration-300">
+                <div className="flex items-center gap-1 mb-3">
+                  {[...Array(5)].map((_, i) => (
+                    <svg key={i} className="w-4 h-4 text-emerald-400 fill-current" viewBox="0 0 20 20">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                  ))}
+                </div>
+                <p className="text-slate-300 text-sm leading-relaxed mb-3">
+                  "Medical bills tanked our credit, but OwnerFi found us a seller who cared more about our story than our score."
+                </p>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-full flex items-center justify-center">
+                    <span className="text-white text-xs font-bold">LT</span>
+                  </div>
+                  <div>
+                    <p className="text-white text-sm font-semibold">Lisa & Tom</p>
+                    <p className="text-slate-400 text-xs">Austin, TX</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="text-center" style={{ marginTop: '2rem' }}>
+              <p className="text-slate-400 text-sm">Join over 1,200 families who found their path to homeownership</p>
+            </div>
           </div>
           
-          <div className="grid md:grid-cols-3" style={{ gap: '2rem' }}>
-            <div className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300">
-              <div className="flex items-center gap-1 mb-4">
-                {[...Array(5)].map((_, i) => (
-                  <svg key={i} className="w-4 h-4 text-emerald-400 fill-current" viewBox="0 0 20 20">
-                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                  </svg>
-                ))}
-              </div>
-              <p className="text-slate-300 text-sm leading-relaxed mb-4">
-                "Stuck renting for 8 years after my credit got destroyed. Every bank said no. OwnerFi connected us with a seller who understood. Now we're homeowners!"
-              </p>
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-full flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">MJ</span>
-                </div>
-                <div>
-                  <p className="text-white text-sm font-semibold">Maria & Jose</p>
-                  <p className="text-slate-400 text-xs">Dallas, TX</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300">
-              <div className="flex items-center gap-1 mb-4">
-                {[...Array(5)].map((_, i) => (
-                  <svg key={i} className="w-4 h-4 text-emerald-400 fill-current" viewBox="0 0 20 20">
-                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                  </svg>
-                ))}
-              </div>
-              <p className="text-slate-300 text-sm leading-relaxed mb-4">
-                "Self-employed contractors - lenders couldn't understand our income. We thought homeownership was impossible. OwnerFi closed in 3 weeks!"
-              </p>
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-full flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">DK</span>
-                </div>
-                <div>
-                  <p className="text-white text-sm font-semibold">David & Karen</p>
-                  <p className="text-slate-400 text-xs">Memphis, TN</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300">
-              <div className="flex items-center gap-1 mb-4">
-                {[...Array(5)].map((_, i) => (
-                  <svg key={i} className="w-4 h-4 text-emerald-400 fill-current" viewBox="0 0 20 20">
-                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                  </svg>
-                ))}
-              </div>
-              <p className="text-slate-300 text-sm leading-relaxed mb-4">
-                "Medical bills tanked our credit, but OwnerFi found us a seller who cared more about our story than our score."
-              </p>
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-full flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">LT</span>
-                </div>
-                <div>
-                  <p className="text-white text-sm font-semibold">Lisa & Tom</p>
-                  <p className="text-slate-400 text-xs">Austin, TX</p>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </section>
 

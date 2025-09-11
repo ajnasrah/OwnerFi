@@ -11,7 +11,6 @@ export default function TestCheckout() {
     setResult('Testing...');
     
     try {
-      console.log('Testing subscription API...');
       
       const response = await fetch('/api/stripe/checkout', {
         method: 'POST',
@@ -23,9 +22,7 @@ export default function TestCheckout() {
         })
       });
       
-      console.log('Response status:', response.status);
       const data = await response.json();
-      console.log('Response data:', data);
       
       if (response.ok && data.url) {
         setResult(`SUCCESS! Checkout URL generated: ${data.url}`);
@@ -36,8 +33,7 @@ export default function TestCheckout() {
         setResult(`API Error: ${JSON.stringify(data, null, 2)}`);
       }
     } catch (error) {
-      console.error('Fetch error:', error);
-      setResult(`Network Error: ${error.message}`);
+      setResult(`Network Error: ${(error as Error).message}`);
     } finally {
       setLoading(false);
     }

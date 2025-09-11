@@ -64,7 +64,6 @@ export default function AdminDashboard() {
       const data = await response.json();
       setProperties(data.properties || []);
     } catch (error) {
-      console.error('Failed to fetch properties:', error);
     } finally {
       setLoadingProperties(false);
     }

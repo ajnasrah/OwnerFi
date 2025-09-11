@@ -11,6 +11,13 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    if (!db) {
+      return NextResponse.json(
+        { error: 'Database not available' },
+        { status: 500 }
+      );
+    }
+
     const resolvedParams = await params;
     const session = await getServerSession(authOptions);
     if (!session?.user || (session as ExtendedSession).user.role !== 'admin') {
@@ -34,7 +41,6 @@ export async function GET(
       ...propertyDoc.data()
     });
   } catch (error) {
-    console.error('Error fetching property:', error);
     return NextResponse.json(
       { error: 'Failed to fetch property' },
       { status: 500 }
@@ -48,6 +54,13 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    if (!db) {
+      return NextResponse.json(
+        { error: 'Database not available' },
+        { status: 500 }
+      );
+    }
+
     const resolvedParams = await params;
     const session = await getServerSession(authOptions);
     if (!session?.user || (session as ExtendedSession).user.role !== 'admin') {
@@ -73,7 +86,6 @@ export async function PUT(
       message: 'Property updated successfully'
     });
   } catch (error) {
-    console.error('Error updating property:', error);
     return NextResponse.json(
       { error: 'Failed to update property' },
       { status: 500 }

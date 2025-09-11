@@ -11,7 +11,7 @@ export const userSignupSchema = z.object({
   email: emailSchema,
   password: passwordSchema,
   name: nameSchema,
-  role: z.enum(['buyer', 'realtor', 'admin'])
+  role: z.enum(['buyer', 'realtor', 'admin', 'pending'])
 });
 
 export const userSigninSchema = z.object({

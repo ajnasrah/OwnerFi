@@ -1,0 +1,46 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { FirebaseDB } from '@/lib/firebase-db';
+
+export async function POST(request: NextRequest) {
+  try {
+    const { email } = await request.json();
+    
+    console.log(`🔍 Checking user profile for: ${email}`);
+    
+    // Find user by email
+    const user = await FirebaseDB.findUserByEmail(email);
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+    
+    console.log(`👤 Found user: ${user.name} (${user.role})`);
+    
+    // Get buyer profile
+    const buyerProfile = await FirebaseDB.findBuyerByUserId(user.id);
+    
+    console.log(`🏠 Buyer profile:`, buyerProfile);
+    
+    // Get buyer link profile  
+    const buyerLinks = await FirebaseDB.queryDocuments(
+      'buyerLinks',
+      [{ field: 'userId', operator: '==', value: user.id }]
+    );
+    
+    console.log(`🔗 Buyer links:`, buyerLinks);
+
+    return NextResponse.json({
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      },
+      buyerProfile: buyerProfile,
+      buyerLinks: buyerLinks
+    });
+
+  } catch (error) {
+    console.error('Failed to check user profile:', error);
+    return NextResponse.json({ error: 'Failed' }, { status: 500 });
+  }
+}

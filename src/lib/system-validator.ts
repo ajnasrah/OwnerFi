@@ -371,7 +371,6 @@ export class SystemValidator {
 
   // Run comprehensive system health check
   static async runSystemHealthCheck(): Promise<SystemHealth> {
-    console.log('Starting comprehensive system health check...');
     
     const allResults: ValidationResult[] = [];
     
@@ -436,8 +435,6 @@ export class SystemValidator {
       }
     });
 
-    console.log(`System health check completed: ${overall}`);
-    console.log(`Results: ${summary.passed} passed, ${summary.warnings} warnings, ${summary.failed} failed`);
 
     return healthReport;
   }

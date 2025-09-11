@@ -14,6 +14,13 @@ import { authOptions } from '@/lib/auth';
 // GET - Fetch all contact form submissions
 export async function GET(request: NextRequest) {
   try {
+    if (!db) {
+      return NextResponse.json(
+        { error: 'Database not available' },
+        { status: 500 }
+      );
+    }
+
     const session = await getServerSession(authOptions);
     
     if (!session?.user || (session.user as { role?: string }).role !== 'admin') {
@@ -42,7 +49,6 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Failed to fetch contacts:', error);
     return NextResponse.json(
       { error: 'Failed to load contact submissions' },
       { status: 500 }
@@ -53,6 +59,13 @@ export async function GET(request: NextRequest) {
 // DELETE - Delete a contact submission
 export async function DELETE(request: NextRequest) {
   try {
+    if (!db) {
+      return NextResponse.json(
+        { error: 'Database not available' },
+        { status: 500 }
+      );
+    }
+
     const session = await getServerSession(authOptions);
     
     if (!session?.user || (session.user as { role?: string }).role !== 'admin') {
@@ -80,7 +93,6 @@ export async function DELETE(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Failed to delete contact:', error);
     return NextResponse.json(
       { error: 'Failed to delete contact' },
       { status: 500 }

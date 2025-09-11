@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
@@ -47,9 +47,9 @@ export default function Dashboard() {
   // Auth check
   useEffect(() => {
     if (status === 'unauthenticated') {
-      router.push('/auth/signin');
+      router.push('/');
     } else if (status === 'authenticated' && session?.user?.role !== 'buyer') {
-      router.push('/auth/signin');
+      router.push('/');
     }
   }, [status, session, router]);
 
@@ -83,7 +83,7 @@ export default function Dashboard() {
       setProperties(propertiesData.properties || []);
       
     } catch (err) {
-      console.error('Failed to load properties:', err);
+      // Error loading properties
     } finally {
       setLoading(false);
     }
@@ -108,7 +108,7 @@ export default function Dashboard() {
         }
       }
     } catch (error) {
-      console.error('Failed to update like status:', error);
+      // Error updating like status
     }
   };
 
@@ -126,10 +126,11 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-700 font-medium">Finding amazing homes...</p>
+          <div className="w-16 h-16 border-4 border-emerald-400 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
+          <div className="text-2xl font-bold text-white mb-2">SCANNING PROPERTIES</div>
+          <p className="text-slate-400 font-medium">Finding owner-financed homes in your area...</p>
         </div>
       </div>
     );
@@ -137,19 +138,25 @@ export default function Dashboard() {
 
   if (!properties.length) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col items-center justify-center p-6">
-        <div className="text-center max-w-sm">
-          <div className="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <span className="text-4xl">🏠</span>
+      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-6">
+        <div className="text-center max-w-md">
+          <div className="w-32 h-32 bg-slate-800/50 backdrop-blur-lg border border-slate-700/50 rounded-2xl flex items-center justify-center mx-auto mb-8">
+            <span className="text-6xl">🏠</span>
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">
-            No homes found
+          <h2 className="text-3xl font-black text-white mb-4">
+            NO PROPERTIES FOUND
           </h2>
-          <p className="text-gray-600 mb-8 leading-relaxed">
-            We couldn't find properties in {profile?.city} that match your criteria. Try adjusting your search.
+          <p className="text-slate-300 mb-8 leading-relaxed text-lg">
+            No owner-financed properties in <span className="text-emerald-400 font-bold">{profile?.city}</span> match your criteria. Expand your search parameters.
           </p>
-          <Link href="/dashboard/settings" className="bg-blue-600 text-white px-8 py-4 rounded-full font-semibold hover:bg-blue-700 transition-colors shadow-lg">
-            Adjust Search
+          <Link 
+            href="/dashboard/settings" 
+            className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 rounded-xl font-bold text-lg transition-all duration-300 hover:scale-105 shadow-2xl shadow-emerald-500/25"
+          >
+            ADJUST SEARCH CRITERIA
+            <svg className="ml-2 w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
+            </svg>
           </Link>
         </div>
       </div>
@@ -159,61 +166,73 @@ export default function Dashboard() {
   const currentProperty = properties[currentIndex];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      {/* Minimal Header */}
-      <header className="relative z-20 bg-white/80 backdrop-blur-lg border-b border-white/20 px-6 py-4">
+    <div className="min-h-screen bg-slate-900 text-white" style={{zoom: '0.9'}}>
+      {/* Dark Header */}
+      <header className="relative z-20 bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50 px-6 py-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-lg font-bold text-gray-900">{profile?.city}</h1>
-            <p className="text-xs text-gray-500 mt-1">{currentIndex + 1} of {properties.length} homes</p>
+            <h1 className="text-xl font-black text-white">{profile?.city?.toUpperCase()}</h1>
+            <p className="text-sm text-slate-400 mt-1 font-semibold">{currentIndex + 1} OF {properties.length} PROPERTIES</p>
           </div>
           
-          <div className="flex space-x-6">
-            <Link href="/dashboard" className="flex flex-col items-center">
-              <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center shadow-lg">
-                <span className="text-white text-lg">🏠</span>
-              </div>
-              <span className="text-xs font-medium text-blue-600 mt-1">Browse</span>
-            </Link>
+          <div className="flex items-center space-x-6">
+            <div className="flex space-x-4">
+              <Link href="/dashboard" className="flex flex-col items-center group">
+                <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                  <span className="text-white text-xl">🏠</span>
+                </div>
+                <span className="text-xs font-bold text-emerald-400 mt-1">BROWSE</span>
+              </Link>
+              
+              <Link href="/dashboard/liked" className="flex flex-col items-center group">
+                <div className="w-12 h-12 bg-slate-700/50 hover:bg-slate-600/50 rounded-xl flex items-center justify-center transition-colors group-hover:scale-110">
+                  <span className="text-slate-300 text-xl">♥</span>
+                </div>
+                <span className="text-xs font-bold text-slate-400 mt-1">SAVED</span>
+              </Link>
+              
+              <Link href="/dashboard/settings" className="flex flex-col items-center group">
+                <div className="w-12 h-12 bg-slate-700/50 hover:bg-slate-600/50 rounded-xl flex items-center justify-center transition-colors group-hover:scale-110">
+                  <span className="text-slate-300 text-xl">⚙</span>
+                </div>
+                <span className="text-xs font-bold text-slate-400 mt-1">SETTINGS</span>
+              </Link>
+            </div>
             
-            <Link href="/dashboard/liked" className="flex flex-col items-center">
-              <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                <span className="text-gray-600 text-lg">♥</span>
+            <button
+              onClick={() => signOut({ callbackUrl: '/auth/signin' })}
+              className="flex flex-col items-center group"
+            >
+              <div className="w-12 h-12 bg-slate-700/50 hover:bg-red-600/30 rounded-xl flex items-center justify-center transition-all group-hover:scale-110 duration-300">
+                <span className="text-slate-300 group-hover:text-red-400 text-xl transition-colors">⏻</span>
               </div>
-              <span className="text-xs font-medium text-gray-500 mt-1">Saved</span>
-            </Link>
-            
-            <Link href="/dashboard/settings" className="flex flex-col items-center">
-              <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                <span className="text-gray-600 text-lg">⚙</span>
-              </div>
-              <span className="text-xs font-medium text-gray-500 mt-1">Settings</span>
-            </Link>
+              <span className="text-xs font-bold text-slate-400 group-hover:text-red-400 mt-1 transition-colors">LOGOUT</span>
+            </button>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="relative px-4 pt-6 pb-8 min-h-screen">
+      <main className="relative px-4 pt-6 pb-4">
         {/* Property Card Stack */}
-        <div className="relative max-w-sm mx-auto">
+        <div className="relative max-w-md mx-auto">
           {/* Background Cards for Stack Effect */}
           {currentIndex < properties.length - 1 && (
-            <div className="absolute inset-0 bg-white rounded-3xl shadow-lg transform rotate-1 scale-95 z-10"></div>
+            <div className="absolute inset-0 bg-slate-800/30 rounded-2xl shadow-xl transform rotate-1 scale-95 z-10 border border-slate-700/50"></div>
           )}
           {currentIndex < properties.length - 2 && (
-            <div className="absolute inset-0 bg-white rounded-3xl shadow-md transform -rotate-1 scale-90 z-5"></div>
+            <div className="absolute inset-0 bg-slate-800/20 rounded-2xl shadow-lg transform -rotate-1 scale-90 z-5 border border-slate-700/30"></div>
           )}
           
           {/* Main Property Card */}
-          <div className="relative bg-white rounded-3xl shadow-2xl overflow-hidden z-20" style={{height: '600px'}}>
+          <div className="relative bg-slate-800/50 backdrop-blur-lg border border-slate-700/50 rounded-2xl shadow-2xl overflow-hidden z-20" style={{height: '700px'}}>
             {/* Property Image */}
             <div className="relative h-80 overflow-hidden">
               <img
                 src={
                   currentProperty.zillowImageUrl || 
                   currentProperty.imageUrl ||
-                  `https://maps.googleapis.com/maps/api/streetview?size=600x400&location=${encodeURIComponent(currentProperty.address + ', ' + currentProperty.city + ', ' + currentProperty.state)}&key=AIzaSyCelger3EPc8GzTOQq7-cv6tUeVh_XN9jE`
+                  `https://maps.googleapis.com/maps/api/streetview?size=600x400&location=${encodeURIComponent(currentProperty.address + ', ' + currentProperty.city + ', ' + currentProperty.state)}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`
                 }
                 alt={currentProperty.address}
                 className="w-full h-full object-cover"
@@ -221,22 +240,22 @@ export default function Dashboard() {
               />
               
               {/* Gradient Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"></div>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
               
               {/* Like Badge */}
               {likedProperties.includes(currentProperty.id) && (
-                <div className="absolute top-4 right-4 bg-red-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg animate-pulse">
-                  ❤️ Loved
+                <div className="absolute top-4 right-4 bg-gradient-to-r from-red-500 to-red-600 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-xl border border-red-400/30">
+                  ❤️ SAVED
                 </div>
               )}
               
               {/* Property Title Overlay */}
               <div className="absolute bottom-4 left-4 right-4 text-white">
-                <h2 className="text-2xl font-bold mb-1 leading-tight">
-                  {currentProperty.address}
+                <h2 className="text-2xl font-black mb-2 leading-tight">
+                  {currentProperty.address.toUpperCase()}
                 </h2>
-                <p className="text-white/90 text-sm">
-                  {currentProperty.city}, {currentProperty.state}
+                <p className="text-slate-300 text-sm font-semibold">
+                  {currentProperty.city.toUpperCase()}, {currentProperty.state}
                 </p>
               </div>
             </div>
@@ -244,49 +263,49 @@ export default function Dashboard() {
             {/* Property Details */}
             <div className="p-6 space-y-6">
               {/* Quick Stats */}
-              <div className="flex justify-around bg-gray-50 rounded-2xl p-4">
+              <div className="flex justify-around bg-slate-700/50 backdrop-blur-lg rounded-xl p-4 border border-slate-600/50">
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-blue-600">{currentProperty.bedrooms}</div>
-                  <div className="text-xs text-gray-500 font-medium">BEDROOMS</div>
+                  <div className="text-3xl font-black text-emerald-400">{currentProperty.bedrooms}</div>
+                  <div className="text-xs text-slate-400 font-bold">BEDROOMS</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-blue-600">{currentProperty.bathrooms}</div>
-                  <div className="text-xs text-gray-500 font-medium">BATHROOMS</div>
+                  <div className="text-3xl font-black text-emerald-400">{currentProperty.bathrooms}</div>
+                  <div className="text-xs text-slate-400 font-bold">BATHROOMS</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-600">
+                  <div className="text-2xl font-black text-emerald-400">
                     {currentProperty.squareFeet?.toLocaleString() || '1,140'}
                   </div>
-                  <div className="text-xs text-gray-500 font-medium">SQ FT</div>
+                  <div className="text-xs text-slate-400 font-bold">SQ FT</div>
                 </div>
               </div>
 
               {/* Pricing Grid */}
               <div className="space-y-4">
-                <div className="bg-gray-50 rounded-2xl p-4">
+                <div className="bg-slate-700/50 backdrop-blur-lg rounded-xl p-4 border border-slate-600/50">
                   <div className="text-center">
-                    <div className="text-xs text-gray-500 font-medium mb-1">LIST PRICE</div>
-                    <div className="text-3xl font-bold text-gray-900">
+                    <div className="text-xs text-slate-400 font-bold mb-2">LIST PRICE</div>
+                    <div className="text-3xl font-black text-white">
                       ${currentProperty.listPrice?.toLocaleString() || '260,000'}
                     </div>
                   </div>
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-green-50 rounded-2xl p-4 text-center">
-                    <div className="text-xs text-green-600 font-medium mb-1">MONTHLY</div>
-                    <div className="text-xl font-bold text-green-600">
+                  <div className="bg-gradient-to-br from-emerald-600/20 to-emerald-700/20 backdrop-blur-lg rounded-xl p-4 text-center border border-emerald-500/30">
+                    <div className="text-xs text-emerald-400 font-bold mb-1">MONTHLY</div>
+                    <div className="text-xl font-black text-emerald-300">
                       ${currentProperty.monthlyPayment ? Math.ceil(currentProperty.monthlyPayment).toLocaleString() : '1,403'}
                     </div>
-                    <div className="text-xs text-green-500">est.</div>
+                    <div className="text-xs text-emerald-400/70 font-semibold">ESTIMATED</div>
                   </div>
                   
-                  <div className="bg-blue-50 rounded-2xl p-4 text-center">
-                    <div className="text-xs text-blue-600 font-medium mb-1">DOWN</div>
-                    <div className="text-xl font-bold text-blue-600">
+                  <div className="bg-gradient-to-br from-blue-600/20 to-blue-700/20 backdrop-blur-lg rounded-xl p-4 text-center border border-blue-500/30">
+                    <div className="text-xs text-blue-400 font-bold mb-1">DOWN</div>
+                    <div className="text-xl font-black text-blue-300">
                       ${currentProperty.downPaymentAmount?.toLocaleString() || '26,000'}
                     </div>
-                    <div className="text-xs text-blue-500">est.</div>
+                    <div className="text-xs text-blue-400/70 font-semibold">ESTIMATED</div>
                   </div>
                 </div>
               </div>
@@ -295,40 +314,40 @@ export default function Dashboard() {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex justify-center items-center space-x-6 mt-8 max-w-sm mx-auto">
-          {/* Skip Button */}
+        <div className="flex justify-center items-center space-x-4 mt-8 max-w-md mx-auto">
+          {/* Previous Button */}
           <button
             onClick={prevProperty}
             disabled={currentIndex === 0}
-            className={`w-16 h-16 rounded-full flex items-center justify-center transition-all shadow-lg ${
+            className={`w-16 h-16 rounded-xl flex items-center justify-center transition-all shadow-xl border-2 ${
               currentIndex === 0 
-                ? 'bg-gray-200 text-gray-400' 
-                : 'bg-white text-gray-600 hover:bg-gray-50 active:scale-95'
+                ? 'bg-slate-700/30 text-slate-500 border-slate-600/30' 
+                : 'bg-slate-700/50 hover:bg-slate-600/50 text-slate-300 hover:text-white border-slate-600/50 hover:border-slate-500 hover:scale-110 active:scale-95'
             }`}
           >
-            <span className="text-2xl">←</span>
+            <span className="text-2xl font-bold">←</span>
           </button>
 
-          {/* Dislike Button */}
+          {/* Pass Button */}
           <button
             onClick={nextProperty}
             disabled={currentIndex === properties.length - 1}
-            className={`w-16 h-16 rounded-full flex items-center justify-center transition-all shadow-lg ${
+            className={`w-16 h-16 rounded-xl flex items-center justify-center transition-all shadow-xl border-2 ${
               currentIndex === properties.length - 1
-                ? 'bg-gray-200 text-gray-400'
-                : 'bg-white text-red-500 hover:bg-red-50 active:scale-95'
+                ? 'bg-slate-700/30 text-slate-500 border-slate-600/30'
+                : 'bg-gradient-to-br from-red-600/20 to-red-700/20 hover:from-red-500/30 hover:to-red-600/30 text-red-400 hover:text-red-300 border-red-500/30 hover:border-red-400/50 hover:scale-110 active:scale-95'
             }`}
           >
-            <span className="text-2xl">✕</span>
+            <span className="text-2xl font-bold">✕</span>
           </button>
 
           {/* Love Button */}
           <button 
             onClick={() => toggleLike(currentProperty.id)}
-            className={`w-20 h-20 rounded-full flex items-center justify-center transition-all shadow-lg transform active:scale-95 ${
+            className={`w-20 h-20 rounded-xl flex items-center justify-center transition-all shadow-2xl transform active:scale-95 hover:scale-110 border-2 ${
               likedProperties.includes(currentProperty.id) 
-                ? 'bg-red-500 text-white shadow-red-200' 
-                : 'bg-white text-red-500 hover:bg-red-50'
+                ? 'bg-gradient-to-br from-red-500 to-red-600 text-white border-red-400/50 shadow-red-500/30' 
+                : 'bg-gradient-to-br from-red-600/20 to-red-700/20 hover:from-red-500/30 hover:to-red-600/30 text-red-400 hover:text-red-300 border-red-500/30 hover:border-red-400/50'
             }`}
           >
             <span className="text-3xl">
@@ -339,40 +358,40 @@ export default function Dashboard() {
           {/* Contact Button */}
           <button 
             onClick={() => {
-              const message = `I'm interested in ${currentProperty.address}, ${currentProperty.city}, ${currentProperty.state}. Found via OwnerFi.`;
+              const message = `I'm interested in ${currentProperty.address}, ${currentProperty.city}, ${currentProperty.state}. Found through OwnerFi.`;
               window.open(`sms:+1234567890&body=${encodeURIComponent(message)}`, '_self');
             }}
-            className="w-16 h-16 bg-blue-600 text-white rounded-full flex items-center justify-center hover:bg-blue-700 transition-all shadow-lg transform active:scale-95"
+            className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white rounded-xl flex items-center justify-center transition-all shadow-2xl shadow-emerald-500/25 transform active:scale-95 hover:scale-110 border-2 border-emerald-400/30"
           >
-            <span className="text-2xl">💬</span>
+            <span className="text-xl">💬</span>
           </button>
 
           {/* Next Button */}
           <button
             onClick={nextProperty}
             disabled={currentIndex === properties.length - 1}
-            className={`w-16 h-16 rounded-full flex items-center justify-center transition-all shadow-lg ${
+            className={`w-16 h-16 rounded-xl flex items-center justify-center transition-all shadow-xl border-2 ${
               currentIndex === properties.length - 1 
-                ? 'bg-gray-200 text-gray-400' 
-                : 'bg-white text-gray-600 hover:bg-gray-50 active:scale-95'
+                ? 'bg-slate-700/30 text-slate-500 border-slate-600/30' 
+                : 'bg-slate-700/50 hover:bg-slate-600/50 text-slate-300 hover:text-white border-slate-600/50 hover:border-slate-500 hover:scale-110 active:scale-95'
             }`}
           >
-            <span className="text-2xl">→</span>
+            <span className="text-2xl font-bold">→</span>
           </button>
         </div>
 
         {/* Progress Indicator */}
         <div className="flex justify-center mt-8">
-          <div className="flex space-x-2">
+          <div className="flex space-x-2 bg-slate-800/30 backdrop-blur-lg rounded-full px-4 py-2 border border-slate-700/50">
             {properties.map((_, index) => (
               <div
                 key={index}
                 className={`w-2 h-2 rounded-full transition-all ${
                   index === currentIndex 
-                    ? 'bg-blue-600 w-6' 
+                    ? 'bg-emerald-400 w-8' 
                     : index < currentIndex 
-                      ? 'bg-green-400' 
-                      : 'bg-gray-300'
+                      ? 'bg-emerald-500/70' 
+                      : 'bg-slate-600'
                 }`}
               />
             ))}

@@ -123,25 +123,6 @@ export function calculateLoanAmount(
   return Math.round(loanAmount * 100) / 100;
 }
 
-/**
- * Process GHL webhook data and calculate all missing financial fields
- */
-export function processGHLPropertyFinancials(ghlData: { customFields?: Record<string, string> }): PropertyFinancials {
-  const cf = ghlData.customFields || {};
-  
-  const rawData: PartialPropertyData = {
-    listPrice: parseFloat(cf.list_price || '0'),
-    downPaymentAmount: parseFloat(cf.down_payment_amount || '0'),
-    downPaymentPercent: parseFloat(cf.down_payment_percent || '0'),
-    monthlyPayment: parseFloat(cf.monthly_payment || '0'),
-    interestRate: parseFloat(cf.interest_rate || '7.0'),
-    termYears: parseInt(cf.loan_term_years || '20'),
-    balloonPayment: cf.balloon_payment ? parseFloat(cf.balloon_payment) : undefined,
-    balloonYears: cf.balloon_years ? parseInt(cf.balloon_years) : undefined
-  };
-
-  return calculatePropertyFinancials(rawData);
-}
 
 /**
  * Validate that calculated financials make sense

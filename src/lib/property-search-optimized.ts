@@ -128,7 +128,6 @@ export async function searchPropertiesOptimized(
     };
     
   } catch (error) {
-    console.error('Optimized property search error:', error);
     throw error;
   }
 }
@@ -148,7 +147,6 @@ export async function searchPropertiesWithNearby(
     const nearbyCities = await getNearbyCitiesDirect(centerCity, state, 30);
     const allCities = [centerCity, ...nearbyCities];
     
-    console.log(`🔍 Searching ${allCities.length} cities for properties`);
     
     // Use optimized search with all cities
     const result = await searchPropertiesOptimized({
@@ -165,7 +163,6 @@ export async function searchPropertiesWithNearby(
     };
     
   } catch (error) {
-    console.error('Property search with nearby cities error:', error);
     throw error;
   }
 }
@@ -204,7 +201,6 @@ export async function getSimilarProperties(
     return similarProperties;
     
   } catch (error) {
-    console.error('Similar properties search error:', error);
     return [];
   }
 }

@@ -1,0 +1,89 @@
+#!/usr/bin/env tsx
+
+// FIREBASE CONNECTION VALIDATOR - Ensures Firebase is working before running tests
+// This validates that Firebase is initialized and we can read/write data
+
+import { FirebaseDB } from '../lib/firebase-db';
+
+async function validateFirebaseConnection() {
+  console.log('🔥 FIREBASE CONNECTION VALIDATOR');
+  console.log('================================');
+  
+  try {
+    console.log('\\n1. Testing Firebase connection...');
+    
+    // Test: Try to query existing buyerProfiles
+    const existingBuyers = await FirebaseDB.queryDocuments('buyerProfiles', []);
+    console.log(`✅ Connected to Firebase - found ${existingBuyers.length} existing buyerProfiles`);
+    
+    // Test: Try to query existing buyerLinks (for migration comparison)
+    const existingLinks = await FirebaseDB.queryDocuments('buyerLinks', []);
+    console.log(`📊 Found ${existingLinks.length} existing buyerLinks for migration`);
+    
+    // Test: Check if we have realtor users
+    const existingRealtors = await FirebaseDB.queryDocuments('users', [
+      { field: 'role', operator: '==', value: 'realtor' }
+    ]);
+    console.log(`🏢 Found ${existingRealtors.length} existing realtor users`);
+    
+    // Test: Create a test document to verify write permissions
+    console.log('\\n2. Testing write permissions...');
+    const testData = {
+      testId: `validation_test_${Date.now()}`,
+      message: 'Firebase connection validation',
+      timestamp: new Date().toISOString()
+    };
+    
+    const testDoc = await FirebaseDB.createDocument('_test_validation', testData);
+    console.log(`✅ Write test successful: ${testDoc.id}`);
+    
+    // Clean up test document
+    await FirebaseDB.deleteDocument('_test_validation', testDoc.id);
+    console.log(`✅ Cleanup successful`);
+    
+    console.log('\\n✅ Firebase connection validated successfully!');
+    console.log('\\n📊 CURRENT DATABASE STATE:');
+    console.log(`- buyerProfiles: ${existingBuyers.length}`);
+    console.log(`- buyerLinks: ${existingLinks.length}`);
+    console.log(`- realtor users: ${existingRealtors.length}`);
+    
+    // Recommendations
+    if (existingLinks.length > 0 && existingBuyers.length > 0) {
+      console.log('\\n💡 RECOMMENDATION: Run migration to consolidate buyerLinks into buyerProfiles');
+    }
+    
+    if (existingBuyers.length === 0 && existingLinks.length === 0) {
+      console.log('\\n💡 RECOMMENDATION: Database is clean - ready for 10-city test data creation');
+    }
+    
+    return {
+      success: true,
+      buyerProfiles: existingBuyers.length,
+      buyerLinks: existingLinks.length,
+      realtorUsers: existingRealtors.length
+    };
+    
+  } catch (error) {
+    console.error('❌ Firebase connection failed:', error);
+    console.log('\\n🔧 TROUBLESHOOTING:');
+    console.log('1. Check if Firebase is initialized in your environment');
+    console.log('2. Verify Firebase credentials are set up');
+    console.log('3. Ensure Firestore security rules allow read/write');
+    
+    return {
+      success: false,
+      error: (error as Error).message
+    };
+  }
+}
+
+// Run validation
+if (require.main === module) {
+  validateFirebaseConnection().then(result => {
+    if (!result.success) {
+      process.exit(1);
+    }
+  });
+}
+
+export { validateFirebaseConnection };

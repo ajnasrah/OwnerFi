@@ -1,0 +1,53 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { 
+  collection, 
+  query, 
+  where, 
+  getDocs, 
+  limit as firestoreLimit,
+  orderBy 
+} from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+
+export async function GET(request: NextRequest) {
+  try {
+    if (!db) {
+      return NextResponse.json(
+        { error: 'Database not available' },
+        { status: 500 }
+      );
+    }
+
+    const { searchParams } = new URL(request.url);
+    const limit = parseInt(searchParams.get('limit') || '20');
+    
+    // Fetch properties from Firebase
+    const propertiesQuery = query(
+      collection(db, 'properties'),
+      where('isActive', '==', true),
+      firestoreLimit(limit)
+    );
+    
+    const propertiesSnapshot = await getDocs(propertiesQuery);
+    const properties = propertiesSnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      // Convert Firestore timestamps to readable format
+      createdAt: doc.data().createdAt?.toDate?.()?.toISOString() || doc.data().createdAt,
+      updatedAt: doc.data().updatedAt?.toDate?.()?.toISOString() || doc.data().updatedAt
+    }));
+
+    return NextResponse.json({ 
+      properties,
+      count: properties.length 
+    });
+
+  } catch (error) {
+    console.error('Failed to fetch properties:', error);
+
+    return NextResponse.json(
+      { error: 'Failed to fetch properties' },
+      { status: 500 }
+    );
+  }
+}

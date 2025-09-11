@@ -12,6 +12,13 @@ import { PropertyListing } from '@/lib/property-schema';
  */
 export async function GET(request: NextRequest) {
   try {
+    if (!db) {
+      return NextResponse.json(
+        { error: 'Database not available' },
+        { status: 500 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const searchCity = searchParams.get('city');
     const searchState = searchParams.get('state');
@@ -25,7 +32,6 @@ export async function GET(request: NextRequest) {
       }, { status: 400 });
     }
 
-    console.log(`🔍 SEARCH WITH NEARBY: ${searchCity}, ${searchState} - Budget: $${maxMonthlyPayment}/$${maxDownPayment}`);
 
     // Get all properties
     const snapshot = await getDocs(collection(db, 'properties'));
@@ -91,7 +97,6 @@ export async function GET(request: NextRequest) {
     })
     .slice(0, limit);
 
-    console.log(`✅ SEARCH COMPLETE: ${directProperties.length} direct + ${nearbyProperties.length} nearby = ${dashboardResults.length} total`);
 
     return NextResponse.json({
       searchQuery: {
@@ -125,7 +130,6 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('🚨 Search with nearby error:', error);
     return NextResponse.json({ 
       error: 'Search failed',
       details: (error as Error).message

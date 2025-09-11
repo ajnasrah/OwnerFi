@@ -9,7 +9,7 @@ import {
   getDocs,
   serverTimestamp 
 } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getSafeDb } from '@/lib/firebase-safe';
 import { firestoreHelpers } from '@/lib/firestore';
 
 /**
@@ -21,13 +21,13 @@ import { firestoreHelpers } from '@/lib/firestore';
 
 export async function POST(request: NextRequest) {
   try {
+    const db = getSafeDb();
     const { buyerId, propertyId, action } = await request.json();
     
     if (!buyerId || !propertyId || !action) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    console.log(`🎯 ${action} action for property ${propertyId} by buyer ${buyerId}`);
 
     // Find the property match record
     const matchQuery = query(
@@ -81,7 +81,6 @@ export async function POST(request: NextRequest) {
       createdAt: serverTimestamp()
     });
 
-    console.log(`✅ Updated property status to: ${newStatus}`);
 
     return NextResponse.json({
       success: true,
@@ -90,7 +89,6 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Property action error:', error);
     return NextResponse.json({ error: 'Failed to update property' }, { status: 500 });
   }
 }

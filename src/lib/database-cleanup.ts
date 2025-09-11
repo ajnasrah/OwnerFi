@@ -38,6 +38,10 @@ export class DatabaseCleanup {
     };
 
     try {
+      if (!db) {
+        throw new Error('Firebase not initialized');
+      }
+      
       // Get all buyer profiles
       const buyersQuery = query(collection(db, 'buyerProfiles'));
       const buyerDocs = await getDocs(buyersQuery);
@@ -76,6 +80,9 @@ export class DatabaseCleanup {
 
           // Delete duplicate profiles
           for (const duplicate of duplicates) {
+            if (!db) {
+              throw new Error('Firebase not initialized');
+            }
             await deleteDoc(doc(db, 'buyerProfiles', String(duplicate.id)));
             result.recordsDeleted++;
             result.details?.push(`Deleted duplicate buyer ${duplicate.id} (${duplicate.firstName} ${duplicate.lastName})`);
@@ -113,6 +120,10 @@ export class DatabaseCleanup {
     };
 
     try {
+      if (!db) {
+        throw new Error('Firebase not initialized');
+      }
+      
       // Get all lead purchases
       const purchasesQuery = query(collection(db, 'buyerLeadPurchases'));
       const purchaseDocs = await getDocs(purchasesQuery);
@@ -148,6 +159,9 @@ export class DatabaseCleanup {
         }
 
         if (shouldDelete) {
+          if (!db) {
+            throw new Error('Firebase not initialized');
+          }
           await deleteDoc(doc(db, 'buyerLeadPurchases', purchaseDoc.id));
           result.recordsDeleted++;
           result.details?.push(`Deleted orphaned purchase ${purchaseDoc.id}: ${reasons.join(', ')}`);
@@ -184,6 +198,10 @@ export class DatabaseCleanup {
     };
 
     try {
+      if (!db) {
+        throw new Error('Firebase not initialized');
+      }
+      
       const batch = writeBatch(db);
       let batchCount = 0;
 
@@ -232,6 +250,9 @@ export class DatabaseCleanup {
 
         if (Object.keys(updates).length > 0) {
           updates.updatedAt = serverTimestamp();
+          if (!db) {
+            throw new Error('Firebase not initialized');
+          }
           batch.update(doc(db, 'buyerProfiles', buyerDoc.id), updates);
           batchCount++;
           result.recordsUpdated++;
@@ -280,6 +301,9 @@ export class DatabaseCleanup {
 
         if (Object.keys(updates).length > 0) {
           updates.updatedAt = serverTimestamp();
+          if (!db) {
+            throw new Error('Firebase not initialized');
+          }
           batch.update(doc(db, 'realtors', realtorDoc.id), updates);
           batchCount++;
           result.recordsUpdated++;
@@ -338,6 +362,10 @@ export class DatabaseCleanup {
     ];
 
     try {
+      if (!db) {
+        throw new Error('Firebase not initialized');
+      }
+      
       // Remove test buyers
       const buyersQuery = query(collection(db, 'buyerProfiles'));
       const buyerDocs = await getDocs(buyersQuery);
@@ -349,6 +377,9 @@ export class DatabaseCleanup {
         const isTestData = testPatterns.some(pattern => email.includes(pattern.toLowerCase()));
         
         if (isTestData) {
+          if (!db) {
+            throw new Error('Firebase not initialized');
+          }
           await deleteDoc(doc(db, 'buyerProfiles', buyerDoc.id));
           result.recordsDeleted++;
           result.details?.push(`Deleted test buyer: ${buyer.firstName} ${buyer.lastName} (${email})`);
@@ -366,6 +397,9 @@ export class DatabaseCleanup {
         const isTestData = testPatterns.some(pattern => email.includes(pattern.toLowerCase()));
         
         if (isTestData) {
+          if (!db) {
+            throw new Error('Firebase not initialized');
+          }
           await deleteDoc(doc(db, 'realtors', realtorDoc.id));
           result.recordsDeleted++;
           result.details?.push(`Deleted test realtor: ${realtor.firstName} ${realtor.lastName} (${email})`);
@@ -395,14 +429,12 @@ export class DatabaseCleanup {
   static async runComprehensiveCleanup(): Promise<CleanupResult[]> {
     const results: CleanupResult[] = [];
     
-    console.log('Starting comprehensive database cleanup...');
     
     // Run all cleanup operations
     results.push(await this.fixIncompleteProfiles());
     results.push(await this.removeDuplicateBuyers());
     results.push(await this.cleanupOrphanedLeadPurchases());
     
-    console.log('Database cleanup completed');
     
     return results;
   }

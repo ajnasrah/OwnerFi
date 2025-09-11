@@ -1,0 +1,82 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+import { FirebaseDB } from '@/lib/firebase-db';
+import { ExtendedSession } from '@/types/session';
+
+export async function POST(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions) as ExtendedSession;
+    
+    if (!session?.user || session.user.role !== 'realtor') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const { targetCity, serviceCities, totalCitiesServed } = body;
+
+    console.log(`💾 Saving realtor profile: ${targetCity}, ${totalCitiesServed} cities`);
+
+    // Parse target city first
+    const cityParts = targetCity.split(',');
+
+    // Get current user data
+    const userData = await FirebaseDB.getDocument('users', session.user.id);
+    
+    if (!userData) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    // Create service area in the format the dashboard expects
+    const serviceArea = {
+      primaryCity: {
+        name: cityParts[0]?.trim() || 'Dallas',
+        state: cityParts[1]?.trim() || 'TX'
+      },
+      nearbyCities: serviceCities.map((city: string) => ({
+        name: city.split(',')[0]?.trim() || city,
+        state: city.split(',')[1]?.trim() || 'TX'
+      })),
+      radiusMiles: 30,
+      totalCitiesServed: totalCitiesServed,
+      lastUpdated: new Date()
+    };
+
+    // Update realtor data in user document
+    const updatedRealtorData = {
+      ...(userData as any).realtorData || {},
+      firstName: (userData as any).name?.split(' ')[0] || '',
+      lastName: (userData as any).name?.split(' ').slice(1).join(' ') || '',
+      email: (userData as any).email,
+      serviceArea: serviceArea,
+      // ALSO save in the format dashboard expects
+      targetCity: targetCity,
+      serviceCities: serviceCities,
+      totalCitiesServed: totalCitiesServed,
+      profileComplete: true,
+      isActive: true,
+      credits: (userData as any).realtorData?.credits || 3,
+      isOnTrial: (userData as any).realtorData?.isOnTrial ?? true,
+      updatedAt: new Date()
+    };
+
+    await FirebaseDB.updateDocument('users', session.user.id, {
+      realtorData: updatedRealtorData,
+      updatedAt: new Date()
+    });
+
+    console.log(`✅ Realtor profile updated: ${session.user.email}`);
+
+    return NextResponse.json({
+      success: true,
+      message: 'Settings saved successfully'
+    });
+
+  } catch (error) {
+    console.error('💥 Realtor profile save error:', error);
+    return NextResponse.json(
+      { error: 'Failed to save settings' },
+      { status: 500 }
+    );
+  }
+}

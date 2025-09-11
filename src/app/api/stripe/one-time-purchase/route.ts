@@ -20,6 +20,13 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 export async function POST(request: NextRequest) {
   try {
+    if (!db) {
+      return NextResponse.json(
+        { error: 'Database not available' },
+        { status: 500 }
+      );
+    }
+
     const session = await getSessionWithRole('realtor');
     
     if (!session?.user?.email) {
@@ -71,7 +78,6 @@ export async function POST(request: NextRequest) {
           stripeCustomerId: stripeCustomerId
         });
       } catch (error) {
-        console.error('Customer lookup/creation failed:', error);
       }
     }
 
@@ -124,7 +130,6 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Single credit purchase error:', error);
     
     await logError('Single credit purchase failed', {
       action: 'single_credit_purchase_error'

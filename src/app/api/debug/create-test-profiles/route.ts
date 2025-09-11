@@ -1,0 +1,63 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { ConsolidatedLeadSystem } from '@/lib/consolidated-lead-system';
+
+export async function POST(request: NextRequest) {
+  try {
+    const testBuyers = [
+      {
+        userId: "houston_test_001",
+        firstName: "Maria",
+        lastName: "Houston", 
+        email: "maria.houston.test@ownerfi.com",
+        phone: "555-222-2222",
+        city: "Houston, TX",
+        maxMonthlyPayment: 1800,
+        maxDownPayment: 45000,
+        languages: ["English", "Spanish"]
+      },
+      {
+        userId: "austin_test_001",
+        firstName: "Mike",
+        lastName: "Austin",
+        email: "mike.austin.test@ownerfi.com", 
+        phone: "555-333-3333",
+        city: "Austin, TX",
+        maxMonthlyPayment: 2200,
+        maxDownPayment: 60000,
+        languages: ["English"]
+      }
+    ];
+
+    const results = [];
+    
+    for (const buyer of testBuyers) {
+      try {
+        const profileId = await ConsolidatedLeadSystem.createBuyerProfile(buyer);
+        results.push({ 
+          success: true, 
+          profileId, 
+          buyer: buyer.firstName,
+          city: buyer.city.split(',')[0]
+        });
+      } catch (error) {
+        results.push({ 
+          success: false, 
+          error: (error as Error).message || 'Unknown error', 
+          buyer: buyer.firstName 
+        });
+      }
+    }
+
+    return NextResponse.json({ 
+      success: true,
+      message: 'Test buyer profiles created in buyerProfiles collection',
+      results: results
+    });
+
+  } catch (error) {
+    return NextResponse.json({ 
+      error: 'Failed', 
+      details: (error as Error).message 
+    }, { status: 500 });
+  }
+}

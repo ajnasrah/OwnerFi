@@ -10,6 +10,13 @@ import { db } from '@/lib/firebase';
 
 export async function GET(request: NextRequest) {
   try {
+    if (!db) {
+      return NextResponse.json(
+        { error: 'Database not available' },
+        { status: 500 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const idsParam = searchParams.get('ids');
     
@@ -23,7 +30,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ properties: [] });
     }
 
-    console.log(`🔍 Fetching details for ${propertyIds.length} properties`);
 
     // Firestore 'in' query has a limit of 10, so batch if needed
     const properties = [];
@@ -54,7 +60,6 @@ export async function GET(request: NextRequest) {
       return aIndex - bIndex;
     });
 
-    console.log(`✅ Retrieved ${sortedProperties.length} property details`);
 
     return NextResponse.json({
       properties: sortedProperties,
@@ -62,7 +67,6 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Property details error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch property details' },
       { status: 500 }

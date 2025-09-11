@@ -5,7 +5,7 @@ import {
   setDoc,
   serverTimestamp
 } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { getSafeDb } from '@/lib/firebase-safe';
 import { firestoreHelpers } from '@/lib/firestore';
 
 export async function POST(request: NextRequest) {
@@ -13,6 +13,7 @@ export async function POST(request: NextRequest) {
     const { realtorId, plan, creditsToAdd } = await request.json();
     
     // Update realtor to active subscription
+    const db = getSafeDb();
     await updateDoc(doc(db, 'realtors', realtorId), {
       credits: 748 + creditsToAdd, // Keep existing credits plus new ones
       currentPlan: plan,
@@ -55,7 +56,6 @@ export async function POST(request: NextRequest) {
     });
     
   } catch (error) {
-    console.error('Failed to activate subscription:', error);
     return NextResponse.json(
       { error: 'Failed to activate subscription' },
       { status: 500 }

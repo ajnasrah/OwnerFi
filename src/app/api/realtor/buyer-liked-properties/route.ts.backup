@@ -1,0 +1,67 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+import { FirebaseDB } from '@/lib/firebase-db';
+import { ExtendedSession } from '@/types/session';
+
+export async function GET(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions) as ExtendedSession;
+    
+    if (!session?.user || session.user.role !== 'realtor') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const buyerId = searchParams.get('buyerId');
+
+    if (!buyerId) {
+      return NextResponse.json({ error: 'Buyer ID required' }, { status: 400 });
+    }
+
+    // Get buyer's profile to access their liked properties
+    const buyerProfile = await FirebaseDB.getDocument('buyerProfiles', buyerId);
+    
+    if (!buyerProfile) {
+      return NextResponse.json({ error: 'Buyer not found' }, { status: 404 });
+    }
+
+    const likedPropertyIds = (buyerProfile as any).likedProperties || [];
+    
+    if (likedPropertyIds.length === 0) {
+      return NextResponse.json({ 
+        buyer: {
+          firstName: (buyerProfile as any).firstName,
+          lastName: (buyerProfile as any).lastName
+        },
+        likedProperties: [] 
+      });
+    }
+
+    // Fetch property details for all liked properties
+    const propertyPromises = likedPropertyIds.map(async (propertyId: string) => {
+      try {
+        const property = await FirebaseDB.getDocument('properties', propertyId);
+        return property;
+      } catch (err) {
+        console.error(`Failed to fetch property ${propertyId}:`, err);
+        return null;
+      }
+    });
+
+    const properties = await Promise.all(propertyPromises);
+    const validProperties = properties.filter(p => p !== null);
+
+    return NextResponse.json({
+      buyer: {
+        firstName: (buyerProfile as any).firstName,
+        lastName: (buyerProfile as any).lastName
+      },
+      likedProperties: validProperties
+    });
+
+  } catch (error) {
+    console.error('Realtor buyer liked properties error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}

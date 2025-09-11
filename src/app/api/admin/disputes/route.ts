@@ -17,11 +17,18 @@ import { logError, logInfo } from '@/lib/logger';
 // GET - Fetch all disputes for admin review
 export async function GET(request: NextRequest) {
   try {
+    if (!db) {
+      return NextResponse.json(
+        { error: 'Database not available' },
+        { status: 500 }
+      );
+    }
+
     // TODO: Add admin role check when admin auth is implemented
     // For now, this is open for development
     
     const disputesQuery = query(
-      collection(db, 'leadDisputes'),
+      collection(db!, 'leadDisputes'),
       orderBy('submittedAt', 'desc')
     );
     const disputeDocs = await getDocs(disputesQuery);
@@ -34,13 +41,13 @@ export async function GET(request: NextRequest) {
       // Try to fetch the related purchase to get buyer ID
       if (disputeData.transactionId) {
         try {
-          const purchaseDoc = await getDoc(doc(db, 'buyerLeadPurchases', disputeData.transactionId));
+          const purchaseDoc = await getDoc(doc(db!, 'buyerLeadPurchases', disputeData.transactionId));
           if (purchaseDoc.exists()) {
             const purchaseData = purchaseDoc.data();
             
             // Fetch buyer profile
             if (purchaseData.buyerId) {
-              const buyerDoc = await getDoc(doc(db, 'buyerProfiles', purchaseData.buyerId));
+              const buyerDoc = await getDoc(doc(db!, 'buyerProfiles', purchaseData.buyerId));
               if (buyerDoc.exists()) {
                 const buyer = buyerDoc.data();
                 const criteria = buyer.searchCriteria || {};
@@ -56,7 +63,6 @@ export async function GET(request: NextRequest) {
             }
           }
         } catch (error) {
-          console.error('Error fetching buyer details for dispute:', error);
         }
       }
       
@@ -64,6 +70,7 @@ export async function GET(request: NextRequest) {
         id: docSnapshot.id,
         ...disputeData,
         ...buyerDetails,
+        status: disputeData.status || 'pending',
         submittedAt: disputeData.submittedAt?.toDate?.()?.toISOString() || disputeData.submittedAt,
         createdAt: disputeData.createdAt?.toDate?.()?.toISOString() || disputeData.createdAt,
         updatedAt: disputeData.updatedAt?.toDate?.()?.toISOString() || disputeData.updatedAt,
@@ -102,6 +109,13 @@ export async function GET(request: NextRequest) {
 // POST - Resolve a dispute (approve/deny)
 export async function POST(request: NextRequest) {
   try {
+    if (!db) {
+      return NextResponse.json(
+        { error: 'Database not available' },
+        { status: 500 }
+      );
+    }
+
     // TODO: Add admin role check when admin auth is implemented
     
     const body = await request.json();
@@ -115,7 +129,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get dispute details
-    const disputeDoc = await getDoc(doc(db, 'leadDisputes', disputeId));
+    const disputeDoc = await getDoc(doc(db!, 'leadDisputes', disputeId));
     
     if (!disputeDoc.exists()) {
       return NextResponse.json(
@@ -128,7 +142,6 @@ export async function POST(request: NextRequest) {
     
     // Allow re-processing approved disputes if they don't have refund amounts
     if (dispute.status === 'approved' && !dispute.refundAmount && refundCredits > 0) {
-      console.log('Re-processing approved dispute to add missing refund');
     }
 
     // Update dispute status
@@ -144,16 +157,16 @@ export async function POST(request: NextRequest) {
       updateData.refundAmount = refundCredits;
       
       // Add credits back to realtor account
-      const realtorDoc = await getDoc(doc(db, 'realtors', dispute.realtorId));
+      const realtorDoc = await getDoc(doc(db!, 'realtors', dispute.realtorId));
       if (realtorDoc.exists()) {
         const currentCredits = realtorDoc.data()?.credits || 0;
-        await updateDoc(doc(db, 'realtors', dispute.realtorId), {
+        await updateDoc(doc(db!, 'realtors', dispute.realtorId), {
           credits: currentCredits + refundCredits,
           updatedAt: serverTimestamp()
         });
         
         // Create a transaction record for the refund
-        await setDoc(doc(collection(db, 'transactions')), {
+        await setDoc(doc(collection(db!, 'transactions')), {
           realtorId: dispute.realtorId,
           type: 'dispute_refund',
           description: `Refund for dispute #${disputeId.substring(0, 8)}`,
@@ -165,7 +178,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    await updateDoc(doc(db, 'leadDisputes', disputeId), updateData);
+    await updateDoc(doc(db!, 'leadDisputes', disputeId), updateData);
 
     await logInfo('Dispute resolved by admin', {
       action: 'dispute_resolved',

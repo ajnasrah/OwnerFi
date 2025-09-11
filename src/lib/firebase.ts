@@ -1,16 +1,8 @@
-import { initializeApp, getApps } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
-import { getStorage } from 'firebase/storage';
+import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
+import { getFirestore, Firestore } from 'firebase/firestore';
+import { getAuth, Auth } from 'firebase/auth';
+import { getStorage, FirebaseStorage } from 'firebase/storage';
 
-// Debug environment variables during build
-console.log('🔥 Firebase env debug:', {
-  NODE_ENV: process.env.NODE_ENV,
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY ? `SET (${process.env.NEXT_PUBLIC_FIREBASE_API_KEY.substring(0, 10)}...)` : 'MISSING',
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN ? 'SET' : 'MISSING',
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ? 'SET' : 'MISSING',
-  allKeys: Object.keys(process.env).filter(key => key.includes('FIREBASE')).length
-});
 
 // Check if we have the minimum required environment variables
 const hasFirebaseConfig = !!(
@@ -19,10 +11,10 @@ const hasFirebaseConfig = !!(
 );
 
 // Initialize Firebase (only once) - skip during build if no config available
-let app = null;
-let db = null;
-let auth = null;
-let storage = null;
+let app: FirebaseApp | null = null;
+let db: Firestore | null = null;
+let auth: Auth | null = null;
+let storage: FirebaseStorage | null = null;
 
 if (hasFirebaseConfig) {
   try {
@@ -39,9 +31,7 @@ if (hasFirebaseConfig) {
     db = getFirestore(app);
     auth = getAuth(app);
     storage = getStorage(app);
-    console.log('🔥 Firebase client SDK initialized successfully');
   } catch (error) {
-    console.warn('🔥 Firebase client initialization failed:', error.message);
     // Reset to null on failure
     app = null;
     db = null;
@@ -49,7 +39,6 @@ if (hasFirebaseConfig) {
     storage = null;
   }
 } else {
-  console.log('🔥 Skipping Firebase client initialization - missing environment variables');
 }
 
 // Safe exports - these can be null if Firebase isn't initialized

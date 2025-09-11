@@ -39,7 +39,6 @@ export async function GET(request: NextRequest) {
       }, { status: 400 });
     }
 
-    console.log(`🚀 OPTIMIZED SEARCH: ${city}, ${state} - Budget: $${maxMonthlyPayment}/$${maxDownPayment}`);
 
     // Build search criteria
     const criteria = {
@@ -55,7 +54,6 @@ export async function GET(request: NextRequest) {
 
     const totalTime = Date.now() - startTime;
 
-    console.log(`⚡ SEARCH COMPLETE: ${result.totalFound} properties in ${totalTime}ms`);
 
     return NextResponse.json({
       success: true,
@@ -78,7 +76,6 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     const totalTime = Date.now() - startTime;
-    console.error(`🚨 Optimized search error (${totalTime}ms):`, error);
     
     return NextResponse.json({ 
       error: 'Search failed',

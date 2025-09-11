@@ -1,0 +1,274 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useSession, signOut } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+
+import { PropertyListing } from '@/lib/property-schema';
+
+type Property = PropertyListing & {
+  isLiked: boolean;
+  zillowImageUrl?: string;
+  imageUrl?: string;
+};
+
+interface BuyerProfile {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  city: string;
+  maxMonthlyPayment?: number;
+  maxDownPayment?: number;
+  likedProperties?: string[];
+}
+
+export default function LikedProperties() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [profile, setProfile] = useState<BuyerProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  // Auth check
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/auth/signin');
+    } else if (status === 'authenticated' && session?.user?.role !== 'buyer') {
+      router.push('/auth/signin');
+    }
+  }, [status, session, router]);
+
+  // Load liked properties
+  useEffect(() => {
+    if (status === 'authenticated' && session?.user?.role === 'buyer') {
+      loadLikedProperties();
+    }
+  }, [status, session]);
+
+  const loadLikedProperties = async () => {
+    try {
+      setLoading(true);
+
+      const response = await fetch('/api/buyer/liked-properties');
+      const data = await response.json();
+
+      if (data.error) {
+        setError(data.error);
+      } else {
+        setProperties(data.likedProperties || []);
+        setProfile(data.profile);
+        
+        console.log(`❤️ LOADED ${data.likedProperties?.length || 0} liked properties`);
+      }
+
+    } catch (err) {
+      console.error('Failed to load liked properties:', err);
+      setError('Failed to load your liked properties');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const removeLike = async (propertyId: string) => {
+    try {
+      const response = await fetch('/api/buyer/like-property', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ propertyId, action: 'unlike' })
+      });
+
+      if (response.ok) {
+        setProperties(prev => prev.filter(p => p.id !== propertyId));
+      }
+    } catch (error) {
+      console.error('Failed to remove like:', error);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-emerald-400 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
+          <div className="text-2xl font-bold text-white mb-2">LOADING SAVED HOMES</div>
+          <p className="text-slate-400 font-medium">Finding your liked properties...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-slate-900">
+      {/* Header with Navigation */}
+      <header className="relative z-20 bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50 px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-black text-white">SAVED HOMES</h1>
+            <p className="text-sm text-slate-400 mt-1 font-semibold">
+              {properties.length} SAVED {properties.length === 1 ? 'PROPERTY' : 'PROPERTIES'}
+            </p>
+          </div>
+          
+          <div className="flex items-center space-x-6">
+            <div className="flex space-x-4">
+              <Link href="/dashboard" className="flex flex-col items-center group">
+                <div className="w-12 h-12 bg-slate-700/50 hover:bg-slate-600/50 rounded-xl flex items-center justify-center transition-colors group-hover:scale-110">
+                  <span className="text-slate-300 text-xl">🏠</span>
+                </div>
+                <span className="text-xs font-bold text-slate-400 mt-1">BROWSE</span>
+              </Link>
+              
+              <Link href="/dashboard/liked" className="flex flex-col items-center group">
+                <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                  <span className="text-white text-xl">♥</span>
+                </div>
+                <span className="text-xs font-bold text-emerald-400 mt-1">SAVED</span>
+              </Link>
+              
+              <Link href="/dashboard/settings" className="flex flex-col items-center group">
+                <div className="w-12 h-12 bg-slate-700/50 hover:bg-slate-600/50 rounded-xl flex items-center justify-center transition-colors group-hover:scale-110">
+                  <span className="text-slate-300 text-xl">⚙</span>
+                </div>
+                <span className="text-xs font-bold text-slate-400 mt-1">SETTINGS</span>
+              </Link>
+            </div>
+            
+            <button
+              onClick={() => signOut({ callbackUrl: '/auth/signin' })}
+              className="flex flex-col items-center group"
+            >
+              <div className="w-12 h-12 bg-slate-700/50 hover:bg-red-600/30 rounded-xl flex items-center justify-center transition-all group-hover:scale-110 duration-300">
+                <span className="text-slate-300 group-hover:text-red-400 text-xl transition-colors">⏻</span>
+              </div>
+              <span className="text-xs font-bold text-slate-400 group-hover:text-red-400 mt-1 transition-colors">LOGOUT</span>
+            </button>
+          </div>
+        </div>
+      </header>
+      
+      <main className="px-4 pb-8 pt-6">
+        <div className="max-w-7xl mx-auto">
+          {/* Error State */}
+          {error && (
+            <div className="bg-red-600/20 backdrop-blur-lg border border-red-500/30 rounded-xl p-4 mb-6">
+              <p className="text-red-300 font-semibold">{error}</p>
+            </div>
+          )}
+
+          {/* Liked Properties Grid */}
+          {properties.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {properties.map((property) => (
+                <div key={property.id} className="bg-slate-800/50 backdrop-blur-lg border border-slate-700/50 rounded-2xl overflow-hidden shadow-2xl">
+                  {/* Property Image */}
+                  <div className="w-full h-48 bg-slate-700 overflow-hidden relative">
+                    <img
+                      src={
+                        property.zillowImageUrl || 
+                        property.imageUrl ||
+                        `https://maps.googleapis.com/maps/api/streetview?size=400x300&location=${encodeURIComponent(property.address + ', ' + property.city + ', ' + property.state)}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`
+                      }
+                      alt={property.address}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = `https://maps.googleapis.com/maps/api/streetview?size=400x300&location=${encodeURIComponent(property.address + ', ' + property.city + ', ' + property.state)}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`;
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"></div>
+                    <div className="absolute top-3 right-3 bg-gradient-to-r from-red-500 to-red-600 text-white px-3 py-2 rounded-xl text-sm font-bold shadow-xl border border-red-400/30">
+                      ❤️ SAVED
+                    </div>
+                  </div>
+                  
+                  <div className="p-6">
+                    <h3 className="text-lg font-bold text-white mb-2">
+                      {property.address.toUpperCase()}
+                    </h3>
+                    <p className="text-slate-300 mb-4 font-semibold">
+                      {property.city}, {property.state}
+                    </p>
+                    
+                    <div className="space-y-3 mb-4">
+                      <div className="flex justify-between items-center">
+                        <span className="text-slate-400 font-semibold">List Price:</span>
+                        <span className="font-bold text-white text-lg">${property.listPrice?.toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-slate-400 font-semibold">Monthly:</span>
+                        <span className="font-bold text-emerald-400 text-lg">${Math.ceil(property.monthlyPayment || 0).toLocaleString()} est</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-slate-400 font-semibold">Down:</span>
+                        <span className="font-bold text-blue-400 text-lg">${property.downPaymentAmount?.toLocaleString()} est</span>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-between text-sm text-slate-400 mb-4 font-semibold">
+                      <span>{property.bedrooms} BED</span>
+                      <span>{property.bathrooms} BATH</span>
+                      <span>{property.squareFeet?.toLocaleString()} SQ FT</span>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-2">
+                      <button 
+                        onClick={() => removeLike(property.id)}
+                        className="bg-red-600/20 hover:bg-red-600/30 text-red-400 py-2 px-3 rounded-lg transition-all hover:scale-105 font-bold border border-red-500/30 text-sm"
+                      >
+                        REMOVE
+                      </button>
+                      
+                      <button 
+                        onClick={() => {
+                          const message = `I'm interested in the property at ${property.address}, ${property.city}, ${property.state}. Found through OwnerFi.`;
+                          window.open(`sms:+1234567890&body=${encodeURIComponent(message)}`, '_self');
+                        }}
+                        className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white py-2 px-3 rounded-lg transition-all hover:scale-105 font-bold text-sm"
+                      >
+                        CONTACT
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          const searchQuery = `${property.address}, ${property.city}, ${property.state}`;
+                          window.open(`https://www.google.com/search?q=${encodeURIComponent(searchQuery)}`, '_blank');
+                        }}
+                        className="bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 py-2 px-3 rounded-lg transition-all hover:scale-105 font-bold text-sm border border-blue-500/30"
+                      >
+                        MORE INFO
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-16">
+              <div className="w-24 h-24 bg-slate-700/30 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <span className="text-4xl">💔</span>
+              </div>
+              <h3 className="text-2xl font-black text-white mb-4">NO SAVED PROPERTIES</h3>
+              <p className="text-slate-300 mb-8 font-medium text-lg">
+                Start browsing and save properties you like to see them here.
+              </p>
+              <Link 
+                href="/dashboard"
+                className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 rounded-xl font-bold text-lg transition-all duration-300 hover:scale-105 shadow-2xl shadow-emerald-500/25"
+              >
+                BROWSE PROPERTIES
+                <svg className="ml-2 w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </Link>
+            </div>
+          )}
+        </div>
+      </main>
+
+    </div>
+  );
+}

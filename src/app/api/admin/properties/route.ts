@@ -19,6 +19,13 @@ import { ExtendedSession } from '@/types/session';
 // Get all properties for admin management
 export async function GET(request: NextRequest) {
   try {
+    if (!db) {
+      return NextResponse.json(
+        { error: 'Database not available' },
+        { status: 500 }
+      );
+    }
+
     // Admin access control
     const session = await getServerSession(authOptions);
     
@@ -83,6 +90,13 @@ export async function GET(request: NextRequest) {
 // Update property
 export async function PUT(request: NextRequest) {
   try {
+    if (!db) {
+      return NextResponse.json(
+        { error: 'Database not available' },
+        { status: 500 }
+      );
+    }
+
     const session = await getServerSession(authOptions);
     
     if (!session?.user || (session as ExtendedSession).user.role !== 'admin') {
@@ -135,6 +149,13 @@ export async function PUT(request: NextRequest) {
 // Delete property
 export async function DELETE(request: NextRequest) {
   try {
+    if (!db) {
+      return NextResponse.json(
+        { error: 'Database not available' },
+        { status: 500 }
+      );
+    }
+
     const session = await getServerSession(authOptions);
     
     if (!session?.user || (session as ExtendedSession).user.role !== 'admin') {

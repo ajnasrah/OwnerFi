@@ -1,169 +1,143 @@
-import { 
-  collection, 
-  doc, 
-  getDoc, 
-  getDocs, 
-  addDoc, 
-  updateDoc, 
-  deleteDoc, 
-  query, 
-  where, 
-  orderBy, 
-  limit as firestoreLimit,
-  writeBatch,
-  serverTimestamp,
-  Timestamp
-} from 'firebase/firestore';
-import { db } from './firebase';
+import { collection, doc, getDoc, setDoc, updateDoc, deleteDoc, query, where, getDocs, orderBy, limit, DocumentReference, DocumentData, QuerySnapshot } from 'firebase/firestore';
+import { getSafeDb } from './firebase-safe';
 
-// Collection references
-export const collections = {
-  users: 'users',
-  realtors: 'realtors',
-  buyerProfiles: 'buyerProfiles', 
-  properties: 'properties',
-  propertyMatches: 'propertyMatches',
-  realtorSubscriptions: 'realtorSubscriptions',
-  buyerLeadPurchases: 'buyerLeadPurchases',
-  systemLogs: 'systemLogs'
-};
-
-// Firestore document interfaces
-export interface FirestoreUser {
-  id?: string;
-  email: string;
-  role: 'buyer' | 'realtor' | 'admin';
-  password?: string; // Only for creation, don't store
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
-}
-
-export interface FirestoreRealtor {
-  id?: string;
-  userId: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  company: string;
-  licenseNumber?: string;
-  licenseState?: string;
-  primaryCity?: string;
-  primaryState?: string;
-  serviceRadius: number;
-  serviceStates?: string[]; // Array instead of JSON string
-  serviceCities?: string[]; // Array instead of JSON string
-  credits: number;
-  isOnTrial: boolean;
-  trialStartDate: Timestamp;
-  trialEndDate: Timestamp;
-  isActive: boolean;
-  profileComplete: boolean;
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
-}
-
-export interface FirestoreBuyerProfile {
-  id?: string;
-  userId: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  maxMonthlyPayment: number;
-  maxDownPayment: number;
-  preferredCity: string;
-  preferredState: string;
-  searchRadius: number;
-  minBedrooms?: number;
-  minBathrooms?: number;
-  minPrice?: number;
-  maxPrice?: number;
-  profileComplete: boolean;
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
-}
-
-export interface FirestoreProperty {
-  id?: string;
-  address: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  bedrooms: number;
-  bathrooms: number;
-  sqft: number;
-  listPrice: number;
-  downPaymentPercent: number;
-  interestRate: number;
-  termYears: number;
-  balloonPayment?: number;
-  monthlyPayment: number;
-  downPaymentAmount: number;
-  description?: string;
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
-}
-
-export interface FirestorePropertyMatch {
-  id?: string;
-  propertyId: string;
-  buyerId: string;
-  matchedOn: Record<string, boolean>; // Object instead of JSON string
-  matchScore: number;
-  createdAt: Timestamp;
-}
-
-export interface FirestoreSubscription {
-  id?: string;
-  realtorId: string;
-  plan: string;
-  status: string;
-  monthlyPrice?: number;
-  creditsPerMonth?: number;
-  stripeCustomerId?: string;
-  stripeSubscriptionId?: string;
-  currentPeriodStart?: Timestamp;
-  currentPeriodEnd?: Timestamp;
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
-}
-
-// Helper functions for common operations
+/**
+ * Firestore helper utilities for common database operations
+ */
 export const firestoreHelpers = {
-  // Generate ID
-  generateId: () => doc(collection(db, 'temp')).id,
-  
-  // Timestamp helpers
-  now: () => serverTimestamp(),
-  toDate: (timestamp: Timestamp | string | null) => {
-    if (timestamp && typeof timestamp === 'object' && 'toDate' in timestamp) {
-      return timestamp.toDate();
-    }
-    if (typeof timestamp === 'string' || typeof timestamp === 'number') {
-      return new Date(timestamp);
-    }
-    return new Date(Date.now());
+  /**
+   * Generate a unique ID for Firestore documents
+   */
+  generateId(): string {
+    const db = getSafeDb();
+    return doc(collection(db, 'temp')).id;
   },
-  
-  // Collection helpers
-  getCollection: (collectionName: string) => collection(db, collectionName),
-  getDoc: async (collectionName: string, docId: string) => {
-    const docRef = doc(db, collectionName, docId);
-    const docSnap = await getDoc(docRef);
-    return docSnap.exists() ? { id: docSnap.id, ...docSnap.data() } : null;
+
+  /**
+   * Get a document by ID
+   */
+  async getDocument<T = DocumentData>(collectionName: string, docId: string): Promise<T | null> {
+    try {
+      const db = getSafeDb();
+      const docRef = doc(db, collectionName, docId);
+      const docSnap = await getDoc(docRef);
+      
+      if (docSnap.exists()) {
+        return { id: docSnap.id, ...docSnap.data() } as T;
+      }
+      return null;
+    } catch (error) {
+      throw error;
+    }
   },
-  
-  // Batch operations
-  createBatch: () => writeBatch(db),
-  
-  // Query builders
-  queryWhere: (collectionName: string, field: string, operator: '==' | '!=' | '<' | '<=' | '>' | '>=' | 'in' | 'not-in' | 'array-contains' | 'array-contains-any', value: unknown) => 
-    query(collection(db, collectionName), where(field, operator, value)),
-    
-  queryLimit: (collectionName: string, limitCount: number) =>
-    query(collection(db, collectionName), firestoreLimit(limitCount)),
-    
-  queryOrder: (collectionName: string, field: string, direction: 'asc' | 'desc' = 'asc') =>
-    query(collection(db, collectionName), orderBy(field, direction))
+
+  /**
+   * Set a document with ID
+   */
+  async setDocument<T = DocumentData>(
+    collectionName: string, 
+    docId: string, 
+    data: T
+  ): Promise<void> {
+    try {
+      const db = getSafeDb();
+      const docRef = doc(db, collectionName, docId);
+      await setDoc(docRef, data);
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  /**
+   * Update a document
+   */
+  async updateDocument<T = DocumentData>(
+    collectionName: string, 
+    docId: string, 
+    data: Partial<T>
+  ): Promise<void> {
+    try {
+      const db = getSafeDb();
+      const docRef = doc(db, collectionName, docId);
+      await updateDoc(docRef, data);
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  /**
+   * Delete a document
+   */
+  async deleteDocument(collectionName: string, docId: string): Promise<void> {
+    try {
+      const db = getSafeDb();
+      const docRef = doc(db, collectionName, docId);
+      await deleteDoc(docRef);
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  /**
+   * Query documents with filtering
+   */
+  async queryDocuments<T = DocumentData>(
+    collectionName: string,
+    field: string,
+    operator: '==' | '!=' | '<' | '<=' | '>' | '>=' | 'array-contains' | 'array-contains-any' | 'in' | 'not-in',
+    value: unknown,
+    orderByField?: string,
+    limitCount?: number
+  ): Promise<T[]> {
+    try {
+      const db = getSafeDb();
+      const collectionRef = collection(db, collectionName);
+      let q = query(collectionRef, where(field, operator, value));
+      
+      if (orderByField) {
+        q = query(q, orderBy(orderByField));
+      }
+      
+      if (limitCount) {
+        q = query(q, limit(limitCount));
+      }
+      
+      const querySnapshot = await getDocs(q);
+      const results: T[] = [];
+      
+      querySnapshot.forEach((doc) => {
+        results.push({ id: doc.id, ...doc.data() } as T);
+      });
+      
+      return results;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  /**
+   * Get all documents from a collection
+   */
+  async getAllDocuments<T = DocumentData>(collectionName: string, limitCount?: number): Promise<T[]> {
+    try {
+      const db = getSafeDb();
+      const collectionRef = collection(db, collectionName);
+      let q = query(collectionRef);
+      
+      if (limitCount) {
+        q = query(q, limit(limitCount));
+      }
+      
+      const querySnapshot = await getDocs(q);
+      const results: T[] = [];
+      
+      querySnapshot.forEach((doc) => {
+        results.push({ id: doc.id, ...doc.data() } as T);
+      });
+      
+      return results;
+    } catch (error) {
+      throw error;
+    }
+  }
 };

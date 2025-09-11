@@ -34,9 +34,9 @@ export default function BuyerSetupV2() {
   // Auth check
   useEffect(() => {
     if (status === 'unauthenticated') {
-      router.push('/auth/signin');
+      router.push('/');
     } else if (status === 'authenticated' && session?.user?.role !== 'buyer') {
-      router.push('/auth/signin');
+      router.push('/');
     }
   }, [status, session, router]);
 
@@ -62,13 +62,19 @@ export default function BuyerSetupV2() {
     }
 
     try {
-      console.log(`🚀 SETTING UP BUYER: ${formData.city}, $${monthlyBudget}/mo, $${downBudget} down`);
 
+      // Parse city and state from the city field
+      const cityParts = formData.city.split(',');
+      const city = cityParts[0]?.trim() || formData.city;
+      const state = cityParts[1]?.trim() || 'TX'; // Default to TX
+
+      
       const response = await fetch('/api/buyer/profile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          city: formData.city.trim(),
+          city: city,
+          state: state,
           maxMonthlyPayment: monthlyBudget,
           maxDownPayment: downBudget
         }),
@@ -79,11 +85,9 @@ export default function BuyerSetupV2() {
       if (data.error) {
         setError(data.error);
       } else {
-        console.log('✅ BUYER SETUP COMPLETE - redirecting to dashboard');
         router.push('/dashboard');
       }
     } catch (err) {
-      console.error('Setup failed:', err);
       setError('Failed to save your preferences');
     } finally {
       setLoading(false);
@@ -126,19 +130,16 @@ export default function BuyerSetupV2() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Maximum monthly payment you can afford? *
                 </label>
-                <div className="relative">
-                  <span className="absolute left-3 top-3 text-gray-500">$</span>
-                  <input
-                    type="number"
-                    required
-                    min="1"
-                    step="1"
-                    value={formData.maxMonthlyPayment}
-                    onChange={(e) => setFormData(prev => ({ ...prev, maxMonthlyPayment: e.target.value }))}
-                    className="w-full pl-8 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="2000"
-                  />
-                </div>
+                <input
+                  type="number"
+                  required
+                  min="1"
+                  step="1"
+                  value={formData.maxMonthlyPayment}
+                  onChange={(e) => setFormData(prev => ({ ...prev, maxMonthlyPayment: e.target.value }))}
+                  className="w-full pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="2000"
+                />
                 <p className="text-xs text-gray-500 mt-1">This includes principal, interest, insurance, and taxes</p>
               </div>
 
@@ -147,19 +148,16 @@ export default function BuyerSetupV2() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Maximum down payment you can make? *
                 </label>
-                <div className="relative">
-                  <span className="absolute left-3 top-3 text-gray-500">$</span>
-                  <input
-                    type="number"
-                    required
-                    min="1"
-                    step="1"
-                    value={formData.maxDownPayment}
-                    onChange={(e) => setFormData(prev => ({ ...prev, maxDownPayment: e.target.value }))}
-                    className="w-full pl-8 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="50000"
-                  />
-                </div>
+                <input
+                  type="number"
+                  required
+                  min="1"
+                  step="1"
+                  value={formData.maxDownPayment}
+                  onChange={(e) => setFormData(prev => ({ ...prev, maxDownPayment: e.target.value }))}
+                  className="w-full pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="50000"
+                />
                 <p className="text-xs text-gray-500 mt-1">The upfront payment you can afford to make</p>
               </div>
 

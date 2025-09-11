@@ -69,6 +69,9 @@ export const unifiedDb = {
   // Realtors
   realtors: {
     async create(realtorData: Omit<RealtorProfile, 'id' | 'createdAt' | 'updatedAt'>) {
+      if (!firebaseDb) {
+        throw new Error('Firebase not initialized - missing environment variables');
+      }
       const id = unifiedDb.generateId();
       await setDoc(doc(firebaseDb, 'realtors', id), {
         ...realtorData,
@@ -80,12 +83,18 @@ export const unifiedDb = {
     },
     
     async findByUserId(userId: string): Promise<(RealtorProfile & { id: string }) | null> {
+      if (!firebaseDb) {
+        throw new Error('Firebase not initialized - missing environment variables');
+      }
       const realtorsQuery = query(collection(firebaseDb, 'realtors'), where('userId', '==', userId));
       const realtorDocs = await getDocs(realtorsQuery);
       return realtorDocs.empty ? null : { id: realtorDocs.docs[0].id, ...realtorDocs.docs[0].data() } as RealtorProfile & { id: string };
     },
     
     async update(id: string, data: Partial<Omit<RealtorProfile, 'id' | 'createdAt' | 'updatedAt'>>) {
+      if (!firebaseDb) {
+        throw new Error('Firebase not initialized - missing environment variables');
+      }
       await updateDoc(doc(firebaseDb, 'realtors', id), {
         ...data,
         updatedAt: serverTimestamp()
@@ -96,6 +105,9 @@ export const unifiedDb = {
   // Buyer Profiles
   buyerProfiles: {
     async create(buyerData: Omit<BuyerProfile, 'id' | 'createdAt' | 'updatedAt'>) {
+      if (!firebaseDb) {
+        throw new Error('Firebase not initialized - missing environment variables');
+      }
       const id = unifiedDb.generateId();
       await setDoc(doc(firebaseDb, 'buyerProfiles', id), {
         ...buyerData,
@@ -107,17 +119,26 @@ export const unifiedDb = {
     },
     
     async findByUserId(userId: string): Promise<(BuyerProfile & { id: string }) | null> {
+      if (!firebaseDb) {
+        throw new Error('Firebase not initialized - missing environment variables');
+      }
       const buyersQuery = query(collection(firebaseDb, 'buyerProfiles'), where('userId', '==', userId));
       const buyerDocs = await getDocs(buyersQuery);
       return buyerDocs.empty ? null : { id: buyerDocs.docs[0].id, ...buyerDocs.docs[0].data() } as BuyerProfile & { id: string };
     },
 
     async findById(id: string): Promise<(BuyerProfile & { id: string }) | null> {
+      if (!firebaseDb) {
+        throw new Error('Firebase not initialized - missing environment variables');
+      }
       const buyerDoc = await getDoc(doc(firebaseDb, 'buyerProfiles', id));
       return buyerDoc.exists() ? { id: buyerDoc.id, ...buyerDoc.data() } as BuyerProfile & { id: string } : null;
     },
 
     async findAllActive(): Promise<(BuyerProfile & { id: string })[]> {
+      if (!firebaseDb) {
+        throw new Error('Firebase not initialized - missing environment variables');
+      }
       const buyersQuery = query(collection(firebaseDb, 'buyerProfiles'), where('isActive', '==', true));
       const buyerDocs = await getDocs(buyersQuery);
       return buyerDocs.docs.map(doc => ({ id: doc.id, ...doc.data() } as BuyerProfile & { id: string }));
@@ -127,6 +148,9 @@ export const unifiedDb = {
   // Properties
   properties: {
     async getAll(limit: number = 20) {
+      if (!firebaseDb) {
+        throw new Error('Firebase not initialized - missing environment variables');
+      }
       const propertiesQuery = query(
         collection(firebaseDb, 'properties'),
         orderBy('createdAt', 'desc'),
@@ -137,6 +161,9 @@ export const unifiedDb = {
     },
     
     async create(propertyData: Omit<PropertyListing, 'id' | 'createdAt' | 'updatedAt'>) {
+      if (!firebaseDb) {
+        throw new Error('Firebase not initialized - missing environment variables');
+      }
       const id = unifiedDb.generateId();
       
       // FAST: Create property immediately without waiting
@@ -155,11 +182,17 @@ export const unifiedDb = {
     },
 
     async findById(id: string): Promise<(PropertyListing & { id: string }) | null> {
+      if (!firebaseDb) {
+        throw new Error('Firebase not initialized - missing environment variables');
+      }
       const propertyDoc = await getDoc(doc(firebaseDb, 'properties', id));
       return propertyDoc.exists() ? { id: propertyDoc.id, ...propertyDoc.data() } as PropertyListing & { id: string } : null;
     },
 
     async findAllActive(): Promise<(PropertyListing & { id: string })[]> {
+      if (!firebaseDb) {
+        throw new Error('Firebase not initialized - missing environment variables');
+      }
       const propertiesQuery = query(collection(firebaseDb, 'properties'), where('isActive', '==', true));
       const propertyDocs = await getDocs(propertiesQuery);
       return propertyDocs.docs.map(doc => ({ id: doc.id, ...doc.data() } as PropertyListing & { id: string }));
@@ -169,6 +202,9 @@ export const unifiedDb = {
   // Agents
   agents: {
     async create(agentData: Omit<RealtorProfile, 'id' | 'createdAt' | 'updatedAt'>) {
+      if (!firebaseDb) {
+        throw new Error('Firebase not initialized - missing environment variables');
+      }
       const id = unifiedDb.generateId();
       await setDoc(doc(firebaseDb, 'agents', id), {
         ...agentData,
@@ -180,17 +216,26 @@ export const unifiedDb = {
     },
     
     async findByEmail(email: string): Promise<(RealtorProfile & { id: string }) | null> {
+      if (!firebaseDb) {
+        throw new Error('Firebase not initialized - missing environment variables');
+      }
       const agentsQuery = query(collection(firebaseDb, 'agents'), where('email', '==', email));
       const agentDocs = await getDocs(agentsQuery);
       return agentDocs.empty ? null : { id: agentDocs.docs[0].id, ...agentDocs.docs[0].data() } as RealtorProfile & { id: string };
     },
     
     async findById(id: string): Promise<(RealtorProfile & { id: string }) | null> {
+      if (!firebaseDb) {
+        throw new Error('Firebase not initialized - missing environment variables');
+      }
       const agentDoc = await getDoc(doc(firebaseDb, 'agents', id));
       return agentDoc.exists() ? { id: agentDoc.id, ...agentDoc.data() } as RealtorProfile & { id: string } : null;
     },
 
     async update(id: string, data: Partial<Omit<RealtorProfile, 'id' | 'createdAt' | 'updatedAt'>>) {
+      if (!firebaseDb) {
+        throw new Error('Firebase not initialized - missing environment variables');
+      }
       await updateDoc(doc(firebaseDb, 'agents', id), {
         ...data,
         updatedAt: serverTimestamp()
@@ -201,12 +246,18 @@ export const unifiedDb = {
   // Subscriptions
   subscriptions: {
     async findByRealtorId(realtorId: string) {
+      if (!firebaseDb) {
+        throw new Error('Firebase not initialized - missing environment variables');
+      }
       const subsQuery = query(collection(firebaseDb, 'realtorSubscriptions'), where('realtorId', '==', realtorId));
       const subDocs = await getDocs(subsQuery);
       return subDocs.empty ? null : { id: subDocs.docs[0].id, ...subDocs.docs[0].data() };
     },
     
     async create(subscriptionData: Omit<RealtorSubscription, 'id' | 'createdAt' | 'updatedAt'>) {
+      if (!firebaseDb) {
+        throw new Error('Firebase not initialized - missing environment variables');
+      }
       const id = unifiedDb.generateId();
       await setDoc(doc(firebaseDb, 'realtorSubscriptions', id), {
         ...subscriptionData,
@@ -221,6 +272,9 @@ export const unifiedDb = {
   // Property Buyer Matches
   propertyBuyerMatches: {
     async create(matchData: Omit<PropertyMatch, 'id' | 'createdAt'>) {
+      if (!firebaseDb) {
+        throw new Error('Firebase not initialized - missing environment variables');
+      }
       const id = unifiedDb.generateId();
       await setDoc(doc(firebaseDb, 'propertyBuyerMatches', id), {
         ...matchData,
@@ -237,6 +291,9 @@ export const unifiedDb = {
     },
 
     async getBuyerMatches(buyerId: string) {
+      if (!firebaseDb) {
+        throw new Error('Firebase not initialized - missing environment variables');
+      }
       const matchesQuery = query(
         collection(firebaseDb, 'propertyBuyerMatches'),
         where('buyerId', '==', buyerId),

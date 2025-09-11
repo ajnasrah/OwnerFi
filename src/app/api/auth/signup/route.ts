@@ -5,11 +5,6 @@ export async function POST(request: NextRequest) {
   const { hash } = await import('bcryptjs');
   const { unifiedDb } = await import('@/lib/unified-db');
   const { logError, logInfo } = await import('@/lib/logger');
-  const Stripe = (await import('stripe')).default;
-
-  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-    apiVersion: '2025-08-27.basil',
-  });
   try {
     const body = await request.json();
     const { name, firstName, lastName, email, password, phone, userType, languages } = body;
@@ -54,6 +49,8 @@ export async function POST(request: NextRequest) {
       role: userType || 'buyer'
     });
 
+    // DON'T create buyer link profile here - wait for setup completion
+
     await logInfo('Created new buyer account', {
       action: 'buyer_signup',
       userId: newUser.id,
@@ -68,7 +65,7 @@ export async function POST(request: NextRequest) {
       success: true,
       message: 'Account created successfully',
       userId: newUser.id,
-      redirectTo: (userType || 'buyer') === 'buyer' ? '/dashboard/setup' : '/realtor/setup'
+      redirectTo: (userType || 'buyer') === 'buyer' ? '/dashboard/setup' : '/realtor-dashboard'
     });
 
   } catch (error) {

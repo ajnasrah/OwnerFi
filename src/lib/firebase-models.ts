@@ -12,7 +12,7 @@ export interface User {
   company?: string; // Optional company name
   licenseState?: string; // Optional license state
   stripeCustomerId?: string; // Optional Stripe customer ID
-  role: 'buyer' | 'realtor' | 'admin';
+  role: 'buyer' | 'realtor' | 'admin' | 'pending';
   password: string; // Only for creation, removed after hashing
   createdAt: Timestamp;
   updatedAt: Timestamp;
@@ -31,7 +31,7 @@ export interface BuyerSearchCriteria {
   minSquareFeet?: number;
 }
 
-// Buyer profile (linked to User via userId)
+// Enhanced Buyer profile - CONSOLIDATED from buyerProfiles + buyerLinks
 export interface BuyerProfile {
   id: string;
   userId: string; // Links to User.id
@@ -39,31 +39,54 @@ export interface BuyerProfile {
   lastName: string;
   email: string;
   phone: string;
+  
+  // Location preferences (backward compatibility)
   preferredCity: string;
   preferredState: string;
-  searchRadius: number; // Miles
+  city?: string;            // For API compatibility (maps to preferredCity)
+  state?: string;           // For API compatibility (maps to preferredState)
+  searchRadius: number;     // Miles
+  
+  // Budget constraints
   maxMonthlyPayment: number; // Dollars
-  maxDownPayment: number; // Dollars
+  maxDownPayment: number;    // Dollars
+  
+  // Property requirements
   minBedrooms?: number;
   minBathrooms?: number;
   minSquareFeet?: number;
-  languages: string[]; // ['English', 'Spanish']
+  minPrice?: number;         // Minimum property price
+  maxPrice?: number;         // Maximum property price
+  
+  // Communication preferences
+  languages: string[];       // ['English', 'Spanish']
   emailNotifications: boolean;
   smsNotifications: boolean;
+  
+  // System fields
   profileComplete: boolean;
   isActive: boolean;
-  searchCriteria?: BuyerSearchCriteria; // Enhanced search criteria
-  matchedPropertyIds?: string[]; // Cached property matches
-  likedPropertyIds?: string[]; // Liked properties
-  passedPropertyIds?: string[]; // Passed properties
   
-  // Additional fields found in codebase
-  minPrice?: number; // Minimum property price
-  maxPrice?: number; // Maximum property price  
-  hasBeenSold?: boolean; // Whether buyer has purchased
-  preferredStates?: string; // JSON string of preferred states array
-  preferredCities?: string; // JSON string of preferred cities array
-  lastMatchUpdate?: Timestamp;
+  // Property interaction tracking
+  searchCriteria?: BuyerSearchCriteria; // Enhanced search criteria
+  matchedPropertyIds: string[];         // Cached property matches
+  likedPropertyIds: string[];           // Liked properties (unified from both systems)
+  passedPropertyIds: string[];          // Passed properties
+  
+  // Lead selling fields (NEW - from buyerLinks)
+  isAvailableForPurchase: boolean;      // Can be purchased by realtors
+  purchasedBy?: string;                 // Realtor userId who purchased this lead
+  purchasedAt?: Timestamp;              // When lead was purchased
+  leadPrice: number;                    // Cost in credits (default: 1)
+  
+  // Legacy/backup fields
+  hasBeenSold?: boolean;                // Whether buyer has purchased a home
+  preferredStates?: string;             // JSON string of preferred states array
+  preferredCities?: string;             // JSON string of preferred cities array
+  lastMatchUpdate?: Timestamp;          // Last time matches were calculated
+  lastActiveAt?: Timestamp;             // Last time buyer used platform
+  
+  // Timestamps
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
@@ -228,7 +251,7 @@ export function isValidUser(data: unknown): data is User {
   return data !== null && typeof data === 'object' && 
     typeof (data as Record<string, unknown>).email === 'string' &&
     typeof (data as Record<string, unknown>).name === 'string' &&
-    ['buyer', 'realtor', 'admin'].includes((data as Record<string, unknown>).role as string);
+    ['buyer', 'realtor', 'admin', 'pending'].includes((data as Record<string, unknown>).role as string);
 }
 
 export function isValidBuyerProfile(data: unknown): data is BuyerProfile {

@@ -33,7 +33,7 @@ export default function SignIn() {
           if (session.user.role === 'buyer') {
             router.push('/dashboard');
           } else if (session.user.role === 'realtor') {
-            router.push('/realtor/dashboard');
+            router.push('/realtor-dashboard');
           } else if (session.user.role === 'admin' && session.user.email === 'admin@prosway.com') {
             router.push('/admin');
           } else {
@@ -51,84 +51,44 @@ export default function SignIn() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Simple Header */}
-      <header style={{
-        padding: 'var(--mobile-padding)',
-        borderBottom: '1px solid var(--blue-200)'
-      }}>
+    <div className="min-h-screen bg-slate-900">
+      {/* Dark Header */}
+      <header className="bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50 px-6 py-4">
         <div className="flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <div style={{
-              width: '32px',
-              height: '32px',
-              background: 'var(--primary)',
-              borderRadius: 'var(--radius-lg)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}>
-              🏠
+          <Link href="/" className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-lg flex items-center justify-center shadow-lg">
+              <span className="text-white font-bold text-lg">O</span>
             </div>
-            <span style={{
-              fontSize: 'var(--text-xl)',
-              fontWeight: 'var(--font-bold)',
-              color: 'var(--blue-950)'
-            }}>
+            <span className="text-xl font-bold text-white">
               OwnerFi
             </span>
           </Link>
         </div>
       </header>
 
-      {/* Main Content - Perfect for 380px */}
-      <main style={{
-        padding: 'var(--space-8) var(--mobile-padding)',
-        maxWidth: 'var(--mobile-content-width)',
-        margin: '0 auto'
-      }}>
+      {/* Main Content */}
+      <main className="px-6 py-12 max-w-md mx-auto">
         {/* Welcome */}
-        <div className="text-center mb-8">
-          <h1 style={{
-            fontSize: 'var(--text-3xl)',
-            fontWeight: 'var(--font-bold)',
-            color: 'var(--gray-900)',
-            marginBottom: 'var(--space-2)'
-          }}>
-            Welcome Back
+        <div className="text-center mb-10">
+          <h1 className="text-3xl font-bold text-white mb-3">
+            Welcome back
           </h1>
-          <p style={{
-            fontSize: 'var(--text-base)',
-            color: 'var(--blue-600)'
-          }}>
-            Sign in to continue your home search
+          <p className="text-lg text-slate-300 font-normal">
+            Sign in to access your property matches
           </p>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} style={{marginBottom: 'var(--space-8)'}}>
+        <form onSubmit={handleSubmit} className="mb-10">
           {error && (
-            <div style={{
-              padding: 'var(--space-4)',
-              marginBottom: 'var(--space-4)',
-              background: 'rgb(239 68 68 / 0.1)',
-              border: '1px solid rgb(239 68 68 / 0.2)',
-              borderRadius: 'var(--radius-lg)',
-              color: '#991b1b'
-            }}>
+            <div className="p-4 mb-6 bg-red-600/20 backdrop-blur-lg border border-red-500/30 rounded-xl text-red-300 font-semibold">
               {error}
             </div>
           )}
           
-          <div style={{marginBottom: 'var(--space-4)'}}>
-            <label style={{
-              display: 'block',
-              fontSize: 'var(--text-sm)',
-              fontWeight: 'var(--font-medium)',
-              color: 'var(--blue-700)',
-              marginBottom: 'var(--space-2)'
-            }}>
-              Email
+          <div className="mb-6">
+            <label className="block text-sm font-semibold text-slate-300 mb-3">
+              Email address
             </label>
             <input
               type="email"
@@ -137,18 +97,12 @@ export default function SignIn() {
               required
               autoComplete="email"
               placeholder="your@email.com"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+              className="w-full px-4 py-4 bg-emerald-500/10 border border-emerald-400/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 text-white placeholder-slate-400 font-normal"
             />
           </div>
 
-          <div style={{marginBottom: 'var(--space-6)'}}>
-            <label style={{
-              display: 'block',
-              fontSize: 'var(--text-sm)',
-              fontWeight: 'var(--font-medium)',
-              color: 'var(--blue-700)',
-              marginBottom: 'var(--space-2)'
-            }}>
+          <div className="mb-8">
+            <label className="block text-sm font-semibold text-slate-300 mb-3">
               Password
             </label>
             <input
@@ -157,20 +111,19 @@ export default function SignIn() {
               onChange={(e) => setPassword(e.target.value)}
               required
               autoComplete="current-password"
-              placeholder="Your password"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+              placeholder="Enter your password"
+              className="w-full px-4 py-4 bg-emerald-500/10 border border-emerald-400/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 text-white placeholder-slate-400 font-normal"
             />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:bg-gray-400"
-            style={{marginBottom: 'var(--space-4)'}}
+            className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-300 hover:scale-105 shadow-2xl shadow-emerald-500/25 disabled:opacity-50 disabled:cursor-not-allowed mb-6"
           >
             {loading ? (
-              <span className="flex items-center justify-center gap-2">
-                <span className="loading"></span>
+              <span className="flex items-center justify-center gap-3">
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                 Signing in...
               </span>
             ) : (
@@ -181,11 +134,7 @@ export default function SignIn() {
           <div className="text-center">
             <Link 
               href="/auth/forgot-password" 
-              style={{
-                fontSize: 'var(--text-sm)',
-                color: 'var(--primary)',
-                textDecoration: 'none'
-              }}
+              className="text-emerald-400 hover:text-emerald-300 font-semibold transition-colors"
             >
               Forgot password?
             </Link>
@@ -194,42 +143,31 @@ export default function SignIn() {
 
         {/* Sign Up Options */}
         <div>
-          <p style={{
-            fontSize: 'var(--text-base)',
-            fontWeight: 'var(--font-medium)',
-            color: 'var(--gray-900)',
-            textAlign: 'center',
-            marginBottom: 'var(--space-4)'
-          }}>
-            Don't have an account?
-          </p>
+          <div className="flex items-center mb-6">
+            <div className="flex-1 h-px bg-slate-700"></div>
+            <span className="px-4 text-slate-400 font-medium">Don't have an account?</span>
+            <div className="flex-1 h-px bg-slate-700"></div>
+          </div>
           
-          <div style={{display: 'flex', flexDirection: 'column', gap: 'var(--space-3)'}}>
-            <a href="/unified-signup" className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center justify-center">
-              🏠 I'm Looking for a Home
+          <div className="space-y-4">
+            <a href="/signup" className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-300 hover:scale-105 flex items-center justify-center shadow-2xl shadow-emerald-500/25">
+              I'm looking for a home
             </a>
-            <a href="/unified-signup" className="w-full bg-gray-100 text-gray-700 py-3 px-4 rounded-lg hover:bg-gray-200 transition-colors font-medium flex items-center justify-center border">
-              🤝 I'm a Real Estate Professional
+            <a href="/realtor-signup" className="w-full bg-slate-800/50 backdrop-blur-lg border-2 border-slate-600/50 hover:border-slate-500 text-slate-300 hover:text-white py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-300 hover:bg-slate-700/50 flex items-center justify-center">
+              I'm a real estate agent
             </a>
           </div>
         </div>
 
         {/* Footer */}
-        <div style={{
-          marginTop: 'var(--space-12)',
-          textAlign: 'center'
-        }}>
-          <p style={{
-            fontSize: 'var(--text-xs)',
-            color: 'var(--blue-500)',
-            lineHeight: '1.5'
-          }}>
+        <div className="mt-12 text-center">
+          <p className="text-xs text-slate-500 leading-relaxed">
             By signing in, you agree to our{' '}
-            <Link href="/terms" style={{color: 'var(--primary)', textDecoration: 'none'}}>
+            <Link href="/terms" className="text-emerald-400 hover:text-emerald-300 transition-colors">
               Terms
             </Link>{' '}
             and{' '}
-            <Link href="/privacy" style={{color: 'var(--primary)', textDecoration: 'none'}}>
+            <Link href="/privacy" className="text-emerald-400 hover:text-emerald-300 transition-colors">
               Privacy Policy
             </Link>
           </p>

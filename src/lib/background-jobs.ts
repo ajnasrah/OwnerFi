@@ -1,7 +1,7 @@
 // Background job system for async property processing
 import { doc, updateDoc, serverTimestamp, writeBatch } from 'firebase/firestore';
 import { db } from './firebase';
-import { getNearbyCitiesDirect } from './cities-service';
+import { getCitiesWithinRadiusComprehensive } from './comprehensive-cities';
 
 type JobType = 'populate_nearby_cities';
 type JobStatus = 'pending' | 'processing' | 'completed' | 'failed';
@@ -37,7 +37,6 @@ export function queueNearbyCitiesJob(propertyId: string, city: string, state: st
   };
   
   jobQueue.push(job);
-  console.log(`📋 Queued nearby cities job for ${city}, ${state} (Property: ${propertyId})`);
   
   // Start processing if not already running
   if (!isProcessing) {
@@ -52,19 +51,20 @@ async function processJobQueue(): Promise<void> {
   if (isProcessing) return;
   isProcessing = true;
   
-  console.log(`⚡ Starting job processor, ${jobQueue.length} jobs in queue`);
   
   while (jobQueue.length > 0) {
     const job = jobQueue.shift()!;
     
     try {
       job.status = 'processing';
-      console.log(`🔄 Processing job ${job.id} for ${job.city}, ${job.state}`);
       
       // Get nearby cities
-      const nearbyCities = await getNearbyCitiesDirect(job.city, job.state, 30);
+      const nearbyCities = await getCitiesWithinRadiusComprehensive(job.city, job.state, 30);
       
       // Update property with nearby cities
+      if (!db) {
+        throw new Error('Firebase not initialized');
+      }
       await updateDoc(doc(db, 'properties', job.propertyId), {
         nearbyCities: nearbyCities,
         nearbyCitiesUpdatedAt: serverTimestamp()
@@ -72,18 +72,15 @@ async function processJobQueue(): Promise<void> {
       
       job.status = 'completed';
       job.completedAt = new Date();
-      console.log(`✅ Completed job ${job.id}, added ${nearbyCities.length} cities`);
       
     } catch (error) {
       job.status = 'failed';
       job.error = (error as Error).message;
       job.completedAt = new Date();
-      console.error(`❌ Job ${job.id} failed:`, error);
     }
   }
   
   isProcessing = false;
-  console.log(`🏁 Job processor finished`);
 }
 
 /**
@@ -98,18 +95,15 @@ export async function batchProcessNearbyCities(properties: Array<{id: string, ci
     batches.push(properties.slice(i, i + batchSize));
   }
   
-  console.log(`🔢 Processing ${properties.length} properties in ${batches.length} batches`);
   
   for (const [batchIndex, propertyBatch] of batches.entries()) {
-    console.log(`📦 Processing batch ${batchIndex + 1}/${batches.length}`);
     
     // Process batch in parallel
     const promises = propertyBatch.map(async property => {
       try {
-        const nearbyCities = await getNearbyCitiesDirect(property.city, property.state, 30);
+        const nearbyCities = await getCitiesWithinRadiusComprehensive(property.city, property.state, 30);
         return { propertyId: property.id, nearbyCities, success: true };
       } catch (error) {
-        console.error(`Error processing ${property.city}, ${property.state}:`, error);
         return { propertyId: property.id, nearbyCities: [], success: false };
       }
     });
@@ -117,12 +111,15 @@ export async function batchProcessNearbyCities(properties: Array<{id: string, ci
     const results = await Promise.all(promises);
     
     // Batch write to Firestore (up to 500 operations)
+    if (!db) {
+      throw new Error('Firebase not initialized');
+    }
     const batch = writeBatch(db);
     let operations = 0;
     
     for (const result of results) {
       if (result.success) {
-        const propertyRef = doc(db, 'properties', result.propertyId);
+        const propertyRef = doc(db!, 'properties', result.propertyId);
         batch.update(propertyRef, {
           nearbyCities: result.nearbyCities,
           nearbyCitiesUpdatedAt: serverTimestamp()
@@ -133,17 +130,14 @@ export async function batchProcessNearbyCities(properties: Array<{id: string, ci
     
     if (operations > 0) {
       await batch.commit();
-      console.log(`✅ Batch ${batchIndex + 1}: Updated ${operations} properties`);
     }
     
     // Rate limiting between batches
     if (batchIndex < batches.length - 1) {
-      console.log('⏳ Waiting 2s between batches...');
       await new Promise(resolve => setTimeout(resolve, 2000));
     }
   }
   
-  console.log('🎉 Batch processing completed!');
 }
 
 /**

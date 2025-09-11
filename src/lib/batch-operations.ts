@@ -40,6 +40,9 @@ export async function batchGetDocuments(
   ids: string[]
 ): Promise<Record<string, unknown>[]> {
   if (ids.length === 0) return [];
+  if (!db) {
+    throw new Error('Firebase not initialized');
+  }
 
   const results = [];
   
@@ -92,6 +95,10 @@ export async function searchProperties(criteria: SearchCriteria): Promise<Record
     constraints.push(where('monthlyPayment', '<=', criteria.maxMonthlyPayment));
   }
 
+  if (!db) {
+    throw new Error('Firebase not initialized');
+  }
+  
   const propertiesQuery = query(
     collection(db, 'properties'),
     ...constraints
@@ -141,6 +148,10 @@ export async function batchUpdatePropertyMatches(updates: Array<{
   matches: Record<string, unknown>[];
 }>): Promise<void> {
   
+  if (!db) {
+    throw new Error('Firebase not initialized');
+  }
+  
   // Process in parallel for performance
   const updatePromises = updates.map(async ({ buyerId, matches }) => {
     const updateDocRef = doc(collection(db, 'buyerProfiles'), buyerId);
@@ -169,6 +180,9 @@ export async function getCachedUser(userId: string): Promise<Record<string, unkn
 
   // Fetch from database
   try {
+    if (!db) {
+      throw new Error('Firebase not initialized');
+    }
     const userDoc = await getDoc(doc(db, 'users', userId));
     const userData = userDoc.exists() ? { id: userDoc.id, ...userDoc.data() } : null;
     
@@ -180,7 +194,6 @@ export async function getCachedUser(userId: string): Promise<Record<string, unkn
     
     return userData;
   } catch (error) {
-    console.error('User fetch error:', error);
     return null;
   }
 }

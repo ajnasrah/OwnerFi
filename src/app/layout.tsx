@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from './providers';
@@ -17,12 +17,13 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "OwnerFi - Owner Financed Properties",
   description: "Find your dream home with owner financing in Texas, Florida, and Georgia",
-  viewport: "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no",
-  themeColor: "#2563EB",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
     title: "OwnerFi"
+  },
+  other: {
+    'mobile-web-app-capable': 'yes'
   },
   formatDetection: {
     telephone: false,
@@ -33,6 +34,14 @@ export const metadata: Metadata = {
   }
 };
 
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1.0,
+  maximumScale: 1.0,
+  userScalable: false,
+  themeColor: '#2563EB'
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -41,12 +50,10 @@ export default function RootLayout({
   return (
     <html lang="en" data-scroll-behavior="smooth">
       <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-        <meta name="theme-color" content="#2563EB" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <script
-          src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCelger3EPc8GzTOQq7-cv6tUeVh_XN9jE&libraries=places&callback=initMap&loading=async"
+          src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`}
           async
           defer
         />
@@ -62,7 +69,7 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${inter.variable} ${geistMono.variable} antialiased`}
+        className={`${inter.variable} ${geistMono.variable} antialiased bg-slate-900`}
       >
         <Providers>
           {children}

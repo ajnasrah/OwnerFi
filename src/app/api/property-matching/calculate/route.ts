@@ -22,17 +22,23 @@ import { PropertyListing } from '@/lib/property-schema';
 
 export async function POST(request: NextRequest) {
   try {
+    if (!db) {
+      return NextResponse.json(
+        { error: 'Database not available' },
+        { status: 500 }
+      );
+    }
+
     const { buyerId } = await request.json();
     
     if (!buyerId) {
       return NextResponse.json({ error: 'Missing buyerId' }, { status: 400 });
     }
 
-    console.log(`🔄 Calculating property matches for buyer: ${buyerId}`);
 
     // Get buyer profile
     const buyerDoc = await getDocs(query(
-      collection(db, 'buyerProfiles'),
+      collection(db!, 'buyerProfiles'),
       where('__name__', '==', buyerId)
     ));
 
@@ -49,7 +55,7 @@ export async function POST(request: NextRequest) {
 
     // Get all active properties in buyer's state
     const propertiesQuery = query(
-      collection(db, 'properties'),
+      collection(db!, 'properties'),
       where('isActive', '==', true),
       where('state', '==', criteria.state)
     );
@@ -60,7 +66,6 @@ export async function POST(request: NextRequest) {
       ...doc.data()
     } as PropertyListing));
 
-    console.log(`📦 Found ${allProperties.length} total properties in ${criteria.state}`);
 
     // Calculate matches with scoring
     const matches = [];
@@ -70,7 +75,7 @@ export async function POST(request: NextRequest) {
       const matchReasons = [];
 
       // Location match (required)
-      const cityMatch = criteria.cities.some(city => 
+      const cityMatch = criteria.cities.some((city: string) => 
         property.city.toLowerCase() === city.toLowerCase()
       );
       if (!cityMatch) continue; // Skip if not in buyer's cities
@@ -119,14 +124,13 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    console.log(`🎯 Calculated ${matches.length} property matches`);
 
     // Save matches to database using batch write for performance
     const batch = writeBatch(db);
     
     // Clear existing matches for this buyer
     const existingMatchesQuery = query(
-      collection(db, 'propertyMatches'),
+      collection(db!, 'propertyMatches'),
       where('buyerId', '==', buyerId)
     );
     const existingMatches = await getDocs(existingMatchesQuery);
@@ -137,13 +141,12 @@ export async function POST(request: NextRequest) {
 
     // Add new matches
     matches.forEach(match => {
-      const matchRef = doc(collection(db, 'propertyMatches'), match.id);
+      const matchRef = doc(collection(db!, 'propertyMatches'), match.id);
       batch.set(matchRef, match);
     });
 
     await batch.commit();
 
-    console.log(`✅ Saved ${matches.length} property matches to database`);
 
     return NextResponse.json({
       success: true,
@@ -153,7 +156,6 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Property matching error:', error);
     return NextResponse.json({ error: 'Failed to calculate matches' }, { status: 500 });
   }
 }

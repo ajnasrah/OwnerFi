@@ -13,6 +13,13 @@ import { ExtendedSession } from '@/types/session';
 
 export async function GET(request: NextRequest) {
   try {
+    if (!db) {
+      return NextResponse.json(
+        { error: 'Database not available' },
+        { status: 500 }
+      );
+    }
+
     const session = await getServerSession(authOptions) as ExtendedSession;
     
     if (!session?.user || session.user.role !== 'buyer') {
@@ -65,7 +72,6 @@ export async function GET(request: NextRequest) {
       allProperties.push(...batchProperties);
     }
 
-    console.log(`❤️ FOUND ${allProperties.length} liked properties for buyer`);
 
     return NextResponse.json({
       likedProperties: allProperties,
@@ -74,7 +80,6 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('🚨 Get liked properties error:', error);
     return NextResponse.json({ 
       error: 'Failed to load liked properties',
       likedProperties: []

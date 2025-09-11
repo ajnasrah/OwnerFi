@@ -21,6 +21,13 @@ export async function GET(_request: NextRequest) {
       });
     }
     
+    if (!db) {
+      return NextResponse.json(
+        { error: 'Database not available' },
+        { status: 500 }
+      );
+    }
+
     // Find realtor profile for this user
     const realtorsQuery = query(
       collection(db, 'realtors'),
@@ -55,7 +62,6 @@ export async function GET(_request: NextRequest) {
     });
     
   } catch (error) {
-    console.error('Failed to check session:', error);
     return NextResponse.json(
       { error: 'Failed to check session' },
       { status: 500 }

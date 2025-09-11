@@ -16,7 +16,6 @@ export function queueNearbyCitiesForProperty(
   propertyState: string
 ): void {
   queueNearbyCitiesJob(propertyId, propertyCity, propertyState);
-  console.log(`📋 Queued nearby cities job for ${propertyCity}, ${propertyState}`);
 }
 
 /**
@@ -67,7 +66,6 @@ export function getNearbyCitiesForProperty(
       .slice(0, 20); // Limit to 20 nearby cities
       
   } catch (error) {
-    console.error('Error getting nearby cities for property:', error);
     return [];
   }
 }
@@ -98,7 +96,6 @@ export function getNearbyCitiesWithDistance(
       .slice(0, 20);
       
   } catch (error) {
-    console.error('Error getting nearby cities with distance:', error);
     return [];
   }
 }
@@ -141,7 +138,6 @@ export async function expandSearchToNearbyCitiesAPI(
     // Get coordinates for the property city first
     const cityCoords = getCityCoordinates(propertyCity, propertyState);
     if (!cityCoords) {
-      console.warn(`Could not find coordinates for ${propertyCity}, ${propertyState}`);
       return [propertyCity];
     }
 
@@ -163,12 +159,10 @@ export async function expandSearchToNearbyCitiesAPI(
     // Remove duplicates and include original city
     const uniqueCities = Array.from(new Set([propertyCity, ...allCityNames]));
     
-    console.log(`🌍 Found ${uniqueCities.length} cities within ${radiusMiles} miles of ${propertyCity}`);
     
     return uniqueCities;
     
   } catch (error) {
-    console.error('Error getting comprehensive nearby cities:', error);
     // Fallback to limited database
     return expandSearchToNearbyCities(propertyCity, propertyState, radiusMiles);
   }

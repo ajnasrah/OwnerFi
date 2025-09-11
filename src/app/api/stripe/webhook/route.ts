@@ -13,6 +13,7 @@ import {
 import { db } from '@/lib/firebase';
 import { PRICING_TIERS } from '@/lib/pricing';
 import { firestoreHelpers } from '@/lib/firestore';
+import { FirebaseDB } from '@/lib/firebase-db';
 import Stripe from 'stripe';
 import { RealtorProfile } from '@/lib/firebase-models';
 
@@ -22,6 +23,13 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
 export async function POST(request: NextRequest) {
+  if (!db) {
+    return NextResponse.json(
+      { error: 'Database not available' },
+      { status: 500 }
+    );
+  }
+
   const body = await request.text();
   const signature = request.headers.get('stripe-signature');
 
@@ -35,15 +43,12 @@ export async function POST(request: NextRequest) {
     
     event = stripe.webhooks.constructEvent(body, signature, endpointSecret);
   } catch (err) {
-    console.error('Webhook signature verification failed:', err);
     return NextResponse.json(
       { error: 'Webhook signature verification failed' },
       { status: 400 }
     );
   }
 
-  console.log('Stripe webhook event:', event.type);
-  console.log('Event data:', JSON.stringify(event.data.object, null, 2));
 
   try {
     switch (event.type) {
@@ -72,10 +77,8 @@ export async function POST(request: NextRequest) {
         break;
       
       default:
-        console.log(`Unhandled event type: ${event.type}`);
     }
   } catch (error) {
-    console.error('Webhook handler error:', error);
     return NextResponse.json(
       { error: 'Webhook handler failed' },
       { status: 500 }
@@ -87,12 +90,54 @@ export async function POST(request: NextRequest) {
 
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const { customer, subscription, metadata, mode } = session;
-  const { userId, userEmail, planId, type, customerId } = metadata;
+  const { userId, userEmail, planId, type, customerId, creditPackId, credits } = metadata || {};
 
-  console.log('Processing checkout completion:', { userId, userEmail, planId, type, mode, customerId: customer || customerId });
+
+  // Handle credit purchase
+  if (creditPackId && credits && userId) {
+    try {
+      
+      // Get current user data
+      const userData = await FirebaseDB.getDocument('users', userId);
+      if (!userData) {
+        return;
+      }
+
+      // Add credits to realtor account
+      const currentCredits = (userData as any).realtorData?.credits || 0;
+      const newCredits = currentCredits + parseInt(credits);
+
+      const updatedRealtorData = {
+        ...(userData as any).realtorData || {},
+        credits: newCredits,
+        lastPurchase: new Date(),
+        updatedAt: new Date()
+      };
+
+      await FirebaseDB.updateDocument('users', userId, {
+        realtorData: updatedRealtorData,
+        updatedAt: new Date()
+      });
+
+      // Create transaction record
+      await FirebaseDB.createDocument('realtorTransactions', {
+        realtorUserId: userId,
+        type: 'credit_purchase',
+        description: `Purchased ${credits} credits via Stripe`,
+        creditsChange: parseInt(credits),
+        runningBalance: newCredits,
+        stripeSessionId: session.id,
+        amount: (session.amount_total || 0) / 100, // Convert from cents
+        createdAt: new Date()
+      });
+
+      
+    } catch (error) {
+    }
+    return;
+  }
 
   if (!userId) {
-    console.error('Missing userId in checkout session metadata');
     return;
   }
 
@@ -100,16 +145,15 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   let effectivePlanId = planId;
   if (!planId && (type === 'single_credit_purchase' || type === 'credit_purchase')) {
     effectivePlanId = 'payAsYouGo';
-    console.log('Using default payAsYouGo plan for credit purchase');
   }
 
   const tier = PRICING_TIERS[effectivePlanId];
   if (!tier && effectivePlanId) {
-    console.error('Invalid plan ID in checkout session:', effectivePlanId);
     return;
   }
 
   // Find the realtor
+  if (!db) return;
   const realtorsQuery = query(
     collection(db, 'realtors'),
     where('userId', '==', userId)
@@ -117,7 +161,6 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const realtorDocs = await getDocs(realtorsQuery);
 
   if (realtorDocs.empty) {
-    console.error('Realtor not found for user:', userId);
     return;
   }
 
@@ -131,12 +174,11 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       stripeCustomerId: sessionCustomerId,
       updatedAt: serverTimestamp()
     });
-    console.log(`Updated realtor ${realtor.id} with Stripe customer ID: ${sessionCustomerId}`);
   }
 
   if (mode === 'payment' && (type === 'credit_purchase' || type === 'single_credit_purchase')) {
     // Handle one-time credit purchase (pay-as-you-go)
-    const creditsToAdd = metadata.credits ? parseInt(metadata.credits) : (tier?.creditsPerMonth || 1);
+    const creditsToAdd = metadata?.credits ? parseInt(metadata.credits) : (tier?.creditsPerMonth || 1);
     
     await updateDoc(doc(db, 'realtors', realtor.id), {
       credits: (realtor.credits || 0) + creditsToAdd,
@@ -150,13 +192,12 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       userId: userId,
       type: 'credit_purchase',
       description: `Purchased ${creditsToAdd} credit${creditsToAdd > 1 ? 's' : ''}`,
-      amount: metadata.amount ? parseInt(metadata.amount) : 300,
+      amount: metadata?.amount ? parseInt(metadata.amount) : 300,
       credits: creditsToAdd,
       stripeSessionId: session?.id || 'unknown',
       createdAt: serverTimestamp()
     });
     
-    console.log(`Added ${creditsToAdd} credits to realtor ${realtor.id} (${type})`);
   } else if (mode === 'payment' && type === 'annual_purchase') {
     // Handle annual package purchase - give all credits upfront
     const annualCredits = tier.creditsPerMonth * 12; // All credits for the year
@@ -201,7 +242,6 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       createdAt: serverTimestamp()
     });
     
-    console.log(`Added ${annualCredits} annual credits to realtor ${realtor.id}`);
   } else if (mode === 'payment' && type === 'monthly_purchase') {
     // Handle monthly package purchase - give monthly credits
     const monthlyCredits = tier.creditsPerMonth; 
@@ -234,7 +274,6 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       updatedAt: serverTimestamp()
     });
     
-    console.log(`Added ${monthlyCredits} monthly credits to realtor ${realtor.id}`);
   } else if (mode === 'subscription' && subscription) {
     // Handle subscription creation - give initial credits AND set up billing
     const initialCredits = tier?.creditsPerMonth || 0;
@@ -282,18 +321,17 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       createdAt: serverTimestamp()
     });
     
-    console.log(`Added ${initialCredits} initial subscription credits to realtor ${realtor.id}, plan ${effectivePlanId}`);
   }
 }
 
 async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
   // This is usually handled in checkout.session.completed
   // But we can handle it here as a fallback
-  console.log('Subscription created:', subscription.id);
 }
 
 async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
   // Handle subscription changes (plan changes, status updates)
+  if (!db) return;
   const subscriptionsQuery = query(
     collection(db, 'realtorSubscriptions'),
     where('stripeSubscriptionId', '==', subscription.id)
@@ -301,7 +339,6 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
   const subscriptionDocs = await getDocs(subscriptionsQuery);
 
   if (subscriptionDocs.empty) {
-    console.error('Subscription not found:', subscription.id);
     return;
   }
 
@@ -314,10 +351,13 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
     updatedAt: serverTimestamp()
   });
 
-  console.log(`Updated subscription ${subscription.id} to status ${subscription.status}`);
 }
 
 async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
+  if (!db) {
+    return;
+  }
+  
   // Handle subscription cancellation
   const subscriptionsQuery = query(
     collection(db, 'realtorSubscriptions'),
@@ -333,7 +373,6 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     });
   }
 
-  console.log(`Canceled subscription ${subscription.id}`);
 }
 
 async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
@@ -343,6 +382,7 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
   if (!subscriptionId) return;
 
   // Find the subscription
+  if (!db) return;
   const subscriptionsQuery = query(
     collection(db, 'realtorSubscriptions'),
     where('stripeSubscriptionId', '==', subscriptionId)
@@ -350,14 +390,12 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
   const subscriptionDocs = await getDocs(subscriptionsQuery);
 
   if (subscriptionDocs.empty) {
-    console.error('Subscription not found for invoice:', invoice.id);
     return;
   }
 
   const subscription = subscriptionDocs.docs[0].data();
   const tier = PRICING_TIERS[subscription.plan];
   if (!tier) {
-    console.error('Invalid plan in subscription:', subscription.plan);
     return;
   }
 
@@ -371,19 +409,16 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
         updatedAt: serverTimestamp()
       });
 
-      console.log(`Added ${tier.creditsPerMonth} monthly credits to realtor ${subscription.realtorId}`);
     }
   }
 }
 
 async function handlePaymentFailed(invoice: Stripe.Invoice) {
   // Handle failed payments
-  console.log('Payment failed for invoice:', invoice.id);
   
   const subscriptionId = (invoice as any).subscription;
   if (subscriptionId) {
     // You might want to send an email notification here
-    console.log(`Payment failed for subscription ${subscriptionId}`);
   }
 }
 
@@ -402,6 +437,7 @@ async function createOrUpdateSubscription(realtorId: string, planId: string, str
   };
 
   // Check if subscription already exists
+  if (!db) return;
   const existingQuery = query(
     collection(db, 'realtorSubscriptions'),
     where('realtorId', '==', realtorId)

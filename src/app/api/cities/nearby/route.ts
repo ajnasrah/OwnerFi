@@ -73,7 +73,6 @@ export async function GET(request: NextRequest) {
             }
           }
         } catch (parseError) {
-          console.warn('Error parsing API response:', parseError);
         }
       }
     }
@@ -83,12 +82,10 @@ export async function GET(request: NextRequest) {
       .sort((a, b) => a.name.localeCompare(b.name))
       .slice(0, 50);
 
-    console.log(`Found ${cities.length} cities within ${radius} miles`);
 
     return NextResponse.json({ cities });
 
   } catch (error) {
-    console.error('Nearby cities error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch nearby cities' },
       { status: 500 }

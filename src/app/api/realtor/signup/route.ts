@@ -1,36 +1,46 @@
+// SINGLE REALTOR SIGNUP API - Everything in one endpoint
+// Creates user account + validates city + finds nearby cities + saves to Firebase
+
 import { NextRequest, NextResponse } from 'next/server';
 import { hash } from 'bcryptjs';
-import { unifiedDb, generateId } from '@/lib/unified-db';
-import { logError, logInfo } from '@/lib/logger';
-import Stripe from 'stripe';
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-08-27.basil',
-});
+import { FirebaseDB } from '@/lib/firebase-db';
+import { 
+  RealtorRegistrationRequest, 
+  RealtorRegistrationResponse,
+  RealtorDataHelper,
+  isValidEmail,
+  isValidPhone,
+  formatPhone
+} from '@/lib/realtor-models';
+import { Timestamp } from 'firebase/firestore';
+import { logInfo, logError } from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { name, email, password, phone, company, licenseState, role } = body;
-
-    // Validation
-    if (!name || !email || !password || !phone) {
+    const body = await request.json() as RealtorRegistrationRequest;
+    
+    // Validate required fields
+    const validation = validateRealtorRegistration(body);
+    if (!validation.isValid) {
       return NextResponse.json(
-        { error: 'Missing required fields: name, email, password, and phone are required' },
+        { error: validation.error },
         { status: 400 }
       );
     }
 
-    if (password.length < 6) {
-      return NextResponse.json(
-        { error: 'Password must be at least 6 characters' },
-        { status: 400 }
-      );
-    }
+    const { 
+      firstName, 
+      lastName, 
+      phone, 
+      email, 
+      password, 
+      primaryCityQuery,
+      company,
+      licenseNumber 
+    } = body;
 
     // Check if user already exists
-    const existingUser = await unifiedDb.users.findByEmail(email.toLowerCase());
-    
+    const existingUser = await FirebaseDB.findUserByEmail(email);
     if (existingUser) {
       return NextResponse.json(
         { error: 'An account with this email already exists' },
@@ -38,44 +48,162 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check if city setup is required
+    const requiresSetup = primaryCityQuery === 'Setup Required';
+    
+    let serviceArea;
+    if (requiresSetup) {
+      // Create placeholder service area that requires setup
+      serviceArea = {
+        primaryCity: {
+          name: 'Setup Required',
+          state: 'Setup Required',
+          stateCode: 'XX',
+          placeId: 'setup-required',
+          coordinates: { lat: 0, lng: 0 },
+          formattedAddress: 'Setup Required'
+        },
+        nearbyCities: [],
+        radiusMiles: 30,
+        totalCitiesServed: 0,
+        lastUpdated: Timestamp.now(),
+        // setupRequired: true
+      };
+    } else {
+      // Parse city manually (for existing functionality)
+      const cityParts = primaryCityQuery.split(',');
+      const cityName = cityParts[0]?.trim() || primaryCityQuery;
+      const statePart = cityParts[1]?.trim();
+      
+      if (!cityName || !statePart) {
+        return NextResponse.json(
+          { error: 'Please provide both city and state in the format: City, State' },
+          { status: 400 }
+        );
+      }
+      
+      serviceArea = {
+        primaryCity: {
+          name: cityName,
+          state: statePart,
+          stateCode: statePart.length === 2 ? statePart : statePart.substring(0, 2).toUpperCase(),
+          placeId: 'manual-' + Date.now(),
+          coordinates: { lat: 0, lng: 0 },
+          formattedAddress: `${cityName}, ${statePart}, USA`
+        },
+        nearbyCities: [],
+        radiusMiles: 30,
+        totalCitiesServed: 1,
+        lastUpdated: Timestamp.now()
+      };
+    }
+
     // Hash password
     const hashedPassword = await hash(password, 12);
 
-    // Create user account - Stripe customer will be created on first payment
-    const newUser = await unifiedDb.users.create({
-      name: name.trim(),
-      email: email.toLowerCase().trim(),
-      password: hashedPassword,
-      phone: phone.trim(),
-      company: company?.trim() || null,
-      licenseState: licenseState?.trim() || null,
-      stripeCustomerId: null, // Will be populated on first payment
-      role: 'realtor'
+    // Create realtor data structure
+    const realtorData = RealtorDataHelper.createRealtorData(
+      firstName,
+      lastName,
+      formatPhone(phone),
+      email,
+      serviceArea,
+      company,
+      licenseNumber
+    );
+
+    // Create user using existing auth system
+    const user = await FirebaseDB.createUser({
+      email,
+      name: `${firstName} ${lastName}`,
+      role: 'realtor',
+      password: hashedPassword
     });
 
-    await logInfo('Created new realtor account', {
-      action: 'realtor_signup',
-      userId: newUser.id,
-      userType: 'realtor',
+    // Update user document with phone and embedded realtor data
+    await FirebaseDB.updateDocument('users', user.id, {
+      phone: formatPhone(phone),
+      realtorData,
+      updatedAt: Timestamp.now()
+    });
+
+    // Log successful registration
+    await logInfo('Realtor registered successfully', {
+      action: 'realtor_registration',
+      userId: user.id,
       metadata: {
-        email: email.toLowerCase()
+        email,
+        primaryCity: serviceArea.primaryCity.name,
+        nearbyCitiesCount: serviceArea.nearbyCities.length,
+        totalCitiesServed: serviceArea.totalCitiesServed
       }
     });
 
-    return NextResponse.json({
+    const response: RealtorRegistrationResponse = {
       success: true,
-      message: 'Realtor account created successfully',
-      userId: newUser.id
-    });
+      userId: user.id,
+      realtorData,
+      serviceArea
+    };
+
+    return NextResponse.json(response, { status: 201 });
 
   } catch (error) {
-    await logError('Failed to create realtor account', {
-      action: 'realtor_signup_error'
+    await logError('Realtor registration failed', {
+      action: 'realtor_registration_error'
     }, error as Error);
 
     return NextResponse.json(
-      { error: 'Failed to create account. Please try again.' },
+      { error: 'Registration failed. Please try again.' },
       { status: 500 }
     );
   }
+}
+
+// Comprehensive validation for realtor registration
+function validateRealtorRegistration(data: unknown): { isValid: boolean; error?: string } {
+  if (!data || typeof data !== 'object') {
+    return { isValid: false, error: 'Invalid request data' };
+  }
+
+  const dataRecord = data as Record<string, unknown>;
+
+  // Required fields
+  const required = ['firstName', 'lastName', 'phone', 'email', 'password', 'primaryCityQuery'];
+  for (const field of required) {
+    if (!dataRecord[field] || typeof dataRecord[field] !== 'string' || (dataRecord[field] as string).trim().length === 0) {
+      return { isValid: false, error: `${field} is required` };
+    }
+  }
+
+  // Validate email
+  if (!isValidEmail(dataRecord.email as string)) {
+    return { isValid: false, error: 'Please enter a valid email address' };
+  }
+
+  // Validate phone
+  if (!isValidPhone(dataRecord.phone as string)) {
+    return { isValid: false, error: 'Please enter a valid phone number' };
+  }
+
+  // Validate password
+  if ((dataRecord.password as string).length < 6) {
+    return { isValid: false, error: 'Password must be at least 6 characters long' };
+  }
+
+  // Validate name lengths
+  if ((dataRecord.firstName as string).length > 50 || (dataRecord.lastName as string).length > 50) {
+    return { isValid: false, error: 'Names must be less than 50 characters' };
+  }
+
+  // Validate optional fields if provided
+  if (dataRecord.company && (dataRecord.company as string).length > 100) {
+    return { isValid: false, error: 'Company name must be less than 100 characters' };
+  }
+
+  if (dataRecord.licenseNumber && (dataRecord.licenseNumber as string).length > 50) {
+    return { isValid: false, error: 'License number must be less than 50 characters' };
+  }
+
+  return { isValid: true };
 }

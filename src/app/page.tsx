@@ -69,7 +69,7 @@ export default function HomePage() {
               Connect directly with homeowners who offer financing
             </p>
 
-            <div className="space-y-6 mb-6">
+            <div className="space-y-8 mb-8">
               <Link
                 href="/signup"
                 className="w-full block bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-300 hover:scale-[1.02] shadow-lg hover:shadow-xl"

@@ -78,13 +78,7 @@ export async function GET() {
       
       
       // Check which buyers should match
-      const potentialBuyers = allBuyers.filter((buyer: {
-        preferredCity?: string;
-        city?: string;
-        preferredState?: string;
-        state?: string;
-        [key: string]: unknown;
-      }) => {
+      const potentialBuyers = (allBuyers as any[]).filter((buyer: any) => {
         const buyerCity = buyer.preferredCity || buyer.city;
         const buyerState = buyer.preferredState || buyer.state;
         

@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
     const realtorData = realtor.realtorData || {};
     
     // Extract service cities like the dashboard does
-    const serviceArea = realtorData.serviceArea || {};
+    const serviceArea = (realtorData as any).serviceArea || {};
     let cities: string[] = [];
     
     // Get primary city and nearby cities from serviceArea

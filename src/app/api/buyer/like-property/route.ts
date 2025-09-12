@@ -4,7 +4,6 @@ import {
   query, 
   where, 
   getDocs,
-  doc,
   updateDoc,
   arrayUnion,
   arrayRemove,
@@ -72,7 +71,7 @@ export async function POST(request: NextRequest) {
       propertyId 
     });
 
-  } catch (error) {
+  } catch {
     return NextResponse.json({ 
       error: 'Failed to update property preference' 
     }, { status: 500 });

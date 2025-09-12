@@ -31,7 +31,7 @@ if (hasFirebaseConfig) {
     db = getFirestore(app);
     auth = getAuth(app);
     storage = getStorage(app);
-  } catch (error) {
+  } catch {
     // Reset to null on failure
     app = null;
     db = null;

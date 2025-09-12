@@ -9,8 +9,9 @@ import {
   getDocs
 } from 'firebase/firestore';
 import { db } from './firebase';
-import { ExtendedUser } from '@/types/session';
-import type { NextAuthOptions } from 'next-auth';
+import { ExtendedUser, ExtendedSession } from '@/types/session';
+import type { AuthOptions as NextAuthOptions, Session } from 'next-auth';
+import type { JWT } from 'next-auth/jwt';
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -69,18 +70,18 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user }: { token: Record<string, unknown>; user?: ExtendedUser }) {
+    async jwt({ token, user }: { token: JWT; user?: ExtendedUser }) {
       if (user) {
         token.role = user.role;
       }
       return token;
     },
     async session({ session, token }: { 
-      session: { user?: { id?: string; role?: string; [key: string]: unknown }; [key: string]: unknown }; 
-      token: { sub?: string; role?: string; [key: string]: unknown }; 
+      session: Session; 
+      token: JWT & { role?: string }; 
     }) {
       if (token && session.user) {
-        session.user.id = token.sub;
+        session.user.id = token.sub!;
         session.user.role = token.role;
       }
       return session;

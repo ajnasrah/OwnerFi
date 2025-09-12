@@ -12,7 +12,6 @@ import {
   query, 
   where, 
   limit as firestoreLimit,
-  writeBatch,
   serverTimestamp,
   runTransaction,
   Timestamp,
@@ -24,20 +23,12 @@ import {
   BuyerProfile, 
   RealtorProfile, 
   LeadPurchase, 
-  LeadDispute, 
-  PropertyMatch, 
-  RealtorSubscription, 
-  Transaction, 
-  SystemLog,
   COLLECTIONS,
   isValidUser,
   isValidBuyerProfile,
   isValidRealtorProfile,
-  generateFirebaseId,
-  createTimestamp,
-  convertTimestampToDate
+  generateFirebaseId
 } from './firebase-models';
-import { PropertyListing } from './property-schema';
 
 // Generic database operations
 export class FirebaseDB {

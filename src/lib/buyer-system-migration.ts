@@ -29,11 +29,15 @@ export class BuyerSystemMigration {
     
     try {
       // Step 1: Get all existing data
-      const [buyerProfiles, buyerLinks, leadPurchases] = await Promise.all([
+      const [buyerProfilesData, buyerLinksData, leadPurchasesData] = await Promise.all([
         FirebaseDB.queryDocuments('buyerProfiles', []),
         FirebaseDB.queryDocuments('buyerLinks', []),
         FirebaseDB.queryDocuments('leadPurchases', [])
       ]);
+      
+      const buyerProfiles = buyerProfilesData as BuyerProfile[];
+      const buyerLinks = buyerLinksData as BuyerProfile[];
+      const leadPurchases = leadPurchasesData as LeadPurchase[];
       
       
       // Step 2: Create mappings
@@ -70,12 +74,12 @@ export class BuyerSystemMigration {
             ),
             
             // Add lead selling fields from buyerLink
-            isAvailableForPurchase: linkData?.isAvailable ?? true,
+            isAvailableForPurchase: linkData?.isAvailableForPurchase ?? true,
             purchasedBy: linkData?.purchasedBy,
             purchasedAt: linkData?.purchasedAt ? 
-              (linkData.purchasedAt instanceof Date ? 
-                Timestamp.fromDate(linkData.purchasedAt) : 
-                Timestamp.fromDate(new Date(linkData.purchasedAt))
+              (linkData.purchasedAt instanceof Timestamp ? 
+                linkData.purchasedAt : 
+                Timestamp.fromDate(new Date(linkData.purchasedAt as any))
               ) : undefined,
             leadPrice: 1, // Default credit cost
             
@@ -168,7 +172,7 @@ export class BuyerSystemMigration {
   // Helper: Merge liked properties without duplicates
   private static mergeLikedProperties(profileLikes: string[] = [], linkLikes: string[] = []): string[] {
     const combined = [...(profileLikes || []), ...(linkLikes || [])];
-    return [...new Set(combined)]; // Remove duplicates
+    return Array.from(new Set(combined)); // Remove duplicates
   }
   
   // Helper: Create buyer profile from buyerLink data
@@ -181,8 +185,8 @@ export class BuyerSystemMigration {
       phone: link.phone || '',
       
       // Map link fields to profile fields
-      preferredCity: link.city,
-      preferredState: link.state,
+      preferredCity: link.city || '',
+      preferredState: link.state || '',
       city: link.city,                    // API compatibility
       state: link.state,                  // API compatibility
       
@@ -192,11 +196,11 @@ export class BuyerSystemMigration {
       
       // Defaults for missing fields
       searchRadius: 25,
-      minBedrooms: null,
-      minBathrooms: null,
-      minSquareFeet: null,
-      minPrice: null,
-      maxPrice: null,
+      minBedrooms: undefined,
+      minBathrooms: undefined,
+      minSquareFeet: undefined,
+      minPrice: undefined,
+      maxPrice: undefined,
       
       // Communication
       languages: link.languages || ['English'],
@@ -213,12 +217,12 @@ export class BuyerSystemMigration {
       matchedPropertyIds: [],
       
       // Lead selling fields
-      isAvailableForPurchase: link.isAvailable ?? true,
+      isAvailableForPurchase: link.isAvailableForPurchase ?? true,
       purchasedBy: link.purchasedBy,
       purchasedAt: link.purchasedAt ? 
-        (link.purchasedAt instanceof Date ? 
-          Timestamp.fromDate(link.purchasedAt) : 
-          Timestamp.fromDate(new Date(link.purchasedAt))
+        (link.purchasedAt instanceof Timestamp ? 
+          link.purchasedAt : 
+          Timestamp.fromDate(new Date(link.purchasedAt as any))
         ) : undefined,
       leadPrice: 1,
       
@@ -234,9 +238,9 @@ export class BuyerSystemMigration {
       
       // Timestamps
       createdAt: link.createdAt ? 
-        (link.createdAt instanceof Date ? 
-          Timestamp.fromDate(link.createdAt) : 
-          Timestamp.fromDate(new Date(link.createdAt))
+        (link.createdAt instanceof Timestamp ? 
+          link.createdAt : 
+          Timestamp.fromDate(new Date(link.createdAt as any))
         ) : Timestamp.now(),
       updatedAt: Timestamp.now()
     };
@@ -259,10 +263,13 @@ export class BuyerSystemMigration {
     const issues: string[] = [];
     
     try {
-      const [buyerProfiles, leadPurchases] = await Promise.all([
+      const [buyerProfilesData, leadPurchasesData] = await Promise.all([
         FirebaseDB.queryDocuments('buyerProfiles', []),
         FirebaseDB.queryDocuments('leadPurchases', [])
       ]);
+      
+      const buyerProfiles = buyerProfilesData as BuyerProfile[];
+      const leadPurchases = leadPurchasesData as LeadPurchase[];
       
       // Check for required fields
       let availableCount = 0;
@@ -298,7 +305,7 @@ export class BuyerSystemMigration {
         const buyerId = p.buyerId;
         
         // Should reference a buyerProfile, not a buyerLink
-        const referencedProfile = buyerProfiles.find((bp: BuyerProfile) => bp.id === buyerId);
+        const referencedProfile = buyerProfiles.find((bp) => bp.id === buyerId);
         if (referencedProfile) {
           validPurchaseRefs++;
         } else {

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server';
 import { FirebaseDB } from '@/lib/firebase-db';
 import { UserWithRealtorData, ValidatedCity } from '@/lib/realtor-models';
@@ -34,14 +33,14 @@ export async function POST(request: NextRequest) {
       
       // Add all nearby cities from service area
       if (serviceArea.nearbyCities && serviceArea.nearbyCities.length > 0) {
-        const nearbyCities = serviceArea.nearbyCities.map((c: ValidatedCity) => c.name);
+        const nearbyCities = (serviceArea.nearbyCities as ValidatedCity[]).map((c: ValidatedCity) => c.name);
         cities.push(...nearbyCities);
       }
     }
     
     // Also check if cities are saved directly in serviceCities field
     if (realtorData.serviceCities && realtorData.serviceCities.length > 0) {
-      cities = realtorData.serviceCities.map((city: string) => city.split(',')[0]?.trim());
+      cities = (realtorData.serviceCities as string[]).map((city: string) => city.split(',')[0]?.trim());
     }
     
     const realtorProfile = {

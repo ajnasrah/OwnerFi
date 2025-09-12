@@ -8,9 +8,8 @@ import {
   doc,
   updateDoc,
   deleteDoc,
-  orderBy,
-  limit as firestoreLimit,
-  where
+  where,
+  limit as firestoreLimit
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { logError, logInfo } from '@/lib/logger';

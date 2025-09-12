@@ -112,7 +112,7 @@ export function GooglePlacesAutocomplete({
     };
 
     // Check current Google Maps state
-    const mapsState = (window as any).googleMapsState;
+    const mapsState = (window as Window & { googleMapsState?: { loaded?: boolean; error?: boolean } }).googleMapsState;
     if (mapsState?.loaded && window.google?.maps?.places) {
       handleMapsReady();
     } else if (mapsState?.error) {

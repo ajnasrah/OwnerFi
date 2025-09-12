@@ -13,7 +13,22 @@ export async function GET() {
     // Get system statistics
     const stats = await ConsolidatedLeadSystem.getSystemStatistics();
     
-    const summary = allBuyerProfiles.map((buyer: {
+    const summary = (allBuyerProfiles as Array<{
+      id: string;
+      firstName: string;
+      lastName: string;
+      preferredCity?: string;
+      city?: string;
+      preferredState?: string;
+      state?: string;
+      maxMonthlyPayment?: number;
+      languages?: string[];
+      isAvailableForPurchase?: boolean;
+      isActive?: boolean;
+      profileComplete?: boolean;
+      purchasedBy?: string;
+      [key: string]: unknown;
+    }>).map((buyer: {
       id: string;
       firstName: string;
       lastName: string;

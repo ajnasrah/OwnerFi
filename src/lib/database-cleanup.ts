@@ -8,7 +8,8 @@ import {
   deleteDoc, 
   updateDoc,
   serverTimestamp,
-  writeBatch
+  writeBatch,
+  Timestamp
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { logInfo, logError } from './logger';
@@ -68,8 +69,10 @@ export class DatabaseCleanup {
         if (buyers.length > 1) {
           // Sort by createdAt, keep the oldest (most complete profile)
           buyers.sort((a, b) => {
-            const aDate = (a.createdAt as any)?.toDate?.() || new Date(0);
-            const bDate = (b.createdAt as any)?.toDate?.() || new Date(0);
+            const aCreatedAt = a.createdAt;
+            const bCreatedAt = b.createdAt;
+            const aDate = aCreatedAt instanceof Timestamp ? aCreatedAt.toDate() : new Date(0);
+            const bDate = bCreatedAt instanceof Timestamp ? bCreatedAt.toDate() : new Date(0);
             return aDate.getTime() - bDate.getTime();
           });
 

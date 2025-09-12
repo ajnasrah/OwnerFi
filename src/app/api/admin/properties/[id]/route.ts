@@ -40,7 +40,7 @@ export async function GET(
       id: propertyDoc.id,
       ...propertyDoc.data()
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: 'Failed to fetch property' },
       { status: 500 }
@@ -85,7 +85,7 @@ export async function PUT(
       success: true,
       message: 'Property updated successfully'
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: 'Failed to update property' },
       { status: 500 }

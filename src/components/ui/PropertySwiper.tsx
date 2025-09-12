@@ -9,20 +9,15 @@ interface PropertyListingSwiperProps {
   properties: PropertyListing[];
   onLike: (property: PropertyListing) => void;
   onPass: (property: PropertyListing) => void;
-  onFavorite: (property: PropertyListing) => void;
   favorites: string[];
   passedIds?: string[];
   isLoading?: boolean;
 }
 
-export function PropertyListingSwiper({ properties, onLike, onPass, onFavorite, favorites, passedIds = [], isLoading = false }: PropertyListingSwiperProps) {
+export function PropertyListingSwiper({ properties, onLike, onPass, favorites, passedIds = [], isLoading = false }: PropertyListingSwiperProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-  const [startPos, setStartPos] = useState({ x: 0, y: 0 });
-  const [buttonPressed, setButtonPressed] = useState<'like' | 'pass' | null>(null);
-  const [isTransitioning, setIsTransitioning] = useState(false);
   const [showToast, setShowToast] = useState<{ type: 'saved' | 'deleted'; show: boolean }>({ type: 'saved', show: false });
+  const [buttonPressed, setButtonPressed] = useState<'like' | 'pass' | null>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   
   // Filter out passed properties
@@ -96,11 +91,6 @@ export function PropertyListingSwiper({ properties, onLike, onPass, onFavorite, 
       setCurrentIndex(0); // Loop back to first
     }
   };
-
-  // Disable swipe functionality - just use arrow buttons
-  const handleMouseDown = () => {};
-  const handleMouseMove = () => {};
-  const handleMouseUp = () => {};
 
   const isFavorited = favorites.includes(currentPropertyListing.id);
 
@@ -260,9 +250,13 @@ export function PropertyListingSwiper({ properties, onLike, onPass, onFavorite, 
             <div className="flex space-x-4">
               <button
                 onClick={() => {
+                  setButtonPressed('pass');
                   onPass(currentPropertyListing);
                   setShowToast({ type: 'deleted', show: true });
-                  setTimeout(() => setShowToast({ type: 'deleted', show: false }), 2000);
+                  setTimeout(() => {
+                    setShowToast({ type: 'deleted', show: false });
+                    setButtonPressed(null);
+                  }, 2000);
                   handleNextPropertyListing();
                 }}
                 className={`flex-1 py-4 px-6 rounded-xl font-semibold transition-all ${
@@ -275,9 +269,13 @@ export function PropertyListingSwiper({ properties, onLike, onPass, onFavorite, 
               </button>
               <button
                 onClick={() => {
+                  setButtonPressed('like');
                   onLike(currentPropertyListing);
                   setShowToast({ type: 'saved', show: true });
-                  setTimeout(() => setShowToast({ type: 'saved', show: false }), 2000);
+                  setTimeout(() => {
+                    setShowToast({ type: 'saved', show: false });
+                    setButtonPressed(null);
+                  }, 2000);
                   // Don't auto-advance for likes
                 }}
                 className={`flex-1 py-4 px-6 rounded-xl font-semibold transition-all ${

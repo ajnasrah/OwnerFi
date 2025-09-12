@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 
 import { PropertyListing } from '@/lib/property-schema';
@@ -11,7 +10,7 @@ import { PropertyListing } from '@/lib/property-schema';
 type Property = PropertyListing;
 
 export default function FavoritesPage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
   const [favoriteProperties, setFavoriteProperties] = useState<Property[]>([]);
   const [passedProperties, setPassedProperties] = useState<Property[]>([]);
@@ -70,7 +69,7 @@ export default function FavoritesPage() {
         setPassedProperties([]);
       }
       
-    } catch (error) {
+    } catch {
       setFavoriteProperties([]);
       setPassedProperties([]);
     } finally {
@@ -288,7 +287,7 @@ export default function FavoritesPage() {
                                     setPassedProperties(prev => prev.filter(p => p.id !== property.id));
                                   }
                                 }
-                              } catch (error) {
+                              } catch {
                               }
                             }}
                             className="w-full bg-green-100 text-green-700 border border-green-300 px-3 py-1 rounded-lg text-sm hover:bg-green-200 transition-colors"

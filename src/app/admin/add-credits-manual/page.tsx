@@ -27,7 +27,7 @@ export default function ManualAddCredits() {
 
       const data = await response.json();
       setMessage(data.error || 'Credits added successfully!');
-    } catch (err) {
+    } catch {
       setMessage('Failed to add credits');
     } finally {
       setLoading(false);

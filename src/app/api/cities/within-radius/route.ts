@@ -101,7 +101,7 @@ export async function GET(request: NextRequest) {
         cities: cities.slice(0, 100) // Limit to 100 cities
       });
 
-    } catch (_apiError) {
+    } catch {
       // Fallback to simple radius calculation using major cities
       return NextResponse.json({
         centerCity: { lat, lng },

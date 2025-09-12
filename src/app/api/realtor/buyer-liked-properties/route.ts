@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Buyer not found' }, { status: 404 });
     }
 
-    const likedPropertyIds = (buyerProfile as BuyerProfile).likedProperties || [];
+    const likedPropertyIds = (buyerProfile as BuyerProfile).likedPropertyIds || [];
     
     if (likedPropertyIds.length === 0) {
       return NextResponse.json({ 

@@ -10,7 +10,10 @@ export async function GET() {
     
     
     // Filter Dallas buyers specifically
-    const dallasBuyers = allBuyerLinks.filter((buyer: {
+    const dallasBuyers = (allBuyerLinks as Array<{
+      city?: string;
+      [key: string]: unknown;
+    }>).filter((buyer: {
       city?: string;
       [key: string]: unknown;
     }) => 
@@ -18,7 +21,17 @@ export async function GET() {
     );
     
     
-    const summary = allBuyerLinks.map((buyer: {
+    const summary = (allBuyerLinks as Array<{
+      id: string;
+      firstName: string;
+      lastName: string;
+      city?: string;
+      state?: string;
+      maxMonthlyPayment?: number;
+      languages?: string[];
+      isAvailable?: boolean;
+      [key: string]: unknown;
+    }>).map((buyer: {
       id: string;
       firstName: string;
       lastName: string;

@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
         name: cityParts[0]?.trim() || 'Dallas',
         state: cityParts[1]?.trim() || 'TX'
       },
-      nearbyCities: serviceCities.map((city: string) => ({
+      nearbyCities: (serviceCities as string[]).map((city: string) => ({
         name: city.split(',')[0]?.trim() || city,
         state: city.split(',')[1]?.trim() || 'TX'
       })),
@@ -140,12 +140,12 @@ export async function DELETE(request: NextRequest) {
     const currentServiceCities = currentRealtorData.serviceCities || [];
 
     // Remove the specified city
-    const updatedServiceCities = currentServiceCities.filter((city: string) => city !== cityToRemove);
+    const updatedServiceCities = (currentServiceCities as string[]).filter((city: string) => city !== cityToRemove);
 
     // Update the service area structure as well
     const updatedServiceArea = {
       ...currentRealtorData.serviceArea,
-      nearbyCities: currentRealtorData.serviceArea?.nearbyCities?.filter(city => 
+      nearbyCities: (currentRealtorData.serviceArea?.nearbyCities as any[])?.filter((city: any) => 
         `${city.name}, ${city.state}` !== cityToRemove
       ) || [],
       totalCitiesServed: updatedServiceCities.length,

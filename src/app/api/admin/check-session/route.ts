@@ -61,7 +61,7 @@ export async function GET() {
       profileCount: realtorDocs.docs.length
     });
     
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: 'Failed to check session' },
       { status: 500 }

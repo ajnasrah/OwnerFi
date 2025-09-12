@@ -37,8 +37,8 @@ export function Header({ className = '' }: HeaderProps) {
                   variant="primary" 
                   size="sm" 
                   href={
-                    (session as any)?.user?.role === 'admin' ? '/admin' :
-                    (session as any)?.user?.role === 'realtor' ? '/realtor-dashboard' : '/dashboard'
+                    (session as ExtendedSession)?.user?.role === 'admin' ? '/admin' :
+                    (session as ExtendedSession)?.user?.role === 'realtor' ? '/realtor-dashboard' : '/dashboard'
                   } 
                   className="font-bold bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 px-6 py-2 rounded-xl transition-all duration-300 hover:scale-105 shadow-xl shadow-emerald-500/25"
                 >

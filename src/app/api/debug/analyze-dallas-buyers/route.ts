@@ -60,7 +60,16 @@ export async function GET() {
     ]);
     
     
-    const txQueryResults = txBuyersQuery.map((buyer: {
+    const txQueryResults = (txBuyersQuery as Array<{
+      id: string;
+      firstName: string;
+      lastName: string;
+      preferredCity?: string;
+      city?: string;
+      preferredState?: string;
+      state?: string;
+      [key: string]: unknown;
+    }>).map((buyer: {
       id: string;
       firstName: string;
       lastName: string;

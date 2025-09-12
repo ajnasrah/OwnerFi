@@ -8,7 +8,6 @@ import {
   getDoc,
   setDoc,
   orderBy,
-  where,
   serverTimestamp
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -62,7 +61,7 @@ export async function GET() {
               }
             }
           }
-        } catch (error) {
+        } catch {
         }
       }
       

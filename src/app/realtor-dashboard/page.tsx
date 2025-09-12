@@ -103,7 +103,7 @@ export default function RealtorDashboard() {
       } else {
         setDashboardData(data);
       }
-    } catch (err) {
+    } catch {
       setError('Failed to load dashboard data');
     } finally {
       setLoading(false);
@@ -126,7 +126,7 @@ export default function RealtorDashboard() {
       } else {
         alert(result.error || 'Failed to purchase lead');
       }
-    } catch (error) {
+    } catch {
       alert('Purchase failed');
     } finally {
       setPurchaseLoading(null);
@@ -177,7 +177,7 @@ export default function RealtorDashboard() {
       } else {
         alert(result.error || 'Failed to submit dispute');
       }
-    } catch (error) {
+    } catch {
       alert('Failed to submit dispute');
     } finally {
       setDisputeModal(prev => ({ ...prev, submitting: false }));

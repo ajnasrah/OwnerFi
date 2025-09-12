@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
       newCredits: 748 + creditsToAdd
     });
     
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: 'Failed to activate subscription' },
       { status: 500 }

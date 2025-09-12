@@ -49,7 +49,7 @@ export default function AdminDashboard() {
 
       const data = await response.json();
       setResult(data);
-    } catch (error) {
+    } catch (_error) {
       setResult({ error: 'Upload failed' });
     } finally {
       setUploading(false);
@@ -63,7 +63,7 @@ export default function AdminDashboard() {
       const response = await fetch('/api/admin/properties');
       const data = await response.json();
       setProperties(data.properties || []);
-    } catch (error) {
+    } catch (_error) {
     } finally {
       setLoadingProperties(false);
     }
@@ -90,7 +90,7 @@ export default function AdminDashboard() {
       setSelectedProperties([]);
       fetchProperties();
       alert('Properties deleted successfully');
-    } catch (error) {
+    } catch (_error) {
       alert('Failed to delete properties');
     }
   };

@@ -2,7 +2,6 @@
 // Self-contained, no interference with existing property matching
 
 import { FirebaseDB } from './firebase-db';
-import { getCitiesWithinRadiusComprehensive } from './comprehensive-cities';
 
 // Separate interfaces for the matching module
 export interface BuyerLinkProfile {
@@ -120,7 +119,7 @@ export class MatchingModule {
       
       return matches;
       
-    } catch (error) {
+    } catch {
       return [];
     }
   }
@@ -190,7 +189,7 @@ export class MatchingModule {
         
       }
       
-    } catch (error) {
+    } catch {
     }
   }
   
@@ -206,7 +205,7 @@ export class MatchingModule {
       
       return true;
       
-    } catch (error) {
+    } catch {
       return false;
     }
   }

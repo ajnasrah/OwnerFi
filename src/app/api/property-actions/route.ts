@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
       message: `Property ${action}ed successfully`
     });
 
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Failed to update property' }, { status: 500 });
   }
 }

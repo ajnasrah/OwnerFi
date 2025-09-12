@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { FirebaseDB } from '@/lib/firebase-db';
 import Stripe from 'stripe';
 import { User } from '@/lib/firebase-models';
+import { UserWithRealtorData } from '@/lib/realtor-models';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-08-27.basil',
@@ -98,12 +99,12 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     }
 
     // Add credits to realtor account using new system
-    const currentCredits = (userData as User & { realtorData?: { credits?: number; [key: string]: unknown } }).realtorData?.credits || 0;
+    const currentCredits = (userData as UserWithRealtorData).realtorData?.credits || 0;
     const creditsToAdd = parseInt(credits || creditPackage.credits.toString());
     const newCredits = currentCredits + creditsToAdd;
 
     const updatedRealtorData = {
-      ...(userData as User & { realtorData?: Record<string, unknown> }).realtorData || {},
+      ...(userData as UserWithRealtorData).realtorData || {},
       credits: newCredits,
       lastPurchase: new Date(),
       updatedAt: new Date()
@@ -155,18 +156,18 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
   try {
     // Find user with this subscription ID and update status
     // TODO: Add Firestore index on 'realtorData.stripeSubscriptionId' for scale
-    const users = await FirebaseDB.queryDocuments<any>(
+    const users = await FirebaseDB.queryDocuments(
       'users',
       [{ field: 'realtorData.stripeSubscriptionId', operator: '==', value: subscription.id }],
       1 // Limit to 1 result since subscription IDs are unique
-    );
+    ) as UserWithRealtorData[];
 
     if (users.length === 0) {
       console.warn(`No user found for subscription ${subscription.id}`);
       return;
     }
 
-    const user = users[0];
+    const user = users[0] as UserWithRealtorData;
     const updatedRealtorData = {
       ...user.realtorData || {},
       subscriptionStatus: subscription.status === 'active' ? 'active' : 'canceled',
@@ -187,18 +188,18 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
   try {
     // Find user with this subscription ID and update status to canceled
     // TODO: Add Firestore index on 'realtorData.stripeSubscriptionId' for scale
-    const users = await FirebaseDB.queryDocuments<any>(
+    const users = await FirebaseDB.queryDocuments(
       'users',
       [{ field: 'realtorData.stripeSubscriptionId', operator: '==', value: subscription.id }],
       1 // Limit to 1 result since subscription IDs are unique
-    );
+    ) as UserWithRealtorData[];
 
     if (users.length === 0) {
       console.warn(`No user found for subscription deletion ${subscription.id}`);
       return;
     }
 
-    const user = users[0];
+    const user = users[0] as UserWithRealtorData;
     const updatedRealtorData = {
       ...user.realtorData || {},
       subscriptionStatus: 'canceled',
@@ -218,24 +219,24 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
 
 async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
   try {
-    const subscriptionId = (invoice as any).subscription as string;
+    const subscriptionId = invoice.subscription as string;
     
     if (!subscriptionId) return;
 
     // Find user with this subscription ID
     // TODO: Add Firestore index on 'realtorData.stripeSubscriptionId' for scale
-    const users = await FirebaseDB.queryDocuments<any>(
+    const users = await FirebaseDB.queryDocuments(
       'users',
       [{ field: 'realtorData.stripeSubscriptionId', operator: '==', value: subscriptionId }],
       1 // Limit to 1 result since subscription IDs are unique
-    );
+    ) as UserWithRealtorData[];
 
     if (users.length === 0) {
       console.warn(`No user found for payment success ${subscriptionId}`);
       return;
     }
 
-    const user = users[0];
+    const user = users[0] as UserWithRealtorData;
     const realtorData = user.realtorData || {};
     const creditPackId = realtorData.currentPlan;
     
@@ -282,24 +283,24 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
 
 async function handlePaymentFailed(invoice: Stripe.Invoice) {
   try {
-    const subscriptionId = (invoice as any).subscription as string;
+    const subscriptionId = invoice.subscription as string;
     
     if (!subscriptionId) return;
 
     // Find user with this subscription and update status
     // TODO: Add Firestore index on 'realtorData.stripeSubscriptionId' for scale
-    const users = await FirebaseDB.queryDocuments<any>(
+    const users = await FirebaseDB.queryDocuments(
       'users',
       [{ field: 'realtorData.stripeSubscriptionId', operator: '==', value: subscriptionId }],
       1 // Limit to 1 result since subscription IDs are unique
-    );
+    ) as UserWithRealtorData[];
 
     if (users.length === 0) {
       console.warn(`No user found for payment failure ${subscriptionId}`);
       return;
     }
 
-    const user = users[0];
+    const user = users[0] as UserWithRealtorData;
     const updatedRealtorData = {
       ...user.realtorData || {},
       subscriptionStatus: 'payment_failed',

@@ -13,7 +13,6 @@ interface HeroProps {
 }
 
 export function Hero({ 
-  backgroundImage, 
   title, 
   subtitle, 
   ctaText, 

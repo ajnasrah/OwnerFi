@@ -30,7 +30,6 @@ export default function LikedProperties() {
   const router = useRouter();
   
   const [properties, setProperties] = useState<Property[]>([]);
-  const [profile, setProfile] = useState<BuyerProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -65,7 +64,7 @@ export default function LikedProperties() {
         
       }
 
-    } catch (err) {
+    } catch {
       setError('Failed to load your liked properties');
     } finally {
       setLoading(false);
@@ -83,7 +82,7 @@ export default function LikedProperties() {
       if (response.ok) {
         setProperties(prev => prev.filter(p => p.id !== propertyId));
       }
-    } catch (error) {
+    } catch {
     }
   };
 

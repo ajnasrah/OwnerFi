@@ -65,7 +65,7 @@ export async function GET(_: NextRequest) {
 
     return NextResponse.json({ subscriptions: formattedSubscriptions });
 
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: 'Failed to fetch subscriptions' },
       { status: 500 }
@@ -130,7 +130,7 @@ export async function POST(_: NextRequest) {
             updatedAt: new Date()
           });
         }
-      } catch (e) {
+      } catch {
         // Handle error silently
       }
     }
@@ -160,7 +160,7 @@ export async function POST(_: NextRequest) {
           updatedAt: new Date()
         });
 
-      } catch (e) {
+      } catch {
         return NextResponse.json(
           { error: 'Failed to create customer account' },
           { status: 500 }

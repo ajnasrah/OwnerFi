@@ -168,11 +168,11 @@ async function getAvailableLeads(userId: string, realtorData: Record<string, unk
       'leadPurchases',
       [{ field: 'realtorUserId', operator: '==', value: userId }]
     );
-    const purchasedBuyerIds = purchasedLeads.map((p: { buyerId: string; [key: string]: unknown }) => p.buyerId);
+    const purchasedBuyerIds = (purchasedLeads as Array<{ buyerId: string; [key: string]: unknown }>).map((p: { buyerId: string; [key: string]: unknown }) => p.buyerId);
 
     // Get realtor's service cities
     const serviceCities = RealtorDataHelper.getAllCitiesServed(realtorData);
-    const serviceCityNames = serviceCities.map(city => city.name.toLowerCase());
+    const serviceCityNames = (serviceCities as Array<{name: string}>).map(city => city.name.toLowerCase());
     const realtorState = realtorData.serviceArea.primaryCity.stateCode;
 
     const availableLeads = [];
@@ -302,7 +302,16 @@ async function getTransactionHistory(userId: string): Promise<Transaction[]> {
       50 // Limit to last 50 transactions
     );
 
-    return transactions.map((transaction: {
+    return (transactions as Array<{
+      id: string;
+      type: string;
+      description: string;
+      creditsChange: number;
+      runningBalance: number;
+      createdAt?: { toDate: () => Date };
+      details?: Record<string, unknown>;
+      [key: string]: unknown;
+    }>).map((transaction: {
       id: string;
       type: string;
       description: string;
@@ -363,8 +372,8 @@ async function getMatchedBuyerLeads(realtorData: {
       
       // Add all nearby cities from service area
       if (serviceArea.nearbyCities && serviceArea.nearbyCities.length > 0) {
-        const nearbyCities = serviceArea.nearbyCities.map(c => 
-          typeof c === 'string' ? c : (c.name || 'Unknown')
+        const nearbyCities = (serviceArea.nearbyCities as Array<{ name?: string } | string>).map((c: { name?: string } | string) => 
+          typeof c === 'string' ? c : ((c as { name?: string }).name || 'Unknown')
         );
         cities.push(...nearbyCities);
       }
@@ -372,7 +381,7 @@ async function getMatchedBuyerLeads(realtorData: {
     
     // Also check if cities are saved directly in serviceCities field
     if (realtorData.serviceCities && realtorData.serviceCities.length > 0) {
-      cities = realtorData.serviceCities.map((city: string) => city.split(',')[0]?.trim());
+      cities = (realtorData.serviceCities as string[]).map((city: string) => city.split(',')[0]?.trim());
     }
     
     const realtorProfile = {
@@ -386,7 +395,7 @@ async function getMatchedBuyerLeads(realtorData: {
     const leads = await ConsolidatedLeadSystem.findAvailableLeads(realtorProfile);
     
     // Convert Timestamp to Date for compatibility
-    const convertedLeads = leads.map(lead => ({
+    const convertedLeads = (leads as any[]).map((lead: any) => ({
       ...lead,
       createdAt: lead.createdAt?.toDate ? lead.createdAt.toDate() : new Date()
     }));

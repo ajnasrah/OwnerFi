@@ -68,7 +68,7 @@ export default function BuyerSettings() {
           maxDownPayment: data.profile.maxDownPayment?.toString() || '',
         });
       }
-    } catch (err) {
+    } catch {
       setError('Failed to load your profile');
     } finally {
       setLoading(false);
@@ -86,16 +86,6 @@ export default function BuyerSettings() {
     }
   };
 
-  const handleInputChange = (field: string, value: string | number) => {
-    if (field === 'phone') {
-      const formatted = formatPhoneNumber(String(value));
-      setFormData(prev => ({ ...prev, [field]: formatted }));
-    } else {
-      setFormData(prev => ({ ...prev, [field]: value }));
-    }
-    setError('');
-    setSuccess('');
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -137,7 +127,7 @@ export default function BuyerSettings() {
           router.push('/dashboard');
         }, 1500);
       }
-    } catch (err) {
+    } catch {
       setError('Failed to save preferences');
     } finally {
       setSaving(false);

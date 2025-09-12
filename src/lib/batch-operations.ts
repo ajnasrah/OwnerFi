@@ -28,9 +28,6 @@ function isValidString(value: unknown): value is string {
 /**
  * Type guard to check if a value is a positive number
  */
-function isPositiveNumber(value: unknown): value is number {
-  return typeof value === 'number' && value > 0 && !isNaN(value);
-}
 
 /**
  * Batch fetch documents by IDs (eliminates N+1 queries)
@@ -193,7 +190,7 @@ export async function getCachedUser(userId: string): Promise<Record<string, unkn
     });
     
     return userData;
-  } catch (error) {
+  } catch {
     return null;
   }
 }

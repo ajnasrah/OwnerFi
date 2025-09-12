@@ -84,7 +84,7 @@ export default function Dashboard() {
 
       setProperties(propertiesData.properties || []);
       
-    } catch (err) {
+    } catch {
       // Error loading properties
     } finally {
       setLoading(false);
@@ -109,7 +109,7 @@ export default function Dashboard() {
           setLikedProperties(prev => [...prev, propertyId]);
         }
       }
-    } catch (error) {
+    } catch {
       // Error updating like status
     }
   };

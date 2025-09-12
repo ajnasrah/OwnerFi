@@ -90,7 +90,7 @@ export class ConsolidatedLeadSystem {
       
       return matches;
       
-    } catch (error) {
+    } catch {
       return [];
     }
   }
@@ -210,7 +210,7 @@ export class ConsolidatedLeadSystem {
         }
       };
       
-    } catch (error) {
+    } catch {
       return { success: false, error: 'Purchase failed' };
     }
   }
@@ -226,7 +226,7 @@ export class ConsolidatedLeadSystem {
       
       return purchasedBuyers;
       
-    } catch (error) {
+    } catch {
       return [];
     }
   }
@@ -249,7 +249,7 @@ export class ConsolidatedLeadSystem {
         
       }
       
-    } catch (error) {
+    } catch {
     }
   }
   

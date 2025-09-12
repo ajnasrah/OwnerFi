@@ -82,7 +82,7 @@ export default function BuyerSetup() {
       } else {
         router.push('/dashboard');
       }
-    } catch (err) {
+    } catch {
       setError('Failed to save your preferences');
     } finally {
       setLoading(false);

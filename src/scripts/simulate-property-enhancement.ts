@@ -286,7 +286,7 @@ async function simulatePropertyEnhancement(): Promise<void> {
   console.log(`   Average Matches per Buyer: ${(totalMatches/SAMPLE_BUYERS.length).toFixed(1)}`);
 
   // Enhanced matching impact
-  const enhancedMatches = totalMatches; // In real system, we'd track which are enhanced vs direct
+  const _enhancedMatches = totalMatches; // In real system, we'd track which are enhanced vs direct
   console.log(`\n🚀 ENHANCED MATCHING IMPACT:`);
   console.log(`   Properties now discoverable in multiple city searches`);
   console.log(`   Buyers can find properties in nearby areas they weren't searching`);

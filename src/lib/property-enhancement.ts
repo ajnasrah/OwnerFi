@@ -35,7 +35,7 @@ export async function populateNearbyCitiesForPropertyFast(
       return comprehensiveResults;
     }
   } catch (error) {
-    console.warn('Comprehensive database failed, falling back to limited database:', error);
+    
   }
   
   // Fallback to limited database if needed

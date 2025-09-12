@@ -90,38 +90,45 @@ export default function BuyerSetup() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900" style={{zoom: '0.8'}}>
-      {/* Header */}
-      <header className="bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50 p-4">
-        <div className="flex items-center justify-between max-w-md mx-auto">
+    <div className="min-h-screen bg-slate-900 overflow-hidden flex flex-col">
+      <style jsx global>{`
+        .pac-container {
+          z-index: 1051 !important;
+          transform: scale(1) !important;
+          transform-origin: top left !important;
+        }
+      `}</style>
+      {/* Compact Header */}
+      <header className="bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50 px-3 py-2 sm:px-4 sm:py-3 flex-shrink-0">
+        <div className="flex items-center justify-between max-w-sm mx-auto">
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">O</span>
+            <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-xs sm:text-sm">O</span>
             </div>
-            <span className="text-lg font-bold text-white">OwnerFi</span>
+            <span className="text-sm sm:text-lg font-bold text-white">OwnerFi</span>
           </Link>
-          <span className="text-slate-400 text-sm">Setup</span>
+          <span className="text-slate-400 text-xs sm:text-sm">Setup</span>
         </div>
       </header>
 
-      {/* Main Content */}
-      <div style={{ paddingTop: '2rem', paddingBottom: '2rem' }} className="px-6">
-        <div className="max-w-md mx-auto w-full">
-          <div className="bg-slate-800/50 backdrop-blur-lg border border-slate-700/50 rounded-2xl p-8 shadow-2xl">
-            <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold text-white mb-3">Set Your Preferences</h1>
-              <p className="text-lg text-white font-normal mb-4">Tell us what you&apos;re looking for</p>
+      {/* Main Content - Flexible */}
+      <div className="flex-1 flex items-center justify-center px-4 py-3 sm:px-6 sm:py-4">
+        <div className="max-w-sm">
+          <div className="bg-slate-800/50 backdrop-blur-lg border border-slate-700/50 rounded-xl p-4 sm:p-6 shadow-2xl">
+            <div className="text-center mb-4 sm:mb-6">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-2">Set Your Preferences</h1>
+              <p className="text-sm sm:text-base text-white font-normal">Tell us what you&apos;re looking for</p>
             </div>
 
             {error && (
-              <div className="p-4 mb-6 bg-red-600/20 backdrop-blur-lg border border-red-500/30 rounded-xl text-red-300 font-semibold">
+              <div className="p-3 mb-4 bg-red-600/20 backdrop-blur-lg border border-red-500/30 rounded-lg text-red-300 font-semibold text-sm">
                 {error}
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
               <div>
-                <label className="block text-sm font-semibold mb-3" style={{color: 'white'}}>Search Location</label>
+                <label className="block text-xs sm:text-sm font-semibold mb-2" style={{color: 'white'}}>Search Location</label>
                 <GooglePlacesAutocomplete
                   value={formData.city}
                   onChange={(city) => setFormData(prev => ({ ...prev, city }))}
@@ -130,37 +137,37 @@ export default function BuyerSetup() {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold mb-3" style={{color: 'white'}}>
+                <label className="block text-xs sm:text-sm font-semibold mb-2" style={{color: 'white'}}>
                   Maximum Monthly Payment
                 </label>
                 <input
                   type="number"
                   value={formData.maxMonthlyPayment}
                   onChange={(e) => setFormData(prev => ({ ...prev, maxMonthlyPayment: e.target.value }))}
-                  className="w-full px-4 py-4 bg-emerald-500/10 border border-emerald-400/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 text-white placeholder-slate-400 font-normal"
+                  className="w-full p-3 sm:p-4 bg-emerald-500/10 border border-emerald-400/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 text-white placeholder-slate-400 font-normal text-sm sm:text-base"
                   placeholder="2000"
                   min="1"
                   required
                 />
-                <p className="text-slate-400 text-sm mt-2">
+                <p className="text-slate-400 text-xs sm:text-sm mt-1">
                   This includes principal, interest, insurance, and taxes
                 </p>
               </div>
 
               <div>
-                <label className="block text-sm font-semibold mb-3" style={{color: 'white'}}>
+                <label className="block text-xs sm:text-sm font-semibold mb-2" style={{color: 'white'}}>
                   Maximum Down Payment
                 </label>
                 <input
                   type="number"
                   value={formData.maxDownPayment}
                   onChange={(e) => setFormData(prev => ({ ...prev, maxDownPayment: e.target.value }))}
-                  className="w-full px-4 py-4 bg-emerald-500/10 border border-emerald-400/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 text-white placeholder-slate-400 font-normal"
+                  className="w-full p-3 sm:p-4 bg-emerald-500/10 border border-emerald-400/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 text-white placeholder-slate-400 font-normal text-sm sm:text-base"
                   placeholder="50000"
                   min="1"
                   required
                 />
-                <p className="text-slate-400 text-sm mt-2">
+                <p className="text-slate-400 text-xs sm:text-sm mt-1">
                   The upfront payment you can afford to make
                 </p>
               </div>
@@ -168,7 +175,7 @@ export default function BuyerSetup() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-300 hover:scale-105 shadow-2xl shadow-emerald-500/25 disabled:opacity-50 disabled:cursor-not-allowed mt-8"
+                className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white py-3 px-4 sm:py-4 sm:px-6 rounded-lg font-semibold text-sm sm:text-base md:text-lg transition-all duration-300 hover:scale-105 shadow-2xl shadow-emerald-500/25 disabled:opacity-50 disabled:cursor-not-allowed mt-6 sm:mt-8"
               >
                 {loading ? 'Setting up...' : 'Show Me Properties'}
               </button>

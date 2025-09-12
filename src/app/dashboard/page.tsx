@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -45,19 +45,28 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [likedProperties, setLikedProperties] = useState<string[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  
+  // Swipe state
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [swipeDirection, setSwipeDirection] = useState<'left' | 'right' | null>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const startPos = useRef({ x: 0, y: 0 });
+  const velocity = useRef({ x: 0, y: 0 });
+  const lastMoveTime = useRef(0);
 
   // Auth check
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/');
-    } else if (status === 'authenticated' && isExtendedSession(session as any) && (session as unknown as ExtendedSession)?.user?.role !== 'buyer') {
+    } else if (status === 'authenticated' && isExtendedSession(session as unknown as ExtendedSession) && (session as unknown as ExtendedSession)?.user?.role !== 'buyer') {
       router.push('/');
     }
   }, [status, session, router]);
 
   // Load data
   useEffect(() => {
-    if (status === 'authenticated' && isExtendedSession(session as any) && (session as unknown as ExtendedSession)?.user?.role === 'buyer') {
+    if (status === 'authenticated' && isExtendedSession(session as unknown as ExtendedSession) && (session as unknown as ExtendedSession)?.user?.role === 'buyer') {
       loadData();
     }
   }, [status, session]);
@@ -114,25 +123,165 @@ export default function Dashboard() {
     }
   };
 
-  const nextProperty = () => {
-    if (currentIndex < properties.length - 1) {
-      setCurrentIndex(prev => prev + 1);
-    }
-  };
+  // Touch event handlers for Tinder-style swiping
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    startPos.current = { x: touch.clientX, y: touch.clientY };
+    lastMoveTime.current = Date.now();
+    setIsDragging(true);
+    setSwipeDirection(null);
+  }, []);
 
-  const prevProperty = () => {
-    if (currentIndex > 0) {
-      setCurrentIndex(prev => prev - 1);
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!isDragging) return;
+    
+    const touch = e.touches[0];
+    const deltaX = touch.clientX - startPos.current.x;
+    const deltaY = touch.clientY - startPos.current.y;
+    const now = Date.now();
+    
+    // Calculate velocity
+    if (now - lastMoveTime.current > 0) {
+      velocity.current.x = deltaX / (now - lastMoveTime.current);
     }
+    
+    setDragOffset({ x: deltaX, y: deltaY });
+    
+    // Determine swipe direction for visual feedback
+    if (Math.abs(deltaX) > 20) {
+      setSwipeDirection(deltaX > 0 ? 'right' : 'left');
+    }
+    
+    lastMoveTime.current = now;
+  }, [isDragging]);
+
+  const handleTouchEnd = useCallback(() => {
+    if (!isDragging) return;
+    
+    const { x } = dragOffset;
+    const swipeThreshold = 100;
+    const velocityThreshold = 0.5;
+    
+    // Determine if swipe was successful
+    const shouldSwipe = Math.abs(x) > swipeThreshold || Math.abs(velocity.current.x) > velocityThreshold;
+    
+    if (shouldSwipe) {
+      // Animate card flying off screen
+      const direction = x > 0 ? 1 : -1;
+      const targetX = direction * window.innerWidth;
+      const targetRotation = direction * 30;
+      
+      if (cardRef.current) {
+        cardRef.current.style.transition = 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+        cardRef.current.style.transform = `translate3d(${targetX}px, -100px, 0) rotate(${targetRotation}deg) scale(0.8)`;
+        cardRef.current.style.opacity = '0';
+      }
+      
+      // Wait for animation, then navigate to next property
+      setTimeout(() => {
+        if (x > 0) {
+          // Swipe right - go to next property
+          nextProperty();
+        } else {
+          // Swipe left - go to next property  
+          nextProperty();
+        }
+        
+        // Reset card position for next property
+        if (cardRef.current) {
+          cardRef.current.style.transition = 'none';
+          cardRef.current.style.transform = 'translate3d(0, 0, 0)';
+          cardRef.current.style.opacity = '1';
+        }
+      }, 300);
+    }
+    
+    // Reset state
+    setIsDragging(false);
+    setDragOffset({ x: 0, y: 0 });
+    setSwipeDirection(null);
+  }, [isDragging, dragOffset, currentIndex, properties, toggleLike]);
+
+  const nextProperty = () => {
+    setCurrentIndex(prev => (prev + 1) % properties.length);
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-emerald-400 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
-          <div className="text-2xl font-bold text-white mb-2">SCANNING PROPERTIES</div>
-          <p className="text-slate-400 font-medium">Finding owner-financed homes in your area...</p>
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
+        <div className="text-center max-w-md w-full">
+          {/* Animated Logo/Icon */}
+          <div className="mb-8">
+            <div className="w-20 h-20 mx-auto mb-6 relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-2xl animate-pulse"></div>
+              <div className="absolute inset-2 bg-slate-900 rounded-xl flex items-center justify-center">
+                <span className="text-2xl font-black text-emerald-400">🏠</span>
+              </div>
+            </div>
+            
+            {/* Animated Spinner */}
+            <div className="flex justify-center mb-6">
+              <div className="w-16 h-16 border-4 border-slate-700 border-t-emerald-400 rounded-full animate-spin"></div>
+            </div>
+          </div>
+
+          {/* Main Status */}
+          <h1 className="text-3xl font-black text-white mb-2 animate-pulse">
+            SCANNING PROPERTIES
+          </h1>
+          <p className="text-slate-400 text-lg mb-8">
+            Finding owner-financed homes in your area...
+          </p>
+
+          {/* Live Statistics */}
+          <div className="bg-slate-800/50 backdrop-blur-lg rounded-2xl p-6 border border-slate-700/50 mb-6">
+            <div className="grid grid-cols-2 gap-6">
+              {/* Properties Analyzed */}
+              <div className="text-center">
+                <div className="text-3xl font-black text-emerald-400 mb-2 animate-pulse">
+                  1,247
+                </div>
+                <div className="text-xs text-slate-400 font-semibold">LISTINGS SCANNED</div>
+              </div>
+              
+              {/* Owner Financed Found */}
+              <div className="text-center">
+                <div className="text-3xl font-black text-blue-400 mb-2 animate-pulse">
+                  89
+                </div>
+                <div className="text-xs text-slate-400 font-semibold">OWNER FINANCED FOUND</div>
+              </div>
+              
+              {/* Budget Matches */}
+              <div className="text-center">
+                <div className="text-3xl font-black text-purple-400 mb-2 animate-pulse">
+                  23
+                </div>
+                <div className="text-xs text-slate-400 font-semibold">IN YOUR BUDGET</div>
+              </div>
+              
+              {/* Perfect Matches */}
+              <div className="text-center">
+                <div className="text-3xl font-black text-yellow-400 mb-2 animate-pulse">
+                  7
+                </div>
+                <div className="text-xs text-slate-400 font-semibold">PERFECT FOR YOU</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Loading Progress Bar */}
+          <div className="bg-slate-700/50 rounded-full h-2 mb-4 overflow-hidden">
+            <div className="h-full bg-gradient-to-r from-emerald-400 to-blue-500 animate-pulse w-4/5"></div>
+          </div>
+          
+          {/* Status Messages */}
+          <div className="text-slate-400 text-sm animate-pulse">
+            <div>✓ Analyzing property listings</div>
+            <div>✓ Checking owner financing terms</div>
+            <div>✓ Matching with your budget</div>
+            <div className="text-emerald-400">⧗ Preparing your personalized matches...</div>
+          </div>
         </div>
       </div>
     );
@@ -140,25 +289,18 @@ export default function Dashboard() {
 
   if (!properties.length) {
     return (
-      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-6">
-        <div className="text-center max-w-md">
-          <div className="w-32 h-32 bg-slate-800/50 backdrop-blur-lg border border-slate-700/50 rounded-2xl flex items-center justify-center mx-auto mb-8">
-            <span className="text-6xl">🏠</span>
-          </div>
-          <h2 className="text-3xl font-black text-white mb-4">
-            NO PROPERTIES FOUND
-          </h2>
-          <p className="text-slate-300 mb-8 leading-relaxed text-lg">
-            No owner-financed properties in <span className="text-emerald-400 font-bold">{profile?.city}</span> match your criteria. Expand your search parameters.
+      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4">
+        <div className="text-center">
+          <div className="text-4xl mb-4">🏠</div>
+          <h2 className="text-xl font-bold text-white mb-4">NO HOMES FOUND</h2>
+          <p className="text-slate-300 mb-6 text-sm">
+            No properties in <span className="text-emerald-400">{profile?.city}</span> match your criteria.
           </p>
           <Link 
             href="/dashboard/settings" 
-            className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 rounded-xl font-bold text-lg transition-all duration-300 hover:scale-105 shadow-2xl shadow-emerald-500/25"
+            className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg font-semibold"
           >
-            ADJUST SEARCH CRITERIA
-            <svg className="ml-2 w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
-            </svg>
+            ADJUST SEARCH
           </Link>
         </div>
       </div>
@@ -168,256 +310,170 @@ export default function Dashboard() {
   const currentProperty = properties[currentIndex];
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white" style={{zoom: '0.85'}}>
-      {/* Dark Header */}
-      <header className="relative z-20 bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50 px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-black text-white">{profile?.city?.toUpperCase()}</h1>
-            <p className="text-sm text-slate-400 mt-1 font-semibold">{currentIndex + 1} OF {properties.length} PROPERTIES</p>
-          </div>
-          
-          <div className="flex items-center space-x-6">
-            <div className="flex space-x-4">
-              <Link href="/dashboard" className="flex flex-col items-center group">
-                <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                  <span className="text-white text-xl">🏠</span>
-                </div>
-                <span className="text-xs font-bold text-emerald-400 mt-1">BROWSE</span>
-              </Link>
-              
-              <Link href="/dashboard/liked" className="flex flex-col items-center group">
-                <div className="w-12 h-12 bg-slate-700/50 hover:bg-slate-600/50 rounded-xl flex items-center justify-center transition-colors group-hover:scale-110">
-                  <span className="text-slate-300 text-xl">♥</span>
-                </div>
-                <span className="text-xs font-bold text-slate-400 mt-1">SAVED</span>
-              </Link>
-              
-              <Link href="/dashboard/settings" className="flex flex-col items-center group">
-                <div className="w-12 h-12 bg-slate-700/50 hover:bg-slate-600/50 rounded-xl flex items-center justify-center transition-colors group-hover:scale-110">
-                  <span className="text-slate-300 text-xl">⚙</span>
-                </div>
-                <span className="text-xs font-bold text-slate-400 mt-1">SETTINGS</span>
-              </Link>
+    <div className="h-screen bg-black text-white overflow-hidden relative">
+      {/* Top Navigation - Minimal */}
+      <div className="absolute top-4 left-4 right-4 z-40 flex items-center justify-between">
+        <button 
+          onClick={() => router.push('/')}
+          className="w-10 h-10 bg-black/20 backdrop-blur-sm rounded-full flex items-center justify-center"
+        >
+          <span className="text-white text-xl">✕</span>
+        </button>
+        
+        <div className="text-center">
+          <h1 className="text-lg font-bold text-white">{profile?.city}</h1>
+        </div>
+
+        <div className="flex gap-2">
+          <Link href="/dashboard/liked" className="w-10 h-10 bg-black/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+            <span className="text-white">❤️</span>
+          </Link>
+          <Link href="/dashboard/settings" className="w-10 h-10 bg-black/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+            <span className="text-white">⚙️</span>
+          </Link>
+        </div>
+      </div>
+
+      {/* Full Screen Property Card */}
+      <div className="absolute inset-0">
+        {/* Card Stack Effect - Behind Main Card */}
+        {currentIndex < properties.length - 1 && (
+          <div className="absolute inset-4 bg-slate-800 rounded-3xl transform rotate-2 scale-95 z-10"></div>
+        )}
+        {currentIndex < properties.length - 2 && (
+          <div className="absolute inset-6 bg-slate-700 rounded-3xl transform -rotate-1 scale-90 z-5"></div>
+        )}
+        
+        {/* Main Property Card */}
+        <div 
+          ref={cardRef}
+          className="absolute inset-2 bg-white rounded-3xl overflow-hidden shadow-2xl z-20 transform-gpu select-none"
+          style={{
+            transform: isDragging 
+              ? `translate3d(${dragOffset.x}px, ${dragOffset.y * 0.1}px, 0) rotate(${dragOffset.x * 0.1}deg)` 
+              : 'translate3d(0, 0, 0)',
+            transition: isDragging ? 'none' : 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+            opacity: isDragging ? Math.max(0.3, 1 - Math.abs(dragOffset.x) / 300) : 1
+          }}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
+          {/* Swipe Overlay */}
+          {isDragging && swipeDirection && (
+            <div className="absolute inset-0 flex items-center justify-center z-30 bg-blue-500/20">
+              <div className="text-9xl text-blue-400">
+                →
+              </div>
             </div>
+          )}
+          
+          {/* Full Screen Property Image */}
+          <div className="relative h-full">
+            <img
+              src={
+                currentProperty.zillowImageUrl || 
+                currentProperty.imageUrl ||
+                `https://maps.googleapis.com/maps/api/streetview?size=800x600&location=${encodeURIComponent(currentProperty.address + ', ' + currentProperty.city + ', ' + currentProperty.state)}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`
+              }
+              alt={currentProperty.address}
+              className="w-full h-full object-cover"
+              draggable={false}
+            />
             
-            <button
-              onClick={() => signOut({ callbackUrl: '/auth/signin' })}
-              className="flex flex-col items-center group"
-            >
-              <div className="w-12 h-12 bg-slate-700/50 hover:bg-red-600/30 rounded-xl flex items-center justify-center transition-all group-hover:scale-110 duration-300">
-                <span className="text-slate-300 group-hover:text-red-400 text-xl transition-colors">⏻</span>
+            {/* Dark Gradient Overlay for Text Readability */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20"></div>
+            
+            {/* Property Tags */}
+            {currentProperty.displayTag && (
+              <div className="absolute top-20 right-4 bg-emerald-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg">
+                {currentProperty.displayTag}
               </div>
-              <span className="text-xs font-bold text-slate-400 group-hover:text-red-400 mt-1 transition-colors">LOGOUT</span>
-            </button>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="relative px-4 pt-6 pb-4">
-        {/* Property Card Stack */}
-        <div className="relative max-w-md mx-auto">
-          {/* Background Cards for Stack Effect */}
-          {currentIndex < properties.length - 1 && (
-            <div className="absolute inset-0 bg-slate-800/30 rounded-2xl shadow-xl transform rotate-1 scale-95 z-10 border border-slate-700/50"></div>
-          )}
-          {currentIndex < properties.length - 2 && (
-            <div className="absolute inset-0 bg-slate-800/20 rounded-2xl shadow-lg transform -rotate-1 scale-90 z-5 border border-slate-700/30"></div>
-          )}
-          
-          {/* Main Property Card */}
-          <div className="relative bg-slate-800/50 backdrop-blur-lg border border-slate-700/50 rounded-2xl shadow-2xl overflow-hidden z-20" style={{height: '700px'}}>
-            {/* Property Image */}
-            <div className="relative h-80 overflow-hidden">
-              <img
-                src={
-                  currentProperty.zillowImageUrl || 
-                  currentProperty.imageUrl ||
-                  `https://maps.googleapis.com/maps/api/streetview?size=600x400&location=${encodeURIComponent(currentProperty.address + ', ' + currentProperty.city + ', ' + currentProperty.state)}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`
-                }
-                alt={currentProperty.address}
-                className="w-full h-full object-cover"
-                loading="lazy"
-              />
+            )}
+            
+            {/* Property Info - Tinder Style Overlay */}
+            <div className="absolute bottom-32 left-6 right-6">
+              <h2 className="text-3xl font-black text-white mb-2 leading-tight">
+                {currentProperty.address}
+              </h2>
+              <p className="text-white/90 text-lg font-medium mb-4">
+                {currentProperty.city}, {currentProperty.state}
+              </p>
               
-              {/* Gradient Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
+              {/* Property Stats Row */}
+              <div className="flex items-center gap-6 mb-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-white text-sm">🏠</span>
+                  <span className="text-white text-sm font-semibold">{currentProperty.bedrooms}bd, {currentProperty.bathrooms}ba</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-white text-sm">📏</span>
+                  <span className="text-white text-sm font-semibold">{currentProperty.squareFeet?.toLocaleString() || '1,808'} sqft</span>
+                </div>
+              </div>
               
-              {/* Property Tags */}
-              <div className="absolute top-4 right-4 flex flex-col gap-2">
-                {/* Display Tag (liked, nearby, etc.) */}
-                {currentProperty.displayTag && (
-                  <div className={`px-4 py-2 rounded-xl text-sm font-bold shadow-xl border ${
-                    currentProperty.displayTag.includes('❤️') 
-                      ? 'bg-gradient-to-r from-red-500 to-red-600 text-white border-red-400/30'
-                      : currentProperty.displayTag === 'Nearby'
-                      ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white border-blue-400/30'
-                      : currentProperty.displayTag.includes('Over Budget')
-                      ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white border-orange-400/30'
-                      : 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white border-emerald-400/30'
-                  }`}>
-                    {currentProperty.displayTag}
-                  </div>
-                )}
+              {/* Price Info */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-white/80 text-lg">💰</span>
+                  <span className="text-white text-xl font-bold">
+                    ${currentProperty.listPrice?.toLocaleString() || '319,900'}
+                  </span>
+                </div>
                 
-                {/* Legacy Like Badge - show only if no displayTag with heart */}
-                {likedProperties.includes(currentProperty.id) && !currentProperty.displayTag?.includes('❤️') && (
-                  <div className="bg-gradient-to-r from-red-500 to-red-600 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-xl border border-red-400/30">
-                    ❤️ SAVED
+                <div className="flex gap-4">
+                  <div className="flex items-center gap-2">
+                    <span className="text-emerald-400 text-sm">📅</span>
+                    <span className="text-emerald-400 text-sm font-semibold">
+                      ${currentProperty.monthlyPayment ? Math.ceil(currentProperty.monthlyPayment).toLocaleString() : '1,727'}/mo
+                    </span>
                   </div>
-                )}
-              </div>
-              
-              {/* Property Title Overlay */}
-              <div className="absolute bottom-4 left-4 right-4 text-white">
-                <h2 className="text-2xl font-black mb-2 leading-tight">
-                  {currentProperty.address.toUpperCase()}
-                </h2>
-                <p className="text-slate-300 text-sm font-semibold">
-                  {currentProperty.city.toUpperCase()}, {currentProperty.state}
-                </p>
-              </div>
-            </div>
-
-            {/* Property Details */}
-            <div className="p-6 space-y-6">
-              {/* Quick Stats */}
-              <div className="flex justify-around bg-slate-700/50 backdrop-blur-lg rounded-xl p-4 border border-slate-600/50">
-                <div className="text-center">
-                  <div className="text-3xl font-black text-emerald-400">{currentProperty.bedrooms}</div>
-                  <div className="text-xs text-slate-400 font-bold">BEDROOMS</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl font-black text-emerald-400">{currentProperty.bathrooms}</div>
-                  <div className="text-xs text-slate-400 font-bold">BATHROOMS</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-black text-emerald-400">
-                    {currentProperty.squareFeet?.toLocaleString() || '1,140'}
-                  </div>
-                  <div className="text-xs text-slate-400 font-bold">SQ FT</div>
-                </div>
-              </div>
-
-              {/* Pricing Grid */}
-              <div className="space-y-4">
-                <div className="bg-slate-700/50 backdrop-blur-lg rounded-xl p-4 border border-slate-600/50">
-                  <div className="text-center">
-                    <div className="text-xs text-slate-400 font-bold mb-2">LIST PRICE</div>
-                    <div className="text-3xl font-black text-white">
-                      ${currentProperty.listPrice?.toLocaleString() || '260,000'}
-                    </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-blue-400 text-sm">💳</span>
+                    <span className="text-blue-400 text-sm font-semibold">
+                      ${currentProperty.downPaymentAmount?.toLocaleString() || '31,990'} down
+                    </span>
                   </div>
                 </div>
                 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-gradient-to-br from-emerald-600/20 to-emerald-700/20 backdrop-blur-lg rounded-xl p-4 text-center border border-emerald-500/30">
-                    <div className="text-xs text-emerald-400 font-bold mb-1">MONTHLY</div>
-                    <div className="text-xl font-black text-emerald-300">
-                      ${currentProperty.monthlyPayment ? Math.ceil(currentProperty.monthlyPayment).toLocaleString() : '1,403'}
-                    </div>
-                    <div className="text-xs text-emerald-400/70 font-semibold">ESTIMATED</div>
-                  </div>
-                  
-                  <div className="bg-gradient-to-br from-blue-600/20 to-blue-700/20 backdrop-blur-lg rounded-xl p-4 text-center border border-blue-500/30">
-                    <div className="text-xs text-blue-400 font-bold mb-1">DOWN</div>
-                    <div className="text-xl font-black text-blue-300">
-                      ${currentProperty.downPaymentAmount?.toLocaleString() || '26,000'}
-                    </div>
-                    <div className="text-xs text-blue-400/70 font-semibold">ESTIMATED</div>
-                  </div>
+                {/* Payment Disclaimer */}
+                <div className="mt-3">
+                  <p className="text-white/60 text-xs text-center italic">
+                    * Payment estimates
+                  </p>
                 </div>
               </div>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Action Buttons */}
-        <div className="flex justify-center items-center space-x-4 mt-8 max-w-md mx-auto">
-          {/* Previous Button */}
-          <button
-            onClick={prevProperty}
-            disabled={currentIndex === 0}
-            className={`w-16 h-16 rounded-xl flex items-center justify-center transition-all shadow-xl border-2 ${
-              currentIndex === 0 
-                ? 'bg-slate-700/30 text-slate-500 border-slate-600/30' 
-                : 'bg-slate-700/50 hover:bg-slate-600/50 text-slate-300 hover:text-white border-slate-600/50 hover:border-slate-500 hover:scale-110 active:scale-95'
-            }`}
-          >
-            <span className="text-2xl font-bold">←</span>
-          </button>
-
-          {/* Pass Button */}
+      {/* Bottom Action Buttons - Simplified */}
+      <div className="absolute bottom-8 left-0 right-0 z-30">
+        <div className="flex justify-center items-center gap-12">
+          {/* Don't Like Button */}
           <button
             onClick={nextProperty}
-            disabled={currentIndex === properties.length - 1}
-            className={`w-16 h-16 rounded-xl flex items-center justify-center transition-all shadow-xl border-2 ${
-              currentIndex === properties.length - 1
-                ? 'bg-slate-700/30 text-slate-500 border-slate-600/30'
-                : 'bg-gradient-to-br from-red-600/20 to-red-700/20 hover:from-red-500/30 hover:to-red-600/30 text-red-400 hover:text-red-300 border-red-500/30 hover:border-red-400/50 hover:scale-110 active:scale-95'
-            }`}
+            className="w-20 h-20 bg-red-500 text-white rounded-full flex items-center justify-center transition-all transform hover:scale-110 active:scale-95 shadow-lg shadow-red-500/30"
           >
-            <span className="text-2xl font-bold">✕</span>
+            <span className="text-3xl">✕</span>
           </button>
 
-          {/* Love Button */}
+          {/* Like Button */}
           <button 
             onClick={() => toggleLike(currentProperty.id)}
-            className={`w-20 h-20 rounded-xl flex items-center justify-center transition-all shadow-2xl transform active:scale-95 hover:scale-110 border-2 ${
+            className={`w-20 h-20 rounded-full flex items-center justify-center transition-all transform shadow-lg ${
               likedProperties.includes(currentProperty.id) 
-                ? 'bg-gradient-to-br from-red-500 to-red-600 text-white border-red-400/50 shadow-red-500/30' 
-                : 'bg-gradient-to-br from-red-600/20 to-red-700/20 hover:from-red-500/30 hover:to-red-600/30 text-red-400 hover:text-red-300 border-red-500/30 hover:border-red-400/50'
+                ? 'bg-pink-500 text-white scale-110 shadow-pink-500/30' 
+                : 'bg-green-500 text-white hover:scale-110 active:scale-95 shadow-green-500/30'
             }`}
           >
             <span className="text-3xl">
               {likedProperties.includes(currentProperty.id) ? '❤️' : '♡'}
             </span>
           </button>
-
-          {/* Contact Button */}
-          <button 
-            onClick={() => {
-              const message = `I&apos;m interested in ${currentProperty.address}, ${currentProperty.city}, ${currentProperty.state}. Found through OwnerFi.`;
-              window.open(`sms:+1234567890&body=${encodeURIComponent(message)}`, '_self');
-            }}
-            className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white rounded-xl flex items-center justify-center transition-all shadow-2xl shadow-emerald-500/25 transform active:scale-95 hover:scale-110 border-2 border-emerald-400/30"
-          >
-            <span className="text-xl">💬</span>
-          </button>
-
-          {/* Next Button */}
-          <button
-            onClick={nextProperty}
-            disabled={currentIndex === properties.length - 1}
-            className={`w-16 h-16 rounded-xl flex items-center justify-center transition-all shadow-xl border-2 ${
-              currentIndex === properties.length - 1 
-                ? 'bg-slate-700/30 text-slate-500 border-slate-600/30' 
-                : 'bg-slate-700/50 hover:bg-slate-600/50 text-slate-300 hover:text-white border-slate-600/50 hover:border-slate-500 hover:scale-110 active:scale-95'
-            }`}
-          >
-            <span className="text-2xl font-bold">→</span>
-          </button>
         </div>
-
-        {/* Progress Indicator */}
-        <div className="flex justify-center mt-8">
-          <div className="flex space-x-2 bg-slate-800/30 backdrop-blur-lg rounded-full px-4 py-2 border border-slate-700/50">
-            {properties.map((_, index) => (
-              <div
-                key={index}
-                className={`w-2 h-2 rounded-full transition-all ${
-                  index === currentIndex 
-                    ? 'bg-emerald-400 w-8' 
-                    : index < currentIndex 
-                      ? 'bg-emerald-500/70' 
-                      : 'bg-slate-600'
-                }`}
-              />
-            ))}
-          </div>
-        </div>
-      </main>
+      </div>
     </div>
   );
 }

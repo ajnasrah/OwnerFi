@@ -12,7 +12,7 @@ export default function TermsOfService() {
       <div className="max-w-4xl mx-auto px-6 py-16">
         <div className="bg-white rounded-xl shadow-light p-8 md:p-12">
           <h1 className="text-4xl font-bold text-primary-text mb-8">Terms of Service</h1>
-          <p className="text-gray-600 mb-8">Last updated: September 3, 2025</p>
+          <p className="text-slate-600 mb-8">Last updated: September 3, 2025</p>
           
           {/* Plain English Summary */}
           <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-8">
@@ -27,7 +27,7 @@ export default function TermsOfService() {
             </ul>
           </div>
 
-          <div className="space-y-8 text-lg leading-relaxed text-gray-700">
+          <div className="space-y-8 text-lg leading-relaxed text-slate-700">
             
             <section>
               <h2 className="text-2xl font-semibold text-primary-text mb-4">1. Acceptance of Terms</h2>
@@ -191,10 +191,10 @@ export default function TermsOfService() {
 
             <section>
               <h2 className="text-2xl font-semibold text-primary-text mb-4">15. Governing Law and Binding Arbitration</h2>
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
-                <p className="font-bold text-gray-800">⚖️ BINDING ARBITRATION & CLASS ACTION WAIVER</p>
-                <p className="text-gray-700 mt-2"><strong>BY USING THIS SERVICE, YOU AGREE TO:</strong></p>
-                <ul className="list-disc ml-6 mt-2 space-y-1 text-gray-700">
+              <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 mb-4">
+                <p className="font-bold text-slate-800">⚖️ BINDING ARBITRATION & CLASS ACTION WAIVER</p>
+                <p className="text-slate-700 mt-2"><strong>BY USING THIS SERVICE, YOU AGREE TO:</strong></p>
+                <ul className="list-disc ml-6 mt-2 space-y-1 text-slate-700">
                   <li><strong>WAIVE YOUR RIGHT TO A JURY TRIAL</strong></li>
                   <li><strong>WAIVE YOUR RIGHT TO PARTICIPATE IN CLASS ACTION LAWSUITS</strong></li>
                   <li><strong>RESOLVE ALL DISPUTES THROUGH BINDING ARBITRATION</strong></li>
@@ -211,7 +211,7 @@ export default function TermsOfService() {
             <section>
               <h2 className="text-2xl font-semibold text-primary-text mb-4">17. Contact Information</h2>
               <p>If you have questions about these Terms, please contact us at:</p>
-              <div className="mt-2 p-4 bg-gray-50 rounded-lg">
+              <div className="mt-2 p-4 bg-slate-50 rounded-lg">
                 <p><strong>OwnerFi (operated by Prosway)</strong></p>
                 <p>Email: admin@prosway.com</p>
                 <p>Address: 5095 Covington Way, Memphis, TN 38134</p>
@@ -219,7 +219,7 @@ export default function TermsOfService() {
             </section>
 
             <div className="border-t pt-8 mt-8">
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-slate-500">
                 By using OwnerFi, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service.
               </p>
             </div>

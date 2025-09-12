@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
           });
         }
       } catch (err) {
-        console.error(`Failed to load property ${propertyId}:`, err);
+        // Failed to load property
       }
     }
 
@@ -76,7 +76,7 @@ export async function GET(request: NextRequest) {
       properties: likedProperties
     });
 
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

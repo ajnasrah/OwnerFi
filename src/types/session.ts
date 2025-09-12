@@ -15,7 +15,7 @@ export interface ExtendedSession extends Omit<Session, 'user'> {
 }
 
 // Type guard to check if session has extended user properties
-export function isExtendedSession(session: Session | null): session is ExtendedSession {
+export function isExtendedSession(session: Session | null | undefined): session is ExtendedSession {
   return !!(session?.user && 'role' in session.user && 'id' in session.user);
 }
 

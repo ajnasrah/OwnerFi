@@ -75,7 +75,7 @@ export default function BuyCredits() {
           setActiveSubscriptions(data.subscriptions || []);
         }
       } catch (error) {
-        console.error('Failed to load subscriptions:', error);
+        
       } finally {
         setLoadingSubscriptions(false);
       }

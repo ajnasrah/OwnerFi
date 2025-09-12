@@ -218,12 +218,12 @@ export default function RealtorDashboard() {
       <header className="bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50">
         {/* Top Row - Logo and Actions */}
         <div className="px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
             <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-sm">O</span>
             </div>
             <span className="text-lg font-bold text-white">OwnerFi</span>
-          </div>
+          </Link>
           
           <div className="flex items-center gap-2">
             <Link
@@ -240,7 +240,7 @@ export default function RealtorDashboard() {
               ⚙️
             </Link>
             <button
-              onClick={() => signOut({ callbackUrl: '/auth/signin' })}
+              onClick={() => signOut({ callbackUrl: '/' })}
               className="text-slate-400 hover:text-red-400 transition-colors p-1.5"
               title="Logout"
             >
@@ -258,12 +258,12 @@ export default function RealtorDashboard() {
       {/* Main Content */}
       <main className="max-w-6xl mx-auto p-4">
         
-        {/* Clean Navigation */}
+        {/* Compact Navigation */}
         <div className="bg-slate-800/30 rounded-xl p-1 mb-6">
-          <div className="flex">
+          <div className="flex gap-1">
             <button
               onClick={() => setActiveTab('available')}
-              className={`flex-1 text-center py-3 px-4 rounded-lg font-medium transition-all ${
+              className={`flex-1 text-center py-2 px-2 rounded-lg text-xs font-medium transition-all ${
                 activeTab === 'available' 
                   ? 'bg-emerald-500 text-white shadow-lg' 
                   : 'text-slate-300 hover:text-white'
@@ -273,7 +273,7 @@ export default function RealtorDashboard() {
             </button>
             <button
               onClick={() => setActiveTab('owned')}
-              className={`flex-1 text-center py-3 px-4 rounded-lg font-medium transition-all ${
+              className={`flex-1 text-center py-2 px-2 rounded-lg text-xs font-medium transition-all ${
                 activeTab === 'owned' 
                   ? 'bg-emerald-500 text-white shadow-lg' 
                   : 'text-slate-300 hover:text-white'
@@ -283,7 +283,7 @@ export default function RealtorDashboard() {
             </button>
             <button
               onClick={() => setActiveTab('transactions')}
-              className={`flex-1 text-center py-3 px-4 rounded-lg font-medium transition-all ${
+              className={`flex-1 text-center py-2 px-2 rounded-lg text-xs font-medium transition-all ${
                 activeTab === 'transactions' 
                   ? 'bg-emerald-500 text-white shadow-lg' 
                   : 'text-slate-300 hover:text-white'

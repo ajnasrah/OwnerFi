@@ -40,24 +40,24 @@ export default function TestCheckout() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
+    <div className="min-h-screen bg-slate-100 p-8">
       <div className="max-w-2xl mx-auto bg-white rounded-lg p-6">
         <h1 className="text-2xl font-bold mb-4">Subscription API Test</h1>
         
         <button
           onClick={testSubscription}
           disabled={loading}
-          className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-400"
+          className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 disabled:bg-slate-400"
         >
           {loading ? 'Testing...' : 'Test Professional Plan Subscription'}
         </button>
         
-        <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+        <div className="mt-6 p-4 bg-slate-50 rounded-lg">
           <h3 className="font-semibold mb-2">Result:</h3>
           <pre className="text-sm whitespace-pre-wrap">{result}</pre>
         </div>
         
-        <div className="mt-4 text-sm text-gray-600">
+        <div className="mt-4 text-sm text-slate-600">
           <p>This tests the /api/stripe/checkout endpoint directly with:</p>
           <ul className="list-disc ml-6 mt-2">
             <li>priceId: price_1S18NlJkpg3x1io7vUCoetwT (Professional)</li>

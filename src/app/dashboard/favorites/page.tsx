@@ -87,18 +87,18 @@ export default function FavoritesPage() {
 
   return (
     <div className="min-h-screen bg-primary-bg">
-      <header className="bg-white px-6 py-4 border-b border-gray-100">
+      <header className="bg-white px-6 py-4 border-b border-slate-100">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <button 
               onClick={() => router.back()}
-              className="text-gray-600 hover:text-gray-800 transition-colors p-1"
+              className="text-slate-600 hover:text-slate-800 transition-colors p-1"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
             </button>
-            <h1 className="text-2xl font-bold text-gray-900">Saved Properties</h1>
+            <h1 className="text-2xl font-bold text-slate-900">Saved Properties</h1>
           </div>
         </div>
       </header>
@@ -116,11 +116,11 @@ export default function FavoritesPage() {
         ) : (
           <div className="space-y-6">
             {favoriteProperties.map((property: Property) => (
-              <div key={property.id} className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
+              <div key={property.id} className="bg-white rounded-xl p-6 shadow-lg border border-slate-100">
                 {/* Header */}
                 <div className="text-center mb-4">
-                  <h3 className="text-xl font-bold text-gray-900">{property.address}</h3>
-                  <p className="text-gray-600">{property.city}, {property.state} {property.zipCode}</p>
+                  <h3 className="text-xl font-bold text-slate-900">{property.address}</h3>
+                  <p className="text-slate-600">{property.city}, {property.state} {property.zipCode}</p>
                   
                   {/* More Details Link */}
                   <a
@@ -158,33 +158,33 @@ export default function FavoritesPage() {
                 {/* Property Details */}
                 <div className="grid grid-cols-3 gap-4 mb-4 text-center">
                   <div>
-                    <div className="text-2xl font-bold text-gray-800">{property.bedrooms}</div>
-                    <div className="text-xs text-gray-600">Bedrooms</div>
+                    <div className="text-2xl font-bold text-slate-800">{property.bedrooms}</div>
+                    <div className="text-xs text-slate-600">Bedrooms</div>
                   </div>
                   <div>
-                    <div className="text-2xl font-bold text-gray-800">{property.bathrooms}</div>
-                    <div className="text-xs text-gray-600">Bathrooms</div>
+                    <div className="text-2xl font-bold text-slate-800">{property.bathrooms}</div>
+                    <div className="text-xs text-slate-600">Bathrooms</div>
                   </div>
                   <div>
-                    <div className="text-2xl font-bold text-gray-800">{property.squareFeet?.toLocaleString() || 'N/A'}</div>
-                    <div className="text-xs text-gray-600">Sq Ft</div>
+                    <div className="text-2xl font-bold text-slate-800">{property.squareFeet?.toLocaleString() || 'N/A'}</div>
+                    <div className="text-xs text-slate-600">Sq Ft</div>
                   </div>
                 </div>
 
                 {/* Financing Terms */}
-                <div className="bg-gray-50 rounded-lg p-4 mb-4">
+                <div className="bg-slate-50 rounded-lg p-4 mb-4">
                   <div className="grid grid-cols-3 gap-4 text-center text-sm">
                     <div>
-                      <div className="font-semibold text-gray-800">{formatCurrency(property.listPrice)}</div>
-                      <div className="text-gray-600">List Price (est)</div>
+                      <div className="font-semibold text-slate-800">{formatCurrency(property.listPrice)}</div>
+                      <div className="text-slate-600">List Price (est)</div>
                     </div>
                     <div>
-                      <div className="font-semibold text-gray-800">{property.interestRate}%</div>
-                      <div className="text-gray-600">APR (est)</div>
+                      <div className="font-semibold text-slate-800">{property.interestRate}%</div>
+                      <div className="text-slate-600">APR (est)</div>
                     </div>
                     <div>
-                      <div className="font-semibold text-gray-800">{property.termYears} years</div>
-                      <div className="text-gray-600">Term (est)</div>
+                      <div className="font-semibold text-slate-800">{property.termYears} years</div>
+                      <div className="text-slate-600">Term (est)</div>
                     </div>
                   </div>
                 </div>
@@ -192,8 +192,8 @@ export default function FavoritesPage() {
                 {/* Description */}
                 {property.description && (
                   <div className="bg-blue-50 rounded-lg p-4">
-                    <h4 className="font-semibold text-gray-800 mb-2">Property Description</h4>
-                    <p className="text-gray-700 leading-relaxed">{property.description}</p>
+                    <h4 className="font-semibold text-slate-800 mb-2">Property Description</h4>
+                    <p className="text-slate-700 leading-relaxed">{property.description}</p>
                   </div>
                 )}
               </div>
@@ -206,14 +206,14 @@ export default function FavoritesPage() {
           <div className="mt-8">
             <button
               onClick={() => setShowPassed(!showPassed)}
-              className="w-full text-left bg-gray-100 hover:bg-gray-200 rounded-lg p-4 transition-colors"
+              className="w-full text-left bg-slate-100 hover:bg-slate-200 rounded-lg p-4 transition-colors"
             >
               <div className="flex items-center justify-between">
-                <span className="text-lg font-semibold text-gray-700">
+                <span className="text-lg font-semibold text-slate-700">
                   Properties I Don't Like ({passedProperties.length})
                 </span>
                 <svg 
-                  className={`w-5 h-5 text-gray-500 transition-transform ${showPassed ? 'rotate-180' : ''}`} 
+                  className={`w-5 h-5 text-slate-500 transition-transform ${showPassed ? 'rotate-180' : ''}`} 
                   fill="none" 
                   stroke="currentColor" 
                   viewBox="0 0 24 24"
@@ -229,9 +229,9 @@ export default function FavoritesPage() {
                   <div key={property.id} className="bg-red-50 rounded-xl p-4 border border-red-100">
                     <div className="flex justify-between items-center">
                       <div className="flex-1">
-                        <h3 className="font-semibold text-gray-800">{property.address}</h3>
-                        <p className="text-gray-600 text-sm">{property.city}, {property.state}</p>
-                        <p className="text-gray-600 text-sm">
+                        <h3 className="font-semibold text-slate-800">{property.address}</h3>
+                        <p className="text-slate-600 text-sm">{property.city}, {property.state}</p>
+                        <p className="text-slate-600 text-sm">
                           {property.bedrooms} bed • {property.bathrooms} bath • {property.squareFeet?.toLocaleString() || 'N/A'} sqft
                         </p>
                         
@@ -253,7 +253,7 @@ export default function FavoritesPage() {
                       </div>
                       <div className="text-right">
                         <div className="text-lg font-bold text-blue-600">
-                          {formatCurrency(property.monthlyPayment)}<span className="text-xs text-gray-500">/mo</span>
+                          {formatCurrency(property.monthlyPayment)}<span className="text-xs text-slate-500">/mo</span>
                         </div>
                         <div className="text-sm text-orange-600">
                           {formatCurrency(property.downPaymentAmount)} down
@@ -261,7 +261,7 @@ export default function FavoritesPage() {
                         <div className="mt-2 space-y-1">
                           <button 
                             onClick={() => setSelectedProperty(property)}
-                            className="w-full bg-white text-gray-700 border border-gray-300 px-3 py-1 rounded-lg text-sm hover:bg-gray-50 transition-colors"
+                            className="w-full bg-white text-slate-700 border border-slate-300 px-3 py-1 rounded-lg text-sm hover:bg-slate-50 transition-colors"
                           >
                             View Details
                           </button>
@@ -311,32 +311,32 @@ export default function FavoritesPage() {
           <div className="bg-white rounded-2xl max-w-lg w-full max-h-[80vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex justify-between items-start mb-4">
-                <h2 className="text-xl font-bold text-gray-900">{selectedProperty.address}</h2>
+                <h2 className="text-xl font-bold text-slate-900">{selectedProperty.address}</h2>
                 <button 
                   onClick={() => setSelectedProperty(null)}
-                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                  className="p-2 hover:bg-slate-100 rounded-full transition-colors"
                 >
-                  <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-6 h-6 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
               </div>
               
               <div className="space-y-4">
-                <p className="text-gray-600">{selectedProperty.city}, {selectedProperty.state} {selectedProperty.zipCode}</p>
+                <p className="text-slate-600">{selectedProperty.city}, {selectedProperty.state} {selectedProperty.zipCode}</p>
                 
                 <div className="grid grid-cols-3 gap-4 text-center">
                   <div>
-                    <div className="text-2xl font-bold text-gray-800">{selectedProperty.bedrooms}</div>
-                    <div className="text-xs text-gray-600">Bedrooms</div>
+                    <div className="text-2xl font-bold text-slate-800">{selectedProperty.bedrooms}</div>
+                    <div className="text-xs text-slate-600">Bedrooms</div>
                   </div>
                   <div>
-                    <div className="text-2xl font-bold text-gray-800">{selectedProperty.bathrooms}</div>
-                    <div className="text-xs text-gray-600">Bathrooms</div>
+                    <div className="text-2xl font-bold text-slate-800">{selectedProperty.bathrooms}</div>
+                    <div className="text-xs text-slate-600">Bathrooms</div>
                   </div>
                   <div>
-                    <div className="text-2xl font-bold text-gray-800">{selectedProperty.squareFeet?.toLocaleString() || 'N/A'}</div>
-                    <div className="text-xs text-gray-600">Sq Ft</div>
+                    <div className="text-2xl font-bold text-slate-800">{selectedProperty.squareFeet?.toLocaleString() || 'N/A'}</div>
+                    <div className="text-xs text-slate-600">Sq Ft</div>
                   </div>
                 </div>
 
@@ -355,27 +355,27 @@ export default function FavoritesPage() {
                   </div>
                 </div>
 
-                <div className="bg-gray-50 rounded-lg p-4">
+                <div className="bg-slate-50 rounded-lg p-4">
                   <div className="grid grid-cols-3 gap-4 text-center text-sm">
                     <div>
-                      <div className="font-semibold text-gray-800">{formatCurrency(selectedProperty.listPrice)}</div>
-                      <div className="text-gray-600">List Price (est)</div>
+                      <div className="font-semibold text-slate-800">{formatCurrency(selectedProperty.listPrice)}</div>
+                      <div className="text-slate-600">List Price (est)</div>
                     </div>
                     <div>
-                      <div className="font-semibold text-gray-800">{selectedProperty.interestRate}%</div>
-                      <div className="text-gray-600">APR (est)</div>
+                      <div className="font-semibold text-slate-800">{selectedProperty.interestRate}%</div>
+                      <div className="text-slate-600">APR (est)</div>
                     </div>
                     <div>
-                      <div className="font-semibold text-gray-800">{selectedProperty.termYears} years</div>
-                      <div className="text-gray-600">Term (est)</div>
+                      <div className="font-semibold text-slate-800">{selectedProperty.termYears} years</div>
+                      <div className="text-slate-600">Term (est)</div>
                     </div>
                   </div>
                 </div>
 
                 {selectedProperty.description && (
                   <div className="bg-blue-50 rounded-lg p-4">
-                    <h4 className="font-semibold text-gray-800 mb-2">Description</h4>
-                    <p className="text-gray-700 leading-relaxed">{selectedProperty.description}</p>
+                    <h4 className="font-semibold text-slate-800 mb-2">Description</h4>
+                    <p className="text-slate-700 leading-relaxed">{selectedProperty.description}</p>
                   </div>
                 )}
               </div>

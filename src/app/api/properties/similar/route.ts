@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { 
   collection, 
-  getDocs,
-  query,
-  where,
-  orderBy,
-  limit as firestoreLimit
+  getDocs
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { expandSearchToNearbyCities, enhancePropertyWithNearbyCities } from '@/lib/property-enhancement';
@@ -105,7 +101,7 @@ export async function GET(request: NextRequest) {
       properties: similarProperties
     });
 
-  } catch (error) {
+  } catch {
     return NextResponse.json({ 
       error: 'Failed to find similar properties',
       properties: []

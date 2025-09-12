@@ -1,24 +1,26 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ExtendedSession, isExtendedSession } from '@/types/session';
+import Chatbot from '@/components/ui/ChatbotiPhone';
+import FloatingChatbotButton from '@/components/ui/FloatingChatbotButton';
 
 export default function HomePage() {
   const { data: session, status } = useSession();
-  const router = useRouter();
+  const [isChatbotOpen, setIsChatbotOpen] = useState(false);
 
   // Get dashboard URL for logged-in users
   const getDashboardUrl = () => {
     if (status !== 'authenticated' || !session?.user) return null;
     
-    if (isExtendedSession(session as any)) {
-      const extendedSession = session as unknown as ExtendedSession;
-      if (extendedSession.user.role === 'buyer') return '/dashboard';
-      if (extendedSession.user.role === 'realtor') return '/realtor-dashboard';
-      if (extendedSession.user.role === 'admin') return '/admin';
+    if (isExtendedSession(session as unknown as ExtendedSession)) {
+      const extSession = session as unknown as ExtendedSession;
+      if (extSession.user.role === 'buyer') return '/dashboard';
+      if (extSession.user.role === 'realtor') return '/realtor-dashboard';
+      if (extSession.user.role === 'admin') return '/admin';
     }
     return '/dashboard';
   };
@@ -475,6 +477,12 @@ export default function HomePage() {
           </div>
         </div>
       </footer>
+
+      {/* Floating Chatbot Button */}
+      <FloatingChatbotButton onClick={() => setIsChatbotOpen(true)} />
+
+      {/* Chatbot Modal */}
+      <Chatbot isOpen={isChatbotOpen} onClose={() => setIsChatbotOpen(false)} />
     </div>
   );
 }

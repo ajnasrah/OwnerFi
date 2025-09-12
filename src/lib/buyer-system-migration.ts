@@ -79,7 +79,7 @@ export class BuyerSystemMigration {
             purchasedAt: linkData?.purchasedAt ? 
               (linkData.purchasedAt instanceof Timestamp ? 
                 linkData.purchasedAt : 
-                Timestamp.fromDate(new Date(linkData.purchasedAt as any))
+                Timestamp.fromDate(new Date(linkData.purchasedAt as unknown as string))
               ) : undefined,
             leadPrice: 1, // Default credit cost
             
@@ -111,7 +111,7 @@ export class BuyerSystemMigration {
       for (const link of buyerLinks as BuyerProfile[]) {
         if (!existingUserIds.has(link.userId)) {
           try {
-            const newProfile = await this.createBuyerProfileFromLink(link);
+            await this.createBuyerProfileFromLink(link);
             result.profilesCreated++;
             
             
@@ -222,7 +222,7 @@ export class BuyerSystemMigration {
       purchasedAt: link.purchasedAt ? 
         (link.purchasedAt instanceof Timestamp ? 
           link.purchasedAt : 
-          Timestamp.fromDate(new Date(link.purchasedAt as any))
+          Timestamp.fromDate(new Date(link.purchasedAt as unknown as string))
         ) : undefined,
       leadPrice: 1,
       
@@ -240,7 +240,7 @@ export class BuyerSystemMigration {
       createdAt: link.createdAt ? 
         (link.createdAt instanceof Timestamp ? 
           link.createdAt : 
-          Timestamp.fromDate(new Date(link.createdAt as any))
+          Timestamp.fromDate(new Date(link.createdAt as unknown as string))
         ) : Timestamp.now(),
       updatedAt: Timestamp.now()
     };

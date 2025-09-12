@@ -149,7 +149,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(response, { status: 201 });
 
   } catch (error) {
-    console.error('Realtor registration error:', error);
+    // Registration error
     await logError('Realtor registration failed', {
       action: 'realtor_registration_error'
     }, error as Error);

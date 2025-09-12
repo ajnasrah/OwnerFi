@@ -4,7 +4,6 @@ import {
   getDocs,
   query,
   where,
-  documentId
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { getServerSession } from 'next-auth/next';
@@ -214,7 +213,7 @@ export async function GET(request: NextRequest) {
       }
     });
 
-  } catch (error) {
+  } catch {
     return NextResponse.json({ 
       error: 'Failed to load properties',
       properties: [],

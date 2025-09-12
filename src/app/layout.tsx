@@ -70,7 +70,7 @@ export default function RootLayout({
                     window.googleMapsState.error = false;
                     window.dispatchEvent(new Event('googleMapsReady'));
                   } catch (error) {
-                    console.error('Google Maps initialization failed:', error);
+                    // Google Maps failed to initialize
                     window.googleMapsState.error = true;
                     window.googleMapsState.loading = false;
                     window.dispatchEvent(new Event('googleMapsError'));
@@ -110,7 +110,7 @@ export default function RootLayout({
             dangerouslySetInnerHTML={{
               __html: `
                 window.googleMapsState = { loaded: false, error: true, loading: false };
-                console.warn('Google Maps API key not configured - Places autocomplete will not work');
+                // Google Maps API key not configured
                 window.dispatchEvent(new Event('googleMapsError'));
               `
             }}

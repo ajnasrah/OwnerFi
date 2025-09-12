@@ -62,8 +62,8 @@ export default function RealtorSettings() {
         setCurrentSavedCities(data.data.serviceCities || []);
         setTargetCity(data.data.targetCity || '');
       }
-    } catch (err) {
-      console.error('Failed to fetch current cities:', err);
+    } catch {
+      // Failed to fetch current cities
     } finally {
       setLoadingCurrentCities(false);
     }
@@ -88,7 +88,7 @@ export default function RealtorSettings() {
       } else {
         setError('Failed to remove city');
       }
-    } catch (err) {
+    } catch {
       setError('Failed to remove city');
     } finally {
       setLoading(false);
@@ -124,7 +124,7 @@ export default function RealtorSettings() {
       
       setError('');
       setSuccessMessage('');
-    } catch (err) {
+    } catch {
       setError('City not found. Please try again.');
       setSuccessMessage('');
     }
@@ -159,11 +159,6 @@ export default function RealtorSettings() {
     setError('');
 
     try {
-      const selectedCitiesList = Array.from(selectedCities).map(cityKey => {
-        const city = nearbyCities.find(c => `${c.name}, ${c.state}` === cityKey);
-        return city;
-      }).filter(Boolean);
-
       const response = await fetch('/api/realtor/profile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -182,11 +177,14 @@ export default function RealtorSettings() {
         setSelectedCities(new Set());
         setTargetCity('');
         setSuccessMessage('Cities saved successfully!');
-        setTimeout(() => setSuccessMessage(''), 3000);
+        // Redirect to dashboard after successful save
+        setTimeout(() => {
+          router.push('/realtor-dashboard');
+        }, 1500);
       } else {
         setError('Failed to save settings');
       }
-    } catch (err) {
+    } catch {
       setError('Failed to save settings');
     } finally {
       setLoading(false);
@@ -194,100 +192,98 @@ export default function RealtorSettings() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 flex flex-col" style={{height: '100vh', overflow: 'hidden'}}>
+    <div className="h-screen bg-slate-900 flex flex-col overflow-hidden">
       {/* Header */}
-      <header className="bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50 p-4">
+      <header className="bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50 p-3 flex-shrink-0">
         <div className="flex items-center justify-between max-w-md mx-auto">
           <Link href="/realtor-dashboard" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">O</span>
+            <div className="w-7 h-7 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-xs">O</span>
             </div>
-            <span className="text-lg font-bold text-white">OwnerFi</span>
+            <span className="text-base font-bold text-white">OwnerFi</span>
           </Link>
-          <span className="text-slate-400 text-sm">Settings</span>
+          <span className="text-slate-400 text-xs">Settings</span>
         </div>
       </header>
 
       {/* Main Content - Single Screen */}
-      <div className="flex-1 px-4 py-4 max-w-md mx-auto w-full">
+      <div className="flex-1 px-4 py-2 max-w-md mx-auto w-full overflow-hidden flex flex-col">
         
         {/* Title */}
-        <div className="text-center mb-6">
-          <h1 className="text-xl font-bold text-white mb-1">Service Area</h1>
-          <p className="text-slate-300 text-sm">Set up your coverage area</p>
+        <div className="text-center mb-3 flex-shrink-0">
+          <h1 className="text-lg font-bold text-white mb-1">Service Area</h1>
+          <p className="text-slate-300 text-xs">Set up your coverage area</p>
         </div>
 
         {error && (
-          <div className="bg-red-500/20 border border-red-400/30 rounded-lg p-3 mb-4">
-            <p className="text-red-300 text-sm">{error}</p>
+          <div className="bg-red-500/20 border border-red-400/30 rounded-lg p-2 mb-2 flex-shrink-0">
+            <p className="text-red-300 text-xs">{error}</p>
           </div>
         )}
 
         {successMessage && (
-          <div className="bg-emerald-500/20 border border-emerald-400/30 rounded-lg p-3 mb-4">
-            <p className="text-emerald-300 text-sm">{successMessage}</p>
+          <div className="bg-emerald-500/20 border border-emerald-400/30 rounded-lg p-2 mb-2 flex-shrink-0">
+            <p className="text-emerald-300 text-xs">{successMessage}</p>
           </div>
         )}
 
         {/* Current Saved Cities */}
-        {loadingCurrentCities ? (
-          <div className="mb-6">
-            <h3 className="text-white font-medium mb-3">Current Cities</h3>
-            <div className="bg-slate-800/50 border border-slate-700/50 rounded-lg p-4 text-center">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-emerald-400 mx-auto"></div>
-              <p className="text-slate-400 text-sm mt-2">Loading cities...</p>
-            </div>
-          </div>
-        ) : currentSavedCities.length > 0 ? (
-          <div className="mb-6">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-white font-medium">
-                Current Cities ({currentSavedCities.length})
-              </h3>
-              <button
-                onClick={fetchCurrentCities}
-                className="text-emerald-400 hover:text-emerald-300 text-xs font-medium"
-              >
-                Refresh
-              </button>
-            </div>
-            <div className="bg-slate-800/50 border border-slate-700/50 rounded-lg p-3 max-h-48 overflow-y-auto">
-              <div className="space-y-2">
-                {[...currentSavedCities].sort().map((city) => (
-                  <div
-                    key={city}
-                    className="flex items-center justify-between p-2 rounded-lg hover:bg-slate-700/30 transition-colors"
-                  >
-                    <span className="text-white text-sm">{city}</span>
-                    <button
-                      onClick={() => handleRemoveCity(city)}
-                      disabled={loading}
-                      className="text-red-400 hover:text-red-300 text-xs font-medium disabled:opacity-50"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                ))}
+        <div className="flex-shrink-0 mb-2">
+          {loadingCurrentCities ? (
+            <div>
+              <h3 className="text-white font-medium mb-2 text-sm">Current Cities</h3>
+              <div className="bg-slate-800/50 border border-slate-700/50 rounded-lg p-3 text-center">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-emerald-400 mx-auto"></div>
+                <p className="text-slate-400 text-xs mt-1">Loading...</p>
               </div>
             </div>
-            <p className="text-slate-400 text-xs mt-2">
-              Click "Remove" next to any city you no longer want to serve
-            </p>
-          </div>
-        ) : (
-          <div className="mb-6">
-            <h3 className="text-white font-medium mb-3">Current Cities</h3>
-            <div className="bg-slate-800/50 border border-slate-700/50 rounded-lg p-4 text-center">
-              <p className="text-slate-400 text-sm">No cities saved yet</p>
-              <p className="text-slate-500 text-xs mt-1">Use the form below to add cities to your service area</p>
+          ) : currentSavedCities.length > 0 ? (
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-white font-medium text-sm">
+                  Current Cities ({currentSavedCities.length})
+                </h3>
+                <button
+                  onClick={fetchCurrentCities}
+                  className="text-emerald-400 hover:text-emerald-300 text-xs font-medium"
+                >
+                  Refresh
+                </button>
+              </div>
+              <div className="bg-slate-800/50 border border-slate-700/50 rounded-lg p-2 max-h-20 overflow-y-auto">
+                <div className="space-y-1">
+                  {[...currentSavedCities].sort().map((city) => (
+                    <div
+                      key={city}
+                      className="flex items-center justify-between p-1 rounded hover:bg-slate-700/30 transition-colors"
+                    >
+                      <span className="text-white text-xs">{city}</span>
+                      <button
+                        onClick={() => handleRemoveCity(city)}
+                        disabled={loading}
+                        className="text-red-400 hover:text-red-300 text-xs font-medium disabled:opacity-50"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
-          </div>
-        )}
+          ) : (
+            <div>
+              <h3 className="text-white font-medium mb-2 text-sm">Current Cities</h3>
+              <div className="bg-slate-800/50 border border-slate-700/50 rounded-lg p-3 text-center">
+                <p className="text-slate-400 text-xs">No cities saved yet</p>
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Add New Cities */}
-        <div className="mb-4">
-          <h3 className="text-white font-medium mb-3">Add New Cities</h3>
-          <label className="block text-sm font-medium text-white mb-2">Primary City</label>
+        <div className="flex-shrink-0 mb-2">
+          <h3 className="text-white font-medium mb-2 text-sm">Add New Cities</h3>
+          <label className="block text-xs font-medium text-white mb-1">Primary City</label>
           <div className="flex gap-2">
             <div className="flex-1">
               <GooglePlacesAutocomplete
@@ -298,7 +294,7 @@ export default function RealtorSettings() {
             </div>
             <button
               onClick={handleCitySearch}
-              className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-3 rounded-lg font-medium transition-colors"
+              className="bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-2 rounded-lg font-medium transition-colors text-sm"
             >
               Find
             </button>
@@ -307,19 +303,19 @@ export default function RealtorSettings() {
 
         {/* Cities Selection */}
         {nearbyCities.length > 0 && (
-          <div className="mb-6">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-white font-medium">
-                Select Cities to Serve ({selectedCities.size} selected)
+          <div className="flex-1 flex flex-col min-h-0">
+            <div className="flex items-center justify-between mb-2 flex-shrink-0">
+              <h3 className="text-white font-medium text-sm">
+                Select Cities ({selectedCities.size} selected)
               </h3>
               <div className="flex gap-2">
                 <button
                   onClick={selectAllCities}
                   className="text-emerald-400 hover:text-emerald-300 text-xs font-medium"
                 >
-                  Select All
+                  All
                 </button>
-                <span className="text-slate-600">|</span>
+                <span className="text-slate-400">|</span>
                 <button
                   onClick={deselectAllCities}
                   className="text-slate-400 hover:text-white text-xs font-medium"
@@ -328,8 +324,8 @@ export default function RealtorSettings() {
                 </button>
               </div>
             </div>
-            <div className="bg-slate-800/50 border border-slate-700/50 rounded-lg p-3 max-h-64 overflow-y-auto">
-              <div className="space-y-2">
+            <div className="bg-slate-800/50 border border-slate-700/50 rounded-lg p-2 flex-1 overflow-y-auto">
+              <div className="space-y-1">
                 {nearbyCities.map((city) => {
                   const cityKey = `${city.name}, ${city.state}`;
                   const isSelected = selectedCities.has(cityKey);
@@ -337,16 +333,16 @@ export default function RealtorSettings() {
                   return (
                     <label
                       key={cityKey}
-                      className="flex items-center justify-between p-2 rounded-lg cursor-pointer hover:bg-slate-700/30 transition-colors"
+                      className="flex items-center justify-between p-1 rounded cursor-pointer hover:bg-slate-700/30 transition-colors"
                     >
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2">
                         <input
                           type="checkbox"
                           checked={isSelected}
                           onChange={() => handleCityToggle(cityKey)}
-                          className="w-4 h-4 text-emerald-500 bg-slate-700 border-slate-600 rounded focus:ring-emerald-400 focus:ring-2"
+                          className="w-3 h-3 text-emerald-500 bg-slate-700 border-slate-600 rounded focus:ring-emerald-400 focus:ring-1"
                         />
-                        <span className="text-white text-sm">{city.name}, {city.state}</span>
+                        <span className="text-white text-xs">{city.name}, {city.state}</span>
                       </div>
                       <span className="text-slate-400 text-xs">{city.distance.toFixed(1)} mi</span>
                     </label>
@@ -358,20 +354,25 @@ export default function RealtorSettings() {
         )}
 
         {/* Action Buttons */}
-        <div className="space-y-3">
-          {selectedCities.size > 0 && (
+        <div className="flex-shrink-0 space-y-2 pt-2">
+          {nearbyCities.length > 0 && (
             <button
               onClick={handleSave}
-              disabled={loading}
-              className="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-3 px-4 rounded-lg font-medium transition-colors disabled:opacity-50"
+              disabled={loading || selectedCities.size === 0}
+              className="w-full bg-emerald-500 hover:bg-emerald-600 disabled:bg-slate-600 disabled:cursor-not-allowed text-white py-2 px-4 rounded-lg font-medium transition-colors disabled:opacity-50 text-sm"
             >
-              {loading ? 'Saving...' : `Save ${selectedCities.size} Cities`}
+              {loading 
+                ? 'Saving...' 
+                : selectedCities.size === 0 
+                  ? 'Select cities to save' 
+                  : `Save ${selectedCities.size} Cities`
+              }
             </button>
           )}
           
           <Link
             href="/realtor-dashboard"
-            className="block w-full text-center text-slate-400 hover:text-white py-2 transition-colors"
+            className="block w-full text-center text-slate-400 hover:text-white py-1 transition-colors text-xs"
           >
             ← Back to Dashboard
           </Link>

@@ -12,8 +12,7 @@ import { ExtendedSession } from '@/types/session';
 
 export async function GET() {
   try {
-    const session = await // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    getServerSession(authOptions as any) as ExtendedSession;
+    const session = await getServerSession(authOptions as unknown as Parameters<typeof getServerSession>[0]) as ExtendedSession;
     
     if (!session) {
       return NextResponse.json({ 

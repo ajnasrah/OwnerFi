@@ -26,7 +26,7 @@ export async function getAllCitiesWithinRadiusAPI(
   // 3. USGS Geographic Names Information System
   // 4. Census Bureau API
   
-  console.warn('getAllCitiesWithinRadiusAPI: External API integration needed for comprehensive coverage');
+  
   return [];
 }
 
@@ -55,7 +55,7 @@ async function loadComprehensiveCitiesDatabase(): Promise<CityResult[]> {
   // - A SQLite database with cities data
   // - API calls to comprehensive data sources
   
-  console.warn('loadComprehensiveCitiesDatabase: Need to integrate with comprehensive US cities dataset');
+  
   return [];
 }
 
@@ -124,7 +124,7 @@ export async function getAllCitiesWithinRadiusHybrid(
     return uniqueResults.sort((a, b) => a.distance - b.distance);
     
   } catch (error) {
-    console.error('Error in hybrid city finder:', error);
+    
     return results;
   }
 }

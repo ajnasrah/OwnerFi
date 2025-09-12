@@ -1,4 +1,4 @@
-import { cities, City } from './cities';
+import { cities } from './cities';
 
 interface NearbyCity {
   name: string;

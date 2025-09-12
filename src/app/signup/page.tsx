@@ -93,7 +93,7 @@ export default function SignUp() {
         router.push('/auth/signin');
       }, 2000);
       
-    } catch (err) {
+    } catch {
       setError('Something went wrong. Please try again.');
       setLoading(false);
     }
@@ -105,21 +105,20 @@ export default function SignUp() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900">
-      <div className="py-8 px-6">
-        <div className="max-w-md mx-auto w-full">
-        <div className="bg-slate-800/50 backdrop-blur-lg border border-slate-700/50 rounded-2xl p-8">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-white mb-3">Find your home</h1>
-            <p className="text-white font-normal mb-4">Join thousands who found homes through owner financing</p>
-            <div className="space-y-2">
+    <div className="h-screen bg-slate-900 flex items-center justify-center overflow-hidden">
+      <div className="w-full max-w-lg mx-auto px-4">
+        <div className="bg-slate-800/50 backdrop-blur-lg border border-slate-700/50 rounded-2xl p-4 max-h-[95vh] overflow-y-auto">
+          <div className="text-center mb-4">
+            <h1 className="text-xl sm:text-2xl font-bold text-white mb-2">Skip the bank. Buy direct.</h1>
+            <p className="text-white font-normal mb-3 text-sm">Real people selling real homes without traditional mortgages</p>
+            <div className="space-y-1 text-sm">
               <p className="text-white">
                 Already have an account?{' '}
                 <Link href="/auth/signin" className="text-emerald-400 hover:text-emerald-300 font-semibold transition-colors">
                   Sign In
                 </Link>
               </p>
-              <p className="text-sm text-white">
+              <p className="text-xs text-white">
                 Real estate professional?{' '}
                 <Link href="/realtor-signup" className="text-blue-400 hover:text-blue-300 font-semibold transition-colors">
                   Join as a Realtor
@@ -129,67 +128,67 @@ export default function SignUp() {
           </div>
 
           {error && (
-            <div className="mb-6 bg-red-600/20 backdrop-blur-lg border border-red-500/30 rounded-xl p-4">
-              <p className="text-red-300 font-semibold">{error}</p>
+            <div className="mb-3 bg-red-600/20 backdrop-blur-lg border border-red-500/30 rounded-lg p-3">
+              <p className="text-red-300 font-semibold text-sm">{error}</p>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-3">
             <div>
-              <label className="block text-sm font-semibold text-white mb-3">Full name</label>
+              <label className="block text-xs font-semibold text-white mb-1">Full name</label>
               <input
                 type="text"
                 required
-                className="w-full px-4 py-4 bg-emerald-500/10 border border-emerald-400/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 text-white placeholder-slate-400 font-normal"
-                placeholder="John Smith"
+                className="w-full px-3 py-2 bg-emerald-500/10 border border-emerald-400/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 text-white placeholder-slate-400 font-normal text-sm"
+                placeholder="Your full name"
                 value={formData.name}
                 onChange={(e) => handleInputChange('name', e.target.value)}
               />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-white mb-3">Email address</label>
+              <label className="block text-xs font-semibold text-white mb-1">Email address</label>
               <input
                 type="email"
                 required
-                className="w-full px-4 py-4 bg-emerald-500/10 border border-emerald-400/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 text-white placeholder-slate-400 font-normal"
-                placeholder="john@example.com"
+                className="w-full px-3 py-2 bg-emerald-500/10 border border-emerald-400/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 text-white placeholder-slate-400 font-normal text-sm"
+                placeholder="Enter your email"
                 value={formData.email}
                 onChange={(e) => handleInputChange('email', e.target.value)}
               />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-white mb-3">Phone number</label>
+              <label className="block text-xs font-semibold text-white mb-1">Phone number</label>
               <input
                 type="tel"
                 required
-                className="w-full px-4 py-4 bg-emerald-500/10 border border-emerald-400/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 text-white placeholder-slate-400 font-normal"
-                placeholder="(555) 123-4567"
+                className="w-full px-3 py-2 bg-emerald-500/10 border border-emerald-400/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 text-white placeholder-slate-400 font-normal text-sm"
+                placeholder="Your phone number"
                 value={formData.phone}
                 onChange={(e) => handleInputChange('phone', e.target.value)}
               />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-white mb-3">Password</label>
+              <label className="block text-xs font-semibold text-white mb-1">Password</label>
               <input
                 type="password"
                 required
-                className="w-full px-4 py-4 bg-emerald-500/10 border border-emerald-400/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 text-white placeholder-slate-400 font-normal"
-                placeholder="Choose a strong password"
+                className="w-full px-3 py-2 bg-emerald-500/10 border border-emerald-400/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 text-white placeholder-slate-400 font-normal text-sm"
+                placeholder="Create password"
                 value={formData.password}
                 onChange={(e) => handleInputChange('password', e.target.value)}
               />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-white mb-3">Confirm password</label>
+              <label className="block text-xs font-semibold text-white mb-1">Confirm password</label>
               <input
                 type="password"
                 required
-                className="w-full px-4 py-4 bg-emerald-500/10 border border-emerald-400/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 text-white placeholder-slate-400 font-normal"
-                placeholder="Confirm your password"
+                className="w-full px-3 py-2 bg-emerald-500/10 border border-emerald-400/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 text-white placeholder-slate-400 font-normal text-sm"
+                placeholder="Re-enter password"
                 value={formData.confirmPassword}
                 onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
               />
@@ -198,31 +197,30 @@ export default function SignUp() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-300 hover:scale-105 shadow-2xl shadow-emerald-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white py-2.5 px-4 rounded-lg font-semibold text-sm transition-all duration-200 shadow-lg shadow-emerald-500/25 disabled:opacity-50 disabled:cursor-not-allowed mt-4"
             >
               {loading ? 'Creating account...' : 'Create account'}
             </button>
           </form>
 
-          <div className="mt-6 bg-emerald-500/10 border border-emerald-400/30 rounded-xl p-4">
-            <h3 className="font-bold text-white mb-3">What you get:</h3>
-            <ul className="space-y-2 text-sm text-white">
+          <div className="mt-3 bg-emerald-500/10 border border-emerald-400/30 rounded-lg p-3">
+            <h3 className="font-bold text-white mb-2 text-sm">Why people choose OwnerFi:</h3>
+            <ul className="space-y-1 text-xs text-white">
               <li className="flex items-center">
-                <div className="w-2 h-2 bg-emerald-400 rounded-full mr-3"></div>
-                Direct access to owner-financed homes
+                <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full mr-2"></div>
+                No bank approval needed
               </li>
               <li className="flex items-center">
-                <div className="w-2 h-2 bg-emerald-400 rounded-full mr-3"></div>
-                Flexible financing terms
+                <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full mr-2"></div>
+                Lower down payments available  
               </li>
               <li className="flex items-center">
-                <div className="w-2 h-2 bg-emerald-400 rounded-full mr-3"></div>
-                Professional agent support
+                <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full mr-2"></div>
+                Real sellers, real properties
               </li>
             </ul>
           </div>
 
-        </div>
         </div>
       </div>
     </div>

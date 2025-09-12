@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSessionWithRole } from '@/lib/auth-utils';
-import { FirebaseDB } from '@/lib/firebase-db';
 import { db } from '@/lib/firebase';
 import Stripe from 'stripe';
 import { UserWithRealtorData } from '@/lib/realtor-models';
@@ -31,10 +30,19 @@ export async function GET(_: NextRequest) {
     }
 
     // Get user data from new system
-    const userData = await FirebaseDB.getDocument('users', session.user.id!);
-    if (!userData) {
+    if (!db) {
       return NextResponse.json({ subscriptions: [] });
     }
+    
+    const { getDoc, doc } = await import('firebase/firestore');
+    const userDocRef = doc(db, 'users', session.user.id!);
+    const userDocSnap = await getDoc(userDocRef);
+    
+    if (!userDocSnap.exists()) {
+      return NextResponse.json({ subscriptions: [] });
+    }
+    
+    const userData = { id: userDocSnap.id, ...userDocSnap.data() };
 
     const realtorData = (userData as UserWithRealtorData).realtorData;
     if (!realtorData?.stripeCustomerId) {
@@ -85,13 +93,25 @@ export async function POST(_: NextRequest) {
     }
 
     // Get user data from new system
-    const userData = await FirebaseDB.getDocument('users', session.user.id!);
-    if (!userData) {
+    if (!db) {
+      return NextResponse.json(
+        { error: 'Database not available' },
+        { status: 500 }
+      );
+    }
+    
+    const { getDoc, doc, updateDoc } = await import('firebase/firestore');
+    const userDocRef = doc(db, 'users', session.user.id!);
+    const userDocSnap = await getDoc(userDocRef);
+    
+    if (!userDocSnap.exists()) {
       return NextResponse.json(
         { error: 'User profile not found' },
         { status: 404 }
       );
     }
+    
+    const userData = { id: userDocSnap.id, ...userDocSnap.data() };
 
     const realtorData = (userData as UserWithRealtorData).realtorData;
     
@@ -125,7 +145,7 @@ export async function POST(_: NextRequest) {
             updatedAt: new Date()
           };
 
-          await FirebaseDB.updateDocument('users', session.user.id!, {
+          await updateDoc(userDocRef, {
             realtorData: updatedRealtorData,
             updatedAt: new Date()
           });
@@ -155,7 +175,7 @@ export async function POST(_: NextRequest) {
           updatedAt: new Date()
         };
 
-        await FirebaseDB.updateDocument('users', session.user.id!, {
+        await updateDoc(userDocRef, {
           realtorData: updatedRealtorData,
           updatedAt: new Date()
         });

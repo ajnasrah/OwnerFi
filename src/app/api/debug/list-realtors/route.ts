@@ -9,22 +9,7 @@ export async function GET() {
       { field: 'role', operator: '==', value: 'realtor' }
     ]);
     
-    const realtorList = realtors.map((realtor: {
-      id: string;
-      email: string;
-      createdAt?: { seconds: number };
-      realtorData?: {
-        firstName?: string;
-        lastName?: string;
-        serviceCities?: string[];
-        createdAt?: { seconds: number };
-        serviceArea?: {
-          primaryCity?: { name: string; state: string };
-        };
-        [key: string]: unknown;
-      };
-      [key: string]: unknown;
-    }) => {
+    const realtorList = (realtors as any[]).map((realtor: any) => {
       const realtorData = realtor.realtorData || {};
       const serviceArea = realtorData.serviceArea || {};
       

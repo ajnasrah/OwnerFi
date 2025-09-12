@@ -35,8 +35,14 @@ export class FirebaseDB {
   
   private static checkFirebase() {
     if (!db) {
+      // During build time, Firebase might not be initialized
+      // Return a more graceful error that won't break the build
+      if (process.env.NODE_ENV === 'production' && !process.env.NEXT_PUBLIC_FIREBASE_API_KEY) {
+        return false;
+      }
       throw new Error('Firebase not initialized');
     }
+    return true;
   }
   
   // Generic document operations
@@ -45,7 +51,9 @@ export class FirebaseDB {
     data: Omit<T, 'id' | 'createdAt' | 'updatedAt'>,
     customId?: string
   ): Promise<T> {
-    FirebaseDB.checkFirebase();
+    if (!FirebaseDB.checkFirebase()) {
+      throw new Error('Database not available');
+    }
     
     const id = customId || generateFirebaseId();
     const now = serverTimestamp();
@@ -62,7 +70,9 @@ export class FirebaseDB {
   }
 
   static async getDocument<T>(collectionName: string, id: string): Promise<T | null> {
-    FirebaseDB.checkFirebase();
+    if (!FirebaseDB.checkFirebase()) {
+      throw new Error('Database not available');
+    }
     const docRef = doc(db!, collectionName, id);
     const docSnap = await getDoc(docRef);
     
@@ -76,7 +86,9 @@ export class FirebaseDB {
     id: string, 
     updates: Partial<T>
   ): Promise<void> {
-    FirebaseDB.checkFirebase();
+    if (!FirebaseDB.checkFirebase()) {
+      throw new Error('Database not available');
+    }
     const docRef = doc(db!, collectionName, id);
     await updateDoc(docRef, {
       ...updates,
@@ -85,7 +97,9 @@ export class FirebaseDB {
   }
 
   static async deleteDocument(collectionName: string, id: string): Promise<void> {
-    FirebaseDB.checkFirebase();
+    if (!FirebaseDB.checkFirebase()) {
+      throw new Error('Database not available');
+    }
     const docRef = doc(db!, collectionName, id);
     await deleteDoc(docRef);
   }
@@ -95,7 +109,9 @@ export class FirebaseDB {
     conditions: { field: string; operator: WhereFilterOp; value: unknown }[],
     limitCount?: number
   ): Promise<T[]> {
-    FirebaseDB.checkFirebase();
+    if (!FirebaseDB.checkFirebase()) {
+      throw new Error('Database not available');
+    }
     let q = query(collection(db!, collectionName));
     
     // Add where conditions
@@ -234,7 +250,9 @@ export class FirebaseDB {
     role: 'buyer' | 'realtor';
     profileData: Record<string, unknown>;
   }): Promise<{ user: User; profile: BuyerProfile | RealtorProfile }> {
-    FirebaseDB.checkFirebase();
+    if (!FirebaseDB.checkFirebase()) {
+      throw new Error('Database not available');
+    }
     return runTransaction(db!, async (transaction) => {
       // Create user first
       const userId = generateFirebaseId();
@@ -279,7 +297,9 @@ export class FirebaseDB {
     creditsCost: number;
     purchasePrice: number;
   }): Promise<{ purchase: LeadPurchase; newBalance: number }> {
-    FirebaseDB.checkFirebase();
+    if (!FirebaseDB.checkFirebase()) {
+      throw new Error('Database not available');
+    }
     return runTransaction(db!, async (transaction) => {
       // Get current realtor profile
       const realtorRef = doc(db!, COLLECTIONS.REALTOR_PROFILES, data.realtorId);

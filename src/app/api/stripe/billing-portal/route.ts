@@ -42,7 +42,7 @@ export async function GET(_: NextRequest) {
     }
 
     // Only show subscriptions if user has a subscription plan (4 or 10 credits)
-    const currentPlan = realtorData.currentPlan;
+    const currentPlan = (realtorData as any).currentPlan;
     if (!currentPlan || !SUBSCRIPTION_PACKAGES.includes(currentPlan)) {
       return NextResponse.json({ subscriptions: [] });
     }

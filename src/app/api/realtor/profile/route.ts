@@ -25,10 +25,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: {
-        targetCity: realtorData.targetCity || '',
-        serviceCities: realtorData.serviceCities || [],
-        totalCitiesServed: realtorData.totalCitiesServed || 0,
-        serviceArea: realtorData.serviceArea || null
+        targetCity: (realtorData as any).targetCity || '',
+        serviceCities: (realtorData as any).serviceCities || [],
+        totalCitiesServed: (realtorData as any).totalCitiesServed || 0,
+        serviceArea: (realtorData as any).serviceArea || null
       }
     });
 
@@ -137,15 +137,15 @@ export async function DELETE(request: NextRequest) {
     }
 
     const currentRealtorData = (userData as UserWithRealtorData).realtorData || {};
-    const currentServiceCities = currentRealtorData.serviceCities || [];
+    const currentServiceCities = (currentRealtorData as any).serviceCities || [];
 
     // Remove the specified city
     const updatedServiceCities = (currentServiceCities as string[]).filter((city: string) => city !== cityToRemove);
 
     // Update the service area structure as well
     const updatedServiceArea = {
-      ...currentRealtorData.serviceArea,
-      nearbyCities: (currentRealtorData.serviceArea?.nearbyCities as any[])?.filter((city: any) => 
+      ...(currentRealtorData as any).serviceArea,
+      nearbyCities: ((currentRealtorData as any).serviceArea?.nearbyCities as any[])?.filter((city: any) => 
         `${city.name}, ${city.state}` !== cityToRemove
       ) || [],
       totalCitiesServed: updatedServiceCities.length,

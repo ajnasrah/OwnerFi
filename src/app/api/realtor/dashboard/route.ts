@@ -229,7 +229,7 @@ async function getAvailableLeads(userId: string, realtorData: Record<string, unk
     // Sort by creation date (newest first)
     availableLeads.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
-    return availableLeads.slice(0, 20); // Limit to 20 most recent
+    return availableLeads.slice(0, 20) as any; // Limit to 20 most recent
 
   } catch (error) {
     return [];

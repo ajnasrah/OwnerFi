@@ -273,7 +273,7 @@ async function testMatching() {
     else results.summary.failed++;
     
     
-  } catch {
+  } catch (error) {
     results.summary.failed++;
   }
   

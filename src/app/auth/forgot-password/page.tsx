@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 export default function ForgotPassword() {
@@ -29,7 +28,7 @@ export default function ForgotPassword() {
       } else {
         setSent(true);
       }
-    } catch (err) {
+    } catch {
       setError('Something went wrong. Please try again.');
     } finally {
       setLoading(false);
@@ -39,15 +38,15 @@ export default function ForgotPassword() {
   if (sent) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4 py-8">
-        <div className="w-full max-w-lg bg-white rounded-3xl shadow-2xl p-10">
+        <div className="max-w-lg bg-white rounded-3xl shadow-2xl p-10">
           <div className="text-center">
             <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">Check Your Email</h2>
-            <p className="text-gray-600 mb-6">
+            <h2 className="text-2xl font-bold text-slate-800 mb-4">Check Your Email</h2>
+            <p className="text-slate-600 mb-6">
               We've sent password reset instructions to <strong>{email}</strong>
             </p>
             <div className="space-y-4">
@@ -75,10 +74,10 @@ export default function ForgotPassword() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4 py-8">
-      <div className="w-full max-w-lg bg-white rounded-3xl shadow-2xl p-10">
+      <div className="max-w-lg bg-white rounded-3xl shadow-2xl p-10">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">Reset Password</h1>
-          <p className="text-gray-600">
+          <h1 className="text-3xl font-bold text-slate-800 mb-2">Reset Password</h1>
+          <p className="text-slate-600">
             Enter email to reset password
           </p>
         </div>
@@ -91,7 +90,7 @@ export default function ForgotPassword() {
           )}
 
           <div>
-            <label className="block text-sm font-semibold text-gray-800 mb-3">
+            <label className="block text-sm font-semibold text-slate-800 mb-3">
               Email Address
             </label>
             <input
@@ -99,7 +98,7 @@ export default function ForgotPassword() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500 text-lg"
+              className="w-full p-4 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-900 placeholder-slate-500 text-lg"
               placeholder="Enter your email address"
             />
           </div>
@@ -107,7 +106,7 @@ export default function ForgotPassword() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 text-white py-4 px-4 rounded-2xl hover:bg-blue-700 transition-colors font-semibold text-lg disabled:bg-gray-400 disabled:cursor-not-allowed shadow-lg transform active:scale-95"
+            className="w-full bg-blue-600 text-white py-4 px-4 rounded-2xl hover:bg-blue-700 transition-colors font-semibold text-lg disabled:bg-slate-400 disabled:cursor-not-allowed shadow-lg transform active:scale-95"
           >
             {loading ? (
               <span className="flex items-center justify-center">

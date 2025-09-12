@@ -18,8 +18,7 @@ const CREDIT_PACKAGES = {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    getServerSession(authOptions as any) as ExtendedSession;
+    const session = await getServerSession(authOptions as unknown as Parameters<typeof getServerSession>[0]) as ExtendedSession;
     
     if (!session?.user?.email || session.user.role !== 'realtor') {
       return NextResponse.json({ error: 'Realtor access required' }, { status: 401 });
@@ -67,7 +66,7 @@ export async function POST(request: NextRequest) {
       checkoutUrl: checkoutSession.url
     });
 
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: 'Failed to create checkout session' },
       { status: 500 }

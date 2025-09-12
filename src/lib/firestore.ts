@@ -59,8 +59,7 @@ export const firestoreHelpers = {
     try {
       const db = getSafeDb();
       const docRef = doc(db, collectionName, docId);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await updateDoc(docRef, data as any);
+      await updateDoc(docRef, data as Record<string, unknown>);
     } catch (error) {
       throw error;
     }

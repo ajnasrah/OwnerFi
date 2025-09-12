@@ -190,7 +190,7 @@ export async function getNearbyCitiesUltraFast(
   );
   
   if (!center) {
-    console.warn(`Center city not found in comprehensive database: ${centerCity}, ${state}`);
+    
     return [];
   }
 

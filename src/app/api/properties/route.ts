@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
       count: properties.length 
     });
 
-  } catch (error) {
+  } catch {
 
     return NextResponse.json(
       { error: 'Failed to fetch properties' },

@@ -1,12 +1,10 @@
 // Database cleanup and integrity utilities for OwnerFi
 import { 
   collection, 
-  query, 
-  where, 
+  query,
   getDocs, 
   doc, 
-  deleteDoc, 
-  updateDoc,
+  deleteDoc,
   serverTimestamp,
   writeBatch,
   Timestamp

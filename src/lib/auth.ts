@@ -1,17 +1,16 @@
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { compare } from 'bcryptjs';
 import { 
-  doc, 
-  getDoc, 
   collection, 
   query, 
   where, 
   getDocs
 } from 'firebase/firestore';
 import { db } from './firebase';
-import { ExtendedUser, ExtendedSession } from '@/types/session';
+import { ExtendedUser } from '@/types/session';
 import type { Session } from 'next-auth';
 import type { JWT } from 'next-auth/jwt';
+// NextAuthOptions type doesn't exist in newer versions, use a generic type
 
 export const authOptions = {
   providers: [
@@ -81,8 +80,7 @@ export const authOptions = {
       token: JWT & { role?: string }; 
     }) {
       if (token && session.user) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        session.user.id = (token as any).sub!;
+        session.user.id = (token as JWT & { sub: string }).sub;
         session.user.role = token.role;
       }
       return session;

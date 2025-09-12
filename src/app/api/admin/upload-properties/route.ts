@@ -22,8 +22,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Strict admin access control
-    const session = await // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    getServerSession(authOptions as any) as ExtendedSession | null;
+    const session = await getServerSession(authOptions as unknown as Parameters<typeof getServerSession>[0]) as ExtendedSession | null;
     
     if (!session?.user || (session as ExtendedSession).user.role !== 'admin') {
       return NextResponse.json(
@@ -56,7 +55,7 @@ export async function POST(request: NextRequest) {
     });
     
     // Basic CSV parsing (simplified without GHL dependency)
-    const _csvContent = buffer.toString('utf-8');
+    buffer.toString('utf-8');
     const parseResult: { 
       success: PropertyListing[], 
       errors: string[], 

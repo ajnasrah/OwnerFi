@@ -42,7 +42,7 @@ export async function GET(_: NextRequest) {
     }
 
     // Only show subscriptions if user has a subscription plan (4 or 10 credits)
-    const currentPlan = (realtorData as any).currentPlan;
+    const currentPlan = (realtorData as unknown as { currentPlan?: string }).currentPlan;
     if (!currentPlan || !SUBSCRIPTION_PACKAGES.includes(currentPlan)) {
       return NextResponse.json({ subscriptions: [] });
     }
@@ -54,18 +54,18 @@ export async function GET(_: NextRequest) {
       limit: 10
     });
 
-    const formattedSubscriptions = subscriptions.data.map((sub: any) => ({
+    const formattedSubscriptions = subscriptions.data.map((sub: Stripe.Subscription) => ({
       id: sub.id,
       status: sub.status,
-      current_period_end: sub.current_period_end,
-      credits: sub.metadata.credits ? parseInt(sub.metadata.credits) : 0,
-      price: sub.items.data[0]?.price.unit_amount ? (sub.items.data[0].price.unit_amount / 100) : 0,
+      current_period_end: (sub as unknown as { current_period_end: number }).current_period_end,
+      credits: sub.metadata?.credits ? parseInt(sub.metadata.credits) : 0,
+      price: sub.items.data[0]?.price?.unit_amount ? (sub.items.data[0].price.unit_amount / 100) : 0,
       plan: currentPlan
     }));
 
     return NextResponse.json({ subscriptions: formattedSubscriptions });
 
-  } catch {
+  } catch (error) {
     return NextResponse.json(
       { error: 'Failed to fetch subscriptions' },
       { status: 500 }
@@ -96,7 +96,7 @@ export async function POST(_: NextRequest) {
     const realtorData = (userData as UserWithRealtorData).realtorData;
     
     // Only allow billing portal access if user has active subscription
-    const currentPlan = (realtorData as any)?.currentPlan;
+    const currentPlan = (realtorData as unknown as { currentPlan?: string }).currentPlan;
     if (!currentPlan || !SUBSCRIPTION_PACKAGES.includes(currentPlan)) {
       return NextResponse.json(
         { error: 'No active subscription found' },
@@ -105,7 +105,7 @@ export async function POST(_: NextRequest) {
     }
 
     // Get customer ID
-    let customerId = (realtorData as any)?.stripeCustomerId;
+    let customerId = realtorData?.stripeCustomerId;
 
     // If no customer ID found, try to find customer by email
     if (!customerId) {
@@ -130,7 +130,7 @@ export async function POST(_: NextRequest) {
             updatedAt: new Date()
           });
         }
-      } catch {
+      } catch (error) {
         // Handle error silently
       }
     }
@@ -160,7 +160,7 @@ export async function POST(_: NextRequest) {
           updatedAt: new Date()
         });
 
-      } catch {
+      } catch (error) {
         return NextResponse.json(
           { error: 'Failed to create customer account' },
           { status: 500 }

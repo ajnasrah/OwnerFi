@@ -12,7 +12,7 @@ export default function PrivacyPolicy() {
       <div className="max-w-4xl mx-auto px-6 py-16">
         <div className="bg-white rounded-xl shadow-light p-8 md:p-12">
           <h1 className="text-4xl font-bold text-primary-text mb-8">Privacy Policy</h1>
-          <p className="text-gray-600 mb-8">Last updated: September 3, 2025</p>
+          <p className="text-slate-600 mb-8">Last updated: September 3, 2025</p>
           
           {/* Summary at Top */}
           <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-8">
@@ -28,7 +28,7 @@ export default function PrivacyPolicy() {
             </ul>
           </div>
 
-          <div className="space-y-8 text-lg leading-relaxed text-gray-700">
+          <div className="space-y-8 text-lg leading-relaxed text-slate-700">
             
             <section>
               <h2 className="text-2xl font-semibold text-primary-text mb-4">1. Who We Are</h2>
@@ -105,9 +105,9 @@ export default function PrivacyPolicy() {
                 <p className="text-red-700 mt-2">When you register as a buyer, we may sell your information to multiple real estate agents and brokers. You may receive contact from several professionals regarding properties and services.</p>
               </div>
               
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
-                <p className="font-bold text-gray-800">🛡️ AGENT LIABILITY FIREWALL</p>
-                <p className="text-gray-700 mt-2"><strong>Licensed real estate professionals who purchase leads from us are independent third parties.</strong> We are not responsible for their actions, privacy practices, or how they use your information once sold.</p>
+              <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 mb-4">
+                <p className="font-bold text-slate-800">🛡️ AGENT LIABILITY FIREWALL</p>
+                <p className="text-slate-700 mt-2"><strong>Licensed real estate professionals who purchase leads from us are independent third parties.</strong> We are not responsible for their actions, privacy practices, or how they use your information once sold.</p>
               </div>
               
               <p>Information shared in lead sales includes:</p>
@@ -214,15 +214,15 @@ export default function PrivacyPolicy() {
             <section>
               <h2 className="text-2xl font-semibold text-primary-text mb-4">13. Contact Information</h2>
               <p>If you have questions about this Privacy Policy or our privacy practices, please contact us:</p>
-              <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+              <div className="mt-4 p-4 bg-slate-50 rounded-lg">
                 <p><strong>Email:</strong> admin@prosway.com</p>
                 <p><strong>Address:</strong> 5095 Covington Way<br />Memphis, TN 38134</p>
               </div>
             </section>
 
             <div className="border-t pt-8 mt-8">
-              <p className="text-sm text-gray-500">
-                By using OwnerFi, you acknowledge that you have read, understood, and agree to this Privacy Policy and our <Link href="/terms" className="underline hover:text-gray-700">Terms of Service</Link>.
+              <p className="text-sm text-slate-500">
+                By using OwnerFi, you acknowledge that you have read, understood, and agree to this Privacy Policy and our <Link href="/terms" className="underline hover:text-slate-700">Terms of Service</Link>.
               </p>
             </div>
           </div>

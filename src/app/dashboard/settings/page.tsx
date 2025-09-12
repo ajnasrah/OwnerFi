@@ -31,8 +31,8 @@ export default function BuyerSettings() {
     }
     
     // Strict role checking - buyers only
-    if (status === 'authenticated' && (session as any as ExtendedSession)?.user?.role !== 'buyer') {
-      if ((session as any as ExtendedSession)?.user?.role === 'realtor') {
+    if (status === 'authenticated' && (session as unknown as ExtendedSession)?.user?.role !== 'buyer') {
+      if ((session as unknown as ExtendedSession)?.user?.role === 'realtor') {
         router.push('/realtor/dashboard');
       } else {
         router.push('/auth/signin');
@@ -42,7 +42,7 @@ export default function BuyerSettings() {
 
   // Load existing buyer profile data
   useEffect(() => {
-    if (status === 'authenticated' && (session as any as ExtendedSession)?.user?.role === 'buyer') {
+    if (status === 'authenticated' && (session as unknown as ExtendedSession)?.user?.role === 'buyer') {
       loadProfile();
     }
   }, [status, session]);
@@ -180,7 +180,7 @@ export default function BuyerSettings() {
             </div>
             
             <button
-              onClick={() => signOut({ callbackUrl: '/auth/signin' })}
+              onClick={() => signOut({ callbackUrl: '/' })}
               className="flex flex-col items-center group"
             >
               <div className="w-12 h-12 bg-slate-700/50 hover:bg-red-600/30 rounded-xl flex items-center justify-center transition-all group-hover:scale-110 duration-300">

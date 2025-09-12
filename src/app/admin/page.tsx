@@ -124,7 +124,7 @@ export default function AdminDashboard() {
       if (data.properties) {
         setProperties(data.properties);
       }
-    } catch (_error) {
+    } catch {
     } finally {
       setLoadingProperties(false);
     }
@@ -162,7 +162,7 @@ export default function AdminDashboard() {
       setSelectedProperties([]);
       fetchProperties();
       alert(`${selectedProperties.length} properties deleted successfully`);
-    } catch (_error) {
+    } catch {
       alert('Failed to delete some properties');
     } finally {
       setDeleting(false);
@@ -181,7 +181,7 @@ export default function AdminDashboard() {
         ...(data.resolvedDisputes || [])
       ];
       setDisputes(allDisputes);
-    } catch (_error) {
+    } catch {
     } finally {
       setLoadingDisputes(false);
     }
@@ -227,7 +227,7 @@ export default function AdminDashboard() {
         const error = await response.json();
         alert(`Failed to update: ${error.error}`);
       }
-    } catch (_error) {
+    } catch {
       alert('Failed to update property');
     }
   };
@@ -248,7 +248,7 @@ export default function AdminDashboard() {
         alert(`Dispute ${action}d successfully`);
         fetchDisputes();
       }
-    } catch (_error) {
+    } catch {
       alert('Failed to resolve dispute');
     }
   };
@@ -261,7 +261,7 @@ export default function AdminDashboard() {
         redirect: false 
       });
       router.push('/');
-    } catch (_error) {
+    } catch {
       setIsSigningOut(false);
     }
   };
@@ -275,7 +275,7 @@ export default function AdminDashboard() {
       }
       const data = await response.json();
       setContacts(data.contacts || []);
-    } catch (_error) {
+    } catch {
     } finally {
       setLoadingContacts(false);
     }
@@ -309,7 +309,7 @@ export default function AdminDashboard() {
             <button
               onClick={handleSignOut}
               disabled={isSigningOut}
-              className="absolute top-0 right-0 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm disabled:bg-gray-400 disabled:cursor-not-allowed"
+              className="absolute top-0 right-0 px-4 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-700 transition-colors text-sm disabled:bg-slate-400 disabled:cursor-not-allowed"
             >
               {isSigningOut ? 'Signing out...' : 'Sign Out'}
             </button>
@@ -324,7 +324,7 @@ export default function AdminDashboard() {
               className={`px-6 py-3 rounded-lg font-medium transition-colors ${
                 activeTab === 'upload' 
                   ? 'bg-blue-600 text-white' 
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
               }`}
             >
               📤 Upload Properties
@@ -334,7 +334,7 @@ export default function AdminDashboard() {
               className={`px-6 py-3 rounded-lg font-medium transition-colors ${
                 activeTab === 'manage' 
                   ? 'bg-blue-600 text-white' 
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
               }`}
             >
               🏠 Manage Properties
@@ -344,7 +344,7 @@ export default function AdminDashboard() {
               className={`px-6 py-3 rounded-lg font-medium transition-colors ${
                 activeTab === 'disputes' 
                   ? 'bg-blue-600 text-white' 
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
               }`}
             >
               ⚖️ Disputes
@@ -354,7 +354,7 @@ export default function AdminDashboard() {
               className={`px-6 py-3 rounded-lg font-medium transition-colors ${
                 activeTab === 'contacts' 
                   ? 'bg-blue-600 text-white' 
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
               }`}
             >
               📧 Contact Forms
@@ -364,17 +364,17 @@ export default function AdminDashboard() {
           {/* Upload Tab */}
           {activeTab === 'upload' && (
             <div className="bg-white rounded-xl p-6 shadow-lg">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-6">Upload Properties</h2>
+              <h2 className="text-2xl font-semibold text-slate-900 mb-6">Upload Properties</h2>
               
               <div className="mb-6">
-                <label className="block text-lg font-medium text-gray-700 mb-3">
+                <label className="block text-lg font-medium text-slate-700 mb-3">
                   Select CSV File
                 </label>
                 <input
                   type="file"
                   accept=".csv"
                   onChange={handleFileChange}
-                  className="block w-full text-base text-gray-500 file:mr-4 file:py-3 file:px-6 file:rounded-xl file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-colors"
+                  className="block w-full text-base text-slate-500 file:mr-4 file:py-3 file:px-6 file:rounded-xl file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-colors"
                 />
               </div>
 
@@ -497,9 +497,9 @@ export default function AdminDashboard() {
           {activeTab === 'manage' && (
             <div className="bg-white rounded-xl p-6 shadow-lg">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-semibold text-gray-900">Manage Properties</h2>
+                <h2 className="text-2xl font-semibold text-slate-900">Manage Properties</h2>
                 <div className="flex items-center space-x-3">
-                  <span className="text-sm text-gray-600">
+                  <span className="text-sm text-slate-600">
                     Showing {properties.length} properties {/* TODO: Show total when available */}
                   </span>
                   <button
@@ -526,7 +526,7 @@ export default function AdminDashboard() {
                   <button
                     onClick={fetchProperties}
                     disabled={loadingProperties}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400"
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-slate-400"
                   >
                     {loadingProperties ? 'Loading...' : 'Refresh'}
                   </button>
@@ -535,16 +535,16 @@ export default function AdminDashboard() {
 
               {/* Bulk Actions */}
               {properties.length > 0 && (
-                <div className="flex items-center justify-between bg-gray-50 rounded-lg p-4 mb-6">
+                <div className="flex items-center justify-between bg-slate-50 rounded-lg p-4 mb-6">
                   <div className="flex items-center space-x-4">
                     <label className="flex items-center space-x-2">
                       <input
                         type="checkbox"
                         checked={selectedProperties.length === properties.length && properties.length > 0}
                         onChange={handleSelectAll}
-                        className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                        className="w-5 h-5 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
                       />
-                      <span className="text-gray-700">Select All ({properties.length})</span>
+                      <span className="text-slate-700">Select All ({properties.length})</span>
                     </label>
                     {selectedProperties.length > 0 && (
                       <span className="text-blue-600 font-medium">
@@ -557,7 +557,7 @@ export default function AdminDashboard() {
                     <button
                       onClick={handleDeleteSelected}
                       disabled={deleting}
-                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:bg-gray-400"
+                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:bg-slate-400"
                     >
                       {deleting ? 'Deleting...' : `Permanently Delete ${selectedProperties.length} Properties`}
                     </button>
@@ -569,13 +569,13 @@ export default function AdminDashboard() {
               {loadingProperties ? (
                 <div className="text-center py-12">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-                  <p className="mt-4 text-gray-600">Loading properties...</p>
+                  <p className="mt-4 text-slate-600">Loading properties...</p>
                 </div>
               ) : properties.length === 0 ? (
                 <div className="text-center py-12">
                   <div className="text-6xl mb-4">🏠</div>
-                  <h3 className="text-xl font-semibold text-gray-800 mb-2">No Properties Yet</h3>
-                  <p className="text-gray-600 mb-6">Upload a CSV file to add properties to your system</p>
+                  <h3 className="text-xl font-semibold text-slate-800 mb-2">No Properties Yet</h3>
+                  <p className="text-slate-600 mb-6">Upload a CSV file to add properties to your system</p>
                   <button
                     onClick={() => setActiveTab('upload')}
                     className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -586,33 +586,33 @@ export default function AdminDashboard() {
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full border-collapse bg-white rounded-lg overflow-hidden shadow">
-                    <thead className="bg-gray-50">
+                    <thead className="bg-slate-50">
                       <tr>
                         <th className="p-4 text-left border-b">
                           <input
                             type="checkbox"
                             checked={selectedProperties.length === properties.length && properties.length > 0}
                             onChange={handleSelectAll}
-                            className="w-4 h-4 text-blue-600 border-gray-300 rounded"
+                            className="w-4 h-4 text-blue-600 border-slate-300 rounded"
                           />
                         </th>
-                        <th className="p-4 text-left border-b font-semibold text-gray-700">Image</th>
-                        <th className="p-4 text-left border-b font-semibold text-gray-700">Address</th>
-                        <th className="p-4 text-left border-b font-semibold text-gray-700">City, State</th>
-                        <th className="p-4 text-left border-b font-semibold text-gray-700">Price</th>
-                        <th className="p-4 text-left border-b font-semibold text-gray-700">Beds/Baths</th>
-                        <th className="p-4 text-left border-b font-semibold text-gray-700">Actions</th>
+                        <th className="p-4 text-left border-b font-semibold text-slate-700">Image</th>
+                        <th className="p-4 text-left border-b font-semibold text-slate-700">Address</th>
+                        <th className="p-4 text-left border-b font-semibold text-slate-700">City, State</th>
+                        <th className="p-4 text-left border-b font-semibold text-slate-700">Price</th>
+                        <th className="p-4 text-left border-b font-semibold text-slate-700">Beds/Baths</th>
+                        <th className="p-4 text-left border-b font-semibold text-slate-700">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
                       {properties.map((property) => (
-                        <tr key={property.id} className="border-b hover:bg-gray-50 transition-colors">
+                        <tr key={property.id} className="border-b hover:bg-slate-50 transition-colors">
                           <td className="p-4">
                             <input
                               type="checkbox"
                               checked={selectedProperties.includes(property.id)}
                               onChange={() => handleSelectProperty(property.id)}
-                              className="w-4 h-4 text-blue-600 border-gray-300 rounded"
+                              className="w-4 h-4 text-blue-600 border-slate-300 rounded"
                             />
                           </td>
                           <td className="p-4">
@@ -626,29 +626,29 @@ export default function AdminDashboard() {
                                 onClick={() => window.open(property.imageUrl || '', '_blank')}
                               />
                             ) : (
-                              <div className="w-20 h-16 bg-gray-200 rounded flex items-center justify-center text-gray-400">
+                              <div className="w-20 h-16 bg-slate-200 rounded flex items-center justify-center text-slate-400">
                                 No Image
                               </div>
                             )}
                           </td>
                           <td className="p-4">
-                            <div className="font-medium text-gray-900">{property.address}</div>
+                            <div className="font-medium text-slate-900">{property.address}</div>
                           </td>
-                          <td className="p-4 text-gray-700">{property.city}, {property.state} {property.zipCode}</td>
+                          <td className="p-4 text-slate-700">{property.city}, {property.state} {property.zipCode}</td>
                           <td className="p-4">
                             <div className="font-semibold text-green-600">
                               ${property.listPrice?.toLocaleString() || 'N/A'}
                             </div>
                             {property.monthlyPayment && (
-                              <div className="text-sm text-gray-500">
+                              <div className="text-sm text-slate-500">
                                 ${property.monthlyPayment?.toLocaleString()}/mo
                               </div>
                             )}
                           </td>
-                          <td className="p-4 text-gray-700">
+                          <td className="p-4 text-slate-700">
                             {property.bedrooms || 'N/A'} bed / {property.bathrooms || 'N/A'} bath
                             {property.squareFeet && property.squareFeet > 0 && (
-                              <div className="text-sm text-gray-500">{property.squareFeet.toLocaleString()} sq ft</div>
+                              <div className="text-sm text-slate-500">{property.squareFeet.toLocaleString()} sq ft</div>
                             )}
                           </td>
                           <td className="p-4">
@@ -687,13 +687,13 @@ export default function AdminDashboard() {
             <div className="bg-white rounded-xl p-6 shadow-lg">
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h2 className="text-2xl font-semibold text-gray-900">Lead Disputes</h2>
-                  <p className="text-gray-600">Manage realtor complaints and refund requests</p>
+                  <h2 className="text-2xl font-semibold text-slate-900">Lead Disputes</h2>
+                  <p className="text-slate-600">Manage realtor complaints and refund requests</p>
                 </div>
                 <button
                   onClick={fetchDisputes}
                   disabled={loadingDisputes}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-slate-400"
                 >
                   {loadingDisputes ? 'Loading...' : 'Refresh'}
                 </button>
@@ -702,35 +702,35 @@ export default function AdminDashboard() {
               {loadingDisputes ? (
                 <div className="text-center py-12">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-                  <p className="mt-4 text-gray-600">Loading disputes...</p>
+                  <p className="mt-4 text-slate-600">Loading disputes...</p>
                 </div>
               ) : disputes.length === 0 ? (
                 <div className="text-center py-12">
                   <div className="text-6xl mb-4">⚖️</div>
-                  <h3 className="text-xl font-semibold text-gray-800 mb-2">No Disputes</h3>
-                  <p className="text-gray-600">No realtor disputes at this time</p>
+                  <h3 className="text-xl font-semibold text-slate-800 mb-2">No Disputes</h3>
+                  <p className="text-slate-600">No realtor disputes at this time</p>
                 </div>
               ) : (
                 <div className="space-y-4">
                   {disputes.map((dispute) => (
-                    <div key={dispute.id} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                    <div key={dispute.id} className="border border-slate-200 rounded-lg p-4 bg-slate-50">
                       <div className="flex justify-between items-start mb-4">
                         <div>
-                          <h3 className="font-semibold text-gray-900">Dispute #{dispute.id.substring(0, 8)}...</h3>
+                          <h3 className="font-semibold text-slate-900">Dispute #{dispute.id.substring(0, 8)}...</h3>
                           <div className="mt-2 space-y-1">
-                            <p className="text-gray-800 font-medium">📋 Transaction Details:</p>
-                            <p className="text-gray-600">• Realtor: {dispute.realtorName} ({dispute.realtorEmail})</p>
-                            <p className="text-gray-600">• Purchase Date: {new Date(dispute.purchaseDate).toLocaleDateString()}</p>
+                            <p className="text-slate-800 font-medium">📋 Transaction Details:</p>
+                            <p className="text-slate-600">• Realtor: {dispute.realtorName} ({dispute.realtorEmail})</p>
+                            <p className="text-slate-600">• Purchase Date: {new Date(dispute.purchaseDate).toLocaleDateString()}</p>
                           </div>
                           <div className="mt-2 space-y-1">
-                            <p className="text-gray-800 font-medium">👤 Buyer Information:</p>
-                            <p className="text-gray-600">• Name: {dispute.buyerName}</p>
-                            <p className="text-gray-600">• Phone: {dispute.buyerPhone || 'Not provided'}</p>
-                            <p className="text-gray-600">• Email: {dispute.buyerEmail || 'Not provided'}</p>
-                            <p className="text-gray-600">• Location: {dispute.buyerCity}, {dispute.buyerState}</p>
-                            <p className="text-gray-600">• Budget: ${dispute.maxMonthlyPayment}/mo, ${dispute.maxDownPayment} down</p>
+                            <p className="text-slate-800 font-medium">👤 Buyer Information:</p>
+                            <p className="text-slate-600">• Name: {dispute.buyerName}</p>
+                            <p className="text-slate-600">• Phone: {dispute.buyerPhone || 'Not provided'}</p>
+                            <p className="text-slate-600">• Email: {dispute.buyerEmail || 'Not provided'}</p>
+                            <p className="text-slate-600">• Location: {dispute.buyerCity}, {dispute.buyerState}</p>
+                            <p className="text-slate-600">• Budget: ${dispute.maxMonthlyPayment}/mo, ${dispute.maxDownPayment} down</p>
                           </div>
-                          <p className="text-sm text-gray-500 mt-2">Submitted: {dispute.submittedAt?.toDate?.()?.toLocaleString() || 'N/A'}</p>
+                          <p className="text-sm text-slate-500 mt-2">Submitted: {dispute.submittedAt?.toDate?.()?.toLocaleString() || 'N/A'}</p>
                         </div>
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                           dispute.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
@@ -742,8 +742,8 @@ export default function AdminDashboard() {
                       </div>
 
                       <div className="mb-4">
-                        <p className="font-medium text-gray-800 mb-2">Reason:</p>
-                        <div className="text-gray-700 bg-white p-3 rounded border">
+                        <p className="font-medium text-slate-800 mb-2">Reason:</p>
+                        <div className="text-slate-700 bg-white p-3 rounded border">
                           <p className="font-semibold">
                             {dispute.reason === 'no_response' ? '❌ No Response from Buyer' :
                              dispute.reason === 'wrong_info' ? '⚠️ Wrong/Invalid Information' :
@@ -755,7 +755,7 @@ export default function AdminDashboard() {
                             <p className="mt-2 text-sm">{dispute.explanation}</p>
                           )}
                           {dispute.contactAttempts && (
-                            <p className="mt-2 text-sm text-gray-600">
+                            <p className="mt-2 text-sm text-slate-600">
                               <strong>Contact Attempts:</strong> {dispute.contactAttempts}
                             </p>
                           )}
@@ -763,7 +763,7 @@ export default function AdminDashboard() {
                       </div>
                       {dispute.evidence && Array.isArray(dispute.evidence) && dispute.evidence.length > 0 && (
                         <div className="mb-4">
-                          <p className="font-medium text-gray-800 mb-2">Evidence Images:</p>
+                          <p className="font-medium text-slate-800 mb-2">Evidence Images:</p>
                           <div className="flex flex-wrap gap-2">
                             {(dispute.evidence as string[])?.map((imageUrl: string, index: number) => (
                               <Image 
@@ -783,10 +783,10 @@ export default function AdminDashboard() {
                       {dispute.status === 'pending' && (
                         <div className="flex items-center space-x-4">
                           <div className="flex items-center space-x-2">
-                            <label className="text-sm text-gray-700">Credits to refund:</label>
+                            <label className="text-sm text-slate-700">Credits to refund:</label>
                             <select 
                               id={`credits-${dispute.id}`}
-                              className="border border-gray-300 rounded px-2 py-1 text-sm"
+                              className="border border-slate-300 rounded px-2 py-1 text-sm"
                               defaultValue="1"
                             >
                               <option value="1">1 Credit</option>
@@ -825,13 +825,13 @@ export default function AdminDashboard() {
             <div className="bg-white rounded-xl p-6 shadow-lg">
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h2 className="text-2xl font-semibold text-gray-900">Contact Form Submissions</h2>
-                  <p className="text-gray-600">Messages from website contact forms</p>
+                  <h2 className="text-2xl font-semibold text-slate-900">Contact Form Submissions</h2>
+                  <p className="text-slate-600">Messages from website contact forms</p>
                 </div>
                 <button
                   onClick={fetchContacts}
                   disabled={loadingContacts}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-slate-400"
                 >
                   {loadingContacts ? 'Loading...' : 'Refresh'}
                 </button>
@@ -840,30 +840,30 @@ export default function AdminDashboard() {
               {loadingContacts ? (
                 <div className="text-center py-12">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-                  <p className="mt-4 text-gray-600">Loading contacts...</p>
+                  <p className="mt-4 text-slate-600">Loading contacts...</p>
                 </div>
               ) : contacts.length === 0 ? (
                 <div className="text-center py-12">
                   <div className="text-6xl mb-4">📧</div>
-                  <h3 className="text-xl font-semibold text-gray-800 mb-2">No Contact Forms</h3>
-                  <p className="text-gray-600">No contact form submissions yet</p>
+                  <h3 className="text-xl font-semibold text-slate-800 mb-2">No Contact Forms</h3>
+                  <p className="text-slate-600">No contact form submissions yet</p>
                 </div>
               ) : (
                 <div className="space-y-4">
                   {contacts.map((contact) => (
-                    <div key={contact.id} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                    <div key={contact.id} className="border border-slate-200 rounded-lg p-4 bg-slate-50">
                       <div className="flex justify-between items-start mb-3">
                         <div>
-                          <h3 className="font-semibold text-gray-900">{contact.name}</h3>
-                          <p className="text-gray-600">{contact.email}</p>
-                          {contact.phone && <p className="text-gray-600">{contact.phone}</p>}
+                          <h3 className="font-semibold text-slate-900">{contact.name}</h3>
+                          <p className="text-slate-600">{contact.email}</p>
+                          {contact.phone && <p className="text-slate-600">{contact.phone}</p>}
                         </div>
-                        <span className="text-sm text-gray-500">
+                        <span className="text-sm text-slate-500">
                           {new Date(contact.createdAt).toLocaleDateString()}
                         </span>
                       </div>
                       <div className="bg-white p-3 rounded border">
-                        <p className="text-gray-700">{contact.message}</p>
+                        <p className="text-slate-700">{contact.message}</p>
                       </div>
                     </div>
                   ))}
@@ -879,10 +879,10 @@ export default function AdminDashboard() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">Edit Property</h2>
+              <h2 className="text-2xl font-bold text-slate-900">Edit Property</h2>
               <button
                 onClick={() => setEditingProperty(null)}
-                className="text-gray-500 hover:text-gray-700"
+                className="text-slate-500 hover:text-slate-700"
               >
                 ✕
               </button>
@@ -891,18 +891,18 @@ export default function AdminDashboard() {
             <div className="space-y-4">
               {/* Property ID (read-only) */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Property ID</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Property ID</label>
                 <input
                   type="text"
                   value={editingProperty.id}
                   disabled
-                  className="w-full p-2 border rounded bg-gray-100 text-gray-500"
+                  className="w-full p-2 border rounded bg-slate-100 text-slate-500"
                 />
               </div>
               
               {/* Address */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Address</label>
                 <input
                   type="text"
                   value={editForm.address}
@@ -914,7 +914,7 @@ export default function AdminDashboard() {
               {/* City, State, Zip in a row */}
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">City</label>
                   <input
                     type="text"
                     value={editForm.city}
@@ -923,7 +923,7 @@ export default function AdminDashboard() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">State</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">State</label>
                   <input
                     type="text"
                     value={editForm.state}
@@ -932,7 +932,7 @@ export default function AdminDashboard() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Zip Code</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Zip Code</label>
                   <input
                     type="text"
                     value={editForm.zipCode}
@@ -945,7 +945,7 @@ export default function AdminDashboard() {
               {/* Beds, Baths, Sq Ft */}
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Bedrooms</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Bedrooms</label>
                   <input
                     type="number"
                     value={editForm.bedrooms}
@@ -954,7 +954,7 @@ export default function AdminDashboard() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Bathrooms</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Bathrooms</label>
                   <input
                     type="number"
                     step="0.5"
@@ -964,7 +964,7 @@ export default function AdminDashboard() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Square Feet</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Square Feet</label>
                   <input
                     type="number"
                     value={editForm.squareFeet}
@@ -977,7 +977,7 @@ export default function AdminDashboard() {
               {/* Financial Info */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">List Price</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">List Price</label>
                   <input
                     type="number"
                     value={editForm.listPrice}
@@ -986,7 +986,7 @@ export default function AdminDashboard() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Down Payment</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Down Payment</label>
                   <input
                     type="number"
                     value={editForm.downPaymentAmount}
@@ -998,7 +998,7 @@ export default function AdminDashboard() {
               
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Monthly Payment</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Monthly Payment</label>
                   <input
                     type="number"
                     value={editForm.monthlyPayment}
@@ -1007,7 +1007,7 @@ export default function AdminDashboard() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Interest Rate (%)</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Interest Rate (%)</label>
                   <input
                     type="number"
                     step="0.1"
@@ -1017,7 +1017,7 @@ export default function AdminDashboard() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Term (Years)</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Term (Years)</label>
                   <input
                     type="number"
                     value={editForm.termYears}
@@ -1029,7 +1029,7 @@ export default function AdminDashboard() {
               
               {/* Description */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Description</label>
                 <textarea
                   value={editForm.description}
                   onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
@@ -1040,7 +1040,7 @@ export default function AdminDashboard() {
               
               {/* Image URL */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Image URL</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Image URL</label>
                 <input
                   type="text"
                   value={editForm.imageUrl}
@@ -1065,9 +1065,9 @@ export default function AdminDashboard() {
                   id="isActive"
                   checked={editForm.isActive}
                   onChange={(e) => setEditForm({ ...editForm, isActive: e.target.checked })}
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded"
+                  className="w-4 h-4 text-blue-600 border-slate-300 rounded"
                 />
-                <label htmlFor="isActive" className="ml-2 text-sm font-medium text-gray-700">
+                <label htmlFor="isActive" className="ml-2 text-sm font-medium text-slate-700">
                   Property is Active
                 </label>
               </div>
@@ -1076,7 +1076,7 @@ export default function AdminDashboard() {
               <div className="flex justify-end space-x-3 pt-4">
                 <button
                   onClick={() => setEditingProperty(null)}
-                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors"
+                  className="px-4 py-2 bg-slate-200 text-slate-700 rounded hover:bg-slate-300 transition-colors"
                 >
                   Cancel
                 </button>

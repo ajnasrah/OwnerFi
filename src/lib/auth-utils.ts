@@ -1,12 +1,11 @@
 import { getServerSession } from 'next-auth/next';
 import { redirect } from 'next/navigation';
 import { authOptions } from './auth';
-import { ExtendedSession, ExtendedUser } from '@/types/session';
+import { ExtendedSession } from '@/types/session';
 
 // Check if user has required role, redirect if not
 export async function requireRole(requiredRole: 'buyer' | 'realtor'): Promise<ExtendedSession> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const session = await getServerSession(authOptions as any) as ExtendedSession | null;
+  const session = await getServerSession(authOptions as unknown as Parameters<typeof getServerSession>[0]) as ExtendedSession | null;
   
   if (!session?.user) {
     // Not logged in - redirect to appropriate signin
@@ -34,8 +33,7 @@ export async function requireRole(requiredRole: 'buyer' | 'realtor'): Promise<Ex
 
 // Get session and validate role for API routes
 export async function getSessionWithRole(requiredRole: 'buyer' | 'realtor'): Promise<ExtendedSession> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const session = await getServerSession(authOptions as any) as ExtendedSession | null;
+  const session = await getServerSession(authOptions as unknown as Parameters<typeof getServerSession>[0]) as ExtendedSession | null;
   
   if (!session?.user) {
     throw new Error('Not authenticated');

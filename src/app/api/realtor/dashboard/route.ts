@@ -4,7 +4,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSessionWithRole } from '@/lib/auth-utils';
 import { FirebaseDB } from '@/lib/firebase-db';
-import { RealtorDataHelper } from '@/lib/realtor-models';
+import { RealtorDataHelper, ValidatedCity } from '@/lib/realtor-models';
 import { logError, logInfo } from '@/lib/logger';
 
 interface LeadData {
@@ -66,7 +66,7 @@ interface DashboardData {
   };
 }
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // Enforce realtor role only
     const session = await getSessionWithRole('realtor');
@@ -113,7 +113,7 @@ export async function GET(request: NextRequest) {
     const transactions = await getTransactionHistory(session.user.id);
 
     // Calculate trial days remaining
-    const trialDaysRemaining = RealtorDataHelper.getTrialDaysRemaining(realtorData as any);
+    const trialDaysRemaining = RealtorDataHelper.getTrialDaysRemaining(realtorData);
 
     const dashboardData: DashboardData = {
       availableLeads,
@@ -171,9 +171,9 @@ async function getAvailableLeads(userId: string, realtorData: Record<string, unk
     const purchasedBuyerIds = (purchasedLeads as Array<{ buyerId: string; [key: string]: unknown }>).map((p: { buyerId: string; [key: string]: unknown }) => p.buyerId);
 
     // Get realtor's service cities
-    const serviceCities = RealtorDataHelper.getAllCitiesServed(realtorData as any);
-    const serviceCityNames = (serviceCities as Array<{name: string}>).map(city => city.name.toLowerCase());
-    const realtorState = (realtorData as any).serviceArea.primaryCity.stateCode;
+    const serviceCities = RealtorDataHelper.getAllCitiesServed(realtorData as { serviceArea: { primaryCity: ValidatedCity; nearbyCities: ValidatedCity[] } });
+    const serviceCityNames = serviceCities.map(city => city.name.toLowerCase());
+    const realtorState = (realtorData as { serviceArea: { primaryCity: { stateCode: string } } }).serviceArea.primaryCity.stateCode;
 
     const availableLeads = [];
 
@@ -229,9 +229,9 @@ async function getAvailableLeads(userId: string, realtorData: Record<string, unk
     // Sort by creation date (newest first)
     availableLeads.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
-    return availableLeads.slice(0, 20) as any; // Limit to 20 most recent
+    return availableLeads.slice(0, 20); // Limit to 20 most recent
 
-  } catch (error) {
+  } catch {
     return [];
   }
 }
@@ -287,7 +287,7 @@ async function getOwnedBuyers(userId: string): Promise<OwnedBuyer[]> {
 
     return ownedBuyers;
 
-  } catch (error) {
+  } catch {
     return [];
   }
 }
@@ -330,7 +330,7 @@ async function getTransactionHistory(userId: string): Promise<Transaction[]> {
       details: transaction.details || {}
     }));
 
-  } catch (error) {
+  } catch {
     return [];
   }
 }
@@ -395,14 +395,30 @@ async function getMatchedBuyerLeads(realtorData: {
     const leads = await ConsolidatedLeadSystem.findAvailableLeads(realtorProfile);
     
     // Convert Timestamp to Date for compatibility
-    const convertedLeads = (leads as any[]).map((lead: any) => ({
+    const convertedLeads = leads.map((lead: {
+      id: string;
+      firstName: string;
+      lastName: string;
+      email: string;
+      phone: string;
+      city: string;
+      state: string;
+      maxMonthlyPayment: number;
+      maxDownPayment: number;
+      languages: string[];
+      matchScore: number;
+      matchReasons: string[];
+      likedPropertiesCount: number;
+      leadPrice: number;
+      createdAt?: { toDate?: () => Date };
+    }) => ({
       ...lead,
       createdAt: lead.createdAt?.toDate ? lead.createdAt.toDate() : new Date()
     }));
     
     return convertedLeads;
     
-  } catch (error) {
+  } catch {
     // Fallback to empty array if matching fails
     return [];
   }

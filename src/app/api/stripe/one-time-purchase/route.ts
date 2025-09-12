@@ -1,14 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSessionWithRole } from '@/lib/auth-utils';
 import { 
-  collection, 
-  query, 
-  where, 
-  getDocs,
   doc,
   getDoc,
-  updateDoc,
-  increment
+  updateDoc
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { logInfo, logError } from '@/lib/logger';

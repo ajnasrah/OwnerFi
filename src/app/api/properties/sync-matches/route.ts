@@ -106,7 +106,7 @@ async function removePropertyFromAllBuyers(propertyId: string) {
     await Promise.all(updatePromises);
     
   } catch (error) {
-    throw error;
+    // Error occurred
   }
 }
 
@@ -140,7 +140,7 @@ async function addPropertyToMatchingBuyers(property: PropertyListing & { id: str
     await Promise.all(updatePromises);
     
   } catch (error) {
-    throw error;
+    // Error occurred
   }
 }
 

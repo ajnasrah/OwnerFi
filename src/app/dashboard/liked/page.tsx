@@ -37,14 +37,14 @@ export default function LikedProperties() {
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/auth/signin');
-    } else if (status === 'authenticated' && isExtendedSession(session as any) && (session as unknown as ExtendedSession)?.user?.role !== 'buyer') {
+    } else if (status === 'authenticated' && isExtendedSession(session as unknown as ExtendedSession) && (session as unknown as ExtendedSession)?.user?.role !== 'buyer') {
       router.push('/auth/signin');
     }
   }, [status, session, router]);
 
   // Load liked properties
   useEffect(() => {
-    if (status === 'authenticated' && isExtendedSession(session as any) && (session as unknown as ExtendedSession)?.user?.role === 'buyer') {
+    if (status === 'authenticated' && isExtendedSession(session as unknown as ExtendedSession) && (session as unknown as ExtendedSession)?.user?.role === 'buyer') {
       loadLikedProperties();
     }
   }, [status, session]);
@@ -135,7 +135,7 @@ export default function LikedProperties() {
             </div>
             
             <button
-              onClick={() => signOut({ callbackUrl: '/auth/signin' })}
+              onClick={() => signOut({ callbackUrl: '/' })}
               className="flex flex-col items-center group"
             >
               <div className="w-12 h-12 bg-slate-700/50 hover:bg-red-600/30 rounded-xl flex items-center justify-center transition-all group-hover:scale-110 duration-300">

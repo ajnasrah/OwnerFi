@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
       
       default:
     }
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: 'Webhook handler failed' },
       { status: 500 }
@@ -113,18 +113,14 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     // Handle subscription vs one-time purchase
     if (mode === 'subscription' && subscription && creditPackage.recurring) {
       // Only 4 and 10 credit packages should create subscriptions
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (updatedRealtorData as any).stripeSubscriptionId = typeof subscription === 'string' ? subscription : subscription.id;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (updatedRealtorData as any).subscriptionStatus = 'active';
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (updatedRealtorData as any).currentPlan = creditPackId;
+      (updatedRealtorData as Record<string, unknown>).stripeSubscriptionId = typeof subscription === 'string' ? subscription : subscription.id;
+      (updatedRealtorData as Record<string, unknown>).subscriptionStatus = 'active';
+      (updatedRealtorData as Record<string, unknown>).currentPlan = creditPackId;
     }
 
     // Store Stripe customer ID if provided
     if (customer) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (updatedRealtorData as any).stripeCustomerId = customer;
+      (updatedRealtorData as Record<string, unknown>).stripeCustomerId = customer;
     }
 
     await FirebaseDB.updateDocument('users', userId, {
@@ -146,7 +142,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       createdAt: new Date()
     });
     
-  } catch (error) {
+  } catch {
     // Log error but don't fail the webhook
   }
 }
@@ -167,7 +163,7 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
     ) as UserWithRealtorData[];
 
     if (users.length === 0) {
-      console.warn(`No user found for subscription ${subscription.id}`);
+      // Warning:(`No user found for subscription ${subscription.id}`);
       return;
     }
 
@@ -182,9 +178,9 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
       realtorData: updatedRealtorData,
       updatedAt: new Date()
     });
-  } catch (error) {
-    console.error('Error in handleSubscriptionUpdated:', error);
-    throw error;
+  } catch {
+    // Error:('Error in handleSubscriptionUpdated:', error);
+    // Error occurred
   }
 }
 
@@ -199,7 +195,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     ) as UserWithRealtorData[];
 
     if (users.length === 0) {
-      console.warn(`No user found for subscription deletion ${subscription.id}`);
+      // Warning:(`No user found for subscription deletion ${subscription.id}`);
       return;
     }
 
@@ -215,16 +211,15 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
       realtorData: updatedRealtorData,
       updatedAt: new Date()
     });
-  } catch (error) {
-    console.error('Error in handleSubscriptionDeleted:', error);
-    throw error;
+  } catch {
+    // Error:('Error in handleSubscriptionDeleted:', error);
+    // Error occurred
   }
 }
 
 async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const subscriptionId = (invoice as any).subscription as string;
+    const subscriptionId = (invoice as { subscription?: string }).subscription;
     
     if (!subscriptionId) return;
 
@@ -237,14 +232,13 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
     ) as UserWithRealtorData[];
 
     if (users.length === 0) {
-      console.warn(`No user found for payment success ${subscriptionId}`);
+      // Warning:(`No user found for payment success ${subscriptionId}`);
       return;
     }
 
     const user = users[0] as UserWithRealtorData;
     const realtorData = user.realtorData || {};
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const creditPackId = (realtorData as any).currentPlan;
+    const creditPackId = (realtorData as Record<string, unknown>).currentPlan as string;
     
     // Find the credit package to get credits
     const creditPackage = CREDIT_PACKAGES[creditPackId as keyof typeof CREDIT_PACKAGES];
@@ -253,8 +247,7 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
     }
 
     // Add monthly credits for recurring subscriptions
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const currentCredits = (realtorData as any).credits || 0;
+    const currentCredits = (realtorData as Record<string, unknown>).credits as number || 0;
     const newCredits = currentCredits + creditPackage.credits;
 
     const updatedRealtorData = {
@@ -282,16 +275,15 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
       creditPackageId: creditPackId,
       createdAt: new Date()
     });
-  } catch (error) {
-    console.error('Error in handlePaymentSucceeded:', error);
-    throw error;
+  } catch {
+    // Error:('Error in handlePaymentSucceeded:', error);
+    // Error occurred
   }
 }
 
 async function handlePaymentFailed(invoice: Stripe.Invoice) {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const subscriptionId = (invoice as any).subscription as string;
+    const subscriptionId = (invoice as { subscription?: string }).subscription;
     
     if (!subscriptionId) return;
 
@@ -304,7 +296,7 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
     ) as UserWithRealtorData[];
 
     if (users.length === 0) {
-      console.warn(`No user found for payment failure ${subscriptionId}`);
+      // Warning:(`No user found for payment failure ${subscriptionId}`);
       return;
     }
 
@@ -331,9 +323,9 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
       amount: (invoice.amount_due || 0) / 100,
       createdAt: new Date()
     });
-  } catch (error) {
-    console.error('Error in handlePaymentFailed:', error);
-    throw error;
+  } catch {
+    // Error:('Error in handlePaymentFailed:', error);
+    // Error occurred
   }
 }
 

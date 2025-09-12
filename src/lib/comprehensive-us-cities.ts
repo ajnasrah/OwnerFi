@@ -26,7 +26,7 @@ async function loadComprehensiveUSCitiesDatabase(): Promise<void> {
   if (isDatabaseLoaded) return;
 
   try {
-    console.log('Loading comprehensive US cities database...');
+    
     
     // Fetch the complete database from GitHub
     const response = await fetch('https://raw.githubusercontent.com/kelvins/US-Cities-Database/main/csv/us_cities.csv');
@@ -72,21 +72,21 @@ async function loadComprehensiveUSCitiesDatabase(): Promise<void> {
       totalCities++;
     }
     
-    console.log(`✅ Loaded ${totalCities} cities across ${usCitiesDatabase.size} states`);
+    
     
     // Log stats by state
-    console.log('Cities per state:');
+    
     Array.from(usCitiesDatabase.entries())
       .sort((a, b) => b[1].length - a[1].length)
       .slice(0, 10)
       .forEach(([state, cities]) => {
-        console.log(`  ${state}: ${cities.length} cities`);
+        
       });
     
     isDatabaseLoaded = true;
     
   } catch (error) {
-    console.error('Failed to load comprehensive cities database:', error);
+    
     throw new Error('Could not load US cities database');
   }
 }
@@ -204,7 +204,7 @@ export async function getCitiesNearProperty(
   // Find the property's city in our database
   const stateCities = usCitiesDatabase.get(propertyStateCode.toUpperCase());
   if (!stateCities) {
-    console.warn(`State not found: ${propertyStateCode}`);
+    
     return [];
   }
   
@@ -213,7 +213,7 @@ export async function getCitiesNearProperty(
   );
   
   if (!propertyCity) {
-    console.warn(`City not found: ${propertyCityName}, ${propertyStateCode}`);
+    
     return [];
   }
   

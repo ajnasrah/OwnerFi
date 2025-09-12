@@ -7,8 +7,7 @@ import { UserWithRealtorData } from '@/lib/realtor-models';
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    getServerSession(authOptions as any) as ExtendedSession;
+    const session = await getServerSession(authOptions as unknown as Parameters<typeof getServerSession>[0]) as ExtendedSession;
     
     if (!session?.user || session.user.role !== 'realtor') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -26,14 +25,14 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: {
-        targetCity: (realtorData as any).targetCity || '',
-        serviceCities: (realtorData as any).serviceCities || [],
-        totalCitiesServed: (realtorData as any).totalCitiesServed || 0,
-        serviceArea: (realtorData as any).serviceArea || null
+        targetCity: (realtorData as Record<string, unknown>).targetCity as string || '',
+        serviceCities: (realtorData as Record<string, unknown>).serviceCities as string[] || [],
+        totalCitiesServed: (realtorData as Record<string, unknown>).totalCitiesServed as number || 0,
+        serviceArea: (realtorData as Record<string, unknown>).serviceArea || null
       }
     });
 
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: 'Failed to fetch profile data' },
       { status: 500 }
@@ -43,8 +42,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    getServerSession(authOptions as any) as ExtendedSession;
+    const session = await getServerSession(authOptions as unknown as Parameters<typeof getServerSession>[0]) as ExtendedSession;
     
     if (!session?.user || session.user.role !== 'realtor') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -108,7 +106,7 @@ export async function POST(request: NextRequest) {
       message: 'Settings saved successfully'
     });
 
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: 'Failed to save settings' },
       { status: 500 }
@@ -118,8 +116,8 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const session = await // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    getServerSession(authOptions as any) as ExtendedSession;
+    const session = await  
+    getServerSession(authOptions as unknown as Parameters<typeof getServerSession>[0]) as ExtendedSession;
     
     if (!session?.user || session.user.role !== 'realtor') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -140,15 +138,15 @@ export async function DELETE(request: NextRequest) {
     }
 
     const currentRealtorData = (userData as UserWithRealtorData).realtorData || {};
-    const currentServiceCities = (currentRealtorData as any).serviceCities || [];
+    const currentServiceCities = (currentRealtorData as Record<string, unknown>).serviceCities as string[] || [];
 
     // Remove the specified city
     const updatedServiceCities = (currentServiceCities as string[]).filter((city: string) => city !== cityToRemove);
 
     // Update the service area structure as well
     const updatedServiceArea = {
-      ...(currentRealtorData as any).serviceArea,
-      nearbyCities: ((currentRealtorData as any).serviceArea?.nearbyCities as any[])?.filter((city: any) => 
+      ...(currentRealtorData as Record<string, unknown>).serviceArea as Record<string, unknown>,
+      nearbyCities: (((currentRealtorData as Record<string, unknown>).serviceArea as Record<string, unknown>)?.nearbyCities as Array<{ name: string; state: string }>)?.filter((city: { name: string; state: string }) => 
         `${city.name}, ${city.state}` !== cityToRemove
       ) || [],
       totalCitiesServed: updatedServiceCities.length,
@@ -175,7 +173,7 @@ export async function DELETE(request: NextRequest) {
       updatedServiceCities: updatedServiceCities
     });
 
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: 'Failed to remove city' },
       { status: 500 }

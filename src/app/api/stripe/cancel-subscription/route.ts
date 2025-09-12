@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ 
         success: true,
         message: 'Subscription cancelled successfully. You will retain access until the end of your current billing period.',
-        endsAt: (canceledSubscription as any).current_period_end ? new Date((canceledSubscription as any).current_period_end * 1000) : null
+        endsAt: (canceledSubscription as unknown as { current_period_end?: number }).current_period_end ? new Date((canceledSubscription as unknown as { current_period_end: number }).current_period_end * 1000) : null
       });
 
     } catch (stripeError: unknown) {
@@ -128,7 +128,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: 'Failed to cancel subscription' },
       { status: 500 }

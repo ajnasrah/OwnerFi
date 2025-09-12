@@ -182,7 +182,7 @@ export class RealtorDataHelper {
   }
   
   // Get days remaining in trial
-  static getTrialDaysRemaining(realtorData: RealtorData): number {
+  static getTrialDaysRemaining(realtorData: { isOnTrial?: boolean; trialEndDate?: { toDate: () => Date } }): number {
     if (!realtorData.isOnTrial) return 0;
     const now = new Date();
     const trialEnd = realtorData.trialEndDate.toDate();
@@ -192,7 +192,7 @@ export class RealtorDataHelper {
   }
   
   // Get all cities served (primary + nearby)
-  static getAllCitiesServed(realtorData: RealtorData): ValidatedCity[] {
+  static getAllCitiesServed(realtorData: { serviceArea: { primaryCity: ValidatedCity; nearbyCities: ValidatedCity[] } }): ValidatedCity[] {
     return [realtorData.serviceArea.primaryCity, ...realtorData.serviceArea.nearbyCities];
   }
   

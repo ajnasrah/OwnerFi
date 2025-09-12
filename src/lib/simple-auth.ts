@@ -6,8 +6,7 @@ import { ExtendedSession } from '@/types/session';
 // Simple auth wrapper that doesn't throw errors
 export async function getSessionSafe(): Promise<{ user: { id?: string; email?: string; role?: string } | null; isAuthenticated: boolean }> {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const session = await getServerSession(authOptions as any) as ExtendedSession;
+    const session = await getServerSession(authOptions as unknown as Parameters<typeof getServerSession>[0]) as ExtendedSession;
     return {
       user: session?.user ? {
         id: session.user.id,

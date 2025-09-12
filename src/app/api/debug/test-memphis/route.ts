@@ -33,7 +33,7 @@ export async function GET() {
         profileComplete: b.profileComplete,
         languages: b.languages
       })),
-      matchedLeads: leads.map(lead => ({
+      matchedLeads: (leads as any[]).map((lead: any) => ({
         name: `${lead.firstName} ${lead.lastName}`,
         city: lead.city,
         state: lead.state,

@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
         if (property) {
           // Format property data with all needed fields
           likedProperties.push({
-            id: propertyId,
+            ...property,
             address: property.address || '',
             city: property.city || '',
             state: property.state || '',
@@ -59,8 +59,7 @@ export async function GET(request: NextRequest) {
             listPrice: property.listPrice || 0,
             monthlyPayment: property.monthlyPayment || 0,
             downPaymentAmount: property.downPaymentAmount || 0,
-            imageUrl: property.imageUrl || property.zillowImageUrl,
-            ...property
+            imageUrl: property.imageUrl || property.zillowImageUrl
           });
         }
       } catch (err) {

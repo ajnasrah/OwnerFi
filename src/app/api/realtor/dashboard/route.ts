@@ -113,7 +113,7 @@ export async function GET(request: NextRequest) {
     const transactions = await getTransactionHistory(session.user.id);
 
     // Calculate trial days remaining
-    const trialDaysRemaining = RealtorDataHelper.getTrialDaysRemaining(realtorData);
+    const trialDaysRemaining = RealtorDataHelper.getTrialDaysRemaining(realtorData as any);
 
     const dashboardData: DashboardData = {
       availableLeads,
@@ -171,9 +171,9 @@ async function getAvailableLeads(userId: string, realtorData: Record<string, unk
     const purchasedBuyerIds = (purchasedLeads as Array<{ buyerId: string; [key: string]: unknown }>).map((p: { buyerId: string; [key: string]: unknown }) => p.buyerId);
 
     // Get realtor's service cities
-    const serviceCities = RealtorDataHelper.getAllCitiesServed(realtorData);
+    const serviceCities = RealtorDataHelper.getAllCitiesServed(realtorData as any);
     const serviceCityNames = (serviceCities as Array<{name: string}>).map(city => city.name.toLowerCase());
-    const realtorState = realtorData.serviceArea.primaryCity.stateCode;
+    const realtorState = (realtorData as any).serviceArea.primaryCity.stateCode;
 
     const availableLeads = [];
 

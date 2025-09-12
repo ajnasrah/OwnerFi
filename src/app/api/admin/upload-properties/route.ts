@@ -54,14 +54,70 @@ export async function POST(request: NextRequest) {
       metadata: { fileName: file.name, fileSize: file.size }
     });
     
-    // Basic CSV parsing (simplified without GHL dependency)
-    buffer.toString('utf-8');
+    // Parse CSV data
+    const csvText = buffer.toString('utf-8');
+    const lines = csvText.split('\n').filter(line => line.trim());
+    const headers = lines[0].split(',').map(h => h.trim());
+    
     const parseResult: { 
       success: PropertyListing[], 
       errors: string[], 
       totalRows: number, 
       duplicates: string[] 
-    } = { success: [], errors: [], totalRows: 0, duplicates: [] };
+    } = { success: [], errors: [], totalRows: lines.length - 1, duplicates: [] };
+
+    // Process each row
+    for (let i = 1; i < lines.length; i++) {
+      try {
+        const values = lines[i].split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+        const row: Record<string, string> = {};
+        
+        headers.forEach((header, index) => {
+          row[header] = values[index] || '';
+        });
+
+        // Map CSV columns to PropertyListing format
+        const property: PropertyListing = {
+          id: row['Opportunity ID'] || `prop_${Date.now()}_${i}`,
+          address: row['Property Address'] || row['Full Address'] || '',
+          city: row['Property city'] || row['city'] || '',
+          state: (row['state'] || '').toLowerCase(),
+          zipCode: row['Zip code'] || '',
+          propertyType: 'single-family', // Default type
+          listPrice: parseFloat(row['price']) || 0,
+          bedrooms: parseInt(row['bedrooms']) || 0,
+          bathrooms: parseFloat(row['bathrooms']) || 0,
+          squareFeet: parseInt(row['livingArea']) || 0,
+          monthlyPayment: parseFloat(row['Monthly payment']) || 0,
+          downPaymentAmount: parseFloat(row['down payment amount']) || 0,
+          downPaymentPercent: parseFloat(row['down payment']) || 0,
+          interestRate: parseFloat(row['Interest rate']) || 0,
+          termYears: parseFloat(row['Balloon']) || 30,
+          yearBuilt: parseInt(row['yearBuilt']) || 0,
+          lotSize: parseFloat(row['lot sizes']) || 0,
+          description: row['description'] || '',
+          imageUrls: row['Image link'] ? [row['Image link']] : [],
+          source: 'import',
+          status: 'active',
+          dateAdded: new Date().toISOString(),
+          lastUpdated: new Date().toISOString(),
+          priority: 1,
+          featured: false,
+          isActive: true
+        };
+
+        // Validation
+        if (!property.address || !property.city || !property.state || property.listPrice <= 0) {
+          parseResult.errors.push(`Row ${i}: Missing required fields (address, city, state, price)`);
+          continue;
+        }
+
+        parseResult.success.push(property);
+        
+      } catch (error) {
+        parseResult.errors.push(`Row ${i}: ${(error as Error).message}`);
+      }
+    }
     
     if (parseResult.success.length === 0) {
       await logError('No valid properties found in CSV file', {
@@ -93,7 +149,7 @@ export async function POST(request: NextRequest) {
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
           status: 'active',
-          source: 'csv-upload',
+          source: 'import',
           isActive: true // Ensure this flag is set for the matching service
         });
         

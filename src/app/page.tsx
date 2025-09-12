@@ -37,8 +37,8 @@ export default function HomePage() {
   return (
     <div className="bg-slate-900 text-white">
       {/* Clean Header */}
-      <nav className="bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50 px-4 py-4">
-        <div className="flex justify-between items-center max-w-md mx-auto">
+      <nav className="bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50 px-4 lg:px-6 py-4">
+        <div className="flex justify-between items-center max-w-6xl mx-auto">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-sm">O</span>
@@ -64,8 +64,8 @@ export default function HomePage() {
       </nav>
 
       {/* Hero Section - Compact */}
-      <div className="flex flex-col px-6" style={{ paddingTop: '3rem', paddingBottom: '3rem', minHeight: 'auto' }}>
-        <div className="max-w-md mx-auto text-center">
+      <div className="flex flex-col px-6 lg:px-12" style={{ paddingTop: '3rem', paddingBottom: '3rem', minHeight: 'auto' }}>
+        <div className="max-w-2xl mx-auto text-center">
           <div className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-8 shadow-2xl">
             
             <h1 className="text-3xl font-bold text-white leading-tight mb-4">
@@ -145,7 +145,7 @@ export default function HomePage() {
 
       {/* Customer Success Stories */}
       <section style={{ padding: '2rem 0' }}>
-        <div className="max-w-6xl mx-auto px-6">
+        <div className="max-w-6xl mx-auto px-6 lg:px-12">
           
           {/* Big Card Container for Reviews */}
           <div className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/50 rounded-3xl p-8 shadow-2xl">
@@ -232,7 +232,7 @@ export default function HomePage() {
 
       {/* How It Works - Card-Based Design */}
       <section style={{ padding: '2rem 0' }}>
-        <div className="max-w-6xl mx-auto px-6">
+        <div className="max-w-6xl mx-auto px-6 lg:px-12">
           
           <div className="grid lg:grid-cols-2" style={{ gap: '4rem' }}>
             
@@ -346,7 +346,7 @@ export default function HomePage() {
 
       {/* About Us Section */}
       <section style={{ padding: '2rem 0' }}>
-        <div className="max-w-6xl mx-auto px-6">
+        <div className="max-w-6xl mx-auto px-6 lg:px-12">
           <div className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-8 shadow-2xl">
             <div className="text-center mb-8">
               <h2 className="text-3xl font-bold text-white mb-4">About OwnerFi</h2>
@@ -414,7 +414,7 @@ export default function HomePage() {
 
       {/* About the Founder Section */}
       <section style={{ padding: '2rem 0' }}>
-        <div className="max-w-6xl mx-auto px-6">
+        <div className="max-w-6xl mx-auto px-6 lg:px-12">
           <div className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-8 shadow-2xl">
             <div className="text-center mb-8">
               <h2 className="text-3xl font-bold text-white mb-4">About the Founder</h2>
@@ -460,7 +460,7 @@ export default function HomePage() {
 
       {/* Minimal Footer */}
       <footer className="bg-slate-800/30 border-t border-slate-700/50 py-6">
-        <div className="max-w-md mx-auto px-6">
+        <div className="max-w-6xl mx-auto px-6 lg:px-12">
           <div className="flex justify-center gap-6 text-sm">
             <a href="mailto:support@prosway.com" className="text-slate-400 hover:text-emerald-400 transition-colors">
               Contact

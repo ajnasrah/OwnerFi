@@ -1,9 +1,15 @@
 import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Create OpenAI client only when needed to avoid build errors
+function getOpenAIClient() {
+  if (!process.env.OPENAI_API_KEY) {
+    throw new Error('OpenAI API key not configured');
+  }
+  return new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+  });
+}
 
 const OWNERFI_CONTEXT = `
 You are Sarah, a LIVE OwnerFi agent. Act like someone greeting customers who just walked into your store. Be warm, welcoming, and conversational.
@@ -68,20 +74,25 @@ export async function POST(request: Request) {
       response = "Are you a realtor looking for leads?";
     } else {
       // Use AI for other responses
-      const messages = [
-        { role: 'system', content: OWNERFI_CONTEXT },
-        ...conversationHistory,
-        { role: 'user', content: message }
-      ];
+      try {
+        const openai = getOpenAIClient();
+        const messages = [
+          { role: 'system', content: OWNERFI_CONTEXT },
+          ...conversationHistory,
+          { role: 'user', content: message }
+        ];
 
-      const completion = await openai.chat.completions.create({
-        model: 'gpt-4',
-        messages: messages as OpenAI.Chat.Completions.ChatCompletionMessageParam[],
-        max_tokens: 100,
-        temperature: 0.7,
-      });
+        const completion = await openai.chat.completions.create({
+          model: 'gpt-4',
+          messages: messages as OpenAI.Chat.Completions.ChatCompletionMessageParam[],
+          max_tokens: 100,
+          temperature: 0.7,
+        });
 
-      response = completion.choices[0]?.message?.content || 'How can I help you today?';
+        response = completion.choices[0]?.message?.content || 'How can I help you today?';
+      } catch {
+        response = 'How can I help you today?';
+      }
     }
 
     return NextResponse.json({

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server';
 import { FirebaseDB } from '@/lib/firebase-db';
 import { UserWithRealtorData, ValidatedCity } from '@/lib/realtor-models';
@@ -39,8 +40,8 @@ export async function POST(request: NextRequest) {
     }
     
     // Also check if cities are saved directly in serviceCities field
-    if (realtorData.serviceCities && realtorData.serviceCities.length > 0) {
-      cities = (realtorData.serviceCities as string[]).map((city: string) => city.split(',')[0]?.trim());
+    if ((realtorData as any).serviceCities && (realtorData as any).serviceCities.length > 0) {
+      cities = ((realtorData as any).serviceCities as string[]).map((city: string) => city.split(',')[0]?.trim());
     }
     
     const realtorProfile = {
@@ -52,11 +53,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       realtor: {
-        name: `${realtorData.firstName} ${realtorData.lastName}`,
+        name: `${(realtorData as any).firstName} ${(realtorData as any).lastName}`,
         email: realtor.email
       },
       rawServiceArea: serviceArea,
-      rawServiceCities: realtorData.serviceCities,
+      rawServiceCities: (realtorData as any).serviceCities,
       extractedProfile: realtorProfile,
       fullRealtorData: realtorData
     });

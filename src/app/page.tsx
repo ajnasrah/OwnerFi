@@ -14,8 +14,8 @@ export default function HomePage() {
   const getDashboardUrl = () => {
     if (status !== 'authenticated' || !session?.user) return null;
     
-    if (isExtendedSession(session)) {
-      const extendedSession = session as ExtendedSession;
+    if (isExtendedSession(session as any)) {
+      const extendedSession = session as unknown as ExtendedSession;
       if (extendedSession.user.role === 'buyer') return '/dashboard';
       if (extendedSession.user.role === 'realtor') return '/realtor-dashboard';
       if (extendedSession.user.role === 'admin') return '/admin';

@@ -59,7 +59,7 @@ export const firestoreHelpers = {
     try {
       const db = getSafeDb();
       const docRef = doc(db, collectionName, docId);
-      await updateDoc(docRef, data);
+      await updateDoc(docRef, data as any);
     } catch (error) {
       throw error;
     }

@@ -28,7 +28,7 @@ export default function RealtorSettings() {
     
     if (status === 'unauthenticated') {
       router.push('/realtor-signup');
-    } else if (status === 'authenticated' && (session as ExtendedSession)?.user?.role !== 'realtor') {
+    } else if (status === 'authenticated' && (session as unknown as ExtendedSession)?.user?.role !== 'realtor') {
       router.push('/signup');
     }
   }, [status, session, router, sessionCheckPaused]);

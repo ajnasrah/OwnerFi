@@ -31,8 +31,8 @@ export default function BuyerSettings() {
     }
     
     // Strict role checking - buyers only
-    if (status === 'authenticated' && (session as ExtendedSession)?.user?.role !== 'buyer') {
-      if ((session as ExtendedSession)?.user?.role === 'realtor') {
+    if (status === 'authenticated' && (session as any as ExtendedSession)?.user?.role !== 'buyer') {
+      if ((session as any as ExtendedSession)?.user?.role === 'realtor') {
         router.push('/realtor/dashboard');
       } else {
         router.push('/auth/signin');
@@ -42,7 +42,7 @@ export default function BuyerSettings() {
 
   // Load existing buyer profile data
   useEffect(() => {
-    if (status === 'authenticated' && (session as ExtendedSession)?.user?.role === 'buyer') {
+    if (status === 'authenticated' && (session as any as ExtendedSession)?.user?.role === 'buyer') {
       loadProfile();
     }
   }, [status, session]);

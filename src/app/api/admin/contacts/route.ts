@@ -22,7 +22,7 @@ export async function GET() {
       );
     }
 
-    const session = await getServerSession(authOptions) as ExtendedSession;
+    const session = await getServerSession(authOptions as any) as ExtendedSession;
     
     if (!session?.user || session.user?.role !== 'admin') {
       return NextResponse.json(
@@ -67,7 +67,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const session = await getServerSession(authOptions) as ExtendedSession;
+    const session = await getServerSession(authOptions as any) as ExtendedSession;
     
     if (!session?.user || session.user?.role !== 'admin') {
       return NextResponse.json(

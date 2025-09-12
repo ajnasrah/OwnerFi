@@ -29,8 +29,8 @@ export default function SignIn() {
         setError('Invalid email or password');
       } else {
         const session = await getSession();
-        if (isExtendedSession(session)) {
-          const extendedSession = session as ExtendedSession;
+        if (isExtendedSession(session as any)) {
+          const extendedSession = session as unknown as ExtendedSession;
           if (extendedSession.user.role === 'buyer') {
             router.push('/dashboard');
           } else if (extendedSession.user.role === 'realtor') {

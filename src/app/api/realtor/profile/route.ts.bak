@@ -1,0 +1,181 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/lib/auth';
+import { FirebaseDB } from '@/lib/firebase-db';
+import { ExtendedSession } from '@/types/session';
+import { UserWithRealtorData } from '@/lib/realtor-models';
+
+export async function GET(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions) as ExtendedSession;
+    
+    if (!session?.user || session.user.role !== 'realtor') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Get current user data
+    const userData = await FirebaseDB.getDocument('users', session.user.id);
+    
+    if (!userData) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    const realtorData = (userData as UserWithRealtorData).realtorData || {};
+    
+    return NextResponse.json({
+      success: true,
+      data: {
+        targetCity: (realtorData as any).targetCity || '',
+        serviceCities: (realtorData as any).serviceCities || [],
+        totalCitiesServed: (realtorData as any).totalCitiesServed || 0,
+        serviceArea: (realtorData as any).serviceArea || null
+      }
+    });
+
+  } catch (error) {
+    return NextResponse.json(
+      { error: 'Failed to fetch profile data' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions) as ExtendedSession;
+    
+    if (!session?.user || session.user.role !== 'realtor') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const { targetCity, serviceCities, totalCitiesServed } = body;
+
+
+    // Parse target city first
+    const cityParts = targetCity.split(',');
+
+    // Get current user data
+    const userData = await FirebaseDB.getDocument('users', session.user.id);
+    
+    if (!userData) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    // Create service area in the format the dashboard expects
+    const serviceArea = {
+      primaryCity: {
+        name: cityParts[0]?.trim() || 'Dallas',
+        state: cityParts[1]?.trim() || 'TX'
+      },
+      nearbyCities: (serviceCities as string[]).map((city: string) => ({
+        name: city.split(',')[0]?.trim() || city,
+        state: city.split(',')[1]?.trim() || 'TX'
+      })),
+      radiusMiles: 30,
+      totalCitiesServed: totalCitiesServed,
+      lastUpdated: new Date()
+    };
+
+    // Update realtor data in user document
+    const updatedRealtorData = {
+      ...(userData as UserWithRealtorData).realtorData || {},
+      firstName: (userData as UserWithRealtorData).email?.split('@')[0] || '',
+      lastName: '',
+      email: (userData as UserWithRealtorData).email,
+      serviceArea: serviceArea,
+      // ALSO save in the format dashboard expects
+      targetCity: targetCity,
+      serviceCities: serviceCities,
+      totalCitiesServed: totalCitiesServed,
+      profileComplete: true,
+      isActive: true,
+      credits: (userData as UserWithRealtorData).realtorData?.credits || 3,
+      isOnTrial: (userData as UserWithRealtorData).realtorData?.isOnTrial ?? true,
+      updatedAt: new Date()
+    };
+
+    await FirebaseDB.updateDocument('users', session.user.id, {
+      realtorData: updatedRealtorData,
+      updatedAt: new Date()
+    });
+
+
+    return NextResponse.json({
+      success: true,
+      message: 'Settings saved successfully'
+    });
+
+  } catch (error) {
+    return NextResponse.json(
+      { error: 'Failed to save settings' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions) as ExtendedSession;
+    
+    if (!session?.user || session.user.role !== 'realtor') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const { cityToRemove } = body;
+
+    if (!cityToRemove) {
+      return NextResponse.json({ error: 'City to remove is required' }, { status: 400 });
+    }
+
+    // Get current user data
+    const userData = await FirebaseDB.getDocument('users', session.user.id);
+    
+    if (!userData) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    const currentRealtorData = (userData as UserWithRealtorData).realtorData || {};
+    const currentServiceCities = (currentRealtorData as any).serviceCities || [];
+
+    // Remove the specified city
+    const updatedServiceCities = (currentServiceCities as string[]).filter((city: string) => city !== cityToRemove);
+
+    // Update the service area structure as well
+    const updatedServiceArea = {
+      ...(currentRealtorData as any).serviceArea,
+      nearbyCities: ((currentRealtorData as any).serviceArea?.nearbyCities as any[])?.filter((city: any) => 
+        `${city.name}, ${city.state}` !== cityToRemove
+      ) || [],
+      totalCitiesServed: updatedServiceCities.length,
+      lastUpdated: new Date()
+    };
+
+    // Update realtor data
+    const updatedRealtorData = {
+      ...currentRealtorData,
+      serviceCities: updatedServiceCities,
+      totalCitiesServed: updatedServiceCities.length,
+      serviceArea: updatedServiceArea,
+      updatedAt: new Date()
+    };
+
+    await FirebaseDB.updateDocument('users', session.user.id, {
+      realtorData: updatedRealtorData,
+      updatedAt: new Date()
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: 'City removed successfully',
+      updatedServiceCities: updatedServiceCities
+    });
+
+  } catch (error) {
+    return NextResponse.json(
+      { error: 'Failed to remove city' },
+      { status: 500 }
+    );
+  }
+}

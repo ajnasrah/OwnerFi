@@ -18,7 +18,7 @@ const CREDIT_PACKAGES = {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions) as ExtendedSession;
+    const session = await getServerSession(authOptions as any) as ExtendedSession;
     
     if (!session?.user?.email || session.user.role !== 'realtor') {
       return NextResponse.json({ error: 'Realtor access required' }, { status: 401 });

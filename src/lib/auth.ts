@@ -10,10 +10,10 @@ import {
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { ExtendedUser, ExtendedSession } from '@/types/session';
-import type { AuthOptions as NextAuthOptions, Session } from 'next-auth';
+import type { Session } from 'next-auth';
 import type { JWT } from 'next-auth/jwt';
 
-export const authOptions: NextAuthOptions = {
+export const authOptions = {
   providers: [
     CredentialsProvider({
       name: 'credentials',
@@ -81,7 +81,7 @@ export const authOptions: NextAuthOptions = {
       token: JWT & { role?: string }; 
     }) {
       if (token && session.user) {
-        session.user.id = token.sub!;
+        session.user.id = (token as any).sub!;
         session.user.role = token.role;
       }
       return session;

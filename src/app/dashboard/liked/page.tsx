@@ -37,14 +37,14 @@ export default function LikedProperties() {
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/auth/signin');
-    } else if (status === 'authenticated' && isExtendedSession(session) && (session as ExtendedSession)?.user?.role !== 'buyer') {
+    } else if (status === 'authenticated' && isExtendedSession(session as any) && (session as unknown as ExtendedSession)?.user?.role !== 'buyer') {
       router.push('/auth/signin');
     }
   }, [status, session, router]);
 
   // Load liked properties
   useEffect(() => {
-    if (status === 'authenticated' && isExtendedSession(session) && (session as ExtendedSession)?.user?.role === 'buyer') {
+    if (status === 'authenticated' && isExtendedSession(session as any) && (session as unknown as ExtendedSession)?.user?.role === 'buyer') {
       loadLikedProperties();
     }
   }, [status, session]);
@@ -60,7 +60,7 @@ export default function LikedProperties() {
         setError(data.error);
       } else {
         setProperties(data.likedProperties || []);
-        setProfile(data.profile);
+        // setProfile(data.profile); // TODO: Define setProfile function
         
       }
 

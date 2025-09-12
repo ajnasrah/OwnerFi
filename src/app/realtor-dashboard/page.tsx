@@ -80,14 +80,14 @@ export default function RealtorDashboard() {
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/auth/signin');
-    } else if (status === 'authenticated' && (session as ExtendedSession)?.user?.role !== 'realtor') {
+    } else if (status === 'authenticated' && (session as unknown as ExtendedSession)?.user?.role !== 'realtor') {
       router.push('/');
     }
   }, [status, session, router]);
 
   // Load dashboard data
   useEffect(() => {
-    if (status === 'authenticated' && (session as ExtendedSession)?.user?.role === 'realtor') {
+    if (status === 'authenticated' && (session as unknown as ExtendedSession)?.user?.role === 'realtor') {
       loadDashboardData();
     }
   }, [status, session]);

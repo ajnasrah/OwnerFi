@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
           status: 'active',
           dateAdded: new Date().toISOString(),
           lastUpdated: new Date().toISOString(),
-          priority: 'normal',
+          priority: 1,
           featured: false,
           isActive: true
         };

@@ -26,7 +26,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const session = await getServerSession(authOptions as any) as ExtendedSession | null;
+    const session = await // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    getServerSession(authOptions as any) as ExtendedSession | null;
     
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

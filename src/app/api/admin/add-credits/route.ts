@@ -16,7 +16,8 @@ import { getSafeDb } from '@/lib/firebase-safe';
 export async function POST(request: NextRequest) {
   try {
     // Admin access control
-    const session = await getServerSession(authOptions as any) as ExtendedSession;
+    const session = await // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    getServerSession(authOptions as any) as ExtendedSession;
     
     if (!session?.user || session.user?.role !== 'admin') {
       return NextResponse.json(

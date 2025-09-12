@@ -5,6 +5,7 @@ import { ExtendedSession, ExtendedUser } from '@/types/session';
 
 // Check if user has required role, redirect if not
 export async function requireRole(requiredRole: 'buyer' | 'realtor'): Promise<ExtendedSession> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const session = await getServerSession(authOptions as any) as ExtendedSession | null;
   
   if (!session?.user) {
@@ -33,6 +34,7 @@ export async function requireRole(requiredRole: 'buyer' | 'realtor'): Promise<Ex
 
 // Get session and validate role for API routes
 export async function getSessionWithRole(requiredRole: 'buyer' | 'realtor'): Promise<ExtendedSession> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const session = await getServerSession(authOptions as any) as ExtendedSession | null;
   
   if (!session?.user) {

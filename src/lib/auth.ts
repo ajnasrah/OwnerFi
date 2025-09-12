@@ -81,6 +81,7 @@ export const authOptions = {
       token: JWT & { role?: string }; 
     }) {
       if (token && session.user) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         session.user.id = (token as any).sub!;
         session.user.role = token.role;
       }

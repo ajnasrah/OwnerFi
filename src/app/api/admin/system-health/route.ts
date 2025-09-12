@@ -7,7 +7,8 @@ import { ExtendedSession } from '@/types/session';
 export async function GET() {
   try {
     // Check if user is admin (basic check)
-    const session = await getServerSession(authOptions as any) as ExtendedSession | null;
+    const session = await // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    getServerSession(authOptions as any) as ExtendedSession | null;
     
     if (!session?.user || (session as ExtendedSession).user.role !== 'admin') {
       return NextResponse.json(
@@ -41,7 +42,8 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     // Check if user is admin
-    const session = await getServerSession(authOptions as any) as ExtendedSession | null;
+    const session = await // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    getServerSession(authOptions as any) as ExtendedSession | null;
     
     if (!session?.user || (session as ExtendedSession).user.role !== 'admin') {
       return NextResponse.json(

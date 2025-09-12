@@ -22,7 +22,8 @@ export async function GET() {
       );
     }
 
-    const session = await getServerSession(authOptions as any) as ExtendedSession;
+    const session = await // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    getServerSession(authOptions as any) as ExtendedSession;
     
     if (!session?.user || session.user?.role !== 'admin') {
       return NextResponse.json(
@@ -67,7 +68,8 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const session = await getServerSession(authOptions as any) as ExtendedSession;
+    const session = await // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    getServerSession(authOptions as any) as ExtendedSession;
     
     if (!session?.user || session.user?.role !== 'admin') {
       return NextResponse.json(

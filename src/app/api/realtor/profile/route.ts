@@ -7,7 +7,8 @@ import { UserWithRealtorData } from '@/lib/realtor-models';
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions as any) as ExtendedSession;
+    const session = await // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    getServerSession(authOptions as any) as ExtendedSession;
     
     if (!session?.user || session.user.role !== 'realtor') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -42,7 +43,8 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions as any) as ExtendedSession;
+    const session = await // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    getServerSession(authOptions as any) as ExtendedSession;
     
     if (!session?.user || session.user.role !== 'realtor') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -116,7 +118,8 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions as any) as ExtendedSession;
+    const session = await // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    getServerSession(authOptions as any) as ExtendedSession;
     
     if (!session?.user || session.user.role !== 'realtor') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

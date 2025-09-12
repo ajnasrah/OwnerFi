@@ -113,13 +113,17 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     // Handle subscription vs one-time purchase
     if (mode === 'subscription' && subscription && creditPackage.recurring) {
       // Only 4 and 10 credit packages should create subscriptions
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (updatedRealtorData as any).stripeSubscriptionId = typeof subscription === 'string' ? subscription : subscription.id;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (updatedRealtorData as any).subscriptionStatus = 'active';
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (updatedRealtorData as any).currentPlan = creditPackId;
     }
 
     // Store Stripe customer ID if provided
     if (customer) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (updatedRealtorData as any).stripeCustomerId = customer;
     }
 
@@ -219,6 +223,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
 
 async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
   try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const subscriptionId = (invoice as any).subscription as string;
     
     if (!subscriptionId) return;
@@ -238,6 +243,7 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
 
     const user = users[0] as UserWithRealtorData;
     const realtorData = user.realtorData || {};
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const creditPackId = (realtorData as any).currentPlan;
     
     // Find the credit package to get credits
@@ -247,6 +253,7 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
     }
 
     // Add monthly credits for recurring subscriptions
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const currentCredits = (realtorData as any).credits || 0;
     const newCredits = currentCredits + creditPackage.credits;
 
@@ -283,6 +290,7 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
 
 async function handlePaymentFailed(invoice: Stripe.Invoice) {
   try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const subscriptionId = (invoice as any).subscription as string;
     
     if (!subscriptionId) return;

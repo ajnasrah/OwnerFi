@@ -1,0 +1,207 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { 
+  collection, 
+  query, 
+  getDocs, 
+  doc,
+  updateDoc,
+  getDoc,
+  setDoc,
+  orderBy,
+  serverTimestamp
+} from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { logError, logInfo } from '@/lib/logger';
+
+// GET - Fetch all disputes for admin review
+export async function GET() {
+  try {
+    if (!db) {
+      return NextResponse.json(
+        { error: 'Database not available' },
+        { status: 500 }
+      );
+    }
+
+    // TODO: Add admin role check when admin auth is implemented
+    // For now, this is open for development
+    
+    const disputesQuery = query(
+      collection(db!, 'leadDisputes'),
+      orderBy('submittedAt', 'desc')
+    );
+    const disputeDocs = await getDocs(disputesQuery);
+
+    // Fetch disputes and enhance with buyer details
+    const disputes = await Promise.all(disputeDocs.docs.map(async (docSnapshot) => {
+      const disputeData = docSnapshot.data();
+      let buyerDetails = null;
+      
+      // Try to fetch the related purchase to get buyer ID
+      if (disputeData.transactionId) {
+        try {
+          const purchaseDoc = await getDoc(doc(db!, 'buyerLeadPurchases', disputeData.transactionId));
+          if (purchaseDoc.exists()) {
+            const purchaseData = purchaseDoc.data();
+            
+            // Fetch buyer profile
+            if (purchaseData.buyerId) {
+              const buyerDoc = await getDoc(doc(db!, 'buyerProfiles', purchaseData.buyerId));
+              if (buyerDoc.exists()) {
+                const buyer = buyerDoc.data();
+                const criteria = buyer.searchCriteria || {};
+                buyerDetails = {
+                  buyerPhone: buyer.phone || 'No phone',
+                  buyerEmail: buyer.email || 'No email',
+                  buyerCity: criteria.cities?.[0] || buyer.preferredCity || 'Unknown',
+                  buyerState: criteria.state || buyer.preferredState || '',
+                  maxMonthlyPayment: criteria.maxMonthlyPayment || buyer.maxMonthlyPayment || 0,
+                  maxDownPayment: criteria.maxDownPayment || buyer.maxDownPayment || 0
+                };
+              }
+            }
+          }
+        } catch {
+        }
+      }
+      
+      return {
+        id: docSnapshot.id,
+        ...disputeData,
+        ...buyerDetails,
+        status: disputeData.status || 'pending',
+        submittedAt: disputeData.submittedAt?.toDate?.()?.toISOString() || disputeData.submittedAt,
+        createdAt: disputeData.createdAt?.toDate?.()?.toISOString() || disputeData.createdAt,
+        updatedAt: disputeData.updatedAt?.toDate?.()?.toISOString() || disputeData.updatedAt,
+        resolvedAt: disputeData.resolvedAt?.toDate?.()?.toISOString() || disputeData.resolvedAt
+      };
+    }));
+
+    // Group by status
+    const pendingDisputes = disputes.filter(d => d.status === 'pending');
+    const resolvedDisputes = disputes.filter(d => d.status !== 'pending');
+
+    return NextResponse.json({
+      pendingDisputes,
+      resolvedDisputes,
+      totalDisputes: disputes.length,
+      stats: {
+        pending: pendingDisputes.length,
+        approved: disputes.filter(d => d.status === 'approved').length,
+        denied: disputes.filter(d => d.status === 'denied').length,
+        refunded: disputes.filter(d => d.status === 'refunded').length
+      }
+    });
+
+  } catch (error) {
+    await logError('Failed to fetch disputes', {
+      action: 'admin_disputes_fetch_error'
+    }, error as Error);
+
+    return NextResponse.json(
+      { error: 'Failed to load disputes' },
+      { status: 500 }
+    );
+  }
+}
+
+// POST - Resolve a dispute (approve/deny)
+export async function POST(request: NextRequest) {
+  try {
+    if (!db) {
+      return NextResponse.json(
+        { error: 'Database not available' },
+        { status: 500 }
+      );
+    }
+
+    // TODO: Add admin role check when admin auth is implemented
+    
+    const body = await request.json();
+    const { disputeId, action, adminNotes, refundCredits } = body;
+
+    if (!disputeId || !action || !['approve', 'deny', 'refund'].includes(action)) {
+      return NextResponse.json(
+        { error: 'Invalid dispute resolution action' },
+        { status: 400 }
+      );
+    }
+
+    // Get dispute details
+    const disputeDoc = await getDoc(doc(db!, 'leadDisputes', disputeId));
+    
+    if (!disputeDoc.exists()) {
+      return NextResponse.json(
+        { error: 'Dispute not found' },
+        { status: 404 }
+      );
+    }
+
+    const dispute = disputeDoc.data();
+    
+    // Allow re-processing approved disputes if they don't have refund amounts
+    if (dispute.status === 'approved' && !dispute.refundAmount && refundCredits > 0) {
+    }
+
+    // Update dispute status
+    const updateData: Record<string, unknown> = {
+      status: action === 'refund' ? 'refunded' : action === 'approve' ? 'approved' : 'denied',
+      adminNotes: adminNotes || '',
+      resolvedAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    };
+
+    // Refund credits when approving or explicitly refunding
+    if ((action === 'approve' || action === 'refund') && refundCredits > 0) {
+      updateData.refundAmount = refundCredits;
+      
+      // Add credits back to realtor account
+      const realtorDoc = await getDoc(doc(db!, 'realtors', dispute.realtorId));
+      if (realtorDoc.exists()) {
+        const currentCredits = realtorDoc.data()?.credits || 0;
+        await updateDoc(doc(db!, 'realtors', dispute.realtorId), {
+          credits: currentCredits + refundCredits,
+          updatedAt: serverTimestamp()
+        });
+        
+        // Create a transaction record for the refund
+        await setDoc(doc(collection(db!, 'transactions')), {
+          realtorId: dispute.realtorId,
+          type: 'dispute_refund',
+          description: `Refund for dispute #${disputeId.substring(0, 8)}`,
+          credits: refundCredits,
+          amount: 0, // No money transaction, just credits
+          status: 'completed',
+          createdAt: serverTimestamp()
+        });
+      }
+    }
+
+    await updateDoc(doc(db!, 'leadDisputes', disputeId), updateData);
+
+    await logInfo('Dispute resolved by admin', {
+      action: 'dispute_resolved',
+      metadata: {
+        resolution: action,
+        refundCredits: refundCredits || 0,
+        disputeId: disputeId
+      }
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: `Dispute ${action}ed successfully`,
+      refundAmount: action === 'refund' ? refundCredits : 0
+    });
+
+  } catch (error) {
+    await logError('Failed to resolve dispute', {
+      action: 'admin_dispute_resolve_error'
+    }, error as Error);
+
+    return NextResponse.json(
+      { error: 'Failed to resolve dispute' },
+      { status: 500 }
+    );
+  }
+}

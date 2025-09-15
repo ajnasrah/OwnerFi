@@ -13,6 +13,42 @@ import { PropertyListing } from '@/lib/property-schema';
 interface AdminProperty extends PropertyListing {
   imageUrl?: string; // Legacy field for backward compatibility
 }
+
+interface BuyerStats {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  primaryCity?: string;
+  primaryState?: string;
+  downPayment?: number;
+  monthlyBudget?: number;
+  matchedPropertiesCount: number;
+  likedPropertiesCount: number;
+  loginCount: number;
+  lastSignIn?: string;
+  createdAt?: string;
+  isActive?: boolean;
+}
+
+interface RealtorStats {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  licenseNumber?: string;
+  brokerage?: string;
+  city?: string;
+  state?: string;
+  credits: number;
+  availableBuyersCount: number;
+  totalLeadsPurchased: number;
+  lastSignIn?: string;
+  createdAt?: string;
+  isActive?: boolean;
+  subscriptionStatus?: string;
+}
+
 import Image from 'next/image';
 
 export default function AdminDashboard() {
@@ -50,9 +86,9 @@ export default function AdminDashboard() {
   const [loadingContacts, setLoadingContacts] = useState(false);
 
   // Buyers and Realtors state
-  const [buyers, setBuyers] = useState<any[]>([]);
+  const [buyers, setBuyers] = useState<BuyerStats[]>([]);
   const [loadingBuyers, setLoadingBuyers] = useState(false);
-  const [realtors, setRealtors] = useState<any[]>([]);
+  const [realtors, setRealtors] = useState<RealtorStats[]>([]);
   const [loadingRealtors, setLoadingRealtors] = useState(false);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 

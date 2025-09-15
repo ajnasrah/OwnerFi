@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { ExtendedSession, isExtendedSession } from '@/types/session';
 import Chatbot from '@/components/ui/ChatbotiPhone';
 import FloatingChatbotButton from '@/components/ui/FloatingChatbotButton';
+import { LegalFooter } from '@/components/ui/LegalFooter';
 
 export default function HomePage() {
   const { data: session, status } = useSession();
@@ -75,7 +76,7 @@ export default function HomePage() {
               Connect directly with homeowners who offer financing
             </p>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem', marginBottom: '2rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '2rem' }}>
               <Link
                 href="/signup"
                 className="w-full block bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-300 hover:scale-[1.02] shadow-lg hover:shadow-xl"
@@ -89,6 +90,13 @@ export default function HomePage() {
               >
                 I&apos;m a Real Estate Agent
               </Link>
+
+              <Link
+                href="/how-owner-finance-works"
+                className="w-full block bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white py-3 px-6 rounded-xl font-medium text-base transition-all duration-300 hover:scale-[1.02] shadow-md"
+              >
+                📚 How Owner Finance Works
+              </Link>
             </div>
 
             <div className="space-y-3 mb-6">
@@ -96,27 +104,27 @@ export default function HomePage() {
                 <div className="w-4 h-4 rounded-full bg-emerald-500/20 flex items-center justify-center">
                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>
                 </div>
-                <span>No credit checks</span>
+                <span>Lead generation platform</span>
               </div>
               <div className="flex items-center justify-center gap-3 text-slate-300 text-sm">
                 <div className="w-4 h-4 rounded-full bg-emerald-500/20 flex items-center justify-center">
                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>
                 </div>
-                <span>Direct communication</span>
+                <span>Agent connections</span>
               </div>
               <div className="flex items-center justify-center gap-3 text-slate-300 text-sm">
                 <div className="w-4 h-4 rounded-full bg-emerald-500/20 flex items-center justify-center">
                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>
                 </div>
-                <span>Professional support</span>
+                <span>Information only*</span>
               </div>
             </div>
 
             <div className="bg-slate-800/50 border border-slate-700/30 rounded-xl p-4">
               <div className="flex items-center justify-center gap-4 text-center">
                 <div>
-                  <div className="text-lg font-bold text-emerald-400">1,247</div>
-                  <div className="text-xs text-slate-400">homes found</div>
+                  <div className="text-lg font-bold text-emerald-400">Platform</div>
+                  <div className="text-xs text-slate-400">lead generation</div>
                 </div>
                 <div className="w-px h-8 bg-slate-600"></div>
                 <div className="flex items-center gap-1">
@@ -253,7 +261,7 @@ export default function HomePage() {
                   </div>
                   <div>
                     <h3 className="text-white font-semibold mb-1">Set Preferences</h3>
-                    <p className="text-slate-400 text-sm">Budget and location. No credit checks.</p>
+                    <p className="text-slate-400 text-sm">Budget and location preferences for agent matching.</p>
                   </div>
                 </div>
 
@@ -263,7 +271,7 @@ export default function HomePage() {
                   </div>
                   <div>
                     <h3 className="text-white font-semibold mb-1">Browse Properties</h3>
-                    <p className="text-slate-400 text-sm">Owner-financed homes, direct from sellers.</p>
+                    <p className="text-slate-400 text-sm">Information about properties with owner financing opportunities.</p>
                   </div>
                 </div>
 
@@ -272,8 +280,8 @@ export default function HomePage() {
                     <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
                   </div>
                   <div>
-                    <h3 className="text-white font-semibold mb-1">Connect & Close</h3>
-                    <p className="text-slate-400 text-sm">Flexible terms, faster closings.</p>
+                    <h3 className="text-white font-semibold mb-1">Agent Connection</h3>
+                    <p className="text-slate-400 text-sm">Matched with licensed real estate professionals.</p>
                   </div>
                 </div>
               </div>
@@ -404,9 +412,13 @@ export default function HomePage() {
             
             <div className="bg-slate-700/30 border border-slate-600/30 rounded-xl p-6 text-center">
               <p className="text-slate-300 text-lg mb-2">
-                <span className="text-emerald-400 font-bold">1,247</span> families have found their dream homes through owner financing
+                Lead generation platform connecting buyers with licensed real estate agents
               </p>
-              <p className="text-slate-400">Join the movement that&apos;s changing how America buys homes</p>
+              <div className="bg-yellow-100 border border-yellow-300 rounded-lg p-3 mt-3">
+                <p className="text-xs text-yellow-800">
+                  ⚠️ OwnerFi is not a licensed real estate broker or agent. Information not guaranteed. Your contact information will be sold to licensed real estate professionals who may contact you. Consult licensed professionals for all real estate decisions.
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -477,6 +489,9 @@ export default function HomePage() {
           </div>
         </div>
       </footer>
+
+      {/* Comprehensive Legal Footer */}
+      <LegalFooter />
 
       {/* Floating Chatbot Button */}
       <FloatingChatbotButton onClick={() => setIsChatbotOpen(true)} />

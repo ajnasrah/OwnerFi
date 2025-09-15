@@ -52,16 +52,30 @@ export default function TermsOfService() {
             <section>
               <h2 className="text-2xl font-semibold text-primary-text mb-4">3. NOT A LICENSED BROKER OR AGENT</h2>
               <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-                <p className="font-bold text-red-800 text-xl">⚠️ IMPORTANT DISCLAIMER</p>
-                <p className="text-red-700 mt-2"><strong>OWNERFI IS NOT A LICENSED REAL ESTATE BROKER, AGENT, OR LENDER.</strong> We do not:</p>
+                <p className="font-bold text-red-800 text-xl">⚠️ CRITICAL LEGAL DISCLAIMER</p>
+                <p className="text-red-700 mt-2"><strong>OWNERFI IS NOT A LICENSED REAL ESTATE BROKER, AGENT, OR LENDER IN ANY STATE.</strong> We do not:</p>
                 <ul className="list-disc ml-6 mt-2 space-y-1 text-red-700">
                   <li>Represent buyers or sellers in real estate transactions</li>
                   <li>Negotiate sales prices or financing terms</li>
                   <li>Provide real estate brokerage services</li>
                   <li>Act as a fiduciary or advocate for any party</li>
-                  <li>Provide lending or mortgage services</li>
+                  <li>Provide lending, mortgage, or financial services</li>
+                  <li>Provide legal, tax, or investment advice</li>
+                  <li>Guarantee property information accuracy</li>
+                  <li>Facilitate or conduct real estate transactions</li>
                 </ul>
-                <p className="text-red-700 mt-2"><strong>WE ARE SOLELY A LEAD GENERATION AND MARKETING PLATFORM.</strong></p>
+                <p className="text-red-700 mt-2"><strong>WE ARE SOLELY A LEAD GENERATION AND MARKETING PLATFORM CONNECTING CONSUMERS WITH LICENSED REAL ESTATE PROFESSIONALS.</strong></p>
+              </div>
+              
+              <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-4">
+                <p className="font-bold text-purple-800">🏛️ STATE LICENSING DISCLOSURES</p>
+                <div className="text-purple-700 mt-2 space-y-1 text-sm">
+                  <p><strong>California:</strong> Not licensed by California Bureau of Real Estate. License #: N/A</p>
+                  <p><strong>Texas:</strong> Not licensed by Texas Real Estate Commission (TREC). TSB #: N/A</p>
+                  <p><strong>Florida:</strong> Not licensed by Florida Department of Business & Professional Regulation</p>
+                  <p><strong>New York:</strong> Not licensed by New York Department of State</p>
+                  <p><strong>All States:</strong> We are not licensed to provide real estate brokerage services in any jurisdiction</p>
+                </div>
               </div>
             </section>
 
@@ -74,11 +88,83 @@ export default function TermsOfService() {
                   <li>Having your contact information SOLD to licensed real estate professionals</li>
                   <li>Receiving calls, texts, and emails from multiple real estate agents</li>
                   <li>Being contacted using automated dialing systems</li>
-                  <li>Marketing communications from OwnerFi and our partners</li>
+                  <li>Marketing communications from our real estate partners</li>
                 </ul>
                 <p className="text-yellow-700 mt-2"><strong>Message and data rates may apply. This consent is required to use our service.</strong></p>
               </div>
               <p>When you register as a buyer, your information including but not limited to name, email, phone number, and property preferences <strong>WILL BE SOLD</strong> to real estate professionals who serve your area. You <strong>WILL BE CONTACTED</strong> by multiple agents regarding properties and services.</p>
+              
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4 mt-4">
+                <p className="font-bold text-green-800">📞 OWNERFI COMMUNICATION RIGHTS</p>
+                <p className="text-green-700 mt-2">
+                  <strong>By registering, you expressly consent to OwnerFi contacting you via phone, text, and email for:</strong>
+                </p>
+                <ul className="list-disc ml-6 mt-2 space-y-1 text-green-700">
+                  <li><strong>Marketing communications</strong> - Property updates, platform promotions, service offerings</li>
+                  <li><strong>Account and service notifications</strong> - Password resets, account updates, security alerts</li>
+                  <li><strong>Platform updates</strong> - New features, policy changes, important announcements</li>
+                  <li><strong>Customer support</strong> - Responding to your inquiries and technical support</li>
+                  <li><strong>Legal and compliance</strong> - Required notices, dispute resolution, regulatory compliance</li>
+                </ul>
+                <p className="text-green-700 mt-2 text-sm">
+                  <strong>This includes automated calls and texts. Message and data rates may apply.</strong> 
+                  You consent to these communications as part of using our platform, even if your number is on a Do Not Call registry.
+                </p>
+              </div>
+              
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mt-4">
+                <p className="font-bold text-red-800">🚨 AGENT COMPLIANCE & LIABILITY LIMITATION</p>
+                <div className="text-red-700 mt-2 space-y-2">
+                  <p><strong>OwnerFi is not responsible for agent compliance with TCPA, state telemarketing laws, or communication regulations.</strong></p>
+                  <p><strong>Each agent is an independent contractor responsible for:</strong></p>
+                  <ul className="list-disc ml-6 space-y-1">
+                    <li>Compliance with federal and state TCPA regulations</li>
+                    <li>Honoring opt-out requests (STOP, unsubscribe)</li>
+                    <li>Maintaining their own Do Not Call compliance</li>
+                    <li>Following state-specific telemarketing laws</li>
+                    <li>Proper use of automated dialing systems</li>
+                  </ul>
+                  <p><strong>You acknowledge that OwnerFi cannot control agent communication practices after lead sale and agree to direct any compliance issues to the individual agent, not OwnerFi.</strong></p>
+                </div>
+              </div>
+              
+              <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mt-4">
+                <p className="font-bold text-purple-800">🏛️ STATE-SPECIFIC TCPA COMPLIANCE</p>
+                <p className="text-purple-700 mt-2">
+                  <strong>Additional state laws may apply beyond federal TCPA requirements:</strong>
+                </p>
+                <ul className="list-disc ml-6 mt-2 space-y-1 text-purple-700 text-sm">
+                  <li><strong>Florida:</strong> Florida Telephone Solicitation Act (additional restrictions)</li>
+                  <li><strong>Oklahoma:</strong> Oklahoma Telephone Solicitation Act (stricter than federal)</li>
+                  <li><strong>Washington:</strong> Washington Commercial Electronic Mail Act</li>
+                  <li><strong>All States:</strong> State Do Not Call registries may apply</li>
+                </ul>
+                <p className="text-purple-700 mt-2 text-sm">
+                  <strong>You consent to contact under both federal and applicable state laws. Agents purchasing leads are responsible for compliance with all applicable laws in their jurisdiction and yours.</strong>
+                </p>
+              </div>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold text-primary-text mb-4">4.5. AGENT COMPLIANCE REQUIREMENTS</h2>
+              <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4">
+                <p className="font-bold text-orange-800">📋 REAL ESTATE AGENT OBLIGATIONS</p>
+                <p className="text-orange-700 mt-2"><strong>Licensed real estate professionals who purchase leads through OwnerFi agree to:</strong></p>
+                <ul className="list-disc ml-6 mt-2 space-y-1 text-orange-700">
+                  <li><strong>Use leads only for purchased purpose</strong> - Contact only regarding properties and services</li>
+                  <li><strong>Honor opt-out requests within 24 hours</strong> - Process STOP, unsubscribe, do-not-call requests immediately</li>
+                  <li><strong>Maintain TCPA compliance</strong> - Follow federal and state telemarketing regulations</li>
+                  <li><strong>Respect Do Not Call registries</strong> - Check and comply with federal and state DNC lists</li>
+                  <li><strong>Use proper identification</strong> - Identify themselves and their brokerage in all communications</li>
+                  <li><strong>Indemnify OwnerFi</strong> - Hold OwnerFi harmless for their communication practices</li>
+                </ul>
+                
+                <div className="bg-red-100 border border-red-200 rounded p-3 mt-3">
+                  <p className="text-red-800 font-semibold text-sm">
+                    🚨 AGENT LIABILITY: Agents are independent contractors. OwnerFi is not responsible for agent compliance failures, spam, or regulatory violations. Direct all communication complaints to the individual agent and their brokerage.
+                  </p>
+                </div>
+              </div>
             </section>
 
             <section>
@@ -190,6 +276,145 @@ export default function TermsOfService() {
             </section>
 
             <section>
+              <h2 className="text-2xl font-semibold text-primary-text mb-4">14.5. LEGAL RISK & LIMITATION OF LIABILITY</h2>
+              
+              <div className="bg-red-50 border border-red-200 rounded-lg p-6 mb-6">
+                <h3 className="font-bold text-red-800 text-xl mb-4">🏢 PLATFORM ROLE</h3>
+                <p className="text-red-700 mb-4">
+                  <strong>OwnerFi (operated by Prosway) is a marketing and lead-generation platform only.</strong> We are <strong>NOT</strong> a licensed real estate broker, agent, lender, title company, attorney, or financial advisor. We do not negotiate, structure, or close any transactions. All property, financing, and investment decisions are the sole responsibility of the users of the platform.
+                </p>
+                
+                <h3 className="font-bold text-red-800 text-lg mb-3">🚫 NO GUARANTEE OF ACCURACY</h3>
+                <p className="text-red-700 mb-4">
+                  All property information, financial figures, payment estimates, and other data displayed on OwnerFi are provided by third parties (sellers, agents, or automated sources). OwnerFi makes no representation or warranty as to the <strong>accuracy, completeness, or reliability</strong> of this information. Users must independently verify all property details, financing terms, tax obligations, insurance requirements, and homeowner association (HOA) fees before making any purchase or investment decision.
+                </p>
+                
+                <h3 className="font-bold text-red-800 text-lg mb-3">⚖️ NO PROFESSIONAL ADVICE</h3>
+                <p className="text-red-700 mb-4">
+                  Nothing provided on OwnerFi should be considered <strong>legal, financial, tax, or real estate advice.</strong> Users are encouraged to consult with licensed professionals, including but not limited to real estate brokers, attorneys, title companies, financial advisors, and tax specialists, before entering into any agreement.
+                </p>
+                
+                <h3 className="font-bold text-red-800 text-lg mb-3">📋 USER RESPONSIBILITIES</h3>
+                <p className="text-red-700 mb-2"><strong>By using OwnerFi, you acknowledge and agree that:</strong></p>
+                <ul className="list-disc ml-6 space-y-1 text-red-700 text-sm">
+                  <li>You are solely responsible for verifying the legal status of the property, including liens, mortgages, judgments, or title defects.</li>
+                  <li>You are solely responsible for understanding and paying property taxes, homeowner's insurance, and HOA dues (if applicable), as these are not escrowed by OwnerFi or the seller.</li>
+                  <li>You are solely responsible for understanding balloon payments, refinancing obligations, and foreclosure risks associated with owner-finance transactions.</li>
+                  <li>You are solely responsible for ensuring compliance with all applicable laws, including federal Fair Housing laws and state-specific licensing regulations.</li>
+                </ul>
+                
+                <h3 className="font-bold text-red-800 text-lg mb-3 mt-4">🛡️ LIMITATION OF LIABILITY</h3>
+                <p className="text-red-700 mb-2">
+                  To the maximum extent permitted by law, OwnerFi and its parent company Prosway, including all officers, directors, employees, contractors, and affiliates, shall not be liable for any <strong>losses, damages, claims, or expenses</strong> (including but not limited to direct, indirect, incidental, consequential, punitive, or special damages) arising out of or related to:
+                </p>
+                <ul className="list-disc ml-6 space-y-1 text-red-700 text-sm">
+                  <li>Inaccurate or incomplete property information</li>
+                  <li>Failed, delayed, or canceled transactions</li>
+                  <li>Acts or omissions of sellers, buyers, agents, or third parties</li>
+                  <li>User reliance on financial projections, estimates, or examples</li>
+                  <li>Any real estate, financing, or investment decision made by the user</li>
+                </ul>
+                
+                <h3 className="font-bold text-red-800 text-lg mb-3 mt-4">🔒 INDEMNIFICATION</h3>
+                <p className="text-red-700">
+                  You agree to <strong>indemnify, defend, and hold harmless</strong> OwnerFi, Prosway, and their affiliates from and against any and all claims, damages, losses, liabilities, costs, or expenses (including attorney's fees) arising from: (a) Your use of the platform; (b) Your participation in any transaction or investment opportunity; (c) Your violation of any law, regulation, or third-party rights.
+                </p>
+              </div>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold text-primary-text mb-4">14.6. ADDITIONAL LIABILITY LIMITATIONS</h2>
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                <p className="font-bold text-red-800">🚨 MAXIMUM LIABILITY PROTECTION</p>
+                <div className="text-red-700 mt-2 space-y-2">
+                  <p><strong>OWNERFI'S TOTAL LIABILITY TO YOU SHALL NOT EXCEED $100 (ONE HUNDRED DOLLARS) REGARDLESS OF THE NATURE OF YOUR CLAIM.</strong></p>
+                  <p><strong>WE ARE NOT LIABLE FOR:</strong></p>
+                  <ul className="list-disc ml-6 space-y-1">
+                    <li>Inaccurate property information or financial projections</li>
+                    <li>Failed real estate transactions or financing arrangements</li>
+                    <li>Actions or omissions of real estate agents, brokers, or property owners</li>
+                    <li>Investment losses, property damage, or financial harm</li>
+                    <li>Consequential, incidental, punitive, or special damages</li>
+                    <li>Lost profits, lost opportunities, or business interruption</li>
+                    <li>Third-party actions, fraud, or misrepresentation</li>
+                    <li>AI-generated content or automated responses</li>
+                  </ul>
+                  <p><strong>YOU USE OUR PLATFORM ENTIRELY AT YOUR OWN RISK.</strong></p>
+                </div>
+              </div>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold text-primary-text mb-4">14.6. PROPERTY LISTING DISCLAIMERS & PROTECTIONS</h2>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                <p className="font-bold text-blue-800">🏠 PROPERTY INFORMATION DISCLAIMERS</p>
+                <p className="text-blue-700 mt-2"><strong>ALL PROPERTY LISTINGS AND DESCRIPTIONS ARE SUBJECT TO THE FOLLOWING DISCLAIMERS:</strong></p>
+                <div className="mt-3 space-y-2 text-blue-700">
+                  <div className="border-l-4 border-blue-400 pl-3">
+                    <p className="font-semibold">1. Payment Estimates Only</p>
+                    <p className="text-sm">All payment amounts shown are approximate examples only and not guaranteed. Actual payments may vary significantly based on multiple factors.</p>
+                  </div>
+                  
+                  <div className="border-l-4 border-blue-400 pl-3">
+                    <p className="font-semibold">2. Additional Costs Not Included & Escrow Responsibility</p>
+                    <p className="text-sm">Monthly payment estimates do not include property taxes, insurance, HOA fees, maintenance, utilities, or other ownership costs. Unlike traditional bank loans, there is typically no escrow account established to collect and pay these expenses. Buyers are solely responsible for determining amounts owed, payment due dates, and ensuring timely direct payments to taxing authorities, insurance providers, and HOA organizations. Failure to pay these obligations may result in penalties, liens, loss of coverage, or foreclosure.</p>
+                  </div>
+                  
+                  <div className="border-l-4 border-blue-400 pl-3">
+                    <p className="font-semibold">3. Financing Terms Are Examples Only</p>
+                    <p className="text-sm">Interest rates, loan terms, down payment requirements, and buyer qualifications shown are examples only and not offers to finance.</p>
+                  </div>
+                  
+                  <div className="border-l-4 border-blue-400 pl-3">
+                    <p className="font-semibold">4. Not a Loan Offer or Commitment</p>
+                    <p className="text-sm">OwnerFi does not make loans, provide financing, or commit to any lending arrangements. All financing is between buyer and property owner only.</p>
+                  </div>
+                  
+                  <div className="border-l-4 border-blue-400 pl-3">
+                    <p className="font-semibold">5. Credit Approval Required</p>
+                    <p className="text-sm">All financing arrangements require approved credit and buyer qualifications as determined solely by the property owner or their designated lender. Sellers have the right to perform credit checks and may require credit reports, income verification, and background checks.</p>
+                  </div>
+                  
+                  <div className="border-l-4 border-blue-400 pl-3">
+                    <p className="font-semibold">6. No Guarantee of Approval or Availability</p>
+                    <p className="text-sm">OwnerFi does not guarantee financing approval, property availability, or successful transaction completion for any buyer. Properties shown may no longer be available, sellers may have changed their financing terms, or sellers may no longer be interested in owner financing. We are simply letting you know what possible owner finance deals are out there - not guaranteeing availability or seller commitment.</p>
+                  </div>
+                  
+                  <div className="border-l-4 border-blue-400 pl-3">
+                    <p className="font-semibold">7. Balloon Payment Disclosure</p>
+                    <p className="text-sm">Owner financing arrangements may include balloon payments where remaining loan balance becomes due at specified intervals (typically 3-5 years) requiring refinancing or full payment.</p>
+                  </div>
+                  
+                  <div className="border-l-4 border-blue-400 pl-3">
+                    <p className="font-semibold">8. Seller Discretion Reserved</p>
+                    <p className="text-sm">Property owners reserve the absolute right to accept, reject, or negotiate any offer at their sole discretion without obligation or explanation.</p>
+                  </div>
+                </div>
+                <p className="text-blue-700 mt-3 font-semibold">These disclaimers apply to all property information displayed on our platform regardless of source or format.</p>
+              </div>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold text-primary-text mb-4">14.7. REAL ESTATE INVESTMENT RISKS</h2>
+              <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4">
+                <p className="font-bold text-orange-800">💰 INVESTMENT RISK DISCLOSURE</p>
+                <div className="text-orange-700 mt-2 space-y-2">
+                  <p><strong>REAL ESTATE INVESTMENTS INVOLVE SUBSTANTIAL RISK OF LOSS.</strong></p>
+                  <p>You acknowledge and understand that:</p>
+                  <ul className="list-disc ml-6 space-y-1">
+                    <li>Property values may decrease, resulting in financial loss</li>
+                    <li>Owner financing arrangements may fail or be foreclosed</li>
+                    <li>All financial projections are estimates only and not guaranteed</li>
+                    <li>Past performance does not predict future results</li>
+                    <li>You may lose your entire investment including down payment</li>
+                    <li>OwnerFi provides no investment advice or recommendations</li>
+                  </ul>
+                  <p><strong>CONSULT LICENSED FINANCIAL ADVISORS BEFORE MAKING ANY INVESTMENT DECISIONS.</strong></p>
+                </div>
+              </div>
+            </section>
+
+            <section>
               <h2 className="text-2xl font-semibold text-primary-text mb-4">15. Governing Law and Binding Arbitration</h2>
               <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 mb-4">
                 <p className="font-bold text-slate-800">⚖️ BINDING ARBITRATION & CLASS ACTION WAIVER</p>
@@ -214,7 +439,7 @@ export default function TermsOfService() {
               <div className="mt-2 p-4 bg-slate-50 rounded-lg">
                 <p><strong>OwnerFi (operated by Prosway)</strong></p>
                 <p>Email: admin@prosway.com</p>
-                <p>Address: 5095 Covington Way, Memphis, TN 38134</p>
+                <p>Address: 6699 Fletcher Creek Cove, Memphis, TN 38133</p>
               </div>
             </section>
 

@@ -36,6 +36,7 @@ export default function SignUp() {
       return;
     }
 
+
     try {
       const response = await fetch('/api/auth/signup', {
         method: 'POST',
@@ -194,6 +195,17 @@ export default function SignUp() {
               />
             </div>
 
+            {/* Simple Consent Notice */}
+            <div className="bg-slate-700/30 border border-slate-600/30 rounded-lg p-3 mt-4">
+              <p className="text-xs text-slate-300 text-center leading-relaxed">
+                By creating an account, you agree to our{' '}
+                <Link href="/terms" className="text-emerald-400 underline" target="_blank">Terms of Service</Link>
+                {' '}and{' '}
+                <Link href="/privacy" className="text-emerald-400 underline" target="_blank">Privacy Policy</Link>
+                {' '}and consent to receiving marketing messages and phone calls from OwnerFi and licensed real estate agents, including automated calls and texts.
+              </p>
+            </div>
+
             <button
               type="submit"
               disabled={loading}
@@ -204,19 +216,19 @@ export default function SignUp() {
           </form>
 
           <div className="mt-3 bg-emerald-500/10 border border-emerald-400/30 rounded-lg p-3">
-            <h3 className="font-bold text-white mb-2 text-sm">Why people choose OwnerFi:</h3>
+            <h3 className="font-bold text-white mb-2 text-sm">OwnerFi Platform:</h3>
             <ul className="space-y-1 text-xs text-white">
               <li className="flex items-center">
                 <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full mr-2"></div>
-                No bank approval needed
+                Lead generation platform
               </li>
               <li className="flex items-center">
                 <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full mr-2"></div>
-                Lower down payments available  
+                Connects with licensed agents
               </li>
               <li className="flex items-center">
                 <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full mr-2"></div>
-                Real sellers, real properties
+                Information only - not advice
               </li>
             </ul>
           </div>

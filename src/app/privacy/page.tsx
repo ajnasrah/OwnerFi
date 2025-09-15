@@ -32,7 +32,7 @@ export default function PrivacyPolicy() {
             
             <section>
               <h2 className="text-2xl font-semibold text-primary-text mb-4">1. Who We Are</h2>
-              <p><strong>OwnerFi is operated by Prosway</strong>, headquartered at 5095 Covington Way, Memphis, TN 38134.</p>
+              <p><strong>OwnerFi is operated by Prosway</strong>, headquartered at 6699 Fletcher Creek Cove, Memphis, TN 38133.</p>
               <p className="mt-4">This Privacy Policy describes how we collect, use, share, and protect your personal information when you use our website and services.</p>
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
                 <p className="font-medium text-blue-800">Key Point:</p>
@@ -117,6 +117,15 @@ export default function PrivacyPolicy() {
                 <li>Budget and financing information</li>
                 <li>Timeline and urgency indicators</li>
               </ul>
+              
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mt-4">
+                <p className="font-bold text-yellow-800">📊 CREDIT CHECK DISCLOSURE</p>
+                <p className="text-yellow-700 mt-2">
+                  <strong>Sellers and their agents have the right to perform credit checks, request credit reports, and require income verification.</strong> 
+                  When you express interest in a property, the seller may request authorization to check your credit and financial qualifications. 
+                  This is separate from our lead generation service.
+                </p>
+              </div>
 
               <h3 className="text-xl font-medium text-primary-text mb-3 mt-6">Other Sharing</h3>
               <p>We may also share your information with:</p>
@@ -185,7 +194,59 @@ export default function PrivacyPolicy() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-primary-text mb-4">9. Children's Privacy</h2>
+              <h2 className="text-2xl font-semibold text-primary-text mb-4">9. CALIFORNIA PRIVACY RIGHTS (CCPA/CPRA)</h2>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                <p className="font-bold text-blue-800">🏛️ CALIFORNIA RESIDENTS RIGHTS</p>
+                <p className="text-blue-700 mt-2">Under the California Consumer Privacy Act (CCPA), California residents have specific rights regarding their personal information:</p>
+                <ul className="list-disc ml-6 mt-2 space-y-1 text-blue-700">
+                  <li><strong>Right to Know:</strong> Request disclosure of personal information we collect, use, or sell</li>
+                  <li><strong>Right to Delete:</strong> Request deletion of personal information (with exceptions)</li>
+                  <li><strong>Right to Opt-Out:</strong> Opt out of the sale of personal information</li>
+                  <li><strong>Right to Non-Discrimination:</strong> Equal service regardless of privacy choices</li>
+                </ul>
+              </div>
+              
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                <p className="font-bold text-red-800">⚠️ IMPORTANT LIMITATION</p>
+                <p className="text-red-700 mt-2">
+                  <strong>Once we sell your information to real estate agents, we cannot retrieve or delete it from their systems.</strong> 
+                  We can stop future sales and delete our copy, but agents who already purchased your information will retain it 
+                  according to their own privacy policies.
+                </p>
+              </div>
+              
+              <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4">
+                <p className="font-bold text-orange-800">📞 "DO NOT SELL MY INFO" REQUEST</p>
+                <p className="text-orange-700 mt-2">
+                  To opt out of information sales, email us at <strong>privacy@prosway.com</strong> with "DO NOT SELL" in the subject line. 
+                  Include your name, email, and phone number. We will process your request within 15 business days for future sales, 
+                  but cannot retrieve information already sold to agents.
+                </p>
+              </div>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold text-primary-text mb-4">10. GDPR COMPLIANCE (EU RESIDENTS)</h2>
+              <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-4">
+                <p className="font-bold text-purple-800">🇪🇺 EUROPEAN UNION RESIDENTS</p>
+                <p className="text-purple-700 mt-2">If you are in the European Union, you have additional rights under GDPR:</p>
+                <ul className="list-disc ml-6 mt-2 space-y-1 text-purple-700">
+                  <li><strong>Right of Access:</strong> Request copies of your personal data</li>
+                  <li><strong>Right to Rectification:</strong> Request correction of inaccurate data</li>
+                  <li><strong>Right to Erasure:</strong> Request deletion of your data</li>
+                  <li><strong>Right to Restrict Processing:</strong> Limit how we use your data</li>
+                  <li><strong>Right to Data Portability:</strong> Request transfer of your data</li>
+                  <li><strong>Right to Object:</strong> Object to processing for marketing purposes</li>
+                </ul>
+                <p className="text-purple-700 mt-2">
+                  <strong>Legal Basis for Processing:</strong> Legitimate interest (lead generation business) and consent (marketing communications).
+                  Contact <strong>gdpr@prosway.com</strong> for any GDPR requests.
+                </p>
+              </div>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold text-primary-text mb-4">11. Children's Privacy</h2>
               <p>Our services are not intended for individuals under 18 years of age. We do not knowingly collect personal information from children under 18. If we become aware of such collection, we will take steps to delete the information promptly.</p>
             </section>
 

@@ -191,14 +191,19 @@ export function PropertyListingSwiper({ properties, onLike, onPass, favorites, p
 
             {/* Owner Financing Terms Section */}
             <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
-              <h3 className="text-xl font-bold text-center text-blue-700 mb-3">💳 Owner Financing Terms</h3>
+              <h3 className="text-xl font-bold text-center text-blue-700 mb-2">💳 Estimated Owner Financing Terms</h3>
+              <div className="bg-yellow-100 border border-yellow-300 rounded-lg p-2 mb-3">
+                <p className="text-xs text-yellow-800 text-center font-medium">
+                  ⚠️ ESTIMATES ONLY - Not guaranteed. Verify all terms with property owner and licensed professionals.
+                </p>
+              </div>
               
               <div className="space-y-2">
                 <div className="flex justify-between items-center border-b border-blue-200 pb-1">
                   <span className="text-base text-blue-700 font-medium">Monthly Payment:</span>
                   <div className="text-right">
                     <div className="text-2xl font-bold text-blue-800">${currentPropertyListing.monthlyPayment?.toLocaleString()}/mo</div>
-                    <div className="text-sm text-blue-600">est</div>
+                    <div className="text-sm text-blue-600">estimated only</div>
                   </div>
                 </div>
                 
@@ -206,7 +211,7 @@ export function PropertyListingSwiper({ properties, onLike, onPass, favorites, p
                   <span className="text-base text-blue-700 font-medium">Down Payment:</span>
                   <div className="text-right">
                     <div className="text-2xl font-bold text-blue-800">${currentPropertyListing.downPaymentAmount?.toLocaleString()}</div>
-                    <div className="text-sm text-blue-600">est</div>
+                    <div className="text-sm text-blue-600">estimated only</div>
                   </div>
                 </div>
                 
@@ -214,7 +219,7 @@ export function PropertyListingSwiper({ properties, onLike, onPass, favorites, p
                   <span className="text-base text-blue-700 font-medium">Interest Rate:</span>
                   <div className="text-right">
                     <div className="text-2xl font-bold text-blue-800">{currentPropertyListing.interestRate}%</div>
-                    <div className="text-sm text-blue-600">est</div>
+                    <div className="text-sm text-blue-600">estimated only</div>
                   </div>
                 </div>
                 
@@ -222,9 +227,18 @@ export function PropertyListingSwiper({ properties, onLike, onPass, favorites, p
                   <span className="text-base text-blue-700 font-medium">Term Length:</span>
                   <div className="text-right">
                     <div className="text-2xl font-bold text-blue-800">{currentPropertyListing.termYears} years</div>
-                    <div className="text-sm text-blue-600">est</div>
+                    <div className="text-sm text-blue-600">estimated only</div>
                   </div>
                 </div>
+              </div>
+              
+              <div className="bg-red-50 border border-red-200 rounded-lg p-2 mt-3">
+                <p className="text-xs text-red-700 text-center font-semibold mb-1">
+                  ⚠️ NO ESCROW ACCOUNT - You pay taxes/insurance/HOA directly
+                </p>
+                <p className="text-xs text-red-700 text-center">
+                  Property information not verified. OwnerFi is not a licensed broker. Consult real estate professionals before making decisions.
+                </p>
               </div>
             </div>
 

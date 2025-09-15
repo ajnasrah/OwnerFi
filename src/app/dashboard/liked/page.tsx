@@ -109,8 +109,19 @@ export default function LikedProperties() {
               {properties.length} SAVED {properties.length === 1 ? 'PROPERTY' : 'PROPERTIES'}
             </p>
           </div>
+
+          {/* Mobile Owner Finance Help Button */}
+          <div className="md:hidden">
+            <Link
+              href="/how-owner-finance-works"
+              className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-2 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1"
+            >
+              <span>📚</span>
+              <span>Learn</span>
+            </Link>
+          </div>
           
-          <div className="flex items-center space-x-6">
+          <div className="hidden md:flex items-center space-x-6">
             <div className="flex space-x-4">
               <Link href="/dashboard" className="flex flex-col items-center group">
                 <div className="w-12 h-12 bg-slate-700/50 hover:bg-slate-600/50 rounded-xl flex items-center justify-center transition-colors group-hover:scale-110">
@@ -202,6 +213,25 @@ export default function LikedProperties() {
                       <div className="flex justify-between items-center">
                         <span className="text-slate-400 font-semibold">Down:</span>
                         <span className="font-bold text-blue-400 text-lg">${property.downPaymentAmount?.toLocaleString()} est</span>
+                      </div>
+                      
+                      {/* Balloon Payment Warning */}
+                      <div className="bg-red-500/20 border border-red-400/30 rounded-lg p-3 mt-3">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-red-400 text-sm">🎈</span>
+                          <span className="text-red-300 font-semibold text-sm">Balloon Payment Alert</span>
+                        </div>
+                        <p className="text-red-200 text-xs leading-relaxed">
+                          <strong>This property may include a balloon payment.</strong> You might owe the remaining loan balance (potentially ${((property.listPrice || 200000) * 0.7).toLocaleString()}+) in {property.termYears || 5} years. Plan to refinance or save for this payment.
+                        </p>
+                        <div className="mt-2">
+                          <Link 
+                            href="/how-owner-finance-works#balloon-payments" 
+                            className="text-red-300 underline text-xs hover:text-red-200"
+                          >
+                            Learn about balloon payments →
+                          </Link>
+                        </div>
                       </div>
                     </div>
 

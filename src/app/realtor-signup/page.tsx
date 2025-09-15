@@ -18,6 +18,8 @@ export default function RealtorSignup() {
     company: '',
     licenseNumber: ''
   });
+
+  const [tcpaCompliance, setTcpaCompliance] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -31,6 +33,11 @@ export default function RealtorSignup() {
     
     if (!formData.firstName || !formData.lastName || !formData.email || !formData.password || !formData.phone) {
       setError('Please fill in all required fields');
+      return;
+    }
+
+    if (!tcpaCompliance) {
+      setError('You must agree to TCPA Compliance requirements');
       return;
     }
     
@@ -210,6 +217,17 @@ export default function RealtorSignup() {
               </div>
             </div>
 
+            {/* Simple Consent Notice */}
+            <div className="bg-slate-700/30 border border-slate-600/30 rounded-lg p-3 mt-4">
+              <p className="text-xs text-slate-300 text-center leading-relaxed">
+                By creating an account, you agree to our{' '}
+                <Link href="/terms" className="text-emerald-400 underline" target="_blank">Terms of Service</Link>
+                {' '}and{' '}
+                <Link href="/privacy" className="text-emerald-400 underline" target="_blank">Privacy Policy</Link>
+                {' '}as a licensed real estate professional.
+              </p>
+            </div>
+
             <button
               type="submit"
               disabled={loading}
@@ -220,19 +238,19 @@ export default function RealtorSignup() {
           </form>
 
           <div className="mt-3 bg-emerald-500/10 border border-emerald-400/30 rounded-lg p-3">
-            <h3 className="font-bold text-white mb-2 text-sm">Join 800+ agents earning more:</h3>
+            <h3 className="font-bold text-white mb-2 text-sm">OwnerFi Lead Platform:</h3>
             <ul className="space-y-1 text-xs text-white">
               <li className="flex items-center">
                 <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full mr-2"></div>
-                Buyers with cash ready
+                Connects with potential buyers
               </li>
               <li className="flex items-center">
                 <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full mr-2"></div>
-                No credit check hassles
+                Information only - not advice
               </li>
               <li className="flex items-center">
                 <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full mr-2"></div>
-                Faster closings guaranteed
+                Lead generation platform
               </li>
             </ul>
           </div>

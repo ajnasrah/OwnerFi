@@ -13,12 +13,48 @@ import { PropertyListing } from '@/lib/property-schema';
 interface AdminProperty extends PropertyListing {
   imageUrl?: string; // Legacy field for backward compatibility
 }
+
+interface BuyerStats {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  primaryCity?: string;
+  primaryState?: string;
+  downPayment?: number;
+  monthlyBudget?: number;
+  matchedPropertiesCount: number;
+  likedPropertiesCount: number;
+  loginCount: number;
+  lastSignIn?: string;
+  createdAt?: string;
+  isActive?: boolean;
+}
+
+interface RealtorStats {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  licenseNumber?: string;
+  brokerage?: string;
+  city?: string;
+  state?: string;
+  credits: number;
+  availableBuyersCount: number;
+  totalLeadsPurchased: number;
+  lastSignIn?: string;
+  createdAt?: string;
+  isActive?: boolean;
+  subscriptionStatus?: string;
+}
+
 import Image from 'next/image';
 
 export default function AdminDashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'upload' | 'manage' | 'disputes' | 'contacts'>('upload');
+  const [activeTab, setActiveTab] = useState<'upload' | 'manage' | 'disputes' | 'contacts' | 'buyers' | 'realtors'>('upload');
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [result, setResult] = useState<{
@@ -48,7 +84,14 @@ export default function AdminDashboard() {
     createdAt: string;
   }[]>([]);
   const [loadingContacts, setLoadingContacts] = useState(false);
-  
+
+  // Buyers and Realtors state
+  const [buyers, setBuyers] = useState<BuyerStats[]>([]);
+  const [loadingBuyers, setLoadingBuyers] = useState(false);
+  const [realtors, setRealtors] = useState<RealtorStats[]>([]);
+  const [loadingRealtors, setLoadingRealtors] = useState(false);
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+
   // Edit modal state
   const [editingProperty, setEditingProperty] = useState<AdminProperty | null>(null);
   const [editForm, setEditForm] = useState<Partial<AdminProperty>>({});
@@ -281,6 +324,48 @@ export default function AdminDashboard() {
     }
   };
 
+  const fetchBuyers = async () => {
+    setLoadingBuyers(true);
+    try {
+      const response = await fetch('/api/admin/buyers');
+      if (!response.ok) {
+        return;
+      }
+      const data = await response.json();
+      setBuyers(data.buyers || []);
+    } catch {
+    } finally {
+      setLoadingBuyers(false);
+    }
+  };
+
+  const fetchRealtors = async () => {
+    setLoadingRealtors(true);
+    try {
+      const response = await fetch('/api/admin/realtors');
+      if (!response.ok) {
+        return;
+      }
+      const data = await response.json();
+      setRealtors(data.realtors || []);
+    } catch {
+    } finally {
+      setLoadingRealtors(false);
+    }
+  };
+
+  const toggleRowExpansion = (id: string) => {
+    setExpandedRows(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  };
+
   useEffect(() => {
     if (activeTab === 'manage') {
       fetchProperties();
@@ -288,6 +373,10 @@ export default function AdminDashboard() {
       fetchDisputes();
     } else if (activeTab === 'contacts') {
       fetchContacts();
+    } else if (activeTab === 'buyers') {
+      fetchBuyers();
+    } else if (activeTab === 'realtors') {
+      fetchRealtors();
     }
   }, [activeTab]);
 
@@ -352,12 +441,32 @@ export default function AdminDashboard() {
             <button
               onClick={() => setActiveTab('contacts')}
               className={`px-6 py-3 rounded-lg font-medium transition-colors ${
-                activeTab === 'contacts' 
-                  ? 'bg-blue-600 text-white' 
+                activeTab === 'contacts'
+                  ? 'bg-blue-600 text-white'
                   : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
               }`}
             >
               📧 Contact Forms
+            </button>
+            <button
+              onClick={() => setActiveTab('buyers')}
+              className={`px-6 py-3 rounded-lg font-medium transition-colors ${
+                activeTab === 'buyers'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
+              }`}
+            >
+              👤 Buyers
+            </button>
+            <button
+              onClick={() => setActiveTab('realtors')}
+              className={`px-6 py-3 rounded-lg font-medium transition-colors ${
+                activeTab === 'realtors'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
+              }`}
+            >
+              🏢 Realtors
             </button>
           </div>
 
@@ -871,9 +980,219 @@ export default function AdminDashboard() {
               )}
             </div>
           )}
+
+          {/* Buyers Tab */}
+          {activeTab === 'buyers' && (
+            <div className="bg-white rounded-xl p-6 shadow-lg">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-2xl font-semibold text-slate-900">Buyer Users</h2>
+                  <p className="text-slate-600">Manage registered buyers and their statistics</p>
+                </div>
+                <button
+                  onClick={fetchBuyers}
+                  disabled={loadingBuyers}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-slate-400"
+                >
+                  {loadingBuyers ? 'Loading...' : 'Refresh'}
+                </button>
+              </div>
+
+              {loadingBuyers ? (
+                <div className="text-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                  <p className="mt-4 text-slate-600">Loading buyers...</p>
+                </div>
+              ) : buyers.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="text-6xl mb-4">👤</div>
+                  <h3 className="text-xl font-semibold text-slate-800 mb-2">No Buyers Yet</h3>
+                  <p className="text-slate-600">No registered buyers in the system</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {buyers.map((buyer) => (
+                    <div key={buyer.id} className="border border-slate-200 rounded-lg bg-slate-50">
+                      {/* Collapsed view */}
+                      <div
+                        className="p-4 cursor-pointer hover:bg-slate-100 transition-colors"
+                        onClick={() => toggleRowExpansion(buyer.id)}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-4">
+                            <span className="text-lg">{expandedRows.has(buyer.id) ? '▼' : '▶'}</span>
+                            <div>
+                              <h3 className="font-semibold text-slate-900">{buyer.name}</h3>
+                              <p className="text-sm text-slate-600">{buyer.email}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-6 text-sm">
+                            <div className="text-center">
+                              <div className="font-semibold text-blue-600">{buyer.matchedPropertiesCount}</div>
+                              <div className="text-slate-500">Matched</div>
+                            </div>
+                            <div className="text-center">
+                              <div className="font-semibold text-green-600">{buyer.likedPropertiesCount}</div>
+                              <div className="text-slate-500">Liked</div>
+                            </div>
+                            <div className="text-center">
+                              <div className="font-semibold text-purple-600">{buyer.loginCount}</div>
+                              <div className="text-slate-500">Logins</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Expanded view */}
+                      {expandedRows.has(buyer.id) && (
+                        <div className="px-4 pb-4 border-t border-slate-200 bg-white">
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
+                            <div>
+                              <label className="text-sm font-medium text-slate-700">Phone</label>
+                              <p className="text-slate-900">{buyer.phone || 'Not provided'}</p>
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium text-slate-700">Primary City</label>
+                              <p className="text-slate-900">{buyer.primaryCity ? `${buyer.primaryCity}, ${buyer.primaryState}` : 'Not provided'}</p>
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium text-slate-700">Down Payment</label>
+                              <p className="text-slate-900">{buyer.downPayment ? `$${buyer.downPayment.toLocaleString()}` : 'Not set'}</p>
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium text-slate-700">Monthly Budget</label>
+                              <p className="text-slate-900">{buyer.monthlyBudget ? `$${buyer.monthlyBudget.toLocaleString()}/mo` : 'Not set'}</p>
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium text-slate-700">Last Sign In</label>
+                              <p className="text-slate-900">{buyer.lastSignIn ? new Date(buyer.lastSignIn).toLocaleDateString() : 'Never'}</p>
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium text-slate-700">Status</label>
+                              <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
+                                buyer.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                              }`}>
+                                {buyer.isActive ? 'Active' : 'Inactive'}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Realtors Tab */}
+          {activeTab === 'realtors' && (
+            <div className="bg-white rounded-xl p-6 shadow-lg">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-2xl font-semibold text-slate-900">Realtor Users</h2>
+                  <p className="text-slate-600">Manage registered realtors and their statistics</p>
+                </div>
+                <button
+                  onClick={fetchRealtors}
+                  disabled={loadingRealtors}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-slate-400"
+                >
+                  {loadingRealtors ? 'Loading...' : 'Refresh'}
+                </button>
+              </div>
+
+              {loadingRealtors ? (
+                <div className="text-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                  <p className="mt-4 text-slate-600">Loading realtors...</p>
+                </div>
+              ) : realtors.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="text-6xl mb-4">🏢</div>
+                  <h3 className="text-xl font-semibold text-slate-800 mb-2">No Realtors Yet</h3>
+                  <p className="text-slate-600">No registered realtors in the system</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {realtors.map((realtor) => (
+                    <div key={realtor.id} className="border border-slate-200 rounded-lg bg-slate-50">
+                      {/* Collapsed view */}
+                      <div
+                        className="p-4 cursor-pointer hover:bg-slate-100 transition-colors"
+                        onClick={() => toggleRowExpansion(realtor.id)}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-4">
+                            <span className="text-lg">{expandedRows.has(realtor.id) ? '▼' : '▶'}</span>
+                            <div>
+                              <h3 className="font-semibold text-slate-900">{realtor.name}</h3>
+                              <p className="text-sm text-slate-600">{realtor.email}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-6 text-sm">
+                            <div className="text-center">
+                              <div className="font-semibold text-blue-600">{realtor.credits}</div>
+                              <div className="text-slate-500">Credits</div>
+                            </div>
+                            <div className="text-center">
+                              <div className="font-semibold text-green-600">{realtor.availableBuyersCount}</div>
+                              <div className="text-slate-500">Available</div>
+                            </div>
+                            <div className="text-center">
+                              <div className="font-semibold text-purple-600">{realtor.totalLeadsPurchased}</div>
+                              <div className="text-slate-500">Purchased</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Expanded view */}
+                      {expandedRows.has(realtor.id) && (
+                        <div className="px-4 pb-4 border-t border-slate-200 bg-white">
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
+                            <div>
+                              <label className="text-sm font-medium text-slate-700">Phone</label>
+                              <p className="text-slate-900">{realtor.phone || 'Not provided'}</p>
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium text-slate-700">License Number</label>
+                              <p className="text-slate-900">{realtor.licenseNumber || 'Not provided'}</p>
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium text-slate-700">Brokerage</label>
+                              <p className="text-slate-900">{realtor.brokerage || 'Not provided'}</p>
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium text-slate-700">Location</label>
+                              <p className="text-slate-900">{realtor.city ? `${realtor.city}, ${realtor.state}` : 'Not provided'}</p>
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium text-slate-700">Last Sign In</label>
+                              <p className="text-slate-900">{realtor.lastSignIn ? new Date(realtor.lastSignIn).toLocaleDateString() : 'Never'}</p>
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium text-slate-700">Subscription</label>
+                              <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
+                                realtor.subscriptionStatus === 'active' ? 'bg-green-100 text-green-800' :
+                                realtor.subscriptionStatus === 'cancelled' ? 'bg-red-100 text-red-800' :
+                                'bg-gray-100 text-gray-800'
+                              }`}>
+                                {realtor.subscriptionStatus || 'none'}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
-      
+
       {/* Edit Property Modal */}
       {editingProperty && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">

@@ -141,12 +141,16 @@ export default function BuyerSetup() {
                   Maximum Monthly Payment
                 </label>
                 <input
-                  type="number"
-                  value={formData.maxMonthlyPayment}
-                  onChange={(e) => setFormData(prev => ({ ...prev, maxMonthlyPayment: e.target.value }))}
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  value={formData.maxMonthlyPayment ? Number(formData.maxMonthlyPayment).toLocaleString() : ''}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/[^\d]/g, '');
+                    setFormData(prev => ({ ...prev, maxMonthlyPayment: value }));
+                  }}
                   className="w-full p-3 sm:p-4 bg-emerald-500/10 border border-emerald-400/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 text-white placeholder-slate-400 font-normal text-sm sm:text-base"
-                  placeholder="2000"
-                  min="1"
+                  placeholder="2,000"
                   required
                 />
                 <p className="text-slate-400 text-xs sm:text-sm mt-1">
@@ -159,12 +163,16 @@ export default function BuyerSetup() {
                   Maximum Down Payment
                 </label>
                 <input
-                  type="number"
-                  value={formData.maxDownPayment}
-                  onChange={(e) => setFormData(prev => ({ ...prev, maxDownPayment: e.target.value }))}
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  value={formData.maxDownPayment ? Number(formData.maxDownPayment).toLocaleString() : ''}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/[^\d]/g, '');
+                    setFormData(prev => ({ ...prev, maxDownPayment: value }));
+                  }}
                   className="w-full p-3 sm:p-4 bg-emerald-500/10 border border-emerald-400/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 text-white placeholder-slate-400 font-normal text-sm sm:text-base"
-                  placeholder="50000"
-                  min="1"
+                  placeholder="50,000"
                   required
                 />
                 <p className="text-slate-400 text-xs sm:text-sm mt-1">

@@ -239,6 +239,8 @@ export default function BuyerSettings() {
                     <span className="text-2xl font-bold text-emerald-400 mr-2">$</span>
                     <input
                       type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       required
                       value={formData.maxMonthlyPayment ? Number(formData.maxMonthlyPayment).toLocaleString() : ''}
                       onChange={(e) => {
@@ -262,6 +264,8 @@ export default function BuyerSettings() {
                     <span className="text-2xl font-bold text-emerald-400 mr-2">$</span>
                     <input
                       type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       required
                       value={formData.maxDownPayment ? Number(formData.maxDownPayment).toLocaleString() : ''}
                       onChange={(e) => {

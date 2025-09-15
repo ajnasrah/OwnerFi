@@ -66,18 +66,11 @@ export default function Chatbot({ isOpen, onClose }: ChatbotProps) {
 
     // Add initial greeting message only when chatbot opens
     if (isOpen && messages.length === 0) {
-      const greetings = [
-        "🤠 Howdy! Welcome to OwnerFi!",
-        "👋 Hey there! Welcome in!",
-        "😊 Hi! Welcome to OwnerFi!",
-        "🏠 Welcome! How can I help?",
-        "👋 Hello! Great to see you!"
-      ];
-      const randomGreeting = greetings[Math.floor(Math.random() * greetings.length)];
+      const greeting = "🤖 Hi! I'm OwnerFi's AI assistant. I provide general information only - not real estate advice. OwnerFi is not a licensed broker. How can I help you learn about our platform?";
       
       setMessages([{
         role: 'assistant',
-        content: randomGreeting,
+        content: greeting,
         timestamp: new Date()
       }]);
     }
@@ -210,15 +203,15 @@ export default function Chatbot({ isOpen, onClose }: ChatbotProps) {
         <div className="bg-slate-50 px-4 py-3 border-b border-slate-200">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center">
-                <span className="text-white text-lg">👩‍💼</span>
+              <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+                <span className="text-white text-lg">🤖</span>
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className="text-slate-900 font-semibold text-lg">Sarah</h3>
+                  <h3 className="text-slate-900 font-semibold text-lg">AI Assistant</h3>
                   <div className="flex items-center gap-1">
-                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                    <span className="text-xs text-green-600 font-medium">LIVE</span>
+                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                    <span className="text-xs text-blue-600 font-medium">AI BOT</span>
                   </div>
                 </div>
               </div>
@@ -291,6 +284,13 @@ export default function Chatbot({ isOpen, onClose }: ChatbotProps) {
             </div>
           )}
           <div ref={messagesEndRef} />
+        </div>
+
+        {/* AI Disclaimer */}
+        <div className="px-4 py-2 bg-blue-50 border-t border-blue-200">
+          <p className="text-xs text-blue-700 text-center">
+            🤖 AI Assistant - General info only, not real estate advice. OwnerFi is not a licensed broker.
+          </p>
         </div>
 
         {/* Input */}

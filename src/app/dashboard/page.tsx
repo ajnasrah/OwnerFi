@@ -5,6 +5,7 @@ import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ExtendedSession, isExtendedSession } from '@/types/session';
+import { LegalDisclaimers } from '@/components/ui/LegalDisclaimers';
 
 interface BuyerProfile {
   id: string;
@@ -63,6 +64,17 @@ export default function Dashboard() {
       router.push('/');
     }
   }, [status, session, router]);
+
+  // Cleanup body styles when component unmounts
+  useEffect(() => {
+    return () => {
+      // Reset body styles when leaving dashboard
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.body.style.height = '';
+    };
+  }, []);
 
   // Load data
   useEffect(() => {
@@ -310,7 +322,32 @@ export default function Dashboard() {
   const currentProperty = properties[currentIndex];
 
   return (
-    <div className="h-screen bg-black text-white overflow-hidden relative">
+    <>
+      <style jsx global>{`
+        body {
+          overflow: hidden;
+          position: fixed;
+          width: 100%;
+          height: 100vh;
+        }
+        
+        @supports (-webkit-touch-callout: none) {
+          body {
+            height: -webkit-fill-available;
+          }
+        }
+      `}</style>
+      <div 
+        className="h-screen bg-black text-white overflow-hidden relative" 
+        style={{ 
+          height: '100vh', 
+          maxHeight: '100vh',
+          paddingTop: 'env(safe-area-inset-top)',
+          paddingBottom: 'env(safe-area-inset-bottom)',
+          paddingLeft: 'env(safe-area-inset-left)',
+          paddingRight: 'env(safe-area-inset-right)'
+        }}
+      >
       {/* Top Navigation - Minimal */}
       <div className="absolute top-4 left-4 right-4 z-40 flex items-center justify-between">
         <button 
@@ -338,16 +375,16 @@ export default function Dashboard() {
       <div className="absolute inset-0">
         {/* Card Stack Effect - Behind Main Card */}
         {currentIndex < properties.length - 1 && (
-          <div className="absolute inset-4 bg-slate-800 rounded-3xl transform rotate-2 scale-95 z-10"></div>
+          <div className="absolute inset-2 bg-slate-800 rounded-3xl transform rotate-2 scale-95 z-10"></div>
         )}
         {currentIndex < properties.length - 2 && (
-          <div className="absolute inset-6 bg-slate-700 rounded-3xl transform -rotate-1 scale-90 z-5"></div>
+          <div className="absolute inset-3 bg-slate-700 rounded-3xl transform -rotate-1 scale-90 z-5"></div>
         )}
         
         {/* Main Property Card */}
         <div 
           ref={cardRef}
-          className="absolute inset-2 bg-white rounded-3xl overflow-hidden shadow-2xl z-20 transform-gpu select-none"
+          className="absolute inset-1 bg-white rounded-3xl overflow-hidden shadow-2xl z-20 transform-gpu select-none"
           style={{
             transform: isDragging 
               ? `translate3d(${dragOffset.x}px, ${dragOffset.y * 0.1}px, 0) rotate(${dragOffset.x * 0.1}deg)` 
@@ -438,8 +475,9 @@ export default function Dashboard() {
                 
                 {/* Payment Disclaimer */}
                 <div className="mt-3">
-                  <p className="text-white/60 text-xs text-center italic">
-                    * Payment estimates
+                  <LegalDisclaimers type="property" compact />
+                  <p className="text-white/60 text-xs text-center italic mt-2">
+                    * All estimates - not guaranteed. Verify with property owner and licensed professionals.
                   </p>
                 </div>
               </div>
@@ -475,5 +513,6 @@ export default function Dashboard() {
         </div>
       </div>
     </div>
+    </>
   );
 }

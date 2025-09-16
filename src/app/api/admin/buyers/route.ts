@@ -5,8 +5,7 @@ import {
   collection,
   query,
   getDocs,
-  where,
-  orderBy
+  where
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { logError } from '@/lib/logger';
@@ -52,73 +51,100 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '100');
 
     // Get all users with role 'buyer'
+    // Temporarily removed orderBy to avoid issues with missing createdAt fields
     const usersQuery = query(
       collection(db, 'users'),
-      where('role', '==', 'buyer'),
-      orderBy('createdAt', 'desc')
+      where('role', '==', 'buyer')
     );
 
     const usersSnapshot = await getDocs(usersQuery);
     const buyerStats: BuyerStats[] = [];
 
+    console.log(`Found ${usersSnapshot.docs.length} users with role 'buyer'`);
+
     for (const userDoc of usersSnapshot.docs) {
-      const userData = userDoc.data();
-
-      // Get buyer profile data
-      const profileQuery = query(
-        collection(db, 'buyerProfiles'),
-        where('userId', '==', userDoc.id)
-      );
-      const profileSnapshot = await getDocs(profileQuery);
-      const profileData = profileSnapshot.docs[0]?.data();
-
-      // Count matched properties
-      const matchedPropertiesQuery = query(
-        collection(db, 'propertyMatches'),
-        where('buyerId', '==', userDoc.id)
-      );
-      const matchedPropertiesSnapshot = await getDocs(matchedPropertiesQuery);
-
-      // Count liked properties
-      const likedPropertiesQuery = query(
-        collection(db, 'propertyActions'),
-        where('userId', '==', userDoc.id),
-        where('action', '==', 'like')
-      );
-      const likedPropertiesSnapshot = await getDocs(likedPropertiesQuery);
-
-      // Get login count from user sessions (if available)
-      let loginCount = 0;
       try {
-        const sessionsQuery = query(
-          collection(db, 'userSessions'),
-          where('userId', '==', userDoc.id)
-        );
-        const sessionsSnapshot = await getDocs(sessionsQuery);
-        loginCount = sessionsSnapshot.size;
-      } catch {
-        // Sessions collection might not exist, default to 0
-        loginCount = userData.loginCount || 0;
+        const userData = userDoc.data();
+        console.log(`Processing buyer: ${userData.email || userDoc.id}`);
+
+          // Simplified approach - just get basic profile data without expensive queries
+        let profileData = null;
+        let matchedPropertiesCount = 0;
+        let likedPropertiesCount = 0;
+        let loginCount = 0;
+
+        try {
+          // Get buyer profile data
+          const profileQuery = query(
+            collection(db, 'buyerProfiles'),
+            where('userId', '==', userDoc.id)
+          );
+          const profileSnapshot = await getDocs(profileQuery);
+          profileData = profileSnapshot.docs[0]?.data();
+        } catch (error) {
+          console.warn(`Could not fetch profile for buyer ${userDoc.id}:`, error);
+        }
+
+        try {
+          // Count matched properties
+          const matchedPropertiesQuery = query(
+            collection(db, 'propertyMatches'),
+            where('buyerId', '==', userDoc.id)
+          );
+          const matchedPropertiesSnapshot = await getDocs(matchedPropertiesQuery);
+          matchedPropertiesCount = matchedPropertiesSnapshot.size;
+        } catch (error) {
+          console.warn(`Could not fetch property matches for buyer ${userDoc.id}:`, error);
+        }
+
+        try {
+          // Count liked properties
+          const likedPropertiesQuery = query(
+            collection(db, 'propertyActions'),
+            where('userId', '==', userDoc.id),
+            where('action', '==', 'like')
+          );
+          const likedPropertiesSnapshot = await getDocs(likedPropertiesQuery);
+          likedPropertiesCount = likedPropertiesSnapshot.size;
+        } catch (error) {
+          console.warn(`Could not fetch liked properties for buyer ${userDoc.id}:`, error);
+        }
+
+        try {
+          // Get login count from user sessions (if available)
+          const sessionsQuery = query(
+            collection(db, 'userSessions'),
+            where('userId', '==', userDoc.id)
+          );
+          const sessionsSnapshot = await getDocs(sessionsQuery);
+          loginCount = sessionsSnapshot.size;
+        } catch {
+          // Sessions collection might not exist, default to 0
+          loginCount = userData.loginCount || 0;
+        }
+
+        const buyerStat: BuyerStats = {
+          id: userDoc.id,
+          name: userData.name || `${userData.firstName || ''} ${userData.lastName || ''}`.trim() || 'N/A',
+          email: userData.email || 'N/A',
+          phone: userData.phone || profileData?.phoneNumber,
+          primaryCity: profileData?.primaryCity || userData.city,
+          primaryState: profileData?.primaryState || userData.state,
+          downPayment: profileData?.maxDownPayment || userData.maxDownPayment,
+          monthlyBudget: profileData?.maxMonthlyPayment || userData.maxMonthlyPayment,
+          matchedPropertiesCount,
+          likedPropertiesCount,
+          loginCount,
+          lastSignIn: userData.lastSignIn?.toDate?.()?.toISOString() || userData.lastLoginAt?.toDate?.()?.toISOString(),
+          createdAt: userData.createdAt?.toDate?.()?.toISOString() || userData.registeredAt?.toDate?.()?.toISOString(),
+          isActive: userData.isActive !== false
+        };
+
+        buyerStats.push(buyerStat);
+      } catch (error) {
+        console.error(`Error processing buyer ${userDoc.id}:`, error);
+        // Continue processing other buyers even if one fails
       }
-
-      const buyerStat: BuyerStats = {
-        id: userDoc.id,
-        name: userData.name || `${userData.firstName || ''} ${userData.lastName || ''}`.trim() || 'N/A',
-        email: userData.email || 'N/A',
-        phone: userData.phone || profileData?.phoneNumber,
-        primaryCity: profileData?.primaryCity || userData.city,
-        primaryState: profileData?.primaryState || userData.state,
-        downPayment: profileData?.maxDownPayment || userData.maxDownPayment,
-        monthlyBudget: profileData?.maxMonthlyPayment || userData.maxMonthlyPayment,
-        matchedPropertiesCount: matchedPropertiesSnapshot.size,
-        likedPropertiesCount: likedPropertiesSnapshot.size,
-        loginCount,
-        lastSignIn: userData.lastSignIn?.toDate?.()?.toISOString() || userData.lastLoginAt?.toDate?.()?.toISOString(),
-        createdAt: userData.createdAt?.toDate?.()?.toISOString() || userData.registeredAt?.toDate?.()?.toISOString(),
-        isActive: userData.isActive !== false
-      };
-
-      buyerStats.push(buyerStat);
     }
 
     // Sort by creation date (newest first) and limit

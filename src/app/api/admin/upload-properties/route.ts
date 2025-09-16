@@ -54,49 +54,89 @@ export async function POST(request: NextRequest) {
       metadata: { fileName: file.name, fileSize: file.size }
     });
     
-    // Parse CSV data
+    // Parse CSV data with proper quote handling
     const csvText = buffer.toString('utf-8');
     const lines = csvText.split('\n').filter(line => line.trim());
-    const headers = lines[0].split(',').map(h => h.trim());
-    
-    const parseResult: { 
-      success: PropertyListing[], 
-      errors: string[], 
-      totalRows: number, 
-      duplicates: string[] 
+
+    // Parse CSV properly handling quoted fields
+    const parseCSVLine = (line: string): string[] => {
+      const result: string[] = [];
+      let current = '';
+      let inQuotes = false;
+
+      for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+
+        if (char === '"') {
+          inQuotes = !inQuotes;
+        } else if (char === ',' && !inQuotes) {
+          result.push(current.trim());
+          current = '';
+        } else {
+          current += char;
+        }
+      }
+      result.push(current.trim());
+      return result;
+    };
+
+    const headers = parseCSVLine(lines[0]);
+
+    const parseResult: {
+      success: PropertyListing[],
+      errors: string[],
+      totalRows: number,
+      duplicates: string[]
     } = { success: [], errors: [], totalRows: lines.length - 1, duplicates: [] };
 
     // Process each row
     for (let i = 1; i < lines.length; i++) {
       try {
-        const values = lines[i].split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+        const values = parseCSVLine(lines[i]);
         const row: Record<string, string> = {};
-        
+
         headers.forEach((header, index) => {
-          row[header] = values[index] || '';
+          row[header.trim()] = values[index]?.trim() || '';
         });
 
-        // Map CSV columns to PropertyListing format
+        // Flexible column mapping - handle spaces and case variations
+        const getColumnValue = (possibleNames: string[]): string => {
+          for (const name of possibleNames) {
+            const value = row[name] || row[name.trim()] || row[name + ' '] || row[name.toLowerCase()];
+            if (value && value.trim()) return value.trim();
+          }
+          return '';
+        };
+
+        const getNumericValue = (possibleNames: string[]): number => {
+          const value = getColumnValue(possibleNames);
+          const parsed = parseFloat(value.replace(/[,$]/g, ''));
+          return isNaN(parsed) ? 0 : parsed;
+        };
+
+        // Map CSV columns to PropertyListing format with flexible column names
         const property: PropertyListing = {
-          id: row['Opportunity ID'] || `prop_${Date.now()}_${i}`,
-          address: row['Property Address'] || row['Full Address'] || '',
-          city: row['Property city'] || row['city'] || '',
-          state: (row['state'] || '').toLowerCase(),
-          zipCode: row['Zip code'] || '',
+          id: getColumnValue(['Opportunity ID', 'ID', 'Property ID']) || `prop_${Date.now()}_${i}`,
+          address: getColumnValue(['Property Address', 'Full Address', 'Address', 'Street Address', 'full_address']),
+          city: getColumnValue(['Property city', 'city', 'City', 'Property City']),
+          state: getColumnValue(['state', 'State', 'Property State']).toLowerCase(),
+          zipCode: getColumnValue(['Zip code', 'ZIP', 'Zip Code', 'zipcode', 'postal_code']),
           propertyType: 'single-family', // Default type
-          listPrice: parseFloat(row['price']) || 0,
-          bedrooms: parseInt(row['bedrooms']) || 0,
-          bathrooms: parseFloat(row['bathrooms']) || 0,
-          squareFeet: parseInt(row['livingArea']) || 0,
-          monthlyPayment: parseFloat(row['Monthly payment']) || 0,
-          downPaymentAmount: parseFloat(row['down payment amount']) || 0,
-          downPaymentPercent: parseFloat(row['down payment']) || 0,
-          interestRate: parseFloat(row['Interest rate']) || 0,
-          termYears: parseFloat(row['Balloon']) || 30,
-          yearBuilt: parseInt(row['yearBuilt']) || 0,
-          lotSize: parseFloat(row['lot sizes']) || 0,
-          description: row['description'] || '',
-          imageUrls: row['Image link'] ? [row['Image link']] : [],
+          listPrice: getNumericValue(['price', 'Price', 'List Price', 'listPrice']),
+          bedrooms: Math.round(getNumericValue(['bedrooms', 'Bedrooms', 'beds'])),
+          bathrooms: getNumericValue(['bathrooms', 'Bathrooms', 'baths']),
+          squareFeet: Math.round(getNumericValue(['livingArea', 'Living Area', 'sqft', 'squareFeet', 'Square Feet'])),
+          monthlyPayment: getNumericValue(['Monthly payment', 'monthly payment', 'Payment', 'payment']),
+          downPaymentAmount: getNumericValue(['down payment amount', 'Down Payment Amount', 'downPayment']),
+          downPaymentPercent: getNumericValue(['down payment', 'Down Payment', 'downPaymentPercent']),
+          interestRate: getNumericValue(['Interest rate', 'interest rate', 'rate', 'Rate']),
+          termYears: 20, // Default amortization term
+          balloonYears: getNumericValue(['Balloon', 'balloon', 'Balloon Years', 'balloonYears']) || undefined,
+          balloonPayment: undefined, // Will be calculated if balloonYears exists
+          yearBuilt: Math.round(getNumericValue(['yearBuilt', 'Year Built', 'year_built', 'built'])),
+          lotSize: getNumericValue(['lot sizes', 'Lot Size', 'lot_size', 'lotSize']),
+          description: getColumnValue(['description', 'Description', 'desc', 'notes']),
+          imageUrls: getColumnValue(['Image link', 'image_link', 'imageUrl', 'photo']) ? [getColumnValue(['Image link', 'image_link', 'imageUrl', 'photo'])] : [],
           source: 'import',
           status: 'active',
           dateAdded: new Date().toISOString(),
@@ -105,6 +145,44 @@ export async function POST(request: NextRequest) {
           featured: false,
           isActive: true
         };
+
+        // Calculate missing financial fields
+        const loanAmount = property.listPrice - property.downPaymentAmount;
+
+        // Calculate down payment percentage if missing
+        if (!property.downPaymentPercent && property.listPrice && property.downPaymentAmount) {
+          property.downPaymentPercent = (property.downPaymentAmount / property.listPrice) * 100;
+        }
+
+        // Calculate monthly payment if missing but we have interest rate
+        if (!property.monthlyPayment && property.interestRate && loanAmount > 0) {
+          const monthlyRate = property.interestRate / 100 / 12;
+          const numPayments = property.termYears * 12;
+
+          if (monthlyRate > 0) {
+            property.monthlyPayment = Math.round(
+              loanAmount * (monthlyRate * Math.pow(1 + monthlyRate, numPayments)) /
+              (Math.pow(1 + monthlyRate, numPayments) - 1)
+            );
+          } else {
+            // No interest - simple division
+            property.monthlyPayment = Math.round(loanAmount / numPayments);
+          }
+        }
+
+        // Calculate balloon payment if balloonYears is specified
+        if (property.balloonYears && property.balloonYears > 0 && property.monthlyPayment && property.interestRate) {
+          const loanAmount = property.listPrice - property.downPaymentAmount;
+          const monthlyRate = property.interestRate / 100 / 12;
+          const balloonPayments = property.balloonYears * 12;
+
+          if (monthlyRate > 0) {
+            // Calculate remaining balance after balloon years of payments
+            const remainingBalance = loanAmount * Math.pow(1 + monthlyRate, balloonPayments) -
+              property.monthlyPayment * ((Math.pow(1 + monthlyRate, balloonPayments) - 1) / monthlyRate);
+            property.balloonPayment = Math.max(0, Math.round(remainingBalance));
+          }
+        }
 
         // Validation
         if (!property.address || !property.city || !property.state || property.listPrice <= 0) {

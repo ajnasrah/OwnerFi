@@ -1,11 +1,10 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useSession, signOut } from 'next-auth/react';
+import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ExtendedSession, isExtendedSession } from '@/types/session';
-import { LegalDisclaimers } from '@/components/ui/LegalDisclaimers';
 
 interface BuyerProfile {
   id: string;
@@ -29,6 +28,10 @@ interface Property {
   listPrice?: number;
   monthlyPayment?: number;
   downPaymentAmount?: number;
+  balloonPayment?: number;
+  balloonYears?: number;
+  interestRate?: number;
+  termYears?: number;
   zillowImageUrl?: string;
   imageUrl?: string;
   displayTag?: string;
@@ -220,82 +223,82 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
-        <div className="text-center max-w-md w-full">
-          {/* Animated Logo/Icon */}
-          <div className="mb-8">
-            <div className="w-20 h-20 mx-auto mb-6 relative">
-              <div className="absolute inset-0 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-2xl animate-pulse"></div>
-              <div className="absolute inset-2 bg-slate-900 rounded-xl flex items-center justify-center">
-                <span className="text-2xl font-black text-emerald-400">🏠</span>
+      <div className="h-screen bg-slate-900 flex items-center justify-center p-4 overflow-hidden fixed inset-0">
+          <div className="text-center max-w-sm w-full">
+            {/* Animated Logo/Icon */}
+            <div className="mb-4">
+              <div className="w-16 h-16 mx-auto mb-3 relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-2xl animate-pulse"></div>
+                <div className="absolute inset-2 bg-slate-900 rounded-xl flex items-center justify-center">
+                  <span className="text-xl font-black text-emerald-400">🏠</span>
+                </div>
+              </div>
+
+              {/* Animated Spinner */}
+              <div className="flex justify-center mb-3">
+                <div className="w-12 h-12 border-4 border-slate-700 border-t-emerald-400 rounded-full animate-spin"></div>
               </div>
             </div>
-            
-            {/* Animated Spinner */}
-            <div className="flex justify-center mb-6">
-              <div className="w-16 h-16 border-4 border-slate-700 border-t-emerald-400 rounded-full animate-spin"></div>
-            </div>
-          </div>
 
-          {/* Main Status */}
-          <h1 className="text-3xl font-black text-white mb-2 animate-pulse">
-            SCANNING PROPERTIES
-          </h1>
-          <p className="text-slate-400 text-lg mb-8">
-            Finding owner-financed homes in your area...
-          </p>
+            {/* Main Status */}
+            <h1 className="text-2xl font-black text-white mb-2 animate-pulse">
+              SCANNING PROPERTIES
+            </h1>
+            <p className="text-slate-400 text-base mb-4">
+              Finding owner-financed homes in your area...
+            </p>
 
-          {/* Live Statistics */}
-          <div className="bg-slate-800/50 backdrop-blur-lg rounded-2xl p-6 border border-slate-700/50 mb-6">
-            <div className="grid grid-cols-2 gap-6">
-              {/* Properties Analyzed */}
-              <div className="text-center">
-                <div className="text-3xl font-black text-emerald-400 mb-2 animate-pulse">
-                  1,247
+            {/* Live Statistics */}
+            <div className="bg-slate-800/50 backdrop-blur-lg rounded-2xl p-3 border border-slate-700/50 mb-3">
+              <div className="grid grid-cols-2 gap-3">
+                {/* Properties Analyzed */}
+                <div className="text-center">
+                  <div className="text-xl font-black text-emerald-400 mb-1 animate-pulse">
+                    1,247
+                  </div>
+                  <div className="text-xs text-slate-400 font-semibold">LISTINGS SCANNED</div>
                 </div>
-                <div className="text-xs text-slate-400 font-semibold">LISTINGS SCANNED</div>
-              </div>
-              
-              {/* Owner Financed Found */}
-              <div className="text-center">
-                <div className="text-3xl font-black text-blue-400 mb-2 animate-pulse">
-                  89
+
+                {/* Owner Financed Found */}
+                <div className="text-center">
+                  <div className="text-xl font-black text-blue-400 mb-1 animate-pulse">
+                    89
+                  </div>
+                  <div className="text-xs text-slate-400 font-semibold">OWNER FINANCED FOUND</div>
                 </div>
-                <div className="text-xs text-slate-400 font-semibold">OWNER FINANCED FOUND</div>
-              </div>
-              
-              {/* Budget Matches */}
-              <div className="text-center">
-                <div className="text-3xl font-black text-purple-400 mb-2 animate-pulse">
-                  23
+
+                {/* Budget Matches */}
+                <div className="text-center">
+                  <div className="text-xl font-black text-purple-400 mb-1 animate-pulse">
+                    23
+                  </div>
+                  <div className="text-xs text-slate-400 font-semibold">IN YOUR BUDGET</div>
                 </div>
-                <div className="text-xs text-slate-400 font-semibold">IN YOUR BUDGET</div>
-              </div>
-              
-              {/* Perfect Matches */}
-              <div className="text-center">
-                <div className="text-3xl font-black text-yellow-400 mb-2 animate-pulse">
-                  7
+
+                {/* Perfect Matches */}
+                <div className="text-center">
+                  <div className="text-xl font-black text-yellow-400 mb-1 animate-pulse">
+                    7
+                  </div>
+                  <div className="text-xs text-slate-400 font-semibold">PERFECT FOR YOU</div>
                 </div>
-                <div className="text-xs text-slate-400 font-semibold">PERFECT FOR YOU</div>
               </div>
             </div>
-          </div>
 
-          {/* Loading Progress Bar */}
-          <div className="bg-slate-700/50 rounded-full h-2 mb-4 overflow-hidden">
-            <div className="h-full bg-gradient-to-r from-emerald-400 to-blue-500 animate-pulse w-4/5"></div>
-          </div>
-          
-          {/* Status Messages */}
-          <div className="text-slate-400 text-sm animate-pulse">
-            <div>✓ Analyzing property listings</div>
-            <div>✓ Checking owner financing terms</div>
-            <div>✓ Matching with your budget</div>
-            <div className="text-emerald-400">⧗ Preparing your personalized matches...</div>
+            {/* Loading Progress Bar */}
+            <div className="bg-slate-700/50 rounded-full h-2 mb-3 overflow-hidden">
+              <div className="h-full bg-gradient-to-r from-emerald-400 to-blue-500 animate-pulse w-4/5"></div>
+            </div>
+
+            {/* Status Messages */}
+            <div className="text-slate-400 text-xs animate-pulse space-y-1">
+              <div>✓ Analyzing property listings</div>
+              <div>✓ Checking owner financing terms</div>
+              <div>✓ Matching with your budget</div>
+              <div className="text-emerald-400">⧗ Preparing your personalized matches...</div>
+            </div>
           </div>
         </div>
-      </div>
     );
   }
 
@@ -322,32 +325,7 @@ export default function Dashboard() {
   const currentProperty = properties[currentIndex];
 
   return (
-    <>
-      <style jsx global>{`
-        body {
-          overflow: hidden;
-          position: fixed;
-          width: 100%;
-          height: 100vh;
-        }
-        
-        @supports (-webkit-touch-callout: none) {
-          body {
-            height: -webkit-fill-available;
-          }
-        }
-      `}</style>
-      <div 
-        className="h-screen bg-black text-white overflow-hidden relative" 
-        style={{ 
-          height: '100vh', 
-          maxHeight: '100vh',
-          paddingTop: 'env(safe-area-inset-top)',
-          paddingBottom: 'env(safe-area-inset-bottom)',
-          paddingLeft: 'env(safe-area-inset-left)',
-          paddingRight: 'env(safe-area-inset-right)'
-        }}
-      >
+    <div className="h-screen bg-black text-white overflow-hidden relative fixed inset-0">
       {/* Top Navigation - Minimal */}
       <div className="absolute top-4 left-4 right-4 z-40 flex items-center justify-between">
         <button 
@@ -375,16 +353,16 @@ export default function Dashboard() {
       <div className="absolute inset-0">
         {/* Card Stack Effect - Behind Main Card */}
         {currentIndex < properties.length - 1 && (
-          <div className="absolute inset-2 bg-slate-800 rounded-3xl transform rotate-2 scale-95 z-10"></div>
+          <div className="absolute top-16 bottom-20 left-2 right-2 bg-slate-800 rounded-3xl transform rotate-2 scale-95 z-10"></div>
         )}
         {currentIndex < properties.length - 2 && (
-          <div className="absolute inset-3 bg-slate-700 rounded-3xl transform -rotate-1 scale-90 z-5"></div>
+          <div className="absolute top-16 bottom-20 left-3 right-3 bg-slate-700 rounded-3xl transform -rotate-1 scale-90 z-5"></div>
         )}
         
         {/* Main Property Card */}
-        <div 
+        <div
           ref={cardRef}
-          className="absolute inset-1 bg-white rounded-3xl overflow-hidden shadow-2xl z-20 transform-gpu select-none"
+          className="absolute top-16 bottom-20 left-1 right-1 bg-white rounded-3xl overflow-hidden shadow-2xl z-20 transform-gpu select-none"
           style={{
             transform: isDragging 
               ? `translate3d(${dragOffset.x}px, ${dragOffset.y * 0.1}px, 0) rotate(${dragOffset.x * 0.1}deg)` 
@@ -429,57 +407,65 @@ export default function Dashboard() {
             )}
             
             {/* Property Info - Tinder Style Overlay */}
-            <div className="absolute bottom-32 left-6 right-6">
-              <h2 className="text-3xl font-black text-white mb-2 leading-tight">
+            <div className="absolute bottom-24 left-4 right-4">
+              <h2 className="text-2xl font-black text-white mb-1 leading-tight">
                 {currentProperty.address}
               </h2>
-              <p className="text-white/90 text-lg font-medium mb-4">
+              <p className="text-white/90 text-base font-medium mb-3">
                 {currentProperty.city}, {currentProperty.state}
               </p>
-              
+
               {/* Property Stats Row */}
-              <div className="flex items-center gap-6 mb-4">
-                <div className="flex items-center gap-2">
-                  <span className="text-white text-sm">🏠</span>
-                  <span className="text-white text-sm font-semibold">{currentProperty.bedrooms}bd, {currentProperty.bathrooms}ba</span>
+              <div className="flex items-center gap-4 mb-3">
+                <div className="flex items-center gap-1">
+                  <span className="text-white text-xs">🏠</span>
+                  <span className="text-white text-xs font-semibold">{currentProperty.bedrooms}bd, {currentProperty.bathrooms}ba</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-white text-sm">📏</span>
-                  <span className="text-white text-sm font-semibold">{currentProperty.squareFeet?.toLocaleString() || '1,808'} sqft</span>
+                <div className="flex items-center gap-1">
+                  <span className="text-white text-xs">📏</span>
+                  <span className="text-white text-xs font-semibold">{currentProperty.squareFeet?.toLocaleString() || '1,140'} sqft</span>
                 </div>
               </div>
-              
+
               {/* Price Info */}
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <span className="text-white/80 text-lg">💰</span>
-                  <span className="text-white text-xl font-bold">
-                    ${currentProperty.listPrice?.toLocaleString() || '319,900'}
+                  <span className="text-white/80 text-base">💰</span>
+                  <span className="text-white text-lg font-bold">
+                    ${currentProperty.listPrice?.toLocaleString() || '260,000'}
                   </span>
                 </div>
-                
-                <div className="flex gap-4">
-                  <div className="flex items-center gap-2">
-                    <span className="text-emerald-400 text-sm">📅</span>
-                    <span className="text-emerald-400 text-sm font-semibold">
-                      ${currentProperty.monthlyPayment ? Math.ceil(currentProperty.monthlyPayment).toLocaleString() : '1,727'}/mo
+
+                <div className="flex gap-3 flex-wrap">
+                  <div className="flex items-center gap-1">
+                    <span className="text-emerald-400 text-xs">📅</span>
+                    <span className="text-emerald-400 text-xs font-semibold">
+                      ${currentProperty.monthlyPayment ? Math.ceil(currentProperty.monthlyPayment).toLocaleString() : '1,403'}/mo est
                     </span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-blue-400 text-sm">💳</span>
-                    <span className="text-blue-400 text-sm font-semibold">
-                      ${currentProperty.downPaymentAmount?.toLocaleString() || '31,990'} down
+                  <div className="flex items-center gap-1">
+                    <span className="text-blue-400 text-xs">💳</span>
+                    <span className="text-blue-400 text-xs font-semibold">
+                      ${currentProperty.downPaymentAmount?.toLocaleString() || '26,000'} down est
                     </span>
                   </div>
+                  {currentProperty.balloonYears && currentProperty.balloonPayment && (
+                    <div className="flex items-center gap-1">
+                      <span className="text-yellow-400 text-xs">🎈</span>
+                      <span className="text-yellow-400 text-xs font-semibold">
+                        ${currentProperty.balloonPayment.toLocaleString()} in {currentProperty.balloonYears}yr est
+                      </span>
+                    </div>
+                  )}
                 </div>
-                
+
                 {/* Payment Disclaimer */}
-                <div className="mt-3">
-                  <LegalDisclaimers type="property" compact />
-                  <p className="text-white/60 text-xs text-center italic mt-2">
-                    * All estimates - not guaranteed. Verify with property owner and licensed professionals.
+                <div className="mt-2 text-center">
+                  <p className="text-white/60 text-xs">
+                    * Excludes taxes, insurance, HOA fees
                   </p>
                 </div>
+
               </div>
             </div>
           </div>
@@ -487,32 +473,31 @@ export default function Dashboard() {
       </div>
 
       {/* Bottom Action Buttons - Simplified */}
-      <div className="absolute bottom-8 left-0 right-0 z-30">
-        <div className="flex justify-center items-center gap-12">
+      <div className="absolute bottom-4 left-0 right-0 z-30">
+        <div className="flex justify-center items-center gap-8">
           {/* Don't Like Button */}
           <button
             onClick={nextProperty}
-            className="w-20 h-20 bg-red-500 text-white rounded-full flex items-center justify-center transition-all transform hover:scale-110 active:scale-95 shadow-lg shadow-red-500/30"
+            className="w-16 h-16 bg-red-500 text-white rounded-full flex items-center justify-center transition-all transform hover:scale-110 active:scale-95 shadow-lg shadow-red-500/30"
           >
-            <span className="text-3xl">✕</span>
+            <span className="text-2xl">✕</span>
           </button>
 
           {/* Like Button */}
-          <button 
+          <button
             onClick={() => toggleLike(currentProperty.id)}
-            className={`w-20 h-20 rounded-full flex items-center justify-center transition-all transform shadow-lg ${
-              likedProperties.includes(currentProperty.id) 
-                ? 'bg-pink-500 text-white scale-110 shadow-pink-500/30' 
+            className={`w-16 h-16 rounded-full flex items-center justify-center transition-all transform shadow-lg ${
+              likedProperties.includes(currentProperty.id)
+                ? 'bg-pink-500 text-white scale-110 shadow-pink-500/30'
                 : 'bg-green-500 text-white hover:scale-110 active:scale-95 shadow-green-500/30'
             }`}
           >
-            <span className="text-3xl">
+            <span className="text-2xl">
               {likedProperties.includes(currentProperty.id) ? '❤️' : '♡'}
             </span>
           </button>
         </div>
       </div>
     </div>
-    </>
   );
 }

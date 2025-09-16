@@ -8,8 +8,6 @@ import { Footer } from '@/components/ui/Footer';
 import { Button } from '@/components/ui/Button';
 import { LeadDispute } from '@/lib/firebase-models';
 import { PropertyListing } from '@/lib/property-schema';
-import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 
 // Extended Property interface for admin with legacy imageUrl field
 interface AdminProperty extends PropertyListing {
@@ -240,22 +238,45 @@ export default function AdminDashboard() {
 
   const handleDeleteSelected = async () => {
     if (selectedProperties.length === 0) return;
-    
+
     const confirmDelete = confirm(`Are you sure you want to permanently delete ${selectedProperties.length} properties? This cannot be undone and will remove them from all user accounts.`);
     if (!confirmDelete) return;
-    
+
     setDeleting(true);
     try {
+      let successCount = 0;
+      let failCount = 0;
+
       for (const propertyId of selectedProperties) {
-        await fetch(`/api/admin/properties?propertyId=${propertyId}`, {
-          method: 'DELETE'
-        });
+        try {
+          const response = await fetch(`/api/admin/properties?propertyId=${propertyId}`, {
+            method: 'DELETE'
+          });
+
+          if (response.ok) {
+            successCount++;
+          } else {
+            const error = await response.json();
+            console.error(`Failed to delete property ${propertyId}:`, error);
+            failCount++;
+          }
+        } catch (error) {
+          console.error(`Error deleting property ${propertyId}:`, error);
+          failCount++;
+        }
       }
+
       setSelectedProperties([]);
       fetchProperties();
-      alert(`${selectedProperties.length} properties deleted successfully`);
-    } catch {
-      alert('Failed to delete some properties');
+
+      if (failCount === 0) {
+        alert(`✅ Successfully deleted ${successCount} properties`);
+      } else {
+        alert(`⚠️ Deleted ${successCount} properties, ${failCount} failed. Check console for details.`);
+      }
+    } catch (error) {
+      console.error('Bulk delete error:', error);
+      alert('Failed to delete properties - check console for details');
     } finally {
       setDeleting(false);
     }
@@ -296,7 +317,7 @@ export default function AdminDashboard() {
       interestRate: property.interestRate || 0,
       termYears: property.termYears || 20,
       description: property.description || '',
-      imageUrl: property.imageUrl || '',
+      imageUrl: property.imageUrls?.[0] || property.imageUrl || '',
       isActive: property.isActive !== false
     });
   };
@@ -337,7 +358,6 @@ export default function AdminDashboard() {
       });
 
       if (response.ok) {
-        const data = await response.json();
         alert(`Dispute ${action === 'approve' ? 'approved' : 'denied'} successfully${refundCredits > 0 ? ` with ${refundCredits} credit(s) refunded` : ''}`);
         fetchDisputes();
       } else {
@@ -828,18 +848,22 @@ export default function AdminDashboard() {
                             />
                           </td>
                           <td className="p-4">
-                            {property.imageUrl ? (
-                              <Image 
-                                src={property.imageUrl || '/placeholder-house.jpg'} 
+                            {(property.imageUrls && property.imageUrls.length > 0) || property.imageUrl ? (
+                              <Image
+                                src={(property.imageUrls?.[0] || property.imageUrl) || '/placeholder-house.jpg'}
                                 alt={property.address}
                                 width={80}
                                 height={64}
                                 className="w-20 h-16 object-cover rounded cursor-pointer hover:opacity-80"
-                                onClick={() => window.open(property.imageUrl || '', '_blank')}
+                                onClick={() => window.open((property.imageUrls?.[0] || property.imageUrl) || '', '_blank')}
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  target.src = '/placeholder-house.jpg';
+                                }}
                               />
                             ) : (
                               <div className="w-20 h-16 bg-slate-200 rounded flex items-center justify-center text-slate-400">
-                                No Image
+                                <span className="text-xs">No Image</span>
                               </div>
                             )}
                           </td>
@@ -875,8 +899,21 @@ export default function AdminDashboard() {
                                 onClick={async () => {
                                   const confirm = window.confirm(`Permanently delete ${property.address}? This cannot be undone.`);
                                   if (confirm) {
-                                    await fetch(`/api/admin/properties?propertyId=${property.id}`, { method: 'DELETE' });
-                                    fetchProperties();
+                                    try {
+                                      const response = await fetch(`/api/admin/properties/${property.id}`, { method: 'DELETE' });
+
+                                      if (response.ok) {
+                                        alert('✅ Property deleted successfully');
+                                        fetchProperties();
+                                      } else {
+                                        const error = await response.json();
+                                        alert(`❌ Failed to delete: ${error.error}`);
+                                        console.error('Delete error:', error);
+                                      }
+                                    } catch (error) {
+                                      alert('❌ Delete failed - check console for details');
+                                      console.error('Delete request failed:', error);
+                                    }
                                   }
                                 }}
                                 className="px-3 py-1 bg-red-100 text-red-700 rounded text-sm hover:bg-red-200 transition-colors"

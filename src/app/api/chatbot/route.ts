@@ -12,48 +12,48 @@ function getOpenAIClient() {
 }
 
 const OWNERFI_CONTEXT = `
-You are an AI assistant for OwnerFi. Be helpful and informative while making it clear you are an automated system providing general information only.
+You are an AI assistant for OwnerFi, a platform that connects buyers with owner-financing opportunities. Be helpful, informative, and answer user questions directly while including necessary disclaimers.
 
-CONVERSATION FLOW (respond based on conversation length):
-1st message: Already set to "🤠 Hi! I'm OwnerFi's AI assistant!" 
-2nd response: "What brings you here today?"
-3rd response: "Are you looking for a place to call home?"
-4th response: "Are you a realtor looking for leads?"
-After that: Answer their questions and guide them to sign up.
+CORE FUNCTION: Answer user questions about:
+- Owner financing and how it works
+- OwnerFi platform features and benefits
+- Property searching and matching
+- Real estate processes and options
+- Directing users to sign up for access
 
-Keep responses under 15 words maximum. Always include disclaimers about being an AI providing general information only.
+RESPONSE STYLE:
+- Answer questions directly and helpfully
+- Be conversational but professional
+- Include relevant disclaimers naturally
+- Guide users toward signing up when appropriate
+- Keep responses informative but concise (2-4 sentences)
 
-LEGAL DISCLAIMERS (MUST INCLUDE):
-- "I'm an AI providing general information only, not advice"
-- "OwnerFi is not a licensed real estate broker or agent"
-- "Consult licensed professionals for real estate decisions"
-- "Your contact info will be shared with real estate agents"
+OWNERFI PLATFORM:
+- Buyers: FREE to use - search properties, get matched with owner-financing opportunities
+- Agents: Pay subscription fees to access qualified buyer leads in their service areas
+- Platform connects buyers with sellers offering owner financing, subject-to deals, lease-to-own, etc.
+- Founded to help families access homeownership when traditional financing is challenging
 
-OWNERFI BASICS:
-- Buyers: FREE platform (we sell your contact info to agents)
-- Agents: Pay for access to buyer leads in their service areas
-- Platform connects buyers with owner-financing opportunities
-- Founded by Abdullah to help families access homeownership
+FOR BUYERS:
+- Free property search and matching
+- Access to owner-financing opportunities
+- Connection with qualified real estate agents
+- Note: Your contact info may be shared with agents who can help you
 
-PRICING STRUCTURE:
-For Buyers: 
-- Platform use: FREE (your info gets sold to agents who may contact you)
-- Property searching: FREE
-- All services: FREE (agents pay us, you get contacted)
+FOR REAL ESTATE AGENTS:
+- Access to pre-qualified buyer leads
+- Subscription-based lead generation
+- Service area targeting
+- Lead management tools
 
-For Real Estate Agents:
-- Trial period with limited lead credits
-- Lead access fees (per lead or subscription)
-- No guarantees on lead quality or conversion
+REQUIRED DISCLAIMERS (include naturally in responses):
+- You're an AI providing general information, not professional advice
+- OwnerFi is a lead generation platform, not a licensed broker
+- Users should consult licensed professionals for real estate decisions
+- Property information should be independently verified
+- No guarantees on financing approval or property availability
 
-KEY DISCLAIMERS:
-- We're a lead generation platform, not brokers
-- Property information may not be accurate - verify everything
-- No guarantee of financing approval or property availability
-- Agents will contact you via phone/email/text
-- All real estate decisions require professional guidance
-
-Always encourage signups but include disclaimers. Keep responses SHORT with proper legal notices.
+Always be helpful while maintaining appropriate legal disclaimers.
 `;
 
 export async function POST(request: Request) {
@@ -67,37 +67,28 @@ export async function POST(request: Request) {
       );
     }
 
-    // Progressive conversation flow
-    const conversationLength = conversationHistory.length;
+    // Always use AI to respond to user questions intelligently
     let response = '';
 
-    if (conversationLength === 0) {
-      response = "What brings you here today? (I'm an AI providing general info only)";
-    } else if (conversationLength === 2) {
-      response = "Are you looking for property information? (Not advice - info only)";
-    } else if (conversationLength === 4) {
-      response = "Are you a realtor interested in our lead generation platform?";
-    } else {
-      // Use AI for other responses
-      try {
-        const openai = getOpenAIClient();
-        const messages = [
-          { role: 'system', content: OWNERFI_CONTEXT },
-          ...conversationHistory,
-          { role: 'user', content: message }
-        ];
+    try {
+      const openai = getOpenAIClient();
+      const messages = [
+        { role: 'system', content: OWNERFI_CONTEXT },
+        ...conversationHistory,
+        { role: 'user', content: message }
+      ];
 
-        const completion = await openai.chat.completions.create({
-          model: 'gpt-4',
-          messages: messages as OpenAI.Chat.Completions.ChatCompletionMessageParam[],
-          max_tokens: 100,
-          temperature: 0.7,
-        });
+      const completion = await openai.chat.completions.create({
+        model: 'gpt-4',
+        messages: messages as OpenAI.Chat.Completions.ChatCompletionMessageParam[],
+        max_tokens: 150,
+        temperature: 0.7,
+      });
 
-        response = completion.choices[0]?.message?.content || 'How can I help you today?';
-      } catch {
-        response = 'How can I help you today?';
-      }
+      response = completion.choices[0]?.message?.content || 'How can I help you with OwnerFi today?';
+    } catch (error) {
+      console.error('OpenAI API error:', error);
+      response = 'I\'m having trouble connecting right now. How can I help you with OwnerFi? Feel free to explore our platform or sign up to get started!';
     }
 
     return NextResponse.json({

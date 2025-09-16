@@ -14,16 +14,6 @@ type Property = PropertyListing & {
   imageUrl?: string;
 };
 
-interface BuyerProfile {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone?: string;
-  city: string;
-  maxMonthlyPayment?: number;
-  maxDownPayment?: number;
-  likedProperties?: string[];
-}
 
 export default function LikedProperties() {
   const { data: session, status } = useSession();
@@ -207,32 +197,67 @@ export default function LikedProperties() {
                         <span className="font-bold text-white text-lg">${property.listPrice?.toLocaleString()}</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-slate-400 font-semibold">Monthly:</span>
+                        <span className="text-slate-400 font-semibold">Monthly Payment:</span>
                         <span className="font-bold text-emerald-400 text-lg">${Math.ceil(property.monthlyPayment || 0).toLocaleString()} est</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-slate-400 font-semibold">Down:</span>
+                        <span className="text-slate-400 font-semibold">Down Payment:</span>
                         <span className="font-bold text-blue-400 text-lg">${property.downPaymentAmount?.toLocaleString()} est</span>
                       </div>
-                      
-                      {/* Balloon Payment Warning */}
-                      <div className="bg-red-500/20 border border-red-400/30 rounded-lg p-3 mt-3">
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className="text-red-400 text-sm">🎈</span>
-                          <span className="text-red-300 font-semibold text-sm">Balloon Payment Alert</span>
-                        </div>
-                        <p className="text-red-200 text-xs leading-relaxed">
-                          <strong>This property may include a balloon payment.</strong> You might owe the remaining loan balance (potentially ${((property.listPrice || 200000) * 0.7).toLocaleString()}+) in {property.termYears || 5} years. Plan to refinance or save for this payment.
+
+                      {/* Payment Disclaimer */}
+                      <div className="text-center bg-slate-700/30 rounded p-2">
+                        <p className="text-slate-300 text-xs">
+                          * Estimates only. Excludes taxes, insurance, HOA fees
                         </p>
-                        <div className="mt-2">
-                          <Link 
-                            href="/how-owner-finance-works#balloon-payments" 
-                            className="text-red-300 underline text-xs hover:text-red-200"
-                          >
-                            Learn about balloon payments →
-                          </Link>
-                        </div>
                       </div>
+                      
+                      {/* Balloon Payment Info */}
+                      {property.balloonYears && property.balloonPayment ? (
+                        <div className="bg-yellow-500/20 border border-yellow-400/30 rounded-lg p-3 mt-3">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-yellow-400 text-sm">🎈</span>
+                            <span className="text-yellow-300 font-semibold text-sm">Balloon Payment</span>
+                          </div>
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-yellow-200 text-xs">Amount Due:</span>
+                            <span className="font-bold text-yellow-300">${property.balloonPayment.toLocaleString()} est</span>
+                          </div>
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-yellow-200 text-xs">Due In:</span>
+                            <span className="font-bold text-yellow-300">{property.balloonYears} year{property.balloonYears > 1 ? 's' : ''}</span>
+                          </div>
+                          <p className="text-yellow-200 text-xs leading-relaxed">
+                            Estimated balloon payment. Plan to refinance or save. Excludes taxes/insurance/HOA.
+                          </p>
+                          <div className="mt-2">
+                            <Link
+                              href="/how-owner-finance-works#balloon-payments"
+                              className="text-yellow-300 underline text-xs hover:text-yellow-200"
+                            >
+                              Learn about balloon payments →
+                            </Link>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="bg-red-500/20 border border-red-400/30 rounded-lg p-3 mt-3">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-red-400 text-sm">⚠️</span>
+                            <span className="text-red-300 font-semibold text-sm">Balloon Payment Unknown</span>
+                          </div>
+                          <p className="text-red-200 text-xs leading-relaxed">
+                            <strong>Balloon payment terms not specified.</strong> This property may include a balloon payment. Ask the seller for details before proceeding.
+                          </p>
+                          <div className="mt-2">
+                            <Link
+                              href="/how-owner-finance-works#balloon-payments"
+                              className="text-red-300 underline text-xs hover:text-red-200"
+                            >
+                              Learn about balloon payments →
+                            </Link>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex justify-between text-sm text-slate-400 mb-4 font-semibold">

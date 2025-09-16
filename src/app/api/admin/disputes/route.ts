@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { 
-  collection, 
-  query, 
-  getDocs, 
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/lib/auth';
+import {
+  collection,
+  query,
+  getDocs,
   doc,
   updateDoc,
   getDoc,
@@ -12,6 +14,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { logError, logInfo } from '@/lib/logger';
+import { ExtendedSession } from '@/types/session';
 
 // GET - Fetch all disputes for admin review
 export async function GET() {
@@ -23,8 +26,15 @@ export async function GET() {
       );
     }
 
-    // TODO: Add admin role check when admin auth is implemented
-    // For now, this is open for development
+    // Admin access control
+    const session = await getServerSession(authOptions as unknown as Parameters<typeof getServerSession>[0]) as ExtendedSession | null;
+
+    if (!session?.user || (session as ExtendedSession).user.role !== 'admin') {
+      return NextResponse.json(
+        { error: 'Access denied. Admin access required.' },
+        { status: 403 }
+      );
+    }
     
     const disputesQuery = query(
       collection(db!, 'leadDisputes'),
@@ -115,8 +125,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // TODO: Add admin role check when admin auth is implemented
-    
+    // Admin access control
+    const session = await getServerSession(authOptions as unknown as Parameters<typeof getServerSession>[0]) as ExtendedSession | null;
+
+    if (!session?.user || (session as ExtendedSession).user.role !== 'admin') {
+      return NextResponse.json(
+        { error: 'Access denied. Admin access required.' },
+        { status: 403 }
+      );
+    }
+
     const body = await request.json();
     const { disputeId, action, adminNotes, refundCredits } = body;
 

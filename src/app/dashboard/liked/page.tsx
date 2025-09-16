@@ -166,15 +166,16 @@ export default function LikedProperties() {
                   <div className="w-full h-48 bg-slate-700 overflow-hidden relative">
                     <img
                       src={
-                        property.zillowImageUrl || 
+                        property.imageUrls?.[0] ||
+                        property.zillowImageUrl ||
                         property.imageUrl ||
-                        `https://maps.googleapis.com/maps/api/streetview?size=400x300&location=${encodeURIComponent(property.address + ', ' + property.city + ', ' + property.state)}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`
+                        '/placeholder-house.jpg'
                       }
                       alt={property.address}
                       className="w-full h-full object-cover"
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
-                        target.src = `https://maps.googleapis.com/maps/api/streetview?size=400x300&location=${encodeURIComponent(property.address + ', ' + property.city + ', ' + property.state)}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`;
+                        target.src = '/placeholder-house.jpg';
                       }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"></div>

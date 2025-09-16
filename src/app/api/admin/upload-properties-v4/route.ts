@@ -339,6 +339,7 @@ interface PropertyData {
   state: string;
   zipCode: string;
   price: number;
+  listPrice: number;
   bedrooms: number;
   bathrooms: number;
   squareFeet: number;

@@ -26,6 +26,7 @@ interface BuyerStats {
   lastSignIn?: string;
   createdAt?: string;
   isActive?: boolean;
+  isPurchased?: boolean;
 }
 
 export async function GET(request: NextRequest) {
@@ -62,100 +63,119 @@ export async function GET(request: NextRequest) {
 
     console.log(`Found ${usersSnapshot.docs.length} users with role 'buyer'`);
 
+    // Batch fetch all related data including lead purchases to check if buyer was purchased
+    const [buyerProfilesSnapshot, propertyActionsSnapshot, leadPurchasesSnapshot] = await Promise.all([
+      getDocs(query(collection(db, 'buyerProfiles'))),
+      getDocs(query(collection(db, 'propertyActions'), where('action', '==', 'like'))),
+      getDocs(query(collection(db, 'leadPurchases')))
+    ]);
+
+    // Build set of purchased buyer IDs
+    const purchasedBuyerIds = new Set<string>();
+    leadPurchasesSnapshot.docs.forEach(doc => {
+      const data = doc.data();
+      if (data.buyerId) {
+        purchasedBuyerIds.add(data.buyerId);
+      }
+    });
+
+    // Build maps for fast lookup
+    const buyerProfileMap = new Map<string, any>();
+    buyerProfilesSnapshot.docs.forEach(doc => {
+      const data = doc.data();
+      // Map by both userId and doc.id for flexibility
+      if (data.userId) {
+        buyerProfileMap.set(data.userId, {
+          firstName: data.firstName,
+          lastName: data.lastName,
+          city: data.city,
+          state: data.state,
+          maxDownPayment: data.maxDownPayment,
+          maxMonthlyPayment: data.maxMonthlyPayment,
+          phone: data.phone,
+          likedProperties: data.likedProperties || [],
+          isPurchased: purchasedBuyerIds.has(doc.id)
+        });
+      }
+      // Also map by document ID
+      buyerProfileMap.set(doc.id, {
+        firstName: data.firstName,
+        lastName: data.lastName,
+        city: data.city,
+        state: data.state,
+        maxDownPayment: data.maxDownPayment,
+        maxMonthlyPayment: data.maxMonthlyPayment,
+        phone: data.phone,
+        likedProperties: data.likedProperties || [],
+        isPurchased: purchasedBuyerIds.has(doc.id)
+      });
+    });
+
+    // Count likes per buyer
+    const likeCountMap = new Map<string, number>();
+    propertyActionsSnapshot.docs.forEach(doc => {
+      const data = doc.data();
+      if (data.userId) {
+        const count = likeCountMap.get(data.userId) || 0;
+        likeCountMap.set(data.userId, count + 1);
+      }
+    });
+
+    // Process all buyer users with aggregated data
     for (const userDoc of usersSnapshot.docs) {
       try {
         const userData = userDoc.data();
-        console.log(`Processing buyer: ${userData.email || userDoc.id}`);
+        const profileData = buyerProfileMap.get(userDoc.id);
 
-          // Simplified approach - just get basic profile data without expensive queries
-        let profileData = null;
-        let matchedPropertiesCount = 0;
-        let likedPropertiesCount = 0;
-        let loginCount = 0;
-
-        try {
-          // Get buyer profile data
-          const profileQuery = query(
-            collection(db, 'buyerProfiles'),
-            where('userId', '==', userDoc.id)
-          );
-          const profileSnapshot = await getDocs(profileQuery);
-          profileData = profileSnapshot.docs[0]?.data();
-        } catch (error) {
-          console.warn(`Could not fetch profile for buyer ${userDoc.id}:`, error);
-        }
-
-        try {
-          // Count matched properties
-          const matchedPropertiesQuery = query(
-            collection(db, 'propertyMatches'),
-            where('buyerId', '==', userDoc.id)
-          );
-          const matchedPropertiesSnapshot = await getDocs(matchedPropertiesQuery);
-          matchedPropertiesCount = matchedPropertiesSnapshot.size;
-        } catch (error) {
-          console.warn(`Could not fetch property matches for buyer ${userDoc.id}:`, error);
-        }
-
-        try {
-          // Count liked properties
-          const likedPropertiesQuery = query(
-            collection(db, 'propertyActions'),
-            where('userId', '==', userDoc.id),
-            where('action', '==', 'like')
-          );
-          const likedPropertiesSnapshot = await getDocs(likedPropertiesQuery);
-          likedPropertiesCount = likedPropertiesSnapshot.size;
-        } catch (error) {
-          console.warn(`Could not fetch liked properties for buyer ${userDoc.id}:`, error);
-        }
-
-        try {
-          // Get login count from user sessions (if available)
-          const sessionsQuery = query(
-            collection(db, 'userSessions'),
-            where('userId', '==', userDoc.id)
-          );
-          const sessionsSnapshot = await getDocs(sessionsQuery);
-          loginCount = sessionsSnapshot.size;
-        } catch {
-          // Sessions collection might not exist, default to 0
-          loginCount = userData.loginCount || 0;
-        }
+        // Use liked properties array from profile or count from propertyActions
+        const likeCount = profileData?.likedProperties?.length ||
+                          likeCountMap.get(userDoc.id) ||
+                          0;
 
         const buyerStat: BuyerStats = {
           id: userDoc.id,
-          name: userData.name || `${userData.firstName || ''} ${userData.lastName || ''}`.trim() || 'N/A',
+          name: profileData?.firstName && profileData?.lastName
+            ? `${profileData.firstName} ${profileData.lastName}`
+            : userData.name || userData.email || 'N/A',
           email: userData.email || 'N/A',
-          phone: userData.phone || profileData?.phoneNumber,
-          primaryCity: profileData?.primaryCity || userData.city,
-          primaryState: profileData?.primaryState || userData.state,
+          phone: profileData?.phone || userData.phone,
+          primaryCity: profileData?.city || userData.city,
+          primaryState: profileData?.state || userData.state,
           downPayment: profileData?.maxDownPayment || userData.maxDownPayment,
           monthlyBudget: profileData?.maxMonthlyPayment || userData.maxMonthlyPayment,
-          matchedPropertiesCount,
-          likedPropertiesCount,
-          loginCount,
+          matchedPropertiesCount: 0,
+          likedPropertiesCount: likeCount,
+          loginCount: userData.loginCount || (profileData ? 1 : 0),
           lastSignIn: userData.lastSignIn?.toDate?.()?.toISOString() || userData.lastLoginAt?.toDate?.()?.toISOString(),
           createdAt: userData.createdAt?.toDate?.()?.toISOString() || userData.registeredAt?.toDate?.()?.toISOString(),
-          isActive: userData.isActive !== false
+          isActive: userData.isActive !== false,
+          isPurchased: profileData?.isPurchased || purchasedBuyerIds.has(userDoc.id)
         };
 
         buyerStats.push(buyerStat);
       } catch (error) {
         console.error(`Error processing buyer ${userDoc.id}:`, error);
-        // Continue processing other buyers even if one fails
       }
     }
 
-    // Sort by creation date (newest first) and limit
+    // Sort by liked properties count (highest first), then by login count as secondary
     const sortedBuyers = buyerStats
-      .sort((a, b) => (new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()))
+      .sort((a, b) => {
+        if (b.likedPropertiesCount !== a.likedPropertiesCount) {
+          return b.likedPropertiesCount - a.likedPropertiesCount;
+        }
+        return b.loginCount - a.loginCount;
+      })
       .slice(0, limit);
 
     return NextResponse.json({
       buyers: sortedBuyers,
       total: buyerStats.length,
-      showing: `${sortedBuyers.length} of ${buyerStats.length} buyers`
+      showing: `${sortedBuyers.length} of ${buyerStats.length} buyers`,
+      stats: {
+        totalPurchasedBuyers: purchasedBuyerIds.size,
+        totalActiveBuyers: buyerStats.filter(b => b.isActive).length
+      }
     });
 
   } catch (error) {

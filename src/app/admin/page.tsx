@@ -8,6 +8,8 @@ import { Footer } from '@/components/ui/Footer';
 import { Button } from '@/components/ui/Button';
 import { LeadDispute } from '@/lib/firebase-models';
 import { PropertyListing } from '@/lib/property-schema';
+import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 // Extended Property interface for admin with legacy imageUrl field
 interface AdminProperty extends PropertyListing {
@@ -49,12 +51,26 @@ interface RealtorStats {
   subscriptionStatus?: string;
 }
 
+interface LogEntry {
+  id: string;
+  level: 'error' | 'warn' | 'info' | 'debug';
+  message: string;
+  context?: {
+    action?: string;
+    metadata?: Record<string, unknown>;
+  };
+  stackTrace?: string;
+  createdAt: { toDate?: () => Date } | null;
+  userId?: string;
+  userType?: string;
+}
+
 import Image from 'next/image';
 
 export default function AdminDashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'upload' | 'manage' | 'disputes' | 'contacts' | 'buyers' | 'realtors'>('upload');
+  const [activeTab, setActiveTab] = useState<'upload' | 'manage' | 'disputes' | 'contacts' | 'buyers' | 'realtors' | 'logs'>('upload');
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [result, setResult] = useState<{
@@ -96,6 +112,14 @@ export default function AdminDashboard() {
   const [editingProperty, setEditingProperty] = useState<AdminProperty | null>(null);
   const [editForm, setEditForm] = useState<Partial<AdminProperty>>({});
   const [isSigningOut, setIsSigningOut] = useState(false);
+
+  // Logs state
+  const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [loadingLogs, setLoadingLogs] = useState(false);
+
+  // Sorting state
+  const [sortField, setSortField] = useState<'address' | 'city' | 'state' | 'listPrice' | 'bedrooms' | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -159,10 +183,11 @@ export default function AdminDashboard() {
     }
   };
 
-  const fetchProperties = async () => {
+  const fetchProperties = async (limit?: number) => {
     setLoadingProperties(true);
     try {
-      const response = await fetch('/api/admin/properties');
+      const url = limit ? `/api/admin/properties?limit=${limit}` : '/api/admin/properties';
+      const response = await fetch(url);
       const data = await response.json();
       if (data.properties) {
         setProperties(data.properties);
@@ -171,6 +196,46 @@ export default function AdminDashboard() {
     } finally {
       setLoadingProperties(false);
     }
+  };
+
+  const handleSort = (field: 'address' | 'city' | 'state' | 'listPrice' | 'bedrooms') => {
+    const newDirection = sortField === field && sortDirection === 'asc' ? 'desc' : 'asc';
+    setSortField(field);
+    setSortDirection(newDirection);
+
+    const sortedProperties = [...properties].sort((a, b) => {
+      let aValue: string | number = '';
+      let bValue: string | number = '';
+
+      switch (field) {
+        case 'address':
+          aValue = a.address?.toLowerCase() || '';
+          bValue = b.address?.toLowerCase() || '';
+          break;
+        case 'city':
+          aValue = a.city?.toLowerCase() || '';
+          bValue = b.city?.toLowerCase() || '';
+          break;
+        case 'state':
+          aValue = a.state?.toLowerCase() || '';
+          bValue = b.state?.toLowerCase() || '';
+          break;
+        case 'listPrice':
+          aValue = a.listPrice || 0;
+          bValue = b.listPrice || 0;
+          break;
+        case 'bedrooms':
+          aValue = a.bedrooms || 0;
+          bValue = b.bedrooms || 0;
+          break;
+      }
+
+      if (aValue < bValue) return newDirection === 'asc' ? -1 : 1;
+      if (aValue > bValue) return newDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+    setProperties(sortedProperties);
   };
 
   const handleSelectAll = () => {
@@ -275,7 +340,7 @@ export default function AdminDashboard() {
     }
   };
 
-  const resolveDispute = async (disputeId: string, action: 'approve' | 'reject', refundCredits: number = 1) => {
+  const resolveDispute = async (disputeId: string, action: 'approve' | 'deny', refundCredits: number = 1) => {
     try {
       const response = await fetch('/api/admin/disputes', {
         method: 'POST',
@@ -288,11 +353,16 @@ export default function AdminDashboard() {
       });
 
       if (response.ok) {
-        alert(`Dispute ${action}d successfully`);
+        const data = await response.json();
+        alert(`Dispute ${action === 'approve' ? 'approved' : 'denied'} successfully${refundCredits > 0 ? ` with ${refundCredits} credit(s) refunded` : ''}`);
         fetchDisputes();
+      } else {
+        const error = await response.json();
+        alert(`Failed to resolve dispute: ${error.error}`);
       }
-    } catch {
-      alert('Failed to resolve dispute');
+    } catch (error) {
+      console.error('Dispute resolution error:', error);
+      alert('Failed to resolve dispute - check console for details');
     }
   };
 
@@ -366,6 +436,60 @@ export default function AdminDashboard() {
     });
   };
 
+  const fetchLogs = async () => {
+    if (!db) return;
+
+    setLoadingLogs(true);
+    try {
+      const logsRef = collection(db, 'systemLogs');
+      const logsQuery = query(
+        logsRef,
+        orderBy('createdAt', 'desc'),
+        limit(100)
+      );
+
+      const snapshot = await getDocs(logsQuery);
+      const logEntries: LogEntry[] = [];
+
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        let context;
+        try {
+          context = data.context ? JSON.parse(data.context) : {};
+        } catch {
+          context = {};
+        }
+
+        // Filter for upload-related logs
+        if (
+          context.action === 'upload_properties' ||
+          context.action === 'insert_property' ||
+          data.message?.includes('property') ||
+          data.message?.includes('upload') ||
+          data.message?.includes('CSV') ||
+          data.message?.includes('Excel')
+        ) {
+          logEntries.push({
+            id: doc.id,
+            level: data.level,
+            message: data.message,
+            context,
+            stackTrace: data.stackTrace,
+            createdAt: data.createdAt,
+            userId: data.userId,
+            userType: data.userType
+          });
+        }
+      });
+
+      setLogs(logEntries);
+    } catch (error) {
+      console.error('Failed to fetch logs:', error);
+    } finally {
+      setLoadingLogs(false);
+    }
+  };
+
   useEffect(() => {
     if (activeTab === 'manage') {
       fetchProperties();
@@ -377,6 +501,8 @@ export default function AdminDashboard() {
       fetchBuyers();
     } else if (activeTab === 'realtors') {
       fetchRealtors();
+    } else if (activeTab === 'logs') {
+      fetchLogs();
     }
   }, [activeTab]);
 
@@ -467,6 +593,16 @@ export default function AdminDashboard() {
               }`}
             >
               🏢 Realtors
+            </button>
+            <button
+              onClick={() => setActiveTab('logs')}
+              className={`px-6 py-3 rounded-lg font-medium transition-colors ${
+                activeTab === 'logs'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
+              }`}
+            >
+              📋 Logs
             </button>
           </div>
 
@@ -608,9 +744,17 @@ export default function AdminDashboard() {
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-semibold text-slate-900">Manage Properties</h2>
                 <div className="flex items-center space-x-3">
-                  <span className="text-sm text-slate-600">
-                    Showing {properties.length} properties {/* TODO: Show total when available */}
-                  </span>
+                  <div className="flex items-center space-x-4">
+                    <span className="text-sm text-slate-600">
+                      Showing {properties.length} properties
+                    </span>
+                    <button
+                      onClick={() => fetchProperties(5000)}
+                      className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition-colors"
+                    >
+                      Load All
+                    </button>
+                  </div>
                   <button
                     onClick={async () => {
                       if (confirm('⚠️ This will DELETE ALL PROPERTIES from the database. Are you sure?')) {
@@ -633,7 +777,7 @@ export default function AdminDashboard() {
                     🗑️ Clean All
                   </button>
                   <button
-                    onClick={fetchProperties}
+                    onClick={() => fetchProperties()}
                     disabled={loadingProperties}
                     className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-slate-400"
                   >
@@ -706,10 +850,50 @@ export default function AdminDashboard() {
                           />
                         </th>
                         <th className="p-4 text-left border-b font-semibold text-slate-700">Image</th>
-                        <th className="p-4 text-left border-b font-semibold text-slate-700">Address</th>
-                        <th className="p-4 text-left border-b font-semibold text-slate-700">City, State</th>
-                        <th className="p-4 text-left border-b font-semibold text-slate-700">Price</th>
-                        <th className="p-4 text-left border-b font-semibold text-slate-700">Beds/Baths</th>
+                        <th className="p-4 text-left border-b font-semibold text-slate-700">
+                          <button
+                            onClick={() => handleSort('address')}
+                            className="flex items-center space-x-1 hover:text-blue-600 transition-colors"
+                          >
+                            <span>Address</span>
+                            <span className="text-xs">
+                              {sortField === 'address' ? (sortDirection === 'asc' ? '▲' : '▼') : '↕'}
+                            </span>
+                          </button>
+                        </th>
+                        <th className="p-4 text-left border-b font-semibold text-slate-700">
+                          <button
+                            onClick={() => handleSort('city')}
+                            className="flex items-center space-x-1 hover:text-blue-600 transition-colors"
+                          >
+                            <span>City, State</span>
+                            <span className="text-xs">
+                              {sortField === 'city' ? (sortDirection === 'asc' ? '▲' : '▼') : '↕'}
+                            </span>
+                          </button>
+                        </th>
+                        <th className="p-4 text-left border-b font-semibold text-slate-700">
+                          <button
+                            onClick={() => handleSort('listPrice')}
+                            className="flex items-center space-x-1 hover:text-blue-600 transition-colors"
+                          >
+                            <span>Price</span>
+                            <span className="text-xs">
+                              {sortField === 'listPrice' ? (sortDirection === 'asc' ? '▲' : '▼') : '↕'}
+                            </span>
+                          </button>
+                        </th>
+                        <th className="p-4 text-left border-b font-semibold text-slate-700">
+                          <button
+                            onClick={() => handleSort('bedrooms')}
+                            className="flex items-center space-x-1 hover:text-blue-600 transition-colors"
+                          >
+                            <span>Beds/Baths</span>
+                            <span className="text-xs">
+                              {sortField === 'bedrooms' ? (sortDirection === 'asc' ? '▲' : '▼') : '↕'}
+                            </span>
+                          </button>
+                        </th>
                         <th className="p-4 text-left border-b font-semibold text-slate-700">Actions</th>
                       </tr>
                     </thead>
@@ -915,7 +1099,7 @@ export default function AdminDashboard() {
                             Approve & Refund Credits
                           </button>
                           <button
-                            onClick={() => resolveDispute(dispute.id, 'reject', 0)}
+                            onClick={() => resolveDispute(dispute.id, 'deny', 0)}
                             className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
                           >
                             Reject Dispute
@@ -989,13 +1173,31 @@ export default function AdminDashboard() {
                   <h2 className="text-2xl font-semibold text-slate-900">Buyer Users</h2>
                   <p className="text-slate-600">Manage registered buyers and their statistics</p>
                 </div>
-                <button
-                  onClick={fetchBuyers}
-                  disabled={loadingBuyers}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-slate-400"
-                >
-                  {loadingBuyers ? 'Loading...' : 'Refresh'}
-                </button>
+                <div className="flex space-x-2">
+                  <button
+                    onClick={async () => {
+                      try {
+                        const response = await fetch('/api/admin/debug-users');
+                        const data = await response.json();
+                        console.log('Debug data:', data);
+                        alert(`Debug: ${data.buyerCount} buyers, ${data.realtorCount} realtors found. Check console for details.`);
+                      } catch (error) {
+                        console.error('Debug error:', error);
+                        alert('Debug failed - check console');
+                      }
+                    }}
+                    className="px-3 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors text-sm"
+                  >
+                    Debug
+                  </button>
+                  <button
+                    onClick={fetchBuyers}
+                    disabled={loadingBuyers}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-slate-400"
+                  >
+                    {loadingBuyers ? 'Loading...' : 'Refresh'}
+                  </button>
+                </div>
               </div>
 
               {loadingBuyers ? (
@@ -1186,6 +1388,127 @@ export default function AdminDashboard() {
                       )}
                     </div>
                   ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Logs Tab */}
+          {activeTab === 'logs' && (
+            <div className="bg-white rounded-xl p-6 shadow-lg">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-2xl font-semibold text-slate-900">Property Upload Logs</h2>
+                  <p className="text-slate-600">View property upload logs and failures</p>
+                </div>
+                <button
+                  onClick={fetchLogs}
+                  disabled={loadingLogs}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-slate-400"
+                >
+                  {loadingLogs ? 'Loading...' : 'Refresh'}
+                </button>
+              </div>
+
+              {loadingLogs ? (
+                <div className="text-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                  <p className="mt-4 text-slate-600">Loading logs...</p>
+                </div>
+              ) : logs.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="text-6xl mb-4">📋</div>
+                  <h3 className="text-xl font-semibold text-slate-800 mb-2">No Upload Logs Found</h3>
+                  <p className="text-slate-600">No property upload logs found in the system</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {/* Upload Summaries */}
+                  {logs.filter(log => log.context?.action === 'upload_properties').map((log) => (
+                    <div key={log.id} className="border border-slate-200 rounded-lg p-4 bg-slate-50">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            log.level === 'error' ? 'bg-red-100 text-red-800' :
+                            log.level === 'warn' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-green-100 text-green-800'
+                          }`}>
+                            {log.level.toUpperCase()}
+                          </span>
+                          <span className="ml-2 text-sm text-slate-500">
+                            {log.createdAt?.toDate?.()?.toLocaleString() || 'Unknown time'}
+                          </span>
+                        </div>
+                      </div>
+                      <h3 className="font-medium text-slate-900 mb-2">{log.message}</h3>
+                      {log.context?.metadata && (
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                          <div>
+                            <span className="font-medium text-slate-700">File:</span>
+                            <p className="text-slate-600">{(log.context.metadata.fileName as string) || 'Unknown'}</p>
+                          </div>
+                          <div>
+                            <span className="font-medium text-slate-700">Total Rows:</span>
+                            <p className="text-slate-600">{(log.context.metadata.totalProcessed as string) || (log.context.metadata.totalRows as string) || 'Unknown'}</p>
+                          </div>
+                          <div>
+                            <span className="font-medium text-slate-700">Successful:</span>
+                            <p className="text-green-600 font-medium">{(log.context.metadata.successfulInserts as string) || 'Unknown'}</p>
+                          </div>
+                          <div>
+                            <span className="font-medium text-slate-700">Errors:</span>
+                            <p className="text-red-600 font-medium">
+                              Parse: {(log.context.metadata.parseErrors as number) || 0}, Insert: {(log.context.metadata.insertErrors as number) || 0}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+
+                  {/* Individual Property Insert Errors */}
+                  {logs.filter(log => log.context?.action === 'insert_property' && log.level === 'error').length > 0 && (
+                    <div className="mt-6">
+                      <h3 className="text-lg font-semibold text-slate-900 mb-4">
+                        Individual Property Insert Errors ({logs.filter(log => log.context?.action === 'insert_property' && log.level === 'error').length})
+                      </h3>
+                      <div className="space-y-3">
+                        {logs.filter(log => log.context?.action === 'insert_property' && log.level === 'error').slice(0, 10).map((log) => (
+                          <div key={log.id} className="border border-red-200 rounded-lg p-4 bg-red-50">
+                            <div className="flex justify-between items-start mb-2">
+                              <div className="flex-1">
+                                <h4 className="font-medium text-red-900">
+                                  Property: {(log.context?.metadata?.property as string) || 'Unknown'}
+                                </h4>
+                                <p className="text-sm text-red-700">
+                                  ID: {(log.context?.metadata?.propertyId as string) || 'Unknown'}
+                                </p>
+                              </div>
+                              <span className="text-xs text-red-600">
+                                {log.createdAt?.toDate?.()?.toLocaleString() || 'Unknown time'}
+                              </span>
+                            </div>
+                            <div className="mb-2">
+                              <span className="font-medium text-red-800">Error Type:</span>
+                              <p className="text-red-700">{(log.context?.metadata?.errorType as string) || 'Unknown'}</p>
+                            </div>
+                            <div className="mb-2">
+                              <span className="font-medium text-red-800">Error Message:</span>
+                              <p className="text-red-700 text-sm">{(log.context?.metadata?.errorMessage as string) || log.message}</p>
+                            </div>
+                            {log.stackTrace && (
+                              <details className="mt-2">
+                                <summary className="cursor-pointer text-red-800 font-medium text-sm">Stack Trace</summary>
+                                <pre className="mt-2 text-xs text-red-600 bg-red-100 p-2 rounded overflow-x-auto">
+                                  {log.stackTrace}
+                                </pre>
+                              </details>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

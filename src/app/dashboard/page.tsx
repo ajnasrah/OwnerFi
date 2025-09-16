@@ -325,6 +325,19 @@ export default function Dashboard() {
 
   const currentProperty = properties[currentIndex];
 
+  // Safety check - if no current property, show loading
+  if (!currentProperty) {
+    return (
+      <div className="h-screen bg-slate-900 flex items-center justify-center p-4">
+        <div className="text-center">
+          <div className="text-4xl mb-4">🏠</div>
+          <h2 className="text-xl font-bold text-white mb-4">LOADING PROPERTY</h2>
+          <p className="text-slate-300 text-sm">Preparing your next match...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="h-screen bg-black text-white overflow-hidden relative fixed inset-0">
       {/* Top Navigation - Minimal */}

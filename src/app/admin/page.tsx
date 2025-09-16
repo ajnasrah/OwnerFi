@@ -237,45 +237,84 @@ export default function AdminDashboard() {
   };
 
   const handleDeleteSelected = async () => {
-    if (selectedProperties.length === 0) return;
+    console.log('DELETE DEBUG: Function called', {
+      selectedPropertiesLength: selectedProperties.length,
+      selectedProperties: selectedProperties
+    });
+
+    if (selectedProperties.length === 0) {
+      alert('No properties selected');
+      return;
+    }
+
+    console.log('DELETE DEBUG: Starting bulk delete', {
+      selectedCount: selectedProperties.length,
+      selectedIds: selectedProperties,
+      totalPropertiesLoaded: properties.length
+    });
 
     const confirmDelete = confirm(`Are you sure you want to permanently delete ${selectedProperties.length} properties? This cannot be undone and will remove them from all user accounts.`);
+
+    console.log('DELETE DEBUG: User confirmation:', confirmDelete);
+
     if (!confirmDelete) return;
 
     setDeleting(true);
     try {
       let successCount = 0;
       let failCount = 0;
+      const failures: any[] = [];
 
       for (const propertyId of selectedProperties) {
         try {
-          const response = await fetch(`/api/admin/properties?propertyId=${propertyId}`, {
-            method: 'DELETE'
+          console.log(`DELETE DEBUG: Attempting to delete property ${propertyId}`);
+
+          const response = await fetch(`/api/admin/properties/${propertyId}`, {
+            method: 'DELETE',
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          });
+
+          console.log(`DELETE DEBUG: Response for ${propertyId}:`, {
+            ok: response.ok,
+            status: response.status,
+            statusText: response.statusText
           });
 
           if (response.ok) {
             successCount++;
+            console.log(`DELETE DEBUG: Successfully deleted ${propertyId}`);
           } else {
             const error = await response.json();
-            console.error(`Failed to delete property ${propertyId}:`, error);
+            console.error(`DELETE DEBUG: Failed to delete property ${propertyId}:`, error);
+            failures.push({ propertyId, error, status: response.status });
             failCount++;
           }
         } catch (error) {
-          console.error(`Error deleting property ${propertyId}:`, error);
+          console.error(`DELETE DEBUG: Network error deleting property ${propertyId}:`, error);
+          failures.push({ propertyId, error: (error as Error).message, networkError: true });
           failCount++;
         }
       }
 
+      console.log('DELETE DEBUG: Final results', {
+        successCount,
+        failCount,
+        failures
+      });
+
       setSelectedProperties([]);
-      fetchProperties();
+      await fetchProperties();
 
       if (failCount === 0) {
         alert(`✅ Successfully deleted ${successCount} properties`);
       } else {
-        alert(`⚠️ Deleted ${successCount} properties, ${failCount} failed. Check console for details.`);
+        alert(`⚠️ Deleted ${successCount} properties, ${failCount} failed. Check console for detailed error info.`);
+        console.log('DELETE FAILURES DETAILS:', failures);
       }
     } catch (error) {
-      console.error('Bulk delete error:', error);
+      console.error('DELETE DEBUG: Bulk delete error:', error);
       alert('Failed to delete properties - check console for details');
     } finally {
       setDeleting(false);
@@ -691,7 +730,7 @@ export default function AdminDashboard() {
                       onClick={() => fetchProperties(5000)}
                       className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition-colors"
                     >
-                      Load All
+                      Load All Properties
                     </button>
                   </div>
                   <button
@@ -736,7 +775,10 @@ export default function AdminDashboard() {
                         onChange={handleSelectAll}
                         className="w-5 h-5 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
                       />
-                      <span className="text-slate-700">Select All ({properties.length})</span>
+                      <span className="text-slate-700">
+                        Select All ({properties.length} loaded)
+                        {properties.length >= 1000 && <span className="text-orange-600 ml-1">⚠️ May be more</span>}
+                      </span>
                     </label>
                     {selectedProperties.length > 0 && (
                       <span className="text-blue-600 font-medium">
@@ -848,18 +890,49 @@ export default function AdminDashboard() {
                             />
                           </td>
                           <td className="p-4">
-                            <Image
-                              src={property.imageUrls?.[0] || property.imageUrl || '/placeholder-house.jpg'}
-                              alt={property.address}
-                              width={80}
-                              height={64}
-                              className="w-20 h-16 object-cover rounded cursor-pointer hover:opacity-80"
-                              onClick={() => window.open(property.imageUrls?.[0] || property.imageUrl || '', '_blank')}
-                              onError={(e) => {
-                                const target = e.target as HTMLImageElement;
-                                target.src = '/placeholder-house.jpg';
-                              }}
-                            />
+                            <div className="w-20 h-16 relative">
+                              {(() => {
+                                const getValidImageSrc = () => {
+                                  const possibleUrls = [
+                                    property.imageUrls?.[0],
+                                    property.imageUrl
+                                  ].filter(Boolean);
+
+                                  for (const url of possibleUrls) {
+                                    try {
+                                      if (url && typeof url === 'string' && url.trim()) {
+                                        new URL(url.trim());
+                                        return url.trim();
+                                      }
+                                    } catch {
+                                      continue;
+                                    }
+                                  }
+                                  return '/placeholder-house.svg';
+                                };
+
+                                const validSrc = getValidImageSrc();
+                                const isGoogleMaps = validSrc.includes('googleapis.com');
+
+                                return (
+                                  <Image
+                                    src={validSrc}
+                                    alt={property.address}
+                                    width={80}
+                                    height={64}
+                                    className="w-20 h-16 object-cover rounded cursor-pointer hover:opacity-80"
+                                    onClick={() => {
+                                      if (validSrc !== '/placeholder-house.jpg') {
+                                        window.open(validSrc, '_blank');
+                                      }
+                                    }}
+                                    placeholder="blur"
+                                    blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k="
+                                    unoptimized={isGoogleMaps}
+                                  />
+                                );
+                              })()}
+                            </div>
                           </td>
                           <td className="p-4">
                             <div className="font-medium text-slate-900">{property.address}</div>

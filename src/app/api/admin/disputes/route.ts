@@ -10,6 +10,7 @@ import {
   getDoc,
   setDoc,
   orderBy,
+  where,
   serverTimestamp
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -50,7 +51,7 @@ export async function GET() {
       // Try to fetch the related purchase to get buyer ID
       if (disputeData.transactionId) {
         try {
-          const purchaseDoc = await getDoc(doc(db!, 'buyerLeadPurchases', disputeData.transactionId));
+          const purchaseDoc = await getDoc(doc(db!, 'leadPurchases', disputeData.transactionId));
           if (purchaseDoc.exists()) {
             const purchaseData = purchaseDoc.data();
             
@@ -117,6 +118,12 @@ export async function GET() {
 
 // POST - Resolve a dispute (approve/deny)
 export async function POST(request: NextRequest) {
+  let disputeId: string | undefined;
+  let action: string | undefined;
+  let adminNotes: string | undefined;
+  let refundCredits: number | undefined;
+  let dispute: Record<string, unknown> | null = null;
+
   try {
     if (!db) {
       return NextResponse.json(
@@ -136,7 +143,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { disputeId, action, adminNotes, refundCredits } = body;
+    ({ disputeId, action, adminNotes, refundCredits } = body);
 
     if (!disputeId || !action || !['approve', 'deny', 'refund'].includes(action)) {
       return NextResponse.json(
@@ -147,7 +154,7 @@ export async function POST(request: NextRequest) {
 
     // Get dispute details
     const disputeDoc = await getDoc(doc(db!, 'leadDisputes', disputeId));
-    
+
     if (!disputeDoc.exists()) {
       return NextResponse.json(
         { error: 'Dispute not found' },
@@ -155,8 +162,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const dispute = disputeDoc.data();
-    
+    dispute = disputeDoc.data();
+
+    // Debug: Log dispute structure for troubleshooting
+    console.log('Dispute resolution debug:', {
+      disputeId,
+      action,
+      refundCredits,
+      disputeStatus: dispute.status,
+      hasRealtorUserId: !!dispute.realtorUserId,
+      hasRealtorId: !!dispute.realtorId,
+      realtorUserIdValue: dispute.realtorUserId,
+      realtorIdValue: dispute.realtorId,
+      allDisputeFields: Object.keys(dispute || {})
+    });
+
     // Allow re-processing approved disputes if they don't have refund amounts
     if (dispute.status === 'approved' && !dispute.refundAmount && refundCredits > 0) {
     }
@@ -173,10 +193,20 @@ export async function POST(request: NextRequest) {
     if ((action === 'approve' || action === 'refund') && refundCredits > 0) {
       updateData.refundAmount = refundCredits;
 
-      if (!dispute.realtorId) {
-        await logError('Cannot refund credits - no realtorId in dispute', {
+      // Get realtor ID - check the actual field name used in dispute creation
+      const realtorUserId = (dispute.realtorUserId as string) || (dispute.realtorId as string);
+
+      if (!realtorUserId) {
+        await logError('Cannot refund credits - no realtor ID in dispute', {
           action: 'admin_dispute_resolve_error',
-          metadata: { disputeId, action, refundCredits }
+          metadata: {
+            disputeId,
+            action,
+            refundCredits,
+            disputeFields: Object.keys(dispute),
+            hasRealtorId: !!dispute?.realtorId,
+            hasRealtorUserId: !!dispute?.realtorUserId
+          }
         });
 
         return NextResponse.json({
@@ -184,19 +214,36 @@ export async function POST(request: NextRequest) {
         }, { status: 400 });
       }
 
-      // Add credits back to realtor account
+      // Find realtor document by userId
       try {
-        const realtorDoc = await getDoc(doc(db!, 'realtors', dispute.realtorId));
-        if (realtorDoc.exists()) {
-          const currentCredits = realtorDoc.data()?.credits || 0;
-          await updateDoc(doc(db!, 'realtors', dispute.realtorId), {
-            credits: currentCredits + refundCredits,
-            updatedAt: serverTimestamp()
+        // Query realtors collection by userId since dispute stores userId, not realtor document ID
+        const realtorsQuery = query(
+          collection(db!, 'realtors'),
+          where('userId', '==', realtorUserId)
+        );
+        const realtorSnapshot = await getDocs(realtorsQuery);
+
+        if (realtorSnapshot.empty) {
+          await logError('Realtor not found for credit refund', {
+            action: 'admin_dispute_resolve_error',
+            metadata: { disputeId, realtorUserId, refundCredits }
           });
 
-          // Create a transaction record for the refund
-          await setDoc(doc(collection(db!, 'transactions')), {
-            realtorId: dispute.realtorId,
+          return NextResponse.json({
+            error: `Realtor account not found for user ID: ${realtorUserId}`
+          }, { status: 404 });
+        }
+
+        const realtorDoc = realtorSnapshot.docs[0];
+        const currentCredits = realtorDoc.data()?.credits || 0;
+        await updateDoc(doc(db!, 'realtors', realtorDoc.id), {
+          credits: currentCredits + refundCredits,
+          updatedAt: serverTimestamp()
+        });
+
+        // Create a transaction record for the refund
+        await setDoc(doc(collection(db!, 'transactions')), {
+          realtorId: realtorDoc.id,
             type: 'dispute_refund',
             description: `Refund for dispute #${disputeId.substring(0, 8)}`,
             credits: refundCredits,
@@ -204,20 +251,11 @@ export async function POST(request: NextRequest) {
             status: 'completed',
             createdAt: serverTimestamp()
           });
-        } else {
-          await logError('Realtor not found for credit refund', {
-            action: 'admin_dispute_resolve_error',
-            metadata: { disputeId, realtorId: dispute.realtorId, refundCredits }
-          });
 
-          return NextResponse.json({
-            error: `Realtor account not found (ID: ${dispute.realtorId})`
-          }, { status: 404 });
-        }
       } catch (error) {
         await logError('Failed to update realtor credits', {
           action: 'admin_dispute_resolve_error',
-          metadata: { disputeId, realtorId: dispute.realtorId, refundCredits }
+          metadata: { disputeId, realtorUserId, refundCredits }
         }, error as Error);
 
         return NextResponse.json({

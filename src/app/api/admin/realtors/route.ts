@@ -5,8 +5,7 @@ import {
   collection,
   query,
   getDocs,
-  where,
-  orderBy
+  where
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { logError } from '@/lib/logger';
@@ -53,72 +52,99 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '100');
 
     // Get all users with role 'realtor'
+    // Temporarily removed orderBy to avoid issues with missing createdAt fields
     const usersQuery = query(
       collection(db, 'users'),
-      where('role', '==', 'realtor'),
-      orderBy('createdAt', 'desc')
+      where('role', '==', 'realtor')
     );
 
     const usersSnapshot = await getDocs(usersQuery);
     const realtorStats: RealtorStats[] = [];
 
+    console.log(`Found ${usersSnapshot.docs.length} users with role 'realtor'`);
+
     for (const userDoc of usersSnapshot.docs) {
-      const userData = userDoc.data();
+      try {
+        const userData = userDoc.data();
+        console.log(`Processing realtor: ${userData.email || userDoc.id}`);
 
-      // Get realtor profile data
-      const profileQuery = query(
-        collection(db, 'realtorProfiles'),
-        where('userId', '==', userDoc.id)
-      );
-      const profileSnapshot = await getDocs(profileQuery);
-      const profileData = profileSnapshot.docs[0]?.data();
+          // Simplified approach - just get basic profile data without expensive queries
+        let profileData = null;
+        let creditsData = null;
+        let totalLeadsPurchased = 0;
+        let availableBuyersCount = 0;
 
-      // Get credit balance
-      const creditsQuery = query(
-        collection(db, 'realtorCredits'),
-        where('realtorId', '==', userDoc.id)
-      );
-      const creditsSnapshot = await getDocs(creditsQuery);
-      const creditsData = creditsSnapshot.docs[0]?.data();
+        try {
+          // Get realtor profile data
+          const profileQuery = query(
+            collection(db, 'realtorProfiles'),
+            where('userId', '==', userDoc.id)
+          );
+          const profileSnapshot = await getDocs(profileQuery);
+          profileData = profileSnapshot.docs[0]?.data();
+        } catch (error) {
+          console.warn(`Could not fetch profile for realtor ${userDoc.id}:`, error);
+        }
 
-      // Count total leads purchased
-      const leadsQuery = query(
-        collection(db, 'leadPurchases'),
-        where('realtorId', '==', userDoc.id)
-      );
-      const leadsSnapshot = await getDocs(leadsQuery);
+        try {
+          // Get credit balance
+          const creditsQuery = query(
+            collection(db, 'realtorCredits'),
+            where('realtorId', '==', userDoc.id)
+          );
+          const creditsSnapshot = await getDocs(creditsQuery);
+          creditsData = creditsSnapshot.docs[0]?.data();
+        } catch (error) {
+          console.warn(`Could not fetch credits for realtor ${userDoc.id}:`, error);
+        }
 
-      // Count available buyers (this is complex - simplified version)
-      // In a real implementation, this would check buyers in their service area
-      // who haven't been purchased by this realtor yet
-      const buyersQuery = query(
-        collection(db, 'users'),
-        where('role', '==', 'buyer')
-      );
-      const buyersSnapshot = await getDocs(buyersQuery);
+        try {
+          // Count total leads purchased
+          const leadsQuery = query(
+            collection(db, 'leadPurchases'),
+            where('realtorId', '==', userDoc.id)
+          );
+          const leadsSnapshot = await getDocs(leadsQuery);
+          totalLeadsPurchased = leadsSnapshot.size;
+        } catch (error) {
+          console.warn(`Could not fetch leads for realtor ${userDoc.id}:`, error);
+        }
 
-      // For now, we'll use total buyers minus purchased leads as available
-      const availableBuyersCount = Math.max(0, buyersSnapshot.size - leadsSnapshot.size);
+        try {
+          // Count available buyers (simplified version)
+          const buyersQuery = query(
+            collection(db, 'users'),
+            where('role', '==', 'buyer')
+          );
+          const buyersSnapshot = await getDocs(buyersQuery);
+          availableBuyersCount = Math.max(0, buyersSnapshot.size - totalLeadsPurchased);
+        } catch (error) {
+          console.warn(`Could not fetch buyers count for realtor ${userDoc.id}:`, error);
+        }
 
-      const realtorStat: RealtorStats = {
-        id: userDoc.id,
-        name: userData.name || `${userData.firstName || ''} ${userData.lastName || ''}`.trim() || 'N/A',
-        email: userData.email || 'N/A',
-        phone: userData.phone || profileData?.phoneNumber,
-        licenseNumber: profileData?.licenseNumber,
-        brokerage: profileData?.brokerage,
-        city: profileData?.city || userData.city,
-        state: profileData?.state || userData.state,
-        credits: creditsData?.balance || userData.credits || 0,
-        availableBuyersCount,
-        totalLeadsPurchased: leadsSnapshot.size,
-        lastSignIn: userData.lastSignIn?.toDate?.()?.toISOString() || userData.lastLoginAt?.toDate?.()?.toISOString(),
-        createdAt: userData.createdAt?.toDate?.()?.toISOString() || userData.registeredAt?.toDate?.()?.toISOString(),
-        isActive: userData.isActive !== false,
-        subscriptionStatus: userData.subscriptionStatus || creditsData?.subscriptionStatus || 'none'
-      };
+        const realtorStat: RealtorStats = {
+          id: userDoc.id,
+          name: userData.name || `${userData.firstName || ''} ${userData.lastName || ''}`.trim() || 'N/A',
+          email: userData.email || 'N/A',
+          phone: userData.phone || profileData?.phoneNumber,
+          licenseNumber: profileData?.licenseNumber,
+          brokerage: profileData?.brokerage,
+          city: profileData?.city || userData.city,
+          state: profileData?.state || userData.state,
+          credits: creditsData?.balance || userData.credits || 0,
+          availableBuyersCount,
+          totalLeadsPurchased,
+          lastSignIn: userData.lastSignIn?.toDate?.()?.toISOString() || userData.lastLoginAt?.toDate?.()?.toISOString(),
+          createdAt: userData.createdAt?.toDate?.()?.toISOString() || userData.registeredAt?.toDate?.()?.toISOString(),
+          isActive: userData.isActive !== false,
+          subscriptionStatus: userData.subscriptionStatus || creditsData?.subscriptionStatus || 'none'
+        };
 
-      realtorStats.push(realtorStat);
+        realtorStats.push(realtorStat);
+      } catch (error) {
+        console.error(`Error processing realtor ${userDoc.id}:`, error);
+        // Continue processing other realtors even if one fails
+      }
     }
 
     // Sort by creation date (newest first) and limit

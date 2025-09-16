@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const limit = parseInt(searchParams.get('limit') || '200');
+    const limit = parseInt(searchParams.get('limit') || '1000'); // Show up to 1000 properties
     const status = searchParams.get('status') || 'all';
     
     // Build query

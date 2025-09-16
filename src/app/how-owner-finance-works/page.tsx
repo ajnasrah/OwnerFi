@@ -80,16 +80,38 @@ export default function HowOwnerFinanceWorks() {
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-6 py-12">
         {/* Important Legal Disclaimer */}
+        <div className="bg-blue-600/20 border border-blue-500/30 rounded-xl p-6 mb-8">
+          <div className="flex items-start gap-3">
+            <div className="text-blue-400 text-2xl">💡</div>
+            <div>
+              <h3 className="text-blue-300 font-bold text-lg mb-2">Educational Information</h3>
+              <p className="text-blue-100 text-sm leading-relaxed">
+                This information is for educational purposes only and should not be considered legal, financial, or real estate advice.
+                OwnerFi does not provide recommendations or guidance on specific transactions. Always consult with qualified professionals
+                including real estate attorneys, financial advisors, and licensed real estate agents before making any property purchase decisions.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Critical Buyer Responsibility Alert */}
         <div className="bg-yellow-600/20 border border-yellow-500/30 rounded-xl p-6 mb-8">
           <div className="flex items-start gap-3">
             <div className="text-yellow-400 text-2xl">⚠️</div>
             <div>
-              <h3 className="text-yellow-300 font-bold text-lg mb-2">Important Disclaimer</h3>
-              <p className="text-yellow-100 text-sm leading-relaxed">
-                This information is for educational purposes only and should not be considered legal, financial, or real estate advice. 
-                OwnerFi does not provide recommendations or guidance on specific transactions. Always consult with qualified professionals 
-                including real estate attorneys, financial advisors, and licensed real estate agents before making any property purchase decisions.
-              </p>
+              <h3 className="text-yellow-300 font-bold text-lg mb-2">CRITICAL: Buyer Verification Responsibility</h3>
+              <div className="text-yellow-100 text-sm leading-relaxed space-y-2">
+                <p><strong>OwnerFi does NOT specify what type of deal each property listing represents.</strong></p>
+                <p>Properties on our platform may involve various financing arrangements: seller financing, subject-to, contract for deed, lease-to-own, or traditional financing.</p>
+                <p className="font-semibold">It is YOUR responsibility as the buyer to verify:</p>
+                <ul className="list-disc ml-4 space-y-1 text-xs">
+                  <li>The exact type of financing arrangement being offered</li>
+                  <li>Whether the property is still available and seller still willing to finance</li>
+                  <li>All terms, conditions, and risks associated with the specific deal type</li>
+                  <li>The seller's legal right and ability to offer the proposed arrangement</li>
+                </ul>
+                <p className="font-bold text-yellow-200">Never sign anything without professional guidance and independent verification.</p>
+              </div>
             </div>
           </div>
         </div>
@@ -161,31 +183,142 @@ export default function HowOwnerFinanceWorks() {
             </div>
           </CollapsibleSection>
 
-          <CollapsibleSection id="vs-lease" question="What's the difference between owner financing and lease-to-own?" color="cyan">
-            <div className="space-y-4">
+          <CollapsibleSection id="all-financing-types" question="What are the 4 main types of alternative financing?" color="cyan">
+            <div className="space-y-6">
               <p className="text-slate-200">
-                People often confuse these two! They're completely different:
+                Here are the 4 main types of alternative financing, from safest to riskiest:
               </p>
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="bg-emerald-500/10 border border-emerald-400/30 rounded-lg p-4">
-                  <h5 className="text-emerald-300 font-semibold mb-2">Owner Financing</h5>
-                  <ul className="space-y-1 text-slate-300 text-sm">
-                    <li>✓ You own the house from day one</li>
-                    <li>✓ You get the deed</li>
-                    <li>✓ You can make changes</li>
-                    <li>✓ You get tax benefits</li>
-                    <li>✓ You build equity</li>
-                  </ul>
+
+              <div className="space-y-4">
+                {/* Seller Finance */}
+                <div className="bg-green-500/10 border border-green-400/30 rounded-lg p-4">
+                  <h5 className="text-green-300 font-semibold mb-2">1. Seller Finance (SAFEST)</h5>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-slate-300 text-sm mb-2">Seller owns house outright, no existing mortgage. Clean transaction.</p>
+                      <div className="space-y-1 text-slate-300 text-xs">
+                        <p>✅ <strong>You get deed immediately</strong></p>
+                        <p>✅ Full ownership from day one</p>
+                        <p>✅ Tax benefits and equity building</p>
+                        <p>✅ Can modify property</p>
+                        <p>✅ Clear title, no complications</p>
+                      </div>
+                    </div>
+                    <div className="bg-green-600/20 rounded p-3">
+                      <p className="text-green-200 text-xs font-semibold">Best Choice When Available</p>
+                      <p className="text-green-300 text-xs">Risk Level: LOW</p>
+                    </div>
+                  </div>
                 </div>
+
+                {/* Subject To */}
                 <div className="bg-orange-500/10 border border-orange-400/30 rounded-lg p-4">
-                  <h5 className="text-orange-300 font-semibold mb-2">Lease-to-Own</h5>
-                  <ul className="space-y-1 text-slate-300 text-sm">
-                    <li>⚠️ You're renting with option to buy</li>
-                    <li>⚠️ Seller keeps ownership</li>
-                    <li>⚠️ No tax benefits until you buy</li>
-                    <li>⚠️ May lose money if you don't buy</li>
-                    <li>⚠️ More restrictions</li>
+                  <h5 className="text-orange-300 font-semibold mb-2">2. Subject To (MEDIUM RISK)</h5>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-slate-300 text-sm mb-2">You take over mortgage payments, but loan stays in seller's name.</p>
+                      <div className="space-y-1 text-slate-300 text-xs">
+                        <p>✅ You get deed immediately</p>
+                        <p>⚠️ Existing mortgage in seller's name</p>
+                        <p>⚠️ Due-on-sale clause risk</p>
+                        <p>⚠️ Seller's credit still tied to loan</p>
+                        <p>⚠️ More complex legal structure</p>
+                      </div>
+                    </div>
+                    <div className="bg-orange-600/20 rounded p-3">
+                      <p className="text-orange-200 text-xs font-semibold">Requires Expert Guidance</p>
+                      <p className="text-orange-300 text-xs">Risk Level: MEDIUM</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Contract for Deed */}
+                <div className="bg-red-500/10 border border-red-400/30 rounded-lg p-4">
+                  <h5 className="text-red-300 font-semibold mb-2">3. Contract for Deed (HIGH RISK)</h5>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-slate-300 text-sm mb-2">You make payments but DON'T get deed until fully paid off.</p>
+                      <div className="space-y-1 text-slate-300 text-xs">
+                        <p>❌ <strong>NO deed until final payment</strong></p>
+                        <p>❌ Seller keeps ownership during payments</p>
+                        <p>❌ Can lose everything if you miss payments</p>
+                        <p>❌ No equity protection</p>
+                        <p>❌ Limited legal recourse</p>
+                      </div>
+                    </div>
+                    <div className="bg-red-600/20 rounded p-3">
+                      <p className="text-red-200 text-xs font-semibold">Avoid If Possible</p>
+                      <p className="text-red-300 text-xs">Risk Level: HIGH</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Lease to Own */}
+                <div className="bg-yellow-500/10 border border-yellow-400/30 rounded-lg p-4">
+                  <h5 className="text-yellow-300 font-semibold mb-2">4. Lease-to-Own (NOT OWNERSHIP)</h5>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-slate-300 text-sm mb-2">You're renting with an option to buy later. Not actually owner financing.</p>
+                      <div className="space-y-1 text-slate-300 text-xs">
+                        <p>❌ You're still a renter</p>
+                        <p>❌ Seller keeps deed and ownership</p>
+                        <p>❌ No tax benefits until you buy</p>
+                        <p>❌ Can lose option money if you don't buy</p>
+                        <p>❌ Rental restrictions apply</p>
+                      </div>
+                    </div>
+                    <div className="bg-yellow-600/20 rounded p-3">
+                      <p className="text-yellow-200 text-xs font-semibold">This Isn't Owner Financing</p>
+                      <p className="text-yellow-300 text-xs">Risk Level: MEDIUM</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Key Comparison Chart */}
+              <div className="bg-slate-700/30 rounded-lg p-4 mt-6">
+                <h5 className="text-white font-semibold mb-3">🔑 Quick Comparison: Do You Get The Deed?</h5>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+                  <div className="bg-green-600/30 rounded p-2 text-center">
+                    <p className="text-green-300 font-semibold">Seller Finance</p>
+                    <p className="text-white">✅ Deed Day 1</p>
+                  </div>
+                  <div className="bg-orange-600/30 rounded p-2 text-center">
+                    <p className="text-orange-300 font-semibold">Subject To</p>
+                    <p className="text-white">✅ Deed Day 1</p>
+                  </div>
+                  <div className="bg-red-600/30 rounded p-2 text-center">
+                    <p className="text-red-300 font-semibold">Contract for Deed</p>
+                    <p className="text-white">❌ No Deed</p>
+                  </div>
+                  <div className="bg-yellow-600/30 rounded p-2 text-center">
+                    <p className="text-yellow-300 font-semibold">Lease-to-Own</p>
+                    <p className="text-white">❌ No Deed</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-blue-600/20 border border-blue-500/30 rounded-lg p-4">
+                <h5 className="text-blue-300 font-semibold mb-2">💡 Key Differences Explained</h5>
+                <div className="space-y-2 text-blue-100 text-sm">
+                  <p><strong>Seller Finance vs Subject To:</strong> Both give you the deed immediately, but seller finance is cleaner (no existing mortgage). Subject to has the complication of an existing loan in the seller's name.</p>
+                  <p><strong>Contract for Deed vs Lease-to-Own:</strong> Both delay ownership, but contract for deed you're making purchase payments while lease-to-own you're paying rent with an option to buy later.</p>
+                  <p><strong>Why the deed matters:</strong> Getting the deed immediately gives you legal ownership and protection. Without it, you're vulnerable if something goes wrong.</p>
+                </div>
+              </div>
+
+              <div className="bg-red-600/20 border border-red-500/30 rounded-lg p-4 mt-4">
+                <h5 className="text-red-300 font-semibold mb-2">🚨 BUYER VERIFICATION REQUIRED</h5>
+                <div className="space-y-2 text-red-100 text-sm">
+                  <p><strong>OwnerFi properties do NOT specify which type of deal is being offered.</strong> Each property may involve any of these arrangements or others.</p>
+                  <p><strong>Before contacting any seller or agent, YOU must verify:</strong></p>
+                  <ul className="list-disc ml-4 space-y-1 text-xs">
+                    <li>What type of financing arrangement is actually being offered</li>
+                    <li>Whether the property is still available and terms are current</li>
+                    <li>The seller's legal authority to offer the proposed arrangement</li>
+                    <li>All risks and obligations associated with the specific deal type</li>
                   </ul>
+                  <p className="font-bold">Consult licensed professionals before making any commitments.</p>
                 </div>
               </div>
             </div>
@@ -325,31 +458,6 @@ export default function HowOwnerFinanceWorks() {
             </div>
           </CollapsibleSection>
 
-          <CollapsibleSection id="types" question="What are the different types of seller financing?" color="purple">
-            <div className="space-y-4">
-              <p className="text-slate-200">There are three main types, each with different complexity levels:</p>
-              
-              <div className="space-y-4">
-                <div className="bg-green-500/10 border border-green-400/30 rounded-lg p-4">
-                  <h5 className="text-green-300 font-semibold mb-2">1. Traditional Owner Financing (Cleanest)</h5>
-                  <p className="text-slate-300 text-sm mb-2">Seller owns house outright, no existing mortgage. You get deed, make payments to seller.</p>
-                  <p className="text-green-300 text-xs"><strong>Risk Level:</strong> Lower - straightforward structure</p>
-                </div>
-                
-                <div className="bg-orange-500/10 border border-orange-400/30 rounded-lg p-4">
-                  <h5 className="text-orange-300 font-semibold mb-2">2. Subject To Deals (More Complex)</h5>
-                  <p className="text-slate-300 text-sm mb-2">Seller still owes on mortgage. You take over payments but loan stays in seller's name.</p>
-                  <p className="text-orange-300 text-xs"><strong>Risk Level:</strong> Medium - existing mortgage complications</p>
-                </div>
-                
-                <div className="bg-purple-500/10 border border-purple-400/30 rounded-lg p-4">
-                  <h5 className="text-purple-300 font-semibold mb-2">3. Wraparound Mortgages (Most Complex)</h5>
-                  <p className="text-slate-300 text-sm mb-2">Seller keeps their mortgage, creates new loan with you. You pay seller, seller pays their bank.</p>
-                  <p className="text-purple-300 text-xs"><strong>Risk Level:</strong> Higher - multiple financing layers</p>
-                </div>
-              </div>
-            </div>
-          </CollapsibleSection>
 
           <CollapsibleSection id="risks" question="What are the risks I should know about?" color="orange">
             <div className="grid md:grid-cols-2 gap-4">
@@ -390,23 +498,10 @@ export default function HowOwnerFinanceWorks() {
                 </div>
 
                 <div className="bg-red-500/10 border border-red-400/30 rounded-lg p-4">
-                  <h5 className="text-red-300 font-semibold mb-2">🏦 Understand Escrow Responsibilities</h5>
-                  <p className="text-slate-300 text-sm mb-2">
-                    <strong>CRITICAL:</strong> Unlike bank loans, there usually isn't an escrow account for taxes, insurance, or HOA fees. 
-                    YOU are responsible for paying these directly.
+                  <h5 className="text-red-300 font-semibold mb-2">🏦 Remember: No Escrow Account</h5>
+                  <p className="text-slate-300 text-sm">
+                    <strong>Don't forget:</strong> You're responsible for paying taxes, insurance, and HOA fees directly (see warning at top of page for details).
                   </p>
-                  <ul className="space-y-1 text-slate-300 text-xs mt-2">
-                    <li>• Property taxes - paid directly to county</li>
-                    <li>• Homeowner's insurance - you arrange and pay</li>
-                    <li>• HOA fees - paid directly to HOA</li>
-                    <li>• Get contact info and due dates from seller/title company</li>
-                    <li>• Budget separately - these costs not included in monthly payment</li>
-                  </ul>
-                  <div className="bg-red-600/20 rounded p-2 mt-2">
-                    <p className="text-red-200 text-xs">
-                      ⚠️ Failure to pay can result in tax liens, insurance cancellation, or HOA penalties
-                    </p>
-                  </div>
                 </div>
                 
                 <div className="grid md:grid-cols-3 gap-3 mt-4">
@@ -431,22 +526,22 @@ export default function HowOwnerFinanceWorks() {
             <div className="grid md:grid-cols-2 gap-4">
               <div className="space-y-3">
                 <div className="bg-slate-700/30 rounded-lg p-3">
-                  <h6 className="text-yellow-300 font-semibold mb-1">Contract for Deed</h6>
-                  <p className="text-slate-300 text-xs">You don't get ownership papers until fully paid. Higher risk structure.</p>
-                </div>
-                <div className="bg-slate-700/30 rounded-lg p-3">
                   <h6 className="text-yellow-300 font-semibold mb-1">Due on Sale Clause</h6>
                   <p className="text-slate-300 text-xs">Bank rule requiring loan payoff when property is sold. Important to verify.</p>
                 </div>
-              </div>
-              <div className="space-y-3">
                 <div className="bg-slate-700/30 rounded-lg p-3">
                   <h6 className="text-yellow-300 font-semibold mb-1">Owner Will Carry</h6>
                   <p className="text-slate-300 text-xs">Another term for owner financing. Seller "carries" the financing.</p>
                 </div>
+              </div>
+              <div className="space-y-3">
                 <div className="bg-slate-700/30 rounded-lg p-3">
                   <h6 className="text-yellow-300 font-semibold mb-1">Deed of Trust</h6>
                   <p className="text-slate-300 text-xs">Document securing the loan with the property as collateral.</p>
+                </div>
+                <div className="bg-slate-700/30 rounded-lg p-3">
+                  <h6 className="text-yellow-300 font-semibold mb-1">Amortization</h6>
+                  <p className="text-slate-300 text-xs">How your payment is split between interest and principal over time.</p>
                 </div>
               </div>
             </div>
@@ -499,7 +594,9 @@ export default function HowOwnerFinanceWorks() {
             <div>
               <h4 className="font-bold mb-2">📋 Your Responsibilities</h4>
               <ul className="list-disc ml-4 space-y-1">
-                <li>Verify property availability and seller's current willingness to offer owner financing</li>
+                <li><strong>Verify exact deal type:</strong> Determine whether arrangement is seller financing, subject-to, contract for deed, lease-to-own, or other structure</li>
+                <li><strong>Verify property availability:</strong> Confirm property is still available and seller's current willingness to offer owner financing</li>
+                <li><strong>Verify legal structure:</strong> Understand when/if you receive deed, ownership rights, and legal protections</li>
                 <li>Verify property legal status, liens, and title defects</li>
                 <li>Understand and pay taxes, insurance, HOA (no escrow provided)</li>
                 <li>Understand balloon payments and refinancing obligations</li>

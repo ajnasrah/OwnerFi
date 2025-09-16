@@ -49,6 +49,7 @@ interface RealtorStats {
   subscriptionStatus?: string;
 }
 
+
 import Image from 'next/image';
 
 export default function AdminDashboard() {
@@ -96,6 +97,11 @@ export default function AdminDashboard() {
   const [editingProperty, setEditingProperty] = useState<AdminProperty | null>(null);
   const [editForm, setEditForm] = useState<Partial<AdminProperty>>({});
   const [isSigningOut, setIsSigningOut] = useState(false);
+
+
+  // Sorting state
+  const [sortField, setSortField] = useState<'address' | 'city' | 'state' | 'listPrice' | 'bedrooms' | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -159,10 +165,11 @@ export default function AdminDashboard() {
     }
   };
 
-  const fetchProperties = async () => {
+  const fetchProperties = async (limit?: number) => {
     setLoadingProperties(true);
     try {
-      const response = await fetch('/api/admin/properties');
+      const url = limit ? `/api/admin/properties?limit=${limit}` : '/api/admin/properties';
+      const response = await fetch(url);
       const data = await response.json();
       if (data.properties) {
         setProperties(data.properties);
@@ -171,6 +178,46 @@ export default function AdminDashboard() {
     } finally {
       setLoadingProperties(false);
     }
+  };
+
+  const handleSort = (field: 'address' | 'city' | 'state' | 'listPrice' | 'bedrooms') => {
+    const newDirection = sortField === field && sortDirection === 'asc' ? 'desc' : 'asc';
+    setSortField(field);
+    setSortDirection(newDirection);
+
+    const sortedProperties = [...properties].sort((a, b) => {
+      let aValue: string | number = '';
+      let bValue: string | number = '';
+
+      switch (field) {
+        case 'address':
+          aValue = a.address?.toLowerCase() || '';
+          bValue = b.address?.toLowerCase() || '';
+          break;
+        case 'city':
+          aValue = a.city?.toLowerCase() || '';
+          bValue = b.city?.toLowerCase() || '';
+          break;
+        case 'state':
+          aValue = a.state?.toLowerCase() || '';
+          bValue = b.state?.toLowerCase() || '';
+          break;
+        case 'listPrice':
+          aValue = a.listPrice || 0;
+          bValue = b.listPrice || 0;
+          break;
+        case 'bedrooms':
+          aValue = a.bedrooms || 0;
+          bValue = b.bedrooms || 0;
+          break;
+      }
+
+      if (aValue < bValue) return newDirection === 'asc' ? -1 : 1;
+      if (aValue > bValue) return newDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+    setProperties(sortedProperties);
   };
 
   const handleSelectAll = () => {
@@ -191,22 +238,45 @@ export default function AdminDashboard() {
 
   const handleDeleteSelected = async () => {
     if (selectedProperties.length === 0) return;
-    
+
     const confirmDelete = confirm(`Are you sure you want to permanently delete ${selectedProperties.length} properties? This cannot be undone and will remove them from all user accounts.`);
     if (!confirmDelete) return;
-    
+
     setDeleting(true);
     try {
+      let successCount = 0;
+      let failCount = 0;
+
       for (const propertyId of selectedProperties) {
-        await fetch(`/api/admin/properties?propertyId=${propertyId}`, {
-          method: 'DELETE'
-        });
+        try {
+          const response = await fetch(`/api/admin/properties?propertyId=${propertyId}`, {
+            method: 'DELETE'
+          });
+
+          if (response.ok) {
+            successCount++;
+          } else {
+            const error = await response.json();
+            console.error(`Failed to delete property ${propertyId}:`, error);
+            failCount++;
+          }
+        } catch (error) {
+          console.error(`Error deleting property ${propertyId}:`, error);
+          failCount++;
+        }
       }
+
       setSelectedProperties([]);
       fetchProperties();
-      alert(`${selectedProperties.length} properties deleted successfully`);
-    } catch {
-      alert('Failed to delete some properties');
+
+      if (failCount === 0) {
+        alert(`✅ Successfully deleted ${successCount} properties`);
+      } else {
+        alert(`⚠️ Deleted ${successCount} properties, ${failCount} failed. Check console for details.`);
+      }
+    } catch (error) {
+      console.error('Bulk delete error:', error);
+      alert('Failed to delete properties - check console for details');
     } finally {
       setDeleting(false);
     }
@@ -247,7 +317,7 @@ export default function AdminDashboard() {
       interestRate: property.interestRate || 0,
       termYears: property.termYears || 20,
       description: property.description || '',
-      imageUrl: property.imageUrl || '',
+      imageUrl: property.imageUrls?.[0] || property.imageUrl || '',
       isActive: property.isActive !== false
     });
   };
@@ -275,7 +345,7 @@ export default function AdminDashboard() {
     }
   };
 
-  const resolveDispute = async (disputeId: string, action: 'approve' | 'reject', refundCredits: number = 1) => {
+  const resolveDispute = async (disputeId: string, action: 'approve' | 'deny', refundCredits: number = 1) => {
     try {
       const response = await fetch('/api/admin/disputes', {
         method: 'POST',
@@ -288,11 +358,15 @@ export default function AdminDashboard() {
       });
 
       if (response.ok) {
-        alert(`Dispute ${action}d successfully`);
+        alert(`Dispute ${action === 'approve' ? 'approved' : 'denied'} successfully${refundCredits > 0 ? ` with ${refundCredits} credit(s) refunded` : ''}`);
         fetchDisputes();
+      } else {
+        const error = await response.json();
+        alert(`Failed to resolve dispute: ${error.error}`);
       }
-    } catch {
-      alert('Failed to resolve dispute');
+    } catch (error) {
+      console.error('Dispute resolution error:', error);
+      alert('Failed to resolve dispute - check console for details');
     }
   };
 
@@ -365,6 +439,7 @@ export default function AdminDashboard() {
       return newSet;
     });
   };
+
 
   useEffect(() => {
     if (activeTab === 'manage') {
@@ -608,9 +683,17 @@ export default function AdminDashboard() {
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-semibold text-slate-900">Manage Properties</h2>
                 <div className="flex items-center space-x-3">
-                  <span className="text-sm text-slate-600">
-                    Showing {properties.length} properties {/* TODO: Show total when available */}
-                  </span>
+                  <div className="flex items-center space-x-4">
+                    <span className="text-sm text-slate-600">
+                      Showing {properties.length} properties
+                    </span>
+                    <button
+                      onClick={() => fetchProperties(5000)}
+                      className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition-colors"
+                    >
+                      Load All
+                    </button>
+                  </div>
                   <button
                     onClick={async () => {
                       if (confirm('⚠️ This will DELETE ALL PROPERTIES from the database. Are you sure?')) {
@@ -633,7 +716,7 @@ export default function AdminDashboard() {
                     🗑️ Clean All
                   </button>
                   <button
-                    onClick={fetchProperties}
+                    onClick={() => fetchProperties()}
                     disabled={loadingProperties}
                     className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-slate-400"
                   >
@@ -706,10 +789,50 @@ export default function AdminDashboard() {
                           />
                         </th>
                         <th className="p-4 text-left border-b font-semibold text-slate-700">Image</th>
-                        <th className="p-4 text-left border-b font-semibold text-slate-700">Address</th>
-                        <th className="p-4 text-left border-b font-semibold text-slate-700">City, State</th>
-                        <th className="p-4 text-left border-b font-semibold text-slate-700">Price</th>
-                        <th className="p-4 text-left border-b font-semibold text-slate-700">Beds/Baths</th>
+                        <th className="p-4 text-left border-b font-semibold text-slate-700">
+                          <button
+                            onClick={() => handleSort('address')}
+                            className="flex items-center space-x-1 hover:text-blue-600 transition-colors"
+                          >
+                            <span>Address</span>
+                            <span className="text-xs">
+                              {sortField === 'address' ? (sortDirection === 'asc' ? '▲' : '▼') : '↕'}
+                            </span>
+                          </button>
+                        </th>
+                        <th className="p-4 text-left border-b font-semibold text-slate-700">
+                          <button
+                            onClick={() => handleSort('city')}
+                            className="flex items-center space-x-1 hover:text-blue-600 transition-colors"
+                          >
+                            <span>City, State</span>
+                            <span className="text-xs">
+                              {sortField === 'city' ? (sortDirection === 'asc' ? '▲' : '▼') : '↕'}
+                            </span>
+                          </button>
+                        </th>
+                        <th className="p-4 text-left border-b font-semibold text-slate-700">
+                          <button
+                            onClick={() => handleSort('listPrice')}
+                            className="flex items-center space-x-1 hover:text-blue-600 transition-colors"
+                          >
+                            <span>Price</span>
+                            <span className="text-xs">
+                              {sortField === 'listPrice' ? (sortDirection === 'asc' ? '▲' : '▼') : '↕'}
+                            </span>
+                          </button>
+                        </th>
+                        <th className="p-4 text-left border-b font-semibold text-slate-700">
+                          <button
+                            onClick={() => handleSort('bedrooms')}
+                            className="flex items-center space-x-1 hover:text-blue-600 transition-colors"
+                          >
+                            <span>Beds/Baths</span>
+                            <span className="text-xs">
+                              {sortField === 'bedrooms' ? (sortDirection === 'asc' ? '▲' : '▼') : '↕'}
+                            </span>
+                          </button>
+                        </th>
                         <th className="p-4 text-left border-b font-semibold text-slate-700">Actions</th>
                       </tr>
                     </thead>
@@ -725,20 +848,18 @@ export default function AdminDashboard() {
                             />
                           </td>
                           <td className="p-4">
-                            {property.imageUrl ? (
-                              <Image 
-                                src={property.imageUrl || '/placeholder-house.jpg'} 
-                                alt={property.address}
-                                width={80}
-                                height={64}
-                                className="w-20 h-16 object-cover rounded cursor-pointer hover:opacity-80"
-                                onClick={() => window.open(property.imageUrl || '', '_blank')}
-                              />
-                            ) : (
-                              <div className="w-20 h-16 bg-slate-200 rounded flex items-center justify-center text-slate-400">
-                                No Image
-                              </div>
-                            )}
+                            <Image
+                              src={property.imageUrls?.[0] || property.imageUrl || '/placeholder-house.jpg'}
+                              alt={property.address}
+                              width={80}
+                              height={64}
+                              className="w-20 h-16 object-cover rounded cursor-pointer hover:opacity-80"
+                              onClick={() => window.open(property.imageUrls?.[0] || property.imageUrl || '', '_blank')}
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.src = '/placeholder-house.jpg';
+                              }}
+                            />
                           </td>
                           <td className="p-4">
                             <div className="font-medium text-slate-900">{property.address}</div>
@@ -772,8 +893,21 @@ export default function AdminDashboard() {
                                 onClick={async () => {
                                   const confirm = window.confirm(`Permanently delete ${property.address}? This cannot be undone.`);
                                   if (confirm) {
-                                    await fetch(`/api/admin/properties?propertyId=${property.id}`, { method: 'DELETE' });
-                                    fetchProperties();
+                                    try {
+                                      const response = await fetch(`/api/admin/properties/${property.id}`, { method: 'DELETE' });
+
+                                      if (response.ok) {
+                                        alert('✅ Property deleted successfully');
+                                        fetchProperties();
+                                      } else {
+                                        const error = await response.json();
+                                        alert(`❌ Failed to delete: ${error.error}`);
+                                        console.error('Delete error:', error);
+                                      }
+                                    } catch (error) {
+                                      alert('❌ Delete failed - check console for details');
+                                      console.error('Delete request failed:', error);
+                                    }
                                   }
                                 }}
                                 className="px-3 py-1 bg-red-100 text-red-700 rounded text-sm hover:bg-red-200 transition-colors"
@@ -915,7 +1049,7 @@ export default function AdminDashboard() {
                             Approve & Refund Credits
                           </button>
                           <button
-                            onClick={() => resolveDispute(dispute.id, 'reject', 0)}
+                            onClick={() => resolveDispute(dispute.id, 'deny', 0)}
                             className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
                           >
                             Reject Dispute
@@ -990,7 +1124,7 @@ export default function AdminDashboard() {
                   <p className="text-slate-600">Manage registered buyers and their statistics</p>
                 </div>
                 <button
-                  onClick={fetchBuyers}
+                  onClick={() => fetchBuyers()}
                   disabled={loadingBuyers}
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-slate-400"
                 >
@@ -1190,6 +1324,7 @@ export default function AdminDashboard() {
               )}
             </div>
           )}
+
         </div>
       </div>
 

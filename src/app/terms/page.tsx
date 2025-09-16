@@ -20,7 +20,9 @@ export default function TermsOfService() {
             <ul className="space-y-2 text-blue-700">
               <li>• <strong>We connect buyers with real estate agents</strong> - that&apos;s our business model</li>
               <li>• <strong>Your contact info will be sold to licensed realtors</strong> who may call/text/email you</li>
-              <li>• <strong>We don&apos;t guarantee property accuracy</strong> - always verify everything yourself</li>
+              <li>• <strong>We don&apos;t specify what type of deal each property is</strong> - could be seller finance, subject-to, contract for deed, lease-to-own, or other arrangements</li>
+              <li>• <strong>You must verify the deal type yourself</strong> - we don&apos;t guarantee what financing structure is actually offered</li>
+              <li>• <strong>We don&apos;t guarantee property accuracy or availability</strong> - always verify everything yourself</li>
               <li>• <strong>We&apos;re not your agent, broker, or advisor</strong> - we&apos;re just a lead generation platform</li>
               <li>• <strong>Do your own homework</strong> before making any real estate decisions</li>
               <li>• <strong>All sales are final</strong> - no refunds on lead purchases</li>
@@ -227,6 +229,68 @@ export default function TermsOfService() {
                 <li>You must independently verify all information before making any decisions</li>
                 <li>We are not responsible for errors in property data from any source</li>
               </ul>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold text-primary-text mb-4">8.5. DEAL TYPE VERIFICATION & BUYER RESPONSIBILITY</h2>
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-4">
+                <h3 className="font-bold text-yellow-800 text-xl mb-4">🔍 CRITICAL BUYER VERIFICATION RESPONSIBILITY</h3>
+
+                <div className="space-y-4 text-yellow-700">
+                  <div className="bg-yellow-100 border border-yellow-300 rounded-lg p-4">
+                    <h4 className="font-bold text-yellow-800 mb-2">⚠️ DEAL TYPE NOT SPECIFIED OR GUARANTEED</h4>
+                    <p className="text-yellow-700 mb-2"><strong>OwnerFi does NOT specify or guarantee the type of financing arrangement for any property listing.</strong></p>
+                    <p className="text-yellow-700 text-sm">Properties may involve various financing structures including but not limited to: seller financing, subject-to arrangements, contract for deed, lease-to-own, or traditional financing. <strong>It is the buyer's sole responsibility to verify and understand the exact financing structure being offered.</strong></p>
+                  </div>
+
+                  <div className="bg-red-100 border border-red-300 rounded-lg p-4">
+                    <h4 className="font-bold text-red-800 mb-2">🚨 BUYER'S MANDATORY VERIFICATION DUTIES</h4>
+                    <p className="text-red-700 mb-2"><strong>Before entering any agreement, you must independently verify:</strong></p>
+                    <ul className="list-disc ml-6 space-y-1 text-red-700 text-sm">
+                      <li><strong>Exact financing type:</strong> Seller finance, subject-to, contract for deed, lease-to-own, or other arrangement</li>
+                      <li><strong>Property ownership status:</strong> Whether seller owns property free and clear or has existing mortgages</li>
+                      <li><strong>Legal structure:</strong> Whether you receive deed immediately or at end of payment term</li>
+                      <li><strong>Risk factors:</strong> Due-on-sale clauses, balloon payments, foreclosure risks, equity protection</li>
+                      <li><strong>Seller qualifications:</strong> Verify seller's legal right to offer the proposed financing arrangement</li>
+                      <li><strong>Current availability:</strong> Whether property is still available and seller still willing to finance</li>
+                      <li><strong>All terms and conditions:</strong> Interest rates, payment schedules, penalties, default provisions</li>
+                    </ul>
+                  </div>
+
+                  <div className="bg-blue-100 border border-blue-300 rounded-lg p-4">
+                    <h4 className="font-bold text-blue-800 mb-2">🏠 PROPERTY STATUS VERIFICATION</h4>
+                    <div className="text-blue-700 space-y-2 text-sm">
+                      <p><strong>OwnerFi makes no representations regarding:</strong></p>
+                      <ul className="list-disc ml-6 space-y-1">
+                        <li>Current property availability or seller willingness to finance</li>
+                        <li>Whether properties are still on the market</li>
+                        <li>Accuracy of listing information, prices, or terms</li>
+                        <li>Seller's current financial or legal status</li>
+                        <li>Whether displayed properties actually exist or are accurately described</li>
+                      </ul>
+                      <p className="font-semibold mt-2">You must verify all property details independently through appropriate professionals.</p>
+                    </div>
+                  </div>
+
+                  <div className="bg-purple-100 border border-purple-300 rounded-lg p-4">
+                    <h4 className="font-bold text-purple-800 mb-2">📋 REQUIRED PROFESSIONAL CONSULTATION</h4>
+                    <p className="text-purple-700 mb-2"><strong>OwnerFi strongly recommends consulting these professionals BEFORE signing any agreement:</strong></p>
+                    <ul className="list-disc ml-6 space-y-1 text-purple-700 text-sm">
+                      <li><strong>Licensed Real Estate Attorney:</strong> To review contracts and explain legal implications</li>
+                      <li><strong>Licensed Real Estate Agent:</strong> To represent your interests and guide the transaction</li>
+                      <li><strong>Title Company/Title Attorney:</strong> To verify ownership and handle closing</li>
+                      <li><strong>Financial Advisor:</strong> To assess investment risks and financing options</li>
+                      <li><strong>Tax Professional:</strong> To understand tax implications of the financing structure</li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="bg-red-100 border border-red-300 rounded-lg p-4 mt-4">
+                  <p className="text-red-800 font-bold text-sm text-center">
+                    🚨 OWNERFI DISCLAIMS ALL LIABILITY FOR BUYER'S FAILURE TO VERIFY DEAL TYPES, PROPERTY STATUS, OR FINANCING ARRANGEMENTS. ALL VERIFICATION IS BUYER'S SOLE RESPONSIBILITY.
+                  </p>
+                </div>
+              </div>
             </section>
 
             <section>

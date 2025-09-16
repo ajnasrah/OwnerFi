@@ -21,6 +21,18 @@ const nextConfig = {
         port: '',
         pathname: '/maps/api/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'photos.zillowstatic.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'ap.rdcpix.com',
+        port: '',
+        pathname: '/**',
+      },
     ],
   },
 

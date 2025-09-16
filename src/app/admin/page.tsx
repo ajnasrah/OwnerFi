@@ -848,24 +848,47 @@ export default function AdminDashboard() {
                             />
                           </td>
                           <td className="p-4">
-                            {(property.imageUrls && property.imageUrls.length > 0) || property.imageUrl ? (
-                              <Image
-                                src={(property.imageUrls?.[0] || property.imageUrl) || '/placeholder-house.jpg'}
-                                alt={property.address}
-                                width={80}
-                                height={64}
-                                className="w-20 h-16 object-cover rounded cursor-pointer hover:opacity-80"
-                                onClick={() => window.open((property.imageUrls?.[0] || property.imageUrl) || '', '_blank')}
-                                onError={(e) => {
-                                  const target = e.target as HTMLImageElement;
-                                  target.src = '/placeholder-house.jpg';
-                                }}
-                              />
-                            ) : (
-                              <div className="w-20 h-16 bg-slate-200 rounded flex items-center justify-center text-slate-400">
-                                <span className="text-xs">No Image</span>
-                              </div>
-                            )}
+                            {(() => {
+                              const getValidImageUrl = () => {
+                                const urls = [
+                                  ...(property.imageUrls || []),
+                                  property.imageUrl
+                                ].filter(Boolean);
+
+                                for (const url of urls) {
+                                  try {
+                                    if (url && typeof url === 'string' && url.trim()) {
+                                      new URL(url.trim());
+                                      return url.trim();
+                                    }
+                                  } catch {
+                                    continue;
+                                  }
+                                }
+                                return null;
+                              };
+
+                              const validImageUrl = getValidImageUrl();
+
+                              return validImageUrl ? (
+                                <Image
+                                  src={validImageUrl}
+                                  alt={property.address}
+                                  width={80}
+                                  height={64}
+                                  className="w-20 h-16 object-cover rounded cursor-pointer hover:opacity-80"
+                                  onClick={() => window.open(validImageUrl, '_blank')}
+                                  onError={(e) => {
+                                    const target = e.target as HTMLImageElement;
+                                    target.src = '/placeholder-house.jpg';
+                                  }}
+                                />
+                              ) : (
+                                <div className="w-20 h-16 bg-slate-200 rounded flex items-center justify-center text-slate-400">
+                                  <span className="text-xs">No Image</span>
+                                </div>
+                              );
+                            })()}
                           </td>
                           <td className="p-4">
                             <div className="font-medium text-slate-900">{property.address}</div>

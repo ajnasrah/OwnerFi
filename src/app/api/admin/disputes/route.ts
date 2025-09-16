@@ -172,26 +172,57 @@ export async function POST(request: NextRequest) {
     // Refund credits when approving or explicitly refunding
     if ((action === 'approve' || action === 'refund') && refundCredits > 0) {
       updateData.refundAmount = refundCredits;
-      
+
+      if (!dispute.realtorId) {
+        await logError('Cannot refund credits - no realtorId in dispute', {
+          action: 'admin_dispute_resolve_error',
+          metadata: { disputeId, action, refundCredits }
+        });
+
+        return NextResponse.json({
+          error: 'Cannot refund credits - realtor ID missing from dispute'
+        }, { status: 400 });
+      }
+
       // Add credits back to realtor account
-      const realtorDoc = await getDoc(doc(db!, 'realtors', dispute.realtorId));
-      if (realtorDoc.exists()) {
-        const currentCredits = realtorDoc.data()?.credits || 0;
-        await updateDoc(doc(db!, 'realtors', dispute.realtorId), {
-          credits: currentCredits + refundCredits,
-          updatedAt: serverTimestamp()
-        });
-        
-        // Create a transaction record for the refund
-        await setDoc(doc(collection(db!, 'transactions')), {
-          realtorId: dispute.realtorId,
-          type: 'dispute_refund',
-          description: `Refund for dispute #${disputeId.substring(0, 8)}`,
-          credits: refundCredits,
-          amount: 0, // No money transaction, just credits
-          status: 'completed',
-          createdAt: serverTimestamp()
-        });
+      try {
+        const realtorDoc = await getDoc(doc(db!, 'realtors', dispute.realtorId));
+        if (realtorDoc.exists()) {
+          const currentCredits = realtorDoc.data()?.credits || 0;
+          await updateDoc(doc(db!, 'realtors', dispute.realtorId), {
+            credits: currentCredits + refundCredits,
+            updatedAt: serverTimestamp()
+          });
+
+          // Create a transaction record for the refund
+          await setDoc(doc(collection(db!, 'transactions')), {
+            realtorId: dispute.realtorId,
+            type: 'dispute_refund',
+            description: `Refund for dispute #${disputeId.substring(0, 8)}`,
+            credits: refundCredits,
+            amount: 0, // No money transaction, just credits
+            status: 'completed',
+            createdAt: serverTimestamp()
+          });
+        } else {
+          await logError('Realtor not found for credit refund', {
+            action: 'admin_dispute_resolve_error',
+            metadata: { disputeId, realtorId: dispute.realtorId, refundCredits }
+          });
+
+          return NextResponse.json({
+            error: `Realtor account not found (ID: ${dispute.realtorId})`
+          }, { status: 404 });
+        }
+      } catch (error) {
+        await logError('Failed to update realtor credits', {
+          action: 'admin_dispute_resolve_error',
+          metadata: { disputeId, realtorId: dispute.realtorId, refundCredits }
+        }, error as Error);
+
+        return NextResponse.json({
+          error: 'Failed to update realtor credits'
+        }, { status: 500 });
       }
     }
 
@@ -213,12 +244,23 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
+    console.error('DISPUTE RESOLUTION ERROR:', error);
+    console.error('REQUEST BODY:', { disputeId, action, adminNotes, refundCredits });
+    console.error('DISPUTE DATA:', dispute);
+
     await logError('Failed to resolve dispute', {
-      action: 'admin_dispute_resolve_error'
+      action: 'admin_dispute_resolve_error',
+      metadata: {
+        disputeId,
+        action,
+        refundCredits,
+        hasRealtorId: !!dispute?.realtorId,
+        disputeData: dispute
+      }
     }, error as Error);
 
     return NextResponse.json(
-      { error: 'Failed to resolve dispute' },
+      { error: `Failed to resolve dispute: ${(error as Error).message}` },
       { status: 500 }
     );
   }

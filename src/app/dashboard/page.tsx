@@ -32,6 +32,7 @@ interface Property {
   balloonYears?: number;
   interestRate?: number;
   termYears?: number;
+  imageUrls?: string[];
   zillowImageUrl?: string;
   imageUrl?: string;
   displayTag?: string;
@@ -387,9 +388,10 @@ export default function Dashboard() {
           <div className="relative h-full">
             <img
               src={
-                currentProperty.zillowImageUrl || 
+                currentProperty.imageUrls?.[0] ||
+                currentProperty.zillowImageUrl ||
                 currentProperty.imageUrl ||
-                `https://maps.googleapis.com/maps/api/streetview?size=800x600&location=${encodeURIComponent(currentProperty.address + ', ' + currentProperty.city + ', ' + currentProperty.state)}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`
+                '/placeholder-house.jpg'
               }
               alt={currentProperty.address}
               className="w-full h-full object-cover"

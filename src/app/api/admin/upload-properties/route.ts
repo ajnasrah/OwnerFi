@@ -136,7 +136,30 @@ export async function POST(request: NextRequest) {
           yearBuilt: Math.round(getNumericValue(['yearBuilt', 'Year Built', 'year_built', 'built'])),
           lotSize: getNumericValue(['lot sizes', 'Lot Size', 'lot_size', 'lotSize']),
           description: getColumnValue(['description', 'Description', 'desc', 'notes']),
-          imageUrls: getColumnValue(['Image link', 'image_link', 'imageUrl', 'photo']) ? [getColumnValue(['Image link', 'image_link', 'imageUrl', 'photo'])] : [],
+          imageUrls: (() => {
+            const csvImageUrl = getColumnValue(['Image link', 'image_link', 'imageUrl', 'photo']);
+
+            if (csvImageUrl) {
+              try {
+                new URL(csvImageUrl);
+                return [csvImageUrl];
+              } catch {
+                // Invalid URL in CSV, will use Street View fallback
+              }
+            }
+
+            // Generate Google Street View URL as fallback
+            const address = getColumnValue(['Property Address', 'Full Address', 'Address', 'Street Address', 'full_address']);
+            const city = getColumnValue(['Property city', 'city', 'City', 'Property City']);
+            const state = getColumnValue(['state', 'State', 'Property State']);
+
+            if (address && city && state) {
+              const streetViewUrl = `https://maps.googleapis.com/maps/api/streetview?size=800x600&location=${encodeURIComponent(address + ', ' + city + ', ' + state)}&key=${process.env.GOOGLE_MAPS_API_KEY}`;
+              return [streetViewUrl];
+            }
+
+            return [];
+          })(),
           source: 'import',
           status: 'active',
           dateAdded: new Date().toISOString(),

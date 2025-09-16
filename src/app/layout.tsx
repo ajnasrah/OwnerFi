@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Geist_Mono } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from './providers';
 
@@ -9,10 +9,6 @@ const inter = Inter({
   display: 'swap',
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "OwnerFi - Owner Financed Properties",
@@ -118,7 +114,7 @@ export default function RootLayout({
         )}
       </head>
       <body
-        className={`${inter.variable} ${geistMono.variable} antialiased bg-slate-900`}
+        className={`${inter.variable} antialiased bg-slate-900`}
       >
         <Providers>
           {children}

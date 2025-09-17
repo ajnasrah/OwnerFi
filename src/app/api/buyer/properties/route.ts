@@ -95,11 +95,13 @@ export async function GET(request: NextRequest) {
       if (property.state !== searchState) return false;
       
       // Must have search city in nearbyCities array
-      const considersSearchCityNearby = property.nearbyCities && 
+      const considersSearchCityNearby = property.nearbyCities &&
         Array.isArray(property.nearbyCities) &&
-        property.nearbyCities.some((nearbyCity: string) => 
-          nearbyCity.toLowerCase() === searchCity.toLowerCase()
-        );
+        property.nearbyCities.some((nearbyCity: any) => {
+          // Handle both string and object formats
+          const cityName = typeof nearbyCity === 'string' ? nearbyCity : nearbyCity.name;
+          return cityName && cityName.toLowerCase() === searchCity.toLowerCase();
+        });
       
       // Temporarily show all properties if they don't have pricing data
       const meetsbudget = (!property.monthlyPayment && !property.downPaymentAmount) ||

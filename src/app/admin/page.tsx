@@ -384,48 +384,90 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Top Navigation Bar */}
-      <nav className="bg-white border-b border-gray-200 px-4 py-3">
-        <div className="flex items-center justify-between max-w-7xl mx-auto">
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center">
-              <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
-                <div className="w-4 h-4 bg-white rounded"></div>
-              </div>
-              <div className="ml-3">
-                <h1 className="text-xl font-bold text-gray-900">OwnerFi</h1>
-                <p className="text-xs text-gray-500">Admin Dashboard</p>
-              </div>
+    <div className="min-h-screen bg-slate-50 flex">
+      {/* Left Sidebar */}
+      <div className="w-72 bg-white shadow-xl border-r border-slate-200 flex-shrink-0">
+        {/* Logo Section */}
+        <div className="p-6 border-b border-slate-200">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+              <div className="w-5 h-5 bg-white rounded-md"></div>
             </div>
-          </div>
-
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2 text-sm text-gray-600">
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <span>System Online</span>
-            </div>
-            <div className="border-l border-gray-200 pl-4">
-              <button
-                onClick={() => signOut({ callbackUrl: '/' })}
-                className="flex items-center space-x-2 px-3 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-                <span>Sign Out</span>
-              </button>
+            <div>
+              <h1 className="text-xl font-bold text-slate-900">OwnerFi</h1>
+              <p className="text-sm text-slate-500">Admin Dashboard</p>
             </div>
           </div>
         </div>
-      </nav>
 
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        {/* Header Section */}
-        <div className="mb-8">
+        {/* Navigation Menu */}
+        <nav className="p-4 space-y-2">
+          {[
+            { key: 'overview', label: 'Overview', icon: '📊', count: null },
+            { key: 'properties', label: 'Properties', icon: '🏠', count: stats.totalProperties },
+            { key: 'upload', label: 'Upload', icon: '📤', count: null },
+            { key: 'buyers', label: 'Buyers', icon: '👤', count: stats.totalBuyers },
+            { key: 'realtors', label: 'Realtors', icon: '🏢', count: stats.totalRealtors },
+            { key: 'disputes', label: 'Disputes', icon: '⚖️', count: stats.pendingDisputes },
+            { key: 'contacts', label: 'Contacts', icon: '📧', count: null },
+            { key: 'logs', label: 'Logs', icon: '📋', count: null },
+          ].map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key as any)}
+              className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-left transition-all duration-200 group ${
+                activeTab === tab.key
+                  ? 'bg-gradient-to-r from-indigo-500 to-indigo-600 text-white shadow-lg transform scale-[1.02]'
+                  : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+              }`}
+            >
+              <div className="flex items-center space-x-3">
+                <span className="text-lg">{tab.icon}</span>
+                <span className="font-medium">{tab.label}</span>
+              </div>
+              {tab.count !== null && tab.count > 0 && (
+                <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${
+                  activeTab === tab.key
+                    ? 'bg-white/20 text-white'
+                    : tab.key === 'disputes'
+                    ? 'bg-red-100 text-red-700 animate-pulse'
+                    : 'bg-slate-200 text-slate-700'
+                }`}>
+                  {tab.count}
+                </span>
+              )}
+            </button>
+          ))}
+        </nav>
+
+        {/* User Section */}
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-200 bg-white">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              <span className="text-sm text-slate-600">System Online</span>
+            </div>
+            <button
+              onClick={() => signOut({ callbackUrl: '/' })}
+              className="flex items-center space-x-2 px-3 py-2 text-sm text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
+              title="Sign Out"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              <span>Sign Out</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col min-h-screen">
+        {/* Top Header */}
+        <header className="bg-white shadow-sm border-b border-slate-200 px-8 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-2xl font-bold text-gray-900">
+              <h2 className="text-2xl font-bold text-slate-900">
                 {activeTab === 'overview' && 'Dashboard Overview'}
                 {activeTab === 'properties' && 'Property Management'}
                 {activeTab === 'upload' && 'Upload Properties'}
@@ -435,7 +477,7 @@ export default function AdminDashboard() {
                 {activeTab === 'contacts' && 'Contact Submissions'}
                 {activeTab === 'logs' && 'System Logs'}
               </h2>
-              <p className="text-gray-600">
+              <p className="text-slate-600 mt-1">
                 {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
               </p>
             </div>
@@ -454,66 +496,24 @@ export default function AdminDashboard() {
                       }
                     }
                   }}
-                  className="px-4 py-2 bg-yellow-600 text-white text-sm font-medium rounded-md hover:bg-yellow-700 transition-colors"
+                  className="px-4 py-2 bg-yellow-600 text-white text-sm font-medium rounded-lg hover:bg-yellow-700 transition-colors shadow-sm"
                 >
                   Remove Duplicates
                 </button>
                 <button
                   onClick={() => fetchProperties()}
                   disabled={loadingProperties}
-                  className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 transition-colors disabled:bg-gray-400"
+                  className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors disabled:bg-gray-400 shadow-sm"
                 >
                   {loadingProperties ? 'Refreshing...' : 'Refresh'}
                 </button>
               </div>
             )}
           </div>
-
-          {/* Tab Navigation */}
-          <div className="mt-6">
-            <nav className="flex space-x-8">
-              {[
-                { key: 'overview', label: 'Overview', count: null },
-                { key: 'properties', label: 'Properties', count: stats.totalProperties },
-                { key: 'upload', label: 'Upload', count: null },
-                { key: 'buyers', label: 'Buyers', count: stats.totalBuyers },
-                { key: 'realtors', label: 'Realtors', count: stats.totalRealtors },
-                { key: 'disputes', label: 'Disputes', count: stats.pendingDisputes },
-                { key: 'contacts', label: 'Contacts', count: null },
-                { key: 'logs', label: 'Logs', count: null },
-              ].map((tab) => (
-                <button
-                  key={tab.key}
-                  onClick={() => setActiveTab(tab.key as any)}
-                  className={`flex items-center space-x-2 py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
-                    activeTab === tab.key
-                      ? 'border-indigo-500 text-indigo-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-                >
-                  <span>{tab.label}</span>
-                  {tab.count !== null && tab.count > 0 && (
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      activeTab === tab.key
-                        ? 'bg-indigo-100 text-indigo-800'
-                        : 'bg-gray-100 text-gray-800'
-                    }`}>
-                      {tab.count}
-                    </span>
-                  )}
-                  {tab.key === 'disputes' && tab.count > 0 && (
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 animate-pulse">
-                      {tab.count}
-                    </span>
-                  )}
-                </button>
-              ))}
-            </nav>
-          </div>
-        </div>
+        </header>
 
         {/* Content Area */}
-        <div>
+        <main className="flex-1 p-8 bg-slate-50 overflow-y-auto">
           {/* Overview Tab */}
           {activeTab === 'overview' && (
             <div className="space-y-6">
@@ -1259,19 +1259,22 @@ export default function AdminDashboard() {
               </div>
             </div>
           )}
-        </div>
+        </main>
       </div>
 
       {/* Edit Property Modal */}
       {editingProperty && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
-            <div className="mt-3">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-medium text-gray-900">Edit Property</h3>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h3 className="text-2xl font-bold text-slate-900">Edit Property</h3>
+                  <p className="text-slate-600 mt-1">Update property information and details</p>
+                </div>
                 <button
                   onClick={() => setEditingProperty(null)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1279,73 +1282,157 @@ export default function AdminDashboard() {
                 </button>
               </div>
 
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Address</label>
-                  <input
-                    type="text"
-                    value={editForm.address || ''}
-                    onChange={(e) => setEditForm({ ...editForm, address: e.target.value })}
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                  />
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Left Column - Basic Info */}
+                <div className="space-y-6">
+                  <div>
+                    <h4 className="text-lg font-semibold text-slate-900 mb-4">Property Details</h4>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-2">Address</label>
+                        <input
+                          type="text"
+                          value={editForm.address || ''}
+                          onChange={(e) => setEditForm({ ...editForm, address: e.target.value })}
+                          className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-2">City</label>
+                          <input
+                            type="text"
+                            value={editForm.city || ''}
+                            onChange={(e) => setEditForm({ ...editForm, city: e.target.value })}
+                            className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-2">State</label>
+                          <input
+                            type="text"
+                            value={editForm.state || ''}
+                            onChange={(e) => setEditForm({ ...editForm, state: e.target.value })}
+                            className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-2">Bedrooms</label>
+                          <input
+                            type="number"
+                            value={editForm.bedrooms || ''}
+                            onChange={(e) => setEditForm({ ...editForm, bedrooms: parseInt(e.target.value) })}
+                            className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-2">Bathrooms</label>
+                          <input
+                            type="number"
+                            step="0.5"
+                            value={editForm.bathrooms || ''}
+                            onChange={(e) => setEditForm({ ...editForm, bathrooms: parseFloat(e.target.value) })}
+                            className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-2">Square Feet</label>
+                          <input
+                            type="number"
+                            value={editForm.squareFeet || ''}
+                            onChange={(e) => setEditForm({ ...editForm, squareFeet: parseInt(e.target.value) })}
+                            className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                {/* Right Column - Financial Info */}
+                <div className="space-y-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">City</label>
-                    <input
-                      type="text"
-                      value={editForm.city || ''}
-                      onChange={(e) => setEditForm({ ...editForm, city: e.target.value })}
-                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">State</label>
-                    <input
-                      type="text"
-                      value={editForm.state || ''}
-                      onChange={(e) => setEditForm({ ...editForm, state: e.target.value })}
-                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                    />
-                  </div>
-                </div>
+                    <h4 className="text-lg font-semibold text-slate-900 mb-4">Financial Information</h4>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-2">List Price</label>
+                        <div className="relative">
+                          <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-500">$</span>
+                          <input
+                            type="number"
+                            value={editForm.listPrice || ''}
+                            onChange={(e) => setEditForm({ ...editForm, listPrice: parseFloat(e.target.value) })}
+                            className="w-full pl-8 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                          />
+                        </div>
+                      </div>
 
-                <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">List Price</label>
-                    <input
-                      type="number"
-                      value={editForm.listPrice || ''}
-                      onChange={(e) => setEditForm({ ...editForm, listPrice: parseFloat(e.target.value) })}
-                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Monthly Payment</label>
-                    <input
-                      type="number"
-                      value={editForm.monthlyPayment || ''}
-                      onChange={(e) => setEditForm({ ...editForm, monthlyPayment: parseFloat(e.target.value) })}
-                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Down Payment</label>
-                    <input
-                      type="number"
-                      value={editForm.downPaymentAmount || ''}
-                      onChange={(e) => setEditForm({ ...editForm, downPaymentAmount: parseFloat(e.target.value) })}
-                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                    />
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-2">Monthly Payment</label>
+                          <div className="relative">
+                            <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-500">$</span>
+                            <input
+                              type="number"
+                              value={editForm.monthlyPayment || ''}
+                              onChange={(e) => setEditForm({ ...editForm, monthlyPayment: parseFloat(e.target.value) })}
+                              className="w-full pl-8 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-2">Down Payment</label>
+                          <div className="relative">
+                            <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-500">$</span>
+                            <input
+                              type="number"
+                              value={editForm.downPaymentAmount || ''}
+                              onChange={(e) => setEditForm({ ...editForm, downPaymentAmount: parseFloat(e.target.value) })}
+                              className="w-full pl-8 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Image URL Field */}
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-2">Property Image URL</label>
+                        <input
+                          type="url"
+                          value={editForm.imageUrl || (editingProperty.imageUrls?.[0]) || ''}
+                          onChange={(e) => setEditForm({ ...editForm, imageUrl: e.target.value })}
+                          placeholder="https://example.com/image.jpg"
+                          className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                        />
+                        {(editForm.imageUrl || editingProperty.imageUrls?.[0]) && (
+                          <div className="mt-3">
+                            <Image
+                              src={editForm.imageUrl || editingProperty.imageUrls?.[0] || '/placeholder-house.jpg'}
+                              alt="Property preview"
+                              width={300}
+                              height={200}
+                              className="rounded-lg border border-slate-200 object-cover"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.src = '/placeholder-house.jpg';
+                              }}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <div className="flex justify-end space-x-3 mt-6">
+              <div className="flex justify-end space-x-4 mt-8 pt-6 border-t border-slate-200">
                 <button
                   onClick={() => setEditingProperty(null)}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  className="px-6 py-3 border border-slate-300 rounded-xl text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
                 >
                   Cancel
                 </button>
@@ -1359,7 +1446,7 @@ export default function AdminDashboard() {
                     setEditingProperty(null);
                     fetchProperties();
                   }}
-                  className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-xl font-medium hover:from-indigo-600 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all transform hover:scale-105 shadow-lg"
                 >
                   Save Changes
                 </button>

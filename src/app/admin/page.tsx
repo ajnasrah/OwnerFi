@@ -1020,6 +1020,9 @@ export default function AdminDashboard() {
                                 <div className="text-sm font-medium text-gray-900">{buyer.name}</div>
                                 <div className="text-sm text-gray-500">{buyer.email}</div>
                                 {buyer.phone && <div className="text-sm text-gray-500">{buyer.phone}</div>}
+                                {buyer.primaryCity && buyer.primaryState && (
+                                  <div className="text-sm text-gray-500">📍 {buyer.primaryCity}, {buyer.primaryState}</div>
+                                )}
                               </div>
                             </div>
                             <div className="flex items-center space-x-8">
@@ -1079,6 +1082,9 @@ export default function AdminDashboard() {
                                 <div className="text-sm font-medium text-gray-900">{realtor.name}</div>
                                 <div className="text-sm text-gray-500">{realtor.email}</div>
                                 {realtor.brokerage && <div className="text-sm text-gray-500">{realtor.brokerage}</div>}
+                                {realtor.city && realtor.state && (
+                                  <div className="text-sm text-gray-500">📍 {realtor.city}, {realtor.state}</div>
+                                )}
                               </div>
                             </div>
                             <div className="flex items-center space-x-8">
@@ -1094,9 +1100,13 @@ export default function AdminDashboard() {
                                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                                   realtor.subscriptionStatus === 'active'
                                     ? 'bg-green-100 text-green-800'
+                                    : realtor.subscriptionStatus === 'cancelled'
+                                    ? 'bg-red-100 text-red-800'
                                     : 'bg-gray-100 text-gray-800'
                                 }`}>
-                                  {realtor.subscriptionStatus || 'No subscription'}
+                                  {realtor.subscriptionStatus === 'active' ? 'Active' :
+                                   realtor.subscriptionStatus === 'cancelled' ? 'Cancelled' :
+                                   'Free'}
                                 </span>
                               </div>
                             </div>

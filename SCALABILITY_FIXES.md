@@ -48,7 +48,7 @@ properties: isActive ASC, downPaymentAmount ASC
 - Properties API: Max 100 properties per request
 - Webhook queries: Limited to 1 result (unique IDs)
 
-### **Error Handling**
+### **Error Handling**sa
 - Added try/catch to all webhook handlers
 - Added warning logs for missing data
 - Graceful degradation instead of crashes

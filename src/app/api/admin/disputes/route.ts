@@ -214,17 +214,13 @@ export async function POST(request: NextRequest) {
         }, { status: 400 });
       }
 
-      // Find realtor document by userId
+      // Find realtor user document and update credits
       try {
-        // Query realtors collection by userId since dispute stores userId, not realtor document ID
-        const realtorsQuery = query(
-          collection(db!, 'realtors'),
-          where('userId', '==', realtorUserId)
-        );
-        const realtorSnapshot = await getDocs(realtorsQuery);
+        // Get the user document directly
+        const userDoc = await getDoc(doc(db!, 'users', realtorUserId));
 
-        if (realtorSnapshot.empty) {
-          await logError('Realtor not found for credit refund', {
+        if (!userDoc.exists()) {
+          await logError('Realtor user not found for credit refund', {
             action: 'admin_dispute_resolve_error',
             metadata: { disputeId, realtorUserId, refundCredits }
           });
@@ -234,16 +230,32 @@ export async function POST(request: NextRequest) {
           }, { status: 404 });
         }
 
-        const realtorDoc = realtorSnapshot.docs[0];
-        const currentCredits = realtorDoc.data()?.credits || 0;
-        await updateDoc(doc(db!, 'realtors', realtorDoc.id), {
-          credits: currentCredits + refundCredits,
+        const userData = userDoc.data();
+
+        // Check if user has realtorData
+        if (!userData.realtorData) {
+          await logError('User is not a realtor or missing realtorData', {
+            action: 'admin_dispute_resolve_error',
+            metadata: { disputeId, realtorUserId, refundCredits }
+          });
+
+          return NextResponse.json({
+            error: `User ${realtorUserId} is not a realtor or has incomplete profile`
+          }, { status: 400 });
+        }
+
+        const currentCredits = userData.realtorData.credits || 0;
+
+        // Update credits in the user's realtorData field
+        await updateDoc(doc(db!, 'users', realtorUserId), {
+          'realtorData.credits': currentCredits + refundCredits,
           updatedAt: serverTimestamp()
         });
 
         // Create a transaction record for the refund
         await setDoc(doc(collection(db!, 'transactions')), {
-          realtorId: realtorDoc.id,
+          realtorId: realtorUserId,
+          realtorUserId: realtorUserId,
             type: 'dispute_refund',
             description: `Refund for dispute #${disputeId.substring(0, 8)}`,
             credits: refundCredits,

@@ -240,7 +240,6 @@ export default function BuyerSettings() {
                     <input
                       type="text"
                       inputMode="numeric"
-                      pattern="[0-9]*"
                       required
                       value={formData.maxMonthlyPayment ? Number(formData.maxMonthlyPayment).toLocaleString() : ''}
                       onChange={(e) => {
@@ -265,7 +264,6 @@ export default function BuyerSettings() {
                     <input
                       type="text"
                       inputMode="numeric"
-                      pattern="[0-9]*"
                       required
                       value={formData.maxDownPayment ? Number(formData.maxDownPayment).toLocaleString() : ''}
                       onChange={(e) => {

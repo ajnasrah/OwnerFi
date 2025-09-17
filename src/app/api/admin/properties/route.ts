@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
-import { 
-  collection, 
-  query, 
+import {
+  collection,
+  query,
   getDocs,
   doc,
   updateDoc,
   deleteDoc,
   where,
+  orderBy,
   limit as firestoreLimit
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -40,17 +41,21 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '1000'); // Show up to 1000 properties
     const status = searchParams.get('status') || 'all';
     
-    // Build query
-    let propertiesQuery = query(collection(db, 'properties'));
-    
+    // Build query with consistent ordering
+    let propertiesQuery = query(
+      collection(db, 'properties'),
+      orderBy('createdAt', 'asc') // Order by creation time to match upload order
+    );
+
     // Filter by status if specified
     if (status !== 'all') {
       propertiesQuery = query(
         collection(db, 'properties'),
-        where('status', '==', status)
+        where('status', '==', status),
+        orderBy('createdAt', 'asc')
       );
     }
-    
+
     // Add limit
     propertiesQuery = query(propertiesQuery, firestoreLimit(limit));
     

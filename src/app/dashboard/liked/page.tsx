@@ -275,7 +275,7 @@ export default function LikedProperties() {
                         REMOVE
                       </button>
                       
-                      <button 
+                      <button
                         onClick={() => {
                           const message = `I'm interested in the property at ${property.address}, ${property.city}, ${property.state}. Found through OwnerFi.`;
                           window.open(`sms:+1234567890&body=${encodeURIComponent(message)}`, '_self');

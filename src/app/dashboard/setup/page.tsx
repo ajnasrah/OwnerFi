@@ -15,6 +15,9 @@ export default function BuyerSetup() {
   const [error, setError] = useState('');
   
   const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    phone: '',
     city: '',
     maxMonthlyPayment: '',
     maxDownPayment: ''
@@ -42,7 +45,7 @@ export default function BuyerSetup() {
     setLoading(true);
     setError('');
 
-    if (!formData.city || !formData.maxMonthlyPayment || !formData.maxDownPayment) {
+    if (!formData.firstName || !formData.lastName || !formData.phone || !formData.city || !formData.maxMonthlyPayment || !formData.maxDownPayment) {
       setError('Please fill in all fields');
       setLoading(false);
       return;
@@ -68,6 +71,9 @@ export default function BuyerSetup() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          phone: formData.phone,
           city: city,
           state: state,
           maxMonthlyPayment: monthlyBudget,
@@ -127,6 +133,49 @@ export default function BuyerSetup() {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs sm:text-sm font-semibold mb-2" style={{color: 'white'}}>
+                    First Name
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.firstName}
+                    onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
+                    className="w-full p-3 sm:p-4 bg-emerald-500/10 border border-emerald-400/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 text-white placeholder-slate-400 font-normal text-sm sm:text-base"
+                    placeholder="John"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs sm:text-sm font-semibold mb-2" style={{color: 'white'}}>
+                    Last Name
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.lastName}
+                    onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
+                    className="w-full p-3 sm:p-4 bg-emerald-500/10 border border-emerald-400/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 text-white placeholder-slate-400 font-normal text-sm sm:text-base"
+                    placeholder="Doe"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs sm:text-sm font-semibold mb-2" style={{color: 'white'}}>
+                  Phone Number
+                </label>
+                <input
+                  type="tel"
+                  value={formData.phone}
+                  onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                  className="w-full p-3 sm:p-4 bg-emerald-500/10 border border-emerald-400/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 text-white placeholder-slate-400 font-normal text-sm sm:text-base"
+                  placeholder="(555) 123-4567"
+                  required
+                />
+              </div>
+
               <div>
                 <label className="block text-xs sm:text-sm font-semibold mb-2" style={{color: 'white'}}>Search Location</label>
                 <GooglePlacesAutocomplete
@@ -143,7 +192,6 @@ export default function BuyerSetup() {
                 <input
                   type="text"
                   inputMode="numeric"
-                  pattern="[0-9]*"
                   value={formData.maxMonthlyPayment ? Number(formData.maxMonthlyPayment).toLocaleString() : ''}
                   onChange={(e) => {
                     const value = e.target.value.replace(/[^\d]/g, '');
@@ -165,7 +213,6 @@ export default function BuyerSetup() {
                 <input
                   type="text"
                   inputMode="numeric"
-                  pattern="[0-9]*"
                   value={formData.maxDownPayment ? Number(formData.maxDownPayment).toLocaleString() : ''}
                   onChange={(e) => {
                     const value = e.target.value.replace(/[^\d]/g, '');

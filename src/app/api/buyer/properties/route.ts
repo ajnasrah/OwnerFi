@@ -77,11 +77,13 @@ export async function GET(request: NextRequest) {
     // 1. DIRECT MATCHES: Properties IN the search city AND state
     const directProperties = allProperties.filter((property: PropertyListing & { id: string }) => {
       const propertyCity = property.city?.split(',')[0].trim();
-      return propertyCity?.toLowerCase() === searchCity.toLowerCase() && 
+      // Temporarily show all properties if they don't have pricing data
+      const meetsbudget = (!property.monthlyPayment && !property.downPaymentAmount) ||
+                         (property.monthlyPayment <= maxMonthly && property.downPaymentAmount <= maxDown);
+      return propertyCity?.toLowerCase() === searchCity.toLowerCase() &&
              property.state === searchState &&
              property.isActive !== false &&
-             property.monthlyPayment <= maxMonthly &&
-             property.downPaymentAmount <= maxDown;
+             meetsbudget;
     });
     
     // 2. NEARBY MATCHES: Properties FROM other cities IN SAME STATE that consider search city nearby
@@ -99,10 +101,13 @@ export async function GET(request: NextRequest) {
           nearbyCity.toLowerCase() === searchCity.toLowerCase()
         );
       
+      // Temporarily show all properties if they don't have pricing data
+      const meetsbudget = (!property.monthlyPayment && !property.downPaymentAmount) ||
+                         (property.monthlyPayment <= maxMonthly && property.downPaymentAmount <= maxDown);
+
       return considersSearchCityNearby &&
              property.isActive !== false &&
-             property.monthlyPayment <= maxMonthly &&
-             property.downPaymentAmount <= maxDown;
+             meetsbudget;
     });
 
     // 3. LIKED PROPERTIES: Always include liked properties regardless of search criteria
@@ -192,10 +197,23 @@ export async function GET(request: NextRequest) {
       .sort((a, b) => {
         // First sort by type (liked -> direct -> nearby), then by monthly payment
         if (a.sortOrder !== b.sortOrder) return a.sortOrder - b.sortOrder;
-        return a.monthlyPayment - b.monthlyPayment;
+        // Handle properties without monthly payment
+        const aPayment = a.monthlyPayment || 0;
+        const bPayment = b.monthlyPayment || 0;
+        return aPayment - bPayment;
       })
       .slice(0, pageSize);
 
+    // Debug logging
+    console.log(`Properties API Debug:
+      Total properties in DB: ${allProperties.length}
+      Search city: ${searchCity}, state: ${searchState}
+      Budget: $${maxMonthly}/mo, $${maxDown} down
+      Direct matches: ${directProperties.length}
+      Nearby matches: ${nearbyProperties.length}
+      Liked matches: ${likedProperties.length}
+      Total results: ${allResults.length}
+    `);
 
     return NextResponse.json({
       properties: allResults,
@@ -204,10 +222,12 @@ export async function GET(request: NextRequest) {
         liked: likedProperties.length,
         direct: directProperties.length,
         nearby: nearbyProperties.length,
-        totalLikedIncluded: allResults.filter(p => p.resultType === 'liked').length
+        totalLikedIncluded: allResults.filter(p => p.resultType === 'liked').length,
+        totalPropertiesInDB: allProperties.length
       },
       searchCriteria: {
         city: searchCity,
+        state: searchState,
         maxMonthlyPayment: maxMonthly,
         maxDownPayment: maxDown
       }

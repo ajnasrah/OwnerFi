@@ -1,9 +1,0 @@
-address,city,state,zipCode,bedrooms,bathrooms,squareFeet,listPrice,downPaymentAmount,monthlyPayment,interestRate,termYears,description,imageUrl
-1234 Poplar Ave,Memphis,TN,38104,3,2,1200,185000,18500,998,6,30,Beautiful 3 bedroom home in Midtown Memphis with hardwood floors,
-5678 Park Ave,Memphis,TN,38119,2,1,980,142000,14200,766,6,30,Cozy 2 bedroom bungalow near Memphis Zoo,
-9012 Main St,Memphis,TN,38103,4,3,1800,295000,29500,1591,6,30,Spacious family home in Cooper-Young district,
-3456 Union Ave,Memphis,TN,38112,2,2,1100,165000,16500,890,6,30,Updated townhome with modern amenities,
-7890 Beale St,Memphis,TN,38103,3,2,1350,215000,21500,1160,6,30,Historic home near downtown Memphis,
-2345 Germantown Pkwy,Memphis,TN,38138,4,3,2200,385000,38500,2077,6,30,Luxury home in East Memphis with pool,
-6789 Elvis Presley Blvd,Memphis,TN,38116,2,1,950,125000,12500,675,6,30,Affordable starter home near Graceland,
-1357 Madison Ave,Memphis,TN,38104,3,2,1450,225000,22500,1214,6,30,Charming home in historic Overton Park area

@@ -61,101 +61,143 @@ export async function GET(request: NextRequest) {
     const usersSnapshot = await getDocs(usersQuery);
     const realtorStats: RealtorStats[] = [];
 
-    console.log(`Found ${usersSnapshot.docs.length} users with role 'realtor'`);
+    // Batch fetch all related data - leadPurchases and buyer profiles only
+    const [leadPurchasesSnapshot, buyerProfilesSnapshot] = await Promise.all([
+      getDocs(query(collection(db, 'leadPurchases'))),
+      getDocs(query(collection(db, 'buyerProfiles'),
+        where('isAvailableForPurchase', '==', true),
+        where('isActive', '==', true),
+        where('profileComplete', '==', true)
+      ))
+    ]);
 
+    console.log(`Found ${usersSnapshot.docs.length} users with role 'realtor'`);
+    console.log(`Found ${leadPurchasesSnapshot.size} lead purchases in 'leadPurchases' collection`);
+    console.log(`Found ${buyerProfilesSnapshot.size} available buyer profiles`);
+
+    // Process lead purchases once - track both purchased buyers and realtor counts
+    const purchasedBuyerIds = new Set<string>();
+    const leadPurchaseCountByUserId = new Map<string, number>();
+
+    leadPurchasesSnapshot.docs.forEach(doc => {
+      const data = doc.data();
+
+      // Track purchased buyers
+      if (data.buyerId) {
+        purchasedBuyerIds.add(data.buyerId);
+      }
+
+      // Track by realtor user ID (primary identifier)
+      if (data.realtorUserId) {
+        const count = leadPurchaseCountByUserId.get(data.realtorUserId) || 0;
+        leadPurchaseCountByUserId.set(data.realtorUserId, count + 1);
+      } else if (data.realtorId) {
+        // Fallback to realtorId if realtorUserId not available
+        const count = leadPurchaseCountByUserId.get(data.realtorId) || 0;
+        leadPurchaseCountByUserId.set(data.realtorId, count + 1);
+      }
+    });
+
+    console.log(`Found ${purchasedBuyerIds.size} unique purchased buyers`);
+
+    // Build a map of UNPURCHASED available buyers by state and city
+    const availableBuyersByState = new Map<string, number>();
+    const availableBuyersByCity = new Map<string, number>();
+    let totalUnpurchasedAvailable = 0;
+
+    buyerProfilesSnapshot.docs.forEach(doc => {
+      const buyerId = doc.id;
+
+      // Skip if this buyer has been purchased
+      if (purchasedBuyerIds.has(buyerId)) {
+        return;
+      }
+
+      const data = doc.data();
+      totalUnpurchasedAvailable++;
+
+      const state = data.preferredState || data.state || 'Unknown';
+      const city = data.preferredCity || data.city || 'Unknown';
+
+      // Count by state
+      availableBuyersByState.set(state, (availableBuyersByState.get(state) || 0) + 1);
+
+      // Count by city
+      availableBuyersByCity.set(city, (availableBuyersByCity.get(city) || 0) + 1);
+    });
+
+    console.log(`${totalUnpurchasedAvailable} buyers are available and unpurchased`)
+
+    // Process all realtor users with aggregated data
     for (const userDoc of usersSnapshot.docs) {
       try {
         const userData = userDoc.data();
-        console.log(`Processing realtor: ${userData.email || userDoc.id}`);
 
-          // Simplified approach - just get basic profile data without expensive queries
-        let profileData = null;
-        let creditsData = null;
-        let totalLeadsPurchased = 0;
-        let availableBuyersCount = 0;
+        // Get purchase count by user ID
+        const purchaseCount = leadPurchaseCountByUserId.get(userDoc.id) || 0;
 
-        try {
-          // Get realtor profile data
-          const profileQuery = query(
-            collection(db, 'realtorProfiles'),
-            where('userId', '==', userDoc.id)
-          );
-          const profileSnapshot = await getDocs(profileQuery);
-          profileData = profileSnapshot.docs[0]?.data();
-        } catch (error) {
-          console.warn(`Could not fetch profile for realtor ${userDoc.id}:`, error);
-        }
+        // Get credits from realtorData field in user document
+        const credits = userData.realtorData?.credits || userData.credits || 0;
 
-        try {
-          // Get credit balance
-          const creditsQuery = query(
-            collection(db, 'realtorCredits'),
-            where('realtorId', '==', userDoc.id)
-          );
-          const creditsSnapshot = await getDocs(creditsQuery);
-          creditsData = creditsSnapshot.docs[0]?.data();
-        } catch (error) {
-          console.warn(`Could not fetch credits for realtor ${userDoc.id}:`, error);
-        }
+        // Extract location info properly
+        const primaryCity = userData.realtorData?.serviceArea?.primaryCity;
+        const cityName = typeof primaryCity === 'object' ? primaryCity?.name : primaryCity;
+        const stateName = typeof primaryCity === 'object' ? primaryCity?.state : userData.realtorData?.serviceArea?.state;
 
-        try {
-          // Count total leads purchased
-          const leadsQuery = query(
-            collection(db, 'leadPurchases'),
-            where('realtorId', '==', userDoc.id)
-          );
-          const leadsSnapshot = await getDocs(leadsQuery);
-          totalLeadsPurchased = leadsSnapshot.size;
-        } catch (error) {
-          console.warn(`Could not fetch leads for realtor ${userDoc.id}:`, error);
-        }
-
-        try {
-          // Count available buyers (simplified version)
-          const buyersQuery = query(
-            collection(db, 'users'),
-            where('role', '==', 'buyer')
-          );
-          const buyersSnapshot = await getDocs(buyersQuery);
-          availableBuyersCount = Math.max(0, buyersSnapshot.size - totalLeadsPurchased);
-        } catch (error) {
-          console.warn(`Could not fetch buyers count for realtor ${userDoc.id}:`, error);
+        // Calculate available buyers for this realtor's service area
+        let availableInArea = 0;
+        if (stateName) {
+          // Get buyers in the realtor's state
+          availableInArea = availableBuyersByState.get(stateName) || 0;
+        } else if (cityName) {
+          // Fallback to city if no state
+          availableInArea = availableBuyersByCity.get(cityName) || 0;
         }
 
         const realtorStat: RealtorStats = {
           id: userDoc.id,
-          name: userData.name || `${userData.firstName || ''} ${userData.lastName || ''}`.trim() || 'N/A',
+          name: userData.realtorData?.firstName && userData.realtorData?.lastName
+            ? `${userData.realtorData.firstName} ${userData.realtorData.lastName}`
+            : userData.name || userData.email || 'N/A',
           email: userData.email || 'N/A',
-          phone: userData.phone || profileData?.phoneNumber,
-          licenseNumber: profileData?.licenseNumber,
-          brokerage: profileData?.brokerage,
-          city: profileData?.city || userData.city,
-          state: profileData?.state || userData.state,
-          credits: creditsData?.balance || userData.credits || 0,
-          availableBuyersCount,
-          totalLeadsPurchased,
+          phone: userData.realtorData?.phone || userData.phone,
+          licenseNumber: userData.realtorData?.licenseNumber || userData.licenseNumber,
+          brokerage: userData.realtorData?.brokerage || userData.brokerage,
+          city: cityName || userData.realtorData?.city || userData.city || 'Not set',
+          state: stateName || userData.realtorData?.state || userData.state || 'Not set',
+          credits: credits,
+          availableBuyersCount: availableInArea,
+          totalLeadsPurchased: purchaseCount,
           lastSignIn: userData.lastSignIn?.toDate?.()?.toISOString() || userData.lastLoginAt?.toDate?.()?.toISOString(),
           createdAt: userData.createdAt?.toDate?.()?.toISOString() || userData.registeredAt?.toDate?.()?.toISOString(),
           isActive: userData.isActive !== false,
-          subscriptionStatus: userData.subscriptionStatus || creditsData?.subscriptionStatus || 'none'
+          subscriptionStatus: userData.subscriptionStatus || 'none'
         };
 
         realtorStats.push(realtorStat);
       } catch (error) {
         console.error(`Error processing realtor ${userDoc.id}:`, error);
-        // Continue processing other realtors even if one fails
       }
     }
 
-    // Sort by creation date (newest first) and limit
+    // Sort by total leads purchased (highest first), then by credits as secondary sort
     const sortedRealtors = realtorStats
-      .sort((a, b) => (new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()))
+      .sort((a, b) => {
+        if (b.totalLeadsPurchased !== a.totalLeadsPurchased) {
+          return b.totalLeadsPurchased - a.totalLeadsPurchased;
+        }
+        return b.credits - a.credits;
+      })
       .slice(0, limit);
 
     return NextResponse.json({
       realtors: sortedRealtors,
       total: realtorStats.length,
-      showing: `${sortedRealtors.length} of ${realtorStats.length} realtors`
+      showing: `${sortedRealtors.length} of ${realtorStats.length} realtors`,
+      stats: {
+        totalPurchasedBuyers: purchasedBuyerIds.size,
+        totalAvailableBuyers: totalUnpurchasedAvailable
+      }
     });
 
   } catch (error) {

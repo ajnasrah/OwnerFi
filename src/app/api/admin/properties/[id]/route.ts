@@ -74,10 +74,10 @@ export async function PUT(
     }
 
     const updates = await request.json();
-    
+
     // Remove id from updates if present
     delete updates.id;
-    
+
     // Update the property
     await updateDoc(doc(db, 'properties', resolvedParams.id), {
       ...updates,

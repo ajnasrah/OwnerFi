@@ -12,6 +12,20 @@ interface AdminProperty extends PropertyListing {
   imageUrl?: string; // Legacy field for backward compatibility
 }
 
+// Helper function to convert Google Drive sharing links to direct image URLs
+function convertToDirectImageUrl(url: string): string {
+  if (!url) return url;
+
+  // Handle Google Drive sharing links
+  const driveMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if (driveMatch) {
+    const fileId = driveMatch[1];
+    return `https://lh3.googleusercontent.com/d/${fileId}=w1000`;
+  }
+
+  return url;
+}
+
 interface BuyerStats {
   id: string;
   name: string;
@@ -72,9 +86,9 @@ export default function AdminDashboard() {
   const [loadingProperties, setLoadingProperties] = useState(false);
   const [selectedProperties, setSelectedProperties] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(20);
+  const [itemsPerPage] = useState(75);
   const [addressSearch, setAddressSearch] = useState('');
-  const [sortField, setSortField] = useState<'address' | 'city' | 'state' | 'listPrice' | 'bedrooms' | null>(null);
+  const [sortField, setSortField] = useState<'address' | 'city' | 'state' | 'listPrice' | 'bedrooms' | null>('address');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   // Upload state
@@ -292,10 +306,57 @@ export default function AdminDashboard() {
   };
 
   const getFilteredProperties = () => {
-    if (!addressSearch.trim()) return properties;
-    return properties.filter(property =>
-      property.address?.toLowerCase().includes(addressSearch.toLowerCase())
-    );
+    let filteredProps = properties;
+
+    // Apply search filter
+    if (addressSearch.trim()) {
+      filteredProps = filteredProps.filter(property =>
+        property.address?.toLowerCase().includes(addressSearch.toLowerCase())
+      );
+    }
+
+    // Apply sorting
+    if (sortField) {
+      filteredProps = [...filteredProps].sort((a, b) => {
+        let aValue: string | number = '';
+        let bValue: string | number = '';
+
+        switch (sortField) {
+          case 'address':
+            aValue = a.address?.toLowerCase() || '';
+            bValue = b.address?.toLowerCase() || '';
+            break;
+          case 'city':
+            aValue = a.city?.toLowerCase() || '';
+            bValue = b.city?.toLowerCase() || '';
+            break;
+          case 'state':
+            aValue = a.state?.toLowerCase() || '';
+            bValue = b.state?.toLowerCase() || '';
+            break;
+          case 'listPrice':
+            aValue = a.listPrice || 0;
+            bValue = b.listPrice || 0;
+            break;
+          case 'bedrooms':
+            aValue = a.bedrooms || 0;
+            bValue = b.bedrooms || 0;
+            break;
+        }
+
+        if (typeof aValue === 'string' && typeof bValue === 'string') {
+          return sortDirection === 'asc'
+            ? aValue.localeCompare(bValue)
+            : bValue.localeCompare(aValue);
+        } else {
+          return sortDirection === 'asc'
+            ? (aValue as number) - (bValue as number)
+            : (bValue as number) - (aValue as number);
+        }
+      });
+    }
+
+    return filteredProps;
   };
 
   const getPaginatedProperties = () => {
@@ -773,7 +834,7 @@ export default function AdminDashboard() {
                           <div className="flex items-center">
                             <div className="flex-shrink-0 h-16 w-20">
                               <Image
-                                src={property.imageUrls?.[0] || property.imageUrl || '/placeholder-house.jpg'}
+                                src={convertToDirectImageUrl(property.imageUrl || (property as any).imageUrls?.[0]) || '/placeholder-house.svg'}
                                 alt={property.address}
                                 width={80}
                                 height={64}
@@ -813,6 +874,9 @@ export default function AdminDashboard() {
                                   listPrice: property.listPrice,
                                   monthlyPayment: property.monthlyPayment,
                                   downPaymentAmount: property.downPaymentAmount,
+                                  interestRate: property.interestRate,
+                                  downPaymentPercent: property.downPaymentPercent,
+                                  imageUrl: property.imageUrl || (property as any).imageUrls?.[0] || '',
                                 });
                               }}
                               className="text-indigo-600 hover:text-indigo-900"
@@ -1371,12 +1435,12 @@ export default function AdminDashboard() {
                       <div>
                         <label className="block text-sm font-medium text-slate-700 mb-2">List Price</label>
                         <div className="relative">
-                          <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-500 font-medium">$</span>
+                          <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-500 font-medium z-10 pointer-events-none">$</span>
                           <input
                             type="number"
                             value={editForm.listPrice || ''}
                             onChange={(e) => setEditForm({ ...editForm, listPrice: parseFloat(e.target.value) })}
-                            className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                            className="w-full pl-12 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                           />
                         </div>
                       </div>
@@ -1385,25 +1449,57 @@ export default function AdminDashboard() {
                         <div>
                           <label className="block text-sm font-medium text-slate-700 mb-2">Monthly Payment</label>
                           <div className="relative">
-                            <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-500 font-medium">$</span>
+                            <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-500 font-medium z-10 pointer-events-none">$</span>
                             <input
                               type="number"
                               value={editForm.monthlyPayment || ''}
                               onChange={(e) => setEditForm({ ...editForm, monthlyPayment: parseFloat(e.target.value) })}
-                              className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                              className="w-full pl-12 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                             />
                           </div>
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-slate-700 mb-2">Down Payment</label>
                           <div className="relative">
-                            <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-500 font-medium">$</span>
+                            <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-500 font-medium z-10 pointer-events-none">$</span>
                             <input
                               type="number"
                               value={editForm.downPaymentAmount || ''}
                               onChange={(e) => setEditForm({ ...editForm, downPaymentAmount: parseFloat(e.target.value) })}
-                              className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                              className="w-full pl-12 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                             />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Interest Rate and Down Payment Percentage */}
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-2">Interest Rate</label>
+                          <div className="relative">
+                            <input
+                              type="number"
+                              step="0.01"
+                              value={editForm.interestRate || ''}
+                              onChange={(e) => setEditForm({ ...editForm, interestRate: parseFloat(e.target.value) })}
+                              placeholder="6.75"
+                              className="w-full pr-10 pl-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                            />
+                            <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-500 font-medium">%</span>
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-2">Down Payment %</label>
+                          <div className="relative">
+                            <input
+                              type="number"
+                              step="0.1"
+                              value={editForm.downPaymentPercent || ''}
+                              onChange={(e) => setEditForm({ ...editForm, downPaymentPercent: parseFloat(e.target.value) })}
+                              placeholder="10"
+                              className="w-full pr-10 pl-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                            />
+                            <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-500 font-medium">%</span>
                           </div>
                         </div>
                       </div>
@@ -1413,15 +1509,15 @@ export default function AdminDashboard() {
                         <label className="block text-sm font-medium text-slate-700 mb-2">Property Image URL</label>
                         <input
                           type="url"
-                          value={editForm.imageUrl || (editingProperty.imageUrls?.[0]) || ''}
+                          value={editForm.imageUrl || ''}
                           onChange={(e) => setEditForm({ ...editForm, imageUrl: e.target.value })}
                           placeholder="https://example.com/image.jpg"
                           className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                         />
-                        {(editForm.imageUrl || editingProperty.imageUrls?.[0]) && (
+                        {(editForm.imageUrl || editingProperty.imageUrl || (editingProperty as any).imageUrls?.[0]) && (
                           <div className="mt-3">
                             <Image
-                              src={editForm.imageUrl || editingProperty.imageUrls?.[0] || '/placeholder-house.jpg'}
+                              src={convertToDirectImageUrl(editForm.imageUrl || editingProperty.imageUrl || (editingProperty as any).imageUrls?.[0]) || '/placeholder-house.svg'}
                               alt="Property preview"
                               width={300}
                               height={200}
@@ -1448,10 +1544,14 @@ export default function AdminDashboard() {
                 </button>
                 <button
                   onClick={async () => {
+                    const formDataWithConvertedUrl = {
+                      ...editForm,
+                      imageUrl: editForm.imageUrl ? convertToDirectImageUrl(editForm.imageUrl) : editForm.imageUrl
+                    };
                     await fetch(`/api/admin/properties/${editingProperty.id}`, {
                       method: 'PUT',
                       headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify(editForm)
+                      body: JSON.stringify(formDataWithConvertedUrl)
                     });
                     setEditingProperty(null);
                     fetchProperties();

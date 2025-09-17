@@ -653,11 +653,11 @@ function generateFailureCSV(headers: string[], failedRows: FailedRow[]): string 
     rowArray.push(escapeCSVField(failed.row));
 
     // Address info - try to extract from data
-    let address = failed.attemptedAddress || '';
-    let city = failed.attemptedCity || '';
-    let state = failed.attemptedState || '';
-    let zip = '';
-    let price = failed.attemptedPrice || '';
+    const address = failed.attemptedAddress || '';
+    const city = failed.attemptedCity || '';
+    const state = failed.attemptedState || '';
+    const zip = '';
+    const price = failed.attemptedPrice || '';
 
     // Extract from already parsed attempted values
     // We already have these from the failed row data

@@ -205,6 +205,18 @@ export default function LikedProperties() {
                         <span className="text-slate-400 font-semibold">Down Payment:</span>
                         <span className="font-bold text-blue-400 text-lg">${property.downPaymentAmount?.toLocaleString()} est</span>
                       </div>
+                      {property.interestRate !== undefined && property.interestRate !== null && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-slate-400 font-semibold">Interest Rate:</span>
+                          <span className="font-bold text-yellow-400 text-lg">{property.interestRate}%</span>
+                        </div>
+                      )}
+                      {property.downPaymentPercent !== undefined && property.downPaymentPercent !== null && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-slate-400 font-semibold">Down Payment %:</span>
+                          <span className="font-bold text-purple-400 text-lg">{property.downPaymentPercent}%</span>
+                        </div>
+                      )}
 
                       {/* Payment Disclaimer */}
                       <div className="text-center bg-slate-700/30 rounded p-2">

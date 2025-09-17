@@ -1371,12 +1371,12 @@ export default function AdminDashboard() {
                       <div>
                         <label className="block text-sm font-medium text-slate-700 mb-2">List Price</label>
                         <div className="relative">
-                          <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-500">$</span>
+                          <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-500 font-medium">$</span>
                           <input
                             type="number"
                             value={editForm.listPrice || ''}
                             onChange={(e) => setEditForm({ ...editForm, listPrice: parseFloat(e.target.value) })}
-                            className="w-full pl-8 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                            className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                           />
                         </div>
                       </div>
@@ -1385,24 +1385,24 @@ export default function AdminDashboard() {
                         <div>
                           <label className="block text-sm font-medium text-slate-700 mb-2">Monthly Payment</label>
                           <div className="relative">
-                            <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-500">$</span>
+                            <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-500 font-medium">$</span>
                             <input
                               type="number"
                               value={editForm.monthlyPayment || ''}
                               onChange={(e) => setEditForm({ ...editForm, monthlyPayment: parseFloat(e.target.value) })}
-                              className="w-full pl-8 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                              className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                             />
                           </div>
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-slate-700 mb-2">Down Payment</label>
                           <div className="relative">
-                            <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-500">$</span>
+                            <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-500 font-medium">$</span>
                             <input
                               type="number"
                               value={editForm.downPaymentAmount || ''}
                               onChange={(e) => setEditForm({ ...editForm, downPaymentAmount: parseFloat(e.target.value) })}
-                              className="w-full pl-8 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                              className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                             />
                           </div>
                         </div>

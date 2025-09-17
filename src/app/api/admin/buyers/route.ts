@@ -94,6 +94,7 @@ export async function GET(request: NextRequest) {
           maxMonthlyPayment: data.maxMonthlyPayment,
           phone: data.phone,
           likedProperties: data.likedProperties || [],
+          matchedPropertyIds: data.matchedPropertyIds || [],
           isPurchased: purchasedBuyerIds.has(doc.id)
         });
       }
@@ -107,6 +108,7 @@ export async function GET(request: NextRequest) {
         maxMonthlyPayment: data.maxMonthlyPayment,
         phone: data.phone,
         likedProperties: data.likedProperties || [],
+        matchedPropertyIds: data.matchedPropertyIds || [],
         isPurchased: purchasedBuyerIds.has(doc.id)
       });
     });
@@ -143,7 +145,7 @@ export async function GET(request: NextRequest) {
           primaryState: profileData?.state || userData.state,
           downPayment: profileData?.maxDownPayment || userData.maxDownPayment,
           monthlyBudget: profileData?.maxMonthlyPayment || userData.maxMonthlyPayment,
-          matchedPropertiesCount: 0,
+          matchedPropertiesCount: profileData?.matchedPropertyIds?.length || 0,
           likedPropertiesCount: likeCount,
           loginCount: userData.loginCount || (profileData ? 1 : 0),
           lastSignIn: userData.lastSignIn?.toDate?.()?.toISOString() || userData.lastLoginAt?.toDate?.()?.toISOString(),

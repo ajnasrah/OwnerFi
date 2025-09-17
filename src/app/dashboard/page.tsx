@@ -451,11 +451,11 @@ export default function Dashboard() {
                       ${currentProperty.downPaymentAmount?.toLocaleString() || '26,000'} down est
                     </span>
                   </div>
-                  {currentProperty.balloonYears && currentProperty.balloonPayment && (
+                  {currentProperty.balloonYears && (
                     <div className="flex items-center gap-1">
                       <span className="text-yellow-400 text-xs">🎈</span>
                       <span className="text-yellow-400 text-xs font-semibold">
-                        ${currentProperty.balloonPayment.toLocaleString()} in {currentProperty.balloonYears}yr est
+                        {currentProperty.balloonYears} year balloon
                       </span>
                     </div>
                   )}

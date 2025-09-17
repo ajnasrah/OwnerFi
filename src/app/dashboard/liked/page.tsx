@@ -226,22 +226,18 @@ export default function LikedProperties() {
                       </div>
                       
                       {/* Balloon Payment Info */}
-                      {property.balloonYears && property.balloonPayment ? (
+                      {property.balloonYears ? (
                         <div className="bg-yellow-500/20 border border-yellow-400/30 rounded-lg p-3 mt-3">
                           <div className="flex items-center gap-2 mb-2">
                             <span className="text-yellow-400 text-sm">🎈</span>
-                            <span className="text-yellow-300 font-semibold text-sm">Balloon Payment</span>
+                            <span className="text-yellow-300 font-semibold text-sm">Balloon Term</span>
                           </div>
                           <div className="flex justify-between items-center mb-2">
-                            <span className="text-yellow-200 text-xs">Amount Due:</span>
-                            <span className="font-bold text-yellow-300">${property.balloonPayment.toLocaleString()} est</span>
-                          </div>
-                          <div className="flex justify-between items-center mb-2">
-                            <span className="text-yellow-200 text-xs">Due In:</span>
+                            <span className="text-yellow-200 text-xs">Balloon Due In:</span>
                             <span className="font-bold text-yellow-300">{property.balloonYears} year{property.balloonYears > 1 ? 's' : ''}</span>
                           </div>
                           <p className="text-yellow-200 text-xs leading-relaxed">
-                            Estimated balloon payment. Plan to refinance or save. Excludes taxes/insurance/HOA.
+                            This property has a balloon payment due in {property.balloonYears} year{property.balloonYears > 1 ? 's' : ''}. Plan to refinance or pay off the balance.
                           </p>
                           <div className="mt-2">
                             <Link
@@ -252,25 +248,7 @@ export default function LikedProperties() {
                             </Link>
                           </div>
                         </div>
-                      ) : (
-                        <div className="bg-red-500/20 border border-red-400/30 rounded-lg p-3 mt-3">
-                          <div className="flex items-center gap-2 mb-2">
-                            <span className="text-red-400 text-sm">⚠️</span>
-                            <span className="text-red-300 font-semibold text-sm">Balloon Payment Unknown</span>
-                          </div>
-                          <p className="text-red-200 text-xs leading-relaxed">
-                            <strong>Balloon payment terms not specified.</strong> This property may include a balloon payment. Ask the seller for details before proceeding.
-                          </p>
-                          <div className="mt-2">
-                            <Link
-                              href="/how-owner-finance-works#balloon-payments"
-                              className="text-red-300 underline text-xs hover:text-red-200"
-                            >
-                              Learn about balloon payments →
-                            </Link>
-                          </div>
-                        </div>
-                      )}
+                      ) : null}
                     </div>
 
                     <div className="flex justify-between text-sm text-slate-400 mb-4 font-semibold">

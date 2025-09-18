@@ -308,10 +308,12 @@ export default function AdminDashboard() {
   const getFilteredProperties = () => {
     let filteredProps = properties;
 
-    // Apply search filter
+    // Apply search filter - search by address or city
     if (addressSearch.trim()) {
+      const searchTerm = addressSearch.toLowerCase();
       filteredProps = filteredProps.filter(property =>
-        property.address?.toLowerCase().includes(addressSearch.toLowerCase())
+        property.address?.toLowerCase().includes(searchTerm) ||
+        property.city?.toLowerCase().includes(searchTerm)
       );
     }
 
@@ -748,7 +750,7 @@ export default function AdminDashboard() {
                       </div>
                       <input
                         type="text"
-                        placeholder="Search properties by address..."
+                        placeholder="Search by address or city..."
                         value={addressSearch}
                         onChange={(e) => setAddressSearch(e.target.value)}
                         className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"

@@ -430,7 +430,7 @@ export default function AdminDashboard() {
         const error = await response.json();
         alert(`Failed to resolve dispute: ${error.error}`);
       }
-    } catch (error) {
+    } catch {
       alert('Failed to resolve dispute');
     }
   };

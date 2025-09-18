@@ -1,0 +1,200 @@
+import { NextRequest, NextResponse } from 'next/server';
+import {
+  doc,
+  getDoc,
+  deleteDoc,
+  collection,
+  query,
+  where,
+  getDocs,
+  writeBatch
+} from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { logError, logInfo, logWarn } from '@/lib/logger';
+import crypto from 'crypto';
+
+const GHL_WEBHOOK_SECRET = process.env.GHL_WEBHOOK_SECRET || '';
+
+function verifyWebhookSignature(
+  payload: string,
+  signature: string | null
+): boolean {
+  if (!signature || !GHL_WEBHOOK_SECRET) {
+    return false;
+  }
+
+  const expectedSignature = crypto
+    .createHmac('sha256', GHL_WEBHOOK_SECRET)
+    .update(payload)
+    .digest('hex');
+
+  return crypto.timingSafeEqual(
+    Buffer.from(signature),
+    Buffer.from(expectedSignature)
+  );
+}
+
+interface GHLDeletePayload {
+  contactId?: string;
+  locationId?: string;
+  propertyId?: string;
+  propertyIds?: string[];
+  deleteBy?: {
+    field: string;
+    value: string | number;
+  };
+  deleteAll?: boolean;
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    if (!db) {
+      return NextResponse.json(
+        { error: 'Database not available' },
+        { status: 500 }
+      );
+    }
+
+    const body = await request.text();
+    const signature = request.headers.get('x-ghl-signature');
+
+    if (!verifyWebhookSignature(body, signature)) {
+      logError('Invalid GoHighLevel webhook signature');
+      return NextResponse.json(
+        { error: 'Invalid webhook signature' },
+        { status: 401 }
+      );
+    }
+
+    const payload: GHLDeletePayload = JSON.parse(body);
+    logInfo('GoHighLevel delete property webhook received', payload);
+
+    const deletedProperties: string[] = [];
+    const errors: string[] = [];
+
+    if (payload.deleteAll === true) {
+      logWarn('Delete all properties requested - this action requires additional confirmation');
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Delete all properties requires additional confirmation',
+          requiresConfirmation: true
+        },
+        { status: 400 }
+      );
+    }
+
+    if (payload.propertyId) {
+      try {
+        const propertyRef = doc(db, 'properties', payload.propertyId);
+        const propertyDoc = await getDoc(propertyRef);
+
+        if (!propertyDoc.exists()) {
+          errors.push(`Property ${payload.propertyId} not found`);
+        } else {
+          await deleteDoc(propertyRef);
+          deletedProperties.push(payload.propertyId);
+          logInfo(`Deleted property ${payload.propertyId}`);
+        }
+      } catch (error) {
+        errors.push(`Failed to delete property ${payload.propertyId}: ${error}`);
+        logError(`Error deleting property ${payload.propertyId}:`, error);
+      }
+    }
+
+    if (payload.propertyIds && Array.isArray(payload.propertyIds)) {
+      const batch = writeBatch(db);
+
+      for (const id of payload.propertyIds) {
+        try {
+          const propertyRef = doc(db, 'properties', id);
+          const propertyDoc = await getDoc(propertyRef);
+
+          if (!propertyDoc.exists()) {
+            errors.push(`Property ${id} not found`);
+          } else {
+            batch.delete(propertyRef);
+            deletedProperties.push(id);
+          }
+        } catch (error) {
+          errors.push(`Failed to process property ${id}: ${error}`);
+          logError(`Error processing property ${id}:`, error);
+        }
+      }
+
+      if (deletedProperties.length > 0) {
+        await batch.commit();
+        logInfo(`Batch deleted ${deletedProperties.length} properties`);
+      }
+    }
+
+    if (payload.deleteBy) {
+      const { field, value } = payload.deleteBy;
+
+      const allowedFields = ['address', 'city', 'state', 'zipCode', 'status'];
+      if (!allowedFields.includes(field)) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: `Invalid field for deletion: ${field}. Allowed fields: ${allowedFields.join(', ')}`
+          },
+          { status: 400 }
+        );
+      }
+
+      try {
+        const q = query(
+          collection(db, 'properties'),
+          where(field, '==', value)
+        );
+
+        const snapshot = await getDocs(q);
+
+        if (snapshot.empty) {
+          errors.push(`No properties found with ${field} = ${value}`);
+        } else {
+          const batch = writeBatch(db);
+
+          snapshot.forEach((doc) => {
+            batch.delete(doc.ref);
+            deletedProperties.push(doc.id);
+          });
+
+          await batch.commit();
+          logInfo(`Deleted ${deletedProperties.length} properties where ${field} = ${value}`);
+        }
+      } catch (error) {
+        errors.push(`Failed to delete properties by ${field}: ${error}`);
+        logError(`Error deleting properties by ${field}:`, error);
+      }
+    }
+
+    const response = {
+      success: deletedProperties.length > 0,
+      data: {
+        deletedProperties,
+        deletedCount: deletedProperties.length,
+        errors: errors.length > 0 ? errors : undefined,
+        contactId: payload.contactId,
+        locationId: payload.locationId
+      }
+    };
+
+    if (deletedProperties.length === 0 && errors.length > 0) {
+      return NextResponse.json(response, { status: 400 });
+    }
+
+    return NextResponse.json(response);
+
+  } catch (error) {
+    logError('Error in GoHighLevel delete property webhook:', error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Failed to delete properties',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
+      { status: 500 }
+    );
+  }
+}

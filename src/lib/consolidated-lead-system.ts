@@ -48,10 +48,10 @@ export class ConsolidatedLeadSystem {
    */
   static async findAvailableLeads(realtorProfile: RealtorMatchProfile): Promise<LeadMatch[]> {
     try {
-      
-      // Get all available buyer profiles (use preferredState for main query)
+
+      // Get ALL available buyer profiles (don't filter by state first)
+      // We'll filter by city match in the application logic
       const availableBuyers = await FirebaseDB.queryDocuments<BuyerProfile>('buyerProfiles', [
-        { field: 'preferredState', operator: '==', value: realtorProfile.state },
         { field: 'isAvailableForPurchase', operator: '==', value: true },
         { field: 'isActive', operator: '==', value: true },
         { field: 'profileComplete', operator: '==', value: true }

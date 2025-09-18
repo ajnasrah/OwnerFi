@@ -91,8 +91,7 @@ export async function POST(request: Request) {
       });
 
       response = completion.choices[0]?.message?.content || 'How can I help you with OwnerFi today?';
-    } catch (error) {
-      console.error('OpenAI API error:', error);
+    } catch {
       response = 'I\'m having trouble connecting right now. How can I help you with OwnerFi? Feel free to explore our platform or sign up to get started!';
     }
 

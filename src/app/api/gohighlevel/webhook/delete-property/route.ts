@@ -67,7 +67,15 @@ export async function POST(request: NextRequest) {
     }
 
     const payload: GHLDeletePayload = JSON.parse(body);
-    logInfo('GoHighLevel delete property webhook received', payload);
+    logInfo('GoHighLevel delete property webhook received', {
+      action: 'webhook_received',
+      metadata: {
+        hasPropertyId: !!payload.propertyId,
+        hasPropertyIds: !!payload.propertyIds,
+        hasDeleteBy: !!payload.deleteBy,
+        deleteAll: payload.deleteAll
+      }
+    });
 
     const deletedProperties: string[] = [];
     const errors: string[] = [];

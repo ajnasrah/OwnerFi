@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { FirebaseDB } from '@/lib/firebase-db';
 import Stripe from 'stripe';
-import { User } from '@/lib/firebase-models';
 import { UserWithRealtorData } from '@/lib/realtor-models';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {

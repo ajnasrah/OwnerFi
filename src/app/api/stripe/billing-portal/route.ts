@@ -11,7 +11,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 // Credit packages that have subscriptions (only 4 and 10 credit packages)
 const SUBSCRIPTION_PACKAGES = ['4_credits', '10_credits'];
 
-export async function GET(_: NextRequest) {
+export async function GET() {
   try {
     if (!db) {
       return NextResponse.json(
@@ -73,7 +73,7 @@ export async function GET(_: NextRequest) {
 
     return NextResponse.json({ subscriptions: formattedSubscriptions });
 
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: 'Failed to fetch subscriptions' },
       { status: 500 }
@@ -81,7 +81,7 @@ export async function GET(_: NextRequest) {
   }
 }
 
-export async function POST(_: NextRequest) {
+export async function POST() {
   try {
     const session = await getSessionWithRole('realtor');
     

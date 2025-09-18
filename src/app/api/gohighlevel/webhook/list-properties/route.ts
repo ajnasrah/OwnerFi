@@ -71,7 +71,15 @@ export async function POST(request: NextRequest) {
     }
 
     const payload: GHLWebhookPayload = JSON.parse(body);
-    logInfo('GoHighLevel list properties webhook received', payload);
+    logInfo('GoHighLevel list properties webhook received', {
+      action: 'webhook_received',
+      metadata: {
+        contactId: payload.contactId,
+        locationId: payload.locationId,
+        hasFilters: !!payload.filters,
+        filterCount: payload.filters ? Object.keys(payload.filters).length : 0
+      }
+    });
 
     const filters = payload.filters || {};
     const limit = filters.limit || 100;

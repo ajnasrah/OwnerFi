@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ExtendedSession, isExtendedSession } from '@/types/session';
 import Chatbot from '@/components/ui/ChatbotiPhone';

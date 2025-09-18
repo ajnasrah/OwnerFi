@@ -1,0 +1,2050 @@
+{
+  "summary": {
+    "totalInCSV": 291,
+    "successfullyProcessed": 167,
+    "updated": 0,
+    "alreadyCorrect": 167,
+    "notFound": 124,
+    "errors": 0
+  },
+  "updateResults": [
+    {
+      "status": "already_correct",
+      "opportunityId": "1QVou8K3swjfghkO431y",
+      "rate": 6.3,
+      "name": "9 Apple Tree Cir Little Rock AR 72210",
+      "address": "9 Apple Tree Cir, Little Rock, AR 72210"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "xZKcsddAZzIoFLe6Xp4n",
+      "rate": 6,
+      "name": "1280 Mohave Dr APT 28 Bullhead City AZ 86442",
+      "address": "1280 Mohave Dr APT 28, Bullhead City, AZ 86442"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "Mo6OWcDOr4rr0gd6PCSc",
+      "rate": 7,
+      "name": "19229 Colonel Glenn Rd Little Rock AR 72210",
+      "address": "19229 Colonel Glenn Rd, Little Rock, AR 72210"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "D8h9eKsRbWK9F26m6tLS",
+      "rate": 6,
+      "name": "2715 N Dellwood Dr Eustis FL 32726",
+      "address": "2715 N Dellwood Dr, Eustis, FL 32726"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "U3JAYhqHI7SgO2IzaMTK",
+      "rate": 7,
+      "name": "510 City House Ct #205 Unit 205 Memphis TN 38103",
+      "address": "510 City House Ct #205 Unit 205, Memphis, TN 38103"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "ZyHOCXsxLRbaPw5Ml19f",
+      "rate": 7,
+      "name": "883 Wingfield Rd Memphis TN 38122",
+      "address": "883 Wingfield Rd, Memphis, TN 38122"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "LYwVyLFvQZrrYEDknUw0",
+      "rate": 7,
+      "name": "1944 E Mclemore Ave Memphis TN 38114",
+      "address": "1944 E Mclemore Ave, Memphis, TN 38114"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "GsBtWqH6A8PDUxRwcWPs",
+      "rate": 7,
+      "name": "6060 E River Rd Tucson AZ 85750",
+      "address": "6060 E River Rd, Tucson, AZ 85750"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "GkYrJV1adp7pjAG7gZL6",
+      "rate": 6,
+      "name": "1876 Cowden Ave Memphis TN 38104",
+      "address": "1876 Cowden Ave, Memphis, TN 38104"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "nWjfLR6pwrm8VZ8yC8gA",
+      "rate": 5,
+      "name": "8680 W Bolsa Dr Golden Valley AZ 86413",
+      "address": "8680 W Bolsa Dr, Golden Valley, AZ 86413"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "i8BLtOzOTYeYUhg42Y6z",
+      "rate": 10,
+      "name": "216 N Martha Ln Sierra Vista AZ 85635",
+      "address": "216 N Martha Ln, Sierra Vista, AZ 85635"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "2JEJvudipIzVdz5OpPbM",
+      "rate": 4,
+      "name": "9938 W Century Dr Arizona City AZ 85123",
+      "address": "9938 W Century Dr, Arizona City, AZ 85123"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "PSbl2rv5ov7gbJnb6whs",
+      "rate": 10,
+      "name": "5771 S Hillerman Dr Tucson AZ 85746",
+      "address": "5771 S Hillerman Dr, Tucson, AZ 85746"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "6z7PIvseFX7srodcNH2s",
+      "rate": 8,
+      "name": "507 W 13th St Casa Grande AZ 85122",
+      "address": "507 W 13th St, Casa Grande, AZ 85122"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "aa4hDT2nr1pEZwUoJ5BW",
+      "rate": 12,
+      "name": "1049 Blythwood Dr Piedmont SC 29673",
+      "address": "1049 Blythwood Dr, Piedmont, SC 29673"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "F6Tgg96Ra6z92hjpOM2a",
+      "rate": 8,
+      "name": "308 E Date Ave Casa Grande AZ 85122",
+      "address": "308 E Date Ave, Casa Grande, AZ 85122"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "vw7FRAILFdMIbmMgpKCS",
+      "rate": 6,
+      "name": "2328 Bridle Creek Creek SE Kentwood MI 49508",
+      "address": "2328 Bridle Creek Creek SE Kentwood, MI 49508"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "CdrgIbq7Qkti1frmYmK5",
+      "rate": 5,
+      "name": "280 Kari Dr Westminster SC 29693",
+      "address": "280 Kari Dr, Westminster, SC 29693"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "CKsqKyp4UZM0OR2gMfCz",
+      "rate": 5.5,
+      "name": "1416 Bourbon St APT 4 New Orleans LA 70116",
+      "address": "1416 Bourbon St APT 4, New Orleans, LA 70116"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "NjSSJpomAub96wdvVBnV",
+      "rate": 4,
+      "name": "8306 W PINEVETA DR Arizona City AZ 85123",
+      "address": "8306 W PINEVETA DR, Arizona City, AZ 85123"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "M094QQyouM9aqoT7D1MV",
+      "rate": 8,
+      "name": "3350 Club Villas Drive # 1403 Southport NC 28461",
+      "address": "3350 Club Villas Drive # 1403, Southport, NC 28461"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "MEwIe5yoNaI381YWDiIg",
+      "rate": 5,
+      "name": "52 Baby Jane Ln Hendersonville NC 28792",
+      "address": "52 Baby Jane Ln, Hendersonville, NC 28792"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "m5m83FNgp7evzlwCcRfU",
+      "rate": 6,
+      "name": "702 Kirkeenan Cir Morrisville NC 27560",
+      "address": "702 Kirkeenan Cir, Morrisville, NC 27560"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "LYx2X4a5p1FAiEWdUptv",
+      "rate": 8,
+      "name": "294 Pipers Gap Rd Mount Airy NC 27030",
+      "address": "294 Pipers Gap Rd, Mount Airy, NC 27030"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "06L9vdVZEh0IFbnlGbtA",
+      "rate": 7.5,
+      "name": "1207 Ocean Blvd. S #50805 Myrtle Beach SC 29577",
+      "address": "1207 Ocean Blvd. S #50805, Myrtle Beach, SC 29577"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "CFlF7uPp6BDVSCSKkDjZ",
+      "rate": 7,
+      "name": "252 Trillium Road Newland NC 28657",
+      "address": "252 Trillium Road, Newland, NC 28657"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "gDCQs5psPrhStV9nOrHG",
+      "rate": 7.5,
+      "name": "1207 S Ocean Blvd UNIT 50901 Myrtle Beach SC 29577",
+      "address": "1207 S Ocean Blvd UNIT 50901, Myrtle Beach, SC 29577"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "SUoV4nEmI5LfMTLywIMw",
+      "rate": 6,
+      "name": "276 Lake Havasu Ave S APT B18 Lake Havasu City AZ 86403",
+      "address": "276 Lake Havasu Ave S APT B18, Lake Havasu City, AZ 86403"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "xwrhghOncVDKdcH0IRAK",
+      "rate": 7,
+      "name": "259 River Mountain Rd Murphy NC 28906",
+      "address": "259 River Mountain Rd, Murphy, NC 28906"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "CIpp9D4XkE0Pn0fufgPw",
+      "rate": 7.5,
+      "name": "611 W James St Lillington NC 27546",
+      "address": "611 W James St, Lillington, NC 27546"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "1T7ylEFYynOoAWnawSlA",
+      "rate": 7,
+      "name": "19820 N 13th Ave UNIT 226 Phoenix AZ 85027",
+      "address": "19820 N 13th Ave UNIT 226, Phoenix, AZ 85027"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "wEBf2FBLG8g9A6slxWmT",
+      "rate": 7.5,
+      "name": "213 Grassy Creek Dr State Road NC 28676",
+      "address": "105 Grassy Creek Dr, State Road, NC 28676"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "OiGsX30v3eRSHrxPOeBr",
+      "rate": 6,
+      "name": "621 Shepard School Rd Zebulon NC 27597",
+      "address": "621 Shepard School Rd, Zebulon, NC 27597"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "TFHYAMwyWjnG4WwusxPZ",
+      "rate": 5,
+      "name": "2138 S Scales St Reidsville NC 27320",
+      "address": "2138 S Scales St, Reidsville, NC 27320"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "RUFebC40k1YCHc8ZZW4G",
+      "rate": 5,
+      "name": "231 Geisky Creek Rd Hayesville NC 28904",
+      "address": "231 Geisky Creek Rd, Hayesville, NC 28904"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "N1pwdRzxUyjhrAwcREWR",
+      "rate": 6,
+      "name": "923 Belvedere Street Rocky Mount NC 27803",
+      "address": "923 Belvedere Street, Rocky Mount, NC 27803"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "H8dUGVMynoxvpOtmYTGP",
+      "rate": 5,
+      "name": "441 Moser Ave APT c5 Bullhead City AZ 86429",
+      "address": "441 Moser Ave APT A6, Bullhead City, AZ 86429"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "yoDs01KPtWhn3Le5BUt5",
+      "rate": 6,
+      "name": "2751 Pine View Ct Overgaard AZ 85933",
+      "address": "2751 Pine View Ct, Overgaard, AZ 85933"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "LRsCVSQR1fpEt9ig2WaN",
+      "rate": 7,
+      "name": "582 Five Mile Road Richlands NC 28574",
+      "address": "582 Five Mile Road, Richlands, NC 28574"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "DcsvZqzfQ9hi2xeOzQro",
+      "rate": 5,
+      "name": "40130 N Thunder Hills Ct Phoenix AZ 85086",
+      "address": "40130 N Thunder Hills Ct, Phoenix, AZ 85086"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "OqCXYUfFhcHDS3TZrU4Q",
+      "rate": 7,
+      "name": "1215 E Justin St Pearce AZ 85625",
+      "address": "1215 E Justin St, Pearce, AZ 85625"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "x3BVp2vimDSyE4NvT642",
+      "rate": 5,
+      "name": "1251 W Kiva Ave Mesa AZ 85202",
+      "address": "1251 W Kiva Ave, Mesa, AZ 85202"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "yHs71EtRAYdePyAO1yUI",
+      "rate": 7,
+      "name": "1810 E Blacklidge Dr APT 726 Tucson AZ 85719",
+      "address": "1810 E Blacklidge Dr APT 726, Tucson, AZ 85719"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "WcKOcXcMF26a4jfNP535",
+      "rate": 5,
+      "name": "19700 N 76th St APT 2057 Scottsdale AZ 85255",
+      "address": "19700 N 76th St APT 2057, Scottsdale, AZ 85255"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "0lI3gTvogDqL3hnDRPfE",
+      "rate": 7,
+      "name": "35 Silver Brook Lane North Granby CT 06060",
+      "address": "35 Silver Brook Lane, North Granby, CT 06060"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "QbXEqf3NbEdT7cuV8uNe",
+      "rate": 5,
+      "name": "6090 S Bella Vista Dr Fort Mohave AZ 86426",
+      "address": "6090 S Bella Vista Dr, Fort Mohave, AZ 86426"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "8gK82n8MbAObOjd4Ngfd",
+      "rate": 6.5,
+      "name": "5775 S Camino Del Sol #6104 Green Valley AZ 85614",
+      "address": "5775 S Camino Del Sol #6104, Green Valley, AZ 85614"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "R7P5EbwR2lNtEbKs1HJr",
+      "rate": 3,
+      "name": "36690 W PIMA Drive Stanfield AZ 85172",
+      "address": "36690 W PIMA Drive Stanfield, AZ 85172"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "uEyf4hWEaJVzzXvVBSUJ",
+      "rate": 8,
+      "name": "177 Via Agua Sarca Rio Rico AZ 85648",
+      "address": "177 Via Agua Sarca, Rio Rico, AZ 85648"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "HoyKRTulk0TBuQ6JH2iI",
+      "rate": 7.5,
+      "name": "4134 W Electra Ln Glendale AZ 85310",
+      "address": "4134 W Electra Ln, Glendale, AZ 85310"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "vKv7gPjN2x3xIUCzhjIx",
+      "rate": 5,
+      "name": "34 Circulo Diego Rivera Tubac AZ 85646",
+      "address": "34 Circulo Diego Rivera, Tubac, AZ 85646"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "QKkXm7VLbma8mR18Pq3p",
+      "rate": 5,
+      "name": "10931 W Benito Dr Arizona City AZ 85123",
+      "address": "10931 W Benito Dr, Arizona City, AZ 85123"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "fUK5twSp05Oea3eKTlGY",
+      "rate": 7,
+      "name": "8715 Surf Dr UNIT 102B Panama City Beach FL 32401",
+      "address": "8715 Surf Dr UNIT 102B, Panama City Beach, FL 32401"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "c8tKQN9HBNTdFCCa7sor",
+      "rate": 8,
+      "name": "22660 W Old Highway 66 Seligman AZ 86337",
+      "address": "22660 W Old Highway 66, Seligman, AZ 86337"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "17PPaq1txG8kPJ7jVufJ",
+      "rate": 7,
+      "name": "1512 W Fairmont Dr Tempe AZ 85282",
+      "address": "1512 W Fairmont Dr, Tempe, AZ 85282"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "u58Ih8D00tgfnvLxqty8",
+      "rate": 4.25,
+      "name": "203 N Avenue J Johnson City TX 78636",
+      "address": "203 N Avenue J, Johnson City, TX 78636"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "eARUt0miILmvllMVGw9t",
+      "rate": 5,
+      "name": "4000 SW 23rd St APT 1305 Gainesville FL 32608",
+      "address": "4000 SW 23rd St APT 1305, Gainesville, FL 32608"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "ctyR5CTW0sfqXMgLczvo",
+      "rate": 10,
+      "name": "24030 NW Banyan Ln Dunnellon FL 34431",
+      "address": "24030 NW Banyan Ln, Dunnellon, FL 34431"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "z47OgJqTGTCvoRCcrmyn",
+      "rate": 7,
+      "name": "1368 Countryridge Pl Orlando FL 32835",
+      "address": "1368 Countryridge Pl, Orlando, FL 32835"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "yQ6XZZiZCJfe0HGkTmDK",
+      "rate": 7.5,
+      "name": "750 Burgundy P Delray Beach FL 33484",
+      "address": "750 Burgundy P, Delray Beach, FL 33484"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "bPkj5Weh6fsqpwVPyeZM",
+      "rate": 9.5,
+      "name": "5312 Suwannee Rd Weeki Wachee FL 34607",
+      "address": "5312 Suwannee Rd, Weeki Wachee, FL 34607"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "BsaDOoKJOlmrYwPz9SUo",
+      "rate": 5,
+      "name": "836 LYNTON Street Jacksonville FL 32208",
+      "address": "836 LYNTON Street, Jacksonville, FL 32208"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "8NWTDO5NaPlzm7fqLj1G",
+      "rate": 5.5,
+      "name": "8973 SW 102nd Pl Ocala FL 34481",
+      "address": "8973 SW 102nd Pl, Ocala, FL 34481"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "VeYsUKrTsoUHFZubeme8",
+      "rate": 9,
+      "name": "3204 Colony Club Rd #6 Pompano Beach FL 33062",
+      "address": "3204 Colony Club Rd #6, Pompano Beach, FL 33062"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "wXPKTp7eRoTwZ9JELoXc",
+      "rate": 6,
+      "name": "116 Links Terrace Blvd Daytona Beach FL 32124",
+      "address": "116 Links Terrace Blvd, Daytona Beach, FL 32124"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "snlJIiC937gQeNd5xVMi",
+      "rate": 9,
+      "name": "6019 Forest Perch Dr Saint Cloud FL 34771",
+      "address": "6019 Forest Perch Dr, Saint Cloud, FL 34771"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "KsKC8bs57EhePpplurXQ",
+      "rate": 7.5,
+      "name": "5937 Beverly Dr Hudson FL 34667",
+      "address": "5937 Beverly Dr, Hudson, FL 34667"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "BdD1XLbsGJsvoj6Tw1WL",
+      "rate": 7,
+      "name": "3640 SE 131st Ln Belleview FL 34420",
+      "address": "3640 SE 131st Ln, Belleview, FL 34420"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "9HJWDngjjEQZimDZApSV",
+      "rate": 7,
+      "name": "200 Croton Ave APT 104 Lantana FL 33462",
+      "address": "200 Croton Ave APT 104, Lantana, FL 33462"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "rOPezxuipdfgR90IoIsW",
+      "rate": 12,
+      "name": "2012 N Inspiration Rd Mission TX 78572",
+      "address": "2012 N Inspiration Rd, Mission, TX 78572"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "E9lfeIe0fIO5hfDYHC2N",
+      "rate": 7,
+      "name": "2680 Via Presidio North Fort Myers FL 33917",
+      "address": "2680 Via Presidio, North Fort Myers, FL 33917"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "AsWG0TpKdKtDRCCu6c7F",
+      "rate": 8,
+      "name": "4910 38th Way S APT 111 Saint Petersburg FL 33711",
+      "address": "4910 38th Way S APT 111, Saint Petersburg, FL 33711"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "UFGNNufPJsmbBJ1e0dVI",
+      "rate": 8.5,
+      "name": "2307 Flintstone Cir Killeen TX 76543",
+      "address": "2307 Flintstone Cir, Killeen, TX 76543"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "QDFBckiGF0krmZkj5IHL",
+      "rate": 6.5,
+      "name": "1001 16TH Street Palatka FL 32177",
+      "address": "1001 16TH Street, Palatka, FL 32177"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "dmiDqstt5eTp4wF2Q0dO",
+      "rate": 6,
+      "name": "117 Lake Emerald Dr unit 208 Oakland Park FL 33309",
+      "address": "117 Lake Emerald Dr, unit 208 Oakland Park, FL 33309"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "pkGLilQXfkDDWHNmCA4S",
+      "rate": 10,
+      "name": "1500 Hummingbird Ct APT 16 Pharr TX 78577",
+      "address": "1500 Hummingbird Ct APT 16, Pharr, TX 78577"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "MxTuBtBNVCYaqZCS5JdI",
+      "rate": 10,
+      "name": "1500 Hummingbird Ct APT 11 Pharr TX 78577",
+      "address": "1500 Hummingbird Ct APT 11, Pharr, TX 78577"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "YwPVTcPwaQG4xxjiXFgd",
+      "rate": 8,
+      "name": "5329 Ogilvie Ln Saint Augustine FL 32086",
+      "address": "5329 Ogilvie Ln, Saint Augustine, FL 32086"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "zd2hRyALefzAMy81fDUI",
+      "rate": 7,
+      "name": "3300 NE 192nd St APT 118 Aventura FL 33180",
+      "address": "3300 NE 192nd St APT 118, Aventura, FL 33180"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "PmneKf082pIyynQgghyN",
+      "rate": 7,
+      "name": "159 SE Sailfish Ln Stuart FL 34996",
+      "address": "159 SE Sailfish Ln, Stuart, FL 34996"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "1alr2TMMN6LyOO7EjOb0",
+      "rate": 11,
+      "name": "608 Tierra Prometida Weslaco TX 78596",
+      "address": "608 Tierra Prometida, Weslaco, TX 78596"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "GWoW1BFEGuqGi7moAmuF",
+      "rate": 6.75,
+      "name": "183 SW Ladybug Drive Port Saint Lucie FL 34953",
+      "address": "183 SW Ladybug Drive, Port Saint Lucie, FL 34953"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "CqxbKVm7R9g9Pb9QhlNF",
+      "rate": 9,
+      "name": "7238 Dianne Dr New Port Richey FL 34652",
+      "address": "7238 Dianne Dr, New Port Richey, FL 34652"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "30DpmBvr8Jr0PMBoKBvl",
+      "rate": 6,
+      "name": "931 Cedar Dr Brooksville FL 34601",
+      "address": "931 Cedar Dr, Brooksville, FL 34601"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "lVPmmPVRy6RogKK5Njwp",
+      "rate": 10,
+      "name": "1500 Hummingbird Ct APT 1 Pharr TX 78577",
+      "address": "1500 Hummingbird Ct APT 1, Pharr, TX 78577"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "wt2Odf5DXf2YkApkYNi2",
+      "rate": 10,
+      "name": "13268 Coldham St El Paso TX 79928",
+      "address": "13268 Coldham St, El Paso, TX 79928"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "VqEV25bVV5qK6PEwMtsX",
+      "rate": 10,
+      "name": "1500 Hummingbird Ct APT 6 Pharr TX 78577",
+      "address": "1500 Hummingbird Ct APT 6, Pharr, TX 78577"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "FnR8iCqM6sb0S7l5h4M9",
+      "rate": 10,
+      "name": "11630 SW 178th Ter Miami FL 33157",
+      "address": "11630 SW 178th Ter, Miami, FL 33157"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "WCqcBHdhT51LZXogbDIP",
+      "rate": 7,
+      "name": "23 Jackson San Antonio TX 78230",
+      "address": "23 Jackson, San Antonio, TX 78230"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "e9uSKMdodvY5iib9Melf",
+      "rate": 10,
+      "name": "1500 Hummingbird Ct APT 9 Pharr TX 78577",
+      "address": "1500 Hummingbird Ct APT 9, Pharr, TX 78577"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "FzlPAFUuwtMjpowf4A7o",
+      "rate": 6.5,
+      "name": "26540 Mangrove Dr UNIT 103 Galveston TX 77554",
+      "address": "26540 Mangrove Dr UNIT 103, Galveston, TX 77554"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "yhmQMBECfRJfdnlLHqXF",
+      "rate": 9,
+      "name": "225 E Main St Bishop TX 78343",
+      "address": "225 E Main St, Bishop, TX 78343"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "T9ExKSlXX44F0HeV0Mum",
+      "rate": 10,
+      "name": "11452 Jim Ferriell Dr El Paso TX 79936",
+      "address": "11452 Jim Ferriell Dr, El Paso, TX 79936"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "r8YjQqJbvD5JO4Buz7bg",
+      "rate": 7,
+      "name": "1826A Portsmouth St Houston TX 77098",
+      "address": "1826A Portsmouth St, Houston, TX 77098"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "UTROa6VpVmsnxnSYW1Ai",
+      "rate": 11,
+      "name": "322 County Road 319 Rosebud TX 76570",
+      "address": "322 County Road 319, Rosebud, TX 76570"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "wIMvvS5DSwl1Z9NlsUXa",
+      "rate": 12,
+      "name": "2608 Linva Ave Edinburg TX 78541",
+      "address": "2608 Linva Ave, Edinburg, TX 78541"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "Va9pb8gSiN1tWqMtU1oZ",
+      "rate": 9,
+      "name": "6818 Marimba San Antonio TX 78227",
+      "address": "6818 Marimba, San Antonio, TX 78227"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "yUjpm0hwLmG5PzlypDyQ",
+      "rate": 9,
+      "name": "3401 Floyd St Corpus Christi TX 78411",
+      "address": "3401 Floyd St, Corpus Christi, TX 78411"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "HLXo1MaNYK43qlMxMXo6",
+      "rate": 11,
+      "name": "3508 Plazas Del Lago Dr San Angelo TX 76903",
+      "address": "3508 Plazas Del Lago Dr, San Angelo, TX 76903"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "0aiwhJyKGIf7XZhIwmGK",
+      "rate": 9.25,
+      "name": "8303 N 33rd Ln McAllen TX 78504",
+      "address": "8303 N 33rd Ln, McAllen, TX 78504"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "RWIW5eHVX32XQWTumfeu",
+      "rate": 10,
+      "name": "2162 E Arkansas Ln Arlington TX 76014",
+      "address": "2162 E Arkansas Ln, Arlington, TX 76014"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "jknbSAlEsC7ipAyzHjKq",
+      "rate": 9.5,
+      "name": "2023 Peace Dr La Feria TX 78559",
+      "address": "2023 Peace Dr, La Feria, TX 78559"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "R8ZC6Ji816O6z3pdZAnI",
+      "rate": 10,
+      "name": "109 S Judkins St Fort Worth TX 76111",
+      "address": "109 S Judkins St, Fort Worth, TX 76111"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "oWA38pcweTSftP1LaYJG",
+      "rate": 6.5,
+      "name": "5409 Chimney Rock Rd Fort Worth TX 76112",
+      "address": "5409 Chimney Rock Rd, Fort Worth, TX 76112"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "oiNYICoZjjUgejbJ1M4Q",
+      "rate": 13,
+      "name": "21895 Amistad Rd Harlingen TX 78550",
+      "address": "21895 Amistad Rd, Harlingen, TX 78550"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "7v3mYEoHAjes3AoC0naQ",
+      "rate": 7,
+      "name": "202 E Green St Anderson SC 29655",
+      "address": "202 E Green St, Anderson, SC 29655"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "lPag6NYRhMjZBTm89I8o",
+      "rate": 10,
+      "name": "640 Stewart Ct El Paso TX 79902",
+      "address": "640 Stewart Ct, El Paso, TX 79902"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "oG6JhiN1qfVTWJsp3DPW",
+      "rate": 11,
+      "name": "5288 County Road 2248 Greenville TX 75402",
+      "address": "5288 County Road 2248, Greenville, TX 75402"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "J6S6bFxMOXi797ygTfGw",
+      "rate": 9,
+      "name": "10427 beachball Converse TX 78109",
+      "address": "10427 beachball, Converse, TX 78109"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "bvJAU4HJ3HPxaEeliAAM",
+      "rate": 10,
+      "name": "520 Munson St Tow TX 78672",
+      "address": "520 Munson St, Tow, TX 78672"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "SDqKZlxOGOj9BHf0KY8V",
+      "rate": 10,
+      "name": "3735 Avenida Residencial Brownsville TX 78526",
+      "address": "3735 Avenida Residencial, Brownsville, TX 78526"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "Rl3bWyf3JBFMlqsDyaqn",
+      "rate": 6.75,
+      "name": "11392 Santa Barbara Dr",
+      "address": "11392 Santa Barbara Dr, Socorro, TX 79927"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "GNRl5zGGGChGvBrCaCLD",
+      "rate": 5.5,
+      "name": "1298 Gideons Dr SW",
+      "address": "1298 Gideons Dr SW, Atlanta, GA 30314"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "Ysc0MsHd6KdEGJg11as2",
+      "rate": 6.75,
+      "name": "401 16th St NW UNIT 1357",
+      "address": "401 16th St NW UNIT 1357, Atlanta, GA 30363"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "4o7h66oZ441Mt09alCEP",
+      "rate": 4,
+      "name": "2870 Pharr Court South NW APT 1202",
+      "address": "2870 Pharr Court South NW APT 1202, Atlanta, GA 30305"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "RI1iKltSaj7t34xWtwHr",
+      "rate": 6.5,
+      "name": "503 Azalea Ct",
+      "address": "503 Azalea Ct, Woodstock, GA 30188"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "tpRvTS80SRkiv9T0HPnA",
+      "rate": 5,
+      "name": "6140 Jones Rd",
+      "address": "6140 Jones Rd, Flowery Branch, GA 30542"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "diL7mHZkbzIGVkdAZnYy",
+      "rate": 6,
+      "name": "3820 Roswell Rd NE UNIT 317",
+      "address": "3820 Roswell Rd NE UNIT 317, Atlanta, GA 30342"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "vEFlRn2dib2RRmu6D6Py",
+      "rate": 6,
+      "name": "475 Mount Vernon Hwy NE APT C230",
+      "address": "475 Mount Vernon Hwy NE APT C230, Sandy Springs, GA 30328"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "99djEYsdbNMmKoWMnnS3",
+      "rate": 7,
+      "name": "2657 Lenox Rd NE APT 134-2",
+      "address": "2657 Lenox Rd NE APT 134-2, Atlanta, GA 30324"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "v51QnkiFcvhWIpzqVxkI",
+      "rate": 9,
+      "name": "515 Cohen St",
+      "address": "515 Cohen St, Atlanta, GA 30310"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "LShVQtD8m4iwkzUz2j36",
+      "rate": 7,
+      "name": "831 Mercury Dr NW",
+      "address": "831 Mercury Dr NW, Atlanta, GA 30331"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "iYsOu4n8laGhyBWVs5ZR",
+      "rate": 6.5,
+      "name": "6947 Gallant Cir SE #10",
+      "address": "6947 Gallant Cir SE #10, Mableton, GA 30126"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "gquOHlJSkaWz5A9iodXq",
+      "rate": 9,
+      "name": "45 Park Place Dr",
+      "address": "45 Park Place Dr, Covington, GA 30016"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "AKEeEDlJkGVF0LHYeboS",
+      "rate": 5,
+      "name": "512 Neese Rd",
+      "address": "512 Neese Rd, Woodstock, GA 30188"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "qapfpHSUCVpF8umG2vfU",
+      "rate": 8,
+      "name": "222 Tanyard St",
+      "address": "222 Tanyard St, Canton, GA 30114"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "MTuI8XKeqvbTAbgWYnZI",
+      "rate": 7.25,
+      "name": "7367 Poppy Way",
+      "address": "7367 Poppy Way, Union City, GA 30291"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "Ucx2o6TJeluX7W1QZvTn",
+      "rate": 5.75,
+      "name": "4580 Cloister Cir",
+      "address": "4580 Cloister Cir, Hampton, GA 30228"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "qj0ZyrIyYYuGWgXkWDNo",
+      "rate": 8,
+      "name": "210 Tanyard St",
+      "address": "210 Tanyard St, Canton, GA 30114"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "7QIMok3YkiGXSHkrpMJR",
+      "rate": 5,
+      "name": "149 Archie Way",
+      "address": "149 Archie Way, Woodstock, GA 30188"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "UwwQ8Ehk52STflR8CW3U",
+      "rate": 5.75,
+      "name": "7680 Banks Mill Rd",
+      "address": "7680 Banks Mill Rd, Douglasville, GA 30135"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "bBdqrJwDZJigiYrxKzmT",
+      "rate": 12,
+      "name": "3500 Asher Ave Little Rock AR 72204",
+      "address": "3500 Asher Ave, Little Rock, AR 72204"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "28mCk3iN1P12ruJUMRU4",
+      "rate": 5,
+      "name": "4955 Flat Creek Rd",
+      "address": "4955 Flat Creek Rd, Oakwood, GA 30566"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "ftoeR5whBv5mWmoAdkiI",
+      "rate": 6,
+      "name": "833 3rd Ave Waverly FL 33877",
+      "address": "833 3rd Ave, Waverly, FL 33877"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "CJYDdBzFLNnHGUIqsgbd",
+      "rate": 10,
+      "name": "5715 Belarbor St Houston TX 77033",
+      "address": "5715 Belarbor St"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "zpgOE0faAGiFYW04RCTt",
+      "rate": 9,
+      "name": "2048 Jack County Dr Forney TX 75126",
+      "address": "2048 Jack County Dr, Forney, TX 75126"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "IzUh9BqyLAEI2l8fhVxs",
+      "rate": 10.5,
+      "name": "2015 Zuefeldt Dr Arlington TX 76002",
+      "address": "2015 Zuefeldt Dr"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "C0nvLY3ztOQyNa5zTXN9",
+      "rate": 10,
+      "name": "8006 White Swan Dr Humble TX 77396",
+      "address": "8006 White Swan Dr,"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "OjgdPknUjhUSIqT87lkN",
+      "rate": 4.5,
+      "name": "1400 s lee circle blytheville ar 72315",
+      "address": "1400 s lee circle"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "lnwwxTIWWH20060S6rM6",
+      "rate": 10,
+      "name": "406 Oriole St Houston TX 77018",
+      "address": "406 Oriole St,"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "YOTApG7gzweNqANV72fU",
+      "rate": 10,
+      "name": "20810 Trenton Valley Ln Katy TX 77449",
+      "address": "20810 Trenton Valley Ln"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "aappjOI8UEwpjTXu5kMl",
+      "rate": 10,
+      "name": "7918 Battleoak Dr Houston TX 77040",
+      "address": "7918 Battleoak Dr"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "NRMRZKeVlyk4mR8Yj0be",
+      "rate": 4.75,
+      "name": "33582 Sky Blossom Cir Leesburg FL 34788",
+      "address": "33582 Sky Blossom Cir,"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "up7ri2TB8SRfwTraIN9G",
+      "rate": 10,
+      "name": "206 E Gilmer St Rice TX 75155",
+      "address": "206 E Gilmer St"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "SYZqy1WnFZiuc47Td27u",
+      "rate": 10,
+      "name": "2907 Kyle St Anna TX 75409",
+      "address": "2907 Kyle St"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "PKyjEq8sbkNFfqMlsygN",
+      "rate": 10,
+      "name": "1221 Simpson Dr Hurst TX 76053",
+      "address": "1221 Simpson Dr"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "PRjeeJuZBao4HFgbERqo",
+      "rate": 10,
+      "name": "3925 Moulton St Greenville TX 75401",
+      "address": "3925 Moulton St"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "oS5qPhUWFUs34WY2oWro",
+      "rate": 10,
+      "name": "1715 Raylene Dr Cleburne TX 76033",
+      "address": "1715 Raylene Dr"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "wPH8SwbEiUrn9pgxqbq8",
+      "rate": 9,
+      "name": "14525 Mainstay Way Haslet TX 76052",
+      "address": "14525 Mainstay Way"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "O0AR0UdSpPhhfcAdNxGQ",
+      "rate": 7,
+      "name": "913 Meadow View Dr Richardson TX 75080",
+      "address": "913 Meadow View Dr"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "hfZ7c2XBd6PgGLIHhvhm",
+      "rate": 8,
+      "name": "1206 Cabernet Dr Allen TX 75002",
+      "address": "1206 Cabernet Dr"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "kNBgq2vOHsVCCD3ateMe",
+      "rate": 8.5,
+      "name": "917 N Jackson St Palestine TX 75801",
+      "address": "917 N Jackson St"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "12OotXnsRyrBtFt5rwzB",
+      "rate": 6.25,
+      "name": "4055 Victor Blvd Kemp TX 75143",
+      "address": "4055 Victor Blvd"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "WFbaLReez5s3fLTAfAy5",
+      "rate": 8,
+      "name": "19173 Greenleaf Dr Flint TX 75762",
+      "address": "19173 Greenleaf Dr"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "tgGetMnLqbslmv0Ltu47",
+      "rate": 5,
+      "name": "1920 Southridge Ln Sherman TX 75092",
+      "address": "1920 Southridge Ln"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "duU755W1ugmAVlTYImHH",
+      "rate": 10,
+      "name": "1002 Jenny Dr Cleburne TX 76031",
+      "address": "1002 Jenny Dr"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "LU6ST07Zxbm1UMyMif1K",
+      "rate": 10,
+      "name": "718 N Union St Whitesboro TX 76273",
+      "address": "718 N Union St"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "lGS4PO4jyoQQcdWdxCFh",
+      "rate": 10,
+      "name": "2460 French St Fate TX 75189",
+      "address": "2460 French St"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "RffmqPIMUlTAW8mP4vDV",
+      "rate": 9,
+      "name": "1816 Memorable Moment Dr Crandall TX 75114",
+      "address": "1816 Memorable Moment Dr"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "Wkps3GxBCvoTKrXjxQOz",
+      "rate": 9,
+      "name": "1200 N 6th St Princeton TX 75407",
+      "address": "1200 N 6th St"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "Iky6SmNue9fBMjkt59Zt",
+      "rate": 8,
+      "name": "719 Jeff Ct Irving TX 75060",
+      "address": "719 Jeff Ct"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "Kr43nodhPZ5GcS2wj837",
+      "rate": 4.5,
+      "name": "3899 Carrick Bend Dr Kissimmee FL 34746",
+      "address": "3899 Carrick Bend Dr"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "8YC62FKrVyUSJuo9Zb37",
+      "rate": 10,
+      "name": "2033 Pleasant Dr Dallas TX 75217",
+      "address": "2033 Pleasant Dr"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "YW4T5T8AuTnte9gJwuNR",
+      "rate": 8,
+      "name": "4870 Highway 67 Hasse TX 76442",
+      "address": "4870 Highway 67"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "teXK4RTMSYoaYFUgG124",
+      "rate": 8.5,
+      "name": "200 Olive St Lone Oak TX 75453",
+      "address": "200 Olive St"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "nNgpv4yBbaxdrzyh5c86",
+      "rate": 8.5,
+      "name": "804 Tyler St Midland TX 79701",
+      "address": "804 Tyler St"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "pWRgLkuD5sg0JTBxFVYx",
+      "rate": 9,
+      "name": "147 Western Lake Dr Weatherford TX 76087",
+      "address": "147 Western Lake Dr"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "xhXaoXnThsTE9Qy289Or",
+      "rate": 9,
+      "name": "1228 Kennie Dr Commerce TX 75428",
+      "address": "1228 Kennie Dr"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "UXI5AXHWrLwtjounhdVe",
+      "rate": 8,
+      "name": "250 County Road 3318 Greenville TX 75402",
+      "address": "250 County Road 3318"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "U02zox68bwwdTkLFPGm0",
+      "rate": 8.75,
+      "name": "11807 Gaston Pkwy Dallas TX 75218",
+      "address": "11807 Gaston Pkwy"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "MtAFWInNZwI0ZmAaeBZ9",
+      "rate": 10,
+      "name": "407 N Dallas St Rice TX 75155",
+      "address": "407 N Dallas St"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "iBmaEDcZpNGDolkiKkbp",
+      "rate": 10,
+      "name": "801 Quebec Dr Garland TX 75040",
+      "address": "801 Quebec Dr"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "nriHRBsfk1q0Zy20pv8b",
+      "rate": 5,
+      "name": "417 W Andrew Dr Mabank TX 75147",
+      "address": "417 W Andrew Dr"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "ussCaKLLiI07DSxno6ui",
+      "rate": 9,
+      "name": "1927 Holcomb Rd Dallas TX 75217",
+      "address": "1927 Holcomb Rd"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "CfOkKFqpYUKaFLReuTku",
+      "rate": 9,
+      "name": "1030 W Five Mile Pkwy Dallas TX 75224",
+      "address": "1030 W Five Mile Pkwy"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "zL2IkYB4FEA7rqG82cMN",
+      "rate": 10,
+      "name": "409 N Dallas St Rice TX 75155",
+      "address": "409 N Dallas St"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "a9RokLoix37MqKXL6liD",
+      "rate": 7,
+      "name": "607 Colwyn Pass San Antonio TX 78216",
+      "address": "607 Colwyn Pass"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "Qo882DwvYAxuonMz2PtZ",
+      "rate": 8,
+      "name": "112 spring valley Adkins TX 78101",
+      "address": "112 spring valley"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "81cTJGanMc2ycrddVGuh",
+      "rate": 5,
+      "name": "917 Nolan San Antonio TX 78202",
+      "address": "917 Nolan"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "W2TPcxismEclLXSAOerR",
+      "rate": 9,
+      "name": "9115 Everton San Antonio TX 78245",
+      "address": "9115 Everton"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "RgL5LBRtk7JnUVNUgmwm",
+      "rate": 6.5,
+      "name": "1216 Forest St Georgetown TX 78626",
+      "address": "1216 Forest St"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "xOna5klK0Ch7p132rn4Q",
+      "rate": 8,
+      "name": "1013 El Dorado Blvd N Cape Coral FL 33993",
+      "address": "1013 El Dorado Blvd N"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "iJzROrMqC6poB7CWmePG",
+      "rate": 10,
+      "name": "4675 River Oak Cir #4675 Brownsville TX 78520",
+      "address": "4675 River Oak Cir #4675"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "fSrkcstAZqaRSz4xIJ8G",
+      "rate": 6,
+      "name": "3406 Mesquite Dr Sugar Land TX 77479",
+      "address": "3406 Mesquite Dr"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "mrh8MrMqH1Os1zDZnzcX",
+      "rate": 9.5,
+      "name": "12930 deep eddy Saint Hedwig TX 78152",
+      "address": "12930 deep eddy"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "k0yQLzwrjtrV6IyVyHkc",
+      "rate": 4,
+      "name": "10034 SW 77th Loop Ocala FL 34481",
+      "address": "10034 SW 77th Loop"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "MTzVrGUVFuTDnfJg2dXP",
+      "rate": 9,
+      "name": "1219 14th St Corpus Christi TX 78404",
+      "address": "1219 14th St"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "oyJ0lI2pJzkEagvzPIiK",
+      "rate": 8,
+      "name": "7319 Holiday Dr Spring Hill FL 34606",
+      "address": "7319 Holiday Dr"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "VgAcLcRETh45crx3MKeA",
+      "rate": 6,
+      "name": "6541 SW 111th Loop Ocala FL 34476",
+      "address": "6541 SW 111th Loop"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "9VUmJyE1ytYYEc5amLHR",
+      "rate": 5.5,
+      "name": "4714 Larcade Dr Corpus Christi TX 78415",
+      "address": "4714 Larcade Dr, Corpus Christi, TX 78415"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "gYKm1QOArTsiwoqWz30J",
+      "rate": 13,
+      "name": "2438 Scotch Moss Dr Corpus Christi TX 78414",
+      "address": "2438 Scotch Moss Dr"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "4HL0fcD9dyaC3EhLWtVP",
+      "rate": 9,
+      "name": "10715 SW 24th Ave Gainesville FL 32608",
+      "address": "10715 SW 24th Ave"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "SsHvXHkKMcDZMMIrwVd2",
+      "rate": 6,
+      "name": "9237 Swiss Road Spring Hill FL 34606",
+      "address": "9237 Swiss Road"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "0n7aIm5fUp9UTQfSYHv6",
+      "rate": 6,
+      "name": "13996 Godbold Rd Tallahassee FL 32309",
+      "address": "13996 Godbold Rd"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "rAqTTG0IEwNd7jigQgN3",
+      "rate": 6,
+      "name": "12301 W Highway 15 Perryton TX 79070",
+      "address": "12301 W Highway 15"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "iz7k8jelTIda8gL3Ltl9",
+      "rate": 5,
+      "name": "280 41st Ave Saint Pete Beach FL 33706",
+      "address": "280 41st Ave"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "udZ9Uv8nukwSO8GJCOXB",
+      "rate": 10,
+      "name": "1150 Orangewood Ave Deland FL 32724",
+      "address": "1150 Orangewood Ave"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "EEXIzQCPYAJps3UGdoia",
+      "rate": 8,
+      "name": "16 N 1st St Defuniak Springs FL 32433",
+      "address": "16 N 1st St"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "f9AaM3xD3t3md5RWjUxR",
+      "rate": 6,
+      "name": "6240 Tributary St Pensacola FL 32526",
+      "address": "6240 Tributary St"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "WYKyNVsg7MSzSYndPmsR",
+      "rate": 7,
+      "name": "304 Highway 98 Carrabelle FL 32322",
+      "address": "304 Highway 98"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "K1powEjC5nxePtBDhhtR",
+      "rate": 8.5,
+      "name": "4313 County Road 311 Henderson TX 75654",
+      "address": "4313 County Road 311"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "BeNtnl24hgRpMM9mxTM8",
+      "rate": 7,
+      "name": "208 Weaver Ave Lake Wales FL 33853",
+      "address": "208 Weaver Ave"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "YgyXflNomI5cNYxoM9G1",
+      "rate": 10,
+      "name": "4545 Fairway Oaks Dr Mulberry FL 33860",
+      "address": "4545 Fairway Oaks Dr"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "cR0TK4mObuVSkMuBwBmY",
+      "rate": 9,
+      "name": "8605 Puerto Viejo Laredo TX 78045",
+      "address": "8605 Puerto Viejo"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "3p3hkBJUT4mPosAvrTCr",
+      "rate": 7.75,
+      "name": "11949 Jim Webb Dr El Paso TX 79934",
+      "address": "11949 Jim Webb Dr"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "NXosZFbcBLu52cmT4v4p",
+      "rate": 10,
+      "name": "3405 Sirius Ave El Paso TX 79904",
+      "address": "3405 Sirius Ave"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "USYRLt7dZnLG3WjgdXUx",
+      "rate": 9,
+      "name": "2983 Point St North Port FL 34286",
+      "address": "2983 Point St"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "Oy7OgEW8KEbctZR3DHoz",
+      "rate": 8,
+      "name": "2299 Athens St Brownsville TX 78520",
+      "address": "2299 Athens St"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "NGZDjFSbiuQDwkK5VVjL",
+      "rate": 9.5,
+      "name": "103 Faith Dr La Feria TX 78559",
+      "address": "103 Faith Dr"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "rcuP9y5jXJe58nk6I7Vt",
+      "rate": 10,
+      "name": "509 N 6th St Donna TX 78537",
+      "address": "509 N 6th St"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "QsgZfBFoM3xlTZRLhXpb",
+      "rate": 10,
+      "name": "2612 Ashley Dr Garland TX 75041",
+      "address": "2612 Ashley Dr"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "RTVreTLpxLM0MGUQX3Ku",
+      "rate": 6,
+      "name": "3005 W Wilder Ave Tampa FL 33614",
+      "address": "3005 W Wilder Ave, Tampa, FL 33614"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "dV60mMCmWgSAg5uf8Nol",
+      "rate": 6,
+      "name": "821 S Roy Reynolds Dr",
+      "address": "821 S Roy Reynolds Dr, Harker Heights, TX 76548"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "ek3YGXdQGSaXT1fpGbqm",
+      "rate": 10,
+      "name": "3730 E Davis Rd Edinburg TX 78542",
+      "address": "3730 E Davis Rd"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "XDqZxRzN3mNdEh9o19kS",
+      "rate": 8,
+      "name": "504 Graneros Ave Laredo TX 78043",
+      "address": "504 Graneros Ave"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "XBjDwTrIc0dSCkSEfyth",
+      "rate": 6,
+      "name": "1421 Chisholm Ridge Ct",
+      "address": "1421 Chisholm Ridge Ct, Saint Cloud, FL 34771"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "o51eOpExycqAnFiJY6W6",
+      "rate": 10,
+      "name": "3330 Calle Bolivia Brownsville TX 78526",
+      "address": "3330 Calle Bolivia"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "wJ0MCCivf8ets9GmKQSN",
+      "rate": 9,
+      "name": "2431 Summer Breeze Rd Mission TX 78572",
+      "address": "2431 Summer Breeze Rd"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "cm05nDut0HyjuEYgqRH6",
+      "rate": 10,
+      "name": "2303 SW 43rd Ter Cape Coral FL 33914",
+      "address": "2303 SW 43rd Ter, Cape Coral, FL 33914"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "mlzCm9nftVNuN04FSoPx",
+      "rate": 10,
+      "name": "916 swallows Seguin TX 78155",
+      "address": "916 swallows, Seguin, TX 78155"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "jpohoNbkHkJVXtqXUHgq",
+      "rate": 7.25,
+      "name": "136 Allington Cir Jarrell TX 76537",
+      "address": "136 Allington Cir"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "I5Sed2Bxyvljl9CyYLSh",
+      "rate": 10,
+      "name": "110 Moses Hughes Blanco TX 78606",
+      "address": "110 Moses Hughes"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "W47qwzouDFX4v6Tmj4pd",
+      "rate": 7,
+      "name": "7119 Satellite Way San Antonio TX 78252",
+      "address": "7119 Satellite Way"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "1ErfE4R0iJDrzJR1EnCp",
+      "rate": 7,
+      "name": "512 Raven WAY Naples FL 34110",
+      "address": "512 Raven WAY"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "gwt0zG57A3CGDthWXyZ2",
+      "rate": 10,
+      "name": "515 Mitchell Ave Seguin TX 78155",
+      "address": "515 Mitchell Ave, Seguin, TX 78155"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "dujtVGKJY8D6inzQjHgC",
+      "rate": 8,
+      "name": "315 Murcia Laredo TX 78046",
+      "address": "315 Murcia"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "RQsFIveZlEsta9ia1Cky",
+      "rate": 10,
+      "name": "1110 Andean Emerald San Antonio TX 78253",
+      "address": "1110 Andean Emerald"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "zSCLyrjTKlEfDZXlT3ZU",
+      "rate": 9,
+      "name": "641 Weber Seguin TX 78155",
+      "address": "641 Weber"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "EmeKOpvvf8D2LprzTgdA",
+      "rate": 10,
+      "name": "433 byrd Universal City TX 78148",
+      "address": "433 byrd"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "A3wwCKxjZY2F5fkCDmbj",
+      "rate": 7.5,
+      "name": "437 Middle Green Floresville TX 78114",
+      "address": "437 Middle Green, Floresville, TX 78114"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "oWCU5feVB6sBAgxHznlD",
+      "rate": 8,
+      "name": "1907 Campbell Rd",
+      "address": "1907 Campbell Rd"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "jLUSRl4yY8f0tqepS7U4",
+      "rate": 5,
+      "name": "3041 FM 3335 Stockdale TX 78160",
+      "address": "3041 FM 3335"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "WOSG5X7KOheB4O1D8zxK",
+      "rate": 10,
+      "name": "534 Mary San Antonio TX 78214",
+      "address": "534 Mary"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "ncllPfgfwF6CULpzRQjE",
+      "rate": 6,
+      "name": "4005 ST CHARLES BAY #4005 San Antonio TX 78229",
+      "address": "4005 ST CHARLES BAY #4005"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "JLoQU5uo1sQH9anHIUm9",
+      "rate": 1,
+      "name": "1296 Monasco Rd",
+      "address": "1296 Monasco Rd"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "t3UQF2MTqIj7dQ0vEGg1",
+      "rate": 8,
+      "name": "778 F St San Antonio TX 78220",
+      "address": "778 F St"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "LKwMD4Ol8PylfUsuqjBL",
+      "rate": 10,
+      "name": "5723 Soothing Water San Antonio TX 78244",
+      "address": "5723 Soothing Water"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "5rNGF4XKC0LPS04JtRDd",
+      "rate": 10,
+      "name": "611 KIRK PL San Antonio TX 78225",
+      "address": "611 KIRK PL"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "n8H6GiY2UfiyJXhrMuQT",
+      "rate": 8.25,
+      "name": "3422 Quintana Trl Seguin TX 78155",
+      "address": "3422 Quintana Trl"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "yDXbGV4KpLJ4H1XlaYbu",
+      "rate": 9,
+      "name": "5455 Dabney San Antonio TX 78227",
+      "address": "5455 Dabney"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "kML20ieI2skHBz3b7dNt",
+      "rate": 8,
+      "name": "343 Goodhue San Antonio TX 78218",
+      "address": "343 Goodhue"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "2A69q01bFoJeA9LDM34S",
+      "rate": 5,
+      "name": "140 Great Oaks Blvd La Vernia TX 78121",
+      "address": "140 Great Oaks Blvd, La Vernia, TX 78121"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "WLTlGPDFM0IYNM6IoJHy",
+      "rate": 8,
+      "name": "14815 Raintree run San Antonio TX 78233",
+      "address": "14815 Raintree run"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "i5bBmwaZgYfseBR334e2",
+      "rate": 10,
+      "name": "7941 FM 1346 lot 7 San Antonio TX 78109",
+      "address": "7941 FM 1346 lot 7"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "Kr1SNzvn58c0jsN2Sffu",
+      "rate": 8.2,
+      "name": "14745 Babcock Rd #204 San Antonio TX 78249",
+      "address": "14745 Babcock Rd #204"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "YhK5g12yUDxGiiVh6tjc",
+      "rate": 8,
+      "name": "7923 Santa Catalina San Antonio TX 78250",
+      "address": "7923 Santa Catalina"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "xaYDEaUqvcuhQy89GGy4",
+      "rate": 4,
+      "name": "1210 WAVERLY AVE San Antonio TX 78201",
+      "address": "1210 WAVERLY AVE"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "sQx2niBBgOfS7EgiW5jw",
+      "rate": 7,
+      "name": "1469 Twin Cv Kyle TX 78640",
+      "address": "1469 Twin Cv"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "qFcIiicV6qrDpJ2pcGgy",
+      "rate": 9,
+      "name": "343 CANTON San Antonio TX 78202",
+      "address": "343 CANTON"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "sFlvhag1VYZzEL6Rpe5Y",
+      "rate": 8.25,
+      "name": "1306 Nolan San Antonio TX 78202",
+      "address": "1306 Nolan"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "8GjrHGWbkjZpTVzA7tHD",
+      "rate": 4,
+      "name": "138 DUNNING AVE San Antonio TX 78210",
+      "address": "138 DUNNING AVE"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "XyT4wp1iB5U0vWyIj7nZ",
+      "rate": 7,
+      "name": "1215 LAMAR ST San Antonio TX 78202",
+      "address": "1215 LAMAR ST"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "RW56JKTZf8zG0cUoxrGP",
+      "rate": 3,
+      "name": "9323 Chattanooga San Antonio TX 78240",
+      "address": "9323 Chattanooga"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "H86zWNpTrwiLo1H2igHR",
+      "rate": 11,
+      "name": "10251 Crystal View Universal City TX 78148",
+      "address": "10251 Crystal View"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "MVX8v6GxLvQpr3Udltp4",
+      "rate": 7,
+      "name": "715 Sumner San Antonio TX 78209",
+      "address": "715 Sumner"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "BbN2Cw8Lf5I9lvZbnrQc",
+      "rate": 6,
+      "name": "1959 Gruene New Braunfels TX 78130",
+      "address": "1959 Gruene"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "hmo75vX8EKTYKgaiWvhl",
+      "rate": 11,
+      "name": "444 BEVERLY DR San Antonio TX 78228",
+      "address": "444 BEVERLY DR"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "N5Hy167j8goeJGkjGjVo",
+      "rate": 2.99,
+      "name": "3105 High Meadow St Seguin TX 78155",
+      "address": "3105 High Meadow St"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "UrGNpHrSrbppv3mNOwVY",
+      "rate": 10,
+      "name": "435 Gould San Antonio TX 78207",
+      "address": "435 Gould"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "B9e6Ed6cYxj5JNVhIub1",
+      "rate": 14,
+      "name": "8815 SEBEC CIR San Antonio TX 78250",
+      "address": "8815 SEBEC CIR"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "4hw7GGrOdJgCIPufF1A0",
+      "rate": 6.5,
+      "name": "3228 Millmar Dr Dallas TX 75228",
+      "address": "3228 Millmar Dr"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "PS31eQ7CfSHjJD7a6dqY",
+      "rate": 6.5,
+      "name": "7305 Ridgeview Dr Rowlett TX 75089",
+      "address": "7305 Ridgeview Dr"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "Di2mSAZhgpjuSxkpAySx",
+      "rate": 6,
+      "name": "133 Black Oak Canyon Lake TX 78133",
+      "address": "133 Black Oak"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "Ryc2mw2qMxGbVdRPDuyN",
+      "rate": 7,
+      "name": "10034 Mill Valley Ln Dallas TX 75217",
+      "address": "10034 Mill Valley Ln"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "3WC0zwoOcUFeYwr7mQQc",
+      "rate": 10,
+      "name": "6601 Mediterranean Dr UNIT 6402 McKinney TX 75072",
+      "address": "6601 Mediterranean Dr UNIT 6402"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "VlwdDvRofjSRLgJFYRHg",
+      "rate": 6,
+      "name": "513 N San Marcos St Seguin TX 78155",
+      "address": "513 N San Marcos St"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "lsAOLsT8G0vaznzQo4r9",
+      "rate": 9,
+      "name": "6812 Lakeside Dr Lake Worth TX 76135",
+      "address": "6812 Lakeside Dr"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "lztjJ11JfpZ60e2K3oFl",
+      "rate": 8.5,
+      "name": "4217 Pinon Ridge Dr San Angelo TX 76904",
+      "address": "4217 Pinon Ridge Dr"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "VFFVan1Gq7e7DA4i8vIR",
+      "rate": 9,
+      "name": "14247 Greenhaw Ln Dallas TX 75253",
+      "address": "14247 Greenhaw Ln, Dallas, TX 75253"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "qZmy1RwvDWjhjQgiqAxk",
+      "rate": 5,
+      "name": "9543 Enstone Cir Spring TX 77379",
+      "address": "9543 Enstone Cir"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "oHs2VXxuH5h8EGcC8VNN",
+      "rate": 8,
+      "name": "3482 Bandera Rd Fort Worth TX 76116",
+      "address": "3482 Bandera Rd"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "HXqa0oPxwCoQCSqEnoMZ",
+      "rate": 7,
+      "name": "3302 High Plateau Dr Garland TX 75044",
+      "address": "3302 High Plateau Dr"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "Mx7zgmreq2eNnO1c5fB5",
+      "rate": 8,
+      "name": "8215 Twining Oaks Ln Spring TX 77379",
+      "address": "8215 Twining Oaks Ln"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "fcH5UooCLK8HsIiaWpv6",
+      "rate": 8.5,
+      "name": "219 Hillcrest St Sanger TX 76266",
+      "address": "219 Hillcrest St"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "L4eT7xQWWbDz0nA6Nnhu",
+      "rate": 8,
+      "name": "910 Lohaina Ct Kemp TX 75143",
+      "address": "910 Lohaina Ct"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "e0n63H2Eo4I7OvJ97Qbg",
+      "rate": 9.5,
+      "name": "6404 Brentwood Dr Fort Worth TX 76112",
+      "address": "6404 Brentwood Dr"
+    },
+    {
+      "status": "already_correct",
+      "opportunityId": "RR6N5vMjC0YpaHuRy4kp",
+      "rate": 5,
+      "name": "1008 E College St Seguin TX 78155",
+      "address": "1008 E College St"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "TAEkYNqV06p8eAJLInWH",
+      "rate": 6,
+      "name": "237 W Brooklyn Ave Dallas TX 75208",
+      "address": "237 W Brooklyn Ave"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "O1lvFuOkElYbe2mFASLk",
+      "rate": 7.5,
+      "name": "2401 Ranger Pass Seguin TX 78155",
+      "address": "2401 Ranger Pass"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "rNh7HPecRFK41uCperUe",
+      "rate": 9,
+      "name": "4911 Dare Ln San Antonio TX 78217",
+      "address": "4911 Dare Ln"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "vKmyVSzSIiYmHIlorl0g",
+      "rate": 10,
+      "name": "1018 W Brockett St Sherman TX 75092",
+      "address": "1018 W Brockett St"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "OONs8jkSpLnS5DduX7s3",
+      "rate": 5.5,
+      "name": "1505 Line Dance Ct Killeen TX 76542",
+      "address": "1505 Line Dance Ct"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "RTCH6CQMNYH4FZq0zx6P",
+      "rate": 7,
+      "name": "1415 Mearns Meadow Blvd Austin TX 78758",
+      "address": "1415 Mearns Meadow Blvd, Austin, TX 78758"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "3rphtuz0gGQA1t9jvcxw",
+      "rate": 9,
+      "name": "11518 Munn St Houston TX 77029",
+      "address": "11518 Munn St"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "G4GQkiCyuH7Di36M5nfU",
+      "rate": 5.5,
+      "name": "12105 Rosita Ct Austin TX 78748",
+      "address": "12105 Rosita Ct, Austin, TX 78748"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "BXdw4RDncJYJTycNJ0OL",
+      "rate": 8,
+      "name": "4504 Hunt Cir Killeen TX 76543",
+      "address": "4504 Hunt Cir Killeen, TX, 76543"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "SZyaq663vuD1mnUronuu",
+      "rate": 7.5,
+      "name": "240 Shadow Oak Dr Bastrop TX 78602",
+      "address": "240 Shadow Oak Dr, Bastrop, TX 78602"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "k4yA28PFbTgaW67znL9v",
+      "rate": 6.5,
+      "name": "12001 Vista Parke Dr #1002 Austin TX 78726",
+      "address": "12001 Vista Parke Dr #1002, Austin, TX 78726"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "Z1FCBGYfFShGVzVFGyVP",
+      "rate": 8.5,
+      "name": "1105 Lohmans Crossing Rd Lakeway TX 78734",
+      "address": "1105 Lohmans Crossing Rd, Lakeway, TX 78734"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "YO5uRIeAif1GAXyMvisw",
+      "rate": 5.5,
+      "name": "1003 Fauntleroy Trail Austin TX 78758",
+      "address": "1003 Fauntleroy Trail, Austin, TX 78758"
+    },
+    {
+      "status": "not_found",
+      "opportunityId": "IjcqyPKhvnWNOnQ3NjpK",
+      "rate": 7,
+      "name": "108 Augusta Ln Wimberley TX 78676",
+      "address": "108 Augusta Ln, Wimberley, TX 78676"
+    }
+  ],
+  "timestamp": "2025-09-18T11:33:00.895Z"
+}

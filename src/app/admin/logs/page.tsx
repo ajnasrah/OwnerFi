@@ -104,8 +104,8 @@ export default function AdminLogsPage() {
       });
 
       setLogs(logEntries);
-    } catch (error) {
-      console.error('Failed to fetch logs:', error);
+    } catch {
+      // Failed to fetch logs
     } finally {
       setLoading(false);
     }

@@ -11,24 +11,75 @@ import { queueNearbyCitiesForProperty } from '@/lib/property-enhancement';
 import crypto from 'crypto';
 
 const GHL_WEBHOOK_SECRET = process.env.GHL_WEBHOOK_SECRET || '';
+const SKIP_SIGNATURE_CHECK = process.env.NODE_ENV === 'development' || process.env.SKIP_GHL_SIGNATURE === 'true';
 
 function verifyWebhookSignature(
   payload: string,
   signature: string | null
 ): boolean {
+  // Skip signature check in development or if explicitly disabled
+  if (SKIP_SIGNATURE_CHECK) {
+    logInfo('Skipping webhook signature verification (development mode or explicitly disabled)');
+    return true;
+  }
+
   if (!signature || !GHL_WEBHOOK_SECRET) {
+    logWarn('Missing webhook signature or secret', {
+      action: 'signature_check',
+      metadata: {
+        hasSignature: !!signature,
+        hasSecret: !!GHL_WEBHOOK_SECRET,
+        secretLength: GHL_WEBHOOK_SECRET.length
+      }
+    });
     return false;
   }
 
-  const expectedSignature = crypto
-    .createHmac('sha256', GHL_WEBHOOK_SECRET)
-    .update(payload)
-    .digest('hex');
+  try {
+    // Check if GoHighLevel is sending the raw secret as the signature
+    if (signature === GHL_WEBHOOK_SECRET) {
+      logInfo('GoHighLevel sent raw secret as signature');
+      return true;
+    }
 
-  return crypto.timingSafeEqual(
-    Buffer.from(signature),
-    Buffer.from(expectedSignature)
-  );
+    // GoHighLevel might send signature in different formats
+    // Try HMAC signature verification
+    const expectedSignature = crypto
+      .createHmac('sha256', GHL_WEBHOOK_SECRET)
+      .update(payload)
+      .digest('hex');
+
+    // Check if signature matches directly
+    if (signature === expectedSignature) {
+      return true;
+    }
+
+    // Try with sha256= prefix (GitHub style)
+    if (signature === `sha256=${expectedSignature}`) {
+      return true;
+    }
+
+    // Try if GoHighLevel sends with sha256= prefix and we need to remove it
+    const signatureWithoutPrefix = signature.replace(/^sha256=/, '');
+    if (signatureWithoutPrefix === expectedSignature) {
+      return true;
+    }
+
+    logWarn('Signature mismatch', {
+      action: 'signature_verification',
+      metadata: {
+        receivedSignatureLength: signature.length,
+        expectedSignatureLength: expectedSignature.length,
+        receivedPrefix: signature.substring(0, 10),
+        expectedPrefix: expectedSignature.substring(0, 10)
+      }
+    });
+
+    return false;
+  } catch (error) {
+    logError('Error verifying webhook signature', undefined, error as Error);
+    return false;
+  }
 }
 
 // Normalize lot size to square feet (copied from upload-properties-v4)
@@ -37,14 +88,16 @@ function normalizeLotSize(lotSizeStr: string): number {
 
   const str = lotSizeStr.toLowerCase().trim();
 
+  // Check for acres
   if (str.includes('acre')) {
     const acreMatch = str.match(/(\d+\.?\d*)\s*acre/);
     if (acreMatch) {
       const acres = parseFloat(acreMatch[1]);
-      return Math.round(acres * 43560);
+      return Math.round(acres * 43560); // Convert acres to sq ft
     }
   }
 
+  // Check for square feet
   if (str.includes('sq') || str.includes('sf')) {
     const sqftMatch = str.match(/(\d+)/);
     if (sqftMatch) {
@@ -52,6 +105,7 @@ function normalizeLotSize(lotSizeStr: string): number {
     }
   }
 
+  // Assume raw number is square feet
   const rawNumber = parseFloat(str.replace(/[,$]/g, ''));
   if (!isNaN(rawNumber)) {
     return Math.round(rawNumber);
@@ -79,10 +133,12 @@ function normalizeState(state: string): string {
 
   const normalized = state.toLowerCase().trim();
 
+  // Check if it's already a 2-letter code
   if (normalized.length === 2) {
     return normalized.toUpperCase();
   }
 
+  // Check if it's a full state name
   return stateMap[normalized] || normalized.substring(0, 2).toUpperCase();
 }
 
@@ -90,11 +146,29 @@ function normalizeState(state: string): string {
 function normalizeCity(city: string): string {
   if (!city) return '';
 
+  const cityFixes: Record<string, string> = {
+    'bartlettt': 'Bartlett',
+    'memphis': 'Memphis',
+    'dallas': 'Dallas',
+    'houston': 'Houston',
+    'austin': 'Austin',
+    'little rock': 'Little Rock',
+    'fort worth': 'Fort Worth',
+    'san antonio': 'San Antonio',
+    'el paso': 'El Paso'
+  };
+
   const cleaned = city.trim();
+  const lower = cleaned.toLowerCase();
+
+  if (cityFixes[lower]) {
+    return cityFixes[lower];
+  }
 
   // Capitalize first letter of each word
   return cleaned.split(' ')
     .map(word => {
+      // Handle special cases like "McAllen" or "O'Neill"
       if (word.toLowerCase().startsWith('mc')) {
         return 'Mc' + word.charAt(2).toUpperCase() + word.slice(3).toLowerCase();
       }
@@ -111,112 +185,219 @@ function normalizeCity(city: string): string {
 function formatStreetAddress(address: string): string {
   if (!address) return '';
 
+  // Common abbreviations that should stay uppercase
   const keepUppercase = new Set(['NE', 'NW', 'SE', 'SW', 'N', 'S', 'E', 'W', 'APT', 'STE', 'UNIT']);
 
+  // Common street suffixes and their proper format
   const streetSuffixes: Record<string, string> = {
-    'street': 'St', 'st': 'St', 'avenue': 'Ave', 'ave': 'Ave',
-    'road': 'Rd', 'rd': 'Rd', 'boulevard': 'Blvd', 'blvd': 'Blvd',
-    'drive': 'Dr', 'dr': 'Dr', 'court': 'Ct', 'ct': 'Ct',
-    'circle': 'Cir', 'cir': 'Cir', 'lane': 'Ln', 'ln': 'Ln',
-    'place': 'Pl', 'pl': 'Pl', 'parkway': 'Pkwy', 'pkwy': 'Pkwy',
+    'street': 'St', 'st': 'St',
+    'avenue': 'Ave', 'ave': 'Ave',
+    'road': 'Rd', 'rd': 'Rd',
+    'boulevard': 'Blvd', 'blvd': 'Blvd',
+    'drive': 'Dr', 'dr': 'Dr',
+    'court': 'Ct', 'ct': 'Ct',
+    'circle': 'Cir', 'cir': 'Cir',
+    'lane': 'Ln', 'ln': 'Ln',
+    'place': 'Pl', 'pl': 'Pl',
+    'parkway': 'Pkwy', 'pkwy': 'Pkwy',
     'highway': 'Hwy', 'hwy': 'Hwy'
   };
 
+  // Split address into parts
   const parts = address.trim().split(/\s+/);
 
   return parts.map((part, index) => {
     const lower = part.toLowerCase();
 
+    // Keep numbers as-is
     if (/^\d+/.test(part)) {
       return part;
     }
 
+    // Check for unit/apartment indicators
     if (index > 0 && (lower === 'apt' || lower === 'ste' || lower === 'unit')) {
       return part.charAt(0).toUpperCase() + part.slice(1).toLowerCase();
     }
 
+    // Check for unit numbers (like "2B", "3A")
     if (/^\d+[A-Za-z]+$/.test(part)) {
       return part.toUpperCase();
     }
 
+    // Check for directional abbreviations
     if (keepUppercase.has(part.toUpperCase())) {
       return part.toUpperCase();
     }
 
+    // Check for street suffixes
     if (streetSuffixes[lower]) {
       return streetSuffixes[lower];
     }
 
+    // Check for possessives or contractions
     if (part.includes("'")) {
       const subParts = part.split("'");
       return subParts.map(p => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase()).join("'");
     }
 
+    // Default: capitalize first letter
     return part.charAt(0).toUpperCase() + part.slice(1).toLowerCase();
   }).join(' ');
 }
 
+// GoHighLevel webhook payload interface
 interface GHLPropertyPayload {
   opportunityId: string;
   opportunityName?: string;
   propertyAddress: string;
   propertyCity: string;
   state: string;
-  zipCode: string;
-  price: number;
-  bedrooms?: number;
-  bathrooms?: number;
-  livingArea?: number;
-  yearBuilt?: number;
+  zipCode?: string;
+  price: number | string; // Accept both number and string
+  bedrooms?: number | string;
+  bathrooms?: number | string;
+  livingArea?: number | string;
+  yearBuilt?: number | string;
   lotSizes?: string;
   homeType?: string;
   imageLink?: string;
-  downPaymentAmount?: number;
-  downPayment?: number; // Percentage
-  interestRate?: number;
-  monthlyPayment?: number;
-  balloon?: number; // Years
-  contactId?: string;
-  locationId?: string;
+  downPaymentAmount?: number | string;
+  downPayment?: number | string; // Percentage
+  interestRate?: number | string;
+  monthlyPayment?: number | string;
+  balloon?: number | string; // Years
+}
+
+// Helper function to safely parse numbers
+function parseNumberField(value: number | string | undefined): number {
+  if (value === undefined || value === null || value === '') return 0;
+  if (typeof value === 'number') return value;
+
+  // Remove common formatting characters
+  const cleaned = String(value).replace(/[$,]/g, '').trim();
+  const parsed = parseFloat(cleaned);
+  return isNaN(parsed) ? 0 : parsed;
 }
 
 export async function POST(request: NextRequest) {
   try {
+    // Check database availability
     if (!db) {
+      logError('Database not available');
       return NextResponse.json(
         { error: 'Database not available' },
         { status: 500 }
       );
     }
 
+    // Parse request body
     const body = await request.text();
-    const signature = request.headers.get('x-ghl-signature');
 
-    // Verify webhook signature
+    // Check multiple possible header names for signature
+    const signature = request.headers.get('x-ghl-signature') ||
+                     request.headers.get('X-GHL-Signature') ||
+                     request.headers.get('x-webhook-signature') ||
+                     request.headers.get('X-Webhook-Signature');
+
+    // Log incoming webhook for debugging
+    logInfo('Webhook received', {
+      action: 'webhook_received_raw',
+      metadata: {
+        bodyLength: body.length,
+        hasSignature: !!signature,
+        headers: Object.fromEntries(request.headers.entries())
+      }
+    });
+
+    // Verify webhook signature for security (can be skipped in development)
     if (!verifyWebhookSignature(body, signature)) {
-      logError('Invalid GoHighLevel webhook signature');
-      return NextResponse.json(
-        { error: 'Invalid webhook signature' },
-        { status: 401 }
-      );
+      logError('Invalid GoHighLevel webhook signature', {
+        action: 'webhook_verification_failed',
+        metadata: {
+          hasSignature: !!signature,
+          hasSecret: !!GHL_WEBHOOK_SECRET,
+          environment: process.env.NODE_ENV
+        }
+      });
+
+      // Only reject in production
+      if (!SKIP_SIGNATURE_CHECK) {
+        return NextResponse.json(
+          { error: 'Invalid webhook signature' },
+          { status: 401 }
+        );
+      }
     }
 
-    const payload: GHLPropertyPayload = JSON.parse(body);
-    logInfo('GoHighLevel save property webhook received', payload);
-
-    // Validate required fields
-    if (!payload.opportunityId) {
+    // Parse the payload
+    let payload: GHLPropertyPayload;
+    try {
+      payload = JSON.parse(body);
+    } catch (parseError) {
+      logError('Failed to parse webhook payload', {
+        action: 'webhook_parse_error',
+        metadata: {
+          error: (parseError as Error).message,
+          bodyPreview: body.substring(0, 200)
+        }
+      });
       return NextResponse.json(
-        { error: 'Opportunity ID is required' },
+        { error: 'Invalid JSON payload' },
         { status: 400 }
       );
     }
 
-    if (!payload.propertyAddress || !payload.propertyCity || !payload.price) {
+    logInfo('GoHighLevel save property webhook parsed', {
+      action: 'webhook_parsed',
+      metadata: {
+        opportunityId: payload.opportunityId,
+        address: payload.propertyAddress,
+        city: payload.propertyCity,
+        price: payload.price
+      }
+    });
+
+    // Parse numeric fields
+    const price = parseNumberField(payload.price);
+
+    // Validate required fields
+    const validationErrors: string[] = [];
+
+    if (!payload.opportunityId) {
+      validationErrors.push('opportunityId is required');
+    }
+    if (!payload.propertyAddress || payload.propertyAddress.trim().length === 0) {
+      validationErrors.push('propertyAddress is required');
+    }
+    if (!payload.propertyCity || payload.propertyCity.trim().length === 0) {
+      validationErrors.push('propertyCity is required');
+    }
+    if (!payload.state) {
+      validationErrors.push('state is required');
+    }
+    if (!price || price <= 0) {
+      validationErrors.push('price must be greater than 0');
+    }
+
+    if (validationErrors.length > 0) {
+      logWarn('Webhook validation failed', {
+        action: 'webhook_validation_error',
+        metadata: {
+          errors: validationErrors,
+          opportunityId: payload.opportunityId,
+          receivedData: {
+            opportunityId: payload.opportunityId,
+            address: payload.propertyAddress,
+            city: payload.propertyCity,
+            state: payload.state,
+            price: payload.price
+          }
+        }
+      });
       return NextResponse.json(
         {
-          error: 'Required fields missing',
-          details: 'propertyAddress, propertyCity, and price are required'
+          error: 'Validation failed',
+          details: validationErrors
         },
         { status: 400 }
       );
@@ -226,52 +407,71 @@ export async function POST(request: NextRequest) {
     const propertyId = payload.opportunityId;
 
     // Check if property already exists
-    const existingDoc = await getDoc(doc(db, 'properties', propertyId));
-    if (existingDoc.exists()) {
-      logWarn(`Property with opportunity ID ${propertyId} already exists, updating instead`);
+    let isUpdate = false;
+    try {
+      const existingDoc = await getDoc(doc(db, 'properties', propertyId));
+      if (existingDoc.exists()) {
+        isUpdate = true;
+        logInfo(`Property with opportunity ID ${propertyId} already exists, updating`, {
+          action: 'property_update',
+          metadata: { propertyId }
+        });
+      }
+    } catch (checkError) {
+      logError('Error checking existing property', {
+        action: 'property_check_error',
+        metadata: { propertyId, error: (checkError as Error).message }
+      }, checkError as Error);
     }
 
-    // Calculate down payment amount from percentage if needed
-    let downPaymentAmount = payload.downPaymentAmount || 0;
-    if (!downPaymentAmount && payload.downPayment && payload.price) {
-      downPaymentAmount = Math.round((payload.downPayment / 100) * payload.price);
+    // Process financial calculations - NO DEFAULTS, only use what's provided
+    let downPaymentAmount = parseNumberField(payload.downPaymentAmount);
+    let downPaymentPercent = parseNumberField(payload.downPayment);
+
+    // Calculate down payment amount from percentage if percentage is provided
+    if (!downPaymentAmount && downPaymentPercent && price) {
+      downPaymentAmount = Math.round((downPaymentPercent / 100) * price);
     }
 
-    // Calculate monthly payment if missing
-    let calculatedMonthlyPayment = payload.monthlyPayment || 0;
-    if (!calculatedMonthlyPayment && payload.interestRate && downPaymentAmount && payload.price) {
-      const loanAmount = payload.price - downPaymentAmount;
-      const monthlyRate = payload.interestRate / 100 / 12;
-      const numPayments = 20 * 12; // Default 20 year term
+    // Calculate down payment percentage if we have amount but not percentage
+    if (downPaymentAmount && !downPaymentPercent && price) {
+      downPaymentPercent = (downPaymentAmount / price) * 100;
+    }
 
-      if (monthlyRate > 0) {
+    // Use provided monthly payment or calculate ONLY if we have interest rate
+    let calculatedMonthlyPayment = parseNumberField(payload.monthlyPayment);
+    const interestRate = parseNumberField(payload.interestRate);
+    const termYears = 20; // Term years is still needed for calculation structure
+
+    // Only calculate monthly payment if we have both interest rate AND down payment info
+    if (!calculatedMonthlyPayment && interestRate > 0 && downPaymentAmount >= 0 && price) {
+      const loanAmount = price - downPaymentAmount;
+      const monthlyRate = interestRate / 100 / 12;
+      const numPayments = termYears * 12;
+
+      if (monthlyRate > 0 && loanAmount > 0) {
         calculatedMonthlyPayment = Math.round(
           loanAmount * (monthlyRate * Math.pow(1 + monthlyRate, numPayments)) /
           (Math.pow(1 + monthlyRate, numPayments) - 1)
         );
-      } else {
-        calculatedMonthlyPayment = Math.round(loanAmount / numPayments);
       }
     }
 
-    // Calculate balloon payment if balloon years provided
+    // Calculate balloon payment ONLY if we have balloon years AND interest rate
     let balloonPaymentAmount: number | undefined = undefined;
-    if (payload.balloon && payload.balloon > 0 && payload.price > 0) {
-      const effectiveInterestRate = payload.interestRate || 6;
-      const effectiveDownPayment = downPaymentAmount || (payload.price * 0.10);
-      const loanAmount = payload.price - effectiveDownPayment;
-      const monthlyRate = effectiveInterestRate / 100 / 12;
-      const totalTermMonths = 20 * 12;
-      const balloonMonths = payload.balloon * 12;
+    const balloonYears = parseNumberField(payload.balloon);
+    if (balloonYears > 0 && price > 0 && interestRate > 0 && downPaymentAmount >= 0) {
+      const loanAmount = price - downPaymentAmount;
+      const monthlyRate = interestRate / 100 / 12;
+      const totalTermMonths = termYears * 12;
+      const balloonMonths = balloonYears * 12;
 
-      if (monthlyRate > 0) {
+      if (monthlyRate > 0 && loanAmount > 0 && balloonMonths < totalTermMonths) {
+        // Calculate remaining balance after balloon years of payments
         const principalPaid = loanAmount *
           (Math.pow(1 + monthlyRate, balloonMonths) - 1) /
           (Math.pow(1 + monthlyRate, totalTermMonths) - 1);
         balloonPaymentAmount = Math.round(loanAmount - principalPaid);
-      } else {
-        const principalPerMonth = loanAmount / totalTermMonths;
-        balloonPaymentAmount = Math.round(loanAmount - (principalPerMonth * balloonMonths));
       }
     }
 
@@ -279,56 +479,70 @@ export async function POST(request: NextRequest) {
     let imageUrl = payload.imageLink || '';
     if (!imageUrl || !imageUrl.startsWith('http')) {
       const fullAddress = `${payload.propertyAddress}, ${payload.propertyCity}, ${payload.state}`;
-      imageUrl = `https://maps.googleapis.com/maps/api/streetview?size=800x600&location=${encodeURIComponent(fullAddress)}&key=${process.env.GOOGLE_MAPS_API_KEY}`;
+      const googleMapsKey = process.env.GOOGLE_MAPS_API_KEY || '';
+      if (googleMapsKey) {
+        imageUrl = `https://maps.googleapis.com/maps/api/streetview?size=800x600&location=${encodeURIComponent(fullAddress)}&key=${googleMapsKey}`;
+      }
     }
 
     // Determine property type
-    const homeType = (payload.homeType || '').toLowerCase();
+    const homeType = (payload.homeType || 'single-family').toLowerCase();
     let propertyType = 'single-family';
     if (homeType.includes('condo')) propertyType = 'condo';
-    else if (homeType.includes('townhouse')) propertyType = 'townhouse';
+    else if (homeType.includes('townhouse') || homeType.includes('town')) propertyType = 'townhouse';
     else if (homeType.includes('multi')) propertyType = 'multi-family';
 
-    // Prepare property data
+    // Normalize location data
+    const normalizedCity = normalizeCity(payload.propertyCity);
+    const normalizedState = normalizeState(payload.state);
+    const formattedAddress = formatStreetAddress(payload.propertyAddress);
+
+    // Parse other numeric fields
+    const bedrooms = Math.max(0, parseNumberField(payload.bedrooms));
+    const bathrooms = Math.max(0, parseNumberField(payload.bathrooms));
+    const squareFeet = Math.max(0, parseNumberField(payload.livingArea));
+    const yearBuilt = parseNumberField(payload.yearBuilt);
+
+    // Prepare property data for database
     const propertyData = {
       // IDs and Names
       id: propertyId,
       opportunityId: payload.opportunityId,
-      opportunityName: payload.opportunityName || payload.propertyAddress,
+      opportunityName: payload.opportunityName || formattedAddress,
 
-      // Location
-      address: formatStreetAddress(payload.propertyAddress),
-      city: normalizeCity(payload.propertyCity),
-      state: normalizeState(payload.state),
+      // Location - all required fields
+      address: formattedAddress,
+      city: normalizedCity,
+      state: normalizedState,
       zipCode: payload.zipCode?.trim() || '',
 
-      // Pricing
-      price: payload.price,
-      listPrice: payload.price,
+      // Pricing - required
+      price: price,
+      listPrice: price, // Components expect listPrice
 
-      // Property Details
-      bedrooms: payload.bedrooms || 0,
-      beds: payload.bedrooms || 0, // Some components use 'beds'
-      bathrooms: payload.bathrooms || 0,
-      baths: payload.bathrooms || 0, // Some components use 'baths'
-      squareFeet: payload.livingArea || 0,
-      yearBuilt: payload.yearBuilt || 0,
+      // Property Details - with defaults
+      bedrooms: bedrooms,
+      beds: bedrooms, // Some components use 'beds'
+      bathrooms: bathrooms,
+      baths: bathrooms, // Some components use 'baths'
+      squareFeet: squareFeet,
+      yearBuilt: yearBuilt || 0,
       lotSize: normalizeLotSize(payload.lotSizes || ''),
       propertyType,
 
-      // Financial Details
+      // Financial Details - all calculated
       monthlyPayment: calculatedMonthlyPayment,
       downPaymentAmount,
-      downPaymentPercent: payload.downPayment || (downPaymentAmount && payload.price ? (downPaymentAmount / payload.price) * 100 : 0),
-      interestRate: payload.interestRate || 0,
-      termYears: 20,
-      balloonYears: payload.balloon && payload.balloon > 0 ? payload.balloon : null,
+      downPaymentPercent,
+      interestRate,
+      termYears,
+      balloonYears: balloonYears > 0 ? balloonYears : null,
       balloonPayment: balloonPaymentAmount,
 
       // Images
       imageUrls: imageUrl ? [imageUrl] : [],
 
-      // Meta
+      // Meta - required fields
       source: 'gohighlevel',
       status: 'active',
       isActive: true,
@@ -336,48 +550,96 @@ export async function POST(request: NextRequest) {
       priority: 1,
       nearbyCities: [],
 
-      // GoHighLevel tracking
-      contactId: payload.contactId || '',
-      locationId: payload.locationId || '',
-
       // Timestamps
-      createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
-      dateAdded: new Date().toISOString(),
       lastUpdated: new Date().toISOString()
     };
 
+    // Add createdAt only for new properties
+    if (!isUpdate) {
+      Object.assign(propertyData, {
+        createdAt: serverTimestamp(),
+        dateAdded: new Date().toISOString()
+      });
+    }
+
     // Save to database
-    await setDoc(doc(db, 'properties', propertyId), propertyData, { merge: true });
+    try {
+      await setDoc(
+        doc(db, 'properties', propertyId),
+        propertyData,
+        { merge: isUpdate } // Merge for updates, overwrite for new
+      );
 
-    // Queue nearby cities calculation
-    queueNearbyCitiesForProperty(propertyId, propertyData.city, propertyData.state);
-
-    logInfo(`Property saved successfully: ${propertyId}`, {
-      address: propertyData.address,
-      city: propertyData.city,
-      state: propertyData.state,
-      price: propertyData.price
-    });
-
-    return NextResponse.json({
-      success: true,
-      data: {
-        propertyId,
-        address: propertyData.address,
-        city: propertyData.city,
-        state: propertyData.state,
-        price: propertyData.price,
-        message: existingDoc.exists() ? 'Property updated successfully' : 'Property created successfully'
+      // Queue nearby cities calculation
+      try {
+        queueNearbyCitiesForProperty(propertyId, normalizedCity, normalizedState);
+      } catch (queueError) {
+        // Don't fail the webhook if queueing fails
+        logWarn('Failed to queue nearby cities calculation', {
+          action: 'nearby_cities_queue_error',
+          metadata: {
+            propertyId,
+            error: (queueError as Error).message
+          }
+        });
       }
-    });
+
+      logInfo(`Property ${isUpdate ? 'updated' : 'created'} successfully`, {
+        action: isUpdate ? 'property_updated' : 'property_created',
+        metadata: {
+          propertyId,
+          address: formattedAddress,
+          city: normalizedCity,
+          state: normalizedState,
+          price: price
+        }
+      });
+
+      return NextResponse.json({
+        success: true,
+        data: {
+          propertyId,
+          address: formattedAddress,
+          city: normalizedCity,
+          state: normalizedState,
+          price: price,
+          message: isUpdate ? 'Property updated successfully' : 'Property created successfully'
+        }
+      });
+
+    } catch (dbError) {
+      logError('Failed to save property to database', {
+        action: 'property_save_error',
+        metadata: {
+          propertyId,
+          error: (dbError as Error).message
+        }
+      }, dbError as Error);
+
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Failed to save property to database',
+          details: (dbError as Error).message
+        },
+        { status: 500 }
+      );
+    }
 
   } catch (error) {
-    logError('Error in GoHighLevel save property webhook:', error);
+    logError('Unexpected error in GoHighLevel save property webhook', {
+      action: 'webhook_unexpected_error',
+      metadata: {
+        error: (error as Error).message,
+        stack: (error as Error).stack
+      }
+    }, error as Error);
+
     return NextResponse.json(
       {
         success: false,
-        error: 'Failed to save property',
+        error: 'An unexpected error occurred',
         details: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }

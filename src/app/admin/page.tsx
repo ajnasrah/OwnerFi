@@ -879,6 +879,7 @@ export default function AdminDashboard() {
                                   interestRate: property.interestRate,
                                   downPaymentPercent: property.downPaymentPercent,
                                   imageUrl: property.imageUrl || (property as any).imageUrls?.[0] || '',
+                                  imageUrls: (property as any).imageUrls || (property.imageUrl ? [property.imageUrl] : [])
                                 });
                               }}
                               className="text-indigo-600 hover:text-indigo-900"
@@ -1437,12 +1438,13 @@ export default function AdminDashboard() {
                       <div>
                         <label className="block text-sm font-medium text-slate-700 mb-2">List Price</label>
                         <div className="relative">
-                          <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-500 font-medium z-10 pointer-events-none">$</span>
+                          <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500 font-medium z-10 pointer-events-none">$</span>
                           <input
                             type="number"
                             value={editForm.listPrice || ''}
                             onChange={(e) => setEditForm({ ...editForm, listPrice: parseFloat(e.target.value) })}
-                            className="w-full pl-12 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                            placeholder="169000"
+                            className="w-full pl-8 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                           />
                         </div>
                       </div>
@@ -1451,24 +1453,26 @@ export default function AdminDashboard() {
                         <div>
                           <label className="block text-sm font-medium text-slate-700 mb-2">Monthly Payment</label>
                           <div className="relative">
-                            <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-500 font-medium z-10 pointer-events-none">$</span>
+                            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500 font-medium z-10 pointer-events-none">$</span>
                             <input
                               type="number"
                               value={editForm.monthlyPayment || ''}
                               onChange={(e) => setEditForm({ ...editForm, monthlyPayment: parseFloat(e.target.value) })}
-                              className="w-full pl-12 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                              placeholder="1092"
+                              className="w-full pl-8 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                             />
                           </div>
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-slate-700 mb-2">Down Payment</label>
                           <div className="relative">
-                            <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-500 font-medium z-10 pointer-events-none">$</span>
+                            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500 font-medium z-10 pointer-events-none">$</span>
                             <input
                               type="number"
                               value={editForm.downPaymentAmount || ''}
                               onChange={(e) => setEditForm({ ...editForm, downPaymentAmount: parseFloat(e.target.value) })}
-                              className="w-full pl-12 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                              placeholder="16900"
+                              className="w-full pl-8 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                             />
                           </div>
                         </div>

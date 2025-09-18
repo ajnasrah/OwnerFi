@@ -78,6 +78,17 @@ export async function PUT(
     // Remove id from updates if present
     delete updates.id;
 
+    // Handle image URL updates - sync imageUrl with imageUrls array
+    if (updates.imageUrl !== undefined) {
+      // If imageUrl is provided, update imageUrls array as well
+      if (updates.imageUrl) {
+        updates.imageUrls = [updates.imageUrl];
+      } else {
+        // If imageUrl is empty, clear imageUrls
+        updates.imageUrls = [];
+      }
+    }
+
     // Update the property
     await updateDoc(doc(db, 'properties', resolvedParams.id), {
       ...updates,

@@ -6,6 +6,7 @@ export interface ExtendedUser {
   name?: string | null;
   email?: string | null;
   image?: string | null;
+  phone?: string | null;
   role: 'buyer' | 'realtor' | 'admin';
 }
 

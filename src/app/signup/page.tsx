@@ -11,7 +11,8 @@ export default function SignUp() {
   const [error, setError] = useState('');
 
   const [formData, setFormData] = useState({
-    name: '',
+    firstName: '',
+    lastName: '',
     email: '',
     password: '',
     confirmPassword: '',
@@ -42,7 +43,7 @@ export default function SignUp() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: formData.name,
+          name: `${formData.firstName} ${formData.lastName}`,
           email: formData.email,
           password: formData.password,
           phone: formData.phone,
@@ -135,16 +136,29 @@ export default function SignUp() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-3">
-            <div>
-              <label className="block text-xs font-semibold text-white mb-1">Full name</label>
-              <input
-                type="text"
-                required
-                className="w-full px-3 py-2 bg-emerald-500/10 border border-emerald-400/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 text-white placeholder-slate-400 font-normal text-sm"
-                placeholder="Your full name"
-                value={formData.name}
-                onChange={(e) => handleInputChange('name', e.target.value)}
-              />
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-semibold text-white mb-1">First name</label>
+                <input
+                  type="text"
+                  required
+                  className="w-full px-3 py-2 bg-emerald-500/10 border border-emerald-400/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 text-white placeholder-slate-400 font-normal text-sm"
+                  placeholder="First name"
+                  value={formData.firstName}
+                  onChange={(e) => handleInputChange('firstName', e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-white mb-1">Last name</label>
+                <input
+                  type="text"
+                  required
+                  className="w-full px-3 py-2 bg-emerald-500/10 border border-emerald-400/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 text-white placeholder-slate-400 font-normal text-sm"
+                  placeholder="Last name"
+                  value={formData.lastName}
+                  onChange={(e) => handleInputChange('lastName', e.target.value)}
+                />
+              </div>
             </div>
 
             <div>

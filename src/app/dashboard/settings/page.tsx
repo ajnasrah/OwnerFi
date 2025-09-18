@@ -15,11 +15,8 @@ export default function BuyerSettings() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  // SIMPLIFIED FORM DATA
+  // SIMPLIFIED FORM DATA - Search preferences only
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    phone: '',
     city: '',
     maxMonthlyPayment: '',
     maxDownPayment: '',
@@ -60,9 +57,6 @@ export default function BuyerSettings() {
           : data.profile.city || '';
 
         setFormData({
-          firstName: data.profile.firstName || '',
-          lastName: data.profile.lastName || '',
-          phone: data.profile.phone || '',
           city: displayCity,
           maxMonthlyPayment: data.profile.maxMonthlyPayment?.toString() || '',
           maxDownPayment: data.profile.maxDownPayment?.toString() || '',
@@ -72,17 +66,6 @@ export default function BuyerSettings() {
       setError('Failed to load your profile');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const formatPhoneNumber = (value: string) => {
-    const phoneNumber = value.replace(/\D/g, '');
-    if (phoneNumber.length >= 6) {
-      return `(${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3, 6)}-${phoneNumber.slice(6, 10)}`;
-    } else if (phoneNumber.length >= 3) {
-      return `(${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3)}`;
-    } else {
-      return phoneNumber;
     }
   };
 
@@ -105,10 +88,20 @@ export default function BuyerSettings() {
       const city = cityParts[0]?.trim() || formData.city.trim();
       const state = cityParts[1]?.trim() || 'TX'; // Default to TX if no state provided
 
+      // Get user's name and phone from session to pass to API
+      const userSession = session as unknown as ExtendedSession;
+      const nameParts = userSession?.user?.name?.split(' ') || ['', ''];
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+      const phone = (userSession?.user as any)?.phone || '';
+
       const response = await fetch('/api/buyer/profile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          firstName: firstName,
+          lastName: lastName,
+          phone: phone,
           city,
           state,
           maxMonthlyPayment: Number(formData.maxMonthlyPayment),

@@ -217,15 +217,24 @@ export default function RealtorSignup() {
               </div>
             </div>
 
-            {/* Simple Consent Notice */}
+            {/* TCPA Compliance Checkbox */}
             <div className="bg-slate-700/30 border border-slate-600/30 rounded-lg p-3 mt-4">
-              <p className="text-xs text-slate-300 text-center leading-relaxed">
-                By creating an account, you agree to our{' '}
-                <Link href="/terms" className="text-emerald-400 underline" target="_blank">Terms of Service</Link>
-                {' '}and{' '}
-                <Link href="/privacy" className="text-emerald-400 underline" target="_blank">Privacy Policy</Link>
-                {' '}as a licensed real estate professional.
-              </p>
+              <div className="flex items-start space-x-2">
+                <input
+                  type="checkbox"
+                  id="tcpa-compliance"
+                  checked={tcpaCompliance}
+                  onChange={(e) => setTcpaCompliance(e.target.checked)}
+                  className="mt-0.5 w-4 h-4 text-emerald-500 bg-slate-700 border-slate-600 rounded focus:ring-emerald-400 focus:ring-2"
+                />
+                <label htmlFor="tcpa-compliance" className="text-xs text-slate-300 leading-relaxed">
+                  I agree to the{' '}
+                  <Link href="/terms" className="text-emerald-400 underline" target="_blank">Terms of Service</Link>
+                  {', '}
+                  <Link href="/privacy" className="text-emerald-400 underline" target="_blank">Privacy Policy</Link>
+                  {', and TCPA compliance requirements. I consent to receive calls and texts at the phone number provided, including by automated means. Consent is not a condition of purchase.'}
+                </label>
+              </div>
             </div>
 
             <button

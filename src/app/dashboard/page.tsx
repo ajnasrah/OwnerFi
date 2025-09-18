@@ -326,7 +326,7 @@ export default function Dashboard() {
   const currentProperty = properties[currentIndex];
 
   return (
-    <div className="h-screen bg-black text-white overflow-hidden relative fixed inset-0">
+    <div className="h-screen bg-black text-white overflow-hidden relative fixed inset-0 supports-[height:100dvh]:h-[100dvh]">
       {/* Top Navigation - Minimal */}
       <div className="absolute top-4 left-4 right-4 z-40 flex items-center justify-between">
         <button 
@@ -363,7 +363,7 @@ export default function Dashboard() {
         {/* Main Property Card */}
         <div
           ref={cardRef}
-          className="absolute top-16 bottom-20 left-1 right-1 bg-white rounded-3xl overflow-hidden shadow-2xl z-20 transform-gpu select-none"
+          className="absolute top-16 bottom-24 left-1 right-1 bg-white rounded-3xl overflow-hidden shadow-2xl z-20 transform-gpu select-none"
           style={{
             transform: isDragging 
               ? `translate3d(${dragOffset.x}px, ${dragOffset.y * 0.1}px, 0) rotate(${dragOffset.x * 0.1}deg)` 
@@ -474,9 +474,9 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Bottom Action Buttons - Simplified */}
-      <div className="absolute bottom-4 left-0 right-0 z-30">
-        <div className="flex justify-center items-center gap-8">
+      {/* Bottom Action Buttons - Simplified with Safe Area */}
+      <div className="absolute bottom-0 left-0 right-0 z-30 pb-safe">
+        <div className="flex justify-center items-center gap-8 pb-8">
           {/* Don't Like Button */}
           <button
             onClick={nextProperty}

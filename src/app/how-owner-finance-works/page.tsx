@@ -186,13 +186,21 @@ export default function HowOwnerFinanceWorks() {
           <CollapsibleSection id="all-financing-types" question="What are the 4 main types of alternative financing?" color="cyan">
             <div className="space-y-6">
               <p className="text-slate-200">
-                Here are the 4 main types of alternative financing, from safest to riskiest:
+                Here are the 4 main types of alternative financing arrangements commonly discussed in real estate:
               </p>
+
+              <div className="bg-blue-600/20 border border-blue-500/30 rounded-lg p-3 mb-4">
+                <p className="text-blue-200 text-xs">
+                  <strong>📚 Educational Context:</strong> These descriptions represent common industry perspectives and general characteristics.
+                  Actual outcomes depend on specific contract terms, state laws, and individual circumstances.
+                  This is educational information only - not advice or recommendations.
+                </p>
+              </div>
 
               <div className="space-y-4">
                 {/* Seller Finance */}
                 <div className="bg-green-500/10 border border-green-400/30 rounded-lg p-4">
-                  <h5 className="text-green-300 font-semibold mb-2">1. Seller Finance (SAFEST)</h5>
+                  <h5 className="text-green-300 font-semibold mb-2">1. Seller Finance (Most Traditional)</h5>
                   <div className="grid md:grid-cols-2 gap-4">
                     <div>
                       <p className="text-slate-300 text-sm mb-2">Seller owns house outright, no existing mortgage. Clean transaction.</p>
@@ -205,15 +213,15 @@ export default function HowOwnerFinanceWorks() {
                       </div>
                     </div>
                     <div className="bg-green-600/20 rounded p-3">
-                      <p className="text-green-200 text-xs font-semibold">Best Choice When Available</p>
-                      <p className="text-green-300 text-xs">Risk Level: LOW</p>
+                      <p className="text-green-200 text-xs font-semibold">Similar to Traditional Financing</p>
+                      <p className="text-green-300 text-xs">Most buyer protections</p>
                     </div>
                   </div>
                 </div>
 
                 {/* Subject To */}
                 <div className="bg-orange-500/10 border border-orange-400/30 rounded-lg p-4">
-                  <h5 className="text-orange-300 font-semibold mb-2">2. Subject To (MEDIUM RISK)</h5>
+                  <h5 className="text-orange-300 font-semibold mb-2">2. Subject To (Requires Legal Review)</h5>
                   <div className="grid md:grid-cols-2 gap-4">
                     <div>
                       <p className="text-slate-300 text-sm mb-2">You take over mortgage payments, but loan stays in seller's name.</p>
@@ -226,15 +234,15 @@ export default function HowOwnerFinanceWorks() {
                       </div>
                     </div>
                     <div className="bg-orange-600/20 rounded p-3">
-                      <p className="text-orange-200 text-xs font-semibold">Requires Expert Guidance</p>
-                      <p className="text-orange-300 text-xs">Risk Level: MEDIUM</p>
+                      <p className="text-orange-200 text-xs font-semibold">Complex Legal Structure</p>
+                      <p className="text-orange-300 text-xs">Professional guidance essential</p>
                     </div>
                   </div>
                 </div>
 
                 {/* Contract for Deed */}
                 <div className="bg-red-500/10 border border-red-400/30 rounded-lg p-4">
-                  <h5 className="text-red-300 font-semibold mb-2">3. Contract for Deed (HIGH RISK)</h5>
+                  <h5 className="text-red-300 font-semibold mb-2">3. Contract for Deed (Least Protective)</h5>
                   <div className="grid md:grid-cols-2 gap-4">
                     <div>
                       <p className="text-slate-300 text-sm mb-2">You make payments but DON'T get deed until fully paid off.</p>
@@ -247,15 +255,15 @@ export default function HowOwnerFinanceWorks() {
                       </div>
                     </div>
                     <div className="bg-red-600/20 rounded p-3">
-                      <p className="text-red-200 text-xs font-semibold">Avoid If Possible</p>
-                      <p className="text-red-300 text-xs">Risk Level: HIGH</p>
+                      <p className="text-red-200 text-xs font-semibold">Minimal Buyer Protections</p>
+                      <p className="text-red-300 text-xs">Careful consideration needed</p>
                     </div>
                   </div>
                 </div>
 
                 {/* Lease to Own */}
                 <div className="bg-yellow-500/10 border border-yellow-400/30 rounded-lg p-4">
-                  <h5 className="text-yellow-300 font-semibold mb-2">4. Lease-to-Own (NOT OWNERSHIP)</h5>
+                  <h5 className="text-yellow-300 font-semibold mb-2">4. Lease-to-Own (Rental with Option)</h5>
                   <div className="grid md:grid-cols-2 gap-4">
                     <div>
                       <p className="text-slate-300 text-sm mb-2">You're renting with an option to buy later. Not actually owner financing.</p>
@@ -268,8 +276,8 @@ export default function HowOwnerFinanceWorks() {
                       </div>
                     </div>
                     <div className="bg-yellow-600/20 rounded p-3">
-                      <p className="text-yellow-200 text-xs font-semibold">This Isn't Owner Financing</p>
-                      <p className="text-yellow-300 text-xs">Risk Level: MEDIUM</p>
+                      <p className="text-yellow-200 text-xs font-semibold">Not Immediate Ownership</p>
+                      <p className="text-yellow-300 text-xs">Rental arrangement first</p>
                     </div>
                   </div>
                 </div>

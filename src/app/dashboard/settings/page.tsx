@@ -93,7 +93,7 @@ export default function BuyerSettings() {
       const nameParts = userSession?.user?.name?.split(' ') || ['', ''];
       const firstName = nameParts[0] || '';
       const lastName = nameParts.slice(1).join(' ') || '';
-      const phone = (userSession?.user as any)?.phone || '';
+      const phone = userSession?.user?.phone || '';
 
       const response = await fetch('/api/buyer/profile', {
         method: 'POST',

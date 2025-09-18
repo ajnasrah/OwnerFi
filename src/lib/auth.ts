@@ -63,6 +63,7 @@ export const authOptions = {
           id: userDoc.id,
           email: userData.email,
           name: userData.name,
+          phone: userData.phone,
           role: userData.role,
         };
       },
@@ -72,16 +73,18 @@ export const authOptions = {
     async jwt({ token, user }: { token: JWT; user?: ExtendedUser }) {
       if (user) {
         token.role = user.role;
+        token.phone = user.phone;
       }
       return token;
     },
-    async session({ session, token }: { 
-      session: Session; 
-      token: JWT & { role?: string }; 
+    async session({ session, token }: {
+      session: Session;
+      token: JWT & { role?: string; phone?: string | null };
     }) {
       if (token && session.user) {
         session.user.id = (token as JWT & { sub: string }).sub;
         session.user.role = token.role;
+        session.user.phone = token.phone;
       }
       return session;
     },

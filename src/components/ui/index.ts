@@ -4,4 +4,3 @@ export { Hero } from './Hero';
 export { Input, Select } from './Input';
 export { Header } from './Header';
 export { Footer } from './Footer';
-export { Newsletter } from './Newsletter';

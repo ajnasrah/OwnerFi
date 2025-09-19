@@ -117,7 +117,15 @@ export async function POST(request: NextRequest) {
       });
     });
 
-    logInfo(`Retrieved ${properties.length} properties for GoHighLevel`);
+    logInfo(`Retrieved ${properties.length} properties for GoHighLevel`, {
+      action: 'properties_retrieved',
+      metadata: {
+        count: properties.length,
+        propertyIds: properties.slice(0, 5).map(p => p.id),
+        sampleAddress: properties[0]?.address || 'No properties found',
+        filters: filters
+      }
+    });
 
     const response = {
       success: true,

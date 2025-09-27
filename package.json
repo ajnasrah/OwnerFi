@@ -23,6 +23,7 @@
     "faker": "^6.6.6",
     "firebase": "^12.2.1",
     "firebase-admin": "^13.5.0",
+    "framer-motion": "^12.23.22",
     "multer": "^2.0.2",
     "next": "15.5.2",
     "next-auth": "^4.24.11",

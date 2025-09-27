@@ -100,8 +100,15 @@ export default function LikedProperties() {
             </p>
           </div>
 
-          {/* Mobile Owner Finance Help Button */}
-          <div className="md:hidden">
+          {/* Mobile Navigation Buttons */}
+          <div className="md:hidden flex gap-2">
+            <Link
+              href="/dashboard"
+              className="bg-slate-600 hover:bg-slate-500 text-white px-3 py-2 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1"
+            >
+              <span>←</span>
+              <span>Back</span>
+            </Link>
             <Link
               href="/how-owner-finance-works"
               className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-2 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1"
@@ -166,9 +173,9 @@ export default function LikedProperties() {
                   <div className="w-full h-48 bg-slate-700 overflow-hidden relative">
                     <img
                       src={
+                        property.imageUrl ||
                         property.imageUrls?.[0] ||
                         property.zillowImageUrl ||
-                        property.imageUrl ||
                         '/placeholder-house.jpg'
                       }
                       alt={property.address}
@@ -203,7 +210,7 @@ export default function LikedProperties() {
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-slate-400 font-semibold">Down Payment:</span>
-                        <span className="font-bold text-blue-400 text-lg">${property.downPaymentAmount?.toLocaleString()} est</span>
+                        <span className="font-bold text-blue-400 text-lg">${Math.ceil(property.downPaymentAmount || 0).toLocaleString()} est</span>
                       </div>
                       {property.interestRate !== undefined && property.interestRate !== null && (
                         <div className="flex justify-between items-center">

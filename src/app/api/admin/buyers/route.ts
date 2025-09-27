@@ -5,31 +5,29 @@ import {
   collection,
   query,
   getDocs,
-  where
+  where,
+  doc,
+  deleteDoc
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { logError } from '@/lib/logger';
 import { ExtendedSession } from '@/types/session';
 
-interface BuyerStats {
+interface Buyer {
   id: string;
-  name: string;
   email: string;
+  firstName?: string;
+  lastName?: string;
   phone?: string;
-  primaryCity?: string;
-  primaryState?: string;
-  downPayment?: number;
-  monthlyBudget?: number;
-  matchedPropertiesCount: number;
-  likedPropertiesCount: number;
-  loginCount: number;
-  lastSignIn?: string;
-  createdAt?: string;
-  isActive?: boolean;
-  isPurchased?: boolean;
+  city?: string;
+  state?: string;
+  maxMonthlyPayment?: number;
+  maxDownPayment?: number;
+  createdAt: string;
 }
 
-export async function GET(request: NextRequest) {
+// GET - Fetch all buyers
+export async function GET() {
   try {
     if (!db) {
       return NextResponse.json(
@@ -48,145 +46,150 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { searchParams } = new URL(request.url);
-    const limit = parseInt(searchParams.get('limit') || '100');
-
     // Get all users with role 'buyer'
-    // Temporarily removed orderBy to avoid issues with missing createdAt fields
     const usersQuery = query(
       collection(db, 'users'),
       where('role', '==', 'buyer')
     );
 
     const usersSnapshot = await getDocs(usersQuery);
-    const buyerStats: BuyerStats[] = [];
 
-    console.log(`Found ${usersSnapshot.docs.length} users with role 'buyer'`);
+    // Get all buyer profiles
+    const buyerProfilesSnapshot = await getDocs(collection(db, 'buyerProfiles'));
 
-    // Batch fetch all related data including lead purchases to check if buyer was purchased
-    const [buyerProfilesSnapshot, propertyActionsSnapshot, leadPurchasesSnapshot] = await Promise.all([
-      getDocs(query(collection(db, 'buyerProfiles'))),
-      getDocs(query(collection(db, 'propertyActions'), where('action', '==', 'like'))),
-      getDocs(query(collection(db, 'leadPurchases')))
-    ]);
-
-    // Build set of purchased buyer IDs
-    const purchasedBuyerIds = new Set<string>();
-    leadPurchasesSnapshot.docs.forEach(doc => {
-      const data = doc.data();
-      if (data.buyerId) {
-        purchasedBuyerIds.add(data.buyerId);
-      }
-    });
-
-    // Build maps for fast lookup
-    const buyerProfileMap = new Map<string, any>();
+    // Create a map of buyer profiles by user ID
+    const buyerProfilesMap = new Map();
     buyerProfilesSnapshot.docs.forEach(doc => {
       const data = doc.data();
-      // Map by both userId and doc.id for flexibility
       if (data.userId) {
-        buyerProfileMap.set(data.userId, {
-          firstName: data.firstName,
-          lastName: data.lastName,
-          city: data.city,
-          state: data.state,
-          maxDownPayment: data.maxDownPayment,
-          maxMonthlyPayment: data.maxMonthlyPayment,
-          phone: data.phone,
-          likedProperties: data.likedProperties || [],
-          matchedPropertyIds: data.matchedPropertyIds || [],
-          isPurchased: purchasedBuyerIds.has(doc.id)
-        });
-      }
-      // Also map by document ID
-      buyerProfileMap.set(doc.id, {
-        firstName: data.firstName,
-        lastName: data.lastName,
-        city: data.city,
-        state: data.state,
-        maxDownPayment: data.maxDownPayment,
-        maxMonthlyPayment: data.maxMonthlyPayment,
-        phone: data.phone,
-        likedProperties: data.likedProperties || [],
-        matchedPropertyIds: data.matchedPropertyIds || [],
-        isPurchased: purchasedBuyerIds.has(doc.id)
-      });
-    });
-
-    // Count likes per buyer
-    const likeCountMap = new Map<string, number>();
-    propertyActionsSnapshot.docs.forEach(doc => {
-      const data = doc.data();
-      if (data.userId) {
-        const count = likeCountMap.get(data.userId) || 0;
-        likeCountMap.set(data.userId, count + 1);
+        buyerProfilesMap.set(data.userId, { ...data, profileId: doc.id });
       }
     });
 
-    // Process all buyer users with aggregated data
+    const buyers: Buyer[] = [];
+
     for (const userDoc of usersSnapshot.docs) {
-      try {
-        const userData = userDoc.data();
-        const profileData = buyerProfileMap.get(userDoc.id);
+      const userData = userDoc.data();
+      const buyerProfile = buyerProfilesMap.get(userDoc.id);
 
-        // Use liked properties array from profile or count from propertyActions
-        const likeCount = profileData?.likedProperties?.length ||
-                          likeCountMap.get(userDoc.id) ||
-                          0;
+      const buyer: Buyer = {
+        id: userDoc.id,
+        email: userData.email || 'N/A',
+        firstName: buyerProfile?.firstName || userData.firstName,
+        lastName: buyerProfile?.lastName || userData.lastName,
+        phone: buyerProfile?.phone || userData.phone,
+        city: buyerProfile?.preferredCity || buyerProfile?.city || userData.city,
+        state: buyerProfile?.preferredState || buyerProfile?.state || userData.state,
+        maxMonthlyPayment: buyerProfile?.maxMonthlyPayment,
+        maxDownPayment: buyerProfile?.maxDownPayment,
+        createdAt: userData.createdAt?.toDate?.()?.toISOString() ||
+                   userData.registeredAt?.toDate?.()?.toISOString() ||
+                   new Date().toISOString()
+      };
 
-        const buyerStat: BuyerStats = {
-          id: userDoc.id,
-          name: profileData?.firstName && profileData?.lastName
-            ? `${profileData.firstName} ${profileData.lastName}`
-            : userData.name || userData.email || 'N/A',
-          email: userData.email || 'N/A',
-          phone: profileData?.phone || userData.phone,
-          primaryCity: profileData?.city || userData.city,
-          primaryState: profileData?.state || userData.state,
-          downPayment: profileData?.maxDownPayment || userData.maxDownPayment,
-          monthlyBudget: profileData?.maxMonthlyPayment || userData.maxMonthlyPayment,
-          matchedPropertiesCount: profileData?.matchedPropertyIds?.length || 0,
-          likedPropertiesCount: likeCount,
-          loginCount: userData.loginCount || (profileData ? 1 : 0),
-          lastSignIn: userData.lastSignIn?.toDate?.()?.toISOString() || userData.lastLoginAt?.toDate?.()?.toISOString(),
-          createdAt: userData.createdAt?.toDate?.()?.toISOString() || userData.registeredAt?.toDate?.()?.toISOString(),
-          isActive: userData.isActive !== false,
-          isPurchased: profileData?.isPurchased || purchasedBuyerIds.has(userDoc.id)
-        };
-
-        buyerStats.push(buyerStat);
-      } catch (error) {
-        console.error(`Error processing buyer ${userDoc.id}:`, error);
-      }
+      buyers.push(buyer);
     }
 
-    // Sort by liked properties count (highest first), then by login count as secondary
-    const sortedBuyers = buyerStats
-      .sort((a, b) => {
-        if (b.likedPropertiesCount !== a.likedPropertiesCount) {
-          return b.likedPropertiesCount - a.likedPropertiesCount;
-        }
-        return b.loginCount - a.loginCount;
-      })
-      .slice(0, limit);
+    // Sort by creation date (newest first)
+    buyers.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
     return NextResponse.json({
-      buyers: sortedBuyers,
-      total: buyerStats.length,
-      showing: `${sortedBuyers.length} of ${buyerStats.length} buyers`,
-      stats: {
-        totalPurchasedBuyers: purchasedBuyerIds.size,
-        totalActiveBuyers: buyerStats.filter(b => b.isActive).length
-      }
+      buyers,
+      total: buyers.length
     });
 
   } catch (error) {
-    await logError('Failed to fetch buyer stats', {
+    await logError('Failed to fetch buyers', {
       action: 'admin_buyers_fetch'
     }, error as Error);
 
     return NextResponse.json(
-      { error: 'Failed to fetch buyer statistics' },
+      { error: 'Failed to fetch buyers' },
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE - Delete selected buyers
+export async function DELETE(request: NextRequest) {
+  try {
+    if (!db) {
+      return NextResponse.json(
+        { error: 'Database not available' },
+        { status: 500 }
+      );
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const session = await getServerSession(authOptions as any) as ExtendedSession | null;
+
+    if (!session?.user || (session as ExtendedSession).user.role !== 'admin') {
+      return NextResponse.json(
+        { error: 'Access denied. Admin access required.' },
+        { status: 403 }
+      );
+    }
+
+    const { buyerIds } = await request.json();
+
+    if (!buyerIds || !Array.isArray(buyerIds) || buyerIds.length === 0) {
+      return NextResponse.json(
+        { error: 'No buyer IDs provided' },
+        { status: 400 }
+      );
+    }
+
+    // Delete buyers from users collection and their profiles
+    let deletedCount = 0;
+    const errors: string[] = [];
+
+    for (const buyerId of buyerIds) {
+      try {
+        // Delete from users collection
+        await deleteDoc(doc(db, 'users', buyerId));
+
+        // Also try to delete from buyerProfiles collection
+        const profileQuery = query(
+          collection(db, 'buyerProfiles'),
+          where('userId', '==', buyerId)
+        );
+        const profileSnapshot = await getDocs(profileQuery);
+
+        for (const profileDoc of profileSnapshot.docs) {
+          await deleteDoc(doc(db, 'buyerProfiles', profileDoc.id));
+        }
+
+        deletedCount++;
+      } catch (error) {
+        console.error(`Failed to delete buyer ${buyerId}:`, error);
+        errors.push(buyerId);
+      }
+    }
+
+    if (errors.length > 0) {
+      await logError('Failed to delete some buyers', {
+        action: 'admin_buyers_delete'
+      }, new Error('Partial deletion failure'));
+
+      return NextResponse.json({
+        deletedCount,
+        failedCount: errors.length,
+        message: `Deleted ${deletedCount} buyers, ${errors.length} failed`
+      });
+    }
+
+    return NextResponse.json({
+      deletedCount,
+      message: `Successfully deleted ${deletedCount} buyer(s)`
+    });
+
+  } catch (error) {
+    await logError('Failed to delete buyers', {
+      action: 'admin_buyers_delete'
+    }, error as Error);
+
+    return NextResponse.json(
+      { error: 'Failed to delete buyers' },
       { status: 500 }
     );
   }

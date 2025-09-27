@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ExtendedSession, isExtendedSession } from '@/types/session';
+import Tutorial from '@/components/dashboard/Tutorial';
 
 interface BuyerProfile {
   id: string;
@@ -22,6 +23,7 @@ interface Property {
   address: string;
   city: string;
   state: string;
+  zipCode?: string;
   bedrooms: number;
   bathrooms: number;
   squareFeet?: number;
@@ -50,6 +52,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [likedProperties, setLikedProperties] = useState<string[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [showTutorial, setShowTutorial] = useState(false);
   
   // Swipe state
   const [isDragging, setIsDragging] = useState(false);
@@ -108,7 +111,17 @@ export default function Dashboard() {
       const propertiesData = await propertiesRes.json();
 
       setProperties(propertiesData.properties || []);
-      
+
+      // Check if tutorial should be shown
+      const tutorialCompleted = localStorage.getItem('buyerTutorialCompleted');
+      const isNewAccount = localStorage.getItem('isNewBuyerAccount');
+
+      // Show tutorial for new accounts or if never completed
+      if ((isNewAccount === 'true' || !tutorialCompleted) && propertiesData.properties?.length > 0) {
+        setShowTutorial(true);
+        // Clear the new account flag once tutorial is shown
+        localStorage.removeItem('isNewBuyerAccount');
+      }
     } catch {
       // Error loading properties
     } finally {
@@ -136,6 +149,18 @@ export default function Dashboard() {
       }
     } catch {
       // Error updating like status
+    }
+  };
+
+  const nextProperty = () => {
+    if (properties.length > 1) {
+      setCurrentIndex(prev => (prev + 1) % properties.length);
+    }
+  };
+
+  const previousProperty = () => {
+    if (properties.length > 1) {
+      setCurrentIndex(prev => (prev - 1 + properties.length) % properties.length);
     }
   };
 
@@ -173,36 +198,36 @@ export default function Dashboard() {
 
   const handleTouchEnd = useCallback(() => {
     if (!isDragging) return;
-    
+
     const { x } = dragOffset;
     const swipeThreshold = 100;
     const velocityThreshold = 0.5;
-    
+
     // Determine if swipe was successful
     const shouldSwipe = Math.abs(x) > swipeThreshold || Math.abs(velocity.current.x) > velocityThreshold;
-    
+
     if (shouldSwipe) {
       // Animate card flying off screen
       const direction = x > 0 ? 1 : -1;
       const targetX = direction * window.innerWidth;
       const targetRotation = direction * 30;
-      
+
       if (cardRef.current) {
         cardRef.current.style.transition = 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
         cardRef.current.style.transform = `translate3d(${targetX}px, -100px, 0) rotate(${targetRotation}deg) scale(0.8)`;
         cardRef.current.style.opacity = '0';
       }
-      
-      // Wait for animation, then navigate to next property
+
+      // Wait for animation, then navigate
       setTimeout(() => {
         if (x > 0) {
           // Swipe right - go to next property
           nextProperty();
         } else {
-          // Swipe left - go to next property  
-          nextProperty();
+          // Swipe left - go back to previous property
+          previousProperty();
         }
-        
+
         // Reset card position for next property
         if (cardRef.current) {
           cardRef.current.style.transition = 'none';
@@ -211,16 +236,12 @@ export default function Dashboard() {
         }
       }, 300);
     }
-    
+
     // Reset state
     setIsDragging(false);
     setDragOffset({ x: 0, y: 0 });
     setSwipeDirection(null);
-  }, [isDragging, dragOffset, currentIndex, properties, toggleLike]);
-
-  const nextProperty = () => {
-    setCurrentIndex(prev => (prev + 1) % properties.length);
-  };
+  }, [isDragging, dragOffset, currentIndex, properties, nextProperty, previousProperty, toggleLike]);
 
   if (loading) {
     return (
@@ -245,7 +266,7 @@ export default function Dashboard() {
             <h1 className="text-2xl font-black text-white mb-2 animate-pulse">
               SCANNING PROPERTIES
             </h1>
-            <p className="text-slate-400 text-base mb-4">
+            <p className="text-slate-400 text-lg mb-4">
               Finding owner-financed homes in your area...
             </p>
 
@@ -257,7 +278,7 @@ export default function Dashboard() {
                   <div className="text-xl font-black text-emerald-400 mb-1 animate-pulse">
                     1,247
                   </div>
-                  <div className="text-xs text-slate-400 font-semibold">LISTINGS SCANNED</div>
+                  <div className="text-sm text-slate-400 font-semibold">LISTINGS SCANNED</div>
                 </div>
 
                 {/* Owner Financed Found */}
@@ -265,7 +286,7 @@ export default function Dashboard() {
                   <div className="text-xl font-black text-blue-400 mb-1 animate-pulse">
                     89
                   </div>
-                  <div className="text-xs text-slate-400 font-semibold">OWNER FINANCED FOUND</div>
+                  <div className="text-sm text-slate-400 font-semibold">OWNER FINANCED FOUND</div>
                 </div>
 
                 {/* Budget Matches */}
@@ -273,7 +294,7 @@ export default function Dashboard() {
                   <div className="text-xl font-black text-purple-400 mb-1 animate-pulse">
                     23
                   </div>
-                  <div className="text-xs text-slate-400 font-semibold">IN YOUR BUDGET</div>
+                  <div className="text-sm text-slate-400 font-semibold">IN YOUR BUDGET</div>
                 </div>
 
                 {/* Perfect Matches */}
@@ -281,7 +302,7 @@ export default function Dashboard() {
                   <div className="text-xl font-black text-yellow-400 mb-1 animate-pulse">
                     7
                   </div>
-                  <div className="text-xs text-slate-400 font-semibold">PERFECT FOR YOU</div>
+                  <div className="text-sm text-slate-400 font-semibold">PERFECT FOR YOU</div>
                 </div>
               </div>
             </div>
@@ -292,7 +313,7 @@ export default function Dashboard() {
             </div>
 
             {/* Status Messages */}
-            <div className="text-slate-400 text-xs animate-pulse space-y-1">
+            <div className="text-slate-400 text-sm animate-pulse space-y-1">
               <div>✓ Analyzing property listings</div>
               <div>✓ Checking owner financing terms</div>
               <div>✓ Matching with your budget</div>
@@ -309,7 +330,7 @@ export default function Dashboard() {
         <div className="text-center">
           <div className="text-4xl mb-4">🏠</div>
           <h2 className="text-xl font-bold text-white mb-4">NO HOMES FOUND</h2>
-          <p className="text-slate-300 mb-6 text-sm">
+          <p className="text-slate-300 mb-6 text-base">
             No properties in <span className="text-emerald-400">{profile?.city}</span> match your criteria.
           </p>
           <Link 
@@ -327,6 +348,12 @@ export default function Dashboard() {
 
   return (
     <div className="h-screen bg-black text-white overflow-hidden relative fixed inset-0 supports-[height:100dvh]:h-[100dvh]">
+      {/* Tutorial Overlay */}
+      <Tutorial
+        isVisible={showTutorial}
+        onComplete={() => setShowTutorial(false)}
+      />
+
       {/* Top Navigation - Minimal */}
       <div className="absolute top-4 left-4 right-4 z-40 flex items-center justify-between">
         <button 
@@ -337,16 +364,28 @@ export default function Dashboard() {
         </button>
         
         <div className="text-center">
-          <h1 className="text-lg font-bold text-white">{profile?.city}</h1>
+          <h1 className="text-xl font-bold text-white">{profile?.city}</h1>
         </div>
 
         <div className="flex gap-2">
-          <Link href="/dashboard/liked" className="w-10 h-10 bg-black/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+          <Link href="/dashboard/liked" className="w-10 h-10 bg-black/20 backdrop-blur-sm rounded-full flex items-center justify-center relative">
             <span className="text-white">❤️</span>
+            {likedProperties.length > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                {likedProperties.length}
+              </span>
+            )}
           </Link>
           <Link href="/dashboard/settings" className="w-10 h-10 bg-black/20 backdrop-blur-sm rounded-full flex items-center justify-center">
             <span className="text-white">⚙️</span>
           </Link>
+          <button
+            onClick={() => setShowTutorial(true)}
+            className="w-10 h-10 bg-black/20 backdrop-blur-sm rounded-full flex items-center justify-center"
+            title="Show Tutorial"
+          >
+            <span className="text-white">❓</span>
+          </button>
         </div>
       </div>
 
@@ -377,9 +416,13 @@ export default function Dashboard() {
         >
           {/* Swipe Overlay */}
           {isDragging && swipeDirection && (
-            <div className="absolute inset-0 flex items-center justify-center z-30 bg-blue-500/20">
-              <div className="text-9xl text-blue-400">
-                →
+            <div className={`absolute inset-0 flex items-center justify-center z-30 ${
+              swipeDirection === 'right' ? 'bg-green-500/20' : 'bg-blue-500/20'
+            }`}>
+              <div className={`text-9xl ${
+                swipeDirection === 'right' ? 'text-green-400' : 'text-blue-400'
+              }`}>
+                {swipeDirection === 'right' ? '→' : '←'}
               </div>
             </div>
           )}
@@ -388,9 +431,9 @@ export default function Dashboard() {
           <div className="relative h-full">
             <img
               src={
+                currentProperty.imageUrl ||
                 currentProperty.imageUrls?.[0] ||
                 currentProperty.zillowImageUrl ||
-                currentProperty.imageUrl ||
                 '/placeholder-house.jpg'
               }
               alt={currentProperty.address}
@@ -403,58 +446,58 @@ export default function Dashboard() {
             
             {/* Property Tags */}
             {currentProperty.displayTag && (
-              <div className="absolute top-20 right-4 bg-emerald-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg">
+              <div className="absolute top-20 right-4 bg-emerald-500 text-white px-4 py-2 rounded-full text-base font-bold shadow-lg">
                 {currentProperty.displayTag}
               </div>
             )}
             
             {/* Property Info - Tinder Style Overlay */}
             <div className="absolute bottom-24 left-4 right-4">
-              <h2 className="text-2xl font-black text-white mb-1 leading-tight">
+              <h2 className="text-2xl font-bold text-white mb-1 leading-tight">
                 {currentProperty.address}
               </h2>
-              <p className="text-white/90 text-base font-medium mb-3">
-                {currentProperty.city}, {currentProperty.state}
+              <p className="text-white/90 text-lg font-medium mb-3">
+                {currentProperty.city}, {currentProperty.state} {currentProperty.zipCode || ''}
               </p>
 
               {/* Property Stats Row */}
               <div className="flex items-center gap-4 mb-3">
                 <div className="flex items-center gap-1">
-                  <span className="text-white text-xs">🏠</span>
-                  <span className="text-white text-xs font-semibold">{currentProperty.bedrooms}bd, {currentProperty.bathrooms}ba</span>
+                  <span className="text-white text-sm">🏠</span>
+                  <span className="text-white text-sm font-semibold">{currentProperty.bedrooms}bd, {currentProperty.bathrooms}ba</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <span className="text-white text-xs">📏</span>
-                  <span className="text-white text-xs font-semibold">{currentProperty.squareFeet?.toLocaleString() || '1,140'} sqft</span>
+                  <span className="text-white text-sm">📏</span>
+                  <span className="text-white text-sm font-semibold">{currentProperty.squareFeet?.toLocaleString() || '1,140'} sqft</span>
                 </div>
               </div>
 
               {/* Price Info */}
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <span className="text-white/80 text-base">💰</span>
-                  <span className="text-white text-lg font-bold">
+                  <span className="text-white/80 text-lg">💰</span>
+                  <span className="text-white text-xl font-bold">
                     ${currentProperty.listPrice?.toLocaleString() || '260,000'}
                   </span>
                 </div>
 
                 <div className="flex gap-3 flex-wrap">
                   <div className="flex items-center gap-1">
-                    <span className="text-emerald-400 text-xs">📅</span>
-                    <span className="text-emerald-400 text-xs font-semibold">
+                    <span className="text-emerald-400 text-base">📅</span>
+                    <span className="text-emerald-400 text-lg font-bold">
                       ${currentProperty.monthlyPayment ? Math.ceil(currentProperty.monthlyPayment).toLocaleString() : '1,403'}/mo est
                     </span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <span className="text-blue-400 text-xs">💳</span>
-                    <span className="text-blue-400 text-xs font-semibold">
+                    <span className="text-blue-400 text-base">💳</span>
+                    <span className="text-blue-400 text-lg font-bold">
                       ${currentProperty.downPaymentAmount?.toLocaleString() || '26,000'} down est
                     </span>
                   </div>
                   {currentProperty.balloonYears && (
                     <div className="flex items-center gap-1">
-                      <span className="text-yellow-400 text-xs">🎈</span>
-                      <span className="text-yellow-400 text-xs font-semibold">
+                      <span className="text-yellow-400 text-sm">🎈</span>
+                      <span className="text-yellow-400 text-sm font-semibold">
                         {currentProperty.balloonYears} year balloon
                       </span>
                     </div>
@@ -463,7 +506,7 @@ export default function Dashboard() {
 
                 {/* Payment Disclaimer */}
                 <div className="mt-2 text-center">
-                  <p className="text-white/60 text-xs">
+                  <p className="text-white/60 text-sm">
                     * Excludes taxes, insurance, HOA fees
                   </p>
                 </div>
@@ -477,12 +520,12 @@ export default function Dashboard() {
       {/* Bottom Action Buttons - Simplified with Safe Area */}
       <div className="absolute bottom-0 left-0 right-0 z-30 pb-safe">
         <div className="flex justify-center items-center gap-8 pb-8">
-          {/* Don't Like Button */}
+          {/* Previous Button */}
           <button
-            onClick={nextProperty}
-            className="w-16 h-16 bg-red-500 text-white rounded-full flex items-center justify-center transition-all transform hover:scale-110 active:scale-95 shadow-lg shadow-red-500/30"
+            onClick={previousProperty}
+            className="w-16 h-16 bg-blue-500 text-white rounded-full flex items-center justify-center transition-all transform hover:scale-110 active:scale-95 shadow-lg shadow-blue-500/30"
           >
-            <span className="text-2xl">✕</span>
+            <span className="text-2xl">←</span>
           </button>
 
           {/* Like Button */}

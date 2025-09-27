@@ -90,6 +90,8 @@ export default function BuyerSetup() {
       if (data.error) {
         setError(data.error);
       } else {
+        // Mark this as a new user who should see the tutorial
+        localStorage.setItem('isNewBuyerAccount', 'true');
         router.push('/dashboard');
       }
     } catch {

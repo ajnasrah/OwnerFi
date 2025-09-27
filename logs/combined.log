@@ -1283,3 +1283,6 @@
 {"context":{"action":"admin_property_delete","metadata":{"propertyId":"QsgZfBFoM3xlTZRLhXpb"}},"level":"info","message":"Property deleted by admin","timestamp":"2025-09-17T01:29:48.953Z"}
 {"context":{"action":"admin_property_delete","metadata":{"propertyId":"prop_1758055788093_189_mlahkgiuk"}},"level":"info","message":"Property deleted by admin","timestamp":"2025-09-17T01:30:50.183Z"}
 {"context":{"action":"admin_property_delete","metadata":{"propertyId":"tgGetMnLqbslmv0Ltu47"}},"level":"info","message":"Property deleted by admin","timestamp":"2025-09-17T01:32:32.568Z"}
+{"context":{"action":"buyer_signup","metadata":{"languages":["English"],"phone":"9018319661"},"userId":"4H8TUyNGJpQWY5veKxre","userType":"buyer"},"level":"info","message":"Created new buyer account","timestamp":"2025-09-27T15:00:54.487Z"}
+{"context":{"action":"buyer_signup","metadata":{"languages":["English"],"phone":"9018319661"},"userId":"U6lMVL9ed88vl2pmodXP","userType":"buyer"},"level":"info","message":"Created new buyer account","timestamp":"2025-09-27T16:26:13.733Z"}
+{"context":{"action":"buyer_signup","metadata":{"languages":["English"],"phone":"9093335555"},"userId":"2oQgqp4qELO4P9TS3ffn","userType":"buyer"},"level":"info","message":"Created new buyer account","timestamp":"2025-09-27T16:27:58.418Z"}

@@ -286,6 +286,22 @@ body {
   outline-offset: 2px;
 }
 
+/* Tutorial Animation */
+@keyframes fadeInScale {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fadeInScale {
+  animation: fadeInScale 0.3s ease-out;
+}
+
 /* Selection */
 ::selection {
   background-color: var(--primary);

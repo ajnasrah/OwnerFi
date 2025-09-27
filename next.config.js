@@ -3,10 +3,7 @@ const nextConfig = {
   // Production optimizations
   compress: true,
   
-  // Bundle optimization
-  experimental: {
-    optimizeCss: true
-  },
+  // Bundle optimization removed - was causing startup issues
 
   // Image optimization
   images: {

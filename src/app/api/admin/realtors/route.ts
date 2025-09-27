@@ -211,3 +211,76 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+export async function DELETE(request: NextRequest) {
+  try {
+    if (!db) {
+      return NextResponse.json(
+        { error: 'Database not available' },
+        { status: 500 }
+      );
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const session = await getServerSession(authOptions as any) as ExtendedSession | null;
+
+    if (!session?.user || (session as ExtendedSession).user.role !== 'admin') {
+      return NextResponse.json(
+        { error: 'Access denied. Admin access required.' },
+        { status: 403 }
+      );
+    }
+
+    const { realtorIds } = await request.json();
+
+    if (!realtorIds || !Array.isArray(realtorIds) || realtorIds.length === 0) {
+      return NextResponse.json(
+        { error: 'No realtor IDs provided' },
+        { status: 400 }
+      );
+    }
+
+    const { deleteDoc, doc } = await import('firebase/firestore');
+
+    // Delete realtors from users collection
+    let deletedCount = 0;
+    const errors: string[] = [];
+
+    for (const realtorId of realtorIds) {
+      try {
+        await deleteDoc(doc(db, 'users', realtorId));
+        deletedCount++;
+      } catch (error) {
+        console.error(`Failed to delete realtor ${realtorId}:`, error);
+        errors.push(realtorId);
+      }
+    }
+
+    if (errors.length > 0) {
+      await logError('Failed to delete some realtors', {
+        action: 'admin_realtors_delete'
+      }, new Error('Partial deletion failure'));
+
+      return NextResponse.json({
+        deletedCount,
+        failedCount: errors.length,
+        message: `Deleted ${deletedCount} realtors, ${errors.length} failed`
+      });
+    }
+
+    return NextResponse.json({
+      deletedCount,
+      message: `Successfully deleted ${deletedCount} realtor(s)`
+    });
+
+  } catch (error) {
+    await logError('Failed to delete realtors', {
+      action: 'admin_realtors_delete'
+    }, error as Error);
+
+    return NextResponse.json(
+      { error: 'Failed to delete realtors' },
+      { status: 500 }
+    );
+  }
+}

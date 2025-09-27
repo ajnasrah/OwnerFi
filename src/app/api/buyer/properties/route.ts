@@ -77,9 +77,9 @@ export async function GET(request: NextRequest) {
     // 1. DIRECT MATCHES: Properties IN the search city AND state
     const directProperties = allProperties.filter((property: PropertyListing & { id: string }) => {
       const propertyCity = property.city?.split(',')[0].trim();
-      // Temporarily show all properties if they don't have pricing data
-      const meetsbudget = (!property.monthlyPayment && !property.downPaymentAmount) ||
-                         (property.monthlyPayment <= maxMonthly && property.downPaymentAmount <= maxDown);
+      // Show properties if they have no pricing data OR meet both budget criteria
+      const meetsbudget = (!property.monthlyPayment || property.monthlyPayment <= maxMonthly) &&
+                         (!property.downPaymentAmount || property.downPaymentAmount <= maxDown);
       return propertyCity?.toLowerCase() === searchCity.toLowerCase() &&
              property.state === searchState &&
              property.isActive !== false &&
@@ -103,9 +103,9 @@ export async function GET(request: NextRequest) {
           return cityName && cityName.toLowerCase() === searchCity.toLowerCase();
         });
       
-      // Temporarily show all properties if they don't have pricing data
-      const meetsbudget = (!property.monthlyPayment && !property.downPaymentAmount) ||
-                         (property.monthlyPayment <= maxMonthly && property.downPaymentAmount <= maxDown);
+      // Show properties if they have no pricing data OR meet both budget criteria
+      const meetsbudget = (!property.monthlyPayment || property.monthlyPayment <= maxMonthly) &&
+                         (!property.downPaymentAmount || property.downPaymentAmount <= maxDown);
 
       return considersSearchCityNearby &&
              property.isActive !== false &&

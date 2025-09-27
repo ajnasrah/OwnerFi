@@ -10,28 +10,6 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { logError, logInfo } from '@/lib/logger';
-import crypto from 'crypto';
-
-const GHL_WEBHOOK_SECRET = process.env.GHL_WEBHOOK_SECRET || '';
-
-function verifyWebhookSignature(
-  payload: string,
-  signature: string | null
-): boolean {
-  if (!signature || !GHL_WEBHOOK_SECRET) {
-    return false;
-  }
-
-  const expectedSignature = crypto
-    .createHmac('sha256', GHL_WEBHOOK_SECRET)
-    .update(payload)
-    .digest('hex');
-
-  return crypto.timingSafeEqual(
-    Buffer.from(signature),
-    Buffer.from(expectedSignature)
-  );
-}
 
 interface GHLWebhookPayload {
   contactId?: string;
@@ -59,18 +37,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.text();
-    const signature = request.headers.get('x-ghl-signature');
-
-    if (!verifyWebhookSignature(body, signature)) {
-      logError('Invalid GoHighLevel webhook signature');
-      return NextResponse.json(
-        { error: 'Invalid webhook signature' },
-        { status: 401 }
-      );
-    }
-
-    const payload: GHLWebhookPayload = JSON.parse(body);
+    const payload: GHLWebhookPayload = await request.json();
     logInfo('GoHighLevel list properties webhook received', {
       action: 'webhook_received',
       metadata: {
@@ -150,7 +117,15 @@ export async function POST(request: NextRequest) {
       });
     });
 
-    logInfo(`Retrieved ${properties.length} properties for GoHighLevel`);
+    logInfo(`Retrieved ${properties.length} properties for GoHighLevel`, {
+      action: 'properties_retrieved',
+      metadata: {
+        count: properties.length,
+        propertyIds: properties.slice(0, 5).map(p => p.id),
+        sampleAddress: properties[0]?.address || 'No properties found',
+        filters: filters
+      }
+    });
 
     const response = {
       success: true,

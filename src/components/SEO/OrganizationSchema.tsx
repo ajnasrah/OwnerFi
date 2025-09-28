@@ -4,10 +4,10 @@ export function OrganizationSchema() {
   const structuredData = {
     '@context': 'https://schema.org',
     '@type': 'Organization',
-    '@id': 'https://ownerfi.com/#organization',
+    '@id': 'https://ownerfi.ai/#organization',
     name: 'OwnerFi',
-    url: 'https://ownerfi.com',
-    logo: 'https://ownerfi.com/logo.png',
+    url: 'https://ownerfi.ai',
+    logo: 'https://ownerfi.ai/logo.png',
     description: 'Find owner financed properties in Texas, Florida, and Georgia. Skip the bank with flexible seller financing options.',
     foundingDate: '2024',
     areaServed: [
@@ -44,7 +44,7 @@ export function OrganizationSchema() {
     contactPoint: {
       '@type': 'ContactPoint',
       contactType: 'customer service',
-      email: 'support@ownerfi.com',
+      email: 'support@ownerfi.ai',
       availableLanguage: ['English', 'Spanish'],
     },
     aggregateRating: {

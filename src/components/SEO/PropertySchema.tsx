@@ -29,7 +29,7 @@ export function PropertySchema({ property, url }: PropertySchemaProps) {
     name: property.address,
     description: property.description || `Owner financed property at ${property.address}, ${property.city}, ${property.state}. ${property.bedrooms} bedrooms, ${property.bathrooms} bathrooms. Monthly payment starting at $${property.monthlyPayment}`,
     url: url,
-    image: property.imageUrls?.[0] || 'https://ownerfi.com/placeholder-house.svg',
+    image: property.imageUrls?.[0] || 'https://ownerfi.ai/placeholder-house.svg',
     address: {
       '@type': 'PostalAddress',
       streetAddress: property.address,
@@ -51,7 +51,7 @@ export function PropertySchema({ property, url }: PropertySchemaProps) {
       seller: {
         '@type': 'Organization',
         name: 'OwnerFi',
-        url: 'https://ownerfi.com',
+        url: 'https://ownerfi.ai',
       },
       priceSpecification: {
         '@type': 'PriceSpecification',

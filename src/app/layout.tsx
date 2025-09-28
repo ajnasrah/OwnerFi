@@ -31,13 +31,13 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: 'https://ownerfi.com',
+    url: 'https://ownerfi.ai',
     siteName: 'OwnerFi',
     title: 'OwnerFi - Owner Financed Properties | No Bank Financing Needed',
     description: 'Find owner financed homes in Texas, Florida, and Georgia. Skip the bank with flexible seller financing options.',
     images: [
       {
-        url: 'https://ownerfi.com/og-image.png',
+        url: 'https://ownerfi.ai/og-image.png',
         width: 1200,
         height: 630,
         alt: 'OwnerFi - Owner Financed Properties',
@@ -48,10 +48,10 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'OwnerFi - Owner Financed Properties',
     description: 'Find owner financed homes with flexible financing. No bank needed.',
-    images: ['https://ownerfi.com/og-image.png'],
+    images: ['https://ownerfi.ai/og-image.png'],
   },
   alternates: {
-    canonical: 'https://ownerfi.com',
+    canonical: 'https://ownerfi.ai',
   },
   appleWebApp: {
     capable: true,

@@ -8,12 +8,12 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'How Owner Financing Works - Complete Guide | OwnerFi',
     description: 'Comprehensive guide to owner financing. Learn seller financing, understand the process, risks, and benefits. Buy homes without traditional bank loans.',
-    url: 'https://ownerfi.com/how-owner-finance-works',
+    url: 'https://ownerfi.ai/how-owner-finance-works',
     siteName: 'OwnerFi',
     type: 'article',
     images: [
       {
-        url: 'https://ownerfi.com/og-owner-finance-guide.png',
+        url: 'https://ownerfi.ai/og-owner-finance-guide.png',
         width: 1200,
         height: 630,
         alt: 'How Owner Financing Works Guide',
@@ -30,11 +30,11 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'How Owner Financing Works - Complete Guide',
     description: 'Learn everything about owner financing, seller financing, and buying homes without banks.',
-    images: ['https://ownerfi.com/og-owner-finance-guide.png'],
+    images: ['https://ownerfi.ai/og-owner-finance-guide.png'],
   },
 
   alternates: {
-    canonical: 'https://ownerfi.com/how-owner-finance-works',
+    canonical: 'https://ownerfi.ai/how-owner-finance-works',
   },
 
   robots: {
@@ -49,7 +49,7 @@ export const metadata: Metadata = {
     },
   },
 
-  authors: [{ name: 'OwnerFi', url: 'https://ownerfi.com' }],
+  authors: [{ name: 'OwnerFi', url: 'https://ownerfi.ai' }],
   creator: 'OwnerFi',
   publisher: 'OwnerFi',
 

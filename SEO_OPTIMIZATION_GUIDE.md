@@ -44,9 +44,9 @@
 
 2. **Submit to Google Search Console**
    - Go to: https://search.google.com/search-console
-   - Add property: https://ownerfi.com
+   - Add property: https://ownerfi.ai
    - Verify ownership (HTML tag method)
-   - Submit sitemap: https://ownerfi.com/sitemap.xml
+   - Submit sitemap: https://ownerfi.ai/sitemap.xml
 
 3. **Submit to Bing Webmaster Tools**
    - Go to: https://www.bing.com/webmasters
@@ -204,7 +204,7 @@
 
 4. **Monitor Indexing**:
    - Check Google Search Console daily
-   - Use site:ownerfi.com in Google to see indexed pages
+   - Use site:ownerfi.ai in Google to see indexed pages
    - Submit individual URLs if needed
 
 ## 💡 Pro Tips

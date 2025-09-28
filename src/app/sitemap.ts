@@ -4,7 +4,7 @@ import { collection, getDocs, query, where } from 'firebase/firestore'
 
 // This function runs on every request to generate a fresh sitemap
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = 'https://ownerfi.com'
+  const baseUrl = 'https://ownerfi.ai'
 
   // Static pages with their priorities and change frequencies
   const staticPages: MetadataRoute.Sitemap = [

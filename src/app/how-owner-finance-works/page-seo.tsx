@@ -73,25 +73,25 @@ function generateArticleSchema() {
     "@type": "Article",
     "headline": "How Owner Financing Works: Complete Guide to Seller Financing",
     "description": "Comprehensive guide explaining owner financing, seller financing, contract for deed, and alternative home buying methods without traditional bank loans.",
-    "image": "https://ownerfi.com/og-owner-finance-guide.png",
+    "image": "https://ownerfi.ai/og-owner-finance-guide.png",
     "author": {
       "@type": "Organization",
       "name": "OwnerFi",
-      "url": "https://ownerfi.com"
+      "url": "https://ownerfi.ai"
     },
     "publisher": {
       "@type": "Organization",
       "name": "OwnerFi",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://ownerfi.com/logo.png"
+        "url": "https://ownerfi.ai/logo.png"
       }
     },
     "datePublished": "2024-01-01",
     "dateModified": new Date().toISOString(),
     "mainEntityOfPage": {
       "@type": "WebPage",
-      "@id": "https://ownerfi.com/how-owner-finance-works"
+      "@id": "https://ownerfi.ai/how-owner-finance-works"
     },
     "keywords": "owner financing, seller financing, contract for deed, subject to, lease to own, creative financing, no bank financing",
     "articleSection": "Real Estate Education",
@@ -113,13 +113,13 @@ function generateBreadcrumbSchema() {
         "@type": "ListItem",
         "position": 1,
         "name": "Home",
-        "item": "https://ownerfi.com"
+        "item": "https://ownerfi.ai"
       },
       {
         "@type": "ListItem",
         "position": 2,
         "name": "How Owner Finance Works",
-        "item": "https://ownerfi.com/how-owner-finance-works"
+        "item": "https://ownerfi.ai/how-owner-finance-works"
       }
     ]
   }

@@ -8,9 +8,9 @@ import { LegalFooter } from '@/components/ui/LegalFooter'
 import Image from 'next/image'
 
 export const metadata: Metadata = {
-  title: 'Owner Financed Homes in Texas, Florida & Georgia | No Bank Needed | OwnerFi',
-  description: 'Find owner financed properties with no bank financing required. Browse seller financed homes in TX, FL, and GA. Low down payments, flexible terms, bad credit OK. Skip the bank, buy direct from owners.',
-  keywords: 'owner financing, owner financed homes, seller financing, no bank financing, buy house without bank, owner finance texas, owner finance florida, owner finance georgia, creative financing, rent to own homes, bad credit home loans, self employed mortgage, contract for deed, subject to real estate',
+  title: 'Owner Financed Homes & Rent to Own Properties | No Bank Needed | OwnerFi',
+  description: 'Better than rent to own! Find owner financed homes with immediate ownership. Browse seller financed properties and rent-to-own alternatives in all 50 states. Bad credit OK, low down payments.',
+  keywords: 'owner financing, owner financed homes, rent to own homes, rent to own alternative, better than rent to own, seller financing, no bank financing, rent to own houses, owner finance properties, buy house without bank, rent to own bad credit, owner financing vs rent to own, lease purchase homes, contract for deed, subject to real estate',
 
   openGraph: {
     type: 'website',
@@ -208,12 +208,12 @@ export default async function HomePage() {
             <div className="max-w-4xl mx-auto">
               <div className="text-center mb-12">
                 <h1 className="text-4xl md:text-5xl font-bold text-white leading-tight mb-6">
-                  Owner Financed Homes in <span className="text-emerald-400">Texas</span>, <span className="text-blue-400">Florida</span> & <span className="text-purple-400">Georgia</span>
-                  <span className="block mt-2 text-3xl">No Bank Financing Needed</span>
+                  Owner Financed Homes <span className="text-emerald-400">Better Than</span> Rent to Own
+                  <span className="block mt-2 text-3xl">Get The Deed • Build Equity • Own Today</span>
                 </h1>
                 <p className="text-xl text-slate-300 leading-relaxed max-w-2xl mx-auto">
-                  Skip traditional mortgage requirements. Buy directly from property owners with flexible seller financing.
-                  Low down payments, flexible terms, and bad credit options available.
+                  Skip banks AND rent-to-own schemes. With owner financing, you become the homeowner immediately.
+                  Browse thousands of seller financed properties across 20 states with flexible terms and bad credit options.
                 </p>
               </div>
 
@@ -259,11 +259,45 @@ export default async function HomePage() {
             </div>
           </section>
 
+          {/* Owner Financing vs Rent to Own Section */}
+          <section className="bg-gradient-to-b from-slate-800/50 to-slate-900/50 py-16 px-6">
+            <div className="max-w-4xl mx-auto">
+              <h2 className="text-3xl font-bold text-white text-center mb-4">
+                Why Owner Financing Beats Rent-to-Own
+              </h2>
+              <p className="text-slate-300 text-center mb-12 max-w-2xl mx-auto">
+                Many people search for "rent to own homes" but don't realize owner financing gives you actual ownership from day one.
+              </p>
+              <div className="grid md:grid-cols-2 gap-8 mb-12">
+                <div className="bg-gradient-to-br from-emerald-900/30 to-emerald-800/30 rounded-xl p-6 border border-emerald-500/30">
+                  <h3 className="text-xl font-bold text-emerald-400 mb-4">✅ Owner Financing (What We Offer)</h3>
+                  <ul className="space-y-2 text-slate-300 text-sm">
+                    <li>• You GET THE DEED immediately</li>
+                    <li>• You're the legal homeowner</li>
+                    <li>• Build equity from day one</li>
+                    <li>• Tax deductions available</li>
+                    <li>• Can sell or refinance anytime</li>
+                  </ul>
+                </div>
+                <div className="bg-gradient-to-br from-red-900/30 to-red-800/30 rounded-xl p-6 border border-red-500/30">
+                  <h3 className="text-xl font-bold text-red-400 mb-4">❌ Traditional Rent-to-Own</h3>
+                  <ul className="space-y-2 text-slate-300 text-sm">
+                    <li>• You're still just a renter</li>
+                    <li>• No deed until fully paid</li>
+                    <li>• No equity building</li>
+                    <li>• No tax benefits</li>
+                    <li>• Can lose everything if you miss payments</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </section>
+
           {/* Benefits Section for SEO */}
-          <section className="bg-slate-800/30 py-16 px-6">
+          <section className="py-16 px-6">
             <div className="max-w-4xl mx-auto">
               <h2 className="text-3xl font-bold text-white text-center mb-12">
-                Why Choose Owner Financing?
+                Benefits of Owner Financing Over Renting
               </h2>
               <div className="grid md:grid-cols-2 gap-8">
                 <div className="bg-slate-900/50 rounded-xl p-6 border border-slate-700/50">

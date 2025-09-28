@@ -136,7 +136,12 @@ function generateServiceSchema() {
 }
 
 export default async function HomePage() {
-  const session = await getServerSession(authOptions as any)
+  let session = null
+  try {
+    session = await getServerSession(authOptions as any)
+  } catch (error) {
+    console.error('Session error:', error)
+  }
 
   return (
     <>

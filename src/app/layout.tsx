@@ -11,8 +11,48 @@ const inter = Inter({
 
 
 export const metadata: Metadata = {
-  title: "OwnerFi - Owner Financed Properties",
-  description: "Find your dream home with owner financing in Texas, Florida, and Georgia",
+  title: "OwnerFi - Owner Financed Properties | No Bank Financing Needed",
+  description: "Find owner financed homes in Texas, Florida, and Georgia. Skip the bank, buy directly from owners with flexible financing. Low down payments, no credit checks required.",
+  keywords: "owner financing, owner financed homes, seller financing, no bank financing, buy house without bank, owner finance texas, owner finance florida, owner finance georgia, creative financing, rent to own homes",
+  authors: [{ name: "OwnerFi" }],
+  creator: "OwnerFi",
+  publisher: "OwnerFi",
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: 'https://ownerfi.ai',
+    siteName: 'OwnerFi',
+    title: 'OwnerFi - Owner Financed Properties | No Bank Financing Needed',
+    description: 'Find owner financed homes in Texas, Florida, and Georgia. Skip the bank with flexible seller financing options.',
+    images: [
+      {
+        url: 'https://ownerfi.ai/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'OwnerFi - Owner Financed Properties',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'OwnerFi - Owner Financed Properties',
+    description: 'Find owner financed homes with flexible financing. No bank needed.',
+    images: ['https://ownerfi.ai/og-image.png'],
+  },
+  alternates: {
+    canonical: 'https://ownerfi.ai',
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",

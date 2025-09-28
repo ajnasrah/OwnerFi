@@ -878,6 +878,7 @@ export default function AdminDashboard() {
                                   downPaymentAmount: property.downPaymentAmount,
                                   interestRate: property.interestRate,
                                   downPaymentPercent: property.downPaymentPercent,
+                                  balloonYears: (property as any).balloonYears,
                                   imageUrl: property.imageUrl || (property as any).imageUrls?.[0] || '',
                                   imageUrls: (property as any).imageUrls || (property.imageUrl ? [property.imageUrl] : [])
                                 });
@@ -1508,6 +1509,25 @@ export default function AdminDashboard() {
                             <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-500 font-medium">%</span>
                           </div>
                         </div>
+                      </div>
+
+                      {/* Balloon Year Term */}
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-2">Balloon Year Term</label>
+                        <div className="relative">
+                          <input
+                            type="number"
+                            step="1"
+                            min="1"
+                            max="30"
+                            value={editForm.balloonYears || ''}
+                            onChange={(e) => setEditForm({ ...editForm, balloonYears: parseInt(e.target.value) || undefined })}
+                            placeholder="5"
+                            className="w-full pr-16 pl-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                          />
+                          <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-500 font-medium">years</span>
+                        </div>
+                        <p className="mt-1 text-sm text-slate-500">Number of years until balloon payment is due (if applicable)</p>
                       </div>
 
                       {/* Image URL Field */}

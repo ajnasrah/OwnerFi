@@ -103,7 +103,6 @@ export default function OwnerFinancingOhio() {
       />
 
       <div className="min-h-screen bg-slate-900 text-white">
-        {/* Header */}
         <header className="bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50 px-6 py-4">
           <div className="max-w-6xl mx-auto flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2">
@@ -123,7 +122,6 @@ export default function OwnerFinancingOhio() {
         </header>
 
         <main>
-          {/* Hero Section */}
           <section className="relative py-20 px-6 bg-gradient-to-b from-red-900/20 to-slate-900">
             <div className="max-w-6xl mx-auto">
               <div className="text-center mb-12">
@@ -138,7 +136,6 @@ export default function OwnerFinancingOhio() {
                 </p>
               </div>
 
-              {/* CTA Buttons */}
               <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
                 <Link href="/signup" className="bg-red-500 hover:bg-red-600 text-white px-8 py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all">
                   Browse Ohio Properties
@@ -148,7 +145,6 @@ export default function OwnerFinancingOhio() {
                 </Link>
               </div>
 
-              {/* Stats */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                 <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 text-center border border-slate-700/50">
                   <div className="text-3xl font-bold text-red-400">420+</div>
@@ -170,7 +166,6 @@ export default function OwnerFinancingOhio() {
             </div>
           </section>
 
-          {/* Call to Action Section */}
           <section className="py-12 px-6 bg-gradient-to-r from-emerald-900/30 to-blue-900/30">
             <div className="max-w-4xl mx-auto text-center">
               <h2 className="text-3xl font-bold text-white mb-4">
@@ -198,7 +193,6 @@ export default function OwnerFinancingOhio() {
             </div>
           </section>
 
-          {/* Cities Section */
           <section className="py-16 px-6 bg-slate-800/30">
             <div className="max-w-6xl mx-auto">
               <h2 className="text-3xl font-bold text-white text-center mb-12">
@@ -239,8 +233,7 @@ export default function OwnerFinancingOhio() {
             </div>
           </section>
 
-          {/* Benefits Section */}
-          <section className="py-16 px-6">
+          <section className="py-16 px-6">{/* Benefits Section */}
             <div className="max-w-6xl mx-auto">
               <h2 className="text-3xl font-bold text-white text-center mb-12">
                 Why Choose Owner Financing Over Rent-to-Own in Ohio?
@@ -280,8 +273,7 @@ export default function OwnerFinancingOhio() {
             </div>
           </section>
 
-          {/* FAQ Section */}
-          <section className="py-16 px-6 bg-slate-800/30">
+          <section className="py-16 px-6 bg-slate-800/30">{/* FAQ Section */}
             <div className="max-w-4xl mx-auto">
               <h2 className="text-3xl font-bold text-white text-center mb-12">
                 Ohio Owner Financing FAQs
@@ -311,8 +303,7 @@ export default function OwnerFinancingOhio() {
             </div>
           </section>
 
-          {/* CTA Section */}
-          <section className="py-20 px-6 bg-gradient-to-b from-slate-900 to-slate-800">
+          <section className="py-20 px-6 bg-gradient-to-b from-slate-900 to-slate-800">{/* CTA Section */}
             <div className="max-w-4xl mx-auto text-center">
               <h2 className="text-3xl font-bold text-white mb-6">
                 Ready to Find Your Ohio Home with Owner Financing?

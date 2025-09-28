@@ -36,6 +36,7 @@ export const metadata: Metadata = {
     images: ['https://ownerfi.ai/og-homepage.png'],
     creator: '@ownerfi',
   },
+<<<<<<< HEAD
 
   alternates: {
     canonical: 'https://ownerfi.ai',
@@ -141,7 +142,109 @@ export default async function HomePage() {
     session = await getServerSession(authOptions as any)
   } catch (error) {
     console.error('Session error:', error)
+=======
+
+  alternates: {
+    canonical: 'https://ownerfi.ai',
+  },
+
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+}
+
+// Schema Markup for SEO
+function generateOrganizationSchema() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "@id": "https://ownerfi.ai/#organization",
+    "name": "OwnerFi",
+    "url": "https://ownerfi.ai",
+    "logo": "https://ownerfi.ai/logo.png",
+    "description": "Leading platform for owner financed properties in Texas, Florida, and Georgia",
+    "foundingDate": "2024",
+    "founder": {
+      "@type": "Person",
+      "name": "Abdullah Abunasrah",
+      "image": "https://ownerfi.ai/abdullah.png"
+    },
+    "areaServed": [
+      {
+        "@type": "State",
+        "name": "Texas"
+      },
+      {
+        "@type": "State",
+        "name": "Florida"
+      },
+      {
+        "@type": "State",
+        "name": "Georgia"
+      }
+    ],
+    "knowsAbout": [
+      "Owner Financing",
+      "Seller Financing",
+      "Contract for Deed",
+      "Subject To Real Estate",
+      "Creative Financing"
+    ],
+    "sameAs": [
+      "https://www.facebook.com/ownerfi",
+      "https://www.linkedin.com/company/ownerfi",
+      "https://twitter.com/ownerfi"
+    ]
+>>>>>>> origin/main
   }
+}
+
+function generateWebsiteSchema() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "url": "https://ownerfi.ai",
+    "name": "OwnerFi",
+    "description": "Find owner financed homes without bank financing",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://ownerfi.ai/search?q={search_term_string}",
+      "query-input": "required name=search_term_string"
+    }
+  }
+}
+
+function generateServiceSchema() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    "name": "Owner Finance Property Marketplace",
+    "provider": {
+      "@type": "Organization",
+      "name": "OwnerFi"
+    },
+    "serviceType": "Real Estate Marketplace",
+    "areaServed": ["Texas", "Florida", "Georgia"],
+    "description": "Connect buyers with owner financed properties. No bank financing needed.",
+    "offers": {
+      "@type": "AggregateOffer",
+      "priceCurrency": "USD",
+      "lowPrice": "50000",
+      "highPrice": "1000000"
+    }
+  }
+}
+
+export default async function HomePage() {
+  const session = await getServerSession(authOptions)
 
   return (
     <>

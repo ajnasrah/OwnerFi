@@ -1,7 +1,7 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
 import Script from 'next/script'
-import { getServerSession } from 'next-auth'
+import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/lib/auth'
 import HomePageClient from './HomePageClient'
 import { LegalFooter } from '@/components/ui/LegalFooter'
@@ -136,7 +136,7 @@ function generateServiceSchema() {
 }
 
 export default async function HomePage() {
-  const session = await getServerSession(authOptions)
+  const session = await getServerSession(authOptions as any)
 
   return (
     <>

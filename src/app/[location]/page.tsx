@@ -56,19 +56,19 @@ export async function generateMetadata({ params }: { params: Promise<{ location:
     openGraph: {
       type: 'website',
       locale: 'en_US',
-      url: `https://ownerfi.ai/${params.location}`,
+      url: `https://ownerfi.ai/${location}`,
       siteName: 'OwnerFi',
       title: title.split('|')[0].trim(),
       description,
       images: [{
-        url: `https://ownerfi.ai/og-${params.location}.png`,
+        url: `https://ownerfi.ai/og-${location}.png`,
         width: 1200,
         height: 630,
         alt: `Owner Financing ${locationTitle}`,
       }],
     },
     alternates: {
-      canonical: `https://ownerfi.ai/${params.location}`,
+      canonical: `https://ownerfi.ai/${location}`,
     },
   }
 }

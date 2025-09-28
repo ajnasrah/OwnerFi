@@ -1,0 +1,30 @@
+{
+  "name": "OwnerFi - Owner Financed Properties",
+  "short_name": "OwnerFi",
+  "description": "Find owner financed homes with flexible financing options. No bank required.",
+  "theme_color": "#2563EB",
+  "background_color": "#1e293b",
+  "display": "standalone",
+  "orientation": "portrait",
+  "scope": "/",
+  "start_url": "/",
+  "icons": [
+    {
+      "src": "/favicon-16x16.png",
+      "sizes": "16x16",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon-32x32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ],
+  "categories": ["business", "finance", "lifestyle"],
+  "lang": "en-US"
+}

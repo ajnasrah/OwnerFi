@@ -8,9 +8,9 @@ import { LegalFooter } from '@/components/ui/LegalFooter'
 import Image from 'next/image'
 
 export const metadata: Metadata = {
-  title: 'Owner Financed Homes & Rent to Own Properties | No Bank Needed | OwnerFi',
-  description: 'Better than rent to own! Find owner financed homes with immediate ownership. Browse seller financed properties and rent-to-own alternatives in all 50 states. Bad credit OK, low down payments.',
-  keywords: 'owner financing, owner financed homes, rent to own homes, rent to own alternative, better than rent to own, seller financing, no bank financing, rent to own houses, owner finance properties, buy house without bank, rent to own bad credit, owner financing vs rent to own, lease purchase homes, contract for deed, subject to real estate',
+  title: 'No Bank Needed Homes | Owner Financing & Rent to Own Properties | OwnerFi',
+  description: 'Find homes without bank financing! Browse owner financed properties, rent-to-own homes, seller financing, and creative deals across all 50 states. Bad credit OK, flexible terms.',
+  keywords: 'no bank financing, owner financing, rent to own homes, seller financing, buy house without bank, owner financed homes, rent to own properties, creative financing, subject to real estate, lease purchase, contract for deed, bad credit homes, no credit check homes, alternative financing',
 
   openGraph: {
     type: 'website',
@@ -208,12 +208,17 @@ export default async function HomePage() {
             <div className="max-w-4xl mx-auto">
               <div className="text-center mb-12">
                 <h1 className="text-4xl md:text-5xl font-bold text-white leading-tight mb-6">
-                  Owner Financed Homes <span className="text-emerald-400">Better Than</span> Rent to Own
-                  <span className="block mt-2 text-3xl">Get The Deed • Build Equity • Own Today</span>
+                  Buy a Home <span className="text-emerald-400">Without a Bank</span>
+                  <div className="mt-4 text-2xl space-y-2">
+                    <div>Owner Financing</div>
+                    <div>Rent to Own</div>
+                    <div>Creative Deals</div>
+                  </div>
                 </h1>
                 <p className="text-xl text-slate-300 leading-relaxed max-w-2xl mx-auto">
-                  Skip banks AND rent-to-own schemes. With owner financing, you become the homeowner immediately.
-                  Browse thousands of seller financed properties across 20 states with flexible terms and bad credit options.
+                  We specialize in finding homes you can buy without traditional bank financing.
+                  Browse owner financed properties, rent-to-own homes, and creative deals nationwide.
+                  Bad credit OK, flexible terms available.
                 </p>
               </div>
 
@@ -223,7 +228,7 @@ export default async function HomePage() {
                   href="/signup"
                   className="w-full block bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-300 hover:scale-[1.02] shadow-lg hover:shadow-xl text-center"
                 >
-                  Browse Owner Financed Properties
+                  Browse No-Bank Properties
                 </Link>
 
                 <Link
@@ -237,7 +242,7 @@ export default async function HomePage() {
                   href="/how-owner-finance-works"
                   className="w-full block bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white py-3 px-6 rounded-xl font-medium text-base transition-all duration-300 hover:scale-[1.02] shadow-md text-center"
                 >
-                  📚 Learn How Owner Financing Works
+                  📚 Learn About No-Bank Options
                 </Link>
               </div>
 
@@ -249,46 +254,73 @@ export default async function HomePage() {
                 </div>
                 <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-6 text-center">
                   <div className="text-3xl font-bold text-blue-400 mb-2">No Banks</div>
-                  <div className="text-slate-300">Direct Owner Deals</div>
+                  <div className="text-slate-300">Multiple Options</div>
                 </div>
                 <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-6 text-center">
-                  <div className="text-3xl font-bold text-purple-400 mb-2">3 States</div>
-                  <div className="text-slate-300">TX, FL, GA Coverage</div>
+                  <div className="text-3xl font-bold text-purple-400 mb-2">50 States</div>
+                  <div className="text-slate-300">Nationwide Coverage</div>
                 </div>
               </div>
             </div>
           </section>
 
-          {/* Owner Financing vs Rent to Own Section */}
+          {/* No-Bank Options Section */}
           <section className="bg-gradient-to-b from-slate-800/50 to-slate-900/50 py-16 px-6">
-            <div className="max-w-4xl mx-auto">
+            <div className="max-w-6xl mx-auto">
               <h2 className="text-3xl font-bold text-white text-center mb-4">
-                Why Owner Financing Beats Rent-to-Own
+                All Types of No-Bank Home Buying Options
               </h2>
               <p className="text-slate-300 text-center mb-12 max-w-2xl mx-auto">
-                Many people search for "rent to own homes" but don't realize owner financing gives you actual ownership from day one.
+                We specialize in finding creative deals that don't require traditional bank financing.
+                Each option has unique benefits - we'll help you find the right fit.
               </p>
-              <div className="grid md:grid-cols-2 gap-8 mb-12">
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
                 <div className="bg-gradient-to-br from-emerald-900/30 to-emerald-800/30 rounded-xl p-6 border border-emerald-500/30">
-                  <h3 className="text-xl font-bold text-emerald-400 mb-4">✅ Owner Financing (What We Offer)</h3>
+                  <h3 className="text-lg font-bold text-emerald-400 mb-4">🏠 Owner Financing</h3>
                   <ul className="space-y-2 text-slate-300 text-sm">
-                    <li>• You GET THE DEED immediately</li>
-                    <li>• You're the legal homeowner</li>
-                    <li>• Build equity from day one</li>
-                    <li>• Tax deductions available</li>
-                    <li>• Can sell or refinance anytime</li>
+                    <li>• Immediate ownership</li>
+                    <li>• Get deed at closing</li>
+                    <li>• Build equity now</li>
+                    <li>• Tax benefits</li>
                   </ul>
                 </div>
-                <div className="bg-gradient-to-br from-red-900/30 to-red-800/30 rounded-xl p-6 border border-red-500/30">
-                  <h3 className="text-xl font-bold text-red-400 mb-4">❌ Traditional Rent-to-Own</h3>
+                <div className="bg-gradient-to-br from-blue-900/30 to-blue-800/30 rounded-xl p-6 border border-blue-500/30">
+                  <h3 className="text-lg font-bold text-blue-400 mb-4">🔑 Rent to Own</h3>
                   <ul className="space-y-2 text-slate-300 text-sm">
-                    <li>• You're still just a renter</li>
-                    <li>• No deed until fully paid</li>
-                    <li>• No equity building</li>
-                    <li>• No tax benefits</li>
-                    <li>• Can lose everything if you miss payments</li>
+                    <li>• Try before you buy</li>
+                    <li>• Build down payment</li>
+                    <li>• Lock in price</li>
+                    <li>• Credit repair time</li>
                   </ul>
                 </div>
+                <div className="bg-gradient-to-br from-purple-900/30 to-purple-800/30 rounded-xl p-6 border border-purple-500/30">
+                  <h3 className="text-lg font-bold text-purple-400 mb-4">📄 Lease Purchase</h3>
+                  <ul className="space-y-2 text-slate-300 text-sm">
+                    <li>• Obligation to buy</li>
+                    <li>• Agreed future date</li>
+                    <li>• Credit toward price</li>
+                    <li>• Flexible terms</li>
+                  </ul>
+                </div>
+                <div className="bg-gradient-to-br from-orange-900/30 to-orange-800/30 rounded-xl p-6 border border-orange-500/30">
+                  <h3 className="text-lg font-bold text-orange-400 mb-4">🤝 Subject-To</h3>
+                  <ul className="space-y-2 text-slate-300 text-sm">
+                    <li>• Take over payments</li>
+                    <li>• Quick closing</li>
+                    <li>• Low down payment</li>
+                    <li>• Keep existing rate</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div className="bg-slate-800/30 rounded-xl p-6 border border-slate-600/30 text-center">
+                <p className="text-slate-300 mb-4">
+                  <strong className="text-white">Our Specialty:</strong> Finding and structuring deals that work without banks.
+                  Whether it's owner financing, rent-to-own, or other creative solutions - we have options for every situation.
+                </p>
+                <Link href="/how-owner-finance-works" className="text-emerald-400 hover:text-emerald-300 font-semibold">
+                  Learn more about each option →
+                </Link>
               </div>
             </div>
           </section>
@@ -322,11 +354,13 @@ export default async function HomePage() {
 
           {/* Location-Based SEO Content */}
           <section className="py-16 px-6">
-            <div className="max-w-4xl mx-auto">
+            <div className="max-w-6xl mx-auto">
               <h2 className="text-3xl font-bold text-white text-center mb-12">
                 Owner Financed Properties by State
               </h2>
-              <div className="grid md:grid-cols-3 gap-6">
+
+              {/* Featured States */}
+              <div className="grid md:grid-cols-3 gap-6 mb-12">
                 <Link href="/owner-financing-texas" className="group">
                   <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-8 text-center hover:border-emerald-400/50 transition-all duration-300 hover:scale-[1.02]">
                     <h3 className="text-2xl font-bold text-emerald-400 mb-2 group-hover:text-emerald-300">Texas</h3>
@@ -349,92 +383,99 @@ export default async function HomePage() {
                   </div>
                 </Link>
               </div>
-            </div>
-          </section>
 
-          {/* FAQ Section for SEO */}
-          <section className="bg-slate-800/30 py-16 px-6">
-            <div className="max-w-4xl mx-auto">
-              <h2 className="text-3xl font-bold text-white text-center mb-12">
-                Frequently Asked Questions
-              </h2>
-              <div className="space-y-6">
-                <div className="bg-slate-900/50 rounded-xl p-6 border border-slate-700/50">
-                  <h3 className="text-xl font-semibold text-white mb-3">What is owner financing?</h3>
-                  <p className="text-slate-300">Owner financing, also known as seller financing, is when the property owner acts as the bank, allowing you to make payments directly to them instead of getting a traditional mortgage.</p>
+              {/* Simplified Coverage */}
+              <div className="bg-slate-800/30 rounded-2xl p-8 border border-slate-700/50">
+                <h3 className="text-2xl font-bold text-white text-center mb-6">Available Nationwide</h3>
+                <div className="text-center mb-6">
+                  <p className="text-slate-300 mb-4">Properties available in all 50 states</p>
+                  <Link href="/signup" className="inline-block bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white py-3 px-8 rounded-xl font-semibold text-lg transition-all duration-300 hover:scale-[1.02] shadow-lg">
+                    View All Properties →
+                  </Link>
                 </div>
-                <div className="bg-slate-900/50 rounded-xl p-6 border border-slate-700/50">
-                  <h3 className="text-xl font-semibold text-white mb-3">Do I need good credit for owner financing?</h3>
-                  <p className="text-slate-300">Many sellers are flexible with credit requirements. While some may check credit, others focus more on your down payment and ability to make monthly payments.</p>
-                </div>
-                <div className="bg-slate-900/50 rounded-xl p-6 border border-slate-700/50">
-                  <h3 className="text-xl font-semibold text-white mb-3">How fast can I close with owner financing?</h3>
-                  <p className="text-slate-300">Owner financed deals can close much faster than traditional mortgages - often in 7-14 days instead of 30-45 days, since there's no bank approval process.</p>
+              </div>
+
+              {/* Alternative Financing Options */}
+              <div className="mt-12 bg-slate-800/30 rounded-2xl p-8 border border-slate-700/50">
+                <h3 className="text-2xl font-bold text-white text-center mb-8">Alternative Financing Solutions</h3>
+                <div className="grid md:grid-cols-3 gap-6">
+                  <Link href="/rent-to-own-homes" className="group">
+                    <div className="bg-gradient-to-br from-emerald-900/30 to-emerald-800/30 rounded-xl p-6 border border-emerald-500/30 hover:border-emerald-400/50 transition-all duration-300 hover:scale-[1.02]">
+                      <h4 className="text-xl font-bold text-emerald-400 mb-3 group-hover:text-emerald-300">Rent to Own Homes</h4>
+                      <p className="text-slate-300 text-sm">Better than traditional rent-to-own with immediate ownership options.</p>
+                    </div>
+                  </Link>
+                  <Link href="/bad-credit-home-buying" className="group">
+                    <div className="bg-gradient-to-br from-blue-900/30 to-blue-800/30 rounded-xl p-6 border border-blue-500/30 hover:border-blue-400/50 transition-all duration-300 hover:scale-[1.02]">
+                      <h4 className="text-xl font-bold text-blue-400 mb-3 group-hover:text-blue-300">Bad Credit Solutions</h4>
+                      <p className="text-slate-300 text-sm">Buy a home even with poor credit through flexible owner financing.</p>
+                    </div>
+                  </Link>
+                  <Link href="/no-credit-check-homes" className="group">
+                    <div className="bg-gradient-to-br from-purple-900/30 to-purple-800/30 rounded-xl p-6 border border-purple-500/30 hover:border-purple-400/50 transition-all duration-300 hover:scale-[1.02]">
+                      <h4 className="text-xl font-bold text-purple-400 mb-3 group-hover:text-purple-300">No Credit Check</h4>
+                      <p className="text-slate-300 text-sm">Find homes that don't require credit checks or bank approval.</p>
+                    </div>
+                  </Link>
                 </div>
               </div>
             </div>
           </section>
 
-          {/* Founder Section with Optimized Image */}
-          <section className="py-16 px-6">
-            <div className="max-w-4xl mx-auto text-center">
-              <h2 className="text-3xl font-bold text-white mb-8">Meet the Founder</h2>
-              <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-8 max-w-2xl mx-auto">
-                <Image
-                  src="/abdullah.png"
-                  alt="Abdullah Abunasrah - Founder and CEO of OwnerFi, owner financing expert"
-                  width={120}
-                  height={120}
-                  className="rounded-full mx-auto mb-6 border-4 border-emerald-400/50"
-                  loading="lazy"
-                />
-                <h3 className="text-2xl font-bold text-white mb-2">Abdullah Abunasrah</h3>
-                <p className="text-emerald-400 font-medium mb-4">Founder & CEO</p>
-                <p className="text-slate-300 leading-relaxed">
-                  "We're making homeownership accessible by connecting buyers directly with sellers who offer financing.
-                  No banks, no barriers - just people helping people achieve their dream of owning a home."
-                </p>
-              </div>
-            </div>
-          </section>
+
         </main>
 
         {/* SEO-Optimized Footer */}
         <footer className="bg-slate-900 border-t border-slate-800 py-12 px-6">
           <div className="max-w-6xl mx-auto">
-            <div className="grid md:grid-cols-4 gap-8 mb-8">
+            <div className="grid md:grid-cols-5 gap-8 mb-8">
               <div>
-                <h3 className="text-white font-semibold mb-4">Properties by State</h3>
+                <h3 className="text-white font-semibold mb-4">Top States</h3>
                 <ul className="space-y-2">
-                  <li><Link href="/owner-financing-texas" className="text-slate-400 hover:text-emerald-400 transition-colors">Owner Financing Texas</Link></li>
-                  <li><Link href="/owner-financing-florida" className="text-slate-400 hover:text-blue-400 transition-colors">Owner Financing Florida</Link></li>
-                  <li><Link href="/owner-financing-georgia" className="text-slate-400 hover:text-purple-400 transition-colors">Owner Financing Georgia</Link></li>
+                  <li><Link href="/owner-financing-texas" className="text-slate-400 hover:text-emerald-400 transition-colors">Texas</Link></li>
+                  <li><Link href="/owner-financing-florida" className="text-slate-400 hover:text-blue-400 transition-colors">Florida</Link></li>
+                  <li><Link href="/owner-financing-california" className="text-slate-400 hover:text-purple-400 transition-colors">California</Link></li>
+                  <li><Link href="/owner-financing-georgia" className="text-slate-400 hover:text-yellow-400 transition-colors">Georgia</Link></li>
+                  <li><Link href="/owner-financing-new-york" className="text-slate-400 hover:text-pink-400 transition-colors">New York</Link></li>
+                  <li><Link href="/owner-financing-north-carolina" className="text-slate-400 hover:text-orange-400 transition-colors">North Carolina</Link></li>
                 </ul>
               </div>
               <div>
-                <h3 className="text-white font-semibold mb-4">Popular Cities</h3>
+                <h3 className="text-white font-semibold mb-4">Major Cities</h3>
                 <ul className="space-y-2">
-                  <li><Link href="/owner-financing-houston" className="text-slate-400 hover:text-white transition-colors">Houston</Link></li>
-                  <li><Link href="/owner-financing-dallas" className="text-slate-400 hover:text-white transition-colors">Dallas</Link></li>
-                  <li><Link href="/owner-financing-miami" className="text-slate-400 hover:text-white transition-colors">Miami</Link></li>
-                  <li><Link href="/owner-financing-atlanta" className="text-slate-400 hover:text-white transition-colors">Atlanta</Link></li>
+                  <li><Link href="/houston-owner-financing" className="text-slate-400 hover:text-white transition-colors">Houston</Link></li>
+                  <li><Link href="/los-angeles-owner-financing" className="text-slate-400 hover:text-white transition-colors">Los Angeles</Link></li>
+                  <li><Link href="/chicago-owner-financing" className="text-slate-400 hover:text-white transition-colors">Chicago</Link></li>
+                  <li><Link href="/phoenix-owner-financing" className="text-slate-400 hover:text-white transition-colors">Phoenix</Link></li>
+                  <li><Link href="/philadelphia-owner-financing" className="text-slate-400 hover:text-white transition-colors">Philadelphia</Link></li>
+                  <li><Link href="/dallas-owner-financing" className="text-slate-400 hover:text-white transition-colors">Dallas</Link></li>
                 </ul>
               </div>
               <div>
-                <h3 className="text-white font-semibold mb-4">Resources</h3>
+                <h3 className="text-white font-semibold mb-4">Financing Options</h3>
                 <ul className="space-y-2">
+                  <li><Link href="/rent-to-own-homes" className="text-slate-400 hover:text-emerald-400 transition-colors">Rent to Own</Link></li>
+                  <li><Link href="/bad-credit-home-buying" className="text-slate-400 hover:text-blue-400 transition-colors">Bad Credit Solutions</Link></li>
+                  <li><Link href="/no-credit-check-homes" className="text-slate-400 hover:text-purple-400 transition-colors">No Credit Check</Link></li>
                   <li><Link href="/how-owner-finance-works" className="text-slate-400 hover:text-white transition-colors">How It Works</Link></li>
+                </ul>
+              </div>
+              <div>
+                <h3 className="text-white font-semibold mb-4">Company</h3>
+                <ul className="space-y-2">
                   <li><Link href="/about" className="text-slate-400 hover:text-white transition-colors">About Us</Link></li>
                   <li><Link href="/contact" className="text-slate-400 hover:text-white transition-colors">Contact</Link></li>
+                  <li><Link href="/realtor" className="text-slate-400 hover:text-white transition-colors">For Realtors</Link></li>
                   <li><Link href="/signup" className="text-slate-400 hover:text-white transition-colors">Sign Up</Link></li>
                 </ul>
               </div>
               <div>
-                <h3 className="text-white font-semibold mb-4">For Agents</h3>
+                <h3 className="text-white font-semibold mb-4">Account</h3>
                 <ul className="space-y-2">
+                  <li><Link href="/auth/signin" className="text-slate-400 hover:text-white transition-colors">Sign In</Link></li>
+                  <li><Link href="/auth/signup" className="text-slate-400 hover:text-white transition-colors">Create Account</Link></li>
                   <li><Link href="/realtor-signup" className="text-slate-400 hover:text-white transition-colors">Agent Sign Up</Link></li>
-                  <li><Link href="/realtor" className="text-slate-400 hover:text-white transition-colors">Agent Portal</Link></li>
-                  <li><Link href="/auth/signin" className="text-slate-400 hover:text-white transition-colors">Agent Login</Link></li>
+                  <li><Link href="/dashboard" className="text-slate-400 hover:text-white transition-colors">Dashboard</Link></li>
                 </ul>
               </div>
             </div>

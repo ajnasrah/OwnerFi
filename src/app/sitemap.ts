@@ -76,6 +76,55 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ]
 
+  // High-priority keyword pages
+  const keywordPages: MetadataRoute.Sitemap = [
+    {
+      url: `${baseUrl}/rent-to-own-homes`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.9,
+    },
+    {
+      url: `${baseUrl}/bad-credit-home-buying`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.9,
+    },
+    {
+      url: `${baseUrl}/no-credit-check-homes`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.9,
+    },
+  ]
+
+  // All 50 US states owner financing pages
+  const statePages: MetadataRoute.Sitemap = [
+    'alabama', 'alaska', 'arizona', 'arkansas', 'california', 'colorado', 'connecticut', 'delaware',
+    'florida', 'georgia', 'hawaii', 'idaho', 'illinois', 'indiana', 'iowa', 'kansas', 'kentucky',
+    'louisiana', 'maine', 'maryland', 'massachusetts', 'michigan', 'minnesota', 'mississippi',
+    'missouri', 'montana', 'nebraska', 'nevada', 'new-hampshire', 'new-jersey', 'new-mexico',
+    'new-york', 'north-carolina', 'north-dakota', 'ohio', 'oklahoma', 'oregon', 'pennsylvania',
+    'rhode-island', 'south-carolina', 'south-dakota', 'tennessee', 'texas', 'utah', 'vermont',
+    'virginia', 'washington', 'west-virginia', 'wisconsin', 'wyoming'
+  ].map(state => ({
+    url: `${baseUrl}/owner-financing-${state}`,
+    lastModified: new Date(),
+    changeFrequency: 'daily' as const,
+    priority: 0.8,
+  }))
+
+  // Major city pages
+  const cityPages: MetadataRoute.Sitemap = [
+    'new-york-city', 'los-angeles', 'chicago', 'houston', 'phoenix', 'philadelphia',
+    'san-antonio', 'san-diego', 'dallas', 'austin'
+  ].map(city => ({
+    url: `${baseUrl}/${city}-owner-financing`,
+    lastModified: new Date(),
+    changeFrequency: 'daily' as const,
+    priority: 0.7,
+  }))
+
   // Fetch all active properties from Firebase
   let propertyPages: MetadataRoute.Sitemap = []
 
@@ -110,27 +159,27 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       if (property.state) states.add(property.state.toLowerCase())
     })
 
-    // Add city pages
-    const cityPages: MetadataRoute.Sitemap = Array.from(cities).map(city => ({
+    // Add dynamic city pages from properties
+    const dynamicCityPages: MetadataRoute.Sitemap = Array.from(cities).map(city => ({
       url: `${baseUrl}/properties/${city.replace(/\s+/g, '-')}`,
       lastModified: new Date(),
       changeFrequency: 'daily' as const,
-      priority: 0.9,
+      priority: 0.6,
     }))
 
-    // Add state pages
-    const statePages: MetadataRoute.Sitemap = Array.from(states).map(state => ({
+    // Add dynamic state pages from properties
+    const dynamicStatePages: MetadataRoute.Sitemap = Array.from(states).map(state => ({
       url: `${baseUrl}/properties/state/${state}`,
       lastModified: new Date(),
       changeFrequency: 'daily' as const,
-      priority: 0.9,
+      priority: 0.6,
     }))
 
     // Combine all pages
-    return [...staticPages, ...propertyPages, ...cityPages, ...statePages]
+    return [...staticPages, ...keywordPages, ...statePages, ...cityPages, ...propertyPages, ...dynamicCityPages, ...dynamicStatePages]
   } catch (error) {
     console.error('Error generating sitemap:', error)
-    // Return at least static pages if database fails
-    return staticPages
+    // Return at least static pages and keyword pages if database fails
+    return [...staticPages, ...keywordPages, ...statePages, ...cityPages]
   }
 }

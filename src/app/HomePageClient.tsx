@@ -12,13 +12,15 @@ export default function HomePageClient() {
       {/* Chatbot Components */}
       {isChatbotOpen && (
         <Chatbot
-          isChatbotOpen={isChatbotOpen}
-          setIsChatbotOpen={setIsChatbotOpen}
+          isOpen={isChatbotOpen}
+          onClose={() => setIsChatbotOpen(false)}
         />
       )}
       <FloatingChatbotButton
-        isChatbotOpen={isChatbotOpen}
-        setIsChatbotOpen={setIsChatbotOpen}
+        onClick={() => {
+          console.log('Chatbot button clicked, current state:', isChatbotOpen)
+          setIsChatbotOpen(!isChatbotOpen)
+        }}
       />
     </>
   )

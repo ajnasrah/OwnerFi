@@ -199,6 +199,34 @@ export default function OwnerFinancingTexas() {
             </div>
           </section>
 
+          {/* Call to Action Section */}
+          <section className="py-12 px-6 bg-gradient-to-r from-emerald-900/30 to-blue-900/30">
+            <div className="max-w-4xl mx-auto text-center">
+              <h2 className="text-3xl font-bold text-white mb-4">
+                Ready to Find Your Texas Home?
+              </h2>
+              <p className="text-xl text-slate-300 mb-8">
+                Browse hundreds of owner financed and rent-to-own properties across Texas.
+                No banks needed, flexible terms available.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Link href="/signup">
+                  <button className="bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white py-4 px-8 rounded-xl font-semibold text-lg transition-all duration-300 hover:scale-[1.02] shadow-lg hover:shadow-xl">
+                    🏠 Browse Texas Properties
+                  </button>
+                </Link>
+                <Link href="/signup">
+                  <button className="bg-white/10 backdrop-blur-sm border-2 border-white/30 hover:bg-white/20 text-white py-4 px-8 rounded-xl font-semibold text-lg transition-all duration-300 hover:scale-[1.02]">
+                    Get Pre-Qualified Today
+                  </button>
+                </Link>
+              </div>
+              <p className="text-sm text-slate-400 mt-6">
+                Join 500+ buyers who found their dream home without traditional financing
+              </p>
+            </div>
+          </section>
+
           {/* Cities Section */}
           <section className="py-16 px-6 bg-slate-800/30">
             <div className="max-w-6xl mx-auto">

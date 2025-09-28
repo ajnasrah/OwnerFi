@@ -58,7 +58,7 @@ function generateFAQSchema() {
     },
     {
       question: "What are the benefits of owner financing in Utah?",
-      answer: "Benefits include no bank approval needed, faster closing (7-14 days), flexible down payments, negotiable terms, and the opportunity to buy in Utah's growing market. Tech industry "Silicon Slopes" and Outdoor recreation economy"
+      answer: "Benefits include no bank approval needed, faster closing (7-14 days), flexible down payments, negotiable terms, and the opportunity to buy in Utah's growing market. Tech industry 'Silicon Slopes' and Outdoor recreation economy."
     },
     {
       question: "What is the typical down payment for owner financing in Utah?",

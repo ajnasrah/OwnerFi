@@ -1,502 +1,426 @@
-'use client';
+import { Metadata } from 'next'
+import Link from 'next/link'
+import Script from 'next/script'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
+import HomePageClient from './HomePageClient'
+import { LegalFooter } from '@/components/ui/LegalFooter'
+import Image from 'next/image'
 
-import { useState } from 'react';
-import { useSession } from 'next-auth/react';
-import Link from 'next/link';
-import { ExtendedSession, isExtendedSession } from '@/types/session';
-import Chatbot from '@/components/ui/ChatbotiPhone';
-import FloatingChatbotButton from '@/components/ui/FloatingChatbotButton';
-import { LegalFooter } from '@/components/ui/LegalFooter';
+export const metadata: Metadata = {
+  title: 'Owner Financed Homes in Texas, Florida & Georgia | No Bank Needed | OwnerFi',
+  description: 'Find owner financed properties with no bank financing required. Browse seller financed homes in TX, FL, and GA. Low down payments, flexible terms, bad credit OK. Skip the bank, buy direct from owners.',
+  keywords: 'owner financing, owner financed homes, seller financing, no bank financing, buy house without bank, owner finance texas, owner finance florida, owner finance georgia, creative financing, rent to own homes, bad credit home loans, self employed mortgage, contract for deed, subject to real estate',
 
-export default function HomePage() {
-  const { data: session, status } = useSession();
-  const [isChatbotOpen, setIsChatbotOpen] = useState(false);
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: 'https://ownerfi.ai',
+    siteName: 'OwnerFi',
+    title: 'Owner Financed Homes | No Bank Financing Needed',
+    description: 'Find owner financed properties in Texas, Florida, and Georgia. Skip the bank with flexible seller financing options. Low down payments, bad credit OK.',
+    images: [
+      {
+        url: 'https://ownerfi.ai/og-homepage.png',
+        width: 1200,
+        height: 630,
+        alt: 'OwnerFi - Owner Financed Properties Platform',
+      },
+    ],
+  },
 
-  // Get dashboard URL for logged-in users
-  const getDashboardUrl = () => {
-    if (status !== 'authenticated' || !session?.user) return null;
-    
-    if (isExtendedSession(session as unknown as ExtendedSession)) {
-      const extSession = session as unknown as ExtendedSession;
-      if (extSession.user.role === 'buyer') return '/dashboard';
-      if (extSession.user.role === 'realtor') return '/realtor-dashboard';
-      if (extSession.user.role === 'admin') return '/admin';
-    }
-    return '/dashboard';
-  };
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Owner Financed Homes - No Bank Needed | OwnerFi',
+    description: 'Find seller financed homes with flexible terms. Skip traditional bank financing.',
+    images: ['https://ownerfi.ai/og-homepage.png'],
+    creator: '@ownerfi',
+  },
 
-  // Show loading state while checking auth
-  if (status === 'loading') {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-900">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-400"></div>
-      </div>
-    );
+  alternates: {
+    canonical: 'https://ownerfi.ai',
+  },
+
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+}
+
+// Schema Markup for SEO
+function generateOrganizationSchema() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "@id": "https://ownerfi.ai/#organization",
+    "name": "OwnerFi",
+    "url": "https://ownerfi.ai",
+    "logo": "https://ownerfi.ai/logo.png",
+    "description": "Leading platform for owner financed properties in Texas, Florida, and Georgia",
+    "foundingDate": "2024",
+    "founder": {
+      "@type": "Person",
+      "name": "Abdullah Abunasrah",
+      "image": "https://ownerfi.ai/abdullah.png"
+    },
+    "areaServed": [
+      {
+        "@type": "State",
+        "name": "Texas"
+      },
+      {
+        "@type": "State",
+        "name": "Florida"
+      },
+      {
+        "@type": "State",
+        "name": "Georgia"
+      }
+    ],
+    "knowsAbout": [
+      "Owner Financing",
+      "Seller Financing",
+      "Contract for Deed",
+      "Subject To Real Estate",
+      "Creative Financing"
+    ],
+    "sameAs": [
+      "https://www.facebook.com/ownerfi",
+      "https://www.linkedin.com/company/ownerfi",
+      "https://twitter.com/ownerfi"
+    ]
   }
+}
+
+function generateWebsiteSchema() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "url": "https://ownerfi.ai",
+    "name": "OwnerFi",
+    "description": "Find owner financed homes without bank financing",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://ownerfi.ai/search?q={search_term_string}",
+      "query-input": "required name=search_term_string"
+    }
+  }
+}
+
+function generateServiceSchema() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    "name": "Owner Finance Property Marketplace",
+    "provider": {
+      "@type": "Organization",
+      "name": "OwnerFi"
+    },
+    "serviceType": "Real Estate Marketplace",
+    "areaServed": ["Texas", "Florida", "Georgia"],
+    "description": "Connect buyers with owner financed properties. No bank financing needed.",
+    "offers": {
+      "@type": "AggregateOffer",
+      "priceCurrency": "USD",
+      "lowPrice": "50000",
+      "highPrice": "1000000"
+    }
+  }
+}
+
+export default async function HomePage() {
+  const session = await getServerSession(authOptions)
 
   return (
-    <div className="bg-slate-900 text-white">
-      {/* Clean Header */}
-      <nav className="bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50 px-4 lg:px-6 py-4">
-        <div className="flex justify-between items-center max-w-6xl mx-auto">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">O</span>
-            </div>
-            <span className="text-lg font-bold text-white">OwnerFi</span>
-          </div>
-          {status === 'authenticated' ? (
-            <Link
-              href={getDashboardUrl() || '/dashboard'}
-              className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white px-4 py-2 rounded-xl font-semibold text-sm transition-all duration-300 hover:scale-105 shadow-lg shadow-emerald-500/25"
-            >
-              Go to Dashboard
-            </Link>
-          ) : (
-            <Link
-              href="/auth/signin"
-              className="text-slate-300 hover:text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
-            >
-              Sign In
-            </Link>
-          )}
-        </div>
-      </nav>
+    <>
+      {/* Schema Markup */}
+      <Script
+        id="organization-schema"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(generateOrganizationSchema())
+        }}
+      />
+      <Script
+        id="website-schema"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(generateWebsiteSchema())
+        }}
+      />
+      <Script
+        id="service-schema"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(generateServiceSchema())
+        }}
+      />
 
-      {/* Hero Section - Compact */}
-      <div className="flex flex-col px-6 lg:px-12" style={{ paddingTop: '3rem', paddingBottom: '3rem', minHeight: 'auto' }}>
-        <div className="max-w-2xl mx-auto text-center">
-          <div className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-8 shadow-2xl">
-            
-            <h1 className="text-3xl font-bold text-white leading-tight mb-4">
-              Find homes with <span className="text-emerald-400">flexible financing</span>
-            </h1>
-            <p className="text-slate-300 text-base leading-relaxed mb-6">
-              Connect directly with homeowners who offer financing
-            </p>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '2rem' }}>
-              <Link
-                href="/signup"
-                className="w-full block bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-300 hover:scale-[1.02] shadow-lg hover:shadow-xl"
-              >
-                Find Your Dream Home
-              </Link>
-
-              <Link
-                href="/realtor-signup"
-                className="w-full block bg-transparent border-2 border-slate-500 hover:border-slate-400 hover:bg-slate-700/30 text-white py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-300 hover:scale-[1.02]"
-              >
-                I&apos;m a Real Estate Agent
-              </Link>
-
-              <Link
-                href="/how-owner-finance-works"
-                className="w-full block bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white py-3 px-6 rounded-xl font-medium text-base transition-all duration-300 hover:scale-[1.02] shadow-md"
-              >
-                📚 How Owner Finance Works
-              </Link>
-            </div>
-
-            <div className="space-y-3 mb-6">
-              <div className="flex items-center justify-center gap-3 text-slate-300 text-sm">
-                <div className="w-4 h-4 rounded-full bg-emerald-500/20 flex items-center justify-center">
-                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>
+      <div className="bg-slate-900 text-white">
+        {/* SEO-Optimized Header */}
+        <header>
+          <nav className="bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50 px-4 lg:px-6 py-4" aria-label="Main navigation">
+            <div className="flex justify-between items-center max-w-6xl mx-auto">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-lg flex items-center justify-center">
+                  <span className="text-white font-bold text-sm">O</span>
                 </div>
-                <span>Lead generation platform</span>
+                <span className="text-lg font-bold text-white">OwnerFi</span>
               </div>
-              <div className="flex items-center justify-center gap-3 text-slate-300 text-sm">
-                <div className="w-4 h-4 rounded-full bg-emerald-500/20 flex items-center justify-center">
-                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>
-                </div>
-                <span>Agent connections</span>
-              </div>
-              <div className="flex items-center justify-center gap-3 text-slate-300 text-sm">
-                <div className="w-4 h-4 rounded-full bg-emerald-500/20 flex items-center justify-center">
-                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>
-                </div>
-                <span>Information only*</span>
+
+              <div className="flex items-center gap-4">
+                <Link
+                  href="/how-owner-finance-works"
+                  className="hidden sm:block text-slate-300 hover:text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                >
+                  How It Works
+                </Link>
+                {session ? (
+                  <Link
+                    href="/dashboard"
+                    className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white px-4 py-2 rounded-xl font-semibold text-sm transition-all duration-300 hover:scale-105 shadow-lg shadow-emerald-500/25"
+                  >
+                    Go to Dashboard
+                  </Link>
+                ) : (
+                  <Link
+                    href="/auth/signin"
+                    className="text-slate-300 hover:text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                  >
+                    Sign In
+                  </Link>
+                )}
               </div>
             </div>
+          </nav>
+        </header>
 
-            <div className="bg-slate-800/50 border border-slate-700/30 rounded-xl p-4">
-              <div className="flex items-center justify-center gap-4 text-center">
-                <div>
-                  <div className="text-lg font-bold text-emerald-400">Platform</div>
-                  <div className="text-xs text-slate-400">lead generation</div>
-                </div>
-                <div className="w-px h-8 bg-slate-600"></div>
-                <div className="flex items-center gap-1">
-                  {[...Array(4)].map((_, i) => (
-                    <svg key={i} className="w-3 h-3 text-emerald-400 fill-current" viewBox="0 0 20 20">
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                  ))}
-                  <svg className="w-3 h-3 text-emerald-400" viewBox="0 0 20 20" fill="currentColor">
-                    <defs>
-                      <linearGradient id="partialStar" x1="0%" y1="0%" x2="100%" y2="0%">
-                        <stop offset="60%" stopColor="currentColor" />
-                        <stop offset="60%" stopColor="rgb(71, 85, 105)" />
-                      </linearGradient>
-                    </defs>
-                    <path fill="url(#partialStar)" d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                  </svg>
-                  <span className="text-sm text-slate-300 ml-1 font-medium">4.6</span>
-                </div>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </div>
-
-      {/* Customer Success Stories */}
-      <section style={{ padding: '2rem 0' }}>
-        <div className="max-w-6xl mx-auto px-6 lg:px-12">
-          
-          {/* Big Card Container for Reviews */}
-          <div className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/50 rounded-3xl p-8 shadow-2xl">
-            <div className="text-center" style={{ marginBottom: '2rem' }}>
-              <h2 className="text-2xl font-bold text-white" style={{ marginBottom: '0.5rem' }}>Real Families, Real Stories</h2>
-              <p className="text-slate-400">From stuck renting to proud homeowners</p>
-            </div>
-            
-            <div className="grid md:grid-cols-3" style={{ gap: '1rem' }}>
-              <div className="bg-slate-700/40 rounded-xl p-5 hover:bg-slate-700/50 transition-all duration-300 shadow-lg hover:shadow-xl">
-                <div className="flex items-center gap-1 mb-3">
-                  {[...Array(5)].map((_, i) => (
-                    <svg key={i} className="w-4 h-4 text-emerald-400 fill-current" viewBox="0 0 20 20">
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                  ))}
-                </div>
-                <p className="text-slate-300 text-sm leading-relaxed mb-3">
-                  "Stuck renting for 8 years after my credit got destroyed. Every bank said no. OwnerFi connected us with a seller who understood. Now we&apos;re homeowners!"
+        <main>
+          {/* Hero Section with SEO Content */}
+          <section className="px-6 lg:px-12 py-12 min-h-[600px]">
+            <div className="max-w-4xl mx-auto">
+              <div className="text-center mb-12">
+                <h1 className="text-4xl md:text-5xl font-bold text-white leading-tight mb-6">
+                  Owner Financed Homes in <span className="text-emerald-400">Texas</span>, <span className="text-blue-400">Florida</span> & <span className="text-purple-400">Georgia</span>
+                  <span className="block mt-2 text-3xl">No Bank Financing Needed</span>
+                </h1>
+                <p className="text-xl text-slate-300 leading-relaxed max-w-2xl mx-auto">
+                  Skip traditional mortgage requirements. Buy directly from property owners with flexible seller financing.
+                  Low down payments, flexible terms, and bad credit options available.
                 </p>
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-full flex items-center justify-center">
-                    <span className="text-white text-xs font-bold">MJ</span>
-                  </div>
-                  <div>
-                    <p className="text-white text-sm font-semibold">Maria & Jose</p>
-                    <p className="text-slate-400 text-xs">Dallas, TX</p>
-                  </div>
-                </div>
               </div>
 
-              <div className="bg-slate-700/40 rounded-xl p-5 hover:bg-slate-700/50 transition-all duration-300 shadow-lg hover:shadow-xl">
-                <div className="flex items-center gap-1 mb-3">
-                  {[...Array(5)].map((_, i) => (
-                    <svg key={i} className="w-4 h-4 text-emerald-400 fill-current" viewBox="0 0 20 20">
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                  ))}
-                </div>
-                <p className="text-slate-300 text-sm leading-relaxed mb-3">
-                  "Self-employed contractors - lenders couldn&apos;t understand our income. We thought homeownership was impossible. OwnerFi closed in 3 weeks!"
-                </p>
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-full flex items-center justify-center">
-                    <span className="text-white text-xs font-bold">DK</span>
-                  </div>
-                  <div>
-                    <p className="text-white text-sm font-semibold">David & Karen</p>
-                    <p className="text-slate-400 text-xs">Memphis, TN</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-slate-700/40 rounded-xl p-5 hover:bg-slate-700/50 transition-all duration-300 shadow-lg hover:shadow-xl">
-                <div className="flex items-center gap-1 mb-3">
-                  {[...Array(5)].map((_, i) => (
-                    <svg key={i} className="w-4 h-4 text-emerald-400 fill-current" viewBox="0 0 20 20">
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                  ))}
-                </div>
-                <p className="text-slate-300 text-sm leading-relaxed mb-3">
-                  "Medical bills tanked our credit, but OwnerFi found us a seller who cared more about our story than our score."
-                </p>
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-full flex items-center justify-center">
-                    <span className="text-white text-xs font-bold">LT</span>
-                  </div>
-                  <div>
-                    <p className="text-white text-sm font-semibold">Lisa & Tom</p>
-                    <p className="text-slate-400 text-xs">Austin, TX</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <div className="text-center" style={{ marginTop: '2rem' }}>
-              <p className="text-slate-400 text-sm">Join over 1,200 families who found their path to homeownership</p>
-            </div>
-          </div>
-          
-        </div>
-      </section>
-
-      {/* How It Works - Card-Based Design */}
-      <section style={{ padding: '2rem 0' }}>
-        <div className="max-w-6xl mx-auto px-6 lg:px-12">
-          
-          <div className="grid lg:grid-cols-2" style={{ gap: '4rem' }}>
-            
-            {/* For Buyers Card */}
-            <div className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-8 shadow-2xl hover:shadow-emerald-500/10 transition-all duration-300">
-              <div className="text-center mb-8">
-                <div className="inline-block bg-emerald-500/20 px-4 py-2 rounded-full border border-emerald-400/30 mb-4">
-                  <span className="text-emerald-400 font-semibold text-sm">FOR HOME BUYERS</span>
-                </div>
-                <h2 className="text-2xl font-bold text-white mb-3">Find Your Dream Home</h2>
-                <p className="text-slate-400 text-sm">Skip the banks, work directly with owners</p>
-              </div>
-              
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginBottom: '2rem' }}>
-                <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 bg-emerald-400/20 rounded-lg flex items-center justify-center mt-1 flex-shrink-0">
-                    <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
-                  </div>
-                  <div>
-                    <h3 className="text-white font-semibold mb-1">Set Preferences</h3>
-                    <p className="text-slate-400 text-sm">Budget and location preferences for agent matching.</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 bg-emerald-400/20 rounded-lg flex items-center justify-center mt-1 flex-shrink-0">
-                    <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
-                  </div>
-                  <div>
-                    <h3 className="text-white font-semibold mb-1">Browse Properties</h3>
-                    <p className="text-slate-400 text-sm">Information about properties with owner financing opportunities.</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 bg-emerald-400/20 rounded-lg flex items-center justify-center mt-1 flex-shrink-0">
-                    <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
-                  </div>
-                  <div>
-                    <h3 className="text-white font-semibold mb-1">Agent Connection</h3>
-                    <p className="text-slate-400 text-sm">Matched with licensed real estate professionals.</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="text-center">
+              {/* CTA Buttons */}
+              <div className="max-w-md mx-auto space-y-4 mb-12">
                 <Link
                   href="/signup"
-                  className="inline-block bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white py-3 px-6 rounded-xl font-semibold transition-all duration-300 hover:scale-[1.05] shadow-lg"
+                  className="w-full block bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-300 hover:scale-[1.02] shadow-lg hover:shadow-xl text-center"
                 >
-                  Find My Dream Home
+                  Browse Owner Financed Properties
                 </Link>
-              </div>
-            </div>
 
-            {/* For Realtors Card */}
-            <div className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-8 shadow-2xl hover:shadow-blue-500/10 transition-all duration-300">
-              <div className="text-center mb-8">
-                <div className="inline-block bg-blue-500/20 px-4 py-2 rounded-full border border-blue-400/30 mb-4">
-                  <span className="text-blue-400 font-semibold text-sm">FOR REAL ESTATE AGENTS</span>
-                </div>
-                <h2 className="text-2xl font-bold text-white mb-3">Get Qualified Leads</h2>
-                <p className="text-slate-400 text-sm">Turn owner-financed deals into commissions</p>
-              </div>
-              
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', marginBottom: '1.5rem' }}>
-                <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 bg-blue-400/20 rounded-lg flex items-center justify-center mt-1 flex-shrink-0">
-                    <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
-                  </div>
-                  <div>
-                    <h3 className="text-white font-semibold mb-1">Define Service Area</h3>
-                    <p className="text-slate-400 text-sm">Target cities and regions for leads.</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 bg-blue-400/20 rounded-lg flex items-center justify-center mt-1 flex-shrink-0">
-                    <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
-                  </div>
-                  <div>
-                    <h3 className="text-white font-semibold mb-1">Receive Hot Leads</h3>
-                    <p className="text-slate-400 text-sm">Pre-qualified buyers in your area.</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 bg-blue-400/20 rounded-lg flex items-center justify-center mt-1 flex-shrink-0">
-                    <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
-                  </div>
-                  <div>
-                    <h3 className="text-white font-semibold mb-1">Earn Commissions</h3>
-                    <p className="text-slate-400 text-sm">Close deals traditional lenders can&apos;t.</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="text-center">
                 <Link
                   href="/realtor-signup"
-                  className="inline-block bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 text-white py-3 px-6 rounded-xl font-semibold transition-all duration-300 hover:scale-[1.05] shadow-lg"
+                  className="w-full block bg-transparent border-2 border-slate-500 hover:border-slate-400 hover:bg-slate-700/30 text-white py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-300 hover:scale-[1.02] text-center"
                 >
-                  Start Getting Leads
+                  I'm a Real Estate Agent
+                </Link>
+
+                <Link
+                  href="/how-owner-finance-works"
+                  className="w-full block bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white py-3 px-6 rounded-xl font-medium text-base transition-all duration-300 hover:scale-[1.02] shadow-md text-center"
+                >
+                  📚 Learn How Owner Financing Works
+                </Link>
+              </div>
+
+              {/* Trust Signals */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-6 text-center">
+                  <div className="text-3xl font-bold text-emerald-400 mb-2">500+</div>
+                  <div className="text-slate-300">Available Properties</div>
+                </div>
+                <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-6 text-center">
+                  <div className="text-3xl font-bold text-blue-400 mb-2">No Banks</div>
+                  <div className="text-slate-300">Direct Owner Deals</div>
+                </div>
+                <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-6 text-center">
+                  <div className="text-3xl font-bold text-purple-400 mb-2">3 States</div>
+                  <div className="text-slate-300">TX, FL, GA Coverage</div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Benefits Section for SEO */}
+          <section className="bg-slate-800/30 py-16 px-6">
+            <div className="max-w-4xl mx-auto">
+              <h2 className="text-3xl font-bold text-white text-center mb-12">
+                Why Choose Owner Financing?
+              </h2>
+              <div className="grid md:grid-cols-2 gap-8">
+                <div className="bg-slate-900/50 rounded-xl p-6 border border-slate-700/50">
+                  <h3 className="text-xl font-semibold text-emerald-400 mb-3">No Bank Required</h3>
+                  <p className="text-slate-300">Skip traditional mortgage requirements, credit checks, and lengthy approval processes.</p>
+                </div>
+                <div className="bg-slate-900/50 rounded-xl p-6 border border-slate-700/50">
+                  <h3 className="text-xl font-semibold text-blue-400 mb-3">Flexible Terms</h3>
+                  <p className="text-slate-300">Negotiate directly with sellers for down payments, interest rates, and payment schedules.</p>
+                </div>
+                <div className="bg-slate-900/50 rounded-xl p-6 border border-slate-700/50">
+                  <h3 className="text-xl font-semibold text-purple-400 mb-3">Fast Closing</h3>
+                  <p className="text-slate-300">Close deals in days, not months. No waiting for bank approvals or appraisals.</p>
+                </div>
+                <div className="bg-slate-900/50 rounded-xl p-6 border border-slate-700/50">
+                  <h3 className="text-xl font-semibold text-yellow-400 mb-3">Bad Credit OK</h3>
+                  <p className="text-slate-300">Many sellers work with buyers who have less-than-perfect credit or are self-employed.</p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Location-Based SEO Content */}
+          <section className="py-16 px-6">
+            <div className="max-w-4xl mx-auto">
+              <h2 className="text-3xl font-bold text-white text-center mb-12">
+                Owner Financed Properties by State
+              </h2>
+              <div className="grid md:grid-cols-3 gap-6">
+                <Link href="/owner-financing-texas" className="group">
+                  <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-8 text-center hover:border-emerald-400/50 transition-all duration-300 hover:scale-[1.02]">
+                    <h3 className="text-2xl font-bold text-emerald-400 mb-2 group-hover:text-emerald-300">Texas</h3>
+                    <p className="text-slate-300 mb-4">Houston, Dallas, Austin, San Antonio</p>
+                    <p className="text-sm text-slate-400">200+ Properties Available</p>
+                  </div>
+                </Link>
+                <Link href="/owner-financing-florida" className="group">
+                  <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-8 text-center hover:border-blue-400/50 transition-all duration-300 hover:scale-[1.02]">
+                    <h3 className="text-2xl font-bold text-blue-400 mb-2 group-hover:text-blue-300">Florida</h3>
+                    <p className="text-slate-300 mb-4">Miami, Orlando, Tampa, Jacksonville</p>
+                    <p className="text-sm text-slate-400">150+ Properties Available</p>
+                  </div>
+                </Link>
+                <Link href="/owner-financing-georgia" className="group">
+                  <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-8 text-center hover:border-purple-400/50 transition-all duration-300 hover:scale-[1.02]">
+                    <h3 className="text-2xl font-bold text-purple-400 mb-2 group-hover:text-purple-300">Georgia</h3>
+                    <p className="text-slate-300 mb-4">Atlanta, Augusta, Columbus, Savannah</p>
+                    <p className="text-sm text-slate-400">100+ Properties Available</p>
+                  </div>
                 </Link>
               </div>
             </div>
+          </section>
 
-          </div>
-        </div>
-      </section>
-
-      {/* About Us Section */}
-      <section style={{ padding: '2rem 0' }}>
-        <div className="max-w-6xl mx-auto px-6 lg:px-12">
-          <div className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-8 shadow-2xl">
-            <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-white mb-4">About OwnerFi</h2>
-              <p className="text-slate-300 text-lg leading-relaxed">
-                Revolutionizing home buying by connecting buyers directly with homeowners who offer financing
-              </p>
-            </div>
-            
-            <div className="grid md:grid-cols-2 gap-8 mb-8">
-              <div>
-                <h3 className="text-xl font-semibold text-emerald-400 mb-4">Our Mission</h3>
-                <p className="text-slate-300 leading-relaxed mb-4">
-                  We believe homeownership shouldn&apos;t be limited by traditional banking requirements. OwnerFi creates a direct marketplace where creditworthy families can connect with homeowners offering flexible financing solutions.
-                </p>
-                <p className="text-slate-300 leading-relaxed">
-                  No more credit score gatekeeping. No more endless bank paperwork. Just real people helping real families achieve the American dream of homeownership.
-                </p>
-              </div>
-              
-              <div>
-                <h3 className="text-xl font-semibold text-emerald-400 mb-4">How We're Different</h3>
-                <div className="space-y-3">
-                  <div className="flex items-start gap-3">
-                    <div className="w-5 h-5 bg-emerald-400/20 rounded-lg flex items-center justify-center mt-1">
-                      <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
-                    </div>
-                    <div>
-                      <p className="text-white font-medium">Direct Connection</p>
-                      <p className="text-slate-400 text-sm">Buyers and sellers communicate directly, no middleman delays</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start gap-3">
-                    <div className="w-5 h-5 bg-emerald-400/20 rounded-lg flex items-center justify-center mt-1">
-                      <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
-                    </div>
-                    <div>
-                      <p className="text-white font-medium">Flexible Terms</p>
-                      <p className="text-slate-400 text-sm">Customized agreements that work for both parties</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start gap-3">
-                    <div className="w-5 h-5 bg-emerald-400/20 rounded-lg flex items-center justify-center mt-1">
-                      <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
-                    </div>
-                    <div>
-                      <p className="text-white font-medium">Professional Support</p>
-                      <p className="text-slate-400 text-sm">Real estate agents guide you through every step</p>
-                    </div>
-                  </div>
+          {/* FAQ Section for SEO */}
+          <section className="bg-slate-800/30 py-16 px-6">
+            <div className="max-w-4xl mx-auto">
+              <h2 className="text-3xl font-bold text-white text-center mb-12">
+                Frequently Asked Questions
+              </h2>
+              <div className="space-y-6">
+                <div className="bg-slate-900/50 rounded-xl p-6 border border-slate-700/50">
+                  <h3 className="text-xl font-semibold text-white mb-3">What is owner financing?</h3>
+                  <p className="text-slate-300">Owner financing, also known as seller financing, is when the property owner acts as the bank, allowing you to make payments directly to them instead of getting a traditional mortgage.</p>
+                </div>
+                <div className="bg-slate-900/50 rounded-xl p-6 border border-slate-700/50">
+                  <h3 className="text-xl font-semibold text-white mb-3">Do I need good credit for owner financing?</h3>
+                  <p className="text-slate-300">Many sellers are flexible with credit requirements. While some may check credit, others focus more on your down payment and ability to make monthly payments.</p>
+                </div>
+                <div className="bg-slate-900/50 rounded-xl p-6 border border-slate-700/50">
+                  <h3 className="text-xl font-semibold text-white mb-3">How fast can I close with owner financing?</h3>
+                  <p className="text-slate-300">Owner financed deals can close much faster than traditional mortgages - often in 7-14 days instead of 30-45 days, since there's no bank approval process.</p>
                 </div>
               </div>
             </div>
-            
-            <div className="bg-slate-700/30 border border-slate-600/30 rounded-xl p-6 text-center">
-              <p className="text-slate-300 text-lg mb-2">
-                Lead generation platform connecting buyers with licensed real estate agents
-              </p>
-              <div className="bg-yellow-100 border border-yellow-300 rounded-lg p-3 mt-3">
-                <p className="text-xs text-yellow-800">
-                  ⚠️ OwnerFi is not a licensed real estate broker or agent. Information not guaranteed. Your contact information will be sold to licensed real estate professionals who may contact you. Consult licensed professionals for all real estate decisions.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+          </section>
 
-      {/* About the Founder Section */}
-      <section style={{ padding: '2rem 0' }}>
-        <div className="max-w-6xl mx-auto px-6 lg:px-12">
-          <div className="bg-slate-800/30 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-8 shadow-2xl">
-            <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-white mb-4">About the Founder</h2>
-            </div>
-            
-            <div className="flex flex-col md:flex-row items-center gap-8">
-              <div className="flex-shrink-0">
-                <img 
-                  src="/abdullah.png" 
-                  alt="Abdullah Abunasrah - Founder of OwnerFi" 
-                  className="w-32 h-32 rounded-full object-cover shadow-2xl border-4 border-emerald-400/20"
+          {/* Founder Section with Optimized Image */}
+          <section className="py-16 px-6">
+            <div className="max-w-4xl mx-auto text-center">
+              <h2 className="text-3xl font-bold text-white mb-8">Meet the Founder</h2>
+              <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-8 max-w-2xl mx-auto">
+                <Image
+                  src="/abdullah.png"
+                  alt="Abdullah Abunasrah - Founder and CEO of OwnerFi, owner financing expert"
+                  width={120}
+                  height={120}
+                  className="rounded-full mx-auto mb-6 border-4 border-emerald-400/50"
+                  loading="lazy"
                 />
-              </div>
-              
-              <div className="flex-1">
-                <h3 className="text-2xl font-bold text-white mb-4">Abdullah Abunasrah</h3>
-                <p className="text-slate-300 leading-relaxed mb-4">
-                  I got tired of watching good families get told "NO" by banks. You pay $2,000 in rent every month without any problems. But when you ask for a $1,700 house payment? "Sorry, you don&apos;t qualify."
+                <h3 className="text-2xl font-bold text-white mb-2">Abdullah Abunasrah</h3>
+                <p className="text-emerald-400 font-medium mb-4">Founder & CEO</p>
+                <p className="text-slate-300 leading-relaxed">
+                  "We're making homeownership accessible by connecting buyers directly with sellers who offer financing.
+                  No banks, no barriers - just people helping people achieve their dream of owning a home."
                 </p>
-                <p className="text-slate-300 leading-relaxed mb-4">
-                  <strong className="text-white">That makes no sense to me. So I decided to fix it.</strong>
-                </p>
-                <p className="text-slate-300 leading-relaxed mb-4">
-                  Here&apos;s what I believe: If you can pay rent, you can own a home. If you work hard and take care of your family, you deserve a chance. Banks shouldn&apos;t be the ones deciding if you get to live the American Dream.
-                </p>
-                <p className="text-slate-300 leading-relaxed mb-4">
-                  OwnerFi connects you directly with home sellers who understand your story. No more credit score games. No more mountains of paperwork. Just real people helping real families get the keys to their own home.
-                </p>
-                <p className="text-slate-300 leading-relaxed mb-6">
-                  Every month you pay rent, you&apos;re buying someone else a house. With OwnerFi, you can buy your own house instead. Your kids deserve to grow up in a home you own, not one you rent.
-                </p>
-                
-                <div className="bg-slate-700/40 border border-slate-600/30 rounded-xl p-4">
-                  <p className="text-emerald-400 font-bold text-center text-lg">
-                    "Every working family deserves their own home. I&apos;m here to make that happen."
-                  </p>
-                </div>
               </div>
             </div>
+          </section>
+        </main>
+
+        {/* SEO-Optimized Footer */}
+        <footer className="bg-slate-900 border-t border-slate-800 py-12 px-6">
+          <div className="max-w-6xl mx-auto">
+            <div className="grid md:grid-cols-4 gap-8 mb-8">
+              <div>
+                <h3 className="text-white font-semibold mb-4">Properties by State</h3>
+                <ul className="space-y-2">
+                  <li><Link href="/owner-financing-texas" className="text-slate-400 hover:text-emerald-400 transition-colors">Owner Financing Texas</Link></li>
+                  <li><Link href="/owner-financing-florida" className="text-slate-400 hover:text-blue-400 transition-colors">Owner Financing Florida</Link></li>
+                  <li><Link href="/owner-financing-georgia" className="text-slate-400 hover:text-purple-400 transition-colors">Owner Financing Georgia</Link></li>
+                </ul>
+              </div>
+              <div>
+                <h3 className="text-white font-semibold mb-4">Popular Cities</h3>
+                <ul className="space-y-2">
+                  <li><Link href="/owner-financing-houston" className="text-slate-400 hover:text-white transition-colors">Houston</Link></li>
+                  <li><Link href="/owner-financing-dallas" className="text-slate-400 hover:text-white transition-colors">Dallas</Link></li>
+                  <li><Link href="/owner-financing-miami" className="text-slate-400 hover:text-white transition-colors">Miami</Link></li>
+                  <li><Link href="/owner-financing-atlanta" className="text-slate-400 hover:text-white transition-colors">Atlanta</Link></li>
+                </ul>
+              </div>
+              <div>
+                <h3 className="text-white font-semibold mb-4">Resources</h3>
+                <ul className="space-y-2">
+                  <li><Link href="/how-owner-finance-works" className="text-slate-400 hover:text-white transition-colors">How It Works</Link></li>
+                  <li><Link href="/about" className="text-slate-400 hover:text-white transition-colors">About Us</Link></li>
+                  <li><Link href="/contact" className="text-slate-400 hover:text-white transition-colors">Contact</Link></li>
+                  <li><Link href="/signup" className="text-slate-400 hover:text-white transition-colors">Sign Up</Link></li>
+                </ul>
+              </div>
+              <div>
+                <h3 className="text-white font-semibold mb-4">For Agents</h3>
+                <ul className="space-y-2">
+                  <li><Link href="/realtor-signup" className="text-slate-400 hover:text-white transition-colors">Agent Sign Up</Link></li>
+                  <li><Link href="/realtor" className="text-slate-400 hover:text-white transition-colors">Agent Portal</Link></li>
+                  <li><Link href="/auth/signin" className="text-slate-400 hover:text-white transition-colors">Agent Login</Link></li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="border-t border-slate-800 pt-8">
+              <p className="text-center text-slate-400 text-sm">
+                © 2024 OwnerFi. All rights reserved. |
+                <Link href="/terms" className="hover:text-white ml-2">Terms</Link> |
+                <Link href="/privacy" className="hover:text-white ml-2">Privacy</Link> |
+                <Link href="/tcpa-compliance" className="hover:text-white ml-2">TCPA Compliance</Link>
+              </p>
+            </div>
           </div>
-        </div>
-      </section>
+        </footer>
 
-      {/* Minimal Footer */}
-      <footer className="bg-slate-800/30 border-t border-slate-700/50 py-6">
-        <div className="max-w-6xl mx-auto px-6 lg:px-12">
-          <div className="flex justify-center gap-6 text-sm">
-            <a href="mailto:support@prosway.com" className="text-slate-400 hover:text-emerald-400 transition-colors">
-              Contact
-            </a>
-            <a href="/terms" className="text-slate-400 hover:text-emerald-400 transition-colors">
-              Terms
-            </a>
-            <a href="/privacy" className="text-slate-400 hover:text-emerald-400 transition-colors">
-              Privacy
-            </a>
-          </div>
-          <div className="text-center mt-4 text-xs text-slate-500">
-            &copy; 2025 OwnerFi. All rights reserved.
-          </div>
-        </div>
-      </footer>
+        <LegalFooter includeInvestment={true} includeState={true} />
 
-      {/* Comprehensive Legal Footer */}
-      <LegalFooter />
-
-      {/* Floating Chatbot Button */}
-      <FloatingChatbotButton onClick={() => setIsChatbotOpen(true)} />
-
-      {/* Chatbot Modal */}
-      <Chatbot isOpen={isChatbotOpen} onClose={() => setIsChatbotOpen(false)} />
-    </div>
-  );
+        {/* Client Components */}
+        <HomePageClient />
+      </div>
+    </>
+  )
 }

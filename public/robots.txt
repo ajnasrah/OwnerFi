@@ -1,0 +1,15 @@
+User-agent: *
+Allow: /
+
+# Disallow admin and authentication pages
+Disallow: /dashboard/
+Disallow: /auth/
+Disallow: /api/
+Disallow: /signup
+Disallow: /realtor-signup
+
+# Sitemap
+Sitemap: https://ownerfi.ai/sitemap.xml
+
+# Crawl-delay for better indexing
+Crawl-delay: 1

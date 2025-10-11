@@ -1,12 +1,19 @@
 User-agent: *
 Allow: /
 
-# Disallow admin and authentication pages
+# Disallow admin and authentication pages from search indexing
 Disallow: /dashboard/
-Disallow: /auth/
-Disallow: /api/
+Disallow: /auth/signin
+Disallow: /auth/logout
+Disallow: /auth/forgot-password
+Disallow: /auth/reset-password
 Disallow: /signup
 Disallow: /realtor-signup
+
+# API routes should not be indexed but must remain functional
+# Note: robots.txt does NOT block actual API calls, only search engine indexing
+User-agent: *
+Disallow: /api/
 
 # Sitemap
 Sitemap: https://ownerfi.ai/sitemap.xml

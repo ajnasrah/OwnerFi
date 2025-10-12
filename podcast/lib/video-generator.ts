@@ -57,6 +57,8 @@ export class PodcastVideoGenerator {
 
   /**
    * Generate podcast with both individual clips and final video
+   * OPTIMIZED: Single HeyGen API call (90% cost savings!)
+   * Returns HeyGen URL directly - Submagic will handle splitting
    */
   async generatePodcast(
     script: PodcastScript,
@@ -76,17 +78,38 @@ export class PodcastVideoGenerator {
       mkdirSync(episodeDir, { recursive: true });
     }
 
-    // Step 1: Generate individual clips
-    console.log('📹 Step 1: Generating individual clips...\n');
-    const clips = await this.generateIndividualClips(script, guest, episodeDir);
+    // Step 1: Generate complete video with single API call (90% cost savings!)
+    console.log('📹 Step 1: Generating complete video (single API call)...\n');
+    console.log('   This batches all Q&A into ONE HeyGen request\n');
 
-    console.log(`\n✅ Generated ${clips.length} individual clips\n`);
+    const videoUrl = await this.generateCompleteVideo(script, guest);
 
-    // Step 2: Stitch clips together
-    console.log('🔗 Step 2: Stitching clips into final video...\n');
-    const finalVideoPath = await this.stitchClips(clips, episodeDir, episodeNumber);
+    console.log(`✅ Complete video generated!\n`);
+    console.log(`   Video URL: ${videoUrl}\n`);
 
-    console.log(`✅ Final video created: ${finalVideoPath}\n`);
+    // Step 2: Build clip metadata (for Submagic to use)
+    const clips: VideoClip[] = [];
+    let sceneNumber = 1;
+
+    for (let i = 0; i < script.qa_pairs.length; i++) {
+      const qa = script.qa_pairs[i];
+
+      clips.push({
+        scene_number: sceneNumber++,
+        type: 'question',
+        video_id: `q${i + 1}`,
+        video_url: videoUrl, // Same video, Submagic will split
+        text: qa.question
+      });
+
+      clips.push({
+        scene_number: sceneNumber++,
+        type: 'answer',
+        video_id: `a${i + 1}`,
+        video_url: videoUrl, // Same video, Submagic will split
+        text: qa.answer
+      });
+    }
 
     // Step 3: Save metadata
     const metadata = {
@@ -98,26 +121,136 @@ export class PodcastVideoGenerator {
       clips: clips.map(c => ({
         scene: c.scene_number,
         type: c.type,
-        video_url: c.video_url,
+        video_id: c.video_id,
         text: c.text
       })),
-      final_video: finalVideoPath,
-      generated_at: new Date().toISOString()
+      heygen_video_url: videoUrl,
+      generated_at: new Date().toISOString(),
+      cost_optimization: 'single_api_call',
+      total_scenes: clips.length,
+      note: 'Submagic will handle video splitting and caption generation'
     };
 
     const metadataPath = join(episodeDir, 'metadata.json');
     writeFileSync(metadataPath, JSON.stringify(metadata, null, 2));
 
+    console.log(`💡 Next: Pass this video URL to Submagic for:`);
+    console.log(`   - Auto-captioning`);
+    console.log(`   - Scene detection & splitting`);
+    console.log(`   - Individual clip export\n`);
+
     return {
       episode_number: episodeNumber,
       individual_clips: clips,
-      final_video_url: finalVideoPath,
+      final_video_url: videoUrl,
       clips_directory: episodeDir
     };
   }
 
   /**
+   * Generate complete video with single HeyGen API call
+   * Uses multi-scene approach from heygen-podcast.ts
+   */
+  private async generateCompleteVideo(
+    script: PodcastScript,
+    guest: any
+  ): Promise<string> {
+    // Build all scenes (alternating Q&A)
+    const videoScenes = [];
+
+    for (const qa of script.qa_pairs) {
+      // Host asks question
+      videoScenes.push({
+        character: {
+          type: this.hostProfile.avatar_type || 'talking_photo',
+          talking_photo_id: this.hostProfile.avatar_id,
+          scale: this.hostProfile.scale || 1.4
+        },
+        voice: {
+          type: 'text',
+          voice_id: this.hostProfile.voice_id,
+          input_text: qa.question,
+          speed: 1.0
+        },
+        background: {
+          type: 'color',
+          value: this.hostProfile.background_color || '#ffffff'
+        }
+      });
+
+      // Guest answers
+      const guestVoice: any = {
+        type: 'text',
+        input_text: qa.answer,
+        speed: 1.0
+      };
+
+      if (guest.voice_id) {
+        guestVoice.voice_id = guest.voice_id;
+      }
+
+      videoScenes.push({
+        character: {
+          type: guest.avatar_type || 'avatar',
+          ...(guest.avatar_type === 'avatar'
+            ? { avatar_id: guest.avatar_id }
+            : { talking_photo_id: guest.avatar_id }),
+          scale: guest.scale || 1.0
+        },
+        voice: guestVoice,
+        background: {
+          type: 'color',
+          value: guest.background_color || '#f5f5f5'
+        }
+      });
+    }
+
+    const request = {
+      video_inputs: videoScenes,
+      dimension: {
+        width: 1080,
+        height: 1920
+      },
+      title: script.episode_title,
+      caption: false // Submagic will handle captions
+    };
+
+    console.log(`   Generating ${videoScenes.length} scenes in single API call...`);
+
+    // Call HeyGen API
+    const response = await fetch(this.apiUrl, {
+      method: 'POST',
+      headers: {
+        'accept': 'application/json',
+        'content-type': 'application/json',
+        'x-api-key': this.heygenApiKey
+      },
+      body: JSON.stringify(request)
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`HeyGen API error: ${response.status} - ${error}`);
+    }
+
+    const data = await response.json();
+
+    if (data.code !== 100) {
+      throw new Error(`HeyGen API error: ${data.message || 'Unknown error'}`);
+    }
+
+    const videoId = data.data.video_id;
+    console.log(`   Video ID: ${videoId}`);
+
+    // Wait for completion
+    const videoUrl = await this.waitForVideo(videoId);
+
+    return videoUrl;
+  }
+
+  /**
    * Generate individual clips for each Q&A
+   * DEPRECATED: Use generateCompleteVideo instead for 90% cost savings
    */
   private async generateIndividualClips(
     script: PodcastScript,

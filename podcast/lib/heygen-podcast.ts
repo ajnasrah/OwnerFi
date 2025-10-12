@@ -83,6 +83,24 @@ export class HeyGenPodcastGenerator {
       throw new Error(`Guest profile not found: ${script.guest_id}`);
     }
 
+    // Validate guest configuration
+    if (!guest.avatar_id) {
+      throw new Error(`Guest ${script.guest_id} is missing avatar_id`);
+    }
+
+    if (!guest.voice_id) {
+      console.warn(`⚠️  Guest ${script.guest_id} has no voice_id - using avatar's default voice`);
+    }
+
+    // Validate host configuration
+    if (!this.hostProfile.avatar_id) {
+      throw new Error('Host is missing avatar_id');
+    }
+
+    if (!this.hostProfile.voice_id) {
+      throw new Error('Host is missing voice_id');
+    }
+
     // Build video scenes (alternating Q&A)
     const videoScenes = this.buildVideoScenes(script, guest);
 
@@ -153,7 +171,7 @@ export class HeyGenPodcastGenerator {
           ...(guest.avatar_type === 'avatar'
             ? { avatar_id: guest.avatar_id }
             : { talking_photo_id: guest.avatar_id }),
-          scale: 1.0
+          scale: guest.scale || 1.4
         },
         voice: guestVoice,
         background: {

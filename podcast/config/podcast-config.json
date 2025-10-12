@@ -33,7 +33,8 @@
     "enabled": true,
     "provider": "submagic",
     "template": "Hormozi 2",
-    "language": "en"
+    "language": "en",
+    "split_clips": true
   },
   "publishing": {
     "auto_publish": true,

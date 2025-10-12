@@ -7,7 +7,8 @@
       "expertise": "General Health & Wellness",
       "avatar_type": "avatar",
       "avatar_id": "Ann_Doctor_Sitting_public",
-      "voice_id": "2e4de8a01f3b4e9c96794045e2f12779",
+      "voice_id": "7ffb69e578d4492587493c26ebcabc31",
+      "scale": 1.4,
       "description": "Board-certified physician with 15 years of experience",
       "question_topics": [
         "nutrition and diet",
@@ -20,7 +21,9 @@
         "common health myths"
       ],
       "tone": "professional, caring, educational",
-      "background_color": "#f0f8ff"
+      "background_color": "#f0f8ff",
+      "enabled": true,
+      "_note": "ACTIVE - This month's A/B test"
     },
     "real_estate_agent": {
       "id": "real_estate_agent",
@@ -28,8 +31,9 @@
       "title": "Real Estate Expert",
       "expertise": "Property Investment & Home Buying",
       "avatar_type": "avatar",
-      "avatar_id": "placeholder_realtor_avatar_id",
-      "voice_id": "placeholder_friendly_voice",
+      "avatar_id": "Caroline_Business_Sitting_Front_public",
+      "voice_id": "dc491816e53f46eaa466740fbfec09bb",
+      "scale": 1.4,
       "description": "Top-producing agent specializing in residential properties",
       "question_topics": [
         "first-time home buying",
@@ -42,7 +46,9 @@
         "negotiation tactics"
       ],
       "tone": "enthusiastic, knowledgeable, trustworthy",
-      "background_color": "#fff5e6"
+      "background_color": "#fff5e6",
+      "enabled": true,
+      "_note": "ACTIVE - This month's A/B test"
     },
     "car_salesman": {
       "id": "car_salesman",
@@ -50,8 +56,9 @@
       "title": "Automotive Expert",
       "expertise": "Car Buying & Vehicle Maintenance",
       "avatar_type": "avatar",
-      "avatar_id": "placeholder_auto_avatar_id",
-      "voice_id": "placeholder_energetic_voice",
+      "avatar_id": "Brandon_Business_Sitting_Front_public",
+      "voice_id": "827d0da125f140fd8b6d010f32cd9f2e",
+      "scale": 1.4,
       "description": "20 years in automotive sales and customer service",
       "question_topics": [
         "buying new vs used cars",
@@ -64,7 +71,9 @@
         "future of automotive technology"
       ],
       "tone": "friendly, straightforward, helpful",
-      "background_color": "#f0f0f0"
+      "background_color": "#f0f0f0",
+      "enabled": true,
+      "_note": "ACTIVE - This month's A/B test"
     },
     "financial_advisor": {
       "id": "financial_advisor",
@@ -72,8 +81,9 @@
       "title": "Financial Advisor",
       "expertise": "Personal Finance & Investment",
       "avatar_type": "avatar",
-      "avatar_id": "placeholder_finance_avatar_id",
-      "voice_id": "placeholder_confident_voice",
+      "avatar_id": "Byron_Business_Sitting_Front_public",
+      "voice_id": "7a544b76e07648849ed54617f18ea280",
+      "scale": 1.4,
       "description": "Certified financial planner helping individuals build wealth",
       "question_topics": [
         "retirement planning basics",
@@ -86,7 +96,9 @@
         "passive income creation"
       ],
       "tone": "authoritative, clear, empowering",
-      "background_color": "#e8f5e9"
+      "background_color": "#e8f5e9",
+      "enabled": true,
+      "_note": "ACTIVE - This month's A/B test"
     },
     "tech_expert": {
       "id": "tech_expert",
@@ -94,8 +106,9 @@
       "title": "Technology Consultant",
       "expertise": "Consumer Technology & Digital Tools",
       "avatar_type": "avatar",
-      "avatar_id": "placeholder_tech_avatar_id",
-      "voice_id": "placeholder_modern_voice",
+      "avatar_id": "Shawn_Business_Front_public",
+      "voice_id": "d2f4f24783d04e22ab49ee8fdc3715e0",
+      "scale": 1.4,
       "description": "Tech enthusiast helping people navigate the digital world",
       "question_topics": [
         "smartphone buying guide",
@@ -108,7 +121,9 @@
         "tech trends for 2025"
       ],
       "tone": "modern, accessible, innovative",
-      "background_color": "#e3f2fd"
+      "background_color": "#e3f2fd",
+      "enabled": false,
+      "_note": "DISABLED for this month's A/B test"
     },
     "fitness_trainer": {
       "id": "fitness_trainer",
@@ -116,8 +131,9 @@
       "title": "Certified Fitness Trainer",
       "expertise": "Exercise & Nutrition",
       "avatar_type": "avatar",
-      "avatar_id": "placeholder_fitness_avatar_id",
-      "voice_id": "placeholder_energetic_female_voice",
+      "avatar_id": "Adriana_Business_Front_public",
+      "voice_id": "7aafc1296f5c4d418703c5716d83a4a0",
+      "scale": 1.4,
       "description": "Personal trainer specializing in sustainable fitness",
       "question_topics": [
         "starting a fitness routine",
@@ -130,7 +146,9 @@
         "fitness after 40"
       ],
       "tone": "motivating, supportive, energetic",
-      "background_color": "#fff3e0"
+      "background_color": "#fff3e0",
+      "enabled": false,
+      "_note": "DISABLED for this month's A/B test"
     }
   },
   "host": {

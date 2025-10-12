@@ -50,14 +50,20 @@ export class ScriptGenerator {
    */
   selectRandomGuest(excludeRecent: string[] = []): GuestProfile {
     const availableGuests = Object.values(this.guestProfiles).filter(
-      (guest: any) => !excludeRecent.includes(guest.id)
+      (guest: any) => guest.enabled !== false && !excludeRecent.includes(guest.id)
     ) as GuestProfile[];
 
     if (availableGuests.length === 0) {
-      // If all guests used recently, reset and pick from all
-      return Object.values(this.guestProfiles)[
-        Math.floor(Math.random() * Object.values(this.guestProfiles).length)
-      ] as GuestProfile;
+      // If all guests used recently, pick from all enabled guests
+      const allEnabled = Object.values(this.guestProfiles).filter(
+        (guest: any) => guest.enabled !== false
+      ) as GuestProfile[];
+
+      if (allEnabled.length === 0) {
+        throw new Error('No enabled guests available');
+      }
+
+      return allEnabled[Math.floor(Math.random() * allEnabled.length)];
     }
 
     return availableGuests[Math.floor(Math.random() * availableGuests.length)];
@@ -70,6 +76,11 @@ export class ScriptGenerator {
     guestId?: string,
     questionsCount: number = 5
   ): Promise<PodcastScript> {
+    // Validate questions count
+    if (questionsCount < 1 || questionsCount > 10) {
+      throw new Error('Questions count must be between 1 and 10 (HeyGen video duration limits)');
+    }
+
     // Select guest (random or specified)
     const guest = guestId
       ? this.guestProfiles[guestId]
@@ -77,6 +88,10 @@ export class ScriptGenerator {
 
     if (!guest) {
       throw new Error(`Guest profile not found: ${guestId}`);
+    }
+
+    if (guest.enabled === false) {
+      throw new Error(`Guest is disabled: ${guestId}`);
     }
 
     console.log(`Generating script for guest: ${guest.name} (${guest.title})`);
@@ -94,14 +109,14 @@ export class ScriptGenerator {
       messages: [
         {
           role: 'system',
-          content: `You are a professional podcast script writer. Create engaging, educational Q&A content for adult audiences. The host's name is ${this.hostProfile.name}.`
+          content: `You are an ELITE podcast script writer who creates EXPLOSIVE, ENERGETIC content. Your style is a mix of Joe Rogan's curiosity, Gary Vee's intensity, and Alex Hormozi's direct communication. Every line should POP with energy and emotion. Make people feel EXCITED to learn. The host's name is ${this.hostProfile.name} - he's fired up and passionate about getting REAL answers.`
         },
         {
           role: 'user',
           content: prompt
         }
       ],
-      temperature: 0.8,
+      temperature: 0.9,
       max_tokens: 2000
     });
 
@@ -139,7 +154,7 @@ export class ScriptGenerator {
    * Build the GPT-4 prompt for script generation
    */
   private buildPrompt(guest: GuestProfile, topic: string, count: number): string {
-    return `Create a ${count}-question podcast interview script about "${topic}".
+    return `Create a ${count}-question EXPLOSIVE podcast interview about "${topic}".
 
 Guest Expert:
 - Name: ${guest.name}
@@ -149,34 +164,76 @@ Guest Expert:
 
 Host: ${this.hostProfile.name}
 
-Requirements:
-1. ${count} questions from the host, each followed by a detailed answer from ${guest.name}
-2. Questions should be clear, engaging, and educational
-3. Answers should be 2-3 sentences, informative but concise (30-45 seconds when spoken)
-4. Use a conversational, professional tone suitable for adults
-5. Focus on practical, actionable information
-6. Keep it engaging and interesting
-7. IMPORTANT: Do NOT include names in the dialogue. Do NOT say "Thanks ${this.hostProfile.name}" or "Welcome ${guest.name}". Just ask/answer directly.
-8. Make it sound like a natural conversation where people DON'T repeatedly use each other's names
+CRITICAL REQUIREMENTS:
+
+1. ENERGY & EMOTION:
+   - Use POWER WORDS that create excitement: INSANE, CRAZY, SHOCKING, MASSIVE, INCREDIBLE, WILD
+   - Add emphasis with CAPS on key words (but don't overdo it - 1-2 words per answer max)
+   - Use exclamation points! Show emotion! Get hyped!
+   - Questions should sound SHOCKED, CURIOUS, or EXCITED
+   - Answers should sound PASSIONATE like the expert REALLY CARES about this topic
+
+2. CONVERSATIONAL & BOLD:
+   - Make questions sound like "WAIT... are you telling me that...?" or "Hold on, so..." or "No way!"
+   - Answers should start strong: "Listen...", "Here's the crazy part...", "This blows people's minds...", "Okay so..."
+   - Use "you" and "your" to speak directly to the audience
+   - Sound like two friends having an INTENSE conversation
+
+3. SIMPLE BUT PUNCHY (5th grade reading level):
+   - Short sentences. Punchy. Hard-hitting.
+   - Use simple words but deliver them with FORCE
+   - Under 20 words per sentence
+   - Avoid boring academic language - this is REAL TALK
+
+4. PRACTICAL & MIND-BLOWING:
+   - Every answer should drop a truth bomb or life hack
+   - Make it feel like secret insider knowledge
+   - Focus on things that make people go "WHOA I didn't know that!"
+   - 2-3 sentences per answer (30-45 seconds when spoken with energy)
+
+5. NO NAMES IN DIALOGUE:
+   - Don't say "Thanks Abdullah" or "Welcome back"
+   - Just jump right into the content
+   - Natural conversation where people DON'T use names constantly
 
 Format your response as:
-Q1: [Direct question - no names, no greetings]
-A1: [Direct answer - no names, just the information]
+Q1: [Excited/shocked question - no names]
+A1: [Passionate, energetic answer - no names]
 
-Q2: [Direct question]
-A2: [Direct answer]
+Q2: [Another hyped question]
+A2: [Another passionate answer]
 
 ... and so on.
 
-Example of GOOD format:
-Q1: What's the most important factor in preventing heart disease?
-A1: Regular cardiovascular exercise is crucial. Just 30 minutes of moderate activity five days a week can significantly reduce your risk. Combined with a balanced diet, it's one of the most effective preventive measures.
+EXAMPLES:
 
-Example of BAD format (don't do this):
-Q1: Welcome Dr. Smith! Tell me, what's important for heart health?
+❌ BAD (boring, academic, lifeless):
+Q1: What's the most important factor in preventing cardiovascular disease?
+A1: Regular cardiovascular exercise is crucial. Just 30 minutes of moderate activity five days a week can significantly reduce your risk.
+
+✅ GOOD (exciting, simple, emotional):
+Q1: Wait, so what's the BIGGEST mistake people make with their heart health?
+A1: Okay listen - they sit all day! Your body needs to MOVE. Just 30 minutes of walking every single day can literally add YEARS to your life. Most people don't realize how simple it is!
+
+❌ BAD (using names, too formal):
+Q1: Welcome Dr. Smith! Can you tell me about heart health?
 A1: Thanks for having me, Abdullah! Well, exercise is really important...
 
-Make it natural and engaging without using names!`;
+✅ GOOD (direct, energetic, no fluff):
+Q1: What's the one thing everyone gets WRONG about eating healthy?
+A1: Here's the crazy part - you don't need to be perfect! People think it's all or nothing, but eating just ONE extra serving of veggies a day makes a MASSIVE difference. Small wins compound over time!
+
+✅ MORE GOOD EXAMPLES:
+Q: Hold on... are you saying most people are doing this completely wrong?
+A: YES! And it's costing them thousands of dollars. Listen, here's what the pros actually do...
+
+Q: That sounds INSANE. How is this even legal?
+A: Right?! So here's the loophole that nobody talks about...
+
+Q: Okay so what would you tell someone who's brand new to this?
+A: First thing - forget everything you think you know. The real secret is way simpler than people realize...
+
+Make every exchange feel URGENT, VALUABLE, and EXCITING. The listener should feel like they're getting insider secrets that could change their life!`;
   }
 
   /**

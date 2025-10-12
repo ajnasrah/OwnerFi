@@ -1,4 +1,4 @@
-// Submagic API Integration for Podcast Captions
+// Submagic API Integration for Podcast Captions & Clip Generation
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
@@ -6,6 +6,16 @@ interface SubmagicRequest {
   video_url: string;
   template?: string;
   language?: string;
+  split_scenes?: boolean;
+  export_individual_clips?: boolean;
+}
+
+interface SubmagicClip {
+  clip_number: number;
+  start_time: number;
+  end_time: number;
+  video_url: string;
+  caption_text?: string;
 }
 
 interface SubmagicResponse {
@@ -13,6 +23,7 @@ interface SubmagicResponse {
   job_id: string;
   status: string;
   video_url?: string;
+  clips?: SubmagicClip[];
   error?: string;
 }
 
@@ -25,50 +36,89 @@ export class SubmagicIntegration {
   }
 
   /**
-   * Add captions to video using Submagic
+   * Process podcast video: Add captions + Split into clips
+   * This is the ONE-STOP method for the complete podcast workflow
+   */
+  async processPodcastVideo(
+    videoUrl: string,
+    template: string = 'Hormozi 2',
+    language: string = 'en',
+    splitIntoClips: boolean = true
+  ): Promise<{
+    finalVideoUrl: string;
+    clips?: SubmagicClip[];
+  }> {
+    console.log(`\n🎨 Processing video with Submagic...`);
+    console.log(`   Template: ${template}`);
+    console.log(`   Split into clips: ${splitIntoClips ? 'Yes' : 'No'}\n`);
+
+    const response = await this.createSubmagicJob(
+      videoUrl,
+      template,
+      language,
+      splitIntoClips
+    );
+
+    if (!response.success) {
+      throw new Error(`Submagic job creation failed: ${response.error}`);
+    }
+
+    console.log(`   Job ID: ${response.job_id}\n`);
+
+    // Wait for completion
+    const result = await this.waitForCompletion(response.job_id);
+
+    console.log(`✅ Submagic processing complete!\n`);
+
+    if (splitIntoClips && result.clips) {
+      console.log(`   Generated ${result.clips.length} individual clips\n`);
+    }
+
+    return {
+      finalVideoUrl: result.video_url || videoUrl,
+      clips: result.clips
+    };
+  }
+
+  /**
+   * Add captions to video using Submagic (legacy method)
    */
   async addCaptions(
     videoUrl: string,
     template: string = 'Hormozi 2',
     language: string = 'en'
   ): Promise<string> {
-    console.log(`\nAdding captions to video with Submagic...`);
-    console.log(`Template: ${template}`);
-
-    const response = await this.createSubmagicJob(videoUrl, template, language);
-
-    if (!response.success) {
-      throw new Error(`Submagic job creation failed: ${response.error}`);
-    }
-
-    console.log(`Submagic job created: ${response.job_id}`);
-
-    // Wait for completion
-    const finalVideoUrl = await this.waitForCompletion(response.job_id);
-
-    console.log(`Captions added successfully!`);
-    return finalVideoUrl;
+    const result = await this.processPodcastVideo(videoUrl, template, language, false);
+    return result.finalVideoUrl;
   }
 
   /**
-   * Create Submagic caption job
+   * Create Submagic caption job with optional clip splitting
    */
   private async createSubmagicJob(
     videoUrl: string,
     template: string,
-    language: string
+    language: string,
+    splitScenes: boolean = false
   ): Promise<SubmagicResponse> {
+    const payload: SubmagicRequest = {
+      video_url: videoUrl,
+      template,
+      language
+    };
+
+    if (splitScenes) {
+      payload.split_scenes = true;
+      payload.export_individual_clips = true;
+    }
+
     const response = await fetch(`${this.apiUrl}/captions`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${this.apiKey}`,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
-        video_url: videoUrl,
-        template,
-        language
-      })
+      body: JSON.stringify(payload)
     });
 
     if (!response.ok) {
@@ -102,20 +152,21 @@ export class SubmagicIntegration {
   async waitForCompletion(
     jobId: string,
     maxWaitMinutes: number = 15
-  ): Promise<string> {
+  ): Promise<SubmagicResponse> {
     const startTime = Date.now();
     const maxWaitMs = maxWaitMinutes * 60 * 1000;
     const pollIntervalMs = 15000; // Check every 15 seconds
 
-    console.log(`Waiting for Submagic to complete (max ${maxWaitMinutes} minutes)...`);
+    console.log(`   Waiting for Submagic (max ${maxWaitMinutes} min)...`);
 
     while (Date.now() - startTime < maxWaitMs) {
       const status = await this.checkStatus(jobId);
 
-      console.log(`Status: ${status.status}`);
+      const elapsed = Math.floor((Date.now() - startTime) / 1000);
+      console.log(`   [${elapsed}s] Status: ${status.status}`);
 
       if (status.status === 'completed' && status.video_url) {
-        return status.video_url;
+        return status;
       }
 
       if (status.status === 'failed') {

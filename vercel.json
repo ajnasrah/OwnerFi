@@ -12,9 +12,21 @@
   "env": {
     "NODE_ENV": "production"
   },
+  "crons": [
+    {
+      "path": "/api/podcast/cron",
+      "schedule": "0 9 * * 1"
+    }
+  ],
   "functions": {
     "src/app/api/**/*.ts": {
       "maxDuration": 30
+    },
+    "app/api/podcast/generate/route.ts": {
+      "maxDuration": 300
+    },
+    "app/api/podcast/cron/route.ts": {
+      "maxDuration": 300
     }
   },
   "headers": [

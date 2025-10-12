@@ -237,3 +237,33 @@ export function cleanupOldArticles(daysToKeep: number = 30): number {
   console.log(`🧹 Cleaned up ${deleted} old articles`);
   return deleted;
 }
+
+// Reset article processing status (for testing)
+export function resetArticleProcessing(articleId?: string): number {
+  if (articleId) {
+    const article = articles.get(articleId);
+    if (article) {
+      article.processed = false;
+      article.workflowId = undefined;
+      articles.set(articleId, article);
+      console.log(`✅ Reset processing status for article: ${article.title}`);
+      return 1;
+    }
+    return 0;
+  }
+
+  // Reset all articles
+  let count = 0;
+  for (const [id, article] of articles.entries()) {
+    article.processed = false;
+    article.videoGenerated = false;
+    article.workflowId = undefined;
+    article.videoId = undefined;
+    article.error = undefined;
+    articles.set(id, article);
+    count++;
+  }
+
+  console.log(`✅ Reset processing status for ${count} articles`);
+  return count;
+}

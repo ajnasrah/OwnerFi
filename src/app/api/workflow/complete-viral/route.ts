@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
 
     // Step 4: Wait for HeyGen completion
     console.log('⏳ Step 4: Waiting for HeyGen video...');
-    const heygenUrl = await waitForVideoCompletion(videoResult.video_id, 10);
+    const heygenUrl = await waitForVideoCompletion(videoResult.video_id, 11);
 
     if (!heygenUrl) {
       return NextResponse.json(
@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
 
     // Step 6: Wait for Submagic completion
     console.log('⏳ Step 6: Waiting for Submagic enhancement...');
-    const finalVideoUrl = await waitForSubmagicCompletion(submagicResult.project_id, 10);
+    const finalVideoUrl = await waitForSubmagicCompletion(submagicResult.project_id, 11);
 
     if (!finalVideoUrl) {
       return NextResponse.json(
@@ -326,9 +326,9 @@ async function generateHeyGenVideo(params: {
 }
 
 // Helper: Wait for HeyGen video completion
-async function waitForVideoCompletion(videoId: string, maxAttempts: number = 10): Promise<string | null> {
+async function waitForVideoCompletion(videoId: string, maxAttempts: number = 11): Promise<string | null> {
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    await new Promise(resolve => setTimeout(resolve, 30000));
+    await new Promise(resolve => setTimeout(resolve, 45000)); // 45 seconds × 11 = 8.25 minutes
 
     try {
       const response = await fetch(
@@ -372,18 +372,20 @@ async function enhanceWithSubmagic(params: {
         language: params.language,
         videoUrl: params.videoUrl,
         templateName: params.templateName,
-        generateHookTitle: true,  // AI-generated engaging hook title
-        addMagicBRoll: true,      // Add contextual B-roll footage
-        addMagicZoom: true         // Add dynamic zoom effects
+        magicBrolls: true,           // Add contextual B-roll footage
+        magicBrollsPercentage: 50,   // 50% B-roll coverage
+        magicZooms: true             // Add dynamic zoom effects
       })
     });
 
     if (!response.ok) {
       const errorText = await response.text();
+      console.error('❌ Submagic API error:', response.status, errorText);
       return { success: false, error: `API error: ${response.status} - ${errorText}` };
     }
 
     const data = await response.json();
+    console.log('✅ Submagic response:', JSON.stringify(data, null, 2));
     return { success: true, project_id: data.id || data.project_id || data.projectId };
   } catch (error) {
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
@@ -391,9 +393,9 @@ async function enhanceWithSubmagic(params: {
 }
 
 // Helper: Wait for Submagic completion
-async function waitForSubmagicCompletion(projectId: string, maxAttempts: number = 10): Promise<string | null> {
+async function waitForSubmagicCompletion(projectId: string, maxAttempts: number = 11): Promise<string | null> {
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    await new Promise(resolve => setTimeout(resolve, 30000));
+    await new Promise(resolve => setTimeout(resolve, 45000)); // 45 seconds × 11 = 8.25 minutes
 
     try {
       const response = await fetch(
@@ -407,9 +409,12 @@ async function waitForSubmagicCompletion(projectId: string, maxAttempts: number 
       const status = data.status;
 
       console.log(`⏳ Submagic (${attempt + 1}/${maxAttempts}): ${status}`);
+      console.log(`   Full response:`, JSON.stringify(data, null, 2));
 
       if (status === 'completed' || status === 'done' || status === 'ready') {
-        return data.video_url || data.videoUrl || data.output_url;
+        const videoUrl = data.video_url || data.videoUrl || data.output_url || data.downloadUrl || data.download_url || data.url || data.resultUrl || data.result_url;
+        console.log(`   Found video URL: ${videoUrl}`);
+        return videoUrl;
       }
 
       if (status === 'failed' || status === 'error') return null;

@@ -106,7 +106,10 @@ export async function postToMetricool(request: MetricoolPostRequest): Promise<Me
                 timezone: 'America/New_York'
               },
               providers: request.platforms.map(platform => ({
-                network: platform
+                network: platform,
+                // Instagram and Facebook should be posted as Reels
+                ...(platform === 'instagram' && { postType: 'reels' }),
+                ...(platform === 'facebook' && { postType: 'reels' })
               })),
               media: [{
                 url: request.videoUrl

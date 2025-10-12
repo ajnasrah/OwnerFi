@@ -128,6 +128,8 @@ export async function POST(request: NextRequest) {
     createWorkflow(workflowId, {
       videoId: videoId!,
       script: script,
+      title: title,
+      caption: caption,
       status: 'heygen_pending'
     });
 

@@ -172,6 +172,7 @@ async function queueArticlesForVideo() {
 
 /**
  * Evaluate articles with AI and queue the best ones
+ * Strategy: Evaluate ALL articles, then pick the TOP N highest-rated ones
  */
 async function evaluateAndQueueArticles(
   articles: Article[],
@@ -180,40 +181,104 @@ async function evaluateAndQueueArticles(
 ): Promise<number> {
   const { evaluateArticleQuality } = await import('./article-quality-filter');
 
-  let queued = 0;
+  console.log(`  📊 Evaluating ${articles.length} articles to find top ${maxToQueue}...`);
+
+  // Evaluate ALL articles
+  const evaluations: Array<{ article: Article; score: number; reasoning: string }> = [];
 
   for (const article of articles) {
-    if (queued >= maxToQueue) break;
+    try {
+      const quality = await evaluateArticleQuality(
+        article.title,
+        article.content || article.description,
+        category
+      );
 
-    // Evaluate article quality
-    const quality = await evaluateArticleQuality(
-      article.title,
-      article.content || article.description,
-      category
-    );
+      evaluations.push({
+        article,
+        score: quality.score,
+        reasoning: quality.reasoning
+      });
 
-    console.log(`  📊 "${article.title.substring(0, 60)}..."`);
-    console.log(`     Score: ${quality.score}/100 - ${quality.reasoning}`);
-
-    if (quality.shouldMakeVideo) {
-      queueArticleForVideo(article, category, quality.score);
-      queued++;
-      console.log(`     ✅ QUEUED for video`);
-    } else {
-      // Mark as processed but rejected
-      markArticleProcessed(article.id, undefined, `Quality score too low: ${quality.score}`);
-      console.log(`     ❌ REJECTED (${quality.redFlags?.join(', ') || 'low quality'})`);
+      console.log(`  📊 "${article.title.substring(0, 60)}..." - Score: ${quality.score}/100`);
+    } catch (error) {
+      console.error(`  ❌ Error evaluating article: ${error}`);
+      // Mark as processed with error
+      markArticleProcessed(article.id, undefined, `Evaluation error: ${error}`);
     }
+  }
+
+  // Sort by score (highest first) and take top N
+  evaluations.sort((a, b) => b.score - a.score);
+  const topArticles = evaluations.slice(0, maxToQueue);
+
+  console.log(`\n  🏆 TOP ${topArticles.length} ARTICLES SELECTED:`);
+
+  // Queue the top articles with position-based scheduling
+  let queued = 0;
+  for (const { article, score, reasoning } of topArticles) {
+    queueArticleForVideo(article, category, score, queued); // Pass position for scheduling
+    queued++;
+    console.log(`  ✅ #${queued}: "${article.title.substring(0, 60)}..." (Score: ${score}/100)`);
+    console.log(`      ${reasoning}`);
+  }
+
+  // Mark the rest as processed but rejected
+  const rejected = evaluations.slice(maxToQueue);
+  for (const { article, score } of rejected) {
+    markArticleProcessed(article.id, undefined, `Not in top ${maxToQueue} (score: ${score})`);
+  }
+
+  if (rejected.length > 0) {
+    console.log(`\n  ❌ ${rejected.length} articles not selected (scores: ${rejected.map(r => r.score).join(', ')})`);
   }
 
   return queued;
 }
 
+// Posting schedule times (hours in 24-hour format)
+const POSTING_SCHEDULE = [9, 11, 14, 18, 20]; // 9 AM, 11 AM, 2 PM, 6 PM, 8 PM
+
 /**
- * Add article to video generation queue
+ * Get the scheduled time for a video based on its position
  */
-function queueArticleForVideo(article: Article, category: 'carz' | 'ownerfi', qualityScore: number = 50) {
+function getScheduledTime(position: number): number {
+  const now = new Date();
+  const today = new Date(now);
+  today.setHours(0, 0, 0, 0);
+
+  // Get the hour for this position (0-4 maps to schedule array)
+  const scheduleIndex = position % POSTING_SCHEDULE.length;
+  const scheduledHour = POSTING_SCHEDULE[scheduleIndex];
+
+  // Calculate the scheduled date/time
+  const scheduledTime = new Date(today);
+  scheduledTime.setHours(scheduledHour, 0, 0, 0);
+
+  // If this time has already passed today, schedule for tomorrow
+  if (scheduledTime.getTime() < now.getTime()) {
+    scheduledTime.setDate(scheduledTime.getDate() + 1);
+  }
+
+  return scheduledTime.getTime();
+}
+
+/**
+ * Add article to video generation queue with scheduled time
+ */
+function queueArticleForVideo(article: Article, category: 'carz' | 'ownerfi', qualityScore: number = 50, position: number = 0) {
   const queueId = randomUUID();
+  const scheduledTime = getScheduledTime(position);
+
+  const scheduledDate = new Date(scheduledTime);
+  console.log(`  📅 Scheduled for: ${scheduledDate.toLocaleString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+  })}`);
 
   addToVideoQueue({
     id: queueId,
@@ -221,7 +286,8 @@ function queueArticleForVideo(article: Article, category: 'carz' | 'ownerfi', qu
     feedId: article.feedId,
     category,
     status: 'pending',
-    priority: Math.round(qualityScore) // Use quality score as priority
+    priority: Math.round(qualityScore), // Use quality score as priority
+    scheduledFor: scheduledTime // Schedule for specific time
   });
 
   // Mark article as queued
@@ -229,7 +295,7 @@ function queueArticleForVideo(article: Article, category: 'carz' | 'ownerfi', qu
 }
 
 /**
- * Process pending videos in the queue
+ * Process pending videos in the queue (only those scheduled for now or earlier)
  */
 async function processVideoQueue() {
   if (!schedulerConfig.enabled || !isRunning) return;
@@ -237,13 +303,46 @@ async function processVideoQueue() {
   console.log('\n🎬 [VIDEO PROCESS] Processing video queue...');
 
   try {
-    const pendingCarz = getPendingQueueItems('carz', 1);
-    const pendingOwnerfi = getPendingQueueItems('ownerfi', 1);
+    const now = Date.now();
+    const allPendingCarz = getPendingQueueItems('carz', 10);
+    const allPendingOwnerfi = getPendingQueueItems('ownerfi', 10);
+
+    // Filter for videos scheduled for now or earlier
+    const pendingCarz = allPendingCarz.filter(item => {
+      if (!item.scheduledFor) return true; // No schedule = process immediately
+      return item.scheduledFor <= now;
+    });
+
+    const pendingOwnerfi = allPendingOwnerfi.filter(item => {
+      if (!item.scheduledFor) return true;
+      return item.scheduledFor <= now;
+    });
 
     if (pendingCarz.length === 0 && pendingOwnerfi.length === 0) {
-      console.log('✅ No pending videos in queue');
+      // Check if there are any scheduled for later
+      const upcomingCarz = allPendingCarz.filter(item => item.scheduledFor && item.scheduledFor > now);
+      const upcomingOwnerfi = allPendingOwnerfi.filter(item => item.scheduledFor && item.scheduledFor > now);
+
+      if (upcomingCarz.length > 0 || upcomingOwnerfi.length > 0) {
+        const nextScheduled = Math.min(
+          ...[...upcomingCarz, ...upcomingOwnerfi]
+            .map(item => item.scheduledFor!)
+            .filter(Boolean)
+        );
+        const nextTime = new Date(nextScheduled).toLocaleString('en-US', {
+          weekday: 'short',
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true
+        });
+        console.log(`⏰ Next video scheduled for: ${nextTime}`);
+      } else {
+        console.log('✅ No pending videos in queue');
+      }
       return;
     }
+
+    console.log(`📋 ${pendingCarz.length} Carz + ${pendingOwnerfi.length} OwnerFi videos ready to process`);
 
     // Process one from each category (if available)
     const toProcess = [...pendingCarz.slice(0, 1), ...pendingOwnerfi.slice(0, 1)];

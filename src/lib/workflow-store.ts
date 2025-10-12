@@ -10,6 +10,14 @@ export interface WorkflowState {
   script: string;
   createdAt: number;
   error?: string;
+  // Content metadata
+  title?: string;
+  caption?: string;
+  hashtags?: string[];
+  // Metricool integration
+  metricoolPostId?: string;
+  metricoolPlatforms?: string[];
+  metricoolPosted?: boolean;
 }
 
 // In-memory store (for development)

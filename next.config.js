@@ -2,7 +2,10 @@
 const nextConfig = {
   // Production optimizations
   compress: true,
-  
+
+  // Skip static generation for error pages to avoid Html import issues
+  output: 'standalone',
+
   // Bundle optimization removed - was causing startup issues
 
   // Image optimization

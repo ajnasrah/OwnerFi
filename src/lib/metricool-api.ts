@@ -109,21 +109,22 @@ export async function postToMetricool(request: MetricoolPostRequest): Promise<Me
                 dateTime: publicationDate,
                 timezone: 'America/New_York'
               },
-              providers: request.platforms.map(platform => {
-                const provider: any = { network: platform };
-
-                // Set post type based on platform and request
-                if (platform === 'instagram') {
-                  provider.postType = request.postTypes?.instagram || 'reels';
-                } else if (platform === 'facebook') {
-                  provider.postType = request.postTypes?.facebook || 'reels';
-                } else if (platform === 'youtube') {
-                  provider.postType = 'shorts';
-                }
-
-                return provider;
-              }),
+              providers: request.platforms.map(platform => ({
+                network: platform
+              })),
               media: [request.videoUrl],
+              // Instagram: Default to REEL for videos (valid: POST, REEL, STORY)
+              ...(request.platforms.includes('instagram') && {
+                instagramData: {
+                  type: request.postTypes?.instagram === 'story' ? 'STORY' : 'REEL'
+                }
+              }),
+              // Facebook: Default to REEL for videos (valid: POST, REEL, STORY)
+              ...(request.platforms.includes('facebook') && {
+                facebookData: {
+                  type: request.postTypes?.facebook === 'story' ? 'STORY' : 'REEL'
+                }
+              }),
               // YouTube requires a title and category
               ...(request.platforms.includes('youtube') && {
                 youtubeData: {

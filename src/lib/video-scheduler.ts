@@ -60,6 +60,14 @@ export async function startScheduler(config?: Partial<SchedulerConfig>) {
     return;
   }
 
+  // Initialize feed sources if not already initialized
+  const { getAllFeedSources } = await import('./feed-store');
+  if (getAllFeedSources().length === 0) {
+    console.log('🔧 Initializing feed sources...');
+    const { initializeFeedSources } = await import('@/config/feed-sources');
+    initializeFeedSources();
+  }
+
   isRunning = true;
   console.log('🚀 Starting automated video scheduler...\n');
   console.log('📊 Configuration:', schedulerConfig);

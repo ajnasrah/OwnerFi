@@ -9,6 +9,9 @@ const inter = Inter({
   display: 'swap',
 });
 
+// Force dynamic rendering to avoid static generation errors
+export const dynamic = 'force-dynamic';
+export const dynamicParams = true;
 
 export const metadata: Metadata = {
   title: "OwnerFi - Owner Financed Properties | No Bank Financing Needed",

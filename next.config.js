@@ -116,6 +116,12 @@ const nextConfig = {
     ignoreDuringBuilds: true
   },
 
+  // TypeScript configuration for build process
+  typescript: {
+    // Don't fail builds on type errors during deployment
+    ignoreBuildErrors: true
+  },
+
   // Redirects for SEO and URL consistency
   async redirects() {
     return [

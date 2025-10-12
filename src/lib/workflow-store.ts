@@ -6,6 +6,7 @@ export interface WorkflowState {
   videoUrl?: string;
   submagicProjectId?: string;
   finalVideoUrl?: string;
+  firebaseVideoUrl?: string; // Public Firebase Storage URL
   status: 'heygen_pending' | 'heygen_complete' | 'submagic_pending' | 'complete' | 'failed';
   script: string;
   createdAt: number;

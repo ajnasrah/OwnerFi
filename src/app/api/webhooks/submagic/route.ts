@@ -59,9 +59,25 @@ export async function POST(request: NextRequest) {
 
       // Auto-post to Metricool asynchronously (don't block webhook response)
       if (process.env.METRICOOL_AUTO_POST === 'true' && finalVideoUrl) {
-        // Run Metricool posting in background (after sending webhook response)
+        // Run Firebase upload + Metricool posting in background (after sending webhook response)
         setImmediate(async () => {
           try {
+            console.log('\n☁️ Uploading video to Firebase Storage...');
+
+            // Import video storage utilities
+            const { uploadSubmagicVideo } = await import('@/lib/video-storage');
+
+            // Download from Submagic and upload to Firebase
+            const publicVideoUrl = await uploadSubmagicVideo(finalVideoUrl);
+
+            console.log('✅ Video uploaded to Firebase!');
+            console.log('   Public URL:', publicVideoUrl.substring(0, 100) + '...');
+
+            // Update workflow with Firebase URL
+            updateWorkflow(workflowId, {
+              firebaseVideoUrl: publicVideoUrl
+            });
+
             console.log('\n📱 Auto-posting to social media via Metricool...');
 
             // Get the full workflow to access title and caption
@@ -71,7 +87,7 @@ export async function POST(request: NextRequest) {
               const platforms = (process.env.METRICOOL_PLATFORMS || 'instagram,tiktok,youtube,facebook,linkedin,threads').split(',') as any[];
 
               const postResult = await postToMetricool({
-                videoUrl: finalVideoUrl,
+                videoUrl: publicVideoUrl, // Use Firebase URL instead of Submagic URL
                 caption: fullWorkflow.caption || fullWorkflow.script?.substring(0, 150) || 'Check out this video!',
                 title: fullWorkflow.title || 'Viral Video',
                 hashtags: fullWorkflow.hashtags || extractHashtagsFromCaption(fullWorkflow.caption || ''),
@@ -95,7 +111,7 @@ export async function POST(request: NextRequest) {
               }
             }
           } catch (error) {
-            console.error('❌ Error posting to Metricool (async):', error);
+            console.error('❌ Error in Firebase upload or Metricool posting (async):', error);
           }
         });
       }

@@ -1,6 +1,7 @@
 [build]
 builder = "nixpacks"
-buildCommand = "npm run build 2>&1 | tee build.log || (cat build.log && exit 1)"
+# Simple build command without cache clearing
+buildCommand = "npm run build"
 
 [deploy]
 startCommand = "npm start"
@@ -10,7 +11,8 @@ restartPolicyMaxRetries = 10
 [env]
 NODE_ENV = "production"
 NIXPACKS_NODE_VERSION = "20"
-NIXPACKS_NO_CACHE = "1"
+# Don't disable cache - might help with build stability
+# NIXPACKS_NO_CACHE = "1"
 NEXT_TELEMETRY_DISABLED = "1"
 # Increase memory for build
 NODE_OPTIONS = "--max-old-space-size=4096"

@@ -136,6 +136,17 @@ export class HeyGenPodcastGenerator {
       });
 
       // Guest answers
+      const guestVoice: any = {
+        type: 'text',
+        input_text: qa.answer,
+        speed: 1.0
+      };
+
+      // Only add voice_id if it's provided, otherwise use avatar's default voice
+      if (guest.voice_id) {
+        guestVoice.voice_id = guest.voice_id;
+      }
+
       scenes.push({
         character: {
           type: guest.avatar_type,
@@ -144,12 +155,7 @@ export class HeyGenPodcastGenerator {
             : { talking_photo_id: guest.avatar_id }),
           scale: 1.0
         },
-        voice: {
-          type: 'text',
-          voice_id: guest.voice_id,
-          input_text: qa.answer,
-          speed: 1.0
-        },
+        voice: guestVoice,
         background: {
           type: 'color',
           value: guest.background_color || '#f5f5f5'
@@ -164,6 +170,9 @@ export class HeyGenPodcastGenerator {
    * Call HeyGen V2 API to generate video
    */
   private async callHeyGenAPI(request: HeyGenVideoRequest): Promise<HeyGenVideoResponse> {
+    // Log the request for debugging
+    console.log('\nAPI Request:', JSON.stringify(request, null, 2));
+
     const response = await fetch(this.apiUrl, {
       method: 'POST',
       headers: {
@@ -176,10 +185,13 @@ export class HeyGenPodcastGenerator {
 
     if (!response.ok) {
       const error = await response.text();
+      console.error('\nAPI Error Response:', error);
       throw new Error(`HeyGen API request failed: ${response.status} - ${error}`);
     }
 
-    return await response.json();
+    const result = await response.json();
+    console.log('\nAPI Response:', JSON.stringify(result, null, 2));
+    return result;
   }
 
   /**
@@ -204,11 +216,14 @@ export class HeyGenPodcastGenerator {
 
     const data = await response.json();
 
+    // Handle both old and new API response formats
+    const videoData = data.data || data;
+
     return {
-      status: data.data.status,
-      video_url: data.data.video_url,
-      duration: data.data.duration,
-      error: data.data.error
+      status: videoData.status,
+      video_url: videoData.video_url,
+      duration: videoData.duration,
+      error: videoData.error || data.error?.message
     };
   }
 

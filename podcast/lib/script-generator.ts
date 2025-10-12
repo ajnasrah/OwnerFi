@@ -156,17 +156,27 @@ Requirements:
 4. Use a conversational, professional tone suitable for adults
 5. Focus on practical, actionable information
 6. Keep it engaging and interesting
+7. IMPORTANT: Do NOT include names in the dialogue. Do NOT say "Thanks ${this.hostProfile.name}" or "Welcome ${guest.name}". Just ask/answer directly.
+8. Make it sound like a natural conversation where people DON'T repeatedly use each other's names
 
 Format your response as:
-Q1: [Host's question]
-A1: [Guest's answer]
+Q1: [Direct question - no names, no greetings]
+A1: [Direct answer - no names, just the information]
 
-Q2: [Host's question]
-A2: [Guest's answer]
+Q2: [Direct question]
+A2: [Direct answer]
 
 ... and so on.
 
-Make it natural and engaging!`;
+Example of GOOD format:
+Q1: What's the most important factor in preventing heart disease?
+A1: Regular cardiovascular exercise is crucial. Just 30 minutes of moderate activity five days a week can significantly reduce your risk. Combined with a balanced diet, it's one of the most effective preventive measures.
+
+Example of BAD format (don't do this):
+Q1: Welcome Dr. Smith! Tell me, what's important for heart health?
+A1: Thanks for having me, Abdullah! Well, exercise is really important...
+
+Make it natural and engaging without using names!`;
   }
 
   /**

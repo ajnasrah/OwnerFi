@@ -119,12 +119,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(`✅ Final video ready: ${finalVideoUrl}`);
+    console.log(`✅ Submagic video ready: ${finalVideoUrl}`);
 
-    // Step 7: Schedule post to Metricool (brand-specific)
-    console.log(`📱 Step 7: Scheduling post to ${platforms.join(', ')} for ${brand === 'carz' ? 'Carz Inc' : 'Prosway'}...`);
+    // Step 7: Download and upload to public storage
+    console.log('☁️  Step 7: Uploading to public storage for Metricool...');
+    const { uploadSubmagicVideo } = await import('@/lib/video-storage');
+    const publicVideoUrl = await uploadSubmagicVideo(finalVideoUrl);
+    console.log(`✅ Public video URL: ${publicVideoUrl}`);
+
+    // Step 8: Schedule post to Metricool (brand-specific)
+    console.log(`📱 Step 8: Scheduling post to ${platforms.join(', ')} for ${brand === 'carz' ? 'Carz Inc' : 'Prosway'}...`);
     const postResult = await scheduleVideoPost(
-      finalVideoUrl,
+      publicVideoUrl, // Use public URL instead of authenticated download URL
       content.caption,
       content.title,
       platforms,
@@ -157,7 +163,8 @@ export async function POST(request: NextRequest) {
         heygen_video_id: videoResult.video_id,
         heygen_url: heygenUrl,
         submagic_project_id: submagicResult.project_id,
-        final_url: finalVideoUrl
+        submagic_url: finalVideoUrl,
+        public_url: publicVideoUrl
       },
       social: {
         platforms,

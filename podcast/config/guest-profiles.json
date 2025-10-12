@@ -5,9 +5,9 @@
       "name": "Dr. Smith",
       "title": "Medical Doctor",
       "expertise": "General Health & Wellness",
-      "avatar_type": "talking_photo",
-      "avatar_id": "31c6b2b6306b47a2ba3572a23be09dbc",
-      "voice_id": "9070a6c2dbd54c10bb111dc8c655bff7",
+      "avatar_type": "avatar",
+      "avatar_id": "Ann_Doctor_Sitting_public",
+      "voice_id": "2e4de8a01f3b4e9c96794045e2f12779",
       "description": "Board-certified physician with 15 years of experience",
       "question_topics": [
         "nutrition and diet",

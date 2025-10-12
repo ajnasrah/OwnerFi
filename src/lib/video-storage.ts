@@ -1,0 +1,170 @@
+// Video Storage Utilities
+// Download videos from authenticated endpoints and upload to public storage
+
+import { initializeApp, getApps, cert } from 'firebase-admin/app';
+import { getStorage } from 'firebase-admin/storage';
+
+// Initialize Firebase Admin if not already initialized
+function getFirebaseAdmin() {
+  if (getApps().length === 0) {
+    const projectId = process.env.FIREBASE_PROJECT_ID;
+    const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+    const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+
+    if (!projectId || !clientEmail || !privateKey) {
+      throw new Error('Firebase Admin credentials not configured');
+    }
+
+    initializeApp({
+      credential: cert({
+        projectId,
+        clientEmail,
+        privateKey,
+      }),
+      storageBucket: `${projectId}.firebasestorage.app`
+    });
+  }
+
+  return getStorage();
+}
+
+/**
+ * Download video from authenticated endpoint and upload to Firebase Storage
+ * Returns a publicly accessible URL
+ */
+export async function downloadAndUploadVideo(
+  videoUrl: string,
+  apiKey: string,
+  fileName?: string
+): Promise<string> {
+  console.log('📥 Downloading video from authenticated endpoint...');
+  console.log(`   URL: ${videoUrl.substring(0, 80)}...`);
+
+  // Download video with authentication
+  const response = await fetch(videoUrl, {
+    headers: {
+      'x-api-key': apiKey
+    }
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to download video: ${response.status} - ${response.statusText}`);
+  }
+
+  // Get video data as buffer
+  const arrayBuffer = await response.arrayBuffer();
+  const buffer = Buffer.from(arrayBuffer);
+  const sizeInMB = (buffer.length / 1024 / 1024).toFixed(2);
+
+  console.log(`✅ Downloaded video (${sizeInMB} MB)`);
+
+  // Generate filename if not provided
+  if (!fileName) {
+    const timestamp = Date.now();
+    const randomStr = Math.random().toString(36).substring(7);
+    fileName = `viral-videos/${timestamp}-${randomStr}.mp4`;
+  }
+
+  console.log('☁️ Uploading to Firebase Storage...');
+
+  // Upload to Firebase Storage
+  const storage = getFirebaseAdmin();
+  const bucket = storage.bucket();
+  const file = bucket.file(fileName);
+
+  // Calculate deletion date (7 days from now)
+  const deletionDate = new Date();
+  deletionDate.setDate(deletionDate.getDate() + 7);
+
+  await file.save(buffer, {
+    contentType: 'video/mp4',
+    metadata: {
+      cacheControl: 'public, max-age=604800', // Cache for 7 days (1 week)
+      customMetadata: {
+        autoDeleteAfter: deletionDate.toISOString(),
+        createdAt: new Date().toISOString()
+      }
+    }
+  });
+
+  // Make the file publicly accessible
+  await file.makePublic();
+
+  // Get the public URL
+  const publicUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
+
+  console.log(`✅ Uploaded to Firebase Storage: ${publicUrl}`);
+
+  return publicUrl;
+}
+
+/**
+ * Download video from Submagic and upload to public storage
+ */
+export async function uploadSubmagicVideo(submagicDownloadUrl: string): Promise<string> {
+  const SUBMAGIC_API_KEY = process.env.SUBMAGIC_API_KEY;
+
+  if (!SUBMAGIC_API_KEY) {
+    throw new Error('SUBMAGIC_API_KEY not configured');
+  }
+
+  return downloadAndUploadVideo(submagicDownloadUrl, SUBMAGIC_API_KEY);
+}
+
+/**
+ * Delete expired videos (older than 7 days)
+ * Should be called by a cron job or scheduled task
+ */
+export async function deleteExpiredVideos(): Promise<{
+  deleted: number;
+  errors: number;
+  totalSize: number;
+}> {
+  console.log('🗑️  Checking for expired videos...');
+
+  const storage = getFirebaseAdmin();
+  const bucket = storage.bucket();
+
+  // List all files in the viral-videos directory
+  const [files] = await bucket.getFiles({
+    prefix: 'viral-videos/'
+  });
+
+  let deleted = 0;
+  let errors = 0;
+  let totalSize = 0;
+  const now = new Date();
+
+  for (const file of files) {
+    try {
+      // Get file metadata
+      const [metadata] = await file.getMetadata();
+      const autoDeleteAfter = metadata.metadata?.autoDeleteAfter;
+
+      if (!autoDeleteAfter) {
+        // Skip files without autoDeleteAfter metadata
+        continue;
+      }
+
+      const deleteDate = new Date(autoDeleteAfter);
+
+      // Check if file is expired
+      if (now >= deleteDate) {
+        const size = parseInt(metadata.size || '0');
+        totalSize += size;
+
+        console.log(`  Deleting expired video: ${file.name} (${(size / 1024 / 1024).toFixed(2)} MB)`);
+        await file.delete();
+        deleted++;
+      }
+    } catch (error) {
+      console.error(`  Error processing ${file.name}:`, error);
+      errors++;
+    }
+  }
+
+  const totalSizeMB = (totalSize / 1024 / 1024).toFixed(2);
+  console.log(`✅ Cleanup complete: ${deleted} videos deleted (${totalSizeMB} MB freed), ${errors} errors`);
+
+  return { deleted, errors, totalSize };
+}

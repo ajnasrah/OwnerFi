@@ -4,7 +4,7 @@
 
 The system now supports **2 separate Metricool brands**:
 - **Carz Inc** - For Carz automotive videos
-- **Prosway** - For OwnerFi real estate videos
+- **OwnerFi** - For OwnerFi real estate videos
 
 Each brand posts to its own set of 6 social media platforms via Metricool.
 
@@ -12,24 +12,36 @@ Each brand posts to its own set of 6 social media platforms via Metricool.
 
 Add these 4 environment variables to Railway:
 
-### Carz Inc (Carz Brand)
+### Single Metricool Account
 ```bash
-METRICOOL_CARZ_API_KEY=your_carz_api_key_here
-METRICOOL_CARZ_USER_ID=your_carz_user_id_here
+METRICOOL_API_KEY=your_account_api_key
+METRICOOL_USER_ID=your_account_user_id
 ```
 
-### Prosway (OwnerFi Brand)
+### Brand IDs (for routing to correct brand)
 ```bash
-METRICOOL_OWNERFI_API_KEY=your_prosway_api_key_here
-METRICOOL_OWNERFI_USER_ID=your_prosway_user_id_here
+METRICOOL_CARZ_BRAND_ID=your_carz_brand_id
+METRICOOL_OWNERFI_BRAND_ID=your_ownerfi_brand_id
 ```
 
 ## How to Get Your Metricool Credentials
 
+### Step 1: Get Account API Key and User ID
 1. Log into your Metricool account
 2. Go to **Settings** → **API**
-3. Generate API keys for each brand/workspace
-4. Copy the **API Key** and **User ID** for each brand
+3. Copy your **API Key** (METRICOOL_API_KEY)
+4. Copy your **User ID** (METRICOOL_USER_ID)
+
+### Step 2: Get Brand IDs
+1. In Metricool, go to your **Brands** section
+2. For **Carz Inc** brand:
+   - Find the brand ID (usually in URL or brand settings)
+   - Copy as METRICOOL_CARZ_BRAND_ID
+3. For **OwnerFi** brand:
+   - Find the brand ID
+   - Copy as METRICOOL_OWNERFI_BRAND_ID
+
+Note: Brand IDs are typically numeric or alphanumeric identifiers that Metricool uses to route posts to the correct brand's social media accounts.
 
 ## Supported Platforms (Both Brands)
 
@@ -133,13 +145,17 @@ After adding the environment variables, verify they're working:
 
 ## Troubleshooting
 
-### Error: "Metricool credentials not configured for Carz Inc"
-- Missing `METRICOOL_CARZ_API_KEY` or `METRICOOL_CARZ_USER_ID`
+### Error: "Metricool API credentials not configured"
+- Missing `METRICOOL_API_KEY` or `METRICOOL_USER_ID`
 - Add both variables to Railway and redeploy
 
-### Error: "Metricool credentials not configured for Prosway (OwnerFi)"
-- Missing `METRICOOL_OWNERFI_API_KEY` or `METRICOOL_OWNERFI_USER_ID`
-- Add both variables to Railway and redeploy
+### Error: "Brand ID not configured for Carz Inc"
+- Missing `METRICOOL_CARZ_BRAND_ID`
+- Add the brand ID variable to Railway and redeploy
+
+### Error: "Brand ID not configured for OwnerFi"
+- Missing `METRICOOL_OWNERFI_BRAND_ID`
+- Add the brand ID variable to Railway and redeploy
 
 ### Videos posting to wrong brand
 - Check the `brand` field in the API request
@@ -157,9 +173,22 @@ After adding the environment variables, verify they're working:
 
 ## Summary
 
-✅ **2 separate Metricool brands** (Carz Inc + Prosway)
+✅ **2 separate Metricool brands** (Carz Inc + OwnerFi)
+✅ **Single Metricool account** with brand-based routing
 ✅ **Automatic brand detection** from RSS feed category
 ✅ **4 new environment variables** required
 ✅ **6 platforms per brand** (Instagram, TikTok, YouTube, Facebook, LinkedIn, Threads)
 ✅ **10 videos per day** (5 Carz + 5 OwnerFi)
 ✅ **Scheduled posting** at optimal times
+
+## Environment Variables Summary
+
+```bash
+# Account-level (shared)
+METRICOOL_API_KEY=your_api_key
+METRICOOL_USER_ID=your_user_id
+
+# Brand-specific routing
+METRICOOL_CARZ_BRAND_ID=carz_brand_id
+METRICOOL_OWNERFI_BRAND_ID=ownerfi_brand_id
+```

@@ -1,18 +1,18 @@
 // Metricool API Integration
 // Auto-post viral videos to social media platforms
-// Supports multiple brands: Carz Inc and Prosway (OwnerFi)
+// Supports multiple brands: Carz Inc and OwnerFi
 
 import { fetchWithTimeout, retry, TIMEOUTS } from './api-utils';
 
 const METRICOOL_BASE_URL = 'https://api.metricool.com/v1';
 
-// Carz Inc (Carz brand) credentials
-const METRICOOL_CARZ_API_KEY = process.env.METRICOOL_CARZ_API_KEY;
-const METRICOOL_CARZ_USER_ID = process.env.METRICOOL_CARZ_USER_ID;
+// Single Metricool account with multiple brands
+const METRICOOL_API_KEY = process.env.METRICOOL_API_KEY;
+const METRICOOL_USER_ID = process.env.METRICOOL_USER_ID;
 
-// Prosway (OwnerFi brand) credentials
-const METRICOOL_OWNERFI_API_KEY = process.env.METRICOOL_OWNERFI_API_KEY;
-const METRICOOL_OWNERFI_USER_ID = process.env.METRICOOL_OWNERFI_USER_ID;
+// Brand IDs for Carz Inc and Prosway
+const METRICOOL_CARZ_BRAND_ID = process.env.METRICOOL_CARZ_BRAND_ID;
+const METRICOOL_OWNERFI_BRAND_ID = process.env.METRICOOL_OWNERFI_BRAND_ID;
 
 export interface MetricoolPostRequest {
   videoUrl: string;
@@ -33,27 +33,21 @@ export interface MetricoolPostResponse {
 }
 
 /**
- * Get brand-specific Metricool credentials
+ * Get brand-specific Metricool brand ID
  */
-function getBrandCredentials(brand: 'carz' | 'ownerfi'): { apiKey: string; userId: string } | null {
+function getBrandId(brand: 'carz' | 'ownerfi'): string | null {
   if (brand === 'carz') {
-    if (!METRICOOL_CARZ_API_KEY || !METRICOOL_CARZ_USER_ID) {
-      console.error('❌ Carz Inc Metricool credentials not configured');
+    if (!METRICOOL_CARZ_BRAND_ID) {
+      console.error('❌ Carz Inc brand ID not configured (METRICOOL_CARZ_BRAND_ID)');
       return null;
     }
-    return {
-      apiKey: METRICOOL_CARZ_API_KEY,
-      userId: METRICOOL_CARZ_USER_ID
-    };
+    return METRICOOL_CARZ_BRAND_ID;
   } else {
-    if (!METRICOOL_OWNERFI_API_KEY || !METRICOOL_OWNERFI_USER_ID) {
-      console.error('❌ Prosway (OwnerFi) Metricool credentials not configured');
+    if (!METRICOOL_OWNERFI_BRAND_ID) {
+      console.error('❌ OwnerFi brand ID not configured (METRICOOL_OWNERFI_BRAND_ID)');
       return null;
     }
-    return {
-      apiKey: METRICOOL_OWNERFI_API_KEY,
-      userId: METRICOOL_OWNERFI_USER_ID
-    };
+    return METRICOOL_OWNERFI_BRAND_ID;
   }
 }
 
@@ -61,12 +55,21 @@ function getBrandCredentials(brand: 'carz' | 'ownerfi'): { apiKey: string; userI
  * Post video to Metricool for publishing to social media
  */
 export async function postToMetricool(request: MetricoolPostRequest): Promise<MetricoolPostResponse> {
-  const credentials = getBrandCredentials(request.brand);
-
-  if (!credentials) {
+  // Check API credentials
+  if (!METRICOOL_API_KEY || !METRICOOL_USER_ID) {
+    console.error('❌ Metricool API credentials not configured');
     return {
       success: false,
-      error: `Metricool credentials not configured for ${request.brand === 'carz' ? 'Carz Inc' : 'Prosway (OwnerFi)'}`
+      error: 'Metricool API credentials not configured (METRICOOL_API_KEY, METRICOOL_USER_ID)'
+    };
+  }
+
+  // Get brand ID
+  const brandId = getBrandId(request.brand);
+  if (!brandId) {
+    return {
+      success: false,
+      error: `Brand ID not configured for ${request.brand === 'carz' ? 'Carz Inc' : 'OwnerFi'}`
     };
   }
 
@@ -74,8 +77,9 @@ export async function postToMetricool(request: MetricoolPostRequest): Promise<Me
     // Format caption with hashtags
     const fullCaption = formatCaption(request.caption, request.hashtags);
 
-    const brandName = request.brand === 'carz' ? 'Carz Inc' : 'Prosway (OwnerFi)';
+    const brandName = request.brand === 'carz' ? 'Carz Inc' : 'OwnerFi';
     console.log(`📤 Posting to Metricool (${brandName})...`);
+    console.log('   Brand ID:', brandId);
     console.log('   Platforms:', request.platforms.join(', '));
     console.log('   Caption:', fullCaption.substring(0, 100) + '...');
 
@@ -87,10 +91,11 @@ export async function postToMetricool(request: MetricoolPostRequest): Promise<Me
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'X-Mc-Auth': credentials.apiKey // Brand-specific API key
+              'X-Mc-Auth': METRICOOL_API_KEY
             },
             body: JSON.stringify({
-              userId: credentials.userId, // Brand-specific user ID
+              userId: METRICOOL_USER_ID,
+              brandId: brandId, // Specify which brand to post to
               videoUrl: request.videoUrl,
               caption: fullCaption,
               title: request.title,

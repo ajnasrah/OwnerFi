@@ -1,0 +1,154 @@
+{
+  "profiles": {
+    "doctor": {
+      "id": "doctor",
+      "name": "Dr. Smith",
+      "title": "Medical Doctor",
+      "expertise": "General Health & Wellness",
+      "avatar_type": "talking_photo",
+      "avatar_id": "31c6b2b6306b47a2ba3572a23be09dbc",
+      "voice_id": "9070a6c2dbd54c10bb111dc8c655bff7",
+      "description": "Board-certified physician with 15 years of experience",
+      "question_topics": [
+        "nutrition and diet",
+        "sleep quality and habits",
+        "exercise and fitness",
+        "stress management",
+        "preventive health care",
+        "mental wellness",
+        "aging and longevity",
+        "common health myths"
+      ],
+      "tone": "professional, caring, educational",
+      "background_color": "#f0f8ff"
+    },
+    "real_estate_agent": {
+      "id": "real_estate_agent",
+      "name": "Sarah Johnson",
+      "title": "Real Estate Expert",
+      "expertise": "Property Investment & Home Buying",
+      "avatar_type": "avatar",
+      "avatar_id": "placeholder_realtor_avatar_id",
+      "voice_id": "placeholder_friendly_voice",
+      "description": "Top-producing agent specializing in residential properties",
+      "question_topics": [
+        "first-time home buying",
+        "real estate investment strategies",
+        "mortgage tips and advice",
+        "market trends and timing",
+        "property valuation",
+        "rental property income",
+        "home staging and selling",
+        "negotiation tactics"
+      ],
+      "tone": "enthusiastic, knowledgeable, trustworthy",
+      "background_color": "#fff5e6"
+    },
+    "car_salesman": {
+      "id": "car_salesman",
+      "name": "Mike Thompson",
+      "title": "Automotive Expert",
+      "expertise": "Car Buying & Vehicle Maintenance",
+      "avatar_type": "avatar",
+      "avatar_id": "placeholder_auto_avatar_id",
+      "voice_id": "placeholder_energetic_voice",
+      "description": "20 years in automotive sales and customer service",
+      "question_topics": [
+        "buying new vs used cars",
+        "negotiating car prices",
+        "electric vehicles and hybrids",
+        "car maintenance tips",
+        "leasing vs buying",
+        "trade-in value maximization",
+        "car insurance basics",
+        "future of automotive technology"
+      ],
+      "tone": "friendly, straightforward, helpful",
+      "background_color": "#f0f0f0"
+    },
+    "financial_advisor": {
+      "id": "financial_advisor",
+      "name": "James Chen",
+      "title": "Financial Advisor",
+      "expertise": "Personal Finance & Investment",
+      "avatar_type": "avatar",
+      "avatar_id": "placeholder_finance_avatar_id",
+      "voice_id": "placeholder_confident_voice",
+      "description": "Certified financial planner helping individuals build wealth",
+      "question_topics": [
+        "retirement planning basics",
+        "investment strategies for beginners",
+        "debt management and elimination",
+        "emergency fund planning",
+        "stock market fundamentals",
+        "real estate as investment",
+        "tax optimization strategies",
+        "passive income creation"
+      ],
+      "tone": "authoritative, clear, empowering",
+      "background_color": "#e8f5e9"
+    },
+    "tech_expert": {
+      "id": "tech_expert",
+      "name": "Alex Rivera",
+      "title": "Technology Consultant",
+      "expertise": "Consumer Technology & Digital Tools",
+      "avatar_type": "avatar",
+      "avatar_id": "placeholder_tech_avatar_id",
+      "voice_id": "placeholder_modern_voice",
+      "description": "Tech enthusiast helping people navigate the digital world",
+      "question_topics": [
+        "smartphone buying guide",
+        "cybersecurity for everyday users",
+        "productivity apps and tools",
+        "smart home automation",
+        "AI tools for daily life",
+        "social media privacy",
+        "cloud storage solutions",
+        "tech trends for 2025"
+      ],
+      "tone": "modern, accessible, innovative",
+      "background_color": "#e3f2fd"
+    },
+    "fitness_trainer": {
+      "id": "fitness_trainer",
+      "name": "Coach Maria",
+      "title": "Certified Fitness Trainer",
+      "expertise": "Exercise & Nutrition",
+      "avatar_type": "avatar",
+      "avatar_id": "placeholder_fitness_avatar_id",
+      "voice_id": "placeholder_energetic_female_voice",
+      "description": "Personal trainer specializing in sustainable fitness",
+      "question_topics": [
+        "starting a fitness routine",
+        "weight loss myths and facts",
+        "building muscle efficiently",
+        "nutrition for performance",
+        "home workout effectiveness",
+        "injury prevention tips",
+        "motivation and consistency",
+        "fitness after 40"
+      ],
+      "tone": "motivating, supportive, energetic",
+      "background_color": "#fff3e0"
+    }
+  },
+  "host": {
+    "name": "Abdullah",
+    "avatar_type": "talking_photo",
+    "avatar_id": "31c6b2b6306b47a2ba3572a23be09dbc",
+    "voice_id": "9070a6c2dbd54c10bb111dc8c655bff7",
+    "scale": 1.4,
+    "background_color": "#ffffff",
+    "description": "Host - uses same avatar from social media system"
+  },
+  "video_settings": {
+    "dimension": {
+      "width": 1080,
+      "height": 1920
+    },
+    "questions_per_episode": 5,
+    "scene_count": 10,
+    "target_duration_minutes": 5
+  }
+}

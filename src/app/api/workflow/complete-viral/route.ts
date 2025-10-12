@@ -424,7 +424,8 @@ async function waitForSubmagicCompletion(projectId: string, maxAttempts: number 
       console.log(`   Full response:`, JSON.stringify(data, null, 2));
 
       if (status === 'completed' || status === 'done' || status === 'ready') {
-        const videoUrl = data.video_url || data.videoUrl || data.output_url || data.downloadUrl || data.download_url || data.url || data.resultUrl || data.result_url;
+        // Priority order: media_url (direct downloadable), video_url, download_url, then fallbacks
+        const videoUrl = data.media_url || data.mediaUrl || data.video_url || data.videoUrl || data.download_url || data.downloadUrl || data.output_url || data.url || data.resultUrl || data.result_url;
         console.log(`   Found video URL: ${videoUrl}`);
         return videoUrl;
       }

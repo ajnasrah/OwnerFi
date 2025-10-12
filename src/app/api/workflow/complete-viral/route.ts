@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
 
     // Step 4: Wait for HeyGen completion
     console.log('⏳ Step 4: Waiting for HeyGen video...');
-    const heygenUrl = await waitForVideoCompletion(videoResult.video_id, 11);
+    const heygenUrl = await waitForVideoCompletion(videoResult.video_id, 14);
 
     if (!heygenUrl) {
       return NextResponse.json(
@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
 
     // Step 6: Wait for Submagic completion
     console.log('⏳ Step 6: Waiting for Submagic enhancement...');
-    const finalVideoUrl = await waitForSubmagicCompletion(submagicResult.project_id, 11);
+    const finalVideoUrl = await waitForSubmagicCompletion(submagicResult.project_id, 14);
 
     if (!finalVideoUrl) {
       return NextResponse.json(
@@ -338,9 +338,9 @@ async function generateHeyGenVideo(params: {
 }
 
 // Helper: Wait for HeyGen video completion
-async function waitForVideoCompletion(videoId: string, maxAttempts: number = 11): Promise<string | null> {
+async function waitForVideoCompletion(videoId: string, maxAttempts: number = 14): Promise<string | null> {
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    await new Promise(resolve => setTimeout(resolve, 45000)); // 45 seconds × 11 = 8.25 minutes
+    await new Promise(resolve => setTimeout(resolve, 45000)); // 45 seconds × 14 = 10.5 minutes
 
     try {
       const response = await fetch(
@@ -405,9 +405,9 @@ async function enhanceWithSubmagic(params: {
 }
 
 // Helper: Wait for Submagic completion
-async function waitForSubmagicCompletion(projectId: string, maxAttempts: number = 11): Promise<string | null> {
+async function waitForSubmagicCompletion(projectId: string, maxAttempts: number = 14): Promise<string | null> {
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    await new Promise(resolve => setTimeout(resolve, 45000)); // 45 seconds × 11 = 8.25 minutes
+    await new Promise(resolve => setTimeout(resolve, 45000)); // 45 seconds × 14 = 10.5 minutes
 
     try {
       const response = await fetch(

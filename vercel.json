@@ -15,7 +15,7 @@
   "crons": [
     {
       "path": "/api/podcast/cron",
-      "schedule": "0 9 * * 1"
+      "schedule": "0 18 * * 1"
     },
     {
       "path": "/api/cron/viral-video",

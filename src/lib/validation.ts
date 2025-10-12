@@ -145,3 +145,137 @@ export function createRateLimiter(windowMs: number, maxRequests: number) {
 
 export const apiRateLimiter = createRateLimiter(60 * 1000, 100); // 100 requests per minute
 export const authRateLimiter = createRateLimiter(15 * 60 * 1000, 5); // 5 attempts per 15 minutes
+
+// Viral video request validation
+export interface ViralVideoRequest {
+  rss_url?: string;
+  article_content?: string;
+  talking_photo_id?: string;
+  voice_id?: string;
+  scale?: number;
+  width?: number;
+  height?: number;
+  auto_generate_script?: boolean;
+  submagic_template?: string;
+  language?: string;
+}
+
+export interface ValidationError {
+  field: string;
+  message: string;
+}
+
+export function validateViralVideoRequest(body: any): {
+  valid: boolean;
+  errors: ValidationError[];
+  data?: ViralVideoRequest;
+} {
+  const errors: ValidationError[] = [];
+
+  // At least one content source required
+  if (!body.rss_url && !body.article_content) {
+    errors.push({
+      field: 'content',
+      message: 'Either rss_url or article_content is required'
+    });
+  }
+
+  // Validate RSS URL if provided
+  if (body.rss_url && typeof body.rss_url !== 'string') {
+    errors.push({
+      field: 'rss_url',
+      message: 'RSS URL must be a string'
+    });
+  }
+
+  // Validate article content if provided
+  if (body.article_content) {
+    if (typeof body.article_content !== 'string') {
+      errors.push({
+        field: 'article_content',
+        message: 'Article content must be a string'
+      });
+    } else if (body.article_content.length > 10000) {
+      errors.push({
+        field: 'article_content',
+        message: 'Article content too long (max 10000 characters)'
+      });
+    }
+  }
+
+  // Validate scale
+  if (body.scale !== undefined) {
+    const scale = Number(body.scale);
+    if (isNaN(scale) || scale < 0.5 || scale > 3) {
+      errors.push({
+        field: 'scale',
+        message: 'Scale must be between 0.5 and 3'
+      });
+    }
+  }
+
+  // Validate dimensions
+  if (body.width !== undefined) {
+    const width = Number(body.width);
+    if (isNaN(width) || width < 100 || width > 4096) {
+      errors.push({
+        field: 'width',
+        message: 'Width must be between 100 and 4096'
+      });
+    }
+  }
+
+  if (body.height !== undefined) {
+    const height = Number(body.height);
+    if (isNaN(height) || height < 100 || height > 4096) {
+      errors.push({
+        field: 'height',
+        message: 'Height must be between 100 and 4096'
+      });
+    }
+  }
+
+  // Validate language
+  if (body.language && typeof body.language !== 'string') {
+    errors.push({
+      field: 'language',
+      message: 'Language must be a string'
+    });
+  }
+
+  if (errors.length > 0) {
+    return { valid: false, errors };
+  }
+
+  return {
+    valid: true,
+    errors: [],
+    data: {
+      rss_url: body.rss_url,
+      article_content: body.article_content,
+      talking_photo_id: body.talking_photo_id,
+      voice_id: body.voice_id,
+      scale: body.scale ? Number(body.scale) : undefined,
+      width: body.width ? Number(body.width) : undefined,
+      height: body.height ? Number(body.height) : undefined,
+      auto_generate_script: body.auto_generate_script,
+      submagic_template: body.submagic_template,
+      language: body.language
+    }
+  };
+}
+
+// Sanitize HTML content
+export function sanitizeHtml(html: string): string {
+  return html
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '') // Remove scripts
+    .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '') // Remove styles
+    .replace(/<[^>]+>/g, '') // Remove all HTML tags
+    .replace(/&nbsp;/g, ' ') // Replace &nbsp;
+    .replace(/&amp;/g, '&') // Replace &amp;
+    .replace(/&lt;/g, '<') // Replace &lt;
+    .replace(/&gt;/g, '>') // Replace &gt;
+    .replace(/&quot;/g, '"') // Replace &quot;
+    .trim()
+    .substring(0, 10000); // Limit length
+}

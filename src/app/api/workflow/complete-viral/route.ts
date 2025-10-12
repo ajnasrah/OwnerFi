@@ -260,7 +260,19 @@ EXAMPLE BAD SCRIPT:
     })
   });
 
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('❌ OpenAI API error:', response.status, errorText);
+    throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
+  }
+
   const data = await response.json();
+
+  if (!data.choices || !data.choices[0]) {
+    console.error('❌ Invalid OpenAI response:', JSON.stringify(data));
+    throw new Error('Invalid OpenAI API response - no choices returned');
+  }
+
   const fullResponse = data.choices[0]?.message?.content?.trim() || '';
 
   const scriptMatch = fullResponse.match(/SCRIPT:\s*([\s\S]*?)(?=CAPTION:|$)/i);

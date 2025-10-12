@@ -40,3 +40,26 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 ownerfi-mobile/
+
+# Test scripts and temporary files
+test-*.mjs
+test-*.sh
+check-*.mjs
+check-*.sh
+post-*.mjs
+schedule-*.mjs
+monitor-*.sh
+configure-*.mjs
+fix-*.mjs
+
+# Development documentation (keep COMPLETE_SYSTEM_ANALYSIS.md)
+*_SUMMARY.md
+*_RESULT.md
+*_CHECKLIST.md
+*_SETUP.md
+*_SOLUTION.md
+VIRAL_VIDEO_AUTOMATION.md
+!COMPLETE_SYSTEM_ANALYSIS.md
+
+# Firebase config (if needed, can be committed separately)
+firebase.json

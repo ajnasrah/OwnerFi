@@ -11,3 +11,6 @@ restartPolicyMaxRetries = 10
 NODE_ENV = "production"
 NIXPACKS_NODE_VERSION = "20"
 NIXPACKS_NO_CACHE = "1"
+NEXT_TELEMETRY_DISABLED = "1"
+# Increase memory for build
+NODE_OPTIONS = "--max-old-space-size=4096"

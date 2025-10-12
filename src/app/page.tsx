@@ -7,6 +7,9 @@ import HomePageClient from './HomePageClient'
 import { LegalFooter } from '@/components/ui/LegalFooter'
 import Image from 'next/image'
 
+// Force dynamic rendering to prevent static generation errors with headers()
+export const dynamic = 'force-dynamic'
+
 export const metadata: Metadata = {
   title: 'No Bank Needed Homes | Owner Financing & Rent to Own Properties | OwnerFi',
   description: 'Find homes without bank financing! Browse owner financed properties, rent-to-own homes, seller financing, and creative deals across all 50 states. Bad credit OK, flexible terms.',

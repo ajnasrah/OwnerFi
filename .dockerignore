@@ -1,0 +1,10 @@
+# Ignore local build artifacts
+.next/
+node_modules/
+.git/
+*.log
+.env*
+!.env.example
+.DS_Store
+coverage/
+.vercel/

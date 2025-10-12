@@ -85,10 +85,20 @@ export async function POST(request: NextRequest) {
 
     console.log(`✅ HeyGen completed: ${heygenUrl}`);
 
-    // Step 5: Enhance with Submagic
+    // Step 4.5: Upload HeyGen video to Firebase for public access
+    console.log('☁️  Step 4.5: Uploading HeyGen video to public storage...');
+    const { downloadAndUploadVideo } = await import('@/lib/video-storage');
+    const publicHeygenUrl = await downloadAndUploadVideo(
+      heygenUrl,
+      HEYGEN_API_KEY!,
+      `heygen-videos/${videoResult.video_id}.mp4`
+    );
+    console.log(`✅ Public HeyGen URL: ${publicHeygenUrl}`);
+
+    // Step 5: Enhance with Submagic (using public URL)
     console.log('✨ Step 5: Adding Submagic captions and effects...');
     const submagicResult = await enhanceWithSubmagic({
-      videoUrl: heygenUrl,
+      videoUrl: publicHeygenUrl, // Use public URL instead of auth-required HeyGen URL
       title: content.title,
       language: 'en',
       templateName: 'Hormozi 2'
@@ -162,6 +172,7 @@ export async function POST(request: NextRequest) {
       video: {
         heygen_video_id: videoResult.video_id,
         heygen_url: heygenUrl,
+        heygen_public_url: publicHeygenUrl,
         submagic_project_id: submagicResult.project_id,
         submagic_url: finalVideoUrl,
         public_url: publicVideoUrl

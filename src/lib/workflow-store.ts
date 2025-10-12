@@ -10,6 +10,8 @@ export interface WorkflowState {
   script: string;
   createdAt: number;
   error?: string;
+  // Brand identification
+  brand?: 'carz' | 'ownerfi';
   // Content metadata
   title?: string;
   caption?: string;

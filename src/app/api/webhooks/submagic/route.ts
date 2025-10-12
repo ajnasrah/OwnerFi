@@ -64,7 +64,8 @@ export async function POST(request: NextRequest) {
             title: fullWorkflow.title || 'Viral Video',
             hashtags: fullWorkflow.hashtags || extractHashtagsFromCaption(fullWorkflow.caption || ''),
             platforms: platforms,
-            scheduleTime: process.env.METRICOOL_SCHEDULE_DELAY ? getScheduleTime(process.env.METRICOOL_SCHEDULE_DELAY) : undefined
+            scheduleTime: process.env.METRICOOL_SCHEDULE_DELAY ? getScheduleTime(process.env.METRICOOL_SCHEDULE_DELAY) : undefined,
+            brand: fullWorkflow.brand || 'ownerfi' // Default to ownerfi if brand not specified
           });
 
           if (postResult.success) {

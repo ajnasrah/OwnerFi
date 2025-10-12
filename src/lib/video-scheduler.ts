@@ -391,7 +391,8 @@ async function processQueueItem(queueItem: any) {
           width: 1080,
           height: 1920,
           submagic_template: 'Hormozi 2',
-          language: 'en'
+          language: 'en',
+          brand: queueItem.category // Pass brand (carz or ownerfi) for Metricool
         })
       },
       TIMEOUTS.WORKFLOW_TTL

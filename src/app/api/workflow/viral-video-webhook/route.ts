@@ -25,6 +25,7 @@ interface ViralVideoRequest {
   auto_generate_script?: boolean;
   submagic_template?: string;
   language?: string;
+  brand?: 'carz' | 'ownerfi'; // Brand for Metricool posting
 }
 
 export async function POST(request: NextRequest) {
@@ -130,7 +131,8 @@ export async function POST(request: NextRequest) {
       script: script,
       title: title,
       caption: caption,
-      status: 'heygen_pending'
+      status: 'heygen_pending',
+      brand: validatedBody.brand || 'ownerfi' // Store brand for later Metricool posting
     });
 
     // Register for polling backup (in case webhooks don't work)

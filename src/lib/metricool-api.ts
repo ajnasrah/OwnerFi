@@ -1,11 +1,18 @@
 // Metricool API Integration
 // Auto-post viral videos to social media platforms
+// Supports multiple brands: Carz Inc and Prosway (OwnerFi)
 
 import { fetchWithTimeout, retry, TIMEOUTS } from './api-utils';
 
-const METRICOOL_API_KEY = process.env.METRICOOL_API_KEY;
-const METRICOOL_USER_ID = process.env.METRICOOL_USER_ID;
 const METRICOOL_BASE_URL = 'https://api.metricool.com/v1';
+
+// Carz Inc (Carz brand) credentials
+const METRICOOL_CARZ_API_KEY = process.env.METRICOOL_CARZ_API_KEY;
+const METRICOOL_CARZ_USER_ID = process.env.METRICOOL_CARZ_USER_ID;
+
+// Prosway (OwnerFi brand) credentials
+const METRICOOL_OWNERFI_API_KEY = process.env.METRICOOL_OWNERFI_API_KEY;
+const METRICOOL_OWNERFI_USER_ID = process.env.METRICOOL_OWNERFI_USER_ID;
 
 export interface MetricoolPostRequest {
   videoUrl: string;
@@ -14,7 +21,7 @@ export interface MetricoolPostRequest {
   hashtags?: string[];
   platforms: ('instagram' | 'tiktok' | 'youtube' | 'facebook' | 'linkedin' | 'threads')[];
   scheduleTime?: string; // ISO 8601 format, or omit for immediate posting
-  brandId?: string; // For multi-brand accounts
+  brand: 'carz' | 'ownerfi'; // Required: which brand to post to
 }
 
 export interface MetricoolPostResponse {
@@ -26,14 +33,40 @@ export interface MetricoolPostResponse {
 }
 
 /**
+ * Get brand-specific Metricool credentials
+ */
+function getBrandCredentials(brand: 'carz' | 'ownerfi'): { apiKey: string; userId: string } | null {
+  if (brand === 'carz') {
+    if (!METRICOOL_CARZ_API_KEY || !METRICOOL_CARZ_USER_ID) {
+      console.error('❌ Carz Inc Metricool credentials not configured');
+      return null;
+    }
+    return {
+      apiKey: METRICOOL_CARZ_API_KEY,
+      userId: METRICOOL_CARZ_USER_ID
+    };
+  } else {
+    if (!METRICOOL_OWNERFI_API_KEY || !METRICOOL_OWNERFI_USER_ID) {
+      console.error('❌ Prosway (OwnerFi) Metricool credentials not configured');
+      return null;
+    }
+    return {
+      apiKey: METRICOOL_OWNERFI_API_KEY,
+      userId: METRICOOL_OWNERFI_USER_ID
+    };
+  }
+}
+
+/**
  * Post video to Metricool for publishing to social media
  */
 export async function postToMetricool(request: MetricoolPostRequest): Promise<MetricoolPostResponse> {
-  if (!METRICOOL_API_KEY || !METRICOOL_USER_ID) {
-    console.error('❌ Metricool API credentials not configured');
+  const credentials = getBrandCredentials(request.brand);
+
+  if (!credentials) {
     return {
       success: false,
-      error: 'Metricool API credentials not configured'
+      error: `Metricool credentials not configured for ${request.brand === 'carz' ? 'Carz Inc' : 'Prosway (OwnerFi)'}`
     };
   }
 
@@ -41,7 +74,8 @@ export async function postToMetricool(request: MetricoolPostRequest): Promise<Me
     // Format caption with hashtags
     const fullCaption = formatCaption(request.caption, request.hashtags);
 
-    console.log('📤 Posting to Metricool...');
+    const brandName = request.brand === 'carz' ? 'Carz Inc' : 'Prosway (OwnerFi)';
+    console.log(`📤 Posting to Metricool (${brandName})...`);
     console.log('   Platforms:', request.platforms.join(', '));
     console.log('   Caption:', fullCaption.substring(0, 100) + '...');
 
@@ -53,10 +87,10 @@ export async function postToMetricool(request: MetricoolPostRequest): Promise<Me
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'X-Mc-Auth': METRICOOL_API_KEY // Metricool uses custom header
+              'X-Mc-Auth': credentials.apiKey // Brand-specific API key
             },
             body: JSON.stringify({
-              userId: METRICOOL_USER_ID,
+              userId: credentials.userId, // Brand-specific user ID
               videoUrl: request.videoUrl,
               caption: fullCaption,
               title: request.title,
@@ -75,7 +109,7 @@ export async function postToMetricool(request: MetricoolPostRequest): Promise<Me
 
         const data = await response.json();
 
-        console.log('✅ Posted to Metricool successfully!');
+        console.log(`✅ Posted to Metricool (${brandName}) successfully!`);
         console.log('   Post ID:', data.postId || data.id);
 
         return {
@@ -137,7 +171,8 @@ export async function scheduleVideoPost(
   caption: string,
   title: string,
   platforms: MetricoolPostRequest['platforms'],
-  delay: 'immediate' | '1hour' | '2hours' | '4hours' | 'optimal' = 'immediate'
+  delay: 'immediate' | '1hour' | '2hours' | '4hours' | 'optimal' = 'immediate',
+  brand: 'carz' | 'ownerfi' = 'ownerfi'
 ): Promise<MetricoolPostResponse> {
   let scheduleTime: string | undefined;
 
@@ -174,6 +209,7 @@ export async function scheduleVideoPost(
     title,
     hashtags,
     platforms,
-    scheduleTime
+    scheduleTime,
+    brand // Pass brand to postToMetricool
   });
 }

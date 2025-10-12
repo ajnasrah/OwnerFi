@@ -115,14 +115,15 @@ export async function POST(request: NextRequest) {
 
     console.log(`✅ Final video ready: ${finalVideoUrl}`);
 
-    // Step 7: Schedule post to Metricool
-    console.log(`📱 Step 7: Scheduling post to ${platforms.join(', ')}...`);
+    // Step 7: Schedule post to Metricool (brand-specific)
+    console.log(`📱 Step 7: Scheduling post to ${platforms.join(', ')} for ${brand === 'carz' ? 'Carz Inc' : 'Prosway'}...`);
     const postResult = await scheduleVideoPost(
       finalVideoUrl,
       content.caption,
       content.title,
       platforms,
-      schedule
+      schedule,
+      brand // Pass brand for correct Metricool account
     );
 
     if (!postResult.success) {

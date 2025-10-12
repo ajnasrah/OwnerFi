@@ -139,7 +139,9 @@ export class HeyGenPodcastGenerator {
         character: {
           type: this.hostProfile.avatar_type,
           talking_photo_id: this.hostProfile.avatar_id,
-          scale: this.hostProfile.scale || 1.4
+          scale: this.hostProfile.scale || 1.4,
+          talking_photo_style: 'square',
+          talking_style: 'expressive'
         },
         voice: {
           type: 'text',
@@ -165,14 +167,23 @@ export class HeyGenPodcastGenerator {
         guestVoice.voice_id = guest.voice_id;
       }
 
+      const guestCharacter: any = {
+        type: guest.avatar_type,
+        scale: guest.scale || 1.4
+      };
+
+      // Add avatar_id or talking_photo_id based on type
+      if (guest.avatar_type === 'avatar') {
+        guestCharacter.avatar_id = guest.avatar_id;
+        guestCharacter.avatar_style = 'normal';  // Options: normal, closeUp, circle
+      } else {
+        guestCharacter.talking_photo_id = guest.avatar_id;
+        guestCharacter.talking_photo_style = 'square';
+        guestCharacter.talking_style = 'expressive';
+      }
+
       scenes.push({
-        character: {
-          type: guest.avatar_type,
-          ...(guest.avatar_type === 'avatar'
-            ? { avatar_id: guest.avatar_id }
-            : { talking_photo_id: guest.avatar_id }),
-          scale: guest.scale || 1.4
-        },
+        character: guestCharacter,
         voice: guestVoice,
         background: {
           type: 'color',

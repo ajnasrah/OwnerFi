@@ -109,7 +109,7 @@ export class ScriptGenerator {
       messages: [
         {
           role: 'system',
-          content: `You are an ELITE podcast script writer who creates EXPLOSIVE, ENERGETIC content. Your style is a mix of Joe Rogan's curiosity, Gary Vee's intensity, and Alex Hormozi's direct communication. Every line should POP with energy and emotion. Make people feel EXCITED to learn. The host's name is ${this.hostProfile.name} - he's fired up and passionate about getting REAL answers.`
+          content: `You are an ELITE podcast script writer who creates EXPLOSIVE, ENERGETIC content using SIMPLE words a 5th grader can understand. Your style is a mix of Joe Rogan's curiosity, Gary Vee's intensity, and Alex Hormozi's direct communication. Every line should POP with energy and emotion. Make people feel EXCITED to learn. NEVER use names in dialogue - people don't constantly say each other's names in real conversations.`
         },
         {
           role: 'user',
@@ -179,11 +179,14 @@ CRITICAL REQUIREMENTS:
    - Use "you" and "your" to speak directly to the audience
    - Sound like two friends having an INTENSE conversation
 
-3. SIMPLE BUT PUNCHY (5th grade reading level):
-   - Short sentences. Punchy. Hard-hitting.
-   - Use simple words but deliver them with FORCE
-   - Under 20 words per sentence
+3. SIMPLE BUT PUNCHY (5th grade reading level - CRITICAL):
+   - Short sentences. 10 words max. Punchy. Hard-hitting.
+   - Use ONLY simple words: avoid "groundbreaking", "astonishing", "revolutionize", "shatter"
+   - Use instead: "HUGE", "CRAZY", "WILD", "INSANE", "MASSIVE"
+   - NO fancy words like "optimize", "leverage", "microbiome" - say "gut health" not "gut microbiome"
+   - Under 15 words per sentence
    - Avoid boring academic language - this is REAL TALK
+   - If a 10-year-old wouldn't understand it, DON'T USE IT
 
 4. PRACTICAL & MIND-BLOWING:
    - Every answer should drop a truth bomb or life hack
@@ -191,10 +194,15 @@ CRITICAL REQUIREMENTS:
    - Focus on things that make people go "WHOA I didn't know that!"
    - 2-3 sentences per answer (30-45 seconds when spoken with energy)
 
-5. NO NAMES IN DIALOGUE:
-   - Don't say "Thanks Abdullah" or "Welcome back"
+5. NO NAMES IN DIALOGUE (MANDATORY):
+   - NEVER say "Abdullah", "Dr. Smith", or guest names in the dialogue
+   - Don't say "Thanks Abdullah" or "Welcome Dr. Smith"
    - Just jump right into the content
-   - Natural conversation where people DON'T use names constantly
+   - Natural conversation where people DON'T use names AT ALL
+   - Bad: "Dr. Smith, what do you think?"
+   - Good: "What do you think?"
+   - Bad: "Great question, Abdullah!"
+   - Good: "Great question!"
 
 Format your response as:
 Q1: [Excited/shocked question - no names]
@@ -207,31 +215,42 @@ A2: [Another passionate answer]
 
 EXAMPLES:
 
-❌ BAD (boring, academic, lifeless):
-Q1: What's the most important factor in preventing cardiovascular disease?
-A1: Regular cardiovascular exercise is crucial. Just 30 minutes of moderate activity five days a week can significantly reduce your risk.
+❌ BAD (complex words, boring, names):
+Q1: Dr. Smith, what's the most groundbreaking revelation in cardiovascular disease prevention?
+A1: Abdullah, regular cardiovascular exercise is crucial for optimal metabolic function.
 
-✅ GOOD (exciting, simple, emotional):
-Q1: Wait, so what's the BIGGEST mistake people make with their heart health?
-A1: Okay listen - they sit all day! Your body needs to MOVE. Just 30 minutes of walking every single day can literally add YEARS to your life. Most people don't realize how simple it is!
+✅ GOOD (simple words, exciting, NO names):
+Q1: Wait, what's the BIGGEST mistake people make with heart health?
+A1: They sit all day! Your body needs to MOVE. Walk for 30 minutes every day. That's it. It can add YEARS to your life!
 
-❌ BAD (using names, too formal):
-Q1: Welcome Dr. Smith! Can you tell me about heart health?
-A1: Thanks for having me, Abdullah! Well, exercise is really important...
+❌ BAD (using names, complex words, formal):
+Q1: Welcome Dr. Smith! Can you elucidate the paradigm of cardiovascular optimization?
+A1: Thanks for having me, Abdullah! Well, aerobic exercise facilitates metabolic enhancement...
 
-✅ GOOD (direct, energetic, no fluff):
+✅ GOOD (NO names, simple words, energetic):
 Q1: What's the one thing everyone gets WRONG about eating healthy?
-A1: Here's the crazy part - you don't need to be perfect! People think it's all or nothing, but eating just ONE extra serving of veggies a day makes a MASSIVE difference. Small wins compound over time!
+A1: Here's the crazy part - you don't need to be perfect! Eat just ONE more veggie a day. That's HUGE. Small wins add up fast!
 
-✅ MORE GOOD EXAMPLES:
-Q: Hold on... are you saying most people are doing this completely wrong?
-A: YES! And it's costing them thousands of dollars. Listen, here's what the pros actually do...
+✅ MORE GOOD EXAMPLES (NO NAMES, SIMPLE WORDS):
+Q: Hold on. Are most people doing this totally wrong?
+A: YES! And it costs them BIG money. Here's what the pros do instead...
 
-Q: That sounds INSANE. How is this even legal?
-A: Right?! So here's the loophole that nobody talks about...
+Q: That sounds INSANE. How is this legal?
+A: I know right?! So here's the trick nobody talks about...
 
-Q: Okay so what would you tell someone who's brand new to this?
-A: First thing - forget everything you think you know. The real secret is way simpler than people realize...
+Q: What would you tell someone brand new to this?
+A: Forget everything you know. The real secret is WAY simpler than you think...
+
+WORD SUBSTITUTIONS (use simple words):
+❌ groundbreaking → ✅ HUGE, BIG, MASSIVE
+❌ revolutionary → ✅ CRAZY, WILD
+❌ optimize → ✅ make better, improve
+❌ facilitate → ✅ help, make it happen
+❌ paradigm → ✅ way, method
+❌ elucidate → ✅ explain, show
+❌ cardiovascular → ✅ heart
+❌ microbiome → ✅ gut health
+❌ metabolic → ✅ body's energy
 
 Make every exchange feel URGENT, VALUABLE, and EXCITING. The listener should feel like they're getting insider secrets that could change their life!`;
   }

@@ -87,15 +87,16 @@ export async function downloadAndUploadVideo(
     }
   });
 
-  // Make the file publicly accessible
-  await file.makePublic();
+  // Generate a signed URL (valid for 7 days) instead of making file public
+  // This works with uniform bucket-level access enabled
+  const [signedUrl] = await file.getSignedUrl({
+    action: 'read',
+    expires: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
+  });
 
-  // Get the public URL
-  const publicUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
+  console.log(`✅ Uploaded to Firebase Storage with signed URL`);
 
-  console.log(`✅ Uploaded to Firebase Storage: ${publicUrl}`);
-
-  return publicUrl;
+  return signedUrl;
 }
 
 /**

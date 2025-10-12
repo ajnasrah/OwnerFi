@@ -162,8 +162,12 @@ Make it EXCITING!`
 
     console.log('   Response:', JSON.stringify(result, null, 2));
 
-    if (result.code !== 100) {
-      throw new Error(`HeyGen error (code ${result.code}): ${result.message || JSON.stringify(result)}`);
+    if (result.error) {
+      throw new Error(`HeyGen error: ${JSON.stringify(result.error)}`);
+    }
+
+    if (!result.data || !result.data.video_id) {
+      throw new Error(`Invalid HeyGen response: ${JSON.stringify(result)}`);
     }
 
     const videoId = result.data.video_id;

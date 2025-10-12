@@ -21,10 +21,13 @@ interface VideoScene {
     avatar_id?: string;
     talking_photo_id?: string;
     scale?: number;
+    talking_photo_style?: string;
+    talking_style?: string;
+    avatar_style?: string;
   };
   voice: {
     type: string;
-    voice_id: string;
+    voice_id?: string;
     input_text: string;
     speed?: number;
   };

@@ -16,6 +16,26 @@
     {
       "path": "/api/podcast/cron",
       "schedule": "0 9 * * 1"
+    },
+    {
+      "path": "/api/cron/viral-video",
+      "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/cron/viral-video",
+      "schedule": "0 11 * * *"
+    },
+    {
+      "path": "/api/cron/viral-video",
+      "schedule": "0 14 * * *"
+    },
+    {
+      "path": "/api/cron/viral-video",
+      "schedule": "0 18 * * *"
+    },
+    {
+      "path": "/api/cron/viral-video",
+      "schedule": "0 20 * * *"
     }
   ],
   "functions": {
@@ -26,6 +46,9 @@
       "maxDuration": 300
     },
     "app/api/podcast/cron/route.ts": {
+      "maxDuration": 300
+    },
+    "src/app/api/cron/viral-video/route.ts": {
       "maxDuration": 300
     }
   },

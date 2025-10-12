@@ -158,6 +158,7 @@ export interface ViralVideoRequest {
   auto_generate_script?: boolean;
   submagic_template?: string;
   language?: string;
+  brand?: 'carz' | 'ownerfi';
 }
 
 export interface ValidationError {
@@ -260,7 +261,8 @@ export function validateViralVideoRequest(body: any): {
       height: body.height ? Number(body.height) : undefined,
       auto_generate_script: body.auto_generate_script,
       submagic_template: body.submagic_template,
-      language: body.language
+      language: body.language,
+      brand: body.brand
     }
   };
 }

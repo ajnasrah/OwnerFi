@@ -131,16 +131,15 @@ export async function POST(request: NextRequest) {
 
     console.log(`✅ Submagic video ready: ${finalVideoUrl}`);
 
-    // Step 7: Download and upload to public storage
-    console.log('☁️  Step 7: Uploading to public storage for Metricool...');
-    const { uploadSubmagicVideo } = await import('@/lib/video-storage');
-    const publicVideoUrl = await uploadSubmagicVideo(finalVideoUrl);
-    console.log(`✅ Public video URL: ${publicVideoUrl}`);
+    // Step 7: Use Submagic URL directly (Metricool trusts submagic.co domain)
+    console.log('✅ Step 7: Using Submagic URL directly (no storage needed)...');
+    const publicVideoUrl = finalVideoUrl; // Metricool accepts Submagic URLs directly!
+    console.log(`   Video URL: ${publicVideoUrl}`);
 
     // Step 8: Schedule post to Metricool (brand-specific)
     console.log(`📱 Step 8: Scheduling post to ${platforms.join(', ')} for ${brand === 'carz' ? 'Carz Inc' : 'Prosway'}...`);
     const postResult = await scheduleVideoPost(
-      publicVideoUrl, // Use public URL instead of authenticated download URL
+      publicVideoUrl, // Use Submagic URL directly (trusted domain)
       content.caption,
       content.title,
       platforms,

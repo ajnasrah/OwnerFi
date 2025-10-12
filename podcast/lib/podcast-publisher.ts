@@ -20,7 +20,7 @@ interface PublishingStrategy {
     videoUrl: string;
   };
   shortForm?: {
-    platforms: ('instagram' | 'tiktok' | 'facebook' | 'youtube' | 'linkedin' | 'threads')[];
+    platforms: ('instagram' | 'tiktok' | 'facebook' | 'youtube' | 'linkedin' | 'threads' | 'twitter')[];
     clips: Array<{
       videoUrl: string;
       caption: string;
@@ -106,7 +106,7 @@ export class PodcastPublisher {
   }
 
   /**
-   * Publish individual clips to Reels/Shorts/TikTok
+   * Publish individual clips to all 8 platforms (Reels, Stories, Shorts, etc.)
    */
   private async publishClips(
     clips: Array<{ videoUrl: string; caption: string }>,
@@ -114,13 +114,14 @@ export class PodcastPublisher {
   ): Promise<any[]> {
     const results = [];
 
-    // Platforms for short-form content
-    const shortFormPlatforms: MetricoolPostRequest['platforms'] = [
-      'instagram',
-      'facebook', // Facebook Reels
+    // All 8 platforms for maximum reach
+    const allPlatforms: MetricoolPostRequest['platforms'] = [
+      'instagram',  // Reels
+      'facebook',   // Reels
       'tiktok',
-      'youtube', // YouTube Shorts
+      'youtube',    // Shorts
       'linkedin',
+      'twitter',
       'threads'
     ];
 
@@ -137,24 +138,46 @@ From Episode #${metadata.episode_number}: ${metadata.guest_name} on ${metadata.t
 
 #podcast #shorts #viral #education`;
 
-        const result = await postToMetricool({
+        // Post to Reels/Shorts on all platforms
+        const reelsResult = await postToMetricool({
           videoUrl: clip.videoUrl,
           caption: fullCaption,
-          platforms: shortFormPlatforms,
+          platforms: allPlatforms,
+          postTypes: {
+            instagram: 'reels',
+            facebook: 'reels'
+          },
           brand: this.brand
         });
 
-        results.push(result);
+        results.push(reelsResult);
 
-        if (result.success) {
-          console.log(`   ✅ Clip ${i + 1} published`);
+        if (reelsResult.success) {
+          console.log(`   ✅ Clip ${i + 1} published to Reels/Shorts`);
         } else {
-          console.log(`   ❌ Clip ${i + 1} failed: ${result.error}`);
+          console.log(`   ❌ Clip ${i + 1} Reels failed: ${reelsResult.error}`);
         }
 
-        // Rate limiting: Wait 2 seconds between clips
-        if (i < clips.length - 1) {
-          await new Promise(resolve => setTimeout(resolve, 2000));
+        // Also post to Instagram and Facebook Stories
+        await new Promise(resolve => setTimeout(resolve, 2000)); // Rate limit
+
+        const storiesResult = await postToMetricool({
+          videoUrl: clip.videoUrl,
+          caption: fullCaption,
+          platforms: ['instagram', 'facebook'],
+          postTypes: {
+            instagram: 'story',
+            facebook: 'story'
+          },
+          brand: this.brand
+        });
+
+        results.push(storiesResult);
+
+        if (storiesResult.success) {
+          console.log(`   ✅ Clip ${i + 1} published to Stories`);
+        } else {
+          console.log(`   ❌ Clip ${i + 1} Stories failed: ${storiesResult.error}`);
         }
 
       } catch (error) {

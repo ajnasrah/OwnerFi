@@ -4,9 +4,11 @@ import { authOptions } from '@/lib/auth';
 import { ExtendedSession } from '@/types/session';
 import Stripe from 'stripe';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-08-27.basil',
-});
+function getStripe() {
+  return new Stripe(process.env.STRIPE_SECRET_KEY!, {
+    apiVersion: '2025-08-27.basil',
+  });
+}
 
 // Simple credit packages - no complex pricing tiers
 const CREDIT_PACKAGES = {
@@ -17,6 +19,7 @@ const CREDIT_PACKAGES = {
 };
 
 export async function POST(request: NextRequest) {
+  const stripe = getStripe();
   try {
     const session = await getServerSession(authOptions as unknown as Parameters<typeof getServerSession>[0]) as ExtendedSession;
     

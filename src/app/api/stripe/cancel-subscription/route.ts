@@ -13,11 +13,14 @@ import {
 import { getSafeDb } from '@/lib/firebase-safe';
 import { RealtorProfile } from '@/lib/firebase-models';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-08-27.basil',
-});
+function getStripe() {
+  return new Stripe(process.env.STRIPE_SECRET_KEY!, {
+    apiVersion: '2025-08-27.basil',
+  });
+}
 
 export async function POST(request: NextRequest) {
+  const stripe = getStripe();
   try {
     const session = await getSessionWithRole('realtor');
     

@@ -3,9 +3,12 @@ import { FirebaseDB } from '@/lib/firebase-db';
 import Stripe from 'stripe';
 import { UserWithRealtorData } from '@/lib/realtor-models';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-08-27.basil',
-});
+function getStripe() {
+  return new Stripe(process.env.STRIPE_SECRET_KEY!, {
+    apiVersion: '2025-08-27.basil',
+  });
+}
+
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
 // New credit package system - only these packages are valid
@@ -17,6 +20,7 @@ const CREDIT_PACKAGES = {
 };
 
 export async function POST(request: NextRequest) {
+  const stripe = getStripe();
 
   const body = await request.text();
   const signature = request.headers.get('stripe-signature');
@@ -28,7 +32,7 @@ export async function POST(request: NextRequest) {
     if (!signature || !endpointSecret) {
       throw new Error('Missing webhook signature or endpoint secret');
     }
-    
+
     event = stripe.webhooks.constructEvent(body, signature, endpointSecret);
   } catch (err) {
     return NextResponse.json(

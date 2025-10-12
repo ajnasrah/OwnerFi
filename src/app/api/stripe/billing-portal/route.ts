@@ -4,9 +4,12 @@ import { db } from '@/lib/firebase';
 import Stripe from 'stripe';
 import { UserWithRealtorData } from '@/lib/realtor-models';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-08-27.basil',
-});
+// Lazy-initialize Stripe to avoid build-time errors
+function getStripe() {
+  return new Stripe(process.env.STRIPE_SECRET_KEY!, {
+    apiVersion: '2025-08-27.basil',
+  });
+}
 
 // Credit packages that have subscriptions (only 4 and 10 credit packages)
 const SUBSCRIPTION_PACKAGES = ['4_credits', '10_credits'];
@@ -56,6 +59,7 @@ export async function GET() {
     }
 
     // Get active subscriptions from Stripe
+    const stripe = getStripe();
     const subscriptions = await stripe.subscriptions.list({
       customer: realtorData.stripeCustomerId,
       status: 'active',
@@ -128,6 +132,7 @@ export async function POST() {
     let customerId = realtorData?.stripeCustomerId;
 
     // If no customer ID found, try to find customer by email
+    const stripe = getStripe();
     if (!customerId) {
       try {
         const customers = await stripe.customers.list({

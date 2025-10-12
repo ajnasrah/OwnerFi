@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSessionWithRole } from '@/lib/auth-utils';
 import Stripe from 'stripe';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-08-27.basil',
-});
+function getStripe() {
+  return new Stripe(process.env.STRIPE_SECRET_KEY!, {
+    apiVersion: '2025-08-27.basil',
+  });
+}
 
 // New credit package system - matches simple-checkout
 const CREDIT_PACKAGES = {
@@ -15,6 +17,7 @@ const CREDIT_PACKAGES = {
 };
 
 export async function POST(request: NextRequest) {
+  const stripe = getStripe();
   try {
     const session = await getSessionWithRole('realtor');
     

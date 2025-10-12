@@ -1,0 +1,5 @@
+[phases.build]
+cacheDirectories = []
+
+[phases.install]
+cacheDirectories = []

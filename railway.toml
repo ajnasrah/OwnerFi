@@ -1,6 +1,6 @@
 [build]
 builder = "nixpacks"
-buildCommand = "npm ci && npm run build"
+buildCommand = "rm -rf node_modules/.cache .next/cache && npm ci && npm run build"
 
 [deploy]
 startCommand = "npm start"
@@ -10,3 +10,4 @@ restartPolicyMaxRetries = 10
 [env]
 NODE_ENV = "production"
 NIXPACKS_NODE_VERSION = "20"
+NIXPACKS_NO_CACHE = "1"

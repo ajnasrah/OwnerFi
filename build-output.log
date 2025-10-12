@@ -1,0 +1,204 @@
+
+> ownerfi@0.1.0 build
+> next build
+
+   ▲ Next.js 15.5.2
+   - Environments: .env.local
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 10.1s
+   Skipping linting
+   Checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/158) ...
+   Generating static pages (39/158) 
+   Generating static pages (78/158) 
+Session error: Error: Dynamic server usage: Route / couldn't be rendered statically because it used `headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+    at s (.next/server/chunks/4996.js:1:23405)
+    at m (.next/server/chunks/6796.js:1:83833)
+    at h (.next/server/chunks/6796.js:1:2519)
+    at m (.next/server/app/page.js:1:14372)
+    at stringify (<anonymous>) {
+  description: "Route / couldn't be rendered statically because it used `headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+  digest: 'DYNAMIC_SERVER_USAGE'
+}
+   Generating static pages (118/158) 
+ ✓ Generating static pages (158/158)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                        Size  First Load JS
+┌ ƒ /                                            3.8 kB        3.01 MB
+├ ○ /_not-found                                   221 B        3.01 MB
+├ ● /[location]                                   328 B        3.01 MB
+├ ○ /about                                      2.75 kB        3.01 MB
+├ ○ /admin                                      9.76 kB        3.02 MB
+├ ○ /admin/add-credits-manual                   1.01 kB        3.01 MB
+├ ○ /admin/buyers                               1.82 kB        3.01 MB
+├ ○ /admin/logs                                 4.06 kB        3.01 MB
+├ ○ /admin/realtors                             1.78 kB        3.01 MB
+├ ƒ /api/admin/activate-subscription              320 B        3.01 MB
+├ ƒ /api/admin/add-credits                        320 B        3.01 MB
+├ ƒ /api/admin/buyers                             320 B        3.01 MB
+├ ƒ /api/admin/check-credits                      320 B        3.01 MB
+├ ƒ /api/admin/check-session                      320 B        3.01 MB
+├ ƒ /api/admin/clean-database                     320 B        3.01 MB
+├ ƒ /api/admin/contacts                           320 B        3.01 MB
+├ ƒ /api/admin/disputes                           320 B        3.01 MB
+├ ƒ /api/admin/properties                         320 B        3.01 MB
+├ ƒ /api/admin/properties/[id]                    320 B        3.01 MB
+├ ƒ /api/admin/realtors                           320 B        3.01 MB
+├ ƒ /api/admin/system-health                      320 B        3.01 MB
+├ ƒ /api/admin/test-consolidation-simple          320 B        3.01 MB
+├ ƒ /api/admin/update-plan                        320 B        3.01 MB
+├ ƒ /api/admin/upload-properties-v4               320 B        3.01 MB
+├ ƒ /api/auth/[...nextauth]                       320 B        3.01 MB
+├ ƒ /api/auth/forgot-password                     320 B        3.01 MB
+├ ƒ /api/auth/reset-password                      320 B        3.01 MB
+├ ƒ /api/auth/signup                              320 B        3.01 MB
+├ ƒ /api/buyer/like-property                      320 B        3.01 MB
+├ ƒ /api/buyer/liked-properties                   320 B        3.01 MB
+├ ƒ /api/buyer/profile                            320 B        3.01 MB
+├ ƒ /api/buyer/properties                         320 B        3.01 MB
+├ ƒ /api/buyer/properties-nearby                  320 B        3.01 MB
+├ ƒ /api/chatbot                                  320 B        3.01 MB
+├ ƒ /api/cities/coordinates                       320 B        3.01 MB
+├ ƒ /api/cities/list                              320 B        3.01 MB
+├ ƒ /api/cities/nearby                            320 B        3.01 MB
+├ ƒ /api/cities/search                            320 B        3.01 MB
+├ ƒ /api/cities/within-radius                     320 B        3.01 MB
+├ ƒ /api/gohighlevel/webhook/delete-property      320 B        3.01 MB
+├ ƒ /api/gohighlevel/webhook/list-properties      320 B        3.01 MB
+├ ƒ /api/gohighlevel/webhook/save-property        320 B        3.01 MB
+├ ƒ /api/heygen/avatars                           320 B        3.01 MB
+├ ƒ /api/heygen/generate-video                    320 B        3.01 MB
+├ ƒ /api/heygen/voices                            320 B        3.01 MB
+├ ƒ /api/properties                               320 B        3.01 MB
+├ ƒ /api/properties/details                       320 B        3.01 MB
+├ ƒ /api/properties/search-optimized              320 B        3.01 MB
+├ ƒ /api/properties/search-with-nearby            320 B        3.01 MB
+├ ƒ /api/properties/similar                       320 B        3.01 MB
+├ ƒ /api/properties/sync-matches                  320 B        3.01 MB
+├ ƒ /api/property-actions                         320 B        3.01 MB
+├ ƒ /api/property-matching/calculate              320 B        3.01 MB
+├ ƒ /api/realtor/buyer-liked-properties           320 B        3.01 MB
+├ ƒ /api/realtor/dashboard                        320 B        3.01 MB
+├ ƒ /api/realtor/dispute-lead                     320 B        3.01 MB
+├ ƒ /api/realtor/profile                          320 B        3.01 MB
+├ ƒ /api/realtor/purchase-lead                    320 B        3.01 MB
+├ ƒ /api/realtor/signup                           320 B        3.01 MB
+├ ƒ /api/scheduler                                320 B        3.01 MB
+├ ƒ /api/startup                                  320 B        3.01 MB
+├ ƒ /api/stripe/billing-portal                    320 B        3.01 MB
+├ ƒ /api/stripe/cancel-subscription               320 B        3.01 MB
+├ ƒ /api/stripe/checkout                          320 B        3.01 MB
+├ ƒ /api/stripe/one-time-purchase                 320 B        3.01 MB
+├ ƒ /api/stripe/simple-checkout                   320 B        3.01 MB
+├ ƒ /api/stripe/webhook                           320 B        3.01 MB
+├ ƒ /api/users/[id]                               320 B        3.01 MB
+├ ƒ /api/webhooks/heygen                          320 B        3.01 MB
+├ ƒ /api/webhooks/submagic                        320 B        3.01 MB
+├ ƒ /api/workflow/auto-video                      320 B        3.01 MB
+├ ƒ /api/workflow/status/[id]                     320 B        3.01 MB
+├ ƒ /api/workflow/viral-video                     320 B        3.01 MB
+├ ƒ /api/workflow/viral-video-webhook             320 B        3.01 MB
+├ ƒ /api/workflow/viral-video-webhook/status      320 B        3.01 MB
+├ ○ /austin-owner-financing                       230 B        3.01 MB
+├ ○ /auth/forgot-password                       1.49 kB        3.01 MB
+├ ○ /auth/logout                                1.29 kB        3.01 MB
+├ ○ /auth/reset-password                        2.07 kB        3.01 MB
+├ ○ /auth/signin                                1.59 kB        3.01 MB
+├ ○ /bad-credit-home-buying                       230 B        3.01 MB
+├ ○ /buy-credits                                1.97 kB        3.01 MB
+├ ○ /chicago-owner-financing                      230 B        3.01 MB
+├ ○ /dallas-owner-financing                       230 B        3.01 MB
+├ ○ /dashboard                                  4.56 kB        3.01 MB
+├ ○ /dashboard/favorites                        3.17 kB        3.01 MB
+├ ○ /dashboard/liked                            3.26 kB        3.01 MB
+├ ○ /dashboard/settings                         3.45 kB        3.01 MB
+├ ○ /dashboard/setup                            3.15 kB        3.01 MB
+├ ○ /heygen-avatars                             4.12 kB        3.01 MB
+├ ○ /houston-owner-financing                      230 B        3.01 MB
+├ ○ /how-owner-finance-works                    7.42 kB        3.02 MB
+├ ○ /los-angeles-owner-financing                  230 B        3.01 MB
+├ ○ /new-york-city-owner-financing                230 B        3.01 MB
+├ ○ /no-credit-check-homes                        328 B        3.01 MB
+├ ○ /owner-financing-alabama                      328 B        3.01 MB
+├ ○ /owner-financing-alaska                       328 B        3.01 MB
+├ ○ /owner-financing-arizona                      230 B        3.01 MB
+├ ○ /owner-financing-arkansas                     328 B        3.01 MB
+├ ○ /owner-financing-california                   230 B        3.01 MB
+├ ○ /owner-financing-colorado                     328 B        3.01 MB
+├ ○ /owner-financing-connecticut                  328 B        3.01 MB
+├ ○ /owner-financing-delaware                     328 B        3.01 MB
+├ ○ /owner-financing-florida                      328 B        3.01 MB
+├ ○ /owner-financing-georgia                      230 B        3.01 MB
+├ ○ /owner-financing-hawaii                       328 B        3.01 MB
+├ ○ /owner-financing-idaho                        328 B        3.01 MB
+├ ○ /owner-financing-illinois                     328 B        3.01 MB
+├ ○ /owner-financing-indiana                      328 B        3.01 MB
+├ ○ /owner-financing-iowa                         328 B        3.01 MB
+├ ○ /owner-financing-kansas                       328 B        3.01 MB
+├ ○ /owner-financing-kentucky                     328 B        3.01 MB
+├ ○ /owner-financing-louisiana                    328 B        3.01 MB
+├ ○ /owner-financing-maine                        328 B        3.01 MB
+├ ○ /owner-financing-maryland                     328 B        3.01 MB
+├ ○ /owner-financing-massachusetts                328 B        3.01 MB
+├ ○ /owner-financing-michigan                     328 B        3.01 MB
+├ ○ /owner-financing-minnesota                    328 B        3.01 MB
+├ ○ /owner-financing-mississippi                  328 B        3.01 MB
+├ ○ /owner-financing-missouri                     328 B        3.01 MB
+├ ○ /owner-financing-montana                      328 B        3.01 MB
+├ ○ /owner-financing-nebraska                     328 B        3.01 MB
+├ ○ /owner-financing-nevada                       328 B        3.01 MB
+├ ○ /owner-financing-new-hampshire                328 B        3.01 MB
+├ ○ /owner-financing-new-jersey                   328 B        3.01 MB
+├ ○ /owner-financing-new-mexico                   328 B        3.01 MB
+├ ○ /owner-financing-new-york                     230 B        3.01 MB
+├ ○ /owner-financing-north-carolina               328 B        3.01 MB
+├ ○ /owner-financing-north-dakota                 328 B        3.01 MB
+├ ○ /owner-financing-ohio                         328 B        3.01 MB
+├ ○ /owner-financing-oklahoma                     328 B        3.01 MB
+├ ○ /owner-financing-oregon                       328 B        3.01 MB
+├ ○ /owner-financing-pennsylvania                 328 B        3.01 MB
+├ ○ /owner-financing-rhode-island                 328 B        3.01 MB
+├ ○ /owner-financing-south-carolina               328 B        3.01 MB
+├ ○ /owner-financing-south-dakota                 328 B        3.01 MB
+├ ○ /owner-financing-tennessee                    328 B        3.01 MB
+├ ○ /owner-financing-texas                        328 B        3.01 MB
+├ ○ /owner-financing-utah                         328 B        3.01 MB
+├ ○ /owner-financing-vermont                      328 B        3.01 MB
+├ ○ /owner-financing-virginia                     328 B        3.01 MB
+├ ○ /owner-financing-washington                   328 B        3.01 MB
+├ ○ /owner-financing-west-virginia                328 B        3.01 MB
+├ ○ /owner-financing-wisconsin                    328 B        3.01 MB
+├ ○ /owner-financing-wyoming                      328 B        3.01 MB
+├ ○ /philadelphia-owner-financing                 230 B        3.01 MB
+├ ○ /phoenix-owner-financing                      230 B        3.01 MB
+├ ○ /privacy                                    6.55 kB        3.01 MB
+├ ○ /realtor-dashboard                          3.37 kB        3.01 MB
+├ ○ /realtor-dashboard/settings                 3.81 kB        3.01 MB
+├ ○ /realtor-signup                              2.4 kB        3.01 MB
+├ ○ /rent-to-own-homes                            328 B        3.01 MB
+├ ○ /robots.txt                                   320 B        3.01 MB
+├ ○ /san-antonio-owner-financing                  230 B        3.01 MB
+├ ○ /san-diego-owner-financing                    230 B        3.01 MB
+├ ○ /signup                                     2.23 kB        3.01 MB
+├ ○ /sitemap.xml                                  320 B        3.01 MB
+├ ○ /tcpa-compliance                            2.36 kB        3.01 MB
+├ ○ /terms                                      11.4 kB        3.02 MB
+└ ○ /test-checkout                                991 B        3.01 MB
++ First Load JS shared by all                   3.01 MB
+  ├ chunks/framework-a3b8e51514b52c60.js         206 kB
+  ├ chunks/vendor-0892873f-43ad6211b13ee04c.js  18.2 kB
+  ├ chunks/vendor-71890363-dd8cb503b1f2100f.js  49.4 kB
+  ├ chunks/vendor-8bc6b58c-af458b97ee171d13.js  2.68 MB
+  └ chunks/vendor-9b4c83bb-c0dc775ac6c5b0a3.js  24.6 kB
+  ├ chunks/vendor-e3786338-359dbe04d44416c5.js    11 kB
+  └ other shared chunks (total)                 20.5 kB
+
+
+○  (Static)   prerendered as static content
+●  (SSG)      prerendered as static HTML (uses generateStaticParams)
+ƒ  (Dynamic)  server-rendered on demand
+

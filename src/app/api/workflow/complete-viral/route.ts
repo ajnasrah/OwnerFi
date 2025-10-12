@@ -41,6 +41,12 @@ export async function POST(request: NextRequest) {
 
     console.log(`✅ Got article: ${article.title.substring(0, 50)}...`);
 
+    // Mark article as being processed
+    if (article.id) {
+      const { markArticleProcessed } = await import('@/lib/feed-store');
+      markArticleProcessed(article.id);
+    }
+
     // Step 2: Generate viral script + caption with OpenAI
     console.log('🤖 Step 2: Generating viral script and caption...');
     const content = await generateViralContent(article.content);
@@ -175,16 +181,32 @@ export async function POST(request: NextRequest) {
 }
 
 // Helper: Get best article from feed
-async function getBestArticle(brand: string): Promise<{ title: string; content: string; source: string } | null> {
-  // Call your existing feed API
-  const response = await fetch(`http://localhost:3000/api/scheduler`);
-  const data = await response.json();
+async function getBestArticle(brand: string): Promise<{ id: string; title: string; content: string; source: string } | null> {
+  // Import dynamically to avoid circular dependencies
+  const { getUnprocessedArticles } = await import('@/lib/feed-store');
 
-  // Simple mock for now - in production, this would rank articles
+  // Get unprocessed articles for the brand
+  const category = brand === 'carz' ? 'carz' : 'ownerfi';
+  const articles = getUnprocessedArticles(category, 10); // Get top 10 unprocessed
+
+  if (articles.length === 0) {
+    console.log(`⚠️ No unprocessed articles available for ${brand}`);
+    return null;
+  }
+
+  // Simple ranking: prioritize newest articles
+  // In production, you could add quality scoring, engagement prediction, etc.
+  const bestArticle = articles[0];
+
+  console.log(`📰 Selected article: "${bestArticle.title}"`);
+  console.log(`   Published: ${new Date(bestArticle.pubDate).toLocaleString()}`);
+  console.log(`   Feed: ${bestArticle.feedId}`);
+
   return {
-    title: 'Sample Article Title',
-    content: 'Sample article content that will be converted to viral video...',
-    source: 'RSS Feed'
+    id: bestArticle.id,
+    title: bestArticle.title,
+    content: bestArticle.content || bestArticle.description,
+    source: bestArticle.link
   };
 }
 
@@ -349,7 +371,10 @@ async function enhanceWithSubmagic(params: {
         title: params.title,
         language: params.language,
         videoUrl: params.videoUrl,
-        templateName: params.templateName
+        templateName: params.templateName,
+        generateHookTitle: true,  // AI-generated engaging hook title
+        addMagicBRoll: true,      // Add contextual B-roll footage
+        addMagicZoom: true         // Add dynamic zoom effects
       })
     });
 

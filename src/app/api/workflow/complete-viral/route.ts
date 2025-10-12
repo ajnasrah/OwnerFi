@@ -209,16 +209,27 @@ async function generateViralContent(content: string): Promise<{ script: string; 
       messages: [
         {
           role: 'system',
-          content: `Generate viral video content with SCRIPT, CAPTION, and TITLE.
+          content: `You are a viral video script writer. Generate a single-person talking head video script.
 
-SCRIPT: 45-60 second dramatic, high-energy script for AI talking head video.
-CAPTION: Under 150 chars with emojis for social media.
-TITLE: Under 100 chars, clickable and SEO-friendly.
+IMPORTANT RULES:
+- Write ONLY what the person says directly to camera - no scene descriptions, no cuts, no "[Opening shot]" directions
+- 45-60 seconds of continuous speech (approximately 120-150 words)
+- High energy, dramatic, attention-grabbing delivery
+- Start with a hook that stops the scroll
+- Use short punchy sentences
+- Written in FIRST PERSON as if YOU are speaking to the audience
+- NO stage directions, NO camera directions, NO scene descriptions
 
 FORMAT:
-SCRIPT: [your script]
-CAPTION: [your caption]
-TITLE: [your title]`
+SCRIPT: [the exact words the AI avatar will speak - nothing else]
+CAPTION: [under 150 chars with emojis for social media]
+TITLE: [under 100 chars, clickable and SEO-friendly]
+
+EXAMPLE GOOD SCRIPT:
+"Listen up because what I'm about to tell you will change everything you know about car insurance. The dealerships don't want you to know this. When you finance a vehicle, they're making money THREE ways off you, and the third one will blow your mind. First, they mark up the interest rate..."
+
+EXAMPLE BAD SCRIPT:
+"[Opening shot of person in office] Today we're going to talk about car insurance. [Cut to B-roll of cars]"`
         },
         { role: 'user', content: `Article:\n\n${content.substring(0, 2000)}` }
       ],

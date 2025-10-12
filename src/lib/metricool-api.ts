@@ -4,7 +4,7 @@
 
 import { fetchWithTimeout, retry, TIMEOUTS } from './api-utils';
 
-const METRICOOL_BASE_URL = 'https://api.metricool.com/v1';
+const METRICOOL_BASE_URL = 'https://app.metricool.com/api/v2';
 
 // Single Metricool account with multiple brands
 const METRICOOL_API_KEY = process.env.METRICOOL_API_KEY;
@@ -85,8 +85,14 @@ export async function postToMetricool(request: MetricoolPostRequest): Promise<Me
 
     return await retry(
       async () => {
+        // Format datetime for Metricool API (yyyy-MM-dd'T'HH:mm:ss)
+        const publicationDate = request.scheduleTime
+          ? new Date(request.scheduleTime).toISOString().replace(/\.\d{3}Z$/, '')
+          : new Date().toISOString().replace(/\.\d{3}Z$/, '');
+
+        // blogId and userId MUST be query parameters, not in the body
         const response = await fetchWithTimeout(
-          `${METRICOOL_BASE_URL}/posts`,
+          `${METRICOOL_BASE_URL}/scheduler/posts?blogId=${brandId}&userId=${METRICOOL_USER_ID}`,
           {
             method: 'POST',
             headers: {
@@ -94,14 +100,26 @@ export async function postToMetricool(request: MetricoolPostRequest): Promise<Me
               'X-Mc-Auth': METRICOOL_API_KEY
             },
             body: JSON.stringify({
-              userId: METRICOOL_USER_ID,
-              brandId: brandId, // Specify which brand to post to
-              videoUrl: request.videoUrl,
-              caption: fullCaption,
-              title: request.title,
-              platforms: request.platforms,
-              scheduleTime: request.scheduleTime,
-              type: 'video'
+              text: fullCaption,
+              publicationDate: {
+                dateTime: publicationDate,
+                timezone: 'America/New_York'
+              },
+              providers: request.platforms.map(platform => ({
+                network: platform
+              })),
+              media: [{
+                url: request.videoUrl
+              }],
+              // YouTube requires a title and category
+              ...(request.platforms.includes('youtube') && {
+                youtubeData: {
+                  title: request.title || fullCaption.substring(0, 100),
+                  privacy: 'PUBLIC',
+                  madeForKids: false,
+                  category: request.brand === 'carz' ? 'AUTOS_VEHICLES' : 'NEWS_POLITICS'
+                }
+              })
             })
           },
           TIMEOUTS.EXTERNAL_API
@@ -115,12 +133,13 @@ export async function postToMetricool(request: MetricoolPostRequest): Promise<Me
         const data = await response.json();
 
         console.log(`✅ Posted to Metricool (${brandName}) successfully!`);
-        console.log('   Post ID:', data.postId || data.id);
+        console.log('   Post ID:', data.data?.id || data.id);
+        console.log('   Status:', data.data?.providers?.[0]?.status);
 
         return {
           success: true,
-          postId: data.postId || data.id,
-          scheduledFor: data.scheduledFor || request.scheduleTime,
+          postId: data.data?.id?.toString() || data.id?.toString(),
+          scheduledFor: data.data?.publicationDate?.dateTime || request.scheduleTime,
           platforms: request.platforms
         };
       },

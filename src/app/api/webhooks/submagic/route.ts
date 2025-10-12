@@ -8,15 +8,16 @@ export async function POST(request: NextRequest) {
 
     console.log('🔔 Submagic webhook received:', JSON.stringify(body, null, 2));
 
-    // Submagic webhook payload structure (may vary - check actual payload)
-    const { project_id, projectId, id, status, video_url, videoUrl, output_url } = body;
+    // Submagic webhook payload structure:
+    // { projectId: "uuid", status: "completed", downloadUrl: "url", timestamp: "ISO8601" }
+    const { projectId, status, downloadUrl, timestamp } = body;
 
-    const submagicProjectId = project_id || projectId || id;
-    const finalVideoUrl = video_url || videoUrl || output_url;
+    const submagicProjectId = projectId;
+    const finalVideoUrl = downloadUrl;
 
     if (!submagicProjectId) {
       return NextResponse.json(
-        { error: 'Missing project_id in webhook payload' },
+        { error: 'Missing projectId in webhook payload' },
         { status: 400 }
       );
     }
@@ -48,41 +49,58 @@ export async function POST(request: NextRequest) {
       console.log('   HeyGen Video:', workflow.videoUrl);
       console.log('   Final Video:', finalVideoUrl);
 
-      // Auto-post to Metricool if enabled
+      // Send immediate confirmation to Submagic (don't wait for Metricool)
+      const response = NextResponse.json({
+        received: true,
+        projectId: submagicProjectId,
+        workflowId: workflowId,
+        timestamp: new Date().toISOString()
+      });
+
+      // Auto-post to Metricool asynchronously (don't block webhook response)
       if (process.env.METRICOOL_AUTO_POST === 'true' && finalVideoUrl) {
-        console.log('\n📱 Auto-posting to social media via Metricool...');
+        // Run Metricool posting in background (after sending webhook response)
+        setImmediate(async () => {
+          try {
+            console.log('\n📱 Auto-posting to social media via Metricool...');
 
-        // Get the full workflow to access title and caption
-        const fullWorkflow = getWorkflow(workflowId);
+            // Get the full workflow to access title and caption
+            const fullWorkflow = getWorkflow(workflowId);
 
-        if (fullWorkflow) {
-          const platforms = (process.env.METRICOOL_PLATFORMS || 'instagram,tiktok,youtube,facebook,linkedin,threads').split(',') as any[];
+            if (fullWorkflow) {
+              const platforms = (process.env.METRICOOL_PLATFORMS || 'instagram,tiktok,youtube,facebook,linkedin,threads').split(',') as any[];
 
-          const postResult = await postToMetricool({
-            videoUrl: finalVideoUrl,
-            caption: fullWorkflow.caption || fullWorkflow.script?.substring(0, 150) || 'Check out this video!',
-            title: fullWorkflow.title || 'Viral Video',
-            hashtags: fullWorkflow.hashtags || extractHashtagsFromCaption(fullWorkflow.caption || ''),
-            platforms: platforms,
-            scheduleTime: process.env.METRICOOL_SCHEDULE_DELAY ? getScheduleTime(process.env.METRICOOL_SCHEDULE_DELAY) : undefined,
-            brand: fullWorkflow.brand || 'ownerfi' // Default to ownerfi if brand not specified
-          });
+              const postResult = await postToMetricool({
+                videoUrl: finalVideoUrl,
+                caption: fullWorkflow.caption || fullWorkflow.script?.substring(0, 150) || 'Check out this video!',
+                title: fullWorkflow.title || 'Viral Video',
+                hashtags: fullWorkflow.hashtags || extractHashtagsFromCaption(fullWorkflow.caption || ''),
+                platforms: platforms,
+                scheduleTime: process.env.METRICOOL_SCHEDULE_DELAY ? getScheduleTime(process.env.METRICOOL_SCHEDULE_DELAY) : undefined,
+                brand: fullWorkflow.brand || 'ownerfi' // Default to ownerfi if brand not specified
+              });
 
-          if (postResult.success) {
-            console.log('✅ Posted to Metricool!');
-            console.log('   Post ID:', postResult.postId);
-            console.log('   Platforms:', postResult.platforms?.join(', '));
+              if (postResult.success) {
+                console.log('✅ Posted to Metricool!');
+                console.log('   Post ID:', postResult.postId);
+                console.log('   Platforms:', postResult.platforms?.join(', '));
 
-            updateWorkflow(workflowId, {
-              metricoolPostId: postResult.postId,
-              metricoolPlatforms: postResult.platforms,
-              metricoolPosted: true
-            });
-          } else {
-            console.error('❌ Failed to post to Metricool:', postResult.error);
+                updateWorkflow(workflowId, {
+                  metricoolPostId: postResult.postId,
+                  metricoolPlatforms: postResult.platforms,
+                  metricoolPosted: true
+                });
+              } else {
+                console.error('❌ Failed to post to Metricool:', postResult.error);
+              }
+            }
+          } catch (error) {
+            console.error('❌ Error posting to Metricool (async):', error);
           }
-        }
+        });
       }
+
+      return response;
 
     } else if (status === 'failed' || status === 'error') {
       console.error('❌ Submagic processing failed');
@@ -96,8 +114,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       received: true,
-      project_id: submagicProjectId,
-      workflow_id: workflowId
+      projectId: submagicProjectId,
+      workflowId: workflowId,
+      timestamp: new Date().toISOString()
     });
 
   } catch (error) {

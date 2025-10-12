@@ -19,7 +19,11 @@ export interface MetricoolPostRequest {
   caption: string;
   title?: string;
   hashtags?: string[];
-  platforms: ('instagram' | 'tiktok' | 'youtube' | 'facebook' | 'linkedin' | 'threads')[];
+  platforms: ('instagram' | 'tiktok' | 'youtube' | 'facebook' | 'linkedin' | 'threads' | 'twitter')[];
+  postTypes?: {
+    instagram?: 'reels' | 'story';
+    facebook?: 'reels' | 'story';
+  };
   scheduleTime?: string; // ISO 8601 format, or omit for immediate posting
   brand: 'carz' | 'ownerfi'; // Required: which brand to post to
 }
@@ -105,15 +109,21 @@ export async function postToMetricool(request: MetricoolPostRequest): Promise<Me
                 dateTime: publicationDate,
                 timezone: 'America/New_York'
               },
-              providers: request.platforms.map(platform => ({
-                network: platform,
-                // Instagram and Facebook should be posted as Reels
-                ...(platform === 'instagram' && { postType: 'reels' }),
-                ...(platform === 'facebook' && { postType: 'reels' })
-              })),
-              media: [{
-                url: request.videoUrl
-              }],
+              providers: request.platforms.map(platform => {
+                const provider: any = { network: platform };
+
+                // Set post type based on platform and request
+                if (platform === 'instagram') {
+                  provider.postType = request.postTypes?.instagram || 'reels';
+                } else if (platform === 'facebook') {
+                  provider.postType = request.postTypes?.facebook || 'reels';
+                } else if (platform === 'youtube') {
+                  provider.postType = 'shorts';
+                }
+
+                return provider;
+              }),
+              media: [request.videoUrl],
               // YouTube requires a title and category
               ...(request.platforms.includes('youtube') && {
                 youtubeData: {

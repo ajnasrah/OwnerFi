@@ -100,16 +100,75 @@ export async function downloadAndUploadVideo(
 }
 
 /**
- * Download video from Submagic and upload to public storage
+ * Download video from Submagic and upload to Cloudflare R2
+ * Returns a permanent public URL (no expiration) for Metricool compatibility
  */
 export async function uploadSubmagicVideo(submagicDownloadUrl: string): Promise<string> {
-  const SUBMAGIC_API_KEY = process.env.SUBMAGIC_API_KEY;
+  console.log('📥 Downloading video from Submagic...');
+  console.log(`   URL: ${submagicDownloadUrl.substring(0, 80)}...`);
 
-  if (!SUBMAGIC_API_KEY) {
-    throw new Error('SUBMAGIC_API_KEY not configured');
+  // Download video
+  const response = await fetch(submagicDownloadUrl);
+
+  if (!response.ok) {
+    throw new Error(`Failed to download video: ${response.status} - ${response.statusText}`);
   }
 
-  return downloadAndUploadVideo(submagicDownloadUrl, SUBMAGIC_API_KEY);
+  const arrayBuffer = await response.arrayBuffer();
+  const buffer = Buffer.from(arrayBuffer);
+  const sizeInMB = (buffer.length / 1024 / 1024).toFixed(2);
+
+  console.log(`✅ Downloaded video (${sizeInMB} MB)`);
+
+  // Generate filename
+  const timestamp = Date.now();
+  const randomStr = Math.random().toString(36).substring(7);
+  const fileName = `viral-videos/submagic-${timestamp}-${randomStr}.mp4`;
+
+  console.log('☁️  Uploading to Cloudflare R2...');
+
+  // Upload to R2
+  const { S3Client, PutObjectCommand } = await import('@aws-sdk/client-s3');
+
+  const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
+  const accessKeyId = process.env.R2_ACCESS_KEY_ID;
+  const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
+
+  if (!accountId || !accessKeyId || !secretAccessKey) {
+    throw new Error('R2 credentials not configured');
+  }
+
+  const r2Client = new S3Client({
+    region: 'auto',
+    endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
+    credentials: {
+      accessKeyId,
+      secretAccessKey,
+    },
+  });
+
+  const bucketName = process.env.R2_BUCKET_NAME || 'ownerfi-podcast-videos';
+
+  await r2Client.send(new PutObjectCommand({
+    Bucket: bucketName,
+    Key: fileName,
+    Body: buffer,
+    ContentType: 'video/mp4',
+    Metadata: {
+      'uploaded-at': new Date().toISOString(),
+      'source': 'submagic',
+      'auto-delete-after': new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+    },
+  }));
+
+  // Construct public URL
+  const publicUrl = process.env.R2_PUBLIC_URL
+    ? `${process.env.R2_PUBLIC_URL}/${fileName}`
+    : `https://pub-${accountId}.r2.dev/${fileName}`;
+
+  console.log(`✅ Uploaded to R2: ${publicUrl}`);
+
+  return publicUrl;
 }
 
 /**
@@ -147,11 +206,11 @@ export async function deleteExpiredVideos(): Promise<{
         continue;
       }
 
-      const deleteDate = new Date(autoDeleteAfter);
+      const deleteDate = new Date(autoDeleteAfter as string);
 
       // Check if file is expired
       if (now >= deleteDate) {
-        const size = parseInt(metadata.size || '0');
+        const size = parseInt(String(metadata.size || '0'));
         totalSize += size;
 
         console.log(`  Deleting expired video: ${file.name} (${(size / 1024 / 1024).toFixed(2)} MB)`);

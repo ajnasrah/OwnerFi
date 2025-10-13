@@ -100,6 +100,89 @@ export async function downloadAndUploadVideo(
 }
 
 /**
+ * Download video from authenticated endpoint and upload directly to Cloudflare R2
+ * Returns a permanent public URL - more efficient than Firebase Storage
+ */
+export async function downloadAndUploadToR2(
+  videoUrl: string,
+  apiKey: string,
+  fileName?: string
+): Promise<string> {
+  console.log('📥 Downloading video from authenticated endpoint...');
+  console.log(`   URL: ${videoUrl.substring(0, 80)}...`);
+
+  // Download video with authentication
+  const response = await fetch(videoUrl, {
+    headers: {
+      'x-api-key': apiKey
+    }
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to download video: ${response.status} - ${response.statusText}`);
+  }
+
+  // Get video data as buffer
+  const arrayBuffer = await response.arrayBuffer();
+  const buffer = Buffer.from(arrayBuffer);
+  const sizeInMB = (buffer.length / 1024 / 1024).toFixed(2);
+
+  console.log(`✅ Downloaded video (${sizeInMB} MB)`);
+
+  // Generate filename if not provided
+  if (!fileName) {
+    const timestamp = Date.now();
+    const randomStr = Math.random().toString(36).substring(7);
+    fileName = `heygen-videos/${timestamp}-${randomStr}.mp4`;
+  }
+
+  console.log('☁️  Uploading to Cloudflare R2...');
+
+  // Upload to R2
+  const { S3Client, PutObjectCommand } = await import('@aws-sdk/client-s3');
+
+  const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
+  const accessKeyId = process.env.R2_ACCESS_KEY_ID;
+  const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
+
+  if (!accountId || !accessKeyId || !secretAccessKey) {
+    throw new Error('R2 credentials not configured');
+  }
+
+  const r2Client = new S3Client({
+    region: 'auto',
+    endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
+    credentials: {
+      accessKeyId,
+      secretAccessKey,
+    },
+  });
+
+  const bucketName = process.env.R2_BUCKET_NAME || 'ownerfi-podcast-videos';
+
+  await r2Client.send(new PutObjectCommand({
+    Bucket: bucketName,
+    Key: fileName,
+    Body: buffer,
+    ContentType: 'video/mp4',
+    Metadata: {
+      'uploaded-at': new Date().toISOString(),
+      'source': 'heygen',
+      'auto-delete-after': new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+    },
+  }));
+
+  // Construct public URL
+  const publicUrl = process.env.R2_PUBLIC_URL
+    ? `${process.env.R2_PUBLIC_URL}/${fileName}`
+    : `https://pub-${accountId}.r2.dev/${fileName}`;
+
+  console.log(`✅ Uploaded to R2: ${publicUrl}`);
+
+  return publicUrl;
+}
+
+/**
  * Download video from Submagic and upload to Cloudflare R2
  * Returns a permanent public URL (no expiration) for Metricool compatibility
  */

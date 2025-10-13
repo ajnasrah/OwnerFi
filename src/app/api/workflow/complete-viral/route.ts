@@ -28,9 +28,10 @@ export async function POST(request: NextRequest) {
     console.log(`   Platforms: ${platforms.join(', ')}`);
     console.log(`   Schedule: ${schedule}`);
 
-    // Step 1: Get best article from feed
-    console.log('📰 Step 1: Fetching best article from RSS...');
-    const article = await getBestArticle(brand);
+    // Step 1: Get and lock best article from feed (prevents race conditions)
+    console.log('📰 Step 1: Fetching and locking best article from RSS...');
+    const { getAndLockArticle } = await import('@/lib/feed-store-firestore');
+    const article = await getAndLockArticle(brand as 'carz' | 'ownerfi');
 
     if (!article) {
       return NextResponse.json(
@@ -39,15 +40,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(`✅ Got article: ${article.title.substring(0, 50)}...`);
+    console.log(`✅ Got and locked article: ${article.title.substring(0, 50)}...`);
 
-    // Mark article as being processed and add to workflow queue
+    // Add to workflow queue with 'pending' status
     let workflowId: string | undefined;
     if (article.id) {
-      const { markArticleProcessed, addWorkflowToQueue } = await import('@/lib/feed-store-firestore');
-      await markArticleProcessed(article.id, brand as 'carz' | 'ownerfi');
-
-      // Add to workflow queue with 'pending' status
+      const { addWorkflowToQueue } = await import('@/lib/feed-store-firestore');
       const queueItem = await addWorkflowToQueue(article.id, article.title, brand as 'carz' | 'ownerfi');
       workflowId = queueItem.id;
       console.log(`📋 Added to workflow queue: ${workflowId}`);
@@ -117,17 +115,17 @@ export async function POST(request: NextRequest) {
 
     console.log(`✅ HeyGen completed: ${heygenUrl}`);
 
-    // Step 4.5: Upload HeyGen video to Firebase for public access
-    console.log('☁️  Step 4.5: Uploading HeyGen video to public storage...');
-    const { downloadAndUploadVideo } = await import('@/lib/video-storage');
-    const publicHeygenUrl = await downloadAndUploadVideo(
+    // Step 4.5: Upload HeyGen video directly to R2 (skip Firebase - save bandwidth!)
+    console.log('☁️  Step 4.5: Uploading HeyGen video to R2 for Submagic...');
+    const { downloadAndUploadToR2 } = await import('@/lib/video-storage');
+    const publicHeygenUrl = await downloadAndUploadToR2(
       heygenUrl,
       HEYGEN_API_KEY!,
       `heygen-videos/${videoResult.video_id}.mp4`
     );
-    console.log(`✅ Public HeyGen URL: ${publicHeygenUrl}`);
+    console.log(`✅ Public R2 URL: ${publicHeygenUrl}`);
 
-    // Step 5: Enhance with Submagic (using public URL)
+    // Step 5: Enhance with Submagic (using R2 public URL)
     console.log('✨ Step 5: Adding Submagic captions and effects...');
 
     // Update workflow status to 'submagic_processing'
@@ -139,7 +137,7 @@ export async function POST(request: NextRequest) {
     }
 
     const submagicResult = await enhanceWithSubmagic({
-      videoUrl: publicHeygenUrl, // Use public URL instead of auth-required HeyGen URL
+      videoUrl: publicHeygenUrl, // Use R2 public URL (permanent)
       title: content.title,
       language: 'en',
       templateName: 'Hormozi 2'
@@ -173,9 +171,20 @@ export async function POST(request: NextRequest) {
 
     // Step 6: Wait for Submagic completion
     console.log('⏳ Step 6: Waiting for Submagic enhancement...');
-    const finalVideoUrl = await waitForSubmagicCompletion(submagicResult.project_id, 14);
+    const finalVideoUrl = await waitForSubmagicCompletion(submagicResult.project_id, 30); // 22.5 minutes total
 
     if (!finalVideoUrl) {
+      console.error('❌ Submagic timed out after 22.5 minutes');
+
+      // Update workflow status to 'failed'
+      if (workflowId) {
+        const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
+        await updateWorkflowStatus(workflowId, brand as 'carz' | 'ownerfi', {
+          status: 'failed',
+          error: 'Submagic processing timed out after 22.5 minutes'
+        });
+      }
+
       return NextResponse.json(
         {
           success: false,
@@ -533,9 +542,9 @@ async function enhanceWithSubmagic(params: {
 }
 
 // Helper: Wait for Submagic completion
-async function waitForSubmagicCompletion(projectId: string, maxAttempts: number = 14): Promise<string | null> {
+async function waitForSubmagicCompletion(projectId: string, maxAttempts: number = 30): Promise<string | null> {
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    await new Promise(resolve => setTimeout(resolve, 45000)); // 45 seconds × 14 = 10.5 minutes
+    await new Promise(resolve => setTimeout(resolve, 45000)); // 45 seconds × 30 = 22.5 minutes
 
     try {
       const response = await fetch(

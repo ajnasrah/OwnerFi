@@ -98,14 +98,16 @@ export async function postToMetricool(request: MetricoolPostRequest): Promise<Me
           media: [request.videoUrl],
         };
 
-        // Only add publicationDate if scheduling for later (not immediate)
-        if (request.scheduleTime) {
-          const publicationDate = new Date(request.scheduleTime).toISOString().replace(/\.\d{3}Z$/, '');
-          requestBody.publicationDate = {
-            dateTime: publicationDate,
-            timezone: 'America/New_York'
-          };
-        }
+        // Always include publicationDate (use current time + 1 minute for immediate posts)
+        const scheduleDate = request.scheduleTime
+          ? new Date(request.scheduleTime)
+          : new Date(Date.now() + 60000); // 1 minute from now for immediate posts
+
+        const publicationDate = scheduleDate.toISOString().replace(/\.\d{3}Z$/, '');
+        requestBody.publicationDate = {
+          dateTime: publicationDate,
+          timezone: 'America/New_York'
+        };
 
         // Add platform-specific data
         if (request.platforms.includes('instagram')) {

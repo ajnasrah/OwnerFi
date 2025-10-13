@@ -10,26 +10,47 @@ const COLLECTIONS = {
   OWNERFI: 'ownerfi_workflow_queue',
 };
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     if (!db) {
       return NextResponse.json({ error: 'Firebase not initialized' }, { status: 500 });
     }
 
-    // Get active workflows (not completed/failed) from both brands
-    const carzQuery = query(
-      collection(db, COLLECTIONS.CARZ),
-      where('status', 'in', ['pending', 'heygen_processing', 'submagic_processing', 'posting']),
-      orderBy('createdAt', 'desc'),
-      firestoreLimit(20)
-    );
+    // Parse URL to check for history query param
+    const { searchParams } = new URL(request.url);
+    const includeHistory = searchParams.get('history') === 'true';
 
-    const ownerfiQuery = query(
-      collection(db, COLLECTIONS.OWNERFI),
-      where('status', 'in', ['pending', 'heygen_processing', 'submagic_processing', 'posting']),
-      orderBy('createdAt', 'desc'),
-      firestoreLimit(20)
-    );
+    let carzQuery, ownerfiQuery;
+
+    if (includeHistory) {
+      // Get all recent workflows (last 50)
+      carzQuery = query(
+        collection(db, COLLECTIONS.CARZ),
+        orderBy('updatedAt', 'desc'),
+        firestoreLimit(50)
+      );
+
+      ownerfiQuery = query(
+        collection(db, COLLECTIONS.OWNERFI),
+        orderBy('updatedAt', 'desc'),
+        firestoreLimit(50)
+      );
+    } else {
+      // Get active workflows only
+      carzQuery = query(
+        collection(db, COLLECTIONS.CARZ),
+        where('status', 'in', ['pending', 'heygen_processing', 'submagic_processing', 'posting']),
+        orderBy('createdAt', 'desc'),
+        firestoreLimit(20)
+      );
+
+      ownerfiQuery = query(
+        collection(db, COLLECTIONS.OWNERFI),
+        where('status', 'in', ['pending', 'heygen_processing', 'submagic_processing', 'posting']),
+        orderBy('createdAt', 'desc'),
+        firestoreLimit(20)
+      );
+    }
 
     const [carzSnapshot, ownerfiSnapshot] = await Promise.all([
       getDocs(carzQuery),

@@ -84,31 +84,70 @@ interface WorkflowLogs {
   timestamp: string;
 }
 
+interface PodcastWorkflowLog {
+  id: string;
+  episodeNumber: number;
+  episodeTitle: string;
+  guestName: string;
+  topic: string;
+  status: 'script_generation' | 'heygen_processing' | 'submagic_processing' | 'publishing' | 'completed' | 'failed';
+  heygenVideoId?: string;
+  submagicProjectId?: string;
+  finalVideoUrl?: string;
+  metricoolPostId?: string;
+  error?: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
+interface PodcastWorkflowLogs {
+  success: boolean;
+  workflows: PodcastWorkflowLog[];
+  timestamp: string;
+}
+
 export default function SocialMediaDashboard() {
   const [activeSubTab, setActiveSubTab] = useState<'carz' | 'ownerfi' | 'podcast'>('carz');
   const [status, setStatus] = useState<SchedulerStatus | null>(null);
   const [workflows, setWorkflows] = useState<WorkflowLogs | null>(null);
+  const [podcastWorkflows, setPodcastWorkflows] = useState<PodcastWorkflowLogs | null>(null);
   const [loading, setLoading] = useState(true);
-  const [triggering, setTriggering] = useState(false);
+  const [triggeringViral, setTriggeringViral] = useState(false);
+  const [triggeringPodcast, setTriggeringPodcast] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
 
   useEffect(() => {
     loadStatus();
     loadWorkflows();
+    loadPodcastWorkflows();
     const statusInterval = setInterval(loadStatus, 30000); // Refresh every 30 seconds
     const workflowInterval = setInterval(loadWorkflows, 5000); // Refresh every 5 seconds for real-time updates
+    const podcastWorkflowInterval = setInterval(loadPodcastWorkflows, 5000); // Refresh every 5 seconds for real-time updates
     return () => {
       clearInterval(statusInterval);
       clearInterval(workflowInterval);
+      clearInterval(podcastWorkflowInterval);
     };
-  }, []);
+  }, [showHistory]);
 
   const loadWorkflows = async () => {
     try {
-      const response = await fetch('/api/workflow/logs');
+      const url = showHistory ? '/api/workflow/logs?history=true' : '/api/workflow/logs';
+      const response = await fetch(url);
       const data = await response.json();
       setWorkflows(data);
     } catch (error) {
       console.error('Failed to load workflows:', error);
+    }
+  };
+
+  const loadPodcastWorkflows = async () => {
+    try {
+      const response = await fetch('/api/podcast/workflow/logs');
+      const data = await response.json();
+      setPodcastWorkflows(data);
+    } catch (error) {
+      console.error('Failed to load podcast workflows:', error);
     }
   };
 
@@ -125,7 +164,7 @@ export default function SocialMediaDashboard() {
   };
 
   const triggerCron = async () => {
-    setTriggering(true);
+    setTriggeringViral(true);
     try {
       const response = await fetch('/api/cron/viral-video', { method: 'POST' });
       const data = await response.json();
@@ -134,20 +173,20 @@ export default function SocialMediaDashboard() {
     } catch (error) {
       alert('Failed to trigger cron');
     } finally {
-      setTriggering(false);
+      setTriggeringViral(false);
     }
   };
 
   const triggerPodcastCron = async () => {
-    setTriggering(true);
+    setTriggeringPodcast(true);
     try {
-      const response = await fetch('/api/podcast/cron', { method: 'POST' });
+      const response = await fetch('/api/podcast/cron?force=true', { method: 'POST' });
       const data = await response.json();
       alert(data.success ? 'Podcast cron triggered successfully!' : `Error: ${data.error}`);
     } catch (error) {
       alert('Failed to trigger podcast cron');
     } finally {
-      setTriggering(false);
+      setTriggeringPodcast(false);
     }
   };
 
@@ -163,7 +202,19 @@ export default function SocialMediaDashboard() {
     }
   };
 
-  const formatStatus = (status: WorkflowLog['status']) => {
+  const getPodcastStatusColor = (status: PodcastWorkflowLog['status']) => {
+    switch (status) {
+      case 'script_generation': return 'bg-gray-100 text-gray-700';
+      case 'heygen_processing': return 'bg-blue-100 text-blue-700';
+      case 'submagic_processing': return 'bg-purple-100 text-purple-700';
+      case 'publishing': return 'bg-yellow-100 text-yellow-700';
+      case 'completed': return 'bg-green-100 text-green-700';
+      case 'failed': return 'bg-red-100 text-red-700';
+      default: return 'bg-gray-100 text-gray-700';
+    }
+  };
+
+  const formatStatus = (status: WorkflowLog['status'] | PodcastWorkflowLog['status']) => {
     return status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
 
@@ -278,10 +329,10 @@ export default function SocialMediaDashboard() {
                 <h3 className="text-lg font-semibold text-slate-900">Carz Inc Status</h3>
                 <button
                   onClick={triggerCron}
-                  disabled={triggering}
+                  disabled={triggeringViral}
                   className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:bg-gray-400 transition-colors"
                 >
-                  {triggering ? 'Generating...' : 'Generate Video Now'}
+                  {triggeringViral ? 'Generating...' : 'Generate Video Now'}
                 </button>
               </div>
 
@@ -334,7 +385,15 @@ export default function SocialMediaDashboard() {
 
               {/* Workflow Logs */}
               <div className="mt-6 pt-6 border-t border-slate-200">
-                <h4 className="text-sm font-semibold text-slate-900 mb-3">Active Workflows</h4>
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-sm font-semibold text-slate-900">Workflows</h4>
+                  <button
+                    onClick={() => setShowHistory(!showHistory)}
+                    className="text-xs px-3 py-1 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition-colors"
+                  >
+                    {showHistory ? 'Active Only' : 'Show History'}
+                  </button>
+                </div>
                 {workflows && workflows.workflows && workflows.workflows.carz && workflows.workflows.carz.length > 0 ? (
                   <div className="space-y-3">
                     {workflows.workflows.carz.map((workflow) => (
@@ -396,10 +455,10 @@ export default function SocialMediaDashboard() {
                 <h3 className="text-lg font-semibold text-slate-900">OwnerFi Status</h3>
                 <button
                   onClick={triggerCron}
-                  disabled={triggering}
+                  disabled={triggeringViral}
                   className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:bg-gray-400 transition-colors"
                 >
-                  {triggering ? 'Generating...' : 'Generate Video Now'}
+                  {triggeringViral ? 'Generating...' : 'Generate Video Now'}
                 </button>
               </div>
 
@@ -452,7 +511,15 @@ export default function SocialMediaDashboard() {
 
               {/* Workflow Logs */}
               <div className="mt-6 pt-6 border-t border-slate-200">
-                <h4 className="text-sm font-semibold text-slate-900 mb-3">Active Workflows</h4>
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-sm font-semibold text-slate-900">Workflows</h4>
+                  <button
+                    onClick={() => setShowHistory(!showHistory)}
+                    className="text-xs px-3 py-1 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition-colors"
+                  >
+                    {showHistory ? 'Active Only' : 'Show History'}
+                  </button>
+                </div>
                 {workflows && workflows.workflows && workflows.workflows.ownerfi && workflows.workflows.ownerfi.length > 0 ? (
                   <div className="space-y-3">
                     {workflows.workflows.ownerfi.map((workflow) => (
@@ -514,10 +581,10 @@ export default function SocialMediaDashboard() {
                 <h3 className="text-lg font-semibold text-slate-900">Podcast Status</h3>
                 <button
                   onClick={triggerPodcastCron}
-                  disabled={triggering}
+                  disabled={triggeringPodcast}
                   className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:bg-gray-400 transition-colors"
                 >
-                  {triggering ? 'Generating...' : 'Generate Episode Now'}
+                  {triggeringPodcast ? 'Generating...' : 'Generate Episode Now'}
                 </button>
               </div>
 
@@ -576,6 +643,68 @@ export default function SocialMediaDashboard() {
                     <li>• Uploaded to R2 storage → Published to Metricool</li>
                   </ul>
                 </div>
+              </div>
+
+              {/* Podcast Workflow Logs */}
+              <div className="mt-6 pt-6 border-t border-slate-200">
+                <h4 className="text-sm font-semibold text-slate-900 mb-3">Active Workflows</h4>
+                {podcastWorkflows && podcastWorkflows.workflows && podcastWorkflows.workflows.length > 0 ? (
+                  <div className="space-y-3">
+                    {podcastWorkflows.workflows.map((workflow) => (
+                      <div key={workflow.id} className="bg-white border border-slate-200 rounded-lg p-4 hover:border-indigo-300 transition-colors">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex-1">
+                            <div className="font-medium text-slate-900 text-sm mb-1">
+                              Episode #{workflow.episodeNumber}: {workflow.episodeTitle || 'Generating...'}
+                            </div>
+                            {workflow.guestName && (
+                              <div className="text-xs text-slate-600 mb-1">Guest: {workflow.guestName}</div>
+                            )}
+                            {workflow.topic && (
+                              <div className="text-xs text-slate-600 mb-1">Topic: {workflow.topic}</div>
+                            )}
+                            <div className="text-xs text-slate-500">{formatTimeAgo(workflow.createdAt)}</div>
+                          </div>
+                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${getPodcastStatusColor(workflow.status)}`}>
+                            {formatStatus(workflow.status)}
+                          </span>
+                        </div>
+                        {(workflow.heygenVideoId || workflow.submagicProjectId || workflow.metricoolPostId) && (
+                          <div className="grid grid-cols-3 gap-2 text-xs">
+                            {workflow.heygenVideoId && (
+                              <div>
+                                <div className="text-slate-500 mb-1">HeyGen</div>
+                                <div className="font-mono text-slate-700 truncate">{workflow.heygenVideoId.substring(0, 12)}...</div>
+                              </div>
+                            )}
+                            {workflow.submagicProjectId && (
+                              <div>
+                                <div className="text-slate-500 mb-1">Submagic</div>
+                                <div className="font-mono text-slate-700 truncate">{workflow.submagicProjectId.substring(0, 12)}...</div>
+                              </div>
+                            )}
+                            {workflow.metricoolPostId && (
+                              <div>
+                                <div className="text-slate-500 mb-1">Metricool</div>
+                                <div className="font-mono text-slate-700 truncate">{workflow.metricoolPostId}</div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        {workflow.error && (
+                          <div className="mt-3 text-xs text-red-700 bg-red-50 border border-red-200 rounded px-3 py-2">
+                            <span className="font-semibold">Error:</span> {workflow.error}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="bg-slate-50 rounded-lg p-8 text-center border border-slate-200">
+                    <div className="text-slate-500 text-sm font-medium">No active workflows</div>
+                    <div className="text-xs text-slate-400 mt-1">Episodes will appear here when being generated</div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

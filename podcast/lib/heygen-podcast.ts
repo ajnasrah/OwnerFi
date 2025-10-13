@@ -49,11 +49,10 @@ interface HeyGenVideoRequest {
 }
 
 interface HeyGenVideoResponse {
-  code: number;
+  error: any;
   data: {
     video_id: string;
   };
-  message?: string;
 }
 
 export class HeyGenPodcastGenerator {
@@ -120,8 +119,15 @@ export class HeyGenPodcastGenerator {
     // Call HeyGen API
     const response = await this.callHeyGenAPI(request);
 
-    if (response.code !== 100) {
-      throw new Error(`HeyGen API error: ${response.message || 'Unknown error'}`);
+    if (response.error) {
+      const errorMessage = typeof response.error === 'string'
+        ? response.error
+        : JSON.stringify(response.error);
+      throw new Error(`HeyGen API error: ${errorMessage}`);
+    }
+
+    if (!response.data || !response.data.video_id) {
+      throw new Error('HeyGen API did not return a video ID');
     }
 
     const videoId = response.data.video_id;

@@ -32,6 +32,7 @@ export interface Article {
   videoId?: string;
   workflowId?: string;
   error?: string;
+  contentHash?: string;
   createdAt: number;
 }
 
@@ -46,6 +47,8 @@ export interface WorkflowQueueItem {
   submagicVideoId?: string;
   metricoolPostId?: string;
   error?: string;
+  retryCount?: number;
+  lastRetryAt?: number;
   createdAt: number;
   updatedAt: number;
   completedAt?: number;
@@ -62,6 +65,9 @@ const COLLECTIONS = {
     FEEDS: 'ownerfi_rss_feeds',
     ARTICLES: 'ownerfi_articles',
     WORKFLOW_QUEUE: 'ownerfi_workflow_queue',
+  },
+  PODCAST: {
+    WORKFLOW_QUEUE: 'podcast_workflow_queue',
   }
 };
 
@@ -125,12 +131,30 @@ export async function updateFeedSource(feed: FeedSource): Promise<void> {
   await updateDoc(doc(db, collectionName, feed.id), cleanData);
 }
 
+// Generate content hash for deduplication
+function generateContentHash(title: string, content: string): string {
+  // Use title + first 500 chars of content to detect duplicates
+  const text = (title + content.substring(0, 500)).toLowerCase().replace(/\s+/g, ' ').trim();
+
+  // Simple hash function (FNV-1a)
+  let hash = 2166136261;
+  for (let i = 0; i < text.length; i++) {
+    hash ^= text.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0).toString(36);
+}
+
 // Article management
 export async function addArticle(article: Omit<Article, 'createdAt'>, category: 'carz' | 'ownerfi'): Promise<Article> {
   if (!db) throw new Error('Firebase not initialized');
 
+  // Generate content hash for deduplication
+  const contentHash = generateContentHash(article.title, article.content || article.description);
+
   const newArticle: Article = {
     ...article,
+    contentHash,
     createdAt: Date.now()
   };
 
@@ -169,10 +193,99 @@ export async function markArticleProcessed(id: string, category: 'carz' | 'owner
   const collectionName = getCollectionName('ARTICLES', category);
   const cleanData = removeUndefined({
     processed: true,
+    processedAt: Date.now(),
     workflowId,
     error
   });
   await updateDoc(doc(db, collectionName, id), cleanData);
+}
+
+// Get and lock article for processing (atomic operation to prevent race conditions)
+// Uses AI quality evaluation to pick the best article
+export async function getAndLockArticle(category: 'carz' | 'ownerfi'): Promise<Article | null> {
+  if (!db) return null;
+
+  const collectionName = getCollectionName('ARTICLES', category);
+
+  // Get top 5 unprocessed articles to evaluate
+  const q = query(
+    collection(db, collectionName),
+    where('processed', '==', false),
+    orderBy('pubDate', 'desc'),
+    firestoreLimit(5)
+  );
+
+  const snapshot = await getDocs(q);
+
+  if (snapshot.empty) {
+    return null;
+  }
+
+  const candidates = snapshot.docs.map(doc => doc.data() as Article);
+
+  // Use AI quality filter to score all candidates
+  const { evaluateArticlesBatch } = await import('./article-quality-filter');
+  const qualityScores = await evaluateArticlesBatch(
+    candidates.map(article => ({
+      title: article.title,
+      content: article.content || article.description,
+      category
+    })),
+    3 // Max 3 concurrent API calls
+  );
+
+  // Pair articles with their scores
+  const scoredArticles = candidates.map((article, index) => ({
+    article,
+    score: qualityScores[index].score,
+    shouldMakeVideo: qualityScores[index].shouldMakeVideo,
+    reasoning: qualityScores[index].reasoning
+  }));
+
+  // Filter out articles below threshold (score < 70)
+  const viableArticles = scoredArticles.filter(item => item.shouldMakeVideo);
+
+  if (viableArticles.length === 0) {
+    console.log(`⚠️  No viable articles found (all below quality threshold)`);
+    // Still pick the best one even if below threshold (fail open)
+    scoredArticles.sort((a, b) => b.score - a.score);
+    const bestArticle = scoredArticles[0].article;
+    const bestScore = scoredArticles[0].score;
+
+    await updateDoc(doc(db, collectionName, bestArticle.id), {
+      processed: true,
+      processedAt: Date.now(),
+      processingStartedAt: Date.now(),
+      qualityScore: bestScore,
+      aiReasoning: scoredArticles[0].reasoning
+    });
+
+    console.log(`🔒 Locked best available article (score: ${bestScore}): ${bestArticle.title.substring(0, 60)}...`);
+    return bestArticle;
+  }
+
+  // Sort viable articles by score (highest first)
+  viableArticles.sort((a, b) => b.score - a.score);
+
+  const bestArticle = viableArticles[0].article;
+  const bestScore = viableArticles[0].score;
+  const reasoning = viableArticles[0].reasoning;
+
+  console.log(`📊 AI evaluated ${candidates.length} articles, best score: ${bestScore}`);
+  console.log(`   Reasoning: ${reasoning}`);
+
+  // Immediately mark as processed to prevent another process from picking it up
+  await updateDoc(doc(db, collectionName, bestArticle.id), {
+    processed: true,
+    processedAt: Date.now(),
+    processingStartedAt: Date.now(),
+    qualityScore: bestScore,
+    aiReasoning: reasoning
+  });
+
+  console.log(`🔒 Locked best article (AI score: ${bestScore}): ${bestArticle.title.substring(0, 60)}...`);
+
+  return bestArticle;
 }
 
 export async function markArticleVideoGenerated(id: string, category: 'carz' | 'ownerfi', videoId: string): Promise<void> {
@@ -200,6 +313,27 @@ export async function articleExists(link: string, category: 'carz' | 'ownerfi'):
   return !snapshot.empty;
 }
 
+// Check if article content already exists (deduplication)
+export async function articleExistsByContent(
+  title: string,
+  content: string,
+  category: 'carz' | 'ownerfi'
+): Promise<boolean> {
+  if (!db) return false;
+
+  const contentHash = generateContentHash(title, content);
+  const collectionName = getCollectionName('ARTICLES', category);
+
+  const q = query(
+    collection(db, collectionName),
+    where('contentHash', '==', contentHash),
+    firestoreLimit(1)
+  );
+
+  const snapshot = await getDocs(q);
+  return !snapshot.empty;
+}
+
 // Workflow Queue Management
 export async function addWorkflowToQueue(articleId: string, articleTitle: string, brand: 'carz' | 'ownerfi'): Promise<WorkflowQueueItem> {
   if (!db) throw new Error('Firebase not initialized');
@@ -210,6 +344,7 @@ export async function addWorkflowToQueue(articleId: string, articleTitle: string
     articleTitle,
     brand,
     status: 'pending',
+    retryCount: 0,
     createdAt: Date.now(),
     updatedAt: Date.now()
   };
@@ -298,6 +433,170 @@ export async function cleanupCompletedWorkflows(olderThanHours: number = 24): Pr
   return cleaned;
 }
 
+// Keep only top N articles per brand (delete low-quality ones)
+export async function cleanupLowQualityArticles(keepTopN: number = 10): Promise<{carz: number; ownerfi: number}> {
+  if (!db) return { carz: 0, ownerfi: 0 };
+
+  const deleted = { carz: 0, ownerfi: 0 };
+
+  for (const cat of ['carz', 'ownerfi'] as const) {
+    const collectionName = getCollectionName('ARTICLES', cat);
+
+    // Get all unprocessed articles ordered by pubDate
+    const q = query(
+      collection(db, collectionName),
+      where('processed', '==', false),
+      orderBy('pubDate', 'desc')
+    );
+
+    const snapshot = await getDocs(q);
+    const articles = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Article));
+
+    if (articles.length <= keepTopN) {
+      console.log(`✅ ${cat}: ${articles.length} articles (within limit)`);
+      continue;
+    }
+
+    // Keep top N newest, delete the rest
+    const articlesToDelete = articles.slice(keepTopN);
+
+    console.log(`🧹 ${cat}: Deleting ${articlesToDelete.length} old articles (keeping ${keepTopN})`);
+
+    for (const article of articlesToDelete) {
+      await deleteDoc(doc(db, collectionName, article.id));
+      deleted[cat]++;
+    }
+  }
+
+  if (deleted.carz > 0 || deleted.ownerfi > 0) {
+    console.log(`🧹 Cleanup complete: ${deleted.carz} Carz + ${deleted.ownerfi} OwnerFi articles deleted`);
+  }
+
+  return deleted;
+}
+
+// Delete processed articles older than N days to prevent storage bloat
+export async function cleanupProcessedArticles(olderThanDays: number = 7): Promise<{carz: number; ownerfi: number}> {
+  if (!db) return { carz: 0, ownerfi: 0 };
+
+  const cutoffTime = Date.now() - (olderThanDays * 24 * 60 * 60 * 1000);
+  const deleted = { carz: 0, ownerfi: 0 };
+
+  for (const cat of ['carz', 'ownerfi'] as const) {
+    const collectionName = getCollectionName('ARTICLES', cat);
+
+    // Get processed articles older than cutoff
+    const q = query(
+      collection(db, collectionName),
+      where('processed', '==', true),
+      where('processedAt', '<', cutoffTime)
+    );
+
+    const snapshot = await getDocs(q);
+
+    console.log(`🧹 ${cat}: Deleting ${snapshot.size} processed articles older than ${olderThanDays} days`);
+
+    for (const docSnap of snapshot.docs) {
+      await deleteDoc(doc(db, collectionName, docSnap.id));
+      deleted[cat]++;
+    }
+  }
+
+  if (deleted.carz > 0 || deleted.ownerfi > 0) {
+    console.log(`🧹 Processed article cleanup: ${deleted.carz} Carz + ${deleted.ownerfi} OwnerFi deleted`);
+  }
+
+  return deleted;
+}
+
+// Rate ALL articles (new + existing) with AI and keep only top N
+export async function rateAndCleanupArticles(keepTopN: number = 10): Promise<{
+  carz: { rated: number; kept: number; deleted: number };
+  ownerfi: { rated: number; kept: number; deleted: number };
+}> {
+  if (!db) return { carz: { rated: 0, kept: 0, deleted: 0 }, ownerfi: { rated: 0, kept: 0, deleted: 0 } };
+
+  const results = {
+    carz: { rated: 0, kept: 0, deleted: 0 },
+    ownerfi: { rated: 0, kept: 0, deleted: 0 }
+  };
+
+  const { evaluateArticlesBatch } = await import('./article-quality-filter');
+
+  for (const cat of ['carz', 'ownerfi'] as const) {
+    const collectionName = getCollectionName('ARTICLES', cat);
+
+    // Get ALL unprocessed articles
+    const q = query(
+      collection(db, collectionName),
+      where('processed', '==', false)
+    );
+
+    const snapshot = await getDocs(q);
+    const articles = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Article));
+
+    if (articles.length === 0) {
+      console.log(`ℹ️  ${cat}: No articles to rate`);
+      continue;
+    }
+
+    console.log(`🤖 ${cat}: Rating ${articles.length} articles with AI...`);
+
+    // Rate all articles with AI
+    const qualityScores = await evaluateArticlesBatch(
+      articles.map(article => ({
+        title: article.title,
+        content: article.content || article.description,
+        category: cat
+      })),
+      5 // Max 5 concurrent API calls
+    );
+
+    // Pair articles with their scores
+    const scoredArticles = articles.map((article, index) => ({
+      article,
+      score: qualityScores[index].score,
+      shouldMakeVideo: qualityScores[index].shouldMakeVideo,
+      reasoning: qualityScores[index].reasoning
+    }));
+
+    // Sort by score (highest first)
+    scoredArticles.sort((a, b) => b.score - a.score);
+
+    // Update quality scores in Firestore for all articles
+    const updatePromises = scoredArticles.map(item =>
+      updateDoc(doc(db, collectionName, item.article.id), {
+        qualityScore: item.score,
+        aiReasoning: item.reasoning,
+        ratedAt: Date.now()
+      })
+    );
+    await Promise.all(updatePromises);
+
+    // Keep top N, delete the rest
+    const articlesToKeep = scoredArticles.slice(0, keepTopN);
+    const articlesToDelete = scoredArticles.slice(keepTopN);
+
+    console.log(`📊 ${cat}: Top ${articlesToKeep.length} scores: ${articlesToKeep.map(a => a.score).join(', ')}`);
+
+    if (articlesToDelete.length > 0) {
+      console.log(`🧹 ${cat}: Deleting ${articlesToDelete.length} low-quality articles`);
+
+      for (const item of articlesToDelete) {
+        await deleteDoc(doc(db, collectionName, item.article.id));
+      }
+    }
+
+    results[cat] = {
+      rated: articles.length,
+      kept: articlesToKeep.length,
+      deleted: articlesToDelete.length
+    };
+  }
+
+  return results;
+}
+
 // Statistics
 export async function getStats(category?: 'carz' | 'ownerfi') {
   if (!db) {
@@ -371,4 +670,118 @@ export async function getStats(category?: 'carz' | 'ownerfi') {
     queueCompleted: queueStats.completed,
     queueFailed: queueStats.failed
   };
+}
+
+// Podcast Workflow Management
+export interface PodcastWorkflowItem {
+  id: string;
+  episodeNumber: number;
+  episodeTitle: string;
+  guestName: string;
+  topic: string;
+  status: 'script_generation' | 'heygen_processing' | 'submagic_processing' | 'publishing' | 'completed' | 'failed';
+  heygenVideoId?: string;
+  submagicProjectId?: string;
+  finalVideoUrl?: string;
+  metricoolPostId?: string;
+  error?: string;
+  createdAt: number;
+  updatedAt: number;
+  completedAt?: number;
+}
+
+export async function addPodcastWorkflow(episodeNumber: number, episodeTitle: string): Promise<PodcastWorkflowItem> {
+  if (!db) throw new Error('Firebase not initialized');
+
+  const queueItem: PodcastWorkflowItem = {
+    id: `podcast_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    episodeNumber,
+    episodeTitle,
+    guestName: '',
+    topic: '',
+    status: 'script_generation',
+    createdAt: Date.now(),
+    updatedAt: Date.now()
+  };
+
+  await setDoc(doc(db, COLLECTIONS.PODCAST.WORKFLOW_QUEUE, queueItem.id), queueItem);
+  console.log(`✅ Added podcast workflow: ${queueItem.id} - Episode #${episodeNumber}`);
+  return queueItem;
+}
+
+export async function updatePodcastWorkflow(
+  workflowId: string,
+  updates: Partial<PodcastWorkflowItem>
+): Promise<void> {
+  if (!db) return;
+
+  const cleanData = removeUndefined({
+    ...updates,
+    updatedAt: Date.now()
+  });
+  await updateDoc(doc(db, COLLECTIONS.PODCAST.WORKFLOW_QUEUE, workflowId), cleanData);
+}
+
+export async function getPodcastWorkflows(limit: number = 20): Promise<PodcastWorkflowItem[]> {
+  if (!db) return [];
+
+  const q = query(
+    collection(db, COLLECTIONS.PODCAST.WORKFLOW_QUEUE),
+    where('status', 'in', ['script_generation', 'heygen_processing', 'submagic_processing', 'publishing']),
+    orderBy('createdAt', 'desc'),
+    firestoreLimit(limit)
+  );
+
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(doc => doc.data() as PodcastWorkflowItem);
+}
+
+// Retry Failed Workflows
+export async function getRetryableWorkflows(brand: 'carz' | 'ownerfi', maxRetries: number = 3): Promise<WorkflowQueueItem[]> {
+  if (!db) return [];
+
+  const collectionName = getCollectionName('WORKFLOW_QUEUE', brand);
+  const q = query(
+    collection(db, collectionName),
+    where('status', '==', 'failed'),
+    where('retryCount', '<', maxRetries),
+    orderBy('retryCount', 'asc'),
+    orderBy('createdAt', 'desc'),
+    firestoreLimit(10)
+  );
+
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as WorkflowQueueItem));
+}
+
+export async function retryWorkflow(workflowId: string, brand: 'carz' | 'ownerfi'): Promise<void> {
+  if (!db) return;
+
+  const collectionName = getCollectionName('WORKFLOW_QUEUE', brand);
+  const workflowDoc = await getDoc(doc(db, collectionName, workflowId));
+
+  if (!workflowDoc.exists()) {
+    throw new Error(`Workflow ${workflowId} not found`);
+  }
+
+  const workflow = workflowDoc.data() as WorkflowQueueItem;
+  const retryCount = (workflow.retryCount || 0) + 1;
+
+  // Reset article to unprocessed
+  const articleCollectionName = getCollectionName('ARTICLES', brand);
+  await updateDoc(doc(db, articleCollectionName, workflow.articleId), {
+    processed: false,
+    error: undefined
+  });
+
+  // Reset workflow to pending
+  await updateDoc(doc(db, collectionName, workflowId), {
+    status: 'pending',
+    retryCount,
+    lastRetryAt: Date.now(),
+    error: `Retry attempt ${retryCount}`,
+    updatedAt: Date.now()
+  });
+
+  console.log(`♻️  Retry workflow ${workflowId} (attempt ${retryCount})`);
 }

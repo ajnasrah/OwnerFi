@@ -50,42 +50,89 @@ export async function GET(request: NextRequest) {
       console.log('✅ All feeds up to date');
     }
 
-    // Step 3: Process articles and generate videos immediately
-    const carzArticles = await getUnprocessedArticles('carz', 20);
-    const ownerfiArticles = await getUnprocessedArticles('ownerfi', 20);
+    // Step 3: Rate ALL articles (new + existing) and keep only top 10 per brand
+    console.log('🤖 Rating all articles with AI quality filter...');
+    const { rateAndCleanupArticles } = await import('@/lib/feed-store-firestore');
+    const ratingResults = await rateAndCleanupArticles(10);
 
-    console.log(`📊 Articles available: ${carzArticles.length} Carz, ${ownerfiArticles.length} OwnerFi`);
+    console.log(`📊 Rated articles:`);
+    console.log(`   Carz: ${ratingResults.carz.rated} rated, ${ratingResults.carz.kept} kept, ${ratingResults.carz.deleted} deleted`);
+    console.log(`   OwnerFi: ${ratingResults.ownerfi.rated} rated, ${ratingResults.ownerfi.kept} kept, ${ratingResults.ownerfi.deleted} deleted`);
 
-    // Generate one video for each brand if articles available
-    const results = [];
+    // Step 4: Check if we have articles to process
+    const carzArticles = await getUnprocessedArticles('carz', 5);
+    const ownerfiArticles = await getUnprocessedArticles('ownerfi', 5);
+
+    console.log(`📊 Top articles available: ${carzArticles.length} Carz, ${ownerfiArticles.length} OwnerFi`);
+
+    // Trigger video generation in background (fire and forget)
+    const workflowsTriggered = [];
+
+    // Get base URL (production or development)
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ||
+                    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
+                    'https://ownerfi.ai';
 
     if (carzArticles.length > 0) {
-      console.log('🎬 Generating Carz video...');
-      const carzResult = await generateVideo(carzArticles[0], 'carz');
-      results.push({ brand: 'carz', ...carzResult });
+      console.log('🎬 Triggering Carz video workflow...');
+      // Fire and forget - don't await
+      fetch(`${baseUrl}/api/workflow/complete-viral`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          brand: 'carz',
+          platforms: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'threads'],
+          schedule: 'immediate'
+        })
+      }).catch(err => console.error('Carz workflow error:', err));
+      workflowsTriggered.push('carz');
     }
 
     if (ownerfiArticles.length > 0) {
-      console.log('🎬 Generating OwnerFi video...');
-      const ownerfiResult = await generateVideo(ownerfiArticles[0], 'ownerfi');
-      results.push({ brand: 'ownerfi', ...ownerfiResult });
+      console.log('🎬 Triggering OwnerFi video workflow...');
+      // Fire and forget - don't await
+      fetch(`${baseUrl}/api/workflow/complete-viral`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          brand: 'ownerfi',
+          platforms: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'threads'],
+          schedule: 'immediate'
+        })
+      }).catch(err => console.error('OwnerFi workflow error:', err));
+      workflowsTriggered.push('ownerfi');
     }
+
+    // Step 5: Cleanup processed articles older than 7 days
+    console.log('🧹 Cleaning up old processed articles...');
+    const { cleanupProcessedArticles } = await import('@/lib/feed-store-firestore');
+    const processedCleanup = await cleanupProcessedArticles(7);
+
+    console.log(`✅ Processed cleanup: ${processedCleanup.carz} Carz + ${processedCleanup.ownerfi} OwnerFi old processed articles deleted`);
 
     const finalFeedsCount = (await getAllFeedSources()).length;
 
     return NextResponse.json({
       success: true,
-      message: 'Viral video cron job completed',
+      message: `Triggered ${workflowsTriggered.length} video workflow(s) - processing in background`,
       stats: {
         feedsInitialized: finalFeedsCount,
         newArticlesFetched: newArticles,
-        articlesAvailable: {
-          carz: carzArticles.length,
-          ownerfi: ownerfiArticles.length
+        articlesRated: {
+          carz: ratingResults.carz.rated,
+          ownerfi: ratingResults.ownerfi.rated
         },
-        videosGenerated: results.length
+        articlesKept: {
+          carz: ratingResults.carz.kept,
+          ownerfi: ratingResults.ownerfi.kept
+        },
+        articlesDeleted: {
+          carz: ratingResults.carz.deleted + processedCleanup.carz,
+          ownerfi: ratingResults.ownerfi.deleted + processedCleanup.ownerfi
+        },
+        workflowsTriggered: workflowsTriggered.length
       },
-      results,
+      workflowsTriggered,
       timestamp: new Date().toISOString()
     });
 

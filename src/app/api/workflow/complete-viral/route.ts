@@ -205,7 +205,7 @@ export async function POST(request: NextRequest) {
     console.log(`✅ Public R2 URL: ${publicVideoUrl}`);
 
     // Step 8: Schedule post to Metricool (brand-specific)
-    console.log(`📱 Step 8: Scheduling post to ${platforms.join(', ')} for ${brand === 'carz' ? 'Carz Inc' : 'Prosway'}...`);
+    console.log(`📱 Step 8: Scheduling post to ${platforms.join(', ')} for ${brand === 'carz' ? 'Carz Inc' : 'OwnerFi'}...`);
 
     // Update workflow status to 'posting'
     if (workflowId) {
@@ -225,16 +225,29 @@ export async function POST(request: NextRequest) {
     );
 
     if (!postResult.success) {
-      console.error('⚠️ Metricool scheduling failed:', postResult.error);
+      console.error('❌ METRICOOL POSTING FAILED!');
+      console.error('   Brand:', brand);
+      console.error('   Error:', postResult.error);
+      console.error('   Video URL:', publicVideoUrl);
+      console.error('   Platforms:', platforms);
 
       // Update workflow status to 'failed' but still return video URLs
       if (workflowId) {
         const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
         await updateWorkflowStatus(workflowId, brand as 'carz' | 'ownerfi', {
           status: 'failed',
-          error: postResult.error || 'Metricool scheduling failed'
+          error: `Metricool posting failed: ${postResult.error || 'Unknown error'}`
         });
       }
+
+      // Send alert
+      const { alertWorkflowFailure } = await import('@/lib/error-monitoring');
+      await alertWorkflowFailure(
+        brand as 'carz' | 'ownerfi',
+        workflowId || 'unknown',
+        article.title,
+        `Metricool posting failed: ${postResult.error}`
+      );
     } else {
       console.log(`✅ Scheduled! Post ID: ${postResult.postId}`);
 

@@ -1,9 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-// Updated Submagic API key - 2025-10-13
-const HEYGEN_API_KEY = process.env.HEYGEN_API_KEY;
-const SUBMAGIC_API_KEY = process.env.SUBMAGIC_API_KEY;
-
 // Handle OPTIONS for HeyGen webhook validation (required)
 export async function OPTIONS() {
   return new NextResponse(null, {
@@ -115,6 +111,10 @@ async function triggerSubmagicProcessing(
   brand: 'carz' | 'ownerfi',
   workflow: any
 ) {
+  // Read environment variables at runtime, not at module load time
+  const SUBMAGIC_API_KEY = process.env.SUBMAGIC_API_KEY;
+  const HEYGEN_API_KEY = process.env.HEYGEN_API_KEY;
+
   if (!SUBMAGIC_API_KEY) {
     console.error('❌ Submagic API key not configured');
     const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');

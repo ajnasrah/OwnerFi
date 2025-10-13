@@ -1,10 +1,14 @@
 // Full test of Submagic API integration
 import { NextResponse } from 'next/server';
 
-const SUBMAGIC_API_KEY = process.env.SUBMAGIC_API_KEY;
-
 export async function POST() {
   try {
+    // Read at runtime
+    const SUBMAGIC_API_KEY = process.env.SUBMAGIC_API_KEY;
+
+    console.log('SUBMAGIC_API_KEY exists:', !!SUBMAGIC_API_KEY);
+    console.log('SUBMAGIC_API_KEY length:', SUBMAGIC_API_KEY?.length || 0);
+
     if (!SUBMAGIC_API_KEY) {
       return NextResponse.json({
         success: false,

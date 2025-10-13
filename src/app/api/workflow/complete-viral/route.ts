@@ -215,14 +215,36 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    // Post to Reels first
     const postResult = await scheduleVideoPost(
-      publicVideoUrl, // Use Submagic URL directly (trusted domain)
+      publicVideoUrl,
       content.caption,
       content.title,
       platforms,
       schedule,
-      brand // Pass brand for correct Metricool account
+      brand
     );
+
+    // Also post to Instagram and Facebook Stories (separate posts)
+    if (platforms.includes('instagram') || platforms.includes('facebook')) {
+      console.log('📱 Also posting to Stories...');
+      const storyPlatforms = [];
+      if (platforms.includes('instagram')) storyPlatforms.push('instagram');
+      if (platforms.includes('facebook')) storyPlatforms.push('facebook');
+
+      const { postToMetricool } = await import('@/lib/metricool-api');
+      await postToMetricool({
+        videoUrl: publicVideoUrl,
+        caption: content.caption,
+        title: content.title,
+        platforms: storyPlatforms as any,
+        postTypes: {
+          instagram: 'story',
+          facebook: 'story'
+        },
+        brand: brand as 'carz' | 'ownerfi'
+      }).catch(err => console.warn('Story posting failed:', err));
+    }
 
     if (!postResult.success) {
       console.error('❌ METRICOOL POSTING FAILED!');

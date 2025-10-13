@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 
 interface SchedulerStatus {
   timestamp: string;
@@ -107,6 +109,8 @@ interface PodcastWorkflowLogs {
 }
 
 export default function SocialMediaDashboard() {
+  const { data: session, status: authStatus } = useSession();
+  const router = useRouter();
   const [activeSubTab, setActiveSubTab] = useState<'carz' | 'ownerfi' | 'podcast'>('carz');
   const [status, setStatus] = useState<SchedulerStatus | null>(null);
   const [workflows, setWorkflows] = useState<WorkflowLogs | null>(null);
@@ -115,20 +119,43 @@ export default function SocialMediaDashboard() {
   const [triggeringViral, setTriggeringViral] = useState(false);
   const [triggeringPodcast, setTriggeringPodcast] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [deletingWorkflow, setDeletingWorkflow] = useState<string | null>(null);
+
+  // Auth check
+  useEffect(() => {
+    if (authStatus === 'unauthenticated') {
+      router.push('/auth/signin');
+    }
+
+    if (authStatus === 'authenticated') {
+      const userRole = (session?.user as { role?: string })?.role;
+      if (userRole !== 'admin') {
+        if (userRole === 'buyer') {
+          router.push('/dashboard');
+        } else if (userRole === 'realtor') {
+          router.push('/realtor/dashboard');
+        } else {
+          router.push('/auth/signin');
+        }
+      }
+    }
+  }, [authStatus, session, router]);
 
   useEffect(() => {
-    loadStatus();
-    loadWorkflows();
-    loadPodcastWorkflows();
-    const statusInterval = setInterval(loadStatus, 30000); // Refresh every 30 seconds
-    const workflowInterval = setInterval(loadWorkflows, 5000); // Refresh every 5 seconds for real-time updates
-    const podcastWorkflowInterval = setInterval(loadPodcastWorkflows, 5000); // Refresh every 5 seconds for real-time updates
-    return () => {
-      clearInterval(statusInterval);
-      clearInterval(workflowInterval);
-      clearInterval(podcastWorkflowInterval);
-    };
-  }, [showHistory]);
+    if (authStatus === 'authenticated' && (session?.user as { role?: string })?.role === 'admin') {
+      loadStatus();
+      loadWorkflows();
+      loadPodcastWorkflows();
+      const statusInterval = setInterval(loadStatus, 30000); // Refresh every 30 seconds
+      const workflowInterval = setInterval(loadWorkflows, 5000); // Refresh every 5 seconds for real-time updates
+      const podcastWorkflowInterval = setInterval(loadPodcastWorkflows, 5000); // Refresh every 5 seconds for real-time updates
+      return () => {
+        clearInterval(statusInterval);
+        clearInterval(workflowInterval);
+        clearInterval(podcastWorkflowInterval);
+      };
+    }
+  }, [showHistory, authStatus, session]);
 
   const loadWorkflows = async () => {
     try {
@@ -166,12 +193,33 @@ export default function SocialMediaDashboard() {
   const triggerCron = async () => {
     setTriggeringViral(true);
     try {
-      const response = await fetch('/api/cron/viral-video', { method: 'POST' });
+      const response = await fetch('/api/cron/viral-video', {
+        method: 'POST',
+        credentials: 'include', // Include cookies for session auth
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Cron trigger failed:', response.status, errorText);
+        alert(`Failed to trigger cron (${response.status}): ${errorText}`);
+        return;
+      }
+
       const data = await response.json();
-      alert(data.success ? 'Cron triggered successfully!' : `Error: ${data.error}`);
-      loadStatus();
+
+      if (data.success) {
+        alert(`Cron triggered successfully!\n\nWorkflows started: ${data.workflowsTriggered?.join(', ') || 'none'}\nNew articles: ${data.stats?.newArticlesFetched || 0}`);
+        loadStatus();
+        loadWorkflows();
+      } else {
+        alert(`Error: ${data.error || 'Unknown error'}`);
+      }
     } catch (error) {
-      alert('Failed to trigger cron');
+      console.error('Cron trigger error:', error);
+      alert(`Failed to trigger cron: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setTriggeringViral(false);
     }
@@ -187,6 +235,32 @@ export default function SocialMediaDashboard() {
       alert('Failed to trigger podcast cron');
     } finally {
       setTriggeringPodcast(false);
+    }
+  };
+
+  const deleteWorkflow = async (workflowId: string, brand: 'carz' | 'ownerfi') => {
+    if (!confirm('Are you sure you want to delete this workflow? This action cannot be undone.')) {
+      return;
+    }
+
+    setDeletingWorkflow(workflowId);
+    try {
+      const response = await fetch(`/api/workflow/delete?workflowId=${workflowId}&brand=${brand}`, {
+        method: 'DELETE'
+      });
+      const data = await response.json();
+
+      if (data.success) {
+        // Refresh workflows list
+        await loadWorkflows();
+      } else {
+        alert(`Failed to delete workflow: ${data.error}`);
+      }
+    } catch (error) {
+      alert('Failed to delete workflow');
+      console.error('Delete error:', error);
+    } finally {
+      setDeletingWorkflow(null);
     }
   };
 
@@ -227,7 +301,7 @@ export default function SocialMediaDashboard() {
     return `${hours}h ago`;
   };
 
-  if (loading) {
+  if (authStatus === 'loading' || loading) {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">
@@ -403,9 +477,28 @@ export default function SocialMediaDashboard() {
                             <div className="font-medium text-slate-900 text-sm mb-1" dangerouslySetInnerHTML={{ __html: workflow.articleTitle }} />
                             <div className="text-xs text-slate-500">{formatTimeAgo(workflow.createdAt)}</div>
                           </div>
-                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(workflow.status)}`}>
-                            {formatStatus(workflow.status)}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(workflow.status)}`}>
+                              {formatStatus(workflow.status)}
+                            </span>
+                            <button
+                              onClick={() => deleteWorkflow(workflow.id, 'carz')}
+                              disabled={deletingWorkflow === workflow.id}
+                              className="text-red-600 hover:text-red-800 hover:bg-red-50 p-2 rounded-lg transition-colors disabled:opacity-50"
+                              title="Delete workflow"
+                            >
+                              {deletingWorkflow === workflow.id ? (
+                                <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24">
+                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
+                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                              ) : (
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                              )}
+                            </button>
+                          </div>
                         </div>
                         {(workflow.heygenVideoId || workflow.submagicVideoId || workflow.metricoolPostId) && (
                           <div className="grid grid-cols-3 gap-2 text-xs">
@@ -529,9 +622,28 @@ export default function SocialMediaDashboard() {
                             <div className="font-medium text-slate-900 text-sm mb-1" dangerouslySetInnerHTML={{ __html: workflow.articleTitle }} />
                             <div className="text-xs text-slate-500">{formatTimeAgo(workflow.createdAt)}</div>
                           </div>
-                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(workflow.status)}`}>
-                            {formatStatus(workflow.status)}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(workflow.status)}`}>
+                              {formatStatus(workflow.status)}
+                            </span>
+                            <button
+                              onClick={() => deleteWorkflow(workflow.id, 'ownerfi')}
+                              disabled={deletingWorkflow === workflow.id}
+                              className="text-red-600 hover:text-red-800 hover:bg-red-50 p-2 rounded-lg transition-colors disabled:opacity-50"
+                              title="Delete workflow"
+                            >
+                              {deletingWorkflow === workflow.id ? (
+                                <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24">
+                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
+                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                              ) : (
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                              )}
+                            </button>
+                          </div>
                         </div>
                         {(workflow.heygenVideoId || workflow.submagicVideoId || workflow.metricoolPostId) && (
                           <div className="grid grid-cols-3 gap-2 text-xs">

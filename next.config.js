@@ -3,9 +3,6 @@ const nextConfig = {
   // Production optimizations
   compress: true,
 
-  // Skip static generation for error pages to avoid Html import issues
-  output: 'standalone',
-
   // Bundle optimization removed - was causing startup issues
 
   // Image optimization
@@ -62,7 +59,7 @@ const nextConfig = {
         headers: [
           {
             key: 'X-Frame-Options',
-            value: 'DENY'
+            value: 'SAMEORIGIN'
           },
           {
             key: 'X-Content-Type-Options',

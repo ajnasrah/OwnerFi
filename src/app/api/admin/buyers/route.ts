@@ -24,6 +24,11 @@ interface Buyer {
   maxMonthlyPayment?: number;
   maxDownPayment?: number;
   createdAt: string;
+  matchedPropertiesCount: number;
+  likedPropertiesCount: number;
+  loginCount: number;
+  lastSignIn?: string;
+  isActive?: boolean;
 }
 
 // GET - Fetch all buyers
@@ -72,6 +77,22 @@ export async function GET() {
       const userData = userDoc.data();
       const buyerProfile = buyerProfilesMap.get(userDoc.id);
 
+      // Get matched properties count
+      const matchedQuery = query(
+        collection(db, 'matchedProperties'),
+        where('buyerId', '==', userDoc.id)
+      );
+      const matchedSnapshot = await getDocs(matchedQuery);
+      const matchedPropertiesCount = matchedSnapshot.size;
+
+      // Get liked properties count
+      const likedQuery = query(
+        collection(db, 'likedProperties'),
+        where('buyerId', '==', userDoc.id)
+      );
+      const likedSnapshot = await getDocs(likedQuery);
+      const likedPropertiesCount = likedSnapshot.size;
+
       const buyer: Buyer = {
         id: userDoc.id,
         email: userData.email || 'N/A',
@@ -84,7 +105,12 @@ export async function GET() {
         maxDownPayment: buyerProfile?.maxDownPayment,
         createdAt: userData.createdAt?.toDate?.()?.toISOString() ||
                    userData.registeredAt?.toDate?.()?.toISOString() ||
-                   new Date().toISOString()
+                   new Date().toISOString(),
+        matchedPropertiesCount,
+        likedPropertiesCount,
+        loginCount: userData.loginCount || 0,
+        lastSignIn: userData.lastSignIn?.toDate?.()?.toISOString(),
+        isActive: userData.isActive !== false
       };
 
       buyers.push(buyer);

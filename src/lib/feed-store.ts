@@ -1,5 +1,8 @@
-// RSS Feed Data Store
+// RSS Feed Data Store - Firestore Backend for Serverless
 // Manages feed subscriptions, article storage, and video generation queue
+
+import { db } from './firebase';
+import { collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, query, where, orderBy, limit as firestoreLimit, Timestamp } from 'firebase/firestore';
 
 export interface FeedSource {
   id: string;
@@ -47,42 +50,93 @@ export interface VideoGenerationQueue {
   processedAt?: number;
 }
 
-// In-memory stores (replace with database in production)
-const feedSources = new Map<string, FeedSource>();
-const articles = new Map<string, Article>();
-const videoQueue = new Map<string, VideoGenerationQueue>();
+// Firestore collection names - organized by brand
+const COLLECTIONS = {
+  CARZ: {
+    FEEDS: 'carz_rss_feeds',
+    ARTICLES: 'carz_articles',
+    QUEUE: 'carz_video_queue'
+  },
+  OWNERFI: {
+    FEEDS: 'ownerfi_rss_feeds',
+    ARTICLES: 'ownerfi_articles',
+    QUEUE: 'ownerfi_video_queue'
+  }
+};
+
+// Helper to get collection name based on category
+function getCollectionName(type: 'FEEDS' | 'ARTICLES' | 'QUEUE', category: 'carz' | 'ownerfi'): string {
+  return category === 'carz' ? COLLECTIONS.CARZ[type] : COLLECTIONS.OWNERFI[type];
+}
 
 // Feed management
-export function addFeedSource(feed: Omit<FeedSource, 'articlesProcessed'>): FeedSource {
+export async function addFeedSource(feed: Omit<FeedSource, 'articlesProcessed'>): Promise<FeedSource> {
+  if (!db) throw new Error('Firebase not initialized');
+
   const source: FeedSource = {
     ...feed,
     articlesProcessed: 0
   };
-  feedSources.set(feed.id, source);
+
+  const collectionName = getCollectionName('FEEDS', feed.category);
+  await setDoc(doc(db, collectionName, feed.id), source);
   console.log(`✅ Added feed source: ${feed.name} (${feed.category})`);
   return source;
 }
 
-export function getFeedSource(id: string): FeedSource | undefined {
-  return feedSources.get(id);
+export async function getFeedSource(id: string, category: 'carz' | 'ownerfi'): Promise<FeedSource | null> {
+  if (!db) return null;
+
+  const collectionName = getCollectionName('FEEDS', category);
+  const docSnap = await getDoc(doc(db, collectionName, id));
+  return docSnap.exists() ? docSnap.data() as FeedSource : null;
 }
 
-export function getAllFeedSources(category?: 'carz' | 'ownerfi'): FeedSource[] {
-  const sources = Array.from(feedSources.values());
-  return category ? sources.filter(s => s.category === category) : sources;
+export async function getAllFeedSources(category?: 'carz' | 'ownerfi'): Promise<FeedSource[]> {
+  if (!db) return [];
+
+  const sources: FeedSource[] = [];
+
+  // If category specified, get from that collection only
+  if (category) {
+    const collectionName = getCollectionName('FEEDS', category);
+    const snapshot = await getDocs(collection(db, collectionName));
+    snapshot.docs.forEach(doc => sources.push(doc.data() as FeedSource));
+  } else {
+    // Get from both collections
+    const carzSnapshot = await getDocs(collection(db, COLLECTIONS.CARZ.FEEDS));
+    const ownerfiSnapshot = await getDocs(collection(db, COLLECTIONS.OWNERFI.FEEDS));
+    carzSnapshot.docs.forEach(doc => sources.push(doc.data() as FeedSource));
+    ownerfiSnapshot.docs.forEach(doc => sources.push(doc.data() as FeedSource));
+  }
+
+  return sources;
 }
 
-export function updateFeedSource(id: string, updates: Partial<FeedSource>): FeedSource | undefined {
-  const feed = feedSources.get(id);
-  if (!feed) return undefined;
+export async function updateFeedSource(id: string, category: 'carz' | 'ownerfi', updates: Partial<FeedSource>): Promise<FeedSource | null> {
+  if (!db) return null;
 
-  const updated = { ...feed, ...updates };
-  feedSources.set(id, updated);
+  const collectionName = getCollectionName('FEEDS', category);
+  const docRef = doc(db, collectionName, id);
+  const docSnap = await getDoc(docRef);
+
+  if (!docSnap.exists()) return null;
+
+  const updated = { ...docSnap.data(), ...updates } as FeedSource;
+  await updateDoc(docRef, updates as any);
   return updated;
 }
 
-export function deleteFeedSource(id: string): boolean {
-  return feedSources.delete(id);
+export async function deleteFeedSource(id: string, category: 'carz' | 'ownerfi'): Promise<boolean> {
+  if (!db) return false;
+
+  try {
+    const collectionName = getCollectionName('FEEDS', category);
+    await deleteDoc(doc(db, collectionName, id));
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 // Article management

@@ -41,10 +41,16 @@ export async function POST(request: NextRequest) {
 
     console.log(`✅ Got article: ${article.title.substring(0, 50)}...`);
 
-    // Mark article as being processed
+    // Mark article as being processed and add to workflow queue
+    let workflowId: string | undefined;
     if (article.id) {
-      const { markArticleProcessed } = await import('@/lib/feed-store');
-      markArticleProcessed(article.id);
+      const { markArticleProcessed, addWorkflowToQueue } = await import('@/lib/feed-store-firestore');
+      await markArticleProcessed(article.id, brand as 'carz' | 'ownerfi');
+
+      // Add to workflow queue with 'pending' status
+      const queueItem = await addWorkflowToQueue(article.id, article.title, brand as 'carz' | 'ownerfi');
+      workflowId = queueItem.id;
+      console.log(`📋 Added to workflow queue: ${workflowId}`);
     }
 
     // Step 2: Generate viral script + caption with OpenAI
@@ -54,6 +60,15 @@ export async function POST(request: NextRequest) {
 
     // Step 3: Generate HeyGen video
     console.log('🎥 Step 3: Creating HeyGen video...');
+
+    // Update workflow status to 'heygen_processing'
+    if (workflowId) {
+      const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
+      await updateWorkflowStatus(workflowId, brand as 'carz' | 'ownerfi', {
+        status: 'heygen_processing'
+      });
+    }
+
     const videoResult = await generateHeyGenVideo({
       talking_photo_id: body.talking_photo_id || '31c6b2b6306b47a2ba3572a23be09dbc',
       voice_id: body.voice_id || '9070a6c2dbd54c10bb111dc8c655bff7',
@@ -64,6 +79,15 @@ export async function POST(request: NextRequest) {
     });
 
     if (!videoResult.success || !videoResult.video_id) {
+      // Update workflow status to 'failed'
+      if (workflowId) {
+        const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
+        await updateWorkflowStatus(workflowId, brand as 'carz' | 'ownerfi', {
+          status: 'failed',
+          error: videoResult.error || 'HeyGen video generation failed'
+        });
+      }
+
       return NextResponse.json(
         { success: false, error: 'HeyGen video generation failed', details: videoResult.error },
         { status: 500 }
@@ -71,6 +95,14 @@ export async function POST(request: NextRequest) {
     }
 
     console.log(`✅ HeyGen video ID: ${videoResult.video_id}`);
+
+    // Update workflow with HeyGen video ID
+    if (workflowId) {
+      const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
+      await updateWorkflowStatus(workflowId, brand as 'carz' | 'ownerfi', {
+        heygenVideoId: videoResult.video_id
+      });
+    }
 
     // Step 4: Wait for HeyGen completion
     console.log('⏳ Step 4: Waiting for HeyGen video...');
@@ -97,6 +129,15 @@ export async function POST(request: NextRequest) {
 
     // Step 5: Enhance with Submagic (using public URL)
     console.log('✨ Step 5: Adding Submagic captions and effects...');
+
+    // Update workflow status to 'submagic_processing'
+    if (workflowId) {
+      const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
+      await updateWorkflowStatus(workflowId, brand as 'carz' | 'ownerfi', {
+        status: 'submagic_processing'
+      });
+    }
+
     const submagicResult = await enhanceWithSubmagic({
       videoUrl: publicHeygenUrl, // Use public URL instead of auth-required HeyGen URL
       title: content.title,
@@ -105,6 +146,15 @@ export async function POST(request: NextRequest) {
     });
 
     if (!submagicResult.success || !submagicResult.project_id) {
+      // Update workflow status to 'failed'
+      if (workflowId) {
+        const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
+        await updateWorkflowStatus(workflowId, brand as 'carz' | 'ownerfi', {
+          status: 'failed',
+          error: submagicResult.error || 'Submagic enhancement failed'
+        });
+      }
+
       return NextResponse.json(
         { success: false, error: 'Submagic enhancement failed', heygen_url: heygenUrl },
         { status: 500 }
@@ -112,6 +162,14 @@ export async function POST(request: NextRequest) {
     }
 
     console.log(`✅ Submagic project: ${submagicResult.project_id}`);
+
+    // Update workflow with Submagic project ID
+    if (workflowId) {
+      const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
+      await updateWorkflowStatus(workflowId, brand as 'carz' | 'ownerfi', {
+        submagicVideoId: submagicResult.project_id
+      });
+    }
 
     // Step 6: Wait for Submagic completion
     console.log('⏳ Step 6: Waiting for Submagic enhancement...');
@@ -139,6 +197,15 @@ export async function POST(request: NextRequest) {
 
     // Step 8: Schedule post to Metricool (brand-specific)
     console.log(`📱 Step 8: Scheduling post to ${platforms.join(', ')} for ${brand === 'carz' ? 'Carz Inc' : 'Prosway'}...`);
+
+    // Update workflow status to 'posting'
+    if (workflowId) {
+      const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
+      await updateWorkflowStatus(workflowId, brand as 'carz' | 'ownerfi', {
+        status: 'posting'
+      });
+    }
+
     const postResult = await scheduleVideoPost(
       publicVideoUrl, // Use Submagic URL directly (trusted domain)
       content.caption,
@@ -150,9 +217,27 @@ export async function POST(request: NextRequest) {
 
     if (!postResult.success) {
       console.error('⚠️ Metricool scheduling failed:', postResult.error);
-      // Don't fail the whole workflow - video is still created
+
+      // Update workflow status to 'failed' but still return video URLs
+      if (workflowId) {
+        const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
+        await updateWorkflowStatus(workflowId, brand as 'carz' | 'ownerfi', {
+          status: 'failed',
+          error: postResult.error || 'Metricool scheduling failed'
+        });
+      }
     } else {
       console.log(`✅ Scheduled! Post ID: ${postResult.postId}`);
+
+      // Update workflow status to 'completed'
+      if (workflowId) {
+        const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
+        await updateWorkflowStatus(workflowId, brand as 'carz' | 'ownerfi', {
+          status: 'completed',
+          metricoolPostId: postResult.postId,
+          completedAt: Date.now()
+        });
+      }
     }
 
     // SUCCESS! Return complete result
@@ -187,6 +272,10 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('❌ Workflow error:', error);
+
+    // Update workflow status to 'failed' if we have a workflowId
+    // Note: workflowId may not be in scope here, so we'll need to handle this differently
+
     return NextResponse.json(
       {
         success: false,
@@ -201,11 +290,11 @@ export async function POST(request: NextRequest) {
 // Helper: Get best article from feed
 async function getBestArticle(brand: string): Promise<{ id: string; title: string; content: string; source: string } | null> {
   // Import dynamically to avoid circular dependencies
-  const { getUnprocessedArticles } = await import('@/lib/feed-store');
+  const { getUnprocessedArticles } = await import('@/lib/feed-store-firestore');
 
   // Get unprocessed articles for the brand
   const category = brand === 'carz' ? 'carz' : 'ownerfi';
-  const articles = getUnprocessedArticles(category, 10); // Get top 10 unprocessed
+  const articles = await getUnprocessedArticles(category as 'carz' | 'ownerfi', 10); // Get top 10 unprocessed
 
   if (articles.length === 0) {
     console.log(`⚠️ No unprocessed articles available for ${brand}`);
@@ -262,11 +351,32 @@ IMPORTANT RULES:
 
 FORMAT:
 SCRIPT: [the exact words the AI avatar will speak - nothing else]
-CAPTION: [under 150 chars with emojis for social media]
-TITLE: [under 100 chars, clickable and SEO-friendly]
 
-EXAMPLE GOOD SCRIPT:
-"Listen up because what I'm about to tell you will change everything you know about car insurance. The dealerships don't want you to know this. When you finance a vehicle, they're making money THREE ways off you, and the third one will blow your mind. First, they mark up the interest rate..."
+TITLE: [50-100 characters, attention-grabbing headline with emojis]
+
+CAPTION: [Engaging social media post with:
+- Strong opening hook (1-2 sentences)
+- Key value points (2-3 bullets or short sentences)
+- Call to action
+- 5-10 relevant hashtags at the end
+- Use emojis strategically
+- 200-300 characters total]
+
+EXAMPLE GOOD OUTPUT:
+SCRIPT: "Listen up because what I'm about to tell you will change everything you know about car insurance..."
+
+TITLE: 🚗 Dealerships Don't Want You to Know THIS About Insurance!
+
+CAPTION: Car dealerships are hiding something BIG from you 👀
+
+When you finance a vehicle, they're making money THREE ways:
+• Marked up interest rates
+• Extended warranty commissions
+• Insurance kickbacks
+
+Don't let them take advantage! Watch to learn how to save thousands 💰
+
+#CarInsurance #DealershipSecrets #FinanceTips #SaveMoney #AutoInsurance #CarBuying #SmartShopping #ConsumerRights #MoneyTips #InsuranceHacks
 
 EXAMPLE BAD SCRIPT:
 "[Opening shot of person in office] Today we're going to talk about car insurance. [Cut to B-roll of cars]"`
@@ -274,7 +384,7 @@ EXAMPLE BAD SCRIPT:
         { role: 'user', content: `Article:\n\n${content.substring(0, 2000)}` }
       ],
       temperature: 0.85,
-      max_tokens: 500
+      max_tokens: 800
     })
   });
 
@@ -293,14 +403,14 @@ EXAMPLE BAD SCRIPT:
 
   const fullResponse = data.choices[0]?.message?.content?.trim() || '';
 
-  const scriptMatch = fullResponse.match(/SCRIPT:\s*([\s\S]*?)(?=CAPTION:|$)/i);
-  const captionMatch = fullResponse.match(/CAPTION:\s*(.*?)(?=TITLE:|$)/i);
-  const titleMatch = fullResponse.match(/TITLE:\s*(.*?)$/i);
+  const scriptMatch = fullResponse.match(/SCRIPT:\s*([\s\S]*?)(?=TITLE:|CAPTION:|$)/i);
+  const titleMatch = fullResponse.match(/TITLE:\s*([\s\S]*?)(?=CAPTION:|$)/i);
+  const captionMatch = fullResponse.match(/CAPTION:\s*([\s\S]*?)$/i);
 
   return {
     script: scriptMatch ? scriptMatch[1].trim() : content.substring(0, 500),
-    caption: captionMatch ? captionMatch[1].trim() : '🔥 Check this out!',
-    title: titleMatch ? titleMatch[1].trim() : 'Viral Video'
+    title: titleMatch ? titleMatch[1].trim() : 'Breaking News - Must Watch!',
+    caption: captionMatch ? captionMatch[1].trim() : 'Breaking news you need to see! 🔥\n\nThis changes everything. Click to watch the full story.\n\n#BreakingNews #MustWatch #Viral #Trending'
   };
 }
 

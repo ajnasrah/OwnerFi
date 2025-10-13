@@ -1,7 +1,7 @@
 // RSS Feed Source Configuration
 // Carz Inc and OwnerFi feed sources
 
-import { addFeedSource, type FeedSource } from '@/lib/feed-store';
+import { addFeedSource as addFeedSourceFirestore, type FeedSource, getAllFeedSources } from '@/lib/feed-store-firestore';
 
 /**
  * CARZ INC FEEDS
@@ -228,22 +228,29 @@ export const OWNERFI_FEEDS: Omit<FeedSource, 'articlesProcessed'>[] = [
 ];
 
 /**
- * Initialize all feed sources
+ * Initialize all feed sources in Firestore (only if they don't exist)
  */
-export function initializeFeedSources() {
+export async function initializeFeedSources() {
   console.log('🚀 Initializing feed sources...\n');
+
+  // Check if feeds already exist in Firestore
+  const existingFeeds = await getAllFeedSources();
+  if (existingFeeds.length > 0) {
+    console.log(`✅ Feeds already initialized (${existingFeeds.length} total)`);
+    return;
+  }
 
   // Add Carz feeds
   let carzCount = 0;
   for (const feed of CARZ_FEEDS) {
-    addFeedSource(feed);
+    await addFeedSourceFirestore(feed);
     carzCount++;
   }
 
   // Add OwnerFi feeds
   let ownerfiCount = 0;
   for (const feed of OWNERFI_FEEDS) {
-    addFeedSource(feed);
+    await addFeedSourceFirestore(feed);
     ownerfiCount++;
   }
 

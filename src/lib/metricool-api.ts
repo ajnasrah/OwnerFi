@@ -89,10 +89,45 @@ export async function postToMetricool(request: MetricoolPostRequest): Promise<Me
 
     return await retry(
       async () => {
-        // Format datetime for Metricool API (yyyy-MM-dd'T'HH:mm:ss)
-        const publicationDate = request.scheduleTime
-          ? new Date(request.scheduleTime).toISOString().replace(/\.\d{3}Z$/, '')
-          : new Date().toISOString().replace(/\.\d{3}Z$/, '');
+        // Build request body
+        const requestBody: any = {
+          text: fullCaption,
+          providers: request.platforms.map(platform => ({
+            network: platform
+          })),
+          media: [request.videoUrl],
+        };
+
+        // Only add publicationDate if scheduling for later (not immediate)
+        if (request.scheduleTime) {
+          const publicationDate = new Date(request.scheduleTime).toISOString().replace(/\.\d{3}Z$/, '');
+          requestBody.publicationDate = {
+            dateTime: publicationDate,
+            timezone: 'America/New_York'
+          };
+        }
+
+        // Add platform-specific data
+        if (request.platforms.includes('instagram')) {
+          requestBody.instagramData = {
+            type: request.postTypes?.instagram === 'story' ? 'STORY' : 'REEL'
+          };
+        }
+
+        if (request.platforms.includes('facebook')) {
+          requestBody.facebookData = {
+            type: request.postTypes?.facebook === 'story' ? 'STORY' : 'REEL'
+          };
+        }
+
+        if (request.platforms.includes('youtube')) {
+          requestBody.youtubeData = {
+            title: request.title || fullCaption.substring(0, 100),
+            privacy: 'PUBLIC',
+            madeForKids: false,
+            category: request.brand === 'carz' ? 'AUTOS_VEHICLES' : 'NEWS_POLITICS'
+          };
+        }
 
         // blogId and userId MUST be query parameters, not in the body
         const response = await fetchWithTimeout(
@@ -103,38 +138,7 @@ export async function postToMetricool(request: MetricoolPostRequest): Promise<Me
               'Content-Type': 'application/json',
               'X-Mc-Auth': METRICOOL_API_KEY
             },
-            body: JSON.stringify({
-              text: fullCaption,
-              publicationDate: {
-                dateTime: publicationDate,
-                timezone: 'America/New_York'
-              },
-              providers: request.platforms.map(platform => ({
-                network: platform
-              })),
-              media: [request.videoUrl],
-              // Instagram: Default to REEL for videos (valid: POST, REEL, STORY)
-              ...(request.platforms.includes('instagram') && {
-                instagramData: {
-                  type: request.postTypes?.instagram === 'story' ? 'STORY' : 'REEL'
-                }
-              }),
-              // Facebook: Default to REEL for videos (valid: POST, REEL, STORY)
-              ...(request.platforms.includes('facebook') && {
-                facebookData: {
-                  type: request.postTypes?.facebook === 'story' ? 'STORY' : 'REEL'
-                }
-              }),
-              // YouTube requires a title and category
-              ...(request.platforms.includes('youtube') && {
-                youtubeData: {
-                  title: request.title || fullCaption.substring(0, 100),
-                  privacy: 'PUBLIC',
-                  madeForKids: false,
-                  category: request.brand === 'carz' ? 'AUTOS_VEHICLES' : 'NEWS_POLITICS'
-                }
-              })
-            })
+            body: JSON.stringify(requestBody)
           },
           TIMEOUTS.EXTERNAL_API
         );

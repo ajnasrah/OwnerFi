@@ -9,7 +9,7 @@ import {
   updateFeedSource,
   type FeedSource,
   type Article
-} from './feed-store';
+} from './feed-store-firestore';
 import { randomUUID } from 'crypto';
 
 interface RSSItem {
@@ -176,11 +176,12 @@ export async function processFeedSource(feedSource: FeedSource): Promise<{
       }
 
       // Skip if article already exists
-      if (articleExists(item.link, item.title)) {
+      const exists = await articleExists(item.link, feedSource.category);
+      if (exists) {
         continue;
       }
 
-      // Create article
+      // Create article (only include author if it exists)
       const article: Omit<Article, 'createdAt'> = {
         id: randomUUID(),
         feedId: feedSource.id,
@@ -189,21 +190,22 @@ export async function processFeedSource(feedSource: FeedSource): Promise<{
         content: item.content || item.description || '',
         link: item.link,
         pubDate: articlePubDate,
-        author: item.author,
+        ...(item.author && { author: item.author }),
         categories: item.categories || [],
         processed: false,
         videoGenerated: false
       };
 
-      addArticle(article);
+      await addArticle(article, feedSource.category);
       newArticles++;
     }
 
-    // Update feed source with current timestamp
+    // Update feed source with current timestamp (don't pass lastError at all to clear it)
     const now = Date.now();
-    updateFeedSource(feedSource.id, {
+    const { lastError, ...feedWithoutError } = feedSource;
+    await updateFeedSource({
+      ...feedWithoutError,
       lastFetched: now,
-      lastError: undefined,
       articlesProcessed: feedSource.articlesProcessed + newArticles
     });
 
@@ -222,7 +224,8 @@ export async function processFeedSource(feedSource: FeedSource): Promise<{
     console.error(`❌ Error processing feed ${feedSource.name}:`, errorMessage);
 
     // Update feed source with error
-    updateFeedSource(feedSource.id, {
+    await updateFeedSource({
+      ...feedSource,
       lastFetched: Date.now(),
       lastError: errorMessage
     });

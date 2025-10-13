@@ -18,13 +18,39 @@ interface SchedulerStatus {
     carz: number;
     ownerfi: number;
   };
-  articles: {
+  articles?: {
     carz: number;
     ownerfi: number;
   };
   queue: {
-    carz: number;
-    ownerfi: number;
+    carz: {
+      pending: number;
+      items: any[];
+    };
+    ownerfi: {
+      pending: number;
+      items: any[];
+    };
+  };
+  stats?: {
+    carz: {
+      totalFeeds: number;
+      activeFeeds: number;
+      totalArticles: number;
+      unprocessedArticles: number;
+      videosGenerated: number;
+      queuePending: number;
+      queueProcessing: number;
+    };
+    ownerfi: {
+      totalFeeds: number;
+      activeFeeds: number;
+      totalArticles: number;
+      unprocessedArticles: number;
+      videosGenerated: number;
+      queuePending: number;
+      queueProcessing: number;
+    };
   };
   results?: Array<{
     brand: string;
@@ -35,17 +61,56 @@ interface SchedulerStatus {
   }>;
 }
 
+interface WorkflowLog {
+  id: string;
+  articleId: string;
+  articleTitle: string;
+  brand: 'carz' | 'ownerfi';
+  status: 'pending' | 'heygen_processing' | 'submagic_processing' | 'posting' | 'completed' | 'failed';
+  heygenVideoId?: string;
+  submagicVideoId?: string;
+  metricoolPostId?: string;
+  error?: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
+interface WorkflowLogs {
+  success: boolean;
+  workflows: {
+    carz: WorkflowLog[];
+    ownerfi: WorkflowLog[];
+  };
+  timestamp: string;
+}
+
 export default function SocialMediaDashboard() {
   const [activeSubTab, setActiveSubTab] = useState<'carz' | 'ownerfi' | 'podcast'>('carz');
   const [status, setStatus] = useState<SchedulerStatus | null>(null);
+  const [workflows, setWorkflows] = useState<WorkflowLogs | null>(null);
   const [loading, setLoading] = useState(true);
   const [triggering, setTriggering] = useState(false);
 
   useEffect(() => {
     loadStatus();
-    const interval = setInterval(loadStatus, 30000); // Refresh every 30 seconds
-    return () => clearInterval(interval);
+    loadWorkflows();
+    const statusInterval = setInterval(loadStatus, 30000); // Refresh every 30 seconds
+    const workflowInterval = setInterval(loadWorkflows, 5000); // Refresh every 5 seconds for real-time updates
+    return () => {
+      clearInterval(statusInterval);
+      clearInterval(workflowInterval);
+    };
   }, []);
+
+  const loadWorkflows = async () => {
+    try {
+      const response = await fetch('/api/workflow/logs');
+      const data = await response.json();
+      setWorkflows(data);
+    } catch (error) {
+      console.error('Failed to load workflows:', error);
+    }
+  };
 
   const loadStatus = async () => {
     try {
@@ -84,6 +149,31 @@ export default function SocialMediaDashboard() {
     } finally {
       setTriggering(false);
     }
+  };
+
+  const getStatusColor = (status: WorkflowLog['status']) => {
+    switch (status) {
+      case 'pending': return 'bg-gray-100 text-gray-700';
+      case 'heygen_processing': return 'bg-blue-100 text-blue-700';
+      case 'submagic_processing': return 'bg-purple-100 text-purple-700';
+      case 'posting': return 'bg-yellow-100 text-yellow-700';
+      case 'completed': return 'bg-green-100 text-green-700';
+      case 'failed': return 'bg-red-100 text-red-700';
+      default: return 'bg-gray-100 text-gray-700';
+    }
+  };
+
+  const formatStatus = (status: WorkflowLog['status']) => {
+    return status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  };
+
+  const formatTimeAgo = (timestamp: number) => {
+    const seconds = Math.floor((Date.now() - timestamp) / 1000);
+    if (seconds < 60) return `${seconds}s ago`;
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes}m ago`;
+    const hours = Math.floor(minutes / 60);
+    return `${hours}h ago`;
   };
 
   if (loading) {
@@ -133,17 +223,14 @@ export default function SocialMediaDashboard() {
           <div className="bg-white rounded-xl shadow-sm p-6">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-sm font-medium text-slate-600">Scheduler Status</div>
-                <div className="text-2xl font-bold text-slate-900 mt-1">
-                  {status?.scheduler.running ? 'Running' : 'Stopped'}
+                <div className="text-sm font-medium text-slate-600">System Mode</div>
+                <div className="text-lg font-bold text-slate-900 mt-1">
+                  Serverless Cron
                 </div>
+                <div className="text-xs text-slate-500 mt-1">Runs every 2 hours</div>
               </div>
-              <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                status?.scheduler.running ? 'bg-green-100' : 'bg-red-100'
-              }`}>
-                <div className={`w-6 h-6 rounded-full ${
-                  status?.scheduler.running ? 'bg-green-500' : 'bg-red-500'
-                }`}></div>
+              <div className="w-12 h-12 rounded-full flex items-center justify-center bg-blue-100">
+                <div className="w-6 h-6 rounded-full bg-blue-500"></div>
               </div>
             </div>
           </div>
@@ -153,10 +240,10 @@ export default function SocialMediaDashboard() {
               <div>
                 <div className="text-sm font-medium text-slate-600">RSS Feeds</div>
                 <div className="text-2xl font-bold text-slate-900 mt-1">
-                  {status?.feeds.total || 0}
+                  {status?.feeds?.total || 0}
                 </div>
                 <div className="text-xs text-slate-500 mt-1">
-                  {status?.feeds.carz || 0} Carz • {status?.feeds.ownerfi || 0} OwnerFi
+                  {status?.feeds?.carz || 0} Carz • {status?.feeds?.ownerfi || 0} OwnerFi
                 </div>
               </div>
               <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
@@ -170,10 +257,10 @@ export default function SocialMediaDashboard() {
               <div>
                 <div className="text-sm font-medium text-slate-600">Articles in Queue</div>
                 <div className="text-2xl font-bold text-slate-900 mt-1">
-                  {(status?.articles.carz || 0) + (status?.articles.ownerfi || 0)}
+                  {(status?.stats?.carz?.unprocessedArticles || 0) + (status?.stats?.ownerfi?.unprocessedArticles || 0)}
                 </div>
                 <div className="text-xs text-slate-500 mt-1">
-                  {status?.articles.carz || 0} Carz • {status?.articles.ownerfi || 0} OwnerFi
+                  {status?.stats?.carz?.unprocessedArticles || 0} Carz • {status?.stats?.ownerfi?.unprocessedArticles || 0} OwnerFi
                 </div>
               </div>
               <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
@@ -202,7 +289,7 @@ export default function SocialMediaDashboard() {
                 <div className="bg-slate-50 rounded-lg p-4">
                   <div className="text-sm text-slate-600">Daily Limit</div>
                   <div className="text-2xl font-bold text-slate-900 mt-1">
-                    {status?.scheduler.config.maxVideosPerDay.carz || 5}
+                    {status?.scheduler?.config?.maxVideosPerDay?.carz || 5}
                   </div>
                   <div className="text-xs text-slate-500 mt-1">videos/day</div>
                 </div>
@@ -210,7 +297,7 @@ export default function SocialMediaDashboard() {
                 <div className="bg-slate-50 rounded-lg p-4">
                   <div className="text-sm text-slate-600">Available Articles</div>
                   <div className="text-2xl font-bold text-slate-900 mt-1">
-                    {status?.articles.carz || 0}
+                    {status?.stats?.carz?.unprocessedArticles || 0}
                   </div>
                   <div className="text-xs text-slate-500 mt-1">ready to process</div>
                 </div>
@@ -218,15 +305,17 @@ export default function SocialMediaDashboard() {
                 <div className="bg-slate-50 rounded-lg p-4">
                   <div className="text-sm text-slate-600">In Queue</div>
                   <div className="text-2xl font-bold text-slate-900 mt-1">
-                    {status?.queue.carz || 0}
+                    {(status?.stats?.carz?.queuePending || 0) + (status?.stats?.carz?.queueProcessing || 0)}
                   </div>
-                  <div className="text-xs text-slate-500 mt-1">pending videos</div>
+                  <div className="text-xs text-slate-500 mt-1">
+                    {status?.stats?.carz?.queueProcessing || 0} processing
+                  </div>
                 </div>
 
                 <div className="bg-slate-50 rounded-lg p-4">
                   <div className="text-sm text-slate-600">RSS Feeds</div>
                   <div className="text-2xl font-bold text-slate-900 mt-1">
-                    {status?.feeds.carz || 0}
+                    {status?.feeds?.carz || 0}
                   </div>
                   <div className="text-xs text-slate-500 mt-1">active sources</div>
                 </div>
@@ -235,12 +324,66 @@ export default function SocialMediaDashboard() {
               <div className="mt-6 pt-6 border-t border-slate-200">
                 <h4 className="text-sm font-semibold text-slate-900 mb-3">Publishing Platforms</h4>
                 <div className="flex flex-wrap gap-2">
-                  {['Instagram', 'TikTok', 'YouTube', 'Facebook', 'LinkedIn', 'Threads'].map((platform) => (
+                  {['Instagram', 'TikTok', 'YouTube', 'Facebook', 'LinkedIn'].map((platform) => (
                     <span key={platform} className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700">
                       {platform}
                     </span>
                   ))}
                 </div>
+              </div>
+
+              {/* Workflow Logs */}
+              <div className="mt-6 pt-6 border-t border-slate-200">
+                <h4 className="text-sm font-semibold text-slate-900 mb-3">Active Workflows</h4>
+                {workflows && workflows.workflows && workflows.workflows.carz && workflows.workflows.carz.length > 0 ? (
+                  <div className="space-y-3">
+                    {workflows.workflows.carz.map((workflow) => (
+                      <div key={workflow.id} className="bg-white border border-slate-200 rounded-lg p-4 hover:border-indigo-300 transition-colors">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex-1">
+                            <div className="font-medium text-slate-900 text-sm mb-1" dangerouslySetInnerHTML={{ __html: workflow.articleTitle }} />
+                            <div className="text-xs text-slate-500">{formatTimeAgo(workflow.createdAt)}</div>
+                          </div>
+                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(workflow.status)}`}>
+                            {formatStatus(workflow.status)}
+                          </span>
+                        </div>
+                        {(workflow.heygenVideoId || workflow.submagicVideoId || workflow.metricoolPostId) && (
+                          <div className="grid grid-cols-3 gap-2 text-xs">
+                            {workflow.heygenVideoId && (
+                              <div>
+                                <div className="text-slate-500 mb-1">HeyGen</div>
+                                <div className="font-mono text-slate-700 truncate">{workflow.heygenVideoId.substring(0, 12)}...</div>
+                              </div>
+                            )}
+                            {workflow.submagicVideoId && (
+                              <div>
+                                <div className="text-slate-500 mb-1">Submagic</div>
+                                <div className="font-mono text-slate-700 truncate">{workflow.submagicVideoId.substring(0, 12)}...</div>
+                              </div>
+                            )}
+                            {workflow.metricoolPostId && (
+                              <div>
+                                <div className="text-slate-500 mb-1">Metricool</div>
+                                <div className="font-mono text-slate-700 truncate">{workflow.metricoolPostId}</div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        {workflow.error && (
+                          <div className="mt-3 text-xs text-red-700 bg-red-50 border border-red-200 rounded px-3 py-2">
+                            <span className="font-semibold">Error:</span> {workflow.error}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="bg-slate-50 rounded-lg p-8 text-center border border-slate-200">
+                    <div className="text-slate-500 text-sm font-medium">No active workflows</div>
+                    <div className="text-xs text-slate-400 mt-1">Videos will appear here when being processed</div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -264,7 +407,7 @@ export default function SocialMediaDashboard() {
                 <div className="bg-slate-50 rounded-lg p-4">
                   <div className="text-sm text-slate-600">Daily Limit</div>
                   <div className="text-2xl font-bold text-slate-900 mt-1">
-                    {status?.scheduler.config.maxVideosPerDay.ownerfi || 5}
+                    {status?.scheduler?.config?.maxVideosPerDay?.ownerfi || 5}
                   </div>
                   <div className="text-xs text-slate-500 mt-1">videos/day</div>
                 </div>
@@ -272,7 +415,7 @@ export default function SocialMediaDashboard() {
                 <div className="bg-slate-50 rounded-lg p-4">
                   <div className="text-sm text-slate-600">Available Articles</div>
                   <div className="text-2xl font-bold text-slate-900 mt-1">
-                    {status?.articles.ownerfi || 0}
+                    {status?.stats?.ownerfi?.unprocessedArticles || 0}
                   </div>
                   <div className="text-xs text-slate-500 mt-1">ready to process</div>
                 </div>
@@ -280,15 +423,17 @@ export default function SocialMediaDashboard() {
                 <div className="bg-slate-50 rounded-lg p-4">
                   <div className="text-sm text-slate-600">In Queue</div>
                   <div className="text-2xl font-bold text-slate-900 mt-1">
-                    {status?.queue.ownerfi || 0}
+                    {(status?.stats?.ownerfi?.queuePending || 0) + (status?.stats?.ownerfi?.queueProcessing || 0)}
                   </div>
-                  <div className="text-xs text-slate-500 mt-1">pending videos</div>
+                  <div className="text-xs text-slate-500 mt-1">
+                    {status?.stats?.ownerfi?.queueProcessing || 0} processing
+                  </div>
                 </div>
 
                 <div className="bg-slate-50 rounded-lg p-4">
                   <div className="text-sm text-slate-600">RSS Feeds</div>
                   <div className="text-2xl font-bold text-slate-900 mt-1">
-                    {status?.feeds.ownerfi || 0}
+                    {status?.feeds?.ownerfi || 0}
                   </div>
                   <div className="text-xs text-slate-500 mt-1">active sources</div>
                 </div>
@@ -303,6 +448,60 @@ export default function SocialMediaDashboard() {
                     </span>
                   ))}
                 </div>
+              </div>
+
+              {/* Workflow Logs */}
+              <div className="mt-6 pt-6 border-t border-slate-200">
+                <h4 className="text-sm font-semibold text-slate-900 mb-3">Active Workflows</h4>
+                {workflows && workflows.workflows && workflows.workflows.ownerfi && workflows.workflows.ownerfi.length > 0 ? (
+                  <div className="space-y-3">
+                    {workflows.workflows.ownerfi.map((workflow) => (
+                      <div key={workflow.id} className="bg-white border border-slate-200 rounded-lg p-4 hover:border-indigo-300 transition-colors">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex-1">
+                            <div className="font-medium text-slate-900 text-sm mb-1" dangerouslySetInnerHTML={{ __html: workflow.articleTitle }} />
+                            <div className="text-xs text-slate-500">{formatTimeAgo(workflow.createdAt)}</div>
+                          </div>
+                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(workflow.status)}`}>
+                            {formatStatus(workflow.status)}
+                          </span>
+                        </div>
+                        {(workflow.heygenVideoId || workflow.submagicVideoId || workflow.metricoolPostId) && (
+                          <div className="grid grid-cols-3 gap-2 text-xs">
+                            {workflow.heygenVideoId && (
+                              <div>
+                                <div className="text-slate-500 mb-1">HeyGen</div>
+                                <div className="font-mono text-slate-700 truncate">{workflow.heygenVideoId.substring(0, 12)}...</div>
+                              </div>
+                            )}
+                            {workflow.submagicVideoId && (
+                              <div>
+                                <div className="text-slate-500 mb-1">Submagic</div>
+                                <div className="font-mono text-slate-700 truncate">{workflow.submagicVideoId.substring(0, 12)}...</div>
+                              </div>
+                            )}
+                            {workflow.metricoolPostId && (
+                              <div>
+                                <div className="text-slate-500 mb-1">Metricool</div>
+                                <div className="font-mono text-slate-700 truncate">{workflow.metricoolPostId}</div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        {workflow.error && (
+                          <div className="mt-3 text-xs text-red-700 bg-red-50 border border-red-200 rounded px-3 py-2">
+                            <span className="font-semibold">Error:</span> {workflow.error}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="bg-slate-50 rounded-lg p-8 text-center border border-slate-200">
+                    <div className="text-slate-500 text-sm font-medium">No active workflows</div>
+                    <div className="text-xs text-slate-400 mt-1">Videos will appear here when being processed</div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

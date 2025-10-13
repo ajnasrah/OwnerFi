@@ -41,6 +41,12 @@ interface BuyerStats {
   lastSignIn?: string;
   createdAt?: string;
   isActive?: boolean;
+  firstName?: string;
+  lastName?: string;
+  city?: string;
+  state?: string;
+  maxMonthlyPayment?: number;
+  maxDownPayment?: number;
 }
 
 interface RealtorStats {
@@ -1082,30 +1088,32 @@ export default function AdminDashboard() {
                               <div className="flex-shrink-0">
                                 <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
                                   <span className="text-sm font-medium text-gray-700">
-                                    {buyer.name.charAt(0).toUpperCase()}
+                                    {buyer.firstName?.charAt(0).toUpperCase() || buyer.email.charAt(0).toUpperCase()}
                                   </span>
                                 </div>
                               </div>
                               <div className="ml-4">
-                                <div className="text-sm font-medium text-gray-900">{buyer.name}</div>
+                                <div className="text-sm font-medium text-gray-900">
+                                  {buyer.firstName && buyer.lastName ? `${buyer.firstName} ${buyer.lastName}` : buyer.email}
+                                </div>
                                 <div className="text-sm text-gray-500">{buyer.email}</div>
                                 {buyer.phone && <div className="text-sm text-gray-500">{buyer.phone}</div>}
-                                {buyer.primaryCity && buyer.primaryState && (
-                                  <div className="text-sm text-gray-500">📍 {buyer.primaryCity}, {buyer.primaryState}</div>
+                                {(buyer.city || buyer.primaryCity) && (buyer.state || buyer.primaryState) && (
+                                  <div className="text-sm text-gray-500">📍 {buyer.city || buyer.primaryCity}, {buyer.state || buyer.primaryState}</div>
                                 )}
                               </div>
                             </div>
                             <div className="flex items-center space-x-8">
                               <div className="text-center">
-                                <div className="text-lg font-semibold text-gray-900">{buyer.matchedPropertiesCount}</div>
+                                <div className="text-lg font-semibold text-gray-900">{buyer.matchedPropertiesCount || 0}</div>
                                 <div className="text-xs text-gray-500">Matched</div>
                               </div>
                               <div className="text-center">
-                                <div className="text-lg font-semibold text-gray-900">{buyer.likedPropertiesCount}</div>
+                                <div className="text-lg font-semibold text-gray-900">{buyer.likedPropertiesCount || 0}</div>
                                 <div className="text-xs text-gray-500">Liked</div>
                               </div>
                               <div className="text-center">
-                                <div className="text-lg font-semibold text-gray-900">${buyer.monthlyBudget?.toLocaleString() || 0}</div>
+                                <div className="text-lg font-semibold text-gray-900">${(buyer.maxMonthlyPayment || buyer.monthlyBudget || 0).toLocaleString()}</div>
                                 <div className="text-xs text-gray-500">Budget/mo</div>
                               </div>
                             </div>

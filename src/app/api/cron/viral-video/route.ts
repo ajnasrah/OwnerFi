@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    console.log('🕐 Cron job triggered - Processing viral video generation');
+    console.log('🕐 Simplified cron - Fetch RSS and trigger workflows only');
 
     // Import required modules
     const { initializeFeedSources, getFeedsToFetch } = await import('@/config/feed-sources');
@@ -50,16 +50,7 @@ export async function GET(request: NextRequest) {
       console.log('✅ All feeds up to date');
     }
 
-    // Step 3: Rate ALL articles (new + existing) and keep only top 10 per brand
-    console.log('🤖 Rating all articles with AI quality filter...');
-    const { rateAndCleanupArticles } = await import('@/lib/feed-store-firestore');
-    const ratingResults = await rateAndCleanupArticles(10);
-
-    console.log(`📊 Rated articles:`);
-    console.log(`   Carz: ${ratingResults.carz.rated} rated, ${ratingResults.carz.kept} kept, ${ratingResults.carz.deleted} deleted`);
-    console.log(`   OwnerFi: ${ratingResults.ownerfi.rated} rated, ${ratingResults.ownerfi.kept} kept, ${ratingResults.ownerfi.deleted} deleted`);
-
-    // Step 4: Check if we have articles to process
+    // Step 3: Check if we have articles to process
     const carzArticles = await getUnprocessedArticles('carz', 5);
     const ownerfiArticles = await getUnprocessedArticles('ownerfi', 5);
 
@@ -103,13 +94,6 @@ export async function GET(request: NextRequest) {
       workflowsTriggered.push('ownerfi');
     }
 
-    // Step 5: Cleanup processed articles older than 7 days
-    console.log('🧹 Cleaning up old processed articles...');
-    const { cleanupProcessedArticles } = await import('@/lib/feed-store-firestore');
-    const processedCleanup = await cleanupProcessedArticles(7);
-
-    console.log(`✅ Processed cleanup: ${processedCleanup.carz} Carz + ${processedCleanup.ownerfi} OwnerFi old processed articles deleted`);
-
     const finalFeedsCount = (await getAllFeedSources()).length;
 
     return NextResponse.json({
@@ -118,18 +102,6 @@ export async function GET(request: NextRequest) {
       stats: {
         feedsInitialized: finalFeedsCount,
         newArticlesFetched: newArticles,
-        articlesRated: {
-          carz: ratingResults.carz.rated,
-          ownerfi: ratingResults.ownerfi.rated
-        },
-        articlesKept: {
-          carz: ratingResults.carz.kept,
-          ownerfi: ratingResults.ownerfi.kept
-        },
-        articlesDeleted: {
-          carz: ratingResults.carz.deleted + processedCleanup.carz,
-          ownerfi: ratingResults.ownerfi.deleted + processedCleanup.ownerfi
-        },
         workflowsTriggered: workflowsTriggered.length
       },
       workflowsTriggered,

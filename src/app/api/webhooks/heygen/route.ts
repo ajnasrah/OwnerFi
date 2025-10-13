@@ -159,8 +159,8 @@ async function triggerSubmagicProcessing(
         templateName: 'Hormozi 2',
         magicBrolls: true,
         magicBrollsPercentage: 50,
-        magicZooms: true,
-        callbackUrl: webhookUrl
+        magicZooms: true
+        // Note: callbackUrl is not supported by Submagic API
       })
     });
 

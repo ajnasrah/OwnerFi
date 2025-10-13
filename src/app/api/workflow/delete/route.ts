@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { db } from '@/lib/firebase';
 import { deleteDoc, doc } from 'firebase/firestore';
-import { db } from '@/lib/firebase-admin';
 import { getCollectionName } from '@/lib/feed-store-firestore';
 
 export async function DELETE(request: NextRequest) {
@@ -8,6 +8,8 @@ export async function DELETE(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const workflowId = searchParams.get('workflowId');
     const brand = searchParams.get('brand') as 'carz' | 'ownerfi';
+
+    console.log('Delete workflow request:', { workflowId, brand });
 
     if (!workflowId || !brand) {
       return NextResponse.json(
@@ -23,11 +25,22 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
+    if (!db) {
+      console.error('Firebase not initialized');
+      return NextResponse.json(
+        { error: 'Firebase not initialized' },
+        { status: 500 }
+      );
+    }
+
     // Get the collection name for the specific brand
     const collectionName = getCollectionName('WORKFLOW_QUEUE', brand);
+    console.log('Deleting from collection:', collectionName);
 
     // Delete the workflow document from Firestore
     await deleteDoc(doc(db, collectionName, workflowId));
+
+    console.log('Successfully deleted workflow:', workflowId);
 
     return NextResponse.json({
       success: true,

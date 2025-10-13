@@ -12,7 +12,16 @@
   "env": {
     "NODE_ENV": "production"
   },
-  "crons": [],
+  "crons": [
+    {
+      "path": "/api/podcast/cron",
+      "schedule": "0 9 * * 1"
+    },
+    {
+      "path": "/api/cron/viral-video",
+      "schedule": "0 */2 * * *"
+    }
+  ],
   "functions": {
     "src/app/api/**/*.ts": {
       "maxDuration": 30

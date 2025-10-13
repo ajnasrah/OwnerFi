@@ -71,7 +71,7 @@ interface Stats {
 export default function AdminDashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'overview' | 'properties' | 'upload' | 'disputes' | 'contacts' | 'buyers' | 'realtors' | 'logs'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'properties' | 'upload' | 'disputes' | 'contacts' | 'buyers' | 'realtors' | 'logs' | 'social'>('overview');
 
   // Stats
   const [stats, setStats] = useState<Stats>({
@@ -473,6 +473,7 @@ export default function AdminDashboard() {
             { key: 'realtors', label: 'Realtors', icon: '🏢', count: stats.totalRealtors },
             { key: 'disputes', label: 'Disputes', icon: '⚖️', count: stats.pendingDisputes },
             { key: 'contacts', label: 'Contacts', icon: '📧', count: null },
+            { key: 'social', label: 'Social Media', icon: '📱', count: null },
             { key: 'logs', label: 'Logs', icon: '📋', count: null },
           ].map((tab) => (
             <button
@@ -538,6 +539,7 @@ export default function AdminDashboard() {
                 {activeTab === 'realtors' && 'Realtor Management'}
                 {activeTab === 'disputes' && 'Dispute Resolution'}
                 {activeTab === 'contacts' && 'Contact Submissions'}
+                {activeTab === 'social' && 'Social Media Automation'}
                 {activeTab === 'logs' && 'System Logs'}
               </h2>
               <p className="text-slate-600 mt-1">
@@ -1311,6 +1313,18 @@ export default function AdminDashboard() {
                   ))}
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* Social Media Tab */}
+          {activeTab === 'social' && (
+            <div className="space-y-6">
+              {/* Social Media Dashboard Component */}
+              <iframe
+                src="/admin/social-dashboard"
+                className="w-full h-[calc(100vh-200px)] border-0 rounded-lg shadow-lg bg-white"
+                title="Social Media Dashboard"
+              />
             </div>
           )}
 

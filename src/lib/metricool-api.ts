@@ -132,6 +132,12 @@ export async function postToMetricool(request: MetricoolPostRequest): Promise<Me
           };
         }
 
+        if (request.platforms.includes('linkedin')) {
+          requestBody.linkedinData = {
+            visibility: 'PUBLIC'
+          };
+        }
+
         // blogId and userId MUST be query parameters, not in the body
         const response = await fetchWithTimeout(
           `${METRICOOL_BASE_URL}/scheduler/posts?blogId=${brandId}&userId=${METRICOOL_USER_ID}`,

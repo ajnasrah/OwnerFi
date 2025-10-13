@@ -112,11 +112,11 @@ export async function POST(request: NextRequest) {
 
           console.log('\n📱 Auto-posting to social media via Metricool...');
 
-          // Get platforms from env or use defaults
-          const platforms = (process.env.METRICOOL_PLATFORMS || 'instagram,tiktok,youtube').split(',') as any[];
+          // Get platforms from env or use defaults (Instagram Reel, Facebook Reel, TikTok, YouTube Short, LinkedIn)
+          const platforms = (process.env.METRICOOL_PLATFORMS || 'instagram,facebook,tiktok,youtube,linkedin').split(',') as any[];
           const schedule = (process.env.METRICOOL_SCHEDULE_DELAY || 'immediate') as any;
 
-          // Post to Reels
+          // Post to Reels/Shorts
           const postResult = await scheduleVideoPost(
             publicVideoUrl,
             workflow.caption || 'Check out this video! 🔥',

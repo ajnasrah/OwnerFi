@@ -1,14 +1,16 @@
-#!/usr/bin/env ts-node
 /**
  * One-time script to rate all existing articles with AI
  * This will score all unprocessed articles and save the scores to Firestore
  *
- * Usage: npx ts-node scripts/rate-existing-articles.ts
+ * Usage: node --loader ts-node/esm scripts/rate-existing-articles.ts
  */
 
-import { db } from '../src/lib/firebase';
-import { collection, query, where, getDocs, updateDoc, doc } from 'firebase/firestore';
-import { evaluateArticlesBatch } from '../src/lib/article-quality-filter';
+// @ts-ignore
+const { db } = await import('../src/lib/firebase.js');
+// @ts-ignore
+const { collection, query, where, getDocs, updateDoc, doc } = await import('firebase/firestore');
+// @ts-ignore
+const { evaluateArticlesBatch } = await import('../src/lib/article-quality-filter.js');
 
 interface Article {
   id: string;

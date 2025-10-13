@@ -116,13 +116,13 @@ export default function ArticlesPage() {
   };
 
   const rateAllArticles = async () => {
-    if (!confirm(`Rate all ${currentArticles.length} ${activeTab} articles with AI? This will use OpenAI API calls.`)) {
+    if (!confirm(`Rate all ${currentArticles.length} ${activeTab} articles with AI in the background?\n\nThis will:\n- Score all articles with OpenAI\n- Keep top 50 articles\n- Delete low-quality ones\n\nCheck server logs for progress.`)) {
       return;
     }
 
     setRating(true);
     try {
-      const response = await fetch('/api/articles/rate-all', {
+      const response = await fetch('/api/articles/rate-all-async', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -136,13 +136,12 @@ export default function ArticlesPage() {
       const data = await response.json();
 
       if (data.success) {
-        alert(`✅ Rated ${data.results.rated} articles!\n\nKept: ${data.results.kept}\nDeleted: ${data.results.deleted} low-quality articles`);
-        await loadArticles();
+        alert(`✅ Started rating ${activeTab} articles in background!\n\nThe process will run automatically. Refresh the page in a few minutes to see the scores.`);
       } else {
-        alert(`Failed to rate articles: ${data.error}`);
+        alert(`Failed to start rating: ${data.error}`);
       }
     } catch (error) {
-      alert('Failed to rate articles');
+      alert('Failed to start rating');
       console.error('Rating error:', error);
     } finally {
       setRating(false);

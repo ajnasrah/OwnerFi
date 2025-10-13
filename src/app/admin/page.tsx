@@ -77,7 +77,7 @@ interface Stats {
 export default function AdminDashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'overview' | 'properties' | 'upload' | 'disputes' | 'contacts' | 'buyers' | 'realtors' | 'logs' | 'social'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'properties' | 'upload' | 'disputes' | 'contacts' | 'buyers' | 'realtors' | 'logs' | 'social' | 'articles'>('overview');
 
   // Stats
   const [stats, setStats] = useState<Stats>({
@@ -480,6 +480,7 @@ export default function AdminDashboard() {
             { key: 'disputes', label: 'Disputes', icon: '⚖️', count: stats.pendingDisputes },
             { key: 'contacts', label: 'Contacts', icon: '📧', count: null },
             { key: 'social', label: 'Social Media', icon: '📱', count: null },
+            { key: 'articles', label: 'Articles', icon: '📰', count: null },
             { key: 'logs', label: 'Logs', icon: '📋', count: null },
           ].map((tab) => (
             <button
@@ -546,6 +547,7 @@ export default function AdminDashboard() {
                 {activeTab === 'disputes' && 'Dispute Resolution'}
                 {activeTab === 'contacts' && 'Contact Submissions'}
                 {activeTab === 'social' && 'Social Media Automation'}
+                {activeTab === 'articles' && 'Article Queue Management'}
                 {activeTab === 'logs' && 'System Logs'}
               </h2>
               <p className="text-slate-600 mt-1">
@@ -1332,6 +1334,18 @@ export default function AdminDashboard() {
                 src="/admin/social-dashboard"
                 className="w-full h-[calc(100vh-200px)] border-0 rounded-lg shadow-lg bg-white"
                 title="Social Media Dashboard"
+              />
+            </div>
+          )}
+
+          {/* Articles Tab */}
+          {activeTab === 'articles' && (
+            <div className="space-y-6">
+              {/* Articles Queue Dashboard Component */}
+              <iframe
+                src="/admin/articles"
+                className="w-full h-[calc(100vh-200px)] border-0 rounded-lg shadow-lg bg-white"
+                title="Articles Queue Dashboard"
               />
             </div>
           )}

@@ -78,6 +78,35 @@ export default function ArticlesPage() {
     });
   };
 
+  const decodeHTML = (html: string) => {
+    const txt = document.createElement('textarea');
+    txt.innerHTML = html;
+    return txt.value;
+  };
+
+  const deleteArticle = async (articleId: string, brand: 'carz' | 'ownerfi') => {
+    if (!confirm('Are you sure you want to delete this article? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/articles/delete?articleId=${articleId}&brand=${brand}`, {
+        method: 'DELETE'
+      });
+      const data = await response.json();
+
+      if (data.success) {
+        // Refresh articles list
+        await loadArticles();
+      } else {
+        alert(`Failed to delete article: ${data.error}`);
+      }
+    } catch (error) {
+      alert('Failed to delete article');
+      console.error('Delete error:', error);
+    }
+  };
+
   const getScoreColor = (score?: number) => {
     if (!score) return 'bg-gray-100 text-gray-700';
     if (score >= 80) return 'bg-green-100 text-green-700';
@@ -162,16 +191,16 @@ export default function ArticlesPage() {
                         </span>
                         <div className="flex-1">
                           <h3 className="font-semibold text-slate-900 text-base mb-1">
-                            {article.title}
+                            {decodeHTML(article.title)}
                           </h3>
                           <p className="text-sm text-slate-600 line-clamp-2 mb-2">
-                            {article.description}
+                            {decodeHTML(article.description)}
                           </p>
                           <div className="flex items-center gap-4 text-xs text-slate-500">
                             <span>📅 {formatDate(article.pubDate)}</span>
-                            {article.author && <span>✍️ {article.author}</span>}
+                            {article.author && <span>✍️ {decodeHTML(article.author)}</span>}
                             {article.categories.length > 0 && (
-                              <span>🏷️ {article.categories.slice(0, 2).join(', ')}</span>
+                              <span>🏷️ {article.categories.slice(0, 2).map(c => decodeHTML(c)).join(', ')}</span>
                             )}
                           </div>
                         </div>
@@ -192,6 +221,13 @@ export default function ArticlesPage() {
                       >
                         View Article →
                       </a>
+                      <button
+                        onClick={() => deleteArticle(article.id, activeTab)}
+                        className="inline-flex items-center px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors"
+                        title="Delete article"
+                      >
+                        🗑️ Delete
+                      </button>
                     </div>
                   </div>
 

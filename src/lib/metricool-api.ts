@@ -127,7 +127,8 @@ export async function postToMetricool(request: MetricoolPostRequest): Promise<Me
             title: request.title || fullCaption.substring(0, 100),
             privacy: 'PUBLIC',
             madeForKids: false,
-            category: request.brand === 'carz' ? 'AUTOS_VEHICLES' : 'NEWS_POLITICS'
+            category: request.brand === 'carz' ? 'AUTOS_VEHICLES' : 'NEWS_POLITICS',
+            type: 'SHORT' // Post as YouTube Shorts, not regular videos
           };
         }
 

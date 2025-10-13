@@ -107,8 +107,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if we're in local development (webhooks won't work)
-    const isLocalDev = process.env.NODE_ENV === 'development' ||
-                       (process.env.NEXT_PUBLIC_BASE_URL && process.env.NEXT_PUBLIC_BASE_URL.includes('localhost'));
+    // Only use synchronous polling if explicitly running in dev mode with npm run dev
+    const isLocalDev = process.env.NODE_ENV === 'development' &&
+                       !process.env.NEXT_PUBLIC_BASE_URL?.includes('ownerfi.ai');
 
     if (isLocalDev) {
       // LOCAL DEV: Use synchronous polling (webhooks won't reach localhost)
@@ -512,7 +513,7 @@ async function enhanceWithSubmagic(params: {
         magicBrolls: true,           // Add contextual B-roll footage
         magicBrollsPercentage: 50,   // 50% B-roll coverage
         magicZooms: true,            // Add dynamic zoom effects
-        callbackUrl: webhookUrl      // ⭐ Webhook notification when complete
+        webhookUrl: webhookUrl       // ⭐ Webhook notification when complete (parameter is webhookUrl, not callbackUrl)
       })
     });
 

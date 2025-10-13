@@ -44,8 +44,8 @@ export async function POST() {
         templateName: 'Hormozi 2',
         magicBrolls: true,
         magicBrollsPercentage: 50,
-        magicZooms: true
-        // Note: callbackUrl is not supported
+        magicZooms: true,
+        webhookUrl: webhookUrl // ⭐ Webhook notification when complete
       })
     });
 

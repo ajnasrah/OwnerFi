@@ -193,33 +193,41 @@ export default function SocialMediaDashboard() {
   const triggerCron = async () => {
     setTriggeringViral(true);
     try {
-      const response = await fetch('/api/cron/viral-video', {
+      // Determine which brand based on active tab
+      const brand = activeSubTab === 'carz' ? 'carz' : 'ownerfi';
+
+      const response = await fetch('/api/workflow/complete-viral', {
         method: 'POST',
-        credentials: 'include', // Include cookies for session auth
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json'
-        }
+        },
+        body: JSON.stringify({
+          brand: brand,
+          platforms: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'threads'],
+          schedule: 'immediate'
+        })
       });
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Cron trigger failed:', response.status, errorText);
-        alert(`Failed to trigger cron (${response.status}): ${errorText}`);
+        console.error('Workflow trigger failed:', response.status, errorText);
+        alert(`Failed to start workflow (${response.status}): ${errorText}`);
         return;
       }
 
       const data = await response.json();
 
       if (data.success) {
-        alert(`Cron triggered successfully!\n\nWorkflows started: ${data.workflowsTriggered?.join(', ') || 'none'}\nNew articles: ${data.stats?.newArticlesFetched || 0}`);
+        alert(`Video workflow started!\n\nArticle: ${data.article?.title || 'N/A'}\nWorkflow ID: ${data.workflow_id || 'N/A'}`);
         loadStatus();
         loadWorkflows();
       } else {
         alert(`Error: ${data.error || 'Unknown error'}`);
       }
     } catch (error) {
-      console.error('Cron trigger error:', error);
-      alert(`Failed to trigger cron: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error('Workflow trigger error:', error);
+      alert(`Failed to start workflow: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setTriggeringViral(false);
     }

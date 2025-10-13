@@ -40,14 +40,41 @@ export async function POST(request: NextRequest) {
 
     if (status === 'completed' || status === 'done' || status === 'ready') {
       console.log('✅ Submagic video completed via webhook!');
-      console.log('   Video URL:', finalVideoUrl);
+      console.log('   Video URL from webhook:', finalVideoUrl);
 
-      if (!finalVideoUrl) {
-        console.error('❌ No video URL in webhook payload');
-        return NextResponse.json(
-          { error: 'Missing video URL in webhook' },
-          { status: 400 }
-        );
+      // If no video URL provided in webhook, fetch it from Submagic API
+      let videoUrl = finalVideoUrl;
+      if (!videoUrl) {
+        console.log('⚠️  No video URL in webhook, fetching from Submagic API...');
+        try {
+          const SUBMAGIC_API_KEY = process.env.SUBMAGIC_API_KEY;
+          if (!SUBMAGIC_API_KEY) {
+            throw new Error('Submagic API key not configured');
+          }
+
+          const response = await fetch(`https://api.submagic.co/v1/projects/${submagicProjectId}`, {
+            headers: { 'x-api-key': SUBMAGIC_API_KEY }
+          });
+
+          if (!response.ok) {
+            throw new Error(`Submagic API returned ${response.status}`);
+          }
+
+          const projectData = await response.json();
+          videoUrl = projectData.media_url || projectData.video_url || projectData.downloadUrl;
+
+          if (!videoUrl) {
+            throw new Error('No video URL found in Submagic project data');
+          }
+
+          console.log('✅ Fetched video URL from API:', videoUrl);
+        } catch (error) {
+          console.error('❌ Failed to fetch video URL from Submagic:', error);
+          return NextResponse.json(
+            { error: 'Failed to fetch video URL from Submagic', details: error instanceof Error ? error.message : 'Unknown error' },
+            { status: 500 }
+          );
+        }
       }
 
       // Update workflow status to 'posting'
@@ -78,7 +105,7 @@ export async function POST(request: NextRequest) {
           const { uploadSubmagicVideo } = await import('@/lib/video-storage');
 
           // Download from Submagic and upload to R2
-          const publicVideoUrl = await uploadSubmagicVideo(finalVideoUrl);
+          const publicVideoUrl = await uploadSubmagicVideo(videoUrl);
 
           console.log('✅ Video uploaded to R2!');
           console.log('   Public URL:', publicVideoUrl);

@@ -74,7 +74,7 @@ const COLLECTIONS = {
 };
 
 // Helper to get collection name based on category
-function getCollectionName(type: 'FEEDS' | 'ARTICLES' | 'WORKFLOW_QUEUE', category: 'carz' | 'ownerfi'): string {
+export function getCollectionName(type: 'FEEDS' | 'ARTICLES' | 'WORKFLOW_QUEUE', category: 'carz' | 'ownerfi'): string {
   return category === 'carz' ? COLLECTIONS.CARZ[type] : COLLECTIONS.OWNERFI[type];
 }
 

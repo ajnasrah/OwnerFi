@@ -162,6 +162,7 @@ export async function processFeedSource(feedSource: FeedSource): Promise<{
   try {
     const feed = await fetchRSSFeed(feedSource.url);
     let newArticles = 0;
+    const articlesToScore: Array<{ article: Omit<Article, 'createdAt'>; index: number }> = [];
 
     // Get the cutoff time - only process articles published after this
     const cutoffTime = feedSource.lastFetched || Date.now();
@@ -196,8 +197,50 @@ export async function processFeedSource(feedSource: FeedSource): Promise<{
         videoGenerated: false
       };
 
+      // Add article to database first
       await addArticle(article, feedSource.category);
       newArticles++;
+
+      // Queue for AI scoring
+      articlesToScore.push({ article, index: newArticles - 1 });
+    }
+
+    // Score all new articles with AI
+    if (articlesToScore.length > 0) {
+      console.log(`🤖 Scoring ${articlesToScore.length} new articles with AI...`);
+      try {
+        const { evaluateArticlesBatch } = await import('./article-quality-filter');
+        const qualityScores = await evaluateArticlesBatch(
+          articlesToScore.map(({ article }) => ({
+            title: article.title,
+            content: article.content || article.description,
+            category: feedSource.category
+          })),
+          3 // Max 3 concurrent API calls
+        );
+
+        // Update articles with their scores
+        const { updateDoc, doc } = await import('firebase/firestore');
+        const { db } = await import('./firebase');
+        const { getCollectionName } = await import('./feed-store-firestore');
+
+        if (db) {
+          const collectionName = getCollectionName('ARTICLES', feedSource.category);
+          const updatePromises = articlesToScore.map(({ article }, index) => {
+            const score = qualityScores[index];
+            return updateDoc(doc(db, collectionName, article.id), {
+              qualityScore: score.score,
+              aiReasoning: score.reasoning,
+              ratedAt: Date.now()
+            });
+          });
+          await Promise.all(updatePromises);
+          console.log(`✅ Scored ${articlesToScore.length} articles`);
+        }
+      } catch (error) {
+        console.error('⚠️  Failed to score articles with AI:', error);
+        // Continue without failing the entire feed fetch
+      }
     }
 
     // Update feed source with current timestamp (don't pass lastError at all to clear it)

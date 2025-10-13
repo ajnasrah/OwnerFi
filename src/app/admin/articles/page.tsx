@@ -33,6 +33,7 @@ export default function ArticlesPage() {
   const [activeTab, setActiveTab] = useState<'carz' | 'ownerfi'>('carz');
   const [articles, setArticles] = useState<ArticlesData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [rating, setRating] = useState(false);
 
   // Auth check
   useEffect(() => {
@@ -114,6 +115,40 @@ export default function ArticlesPage() {
     return 'bg-red-100 text-red-700';
   };
 
+  const rateAllArticles = async () => {
+    if (!confirm(`Rate all ${currentArticles.length} ${activeTab} articles with AI? This will use OpenAI API calls.`)) {
+      return;
+    }
+
+    setRating(true);
+    try {
+      const response = await fetch('/api/articles/rate-all', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          brand: activeTab,
+          keepTopN: 50 // Keep top 50 articles
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert(`✅ Rated ${data.results.rated} articles!\n\nKept: ${data.results.kept}\nDeleted: ${data.results.deleted} low-quality articles`);
+        await loadArticles();
+      } else {
+        alert(`Failed to rate articles: ${data.error}`);
+      }
+    } catch (error) {
+      alert('Failed to rate articles');
+      console.error('Rating error:', error);
+    } finally {
+      setRating(false);
+    }
+  };
+
   if (authStatus === 'loading' || loading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -168,12 +203,25 @@ export default function ArticlesPage() {
             <h2 className="text-lg font-semibold text-slate-900">
               {activeTab === 'carz' ? 'Carz Inc' : 'OwnerFi'} Articles
             </h2>
-            <button
-              onClick={loadArticles}
-              className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
-            >
-              🔄 Refresh
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={rateAllArticles}
+                disabled={rating || currentArticles.length === 0}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  rating || currentArticles.length === 0
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-purple-500 to-purple-600 text-white hover:from-purple-600 hover:to-purple-700'
+                }`}
+              >
+                {rating ? '🤖 Rating...' : '🤖 Rate All with AI'}
+              </button>
+              <button
+                onClick={loadArticles}
+                className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
+              >
+                🔄 Refresh
+              </button>
+            </div>
           </div>
 
           {currentArticles.length > 0 ? (

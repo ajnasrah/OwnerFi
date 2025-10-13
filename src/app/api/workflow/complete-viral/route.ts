@@ -73,7 +73,8 @@ export async function POST(request: NextRequest) {
       input_text: content.script,
       scale: 1.4,
       width: 1080,
-      height: 1920
+      height: 1920,
+      callback_id: workflowId // Pass workflow ID for webhook callback
     });
 
     if (!videoResult.success || !videoResult.video_id) {
@@ -93,225 +94,66 @@ export async function POST(request: NextRequest) {
     }
 
     console.log(`✅ HeyGen video ID: ${videoResult.video_id}`);
+    console.log(`📋 Workflow ID: ${workflowId}`);
 
-    // Update workflow with HeyGen video ID
+    // Update workflow with HeyGen video ID and store caption/title for webhooks
     if (workflowId) {
       const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
       await updateWorkflowStatus(workflowId, brand as 'carz' | 'ownerfi', {
-        heygenVideoId: videoResult.video_id
-      });
-    }
-
-    // Step 4: Wait for HeyGen completion
-    console.log('⏳ Step 4: Waiting for HeyGen video...');
-    const heygenUrl = await waitForVideoCompletion(videoResult.video_id, 14);
-
-    if (!heygenUrl) {
-      return NextResponse.json(
-        { success: false, error: 'HeyGen video timed out', video_id: videoResult.video_id },
-        { status: 202 }
-      );
-    }
-
-    console.log(`✅ HeyGen completed: ${heygenUrl}`);
-
-    // Step 4.5: Upload HeyGen video directly to R2 (skip Firebase - save bandwidth!)
-    console.log('☁️  Step 4.5: Uploading HeyGen video to R2 for Submagic...');
-    const { downloadAndUploadToR2 } = await import('@/lib/video-storage');
-    const publicHeygenUrl = await downloadAndUploadToR2(
-      heygenUrl,
-      HEYGEN_API_KEY!,
-      `heygen-videos/${videoResult.video_id}.mp4`
-    );
-    console.log(`✅ Public R2 URL: ${publicHeygenUrl}`);
-
-    // Step 5: Enhance with Submagic (using R2 public URL)
-    console.log('✨ Step 5: Adding Submagic captions and effects...');
-
-    // Update workflow status to 'submagic_processing'
-    if (workflowId) {
-      const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
-      await updateWorkflowStatus(workflowId, brand as 'carz' | 'ownerfi', {
-        status: 'submagic_processing'
-      });
-    }
-
-    const submagicResult = await enhanceWithSubmagic({
-      videoUrl: publicHeygenUrl, // Use R2 public URL (permanent)
-      title: content.title,
-      language: 'en',
-      templateName: 'Hormozi 2'
-    });
-
-    if (!submagicResult.success || !submagicResult.project_id) {
-      // Update workflow status to 'failed'
-      if (workflowId) {
-        const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
-        await updateWorkflowStatus(workflowId, brand as 'carz' | 'ownerfi', {
-          status: 'failed',
-          error: submagicResult.error || 'Submagic enhancement failed'
-        });
-      }
-
-      return NextResponse.json(
-        { success: false, error: 'Submagic enhancement failed', heygen_url: heygenUrl },
-        { status: 500 }
-      );
-    }
-
-    console.log(`✅ Submagic project: ${submagicResult.project_id}`);
-
-    // Update workflow with Submagic project ID
-    if (workflowId) {
-      const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
-      await updateWorkflowStatus(workflowId, brand as 'carz' | 'ownerfi', {
-        submagicVideoId: submagicResult.project_id
-      });
-    }
-
-    // Step 6: Wait for Submagic completion
-    console.log('⏳ Step 6: Waiting for Submagic enhancement...');
-    const finalVideoUrl = await waitForSubmagicCompletion(submagicResult.project_id, 30); // 22.5 minutes total
-
-    if (!finalVideoUrl) {
-      console.error('❌ Submagic timed out after 22.5 minutes');
-
-      // Update workflow status to 'failed'
-      if (workflowId) {
-        const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
-        await updateWorkflowStatus(workflowId, brand as 'carz' | 'ownerfi', {
-          status: 'failed',
-          error: 'Submagic processing timed out after 22.5 minutes'
-        });
-      }
-
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Submagic processing timed out',
-          heygen_url: heygenUrl,
-          submagic_project_id: submagicResult.project_id
-        },
-        { status: 202 }
-      );
-    }
-
-    console.log(`✅ Submagic video ready: ${finalVideoUrl}`);
-
-    // Step 7: Upload Submagic video to R2 for permanent public URL
-    console.log('☁️  Step 7: Uploading Submagic video to R2 for Metricool...');
-    const { uploadSubmagicVideo } = await import('@/lib/video-storage');
-    const publicVideoUrl = await uploadSubmagicVideo(finalVideoUrl);
-    console.log(`✅ Public R2 URL: ${publicVideoUrl}`);
-
-    // Step 8: Schedule post to Metricool (brand-specific)
-    console.log(`📱 Step 8: Scheduling post to ${platforms.join(', ')} for ${brand === 'carz' ? 'Carz Inc' : 'OwnerFi'}...`);
-
-    // Update workflow status to 'posting'
-    if (workflowId) {
-      const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
-      await updateWorkflowStatus(workflowId, brand as 'carz' | 'ownerfi', {
-        status: 'posting'
-      });
-    }
-
-    // Post to Reels first
-    const postResult = await scheduleVideoPost(
-      publicVideoUrl,
-      content.caption,
-      content.title,
-      platforms,
-      schedule,
-      brand
-    );
-
-    // Also post to Instagram and Facebook Stories (separate posts)
-    if (platforms.includes('instagram') || platforms.includes('facebook')) {
-      console.log('📱 Also posting to Stories...');
-      const storyPlatforms = [];
-      if (platforms.includes('instagram')) storyPlatforms.push('instagram');
-      if (platforms.includes('facebook')) storyPlatforms.push('facebook');
-
-      const { postToMetricool } = await import('@/lib/metricool-api');
-      await postToMetricool({
-        videoUrl: publicVideoUrl,
+        heygenVideoId: videoResult.video_id,
         caption: content.caption,
-        title: content.title,
-        platforms: storyPlatforms as any,
-        postTypes: {
-          instagram: 'story',
-          facebook: 'story'
-        },
-        brand: brand as 'carz' | 'ownerfi'
-      }).catch(err => console.warn('Story posting failed:', err));
+        title: content.title
+      } as any); // Store caption/title so webhooks can use them
     }
 
-    if (!postResult.success) {
-      console.error('❌ METRICOOL POSTING FAILED!');
-      console.error('   Brand:', brand);
-      console.error('   Error:', postResult.error);
-      console.error('   Video URL:', publicVideoUrl);
-      console.error('   Platforms:', platforms);
+    // Check if we're in local development (webhooks won't work)
+    const isLocalDev = process.env.NODE_ENV === 'development' ||
+                       (process.env.NEXT_PUBLIC_BASE_URL && process.env.NEXT_PUBLIC_BASE_URL.includes('localhost'));
 
-      // Update workflow status to 'failed' but still return video URLs
-      if (workflowId) {
-        const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
-        await updateWorkflowStatus(workflowId, brand as 'carz' | 'ownerfi', {
-          status: 'failed',
-          error: `Metricool posting failed: ${postResult.error || 'Unknown error'}`
-        });
-      }
+    if (isLocalDev) {
+      // LOCAL DEV: Use synchronous polling (webhooks won't reach localhost)
+      console.log('⚠️  Running in LOCAL DEV mode - using polling instead of webhooks');
+      console.log('⏳ Waiting for HeyGen completion (this will take ~10 minutes)...');
 
-      // Send alert
-      const { alertWorkflowFailure } = await import('@/lib/error-monitoring');
-      await alertWorkflowFailure(
-        brand as 'carz' | 'ownerfi',
-        workflowId || 'unknown',
-        article.title,
-        `Metricool posting failed: ${postResult.error}`
-      );
-    } else {
-      console.log(`✅ Scheduled! Post ID: ${postResult.postId}`);
+      const heygenUrl = await waitForHeyGenAndProcess(videoResult.video_id, workflowId, brand as 'carz' | 'ownerfi', content, platforms, schedule);
 
-      // Update workflow status to 'completed'
-      if (workflowId) {
-        const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
-        await updateWorkflowStatus(workflowId, brand as 'carz' | 'ownerfi', {
-          status: 'completed',
-          metricoolPostId: postResult.postId,
-          completedAt: Date.now()
-        });
-      }
+      return NextResponse.json({
+        success: true,
+        message: '✅ Local dev workflow completed',
+        workflow_id: workflowId,
+        brand,
+        article: { title: article.title, source: article.source },
+        content: { script: content.script, title: content.title, caption: content.caption },
+        video: { heygen_video_id: videoResult.video_id, status: heygenUrl ? 'completed' : 'processing' }
+      });
     }
 
-    // SUCCESS! Return complete result
+    // PRODUCTION: Fire-and-forget with webhooks
+    console.log('🎯 HeyGen video submitted successfully!');
+    console.log('📡 Webhooks will handle:');
+    console.log('   1. HeyGen completion → R2 upload → Submagic');
+    console.log('   2. Submagic completion → R2 upload → Metricool posting');
+    console.log('   3. Monitor progress at /admin/social-dashboard');
+
     return NextResponse.json({
       success: true,
-      message: '🎉 Complete viral video workflow finished!',
+      message: '🚀 Viral video workflow started! Webhooks will complete the process.',
+      workflow_id: workflowId,
       brand,
-      article: {
-        title: article.title,
-        source: article.source
+      article: { title: article.title, source: article.source },
+      content: { script: content.script, title: content.title, caption: content.caption },
+      video: { heygen_video_id: videoResult.video_id, status: 'heygen_processing' },
+      tracking: {
+        workflow_id: workflowId,
+        dashboard_url: `https://ownerfi.ai/admin/social-dashboard`,
+        status_api: `/api/workflow/logs`
       },
-      content: {
-        script: content.script,
-        title: content.title,
-        caption: content.caption
-      },
-      video: {
-        heygen_video_id: videoResult.video_id,
-        heygen_url: heygenUrl,
-        heygen_public_url: publicHeygenUrl,
-        submagic_project_id: submagicResult.project_id,
-        submagic_url: finalVideoUrl,
-        public_url: publicVideoUrl
-      },
-      social: {
-        platforms,
-        scheduled_for: postResult.scheduledFor || 'immediate',
-        post_id: postResult.postId,
-        success: postResult.success
-      }
+      next_steps: [
+        '⏳ HeyGen is generating the video (webhook will notify when complete)',
+        '⏳ Submagic will add captions and effects (webhook will notify when complete)',
+        '⏳ Video will auto-post to Metricool (Instagram, TikTok, YouTube)',
+        '📊 Monitor progress in the admin dashboard'
+      ]
     });
 
   } catch (error) {
@@ -466,8 +308,44 @@ async function generateHeyGenVideo(params: {
   scale: number;
   width: number;
   height: number;
+  callback_id?: string;
 }): Promise<{ success: boolean; video_id?: string; error?: string }> {
   try {
+    // Get base URL for webhook callback
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ||
+                    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
+                    'https://ownerfi.ai';
+
+    const webhookUrl = `${baseUrl}/api/webhooks/heygen`;
+    console.log(`📞 HeyGen webhook URL: ${webhookUrl}`);
+
+    const requestBody: any = {
+      video_inputs: [{
+        character: {
+          type: 'talking_photo',
+          talking_photo_id: params.talking_photo_id,
+          scale: params.scale,
+          talking_photo_style: 'square',
+          talking_style: 'expressive'
+        },
+        voice: {
+          type: 'text',
+          input_text: params.input_text,
+          voice_id: params.voice_id,
+          speed: 1.1
+        }
+      }],
+      caption: false,
+      dimension: { width: params.width, height: params.height },
+      test: false
+    };
+
+    // Add webhook callback if callback_id provided
+    if (params.callback_id) {
+      requestBody.webhook_url = webhookUrl;
+      requestBody.callback_id = params.callback_id;
+    }
+
     const response = await fetch('https://api.heygen.com/v2/video/generate', {
       method: 'POST',
       headers: {
@@ -475,26 +353,7 @@ async function generateHeyGenVideo(params: {
         'content-type': 'application/json',
         'x-api-key': HEYGEN_API_KEY!,
       },
-      body: JSON.stringify({
-        video_inputs: [{
-          character: {
-            type: 'talking_photo',
-            talking_photo_id: params.talking_photo_id,
-            scale: params.scale,
-            talking_photo_style: 'square',
-            talking_style: 'expressive'
-          },
-          voice: {
-            type: 'text',
-            input_text: params.input_text,
-            voice_id: params.voice_id,
-            speed: 1.1
-          }
-        }],
-        caption: false,
-        dimension: { width: params.width, height: params.height },
-        test: false
-      })
+      body: JSON.stringify(requestBody)
     });
 
     if (!response.ok) {
@@ -509,10 +368,20 @@ async function generateHeyGenVideo(params: {
   }
 }
 
-// Helper: Wait for HeyGen video completion
-async function waitForVideoCompletion(videoId: string, maxAttempts: number = 14): Promise<string | null> {
-  for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    await new Promise(resolve => setTimeout(resolve, 45000)); // 45 seconds × 14 = 10.5 minutes
+// LOCAL DEV ONLY: Poll HeyGen and process entire workflow synchronously
+async function waitForHeyGenAndProcess(
+  videoId: string,
+  workflowId: string,
+  brand: 'carz' | 'ownerfi',
+  content: { script: string; title: string; caption: string },
+  platforms: any[],
+  schedule: string
+): Promise<string | null> {
+  const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
+
+  // Poll HeyGen for completion (max 14 attempts = 10.5 minutes)
+  for (let attempt = 0; attempt < 14; attempt++) {
+    await new Promise(resolve => setTimeout(resolve, 45000));
 
     try {
       const response = await fetch(
@@ -525,19 +394,95 @@ async function waitForVideoCompletion(videoId: string, maxAttempts: number = 14)
       const data = await response.json();
       const status = data.data?.status;
 
-      console.log(`⏳ HeyGen (${attempt + 1}/${maxAttempts}): ${status}`);
+      console.log(`⏳ HeyGen (${attempt + 1}/14): ${status}`);
 
-      if (status === 'completed') return data.data.video_url;
+      if (status === 'completed') {
+        const heygenUrl = data.data.video_url;
+        console.log('✅ HeyGen completed:', heygenUrl);
+
+        // Upload to R2
+        const { downloadAndUploadToR2 } = await import('@/lib/video-storage');
+        const publicHeygenUrl = await downloadAndUploadToR2(
+          heygenUrl,
+          HEYGEN_API_KEY!,
+          `heygen-videos/${videoId}.mp4`
+        );
+
+        // Submit to Submagic
+        await updateWorkflowStatus(workflowId, brand, { status: 'submagic_processing' });
+
+        const submagicResponse = await fetch('https://api.submagic.co/v1/projects', {
+          method: 'POST',
+          headers: { 'x-api-key': SUBMAGIC_API_KEY!, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: content.title,
+            language: 'en',
+            videoUrl: publicHeygenUrl,
+            templateName: 'Hormozi 2',
+            magicBrolls: true,
+            magicBrollsPercentage: 50,
+            magicZooms: true
+          })
+        });
+
+        const submagicData = await submagicResponse.json();
+        const projectId = submagicData.id || submagicData.project_id;
+
+        // Poll Submagic for completion (max 30 attempts = 22.5 minutes)
+        console.log('⏳ Waiting for Submagic...');
+        for (let i = 0; i < 30; i++) {
+          await new Promise(resolve => setTimeout(resolve, 45000));
+
+          const submagicStatus = await fetch(
+            `https://api.submagic.co/v1/projects/${projectId}`,
+            { headers: { 'x-api-key': SUBMAGIC_API_KEY! } }
+          ).then(r => r.json());
+
+          console.log(`⏳ Submagic (${i + 1}/30): ${submagicStatus.status}`);
+
+          if (submagicStatus.status === 'completed' || submagicStatus.status === 'done') {
+            const videoUrl = submagicStatus.media_url || submagicStatus.video_url;
+
+            // Upload final video to R2
+            const { uploadSubmagicVideo } = await import('@/lib/video-storage');
+            const publicVideoUrl = await uploadSubmagicVideo(videoUrl);
+
+            // Post to Metricool
+            await updateWorkflowStatus(workflowId, brand, { status: 'posting' });
+
+            const postResult = await scheduleVideoPost(
+              publicVideoUrl,
+              content.caption,
+              content.title,
+              platforms,
+              schedule,
+              brand
+            );
+
+            if (postResult.success) {
+              await updateWorkflowStatus(workflowId, brand, {
+                status: 'completed',
+                metricoolPostId: postResult.postId,
+                completedAt: Date.now()
+              });
+              console.log('✅ Local dev workflow completed!');
+            }
+
+            return heygenUrl;
+          }
+        }
+      }
+
       if (status === 'failed') return null;
     } catch (error) {
-      console.error('Error checking video status:', error);
+      console.error('Error in local dev polling:', error);
     }
   }
 
   return null;
 }
 
-// Helper: Enhance with Submagic
+// Helper: Enhance with Submagic (NOT USED - kept for reference only, webhooks handle completion)
 async function enhanceWithSubmagic(params: {
   videoUrl: string;
   title: string;
@@ -545,6 +490,14 @@ async function enhanceWithSubmagic(params: {
   templateName: string;
 }): Promise<{ success: boolean; project_id?: string; error?: string }> {
   try {
+    // Get base URL for webhook callback
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ||
+                    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
+                    'https://ownerfi.ai';
+
+    const webhookUrl = `${baseUrl}/api/webhooks/submagic`;
+    console.log(`📞 Submagic webhook URL: ${webhookUrl}`);
+
     const response = await fetch('https://api.submagic.co/v1/projects', {
       method: 'POST',
       headers: {
@@ -558,7 +511,8 @@ async function enhanceWithSubmagic(params: {
         templateName: params.templateName,
         magicBrolls: true,           // Add contextual B-roll footage
         magicBrollsPercentage: 50,   // 50% B-roll coverage
-        magicZooms: true             // Add dynamic zoom effects
+        magicZooms: true,            // Add dynamic zoom effects
+        callbackUrl: webhookUrl      // ⭐ Webhook notification when complete
       })
     });
 
@@ -576,37 +530,3 @@ async function enhanceWithSubmagic(params: {
   }
 }
 
-// Helper: Wait for Submagic completion
-async function waitForSubmagicCompletion(projectId: string, maxAttempts: number = 30): Promise<string | null> {
-  for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    await new Promise(resolve => setTimeout(resolve, 45000)); // 45 seconds × 30 = 22.5 minutes
-
-    try {
-      const response = await fetch(
-        `https://api.submagic.co/v1/projects/${projectId}`,
-        { headers: { 'x-api-key': SUBMAGIC_API_KEY! } }
-      );
-
-      if (!response.ok) continue;
-
-      const data = await response.json();
-      const status = data.status;
-
-      console.log(`⏳ Submagic (${attempt + 1}/${maxAttempts}): ${status}`);
-      console.log(`   Full response:`, JSON.stringify(data, null, 2));
-
-      if (status === 'completed' || status === 'done' || status === 'ready') {
-        // Priority order: media_url (direct downloadable), video_url, download_url, then fallbacks
-        const videoUrl = data.media_url || data.mediaUrl || data.video_url || data.videoUrl || data.download_url || data.downloadUrl || data.output_url || data.url || data.resultUrl || data.result_url;
-        console.log(`   Found video URL: ${videoUrl}`);
-        return videoUrl;
-      }
-
-      if (status === 'failed' || status === 'error') return null;
-    } catch (error) {
-      console.error('Error checking Submagic status:', error);
-    }
-  }
-
-  return null;
-}

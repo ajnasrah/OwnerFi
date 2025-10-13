@@ -2,7 +2,7 @@
 // Manages feed subscriptions and article storage in Firestore
 
 import { db } from './firebase';
-import { collection, doc, getDoc, getDocs, setDoc, updateDoc, query, where, orderBy, limit as firestoreLimit } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, query, where, orderBy, limit as firestoreLimit } from 'firebase/firestore';
 
 export interface FeedSource {
   id: string;
@@ -46,6 +46,8 @@ export interface WorkflowQueueItem {
   heygenVideoId?: string;
   submagicVideoId?: string;
   metricoolPostId?: string;
+  caption?: string; // Store for webhooks
+  title?: string; // Store for webhooks
   error?: string;
   retryCount?: number;
   lastRetryAt?: number;
@@ -784,4 +786,61 @@ export async function retryWorkflow(workflowId: string, brand: 'carz' | 'ownerfi
   });
 
   console.log(`♻️  Retry workflow ${workflowId} (attempt ${retryCount})`);
+}
+
+// Find workflow by Submagic project ID (for webhook handling)
+export async function findWorkflowBySubmagicId(submagicProjectId: string): Promise<{
+  workflowId: string;
+  workflow: WorkflowQueueItem & { caption?: string; title?: string };
+  brand: 'carz' | 'ownerfi';
+} | null> {
+  if (!db) return null;
+
+  // Search in both Carz and OwnerFi workflow queues
+  for (const brand of ['carz', 'ownerfi'] as const) {
+    const collectionName = getCollectionName('WORKFLOW_QUEUE', brand);
+    const q = query(
+      collection(db, collectionName),
+      where('submagicVideoId', '==', submagicProjectId),
+      firestoreLimit(1)
+    );
+
+    const snapshot = await getDocs(q);
+
+    if (!snapshot.empty) {
+      const docData = snapshot.docs[0].data() as WorkflowQueueItem;
+      return {
+        workflowId: snapshot.docs[0].id,
+        workflow: docData as any,
+        brand
+      };
+    }
+  }
+
+  console.log(`⚠️  No workflow found with Submagic ID: ${submagicProjectId}`);
+  return null;
+}
+
+// Get workflow by ID (for webhook handling)
+export async function getWorkflowById(workflowId: string): Promise<{
+  workflow: WorkflowQueueItem;
+  brand: 'carz' | 'ownerfi';
+} | null> {
+  if (!db) return null;
+
+  // Try to find in both Carz and OwnerFi workflow queues
+  for (const brand of ['carz', 'ownerfi'] as const) {
+    const collectionName = getCollectionName('WORKFLOW_QUEUE', brand);
+    const docSnap = await getDoc(doc(db, collectionName, workflowId));
+
+    if (docSnap.exists()) {
+      return {
+        workflow: docSnap.data() as WorkflowQueueItem,
+        brand
+      };
+    }
+  }
+
+  console.log(`⚠️  No workflow found with ID: ${workflowId}`);
+  return null;
 }

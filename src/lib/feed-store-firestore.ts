@@ -727,15 +727,26 @@ export async function updatePodcastWorkflow(
 export async function getPodcastWorkflows(limit: number = 20): Promise<PodcastWorkflowItem[]> {
   if (!db) return [];
 
+  // Simplified query: just get all recent workflows and filter in memory
+  // This avoids needing a composite index
   const q = query(
     collection(db, COLLECTIONS.PODCAST.WORKFLOW_QUEUE),
-    where('status', 'in', ['script_generation', 'heygen_processing', 'submagic_processing', 'publishing']),
     orderBy('createdAt', 'desc'),
-    firestoreLimit(limit)
+    firestoreLimit(limit * 2) // Get more to account for filtering
   );
 
-  const snapshot = await getDocs(q);
-  return snapshot.docs.map(doc => doc.data() as PodcastWorkflowItem);
+  try {
+    const snapshot = await getDocs(q);
+    const allWorkflows = snapshot.docs.map(doc => doc.data() as PodcastWorkflowItem);
+
+    // Filter in memory for active workflows
+    return allWorkflows
+      .filter(w => ['script_generation', 'heygen_processing', 'submagic_processing', 'publishing'].includes(w.status))
+      .slice(0, limit);
+  } catch (error) {
+    console.error('❌ Error fetching podcast workflows:', error);
+    return [];
+  }
 }
 
 // Retry Failed Workflows

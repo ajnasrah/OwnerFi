@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// Updated Submagic API key - 2025-10-13
 const HEYGEN_API_KEY = process.env.HEYGEN_API_KEY;
 const SUBMAGIC_API_KEY = process.env.SUBMAGIC_API_KEY;
 

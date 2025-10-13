@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body: RateAllRequest = await request.json();
-    const { brand, keepTopN = 50 } = body;
+    const { brand, keepTopN = 10 } = body;
 
     if (!brand || (brand !== 'carz' && brand !== 'ownerfi')) {
       return NextResponse.json(

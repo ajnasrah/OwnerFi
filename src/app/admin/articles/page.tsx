@@ -116,7 +116,7 @@ export default function ArticlesPage() {
   };
 
   const rateAllArticles = async () => {
-    if (!confirm(`Rate all ${currentArticles.length} ${activeTab} articles with AI in the background?\n\nThis will:\n- Score all articles with OpenAI\n- Keep top 50 articles\n- Delete low-quality ones\n\nCheck server logs for progress.`)) {
+    if (!confirm(`Rate all ${currentArticles.length} ${activeTab} articles with AI in the background?\n\nThis will:\n- Score all articles with OpenAI\n- Keep top 10 articles\n- Delete low-quality ones\n\nCheck server logs for progress.`)) {
       return;
     }
 
@@ -129,7 +129,7 @@ export default function ArticlesPage() {
         },
         body: JSON.stringify({
           brand: activeTab,
-          keepTopN: 50 // Keep top 50 articles
+          keepTopN: 10 // Keep top 10 articles
         })
       });
 

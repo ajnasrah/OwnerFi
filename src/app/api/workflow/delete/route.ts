@@ -7,7 +7,7 @@ export async function DELETE(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const workflowId = searchParams.get('workflowId');
-    const brand = searchParams.get('brand') as 'carz' | 'ownerfi';
+    const brand = searchParams.get('brand') as 'carz' | 'ownerfi' | 'podcast';
 
     console.log('Delete workflow request:', { workflowId, brand });
 
@@ -18,9 +18,9 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    if (brand !== 'carz' && brand !== 'ownerfi') {
+    if (brand !== 'carz' && brand !== 'ownerfi' && brand !== 'podcast') {
       return NextResponse.json(
-        { error: 'Invalid brand. Must be "carz" or "ownerfi"' },
+        { error: 'Invalid brand. Must be "carz", "ownerfi", or "podcast"' },
         { status: 400 }
       );
     }
@@ -33,8 +33,14 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Get the collection name for the specific brand
-    const collectionName = getCollectionName('WORKFLOW_QUEUE', brand);
+    // Get the collection name for the specific brand/type
+    let collectionName: string;
+    if (brand === 'podcast') {
+      collectionName = 'podcast_workflow_queue';
+    } else {
+      collectionName = getCollectionName('WORKFLOW_QUEUE', brand);
+    }
+
     console.log('Deleting from collection:', collectionName);
 
     // Delete the workflow document from Firestore

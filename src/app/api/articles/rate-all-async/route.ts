@@ -64,17 +64,20 @@ export async function POST(request: NextRequest) {
 }
 
 async function rateArticlesInBackground(brand: 'carz' | 'ownerfi', keepTopN: number) {
+  console.log(`🚀 [${brand}] Background rating started at ${new Date().toISOString()}`);
+
   const { db } = await import('@/lib/firebase');
   const { collection, query, where, getDocs, updateDoc, doc, deleteDoc } = await import('firebase/firestore');
   const { getCollectionName } = await import('@/lib/feed-store-firestore');
   const { evaluateArticlesBatch } = await import('@/lib/article-quality-filter');
 
   if (!db) {
-    console.error('❌ Firebase not initialized');
+    console.error(`❌ [${brand}] Firebase not initialized`);
     return;
   }
 
   const collectionName = getCollectionName('ARTICLES', brand);
+  console.log(`📂 [${brand}] Querying collection: ${collectionName}`);
 
   // Get ALL unprocessed articles
   const q = query(
@@ -82,28 +85,38 @@ async function rateArticlesInBackground(brand: 'carz' | 'ownerfi', keepTopN: num
     where('processed', '==', false)
   );
 
+  console.log(`🔍 [${brand}] Fetching unprocessed articles...`);
   const snapshot = await getDocs(q);
   const articles = snapshot.docs.map(docSnap => ({
     id: docSnap.id,
     ...docSnap.data()
   })) as any[];
 
+  console.log(`📊 [${brand}] Found ${articles.length} unprocessed articles`);
+
   if (articles.length === 0) {
-    console.log(`ℹ️  ${brand}: No articles to rate`);
+    console.log(`ℹ️  [${brand}] No articles to rate - process complete`);
     return;
   }
 
-  console.log(`🤖 ${brand}: Rating ${articles.length} articles with AI...`);
+  console.log(`🤖 [${brand}] Starting AI rating for ${articles.length} articles (batches of 5)...`);
 
   // Rate all articles with AI
-  const qualityScores = await evaluateArticlesBatch(
-    articles.map((article: any) => ({
-      title: article.title,
-      content: article.content || article.description,
-      category: brand
-    })),
-    5 // Max 5 concurrent API calls
-  );
+  let qualityScores;
+  try {
+    qualityScores = await evaluateArticlesBatch(
+      articles.map((article: any) => ({
+        title: article.title,
+        content: article.content || article.description,
+        category: brand
+      })),
+      5 // Max 5 concurrent API calls
+    );
+    console.log(`✅ [${brand}] AI rating complete. Received ${qualityScores.length} scores`);
+  } catch (error) {
+    console.error(`❌ [${brand}] AI rating failed:`, error);
+    throw error;
+  }
 
   // Pair articles with their scores
   const scoredArticles = articles.map((article: any, index) => ({
@@ -115,6 +128,8 @@ async function rateArticlesInBackground(brand: 'carz' | 'ownerfi', keepTopN: num
   // Sort by score (highest first)
   scoredArticles.sort((a, b) => b.score - a.score);
 
+  console.log(`💾 [${brand}] Updating Firestore with quality scores...`);
+
   // Update quality scores in Firestore for all articles
   const updatePromises = scoredArticles.map(item =>
     updateDoc(doc(db, collectionName, item.article.id), {
@@ -124,6 +139,8 @@ async function rateArticlesInBackground(brand: 'carz' | 'ownerfi', keepTopN: num
     })
   );
   await Promise.all(updatePromises);
+
+  console.log(`✅ [${brand}] Updated ${updatePromises.length} articles with scores`);
 
   // Keep top N, delete the rest
   const articlesToKeep = scoredArticles.slice(0, keepTopN);

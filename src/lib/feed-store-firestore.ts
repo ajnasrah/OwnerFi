@@ -33,6 +33,9 @@ export interface Article {
   workflowId?: string;
   error?: string;
   contentHash?: string;
+  qualityScore?: number;      // AI quality rating (0-100)
+  aiReasoning?: string;        // AI explanation for rating
+  ratedAt?: number;            // Timestamp when rated
   createdAt: number;
 }
 
@@ -227,11 +230,11 @@ export async function getAndLockArticle(category: 'carz' | 'ownerfi'): Promise<A
   const articles = snapshot.docs.map(doc => ({
     id: doc.id,
     ...doc.data()
-  } as Article & { qualityScore?: number }));
+  } as Article));
 
   // Filter only articles with quality scores and sort
   const ratedArticles = articles
-    .filter(a => a.qualityScore !== undefined)
+    .filter(a => typeof a.qualityScore === 'number' && a.qualityScore !== undefined)
     .sort((a, b) => (b.qualityScore || 0) - (a.qualityScore || 0));
 
   if (ratedArticles.length === 0) {

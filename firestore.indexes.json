@@ -1,80 +1,6 @@
 {
   "indexes": [
     {
-      "collectionGroup": "properties",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "isActive",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "state", 
-          "order": "ASCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "properties",
-      "queryScope": "COLLECTION", 
-      "fields": [
-        {
-          "fieldPath": "isActive",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "state",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "monthlyPayment",
-          "order": "ASCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "propertyMatches",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "buyerId", 
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "status",
-          "order": "ASCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "buyerLeadPurchases",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "realtorId",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "createdAt",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "transactions",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "realtorId",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "createdAt",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-    {
       "collectionGroup": "carz_articles",
       "queryScope": "COLLECTION",
       "fields": [
@@ -83,7 +9,7 @@
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "pubDate",
+          "fieldPath": "qualityScore",
           "order": "DESCENDING"
         }
       ]
@@ -97,35 +23,7 @@
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "pubDate",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "carz_workflow_queue",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "status",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "createdAt",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "ownerfi_workflow_queue",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "status",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "createdAt",
+          "fieldPath": "qualityScore",
           "order": "DESCENDING"
         }
       ]

@@ -209,12 +209,11 @@ export async function getAndLockArticle(category: 'carz' | 'ownerfi'): Promise<A
 
   const collectionName = getCollectionName('ARTICLES', category);
 
-  // Get top-rated unprocessed articles (orderBy qualityScore desc)
+  // Get all unprocessed articles (no orderBy to avoid index requirement)
   const q = query(
     collection(db, collectionName),
     where('processed', '==', false),
-    orderBy('qualityScore', 'desc'),
-    firestoreLimit(1)
+    firestoreLimit(50) // Get more to sort in memory
   );
 
   const snapshot = await getDocs(q);
@@ -224,8 +223,24 @@ export async function getAndLockArticle(category: 'carz' | 'ownerfi'): Promise<A
     return null;
   }
 
-  const bestArticle = snapshot.docs[0].data() as Article;
-  const qualityScore = (bestArticle as any).qualityScore || 0;
+  // Convert to articles and sort by qualityScore in memory
+  const articles = snapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data()
+  } as Article & { qualityScore?: number }));
+
+  // Filter only articles with quality scores and sort
+  const ratedArticles = articles
+    .filter(a => a.qualityScore !== undefined)
+    .sort((a, b) => (b.qualityScore || 0) - (a.qualityScore || 0));
+
+  if (ratedArticles.length === 0) {
+    console.log(`⚠️  No rated articles available for ${category}`);
+    return null;
+  }
+
+  const bestArticle = ratedArticles[0];
+  const qualityScore = bestArticle.qualityScore || 0;
 
   console.log(`🔒 Locked top-rated article (score: ${qualityScore}): ${bestArticle.title.substring(0, 60)}...`);
 

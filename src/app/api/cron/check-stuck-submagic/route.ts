@@ -146,18 +146,43 @@ export async function GET(request: NextRequest) {
             const workflow = workflowData?.workflow;
 
             if (workflow) {
-              // Post to Metricool
+              // Post to Metricool (2 posts: Reels/Shorts + Stories)
               console.log(`   📱 Posting to social media...`);
-              const platforms = (process.env.METRICOOL_PLATFORMS || 'instagram,facebook,tiktok,youtube,linkedin').split(',') as any[];
+              const { postToMetricool } = await import('@/lib/metricool-api');
+
+              // POST 1: Reels/Shorts on all platforms
+              console.log(`   📱 Post 1: Reels/Shorts on all platforms...`);
+              const reelsPlatforms = ['facebook', 'instagram', 'tiktok', 'linkedin', 'threads', 'youtube'] as any[];
 
               const postResult = await scheduleVideoPost(
                 publicVideoUrl,
                 workflow.caption || 'Check out this video! 🔥',
                 workflow.title || 'Viral Video',
-                platforms,
+                reelsPlatforms,
                 'immediate',
                 brand
               );
+
+              console.log(`   ${postResult.success ? '✅' : '❌'} Reels/Shorts post: ${postResult.postId || postResult.error}`);
+
+              // POST 2: Stories (Instagram Story + Facebook Story)
+              console.log(`   📱 Post 2: Stories (Instagram + Facebook)...`);
+              const storiesResult = await postToMetricool({
+                videoUrl: publicVideoUrl,
+                caption: workflow.caption || 'Check out this video! 🔥',
+                title: workflow.title || 'Viral Video',
+                platforms: ['instagram', 'facebook'] as any[],
+                postTypes: {
+                  instagram: 'story',
+                  facebook: 'story'
+                },
+                brand: brand
+              }).catch(err => {
+                console.warn(`   ❌ Stories post failed:`, err.message);
+                return { success: false, error: err.message, postId: undefined };
+              });
+
+              console.log(`   ${storiesResult.success ? '✅' : '❌'} Stories post: ${storiesResult.postId || storiesResult.error}`);
 
               if (postResult.success) {
                 console.log(`   ✅ Posted to Metricool!`);

@@ -132,11 +132,8 @@ export async function postToMetricool(request: MetricoolPostRequest): Promise<Me
           };
         }
 
-        if (request.platforms.includes('linkedin')) {
-          requestBody.linkedinData = {
-            visibility: 'PUBLIC'
-          };
-        }
+        // LinkedIn doesn't require platform-specific data
+        // Remove linkedinData completely as it causes API errors
 
         if (request.platforms.includes('tiktok')) {
           requestBody.tiktokData = {

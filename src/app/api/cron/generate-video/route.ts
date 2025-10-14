@@ -10,12 +10,14 @@ const CRON_SECRET = process.env.CRON_SECRET;
 
 export async function GET(request: NextRequest) {
   try {
-    // Verify authorization - either via Bearer token OR admin session
+    // Verify authorization - either via Bearer token OR admin session OR Vercel cron
     const authHeader = request.headers.get('authorization');
+    const userAgent = request.headers.get('user-agent');
     const session = await getServerSession(authOptions as any);
     const isAdmin = session?.user && (session.user as any).role === 'admin';
+    const isVercelCron = userAgent === 'vercel-cron/1.0';
 
-    if (CRON_SECRET && authHeader !== `Bearer ${CRON_SECRET}` && !isAdmin) {
+    if (CRON_SECRET && authHeader !== `Bearer ${CRON_SECRET}` && !isAdmin && !isVercelCron) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }

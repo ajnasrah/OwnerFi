@@ -9,15 +9,17 @@ export const maxDuration = 60; // 1 minute (webhook-based, no polling)
 
 export async function GET(request: NextRequest) {
   try {
-    // Verify authorization - only require CRON_SECRET for external requests
+    // Verify authorization - allow dashboard, CRON_SECRET, or Vercel cron
     const authHeader = request.headers.get('authorization');
     const referer = request.headers.get('referer');
+    const userAgent = request.headers.get('user-agent');
 
-    // Allow requests from dashboard (same origin) or with valid CRON_SECRET
+    // Allow requests from dashboard (same origin), with valid CRON_SECRET, or from Vercel cron
     const isFromDashboard = referer && referer.includes(request.headers.get('host') || '');
     const hasValidSecret = authHeader === `Bearer ${CRON_SECRET}`;
+    const isVercelCron = userAgent === 'vercel-cron/1.0';
 
-    if (!isFromDashboard && !hasValidSecret) {
+    if (!isFromDashboard && !hasValidSecret && !isVercelCron) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }

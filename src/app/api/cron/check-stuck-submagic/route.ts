@@ -9,9 +9,12 @@ export const maxDuration = 60; // 1 minute
 
 export async function GET(request: NextRequest) {
   try {
-    // Verify authorization
+    // Verify authorization - either via Bearer token OR Vercel cron
     const authHeader = request.headers.get('authorization');
-    if (authHeader !== `Bearer ${CRON_SECRET}`) {
+    const userAgent = request.headers.get('user-agent');
+    const isVercelCron = userAgent === 'vercel-cron/1.0';
+
+    if (authHeader !== `Bearer ${CRON_SECRET}` && !isVercelCron) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

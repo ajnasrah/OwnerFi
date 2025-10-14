@@ -31,16 +31,6 @@ export async function evaluateArticleQuality(
     };
   }
 
-  // Check rate limit
-  if (!checkRateLimit(rateLimiters.openai)) {
-    console.warn('⚠️  OpenAI rate limit reached, skipping quality filter');
-    return {
-      score: 50,
-      reasoning: 'Rate limit reached',
-      shouldMakeVideo: true
-    };
-  }
-
   try {
     const prompt = buildQualityPrompt(title, content, category);
 

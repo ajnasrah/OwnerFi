@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
 
           // Manually trigger the Submagic webhook to retry posting
           // The new code has the LinkedIn fix, so it should work now
-          const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://ownerfi.ai';
+          const baseUrl = 'https://ownerfi.ai'; // Use production URL directly
           const webhookResponse = await fetch(`${baseUrl}/api/webhooks/submagic`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

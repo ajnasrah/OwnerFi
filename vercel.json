@@ -18,8 +18,12 @@
       "schedule": "0 9 * * 1"
     },
     {
-      "path": "/api/cron/fetch-articles",
+      "path": "/api/cron/fetch-rss",
       "schedule": "0 12 * * *"
+    },
+    {
+      "path": "/api/cron/rate-articles",
+      "schedule": "0 13 * * *"
     },
     {
       "path": "/api/cron/generate-video",
@@ -40,7 +44,10 @@
     "app/api/podcast/cron/route.ts": {
       "maxDuration": 300
     },
-    "src/app/api/cron/fetch-articles/route.ts": {
+    "src/app/api/cron/fetch-rss/route.ts": {
+      "maxDuration": 300
+    },
+    "src/app/api/cron/rate-articles/route.ts": {
       "maxDuration": 300
     },
     "src/app/api/cron/generate-video/route.ts": {

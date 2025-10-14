@@ -11,13 +11,32 @@ export async function GET(request: NextRequest) {
 
     console.log('🔍 Finding stuck Submagic workflows...');
 
-    // Get workflows in submagic_processing status
-    const { db } = await import('@/lib/firebase');
-    const { collection, query, where, getDocs } = await import('firebase/firestore');
+    // Import Firestore functions directly from feed-store
+    const {
+      findWorkflowBySubmagicId,
+      findPodcastBySubmagicId
+    } = await import('@/lib/feed-store-firestore');
 
-    if (!db) {
-      return NextResponse.json({ error: 'Firebase not initialized' }, { status: 500 });
+    // Import Firebase Admin for direct Firestore access
+    const { getFirestore } = await import('firebase-admin/firestore');
+    const { initializeApp, getApps, cert } = await import('firebase-admin/app');
+
+    // Initialize Firebase Admin if needed
+    if (getApps().length === 0) {
+      const projectId = process.env.FIREBASE_PROJECT_ID;
+      const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+      const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+
+      if (!projectId || !clientEmail || !privateKey) {
+        return NextResponse.json({ error: 'Firebase Admin credentials not configured' }, { status: 500 });
+      }
+
+      initializeApp({
+        credential: cert({ projectId, clientEmail, privateKey })
+      });
     }
+
+    const db = getFirestore();
 
     const results = [];
 
@@ -25,12 +44,9 @@ export async function GET(request: NextRequest) {
     for (const brand of ['carz', 'ownerfi']) {
       const collectionName = brand === 'carz' ? 'carz_workflow_queue' : 'ownerfi_workflow_queue';
 
-      const q = query(
-        collection(db, collectionName),
-        where('status', '==', 'submagic_processing')
-      );
-
-      const snapshot = await getDocs(q);
+      const snapshot = await db.collection(collectionName)
+        .where('status', '==', 'submagic_processing')
+        .get();
 
       for (const doc of snapshot.docs) {
         const workflow = doc.data();

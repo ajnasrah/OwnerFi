@@ -122,33 +122,79 @@ export async function GET(request: NextRequest) {
             continue;
           }
 
-          console.log(`   ✅ COMPLETED! Triggering webhook...`);
+          console.log(`   ✅ COMPLETED! Processing workflow directly...`);
 
-          // Trigger webhook to complete the workflow
-          const webhookResponse = await fetch(`${baseUrl}/api/webhooks/submagic`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              projectId: projectId,
-              id: projectId,
-              status: 'completed',
-              downloadUrl: downloadUrl,
-              media_url: downloadUrl,
-              timestamp: new Date().toISOString()
-            })
-          });
+          // Process workflow completion directly (no webhook fetch needed)
+          const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
+          const { scheduleVideoPost } = await import('@/lib/metricool-api');
+          const { uploadSubmagicVideo } = await import('@/lib/video-storage');
 
-          const webhookResult = await webhookResponse.json();
+          try {
+            // Update status to 'posting'
+            await updateWorkflowStatus(workflowId, brand, {
+              status: 'posting'
+            });
 
-          results.push({
-            projectId,
-            workflowId,
-            brand,
-            action: 'completed_via_failsafe',
-            webhookResult
-          });
+            // Upload to R2
+            console.log(`   ☁️  Uploading to R2...`);
+            const publicVideoUrl = await uploadSubmagicVideo(downloadUrl);
+            console.log(`   ✅ R2 upload complete`);
 
-          console.log(`   ✅ Webhook triggered successfully!`);
+            // Get workflow data to post
+            const { getWorkflowById } = await import('@/lib/feed-store-firestore');
+            const workflowData = await getWorkflowById(workflowId);
+            const workflow = workflowData?.workflow;
+
+            if (workflow) {
+              // Post to Metricool
+              console.log(`   📱 Posting to social media...`);
+              const platforms = (process.env.METRICOOL_PLATFORMS || 'instagram,facebook,tiktok,youtube,linkedin').split(',') as any[];
+
+              const postResult = await scheduleVideoPost(
+                publicVideoUrl,
+                workflow.caption || 'Check out this video! 🔥',
+                workflow.title || 'Viral Video',
+                platforms,
+                'immediate',
+                brand
+              );
+
+              if (postResult.success) {
+                console.log(`   ✅ Posted to Metricool!`);
+                await updateWorkflowStatus(workflowId, brand, {
+                  status: 'completed',
+                  metricoolPostId: postResult.postId,
+                  completedAt: Date.now()
+                });
+
+                results.push({
+                  projectId,
+                  workflowId,
+                  brand,
+                  action: 'completed_via_failsafe',
+                  success: true
+                });
+              } else {
+                throw new Error(`Metricool posting failed: ${postResult.error}`);
+              }
+            } else {
+              throw new Error('Workflow not found');
+            }
+          } catch (completionError) {
+            console.error(`   ❌ Error completing workflow:`, completionError);
+            await updateWorkflowStatus(workflowId, brand, {
+              status: 'failed',
+              error: completionError instanceof Error ? completionError.message : 'Unknown error'
+            });
+
+            results.push({
+              projectId,
+              workflowId,
+              brand,
+              action: 'failed',
+              error: completionError instanceof Error ? completionError.message : 'Unknown error'
+            });
+          }
         } else {
           console.log(`   ⏳ Still processing (${status})`);
           results.push({

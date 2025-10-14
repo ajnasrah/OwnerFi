@@ -59,12 +59,16 @@ export async function GET(request: NextRequest) {
           const data = doc.data();
           const submagicVideoId = data.submagicVideoId;
 
+          console.log(`   📄 Workflow ${doc.id}: submagicVideoId = ${submagicVideoId || 'MISSING'}`);
+
           if (submagicVideoId) {
             projects.push({
               projectId: submagicVideoId,
               workflowId: doc.id,
               brand
             });
+          } else {
+            console.warn(`   ⚠️  Workflow ${doc.id} has no submagicVideoId! Data:`, JSON.stringify(data, null, 2));
           }
         });
       } catch (err) {

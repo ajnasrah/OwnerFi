@@ -66,19 +66,6 @@ export async function POST(request: NextRequest) {
       console.log('   Video URL:', event_data.url);
       console.log('   Type:', isPodcast ? 'PODCAST' : 'SOCIAL MEDIA');
 
-      // Update workflow status
-      if (isPodcast) {
-        const { updatePodcastWorkflow } = await import('@/lib/feed-store-firestore');
-        await updatePodcastWorkflow(workflowId, {
-          status: 'submagic_processing'
-        });
-      } else {
-        const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
-        await updateWorkflowStatus(workflowId, brand as 'carz' | 'ownerfi', {
-          status: 'submagic_processing'
-        });
-      }
-
       // Send immediate confirmation to HeyGen
       const response = NextResponse.json({
         received: true,
@@ -87,6 +74,8 @@ export async function POST(request: NextRequest) {
       });
 
       // Trigger Submagic processing asynchronously (don't block webhook response)
+      // NOTE: Status is set to 'submagic_processing' INSIDE triggerSubmagicProcessing
+      // AFTER we get the Submagic project ID, so failsafe can find it
       setImmediate(async () => {
         await triggerSubmagicProcessing(workflowId, event_data.url, brand, workflow, isPodcast);
       });
@@ -214,15 +203,18 @@ async function triggerSubmagicProcessing(
 
     console.log('✅ Submagic project created via HeyGen webhook:', projectId);
 
-    // Update workflow with Submagic project ID
+    // Update workflow with Submagic project ID AND set status to submagic_processing
+    // (both must be set together so failsafe can find stuck workflows)
     if (isPodcast) {
       const { updatePodcastWorkflow } = await import('@/lib/feed-store-firestore');
       await updatePodcastWorkflow(workflowId, {
+        status: 'submagic_processing',
         submagicProjectId: projectId
       });
     } else {
       const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
       await updateWorkflowStatus(workflowId, brand as 'carz' | 'ownerfi', {
+        status: 'submagic_processing',
         submagicVideoId: projectId
       });
     }

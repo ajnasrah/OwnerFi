@@ -58,8 +58,10 @@ export async function GET(request: NextRequest) {
         snapshot.forEach(doc => {
           const data = doc.data();
           const submagicVideoId = data.submagicVideoId;
+          const updatedAt = data.updatedAt || 0;
+          const stuckMinutes = Math.round((Date.now() - updatedAt) / 60000);
 
-          console.log(`   📄 Workflow ${doc.id}: submagicVideoId = ${submagicVideoId || 'MISSING'}`);
+          console.log(`   📄 Workflow ${doc.id}: submagicVideoId = ${submagicVideoId || 'MISSING'}, stuck for ${stuckMinutes} min`);
 
           if (submagicVideoId) {
             projects.push({
@@ -68,7 +70,19 @@ export async function GET(request: NextRequest) {
               brand
             });
           } else {
-            console.warn(`   ⚠️  Workflow ${doc.id} has no submagicVideoId! Data:`, JSON.stringify(data, null, 2));
+            // Workflow is stuck in submagic_processing but has no submagicVideoId
+            // This means Submagic API call failed. Mark as failed if stuck > 30 min
+            console.warn(`   ⚠️  Workflow ${doc.id} has no submagicVideoId (stuck ${stuckMinutes} min)`);
+
+            if (stuckMinutes > 30) {
+              console.log(`   ❌ Marking workflow ${doc.id} as failed (no Submagic ID after 30+ min)`);
+              projects.push({
+                projectId: null, // Signal to mark as failed
+                workflowId: doc.id,
+                brand,
+                shouldFail: true
+              });
+            }
           }
         });
       } catch (err) {
@@ -87,7 +101,30 @@ export async function GET(request: NextRequest) {
 
     // Check each stuck workflow's Submagic status
     for (const project of projects) {
-      const { projectId, workflowId, brand } = project;
+      const { projectId, workflowId, brand, shouldFail } = project as any;
+
+      // Handle workflows that need to be marked as failed
+      if (shouldFail || !projectId) {
+        console.log(`\n❌ Marking workflow ${workflowId} as failed (no Submagic ID)`);
+
+        try {
+          const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
+          await updateWorkflowStatus(workflowId, brand, {
+            status: 'failed',
+            error: 'Submagic API call failed - no project ID received'
+          });
+
+          results.push({
+            workflowId,
+            brand,
+            action: 'marked_failed',
+            reason: 'no_submagic_id'
+          });
+        } catch (err) {
+          console.error(`   ❌ Error marking workflow as failed:`, err);
+        }
+        continue;
+      }
 
       console.log(`\n🔍 Checking Submagic project: ${projectId}`);
 

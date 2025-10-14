@@ -31,7 +31,7 @@
     },
     {
       "path": "/api/cron/check-stuck-submagic",
-      "schedule": "*/10 * * * *"
+      "schedule": "*/5 * * * *"
     },
     {
       "path": "/api/cron/weekly-maintenance",

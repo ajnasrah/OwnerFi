@@ -1,6 +1,7 @@
-// Failsafe: Check for stuck Submagic workflows every 10 minutes
-// If a workflow has been in "submagic_processing" for >10 minutes, check Submagic API
+// Failsafe: Check for stuck Submagic workflows every 5 minutes
+// If a workflow has been in "submagic_processing" for >5 minutes, check Submagic API
 // and complete the workflow if the video is ready (webhook failover)
+// Submagic webhooks are unreliable, so this ensures videos complete within 5-10 min max
 
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -20,7 +21,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Submagic API key not configured' }, { status: 500 });
     }
 
-    console.log('🔍 [FAILSAFE] Checking for stuck Submagic workflows...');
+    console.log('🔍 [FAILSAFE] Checking for stuck Submagic workflows (>5 min)...');
 
     // Get workflows in submagic_processing status
     const { db } = await import('@/lib/firebase');
@@ -31,7 +32,7 @@ export async function GET(request: NextRequest) {
     }
 
     const results = [];
-    const tenMinutesAgo = Date.now() - (10 * 60 * 1000); // 10 minutes ago
+    const fiveMinutesAgo = Date.now() - (5 * 60 * 1000); // 5 minutes ago (reduced from 10 for faster failsafe)
 
     // Check Carz, OwnerFi, and Podcast collections
     const collections = [
@@ -55,8 +56,8 @@ export async function GET(request: NextRequest) {
 
         if (!submagicProjectId) continue;
 
-        // Only check workflows that have been stuck for >10 minutes
-        if (updatedAt > tenMinutesAgo) {
+        // Only check workflows that have been stuck for >5 minutes
+        if (updatedAt > fiveMinutesAgo) {
           console.log(`   ⏭️  Skipping ${doc.id} - updated ${Math.round((Date.now() - updatedAt) / 60000)} min ago`);
           continue;
         }
@@ -144,7 +145,7 @@ export async function GET(request: NextRequest) {
 
     const completedCount = results.filter(r => r.action === 'completed_via_failsafe').length;
 
-    console.log(`\n✅ [FAILSAFE] Processed ${results.length} stuck workflows (${completedCount} completed)`);
+    console.log(`\n✅ [FAILSAFE] Checked ${results.length} stuck workflows (${completedCount} auto-completed)`);
 
     return NextResponse.json({
       success: true,

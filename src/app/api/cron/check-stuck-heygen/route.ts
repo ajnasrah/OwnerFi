@@ -117,7 +117,7 @@ export async function GET(request: NextRequest) {
 
       try {
         // Get status from HeyGen API
-        const heygenResponse = await fetch(`https://api.heygen.com/v2/video_status.get?video_id=${videoId}`, {
+        const heygenResponse = await fetch(`https://api.heygen.com/v1/video_status.get?video_id=${videoId}`, {
           headers: { 'x-api-key': HEYGEN_API_KEY }
         });
 

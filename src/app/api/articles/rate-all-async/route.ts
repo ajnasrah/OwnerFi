@@ -1,4 +1,4 @@
-// API to rate all articles with AI in the background (non-blocking)
+// API to rate all articles with AI (SYNCHRONOUS - runs to completion)
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
@@ -7,6 +7,8 @@ interface RateAllRequest {
   brand: 'carz' | 'ownerfi';
   keepTopN?: number;
 }
+
+export const maxDuration = 300; // 5 minutes max (Vercel Pro limit)
 
 export async function POST(request: NextRequest) {
   try {
@@ -31,28 +33,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(`🚀 Starting background AI rating for ${brand} articles...`);
+    console.log(`🚀 Starting AI rating for ${brand} articles...`);
 
-    // Start the rating process in the background (fire and forget)
-    setImmediate(async () => {
-      try {
-        await rateArticlesInBackground(brand, keepTopN);
-      } catch (error) {
-        console.error('❌ Background rating failed:', error);
-      }
-    });
+    // Run rating SYNCHRONOUSLY and wait for completion
+    const result = await rateArticles(brand, keepTopN);
 
-    // Return immediately
     return NextResponse.json({
       success: true,
-      message: `Started rating ${brand} articles in background. Check logs for progress.`,
-      brand,
-      keepTopN,
-      timestamp: new Date().toISOString()
+      message: `✅ Rated ${result.rated} ${brand} articles, kept top ${result.kept}, deleted ${result.deleted}`,
+      ...result
     });
 
   } catch (error) {
-    console.error('❌ Error starting background rating:', error);
+    console.error('❌ Error rating articles:', error);
     return NextResponse.json(
       {
         success: false,
@@ -63,8 +56,9 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function rateArticlesInBackground(brand: 'carz' | 'ownerfi', keepTopN: number) {
-  console.log(`🚀 [${brand}] Background rating started at ${new Date().toISOString()}`);
+async function rateArticles(brand: 'carz' | 'ownerfi', keepTopN: number) {
+  const startTime = Date.now();
+  console.log(`🚀 [${brand}] Rating started at ${new Date().toISOString()}`);
 
   const { db } = await import('@/lib/firebase');
   const { collection, query, where, getDocs, updateDoc, doc, deleteDoc } = await import('firebase/firestore');
@@ -72,12 +66,11 @@ async function rateArticlesInBackground(brand: 'carz' | 'ownerfi', keepTopN: num
   const { evaluateArticlesBatch } = await import('@/lib/article-quality-filter');
 
   if (!db) {
-    console.error(`❌ [${brand}] Firebase not initialized`);
-    return;
+    throw new Error('Firebase not initialized');
   }
 
   const collectionName = getCollectionName('ARTICLES', brand);
-  console.log(`📂 [${brand}] Querying collection: ${collectionName}`);
+  console.log(`📂 [${brand}] Collection: ${collectionName}`);
 
   // Get ALL unprocessed articles
   const q = query(
@@ -85,7 +78,6 @@ async function rateArticlesInBackground(brand: 'carz' | 'ownerfi', keepTopN: num
     where('processed', '==', false)
   );
 
-  console.log(`🔍 [${brand}] Fetching unprocessed articles...`);
   const snapshot = await getDocs(q);
   const articles = snapshot.docs.map(docSnap => ({
     id: docSnap.id,
@@ -95,66 +87,72 @@ async function rateArticlesInBackground(brand: 'carz' | 'ownerfi', keepTopN: num
   console.log(`📊 [${brand}] Found ${articles.length} unprocessed articles`);
 
   if (articles.length === 0) {
-    console.log(`ℹ️  [${brand}] No articles to rate - process complete`);
-    return;
+    return {
+      brand,
+      rated: 0,
+      kept: 0,
+      deleted: 0,
+      duration: Math.round((Date.now() - startTime) / 1000)
+    };
   }
 
-  console.log(`🤖 [${brand}] Starting AI rating for ${articles.length} articles (batches of 5)...`);
+  console.log(`🤖 [${brand}] Rating ${articles.length} articles with OpenAI GPT-4o-mini...`);
 
-  // Rate all articles with AI
-  let qualityScores;
-  try {
-    qualityScores = await evaluateArticlesBatch(
-      articles.map((article: any) => ({
-        title: article.title,
-        content: article.content || article.description,
-        category: brand
-      })),
-      5 // Max 5 concurrent API calls
-    );
-    console.log(`✅ [${brand}] AI rating complete. Received ${qualityScores.length} scores`);
-  } catch (error) {
-    console.error(`❌ [${brand}] AI rating failed:`, error);
-    throw error;
-  }
+  // Rate all articles with AI (batches of 5 concurrent calls)
+  const qualityScores = await evaluateArticlesBatch(
+    articles.map((article: any) => ({
+      title: article.title,
+      content: article.content || article.description,
+      category: brand
+    })),
+    5
+  );
 
-  // Pair articles with their scores
+  console.log(`✅ [${brand}] AI rating complete`);
+
+  // Pair articles with scores and sort
   const scoredArticles = articles.map((article: any, index) => ({
     article,
     score: qualityScores[index].score,
     reasoning: qualityScores[index].reasoning
-  }));
+  })).sort((a, b) => b.score - a.score);
 
-  // Sort by score (highest first)
-  scoredArticles.sort((a, b) => b.score - a.score);
+  console.log(`📊 [${brand}] Top 10 scores: ${scoredArticles.slice(0, 10).map(a => a.score).join(', ')}`);
 
-  console.log(`💾 [${brand}] Updating Firestore with quality scores...`);
-
-  // Update quality scores in Firestore for all articles
-  const updatePromises = scoredArticles.map(item =>
-    updateDoc(doc(db, collectionName, item.article.id), {
-      qualityScore: item.score,
-      aiReasoning: item.reasoning,
-      ratedAt: Date.now()
-    })
+  // Update ALL articles with scores
+  console.log(`💾 [${brand}] Updating ${scoredArticles.length} articles in Firestore...`);
+  await Promise.all(
+    scoredArticles.map(item =>
+      updateDoc(doc(db, collectionName, item.article.id), {
+        qualityScore: item.score,
+        aiReasoning: item.reasoning,
+        ratedAt: Date.now()
+      })
+    )
   );
-  await Promise.all(updatePromises);
 
-  console.log(`✅ [${brand}] Updated ${updatePromises.length} articles with scores`);
-
-  // Keep top N, delete the rest
+  // Delete articles below top N
   const articlesToKeep = scoredArticles.slice(0, keepTopN);
   const articlesToDelete = scoredArticles.slice(keepTopN);
 
-  console.log(`📊 ${brand}: Top ${articlesToKeep.length} scores: ${articlesToKeep.map(a => a.score).join(', ')}`);
-
   if (articlesToDelete.length > 0) {
-    console.log(`🧹 ${brand}: Deleting ${articlesToDelete.length} low-quality articles`);
-
-    for (const item of articlesToDelete) {
-      await deleteDoc(doc(db, collectionName, item.article.id));
-    }
+    console.log(`🧹 [${brand}] Deleting ${articlesToDelete.length} low-quality articles`);
+    await Promise.all(
+      articlesToDelete.map(item =>
+        deleteDoc(doc(db, collectionName, item.article.id))
+      )
+    );
   }
 
-  console.log(`✅ ${brand}: Background rating complete! Rated ${articles.length}, kept ${articlesToKeep.length}, deleted ${articlesToDelete.length}`);
+  const duration = Math.round((Date.now() - startTime) / 1000);
+  console.log(`✅ [${brand}] Complete in ${duration}s: Rated ${articles.length}, kept ${articlesToKeep.length}, deleted ${articlesToDelete.length}`);
+
+  return {
+    brand,
+    rated: articles.length,
+    kept: articlesToKeep.length,
+    deleted: articlesToDelete.length,
+    topScores: articlesToKeep.map(a => a.score).slice(0, 10),
+    duration
+  };
 }

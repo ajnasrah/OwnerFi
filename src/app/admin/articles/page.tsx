@@ -117,7 +117,7 @@ export default function ArticlesPage() {
 
   const rateAllArticles = async () => {
     const unprocessedCount = allArticles.filter(a => !a.processed).length;
-    if (!confirm(`Rate all ${unprocessedCount} unprocessed ${activeBrand} articles with AI in the background?\n\nThis will:\n- Score all articles with OpenAI\n- Keep top 10 articles\n- Delete low-quality ones\n\nCheck server logs for progress.`)) {
+    if (!confirm(`Rate all ${unprocessedCount} unprocessed ${activeBrand} articles with AI?\n\nThis will:\n- Score all articles with OpenAI GPT-4o-mini\n- Keep top 10 articles\n- Delete low-quality ones\n\nThis may take 1-2 minutes.`)) {
       return;
     }
 
@@ -137,12 +137,19 @@ export default function ArticlesPage() {
       const data = await response.json();
 
       if (data.success) {
-        alert(`✅ Started rating ${activeBrand} articles in background!\n\nThe process will run automatically. Refresh the page in a few minutes to see the scores.`);
+        alert(`✅ Rating complete!\n\n` +
+          `• Rated: ${data.rated} articles\n` +
+          `• Kept: ${data.kept} top articles\n` +
+          `• Deleted: ${data.deleted} low-quality articles\n` +
+          `• Duration: ${data.duration} seconds\n\n` +
+          `Top scores: ${data.topScores?.join(', ') || 'N/A'}`
+        );
+        await loadArticles(); // Refresh the list
       } else {
-        alert(`Failed to start rating: ${data.error}`);
+        alert(`Failed to rate articles: ${data.error}`);
       }
     } catch (error) {
-      alert('Failed to start rating');
+      alert('Failed to rate articles');
       console.error('Rating error:', error);
     } finally {
       setRating(false);

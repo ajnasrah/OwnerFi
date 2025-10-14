@@ -75,7 +75,9 @@ export async function GET(request: NextRequest) {
     console.log(`\n📋 Found ${projects.length} total stuck workflows`);
 
     const results = [];
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://ownerfi.ai';
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ||
+                    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
+                    'https://ownerfi.ai';
 
     // Check each stuck workflow's Submagic status
     for (const project of projects) {

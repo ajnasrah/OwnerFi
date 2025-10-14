@@ -15,7 +15,7 @@
   "crons": [
     {
       "path": "/api/podcast/cron",
-      "schedule": "0 9 * * 1"
+      "schedule": "0 9 * * *"
     },
     {
       "path": "/api/cron/fetch-rss",
@@ -42,7 +42,7 @@
       "maxDuration": 300
     },
     "app/api/podcast/cron/route.ts": {
-      "maxDuration": 300
+      "maxDuration": 60
     },
     "src/app/api/cron/fetch-rss/route.ts": {
       "maxDuration": 300

@@ -1,11 +1,11 @@
 // Automated Podcast Generation Cron Job
-// Runs every Monday at 9 AM
+// Runs daily at 9 AM
 
 import { NextRequest, NextResponse } from 'next/server';
 
 const CRON_SECRET = process.env.CRON_SECRET;
 
-export const maxDuration = 300; // 5 minutes
+export const maxDuration = 60; // 1 minute (webhook-based, no polling)
 
 export async function GET(request: NextRequest) {
   try {
@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const force = searchParams.get('force') === 'true';
 
-    console.log('🎙️ Podcast cron job triggered - Generating weekly episode');
+    console.log('🎙️ Podcast cron job triggered - Generating daily episode');
     if (force) {
       console.log('⚡ Force mode enabled - Bypassing scheduler check');
     }
@@ -36,8 +36,6 @@ export async function GET(request: NextRequest) {
     // Import podcast generation libraries
     const { PodcastScheduler } = await import('../../../../../podcast/lib/podcast-scheduler');
     const ScriptGenerator = (await import('../../../../../podcast/lib/script-generator')).default;
-    const HeyGenPodcastGenerator = (await import('../../../../../podcast/lib/heygen-podcast')).default;
-    const { PodcastPublisher } = await import('../../../../../podcast/lib/podcast-publisher');
     const { addPodcastWorkflow, updatePodcastWorkflow } = await import('@/lib/feed-store-firestore');
 
     // Check if we should generate an episode (skip check if forced)
@@ -84,138 +82,82 @@ export async function GET(request: NextRequest) {
       status: 'heygen_processing'
     });
 
-    // Step 2: Generate HeyGen video
-    console.log('\n🎥 Step 2: Generating HeyGen video...');
+    // Step 2: Generate HeyGen video with webhook callback
+    console.log('\n🎥 Step 2: Generating HeyGen video with webhook...');
     const HEYGEN_API_KEY = process.env.HEYGEN_API_KEY;
     if (!HEYGEN_API_KEY) {
       throw new Error('HEYGEN_API_KEY not configured');
     }
 
-    const heygenGen = new HeyGenPodcastGenerator(HEYGEN_API_KEY);
-    const videoId = await heygenGen.generatePodcastVideo(script);
+    // Get base URL for webhook callback
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ||
+                    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
+                    'https://ownerfi.ai';
+
+    const webhookUrl = `${baseUrl}/api/webhooks/heygen`;
+
+    // Use Photo Avatar (0.2 credits/min vs 1 credit/min for Standard Avatar)
+    // This is 5x cheaper for podcast-style content
+    const response = await fetch('https://api.heygen.com/v2/video/generate', {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'X-Api-Key': HEYGEN_API_KEY
+      },
+      body: JSON.stringify({
+        test: false,
+        caption: false,
+        callback_id: workflow.id, // Use workflow ID as callback ID
+        webhook_url: webhookUrl,
+        video_inputs: [{
+          character: {
+            type: 'avatar',
+            avatar_id: 'Wayne_20240711', // Photo Avatar (cheap option)
+            avatar_style: 'normal'
+          },
+          voice: {
+            type: 'text',
+            input_text: script.full_dialogue,
+            voice_id: 'bf9fd52eff1f4b999d75ca24e5e5a52d' // Wayne voice
+          }
+        }],
+        dimension: {
+          width: 1080,
+          height: 1920
+        }
+      })
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`HeyGen API error: ${response.status} - ${errorText}`);
+    }
+
+    const heygenData = await response.json();
+    const videoId = heygenData.data?.video_id;
+
+    if (!videoId) {
+      throw new Error('HeyGen did not return video_id');
+    }
 
     console.log(`✅ HeyGen video ID: ${videoId}`);
+    console.log(`   Webhook callback: ${webhookUrl}`);
+    console.log(`   Workflow continues via webhooks...`);
 
     // Update workflow with HeyGen video ID
     await updatePodcastWorkflow(workflow.id, {
       heygenVideoId: videoId
     });
 
-    // Step 3: Wait for HeyGen completion (with timeout)
-    console.log('\n⏳ Step 3: Waiting for HeyGen video...');
-    const heygenUrl = await waitForVideoCompletion(videoId, 14);
-
-    if (!heygenUrl) {
-      throw new Error('HeyGen video timed out');
-    }
-
-    console.log(`✅ HeyGen completed: ${heygenUrl}`);
-
-    // Update workflow to Submagic processing
-    await updatePodcastWorkflow(workflow.id, {
-      status: 'submagic_processing'
-    });
-
-    // Step 4: Enhance with Submagic
-    console.log('\n✨ Step 4: Adding Submagic captions...');
-    const SUBMAGIC_API_KEY = process.env.SUBMAGIC_API_KEY;
-    if (!SUBMAGIC_API_KEY) {
-      throw new Error('SUBMAGIC_API_KEY not configured');
-    }
-
-    const submagicResponse = await fetch('https://api.submagic.co/v1/projects', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': SUBMAGIC_API_KEY
-      },
-      body: JSON.stringify({
-        videoUrl: heygenUrl,
-        title: script.episode_title,
-        language: 'en',
-        templateName: 'Hormozi 2'
-      })
-    });
-
-    if (!submagicResponse.ok) {
-      const errorText = await submagicResponse.text();
-      throw new Error(`Submagic API error: ${submagicResponse.status} - ${errorText}`);
-    }
-
-    const submagicData = await submagicResponse.json();
-    const projectId = submagicData.project_id || submagicData.id;
-
-    if (!projectId) {
-      throw new Error('Submagic did not return project_id');
-    }
-
-    console.log(`✅ Submagic project: ${projectId}`);
-
-    // Update workflow with Submagic project ID
-    await updatePodcastWorkflow(workflow.id, {
-      submagicProjectId: projectId
-    });
-
-    // Step 5: Wait for Submagic completion
-    console.log('\n⏳ Step 5: Waiting for Submagic...');
-    const finalVideoUrl = await waitForSubmagicCompletion(projectId, 14);
-
-    if (!finalVideoUrl) {
-      throw new Error('Submagic processing timed out');
-    }
-
-    console.log(`✅ Final video ready: ${finalVideoUrl}`);
-
-    // Update workflow with final video URL
-    await updatePodcastWorkflow(workflow.id, {
-      finalVideoUrl: finalVideoUrl,
-      status: 'publishing'
-    });
-
-    // Step 6: Use Submagic URL directly (Metricool trusts submagic.co domain)
-    console.log('\n✅ Step 6: Using Submagic URL directly (no storage needed)...');
-    const publicFinalUrl = finalVideoUrl;
-    console.log(`   Video URL: ${publicFinalUrl}`);
-
-    // Step 7: Publish to social media
-    console.log('\n📱 Step 7: Publishing to social media...');
-    const publisher = new PodcastPublisher('ownerfi');
-
-    const publishResult = await publisher.publishEpisode(
-      {
-        episode_number: episodeNumber,
-        episode_title: script.episode_title,
-        guest_name: script.guest_name,
-        topic: script.topic
-      },
-      publicFinalUrl
-    );
-
-    if (!publishResult.success) {
-      console.error('⚠️  Publishing failed:', publishResult.error);
-      // Mark workflow as failed
-      await updatePodcastWorkflow(workflow.id, {
-        status: 'failed',
-        error: publishResult.error,
-        completedAt: Date.now()
-      });
-    } else {
-      console.log('✅ Published to social media!');
-      // Mark workflow as completed
-      await updatePodcastWorkflow(workflow.id, {
-        status: 'completed',
-        metricoolPostId: publishResult.postId,
-        completedAt: Date.now()
-      });
-    }
-
-    // Step 8: Record episode in scheduler
+    // Step 3: Record episode in scheduler
     const recordedEpisodeNumber = scheduler.recordEpisode(
       script.guest_id,
       videoId
     );
 
-    console.log(`\n🎉 Episode #${recordedEpisodeNumber} complete!`);
+    console.log(`\n🎉 Episode #${recordedEpisodeNumber} initiated!`);
+    console.log(`   ⚡ HeyGen → Submagic → Metricool (automatic via webhooks)`);
 
     return NextResponse.json({
       success: true,
@@ -225,9 +167,9 @@ export async function GET(request: NextRequest) {
         guest: script.guest_name,
         topic: script.topic,
         video_id: videoId,
-        final_url: publicFinalUrl
+        workflow_id: workflow.id
       },
-      publishing: publishResult,
+      message: 'Podcast generation started. Workflow continues via webhooks (HeyGen → Submagic → Publishing).',
       timestamp: new Date().toISOString()
     });
 
@@ -258,68 +200,4 @@ export async function GET(request: NextRequest) {
 // Also support POST for Vercel cron
 export async function POST(request: NextRequest) {
   return GET(request);
-}
-
-// Helper: Wait for HeyGen video completion
-async function waitForVideoCompletion(videoId: string, maxAttempts: number = 14): Promise<string | null> {
-  const HEYGEN_API_KEY = process.env.HEYGEN_API_KEY;
-
-  for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    await new Promise(resolve => setTimeout(resolve, 45000)); // 45 seconds
-
-    try {
-      const response = await fetch(
-        `https://api.heygen.com/v1/video_status.get?video_id=${videoId}`,
-        { headers: { 'accept': 'application/json', 'x-api-key': HEYGEN_API_KEY! } }
-      );
-
-      if (!response.ok) continue;
-
-      const data = await response.json();
-      const status = data.data?.status;
-
-      console.log(`⏳ HeyGen (${attempt + 1}/${maxAttempts}): ${status}`);
-
-      if (status === 'completed') return data.data.video_url;
-      if (status === 'failed') return null;
-    } catch (error) {
-      console.error('Error checking video status:', error);
-    }
-  }
-
-  return null;
-}
-
-// Helper: Wait for Submagic completion
-async function waitForSubmagicCompletion(projectId: string, maxAttempts: number = 14): Promise<string | null> {
-  const SUBMAGIC_API_KEY = process.env.SUBMAGIC_API_KEY;
-
-  for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    await new Promise(resolve => setTimeout(resolve, 45000)); // 45 seconds
-
-    try {
-      const response = await fetch(
-        `https://api.submagic.co/v1/projects/${projectId}`,
-        { headers: { 'x-api-key': SUBMAGIC_API_KEY! } }
-      );
-
-      if (!response.ok) continue;
-
-      const data = await response.json();
-      const status = data.status;
-
-      console.log(`⏳ Submagic (${attempt + 1}/${maxAttempts}): ${status}`);
-
-      if (status === 'completed' || status === 'done' || status === 'ready') {
-        const videoUrl = data.media_url || data.mediaUrl || data.video_url || data.videoUrl || data.download_url;
-        return videoUrl;
-      }
-
-      if (status === 'failed' || status === 'error') return null;
-    } catch (error) {
-      console.error('Error checking Submagic status:', error);
-    }
-  }
-
-  return null;
 }

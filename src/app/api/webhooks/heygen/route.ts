@@ -32,9 +32,21 @@ export async function POST(request: NextRequest) {
 
     const workflowId = event_data.callback_id;
 
-    // Find workflow in Firestore by ID
-    const { getWorkflowById } = await import('@/lib/feed-store-firestore');
-    const result = await getWorkflowById(workflowId);
+    // Find workflow in Firestore by ID (check social media workflows first)
+    const { getWorkflowById, getPodcastWorkflowById } = await import('@/lib/feed-store-firestore');
+    let result = await getWorkflowById(workflowId);
+    let isPodcast = false;
+    let brand: 'carz' | 'ownerfi' | 'podcast' = 'ownerfi';
+
+    // If not found in social media, check podcast workflows
+    if (!result) {
+      const podcastWorkflow = await getPodcastWorkflowById(workflowId);
+      if (podcastWorkflow) {
+        isPodcast = true;
+        brand = 'podcast';
+        result = { workflow: podcastWorkflow, brand: 'ownerfi' as any }; // Temp structure
+      }
+    }
 
     if (!result) {
       console.log('⚠️ No pending workflow found for callback_id:', workflowId);
@@ -44,17 +56,28 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const { workflow, brand } = result;
+    const { workflow } = result;
+    if (!isPodcast) {
+      brand = result.brand;
+    }
 
     if (event_type === 'avatar_video.success' && event_data.url) {
       console.log('✅ HeyGen video completed via webhook!');
       console.log('   Video URL:', event_data.url);
+      console.log('   Type:', isPodcast ? 'PODCAST' : 'SOCIAL MEDIA');
 
-      // Update workflow status to 'submagic_processing'
-      const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
-      await updateWorkflowStatus(workflowId, brand, {
-        status: 'submagic_processing'
-      });
+      // Update workflow status
+      if (isPodcast) {
+        const { updatePodcastWorkflow } = await import('@/lib/feed-store-firestore');
+        await updatePodcastWorkflow(workflowId, {
+          status: 'submagic_processing'
+        });
+      } else {
+        const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
+        await updateWorkflowStatus(workflowId, brand as 'carz' | 'ownerfi', {
+          status: 'submagic_processing'
+        });
+      }
 
       // Send immediate confirmation to HeyGen
       const response = NextResponse.json({
@@ -65,7 +88,7 @@ export async function POST(request: NextRequest) {
 
       // Trigger Submagic processing asynchronously (don't block webhook response)
       setImmediate(async () => {
-        await triggerSubmagicProcessing(workflowId, event_data.url, brand, workflow);
+        await triggerSubmagicProcessing(workflowId, event_data.url, brand, workflow, isPodcast);
       });
 
       return response;
@@ -73,20 +96,28 @@ export async function POST(request: NextRequest) {
     } else if (event_type === 'avatar_video.fail') {
       console.error('❌ HeyGen video generation failed via webhook');
 
-      const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
-      await updateWorkflowStatus(workflowId, brand, {
-        status: 'failed',
-        error: 'HeyGen generation failed'
-      });
+      if (isPodcast) {
+        const { updatePodcastWorkflow } = await import('@/lib/feed-store-firestore');
+        await updatePodcastWorkflow(workflowId, {
+          status: 'failed',
+          error: 'HeyGen generation failed'
+        });
+      } else {
+        const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
+        await updateWorkflowStatus(workflowId, brand as 'carz' | 'ownerfi', {
+          status: 'failed',
+          error: 'HeyGen generation failed'
+        });
 
-      // Send alert
-      const { alertWorkflowFailure } = await import('@/lib/error-monitoring');
-      await alertWorkflowFailure(
-        brand,
-        workflowId,
-        workflow.articleTitle || 'Unknown',
-        'HeyGen generation failed'
-      );
+        // Send alert
+        const { alertWorkflowFailure } = await import('@/lib/error-monitoring');
+        await alertWorkflowFailure(
+          brand as 'carz' | 'ownerfi',
+          workflowId,
+          workflow.articleTitle || 'Unknown',
+          'HeyGen generation failed'
+        );
+      }
     }
 
     return NextResponse.json({
@@ -108,8 +139,9 @@ export async function POST(request: NextRequest) {
 async function triggerSubmagicProcessing(
   workflowId: string,
   heygenVideoUrl: string,
-  brand: 'carz' | 'ownerfi',
-  workflow: any
+  brand: 'carz' | 'ownerfi' | 'podcast',
+  workflow: any,
+  isPodcast: boolean = false
 ) {
   // Read environment variables at runtime, not at module load time
   const SUBMAGIC_API_KEY = process.env.SUBMAGIC_API_KEY;
@@ -117,11 +149,19 @@ async function triggerSubmagicProcessing(
 
   if (!SUBMAGIC_API_KEY) {
     console.error('❌ Submagic API key not configured');
-    const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
-    await updateWorkflowStatus(workflowId, brand, {
-      status: 'failed',
-      error: 'Submagic API key not configured'
-    });
+    if (isPodcast) {
+      const { updatePodcastWorkflow } = await import('@/lib/feed-store-firestore');
+      await updatePodcastWorkflow(workflowId, {
+        status: 'failed',
+        error: 'Submagic API key not configured'
+      });
+    } else {
+      const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
+      await updateWorkflowStatus(workflowId, brand as 'carz' | 'ownerfi', {
+        status: 'failed',
+        error: 'Submagic API key not configured'
+      });
+    }
     return;
   }
 
@@ -153,7 +193,7 @@ async function triggerSubmagicProcessing(
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        title: workflow.articleTitle || `Viral Video - ${workflowId}`,
+        title: (workflow.articleTitle || `Viral Video - ${workflowId}`).substring(0, 100), // Limit title to 100 chars to avoid Submagic validation error
         language: 'en',
         videoUrl: publicHeygenUrl, // Use R2 public URL
         templateName: 'Hormozi 2',
@@ -175,27 +215,42 @@ async function triggerSubmagicProcessing(
     console.log('✅ Submagic project created via HeyGen webhook:', projectId);
 
     // Update workflow with Submagic project ID
-    const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
-    await updateWorkflowStatus(workflowId, brand, {
-      submagicVideoId: projectId
-    });
+    if (isPodcast) {
+      const { updatePodcastWorkflow } = await import('@/lib/feed-store-firestore');
+      await updatePodcastWorkflow(workflowId, {
+        submagicProjectId: projectId
+      });
+    } else {
+      const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
+      await updateWorkflowStatus(workflowId, brand as 'carz' | 'ownerfi', {
+        submagicVideoId: projectId
+      });
+    }
 
   } catch (error) {
     console.error('❌ Error triggering Submagic from HeyGen webhook:', error);
 
-    const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
-    await updateWorkflowStatus(workflowId, brand, {
-      status: 'failed',
-      error: error instanceof Error ? error.message : 'Unknown error'
-    });
+    if (isPodcast) {
+      const { updatePodcastWorkflow } = await import('@/lib/feed-store-firestore');
+      await updatePodcastWorkflow(workflowId, {
+        status: 'failed',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    } else {
+      const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
+      await updateWorkflowStatus(workflowId, brand as 'carz' | 'ownerfi', {
+        status: 'failed',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
 
-    // Send alert
-    const { alertWorkflowFailure } = await import('@/lib/error-monitoring');
-    await alertWorkflowFailure(
-      brand,
-      workflowId,
-      workflow.articleTitle || 'Unknown',
-      `Submagic trigger failed: ${error instanceof Error ? error.message : 'Unknown error'}`
-    );
+      // Send alert
+      const { alertWorkflowFailure } = await import('@/lib/error-monitoring');
+      await alertWorkflowFailure(
+        brand as 'carz' | 'ownerfi',
+        workflowId,
+        workflow.articleTitle || 'Unknown',
+        `Submagic trigger failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
   }
 }

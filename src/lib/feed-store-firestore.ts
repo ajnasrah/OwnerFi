@@ -796,6 +796,33 @@ export async function findWorkflowBySubmagicId(submagicProjectId: string): Promi
   return null;
 }
 
+// Find podcast workflow by Submagic project ID (for webhook handling)
+export async function findPodcastBySubmagicId(submagicProjectId: string): Promise<{
+  workflowId: string;
+  workflow: PodcastWorkflowItem;
+} | null> {
+  if (!db) return null;
+
+  const q = query(
+    collection(db, COLLECTIONS.PODCAST.WORKFLOW_QUEUE),
+    where('submagicProjectId', '==', submagicProjectId),
+    firestoreLimit(1)
+  );
+
+  const snapshot = await getDocs(q);
+
+  if (!snapshot.empty) {
+    const docData = snapshot.docs[0].data() as PodcastWorkflowItem;
+    return {
+      workflowId: snapshot.docs[0].id,
+      workflow: docData
+    };
+  }
+
+  console.log(`⚠️  No podcast workflow found with Submagic ID: ${submagicProjectId}`);
+  return null;
+}
+
 // Get workflow by ID (for webhook handling)
 export async function getWorkflowById(workflowId: string): Promise<{
   workflow: WorkflowQueueItem;
@@ -817,5 +844,19 @@ export async function getWorkflowById(workflowId: string): Promise<{
   }
 
   console.log(`⚠️  No workflow found with ID: ${workflowId}`);
+  return null;
+}
+
+// Get podcast workflow by ID (for webhook handling)
+export async function getPodcastWorkflowById(workflowId: string): Promise<PodcastWorkflowItem | null> {
+  if (!db) return null;
+
+  const docSnap = await getDoc(doc(db, COLLECTIONS.PODCAST.WORKFLOW_QUEUE, workflowId));
+
+  if (docSnap.exists()) {
+    return docSnap.data() as PodcastWorkflowItem;
+  }
+
+  console.log(`⚠️  No podcast workflow found with ID: ${workflowId}`);
   return null;
 }

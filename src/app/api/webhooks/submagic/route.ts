@@ -24,11 +24,30 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Find the workflow for this project in Firestore
-    const { findWorkflowBySubmagicId } = await import('@/lib/feed-store-firestore');
-    const result = await findWorkflowBySubmagicId(submagicProjectId);
+    // Find the workflow for this project in Firestore (check social media first, then podcast)
+    const { findWorkflowBySubmagicId, findPodcastBySubmagicId } = await import('@/lib/feed-store-firestore');
+    let result = await findWorkflowBySubmagicId(submagicProjectId);
+    let isPodcast = false;
+    let workflowId: string;
+    let workflow: any;
+    let brand: 'carz' | 'ownerfi' | 'podcast';
 
     if (!result) {
+      // Try podcast workflows
+      const podcastResult = await findPodcastBySubmagicId(submagicProjectId);
+      if (podcastResult) {
+        isPodcast = true;
+        workflowId = podcastResult.workflowId;
+        workflow = podcastResult.workflow;
+        brand = 'podcast';
+      }
+    } else {
+      workflowId = result.workflowId;
+      workflow = result.workflow;
+      brand = result.brand;
+    }
+
+    if (!result && !isPodcast) {
       console.log('⚠️ No pending workflow found for Submagic project:', submagicProjectId);
       return NextResponse.json({
         received: true,
@@ -36,11 +55,10 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const { workflowId, workflow, brand } = result;
-
     if (status === 'completed' || status === 'done' || status === 'ready') {
       console.log('✅ Submagic video completed via webhook!');
       console.log('   Video URL from webhook:', finalVideoUrl);
+      console.log('   Type:', isPodcast ? 'PODCAST' : 'SOCIAL MEDIA');
 
       // If no video URL provided in webhook, fetch it from Submagic API
       let videoUrl = finalVideoUrl;
@@ -77,11 +95,18 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // Update workflow status to 'posting'
-      const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
-      await updateWorkflowStatus(workflowId, brand, {
-        status: 'posting'
-      });
+      // Update workflow status to 'posting' or 'publishing'
+      if (isPodcast) {
+        const { updatePodcastWorkflow } = await import('@/lib/feed-store-firestore');
+        await updatePodcastWorkflow(workflowId, {
+          status: 'publishing'
+        });
+      } else {
+        const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
+        await updateWorkflowStatus(workflowId, brand as 'carz' | 'ownerfi', {
+          status: 'posting'
+        });
+      }
 
       console.log('🎉 Submagic completed via webhook!');
       console.log('   Workflow ID:', workflowId);
@@ -110,81 +135,133 @@ export async function POST(request: NextRequest) {
           console.log('✅ Video uploaded to R2!');
           console.log('   Public URL:', publicVideoUrl);
 
-          console.log('\n📱 Auto-posting to social media via Metricool...');
-
-          // Get platforms from env or use defaults (Instagram Reel, Facebook Reel, TikTok, YouTube Short, LinkedIn)
-          const platforms = (process.env.METRICOOL_PLATFORMS || 'instagram,facebook,tiktok,youtube,linkedin').split(',') as any[];
-          const schedule = (process.env.METRICOOL_SCHEDULE_DELAY || 'immediate') as any;
-
-          // Post to Reels/Shorts
-          const postResult = await scheduleVideoPost(
-            publicVideoUrl,
-            workflow.caption || 'Check out this video! 🔥',
-            workflow.title || 'Viral Video',
-            platforms,
-            schedule,
-            brand
-          );
-
-          // Also post to Stories if Instagram/Facebook are included
-          if (platforms.includes('instagram') || platforms.includes('facebook')) {
-            console.log('📱 Also posting to Stories...');
-            const storyPlatforms = [];
-            if (platforms.includes('instagram')) storyPlatforms.push('instagram');
-            if (platforms.includes('facebook')) storyPlatforms.push('facebook');
+          if (isPodcast) {
+            // Podcast: Post to YouTube (long-form) and Facebook (long-form video)
+            console.log('\n📱 Auto-posting podcast to YouTube & Facebook via Metricool...');
 
             const { postToMetricool } = await import('@/lib/metricool-api');
-            await postToMetricool({
+            const postResult = await postToMetricool({
               videoUrl: publicVideoUrl,
-              caption: workflow.caption || 'Check out this video! 🔥',
-              title: workflow.title || 'Viral Video',
-              platforms: storyPlatforms as any,
+              caption: workflow.episodeTitle || 'New Podcast Episode',
+              title: `Episode #${workflow.episodeNumber}: ${workflow.episodeTitle || 'New Episode'}`,
+              platforms: ['youtube', 'facebook'] as any,
               postTypes: {
-                instagram: 'story',
-                facebook: 'story'
+                youtube: 'video', // Long-form video
+                facebook: 'video'  // Long-form video
               },
-              brand: brand
-            }).catch(err => console.warn('Story posting failed:', err));
-          }
-
-          if (postResult.success) {
-            console.log('✅ Posted to Metricool via webhook!');
-            console.log('   Post ID:', postResult.postId);
-            console.log('   Platforms:', postResult.platforms?.join(', '));
-
-            // Mark workflow as completed
-            await updateWorkflowStatus(workflowId, brand, {
-              status: 'completed',
-              metricoolPostId: postResult.postId,
-              completedAt: Date.now()
+              brand: 'podcast'
             });
+
+            if (postResult.success) {
+              console.log('✅ Posted podcast to YouTube & Facebook!');
+              console.log('   Post ID:', postResult.postId);
+
+              // Mark podcast workflow as completed
+              const { updatePodcastWorkflow } = await import('@/lib/feed-store-firestore');
+              await updatePodcastWorkflow(workflowId, {
+                status: 'completed',
+                finalVideoUrl: publicVideoUrl,
+                metricoolPostId: postResult.postId,
+                completedAt: Date.now()
+              });
+            } else {
+              console.error('❌ Failed to post podcast to Metricool:', postResult.error);
+
+              // Mark podcast workflow as failed
+              const { updatePodcastWorkflow } = await import('@/lib/feed-store-firestore');
+              await updatePodcastWorkflow(workflowId, {
+                status: 'failed',
+                error: `Metricool posting failed: ${postResult.error}`
+              });
+            }
           } else {
-            console.error('❌ Failed to post to Metricool:', postResult.error);
+            // Social Media: Post to Reels/Shorts
+            console.log('\n📱 Auto-posting to social media via Metricool...');
 
-            // Mark workflow as failed
-            await updateWorkflowStatus(workflowId, brand, {
-              status: 'failed',
-              error: `Metricool posting failed: ${postResult.error}`
-            });
+            // Get platforms from env or use defaults (Instagram Reel, Facebook Reel, TikTok, YouTube Short, LinkedIn)
+            const platforms = (process.env.METRICOOL_PLATFORMS || 'instagram,facebook,tiktok,youtube,linkedin').split(',') as any[];
+            const schedule = (process.env.METRICOOL_SCHEDULE_DELAY || 'immediate') as any;
 
-            // Send alert
-            const { alertWorkflowFailure } = await import('@/lib/error-monitoring');
-            await alertWorkflowFailure(
-              brand,
-              workflowId,
-              workflow.articleTitle || 'Unknown',
-              `Metricool posting failed: ${postResult.error}`
+            // Post to Reels/Shorts
+            const postResult = await scheduleVideoPost(
+              publicVideoUrl,
+              workflow.caption || 'Check out this video! 🔥',
+              workflow.title || 'Viral Video',
+              platforms,
+              schedule,
+              brand as 'carz' | 'ownerfi'
             );
+
+            // Also post to Stories if Instagram/Facebook are included
+            if (platforms.includes('instagram') || platforms.includes('facebook')) {
+              console.log('📱 Also posting to Stories...');
+              const storyPlatforms = [];
+              if (platforms.includes('instagram')) storyPlatforms.push('instagram');
+              if (platforms.includes('facebook')) storyPlatforms.push('facebook');
+
+              const { postToMetricool } = await import('@/lib/metricool-api');
+              await postToMetricool({
+                videoUrl: publicVideoUrl,
+                caption: workflow.caption || 'Check out this video! 🔥',
+                title: workflow.title || 'Viral Video',
+                platforms: storyPlatforms as any,
+                postTypes: {
+                  instagram: 'story',
+                  facebook: 'story'
+                },
+                brand: brand as 'carz' | 'ownerfi'
+              }).catch(err => console.warn('Story posting failed:', err));
+            }
+
+            if (postResult.success) {
+              console.log('✅ Posted to Metricool via webhook!');
+              console.log('   Post ID:', postResult.postId);
+              console.log('   Platforms:', postResult.platforms?.join(', '));
+
+              // Mark workflow as completed
+              const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
+              await updateWorkflowStatus(workflowId, brand as 'carz' | 'ownerfi', {
+                status: 'completed',
+                metricoolPostId: postResult.postId,
+                completedAt: Date.now()
+              });
+            } else {
+              console.error('❌ Failed to post to Metricool:', postResult.error);
+
+              // Mark workflow as failed
+              const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
+              await updateWorkflowStatus(workflowId, brand as 'carz' | 'ownerfi', {
+                status: 'failed',
+                error: `Metricool posting failed: ${postResult.error}`
+              });
+
+              // Send alert
+              const { alertWorkflowFailure } = await import('@/lib/error-monitoring');
+              await alertWorkflowFailure(
+                brand as 'carz' | 'ownerfi',
+                workflowId,
+                workflow.articleTitle || 'Unknown',
+                `Metricool posting failed: ${postResult.error}`
+              );
+            }
           }
         } catch (error) {
           console.error('❌ Error in R2 upload or Metricool posting (async):', error);
 
           // Mark workflow as failed
-          const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
-          await updateWorkflowStatus(workflowId, brand, {
-            status: 'failed',
-            error: error instanceof Error ? error.message : 'Unknown error in webhook handler'
-          });
+          if (isPodcast) {
+            const { updatePodcastWorkflow } = await import('@/lib/feed-store-firestore');
+            await updatePodcastWorkflow(workflowId, {
+              status: 'failed',
+              error: error instanceof Error ? error.message : 'Unknown error in webhook handler'
+            });
+          } else {
+            const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
+            await updateWorkflowStatus(workflowId, brand as 'carz' | 'ownerfi', {
+              status: 'failed',
+              error: error instanceof Error ? error.message : 'Unknown error in webhook handler'
+            });
+          }
         }
       });
 
@@ -193,20 +270,28 @@ export async function POST(request: NextRequest) {
     } else if (status === 'failed' || status === 'error') {
       console.error('❌ Submagic processing failed via webhook');
 
-      const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
-      await updateWorkflowStatus(workflowId, brand, {
-        status: 'failed',
-        error: 'Submagic processing failed'
-      });
+      if (isPodcast) {
+        const { updatePodcastWorkflow } = await import('@/lib/feed-store-firestore');
+        await updatePodcastWorkflow(workflowId, {
+          status: 'failed',
+          error: 'Submagic processing failed'
+        });
+      } else {
+        const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
+        await updateWorkflowStatus(workflowId, brand as 'carz' | 'ownerfi', {
+          status: 'failed',
+          error: 'Submagic processing failed'
+        });
 
-      // Send alert
-      const { alertWorkflowFailure } = await import('@/lib/error-monitoring');
-      await alertWorkflowFailure(
-        brand,
-        workflowId,
-        workflow.articleTitle || 'Unknown',
-        'Submagic processing failed'
-      );
+        // Send alert (only for social media workflows)
+        const { alertWorkflowFailure } = await import('@/lib/error-monitoring');
+        await alertWorkflowFailure(
+          brand as 'carz' | 'ownerfi',
+          workflowId,
+          workflow.articleTitle || 'Unknown',
+          'Submagic processing failed'
+        );
+      }
     } else {
       console.log('⏳ Submagic webhook - intermediate status:', status);
     }

@@ -239,7 +239,7 @@ IMPORTANT RULES:
 FORMAT:
 SCRIPT: [the exact words the AI avatar will speak - nothing else]
 
-TITLE: [50-150 characters maximum, attention-grabbing headline with emojis]
+TITLE: [30-45 characters MAXIMUM including emojis - MUST be under 50 chars - attention-grabbing headline]
 
 CAPTION: [Engaging social media post with:
 - Strong opening hook (1-2 sentences)
@@ -294,9 +294,16 @@ EXAMPLE BAD SCRIPT:
   const titleMatch = fullResponse.match(/TITLE:\s*([\s\S]*?)(?=CAPTION:|$)/i);
   const captionMatch = fullResponse.match(/CAPTION:\s*([\s\S]*?)$/i);
 
+  // Extract and enforce title length limit (Submagic requires ≤50 chars)
+  let title = titleMatch ? titleMatch[1].trim() : 'Breaking News - Must Watch!';
+  if (title.length > 50) {
+    console.warn(`⚠️  Title too long (${title.length} chars), truncating to 50: "${title}"`);
+    title = title.substring(0, 47) + '...'; // Truncate to 47 + '...' = 50
+  }
+
   return {
     script: scriptMatch ? scriptMatch[1].trim() : content.substring(0, 500),
-    title: titleMatch ? titleMatch[1].trim() : 'Breaking News - Must Watch!',
+    title,
     caption: captionMatch ? captionMatch[1].trim() : 'Breaking news you need to see! 🔥\n\nThis changes everything. Click to watch the full story.\n\n#BreakingNews #MustWatch #Viral #Trending'
   };
 }

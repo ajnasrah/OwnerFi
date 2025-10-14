@@ -175,6 +175,13 @@ async function triggerSubmagicProcessing(
 
     const webhookUrl = `${baseUrl}/api/webhooks/submagic`;
 
+    // Ensure title is ≤50 characters (Submagic requirement)
+    let title = workflow.articleTitle || `Viral Video - ${workflowId}`;
+    if (title.length > 50) {
+      console.warn(`⚠️  Submagic title too long (${title.length} chars), truncating to 50`);
+      title = title.substring(0, 47) + '...';
+    }
+
     const response = await fetch('https://api.submagic.co/v1/projects', {
       method: 'POST',
       headers: {
@@ -182,7 +189,7 @@ async function triggerSubmagicProcessing(
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        title: workflow.articleTitle || `Viral Video - ${workflowId}`,
+        title,
         language: 'en',
         videoUrl: publicHeygenUrl, // Use R2 public URL
         templateName: 'Hormozi 2',

@@ -18,8 +18,12 @@
       "schedule": "0 9 * * 1"
     },
     {
-      "path": "/api/cron/viral-video",
-      "schedule": "0 */2 * * *"
+      "path": "/api/cron/fetch-articles",
+      "schedule": "0 12 * * *"
+    },
+    {
+      "path": "/api/cron/generate-video",
+      "schedule": "0 9,12,15,18,21 * * *"
     },
     {
       "path": "/api/cron/weekly-maintenance",
@@ -36,7 +40,10 @@
     "app/api/podcast/cron/route.ts": {
       "maxDuration": 300
     },
-    "src/app/api/cron/viral-video/route.ts": {
+    "src/app/api/cron/fetch-articles/route.ts": {
+      "maxDuration": 300
+    },
+    "src/app/api/cron/generate-video/route.ts": {
       "maxDuration": 300
     },
     "src/app/api/cron/weekly-maintenance/route.ts": {

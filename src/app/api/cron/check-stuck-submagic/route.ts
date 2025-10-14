@@ -1,5 +1,6 @@
 // ULTRA-SIMPLE Failsafe: Use feed-store-firestore functions to find stuck workflows
 // Then check each one's Submagic status and complete if ready
+// Force rebuild: v2
 
 import { NextRequest, NextResponse } from 'next/server';
 

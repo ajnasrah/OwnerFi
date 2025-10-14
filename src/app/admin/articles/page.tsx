@@ -35,6 +35,7 @@ export default function ArticlesPage() {
   const [articles, setArticles] = useState<ArticlesData | null>(null);
   const [loading, setLoading] = useState(true);
   const [rating, setRating] = useState(false);
+  const [fetching, setFetching] = useState(false);
 
   // Auth check
   useEffect(() => {
@@ -113,6 +114,37 @@ export default function ArticlesPage() {
     if (score >= 80) return 'bg-green-100 text-green-700';
     if (score >= 70) return 'bg-yellow-100 text-yellow-700';
     return 'bg-red-100 text-red-700';
+  };
+
+  const fetchNewArticles = async () => {
+    if (!confirm('Fetch new articles from all RSS feeds?\n\nThis will fetch the latest articles from all configured RSS feeds.')) {
+      return;
+    }
+
+    setFetching(true);
+    try {
+      const response = await fetch('/api/articles/fetch-now', {
+        method: 'POST'
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert(`✅ Fetch complete!\n\n` +
+          `• New articles: ${data.totalNewArticles}\n` +
+          `• Feeds processed: ${data.feedsProcessed}\n` +
+          (data.errors ? `\n⚠️ Errors:\n${data.errors.join('\n')}` : '')
+        );
+        await loadArticles(); // Refresh the list
+      } else {
+        alert(`Failed to fetch articles: ${data.error}`);
+      }
+    } catch (error) {
+      alert('Failed to fetch articles');
+      console.error('Fetch error:', error);
+    } finally {
+      setFetching(false);
+    }
   };
 
   const rateAllArticles = async () => {
@@ -249,6 +281,17 @@ export default function ArticlesPage() {
               {activeView === 'queue' ? 'Top 10 Rated Articles' : 'All Unprocessed Articles'}
             </h2>
             <div className="flex items-center gap-2">
+              <button
+                onClick={fetchNewArticles}
+                disabled={fetching}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  fetching
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700'
+                }`}
+              >
+                {fetching ? '📡 Fetching...' : '📡 Fetch New Articles'}
+              </button>
               {activeView === 'unprocessed' && (
                 <button
                   onClick={rateAllArticles}
@@ -264,7 +307,7 @@ export default function ArticlesPage() {
               )}
               <button
                 onClick={loadArticles}
-                className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
+                className="px-4 py-2 rounded-lg text-sm font-medium bg-white text-indigo-600 hover:bg-indigo-50 border border-indigo-200 transition-colors"
               >
                 🔄 Refresh
               </button>

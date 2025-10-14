@@ -175,43 +175,45 @@ export async function POST(request: NextRequest) {
               });
             }
           } else {
-            // Social Media: Post to Reels/Shorts
+            // Social Media: Post to Reels/Shorts AND Stories
             console.log('\n📱 Auto-posting to social media via Metricool...');
 
-            // Get platforms from env or use defaults (Instagram Reel, Facebook Reel, TikTok, YouTube Short, LinkedIn)
-            const platforms = (process.env.METRICOOL_PLATFORMS || 'instagram,facebook,tiktok,youtube,linkedin').split(',') as any[];
             const schedule = (process.env.METRICOOL_SCHEDULE_DELAY || 'immediate') as any;
+            const { postToMetricool } = await import('@/lib/metricool-api');
 
-            // Post to Reels/Shorts
+            // POST 1: Reels/Shorts on all platforms (Facebook Reels, Instagram Reels, TikTok, LinkedIn, Threads, YouTube Shorts)
+            console.log('📱 Post 1: Reels/Shorts on all platforms...');
+            const reelsPlatforms = ['facebook', 'instagram', 'tiktok', 'linkedin', 'threads', 'youtube'] as any[];
+
             const postResult = await scheduleVideoPost(
               publicVideoUrl,
               workflow.caption || 'Check out this video! 🔥',
               workflow.title || 'Viral Video',
-              platforms,
+              reelsPlatforms,
               schedule,
               brand as 'carz' | 'ownerfi'
             );
 
-            // Also post to Stories if Instagram/Facebook are included
-            if (platforms.includes('instagram') || platforms.includes('facebook')) {
-              console.log('📱 Also posting to Stories...');
-              const storyPlatforms = [];
-              if (platforms.includes('instagram')) storyPlatforms.push('instagram');
-              if (platforms.includes('facebook')) storyPlatforms.push('facebook');
+            console.log(`   ${postResult.success ? '✅' : '❌'} Reels/Shorts post: ${postResult.postId || postResult.error}`);
 
-              const { postToMetricool } = await import('@/lib/metricool-api');
-              await postToMetricool({
-                videoUrl: publicVideoUrl,
-                caption: workflow.caption || 'Check out this video! 🔥',
-                title: workflow.title || 'Viral Video',
-                platforms: storyPlatforms as any,
-                postTypes: {
-                  instagram: 'story',
-                  facebook: 'story'
-                },
-                brand: brand as 'carz' | 'ownerfi'
-              }).catch(err => console.warn('Story posting failed:', err));
-            }
+            // POST 2: Stories (Instagram Story + Facebook Story)
+            console.log('📱 Post 2: Stories (Instagram + Facebook)...');
+            const storiesResult = await postToMetricool({
+              videoUrl: publicVideoUrl,
+              caption: workflow.caption || 'Check out this video! 🔥',
+              title: workflow.title || 'Viral Video',
+              platforms: ['instagram', 'facebook'] as any[],
+              postTypes: {
+                instagram: 'story',
+                facebook: 'story'
+              },
+              brand: brand as 'carz' | 'ownerfi'
+            }).catch(err => {
+              console.warn('   ❌ Stories post failed:', err.message);
+              return { success: false, error: err.message, postId: undefined };
+            });
+
+            console.log(`   ${storiesResult.success ? '✅' : '❌'} Stories post: ${storiesResult.postId || storiesResult.error}`);
 
             if (postResult.success) {
               console.log('✅ Posted to Metricool via webhook!');

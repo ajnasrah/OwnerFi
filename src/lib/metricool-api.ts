@@ -138,6 +138,18 @@ export async function postToMetricool(request: MetricoolPostRequest): Promise<Me
           };
         }
 
+        if (request.platforms.includes('tiktok')) {
+          requestBody.tiktokData = {
+            privacy: 'PUBLIC_TO_EVERYONE' // Options: PUBLIC_TO_EVERYONE, MUTUAL_FOLLOW_FRIENDS, SELF_ONLY
+          };
+        }
+
+        if (request.platforms.includes('threads')) {
+          requestBody.threadsData = {
+            visibility: 'PUBLIC' // Options: PUBLIC, PRIVATE
+          };
+        }
+
         // blogId and userId MUST be query parameters, not in the body
         const response = await fetchWithTimeout(
           `${METRICOOL_BASE_URL}/scheduler/posts?blogId=${brandId}&userId=${METRICOOL_USER_ID}`,

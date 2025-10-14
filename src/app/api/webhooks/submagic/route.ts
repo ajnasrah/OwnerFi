@@ -181,9 +181,9 @@ export async function POST(request: NextRequest) {
             const schedule = (process.env.METRICOOL_SCHEDULE_DELAY || 'immediate') as any;
             const { postToMetricool } = await import('@/lib/metricool-api');
 
-            // POST 1: Reels/Shorts on all platforms (Facebook Reels, Instagram Reels, TikTok, LinkedIn, Threads, YouTube Shorts)
+            // POST 1: Reels/Shorts on all platforms (Facebook Reels, Instagram Reels, TikTok, LinkedIn, Threads, Twitter, YouTube Shorts)
             console.log('📱 Post 1: Reels/Shorts on all platforms...');
-            const reelsPlatforms = ['facebook', 'instagram', 'tiktok', 'linkedin', 'threads', 'youtube'] as any[];
+            const reelsPlatforms = ['facebook', 'instagram', 'tiktok', 'linkedin', 'threads', 'twitter', 'youtube'] as any[];
 
             const postResult = await scheduleVideoPost(
               publicVideoUrl,

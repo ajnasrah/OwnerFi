@@ -132,8 +132,8 @@ export async function postToMetricool(request: MetricoolPostRequest): Promise<Me
           };
         }
 
-        // LinkedIn doesn't require platform-specific data
-        // Remove linkedinData completely as it causes API errors
+        // LinkedIn: No platform-specific data needed
+        // LinkedIn posts work without linkedinData configuration
 
         if (request.platforms.includes('tiktok')) {
           requestBody.tiktokData = {

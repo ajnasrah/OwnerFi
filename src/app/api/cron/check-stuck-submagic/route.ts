@@ -303,7 +303,7 @@ export async function GET(request: NextRequest) {
 
                 // POST 1: Reels/Shorts on all platforms
                 console.log(`   📱 Post 1: Reels/Shorts on all platforms...`);
-                const reelsPlatforms = ['facebook', 'instagram', 'tiktok', 'linkedin', 'threads', 'youtube'] as any[];
+                const reelsPlatforms = ['facebook', 'instagram', 'tiktok', 'linkedin', 'threads', 'twitter', 'youtube'] as any[];
 
                 const postResult = await scheduleVideoPost(
                   publicVideoUrl,

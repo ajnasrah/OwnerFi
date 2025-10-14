@@ -137,15 +137,12 @@ export async function postToMetricool(request: MetricoolPostRequest): Promise<Me
 
         if (request.platforms.includes('tiktok')) {
           requestBody.tiktokData = {
-            privacy: 'PUBLIC_TO_EVERYONE' // Options: PUBLIC_TO_EVERYONE, MUTUAL_FOLLOW_FRIENDS, SELF_ONLY
+            privacyOption: 'PUBLIC_TO_EVERYONE' // Fixed: use privacyOption not privacy
           };
         }
 
-        if (request.platforms.includes('threads')) {
-          requestBody.threadsData = {
-            visibility: 'PUBLIC' // Options: PUBLIC, PRIVATE
-          };
-        }
+        // Threads: No platform-specific data needed
+        // Threads posts work without threadsData configuration
 
         // blogId and userId MUST be query parameters, not in the body
         const response = await fetchWithTimeout(

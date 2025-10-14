@@ -169,9 +169,15 @@ export default function ArticlesPage() {
 
   const allArticles = activeBrand === 'carz' ? articles?.articles.carz || [] : articles?.articles.ownerfi || [];
 
+  // Debug logging
+  console.log(`[${activeBrand}] Total articles:`, allArticles.length);
+  console.log(`[${activeBrand}] Processed count:`, allArticles.filter(a => a.processed).length);
+  console.log(`[${activeBrand}] Unprocessed count:`, allArticles.filter(a => !a.processed).length);
+  console.log(`[${activeBrand}] With scores:`, allArticles.filter(a => a.qualityScore !== undefined).length);
+
   // Top 10 Queue: Unprocessed articles with scores, sorted by score DESC, limit 10
   const queueArticles = allArticles
-    .filter(a => !a.processed && a.qualityScore)
+    .filter(a => !a.processed && a.qualityScore !== undefined)
     .sort((a, b) => (b.qualityScore || 0) - (a.qualityScore || 0))
     .slice(0, 10);
 

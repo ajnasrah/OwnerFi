@@ -43,12 +43,11 @@ export async function GET(request: NextRequest) {
     const carzArticles: Article[] = [];
     const ownerfiArticles: Article[] = [];
 
-    // Get Carz articles
+    // Get Carz articles (all, not just unprocessed)
     const carzQuery = query(
       collection(db, 'carz_articles'),
-      where('processed', '==', false),
       orderBy('pubDate', 'desc'),
-      firestoreLimit(50)
+      firestoreLimit(100)
     );
 
     const carzSnapshot = await getDocs(carzQuery);
@@ -69,12 +68,11 @@ export async function GET(request: NextRequest) {
       });
     });
 
-    // Get OwnerFi articles
+    // Get OwnerFi articles (all, not just unprocessed)
     const ownerfiQuery = query(
       collection(db, 'ownerfi_articles'),
-      where('processed', '==', false),
       orderBy('pubDate', 'desc'),
-      firestoreLimit(50)
+      firestoreLimit(100)
     );
 
     const ownerfiSnapshot = await getDocs(ownerfiQuery);

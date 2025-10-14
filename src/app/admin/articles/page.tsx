@@ -30,7 +30,8 @@ interface ArticlesData {
 export default function ArticlesPage() {
   const { data: session, status: authStatus } = useSession();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'carz' | 'ownerfi'>('carz');
+  const [activeBrand, setActiveBrand] = useState<'carz' | 'ownerfi'>('carz');
+  const [activeView, setActiveView] = useState<'queue' | 'unprocessed'>('queue');
   const [articles, setArticles] = useState<ArticlesData | null>(null);
   const [loading, setLoading] = useState(true);
   const [rating, setRating] = useState(false);
@@ -97,7 +98,6 @@ export default function ArticlesPage() {
       const data = await response.json();
 
       if (data.success) {
-        // Refresh articles list
         await loadArticles();
       } else {
         alert(`Failed to delete article: ${data.error}`);
@@ -116,7 +116,8 @@ export default function ArticlesPage() {
   };
 
   const rateAllArticles = async () => {
-    if (!confirm(`Rate all ${currentArticles.length} ${activeTab} articles with AI in the background?\n\nThis will:\n- Score all articles with OpenAI\n- Keep top 10 articles\n- Delete low-quality ones\n\nCheck server logs for progress.`)) {
+    const unprocessedCount = allArticles.filter(a => !a.processed).length;
+    if (!confirm(`Rate all ${unprocessedCount} unprocessed ${activeBrand} articles with AI in the background?\n\nThis will:\n- Score all articles with OpenAI\n- Keep top 10 articles\n- Delete low-quality ones\n\nCheck server logs for progress.`)) {
       return;
     }
 
@@ -128,15 +129,15 @@ export default function ArticlesPage() {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          brand: activeTab,
-          keepTopN: 10 // Keep top 10 articles
+          brand: activeBrand,
+          keepTopN: 10
         })
       });
 
       const data = await response.json();
 
       if (data.success) {
-        alert(`✅ Started rating ${activeTab} articles in background!\n\nThe process will run automatically. Refresh the page in a few minutes to see the scores.`);
+        alert(`✅ Started rating ${activeBrand} articles in background!\n\nThe process will run automatically. Refresh the page in a few minutes to see the scores.`);
       } else {
         alert(`Failed to start rating: ${data.error}`);
       }
@@ -159,36 +160,68 @@ export default function ArticlesPage() {
     );
   }
 
-  const currentArticles = activeTab === 'carz' ? articles?.articles.carz || [] : articles?.articles.ownerfi || [];
+  const allArticles = activeBrand === 'carz' ? articles?.articles.carz || [] : articles?.articles.ownerfi || [];
+
+  // Top 10 Queue: Unprocessed articles with scores, sorted by score DESC, limit 10
+  const queueArticles = allArticles
+    .filter(a => !a.processed && a.qualityScore)
+    .sort((a, b) => (b.qualityScore || 0) - (a.qualityScore || 0))
+    .slice(0, 10);
+
+  // Unprocessed: All unprocessed articles (for rating)
+  const unprocessedArticles = allArticles.filter(a => !a.processed);
+
+  const displayArticles = activeView === 'queue' ? queueArticles : unprocessedArticles;
 
   return (
     <div className="min-h-screen bg-slate-50 p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-slate-900">Article Queue</h1>
-          <p className="text-slate-600 mt-1">View all unprocessed articles ready for video generation</p>
+          <h1 className="text-3xl font-bold text-slate-900">Article Management</h1>
+          <p className="text-slate-600 mt-1">Manage articles for video generation</p>
         </div>
 
         {/* Brand Tabs */}
         <div className="flex space-x-2 mb-6">
           {[
-            { key: 'carz', label: 'Carz Inc', icon: '🚗', count: articles?.articles.carz.length || 0 },
-            { key: 'ownerfi', label: 'OwnerFi', icon: '🏠', count: articles?.articles.ownerfi.length || 0 }
+            { key: 'carz', label: 'Carz Inc', icon: '🚗' },
+            { key: 'ownerfi', label: 'OwnerFi', icon: '🏠' }
           ].map((tab) => (
             <button
               key={tab.key}
-              onClick={() => setActiveTab(tab.key as any)}
+              onClick={() => setActiveBrand(tab.key as any)}
               className={`flex items-center space-x-2 px-6 py-3 rounded-xl font-medium transition-all ${
-                activeTab === tab.key
+                activeBrand === tab.key
                   ? 'bg-gradient-to-r from-indigo-500 to-indigo-600 text-white shadow-lg'
                   : 'bg-white text-slate-700 hover:bg-slate-100'
               }`}
             >
               <span className="text-lg">{tab.icon}</span>
               <span>{tab.label}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* View Tabs */}
+        <div className="flex space-x-2 mb-6">
+          {[
+            { key: 'queue', label: 'Top 10 Queue', icon: '🎯', count: queueArticles.length },
+            { key: 'unprocessed', label: 'Unprocessed Articles', icon: '📝', count: unprocessedArticles.length }
+          ].map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveView(tab.key as any)}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                activeView === tab.key
+                  ? 'bg-indigo-600 text-white'
+                  : 'bg-white text-slate-700 hover:bg-slate-100'
+              }`}
+            >
+              <span>{tab.icon}</span>
+              <span>{tab.label}</span>
               <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
-                activeTab === tab.key ? 'bg-white/20' : 'bg-slate-200'
+                activeView === tab.key ? 'bg-white/20' : 'bg-slate-200'
               }`}>
                 {tab.count}
               </span>
@@ -200,20 +233,22 @@ export default function ArticlesPage() {
         <div className="bg-white rounded-xl shadow-sm p-6">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-lg font-semibold text-slate-900">
-              {activeTab === 'carz' ? 'Carz Inc' : 'OwnerFi'} Articles
+              {activeView === 'queue' ? 'Top 10 Rated Articles' : 'All Unprocessed Articles'}
             </h2>
             <div className="flex items-center gap-2">
-              <button
-                onClick={rateAllArticles}
-                disabled={rating || currentArticles.length === 0}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  rating || currentArticles.length === 0
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-gradient-to-r from-purple-500 to-purple-600 text-white hover:from-purple-600 hover:to-purple-700'
-                }`}
-              >
-                {rating ? '🤖 Rating...' : '🤖 Rate All with AI'}
-              </button>
+              {activeView === 'unprocessed' && (
+                <button
+                  onClick={rateAllArticles}
+                  disabled={rating || unprocessedArticles.length === 0}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    rating || unprocessedArticles.length === 0
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      : 'bg-gradient-to-r from-purple-500 to-purple-600 text-white hover:from-purple-600 hover:to-purple-700'
+                  }`}
+                >
+                  {rating ? '🤖 Rating...' : '🤖 Rate All with AI'}
+                </button>
+              )}
               <button
                 onClick={loadArticles}
                 className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
@@ -223,9 +258,9 @@ export default function ArticlesPage() {
             </div>
           </div>
 
-          {currentArticles.length > 0 ? (
+          {displayArticles.length > 0 ? (
             <div className="space-y-4">
-              {currentArticles.map((article, index) => (
+              {displayArticles.map((article, index) => (
                 <div
                   key={article.id}
                   className="border border-slate-200 rounded-lg p-4 hover:border-indigo-300 transition-colors"
@@ -269,7 +304,7 @@ export default function ArticlesPage() {
                         View Article →
                       </a>
                       <button
-                        onClick={() => deleteArticle(article.id, activeTab)}
+                        onClick={() => deleteArticle(article.id, activeBrand)}
                         className="inline-flex items-center px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors"
                         title="Delete article"
                       >
@@ -290,9 +325,13 @@ export default function ArticlesPage() {
           ) : (
             <div className="bg-slate-50 rounded-lg p-12 text-center border border-slate-200">
               <div className="text-4xl mb-3">📭</div>
-              <div className="text-slate-500 text-sm font-medium">No articles in queue</div>
+              <div className="text-slate-500 text-sm font-medium">
+                {activeView === 'queue' ? 'No articles in top 10 queue' : 'No unprocessed articles'}
+              </div>
               <div className="text-xs text-slate-400 mt-1">
-                Articles will appear here when fetched from RSS feeds
+                {activeView === 'queue'
+                  ? 'Rate unprocessed articles to populate the queue'
+                  : 'Articles will appear here when fetched from RSS feeds'}
               </div>
             </div>
           )}
@@ -301,26 +340,25 @@ export default function ArticlesPage() {
         {/* Stats Summary */}
         <div className="mt-6 grid grid-cols-3 gap-4">
           <div className="bg-white rounded-lg shadow-sm p-4">
-            <div className="text-sm text-slate-600">Total Articles</div>
+            <div className="text-sm text-slate-600">Top 10 Queue</div>
             <div className="text-2xl font-bold text-slate-900 mt-1">
-              {(articles?.articles.carz.length || 0) + (articles?.articles.ownerfi.length || 0)}
+              {queueArticles.length}
             </div>
           </div>
           <div className="bg-white rounded-lg shadow-sm p-4">
-            <div className="text-sm text-slate-600">With AI Rating</div>
+            <div className="text-sm text-slate-600">Unprocessed</div>
             <div className="text-2xl font-bold text-slate-900 mt-1">
-              {currentArticles.filter(a => a.qualityScore).length}
+              {unprocessedArticles.length}
             </div>
           </div>
           <div className="bg-white rounded-lg shadow-sm p-4">
-            <div className="text-sm text-slate-600">Avg Score</div>
+            <div className="text-sm text-slate-600">Avg Score (Top 10)</div>
             <div className="text-2xl font-bold text-slate-900 mt-1">
-              {currentArticles.filter(a => a.qualityScore).length > 0
+              {queueArticles.length > 0
                 ? Math.round(
-                    currentArticles
-                      .filter(a => a.qualityScore)
+                    queueArticles
                       .reduce((sum, a) => sum + (a.qualityScore || 0), 0) /
-                    currentArticles.filter(a => a.qualityScore).length
+                    queueArticles.length
                   )
                 : 'N/A'}
             </div>

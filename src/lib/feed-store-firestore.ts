@@ -203,89 +203,38 @@ export async function markArticleProcessed(id: string, category: 'carz' | 'owner
 }
 
 // Get and lock article for processing (atomic operation to prevent race conditions)
-// Uses AI quality evaluation to pick the best article
+// Selects the top-rated article (must be pre-rated with qualityScore)
 export async function getAndLockArticle(category: 'carz' | 'ownerfi'): Promise<Article | null> {
   if (!db) return null;
 
   const collectionName = getCollectionName('ARTICLES', category);
 
-  // Get top 5 unprocessed articles to evaluate
+  // Get top-rated unprocessed articles (orderBy qualityScore desc)
   const q = query(
     collection(db, collectionName),
     where('processed', '==', false),
-    orderBy('pubDate', 'desc'),
-    firestoreLimit(5)
+    orderBy('qualityScore', 'desc'),
+    firestoreLimit(1)
   );
 
   const snapshot = await getDocs(q);
 
   if (snapshot.empty) {
+    console.log(`⚠️  No unprocessed articles available for ${category}`);
     return null;
   }
 
-  const candidates = snapshot.docs.map(doc => doc.data() as Article);
+  const bestArticle = snapshot.docs[0].data() as Article;
+  const qualityScore = (bestArticle as any).qualityScore || 0;
 
-  // Use AI quality filter to score all candidates
-  const { evaluateArticlesBatch } = await import('./article-quality-filter');
-  const qualityScores = await evaluateArticlesBatch(
-    candidates.map(article => ({
-      title: article.title,
-      content: article.content || article.description,
-      category
-    })),
-    3 // Max 3 concurrent API calls
-  );
-
-  // Pair articles with their scores
-  const scoredArticles = candidates.map((article, index) => ({
-    article,
-    score: qualityScores[index].score,
-    shouldMakeVideo: qualityScores[index].shouldMakeVideo,
-    reasoning: qualityScores[index].reasoning
-  }));
-
-  // Filter out articles below threshold (score < 70)
-  const viableArticles = scoredArticles.filter(item => item.shouldMakeVideo);
-
-  if (viableArticles.length === 0) {
-    console.log(`⚠️  No viable articles found (all below quality threshold)`);
-    // Still pick the best one even if below threshold (fail open)
-    scoredArticles.sort((a, b) => b.score - a.score);
-    const bestArticle = scoredArticles[0].article;
-    const bestScore = scoredArticles[0].score;
-
-    await updateDoc(doc(db, collectionName, bestArticle.id), {
-      processed: true,
-      processedAt: Date.now(),
-      processingStartedAt: Date.now(),
-      qualityScore: bestScore,
-      aiReasoning: scoredArticles[0].reasoning
-    });
-
-    console.log(`🔒 Locked best available article (score: ${bestScore}): ${bestArticle.title.substring(0, 60)}...`);
-    return bestArticle;
-  }
-
-  // Sort viable articles by score (highest first)
-  viableArticles.sort((a, b) => b.score - a.score);
-
-  const bestArticle = viableArticles[0].article;
-  const bestScore = viableArticles[0].score;
-  const reasoning = viableArticles[0].reasoning;
-
-  console.log(`📊 AI evaluated ${candidates.length} articles, best score: ${bestScore}`);
-  console.log(`   Reasoning: ${reasoning}`);
+  console.log(`🔒 Locked top-rated article (score: ${qualityScore}): ${bestArticle.title.substring(0, 60)}...`);
 
   // Immediately mark as processed to prevent another process from picking it up
   await updateDoc(doc(db, collectionName, bestArticle.id), {
     processed: true,
     processedAt: Date.now(),
-    processingStartedAt: Date.now(),
-    qualityScore: bestScore,
-    aiReasoning: reasoning
+    processingStartedAt: Date.now()
   });
-
-  console.log(`🔒 Locked best article (AI score: ${bestScore}): ${bestArticle.title.substring(0, 60)}...`);
 
   return bestArticle;
 }

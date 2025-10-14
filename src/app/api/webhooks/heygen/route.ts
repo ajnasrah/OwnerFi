@@ -193,7 +193,7 @@ async function triggerSubmagicProcessing(
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        title: (workflow.articleTitle || `Viral Video - ${workflowId}`).substring(0, 100), // Limit title to 100 chars to avoid Submagic validation error
+        title: workflow.articleTitle || `Viral Video - ${workflowId}`,
         language: 'en',
         videoUrl: publicHeygenUrl, // Use R2 public URL
         templateName: 'Hormozi 2',

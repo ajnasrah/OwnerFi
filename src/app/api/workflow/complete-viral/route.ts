@@ -239,7 +239,7 @@ IMPORTANT RULES:
 FORMAT:
 SCRIPT: [the exact words the AI avatar will speak - nothing else]
 
-TITLE: [50-100 characters, attention-grabbing headline with emojis]
+TITLE: [50-150 characters maximum, attention-grabbing headline with emojis]
 
 CAPTION: [Engaging social media post with:
 - Strong opening hook (1-2 sentences)

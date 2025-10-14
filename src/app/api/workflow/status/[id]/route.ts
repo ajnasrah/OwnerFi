@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getWorkflow } from '@/lib/workflow-store';
+import { getWorkflowById } from '@/lib/feed-store-firestore';
 
 export async function GET(
   request: NextRequest,
@@ -15,16 +15,21 @@ export async function GET(
       );
     }
 
-    const workflow = getWorkflow(id);
+    // Try both brands to find the workflow
+    let result = await getWorkflowById(id);
 
-    if (!workflow) {
+    if (!result) {
       return NextResponse.json(
         { error: 'Workflow not found' },
         { status: 404 }
       );
     }
 
-    return NextResponse.json(workflow);
+    return NextResponse.json({
+      id,
+      brand: result.brand,
+      workflow: result.workflow
+    });
 
   } catch (error) {
     console.error('Error getting workflow status:', error);

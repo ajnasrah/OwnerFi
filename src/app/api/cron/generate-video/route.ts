@@ -3,8 +3,6 @@
 // Takes top-rated unprocessed article and generates video
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth';
 
 const CRON_SECRET = process.env.CRON_SECRET;
 
@@ -40,15 +38,31 @@ export async function GET(request: NextRequest) {
 
     console.log(`✅ Authorization passed\n`);
 
-    // Note: "unprocessed" means articles that have been fetched and rated, but not yet turned into videos
-    // The getAndLockArticle() function in complete-viral workflow will select the top-rated one
+    console.log(`📚 Loading feed-store-firestore module...`);
     const { getUnprocessedArticles } = await import('@/lib/feed-store-firestore');
+    console.log(`✅ Module loaded\n`);
 
-    // Get top-rated articles that haven't been turned into videos yet
+    console.log(`🔍 Fetching unprocessed articles from Firestore...`);
     const carzArticles = await getUnprocessedArticles('carz', 5);
-    const ownerfiArticles = await getUnprocessedArticles('ownerfi', 5);
+    console.log(`   Carz: Found ${carzArticles.length} articles`);
 
-    console.log(`📊 Found ${carzArticles.length} Carz articles, ${ownerfiArticles.length} OwnerFi articles in queue`);
+    const ownerfiArticles = await getUnprocessedArticles('ownerfi', 5);
+    console.log(`   OwnerFi: Found ${ownerfiArticles.length} articles\n`);
+
+    if (carzArticles.length > 0) {
+      console.log(`📰 Top Carz articles:`);
+      carzArticles.slice(0, 3).forEach((article, i) => {
+        console.log(`   ${i + 1}. ${article.title?.substring(0, 60)}...`);
+      });
+    }
+
+    if (ownerfiArticles.length > 0) {
+      console.log(`📰 Top OwnerFi articles:`);
+      ownerfiArticles.slice(0, 3).forEach((article, i) => {
+        console.log(`   ${i + 1}. ${article.title?.substring(0, 60)}...`);
+      });
+    }
+    console.log();
 
     const workflowsTriggered = [];
     const results = [];
@@ -136,7 +150,14 @@ export async function GET(request: NextRequest) {
       console.log('⚠️  No unprocessed OwnerFi articles available');
     }
 
+    const duration = Date.now() - startTime;
+
     if (workflowsTriggered.length === 0) {
+      console.log(`⚠️  No workflows triggered - no unprocessed articles available`);
+      console.log(`\n${'='.repeat(60)}`);
+      console.log(`🏁 CRON COMPLETED (${duration}ms) - No workflows created`);
+      console.log(`${'='.repeat(60)}\n`);
+
       return NextResponse.json({
         success: true,
         message: 'No unprocessed articles available for video generation',
@@ -144,25 +165,40 @@ export async function GET(request: NextRequest) {
           carz: carzArticles.length,
           ownerfi: ownerfiArticles.length
         },
+        duration: `${duration}ms`,
         timestamp: new Date().toISOString()
       });
     }
+
+    console.log(`\n${'='.repeat(60)}`);
+    console.log(`🏁 CRON COMPLETED (${duration}ms) - ${workflowsTriggered.length} workflow(s) triggered`);
+    console.log(`   Brands: ${workflowsTriggered.join(', ')}`);
+    console.log(`${'='.repeat(60)}\n`);
 
     return NextResponse.json({
       success: true,
       message: `Triggered ${workflowsTriggered.length} video workflow(s)`,
       workflowsTriggered,
       results,
+      duration: `${duration}ms`,
       timestamp: new Date().toISOString()
     });
 
   } catch (error) {
-    console.error('❌ Video generation cron error:', error);
+    const duration = Date.now() - startTime;
+    console.error(`\n❌ VIDEO GENERATION CRON ERROR (${duration}ms):`, error);
+    console.error(`   Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    if (error instanceof Error && error.stack) {
+      console.error(`   Stack: ${error.stack}`);
+    }
+    console.log(`\n${'='.repeat(60)}\n`);
+
     return NextResponse.json(
       {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : undefined
+        stack: error instanceof Error ? error.stack : undefined,
+        duration: `${duration}ms`
       },
       { status: 500 }
     );

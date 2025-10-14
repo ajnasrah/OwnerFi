@@ -11,11 +11,13 @@ export const maxDuration = 300; // 5 minutes timeout
 
 export async function GET(request: NextRequest) {
   try {
-    // Verify cron secret
+    // Verify cron secret or Vercel cron User-Agent
     const authHeader = request.headers.get('authorization');
+    const userAgent = request.headers.get('user-agent');
     const cronSecret = process.env.CRON_SECRET || 'dev-secret';
+    const isVercelCron = userAgent === 'vercel-cron/1.0';
 
-    if (authHeader !== `Bearer ${cronSecret}`) {
+    if (!isVercelCron && authHeader !== `Bearer ${cronSecret}`) {
       console.warn('⚠️  Unauthorized cron request');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

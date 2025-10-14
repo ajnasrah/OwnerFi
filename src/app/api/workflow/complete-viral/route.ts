@@ -245,25 +245,19 @@ CAPTION: [Engaging social media post with:
 - Strong opening hook (1-2 sentences)
 - Key value points (2-3 bullets or short sentences)
 - Call to action
-- 5-10 relevant hashtags at the end
+- 3-5 relevant hashtags at the end
 - Use emojis strategically
-- 200-300 characters total]
+- STRICT LIMIT: 280 characters maximum (including hashtags and emojis)
+- Keep it concise and punchy!]
 
 EXAMPLE GOOD OUTPUT:
 SCRIPT: "Listen up because what I'm about to tell you will change everything you know about car insurance..."
 
 TITLE: 🚗 Dealerships Don't Want You to Know THIS About Insurance!
 
-CAPTION: Car dealerships are hiding something BIG from you 👀
+CAPTION: Dealerships hide 3 ways they profit when you finance 👀 Marked up rates, warranty kickbacks, and insurance cuts. Don't get played! 💰
 
-When you finance a vehicle, they're making money THREE ways:
-• Marked up interest rates
-• Extended warranty commissions
-• Insurance kickbacks
-
-Don't let them take advantage! Watch to learn how to save thousands 💰
-
-#CarInsurance #DealershipSecrets #FinanceTips #SaveMoney #AutoInsurance #CarBuying #SmartShopping #ConsumerRights #MoneyTips #InsuranceHacks
+#CarInsurance #DealershipSecrets #FinanceTips #SaveMoney
 
 EXAMPLE BAD SCRIPT:
 "[Opening shot of person in office] Today we're going to talk about car insurance. [Cut to B-roll of cars]"`

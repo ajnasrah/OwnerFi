@@ -1,12 +1,12 @@
 // API utility functions for timeouts, retries, and error handling
 
 export const TIMEOUTS = {
-  RSS_FETCH: 5000,        // 5 seconds
-  OPENAI_GENERATE: 15000, // 15 seconds
-  HEYGEN_SUBMIT: 10000,   // 10 seconds
-  SUBMAGIC_SUBMIT: 10000, // 10 seconds
-  EXTERNAL_API: 15000,    // 15 seconds for external APIs like Metricool
-  WORKFLOW_TTL: 10800000, // 3 hours
+  RSS_FETCH: 5000,         // 5 seconds
+  OPENAI_GENERATE: 120000, // 120 seconds (2 minutes for batch rating)
+  HEYGEN_SUBMIT: 10000,    // 10 seconds
+  SUBMAGIC_SUBMIT: 10000,  // 10 seconds
+  EXTERNAL_API: 15000,     // 15 seconds for external APIs like Metricool
+  WORKFLOW_TTL: 10800000,  // 3 hours
 };
 
 /**

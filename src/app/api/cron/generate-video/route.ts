@@ -67,10 +67,10 @@ export async function GET(request: NextRequest) {
     const workflowsTriggered = [];
     const results = [];
 
-    // Get base URL
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ||
-                    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
-                    'https://ownerfi.ai';
+    // Import workflow handler directly instead of making HTTP call
+    console.log(`📚 Loading complete-viral workflow module...`);
+    const { POST: startWorkflow } = await import('@/app/api/workflow/complete-viral/route');
+    console.log(`✅ Workflow module loaded\n`);
 
     // Trigger Carz workflow if articles available
     if (carzArticles.length > 0) {
@@ -78,7 +78,7 @@ export async function GET(request: NextRequest) {
       console.log(`   Top article: ${carzArticles[0].title.substring(0, 60)}...`);
 
       try {
-        const response = await fetch(`${baseUrl}/api/workflow/complete-viral`, {
+        const mockRequest = new Request('https://ownerfi.ai/api/workflow/complete-viral', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -88,12 +88,13 @@ export async function GET(request: NextRequest) {
           })
         });
 
+        const response = await startWorkflow(mockRequest as any);
         const data = await response.json();
 
         workflowsTriggered.push('carz');
         results.push({
           brand: 'carz',
-          success: response.ok,
+          success: response.status === 200,
           workflowId: data.workflow_id,
           article: carzArticles[0].title.substring(0, 60)
         });
@@ -117,7 +118,7 @@ export async function GET(request: NextRequest) {
       console.log(`   Top article: ${ownerfiArticles[0].title.substring(0, 60)}...`);
 
       try {
-        const response = await fetch(`${baseUrl}/api/workflow/complete-viral`, {
+        const mockRequest = new Request('https://ownerfi.ai/api/workflow/complete-viral', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -127,12 +128,13 @@ export async function GET(request: NextRequest) {
           })
         });
 
+        const response = await startWorkflow(mockRequest as any);
         const data = await response.json();
 
         workflowsTriggered.push('ownerfi');
         results.push({
           brand: 'ownerfi',
-          success: response.ok,
+          success: response.status === 200,
           workflowId: data.workflow_id,
           article: ownerfiArticles[0].title.substring(0, 60)
         });

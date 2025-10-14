@@ -9,22 +9,36 @@ import { authOptions } from '@/lib/auth';
 const CRON_SECRET = process.env.CRON_SECRET;
 
 export async function GET(request: NextRequest) {
+  const startTime = Date.now();
+  console.log(`\n${'='.repeat(60)}`);
+  console.log(`🎬 VIDEO GENERATION CRON STARTED`);
+  console.log(`Time: ${new Date().toISOString()}`);
+  console.log(`${'='.repeat(60)}\n`);
+
   try {
     // Verify authorization - either via Bearer token OR admin session OR Vercel cron
     const authHeader = request.headers.get('authorization');
     const userAgent = request.headers.get('user-agent');
-    const session = await getServerSession(authOptions as any);
-    const isAdmin = session?.user && (session.user as any).role === 'admin';
+
+    console.log(`📋 Request details:`);
+    console.log(`   User-Agent: ${userAgent}`);
+    console.log(`   Has Auth Header: ${!!authHeader}`);
+    console.log(`   CRON_SECRET set: ${!!CRON_SECRET}`);
+
+    // Don't await getServerSession - it can timeout and block the cron
     const isVercelCron = userAgent === 'vercel-cron/1.0';
 
-    if (CRON_SECRET && authHeader !== `Bearer ${CRON_SECRET}` && !isAdmin && !isVercelCron) {
+    console.log(`   Is Vercel Cron: ${isVercelCron}`);
+
+    if (CRON_SECRET && authHeader !== `Bearer ${CRON_SECRET}` && !isVercelCron) {
+      console.error(`❌ Authorization failed - rejecting request`);
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
       );
     }
 
-    console.log('🎬 Video Generation Cron - Starting...');
+    console.log(`✅ Authorization passed\n`);
 
     // Note: "unprocessed" means articles that have been fetched and rated, but not yet turned into videos
     // The getAndLockArticle() function in complete-viral workflow will select the top-rated one

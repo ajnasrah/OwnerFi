@@ -260,12 +260,22 @@ export async function scheduleVideoPost(
 
   const hashtags = extractHashtags(caption);
 
+  // Set postTypes to 'reels' for Instagram and Facebook (default for scheduleVideoPost)
+  const postTypes: any = {};
+  if (platforms.includes('instagram')) {
+    postTypes.instagram = 'reels';
+  }
+  if (platforms.includes('facebook')) {
+    postTypes.facebook = 'reels';
+  }
+
   return postToMetricool({
     videoUrl,
     caption: caption.replace(/#[\w]+/g, '').trim(), // Remove hashtags from caption
     title,
     hashtags,
     platforms,
+    postTypes, // Explicitly set as Reels, not Stories
     scheduleTime,
     brand // Pass brand to postToMetricool
   });

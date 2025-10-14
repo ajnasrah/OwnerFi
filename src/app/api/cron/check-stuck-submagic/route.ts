@@ -1,7 +1,7 @@
-// Failsafe: Check for stuck Submagic workflows every 5 minutes
-// If a workflow has been in "submagic_processing" for >5 minutes, check Submagic API
-// and complete the workflow if the video is ready (webhook failover)
-// Submagic webhooks are unreliable, so this ensures videos complete within 5-10 min max
+// SIMPLIFIED Failsafe: Check Submagic projects directly and complete any that are done
+// Runs every 5 minutes - just polls Submagic API for recent projects
+// If any are completed, trigger webhook to complete the workflow
+// No complex Firestore queries - just check Submagic and complete
 
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -21,159 +21,94 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Submagic API key not configured' }, { status: 500 });
     }
 
-    console.log('🔍 [FAILSAFE] Checking for stuck Submagic workflows (>5 min)...');
+    console.log('🔍 [FAILSAFE] Polling Submagic for completed projects...');
 
-    // Import Firebase Admin for server-side Firestore access
-    const { getFirestore } = await import('firebase-admin/firestore');
-    const { initializeApp, getApps, cert } = await import('firebase-admin/app');
+    // Get list of recent projects from Submagic
+    const listResponse = await fetch('https://api.submagic.co/v1/projects?limit=50', {
+      headers: { 'x-api-key': SUBMAGIC_API_KEY }
+    });
 
-    // Initialize Firebase Admin if needed
-    if (getApps().length === 0) {
-      const projectId = process.env.FIREBASE_PROJECT_ID;
-      const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-      const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
-
-      if (!projectId || !clientEmail || !privateKey) {
-        console.error('❌ Firebase Admin credentials not configured');
-        return NextResponse.json({ error: 'Firebase Admin credentials not configured' }, { status: 500 });
-      }
-
-      initializeApp({
-        credential: cert({ projectId, clientEmail, privateKey })
-      });
+    if (!listResponse.ok) {
+      throw new Error(`Submagic list API error: ${listResponse.status}`);
     }
 
-    const db = getFirestore();
-    console.log('✅ Firebase Admin initialized');
+    const listData = await listResponse.json();
+    const projects = listData.projects || listData.data || [];
+
+    console.log(`   Found ${projects.length} recent projects`);
 
     const results = [];
-    const fiveMinutesAgo = Date.now() - (5 * 60 * 1000); // 5 minutes ago (reduced from 10 for faster failsafe)
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://ownerfi.ai';
 
-    // Check Carz, OwnerFi, and Podcast collections
-    const collections = [
-      { name: 'carz_workflow_queue', type: 'social', brand: 'carz' },
-      { name: 'ownerfi_workflow_queue', type: 'social', brand: 'ownerfi' },
-      { name: 'podcast_workflow_queue', type: 'podcast', brand: 'podcast' }
-    ];
+    // Check each project
+    for (const project of projects) {
+      const projectId = project.id || project.project_id;
+      const status = project.status;
+      const downloadUrl = project.media_url || project.video_url || project.downloadUrl;
 
-    for (const { name: collectionName, type, brand } of collections) {
-      console.log(`\n📂 Checking ${collectionName}...`);
+      // Only process completed projects
+      if (status !== 'completed' && status !== 'done' && status !== 'ready') {
+        continue;
+      }
 
-      const snapshot = await db.collection(collectionName)
-        .where('status', '==', 'submagic_processing')
-        .get();
+      if (!downloadUrl) {
+        console.log(`   ⚠️  Project ${projectId}: complete but no download URL`);
+        continue;
+      }
 
-      console.log(`   Found ${snapshot.size} workflows in submagic_processing`);
+      console.log(`\n✅ Project ${projectId}: COMPLETED - Triggering webhook...`);
 
-      for (const doc of snapshot.docs) {
-        const workflow = doc.data();
-        const submagicProjectId = type === 'podcast' ? workflow.submagicProjectId : workflow.submagicVideoId;
-        const updatedAt = workflow.updatedAt || workflow.createdAt || 0;
-
-        if (!submagicProjectId) continue;
-
-        // Only check workflows that have been stuck for >5 minutes
-        if (updatedAt > fiveMinutesAgo) {
-          console.log(`   ⏭️  Skipping ${doc.id} - updated ${Math.round((Date.now() - updatedAt) / 60000)} min ago`);
-          continue;
-        }
-
-        console.log(`\n🔍 Checking stuck ${brand} workflow ${doc.id}...`);
-        console.log(`   Submagic Project: ${submagicProjectId}`);
-        console.log(`   Stuck for: ${Math.round((Date.now() - updatedAt) / 60000)} minutes`);
-
-        // Check Submagic status
-        const response = await fetch(`https://api.submagic.co/v1/projects/${submagicProjectId}`, {
-          headers: { 'x-api-key': SUBMAGIC_API_KEY }
+      // Trigger webhook to complete the workflow
+      try {
+        const webhookResponse = await fetch(`${baseUrl}/api/webhooks/submagic`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            projectId: projectId,
+            id: projectId,
+            status: 'completed',
+            downloadUrl: downloadUrl,
+            media_url: downloadUrl,
+            timestamp: new Date().toISOString()
+          })
         });
 
-        if (!response.ok) {
-          console.log(`   ❌ API error: ${response.status}`);
-          results.push({
-            workflowId: doc.id,
-            brand,
-            submagicProjectId,
-            action: 'api_error',
-            error: `API returned ${response.status}`
-          });
-          continue;
-        }
+        const webhookResult = await webhookResponse.json();
 
-        const projectData = await response.json();
-        const status = projectData.status;
-        const downloadUrl = projectData.media_url || projectData.video_url || projectData.downloadUrl;
+        results.push({
+          projectId,
+          action: 'webhook_triggered',
+          webhookResult
+        });
 
-        console.log(`   Submagic status: ${status}`);
-
-        if (status === 'completed' || status === 'done' || status === 'ready') {
-          if (!downloadUrl) {
-            console.log(`   ⚠️  Status is complete but no download URL found`);
-            results.push({
-              workflowId: doc.id,
-              brand,
-              submagicProjectId,
-              action: 'no_url',
-              status
-            });
-            continue;
-          }
-
-          console.log(`   ✅ Video is complete! Triggering webhook manually...`);
-
-          // Manually trigger webhook (failover)
-          const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://ownerfi.ai';
-          const webhookResponse = await fetch(`${baseUrl}/api/webhooks/submagic`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              projectId: submagicProjectId,
-              id: submagicProjectId,
-              status: 'completed',
-              downloadUrl: downloadUrl,
-              media_url: downloadUrl,
-              timestamp: new Date().toISOString()
-            })
-          });
-
-          const webhookResult = await webhookResponse.json();
-
-          console.log(`   ✅ Webhook triggered successfully!`);
-
-          results.push({
-            workflowId: doc.id,
-            brand,
-            submagicProjectId,
-            action: 'completed_via_failsafe',
-            webhookResult
-          });
-        } else {
-          console.log(`   ⏳ Still processing (${status})`);
-          results.push({
-            workflowId: doc.id,
-            brand,
-            submagicProjectId,
-            status,
-            action: 'still_processing'
-          });
-        }
+        console.log(`   ✅ Webhook triggered for ${projectId}`);
+      } catch (webhookError) {
+        console.error(`   ❌ Webhook failed for ${projectId}:`, webhookError);
+        results.push({
+          projectId,
+          action: 'webhook_failed',
+          error: webhookError instanceof Error ? webhookError.message : 'Unknown error'
+        });
       }
     }
 
-    const completedCount = results.filter(r => r.action === 'completed_via_failsafe').length;
+    const completedCount = results.filter(r => r.action === 'webhook_triggered').length;
 
-    console.log(`\n✅ [FAILSAFE] Checked ${results.length} stuck workflows (${completedCount} auto-completed)`);
+    console.log(`\n✅ [FAILSAFE] Processed ${results.length} completed projects (${completedCount} webhooks sent)`);
 
     return NextResponse.json({
       success: true,
+      totalProjects: projects.length,
       processed: results.length,
       completed: completedCount,
-      workflows: results
+      results
     });
 
   } catch (error) {
     console.error('❌ [FAILSAFE] Error:', error);
     return NextResponse.json({
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined
     }, { status: 500 });
   }
 }

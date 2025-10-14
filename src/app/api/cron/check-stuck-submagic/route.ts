@@ -23,13 +23,28 @@ export async function GET(request: NextRequest) {
 
     console.log('🔍 [FAILSAFE] Checking for stuck Submagic workflows (>5 min)...');
 
-    // Get workflows in submagic_processing status
-    const { db } = await import('@/lib/firebase');
-    const { collection, query, where, getDocs } = await import('firebase/firestore');
+    // Import Firebase Admin for server-side Firestore access
+    const { getFirestore } = await import('firebase-admin/firestore');
+    const { initializeApp, getApps, cert } = await import('firebase-admin/app');
 
-    if (!db) {
-      return NextResponse.json({ error: 'Firebase not initialized' }, { status: 500 });
+    // Initialize Firebase Admin if needed
+    if (getApps().length === 0) {
+      const projectId = process.env.FIREBASE_PROJECT_ID;
+      const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+      const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+
+      if (!projectId || !clientEmail || !privateKey) {
+        console.error('❌ Firebase Admin credentials not configured');
+        return NextResponse.json({ error: 'Firebase Admin credentials not configured' }, { status: 500 });
+      }
+
+      initializeApp({
+        credential: cert({ projectId, clientEmail, privateKey })
+      });
     }
+
+    const db = getFirestore();
+    console.log('✅ Firebase Admin initialized');
 
     const results = [];
     const fiveMinutesAgo = Date.now() - (5 * 60 * 1000); // 5 minutes ago (reduced from 10 for faster failsafe)
@@ -42,12 +57,13 @@ export async function GET(request: NextRequest) {
     ];
 
     for (const { name: collectionName, type, brand } of collections) {
-      const q = query(
-        collection(db, collectionName),
-        where('status', '==', type === 'podcast' ? 'submagic_processing' : 'submagic_processing')
-      );
+      console.log(`\n📂 Checking ${collectionName}...`);
 
-      const snapshot = await getDocs(q);
+      const snapshot = await db.collection(collectionName)
+        .where('status', '==', 'submagic_processing')
+        .get();
+
+      console.log(`   Found ${snapshot.size} workflows in submagic_processing`);
 
       for (const doc of snapshot.docs) {
         const workflow = doc.data();

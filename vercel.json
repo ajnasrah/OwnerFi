@@ -30,6 +30,10 @@
       "schedule": "0 9,12,15,18,21 * * *"
     },
     {
+      "path": "/api/cron/check-stuck-submagic",
+      "schedule": "*/10 * * * *"
+    },
+    {
       "path": "/api/cron/weekly-maintenance",
       "schedule": "0 11 * * 1"
     }
@@ -54,6 +58,9 @@
       "maxDuration": 300
     },
     "src/app/api/cron/weekly-maintenance/route.ts": {
+      "maxDuration": 60
+    },
+    "src/app/api/cron/check-stuck-submagic/route.ts": {
       "maxDuration": 60
     }
   },

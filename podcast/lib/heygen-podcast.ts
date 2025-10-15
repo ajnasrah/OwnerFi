@@ -164,11 +164,11 @@ export class HeyGenPodcastGenerator {
         }
       });
 
-      // Guest answers
+      // Guest answers (speed up guest since they talk slow)
       const guestVoice: any = {
         type: 'text',
         input_text: qa.answer,
-        speed: 1.0
+        speed: 1.2  // Speed up guest avatar to 1.2x
       };
 
       // Only add voice_id if it's provided, otherwise use avatar's default voice

@@ -1,8 +1,9 @@
 // Metricool API Integration
 // Auto-post viral videos to social media platforms
-// Supports multiple brands: Carz Inc and OwnerFi
+// Supports multiple brands: Carz Inc, OwnerFi, and Podcast
 
-import { fetchWithTimeout, retry, TIMEOUTS } from './api-utils';
+import { fetchWithTimeout, retry, TIMEOUTS, circuitBreakers, RateLimitError } from './api-utils';
+import { ERROR_MESSAGES } from '@/config/constants';
 
 const METRICOOL_BASE_URL = 'https://app.metricool.com/api/v2';
 
@@ -10,9 +11,10 @@ const METRICOOL_BASE_URL = 'https://app.metricool.com/api/v2';
 const METRICOOL_API_KEY = process.env.METRICOOL_API_KEY;
 const METRICOOL_USER_ID = process.env.METRICOOL_USER_ID;
 
-// Brand IDs for Carz Inc and Prosway
+// Brand IDs for Carz Inc, OwnerFi, and Podcast
 const METRICOOL_CARZ_BRAND_ID = process.env.METRICOOL_CARZ_BRAND_ID;
 const METRICOOL_OWNERFI_BRAND_ID = process.env.METRICOOL_OWNERFI_BRAND_ID;
+const METRICOOL_PODCAST_BRAND_ID = process.env.METRICOOL_PODCAST_BRAND_ID || '3738036'; // Podcast brand ID
 
 export interface MetricoolPostRequest {
   videoUrl: string;
@@ -25,7 +27,7 @@ export interface MetricoolPostRequest {
     facebook?: 'reels' | 'story';
   };
   scheduleTime?: string; // ISO 8601 format, or omit for immediate posting
-  brand: 'carz' | 'ownerfi'; // Required: which brand to post to
+  brand: 'carz' | 'ownerfi' | 'podcast'; // Required: which brand to post to
 }
 
 export interface MetricoolPostResponse {
@@ -39,19 +41,26 @@ export interface MetricoolPostResponse {
 /**
  * Get brand-specific Metricool brand ID
  */
-function getBrandId(brand: 'carz' | 'ownerfi'): string | null {
+function getBrandId(brand: 'carz' | 'ownerfi' | 'podcast'): string | null {
   if (brand === 'carz') {
     if (!METRICOOL_CARZ_BRAND_ID) {
       console.error('❌ Carz Inc brand ID not configured (METRICOOL_CARZ_BRAND_ID)');
       return null;
     }
     return METRICOOL_CARZ_BRAND_ID;
-  } else {
+  } else if (brand === 'ownerfi') {
     if (!METRICOOL_OWNERFI_BRAND_ID) {
       console.error('❌ OwnerFi brand ID not configured (METRICOOL_OWNERFI_BRAND_ID)');
       return null;
     }
     return METRICOOL_OWNERFI_BRAND_ID;
+  } else {
+    // podcast
+    if (!METRICOOL_PODCAST_BRAND_ID) {
+      console.error('❌ Podcast brand ID not configured (METRICOOL_PODCAST_BRAND_ID)');
+      return null;
+    }
+    return METRICOOL_PODCAST_BRAND_ID;
   }
 }
 
@@ -71,9 +80,10 @@ export async function postToMetricool(request: MetricoolPostRequest): Promise<Me
   // Get brand ID
   const brandId = getBrandId(request.brand);
   if (!brandId) {
+    const brandDisplayName = request.brand === 'carz' ? 'Carz Inc' : request.brand === 'ownerfi' ? 'OwnerFi' : 'Podcast';
     return {
       success: false,
-      error: `Brand ID not configured for ${request.brand === 'carz' ? 'Carz Inc' : 'OwnerFi'}`
+      error: `Brand ID not configured for ${brandDisplayName}`
     };
   }
 
@@ -81,7 +91,7 @@ export async function postToMetricool(request: MetricoolPostRequest): Promise<Me
     // Format caption with hashtags
     const fullCaption = formatCaption(request.caption, request.hashtags);
 
-    const brandName = request.brand === 'carz' ? 'Carz Inc' : 'OwnerFi';
+    const brandName = request.brand === 'carz' ? 'Carz Inc' : request.brand === 'ownerfi' ? 'OwnerFi' : 'Podcast';
     console.log(`📤 Posting to Metricool (${brandName})...`);
     console.log('   Brand ID:', brandId);
     console.log('   Platforms:', request.platforms.join(', '));
@@ -89,25 +99,27 @@ export async function postToMetricool(request: MetricoolPostRequest): Promise<Me
 
     return await retry(
       async () => {
-        // Build request body
-        const requestBody: any = {
-          text: fullCaption,
-          providers: request.platforms.map(platform => ({
-            network: platform
-          })),
-          media: [request.videoUrl],
-        };
+        // Use circuit breaker to prevent cascading failures
+        return await circuitBreakers.metricool.execute(async () => {
+          // Build request body
+          const requestBody: any = {
+            text: fullCaption,
+            providers: request.platforms.map(platform => ({
+              network: platform
+            })),
+            media: [request.videoUrl],
+          };
 
-        // Always include publicationDate (use current time + 1 minute for immediate posts)
-        const scheduleDate = request.scheduleTime
-          ? new Date(request.scheduleTime)
-          : new Date(Date.now() + 60000); // 1 minute from now for immediate posts
+          // Always include publicationDate (use current time + 1 minute for immediate posts)
+          const scheduleDate = request.scheduleTime
+            ? new Date(request.scheduleTime)
+            : new Date(Date.now() + 60000); // 1 minute from now for immediate posts
 
-        const publicationDate = scheduleDate.toISOString().replace(/\.\d{3}Z$/, '');
-        requestBody.publicationDate = {
-          dateTime: publicationDate,
-          timezone: 'America/New_York'
-        };
+          const publicationDate = scheduleDate.toISOString().replace(/\.\d{3}Z$/, '');
+          requestBody.publicationDate = {
+            dateTime: publicationDate,
+            timezone: 'America/New_York'
+          };
 
         // Add platform-specific data
         if (request.platforms.includes('instagram')) {
@@ -123,11 +135,19 @@ export async function postToMetricool(request: MetricoolPostRequest): Promise<Me
         }
 
         if (request.platforms.includes('youtube')) {
+          // Determine category based on brand
+          let category = 'NEWS_POLITICS'; // default for ownerfi
+          if (request.brand === 'carz') {
+            category = 'AUTOS_VEHICLES';
+          } else if (request.brand === 'podcast') {
+            category = 'NEWS_POLITICS'; // or 'PEOPLE_BLOGS' or 'EDUCATION'
+          }
+
           requestBody.youtubeData = {
             title: request.title || fullCaption.substring(0, 100),
             privacy: 'PUBLIC',
             madeForKids: false,
-            category: request.brand === 'carz' ? 'AUTOS_VEHICLES' : 'NEWS_POLITICS',
+            category,
             type: 'SHORT' // Post as YouTube Shorts, not regular videos
           };
         }
@@ -165,16 +185,17 @@ export async function postToMetricool(request: MetricoolPostRequest): Promise<Me
 
         const data = await response.json();
 
-        console.log(`✅ Posted to Metricool (${brandName}) successfully!`);
-        console.log('   Post ID:', data.data?.id || data.id);
-        console.log('   Status:', data.data?.providers?.[0]?.status);
+          console.log(`✅ Posted to Metricool (${brandName}) successfully!`);
+          console.log('   Post ID:', data.data?.id || data.id);
+          console.log('   Status:', data.data?.providers?.[0]?.status);
 
-        return {
-          success: true,
-          postId: data.data?.id?.toString() || data.id?.toString(),
-          scheduledFor: data.data?.publicationDate?.dateTime || request.scheduleTime,
-          platforms: request.platforms
-        };
+          return {
+            success: true,
+            postId: data.data?.id?.toString() || data.id?.toString(),
+            scheduledFor: data.data?.publicationDate?.dateTime || request.scheduleTime,
+            platforms: request.platforms
+          };
+        }); // End circuit breaker
       },
       {
         maxAttempts: 3,
@@ -187,6 +208,15 @@ export async function postToMetricool(request: MetricoolPostRequest): Promise<Me
 
   } catch (error) {
     console.error('❌ Error posting to Metricool:', error);
+
+    // Provide more specific error messages
+    if (error instanceof RateLimitError) {
+      return {
+        success: false,
+        error: `${ERROR_MESSAGES.RATE_LIMIT_EXCEEDED} Retry in ${error.retryAfter}s.`
+      };
+    }
+
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error'

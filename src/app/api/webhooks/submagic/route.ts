@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { scheduleVideoPost } from '@/lib/metricool-api';
+import { circuitBreakers, fetchWithTimeout, TIMEOUTS } from '@/lib/api-utils';
 
 export async function POST(request: NextRequest) {
   try {
@@ -70,8 +71,14 @@ export async function POST(request: NextRequest) {
             throw new Error('Submagic API key not configured');
           }
 
-          const response = await fetch(`https://api.submagic.co/v1/projects/${submagicProjectId}`, {
-            headers: { 'x-api-key': SUBMAGIC_API_KEY }
+          const response = await circuitBreakers.submagic.execute(async () => {
+            return await fetchWithTimeout(
+              `https://api.submagic.co/v1/projects/${submagicProjectId}`,
+              {
+                headers: { 'x-api-key': SUBMAGIC_API_KEY }
+              },
+              TIMEOUTS.SUBMAGIC_API
+            );
           });
 
           if (!response.ok) {
@@ -136,24 +143,50 @@ export async function POST(request: NextRequest) {
           console.log('   Public URL:', publicVideoUrl);
 
           if (isPodcast) {
-            // Podcast: Post to YouTube (long-form) and Facebook (long-form video)
-            console.log('\n📱 Auto-posting podcast to YouTube & Facebook via Metricool...');
+            // Podcast: Post as SHORT VIDEOS (Reels/Shorts) - same as carz/ownerfi
+            console.log('\n📱 Auto-posting podcast shorts to social media via Metricool...');
 
             const { postToMetricool } = await import('@/lib/metricool-api');
+
+            // POST 1: Reels/Shorts on all platforms
+            console.log('📱 Post 1: Reels/Shorts on all platforms...');
+            const reelsPlatforms = ['facebook', 'instagram', 'tiktok', 'linkedin', 'threads', 'twitter', 'youtube'] as any[];
+
             const postResult = await postToMetricool({
               videoUrl: publicVideoUrl,
               caption: workflow.episodeTitle || 'New Podcast Episode',
               title: `Episode #${workflow.episodeNumber}: ${workflow.episodeTitle || 'New Episode'}`,
-              platforms: ['youtube', 'facebook'] as any,
+              platforms: reelsPlatforms,
               postTypes: {
-                youtube: 'video', // Long-form video
-                facebook: 'video'  // Long-form video
+                instagram: 'reels',
+                facebook: 'reels'
               },
               brand: 'podcast'
             });
 
+            console.log(`   ${postResult.success ? '✅' : '❌'} Reels/Shorts post: ${postResult.postId || postResult.error}`);
+
+            // POST 2: Stories (Instagram Story + Facebook Story)
+            console.log('📱 Post 2: Stories (Instagram + Facebook)...');
+            const storiesResult = await postToMetricool({
+              videoUrl: publicVideoUrl,
+              caption: workflow.episodeTitle || 'New Podcast Episode',
+              title: `Episode #${workflow.episodeNumber}: ${workflow.episodeTitle || 'New Episode'}`,
+              platforms: ['instagram', 'facebook'] as any[],
+              postTypes: {
+                instagram: 'story',
+                facebook: 'story'
+              },
+              brand: 'podcast'
+            }).catch(err => {
+              console.warn('   ❌ Stories post failed:', err.message);
+              return { success: false, error: err.message, postId: undefined };
+            });
+
+            console.log(`   ${storiesResult.success ? '✅' : '❌'} Stories post: ${storiesResult.postId || storiesResult.error}`);
+
             if (postResult.success) {
-              console.log('✅ Posted podcast to YouTube & Facebook!');
+              console.log('✅ Posted podcast to social media!');
               console.log('   Post ID:', postResult.postId);
 
               // Mark podcast workflow as completed
@@ -178,25 +211,48 @@ export async function POST(request: NextRequest) {
             // Social Media: Post to Reels/Shorts AND Stories
             console.log('\n📱 Auto-posting to social media via Metricool...');
 
-            const schedule = (process.env.METRICOOL_SCHEDULE_DELAY || 'immediate') as any;
+            // Get next available time slot for this brand
+            const { getNextAvailableTimeSlot, updateWorkflowStatus: updateWorkflow } = await import('@/lib/feed-store-firestore');
+            const nextSlot = await getNextAvailableTimeSlot(brand as 'carz' | 'ownerfi');
+            const scheduledTime = nextSlot.toISOString();
+
+            console.log(`📅 Scheduling post for: ${nextSlot.toLocaleString('en-US', {
+              timeZone: 'America/New_York',
+              weekday: 'short',
+              month: 'short',
+              day: 'numeric',
+              hour: 'numeric',
+              minute: '2-digit',
+              hour12: true
+            })} ET`);
+
+            // Store the scheduled time in workflow
+            await updateWorkflow(workflowId, brand as 'carz' | 'ownerfi', {
+              scheduledFor: nextSlot.getTime()
+            });
+
             const { postToMetricool } = await import('@/lib/metricool-api');
 
             // POST 1: Reels/Shorts on all platforms (Facebook Reels, Instagram Reels, TikTok, LinkedIn, Threads, Twitter, YouTube Shorts)
             console.log('📱 Post 1: Reels/Shorts on all platforms...');
             const reelsPlatforms = ['facebook', 'instagram', 'tiktok', 'linkedin', 'threads', 'twitter', 'youtube'] as any[];
 
-            const postResult = await scheduleVideoPost(
-              publicVideoUrl,
-              workflow.caption || 'Check out this video! 🔥',
-              workflow.title || 'Viral Video',
-              reelsPlatforms,
-              schedule,
-              brand as 'carz' | 'ownerfi'
-            );
+            const postResult = await postToMetricool({
+              videoUrl: publicVideoUrl,
+              caption: workflow.caption || 'Check out this video! 🔥',
+              title: workflow.title || 'Viral Video',
+              platforms: reelsPlatforms,
+              postTypes: {
+                instagram: 'reels',
+                facebook: 'reels'
+              },
+              scheduleTime: scheduledTime,
+              brand: brand as 'carz' | 'ownerfi'
+            });
 
             console.log(`   ${postResult.success ? '✅' : '❌'} Reels/Shorts post: ${postResult.postId || postResult.error}`);
 
-            // POST 2: Stories (Instagram Story + Facebook Story)
+            // POST 2: Stories (Instagram Story + Facebook Story) - same scheduled time
             console.log('📱 Post 2: Stories (Instagram + Facebook)...');
             const storiesResult = await postToMetricool({
               videoUrl: publicVideoUrl,
@@ -207,6 +263,7 @@ export async function POST(request: NextRequest) {
                 instagram: 'story',
                 facebook: 'story'
               },
+              scheduleTime: scheduledTime,
               brand: brand as 'carz' | 'ownerfi'
             }).catch(err => {
               console.warn('   ❌ Stories post failed:', err.message);

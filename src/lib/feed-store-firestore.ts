@@ -51,6 +51,7 @@ export interface WorkflowQueueItem {
   metricoolPostId?: string;
   caption?: string; // Store for webhooks
   title?: string; // Store for webhooks
+  scheduledFor?: number; // Timestamp for when post should go live
   error?: string;
   retryCount?: number;
   lastRetryAt?: number;
@@ -862,4 +863,88 @@ export async function getPodcastWorkflowById(workflowId: string): Promise<Podcas
 
   console.log(`⚠️  No podcast workflow found with ID: ${workflowId}`);
   return null;
+}
+
+// Smart Scheduling: Get next available time slot for social media posting
+// Posting schedule: 9 AM, 11 AM, 2 PM, 6 PM, 8 PM (Eastern Time)
+const POSTING_SCHEDULE_HOURS = [9, 11, 14, 18, 20];
+
+export async function getNextAvailableTimeSlot(brand: 'carz' | 'ownerfi'): Promise<Date> {
+  if (!db) {
+    // Fallback: return current time + 1 minute if DB not available
+    return new Date(Date.now() + 60000);
+  }
+
+  try {
+    // Get current time in Eastern Time
+    const now = new Date();
+    const nowEastern = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+
+    // Start of today at midnight Eastern
+    const todayStart = new Date(nowEastern);
+    todayStart.setHours(0, 0, 0, 0);
+    const todayStartTimestamp = todayStart.getTime();
+
+    // End of today at 11:59:59 PM Eastern
+    const todayEnd = new Date(nowEastern);
+    todayEnd.setHours(23, 59, 59, 999);
+    const todayEndTimestamp = todayEnd.getTime();
+
+    // Query Firestore for all workflows scheduled for today (for this brand)
+    const collectionName = getCollectionName('WORKFLOW_QUEUE', brand);
+    const q = query(
+      collection(db, collectionName),
+      where('scheduledFor', '>=', todayStartTimestamp),
+      where('scheduledFor', '<=', todayEndTimestamp)
+    );
+
+    const snapshot = await getDocs(q);
+    const scheduledTimestamps = snapshot.docs
+      .map(doc => doc.data().scheduledFor)
+      .filter(ts => typeof ts === 'number') as number[];
+
+    // Build set of taken hours for fast lookup
+    const takenHours = new Set<number>();
+    scheduledTimestamps.forEach(timestamp => {
+      const date = new Date(timestamp);
+      const hour = date.getHours();
+      takenHours.add(hour);
+    });
+
+    console.log(`📅 Scheduling for ${brand.toUpperCase()}: ${takenHours.size} slots taken today (hours: ${Array.from(takenHours).join(', ')})`);
+
+    // Find next available slot
+    for (const hour of POSTING_SCHEDULE_HOURS) {
+      // Create a date for this slot today
+      const slotTime = new Date(todayStart);
+      slotTime.setHours(hour, 0, 0, 0);
+
+      // Skip if this slot has already passed
+      if (slotTime.getTime() < now.getTime()) {
+        continue;
+      }
+
+      // Skip if this slot is already taken
+      if (takenHours.has(hour)) {
+        continue;
+      }
+
+      // Found available slot!
+      console.log(`✅ Next available slot for ${brand}: ${slotTime.toLocaleString('en-US', { timeZone: 'America/New_York', hour: 'numeric', minute: '2-digit', hour12: true })}`);
+      return slotTime;
+    }
+
+    // All slots today are taken or past - schedule for first slot tomorrow
+    const tomorrowStart = new Date(todayStart);
+    tomorrowStart.setDate(tomorrowStart.getDate() + 1);
+    tomorrowStart.setHours(POSTING_SCHEDULE_HOURS[0], 0, 0, 0);
+
+    console.log(`⏭️  All slots taken today for ${brand}, scheduling for tomorrow: ${tomorrowStart.toLocaleString('en-US', { timeZone: 'America/New_York', weekday: 'short', hour: 'numeric', minute: '2-digit', hour12: true })}`);
+    return tomorrowStart;
+
+  } catch (error) {
+    console.error('❌ Error calculating next time slot:', error);
+    // Fallback: return current time + 1 hour
+    return new Date(Date.now() + 3600000);
+  }
 }

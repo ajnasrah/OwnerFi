@@ -3,25 +3,35 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { scheduleVideoPost } from '@/lib/metricool-api';
+import { circuitBreakers, fetchWithTimeout, TIMEOUTS } from '@/lib/api-utils';
+import { CompleteWorkflowRequestSchema, safeParse } from '@/lib/validation-schemas';
+import { ERROR_MESSAGES } from '@/config/constants';
 
 const HEYGEN_API_KEY = process.env.HEYGEN_API_KEY;
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const SUBMAGIC_API_KEY = process.env.SUBMAGIC_API_KEY;
 
-interface CompleteWorkflowRequest {
-  brand: 'carz' | 'ownerfi';
-  platforms?: ('instagram' | 'tiktok' | 'youtube' | 'facebook' | 'linkedin' | 'threads')[];
-  schedule?: 'immediate' | '1hour' | '2hours' | '4hours' | 'optimal';
-  talking_photo_id?: string;
-  voice_id?: string;
-}
-
 export async function POST(request: NextRequest) {
   try {
-    const body: CompleteWorkflowRequest = await request.json();
-    const brand = body.brand || 'ownerfi';
-    const platforms = body.platforms || ['instagram', 'tiktok', 'youtube'];
-    const schedule = body.schedule || 'immediate';
+    // Parse and validate request body
+    const rawBody = await request.json();
+    const validation = safeParse(CompleteWorkflowRequestSchema, rawBody);
+
+    if (!validation.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: ERROR_MESSAGES.MISSING_REQUIRED_FIELD,
+          details: validation.errors.join(', ')
+        },
+        { status: 400 }
+      );
+    }
+
+    const body = validation.data;
+    const brand = body.brand;
+    const platforms = body.platforms;
+    const schedule = body.schedule;
 
     console.log('🚀 Starting COMPLETE VIRAL VIDEO WORKFLOW');
     console.log(`   Brand: ${brand}`);
@@ -204,6 +214,30 @@ async function getBestArticle(brand: string): Promise<{ id: string; title: strin
   };
 }
 
+// Helper: Sanitize user content to prevent prompt injection
+function sanitizeContent(content: string): string {
+  // Remove potentially malicious patterns
+  let sanitized = content;
+
+  // Remove common prompt injection patterns
+  const suspiciousPatterns = [
+    /ignore\s+previous\s+instructions/gi,
+    /ignore\s+all\s+previous/gi,
+    /disregard\s+previous/gi,
+    /forget\s+previous/gi,
+    /system\s*:\s*you\s+are/gi,
+    /new\s+instructions/gi,
+    /you\s+are\s+now/gi,
+    /act\s+as\s+if/gi
+  ];
+
+  for (const pattern of suspiciousPatterns) {
+    sanitized = sanitized.replace(pattern, '[REDACTED]');
+  }
+
+  return sanitized;
+}
+
 // Helper: Generate viral content with OpenAI
 async function generateViralContent(content: string): Promise<{ script: string; title: string; caption: string }> {
   if (!OPENAI_API_KEY) {
@@ -214,22 +248,28 @@ async function generateViralContent(content: string): Promise<{ script: string; 
     };
   }
 
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${OPENAI_API_KEY}`
-    },
-    body: JSON.stringify({
-      model: 'gpt-4o-mini',
-      messages: [
-        {
-          role: 'system',
-          content: `You are a viral video script writer. Generate a single-person talking head video script.
+  // Sanitize content to prevent prompt injection
+  const sanitizedContent = sanitizeContent(content);
+
+  const response = await circuitBreakers.openai.execute(async () => {
+    return await fetchWithTimeout(
+      'https://api.openai.com/v1/chat/completions',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${OPENAI_API_KEY}`
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages: [
+            {
+              role: 'system',
+              content: `You are a viral video script writer. Generate a single-person talking head video script.
 
 IMPORTANT RULES:
 - Write ONLY what the person says directly to camera - no scene descriptions, no cuts, no "[Opening shot]" directions
-- 45-60 seconds of continuous speech (approximately 120-150 words)
+- MUST be under 45 seconds of continuous speech (approximately 90-110 words MAXIMUM)
 - High energy, dramatic, attention-grabbing delivery
 - Start with a hook that stops the scroll
 - Use short punchy sentences
@@ -261,12 +301,15 @@ CAPTION: Dealerships hide 3 ways they profit when you finance 👀 Marked up rat
 
 EXAMPLE BAD SCRIPT:
 "[Opening shot of person in office] Today we're going to talk about car insurance. [Cut to B-roll of cars]"`
-        },
-        { role: 'user', content: `Article:\n\n${content.substring(0, 2000)}` }
-      ],
-      temperature: 0.85,
-      max_tokens: 800
-    })
+            },
+            { role: 'user', content: `Article:\n\n${sanitizedContent.substring(0, 2000)}` }
+          ],
+          temperature: 0.85,
+          max_tokens: 800
+        })
+      },
+      TIMEOUTS.OPENAI_API
+    );
   });
 
   if (!response.ok) {
@@ -348,23 +391,30 @@ async function generateHeyGenVideo(params: {
       requestBody.callback_id = params.callback_id;
     }
 
-    const response = await fetch('https://api.heygen.com/v2/video/generate', {
-      method: 'POST',
-      headers: {
-        'accept': 'application/json',
-        'content-type': 'application/json',
-        'x-api-key': HEYGEN_API_KEY!,
-      },
-      body: JSON.stringify(requestBody)
+    // Use circuit breaker to prevent cascading failures
+    return await circuitBreakers.heygen.execute(async () => {
+      const response = await fetchWithTimeout(
+        'https://api.heygen.com/v2/video/generate',
+        {
+          method: 'POST',
+          headers: {
+            'accept': 'application/json',
+            'content-type': 'application/json',
+            'x-api-key': HEYGEN_API_KEY!,
+          },
+          body: JSON.stringify(requestBody)
+        },
+        TIMEOUTS.HEYGEN_API
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(`HeyGen API error: ${JSON.stringify(errorData)}`);
+      }
+
+      const data = await response.json();
+      return { success: true, video_id: data.data?.video_id || data.video_id };
     });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      return { success: false, error: JSON.stringify(errorData) };
-    }
-
-    const data = await response.json();
-    return { success: true, video_id: data.data?.video_id || data.video_id };
   } catch (error) {
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }

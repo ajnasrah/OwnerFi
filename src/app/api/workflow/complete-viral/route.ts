@@ -327,6 +327,8 @@ EXAMPLE BAD SCRIPT:
 
   const fullResponse = data.choices[0]?.message?.content?.trim() || '';
 
+  console.log('🤖 OpenAI full response:', fullResponse);
+
   const scriptMatch = fullResponse.match(/SCRIPT:\s*([\s\S]*?)(?=TITLE:|CAPTION:|$)/i);
   const titleMatch = fullResponse.match(/TITLE:\s*([\s\S]*?)(?=CAPTION:|$)/i);
   const captionMatch = fullResponse.match(/CAPTION:\s*([\s\S]*?)$/i);
@@ -338,8 +340,24 @@ EXAMPLE BAD SCRIPT:
     title = title.substring(0, 47) + '...'; // Truncate to 47 + '...' = 50
   }
 
+  // Extract script and ensure it's never empty
+  let script = scriptMatch ? scriptMatch[1].trim() : '';
+
+  // If script is empty, use fallback content
+  if (!script || script.length === 0) {
+    console.warn('⚠️  OpenAI returned empty script, using fallback content');
+    script = content.substring(0, 500);
+  }
+
+  // Validate script is not empty before returning
+  if (!script || script.length === 0) {
+    throw new Error('Failed to generate valid script - both OpenAI and fallback content are empty');
+  }
+
+  console.log(`✅ Generated script (${script.length} chars): ${script.substring(0, 100)}...`);
+
   return {
-    script: scriptMatch ? scriptMatch[1].trim() : content.substring(0, 500),
+    script,
     title,
     caption: captionMatch ? captionMatch[1].trim() : 'Breaking news you need to see! 🔥\n\nThis changes everything. Click to watch the full story.\n\n#BreakingNews #MustWatch #Viral #Trending'
   };

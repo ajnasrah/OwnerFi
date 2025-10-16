@@ -215,9 +215,10 @@ export async function POST(request: NextRequest) {
 
             // POST 1: Main post to all platforms (Reels/Shorts)
             // Add Bluesky for OwnerFi only
-            const allPlatforms = ['facebook', 'instagram', 'tiktok', 'youtube', 'linkedin', 'threads', 'twitter'] as any[];
+            // Exclude Twitter for Carz (no account connected)
+            const allPlatforms = ['facebook', 'instagram', 'tiktok', 'youtube', 'linkedin', 'threads'] as any[];
             if (brand === 'ownerfi') {
-              allPlatforms.push('bluesky');
+              allPlatforms.push('twitter', 'bluesky');
             }
             console.log(`📱 Post 1: All platforms (${allPlatforms.join(', ')})...`);
 

@@ -119,18 +119,9 @@ export async function POST(request: NextRequest) {
       console.log('   Workflow ID:', workflowId);
       console.log('   Brand:', brand);
 
-      // Send immediate confirmation to Submagic (don't wait for R2 upload)
-      const response = NextResponse.json({
-        received: true,
-        projectId: submagicProjectId,
-        workflowId: workflowId,
-        brand: brand,
-        timestamp: new Date().toISOString()
-      });
-
-      // Upload to R2 and post to Late asynchronously (don't block webhook response)
-      setImmediate(async () => {
-        try {
+      // Process R2 upload and Late posting synchronously (CRITICAL: Must complete before function terminates)
+      // In serverless environments, setImmediate() work gets killed when the response is sent
+      try {
           console.log('\n☁️ Uploading Submagic video to R2...');
 
           // Import video storage utilities
@@ -291,9 +282,15 @@ export async function POST(request: NextRequest) {
             });
           }
         }
-      });
 
-      return response;
+      // Return success response after all work completes
+      return NextResponse.json({
+        received: true,
+        projectId: submagicProjectId,
+        workflowId: workflowId,
+        brand: brand,
+        timestamp: new Date().toISOString()
+      });
 
     } else if (status === 'failed' || status === 'error') {
       console.error('❌ Submagic processing failed via webhook');
@@ -320,16 +317,25 @@ export async function POST(request: NextRequest) {
           'Submagic processing failed'
         );
       }
-    } else {
-      console.log('⏳ Submagic webhook - intermediate status:', status);
-    }
 
-    return NextResponse.json({
-      received: true,
-      projectId: submagicProjectId,
-      workflowId: workflowId,
-      timestamp: new Date().toISOString()
-    });
+      return NextResponse.json({
+        received: true,
+        projectId: submagicProjectId,
+        workflowId: workflowId,
+        timestamp: new Date().toISOString()
+      });
+
+    } else {
+      // Intermediate status (processing, etc.)
+      console.log('⏳ Submagic webhook - intermediate status:', status);
+
+      return NextResponse.json({
+        received: true,
+        projectId: submagicProjectId,
+        workflowId: workflowId,
+        timestamp: new Date().toISOString()
+      });
+    }
 
   } catch (error) {
     console.error('Error processing Submagic webhook:', error);

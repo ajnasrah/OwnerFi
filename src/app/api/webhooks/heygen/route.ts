@@ -66,21 +66,17 @@ export async function POST(request: NextRequest) {
       console.log('   Video URL:', event_data.url);
       console.log('   Type:', isPodcast ? 'PODCAST' : 'SOCIAL MEDIA');
 
-      // Send immediate confirmation to HeyGen
-      const response = NextResponse.json({
+      // Trigger Submagic processing synchronously (CRITICAL: Must complete before function terminates)
+      // In serverless environments, setImmediate() work gets killed when the response is sent
+      // NOTE: Status is set to 'submagic_processing' INSIDE triggerSubmagicProcessing
+      // AFTER we get the Submagic project ID, so failsafe can find it
+      await triggerSubmagicProcessing(workflowId, event_data.url, brand, workflow, isPodcast);
+
+      return NextResponse.json({
         received: true,
         event_type,
         workflow_id: workflowId
       });
-
-      // Trigger Submagic processing asynchronously (don't block webhook response)
-      // NOTE: Status is set to 'submagic_processing' INSIDE triggerSubmagicProcessing
-      // AFTER we get the Submagic project ID, so failsafe can find it
-      setImmediate(async () => {
-        await triggerSubmagicProcessing(workflowId, event_data.url, brand, workflow, isPodcast);
-      });
-
-      return response;
 
     } else if (event_type === 'avatar_video.fail') {
       console.error('❌ HeyGen video generation failed via webhook');

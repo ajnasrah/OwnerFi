@@ -77,29 +77,20 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Select avatar and voice based on brand
-    // Carz: Automotive Expert (Colton)
-    // OwnerFi: Real Estate Agent (Zelena)
-    const brandAgents = {
-      carz: {
-        talking_photo_id: '711a1d390a2a4634b5b515d44a631ab3', // Colton (Automotive Expert)
-        voice_id: 'dcc89bc2097f47bd93f0c9e8d5e53b5f', // Colton voice
-        scale: 1.4
-      },
-      ownerfi: {
-        talking_photo_id: 'c308729a2d444a09a98cb29baee73d88', // Zelena (Real Estate Agent)
-        voice_id: 'c4313f9f0b214a7a8189c134736ce897', // Abigail - Lifelike
-        scale: 1.4
-      }
-    };
-
-    const selectedAgent = brandAgents[brand as 'carz' | 'ownerfi'] || brandAgents.ownerfi;
+    // NOTE: Both Carz and OwnerFi use the same "me" avatar for viral videos
+    // The following avatars are available for PODCAST INTERVIEWEES only:
+    // - Personal Trainer (Oxana Yoga): talking_photo_id '5eb1adac973c432f90e07a5807059d55'
+    // - Real Estate Agent (Zelena): talking_photo_id 'c308729a2d444a09a98cb29baee73d88', voice 'c4313f9f0b214a7a8189c134736ce897'
+    // - Doctor (Sofia): talking_photo_id '1732832799', voice '2e4de8a01f3b4e9c96794045e2f12779'
+    // - Automotive Expert (Colton): talking_photo_id '711a1d390a2a4634b5b515d44a631ab3', voice 'dcc89bc2097f47bd93f0c9e8d5e53b5f'
+    // - Technology Expert (Vince): talking_photo_id '1727676442', voice '219a23d690fc48c7b3a24ea4a0ac651a'
+    // - Financial Advisor (Henry): talking_photo_id '1375223b2cc24ff0a21830fbf5cb45ba', voice '8c0bd8c49b2849dc96f8e89b8eace60'
 
     const videoResult = await generateHeyGenVideo({
-      talking_photo_id: body.talking_photo_id || selectedAgent.talking_photo_id,
-      voice_id: body.voice_id || selectedAgent.voice_id,
+      talking_photo_id: body.talking_photo_id || '31c6b2b6306b47a2ba3572a23be09dbc', // Default "me" avatar
+      voice_id: body.voice_id || '9070a6c2dbd54c10bb111dc8c655bff7', // Default voice
       input_text: content.script,
-      scale: body.scale || selectedAgent.scale,
+      scale: 1.4,
       width: 1080,
       height: 1920,
       callback_id: workflowId // Pass workflow ID for webhook callback

@@ -42,6 +42,8 @@ export async function GET(request: NextRequest) {
 
     // Check if we should generate an episode (skip check if forced)
     const scheduler = new PodcastScheduler();
+    // Load state from Firestore (async)
+    await scheduler.loadStateFromFirestore();
 
     if (!force && !scheduler.shouldGenerateEpisode()) {
       console.log('⏭️  Skipping - Not time for a new episode yet');
@@ -153,7 +155,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Step 3: Record episode in scheduler
-    const recordedEpisodeNumber = scheduler.recordEpisode(
+    const recordedEpisodeNumber = await scheduler.recordEpisode(
       script.guest_id,
       videoId
     );

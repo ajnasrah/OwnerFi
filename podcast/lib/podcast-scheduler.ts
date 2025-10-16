@@ -1,6 +1,5 @@
 // Weekly Podcast Scheduler
-import { readFileSync, writeFileSync, existsSync } from 'fs';
-import { join } from 'path';
+// Refactored for serverless environments - uses static config and Firestore for state
 
 interface ScheduleConfig {
   frequency: string;
@@ -25,34 +24,26 @@ interface SchedulerState {
   episodes: EpisodeRecord[];
 }
 
+// Static configuration (moved from podcast-config.json for serverless compatibility)
+const DEFAULT_SCHEDULE: ScheduleConfig = {
+  frequency: 'weekly',
+  day_of_week: 'monday',
+  time: '09:00',
+  timezone: 'America/New_York',
+  enabled: true
+};
+
 export class PodcastScheduler {
-  private configPath: string;
-  private statePath: string;
   private schedule: ScheduleConfig;
   private state: SchedulerState;
 
   constructor() {
-    this.configPath = join(process.cwd(), 'podcast', 'config', 'podcast-config.json');
-    this.statePath = join(process.cwd(), 'podcast', 'config', 'scheduler-state.json');
+    // Use static configuration instead of file reads
+    this.schedule = DEFAULT_SCHEDULE;
 
-    // Load configuration
-    const config = JSON.parse(readFileSync(this.configPath, 'utf-8'));
-    this.schedule = config.schedule;
-
-    // Load or initialize state
-    this.state = this.loadState();
-  }
-
-  /**
-   * Load scheduler state from file
-   */
-  private loadState(): SchedulerState {
-    if (existsSync(this.statePath)) {
-      return JSON.parse(readFileSync(this.statePath, 'utf-8'));
-    }
-
-    // Initialize new state
-    return {
+    // State is loaded from Firestore, not local files
+    // Initialize empty state here, will be loaded async
+    this.state = {
       last_episode_number: 0,
       recent_guests: [],
       episodes: []
@@ -60,10 +51,47 @@ export class PodcastScheduler {
   }
 
   /**
-   * Save scheduler state to file
+   * Load scheduler state from Firestore (async)
+   * This should be called after construction
    */
-  private saveState(): void {
-    writeFileSync(this.statePath, JSON.stringify(this.state, null, 2));
+  async loadStateFromFirestore(): Promise<void> {
+    try {
+      const { db } = await import('@/lib/firebase');
+      const { doc, getDoc } = await import('firebase/firestore');
+
+      if (!db) {
+        console.warn('Firebase not initialized, using default state');
+        return;
+      }
+
+      const stateDoc = await getDoc(doc(db, 'podcast_scheduler', 'state'));
+
+      if (stateDoc.exists()) {
+        this.state = stateDoc.data() as SchedulerState;
+      }
+    } catch (error) {
+      console.error('Error loading scheduler state from Firestore:', error);
+      // Continue with default state
+    }
+  }
+
+  /**
+   * Save scheduler state to Firestore (async)
+   */
+  private async saveStateToFirestore(): Promise<void> {
+    try {
+      const { db } = await import('@/lib/firebase');
+      const { doc, setDoc } = await import('firebase/firestore');
+
+      if (!db) {
+        console.warn('Firebase not initialized, cannot save state');
+        return;
+      }
+
+      await setDoc(doc(db, 'podcast_scheduler', 'state'), this.state);
+    } catch (error) {
+      console.error('Error saving scheduler state to Firestore:', error);
+    }
   }
 
   /**
@@ -101,7 +129,7 @@ export class PodcastScheduler {
   /**
    * Record a new episode
    */
-  recordEpisode(guestId: string, videoId: string): number {
+  async recordEpisode(guestId: string, videoId: string): Promise<number> {
     const episodeNumber = this.state.last_episode_number + 1;
 
     const episode: EpisodeRecord = {
@@ -121,7 +149,7 @@ export class PodcastScheduler {
       this.state.recent_guests.shift();
     }
 
-    this.saveState();
+    await this.saveStateToFirestore();
 
     return episodeNumber;
   }
@@ -129,13 +157,13 @@ export class PodcastScheduler {
   /**
    * Mark episode as published
    */
-  markPublished(episodeNumber: number, youtubeUrl: string): void {
+  async markPublished(episodeNumber: number, youtubeUrl: string): Promise<void> {
     const episode = this.state.episodes.find(e => e.episode_number === episodeNumber);
 
     if (episode) {
       episode.published = true;
       episode.youtube_url = youtubeUrl;
-      this.saveState();
+      await this.saveStateToFirestore();
     }
   }
 

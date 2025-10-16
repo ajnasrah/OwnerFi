@@ -77,11 +77,29 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    // Select avatar and voice based on brand
+    // Carz: Automotive Expert (Colton)
+    // OwnerFi: Real Estate Agent (Zelena)
+    const brandAgents = {
+      carz: {
+        talking_photo_id: '711a1d390a2a4634b5b515d44a631ab3', // Colton (Automotive Expert)
+        voice_id: 'dcc89bc2097f47bd93f0c9e8d5e53b5f', // Colton voice
+        scale: 1.4
+      },
+      ownerfi: {
+        talking_photo_id: 'c308729a2d444a09a98cb29baee73d88', // Zelena (Real Estate Agent)
+        voice_id: 'c4313f9f0b214a7a8189c134736ce897', // Abigail - Lifelike
+        scale: 1.4
+      }
+    };
+
+    const selectedAgent = brandAgents[brand as 'carz' | 'ownerfi'] || brandAgents.ownerfi;
+
     const videoResult = await generateHeyGenVideo({
-      talking_photo_id: body.talking_photo_id || '31c6b2b6306b47a2ba3572a23be09dbc',
-      voice_id: body.voice_id || '9070a6c2dbd54c10bb111dc8c655bff7',
+      talking_photo_id: body.talking_photo_id || selectedAgent.talking_photo_id,
+      voice_id: body.voice_id || selectedAgent.voice_id,
       input_text: content.script,
-      scale: 1.4,
+      scale: body.scale || selectedAgent.scale,
       width: 1080,
       height: 1920,
       callback_id: workflowId // Pass workflow ID for webhook callback

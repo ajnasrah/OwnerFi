@@ -948,3 +948,166 @@ export async function getNextAvailableTimeSlot(brand: 'carz' | 'ownerfi'): Promi
     return new Date(Date.now() + 3600000);
   }
 }
+
+// ====== PODCAST GUEST PROFILE MANAGEMENT ======
+
+export interface GuestProfile {
+  id: string;
+  name: string;
+  title: string;
+  expertise: string;
+  avatar_type: 'avatar' | 'talking_photo';
+  avatar_id: string;
+  voice_id: string;
+  scale: number;
+  description: string;
+  question_topics: string[];
+  tone: string;
+  background_color: string;
+  enabled: boolean;
+  _note?: string;
+}
+
+export interface HostProfile {
+  name: string;
+  avatar_type: 'avatar' | 'talking_photo';
+  avatar_id: string;
+  voice_id: string;
+  scale: number;
+  background_color: string;
+  description: string;
+}
+
+export interface VideoSettings {
+  dimension: {
+    width: number;
+    height: number;
+  };
+  questions_per_episode: number;
+  scene_count: number;
+  target_duration_minutes: number;
+}
+
+export interface PodcastConfig {
+  profiles: { [key: string]: GuestProfile };
+  host: HostProfile;
+  video_settings: VideoSettings;
+}
+
+// Initialize podcast config from local JSON file (one-time migration)
+export async function initializePodcastConfigFromFile(): Promise<void> {
+  if (!db) throw new Error('Firebase not initialized');
+
+  try {
+    // Check if config already exists in Firestore
+    const configDoc = await getDoc(doc(db, 'podcast_config', 'main'));
+    if (configDoc.exists()) {
+      console.log('✅ Podcast config already exists in Firestore');
+      return;
+    }
+
+    // Load from local file
+    const { readFileSync } = await import('fs');
+    const { join } = await import('path');
+    const configPath = join(process.cwd(), 'podcast', 'config', 'guest-profiles.json');
+    const configData = JSON.parse(readFileSync(configPath, 'utf-8'));
+
+    // Save to Firestore
+    await setDoc(doc(db, 'podcast_config', 'main'), configData);
+    console.log('✅ Migrated podcast config from file to Firestore');
+  } catch (error) {
+    console.error('❌ Error initializing podcast config:', error);
+    throw error;
+  }
+}
+
+// Get podcast configuration from Firestore
+export async function getPodcastConfig(): Promise<PodcastConfig | null> {
+  if (!db) return null;
+
+  try {
+    const configDoc = await getDoc(doc(db, 'podcast_config', 'main'));
+    if (configDoc.exists()) {
+      return configDoc.data() as PodcastConfig;
+    }
+    return null;
+  } catch (error) {
+    console.error('❌ Error fetching podcast config:', error);
+    return null;
+  }
+}
+
+// Get all guest profiles
+export async function getGuestProfiles(): Promise<{ [key: string]: GuestProfile }> {
+  const config = await getPodcastConfig();
+  return config?.profiles || {};
+}
+
+// Get enabled guest profiles only
+export async function getEnabledGuestProfiles(): Promise<GuestProfile[]> {
+  const profiles = await getGuestProfiles();
+  return Object.values(profiles).filter(profile => profile.enabled !== false);
+}
+
+// Get specific guest profile
+export async function getGuestProfile(guestId: string): Promise<GuestProfile | null> {
+  const profiles = await getGuestProfiles();
+  return profiles[guestId] || null;
+}
+
+// Update guest profile
+export async function updateGuestProfile(guestId: string, updates: Partial<GuestProfile>): Promise<void> {
+  if (!db) throw new Error('Firebase not initialized');
+
+  try {
+    const config = await getPodcastConfig();
+    if (!config) throw new Error('Podcast config not found');
+
+    // Update the specific profile
+    config.profiles[guestId] = {
+      ...config.profiles[guestId],
+      ...removeUndefined(updates)
+    };
+
+    // Save back to Firestore
+    await updateDoc(doc(db, 'podcast_config', 'main'), {
+      [`profiles.${guestId}`]: config.profiles[guestId]
+    });
+
+    console.log(`✅ Updated guest profile: ${guestId}`);
+  } catch (error) {
+    console.error(`❌ Error updating guest profile ${guestId}:`, error);
+    throw error;
+  }
+}
+
+// Update host profile
+export async function updateHostProfile(updates: Partial<HostProfile>): Promise<void> {
+  if (!db) throw new Error('Firebase not initialized');
+
+  try {
+    const config = await getPodcastConfig();
+    if (!config) throw new Error('Podcast config not found');
+
+    const cleanUpdates = removeUndefined(updates);
+    const updatedHost = {
+      ...config.host,
+      ...cleanUpdates
+    };
+
+    await updateDoc(doc(db, 'podcast_config', 'main'), {
+      host: updatedHost
+    });
+
+    console.log('✅ Updated host profile');
+  } catch (error) {
+    console.error('❌ Error updating host profile:', error);
+    throw error;
+  }
+}
+
+// Get host profile
+export async function getHostProfile(): Promise<HostProfile | null> {
+  const config = await getPodcastConfig();
+  return config?.host || null;
+}

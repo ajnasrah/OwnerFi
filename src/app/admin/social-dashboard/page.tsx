@@ -108,6 +108,16 @@ interface PodcastWorkflowLogs {
   timestamp: string;
 }
 
+interface GuestProfile {
+  id: string;
+  name: string;
+  title: string;
+  expertise: string;
+  avatar_id: string;
+  voice_id: string;
+  enabled: boolean;
+}
+
 export default function SocialMediaDashboard() {
   const { data: session, status: authStatus } = useSession();
   const router = useRouter();
@@ -115,6 +125,8 @@ export default function SocialMediaDashboard() {
   const [status, setStatus] = useState<SchedulerStatus | null>(null);
   const [workflows, setWorkflows] = useState<WorkflowLogs | null>(null);
   const [podcastWorkflows, setPodcastWorkflows] = useState<PodcastWorkflowLogs | null>(null);
+  const [guestProfiles, setGuestProfiles] = useState<GuestProfile[]>([]);
+  const [editingProfile, setEditingProfile] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [triggeringViral, setTriggeringViral] = useState(false);
   const [triggeringPodcast, setTriggeringPodcast] = useState(false);
@@ -146,6 +158,7 @@ export default function SocialMediaDashboard() {
       loadStatus();
       loadWorkflows();
       loadPodcastWorkflows();
+      loadGuestProfiles();
       const statusInterval = setInterval(loadStatus, 30000); // Refresh every 30 seconds
       const workflowInterval = setInterval(loadWorkflows, 5000); // Refresh every 5 seconds for real-time updates
       const podcastWorkflowInterval = setInterval(loadPodcastWorkflows, 5000); // Refresh every 5 seconds for real-time updates
@@ -175,6 +188,37 @@ export default function SocialMediaDashboard() {
       setPodcastWorkflows(data);
     } catch (error) {
       console.error('Failed to load podcast workflows:', error);
+    }
+  };
+
+  const loadGuestProfiles = async () => {
+    try {
+      const response = await fetch('/api/podcast/profiles');
+      const data = await response.json();
+      if (data.success && data.profiles) {
+        const profileArray = Object.values(data.profiles) as GuestProfile[];
+        const enabled = profileArray.filter(p => p.enabled);
+        setGuestProfiles(enabled);
+      }
+    } catch (error) {
+      console.error('Failed to load guest profiles:', error);
+    }
+  };
+
+  const updateGuestProfile = async (profileId: string, updates: Partial<GuestProfile>) => {
+    try {
+      const response = await fetch(`/api/podcast/profiles/${profileId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates)
+      });
+      const data = await response.json();
+      if (data.success) {
+        await loadGuestProfiles();
+        setEditingProfile(null);
+      }
+    } catch (error) {
+      console.error('Failed to update guest profile:', error);
     }
   };
 
@@ -766,6 +810,110 @@ export default function SocialMediaDashboard() {
                     <li>• Hormozi 2 caption template (Submagic)</li>
                     <li>• Uploaded to R2 storage → Published to Metricool</li>
                   </ul>
+                </div>
+              </div>
+
+              {/* Guest Profiles */}
+              <div className="mt-6 pt-6 border-t border-slate-200">
+                <h4 className="text-sm font-semibold text-slate-900 mb-3">Active Guest Profiles ({guestProfiles.length})</h4>
+                <div className="space-y-3">
+                  {guestProfiles.map((profile) => (
+                    <div key={profile.id} className="bg-white border border-slate-200 rounded-lg p-4">
+                      {editingProfile === profile.id ? (
+                        <div className="space-y-3">
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <label className="text-xs text-slate-600 font-medium">Name</label>
+                              <input
+                                type="text"
+                                defaultValue={profile.name}
+                                onBlur={(e) => {
+                                  if (e.target.value !== profile.name) {
+                                    updateGuestProfile(profile.id, { name: e.target.value });
+                                  }
+                                }}
+                                className="w-full px-2 py-1 text-sm border border-slate-300 rounded mt-1"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-xs text-slate-600 font-medium">Title</label>
+                              <input
+                                type="text"
+                                defaultValue={profile.title}
+                                onBlur={(e) => {
+                                  if (e.target.value !== profile.title) {
+                                    updateGuestProfile(profile.id, { title: e.target.value });
+                                  }
+                                }}
+                                className="w-full px-2 py-1 text-sm border border-slate-300 rounded mt-1"
+                              />
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <label className="text-xs text-slate-600 font-medium">Avatar ID</label>
+                              <input
+                                type="text"
+                                defaultValue={profile.avatar_id}
+                                onBlur={(e) => {
+                                  if (e.target.value !== profile.avatar_id) {
+                                    updateGuestProfile(profile.id, { avatar_id: e.target.value });
+                                  }
+                                }}
+                                className="w-full px-2 py-1 text-sm border border-slate-300 rounded font-mono mt-1"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-xs text-slate-600 font-medium">Voice ID</label>
+                              <input
+                                type="text"
+                                defaultValue={profile.voice_id}
+                                onBlur={(e) => {
+                                  if (e.target.value !== profile.voice_id) {
+                                    updateGuestProfile(profile.id, { voice_id: e.target.value });
+                                  }
+                                }}
+                                className="w-full px-2 py-1 text-sm border border-slate-300 rounded font-mono mt-1"
+                              />
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => setEditingProfile(null)}
+                            className="text-xs px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
+                          >
+                            Done
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <div className="font-medium text-slate-900 text-sm">{profile.name}</div>
+                            <div className="text-xs text-slate-600 mt-1">{profile.title}</div>
+                            <div className="flex gap-4 mt-2 text-xs text-slate-500">
+                              <div>
+                                <span className="font-medium">Avatar:</span> <span className="font-mono">{profile.avatar_id.substring(0, 20)}...</span>
+                              </div>
+                              <div>
+                                <span className="font-medium">Voice:</span> <span className="font-mono">{profile.voice_id.substring(0, 12)}...</span>
+                              </div>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => setEditingProfile(profile.id)}
+                            className="text-xs px-3 py-1 bg-indigo-100 text-indigo-700 rounded hover:bg-indigo-200 transition-colors"
+                          >
+                            Edit
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                  {guestProfiles.length === 0 && (
+                    <div className="bg-slate-50 rounded-lg p-8 text-center border border-slate-200">
+                      <div className="text-slate-500 text-sm font-medium">No guest profiles loaded</div>
+                      <div className="text-xs text-slate-400 mt-1">Check Firestore configuration</div>
+                    </div>
+                  )}
                 </div>
               </div>
 

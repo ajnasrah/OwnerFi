@@ -1,7 +1,5 @@
 // GPT-4 Script Generator for Podcast Episodes
 import OpenAI from 'openai';
-import { readFileSync } from 'fs';
-import { join } from 'path';
 
 interface GuestProfile {
   id: string;
@@ -34,15 +32,52 @@ export class ScriptGenerator {
   private openai: OpenAI;
   private guestProfiles: any;
   private hostProfile: HostProfile;
+  private configLoaded: boolean = false;
 
   constructor(apiKey: string) {
     this.openai = new OpenAI({ apiKey });
+    this.guestProfiles = {};
+    this.hostProfile = { name: 'Abdullah' }; // Default
+  }
 
-    // Load guest profiles
-    const configPath = join(process.cwd(), 'podcast', 'config', 'guest-profiles.json');
-    const config = JSON.parse(readFileSync(configPath, 'utf-8'));
-    this.guestProfiles = config.profiles;
-    this.hostProfile = config.host;
+  /**
+   * Load guest profiles from Firestore (async)
+   * Must be called before using the script generator
+   */
+  async loadProfiles(): Promise<void> {
+    if (this.configLoaded) return;
+
+    try {
+      // Dynamic import to work in both Node and Edge environments
+      const { getPodcastConfig } = await import('../../src/lib/feed-store-firestore');
+      const config = await getPodcastConfig();
+
+      if (!config) {
+        throw new Error('Podcast config not found in Firestore. Run /api/podcast/profiles/init to initialize.');
+      }
+
+      this.guestProfiles = config.profiles;
+      this.hostProfile = config.host;
+      this.configLoaded = true;
+
+      console.log('✅ Loaded podcast profiles from Firestore');
+    } catch (error) {
+      console.error('❌ Error loading podcast profiles from Firestore:', error);
+      // Fallback: try loading from local file as backup
+      try {
+        const { readFileSync } = await import('fs');
+        const { join } = await import('path');
+        const configPath = join(process.cwd(), 'podcast', 'config', 'guest-profiles.json');
+        const config = JSON.parse(readFileSync(configPath, 'utf-8'));
+        this.guestProfiles = config.profiles;
+        this.hostProfile = config.host;
+        this.configLoaded = true;
+        console.log('⚠️  Loaded podcast profiles from local file (fallback)');
+      } catch (fallbackError) {
+        console.error('❌ Failed to load profiles from both Firestore and local file');
+        throw new Error('Could not load podcast profiles');
+      }
+    }
   }
 
   /**

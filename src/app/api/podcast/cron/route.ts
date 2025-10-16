@@ -71,6 +71,10 @@ export async function GET(request: NextRequest) {
     }
 
     const scriptGen = new ScriptGenerator(OPENAI_API_KEY);
+
+    // Load profiles from Firestore (async)
+    await scriptGen.loadProfiles();
+
     const recentGuestIds = scheduler.getRecentGuestIds(4);
     const script = await scriptGen.generateScript(undefined, 2); // 2 Q&A pairs
 

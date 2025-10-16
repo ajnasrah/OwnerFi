@@ -122,8 +122,8 @@
       ],
       "tone": "modern, accessible, innovative",
       "background_color": "#e3f2fd",
-      "enabled": false,
-      "_note": "DISABLED for this month's A/B test"
+      "enabled": true,
+      "_note": "ACTIVE"
     },
     "fitness_trainer": {
       "id": "fitness_trainer",
@@ -147,8 +147,8 @@
       ],
       "tone": "motivating, supportive, energetic",
       "background_color": "#fff3e0",
-      "enabled": false,
-      "_note": "DISABLED for this month's A/B test"
+      "enabled": true,
+      "_note": "ACTIVE"
     }
   },
   "host": {

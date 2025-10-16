@@ -8,6 +8,8 @@ const CRON_SECRET = process.env.CRON_SECRET;
 export const maxDuration = 60; // 1 minute (webhook-based, no polling)
 
 export async function GET(request: NextRequest) {
+  let workflowId: string | null = null; // Track workflow ID for error handling
+
   try {
     // Verify authorization - allow dashboard, CRON_SECRET, or Vercel cron
     const authHeader = request.headers.get('authorization');
@@ -61,6 +63,7 @@ export async function GET(request: NextRequest) {
 
     // Create workflow record
     const workflow = await addPodcastWorkflow(episodeNumber, 'Generating...');
+    workflowId = workflow.id; // Capture for error handling
     console.log(`📊 Created workflow: ${workflow.id}`);
 
     // Step 1: Generate podcast script
@@ -97,16 +100,20 @@ export async function GET(request: NextRequest) {
       throw new Error('HEYGEN_API_KEY not configured');
     }
 
-    // Get host profile from Firestore
-    const { getHostProfile } = await import('@/lib/feed-store-firestore');
+    // Get host and guest profiles from Firestore
+    const { getHostProfile, getGuestProfile } = await import('@/lib/feed-store-firestore');
     const hostProfile = await getHostProfile();
     if (!hostProfile) {
       throw new Error('Host profile not found in Firestore');
     }
 
-    console.log(`   Host: ${hostProfile.name}`);
-    console.log(`   Avatar: ${hostProfile.avatar_id}`);
-    console.log(`   Voice: ${hostProfile.voice_id}`);
+    const guestProfile = await getGuestProfile(script.guest_id);
+    if (!guestProfile) {
+      throw new Error(`Guest profile not found: ${script.guest_id}`);
+    }
+
+    console.log(`   Host: ${hostProfile.name} (Avatar: ${hostProfile.avatar_id})`);
+    console.log(`   Guest: ${guestProfile.name} (Avatar: ${guestProfile.avatar_id})`);
 
     // Get base URL for webhook callback
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ||
@@ -115,7 +122,39 @@ export async function GET(request: NextRequest) {
 
     const webhookUrl = `${baseUrl}/api/webhooks/heygen`;
 
-    // Use host's avatar and voice from config
+    // Build multi-scene video inputs: alternating host questions and guest answers
+    const videoInputs = script.qa_pairs.flatMap((pair, index) => [
+      // Scene: Host asks question
+      {
+        character: {
+          type: hostProfile.avatar_type,
+          avatar_id: hostProfile.avatar_id,
+          avatar_style: 'normal'
+        },
+        voice: {
+          type: 'text',
+          input_text: pair.question,
+          voice_id: hostProfile.voice_id
+        }
+      },
+      // Scene: Guest answers
+      {
+        character: {
+          type: guestProfile.avatar_type,
+          avatar_id: guestProfile.avatar_id,
+          avatar_style: 'normal'
+        },
+        voice: {
+          type: 'text',
+          input_text: pair.answer,
+          voice_id: guestProfile.voice_id
+        }
+      }
+    ]);
+
+    console.log(`   Generated ${videoInputs.length} scenes (${script.qa_pairs.length} Q&A pairs)`);
+
+    // Use multi-scene format: each entry in video_inputs is a separate scene
     const response = await fetch('https://api.heygen.com/v2/video/generate', {
       method: 'POST',
       headers: {
@@ -128,18 +167,7 @@ export async function GET(request: NextRequest) {
         caption: false,
         callback_id: workflow.id, // Use workflow ID as callback ID
         webhook_url: webhookUrl,
-        video_inputs: [{
-          character: {
-            type: hostProfile.avatar_type,
-            avatar_id: hostProfile.avatar_id,
-            avatar_style: 'normal'
-          },
-          voice: {
-            type: 'text',
-            input_text: script.full_dialogue,
-            voice_id: hostProfile.voice_id
-          }
-        }],
+        video_inputs: videoInputs,
         dimension: {
           width: 1080,
           height: 1920
@@ -195,19 +223,24 @@ export async function GET(request: NextRequest) {
     console.error('❌ Podcast cron job error:', error);
 
     // Try to mark workflow as failed (if workflow was created)
-    try {
-      const { updatePodcastWorkflow } = await import('@/lib/feed-store-firestore');
-      // Get workflow ID from URL or context if available
-      // For now, we'll just log - in production you'd want to track this better
-      console.log('Note: Workflow error occurred, but cannot update status without workflow ID reference');
-    } catch (updateError) {
-      // Ignore errors updating workflow status
+    if (workflowId) {
+      try {
+        const { updatePodcastWorkflow } = await import('@/lib/feed-store-firestore');
+        await updatePodcastWorkflow(workflowId, {
+          status: 'failed',
+          error: error instanceof Error ? error.message : 'Unknown error'
+        });
+        console.log(`✅ Marked workflow ${workflowId} as failed`);
+      } catch (updateError) {
+        console.error('Failed to update workflow status:', updateError);
+      }
     }
 
     return NextResponse.json(
       {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
+        workflow_id: workflowId,
         timestamp: new Date().toISOString()
       },
       { status: 500 }

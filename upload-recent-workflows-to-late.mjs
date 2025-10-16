@@ -178,9 +178,14 @@ async function postToLate(videoUrl, caption, title, platforms, brand) {
 
   console.log('   Raw response:', JSON.stringify(data).substring(0, 200));
 
-  const postId = data.id || data.postId || data._id || data.post?.id || 'unknown';
+  // Extract post ID from various possible locations in the response
+  const postId = data.id || data.postId || data._id || data.post?._id || data.post?.id || null;
 
-  console.log(`✅ Posted successfully! Post ID: ${postId}`);
+  if (postId) {
+    console.log(`✅ Posted successfully! Post ID: ${postId}`);
+  } else {
+    console.log(`⚠️  Posted but no post ID in response (status: ${response.status})`);
+  }
 
   return {
     success: true,
@@ -269,17 +274,25 @@ async function uploadWorkflowToLate(workflow, brand) {
   try {
     const result = await postToLate(videoUrl, caption, title, platforms, brand);
 
-    // Update workflow with latePostId (only if we got a valid postId)
-    if (result.postId && result.postId !== 'unknown') {
-      const workflowRef = db.collection(`${brand}_workflow_queue`).doc(workflow.id);
-      await workflowRef.update({
-        latePostId: result.postId,
-        postedToLateAt: Date.now()
-      });
+    // Always update workflow with latePostId (even if null) to mark as "already attempted"
+    const workflowRef = db.collection(`${brand}_workflow_queue`).doc(workflow.id);
+    const updateData = {
+      postedToLateAt: Date.now()
+    };
+
+    // Only include latePostId if we have a valid one
+    if (result.postId) {
+      updateData.latePostId = result.postId;
+    }
+
+    await workflowRef.update(updateData);
+
+    if (result.postId) {
       console.log(`✅ Successfully posted and updated workflow!`);
     } else {
-      console.log(`✅ Posted successfully but no postId returned (check Late dashboard)`);
+      console.log(`✅ Posted but no post ID returned - marked as attempted`);
     }
+
     return true;
   } catch (error) {
     console.error(`❌ Failed to post workflow:`, error.message);

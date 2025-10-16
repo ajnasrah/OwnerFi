@@ -173,6 +173,19 @@ async function triggerSubmagicProcessing(
 
     // Ensure title is ≤50 characters (Submagic requirement)
     let title = workflow.articleTitle || `Viral Video - ${workflowId}`;
+
+    // Decode HTML entities before measuring length
+    title = title
+      .replace(/&#8217;/g, "'")
+      .replace(/&#8216;/g, "'")
+      .replace(/&#8211;/g, "-")
+      .replace(/&#8212;/g, "-")
+      .replace(/&amp;/g, "&")
+      .replace(/&quot;/g, '"')
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&nbsp;/g, " ");
+
     if (title.length > 50) {
       console.warn(`⚠️  Submagic title too long (${title.length} chars), truncating to 50`);
       title = title.substring(0, 47) + '...';

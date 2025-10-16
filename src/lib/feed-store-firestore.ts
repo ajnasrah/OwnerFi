@@ -49,12 +49,20 @@ export interface WorkflowQueueItem {
   heygenVideoId?: string;
   submagicVideoId?: string;
   latePostId?: string; // Late API post ID (replaced Metricool)
+  finalVideoUrl?: string; // Completed video URL from R2
   caption?: string; // Store for webhooks
   title?: string; // Store for webhooks
   scheduledFor?: number; // Timestamp for when post should go live
+  platforms?: string[]; // Platforms posted to
   error?: string;
   retryCount?: number;
   lastRetryAt?: number;
+
+  // A/B Testing fields
+  abTestId?: string; // ID of active A/B test
+  abTestVariantId?: string; // Which variant (A, B, C, etc.)
+  abTestResultId?: string; // ID of result document for tracking
+
   createdAt: number;
   updatedAt: number;
   completedAt?: number;
@@ -866,8 +874,9 @@ export async function getPodcastWorkflowById(workflowId: string): Promise<Podcas
 }
 
 // Smart Scheduling: Get next available time slot for social media posting
-// Posting schedule: 9 AM, 11 AM, 2 PM, 6 PM, 8 PM (Eastern Time)
-const POSTING_SCHEDULE_HOURS = [9, 11, 14, 18, 20];
+// Posting schedule: 9 AM, 12 PM, 3 PM, 6 PM, 8 PM (Eastern Time)
+// Optimized for cross-platform engagement (Instagram, TikTok, YouTube, LinkedIn, Twitter, Facebook)
+const POSTING_SCHEDULE_HOURS = [9, 12, 15, 18, 20];
 
 export async function getNextAvailableTimeSlot(brand: 'carz' | 'ownerfi'): Promise<Date> {
   if (!db) {

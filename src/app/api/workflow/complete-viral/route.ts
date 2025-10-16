@@ -115,14 +115,15 @@ export async function POST(request: NextRequest) {
     console.log(`✅ HeyGen video ID: ${videoResult.video_id}`);
     console.log(`📋 Workflow ID: ${workflowId}`);
 
-    // Update workflow with HeyGen video ID and store caption/title for webhooks
+    // Update workflow with HeyGen video ID and store caption/title/template for webhooks
     if (workflowId) {
       const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
       await updateWorkflowStatus(workflowId, brand as 'carz' | 'ownerfi', {
         heygenVideoId: videoResult.video_id,
         caption: content.caption,
-        title: content.title
-      } as any); // Store caption/title so webhooks can use them
+        title: content.title,
+        captionTemplate: content.templateUsed // For A/B testing analysis
+      } as any); // Store caption/title/template so webhooks can use them
     }
 
     // Check if we're in local development (webhooks won't work)
@@ -247,8 +248,48 @@ function sanitizeContent(content: string): string {
   return sanitized;
 }
 
+// Helper: Get template-specific variable prompts for OpenAI
+function getTemplateVariablesPrompt(templateKey: string): string {
+  const prompts: Record<string, string> = {
+    CONTROVERSY_HOOK: `SHOCKING_CLAIM: A controversial or shocking statement (10-15 words)
+AUTHORITY_FIGURE: Who/what is being criticized (e.g., "dealerships", "real estate agents")
+SECRET_1: First hidden truth (short sentence)
+SECRET_2: Second hidden truth (short sentence)
+SECRET_3: Third hidden truth (short sentence)
+CTA: Call to action (5-10 words)
+TOPIC: Main topic (2-3 words)`,
+
+    VALUE_BOMB: `BENEFIT: What the user will save/gain (e.g., "$1000", "hours of time")
+NUMBER: How many tips (e.g., "3", "5")
+INDUSTRY: Industry name (e.g., "car buying", "home buying")
+TIP_1: First actionable tip (short sentence)
+TIP_2: Second actionable tip (short sentence)
+TIP_3: Third actionable tip (short sentence)
+TOPIC: Main topic (2-3 words)`,
+
+    STORYTELLING: `DRAMATIC_EVENT: The dramatic event that happened (10-15 words)
+MINI_STORY: Brief story in 2-3 sentences
+KEY_TAKEAWAY: The lesson learned (10-15 words)
+TOPIC: Main topic (2-3 words)`,
+
+    QUESTION_HOOK: `TARGET_AUDIENCE: Who is this for (e.g., "car buyers", "homeowners")
+SURPRISING_BEHAVIOR: Unexpected behavior (5-10 words)
+EXPLANATION: The answer/explanation (2-3 sentences)
+TOPIC: Main topic (2-3 words)`,
+
+    LISTICLE_TEASE: `NUMBER: How many rules/items (e.g., "3", "5")
+INDUSTRY: Industry name (e.g., "car buying", "real estate")
+RULE_1: First rule (short sentence)
+RULE_2: Second rule (short sentence)
+RULE_3: Third rule (short sentence)
+TOPIC: Main topic (2-3 words)`
+  };
+
+  return prompts[templateKey] || prompts.VALUE_BOMB; // Default to VALUE_BOMB
+}
+
 // Helper: Generate viral content with OpenAI
-async function generateViralContent(content: string): Promise<{ script: string; title: string; caption: string }> {
+async function generateViralContent(content: string): Promise<{ script: string; title: string; caption: string; templateUsed?: string }> {
   if (!OPENAI_API_KEY) {
     return {
       script: content.substring(0, 500),
@@ -256,6 +297,16 @@ async function generateViralContent(content: string): Promise<{ script: string; 
       caption: '🔥 Check this out!'
     };
   }
+
+  // Import caption templates for A/B testing
+  const { getRandomTemplate, generateCaption, CAPTION_TEMPLATES, getPlatformHashtags } = await import('@/lib/caption-templates');
+
+  // Select random template for A/B testing
+  const templateKey = getRandomTemplate();
+  const template = CAPTION_TEMPLATES[templateKey];
+
+  console.log(`🧪 A/B Test: Using "${template.name}" caption template`);
+  console.log(`   Expected metrics: ${template.expectedMetrics.engagement} engagement, ${template.expectedMetrics.shares} shares`);
 
   // Sanitize content to prevent prompt injection
   const sanitizedContent = sanitizeContent(content);
@@ -274,7 +325,7 @@ async function generateViralContent(content: string): Promise<{ script: string; 
           messages: [
             {
               role: 'system',
-              content: `You are a viral video script writer. Generate a single-person talking head video script.
+              content: `You are a viral video script writer. Generate a single-person talking head video script and extract key content variables for social media.
 
 IMPORTANT RULES:
 - Write ONLY what the person says directly to camera - no scene descriptions, no cuts, no "[Opening shot]" directions
@@ -290,23 +341,22 @@ SCRIPT: [the exact words the AI avatar will speak - nothing else]
 
 TITLE: [30-45 characters MAXIMUM including emojis - MUST be under 50 chars - attention-grabbing headline]
 
-CAPTION: [Engaging social media post with:
-- Strong opening hook (1-2 sentences)
-- Key value points (2-3 bullets or short sentences)
-- Call to action
-- 3-5 relevant hashtags at the end
-- Use emojis strategically
-- STRICT LIMIT: 280 characters maximum (including hashtags and emojis)
-- Keep it concise and punchy!]
+CONTENT_VARIABLES: [Extract these variables from the article to fill caption templates]
+${getTemplateVariablesPrompt(templateKey)}
 
 EXAMPLE GOOD OUTPUT:
 SCRIPT: "Listen up because what I'm about to tell you will change everything you know about car insurance..."
 
-TITLE: 🚗 Dealerships Don't Want You to Know THIS About Insurance!
+TITLE: 🚗 Dealerships Don't Want You to Know THIS
 
-CAPTION: Dealerships hide 3 ways they profit when you finance 👀 Marked up rates, warranty kickbacks, and insurance cuts. Don't get played! 💰
-
-#CarInsurance #DealershipSecrets #FinanceTips #SaveMoney
+CONTENT_VARIABLES:
+SHOCKING_CLAIM: Dealerships markup your insurance by 30%
+AUTHORITY_FIGURE: dealerships
+SECRET_1: They get kickbacks from insurers
+SECRET_2: Marked up rates boost their profit
+SECRET_3: You're paying 30% more than you should
+CTA: Ask for a quote before signing
+TOPIC: Car Insurance
 
 EXAMPLE BAD SCRIPT:
 "[Opening shot of person in office] Today we're going to talk about car insurance. [Cut to B-roll of cars]"`
@@ -338,12 +388,25 @@ EXAMPLE BAD SCRIPT:
 
   console.log('🤖 OpenAI full response:', fullResponse);
 
-  const scriptMatch = fullResponse.match(/SCRIPT:\s*([\s\S]*?)(?=TITLE:|CAPTION:|$)/i);
-  const titleMatch = fullResponse.match(/TITLE:\s*([\s\S]*?)(?=CAPTION:|$)/i);
-  const captionMatch = fullResponse.match(/CAPTION:\s*([\s\S]*?)$/i);
+  const scriptMatch = fullResponse.match(/SCRIPT:\s*([\s\S]*?)(?=TITLE:|CONTENT_VARIABLES:|$)/i);
+  const titleMatch = fullResponse.match(/TITLE:\s*([\s\S]*?)(?=CONTENT_VARIABLES:|$)/i);
+  const variablesMatch = fullResponse.match(/CONTENT_VARIABLES:\s*([\s\S]*?)$/i);
 
   // Extract and enforce title length limit (Submagic requires ≤50 chars)
   let title = titleMatch ? titleMatch[1].trim() : 'Breaking News - Must Watch!';
+
+  // Decode HTML entities (like &#8217; → ') before measuring length
+  title = title
+    .replace(/&#8217;/g, "'")
+    .replace(/&#8216;/g, "'")
+    .replace(/&#8211;/g, "-")
+    .replace(/&#8212;/g, "-")
+    .replace(/&amp;/g, "&")
+    .replace(/&quot;/g, '"')
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&nbsp;/g, " ");
+
   if (title.length > 50) {
     console.warn(`⚠️  Title too long (${title.length} chars), truncating to 50: "${title}"`);
     title = title.substring(0, 47) + '...'; // Truncate to 47 + '...' = 50
@@ -365,10 +428,49 @@ EXAMPLE BAD SCRIPT:
 
   console.log(`✅ Generated script (${script.length} chars): ${script.substring(0, 100)}...`);
 
+  // Parse content variables and generate caption from template
+  let caption: string;
+  const variables: Record<string, string> = {};
+
+  if (variablesMatch) {
+    const variablesText = variablesMatch[1].trim();
+    const lines = variablesText.split('\n');
+
+    for (const line of lines) {
+      const match = line.match(/^([A-Z_]+):\s*(.+)$/);
+      if (match) {
+        variables[match[1]] = match[2].trim();
+      }
+    }
+
+    console.log(`🧪 Extracted ${Object.keys(variables).length} template variables`);
+
+    // Determine brand from content to generate platform-specific hashtags
+    const brand = content.toLowerCase().includes('car') ? 'carz' : 'ownerfi';
+    const topic = variables['TOPIC'] || 'Tips';
+
+    // Add hashtags to variables
+    variables['HASHTAGS'] = getPlatformHashtags(brand, 'instagram', topic);
+
+    // Generate caption from template
+    try {
+      caption = generateCaption(templateKey, variables);
+      console.log(`✅ Generated caption from "${template.name}" template (${caption.length} chars)`);
+    } catch (error) {
+      console.error('❌ Failed to generate caption from template:', error);
+      // Fallback to default caption
+      caption = 'Breaking news you need to see! 🔥\n\nThis changes everything. Click to watch the full story.\n\n#BreakingNews #MustWatch #Viral #Trending';
+    }
+  } else {
+    console.warn('⚠️  No CONTENT_VARIABLES found in OpenAI response, using fallback caption');
+    caption = 'Breaking news you need to see! 🔥\n\nThis changes everything. Click to watch the full story.\n\n#BreakingNews #MustWatch #Viral #Trending';
+  }
+
   return {
     script,
     title,
-    caption: captionMatch ? captionMatch[1].trim() : 'Breaking news you need to see! 🔥\n\nThis changes everything. Click to watch the full story.\n\n#BreakingNews #MustWatch #Viral #Trending'
+    caption,
+    templateUsed: templateKey
   };
 }
 

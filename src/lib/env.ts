@@ -19,14 +19,20 @@ const envSchema = z.object({
   // External APIs - Required
   HEYGEN_API_KEY: z.string().min(1, 'HeyGen API key is required'),
   SUBMAGIC_API_KEY: z.string().min(1, 'Submagic API key is required'),
-  METRICOOL_API_KEY: z.string().min(1, 'Metricool API key is required'),
-  METRICOOL_USER_ID: z.string().min(1, 'Metricool user ID is required'),
   OPENAI_API_KEY: z.string().min(1, 'OpenAI API key is required'),
 
-  // Metricool Brand IDs
-  METRICOOL_CARZ_BRAND_ID: z.string().min(1, 'Metricool Carz brand ID is required'),
-  METRICOOL_OWNERFI_BRAND_ID: z.string().min(1, 'Metricool OwnerFi brand ID is required'),
-  METRICOOL_PODCAST_BRAND_ID: z.string().default('3738036'),
+  // GetLate API - Social Media Publishing (replaces Metricool)
+  LATE_API_KEY: z.string().min(1, 'GetLate API key is required'),
+  LATE_OWNERFI_PROFILE_ID: z.string().min(1, 'GetLate OwnerFi profile ID is required'),
+  LATE_CARZ_PROFILE_ID: z.string().min(1, 'GetLate Carz profile ID is required'),
+  LATE_PODCAST_PROFILE_ID: z.string().min(1, 'GetLate Podcast profile ID is required'),
+
+  // Metricool (Legacy - kept for backwards compatibility, optional)
+  METRICOOL_API_KEY: z.string().optional(),
+  METRICOOL_USER_ID: z.string().optional(),
+  METRICOOL_CARZ_BRAND_ID: z.string().optional(),
+  METRICOOL_OWNERFI_BRAND_ID: z.string().optional(),
+  METRICOOL_PODCAST_BRAND_ID: z.string().optional(),
 
   // Cloudflare R2 Storage
   R2_ACCOUNT_ID: z.string().min(1, 'R2 account ID is required'),

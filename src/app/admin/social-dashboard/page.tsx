@@ -71,7 +71,9 @@ interface WorkflowLog {
   status: 'pending' | 'heygen_processing' | 'submagic_processing' | 'posting' | 'completed' | 'failed';
   heygenVideoId?: string;
   submagicVideoId?: string;
-  metricoolPostId?: string;
+  latePostId?: string; // Changed from metricoolPostId
+  metricoolPostId?: string; // Keep for backwards compatibility with old workflows
+  captionTemplate?: string; // For A/B testing tracking
   error?: string;
   createdAt: number;
   updatedAt: number;
@@ -96,7 +98,8 @@ interface PodcastWorkflowLog {
   heygenVideoId?: string;
   submagicProjectId?: string;
   finalVideoUrl?: string;
-  metricoolPostId?: string;
+  latePostId?: string; // Changed from metricoolPostId
+  metricoolPostId?: string; // Keep for backwards compatibility with old workflows
   error?: string;
   createdAt: number;
   updatedAt: number;
@@ -440,9 +443,18 @@ export default function SocialMediaDashboard() {
     <div className="min-h-screen bg-slate-50 p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-slate-900">Social Media Automation</h1>
-          <p className="text-slate-600 mt-1">Monitor and control viral video generation</p>
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900">Social Media Automation</h1>
+            <p className="text-slate-600 mt-1">Monitor and control viral video generation</p>
+          </div>
+          <a
+            href="/admin/ab-tests"
+            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all shadow-lg"
+          >
+            <span className="text-xl">🧪</span>
+            <span>A/B Testing</span>
+          </a>
         </div>
 
         {/* Sub-navigation Tabs */}
@@ -600,7 +612,14 @@ export default function SocialMediaDashboard() {
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex-1">
                             <div className="font-medium text-slate-900 text-sm mb-1" dangerouslySetInnerHTML={{ __html: workflow.articleTitle }} />
-                            <div className="text-xs text-slate-500">{formatTimeAgo(workflow.createdAt)}</div>
+                            <div className="flex items-center gap-2 mt-1">
+                              <div className="text-xs text-slate-500">{formatTimeAgo(workflow.createdAt)}</div>
+                              {workflow.captionTemplate && (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700" title="A/B Test Caption Template">
+                                  🧪 {workflow.captionTemplate.replace(/_/g, ' ')}
+                                </span>
+                              )}
+                            </div>
                           </div>
                           <div className="flex items-center gap-2">
                             <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(workflow.status)}`}>
@@ -625,7 +644,7 @@ export default function SocialMediaDashboard() {
                             </button>
                           </div>
                         </div>
-                        {(workflow.heygenVideoId || workflow.submagicVideoId || workflow.metricoolPostId) && (
+                        {(workflow.heygenVideoId || workflow.submagicVideoId || workflow.latePostId || workflow.metricoolPostId) && (
                           <div className="grid grid-cols-3 gap-2 text-xs">
                             {workflow.heygenVideoId && (
                               <div>
@@ -639,10 +658,10 @@ export default function SocialMediaDashboard() {
                                 <div className="font-mono text-slate-700 truncate">{workflow.submagicVideoId.substring(0, 12)}...</div>
                               </div>
                             )}
-                            {workflow.metricoolPostId && (
+                            {(workflow.latePostId || workflow.metricoolPostId) && (
                               <div>
-                                <div className="text-slate-500 mb-1">Metricool</div>
-                                <div className="font-mono text-slate-700 truncate">{workflow.metricoolPostId}</div>
+                                <div className="text-slate-500 mb-1">GetLate</div>
+                                <div className="font-mono text-slate-700 truncate">{(workflow.latePostId || workflow.metricoolPostId)?.substring(0, 12)}...</div>
                               </div>
                             )}
                           </div>
@@ -745,7 +764,14 @@ export default function SocialMediaDashboard() {
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex-1">
                             <div className="font-medium text-slate-900 text-sm mb-1" dangerouslySetInnerHTML={{ __html: workflow.articleTitle }} />
-                            <div className="text-xs text-slate-500">{formatTimeAgo(workflow.createdAt)}</div>
+                            <div className="flex items-center gap-2 mt-1">
+                              <div className="text-xs text-slate-500">{formatTimeAgo(workflow.createdAt)}</div>
+                              {workflow.captionTemplate && (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700" title="A/B Test Caption Template">
+                                  🧪 {workflow.captionTemplate.replace(/_/g, ' ')}
+                                </span>
+                              )}
+                            </div>
                           </div>
                           <div className="flex items-center gap-2">
                             <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(workflow.status)}`}>
@@ -770,7 +796,7 @@ export default function SocialMediaDashboard() {
                             </button>
                           </div>
                         </div>
-                        {(workflow.heygenVideoId || workflow.submagicVideoId || workflow.metricoolPostId) && (
+                        {(workflow.heygenVideoId || workflow.submagicVideoId || workflow.latePostId || workflow.metricoolPostId) && (
                           <div className="grid grid-cols-3 gap-2 text-xs">
                             {workflow.heygenVideoId && (
                               <div>
@@ -784,10 +810,10 @@ export default function SocialMediaDashboard() {
                                 <div className="font-mono text-slate-700 truncate">{workflow.submagicVideoId.substring(0, 12)}...</div>
                               </div>
                             )}
-                            {workflow.metricoolPostId && (
+                            {(workflow.latePostId || workflow.metricoolPostId) && (
                               <div>
-                                <div className="text-slate-500 mb-1">Metricool</div>
-                                <div className="font-mono text-slate-700 truncate">{workflow.metricoolPostId}</div>
+                                <div className="text-slate-500 mb-1">GetLate</div>
+                                <div className="font-mono text-slate-700 truncate">{(workflow.latePostId || workflow.metricoolPostId)?.substring(0, 12)}...</div>
                               </div>
                             )}
                           </div>
@@ -877,7 +903,7 @@ export default function SocialMediaDashboard() {
                     <li>• Host + AI Guest (HeyGen avatars)</li>
                     <li>• 2 Q&A pairs (~1.5 minutes each)</li>
                     <li>• Hormozi 2 caption template (Submagic)</li>
-                    <li>• Uploaded to R2 storage → Published to Metricool</li>
+                    <li>• Uploaded to R2 storage → Published to GetLate</li>
                   </ul>
                 </div>
               </div>
@@ -1029,7 +1055,7 @@ export default function SocialMediaDashboard() {
                             </button>
                           </div>
                         </div>
-                        {(workflow.heygenVideoId || workflow.submagicProjectId || workflow.metricoolPostId) && (
+                        {(workflow.heygenVideoId || workflow.submagicProjectId || workflow.latePostId || workflow.metricoolPostId) && (
                           <div className="grid grid-cols-3 gap-2 text-xs">
                             {workflow.heygenVideoId && (
                               <div>
@@ -1043,10 +1069,10 @@ export default function SocialMediaDashboard() {
                                 <div className="font-mono text-slate-700 truncate">{workflow.submagicProjectId.substring(0, 12)}...</div>
                               </div>
                             )}
-                            {workflow.metricoolPostId && (
+                            {(workflow.latePostId || workflow.metricoolPostId) && (
                               <div>
-                                <div className="text-slate-500 mb-1">Metricool</div>
-                                <div className="font-mono text-slate-700 truncate">{workflow.metricoolPostId}</div>
+                                <div className="text-slate-500 mb-1">GetLate</div>
+                                <div className="font-mono text-slate-700 truncate">{(workflow.latePostId || workflow.metricoolPostId)?.substring(0, 12)}...</div>
                               </div>
                             )}
                           </div>
@@ -1343,7 +1369,7 @@ export default function SocialMediaDashboard() {
             </div>
             <div>
               <div className="text-slate-600">Publishing</div>
-              <div className="font-medium text-slate-900 mt-1">Metricool API</div>
+              <div className="font-medium text-slate-900 mt-1">GetLate API</div>
             </div>
             <div>
               <div className="text-slate-600">Last Updated</div>

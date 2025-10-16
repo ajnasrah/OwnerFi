@@ -242,6 +242,7 @@ export async function POST(request: NextRequest) {
               const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
               await updateWorkflowStatus(workflowId, brand as 'carz' | 'ownerfi', {
                 status: 'completed',
+                finalVideoUrl: publicVideoUrl,  // CRITICAL: Store video URL for future use
                 latePostId: postResult.postId,
                 completedAt: Date.now()
               });

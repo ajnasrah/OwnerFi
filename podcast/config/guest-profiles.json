@@ -2,12 +2,12 @@
   "profiles": {
     "doctor": {
       "id": "doctor",
-      "name": "Dr. Smith",
+      "name": "Dr. Sofia",
       "title": "Medical Doctor",
       "expertise": "General Health & Wellness",
       "avatar_type": "avatar",
       "avatar_id": "Ann_Doctor_Sitting_public",
-      "voice_id": "7ffb69e578d4492587493c26ebcabc31",
+      "voice_id": "2e4de8a01f3b4e9c96794045e2f12779",
       "scale": 1.4,
       "description": "Board-certified physician with 15 years of experience",
       "question_topics": [
@@ -23,16 +23,16 @@
       "tone": "professional, caring, educational",
       "background_color": "#f0f8ff",
       "enabled": true,
-      "_note": "ACTIVE - This month's A/B test"
+      "_note": "ACTIVE - Dr. Sofia using Ann Doctor Sitting (public avatar)"
     },
     "real_estate_agent": {
       "id": "real_estate_agent",
-      "name": "Sarah Johnson",
+      "name": "Zelena",
       "title": "Real Estate Expert",
       "expertise": "Property Investment & Home Buying",
       "avatar_type": "avatar",
       "avatar_id": "Caroline_Business_Sitting_Front_public",
-      "voice_id": "dc491816e53f46eaa466740fbfec09bb",
+      "voice_id": "c4313f9f0b214a7a8189c134736ce897",
       "scale": 1.4,
       "description": "Top-producing agent specializing in residential properties",
       "question_topics": [
@@ -48,16 +48,16 @@
       "tone": "enthusiastic, knowledgeable, trustworthy",
       "background_color": "#fff5e6",
       "enabled": true,
-      "_note": "ACTIVE - This month's A/B test"
+      "_note": "ACTIVE - Zelena using Caroline Business (public avatar)"
     },
     "car_salesman": {
       "id": "car_salesman",
-      "name": "Mike Thompson",
+      "name": "Colton",
       "title": "Automotive Expert",
       "expertise": "Car Buying & Vehicle Maintenance",
       "avatar_type": "avatar",
       "avatar_id": "Brandon_Business_Sitting_Front_public",
-      "voice_id": "827d0da125f140fd8b6d010f32cd9f2e",
+      "voice_id": "dcc89bc2097f47bd93f0c9e8d5e53b5f",
       "scale": 1.4,
       "description": "20 years in automotive sales and customer service",
       "question_topics": [
@@ -73,11 +73,11 @@
       "tone": "friendly, straightforward, helpful",
       "background_color": "#f0f0f0",
       "enabled": true,
-      "_note": "ACTIVE - This month's A/B test"
+      "_note": "ACTIVE - Colton using Brandon Business (public avatar)"
     },
     "financial_advisor": {
       "id": "financial_advisor",
-      "name": "James Chen",
+      "name": "Henry",
       "title": "Financial Advisor",
       "expertise": "Personal Finance & Investment",
       "avatar_type": "avatar",
@@ -98,15 +98,15 @@
       "tone": "authoritative, clear, empowering",
       "background_color": "#e8f5e9",
       "enabled": true,
-      "_note": "ACTIVE - This month's A/B test"
+      "_note": "ACTIVE - Henry using Byron avatar (public avatar)"
     },
     "tech_expert": {
       "id": "tech_expert",
-      "name": "Alex Rivera",
+      "name": "Vince",
       "title": "Technology Consultant",
       "expertise": "Consumer Technology & Digital Tools",
       "avatar_type": "avatar",
-      "avatar_id": "Shawn_Business_Front_public",
+      "avatar_id": "Vince_standing_businesstraining_front",
       "voice_id": "d2f4f24783d04e22ab49ee8fdc3715e0",
       "scale": 1.4,
       "description": "Tech enthusiast helping people navigate the digital world",
@@ -123,15 +123,15 @@
       "tone": "modern, accessible, innovative",
       "background_color": "#e3f2fd",
       "enabled": true,
-      "_note": "ACTIVE"
+      "_note": "ACTIVE - Vince Business Training Front (public avatar)"
     },
     "fitness_trainer": {
       "id": "fitness_trainer",
-      "name": "Coach Maria",
-      "title": "Certified Fitness Trainer",
+      "name": "Oxana",
+      "title": "Certified Personal Trainer",
       "expertise": "Exercise & Nutrition",
       "avatar_type": "avatar",
-      "avatar_id": "Adriana_Business_Front_public",
+      "avatar_id": "Oxana_sitting_yoga_front",
       "voice_id": "7aafc1296f5c4d418703c5716d83a4a0",
       "scale": 1.4,
       "description": "Personal trainer specializing in sustainable fitness",
@@ -148,7 +148,7 @@
       "tone": "motivating, supportive, energetic",
       "background_color": "#fff3e0",
       "enabled": true,
-      "_note": "ACTIVE"
+      "_note": "ACTIVE - Oxana Yoga Front (public avatar)"
     }
   },
   "host": {

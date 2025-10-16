@@ -118,10 +118,53 @@ interface GuestProfile {
   enabled: boolean;
 }
 
+interface Recommendation {
+  id: string;
+  type: 'success' | 'warning' | 'info' | 'critical';
+  category: 'performance' | 'content' | 'scheduling' | 'technical';
+  title: string;
+  description: string;
+  action: string;
+  impact: 'high' | 'medium' | 'low';
+  copyPasteText: string;
+}
+
+interface AnalyticsData {
+  timestamp: string;
+  brands: {
+    carz: BrandAnalytics;
+    ownerfi: BrandAnalytics;
+  };
+  recommendations: Recommendation[];
+  overallHealth: 'excellent' | 'good' | 'fair' | 'poor';
+  keyMetrics: {
+    totalVideosGenerated: number;
+    successRate: number;
+    averageProcessingTime: string;
+    contentQuality: string;
+  };
+}
+
+interface BrandAnalytics {
+  totalFeeds: number;
+  activeFeeds: number;
+  totalArticles: number;
+  unprocessedArticles: number;
+  videosGenerated: number;
+  queueStats: {
+    pending: number;
+    processing: number;
+    completed: number;
+    failed: number;
+  };
+  successRate: number;
+  health: 'excellent' | 'good' | 'fair' | 'poor';
+}
+
 export default function SocialMediaDashboard() {
   const { data: session, status: authStatus } = useSession();
   const router = useRouter();
-  const [activeSubTab, setActiveSubTab] = useState<'carz' | 'ownerfi' | 'podcast'>('carz');
+  const [activeSubTab, setActiveSubTab] = useState<'carz' | 'ownerfi' | 'podcast' | 'analytics'>('carz');
   const [status, setStatus] = useState<SchedulerStatus | null>(null);
   const [workflows, setWorkflows] = useState<WorkflowLogs | null>(null);
   const [podcastWorkflows, setPodcastWorkflows] = useState<PodcastWorkflowLogs | null>(null);
@@ -132,6 +175,8 @@ export default function SocialMediaDashboard() {
   const [triggeringPodcast, setTriggeringPodcast] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [deletingWorkflow, setDeletingWorkflow] = useState<string | null>(null);
+  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
+  const [copiedRecId, setCopiedRecId] = useState<string | null>(null);
 
   // Auth check
   useEffect(() => {
@@ -159,13 +204,16 @@ export default function SocialMediaDashboard() {
       loadWorkflows();
       loadPodcastWorkflows();
       loadGuestProfiles();
+      loadAnalytics();
       const statusInterval = setInterval(loadStatus, 30000); // Refresh every 30 seconds
       const workflowInterval = setInterval(loadWorkflows, 5000); // Refresh every 5 seconds for real-time updates
       const podcastWorkflowInterval = setInterval(loadPodcastWorkflows, 5000); // Refresh every 5 seconds for real-time updates
+      const analyticsInterval = setInterval(loadAnalytics, 60000); // Refresh every 60 seconds
       return () => {
         clearInterval(statusInterval);
         clearInterval(workflowInterval);
         clearInterval(podcastWorkflowInterval);
+        clearInterval(analyticsInterval);
       };
     }
   }, [showHistory, authStatus, session]);
@@ -202,6 +250,26 @@ export default function SocialMediaDashboard() {
       }
     } catch (error) {
       console.error('Failed to load guest profiles:', error);
+    }
+  };
+
+  const loadAnalytics = async () => {
+    try {
+      const response = await fetch('/api/analytics/recommendations');
+      const data = await response.json();
+      setAnalytics(data);
+    } catch (error) {
+      console.error('Failed to load analytics:', error);
+    }
+  };
+
+  const copyToClipboard = async (text: string, recId: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedRecId(recId);
+      setTimeout(() => setCopiedRecId(null), 2000);
+    } catch (error) {
+      console.error('Failed to copy to clipboard:', error);
     }
   };
 
@@ -382,7 +450,8 @@ export default function SocialMediaDashboard() {
           {[
             { key: 'carz', label: 'Carz Inc', icon: '🚗' },
             { key: 'ownerfi', label: 'OwnerFi', icon: '🏠' },
-            { key: 'podcast', label: 'Podcast', icon: '🎙️' }
+            { key: 'podcast', label: 'Podcast', icon: '🎙️' },
+            { key: 'analytics', label: 'Analytics', icon: '📊' }
           ].map((tab) => (
             <button
               key={tab.key}
@@ -998,6 +1067,261 @@ export default function SocialMediaDashboard() {
                 )}
               </div>
             </div>
+          </div>
+        )}
+
+        {activeSubTab === 'analytics' && (
+          <div className="space-y-6">
+            {/* Overall Health */}
+            {analytics && (
+              <>
+                <div className="bg-white rounded-xl shadow-sm p-6">
+                  <h3 className="text-lg font-semibold text-slate-900 mb-4">System Health & Performance</h3>
+
+                  {/* Health Badge */}
+                  <div className="mb-6">
+                    <div className={`inline-flex items-center px-6 py-3 rounded-full text-lg font-bold ${
+                      analytics.overallHealth === 'excellent' ? 'bg-green-100 text-green-800' :
+                      analytics.overallHealth === 'good' ? 'bg-blue-100 text-blue-800' :
+                      analytics.overallHealth === 'fair' ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-red-100 text-red-800'
+                    }`}>
+                      {analytics.overallHealth === 'excellent' ? '✅ Excellent' :
+                       analytics.overallHealth === 'good' ? '👍 Good' :
+                       analytics.overallHealth === 'fair' ? '⚠️ Fair' :
+                       '🚨 Needs Attention'}
+                    </div>
+                  </div>
+
+                  {/* Key Metrics */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="bg-slate-50 rounded-lg p-4">
+                      <div className="text-sm text-slate-600">Total Videos</div>
+                      <div className="text-2xl font-bold text-slate-900 mt-1">
+                        {analytics.keyMetrics.totalVideosGenerated}
+                      </div>
+                      <div className="text-xs text-slate-500 mt-1">all time</div>
+                    </div>
+
+                    <div className="bg-slate-50 rounded-lg p-4">
+                      <div className="text-sm text-slate-600">Success Rate</div>
+                      <div className={`text-2xl font-bold mt-1 ${
+                        analytics.keyMetrics.successRate >= 90 ? 'text-green-600' :
+                        analytics.keyMetrics.successRate >= 75 ? 'text-yellow-600' :
+                        'text-red-600'
+                      }`}>
+                        {analytics.keyMetrics.successRate.toFixed(1)}%
+                      </div>
+                      <div className="text-xs text-slate-500 mt-1">completion rate</div>
+                    </div>
+
+                    <div className="bg-slate-50 rounded-lg p-4">
+                      <div className="text-sm text-slate-600">Processing Time</div>
+                      <div className="text-lg font-bold text-slate-900 mt-1">
+                        {analytics.keyMetrics.averageProcessingTime}
+                      </div>
+                      <div className="text-xs text-slate-500 mt-1">per video</div>
+                    </div>
+
+                    <div className="bg-slate-50 rounded-lg p-4">
+                      <div className="text-sm text-slate-600">Content Quality</div>
+                      <div className="text-sm font-bold text-slate-900 mt-1">
+                        {analytics.keyMetrics.contentQuality}
+                      </div>
+                      <div className="text-xs text-slate-500 mt-1">AI filtering</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Brand Comparison */}
+                <div className="bg-white rounded-xl shadow-sm p-6">
+                  <h3 className="text-lg font-semibold text-slate-900 mb-4">Brand Performance Comparison</h3>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Carz Analytics */}
+                    <div className="border border-slate-200 rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <span className="text-2xl">🚗</span>
+                          <h4 className="font-semibold text-slate-900">Carz Inc</h4>
+                        </div>
+                        <span className={`text-xs px-3 py-1 rounded-full font-semibold ${
+                          analytics.brands.carz.health === 'excellent' ? 'bg-green-100 text-green-700' :
+                          analytics.brands.carz.health === 'good' ? 'bg-blue-100 text-blue-700' :
+                          analytics.brands.carz.health === 'fair' ? 'bg-yellow-100 text-yellow-700' :
+                          'bg-red-100 text-red-700'
+                        }`}>
+                          {analytics.brands.carz.health.toUpperCase()}
+                        </span>
+                      </div>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-slate-600">Success Rate:</span>
+                          <span className="font-medium">{analytics.brands.carz.successRate.toFixed(1)}%</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-600">Articles Ready:</span>
+                          <span className="font-medium">{analytics.brands.carz.unprocessedArticles}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-600">Videos Generated:</span>
+                          <span className="font-medium">{analytics.brands.carz.videosGenerated}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-600">Failed Workflows:</span>
+                          <span className="font-medium text-red-600">{analytics.brands.carz.queueStats.failed}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* OwnerFi Analytics */}
+                    <div className="border border-slate-200 rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <span className="text-2xl">🏠</span>
+                          <h4 className="font-semibold text-slate-900">OwnerFi</h4>
+                        </div>
+                        <span className={`text-xs px-3 py-1 rounded-full font-semibold ${
+                          analytics.brands.ownerfi.health === 'excellent' ? 'bg-green-100 text-green-700' :
+                          analytics.brands.ownerfi.health === 'good' ? 'bg-blue-100 text-blue-700' :
+                          analytics.brands.ownerfi.health === 'fair' ? 'bg-yellow-100 text-yellow-700' :
+                          'bg-red-100 text-red-700'
+                        }`}>
+                          {analytics.brands.ownerfi.health.toUpperCase()}
+                        </span>
+                      </div>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-slate-600">Success Rate:</span>
+                          <span className="font-medium">{analytics.brands.ownerfi.successRate.toFixed(1)}%</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-600">Articles Ready:</span>
+                          <span className="font-medium">{analytics.brands.ownerfi.unprocessedArticles}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-600">Videos Generated:</span>
+                          <span className="font-medium">{analytics.brands.ownerfi.videosGenerated}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-600">Failed Workflows:</span>
+                          <span className="font-medium text-red-600">{analytics.brands.ownerfi.queueStats.failed}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Recommendations */}
+                <div className="bg-white rounded-xl shadow-sm p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-slate-900">AI Recommendations</h3>
+                    <div className="text-sm text-slate-600">
+                      {analytics.recommendations.length} insights
+                    </div>
+                  </div>
+
+                  {analytics.recommendations.length === 0 ? (
+                    <div className="bg-slate-50 rounded-lg p-8 text-center border border-slate-200">
+                      <div className="text-slate-500 text-sm font-medium">No recommendations at this time</div>
+                      <div className="text-xs text-slate-400 mt-1">Your system is running optimally!</div>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {analytics.recommendations.map((rec) => (
+                        <div
+                          key={rec.id}
+                          className={`border-2 rounded-lg p-4 ${
+                            rec.type === 'critical' ? 'border-red-300 bg-red-50' :
+                            rec.type === 'warning' ? 'border-yellow-300 bg-yellow-50' :
+                            rec.type === 'success' ? 'border-green-300 bg-green-50' :
+                            'border-blue-300 bg-blue-50'
+                          }`}
+                        >
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className={`text-2xl ${
+                                  rec.type === 'critical' ? '🚨' :
+                                  rec.type === 'warning' ? '⚠️' :
+                                  rec.type === 'success' ? '✅' :
+                                  '💡'
+                                }`}></span>
+                                <h4 className="font-semibold text-slate-900">{rec.title}</h4>
+                                <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                                  rec.impact === 'high' ? 'bg-red-200 text-red-800' :
+                                  rec.impact === 'medium' ? 'bg-yellow-200 text-yellow-800' :
+                                  'bg-gray-200 text-gray-800'
+                                }`}>
+                                  {rec.impact.toUpperCase()} IMPACT
+                                </span>
+                              </div>
+                              <p className="text-sm text-slate-700 mb-2">{rec.description}</p>
+                              <div className="text-xs text-slate-600 mb-3">
+                                <span className="font-medium">Action:</span> {rec.action}
+                              </div>
+
+                              {/* Copy-Paste Section */}
+                              <div className="bg-white border border-slate-300 rounded-lg p-3 mt-3">
+                                <div className="flex items-center justify-between mb-2">
+                                  <span className="text-xs font-semibold text-slate-700">Copy for Claude:</span>
+                                  <button
+                                    onClick={() => copyToClipboard(rec.copyPasteText, rec.id)}
+                                    className={`text-xs px-3 py-1 rounded-lg font-medium transition-all ${
+                                      copiedRecId === rec.id
+                                        ? 'bg-green-600 text-white'
+                                        : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                                    }`}
+                                  >
+                                    {copiedRecId === rec.id ? '✓ Copied!' : '📋 Copy'}
+                                  </button>
+                                </div>
+                                <pre className="text-xs text-slate-700 whitespace-pre-wrap font-mono bg-slate-50 p-2 rounded border border-slate-200">
+                                  {rec.copyPasteText}
+                                </pre>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Future Analytics Placeholder */}
+                <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl shadow-sm p-6 border-2 border-dashed border-purple-300">
+                  <div className="flex items-center gap-3 mb-3">
+                    <span className="text-3xl">🚀</span>
+                    <h3 className="text-lg font-semibold text-slate-900">Coming Soon: Late.so Analytics Integration</h3>
+                  </div>
+                  <p className="text-sm text-slate-700 mb-4">
+                    Once Late.so releases their analytics API, we'll automatically track:
+                  </p>
+                  <ul className="text-sm text-slate-700 space-y-2">
+                    <li>• Real-time engagement metrics (views, likes, comments, shares)</li>
+                    <li>• Platform-specific performance comparison</li>
+                    <li>• Optimal posting time analysis</li>
+                    <li>• Content type performance (trending vs evergreen)</li>
+                    <li>• Audience retention heatmaps</li>
+                    <li>• A/B testing results for captions and thumbnails</li>
+                  </ul>
+                  <div className="mt-4 text-xs text-slate-600">
+                    For now, manually track engagement in your platform dashboards and use the recommendations above to optimize performance.
+                  </div>
+                </div>
+              </>
+            )}
+
+            {!analytics && (
+              <div className="bg-white rounded-xl shadow-sm p-6">
+                <div className="flex items-center justify-center h-64">
+                  <div className="text-center">
+                    <div className="w-12 h-12 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                    <div className="text-lg font-medium text-gray-900">Loading analytics...</div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 

@@ -162,8 +162,7 @@ export async function POST(request: NextRequest) {
             })} ET`);
 
             // POST 1: Main post to all platforms
-            // SKIP: YouTube (quota exceeded)
-            const allPlatforms = ['facebook', 'instagram', 'tiktok', 'linkedin', 'threads', 'twitter'] as any[];
+            const allPlatforms = ['facebook', 'instagram', 'tiktok', 'youtube', 'linkedin', 'threads', 'twitter'] as any[];
             console.log(`📱 Post 1: All platforms (${allPlatforms.join(', ')})...`);
 
             const postResult = await postToLate({
@@ -224,9 +223,8 @@ export async function POST(request: NextRequest) {
             });
 
             // POST 1: Main post to all platforms (Reels/Shorts)
-            // SKIP: YouTube (quota exceeded)
             // Add Bluesky for OwnerFi only
-            const allPlatforms = ['facebook', 'instagram', 'tiktok', 'linkedin', 'threads', 'twitter'] as any[];
+            const allPlatforms = ['facebook', 'instagram', 'tiktok', 'youtube', 'linkedin', 'threads', 'twitter'] as any[];
             if (brand === 'ownerfi') {
               allPlatforms.push('bluesky');
             }

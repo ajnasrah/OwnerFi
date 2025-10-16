@@ -3,32 +3,14 @@
 ## ✅ Working Platforms
 
 Successfully posting to these platforms:
+- ✅ **Facebook** - Reels & Feed posts
 - ✅ **Instagram** - Reels (default)
 - ✅ **TikTok** - Public posts
+- ✅ **YouTube** - Shorts
 - ✅ **LinkedIn** - Standard posts
 - ✅ **Threads** - Standard posts
 - ✅ **Twitter/X** - Standard posts
 - ✅ **Bluesky** - OwnerFi only
-
-## ❌ Skipped Platforms (Temporarily Disabled)
-
-### Facebook
-**Error**: `Unable to get page access token. Page not found or user does not have admin access to this page.`
-
-**Issue**: Need admin access to Facebook page
-**Fix Required**:
-1. Go to https://getlate.dev/dashboard
-2. Reconnect Facebook account
-3. Ensure you have admin access to the page
-
-### YouTube
-**Error**: `YouTube quota exceeded. Please try again later.`
-
-**Issue**: Daily YouTube API upload quota reached
-**Fix**:
-- Quota resets at midnight Pacific Time
-- Consider requesting quota increase from Google
-- Or post YouTube manually until quota increases
 
 ## Current Configuration
 
@@ -46,33 +28,28 @@ RSS Article → HeyGen Video → Submagic Enhancement
 ### Platform Settings
 | Platform | Content Type | Privacy | Notes |
 |----------|-------------|---------|-------|
-| Instagram | Reel (default) | Public | Working ✅ |
-| TikTok | Video | Public | Working ✅ |
-| LinkedIn | Video | Public | Working ✅ |
-| Threads | Video | Public | Working ✅ |
-| Twitter/X | Video | Public | Working ✅ |
+| Facebook | Reel/Feed | Public | Enabled ✅ |
+| Instagram | Reel (default) | Public | Enabled ✅ |
+| TikTok | Video | Public | Enabled ✅ |
+| YouTube | Shorts | Public | Enabled ✅ |
+| LinkedIn | Video | Public | Enabled ✅ |
+| Threads | Video | Public | Enabled ✅ |
+| Twitter/X | Video | Public | Enabled ✅ |
 | Bluesky | Video | Public | OwnerFi only ✅ |
-| Facebook | Disabled | - | Token error ❌ |
-| YouTube | Disabled | - | Quota exceeded ❌ |
 
 ## Stories (Disabled)
 Instagram and Facebook stories have been disabled per user request.
 Focus is on main platform posts only.
 
-## Next Steps
+## All Platforms Enabled ✅
 
-### To Enable Facebook:
-1. Visit Late dashboard
-2. Reconnect Facebook account with admin access
-3. Verify page permissions
-4. Test with manual post first
-5. Re-enable in code: Add `'facebook'` back to `allPlatforms` array
+All platforms are now active and posting:
+- Facebook, Instagram, TikTok, YouTube, LinkedIn, Threads, Twitter/X
+- Bluesky (OwnerFi brand only)
 
-### To Enable YouTube:
-1. Wait for quota reset (midnight PT)
-2. OR request quota increase from Google Cloud Console
-3. Test with manual post first
-4. Re-enable in code: Add `'youtube'` back to `allPlatforms` array
+If you encounter errors:
+- **Facebook**: Reconnect in Late dashboard with admin access
+- **YouTube**: Quota resets at midnight PT; request increase if needed
 
 ## Code Location
 
@@ -82,8 +59,8 @@ Main posting logic:
 - `/src/lib/feed-store-firestore.ts` - Scheduling logic
 
 Platform configuration:
-- Line 166 (Podcast): `const allPlatforms = ['instagram', 'tiktok', 'linkedin', 'threads', 'twitter']`
-- Line 234 (Social Media): `const allPlatforms = ['instagram', 'tiktok', 'linkedin', 'threads', 'twitter']` + Bluesky for OwnerFi
+- Line 165 (Podcast): `const allPlatforms = ['facebook', 'instagram', 'tiktok', 'youtube', 'linkedin', 'threads', 'twitter']`
+- Line 227 (Social Media): `const allPlatforms = ['facebook', 'instagram', 'tiktok', 'youtube', 'linkedin', 'threads', 'twitter']` + Bluesky for OwnerFi
 
 ## Testing
 

@@ -97,6 +97,17 @@ export async function GET(request: NextRequest) {
       throw new Error('HEYGEN_API_KEY not configured');
     }
 
+    // Get host profile from Firestore
+    const { getHostProfile } = await import('@/lib/feed-store-firestore');
+    const hostProfile = await getHostProfile();
+    if (!hostProfile) {
+      throw new Error('Host profile not found in Firestore');
+    }
+
+    console.log(`   Host: ${hostProfile.name}`);
+    console.log(`   Avatar: ${hostProfile.avatar_id}`);
+    console.log(`   Voice: ${hostProfile.voice_id}`);
+
     // Get base URL for webhook callback
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ||
                     (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
@@ -104,8 +115,7 @@ export async function GET(request: NextRequest) {
 
     const webhookUrl = `${baseUrl}/api/webhooks/heygen`;
 
-    // Use Photo Avatar (0.2 credits/min vs 1 credit/min for Standard Avatar)
-    // This is 5x cheaper for podcast-style content
+    // Use host's avatar and voice from config
     const response = await fetch('https://api.heygen.com/v2/video/generate', {
       method: 'POST',
       headers: {
@@ -120,14 +130,14 @@ export async function GET(request: NextRequest) {
         webhook_url: webhookUrl,
         video_inputs: [{
           character: {
-            type: 'avatar',
-            avatar_id: 'Wayne_20240711', // Photo Avatar (cheap option)
+            type: hostProfile.avatar_type,
+            avatar_id: hostProfile.avatar_id,
             avatar_style: 'normal'
           },
           voice: {
             type: 'text',
             input_text: script.full_dialogue,
-            voice_id: 'bf9fd52eff1f4b999d75ca24e5e5a52d' // Wayne voice
+            voice_id: hostProfile.voice_id
           }
         }],
         dimension: {

@@ -994,33 +994,6 @@ export interface PodcastConfig {
   video_settings: VideoSettings;
 }
 
-// Initialize podcast config from local JSON file (one-time migration)
-export async function initializePodcastConfigFromFile(): Promise<void> {
-  if (!db) throw new Error('Firebase not initialized');
-
-  try {
-    // Check if config already exists in Firestore
-    const configDoc = await getDoc(doc(db, 'podcast_config', 'main'));
-    if (configDoc.exists()) {
-      console.log('✅ Podcast config already exists in Firestore');
-      return;
-    }
-
-    // Load from local file
-    const { readFileSync } = await import('fs');
-    const { join } = await import('path');
-    const configPath = join(process.cwd(), 'podcast', 'config', 'guest-profiles.json');
-    const configData = JSON.parse(readFileSync(configPath, 'utf-8'));
-
-    // Save to Firestore
-    await setDoc(doc(db, 'podcast_config', 'main'), configData);
-    console.log('✅ Migrated podcast config from file to Firestore');
-  } catch (error) {
-    console.error('❌ Error initializing podcast config:', error);
-    throw error;
-  }
-}
-
 // Get podcast configuration from Firestore
 export async function getPodcastConfig(): Promise<PodcastConfig | null> {
   if (!db) return null;

@@ -323,6 +323,8 @@ export class CircuitBreaker {
 // Global circuit breakers for external services
 export const circuitBreakers = {
   metricool: new CircuitBreaker('Metricool'),
+  buffer: new CircuitBreaker('Buffer'),
+  late: new CircuitBreaker('Late'),
   heygen: new CircuitBreaker('HeyGen'),
   submagic: new CircuitBreaker('Submagic'),
   openai: new CircuitBreaker('OpenAI'),

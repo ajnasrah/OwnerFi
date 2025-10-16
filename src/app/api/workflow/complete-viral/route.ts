@@ -2,7 +2,7 @@
 // This is the ONE endpoint to trigger the entire A-Z process
 
 import { NextRequest, NextResponse } from 'next/server';
-import { scheduleVideoPost } from '@/lib/metricool-api';
+import { scheduleVideoPost } from '@/lib/late-api'; // Switched from Metricool to Late
 import { circuitBreakers, fetchWithTimeout, TIMEOUTS } from '@/lib/api-utils';
 import { CompleteWorkflowRequestSchema, safeParse } from '@/lib/validation-schemas';
 import { ERROR_MESSAGES } from '@/config/constants';
@@ -143,7 +143,7 @@ export async function POST(request: NextRequest) {
     console.log('🎯 HeyGen video submitted successfully!');
     console.log('📡 Webhooks will handle:');
     console.log('   1. HeyGen completion → R2 upload → Submagic');
-    console.log('   2. Submagic completion → R2 upload → Metricool posting');
+    console.log('   2. Submagic completion → R2 upload → Late posting');
     console.log('   3. Monitor progress at /admin/social-dashboard');
 
     return NextResponse.json({
@@ -162,7 +162,7 @@ export async function POST(request: NextRequest) {
       next_steps: [
         '⏳ HeyGen is generating the video (webhook will notify when complete)',
         '⏳ Submagic will add captions and effects (webhook will notify when complete)',
-        '⏳ Video will auto-post to Metricool (Instagram, TikTok, YouTube)',
+        '⏳ Video will auto-post to Late (Instagram, TikTok, YouTube, Facebook, LinkedIn, etc.)',
         '📊 Monitor progress in the admin dashboard'
       ]
     });
@@ -499,7 +499,7 @@ async function waitForHeyGenAndProcess(
             const { uploadSubmagicVideo } = await import('@/lib/video-storage');
             const publicVideoUrl = await uploadSubmagicVideo(videoUrl);
 
-            // Post to Metricool
+            // Post to Late
             await updateWorkflowStatus(workflowId, brand, { status: 'posting' });
 
             const postResult = await scheduleVideoPost(
@@ -514,7 +514,7 @@ async function waitForHeyGenAndProcess(
             if (postResult.success) {
               await updateWorkflowStatus(workflowId, brand, {
                 status: 'completed',
-                metricoolPostId: postResult.postId,
+                latePostId: postResult.postId,
                 completedAt: Date.now()
               });
               console.log('✅ Local dev workflow completed!');

@@ -48,7 +48,7 @@ export interface WorkflowQueueItem {
   workflowId?: string;
   heygenVideoId?: string;
   submagicVideoId?: string;
-  metricoolPostId?: string;
+  latePostId?: string; // Late API post ID (replaced Metricool)
   caption?: string; // Store for webhooks
   title?: string; // Store for webhooks
   scheduledFor?: number; // Timestamp for when post should go live
@@ -309,7 +309,7 @@ export async function addWorkflowToQueue(articleId: string, articleTitle: string
   if (!db) throw new Error('Firebase not initialized');
 
   const queueItem: WorkflowQueueItem = {
-    id: `wf_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    id: `wf_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
     articleId,
     articleTitle,
     brand,
@@ -394,7 +394,7 @@ export async function cleanupCompletedWorkflows(olderThanHours: number = 24): Pr
 
     // Note: In production, you'd want to batch delete these
     for (const docSnap of snapshot.docs) {
-      await docSnap.ref.delete();
+      await deleteDoc(docSnap.ref);
       cleaned++;
     }
   }
@@ -653,7 +653,7 @@ export interface PodcastWorkflowItem {
   heygenVideoId?: string;
   submagicProjectId?: string;
   finalVideoUrl?: string;
-  metricoolPostId?: string;
+  latePostId?: string; // Late API post ID (replaced Metricool)
   error?: string;
   createdAt: number;
   updatedAt: number;
@@ -664,7 +664,7 @@ export async function addPodcastWorkflow(episodeNumber: number, episodeTitle: st
   if (!db) throw new Error('Firebase not initialized');
 
   const queueItem: PodcastWorkflowItem = {
-    id: `podcast_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    id: `podcast_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
     episodeNumber,
     episodeTitle,
     guestName: '',

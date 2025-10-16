@@ -26,6 +26,7 @@ interface PodcastScript {
   topic: string;
   qa_pairs: QAPair[];
   estimated_duration_seconds: number;
+  full_dialogue: string; // Complete script text for HeyGen TTS
 }
 
 export class ScriptGenerator {
@@ -164,6 +165,11 @@ export class ScriptGenerator {
     // Parse the response into structured Q&A pairs
     const qaPairs = this.parseQAPairs(response, questionsCount);
 
+    // Generate full dialogue for HeyGen TTS (concatenate all Q&A pairs)
+    const fullDialogue = qaPairs.map(pair =>
+      `${pair.question} ${pair.answer}`
+    ).join(' ');
+
     // Calculate estimated duration (average speaking rate: 150 words/minute)
     const totalWords = qaPairs.reduce((sum, pair) => {
       return sum + pair.question.split(' ').length + pair.answer.split(' ').length;
@@ -176,11 +182,13 @@ export class ScriptGenerator {
       guest_name: guest.name,
       topic,
       qa_pairs: qaPairs,
-      estimated_duration_seconds: estimatedDuration
+      estimated_duration_seconds: estimatedDuration,
+      full_dialogue: fullDialogue
     };
 
     console.log(`Script generated: ${script.episode_title}`);
     console.log(`Estimated duration: ${estimatedDuration}s`);
+    console.log(`Full dialogue length: ${fullDialogue.length} characters`);
 
     return script;
   }

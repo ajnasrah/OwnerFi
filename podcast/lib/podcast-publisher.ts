@@ -1,5 +1,5 @@
-// Podcast Publisher - Auto-post to social media via Metricool
-import { postToMetricool, scheduleVideoPost, MetricoolPostRequest } from '../../src/lib/metricool-api';
+// Podcast Publisher - Auto-post to social media via Late
+import { postToLate, scheduleVideoPost, LatePostRequest } from '../../src/lib/late-api';
 
 interface PodcastMetadata {
   episode_number: number;
@@ -114,15 +114,16 @@ export class PodcastPublisher {
   ): Promise<any[]> {
     const results = [];
 
-    // All 8 platforms for maximum reach
-    const allPlatforms: MetricoolPostRequest['platforms'] = [
+    // All platforms for maximum reach
+    const allPlatforms: LatePostRequest['platforms'] = [
       'instagram',  // Reels
       'facebook',   // Reels
       'tiktok',
       'youtube',    // Shorts
       'linkedin',
       'twitter',
-      'threads'
+      'threads',
+      'bluesky'
     ];
 
     for (let i = 0; i < clips.length; i++) {
@@ -139,15 +140,11 @@ From Episode #${metadata.episode_number}: ${metadata.guest_name} on ${metadata.t
 #podcast #shorts #viral #education`;
 
         // Post to Reels/Shorts on all platforms
-        const reelsResult = await postToMetricool({
+        const reelsResult = await postToLate({
           videoUrl: clip.videoUrl,
           caption: fullCaption,
           platforms: allPlatforms,
-          postTypes: {
-            instagram: 'reels',
-            facebook: 'reels'
-          },
-          brand: this.brand
+          brand: 'podcast'
         });
 
         results.push(reelsResult);
@@ -158,27 +155,8 @@ From Episode #${metadata.episode_number}: ${metadata.guest_name} on ${metadata.t
           console.log(`   ❌ Clip ${i + 1} Reels failed: ${reelsResult.error}`);
         }
 
-        // Also post to Instagram and Facebook Stories
-        await new Promise(resolve => setTimeout(resolve, 2000)); // Rate limit
-
-        const storiesResult = await postToMetricool({
-          videoUrl: clip.videoUrl,
-          caption: fullCaption,
-          platforms: ['instagram', 'facebook'],
-          postTypes: {
-            instagram: 'story',
-            facebook: 'story'
-          },
-          brand: this.brand
-        });
-
-        results.push(storiesResult);
-
-        if (storiesResult.success) {
-          console.log(`   ✅ Clip ${i + 1} published to Stories`);
-        } else {
-          console.log(`   ❌ Clip ${i + 1} Stories failed: ${storiesResult.error}`);
-        }
+        // Late handles all platform types (Reels/Stories/Shorts) automatically
+        // No need for separate Stories posting
 
       } catch (error) {
         console.error(`   ❌ Error publishing clip ${i + 1}:`, error);

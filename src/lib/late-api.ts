@@ -277,6 +277,8 @@ export async function postToLate(request: LatePostRequest): Promise<LatePostResp
             requestBody.publishNow = true;
           }
 
+          console.log('🔍 Late API Request Body:', JSON.stringify(requestBody, null, 2));
+
           const response = await fetchWithTimeout(
             `${LATE_BASE_URL}/posts`,
             {
@@ -290,28 +292,47 @@ export async function postToLate(request: LatePostRequest): Promise<LatePostResp
             TIMEOUTS.EXTERNAL_API
           );
 
-          if (!response.ok) {
-            const errorText = await response.text();
+          console.log(`🔍 Late API Response Status: ${response.status} ${response.statusText}`);
 
+          // Get response text first
+          const responseText = await response.text();
+          console.log(`🔍 Late API Response Body:`, responseText);
+
+          if (!response.ok) {
             // Check for rate limit
             if (response.status === 429) {
               throw new RateLimitError('Late API rate limit exceeded', 60);
             }
 
-            throw new Error(`Late API error: ${response.status} - ${errorText}`);
+            throw new Error(`Late API error: ${response.status} - ${responseText}`);
           }
 
-          const data = await response.json();
+          // Parse JSON response
+          let data;
+          try {
+            data = JSON.parse(responseText);
+          } catch (e) {
+            throw new Error(`Late API returned invalid JSON: ${responseText}`);
+          }
+
+          // Extract post ID and validate it exists
+          const postId = data.id || data.postId || data._id || data.post?.id || data.post?._id;
+
+          if (!postId) {
+            console.error('❌ Late API response missing post ID!');
+            console.error('   Response data:', JSON.stringify(data, null, 2));
+            throw new Error('Late API response missing post ID');
+          }
 
           console.log(`✅ Posted to Late (${brandName}) successfully!`);
-          console.log('   Post ID:', data.id || data.postId);
+          console.log('   Post ID:', postId);
           if (data.scheduledFor) {
             console.log('   Scheduled for:', data.scheduledFor);
           }
 
           return {
             success: true,
-            postId: data.id || data.postId,
+            postId: postId,
             scheduledFor: data.scheduledFor || request.scheduleTime,
             platforms: platformAccounts.map(p => p.platform)
           };

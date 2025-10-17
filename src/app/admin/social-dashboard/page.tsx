@@ -490,7 +490,7 @@ export default function SocialMediaDashboard() {
                 <div className="text-lg font-bold text-slate-900 mt-1">
                   Serverless Cron
                 </div>
-                <div className="text-xs text-slate-500 mt-1">Runs every 2 hours</div>
+                <div className="text-xs text-slate-500 mt-1">5x daily (9AM-9PM CDT)</div>
               </div>
               <div className="w-12 h-12 rounded-full flex items-center justify-center bg-blue-100">
                 <div className="w-6 h-6 rounded-full bg-blue-500"></div>
@@ -858,7 +858,7 @@ export default function SocialMediaDashboard() {
                   <div className="text-lg font-bold text-slate-900 mt-1">
                     Smart Slots
                   </div>
-                  <div className="text-xs text-slate-500 mt-1">9AM, 11AM, 2PM, 6PM, 8PM ET</div>
+                  <div className="text-xs text-slate-500 mt-1">9AM, 12PM, 3PM, 6PM, 9PM CDT</div>
                 </div>
 
                 <div className="bg-slate-50 rounded-lg p-4">
@@ -1366,7 +1366,7 @@ export default function SocialMediaDashboard() {
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
             <div>
               <div className="text-slate-600">Cron Schedule</div>
-              <div className="font-medium text-slate-900 mt-1">Every 2 hours</div>
+              <div className="font-medium text-slate-900 mt-1">5x daily (9AM-9PM CDT)</div>
             </div>
             <div>
               <div className="text-slate-600">Video Generation</div>

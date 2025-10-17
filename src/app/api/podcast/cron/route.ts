@@ -78,7 +78,6 @@ export async function GET(request: NextRequest) {
     // Load profiles from Firestore (async)
     await scriptGen.loadProfiles();
 
-    const recentGuestIds = scheduler.getRecentGuestIds(4);
     const script = await scriptGen.generateScript(undefined, 2); // 2 Q&A pairs
 
     console.log(`✅ Generated script: ${script.episode_title}`);
@@ -123,34 +122,56 @@ export async function GET(request: NextRequest) {
     const webhookUrl = `${baseUrl}/api/webhooks/heygen`;
 
     // Build multi-scene video inputs: alternating host questions and guest answers
-    const videoInputs = script.qa_pairs.flatMap((pair, index) => [
-      // Scene: Host asks question
-      {
-        character: {
-          type: hostProfile.avatar_type,
-          avatar_id: hostProfile.avatar_id,
-          avatar_style: 'normal'
+    const videoInputs = script.qa_pairs.flatMap((pair) => {
+      // Build host character config based on avatar type
+      const hostCharacter = hostProfile.avatar_type === 'talking_photo'
+        ? {
+            type: 'talking_photo',
+            talking_photo: {
+              talking_photo_id: hostProfile.avatar_id
+            }
+          }
+        : {
+            type: 'avatar',
+            avatar_id: hostProfile.avatar_id,
+            avatar_style: 'normal'
+          };
+
+      // Build guest character config based on avatar type
+      const guestCharacter = guestProfile.avatar_type === 'talking_photo'
+        ? {
+            type: 'talking_photo',
+            talking_photo: {
+              talking_photo_id: guestProfile.avatar_id
+            }
+          }
+        : {
+            type: 'avatar',
+            avatar_id: guestProfile.avatar_id,
+            avatar_style: 'normal'
+          };
+
+      return [
+        // Scene: Host asks question
+        {
+          character: hostCharacter,
+          voice: {
+            type: 'text',
+            input_text: pair.question,
+            voice_id: hostProfile.voice_id
+          }
         },
-        voice: {
-          type: 'text',
-          input_text: pair.question,
-          voice_id: hostProfile.voice_id
+        // Scene: Guest answers
+        {
+          character: guestCharacter,
+          voice: {
+            type: 'text',
+            input_text: pair.answer,
+            voice_id: guestProfile.voice_id
+          }
         }
-      },
-      // Scene: Guest answers
-      {
-        character: {
-          type: guestProfile.avatar_type,
-          avatar_id: guestProfile.avatar_id,
-          avatar_style: 'normal'
-        },
-        voice: {
-          type: 'text',
-          input_text: pair.answer,
-          voice_id: guestProfile.voice_id
-        }
-      }
-    ]);
+      ];
+    });
 
     console.log(`   Generated ${videoInputs.length} scenes (${script.qa_pairs.length} Q&A pairs)`);
 

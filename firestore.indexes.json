@@ -107,6 +107,20 @@
       ]
     },
     {
+      "collectionGroup": "podcast_workflow_queue",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
       "collectionGroup": "ownerfi_workflow_queue",
       "queryScope": "COLLECTION",
       "fields": [

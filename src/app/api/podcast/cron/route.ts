@@ -127,9 +127,10 @@ export async function GET(request: NextRequest) {
       const hostCharacter = hostProfile.avatar_type === 'talking_photo'
         ? {
             type: 'talking_photo',
-            talking_photo: {
-              talking_photo_id: hostProfile.avatar_id
-            }
+            talking_photo_id: hostProfile.avatar_id,
+            scale: hostProfile.scale,
+            talking_photo_style: 'square',
+            talking_style: 'expressive'
           }
         : {
             type: 'avatar',
@@ -141,9 +142,10 @@ export async function GET(request: NextRequest) {
       const guestCharacter = guestProfile.avatar_type === 'talking_photo'
         ? {
             type: 'talking_photo',
-            talking_photo: {
-              talking_photo_id: guestProfile.avatar_id
-            }
+            talking_photo_id: guestProfile.avatar_id,
+            scale: guestProfile.scale,
+            talking_photo_style: 'square',
+            talking_style: 'expressive'
           }
         : {
             type: 'avatar',

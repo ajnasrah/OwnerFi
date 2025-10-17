@@ -879,6 +879,31 @@ export async function getPodcastWorkflowById(workflowId: string): Promise<Podcas
 // Optimized for cross-platform engagement (Instagram, TikTok, YouTube, LinkedIn, Twitter, Facebook)
 const POSTING_SCHEDULE_HOURS = [9, 12, 15, 18, 21]; // 9am, 12pm, 3pm, 6pm, 9pm CDT
 
+/**
+ * Helper: Convert Central Time to proper UTC Date object
+ * This ensures that when we call .toISOString(), it returns the correct UTC time
+ */
+function createCentralTimeAsUTC(year: number, month: number, day: number, hour: number): Date {
+  // Determine if we're in CDT (UTC-5) or CST (UTC-6) for this date
+  // Create a test date at noon on the target day
+  const testDate = new Date(Date.UTC(year, month, day, 12, 0, 0));
+  const centralHourStr = testDate.toLocaleString('en-US', {
+    timeZone: 'America/Chicago',
+    hour: '2-digit',
+    hour12: false
+  });
+  const centralHour = parseInt(centralHourStr);
+
+  // Calculate offset: 12 UTC - centralHour = offset in hours
+  // CDT: 12 UTC = 7 AM Central (offset = 5)
+  // CST: 12 UTC = 6 AM Central (offset = 6)
+  const offsetHours = 12 - centralHour;
+
+  // Create UTC date for the desired Central Time hour
+  // If we want 9 AM Central and offset is 5 (CDT), then UTC time is 9 + 5 = 14:00 UTC
+  return new Date(Date.UTC(year, month, day, hour + offsetHours, 0, 0));
+}
+
 export async function getNextAvailableTimeSlot(brand: 'carz' | 'ownerfi'): Promise<Date> {
   if (!db) {
     // Fallback: return current time + 1 minute if DB not available
@@ -886,18 +911,21 @@ export async function getNextAvailableTimeSlot(brand: 'carz' | 'ownerfi'): Promi
   }
 
   try {
-    // Get current time in Central Time (CDT/CST)
+    // Get current date components in Central Time
     const now = new Date();
-    const nowCentral = new Date(now.toLocaleString('en-US', { timeZone: 'America/Chicago' }));
+    const centralYear = parseInt(now.toLocaleString('en-US', { timeZone: 'America/Chicago', year: 'numeric' }));
+    const centralMonth = parseInt(now.toLocaleString('en-US', { timeZone: 'America/Chicago', month: 'numeric' })) - 1;
+    const centralDay = parseInt(now.toLocaleString('en-US', { timeZone: 'America/Chicago', day: 'numeric' }));
 
-    // Start of today at midnight Central
-    const todayStart = new Date(nowCentral);
-    todayStart.setHours(0, 0, 0, 0);
+    // Start of today at midnight Central (converted to UTC)
+    const todayStart = createCentralTimeAsUTC(centralYear, centralMonth, centralDay, 0);
     const todayStartTimestamp = todayStart.getTime();
 
-    // End of today at 11:59:59 PM Central
-    const todayEnd = new Date(nowCentral);
-    todayEnd.setHours(23, 59, 59, 999);
+    // End of today at 11:59:59 PM Central (converted to UTC)
+    const todayEnd = createCentralTimeAsUTC(centralYear, centralMonth, centralDay, 23);
+    todayEnd.setUTCMinutes(59);
+    todayEnd.setUTCSeconds(59);
+    todayEnd.setUTCMilliseconds(999);
     const todayEndTimestamp = todayEnd.getTime();
 
     // Query Firestore for all workflows scheduled for today (for this brand)
@@ -913,21 +941,26 @@ export async function getNextAvailableTimeSlot(brand: 'carz' | 'ownerfi'): Promi
       .map(doc => doc.data().scheduledFor)
       .filter(ts => typeof ts === 'number') as number[];
 
-    // Build set of taken hours for fast lookup
+    // Build set of taken hours (in Central Time) for fast lookup
     const takenHours = new Set<number>();
     scheduledTimestamps.forEach(timestamp => {
       const date = new Date(timestamp);
-      const hour = date.getHours();
-      takenHours.add(hour);
+      // Get the hour in Central Time for this timestamp
+      const centralHourStr = date.toLocaleString('en-US', {
+        timeZone: 'America/Chicago',
+        hour: '2-digit',
+        hour12: false
+      });
+      const centralHour = parseInt(centralHourStr);
+      takenHours.add(centralHour);
     });
 
-    console.log(`📅 Scheduling for ${brand.toUpperCase()}: ${takenHours.size} slots taken today (hours: ${Array.from(takenHours).join(', ')})`);
+    console.log(`📅 Scheduling for ${brand.toUpperCase()}: ${takenHours.size} slots taken today (hours: ${Array.from(takenHours).join(', ')} CDT)`);
 
     // Find next available slot
     for (const hour of POSTING_SCHEDULE_HOURS) {
-      // Create a date for this slot today
-      const slotTime = new Date(todayStart);
-      slotTime.setHours(hour, 0, 0, 0);
+      // Create a proper UTC date for this Central Time slot
+      const slotTime = createCentralTimeAsUTC(centralYear, centralMonth, centralDay, hour);
 
       // Skip if this slot has already passed
       if (slotTime.getTime() < now.getTime()) {
@@ -940,17 +973,29 @@ export async function getNextAvailableTimeSlot(brand: 'carz' | 'ownerfi'): Promi
       }
 
       // Found available slot!
-      console.log(`✅ Next available slot for ${brand}: ${slotTime.toLocaleString('en-US', { timeZone: 'America/Chicago', hour: 'numeric', minute: '2-digit', hour12: true })} CDT`);
+      console.log(`✅ Next available slot for ${brand}: ${slotTime.toLocaleString('en-US', { timeZone: 'America/Chicago', hour: 'numeric', minute: '2-digit', hour12: true })} CDT (UTC: ${slotTime.toISOString()})`);
       return slotTime;
     }
 
     // All slots today are taken or past - schedule for first slot tomorrow
-    const tomorrowStart = new Date(todayStart);
-    tomorrowStart.setDate(tomorrowStart.getDate() + 1);
-    tomorrowStart.setHours(POSTING_SCHEDULE_HOURS[0], 0, 0, 0);
+    const tomorrowYear = centralYear;
+    let tomorrowMonth = centralMonth;
+    let tomorrowDay = centralDay + 1;
 
-    console.log(`⏭️  All slots taken today for ${brand}, scheduling for tomorrow: ${tomorrowStart.toLocaleString('en-US', { timeZone: 'America/Chicago', weekday: 'short', hour: 'numeric', minute: '2-digit', hour12: true })} CDT`);
-    return tomorrowStart;
+    // Handle month/year rollover
+    const daysInMonth = new Date(tomorrowYear, tomorrowMonth + 1, 0).getDate();
+    if (tomorrowDay > daysInMonth) {
+      tomorrowDay = 1;
+      tomorrowMonth += 1;
+      if (tomorrowMonth > 11) {
+        tomorrowMonth = 0;
+      }
+    }
+
+    const tomorrowSlot = createCentralTimeAsUTC(tomorrowYear, tomorrowMonth, tomorrowDay, POSTING_SCHEDULE_HOURS[0]);
+
+    console.log(`⏭️  All slots taken today for ${brand}, scheduling for tomorrow: ${tomorrowSlot.toLocaleString('en-US', { timeZone: 'America/Chicago', weekday: 'short', hour: 'numeric', minute: '2-digit', hour12: true })} CDT (UTC: ${tomorrowSlot.toISOString()})`);
+    return tomorrowSlot;
 
   } catch (error) {
     console.error('❌ Error calculating next time slot:', error);

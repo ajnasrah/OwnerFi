@@ -449,21 +449,35 @@ EXAMPLE BAD SCRIPT:
     const brand = content.toLowerCase().includes('car') ? 'carz' : 'ownerfi';
     const topic = variables['TOPIC'] || 'Tips';
 
-    // Add hashtags to variables
-    variables['HASHTAGS'] = getPlatformHashtags(brand, 'instagram', topic);
+    // Generate hashtags separately (will be appended by Late API, not embedded in template)
+    const hashtags = getPlatformHashtags(brand, 'instagram', topic);
+
+    // Remove [HASHTAGS] placeholder from template or replace with empty string
+    // Hashtags will be added by Late API at the END, not in the middle
+    variables['HASHTAGS'] = ''; // Don't embed hashtags in template
 
     // Generate caption from template
     try {
       caption = generateCaption(templateKey, variables);
+
+      // Remove any trailing whitespace and the empty hashtag line
+      caption = caption.replace(/\n\n\s*$/g, '').trim();
+
+      // Append hashtags at the END
+      caption = `${caption}\n\n${hashtags}`;
+
       console.log(`✅ Generated caption from "${template.name}" template (${caption.length} chars)`);
+      console.log(`   Hashtags: ${hashtags}`);
     } catch (error) {
       console.error('❌ Failed to generate caption from template:', error);
-      // Fallback to default caption
-      caption = 'Breaking news you need to see! 🔥\n\nThis changes everything. Click to watch the full story.\n\n#BreakingNews #MustWatch #Viral #Trending';
+      // Fallback to default caption with hashtags
+      caption = `Breaking news you need to see! 🔥\n\nThis changes everything. Click to watch the full story.\n\n${hashtags}`;
     }
   } else {
     console.warn('⚠️  No CONTENT_VARIABLES found in OpenAI response, using fallback caption');
-    caption = 'Breaking news you need to see! 🔥\n\nThis changes everything. Click to watch the full story.\n\n#BreakingNews #MustWatch #Viral #Trending';
+    const brand = content.toLowerCase().includes('car') ? 'carz' : 'ownerfi';
+    const fallbackHashtags = getPlatformHashtags(brand, 'instagram', 'BreakingNews');
+    caption = `Breaking news you need to see! 🔥\n\nThis changes everything. Click to watch the full story.\n\n${fallbackHashtags}`;
   }
 
   return {

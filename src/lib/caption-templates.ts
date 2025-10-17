@@ -145,21 +145,25 @@ export function generateCaption(
   }
 
   // Ensure caption is under 280 characters (including hashtags)
+  // NOTE: Hashtags should always be at the END after "\n\n", not in the middle
   if (caption.length > 280) {
-    // Truncate before hashtags
-    const hashtagIndex = caption.lastIndexOf('#');
-    if (hashtagIndex > 0) {
-      const beforeHashtags = caption.substring(0, hashtagIndex);
-      const hashtags = caption.substring(hashtagIndex);
+    // Split caption into text and hashtags (hashtags should be after last "\n\n")
+    const parts = caption.split('\n\n');
+    const hashtags = parts[parts.length - 1].startsWith('#') ? parts.pop() : '';
+    const textParts = parts;
+    const text = textParts.join('\n\n');
 
+    if (hashtags) {
       // Truncate text, keep hashtags
-      const maxTextLength = 280 - hashtags.length - 3; // -3 for "..."
-      if (beforeHashtags.length > maxTextLength) {
-        caption = beforeHashtags.substring(0, maxTextLength) + '...\n\n' + hashtags;
+      const maxTextLength = 280 - hashtags.length - 5; // -5 for "\n\n..."
+      if (text.length > maxTextLength) {
+        caption = text.substring(0, maxTextLength).trim() + '...\n\n' + hashtags;
+      } else {
+        caption = text + '\n\n' + hashtags;
       }
     } else {
       // No hashtags, just truncate
-      caption = caption.substring(0, 277) + '...';
+      caption = caption.substring(0, 277).trim() + '...';
     }
   }
 

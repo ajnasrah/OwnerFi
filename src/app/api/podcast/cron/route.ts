@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const force = searchParams.get('force') === 'true';
 
-    console.log('🎙️ Podcast cron job triggered - Generating daily episode');
+    console.log('🎙️ Podcast cron job triggered - Generating daily episode [v2]');
     if (force) {
       console.log('⚡ Force mode enabled - Bypassing scheduler check');
     }

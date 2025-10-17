@@ -874,9 +874,10 @@ export async function getPodcastWorkflowById(workflowId: string): Promise<Podcas
 }
 
 // Smart Scheduling: Get next available time slot for social media posting
-// Posting schedule: 9 AM, 12 PM, 3 PM, 6 PM, 8 PM (Eastern Time)
+// Posting schedule: 9 AM, 12 PM, 3 PM, 6 PM, 9 PM (Central Daylight Time)
+// No posts before 9am or after 10pm CDT per user requirements
 // Optimized for cross-platform engagement (Instagram, TikTok, YouTube, LinkedIn, Twitter, Facebook)
-const POSTING_SCHEDULE_HOURS = [9, 12, 15, 18, 20];
+const POSTING_SCHEDULE_HOURS = [9, 12, 15, 18, 21]; // 9am, 12pm, 3pm, 6pm, 9pm CDT
 
 export async function getNextAvailableTimeSlot(brand: 'carz' | 'ownerfi'): Promise<Date> {
   if (!db) {
@@ -885,17 +886,17 @@ export async function getNextAvailableTimeSlot(brand: 'carz' | 'ownerfi'): Promi
   }
 
   try {
-    // Get current time in Eastern Time
+    // Get current time in Central Time (CDT/CST)
     const now = new Date();
-    const nowEastern = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+    const nowCentral = new Date(now.toLocaleString('en-US', { timeZone: 'America/Chicago' }));
 
-    // Start of today at midnight Eastern
-    const todayStart = new Date(nowEastern);
+    // Start of today at midnight Central
+    const todayStart = new Date(nowCentral);
     todayStart.setHours(0, 0, 0, 0);
     const todayStartTimestamp = todayStart.getTime();
 
-    // End of today at 11:59:59 PM Eastern
-    const todayEnd = new Date(nowEastern);
+    // End of today at 11:59:59 PM Central
+    const todayEnd = new Date(nowCentral);
     todayEnd.setHours(23, 59, 59, 999);
     const todayEndTimestamp = todayEnd.getTime();
 
@@ -939,7 +940,7 @@ export async function getNextAvailableTimeSlot(brand: 'carz' | 'ownerfi'): Promi
       }
 
       // Found available slot!
-      console.log(`✅ Next available slot for ${brand}: ${slotTime.toLocaleString('en-US', { timeZone: 'America/New_York', hour: 'numeric', minute: '2-digit', hour12: true })}`);
+      console.log(`✅ Next available slot for ${brand}: ${slotTime.toLocaleString('en-US', { timeZone: 'America/Chicago', hour: 'numeric', minute: '2-digit', hour12: true })} CDT`);
       return slotTime;
     }
 
@@ -948,7 +949,7 @@ export async function getNextAvailableTimeSlot(brand: 'carz' | 'ownerfi'): Promi
     tomorrowStart.setDate(tomorrowStart.getDate() + 1);
     tomorrowStart.setHours(POSTING_SCHEDULE_HOURS[0], 0, 0, 0);
 
-    console.log(`⏭️  All slots taken today for ${brand}, scheduling for tomorrow: ${tomorrowStart.toLocaleString('en-US', { timeZone: 'America/New_York', weekday: 'short', hour: 'numeric', minute: '2-digit', hour12: true })}`);
+    console.log(`⏭️  All slots taken today for ${brand}, scheduling for tomorrow: ${tomorrowStart.toLocaleString('en-US', { timeZone: 'America/Chicago', weekday: 'short', hour: 'numeric', minute: '2-digit', hour12: true })} CDT`);
     return tomorrowStart;
 
   } catch (error) {

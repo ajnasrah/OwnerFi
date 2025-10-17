@@ -271,7 +271,7 @@ export async function postToLate(request: LatePostRequest): Promise<LatePostResp
           // Add scheduling
           if (request.scheduleTime) {
             requestBody.scheduledFor = request.scheduleTime;
-            requestBody.timezone = 'America/Chicago'; // Central Time
+            requestBody.timezone = 'America/New_York'; // Eastern Time (matches Late profile setting)
           } else {
             // Immediate posting
             requestBody.publishNow = true;

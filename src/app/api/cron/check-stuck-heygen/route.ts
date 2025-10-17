@@ -82,33 +82,86 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // Check Podcast workflows stuck in heygen_processing
+    console.log(`\n📂 Checking podcast_workflow_queue...`);
+    try {
+      const q = query(
+        collection(db, 'podcast_workflow_queue'),
+        where('status', '==', 'heygen_processing')
+      );
+
+      const snapshot = await getDocs(q);
+      console.log(`   Found ${snapshot.size} podcast workflows in heygen_processing`);
+
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const heygenVideoId = data.heygenVideoId;
+        const updatedAt = data.updatedAt || 0;
+        const stuckMinutes = Math.round((Date.now() - updatedAt) / 60000);
+
+        console.log(`   📄 Podcast ${doc.id}: heygenVideoId = ${heygenVideoId || 'MISSING'}, stuck for ${stuckMinutes} min`);
+
+        if (heygenVideoId) {
+          heygenProjects.push({
+            videoId: heygenVideoId,
+            workflowId: doc.id,
+            brand: 'podcast',
+            isPodcast: true,
+            stuckMinutes,
+            workflow: data
+          });
+        } else if (stuckMinutes > 30) {
+          console.warn(`   ❌ Podcast ${doc.id} has no heygenVideoId after ${stuckMinutes} min - marking failed`);
+          heygenProjects.push({
+            videoId: null,
+            workflowId: doc.id,
+            brand: 'podcast',
+            isPodcast: true,
+            shouldFail: true,
+            workflow: data
+          });
+        }
+      });
+    } catch (err) {
+      console.error(`   ❌ Error querying podcast_workflow_queue:`, err);
+    }
+
     console.log(`\n📋 Found ${heygenProjects.length} stuck HeyGen workflows`);
 
     const results = [];
 
     // Check each stuck workflow's HeyGen status
     for (const project of heygenProjects) {
-      const { videoId, workflowId, brand, stuckMinutes, shouldFail, workflow } = project as any;
+      const { videoId, workflowId, brand, stuckMinutes, shouldFail, workflow, isPodcast } = project as any;
 
       // Handle workflows that should be marked as failed
       if (shouldFail || !videoId) {
-        console.log(`\n❌ Marking workflow ${workflowId} as failed (no HeyGen video ID)`);
+        console.log(`\n❌ Marking ${isPodcast ? 'podcast' : 'workflow'} ${workflowId} as failed (no HeyGen video ID)`);
 
         try {
-          const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
-          await updateWorkflowStatus(workflowId, brand, {
-            status: 'failed',
-            error: 'HeyGen video generation failed - no video ID received'
-          });
+          if (isPodcast) {
+            const { updatePodcastWorkflow } = await import('@/lib/feed-store-firestore');
+            await updatePodcastWorkflow(workflowId, {
+              status: 'failed',
+              error: 'HeyGen video generation failed - no video ID received'
+            });
+          } else {
+            const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
+            await updateWorkflowStatus(workflowId, brand, {
+              status: 'failed',
+              error: 'HeyGen video generation failed - no video ID received'
+            });
+          }
 
           results.push({
             workflowId,
             brand,
+            isPodcast,
             action: 'marked_failed',
             reason: 'no_heygen_id'
           });
         } catch (err) {
-          console.error(`   ❌ Error marking workflow as failed:`, err);
+          console.error(`   ❌ Error marking ${isPodcast ? 'podcast' : 'workflow'} as failed:`, err);
         }
         continue;
       }
@@ -163,9 +216,9 @@ export async function GET(request: NextRequest) {
             const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ||
                             (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
                             'https://ownerfi.ai';
-            const webhookUrl = `${baseUrl}/api/webhooks/submagic`;
+            const webhookUrl = isPodcast ? `${baseUrl}/api/webhooks/submagic-podcast` : `${baseUrl}/api/webhooks/submagic`;
 
-            let title = workflow.articleTitle || `Viral Video - ${workflowId}`;
+            let title = workflow.articleTitle || workflow.topic || `${isPodcast ? 'Podcast' : 'Viral Video'} - ${workflowId}`;
 
             // Decode HTML entities before measuring length
             title = title
@@ -212,16 +265,25 @@ export async function GET(request: NextRequest) {
             console.log('   ✅ Submagic project created:', projectId);
 
             // Update workflow to submagic_processing
-            const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
-            await updateWorkflowStatus(workflowId, brand, {
-              status: 'submagic_processing',
-              submagicVideoId: projectId
-            });
+            if (isPodcast) {
+              const { updatePodcastWorkflow } = await import('@/lib/feed-store-firestore');
+              await updatePodcastWorkflow(workflowId, {
+                status: 'submagic_processing',
+                submagicVideoId: projectId
+              });
+            } else {
+              const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
+              await updateWorkflowStatus(workflowId, brand, {
+                status: 'submagic_processing',
+                submagicVideoId: projectId
+              });
+            }
 
             results.push({
               videoId,
               workflowId,
               brand,
+              isPodcast,
               action: 'advanced_to_submagic',
               submagicProjectId: projectId,
               success: true
@@ -229,16 +291,25 @@ export async function GET(request: NextRequest) {
           } catch (submagicError) {
             console.error(`   ❌ Error triggering Submagic:`, submagicError);
 
-            const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
-            await updateWorkflowStatus(workflowId, brand, {
-              status: 'failed',
-              error: submagicError instanceof Error ? submagicError.message : 'Unknown error'
-            });
+            if (isPodcast) {
+              const { updatePodcastWorkflow } = await import('@/lib/feed-store-firestore');
+              await updatePodcastWorkflow(workflowId, {
+                status: 'failed',
+                error: submagicError instanceof Error ? submagicError.message : 'Unknown error'
+              });
+            } else {
+              const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
+              await updateWorkflowStatus(workflowId, brand, {
+                status: 'failed',
+                error: submagicError instanceof Error ? submagicError.message : 'Unknown error'
+              });
+            }
 
             results.push({
               videoId,
               workflowId,
               brand,
+              isPodcast,
               action: 'failed',
               error: submagicError instanceof Error ? submagicError.message : 'Unknown error'
             });
@@ -246,16 +317,25 @@ export async function GET(request: NextRequest) {
         } else if (status === 'failed') {
           console.log(`   ❌ HeyGen video failed`);
 
-          const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
-          await updateWorkflowStatus(workflowId, brand, {
-            status: 'failed',
-            error: 'HeyGen video generation failed'
-          });
+          if (isPodcast) {
+            const { updatePodcastWorkflow } = await import('@/lib/feed-store-firestore');
+            await updatePodcastWorkflow(workflowId, {
+              status: 'failed',
+              error: 'HeyGen video generation failed'
+            });
+          } else {
+            const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
+            await updateWorkflowStatus(workflowId, brand, {
+              status: 'failed',
+              error: 'HeyGen video generation failed'
+            });
+          }
 
           results.push({
             videoId,
             workflowId,
             brand,
+            isPodcast,
             action: 'marked_failed',
             reason: 'heygen_failed'
           });

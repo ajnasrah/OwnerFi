@@ -336,12 +336,18 @@ IMPORTANT RULES:
 - Written in FIRST PERSON as if YOU are speaking to the audience
 - NO stage directions, NO camera directions, NO scene descriptions
 
+CAPTION RULES (CRITICAL):
+- Keep CONTENT_VARIABLES extremely concise and short
+- Each variable should be SHORT - captions will be truncated to 150 chars total INCLUDING hashtags
+- Focus on punchy, impactful phrases, not long explanations
+- Example: "Save $1000" NOT "You can potentially save up to one thousand dollars"
+
 FORMAT:
 SCRIPT: [the exact words the AI avatar will speak - nothing else]
 
 TITLE: [30-45 characters MAXIMUM including emojis - MUST be under 50 chars - attention-grabbing headline]
 
-CONTENT_VARIABLES: [Extract these variables from the article to fill caption templates]
+CONTENT_VARIABLES: [Extract these variables from the article - KEEP EACH ONE SHORT AND PUNCHY]
 ${getTemplateVariablesPrompt(templateKey)}
 
 EXAMPLE GOOD OUTPUT:

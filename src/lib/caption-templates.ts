@@ -29,12 +29,7 @@ export const CAPTION_TEMPLATES: Record<string, CaptionTemplate> = {
     },
     template: `🚨 [SHOCKING_CLAIM]
 
-Here's what [AUTHORITY_FIGURE] doesn't want you to know:
-• [SECRET_1]
-• [SECRET_2]
-• [SECRET_3]
-
-Don't get played! [CTA] 💰
+[CTA] 💰
 
 [HASHTAGS]`
   },
@@ -49,13 +44,9 @@ Don't get played! [CTA] 💰
       shares: 'high',
       comments: 'medium'
     },
-    template: `Save [BENEFIT] with these [NUMBER] [INDUSTRY] hacks 🔥
+    template: `Save [BENEFIT] with these [INDUSTRY] hacks 🔥
 
-✅ [TIP_1]
-✅ [TIP_2]
-✅ [TIP_3]
-
-Which one are you trying first? 👇
+[TIP_1] 👇
 
 [HASHTAGS]`
   },
@@ -70,11 +61,9 @@ Which one are you trying first? 👇
       shares: 'high',
       comments: 'medium'
     },
-    template: `I couldn't believe my eyes when [DRAMATIC_EVENT] 😱
+    template: `[DRAMATIC_EVENT] 😱
 
-[MINI_STORY]
-
-The lesson? [KEY_TAKEAWAY]. Share if this helped! 🙏
+[KEY_TAKEAWAY] 🙏
 
 [HASHTAGS]`
   },
@@ -91,11 +80,7 @@ The lesson? [KEY_TAKEAWAY]. Share if this helped! 🙏
     },
     template: `Why do [TARGET_AUDIENCE] [SURPRISING_BEHAVIOR]? 🤔
 
-The answer will shock you:
-
-[EXPLANATION]
-
-Comment if you didn't know this! 💬
+[EXPLANATION] 💬
 
 [HASHTAGS]`
   },
@@ -110,15 +95,9 @@ Comment if you didn't know this! 💬
       shares: 'medium',
       comments: 'medium'
     },
-    template: `The [NUMBER] [INDUSTRY] rules everyone breaks:
+    template: `[NUMBER] [INDUSTRY] rules you're breaking:
 
-1️⃣ [RULE_1]
-2️⃣ [RULE_2]
-3️⃣ [RULE_3]
-
-(Most people mess up #2) 👀
-
-Tag someone who needs this!
+[RULE_1] 👀
 
 [HASHTAGS]`
   }
@@ -144,9 +123,9 @@ export function generateCaption(
     caption = caption.replace(new RegExp(placeholder, 'g'), value);
   }
 
-  // Ensure caption is under 280 characters (including hashtags)
+  // Ensure caption is under 150 characters (including hashtags)
   // NOTE: Hashtags should always be at the END after "\n\n", not in the middle
-  if (caption.length > 280) {
+  if (caption.length > 150) {
     // Split caption into text and hashtags (hashtags should be after last "\n\n")
     const parts = caption.split('\n\n');
     const hashtags = parts[parts.length - 1].startsWith('#') ? parts.pop() : '';
@@ -155,7 +134,7 @@ export function generateCaption(
 
     if (hashtags) {
       // Truncate text, keep hashtags
-      const maxTextLength = 280 - hashtags.length - 5; // -5 for "\n\n..."
+      const maxTextLength = 150 - hashtags.length - 5; // -5 for "\n\n..."
       if (text.length > maxTextLength) {
         caption = text.substring(0, maxTextLength).trim() + '...\n\n' + hashtags;
       } else {
@@ -163,7 +142,7 @@ export function generateCaption(
       }
     } else {
       // No hashtags, just truncate
-      caption = caption.substring(0, 277).trim() + '...';
+      caption = caption.substring(0, 147).trim() + '...';
     }
   }
 
@@ -211,19 +190,19 @@ export function getPlatformHashtags(
   };
 
   const platformStrategies = {
-    instagram: 5, // 5 niche hashtags
-    tiktok: 4, // 1-2 trending + 2-3 niche
-    youtube: 7, // 5-7 descriptive keywords
-    linkedin: 5, // 3-5 professional tags
-    twitter: 2, // 1-2 trending only
+    instagram: 3, // 3 niche hashtags (reduced for 150 char limit)
+    tiktok: 3,    // 3 hashtags
+    youtube: 3,   // 3 hashtags
+    linkedin: 3,  // 3 hashtags
+    twitter: 2,   // 2 trending only
     facebook: 3,
-    threads: 4,
+    threads: 3,
     bluesky: 3
   };
 
-  const count = platformStrategies[platform as keyof typeof platformStrategies] || 4;
+  const count = platformStrategies[platform as keyof typeof platformStrategies] || 3;
 
-  // Mix base hashtags with topic-specific ones
+  // Mix base hashtags with topic-specific ones (limit to count)
   const hashtags = [
     ...baseHashtags[brand],
     ...topic.split(' ').slice(0, 2).map(word => word.replace(/[^a-zA-Z0-9]/g, ''))

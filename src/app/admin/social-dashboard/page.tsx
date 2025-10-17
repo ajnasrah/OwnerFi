@@ -234,7 +234,8 @@ export default function SocialMediaDashboard() {
 
   const loadPodcastWorkflows = async () => {
     try {
-      const response = await fetch('/api/podcast/workflow/logs');
+      const url = showHistory ? '/api/podcast/workflow/logs?history=true' : '/api/podcast/workflow/logs';
+      const response = await fetch(url);
       const data = await response.json();
       setPodcastWorkflows(data);
     } catch (error) {
@@ -1014,7 +1015,15 @@ export default function SocialMediaDashboard() {
 
               {/* Podcast Workflow Logs */}
               <div className="mt-6 pt-6 border-t border-slate-200">
-                <h4 className="text-sm font-semibold text-slate-900 mb-3">Active Workflows</h4>
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-sm font-semibold text-slate-900">Workflows</h4>
+                  <button
+                    onClick={() => setShowHistory(!showHistory)}
+                    className="text-xs px-3 py-1 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition-colors"
+                  >
+                    {showHistory ? 'Active Only' : 'Show History'}
+                  </button>
+                </div>
                 {podcastWorkflows && podcastWorkflows.workflows && podcastWorkflows.workflows.length > 0 ? (
                   <div className="space-y-3">
                     {podcastWorkflows.workflows.map((workflow) => (

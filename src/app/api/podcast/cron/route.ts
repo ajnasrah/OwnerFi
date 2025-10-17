@@ -1,5 +1,6 @@
 // Automated Podcast Generation Cron Job
-// Runs daily at 9 AM
+// Runs 5x daily (9 AM, 12 PM, 3 PM, 6 PM, 9 PM CDT)
+// Generates up to 3 episodes per day with smart scheduling
 
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -226,7 +227,7 @@ export async function GET(request: NextRequest) {
     );
 
     console.log(`\n🎉 Episode #${recordedEpisodeNumber} initiated!`);
-    console.log(`   ⚡ HeyGen → Submagic → Metricool (automatic via webhooks)`);
+    console.log(`   ⚡ HeyGen → Submagic → GetLate (automatic via webhooks)`);
 
     return NextResponse.json({
       success: true,
@@ -238,7 +239,7 @@ export async function GET(request: NextRequest) {
         video_id: videoId,
         workflow_id: workflow.id
       },
-      message: 'Podcast generation started. Workflow continues via webhooks (HeyGen → Submagic → Publishing).',
+      message: 'Podcast generation started. Workflow continues via webhooks (HeyGen → Submagic → GetLate).',
       timestamp: new Date().toISOString()
     });
 

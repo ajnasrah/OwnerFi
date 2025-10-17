@@ -1,10 +1,9 @@
-// Weekly Podcast Scheduler
+// Daily Podcast Scheduler - 3 Episodes Per Day
 // Refactored for serverless environments - uses static config and Firestore for state
 
 interface ScheduleConfig {
   frequency: string;
-  day_of_week: string;
-  time: string;
+  episodes_per_day: number;
   timezone: string;
   enabled: boolean;
 }
@@ -26,10 +25,9 @@ interface SchedulerState {
 
 // Static configuration (moved from podcast-config.json for serverless compatibility)
 const DEFAULT_SCHEDULE: ScheduleConfig = {
-  frequency: 'weekly',
-  day_of_week: 'monday',
-  time: '09:00',
-  timezone: 'America/New_York',
+  frequency: 'daily',
+  episodes_per_day: 3,
+  timezone: 'America/Chicago',
   enabled: true
 };
 
@@ -96,27 +94,46 @@ export class PodcastScheduler {
 
   /**
    * Check if it's time to generate a new episode
+   * Returns true if we haven't reached the daily limit (3 episodes per day)
    */
   shouldGenerateEpisode(): boolean {
     if (!this.schedule.enabled) {
       return false;
     }
 
-    const now = new Date();
-    const lastEpisode = this.state.episodes[this.state.episodes.length - 1];
-
-    if (!lastEpisode) {
-      return true; // No episodes yet
-    }
-
-    const lastEpisodeDate = new Date(lastEpisode.generated_at);
-    const daysSinceLastEpisode = (now.getTime() - lastEpisodeDate.getTime()) / (1000 * 60 * 60 * 24);
-
-    if (this.schedule.frequency === 'weekly' && daysSinceLastEpisode >= 7) {
+    // Allow generation if no episodes exist yet
+    if (this.state.episodes.length === 0) {
       return true;
     }
 
-    return false;
+    // Get current date in Central Time
+    const now = new Date();
+    const todayInCentral = now.toLocaleString('en-US', {
+      timeZone: this.schedule.timezone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
+
+    // Count episodes generated today
+    const episodesToday = this.state.episodes.filter(episode => {
+      const episodeDate = new Date(episode.generated_at);
+      const episodeDateInCentral = episodeDate.toLocaleString('en-US', {
+        timeZone: this.schedule.timezone,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      });
+      return episodeDateInCentral === todayInCentral;
+    });
+
+    const count = episodesToday.length;
+    const limit = this.schedule.episodes_per_day;
+
+    console.log(`📊 Podcast scheduler check: ${count}/${limit} episodes generated today (${todayInCentral} ${this.schedule.timezone})`);
+
+    // Generate if we haven't hit the daily limit
+    return count < limit;
   }
 
   /**
@@ -203,16 +220,42 @@ export class PodcastScheduler {
       return 'Disabled';
     }
 
-    const lastEpisode = this.state.episodes[this.state.episodes.length - 1];
-    if (!lastEpisode) {
+    if (this.state.episodes.length === 0) {
       return 'Immediately';
     }
 
-    const lastDate = new Date(lastEpisode.generated_at);
-    const nextDate = new Date(lastDate);
-    nextDate.setDate(nextDate.getDate() + 7); // Add 1 week
+    // Get current date in Central Time
+    const now = new Date();
+    const todayInCentral = now.toLocaleString('en-US', {
+      timeZone: this.schedule.timezone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
 
-    return nextDate.toISOString();
+    // Count episodes generated today
+    const episodesToday = this.state.episodes.filter(episode => {
+      const episodeDate = new Date(episode.generated_at);
+      const episodeDateInCentral = episodeDate.toLocaleString('en-US', {
+        timeZone: this.schedule.timezone,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      });
+      return episodeDateInCentral === todayInCentral;
+    });
+
+    const remaining = this.schedule.episodes_per_day - episodesToday.length;
+
+    if (remaining > 0) {
+      return `Immediately (${remaining} left today)`;
+    }
+
+    // All episodes for today generated, next one is tomorrow
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(9, 0, 0, 0); // 9 AM tomorrow
+    return tomorrow.toISOString();
   }
 }
 

@@ -862,17 +862,17 @@ export default function SocialMediaDashboard() {
                 </div>
 
                 <div className="bg-slate-50 rounded-lg p-4">
-                  <div className="text-sm text-slate-600">Last Episode</div>
+                  <div className="text-sm text-slate-600">Daily Limit</div>
                   <div className="text-lg font-bold text-slate-900 mt-1">
-                    #0
+                    3 episodes
                   </div>
-                  <div className="text-xs text-slate-500 mt-1">total episodes</div>
+                  <div className="text-xs text-slate-500 mt-1">per day</div>
                 </div>
 
                 <div className="bg-slate-50 rounded-lg p-4">
                   <div className="text-sm text-slate-600">Duration</div>
                   <div className="text-lg font-bold text-slate-900 mt-1">
-                    ~10 min
+                    ~3-4 min
                   </div>
                   <div className="text-xs text-slate-500 mt-1">per episode</div>
                 </div>
@@ -901,10 +901,11 @@ export default function SocialMediaDashboard() {
                 <h4 className="text-sm font-semibold text-slate-900 mb-3">Episode Format</h4>
                 <div className="bg-slate-50 rounded-lg p-4">
                   <ul className="text-sm text-slate-700 space-y-2">
+                    <li>• <strong>3 episodes daily</strong> - Posted at optimal engagement times</li>
                     <li>• Host + AI Guest (HeyGen avatars)</li>
                     <li>• 2 Q&A pairs (~1.5 minutes each)</li>
                     <li>• Hormozi 2 caption template (Submagic)</li>
-                    <li>• Uploaded to R2 storage → Published to GetLate</li>
+                    <li>• Smart scheduling: 9 AM, 12 PM, 3 PM, 6 PM, or 9 PM CDT</li>
                   </ul>
                 </div>
               </div>

@@ -77,7 +77,7 @@ interface Stats {
 export default function AdminDashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'overview' | 'properties' | 'upload' | 'disputes' | 'contacts' | 'buyers' | 'realtors' | 'logs' | 'social' | 'articles'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'properties' | 'failed-properties' | 'upload' | 'disputes' | 'contacts' | 'buyers' | 'realtors' | 'logs' | 'social' | 'articles'>('overview');
 
   // Stats
   const [stats, setStats] = useState<Stats>({
@@ -96,6 +96,12 @@ export default function AdminDashboard() {
   const [addressSearch, setAddressSearch] = useState('');
   const [sortField, setSortField] = useState<'address' | 'city' | 'state' | 'listPrice' | 'bedrooms' | null>('address');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+
+  // Failed Properties state
+  const [failedProperties, setFailedProperties] = useState<AdminProperty[]>([]);
+  const [loadingFailedProperties, setLoadingFailedProperties] = useState(false);
+  const [failedPropertiesFilter, setFailedPropertiesFilter] = useState<'all' | 'validation' | 'withdrawn' | 'missing-data'>('all');
+  const [failedPropertySummary, setFailedPropertySummary] = useState({ total: 0, withdrawn: 0, missingData: 0, validation: 0 });
 
   // Upload state
   const [file, setFile] = useState<File | null>(null);
@@ -196,6 +202,22 @@ export default function AdminDashboard() {
     }
   };
 
+  const fetchFailedProperties = async () => {
+    setLoadingFailedProperties(true);
+    try {
+      const response = await fetch(`/api/admin/failed-properties?filter=${failedPropertiesFilter}`);
+      const data = await response.json();
+      if (data.properties) {
+        setFailedProperties(data.properties);
+        setFailedPropertySummary(data.summary);
+      }
+    } catch (error) {
+      console.error('Failed to fetch failed properties:', error);
+    } finally {
+      setLoadingFailedProperties(false);
+    }
+  };
+
   const fetchDisputes = async () => {
     try {
       const response = await fetch('/api/admin/disputes');
@@ -259,6 +281,8 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (activeTab === 'properties') {
       fetchProperties();
+    } else if (activeTab === 'failed-properties') {
+      fetchFailedProperties();
     } else if (activeTab === 'disputes') {
       fetchDisputes();
     } else if (activeTab === 'contacts') {
@@ -269,6 +293,13 @@ export default function AdminDashboard() {
       fetchRealtors();
     }
   }, [activeTab]);
+
+  // Fetch failed properties when filter changes
+  useEffect(() => {
+    if (activeTab === 'failed-properties') {
+      fetchFailedProperties();
+    }
+  }, [failedPropertiesFilter]);
 
   // Property management functions
   const handleSort = (field: 'address' | 'city' | 'state' | 'listPrice' | 'bedrooms') => {
@@ -474,6 +505,7 @@ export default function AdminDashboard() {
           {[
             { key: 'overview', label: 'Overview', icon: '📊', count: null },
             { key: 'properties', label: 'Properties', icon: '🏠', count: stats.totalProperties },
+            { key: 'failed-properties', label: 'Failed Properties', icon: '⚠️', count: failedPropertySummary.total || null },
             { key: 'upload', label: 'Upload', icon: '📤', count: null },
             { key: 'buyers', label: 'Buyers', icon: '👤', count: stats.totalBuyers },
             { key: 'realtors', label: 'Realtors', icon: '🏢', count: stats.totalRealtors },
@@ -541,6 +573,7 @@ export default function AdminDashboard() {
               <h2 className="text-2xl font-bold text-slate-900">
                 {activeTab === 'overview' && 'Dashboard Overview'}
                 {activeTab === 'properties' && 'Property Management'}
+                {activeTab === 'failed-properties' && 'Failed Properties'}
                 {activeTab === 'upload' && 'Upload Properties'}
                 {activeTab === 'buyers' && 'Buyer Management'}
                 {activeTab === 'realtors' && 'Realtor Management'}
@@ -996,6 +1029,198 @@ export default function AdminDashboard() {
                   </div>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Failed Properties Tab */}
+          {activeTab === 'failed-properties' && (
+            <div className="space-y-6">
+              {/* Filter Buttons */}
+              <div className="bg-white shadow rounded-lg p-6">
+                <h3 className="text-lg font-semibold text-slate-900 mb-4">Filter by Issue Type</h3>
+                <div className="flex flex-wrap gap-3">
+                  <button
+                    onClick={() => setFailedPropertiesFilter('all')}
+                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                      failedPropertiesFilter === 'all'
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                    }`}
+                  >
+                    All Issues ({failedPropertySummary.total})
+                  </button>
+                  <button
+                    onClick={() => setFailedPropertiesFilter('validation')}
+                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                      failedPropertiesFilter === 'validation'
+                        ? 'bg-red-600 text-white'
+                        : 'bg-red-50 text-red-700 hover:bg-red-100'
+                    }`}
+                  >
+                    Validation Errors ({failedPropertySummary.validation})
+                  </button>
+                  <button
+                    onClick={() => setFailedPropertiesFilter('missing-data')}
+                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                      failedPropertiesFilter === 'missing-data'
+                        ? 'bg-yellow-600 text-white'
+                        : 'bg-yellow-50 text-yellow-700 hover:bg-yellow-100'
+                    }`}
+                  >
+                    Missing Data ({failedPropertySummary.missingData})
+                  </button>
+                  <button
+                    onClick={() => setFailedPropertiesFilter('withdrawn')}
+                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                      failedPropertiesFilter === 'withdrawn'
+                        ? 'bg-gray-600 text-white'
+                        : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+                    }`}
+                  >
+                    Withdrawn/Expired ({failedPropertySummary.withdrawn})
+                  </button>
+                </div>
+              </div>
+
+              {/* Failed Properties Table */}
+              <div className="bg-white shadow rounded-lg overflow-hidden">
+                <div className="px-4 py-5 border-b border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-slate-900">
+                      {loadingFailedProperties ? 'Loading...' : `${failedProperties.length} Failed Properties`}
+                    </h3>
+                    <button
+                      onClick={fetchFailedProperties}
+                      disabled={loadingFailedProperties}
+                      className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors disabled:bg-gray-400"
+                    >
+                      {loadingFailedProperties ? 'Refreshing...' : 'Refresh'}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Table */}
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Property
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Issue Type
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Problems
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Status
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {failedProperties.length === 0 ? (
+                        <tr>
+                          <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
+                            {loadingFailedProperties ? 'Loading...' : 'No failed properties found'}
+                          </td>
+                        </tr>
+                      ) : (
+                        failedProperties.map((property: any) => (
+                          <tr key={property.id} className="hover:bg-gray-50">
+                            <td className="px-6 py-4">
+                              <div className="text-sm font-medium text-gray-900">
+                                {property.address || 'No Address'}
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                {property.city}, {property.state} {property.zipCode}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4">
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                property.failureType === 'validation'
+                                  ? 'bg-red-100 text-red-800'
+                                  : property.failureType === 'missing-data'
+                                  ? 'bg-yellow-100 text-yellow-800'
+                                  : 'bg-gray-100 text-gray-800'
+                              }`}>
+                                {property.failureType === 'validation' && 'Validation'}
+                                {property.failureType === 'missing-data' && 'Missing Data'}
+                                {property.failureType === 'withdrawn' && 'Withdrawn/Expired'}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="text-sm text-gray-900">
+                                {property.validationErrors && property.validationErrors.length > 0 && (
+                                  <ul className="list-disc list-inside space-y-1">
+                                    {property.validationErrors.slice(0, 3).map((error: string, idx: number) => (
+                                      <li key={idx} className="text-red-600">{error}</li>
+                                    ))}
+                                    {property.validationErrors.length > 3 && (
+                                      <li className="text-gray-500">+{property.validationErrors.length - 3} more</li>
+                                    )}
+                                  </ul>
+                                )}
+                                {property.missingFields && property.missingFields.length > 0 && (
+                                  <div className="flex flex-wrap gap-1">
+                                    {property.missingFields.map((field: string, idx: number) => (
+                                      <span key={idx} className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded">
+                                        Missing: {field}
+                                      </span>
+                                    ))}
+                                  </div>
+                                )}
+                                {property.failureType === 'withdrawn' && (
+                                  <span className="text-gray-600">Status: {property.status}</span>
+                                )}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4">
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                property.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                              }`}>
+                                {property.isActive ? 'Active' : 'Inactive'}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 text-sm">
+                              <div className="flex space-x-2">
+                                <a
+                                  href={`/admin/property/edit/${property.id}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-indigo-600 hover:text-indigo-900 font-medium"
+                                >
+                                  Edit
+                                </a>
+                                <button
+                                  onClick={async () => {
+                                    if (confirm(`Delete property: ${property.address}?`)) {
+                                      try {
+                                        await fetch(`/api/admin/properties/${property.id}`, { method: 'DELETE' });
+                                        fetchFailedProperties();
+                                        alert('Property deleted successfully');
+                                      } catch (error) {
+                                        alert('Failed to delete property');
+                                        console.error('Delete error:', error);
+                                      }
+                                    }
+                                  }}
+                                  className="text-red-600 hover:text-red-900 font-medium"
+                                >
+                                  Delete
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
           )}
 

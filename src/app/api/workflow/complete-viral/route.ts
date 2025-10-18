@@ -115,15 +115,14 @@ export async function POST(request: NextRequest) {
     console.log(`✅ HeyGen video ID: ${videoResult.video_id}`);
     console.log(`📋 Workflow ID: ${workflowId}`);
 
-    // Update workflow with HeyGen video ID and store caption/title/template for webhooks
+    // Update workflow with HeyGen video ID and store caption/title for webhooks
     if (workflowId) {
       const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
       await updateWorkflowStatus(workflowId, brand as 'carz' | 'ownerfi', {
         heygenVideoId: videoResult.video_id,
         caption: content.caption,
-        title: content.title,
-        captionTemplate: content.templateUsed // For A/B testing analysis
-      } as any); // Store caption/title/template so webhooks can use them
+        title: content.title
+      } as any); // Store caption/title so webhooks can use them
     }
 
     // Check if we're in local development (webhooks won't work)
@@ -294,7 +293,7 @@ TOPIC: Main topic (2-3 words)`
 }
 
 // Helper: Generate viral content with OpenAI
-async function generateViralContent(content: string): Promise<{ script: string; title: string; caption: string; templateUsed?: string }> {
+async function generateViralContent(content: string): Promise<{ script: string; title: string; caption: string }> {
   if (!OPENAI_API_KEY) {
     return {
       script: content.substring(0, 500),
@@ -302,16 +301,6 @@ async function generateViralContent(content: string): Promise<{ script: string; 
       caption: '🔥 Check this out!'
     };
   }
-
-  // Import caption templates for A/B testing
-  const { getRandomTemplate, generateCaption, CAPTION_TEMPLATES, getPlatformHashtags } = await import('@/lib/caption-templates');
-
-  // Select random template for A/B testing
-  const templateKey = getRandomTemplate();
-  const template = CAPTION_TEMPLATES[templateKey];
-
-  console.log(`🧪 A/B Test: Using "${template.name}" caption template`);
-  console.log(`   Expected metrics: ${template.expectedMetrics.engagement} engagement, ${template.expectedMetrics.shares} shares`);
 
   // Sanitize content to prevent prompt injection
   const sanitizedContent = sanitizeContent(content);
@@ -330,9 +319,13 @@ async function generateViralContent(content: string): Promise<{ script: string; 
           messages: [
             {
               role: 'system',
-              content: `You are a viral video script writer. Generate a single-person talking head video script and extract key content variables for social media.
+              content: `You are an expert real estate copywriter for OwnerFi, a company that helps renters become homeowners through creative financing options (like owner financing and rent-to-own).
 
-IMPORTANT RULES:
+Your task is to:
+1. Generate a single-person talking head video script for a viral social media video
+2. Create a polished, ready-to-post social media caption
+
+SCRIPT RULES:
 - Write ONLY what the person says directly to camera - no scene descriptions, no cuts, no "[Opening shot]" directions
 - MUST be under 45 seconds of continuous speech (approximately 90-110 words MAXIMUM)
 - High energy, dramatic, attention-grabbing delivery
@@ -343,39 +336,46 @@ IMPORTANT RULES:
 - NEVER use the article author's name as if it's the speaker's name
 - NO stage directions, NO camera directions, NO scene descriptions
 
-CAPTION RULES (CRITICAL):
-- Keep CONTENT_VARIABLES extremely concise and short
-- Each variable should be SHORT - captions will be truncated to 150 chars total INCLUDING hashtags
-- Focus on punchy, impactful phrases, not long explanations
-- Example: "Save $1000" NOT "You can potentially save up to one thousand dollars"
-- HOOK_QUESTION must be a compelling question based on the article that grabs attention (not "stop scrolling" or "stop right there")
+CAPTION STYLE & TONE:
+- Brand voice: **Helpful, educational, and empowering** — you inspire confidence and financial hope.
+- Writing style: **Conversational, authentic, and professional**, not salesy or robotic.
+- Sentence count: **2–4 sentences maximum.**
+- Reading level: 6th–9th grade (easy to understand but not oversimplified).
+
+CAPTION STRUCTURE:
+1. **Hook (first line):** Ask a bold question or make a statement that instantly grabs attention.
+2. **Value (second line):** Provide a quick, educational insight or fact about homeownership, creative financing, or overcoming credit barriers.
+3. **Encouragement/CTA (final line):** Invite engagement or inspire action (e.g., "Let's make homeownership possible for you.").
+4. **Hashtags:** Include **3–5 relevant hashtags** formatted like \`#RealEstate #Homeownership #OwnerFi\`.
+
+CAPTION FORMATTING RULES (MANDATORY):
+- Output **ONE caption string only** (no labels, no titles, no code blocks).
+- Do **NOT** include any brackets, numbers, placeholders, or codes (e.g., \`[22L2]\`, \`[text2]\`, \`{caption}\`).
+- Do **NOT** repeat words, phrases, or sentences.
+- Do **NOT** include JSON, XML, or structured data.
+- Write clean, human-sounding text — **ready to copy and post**.
+
+CAPTION TOPICS (for variation):
+- Overcoming credit challenges
+- Benefits of owner financing
+- Why renting keeps people stuck
+- Tips for first-time homebuyers
+- Building equity through ownership
+- Inspirational homeowner success stories
 
 FORMAT:
 SCRIPT: [the exact words the AI avatar will speak - nothing else]
 
 TITLE: [30-45 characters MAXIMUM including emojis - MUST be under 50 chars - attention-grabbing headline]
 
-CONTENT_VARIABLES: [Extract these variables from the article - KEEP EACH ONE SHORT AND PUNCHY]
-${getTemplateVariablesPrompt(templateKey)}
+CAPTION: [2-4 sentence ready-to-post caption with 3-5 hashtags at the end]
 
-EXAMPLE GOOD OUTPUT:
-SCRIPT: "You know what's crazy? Most people are overpaying for car insurance because dealerships are hiding something huge. Let me break down what I just learned..."
+EXAMPLE OUTPUT:
+SCRIPT: "You know what's crazy? Most people think they need perfect credit to buy a home, but that's completely wrong. Let me tell you what I just discovered about owner financing..."
 
-TITLE: 🚗 Dealerships Don't Want You to Know THIS
+TITLE: 🏡 You Don't Need Perfect Credit!
 
-CONTENT_VARIABLES:
-HOOK_QUESTION: Did you know dealerships markup insurance by 30%?
-SHOCKING_CLAIM: Dealerships markup your insurance by 30%
-AUTHORITY_FIGURE: dealerships
-SECRET_1: They get kickbacks from insurers
-SECRET_2: Marked up rates boost their profit
-SECRET_3: You're paying 30% more than you should
-CTA: Ask for a quote before signing
-TOPIC: Car Insurance
-
-EXAMPLE BAD SCRIPT:
-"[Opening shot of person in office] Today we're going to talk about car insurance. [Cut to B-roll of cars]"
-"Hi I'm John Smith and I wrote an article about..." ← NEVER claim to be the author!`
+CAPTION: Dreaming of owning your first home but not sure where to start? You don't need perfect credit — you just need the right strategy. Owner financing can open the door to your future! #Homeownership #OwnerFi #RealEstate #FirstTimeHomeBuyer`
             },
             { role: 'user', content: `Article:\n\n${sanitizedContent.substring(0, 2000)}` }
           ],
@@ -404,9 +404,9 @@ EXAMPLE BAD SCRIPT:
 
   console.log('🤖 OpenAI full response:', fullResponse);
 
-  const scriptMatch = fullResponse.match(/SCRIPT:\s*([\s\S]*?)(?=TITLE:|CONTENT_VARIABLES:|$)/i);
-  const titleMatch = fullResponse.match(/TITLE:\s*([\s\S]*?)(?=CONTENT_VARIABLES:|$)/i);
-  const variablesMatch = fullResponse.match(/CONTENT_VARIABLES:\s*([\s\S]*?)$/i);
+  const scriptMatch = fullResponse.match(/SCRIPT:\s*([\s\S]*?)(?=TITLE:|CAPTION:|$)/i);
+  const titleMatch = fullResponse.match(/TITLE:\s*([\s\S]*?)(?=CAPTION:|$)/i);
+  const captionMatch = fullResponse.match(/CAPTION:\s*([\s\S]*?)$/i);
 
   // Extract and enforce title length limit (Submagic requires ≤50 chars)
   let title = titleMatch ? titleMatch[1].trim() : 'Breaking News - Must Watch!';
@@ -444,63 +444,21 @@ EXAMPLE BAD SCRIPT:
 
   console.log(`✅ Generated script (${script.length} chars): ${script.substring(0, 100)}...`);
 
-  // Parse content variables and generate caption from template
+  // Extract caption directly from OpenAI response
   let caption: string;
-  const variables: Record<string, string> = {};
 
-  if (variablesMatch) {
-    const variablesText = variablesMatch[1].trim();
-    const lines = variablesText.split('\n');
-
-    for (const line of lines) {
-      const match = line.match(/^([A-Z_]+):\s*(.+)$/);
-      if (match) {
-        variables[match[1]] = match[2].trim();
-      }
-    }
-
-    console.log(`🧪 Extracted ${Object.keys(variables).length} template variables`);
-
-    // Determine brand from content to generate platform-specific hashtags
-    const brand = content.toLowerCase().includes('car') ? 'carz' : 'ownerfi';
-    const topic = variables['TOPIC'] || 'Tips';
-
-    // Generate hashtags separately (will be appended by Late API, not embedded in template)
-    const hashtags = getPlatformHashtags(brand, 'instagram', topic);
-
-    // Remove [HASHTAGS] placeholder from template or replace with empty string
-    // Hashtags will be added by Late API at the END, not in the middle
-    variables['HASHTAGS'] = ''; // Don't embed hashtags in template
-
-    // Generate caption from template
-    try {
-      caption = generateCaption(templateKey, variables);
-
-      // Remove any trailing whitespace and the empty hashtag line
-      caption = caption.replace(/\n\n\s*$/g, '').trim();
-
-      // Append hashtags at the END
-      caption = `${caption}\n\n${hashtags}`;
-
-      console.log(`✅ Generated caption from "${template.name}" template (${caption.length} chars)`);
-      console.log(`   Hashtags: ${hashtags}`);
-    } catch (error) {
-      console.error('❌ Failed to generate caption from template:', error);
-      // Fallback to default caption with hashtags
-      caption = `Breaking news you need to see! 🔥\n\nThis changes everything. Click to watch the full story.\n\n${hashtags}`;
-    }
+  if (captionMatch) {
+    caption = captionMatch[1].trim();
+    console.log(`✅ Generated caption (${caption.length} chars): ${caption.substring(0, 100)}...`);
   } else {
-    console.warn('⚠️  No CONTENT_VARIABLES found in OpenAI response, using fallback caption');
-    const brand = content.toLowerCase().includes('car') ? 'carz' : 'ownerfi';
-    const fallbackHashtags = getPlatformHashtags(brand, 'instagram', 'BreakingNews');
-    caption = `Breaking news you need to see! 🔥\n\nThis changes everything. Click to watch the full story.\n\n${fallbackHashtags}`;
+    console.warn('⚠️  No CAPTION found in OpenAI response, using fallback caption');
+    caption = `Dreaming of owning your first home but not sure where to start? You don't need perfect credit — you just need the right strategy. Owner financing can open the door to your future! #Homeownership #OwnerFi #RealEstate`;
   }
 
   return {
     script,
     title,
-    caption,
-    templateUsed: templateKey
+    caption
   };
 }
 

@@ -97,8 +97,15 @@ export async function POST(request: NextRequest) {
 
     const payload: GHLDeletePayload = JSON.parse(body);
 
+    // GHL sends property ID in HEADERS (like save-property webhook), not in body
+    // Check both headers and body for property ID
+    const propertyIdFromHeaders = request.headers.get('propertyid') ||
+                                   request.headers.get('propertyId') ||
+                                   request.headers.get('opportunityid') ||
+                                   request.headers.get('opportunityId');
+
     // GHL can send opportunityId, id, or propertyId - normalize to propertyId
-    const propertyId = payload.propertyId || payload.opportunityId || payload.id;
+    const propertyId = propertyIdFromHeaders || payload.propertyId || payload.opportunityId || payload.id;
 
     logInfo('GoHighLevel delete property webhook received', {
       action: 'webhook_received',

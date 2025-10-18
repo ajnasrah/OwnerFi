@@ -577,7 +577,7 @@ export default function AdminDashboard() {
         <header className="bg-white shadow-sm border-b border-slate-200 px-4 md:px-6 lg:px-8 py-4 md:py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-2xl font-bold text-slate-900">
+              <h2 className="text-xl md:text-2xl font-bold text-slate-900">
                 {activeTab === 'overview' && 'Dashboard Overview'}
                 {activeTab === 'properties' && 'Property Management'}
                 {activeTab === 'failed-properties' && 'Failed Properties'}
@@ -590,7 +590,7 @@ export default function AdminDashboard() {
                 {activeTab === 'articles' && 'Article Queue Management'}
                 {activeTab === 'logs' && 'System Logs'}
               </h2>
-              <p className="text-slate-600 mt-1">
+              <p className="text-sm md:text-base text-slate-600 mt-1">
                 {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
               </p>
             </div>

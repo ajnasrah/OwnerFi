@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "setup-queues": "tsx scripts/setup-late-queues.ts",
+    "view-queues": "tsx scripts/setup-late-queues.ts --view"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.908.0",
@@ -18,16 +20,11 @@
     "cheerio": "^1.1.2",
     "cities.json": "^1.1.50",
     "critters": "^0.0.23",
-    "csv-parse": "^6.1.0",
-    "csv-parser": "^3.2.0",
     "dotenv": "^17.2.2",
-    "faker": "^6.6.6",
     "firebase": "^12.2.1",
     "firebase-admin": "^13.5.0",
     "framer-motion": "^12.23.22",
     "googleapis": "^162.0.0",
-    "ioredis": "^5.8.1",
-    "multer": "^2.0.2",
     "next": "15.5.2",
     "next-auth": "^4.24.11",
     "openai": "^5.20.1",
@@ -35,10 +32,8 @@
     "react-dom": "19.1.0",
     "rss-parser": "^3.13.0",
     "stripe": "^18.5.0",
-    "twilio": "^5.9.0",
     "use-debounce": "^10.0.6",
     "winston": "^3.17.0",
-    "xlsx": "^0.18.5",
     "zod": "^3.23.8"
   },
   "devDependencies": {
@@ -51,6 +46,8 @@
     "eslint": "^9",
     "eslint-config-next": "15.5.2",
     "tailwindcss": "^4",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.20.6",
     "typescript": "^5"
   },
   "description": "Owner financed properties platform",

@@ -184,9 +184,15 @@ export async function downloadAndUploadToR2(
 
 /**
  * Download video from Submagic and upload to Cloudflare R2
- * Returns a permanent public URL (no expiration) for Metricool compatibility
+ * Returns a permanent public URL (no expiration) for Metricool/Late compatibility
+ *
+ * @param submagicDownloadUrl - URL to download video from Submagic
+ * @param fileName - Optional custom filename/path (supports brand-specific paths)
  */
-export async function uploadSubmagicVideo(submagicDownloadUrl: string): Promise<string> {
+export async function uploadSubmagicVideo(
+  submagicDownloadUrl: string,
+  fileName?: string
+): Promise<string> {
   console.log('📥 Downloading video from Submagic...');
   console.log(`   URL: ${submagicDownloadUrl.substring(0, 80)}...`);
 
@@ -203,10 +209,12 @@ export async function uploadSubmagicVideo(submagicDownloadUrl: string): Promise<
 
   console.log(`✅ Downloaded video (${sizeInMB} MB)`);
 
-  // Generate filename
-  const timestamp = Date.now();
-  const randomStr = Math.random().toString(36).substring(7);
-  const fileName = `viral-videos/submagic-${timestamp}-${randomStr}.mp4`;
+  // Generate filename if not provided (with brand-specific path support)
+  if (!fileName) {
+    const timestamp = Date.now();
+    const randomStr = Math.random().toString(36).substring(7);
+    fileName = `viral-videos/submagic-${timestamp}-${randomStr}.mp4`;
+  }
 
   console.log('☁️  Uploading to Cloudflare R2...');
 

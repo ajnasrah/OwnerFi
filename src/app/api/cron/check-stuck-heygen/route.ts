@@ -360,14 +360,30 @@ export async function GET(request: NextRequest) {
     }
 
     const advancedCount = results.filter(r => r.action === 'advanced_to_submagic').length;
+    const failedCount = results.filter(r => r.action === 'marked_failed').length;
+    const stillProcessingCount = results.filter(r => r.action === 'still_processing').length;
 
     console.log(`\n✅ [HEYGEN FAILSAFE] Checked ${heygenProjects.length} stuck workflows (${advancedCount} advanced)`);
+
+    // Log metrics for monitoring failsafe usage
+    console.log(JSON.stringify({
+      event: 'failsafe_check',
+      type: 'heygen',
+      timestamp: new Date().toISOString(),
+      found: heygenProjects.length,
+      advanced: advancedCount,
+      failed: failedCount,
+      stillProcessing: stillProcessingCount,
+      utilization: heygenProjects.length > 0 ? 'ACTIVE' : 'IDLE'
+    }));
 
     return NextResponse.json({
       success: true,
       totalWorkflows: heygenProjects.length,
       processed: results.length,
       advanced: advancedCount,
+      failed: failedCount,
+      stillProcessing: stillProcessingCount,
       results
     });
 

@@ -115,12 +115,9 @@ export async function GET(request: NextRequest) {
     console.log(`   Host: ${hostProfile.name} (Avatar: ${hostProfile.avatar_id})`);
     console.log(`   Guest: ${guestProfile.name} (Avatar: ${guestProfile.avatar_id})`);
 
-    // Get base URL for webhook callback
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ||
-                    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
-                    'https://ownerfi.ai';
-
-    const webhookUrl = `${baseUrl}/api/webhooks/heygen`;
+    // Use brand-specific webhook URL for podcast
+    const { getBrandWebhookUrl } = await import('@/lib/brand-utils');
+    const webhookUrl = getBrandWebhookUrl('podcast', 'heygen');
 
     // Build multi-scene video inputs: alternating host questions and guest answers
     const videoInputs = script.qa_pairs.flatMap((pair) => {

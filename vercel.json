@@ -31,11 +31,11 @@
     },
     {
       "path": "/api/cron/check-stuck-heygen",
-      "schedule": "*/10 9-23 * * *"
+      "schedule": "0 9-23/2 * * *"
     },
     {
       "path": "/api/cron/check-stuck-submagic",
-      "schedule": "*/10 9-23 * * *"
+      "schedule": "0 9-23/2 * * *"
     },
     {
       "path": "/api/cron/weekly-maintenance",

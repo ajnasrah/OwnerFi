@@ -1,0 +1,87 @@
+ABSOLUTE FILE PATHS - SOCIAL MEDIA & PODCAST QUEUE INTEGRATION ANALYSIS
+
+Generated Documentation Files:
+/Users/abdullahabunasrah/Desktop/ownerfi/QUEUE_SYSTEM_ANALYSIS_INDEX.md
+/Users/abdullahabunasrah/Desktop/ownerfi/FINDINGS_SUMMARY.md
+/Users/abdullahabunasrah/Desktop/ownerfi/SOCIAL_MEDIA_PODCAST_ARCHITECTURE.md
+/Users/abdullahabunasrah/Desktop/ownerfi/QUEUE_INTEGRATION_QUICK_REFERENCE.md
+
+Critical Source Files for Queue Integration:
+
+WORKFLOW MANAGEMENT:
+/Users/abdullahabunasrah/Desktop/ownerfi/src/lib/feed-store-firestore.ts
+  - Line 316: addWorkflowToQueue()
+  - Line 336: updateWorkflowStatus()
+  - Line 351: getWorkflowQueueStats()
+  - Line 654: PodcastWorkflowItem interface
+  - Line 671: addPodcastWorkflow()
+  - Line 690: updatePodcastWorkflow()
+  - Line 779: findWorkflowBySubmagicId()
+  - Line 863: getPodcastWorkflowById()
+
+POST CREATION (PRIMARY INTEGRATION POINT):
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/webhooks/submagic/route.ts
+  - Line 159: postToLate() call [QUEUE INTEGRATION POINT]
+  - Lines 155-268: Social media publishing logic
+  - Lines 136-191: Podcast publishing logic
+
+LATE API CLIENT (ALL PLATFORM PUBLISHING):
+/Users/abdullahabunasrah/Desktop/ownerfi/src/lib/late-api.ts
+  - Line 154: postToLate() function definition
+  - Line 18: LatePostRequest interface
+  - Line 32: LatePostResponse interface
+  - Line 67: getLateProfiles()
+  - Line 113: getLateAccounts()
+  - Line 372: scheduleVideoPost()
+
+HEYGEN WEBHOOK HANDLER:
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/webhooks/heygen/route.ts
+  - Line 123: triggerSubmagicProcessing()
+  - Lines 69-74: Trigger Submagic after HeyGen completes
+
+PODCAST SCHEDULING:
+/Users/abdullahabunasrah/Desktop/ownerfi/podcast/lib/podcast-scheduler.ts
+  - Line 34: PodcastScheduler class
+  - Line 55: loadStateFromFirestore()
+  - Line 99: shouldGenerateEpisode()
+  - Line 149: recordEpisode()
+  - Line 177: markPublished()
+
+PODCAST PUBLISHER:
+/Users/abdullahabunasrah/Desktop/ownerfi/podcast/lib/podcast-publisher.ts
+  - Line 31: PodcastPublisher class
+  - Line 42: publishEpisode()
+  - Line 111: publishClips()
+  - Line 176: generateEpisodeCaption()
+
+PODCAST CRON TRIGGER:
+/Users/abdullahabunasrah/Desktop/ownerfi/src/app/api/podcast/cron/route.ts
+  - Line 11: GET() handler for cron
+  - Line 182: HeyGen API call
+  - Line 224: recordEpisode() call
+
+VIDEO STORAGE:
+/Users/abdullahabunasrah/Desktop/ownerfi/src/lib/video-storage.ts
+  - Line 157: downloadAndUploadToR2()
+  - Line 131: uploadSubmagicVideo()
+
+FIRESTORE COLLECTIONS:
+- Firestore: carz_workflow_queue
+- Firestore: ownerfi_workflow_queue
+- Firestore: podcast_workflow_queue
+- Firestore: podcast_scheduler
+
+TESTING/REFERENCE FILES:
+/Users/abdullahabunasrah/Desktop/ownerfi/social-media/utils/post_to_social_now.js
+/Users/abdullahabunasrah/Desktop/ownerfi/social-media/utils/complete_workflow_manual.js
+/Users/abdullahabunasrah/Desktop/ownerfi/social-media/scripts/get-late-profile-ids.js
+
+CONFIGURATION FILES:
+/Users/abdullahabunasrah/Desktop/ownerfi/podcast/config/guest-profiles.json
+/Users/abdullahabunasrah/Desktop/ownerfi/podcast/config/podcast-config.json
+
+DOCUMENTATION FILES:
+/Users/abdullahabunasrah/Desktop/ownerfi/podcast/README.md
+/Users/abdullahabunasrah/Desktop/ownerfi/social-media/README.md
+/Users/abdullahabunasrah/Desktop/ownerfi/podcast/docs/SETUP.md
+/Users/abdullahabunasrah/Desktop/ownerfi/social-media/docs/RSS_SYSTEM_README.md

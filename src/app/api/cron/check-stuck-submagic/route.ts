@@ -252,33 +252,18 @@ export async function GET(request: NextRequest) {
               const workflow = await getPodcastWorkflowById(workflowId);
 
               if (workflow) {
-                console.log(`   📱 Posting podcast to social media via Late...`);
+                console.log(`   📱 Posting podcast to social media via Late queue...`);
                 const { postToLate } = await import('@/lib/late-api');
-                const { getNextAvailableTimeSlot } = await import('@/lib/feed-store-firestore');
 
-                // Get next available time slot for podcast
-                const nextSlot = await getNextAvailableTimeSlot('podcast');
-                const scheduledTime = nextSlot.toISOString();
-
-                console.log(`   📅 Scheduling post for: ${nextSlot.toLocaleString('en-US', {
-                  timeZone: 'America/New_York',
-                  weekday: 'short',
-                  month: 'short',
-                  day: 'numeric',
-                  hour: 'numeric',
-                  minute: '2-digit',
-                  hour12: true
-                })} ET`);
-
-                // Post to all platforms
-                const allPlatforms = ['facebook', 'instagram', 'tiktok', 'youtube', 'linkedin', 'threads', 'twitter'] as any[];
+                // Post to all platforms using queue
+                const allPlatforms = ['facebook', 'instagram', 'tiktok', 'youtube', 'linkedin', 'threads', 'twitter', 'bluesky'] as any[];
 
                 const postResult = await postToLate({
                   videoUrl: publicVideoUrl,
                   caption: workflow.episodeTitle || 'New Podcast Episode',
                   title: `Episode #${workflow.episodeNumber}: ${workflow.episodeTitle || 'New Episode'}`,
                   platforms: allPlatforms,
-                  scheduleTime: scheduledTime,
+                  useQueue: true,  // Use Late's queue system
                   brand: 'podcast'
                 });
 
@@ -315,31 +300,11 @@ export async function GET(request: NextRequest) {
               const workflow = workflowData?.workflow;
 
               if (workflow) {
-                console.log(`   📱 Posting to social media via Late...`);
-
-                // Get next available time slot for this brand
-                const { getNextAvailableTimeSlot, updateWorkflowStatus: updateWorkflow } = await import('@/lib/feed-store-firestore');
-                const nextSlot = await getNextAvailableTimeSlot(brand);
-                const scheduledTime = nextSlot.toISOString();
-
-                console.log(`   📅 Scheduling post for: ${nextSlot.toLocaleString('en-US', {
-                  timeZone: 'America/New_York',
-                  weekday: 'short',
-                  month: 'short',
-                  day: 'numeric',
-                  hour: 'numeric',
-                  minute: '2-digit',
-                  hour12: true
-                })} ET`);
-
-                // Store the scheduled time in workflow
-                await updateWorkflow(workflowId, brand, {
-                  scheduledFor: nextSlot.getTime()
-                });
+                console.log(`   📱 Posting to social media via Late queue...`);
 
                 const { postToLate } = await import('@/lib/late-api');
 
-                // Post to all platforms
+                // Post to all platforms using queue
                 const allPlatforms = ['facebook', 'instagram', 'tiktok', 'youtube', 'linkedin', 'threads'] as any[];
                 if (brand === 'ownerfi') {
                   allPlatforms.push('twitter', 'bluesky');
@@ -350,7 +315,7 @@ export async function GET(request: NextRequest) {
                   caption: workflow.caption || 'Check out this video! 🔥',
                   title: workflow.title || 'Viral Video',
                   platforms: allPlatforms,
-                  scheduleTime: scheduledTime,
+                  useQueue: true,  // Use Late's queue system
                   brand: brand
                 });
 
@@ -428,14 +393,30 @@ export async function GET(request: NextRequest) {
     }
 
     const completedCount = results.filter(r => r.action === 'completed_via_failsafe').length;
+    const failedCount = results.filter(r => r.action === 'marked_failed').length;
+    const stillProcessingCount = results.filter(r => r.action === 'still_processing').length;
 
     console.log(`\n✅ [FAILSAFE] Checked ${projects.length} stuck workflows (${completedCount} completed)`);
+
+    // Log metrics for monitoring failsafe usage
+    console.log(JSON.stringify({
+      event: 'failsafe_check',
+      type: 'submagic',
+      timestamp: new Date().toISOString(),
+      found: projects.length,
+      completed: completedCount,
+      failed: failedCount,
+      stillProcessing: stillProcessingCount,
+      utilization: projects.length > 0 ? 'ACTIVE' : 'IDLE'
+    }));
 
     return NextResponse.json({
       success: true,
       totalWorkflows: projects.length,
       processed: results.length,
       completed: completedCount,
+      failed: failedCount,
+      stillProcessing: stillProcessingCount,
       results
     });
 

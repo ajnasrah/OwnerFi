@@ -93,7 +93,8 @@ export async function POST(request: NextRequest) {
       scale: 1.4,
       width: 1080,
       height: 1920,
-      callback_id: workflowId // Pass workflow ID for webhook callback
+      callback_id: workflowId, // Pass workflow ID for webhook callback
+      brand: brand as 'carz' | 'ownerfi' // Pass brand for brand-specific webhook
     });
 
     if (!videoResult.success || !videoResult.video_id) {
@@ -471,15 +472,14 @@ async function generateHeyGenVideo(params: {
   width: number;
   height: number;
   callback_id?: string;
+  brand?: 'carz' | 'ownerfi';
 }): Promise<{ success: boolean; video_id?: string; error?: string }> {
   try {
-    // Get base URL for webhook callback
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ||
-                    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
-                    'https://ownerfi.ai';
-
-    const webhookUrl = `${baseUrl}/api/webhooks/heygen`;
-    console.log(`📞 HeyGen webhook URL: ${webhookUrl}`);
+    // Use brand-specific webhook URL from configuration
+    const { getBrandWebhookUrl } = await import('@/lib/brand-utils');
+    const brand = params.brand || 'ownerfi'; // Default to ownerfi for backwards compatibility
+    const webhookUrl = getBrandWebhookUrl(brand, 'heygen');
+    console.log(`📞 HeyGen webhook URL (${brand}): ${webhookUrl}`);
 
     const requestBody: any = {
       video_inputs: [{

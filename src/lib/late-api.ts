@@ -7,13 +7,11 @@ import { ERROR_MESSAGES } from '@/config/constants';
 
 const LATE_BASE_URL = 'https://getlate.dev/api/v1';
 
-// Late API credentials
-const LATE_API_KEY = process.env.LATE_API_KEY;
-
-// Profile IDs for each brand
-const LATE_OWNERFI_PROFILE_ID = process.env.LATE_OWNERFI_PROFILE_ID;
-const LATE_CARZ_PROFILE_ID = process.env.LATE_CARZ_PROFILE_ID;
-const LATE_PODCAST_PROFILE_ID = process.env.LATE_PODCAST_PROFILE_ID;
+// Late API credentials - use getters to read at runtime, not at module load time
+const getLateApiKey = () => process.env.LATE_API_KEY;
+const getLateOwnerfiProfileId = () => process.env.LATE_OWNERFI_PROFILE_ID;
+const getLateCarzProfileId = () => process.env.LATE_CARZ_PROFILE_ID;
+const getLatePodcastProfileId = () => process.env.LATE_PODCAST_PROFILE_ID;
 
 export interface LatePostRequest {
   videoUrl: string;
@@ -27,6 +25,8 @@ export interface LatePostRequest {
     instagram?: 'reel' | 'story';
     facebook?: 'feed' | 'story';
   };
+  useQueue?: boolean; // If true, automatically get next queue slot and mark as queued
+  timezone?: string; // Timezone for scheduling (used with queue)
 }
 
 export interface LatePostResponse {
@@ -53,11 +53,11 @@ export interface LateProfile {
 function getProfileId(brand: 'carz' | 'ownerfi' | 'podcast'): string | null {
   switch (brand) {
     case 'ownerfi':
-      return LATE_OWNERFI_PROFILE_ID || null;
+      return getLateOwnerfiProfileId() || null;
     case 'carz':
-      return LATE_CARZ_PROFILE_ID || null;
+      return getLateCarzProfileId() || null;
     case 'podcast':
-      return LATE_PODCAST_PROFILE_ID || null;
+      return getLatePodcastProfileId() || null;
   }
 }
 
@@ -65,6 +65,7 @@ function getProfileId(brand: 'carz' | 'ownerfi' | 'podcast'): string | null {
  * Get all profiles from Late
  */
 export async function getLateProfiles(): Promise<LateProfile[]> {
+  const LATE_API_KEY = getLateApiKey();
   if (!LATE_API_KEY) {
     throw new Error('Late API key not configured (LATE_API_KEY)');
   }
@@ -111,6 +112,7 @@ export async function getLateProfiles(): Promise<LateProfile[]> {
  * Get accounts for a specific profile
  */
 export async function getLateAccounts(profileId: string): Promise<any[]> {
+  const LATE_API_KEY = getLateApiKey();
   if (!LATE_API_KEY) {
     throw new Error('Late API key not configured (LATE_API_KEY)');
   }
@@ -153,6 +155,7 @@ export async function getLateAccounts(profileId: string): Promise<any[]> {
  */
 export async function postToLate(request: LatePostRequest): Promise<LatePostResponse> {
   // Check API credentials
+  const LATE_API_KEY = getLateApiKey();
   if (!LATE_API_KEY) {
     console.error('❌ Late API key not configured');
     return {
@@ -173,6 +176,23 @@ export async function postToLate(request: LatePostRequest): Promise<LatePostResp
   }
 
   try {
+    // If useQueue is true, get the next available queue slot
+    let scheduleTime = request.scheduleTime;
+    let timezone = request.timezone;
+
+    if (request.useQueue) {
+      console.log(`📅 Using queue for ${request.brand}...`);
+      const queueSlot = await getNextQueueSlot(request.brand);
+
+      if (queueSlot) {
+        scheduleTime = queueSlot.nextSlot;
+        timezone = queueSlot.timezone;
+        console.log(`   Next queue slot: ${scheduleTime} (${timezone})`);
+      } else {
+        console.warn('⚠️  Failed to get queue slot, falling back to immediate posting');
+      }
+    }
+
     // First, get the accounts for this profile to get accountIds
     const accounts = await getLateAccounts(profileId);
 
@@ -239,9 +259,19 @@ export async function postToLate(request: LatePostRequest): Promise<LatePostResp
 
             // YouTube Shorts
             if (p.platform === 'youtube') {
+              // Category mapping by brand
+              let category = 'People & Blogs'; // Default
+              if (request.brand === 'carz') {
+                category = 'Autos & Vehicles';
+              } else if (request.brand === 'ownerfi') {
+                category = 'Howto & Style'; // Best fit for real estate content
+              } else if (request.brand === 'podcast') {
+                category = 'Education'; // Podcast content
+              }
+
               platformConfig.platformSpecificData = {
                 title: request.title || fullCaption.substring(0, 100),
-                category: request.brand === 'carz' ? 'Autos & Vehicles' : 'News & Politics',
+                category: category,
                 privacy: 'public',
                 madeForKids: false,
                 short: true // YouTube Shorts
@@ -269,9 +299,14 @@ export async function postToLate(request: LatePostRequest): Promise<LatePostResp
           };
 
           // Add scheduling
-          if (request.scheduleTime) {
-            requestBody.scheduledFor = request.scheduleTime;
-            requestBody.timezone = 'America/New_York'; // Eastern Time (matches Late profile setting)
+          if (scheduleTime) {
+            requestBody.scheduledFor = scheduleTime;
+            requestBody.timezone = timezone || 'America/New_York'; // Use queue timezone or default to Eastern
+
+            // If this was queued, mark it with queuedFromProfile
+            if (request.useQueue) {
+              requestBody.queuedFromProfile = profileId;
+            }
           } else {
             // Immediate posting
             requestBody.publishNow = true;
@@ -363,6 +398,118 @@ export async function postToLate(request: LatePostRequest): Promise<LatePostResp
       error: error instanceof Error ? error.message : 'Unknown error'
     };
   }
+}
+
+/**
+ * Get the next available queue slot for a profile
+ */
+export async function getNextQueueSlot(brand: 'carz' | 'ownerfi' | 'podcast'): Promise<{ nextSlot: string; timezone: string } | null> {
+  const profileId = getProfileId(brand);
+  const LATE_API_KEY = getLateApiKey();
+  if (!profileId || !LATE_API_KEY) {
+    return null;
+  }
+
+  try {
+    const response = await fetchWithTimeout(
+      `${LATE_BASE_URL}/queue/next-slot?profileId=${profileId}`,
+      {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${LATE_API_KEY}`,
+          'Content-Type': 'application/json',
+        }
+      },
+      TIMEOUTS.EXTERNAL_API
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.warn(`⚠️  Failed to get queue slot: ${response.status} - ${errorText}`);
+      return null;
+    }
+
+    const data = await response.json();
+    return {
+      nextSlot: data.nextSlot,
+      timezone: data.timezone
+    };
+  } catch (error) {
+    console.error('❌ Error getting queue slot:', error);
+    return null;
+  }
+}
+
+/**
+ * Get queue schedule for a profile
+ */
+export async function getQueueSchedule(brand: 'carz' | 'ownerfi' | 'podcast'): Promise<any> {
+  const profileId = getProfileId(brand);
+  const LATE_API_KEY = getLateApiKey();
+  if (!profileId || !LATE_API_KEY) {
+    throw new Error('Profile ID or API key not configured');
+  }
+
+  const response = await fetchWithTimeout(
+    `${LATE_BASE_URL}/queue/slots?profileId=${profileId}`,
+    {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${LATE_API_KEY}`,
+        'Content-Type': 'application/json',
+      }
+    },
+    TIMEOUTS.EXTERNAL_API
+  );
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Failed to get queue schedule: ${response.status} - ${errorText}`);
+  }
+
+  return response.json();
+}
+
+/**
+ * Set or update queue schedule for a profile
+ */
+export async function setQueueSchedule(
+  brand: 'carz' | 'ownerfi' | 'podcast',
+  slots: { dayOfWeek: number; time: string }[],
+  timezone: string = 'America/New_York',
+  reshuffleExisting: boolean = false
+): Promise<any> {
+  const profileId = getProfileId(brand);
+  const LATE_API_KEY = getLateApiKey();
+  if (!profileId || !LATE_API_KEY) {
+    throw new Error('Profile ID or API key not configured');
+  }
+
+  const response = await fetchWithTimeout(
+    `${LATE_BASE_URL}/queue/slots`,
+    {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${LATE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        profileId,
+        timezone,
+        slots,
+        active: true,
+        reshuffleExisting
+      })
+    },
+    TIMEOUTS.EXTERNAL_API
+  );
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Failed to set queue schedule: ${response.status} - ${errorText}`);
+  }
+
+  return response.json();
 }
 
 /**

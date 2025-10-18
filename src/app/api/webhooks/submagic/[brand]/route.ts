@@ -1,0 +1,372 @@
+/**
+ * Brand-Specific Submagic Webhook Handler
+ *
+ * This webhook receives notifications from Submagic when video enhancement completes.
+ * Each brand has its own isolated webhook endpoint to prevent failures from affecting other brands.
+ *
+ * Route: /api/webhooks/submagic/[brand]
+ * Brands: carz, ownerfi, podcast
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
+import { postToLate } from '@/lib/late-api';
+import { circuitBreakers, fetchWithTimeout, TIMEOUTS } from '@/lib/api-utils';
+import {
+  validateBrand,
+  buildErrorContext,
+  createBrandError,
+  getBrandPlatforms,
+  getBrandStoragePath,
+} from '@/lib/brand-utils';
+import { getBrandConfig } from '@/config/brand-configs';
+
+interface RouteContext {
+  params: {
+    brand: string;
+  };
+}
+
+export async function POST(request: NextRequest, context: RouteContext) {
+  const startTime = Date.now();
+  let workflowId: string | undefined;
+  let submagicProjectId: string | undefined;
+
+  try {
+    // Validate brand from URL path
+    const brand = validateBrand(context.params.brand);
+    const brandConfig = getBrandConfig(brand);
+
+    console.log(`🔔 [${brandConfig.displayName}] Submagic webhook received`);
+
+    // Parse request body
+    const body = await request.json();
+    console.log(`   Payload:`, JSON.stringify(body, null, 2));
+
+    // Extract Submagic webhook data
+    // Payload: { projectId: "uuid", status: "completed", downloadUrl: "url", ... }
+    // OR: { id: "uuid", status: "completed", media_url: "url", ... }
+    submagicProjectId = body.projectId || body.id;
+    const status = body.status;
+    let downloadUrl = body.downloadUrl || body.media_url || body.mediaUrl || body.video_url || body.videoUrl || body.download_url;
+
+    if (!submagicProjectId) {
+      console.warn(`⚠️ [${brandConfig.displayName}] Missing projectId in webhook`);
+      return NextResponse.json({
+        success: false,
+        brand,
+        message: 'Missing projectId in webhook payload',
+      }, { status: 400 });
+    }
+
+    // Find workflow in brand-specific collection (NO sequential lookups!)
+    const workflowResult = await getWorkflowBySubmagicId(brand, submagicProjectId);
+
+    if (!workflowResult) {
+      console.warn(`⚠️ [${brandConfig.displayName}] No workflow found for Submagic project: ${submagicProjectId}`);
+      return NextResponse.json({
+        success: false,
+        brand,
+        projectId: submagicProjectId,
+        message: 'No pending workflow found for this Submagic project',
+      }, { status: 404 });
+    }
+
+    workflowId = workflowResult.workflowId;
+    const workflow = workflowResult.workflow;
+
+    console.log(`   Workflow ID: ${workflowId}`);
+    console.log(`   Status: ${status}`);
+
+    // Handle completion
+    if (status === 'completed' || status === 'done' || status === 'ready') {
+      console.log(`✅ [${brandConfig.displayName}] Submagic video completed!`);
+
+      // If no video URL in webhook, fetch from Submagic API
+      if (!downloadUrl) {
+        console.log(`   Fetching video URL from Submagic API...`);
+        downloadUrl = await fetchVideoUrlFromSubmagic(submagicProjectId);
+      }
+
+      console.log(`   Video URL: ${downloadUrl}`);
+
+      // Update workflow status to 'posting' or 'publishing'
+      await updateWorkflowForBrand(brand, workflowId, {
+        status: brand === 'podcast' ? 'publishing' : 'posting',
+      });
+
+      // Process R2 upload and Late posting synchronously
+      // CRITICAL: Must complete before function terminates in serverless environment
+      await processVideoAndPost(brand, workflowId, workflow, downloadUrl);
+
+      const duration = Date.now() - startTime;
+      console.log(`⏱️  [${brandConfig.displayName}] Webhook processed in ${duration}ms`);
+
+      return NextResponse.json({
+        success: true,
+        brand,
+        projectId: submagicProjectId,
+        workflow_id: workflowId,
+        processing_time_ms: duration,
+      });
+    }
+
+    // Handle failure
+    if (status === 'failed' || status === 'error') {
+      console.error(`❌ [${brandConfig.displayName}] Submagic processing failed`);
+
+      await updateWorkflowForBrand(brand, workflowId, {
+        status: 'failed',
+        error: 'Submagic processing failed',
+        failedAt: Date.now(),
+      });
+
+      await sendFailureAlert(brand, workflowId, workflow, 'Submagic processing failed');
+
+      return NextResponse.json({
+        success: true,
+        brand,
+        projectId: submagicProjectId,
+        workflow_id: workflowId,
+        message: 'Failure recorded',
+      });
+    }
+
+    // Intermediate status (processing, etc.)
+    console.log(`⏳ [${brandConfig.displayName}] Submagic intermediate status: ${status}`);
+
+    return NextResponse.json({
+      success: true,
+      brand,
+      projectId: submagicProjectId,
+      workflow_id: workflowId,
+      status,
+    });
+
+  } catch (error) {
+    console.error('❌ Error processing Submagic webhook:', error);
+
+    // Log to DLQ for later analysis
+    await logToDeadLetterQueue('submagic', context.params.brand, request, error);
+
+    return NextResponse.json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Internal server error',
+      workflow_id: workflowId,
+      projectId: submagicProjectId,
+    }, { status: 500 });
+  }
+}
+
+/**
+ * Get workflow by Submagic project ID for specific brand
+ */
+async function getWorkflowBySubmagicId(
+  brand: 'carz' | 'ownerfi' | 'podcast',
+  submagicProjectId: string
+): Promise<{ workflowId: string; workflow: any } | null> {
+  if (brand === 'podcast') {
+    const { findPodcastBySubmagicId } = await import('@/lib/feed-store-firestore');
+    return await findPodcastBySubmagicId(submagicProjectId);
+  } else {
+    const { findWorkflowBySubmagicId } = await import('@/lib/feed-store-firestore');
+    const result = await findWorkflowBySubmagicId(submagicProjectId);
+
+    // Ensure the workflow belongs to the correct brand
+    if (result && result.brand === brand) {
+      return {
+        workflowId: result.workflowId,
+        workflow: result.workflow,
+      };
+    }
+
+    return null;
+  }
+}
+
+/**
+ * Update workflow for specific brand
+ */
+async function updateWorkflowForBrand(
+  brand: 'carz' | 'ownerfi' | 'podcast',
+  workflowId: string,
+  updates: Record<string, any>
+): Promise<void> {
+  if (brand === 'podcast') {
+    const { updatePodcastWorkflow } = await import('@/lib/feed-store-firestore');
+    await updatePodcastWorkflow(workflowId, updates);
+  } else {
+    const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
+    await updateWorkflowStatus(workflowId, brand, updates);
+  }
+}
+
+/**
+ * Fetch video URL from Submagic API if not provided in webhook
+ */
+async function fetchVideoUrlFromSubmagic(submagicProjectId: string): Promise<string> {
+  const SUBMAGIC_API_KEY = process.env.SUBMAGIC_API_KEY;
+
+  if (!SUBMAGIC_API_KEY) {
+    throw new Error('Submagic API key not configured');
+  }
+
+  const response = await circuitBreakers.submagic.execute(async () => {
+    return await fetchWithTimeout(
+      `https://api.submagic.co/v1/projects/${submagicProjectId}`,
+      {
+        headers: { 'x-api-key': SUBMAGIC_API_KEY }
+      },
+      TIMEOUTS.SUBMAGIC_API
+    );
+  });
+
+  if (!response.ok) {
+    throw new Error(`Submagic API returned ${response.status}`);
+  }
+
+  const projectData = await response.json();
+  const videoUrl = projectData.media_url || projectData.video_url || projectData.downloadUrl;
+
+  if (!videoUrl) {
+    throw new Error('No video URL found in Submagic project data');
+  }
+
+  return videoUrl;
+}
+
+/**
+ * Process video upload to R2 and post to Late
+ */
+async function processVideoAndPost(
+  brand: 'carz' | 'ownerfi' | 'podcast',
+  workflowId: string,
+  workflow: any,
+  videoUrl: string
+): Promise<void> {
+  const brandConfig = getBrandConfig(brand);
+
+  try {
+    console.log(`☁️  [${brandConfig.displayName}] Uploading video to R2...`);
+
+    // Upload to R2 with brand-specific path
+    const { uploadSubmagicVideo } = await import('@/lib/video-storage');
+    const storagePath = getBrandStoragePath(brand, `submagic-videos/${workflowId}.mp4`);
+
+    const publicVideoUrl = await uploadSubmagicVideo(videoUrl, storagePath);
+
+    console.log(`✅ [${brandConfig.displayName}] Video uploaded to R2: ${publicVideoUrl}`);
+
+    // Get brand-specific platforms from config
+    const platforms = getBrandPlatforms(brand, false); // Use default platforms
+
+    // Prepare caption and title
+    let caption: string;
+    let title: string;
+
+    if (brand === 'podcast') {
+      caption = workflow.episodeTitle || 'New Podcast Episode';
+      title = `Episode #${workflow.episodeNumber}: ${workflow.episodeTitle || 'New Episode'}`;
+    } else {
+      caption = workflow.caption || 'Check out this video! 🔥';
+      title = workflow.title || 'Viral Video';
+    }
+
+    console.log(`📱 [${brandConfig.displayName}] Posting to platforms: ${platforms.join(', ')}`);
+
+    // Post to Late API
+    const postResult = await postToLate({
+      videoUrl: publicVideoUrl,
+      caption,
+      title,
+      platforms: platforms as any[],
+      useQueue: true, // Use Late's queue system
+      brand,
+    });
+
+    if (postResult.success) {
+      console.log(`✅ [${brandConfig.displayName}] Posted to Late!`);
+      console.log(`   Post ID: ${postResult.postId}`);
+      console.log(`   Platforms: ${postResult.platforms?.join(', ')}`);
+
+      // Mark workflow as completed
+      await updateWorkflowForBrand(brand, workflowId, {
+        status: 'completed',
+        finalVideoUrl: publicVideoUrl,
+        latePostId: postResult.postId,
+        completedAt: Date.now(),
+      });
+    } else {
+      throw new Error(`Late posting failed: ${postResult.error}`);
+    }
+
+  } catch (error) {
+    console.error(`❌ [${brandConfig.displayName}] Error in video processing or posting:`, error);
+
+    await updateWorkflowForBrand(brand, workflowId, {
+      status: 'failed',
+      error: error instanceof Error ? error.message : 'Unknown error in video processing',
+      failedAt: Date.now(),
+    });
+
+    await sendFailureAlert(
+      brand,
+      workflowId,
+      workflow,
+      `Video processing or posting failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
+
+    throw error;
+  }
+}
+
+/**
+ * Send failure alert for brand
+ */
+async function sendFailureAlert(
+  brand: 'carz' | 'ownerfi' | 'podcast',
+  workflowId: string,
+  workflow: any,
+  reason: string
+): Promise<void> {
+  try {
+    if (brand !== 'podcast') {
+      const { alertWorkflowFailure } = await import('@/lib/error-monitoring');
+      await alertWorkflowFailure(
+        brand,
+        workflowId,
+        workflow.articleTitle || 'Unknown',
+        reason
+      );
+    }
+  } catch (error) {
+    console.error('Failed to send alert:', error);
+    // Don't throw - alerting failure shouldn't block webhook processing
+  }
+}
+
+/**
+ * Log failed webhook to dead letter queue
+ */
+async function logToDeadLetterQueue(
+  service: string,
+  brand: string,
+  request: NextRequest,
+  error: unknown
+): Promise<void> {
+  try {
+    const { logWebhookFailure } = await import('@/lib/webhook-dlq');
+    await logWebhookFailure({
+      service,
+      brand,
+      url: request.url,
+      method: request.method,
+      headers: Object.fromEntries(request.headers.entries()),
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      timestamp: Date.now(),
+    });
+  } catch (dlqError) {
+    console.error('Failed to log to DLQ:', dlqError);
+    // Don't throw - DLQ failure shouldn't block webhook response
+  }
+}

@@ -504,7 +504,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Calculate balloon payment ONLY if we have balloon years AND interest rate
-    let balloonPaymentAmount: number | undefined = undefined;
+    let balloonPaymentAmount: number | null = null;
     const balloonYears = parseNumberField(payload.balloon);
     if (balloonYears > 0 && price > 0 && interestRate > 0 && downPaymentAmount >= 0) {
       const loanAmount = price - downPaymentAmount;

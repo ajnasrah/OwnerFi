@@ -220,124 +220,68 @@ export async function batchSyncPropertiesToGHL(properties: PropertyData[]): Prom
 }
 
 /**
- * Create or update a contact in GoHighLevel for a new buyer
+ * Send new buyer to GoHighLevel webhook
  */
 export async function syncBuyerToGHL(buyer: BuyerData): Promise<{ success: boolean; contactId?: string; error?: string }> {
   try {
-    if (!GHL_API_KEY || !GHL_LOCATION_ID) {
-      logError('GoHighLevel API credentials not configured for buyer sync');
-      return { success: false, error: 'API credentials not configured' };
+    const GHL_BUYER_WEBHOOK_URL = process.env.GHL_BUYER_WEBHOOK_URL;
+
+    if (!GHL_BUYER_WEBHOOK_URL) {
+      logError('GoHighLevel buyer webhook URL not configured');
+      return { success: false, error: 'Webhook URL not configured' };
     }
 
-    // Create contact payload
-    const contactData = {
-      locationId: GHL_LOCATION_ID,
+    // Send buyer data to GoHighLevel webhook
+    const buyerPayload = {
+      buyerId: buyer.id,
+      userId: buyer.userId,
       firstName: buyer.firstName || '',
       lastName: buyer.lastName || '',
-      name: `${buyer.firstName} ${buyer.lastName}`.trim(),
+      fullName: `${buyer.firstName} ${buyer.lastName}`.trim(),
       email: buyer.email,
-      phone: buyer.phone,
-      address1: buyer.city ? `${buyer.city}, ${buyer.state}` : undefined,
-      city: buyer.city,
-      state: buyer.state,
-      tags: ['buyer', 'ownerfi-buyer'],
-      customFields: [
-        { key: 'buyer_id', field_value: buyer.id },
-        { key: 'user_id', field_value: buyer.userId },
-        { key: 'max_monthly_payment', field_value: buyer.maxMonthlyPayment?.toString() || '0' },
-        { key: 'max_down_payment', field_value: buyer.maxDownPayment?.toString() || '0' },
-        { key: 'preferred_city', field_value: buyer.city || '' },
-        { key: 'preferred_state', field_value: buyer.state || '' },
-        { key: 'search_radius', field_value: buyer.searchRadius?.toString() || '25' },
-        { key: 'languages', field_value: buyer.languages?.join(', ') || 'English' },
-        { key: 'source', field_value: 'ownerfi_platform' }
-      ]
+      phone: buyer.phone || '',
+      city: buyer.city || '',
+      state: buyer.state || '',
+      maxMonthlyPayment: buyer.maxMonthlyPayment || 0,
+      maxDownPayment: buyer.maxDownPayment || 0,
+      searchRadius: buyer.searchRadius || 25,
+      languages: buyer.languages?.join(', ') || 'English',
+      source: 'ownerfi_platform',
+      createdAt: buyer.createdAt || new Date().toISOString()
     };
 
-    // Check if contact already exists by email
-    const searchResponse = await fetch(`${GHL_API_BASE}/contacts/search?locationId=${GHL_LOCATION_ID}&email=${encodeURIComponent(buyer.email)}`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${GHL_API_KEY}`,
-        'Version': '2021-07-28'
-      }
+    logInfo(`Sending buyer ${buyer.id} to GoHighLevel webhook`, {
+      action: 'ghl_buyer_webhook_send',
+      metadata: { buyerId: buyer.id, email: buyer.email }
     });
 
-    let contactId: string | undefined;
-    let response: Response;
-
-    if (searchResponse.ok) {
-      const searchData = await searchResponse.json();
-      if (searchData.contacts && searchData.contacts.length > 0) {
-        // Update existing contact
-        contactId = searchData.contacts[0].id;
-
-        logInfo(`Updating existing GoHighLevel contact for buyer ${buyer.id}`, {
-          action: 'ghl_update_buyer',
-          metadata: { buyerId: buyer.id, contactId }
-        });
-
-        response = await fetch(`${GHL_API_BASE}/contacts/${contactId}`, {
-          method: 'PUT',
-          headers: {
-            'Authorization': `Bearer ${GHL_API_KEY}`,
-            'Content-Type': 'application/json',
-            'Version': '2021-07-28'
-          },
-          body: JSON.stringify(contactData)
-        });
-      } else {
-        // Create new contact
-        logInfo(`Creating new GoHighLevel contact for buyer ${buyer.id}`, {
-          action: 'ghl_create_buyer',
-          metadata: { buyerId: buyer.id }
-        });
-
-        response = await fetch(`${GHL_API_BASE}/contacts`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${GHL_API_KEY}`,
-            'Content-Type': 'application/json',
-            'Version': '2021-07-28'
-          },
-          body: JSON.stringify(contactData)
-        });
-      }
-    } else {
-      // Create new contact if search failed
-      response = await fetch(`${GHL_API_BASE}/contacts`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${GHL_API_KEY}`,
-          'Content-Type': 'application/json',
-          'Version': '2021-07-28'
-        },
-        body: JSON.stringify(contactData)
-      });
-    }
+    const response = await fetch(GHL_BUYER_WEBHOOK_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(buyerPayload)
+    });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      logError('GoHighLevel API error syncing buyer', {
-        action: 'ghl_buyer_sync_error',
-        metadata: { status: response.status, error: errorData, buyerId: buyer.id }
+      const errorText = await response.text().catch(() => 'Unknown error');
+      logError('GoHighLevel webhook error syncing buyer', {
+        action: 'ghl_buyer_webhook_error',
+        metadata: { status: response.status, error: errorText, buyerId: buyer.id }
       });
-      return { success: false, error: `API error: ${response.status}` };
+      return { success: false, error: `Webhook error: ${response.status}` };
     }
 
-    const data = await response.json();
-    contactId = contactId || data.contact?.id || data.id;
-
-    logInfo(`Successfully synced buyer ${buyer.id} to GoHighLevel`, {
-      action: 'ghl_buyer_sync_success',
-      metadata: { buyerId: buyer.id, contactId }
+    logInfo(`Successfully sent buyer ${buyer.id} to GoHighLevel webhook`, {
+      action: 'ghl_buyer_webhook_success',
+      metadata: { buyerId: buyer.id }
     });
 
-    return { success: true, contactId };
+    return { success: true };
 
   } catch (error) {
-    logError('Failed to sync buyer to GoHighLevel', {
-      action: 'ghl_buyer_sync_error',
+    logError('Failed to send buyer to GoHighLevel webhook', {
+      action: 'ghl_buyer_webhook_error',
       metadata: { buyerId: buyer.id }
     }, error as Error);
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };

@@ -347,18 +347,25 @@ export async function POST(request: NextRequest) {
     }
 
     // Read opportunityId from body first, fallback to header
-    const opportunityId = bodyData.opportunityId || request.headers.get('opportunityid') || request.headers.get('opportunityId');
+    // GoHighLevel sends it as 'id', 'opportunityId', or in custom data
+    const opportunityId = bodyData.opportunityId ||
+                         bodyData.id ||
+                         bodyData.customData?.opportunityId ||
+                         request.headers.get('opportunityid') ||
+                         request.headers.get('opportunityId');
 
     if (!opportunityId) {
       logError('No opportunityId found in body or headers', {
         action: 'missing_opportunity_id',
         metadata: {
           bodyKeys: Object.keys(bodyData),
+          bodyIdField: bodyData.id,
+          bodyOpportunityIdField: bodyData.opportunityId,
           headerKeys: Array.from(request.headers.keys()).slice(0, 20)
         }
       });
       return NextResponse.json(
-        { error: 'opportunityId is required' },
+        { error: 'opportunityId is required (send as id, opportunityId, or customData.opportunityId)' },
         { status: 400 }
       );
     }

@@ -64,3 +64,9 @@ VIRAL_VIDEO_AUTOMATION.md
 # Firebase config (if needed, can be committed separately)
 firebase.json
 heygen-voices.json
+
+# HeyGen webhook secrets (contains sensitive data)
+heygen-webhook-secrets.json
+
+# Test results
+test-results-*.json

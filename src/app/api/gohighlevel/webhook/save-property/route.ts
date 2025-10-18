@@ -11,7 +11,9 @@ import { queueNearbyCitiesForProperty } from '@/lib/property-enhancement';
 import crypto from 'crypto';
 
 const GHL_WEBHOOK_SECRET = process.env.GHL_WEBHOOK_SECRET || '';
-const SKIP_SIGNATURE_CHECK = process.env.NODE_ENV === 'development' || process.env.SKIP_GHL_SIGNATURE === 'true';
+const SKIP_SIGNATURE_CHECK = process.env.NODE_ENV === 'development' ||
+                              process.env.SKIP_GHL_SIGNATURE === 'true' ||
+                              process.env.GHL_BYPASS_SIGNATURE === 'true'; // Same as delete webhook
 
 function verifyWebhookSignature(
   payload: string,

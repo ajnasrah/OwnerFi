@@ -10,10 +10,12 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { logError, logInfo } from '@/lib/logger';
+import { batchSyncPropertiesToGHL } from '@/lib/gohighlevel-api';
 
 interface GHLWebhookPayload {
   contactId?: string;
   locationId?: string;
+  syncToGHL?: boolean; // New option to sync properties to GoHighLevel
   filters?: {
     city?: string;
     state?: string;
@@ -127,6 +129,26 @@ export async function POST(request: NextRequest) {
       }
     });
 
+    // Sync properties to GoHighLevel if requested
+    let syncResult;
+    if (payload.syncToGHL && properties.length > 0) {
+      logInfo(`Syncing ${properties.length} properties to GoHighLevel`, {
+        action: 'ghl_sync_started',
+        metadata: { count: properties.length }
+      });
+
+      syncResult = await batchSyncPropertiesToGHL(properties);
+
+      logInfo(`GoHighLevel sync completed`, {
+        action: 'ghl_sync_completed',
+        metadata: {
+          syncedCount: syncResult.syncedCount,
+          failedCount: syncResult.failedCount,
+          errors: syncResult.errors
+        }
+      });
+    }
+
     const response = {
       success: true,
       data: {
@@ -134,7 +156,13 @@ export async function POST(request: NextRequest) {
         count: properties.length,
         filters: filters,
         contactId: payload.contactId,
-        locationId: payload.locationId
+        locationId: payload.locationId,
+        ghlSync: syncResult ? {
+          enabled: true,
+          syncedCount: syncResult.syncedCount,
+          failedCount: syncResult.failedCount,
+          errors: syncResult.errors
+        } : { enabled: false }
       }
     };
 

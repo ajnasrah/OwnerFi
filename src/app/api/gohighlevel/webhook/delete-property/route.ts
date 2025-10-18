@@ -45,6 +45,8 @@ interface GHLDeletePayload {
   contactId?: string;
   locationId?: string;
   propertyId?: string;
+  opportunityId?: string; // GHL sends this
+  id?: string; // GHL might also send this
   propertyIds?: string[];
   deleteBy?: {
     field: string;
@@ -94,13 +96,21 @@ export async function POST(request: NextRequest) {
     }
 
     const payload: GHLDeletePayload = JSON.parse(body);
+
+    // GHL can send opportunityId, id, or propertyId - normalize to propertyId
+    const propertyId = payload.propertyId || payload.opportunityId || payload.id;
+
     logInfo('GoHighLevel delete property webhook received', {
       action: 'webhook_received',
       metadata: {
         hasPropertyId: !!payload.propertyId,
+        hasOpportunityId: !!payload.opportunityId,
+        hasId: !!payload.id,
+        normalizedPropertyId: propertyId,
         hasPropertyIds: !!payload.propertyIds,
         hasDeleteBy: !!payload.deleteBy,
-        deleteAll: payload.deleteAll
+        deleteAll: payload.deleteAll,
+        fullPayload: payload
       }
     });
 
@@ -119,21 +129,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (payload.propertyId) {
+    if (propertyId) {
       try {
-        const propertyRef = doc(db, 'properties', payload.propertyId);
+        const propertyRef = doc(db, 'properties', propertyId);
         const propertyDoc = await getDoc(propertyRef);
 
         if (!propertyDoc.exists()) {
-          errors.push(`Property ${payload.propertyId} not found`);
+          errors.push(`Property ${propertyId} not found`);
+          logWarn(`Property ${propertyId} not found in database`, {
+            action: 'property_not_found',
+            metadata: { propertyId }
+          });
         } else {
           await deleteDoc(propertyRef);
-          deletedProperties.push(payload.propertyId);
-          logInfo(`Deleted property ${payload.propertyId}`);
+          deletedProperties.push(propertyId);
+          logInfo(`Successfully deleted property ${propertyId}`, {
+            action: 'property_deleted',
+            metadata: { propertyId }
+          });
         }
       } catch (error) {
-        errors.push(`Failed to delete property ${payload.propertyId}: ${error}`);
-        logError(`Error deleting property ${payload.propertyId}:`, error);
+        errors.push(`Failed to delete property ${propertyId}: ${error}`);
+        logError(`Error deleting property ${propertyId}:`, {
+          action: 'delete_error',
+          metadata: { propertyId }
+        }, error as Error);
       }
     }
 

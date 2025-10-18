@@ -173,7 +173,8 @@ export default function AdminBuyers() {
                   <th className="p-3 text-left">Email</th>
                   <th className="p-3 text-left">Phone</th>
                   <th className="p-3 text-left">Location</th>
-                  <th className="p-3 text-left">Budget</th>
+                  <th className="p-3 text-left">Monthly Payment</th>
+                  <th className="p-3 text-left">Down Payment</th>
                   <th className="p-3 text-left">Joined</th>
                 </tr>
               </thead>
@@ -200,8 +201,13 @@ export default function AdminBuyers() {
                     </td>
                     <td className="p-3 text-slate-300">
                       {buyer.maxMonthlyPayment
-                        ? `$${buyer.maxMonthlyPayment}/mo, $${buyer.maxDownPayment || 0} down`
+                        ? `$${buyer.maxMonthlyPayment.toLocaleString()}/mo`
                         : 'N/A'}
+                    </td>
+                    <td className="p-3 text-emerald-400 font-semibold">
+                      {buyer.maxDownPayment
+                        ? `$${buyer.maxDownPayment.toLocaleString()}`
+                        : '$0'}
                     </td>
                     <td className="p-3 text-slate-300">
                       {new Date(buyer.createdAt).toLocaleDateString()}

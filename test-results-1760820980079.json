@@ -1,0 +1,126 @@
+{
+  "passed": 4,
+  "failed": 16,
+  "tests": [
+    {
+      "name": "carz heygen webhook OPTIONS",
+      "passed": false,
+      "details": "Status: 204",
+      "timestamp": "2025-10-18T20:56:04.518Z"
+    },
+    {
+      "name": "carz submagic webhook OPTIONS",
+      "passed": false,
+      "details": "Status: 204",
+      "timestamp": "2025-10-18T20:56:04.648Z"
+    },
+    {
+      "name": "ownerfi heygen webhook OPTIONS",
+      "passed": false,
+      "details": "Status: 204",
+      "timestamp": "2025-10-18T20:56:04.681Z"
+    },
+    {
+      "name": "ownerfi submagic webhook OPTIONS",
+      "passed": false,
+      "details": "Status: 204",
+      "timestamp": "2025-10-18T20:56:04.712Z"
+    },
+    {
+      "name": "podcast heygen webhook OPTIONS",
+      "passed": false,
+      "details": "Status: 204",
+      "timestamp": "2025-10-18T20:56:04.757Z"
+    },
+    {
+      "name": "podcast submagic webhook OPTIONS",
+      "passed": false,
+      "details": "Status: 204",
+      "timestamp": "2025-10-18T20:56:04.784Z"
+    },
+    {
+      "name": "carz configuration valid",
+      "passed": false,
+      "details": "Error: Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "timestamp": "2025-10-18T20:56:04.828Z"
+    },
+    {
+      "name": "ownerfi configuration valid",
+      "passed": false,
+      "details": "Error: Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "timestamp": "2025-10-18T20:56:04.862Z"
+    },
+    {
+      "name": "podcast configuration valid",
+      "passed": false,
+      "details": "Error: Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "timestamp": "2025-10-18T20:56:04.898Z"
+    },
+    {
+      "name": "carz workflow trigger",
+      "passed": true,
+      "details": "Workflow ID: wf_1760820965208_0l99aasq9",
+      "timestamp": "2025-10-18T20:56:06.716Z"
+    },
+    {
+      "name": "ownerfi workflow trigger",
+      "passed": true,
+      "details": "Workflow ID: wf_1760820968954_2wjjgqu0a",
+      "timestamp": "2025-10-18T20:56:12.347Z"
+    },
+    {
+      "name": "podcast workflow trigger",
+      "passed": false,
+      "details": "Error: Unauthorized",
+      "timestamp": "2025-10-18T20:56:14.514Z"
+    },
+    {
+      "name": "carz DLQ isolated",
+      "passed": false,
+      "details": "Error: Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "timestamp": "2025-10-18T20:56:14.610Z"
+    },
+    {
+      "name": "ownerfi DLQ isolated",
+      "passed": false,
+      "details": "Error: Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "timestamp": "2025-10-18T20:56:14.644Z"
+    },
+    {
+      "name": "podcast DLQ isolated",
+      "passed": false,
+      "details": "Error: Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "timestamp": "2025-10-18T20:56:14.680Z"
+    },
+    {
+      "name": "carz error logging isolated",
+      "passed": false,
+      "details": "Error: Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "timestamp": "2025-10-18T20:56:14.722Z"
+    },
+    {
+      "name": "ownerfi error logging isolated",
+      "passed": false,
+      "details": "Error: Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "timestamp": "2025-10-18T20:56:14.758Z"
+    },
+    {
+      "name": "podcast error logging isolated",
+      "passed": false,
+      "details": "Error: Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "timestamp": "2025-10-18T20:56:14.795Z"
+    },
+    {
+      "name": "OwnerFi unaffected by Carz failure",
+      "passed": true,
+      "details": "Health: 0 → 0",
+      "timestamp": "2025-10-18T20:56:20.078Z"
+    },
+    {
+      "name": "Podcast unaffected by Carz failure",
+      "passed": true,
+      "details": "Health: 0 → 0",
+      "timestamp": "2025-10-18T20:56:20.078Z"
+    }
+  ]
+}

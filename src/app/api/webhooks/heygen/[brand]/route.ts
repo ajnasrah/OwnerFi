@@ -33,6 +33,7 @@ interface RouteContext {
 export async function POST(request: NextRequest, context: RouteContext) {
   const startTime = Date.now();
   let workflowId: string | undefined;
+  let rawBody: string | undefined;
 
   try {
     // Validate brand from URL path
@@ -41,13 +42,51 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     console.log(`🔔 [${brandConfig.displayName}] HeyGen webhook received`);
 
-    // Parse request body
-    const body = await request.json();
+    // Get raw body for signature verification
+    rawBody = await request.text();
+    const body = JSON.parse(rawBody);
+
+    // Verify webhook signature (if configured)
+    const { verifyHeyGenWebhook, shouldEnforceWebhookVerification } = await import('@/lib/webhook-verification');
+    const signature = request.headers.get('X-HeyGen-Signature') || request.headers.get('x-heygen-signature');
+
+    if (shouldEnforceWebhookVerification()) {
+      const verification = verifyHeyGenWebhook(brand, rawBody, signature);
+
+      if (!verification.valid) {
+        console.error(`❌ [${brandConfig.displayName}] Webhook signature verification failed: ${verification.error}`);
+        return NextResponse.json({
+          success: false,
+          brand,
+          error: 'Webhook verification failed',
+        }, { status: 401 });
+      }
+
+      console.log(`✅ [${brandConfig.displayName}] Webhook signature verified`);
+    }
+
     console.log(`   Payload:`, JSON.stringify(body, null, 2));
 
     // Extract HeyGen webhook data
     // Structure: { event_type: "avatar_video.success", event_data: { video_id, url, callback_id, ... } }
     const { event_type, event_data } = body;
+
+    // Check idempotency - prevent duplicate processing
+    const { isWebhookProcessed, markWebhookProcessed } = await import('@/lib/webhook-idempotency');
+    const videoId = event_data?.video_id;
+
+    if (videoId) {
+      const idempotencyCheck = await isWebhookProcessed('heygen', videoId, brand, body);
+
+      if (idempotencyCheck.processed) {
+        console.log(`⚠️  [${brandConfig.displayName}] Webhook already processed, returning cached response`);
+        return NextResponse.json(idempotencyCheck.previousResponse || {
+          success: true,
+          brand,
+          message: 'Already processed',
+        });
+      }
+    }
 
     if (!event_data || !event_data.callback_id) {
       console.warn(`⚠️ [${brandConfig.displayName}] Missing callback_id in webhook`);
@@ -91,13 +130,20 @@ export async function POST(request: NextRequest, context: RouteContext) {
       const duration = Date.now() - startTime;
       console.log(`⏱️  [${brandConfig.displayName}] Webhook processed in ${duration}ms`);
 
-      return NextResponse.json({
+      const response = {
         success: true,
         brand,
         event_type,
         workflow_id: workflowId,
         processing_time_ms: duration,
-      });
+      };
+
+      // Mark webhook as processed for idempotency
+      if (videoId) {
+        await markWebhookProcessed('heygen', videoId, brand, body, response);
+      }
+
+      return NextResponse.json(response);
     }
 
     // Handle video generation failure

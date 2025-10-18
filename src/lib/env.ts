@@ -21,6 +21,11 @@ const envSchema = z.object({
   SUBMAGIC_API_KEY: z.string().min(1, 'Submagic API key is required'),
   OPENAI_API_KEY: z.string().min(1, 'OpenAI API key is required'),
 
+  // HeyGen Webhook Secrets (brand-specific, optional but recommended)
+  HEYGEN_WEBHOOK_SECRET_CARZ: z.string().optional(),
+  HEYGEN_WEBHOOK_SECRET_OWNERFI: z.string().optional(),
+  HEYGEN_WEBHOOK_SECRET_PODCAST: z.string().optional(),
+
   // GetLate API - Social Media Publishing (replaces Metricool)
   LATE_API_KEY: z.string().min(1, 'GetLate API key is required'),
   LATE_OWNERFI_PROFILE_ID: z.string().min(1, 'GetLate OwnerFi profile ID is required'),

@@ -35,105 +35,111 @@ export async function GET(request: NextRequest) {
     );
 
     const propertiesSnapshot = await getDocs(propertiesQuery);
-    const properties = propertiesSnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      // Convert Firestore timestamps
-      createdAt: doc.data().createdAt?.toDate?.()?.toISOString() || doc.data().createdAt,
-      updatedAt: doc.data().updatedAt?.toDate?.()?.toISOString() || doc.data().updatedAt
-    }));
+    const properties = propertiesSnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        // Convert Firestore timestamps
+        createdAt: data.createdAt?.toDate?.()?.toISOString() || data.createdAt,
+        updatedAt: data.updatedAt?.toDate?.()?.toISOString() || data.updatedAt
+      };
+    });
 
     // Format data for Excel
-    const excelData = properties.map(property => ({
+    const excelData = properties.map(property => {
+      const prop = property as any;
+      return {
       // Core Identification
-      'Property ID': property.id,
-      'MLS Number': property.mlsNumber || '',
+      'Property ID': prop.id,
+      'MLS Number': prop.mlsNumber || '',
 
       // Address & Location
-      'Address': property.address,
-      'City': property.city,
-      'State': property.state,
-      'ZIP Code': property.zipCode,
-      'County': property.county || '',
-      'Neighborhood': property.neighborhood || '',
-      'Latitude': property.latitude || '',
-      'Longitude': property.longitude || '',
+      'Address': prop.address,
+      'City': prop.city,
+      'State': prop.state,
+      'ZIP Code': prop.zipCode,
+      'County': prop.county || '',
+      'Neighborhood': prop.neighborhood || '',
+      'Latitude': prop.latitude || '',
+      'Longitude': prop.longitude || '',
 
       // Property Details
-      'Property Type': property.propertyType,
-      'Bedrooms': property.bedrooms,
-      'Bathrooms': property.bathrooms,
-      'Square Feet': property.squareFeet || '',
-      'Lot Size': property.lotSize || '',
-      'Year Built': property.yearBuilt || '',
-      'Stories': property.stories || '',
-      'Garage': property.garage || '',
+      'Property Type': prop.propertyType,
+      'Bedrooms': prop.bedrooms,
+      'Bathrooms': prop.bathrooms,
+      'Square Feet': prop.squareFeet || '',
+      'Lot Size': prop.lotSize || '',
+      'Year Built': prop.yearBuilt || '',
+      'Stories': prop.stories || '',
+      'Garage': prop.garage || '',
 
       // Financial Information
-      'List Price': property.listPrice,
-      'Down Payment Amount': property.downPaymentAmount,
-      'Down Payment Percent': property.downPaymentPercent,
-      'Monthly Payment': property.monthlyPayment,
-      'Interest Rate': property.interestRate,
-      'Term (Years)': property.termYears,
-      'Balloon Payment': property.balloonPayment || '',
-      'Balloon Years': property.balloonYears || '',
+      'List Price': prop.listPrice,
+      'Down Payment Amount': prop.downPaymentAmount,
+      'Down Payment Percent': prop.downPaymentPercent,
+      'Monthly Payment': prop.monthlyPayment,
+      'Interest Rate': prop.interestRate,
+      'Term (Years)': prop.termYears,
+      'Balloon Payment': prop.balloonPayment || '',
+      'Balloon Years': prop.balloonYears || '',
 
       // Property Features
-      'Features': Array.isArray(property.features) ? property.features.join(', ') : '',
-      'Appliances': Array.isArray(property.appliances) ? property.appliances.join(', ') : '',
-      'Heating': property.heating || '',
-      'Cooling': property.cooling || '',
-      'Parking': property.parking || '',
+      'Features': Array.isArray(prop.features) ? prop.features.join(', ') : '',
+      'Appliances': Array.isArray(prop.appliances) ? prop.appliances.join(', ') : '',
+      'Heating': prop.heating || '',
+      'Cooling': prop.cooling || '',
+      'Parking': prop.parking || '',
 
       // Media
-      'Image URLs': Array.isArray(property.imageUrls) ? property.imageUrls.join(', ') : '',
-      'Virtual Tour URL': property.virtualTourUrl || '',
-      'Floor Plan URL': property.floorPlanUrl || '',
+      'Image URLs': Array.isArray(prop.imageUrls) ? prop.imageUrls.join(', ') : '',
+      'Virtual Tour URL': prop.virtualTourUrl || '',
+      'Floor Plan URL': prop.floorPlanUrl || '',
 
       // Description
-      'Title': property.title || '',
-      'Description': property.description || '',
-      'Highlights': Array.isArray(property.highlights) ? property.highlights.join(', ') : '',
+      'Title': prop.title || '',
+      'Description': prop.description || '',
+      'Highlights': Array.isArray(prop.highlights) ? prop.highlights.join(', ') : '',
 
       // Owner/Contact Information
-      'Owner Name': property.ownerName || '',
-      'Owner Phone': property.ownerPhone || '',
-      'Owner Email': property.ownerEmail || '',
-      'Agent Name': property.agentName || '',
-      'Agent Phone': property.agentPhone || '',
-      'Agent Email': property.agentEmail || '',
+      'Owner Name': prop.ownerName || '',
+      'Owner Phone': prop.ownerPhone || '',
+      'Owner Email': prop.ownerEmail || '',
+      'Agent Name': prop.agentName || '',
+      'Agent Phone': prop.agentPhone || '',
+      'Agent Email': prop.agentEmail || '',
 
       // Listing Management
-      'Status': property.status,
-      'Is Active': property.isActive ? 'Yes' : 'No',
-      'Date Added': property.dateAdded || '',
-      'Last Updated': property.lastUpdated || '',
-      'Expiration Date': property.expirationDate || '',
-      'Priority': property.priority || '',
-      'Featured': property.featured ? 'Yes' : 'No',
+      'Status': prop.status,
+      'Is Active': prop.isActive ? 'Yes' : 'No',
+      'Date Added': prop.dateAdded || '',
+      'Last Updated': prop.lastUpdated || '',
+      'Expiration Date': prop.expirationDate || '',
+      'Priority': prop.priority || '',
+      'Featured': prop.featured ? 'Yes' : 'No',
 
       // Market Data
-      'Estimated Value': property.estimatedValue || '',
-      'Price Per Sq Ft': property.pricePerSqFt || '',
-      'Days On Market': property.daysOnMarket || '',
-      'View Count': property.viewCount || '',
-      'Favorite Count': property.favoriteCount || '',
+      'Estimated Value': prop.estimatedValue || '',
+      'Price Per Sq Ft': prop.pricePerSqFt || '',
+      'Days On Market': prop.daysOnMarket || '',
+      'View Count': prop.viewCount || '',
+      'Favorite Count': prop.favoriteCount || '',
 
       // HOA & Taxes
-      'Has HOA': property.hoa?.hasHOA ? 'Yes' : 'No',
-      'HOA Monthly Fee': property.hoa?.monthlyFee || '',
-      'Annual Taxes': property.taxes?.annualAmount || '',
-      'Assessed Value': property.taxes?.assessedValue || '',
+      'Has HOA': prop.hoa?.hasHOA ? 'Yes' : 'No',
+      'HOA Monthly Fee': prop.hoa?.monthlyFee || '',
+      'Annual Taxes': prop.taxes?.annualAmount || '',
+      'Assessed Value': prop.taxes?.assessedValue || '',
 
       // Source
-      'Source': property.source || '',
-      'Source ID': property.sourceId || '',
+      'Source': prop.source || '',
+      'Source ID': prop.sourceId || '',
 
       // Timestamps
-      'Created At': property.createdAt || '',
-      'Updated At': property.updatedAt || ''
-    }));
+      'Created At': prop.createdAt || '',
+      'Updated At': prop.updatedAt || ''
+      };
+    });
 
     // Create workbook and worksheet
     const wb = XLSX.utils.book_new();

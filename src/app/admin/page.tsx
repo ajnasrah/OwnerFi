@@ -491,9 +491,9 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
+    <div className="min-h-screen bg-slate-50 flex max-w-full overflow-x-hidden">
       {/* Left Sidebar */}
-      <div className="w-72 bg-white shadow-xl border-r border-slate-200 flex-shrink-0">
+      <div className="w-64 lg:w-72 bg-white shadow-xl border-r border-slate-200 flex-shrink-0">
         {/* Logo Section */}
         <div className="p-6 border-b border-slate-200">
           <div className="flex items-center space-x-3">
@@ -572,9 +572,9 @@ export default function AdminDashboard() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col min-h-screen">
+      <div className="flex-1 flex flex-col min-h-screen w-full overflow-x-hidden">
         {/* Top Header */}
-        <header className="bg-white shadow-sm border-b border-slate-200 px-8 py-6">
+        <header className="bg-white shadow-sm border-b border-slate-200 px-4 md:px-6 lg:px-8 py-4 md:py-6">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-2xl font-bold text-slate-900">
@@ -626,7 +626,7 @@ export default function AdminDashboard() {
         </header>
 
         {/* Content Area */}
-        <main className="flex-1 p-8 bg-slate-50 overflow-y-auto">
+        <main className="flex-1 p-4 md:p-6 lg:p-8 bg-slate-50 overflow-y-auto w-full">
           {/* Overview Tab */}
           {activeTab === 'overview' && (
             <div className="space-y-6">
@@ -867,7 +867,7 @@ export default function AdminDashboard() {
               </div>
 
               {/* Properties Table */}
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto w-full">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>

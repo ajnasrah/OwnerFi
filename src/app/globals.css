@@ -136,6 +136,8 @@ body {
   margin: 0;
   padding: 0;
   background-color: #0f172a;
+  overflow-x: hidden;
+  max-width: 100vw;
 }
 
 /* Custom Components - Keep these as they don't conflict with Tailwind utilities */

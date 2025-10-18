@@ -21,7 +21,7 @@ export const TIMEOUTS = {
   EXTERNAL_API: 30_000, // 30 seconds
   HEYGEN_API: 30_000,
   SUBMAGIC_API: 30_000,
-  METRICOOL_API: 30_000,
+  LATE_API: 30_000,
   OPENAI_API: 60_000, // 60 seconds for AI generation
   RSS_FETCH: 30_000, // 30 seconds for RSS feed fetching
 
@@ -117,14 +117,14 @@ export const SCHEDULE = {
 // - Submagic: 50/hour (exports), 500/hour (uploads/standard), 1000/hour (lightweight)
 // - OpenAI: Varies by model and tier (60 RPM is typical for basic tier)
 // - HeyGen: Not publicly documented, varies by plan (Free: 1 concurrent, Pro: 3, Scale: 6)
-// - Metricool: Not publicly documented in API docs
+// - Late API: Not publicly documented
 //
 // Our settings are intentionally conservative to avoid hitting limits.
 
 export const RATE_LIMITS = {
-  // Metricool (undocumented - conservative estimate)
-  METRICOOL_REQUESTS_PER_MINUTE: 60,
-  METRICOOL_REQUESTS_PER_HOUR: 1000,
+  // Late API (replaces Metricool)
+  LATE_REQUESTS_PER_MINUTE: 60,
+  LATE_REQUESTS_PER_HOUR: 1000,
 
   // HeyGen (plan-dependent, conservative estimate)
   // NOTE: HeyGen uses concurrent video limits, not per-minute rate limits
@@ -174,11 +174,6 @@ export const WORKFLOW = {
 
 export const BRANDS = {
   VALID_BRANDS: ['carz', 'ownerfi', 'podcast'] as const,
-
-  // Metricool brand IDs (should be in env, these are fallbacks)
-  DEFAULT_METRICOOL_IDS: {
-    podcast: '3738036',
-  } as const,
 } as const;
 
 export type Brand = typeof BRANDS.VALID_BRANDS[number];

@@ -32,26 +32,6 @@ export const CompleteWorkflowRequestSchema = z.object({
 export type CompleteWorkflowRequest = z.infer<typeof CompleteWorkflowRequestSchema>;
 
 // ============================================================================
-// METRICOOL SCHEMAS
-// ============================================================================
-
-export const MetricoolPostRequestSchema = z.object({
-  videoUrl: z.string().url('Video URL must be a valid URL'),
-  caption: z.string().min(1, 'Caption cannot be empty').max(2000, 'Caption too long'),
-  title: z.string().max(100, 'Title too long').optional(),
-  hashtags: z.array(z.string()).optional(),
-  platforms: z.array(PlatformSchema).min(1, 'At least one platform required'),
-  postTypes: z.object({
-    instagram: PostTypeSchema.optional(),
-    facebook: PostTypeSchema.optional(),
-  }).optional(),
-  scheduleTime: z.string().datetime().optional(),
-  brand: BrandSchema,
-});
-
-export type MetricoolPostRequest = z.infer<typeof MetricoolPostRequestSchema>;
-
-// ============================================================================
 // HEYGEN SCHEMAS
 // ============================================================================
 

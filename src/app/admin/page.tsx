@@ -107,6 +107,13 @@ export default function AdminDashboard() {
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadResult, setUploadResult] = useState<any>(null);
+  const [uploadMode, setUploadMode] = useState<'csv' | 'manual'>('csv');
+  const [manualPropertyData, setManualPropertyData] = useState<any>({
+    propertyType: 'single-family',
+    status: 'active',
+    isActive: true,
+    priority: 5
+  });
 
   // Disputes state
   const [disputes, setDisputes] = useState<LeadDispute[]>([]);
@@ -1226,77 +1233,424 @@ export default function AdminDashboard() {
 
           {/* Upload Tab */}
           {activeTab === 'upload' && (
-            <div className="max-w-3xl mx-auto">
-              <div className="bg-white shadow rounded-lg">
-                <div className="px-4 py-5 sm:p-6">
-                  <h3 className="text-lg leading-6 font-medium text-gray-900 mb-6">Upload Property CSV File</h3>
+            <div className="max-w-4xl mx-auto">
+              {/* Mode Toggle */}
+              <div className="bg-white shadow rounded-lg p-4 mb-6">
+                <div className="flex space-x-3">
+                  <button
+                    onClick={() => { setUploadMode('csv'); setUploadResult(null); }}
+                    className={`px-6 py-3 rounded-lg font-medium transition-colors ${
+                      uploadMode === 'csv'
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                    }`}
+                  >
+                    📄 CSV Upload
+                  </button>
+                  <button
+                    onClick={() => { setUploadMode('manual'); setUploadResult(null); }}
+                    className={`px-6 py-3 rounded-lg font-medium transition-colors ${
+                      uploadMode === 'manual'
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                    }`}
+                  >
+                    ✏️ Manual Entry
+                  </button>
+                </div>
+              </div>
 
-                  <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
-                    <div className="space-y-1 text-center">
-                      <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
-                        <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                      <div className="flex text-sm text-gray-600">
-                        <label htmlFor="file-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500">
-                          <span>{file ? file.name : 'Upload a file'}</span>
-                          <input
-                            id="file-upload"
-                            name="file-upload"
-                            type="file"
-                            accept=".csv"
-                            onChange={handleFileChange}
-                            className="sr-only"
-                          />
-                        </label>
-                        <p className="pl-1">or drag and drop</p>
-                      </div>
-                      <p className="text-xs text-gray-500">CSV files only</p>
-                    </div>
-                  </div>
+              {/* CSV Upload Mode */}
+              {uploadMode === 'csv' && (
+                <div className="bg-white shadow rounded-lg">
+                  <div className="px-4 py-5 sm:p-6">
+                    <h3 className="text-lg leading-6 font-medium text-gray-900 mb-6">Upload Property CSV File</h3>
 
-                  {file && (
-                    <div className="mt-6">
-                      <button
-                        onClick={handleUpload}
-                        disabled={uploading}
-                        className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-gray-400"
-                      >
-                        {uploading ? 'Uploading...' : 'Upload Properties'}
-                      </button>
-                    </div>
-                  )}
-
-                  {uploadResult && (
-                    <div className={`mt-6 rounded-md p-4 ${uploadResult.error ? 'bg-red-50' : 'bg-green-50'}`}>
-                      <div className="flex">
-                        <div className="flex-shrink-0">
-                          {uploadResult.error ? (
-                            <svg className="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                            </svg>
-                          ) : (
-                            <svg className="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                            </svg>
-                          )}
+                    <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                      <div className="space-y-1 text-center">
+                        <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                          <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                        <div className="flex text-sm text-gray-600">
+                          <label htmlFor="file-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500">
+                            <span>{file ? file.name : 'Upload a file'}</span>
+                            <input
+                              id="file-upload"
+                              name="file-upload"
+                              type="file"
+                              accept=".csv"
+                              onChange={handleFileChange}
+                              className="sr-only"
+                            />
+                          </label>
+                          <p className="pl-1">or drag and drop</p>
                         </div>
-                        <div className="ml-3">
-                          <h3 className={`text-sm font-medium ${uploadResult.error ? 'text-red-800' : 'text-green-800'}`}>
-                            {uploadResult.error ? 'Upload Failed' : 'Upload Successful'}
-                          </h3>
-                          <div className={`mt-2 text-sm ${uploadResult.error ? 'text-red-700' : 'text-green-700'}`}>
+                        <p className="text-xs text-gray-500">CSV files only</p>
+                      </div>
+                    </div>
+
+                    {file && (
+                      <div className="mt-6">
+                        <button
+                          onClick={handleUpload}
+                          disabled={uploading}
+                          className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-gray-400"
+                        >
+                          {uploading ? 'Uploading...' : 'Upload Properties'}
+                        </button>
+                      </div>
+                    )}
+
+                    {uploadResult && (
+                      <div className={`mt-6 rounded-md p-4 ${uploadResult.error ? 'bg-red-50' : 'bg-green-50'}`}>
+                        <div className="flex">
+                          <div className="flex-shrink-0">
                             {uploadResult.error ? (
-                              <p>{uploadResult.error}</p>
+                              <svg className="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                              </svg>
                             ) : (
-                              <p>Successfully uploaded {uploadResult.summary?.successfulInserts} of {uploadResult.summary?.totalRows} properties</p>
+                              <svg className="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                              </svg>
                             )}
+                          </div>
+                          <div className="ml-3">
+                            <h3 className={`text-sm font-medium ${uploadResult.error ? 'text-red-800' : 'text-green-800'}`}>
+                              {uploadResult.error ? 'Upload Failed' : 'Upload Successful'}
+                            </h3>
+                            <div className={`mt-2 text-sm ${uploadResult.error ? 'text-red-700' : 'text-green-700'}`}>
+                              {uploadResult.error ? (
+                                <p>{uploadResult.error}</p>
+                              ) : (
+                                <p>Successfully uploaded {uploadResult.summary?.successfulInserts} of {uploadResult.summary?.totalRows} properties</p>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {/* Manual Entry Mode */}
+              {uploadMode === 'manual' && (
+                <div className="bg-white shadow rounded-lg">
+                  <div className="px-4 py-5 sm:p-6">
+                    <h3 className="text-lg leading-6 font-medium text-gray-900 mb-6">Add Property Manually</h3>
+
+                    <form onSubmit={async (e) => {
+                      e.preventDefault();
+                      setUploading(true);
+                      setUploadResult(null);
+
+                      try {
+                        const response = await fetch('/api/admin/properties/create', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify(manualPropertyData)
+                        });
+
+                        const data = await response.json();
+
+                        if (response.ok) {
+                          setUploadResult({ success: true, propertyId: data.propertyId });
+                          setManualPropertyData({
+                            propertyType: 'single-family',
+                            status: 'active',
+                            isActive: true,
+                            priority: 5
+                          });
+                          fetchProperties();
+                        } else {
+                          setUploadResult({ error: data.error });
+                        }
+                      } catch (error) {
+                        setUploadResult({ error: 'Failed to create property' });
+                      } finally {
+                        setUploading(false);
+                      }
+                    }} className="space-y-6">
+                      {/* Address Section */}
+                      <div className="border-b border-gray-200 pb-6">
+                        <h4 className="text-md font-semibold text-gray-900 mb-4">Address & Location</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="md:col-span-2">
+                            <label className="block text-sm font-medium text-gray-700">Street Address *</label>
+                            <input
+                              type="text"
+                              required
+                              value={manualPropertyData.address || ''}
+                              onChange={(e) => setManualPropertyData({ ...manualPropertyData, address: e.target.value })}
+                              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">City *</label>
+                            <input
+                              type="text"
+                              required
+                              value={manualPropertyData.city || ''}
+                              onChange={(e) => setManualPropertyData({ ...manualPropertyData, city: e.target.value })}
+                              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">State *</label>
+                            <input
+                              type="text"
+                              required
+                              maxLength={2}
+                              value={manualPropertyData.state || ''}
+                              onChange={(e) => setManualPropertyData({ ...manualPropertyData, state: e.target.value.toUpperCase() })}
+                              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">ZIP Code *</label>
+                            <input
+                              type="text"
+                              required
+                              value={manualPropertyData.zipCode || ''}
+                              onChange={(e) => setManualPropertyData({ ...manualPropertyData, zipCode: e.target.value })}
+                              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Property Details */}
+                      <div className="border-b border-gray-200 pb-6">
+                        <h4 className="text-md font-semibold text-gray-900 mb-4">Property Details</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">Property Type *</label>
+                            <select
+                              required
+                              value={manualPropertyData.propertyType || 'single-family'}
+                              onChange={(e) => setManualPropertyData({ ...manualPropertyData, propertyType: e.target.value })}
+                              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                            >
+                              <option value="single-family">Single Family</option>
+                              <option value="condo">Condo</option>
+                              <option value="townhouse">Townhouse</option>
+                              <option value="mobile-home">Mobile Home</option>
+                              <option value="multi-family">Multi-Family</option>
+                              <option value="land">Land</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">Bedrooms *</label>
+                            <input
+                              type="number"
+                              required
+                              min="0"
+                              value={manualPropertyData.bedrooms || ''}
+                              onChange={(e) => setManualPropertyData({ ...manualPropertyData, bedrooms: e.target.value })}
+                              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">Bathrooms *</label>
+                            <input
+                              type="number"
+                              required
+                              min="0"
+                              step="0.5"
+                              value={manualPropertyData.bathrooms || ''}
+                              onChange={(e) => setManualPropertyData({ ...manualPropertyData, bathrooms: e.target.value })}
+                              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">Square Feet</label>
+                            <input
+                              type="number"
+                              min="0"
+                              value={manualPropertyData.squareFeet || ''}
+                              onChange={(e) => setManualPropertyData({ ...manualPropertyData, squareFeet: e.target.value })}
+                              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">Year Built</label>
+                            <input
+                              type="number"
+                              min="1800"
+                              max={new Date().getFullYear() + 1}
+                              value={manualPropertyData.yearBuilt || ''}
+                              onChange={(e) => setManualPropertyData({ ...manualPropertyData, yearBuilt: e.target.value })}
+                              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Financial Information */}
+                      <div className="border-b border-gray-200 pb-6">
+                        <h4 className="text-md font-semibold text-gray-900 mb-4">Financial Information</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">List Price * ($)</label>
+                            <input
+                              type="number"
+                              required
+                              min="0"
+                              value={manualPropertyData.listPrice || ''}
+                              onChange={(e) => setManualPropertyData({ ...manualPropertyData, listPrice: e.target.value })}
+                              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">Down Payment * ($)</label>
+                            <input
+                              type="number"
+                              required
+                              min="0"
+                              value={manualPropertyData.downPaymentAmount || ''}
+                              onChange={(e) => setManualPropertyData({ ...manualPropertyData, downPaymentAmount: e.target.value })}
+                              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">Down Payment * (%)</label>
+                            <input
+                              type="number"
+                              required
+                              min="0"
+                              max="100"
+                              step="0.1"
+                              value={manualPropertyData.downPaymentPercent || ''}
+                              onChange={(e) => setManualPropertyData({ ...manualPropertyData, downPaymentPercent: e.target.value })}
+                              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">Monthly Payment * ($)</label>
+                            <input
+                              type="number"
+                              required
+                              min="0"
+                              value={manualPropertyData.monthlyPayment || ''}
+                              onChange={(e) => setManualPropertyData({ ...manualPropertyData, monthlyPayment: e.target.value })}
+                              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">Interest Rate * (%)</label>
+                            <input
+                              type="number"
+                              required
+                              min="0"
+                              max="100"
+                              step="0.01"
+                              value={manualPropertyData.interestRate || ''}
+                              onChange={(e) => setManualPropertyData({ ...manualPropertyData, interestRate: e.target.value })}
+                              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">Term * (Years)</label>
+                            <input
+                              type="number"
+                              required
+                              min="1"
+                              max="50"
+                              value={manualPropertyData.termYears || ''}
+                              onChange={(e) => setManualPropertyData({ ...manualPropertyData, termYears: e.target.value })}
+                              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Description & Images */}
+                      <div className="border-b border-gray-200 pb-6">
+                        <h4 className="text-md font-semibold text-gray-900 mb-4">Description & Media</h4>
+                        <div className="space-y-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">Description</label>
+                            <textarea
+                              rows={4}
+                              value={manualPropertyData.description || ''}
+                              onChange={(e) => setManualPropertyData({ ...manualPropertyData, description: e.target.value })}
+                              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                              placeholder="Property description..."
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">Image URLs (comma-separated)</label>
+                            <textarea
+                              rows={2}
+                              value={manualPropertyData.imageUrls || ''}
+                              onChange={(e) => setManualPropertyData({ ...manualPropertyData, imageUrls: e.target.value })}
+                              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                              placeholder="https://example.com/image1.jpg, https://example.com/image2.jpg"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Submit Button */}
+                      <div className="flex items-center justify-end space-x-4">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setManualPropertyData({
+                              propertyType: 'single-family',
+                              status: 'active',
+                              isActive: true,
+                              priority: 5
+                            });
+                          }}
+                          className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                        >
+                          Reset Form
+                        </button>
+                        <button
+                          type="submit"
+                          disabled={uploading}
+                          className="px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-gray-400"
+                        >
+                          {uploading ? 'Creating...' : 'Create Property'}
+                        </button>
+                      </div>
+                    </form>
+
+                    {/* Result Message */}
+                    {uploadResult && (
+                      <div className={`mt-6 rounded-md p-4 ${uploadResult.error ? 'bg-red-50' : 'bg-green-50'}`}>
+                        <div className="flex">
+                          <div className="flex-shrink-0">
+                            {uploadResult.error ? (
+                              <svg className="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                              </svg>
+                            ) : (
+                              <svg className="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                              </svg>
+                            )}
+                          </div>
+                          <div className="ml-3">
+                            <h3 className={`text-sm font-medium ${uploadResult.error ? 'text-red-800' : 'text-green-800'}`}>
+                              {uploadResult.error ? 'Creation Failed' : 'Property Created Successfully'}
+                            </h3>
+                            <div className={`mt-2 text-sm ${uploadResult.error ? 'text-red-700' : 'text-green-700'}`}>
+                              {uploadResult.error ? (
+                                <p>{uploadResult.error}</p>
+                              ) : (
+                                <p>Property ID: {uploadResult.propertyId}</p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

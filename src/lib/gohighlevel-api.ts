@@ -5,6 +5,11 @@ const GHL_API_KEY = process.env.GHL_API_KEY || '';
 const GHL_LOCATION_ID = process.env.GHL_LOCATION_ID || '';
 const GHL_API_BASE = 'https://services.leadconnectorhq.com';
 
+// Required environment variables:
+// - GHL_API_KEY: Your GoHighLevel API key
+// - GHL_LOCATION_ID: Your GoHighLevel location ID
+// Note: Pipeline and stage are managed by GoHighLevel workflows, not needed here
+
 interface PropertyData {
   id: string;
   address: string;
@@ -16,25 +21,12 @@ interface PropertyData {
   bathrooms: number;
   squareFeet?: number;
   imageUrl?: string;
+  imageUrls?: string[];
   monthlyPayment?: number;
   downPaymentAmount?: number;
   interestRate?: number;
   description?: string;
   [key: string]: any;
-}
-
-interface GHLOpportunity {
-  pipelineId: string;
-  locationId: string;
-  name: string;
-  pipelineStageId: string;
-  status: string;
-  monetaryValue?: number;
-  assignedTo?: string;
-  customFields?: Array<{
-    id: string;
-    value: string | number;
-  }>;
 }
 
 /**
@@ -51,11 +43,10 @@ export async function syncPropertyToGHL(property: PropertyData): Promise<{ succe
     const opportunityName = `${property.address}, ${property.city}, ${property.state} ${property.zipCode}`;
 
     // Create opportunity payload
-    const opportunityData: GHLOpportunity = {
-      pipelineId: process.env.GHL_PIPELINE_ID || '', // You'll need to provide this
+    // Note: pipelineId and stageId are managed by GoHighLevel workflows
+    const opportunityData: any = {
       locationId: GHL_LOCATION_ID,
       name: opportunityName,
-      pipelineStageId: process.env.GHL_STAGE_ID || '', // You'll need to provide this
       status: 'open',
       monetaryValue: property.listPrice,
       customFields: [

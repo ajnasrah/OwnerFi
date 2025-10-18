@@ -330,22 +330,59 @@ export async function POST(request: NextRequest) {
     }
 
     // Parse the payload
-    let payload: GHLPropertyPayload;
+    // GoHighLevel sends opportunityId in body (custom data) and property fields in headers
+    let bodyData: any = {};
     try {
-      payload = JSON.parse(body);
+      bodyData = JSON.parse(body);
     } catch (parseError) {
-      logError('Failed to parse webhook payload', {
-        action: 'webhook_parse_error',
+      logWarn('Failed to parse body as JSON, will use headers only', {
+        action: 'webhook_body_parse_warning',
         metadata: {
           error: (parseError as Error).message,
           bodyPreview: body.substring(0, 200)
         }
       });
+    }
+
+    // Read opportunityId from body first, fallback to header
+    const opportunityId = bodyData.opportunityId || request.headers.get('opportunityid') || request.headers.get('opportunityId');
+
+    if (!opportunityId) {
+      logError('No opportunityId found in body or headers', {
+        action: 'missing_opportunity_id',
+        metadata: {
+          bodyKeys: Object.keys(bodyData),
+          headerKeys: Array.from(request.headers.keys()).slice(0, 20)
+        }
+      });
       return NextResponse.json(
-        { error: 'Invalid JSON payload' },
+        { error: 'opportunityId is required' },
         { status: 400 }
       );
     }
+
+    // Read all property data from HEADERS (where GoHighLevel sends it)
+    const payload: GHLPropertyPayload = {
+      opportunityId: opportunityId,
+      opportunityName: request.headers.get('opportunityname') || request.headers.get('opportunityName') || '',
+      propertyAddress: request.headers.get('propertyaddress') || request.headers.get('propertyAddress') || '',
+      propertyCity: request.headers.get('propertycity') || request.headers.get('propertyCity') || '',
+      state: request.headers.get('state') || '',
+      zipCode: request.headers.get('zipcode') || request.headers.get('zipCode') || '',
+      price: request.headers.get('price') || '0',
+      bedrooms: request.headers.get('bedrooms') || '',
+      bathrooms: request.headers.get('bathrooms') || '',
+      livingArea: request.headers.get('livingarea') || request.headers.get('livingArea') || '',
+      yearBuilt: request.headers.get('yearbuilt') || request.headers.get('yearBuilt') || '',
+      lotSizes: request.headers.get('lotsizes') || request.headers.get('lotSizes') || '',
+      homeType: request.headers.get('hometype') || request.headers.get('homeType') || 'SINGLE_FAMILY',
+      imageLink: request.headers.get('imagelink') || request.headers.get('imageLink') || '',
+      downPaymentAmount: request.headers.get('downpaymentamount') || request.headers.get('downPaymentAmount') || '',
+      downPayment: request.headers.get('downpayment') || request.headers.get('downPayment') || '',
+      interestRate: request.headers.get('interestrate') || request.headers.get('interestRate') || '',
+      monthlyPayment: request.headers.get('monthlypayment') || request.headers.get('monthlyPayment') || '',
+      balloon: request.headers.get('balloon') || ''
+    };
 
     logInfo('GoHighLevel save property webhook parsed', {
       action: 'webhook_parsed',

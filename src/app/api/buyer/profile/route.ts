@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { 
-  collection, 
-  query, 
-  where, 
+import {
+  collection,
+  query,
+  where,
   getDocs,
   doc,
   setDoc,
@@ -14,6 +14,8 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { unifiedDb } from '@/lib/unified-db';
 import { ExtendedSession } from '@/types/session';
+import { syncBuyerToGHL } from '@/lib/gohighlevel-api';
+import { logInfo, logWarn } from '@/lib/logger';
 
 /**
  * SIMPLIFIED BUYER PROFILE API
@@ -175,7 +177,44 @@ export async function POST(request: NextRequest) {
 
     // Lead selling fields are now part of the main profile - no separate buyerLinks needed
 
-    return NextResponse.json({ 
+    // Sync buyer to GoHighLevel (async, don't block response)
+    const isNewProfile = existing.empty;
+    if (isNewProfile) {
+      // Only sync new buyers to avoid overwhelming GoHighLevel with updates
+      syncBuyerToGHL({
+        id: buyerId,
+        userId: session.user.id,
+        firstName: profileData.firstName,
+        lastName: profileData.lastName,
+        email: profileData.email,
+        phone: profileData.phone,
+        city: profileData.city,
+        state: profileData.state,
+        maxMonthlyPayment: profileData.maxMonthlyPayment,
+        maxDownPayment: profileData.maxDownPayment,
+        searchRadius: profileData.searchRadius,
+        languages: profileData.languages
+      }).then(result => {
+        if (result.success) {
+          logInfo('Buyer synced to GoHighLevel', {
+            action: 'buyer_ghl_sync',
+            metadata: { buyerId, contactId: result.contactId }
+          });
+        } else {
+          logWarn('Failed to sync buyer to GoHighLevel', {
+            action: 'buyer_ghl_sync_failed',
+            metadata: { buyerId, error: result.error }
+          });
+        }
+      }).catch(error => {
+        logWarn('Error syncing buyer to GoHighLevel', {
+          action: 'buyer_ghl_sync_error',
+          metadata: { buyerId, error: error.message }
+        });
+      });
+    }
+
+    return NextResponse.json({
       success: true,
       buyerId,
       message: 'Profile saved successfully'

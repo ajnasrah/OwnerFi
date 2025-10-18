@@ -775,8 +775,18 @@ export default function AdminDashboard() {
                       <button
                         onClick={async () => {
                           if (confirm(`Delete ${selectedProperties.length} selected properties?`)) {
-                            setSelectedProperties([]);
-                            fetchProperties();
+                            try {
+                              // Delete each selected property
+                              for (const propertyId of selectedProperties) {
+                                await fetch(`/api/admin/properties/${propertyId}`, { method: 'DELETE' });
+                              }
+                              setSelectedProperties([]);
+                              fetchProperties();
+                              alert(`Successfully deleted ${selectedProperties.length} properties`);
+                            } catch (error) {
+                              alert('Failed to delete some properties');
+                              console.error('Delete error:', error);
+                            }
                           }
                         }}
                         className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"

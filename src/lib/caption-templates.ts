@@ -27,9 +27,9 @@ export const CAPTION_TEMPLATES: Record<string, CaptionTemplate> = {
       shares: 'high',
       comments: 'high'
     },
-    template: `🚨 [SHOCKING_CLAIM]
+    template: `[HOOK_QUESTION] 🚨
 
-[CTA] 💰
+[CTA] 👇
 
 [HASHTAGS]`
   },
@@ -44,9 +44,9 @@ export const CAPTION_TEMPLATES: Record<string, CaptionTemplate> = {
       shares: 'high',
       comments: 'medium'
     },
-    template: `Save [BENEFIT] with these [INDUSTRY] hacks 🔥
+    template: `[HOOK_QUESTION] 💡
 
-[TIP_1] 👇
+[TIP_1] 🔥
 
 [HASHTAGS]`
   },
@@ -61,9 +61,9 @@ export const CAPTION_TEMPLATES: Record<string, CaptionTemplate> = {
       shares: 'high',
       comments: 'medium'
     },
-    template: `[DRAMATIC_EVENT] 😱
+    template: `[HOOK_QUESTION] 😱
 
-[KEY_TAKEAWAY] 🙏
+[KEY_TAKEAWAY] 👉
 
 [HASHTAGS]`
   },
@@ -78,9 +78,9 @@ export const CAPTION_TEMPLATES: Record<string, CaptionTemplate> = {
       shares: 'medium',
       comments: 'high'
     },
-    template: `Why do [TARGET_AUDIENCE] [SURPRISING_BEHAVIOR]? 🤔
+    template: `[HOOK_QUESTION] 🤔
 
-[EXPLANATION] 💬
+Watch to find out 👆
 
 [HASHTAGS]`
   },
@@ -95,9 +95,9 @@ export const CAPTION_TEMPLATES: Record<string, CaptionTemplate> = {
       shares: 'medium',
       comments: 'medium'
     },
-    template: `[NUMBER] [INDUSTRY] rules you're breaking:
+    template: `[HOOK_QUESTION] 👀
 
-[RULE_1] 👀
+[RULE_1] is a game-changer
 
 [HASHTAGS]`
   }

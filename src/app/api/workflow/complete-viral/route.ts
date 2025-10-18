@@ -251,7 +251,8 @@ function sanitizeContent(content: string): string {
 // Helper: Get template-specific variable prompts for OpenAI
 function getTemplateVariablesPrompt(templateKey: string): string {
   const prompts: Record<string, string> = {
-    CONTROVERSY_HOOK: `SHOCKING_CLAIM: A controversial or shocking statement (10-15 words)
+    CONTROVERSY_HOOK: `HOOK_QUESTION: Attention-grabbing question based on the article (10-20 words, must be a question)
+SHOCKING_CLAIM: A controversial or shocking statement (10-15 words)
 AUTHORITY_FIGURE: Who/what is being criticized (e.g., "dealerships", "real estate agents")
 SECRET_1: First hidden truth (short sentence)
 SECRET_2: Second hidden truth (short sentence)
@@ -259,7 +260,8 @@ SECRET_3: Third hidden truth (short sentence)
 CTA: Call to action (5-10 words)
 TOPIC: Main topic (2-3 words)`,
 
-    VALUE_BOMB: `BENEFIT: What the user will save/gain (e.g., "$1000", "hours of time")
+    VALUE_BOMB: `HOOK_QUESTION: Attention-grabbing question based on the article (10-20 words, must be a question)
+BENEFIT: What the user will save/gain (e.g., "$1000", "hours of time")
 NUMBER: How many tips (e.g., "3", "5")
 INDUSTRY: Industry name (e.g., "car buying", "home buying")
 TIP_1: First actionable tip (short sentence)
@@ -267,17 +269,20 @@ TIP_2: Second actionable tip (short sentence)
 TIP_3: Third actionable tip (short sentence)
 TOPIC: Main topic (2-3 words)`,
 
-    STORYTELLING: `DRAMATIC_EVENT: The dramatic event that happened (10-15 words)
+    STORYTELLING: `HOOK_QUESTION: Attention-grabbing question based on the article (10-20 words, must be a question)
+DRAMATIC_EVENT: The dramatic event that happened (10-15 words)
 MINI_STORY: Brief story in 2-3 sentences
 KEY_TAKEAWAY: The lesson learned (10-15 words)
 TOPIC: Main topic (2-3 words)`,
 
-    QUESTION_HOOK: `TARGET_AUDIENCE: Who is this for (e.g., "car buyers", "homeowners")
+    QUESTION_HOOK: `HOOK_QUESTION: Attention-grabbing question based on the article (10-20 words, must be a question)
+TARGET_AUDIENCE: Who is this for (e.g., "car buyers", "homeowners")
 SURPRISING_BEHAVIOR: Unexpected behavior (5-10 words)
 EXPLANATION: The answer/explanation (2-3 sentences)
 TOPIC: Main topic (2-3 words)`,
 
-    LISTICLE_TEASE: `NUMBER: How many rules/items (e.g., "3", "5")
+    LISTICLE_TEASE: `HOOK_QUESTION: Attention-grabbing question based on the article (10-20 words, must be a question)
+NUMBER: How many rules/items (e.g., "3", "5")
 INDUSTRY: Industry name (e.g., "car buying", "real estate")
 RULE_1: First rule (short sentence)
 RULE_2: Second rule (short sentence)
@@ -333,7 +338,9 @@ IMPORTANT RULES:
 - High energy, dramatic, attention-grabbing delivery
 - Start with a hook that stops the scroll
 - Use short punchy sentences
-- Written in FIRST PERSON as if YOU are speaking to the audience
+- Written as a CONTENT CREATOR sharing/discussing insights from an article - DO NOT impersonate or claim to be the article's author
+- The speaker is presenting information they discovered, NOT claiming they wrote it or experienced it
+- NEVER use the article author's name as if it's the speaker's name
 - NO stage directions, NO camera directions, NO scene descriptions
 
 CAPTION RULES (CRITICAL):
@@ -341,6 +348,7 @@ CAPTION RULES (CRITICAL):
 - Each variable should be SHORT - captions will be truncated to 150 chars total INCLUDING hashtags
 - Focus on punchy, impactful phrases, not long explanations
 - Example: "Save $1000" NOT "You can potentially save up to one thousand dollars"
+- HOOK_QUESTION must be a compelling question based on the article that grabs attention (not "stop scrolling" or "stop right there")
 
 FORMAT:
 SCRIPT: [the exact words the AI avatar will speak - nothing else]
@@ -351,11 +359,12 @@ CONTENT_VARIABLES: [Extract these variables from the article - KEEP EACH ONE SHO
 ${getTemplateVariablesPrompt(templateKey)}
 
 EXAMPLE GOOD OUTPUT:
-SCRIPT: "Listen up because what I'm about to tell you will change everything you know about car insurance..."
+SCRIPT: "You know what's crazy? Most people are overpaying for car insurance because dealerships are hiding something huge. Let me break down what I just learned..."
 
 TITLE: 🚗 Dealerships Don't Want You to Know THIS
 
 CONTENT_VARIABLES:
+HOOK_QUESTION: Did you know dealerships markup insurance by 30%?
 SHOCKING_CLAIM: Dealerships markup your insurance by 30%
 AUTHORITY_FIGURE: dealerships
 SECRET_1: They get kickbacks from insurers
@@ -365,7 +374,8 @@ CTA: Ask for a quote before signing
 TOPIC: Car Insurance
 
 EXAMPLE BAD SCRIPT:
-"[Opening shot of person in office] Today we're going to talk about car insurance. [Cut to B-roll of cars]"`
+"[Opening shot of person in office] Today we're going to talk about car insurance. [Cut to B-roll of cars]"
+"Hi I'm John Smith and I wrote an article about..." ← NEVER claim to be the author!`
             },
             { role: 'user', content: `Article:\n\n${sanitizedContent.substring(0, 2000)}` }
           ],

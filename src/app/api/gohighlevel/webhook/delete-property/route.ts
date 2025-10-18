@@ -14,11 +14,18 @@ import { logError, logInfo, logWarn } from '@/lib/logger';
 import crypto from 'crypto';
 
 const GHL_WEBHOOK_SECRET = process.env.GHL_WEBHOOK_SECRET || '';
+const BYPASS_SIGNATURE_CHECK = process.env.GHL_BYPASS_SIGNATURE === 'true'; // For testing only
 
 function verifyWebhookSignature(
   payload: string,
   signature: string | null
 ): boolean {
+  // TESTING ONLY: Bypass signature check if env var is set
+  if (BYPASS_SIGNATURE_CHECK) {
+    logWarn('⚠️ WARNING: Signature verification bypassed for testing');
+    return true;
+  }
+
   if (!signature || !GHL_WEBHOOK_SECRET) {
     return false;
   }
@@ -58,8 +65,28 @@ export async function POST(request: NextRequest) {
     const body = await request.text();
     const signature = request.headers.get('x-ghl-signature');
 
+    // Debug logging
+    logInfo('GoHighLevel delete webhook request received', {
+      action: 'webhook_request',
+      metadata: {
+        hasSignature: !!signature,
+        signatureValue: signature,
+        bodyLength: body.length,
+        bodyPreview: body.substring(0, 200),
+        hasSecret: !!GHL_WEBHOOK_SECRET,
+        allHeaders: Object.fromEntries(request.headers.entries())
+      }
+    });
+
     if (!verifyWebhookSignature(body, signature)) {
-      logError('Invalid GoHighLevel webhook signature');
+      logError('Invalid GoHighLevel webhook signature', {
+        action: 'signature_verification_failed',
+        metadata: {
+          providedSignature: signature,
+          hasSecret: !!GHL_WEBHOOK_SECRET,
+          bodyLength: body.length
+        }
+      });
       return NextResponse.json(
         { error: 'Invalid webhook signature' },
         { status: 401 }

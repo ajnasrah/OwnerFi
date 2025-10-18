@@ -77,7 +77,7 @@ interface Stats {
 export default function AdminDashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'overview' | 'properties' | 'failed-properties' | 'upload' | 'disputes' | 'contacts' | 'buyers' | 'realtors' | 'logs' | 'social' | 'articles'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'properties' | 'failed-properties' | 'upload' | 'disputes' | 'contacts' | 'buyers' | 'realtors' | 'logs' | 'social' | 'articles' | 'image-quality'>('overview');
 
   // Stats
   const [stats, setStats] = useState<Stats>({
@@ -131,6 +131,12 @@ export default function AdminDashboard() {
   // Edit modal state
   const [editingProperty, setEditingProperty] = useState<AdminProperty | null>(null);
   const [editForm, setEditForm] = useState<Partial<AdminProperty>>({});
+
+  // Image quality state
+  const [streetViewProperties, setStreetViewProperties] = useState<AdminProperty[]>([]);
+  const [loadingStreetView, setLoadingStreetView] = useState(false);
+  const [editingImageUrl, setEditingImageUrl] = useState<string | null>(null);
+  const [newImageUrl, setNewImageUrl] = useState('');
 
   // Auth check
   useEffect(() => {
@@ -225,6 +231,21 @@ export default function AdminDashboard() {
     }
   };
 
+  const fetchStreetViewProperties = async () => {
+    setLoadingStreetView(true);
+    try {
+      const response = await fetch('/api/admin/street-view-properties');
+      const data = await response.json();
+      if (data.properties) {
+        setStreetViewProperties(data.properties);
+      }
+    } catch (error) {
+      console.error('Failed to fetch Street View properties:', error);
+    } finally {
+      setLoadingStreetView(false);
+    }
+  };
+
   const fetchDisputes = async () => {
     try {
       const response = await fetch('/api/admin/disputes');
@@ -290,6 +311,8 @@ export default function AdminDashboard() {
       fetchProperties();
     } else if (activeTab === 'failed-properties') {
       fetchFailedProperties();
+    } else if (activeTab === 'image-quality') {
+      fetchStreetViewProperties();
     } else if (activeTab === 'disputes') {
       fetchDisputes();
     } else if (activeTab === 'contacts') {
@@ -513,6 +536,7 @@ export default function AdminDashboard() {
             { key: 'overview', label: 'Overview', icon: '📊', count: null },
             { key: 'properties', label: 'Properties', icon: '🏠', count: stats.totalProperties },
             { key: 'failed-properties', label: 'Failed Properties', icon: '⚠️', count: failedPropertySummary.total || null },
+            { key: 'image-quality', label: 'Image Quality', icon: '📸', count: null },
             { key: 'upload', label: 'Upload', icon: '📤', count: null },
             { key: 'buyers', label: 'Buyers', icon: '👤', count: stats.totalBuyers },
             { key: 'realtors', label: 'Realtors', icon: '🏢', count: stats.totalRealtors },
@@ -581,6 +605,7 @@ export default function AdminDashboard() {
                 {activeTab === 'overview' && 'Dashboard Overview'}
                 {activeTab === 'properties' && 'Property Management'}
                 {activeTab === 'failed-properties' && 'Failed Properties'}
+                {activeTab === 'image-quality' && 'Image Quality Review'}
                 {activeTab === 'upload' && 'Upload Properties'}
                 {activeTab === 'buyers' && 'Buyer Management'}
                 {activeTab === 'realtors' && 'Realtor Management'}
@@ -1255,6 +1280,166 @@ export default function AdminDashboard() {
                     </tbody>
                   </table>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* Image Quality Tab */}
+          {activeTab === 'image-quality' && (
+            <div className="space-y-6">
+              {/* Header */}
+              <div className="bg-white shadow rounded-lg p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="text-lg font-semibold text-slate-900">📸 Google Street View Images</h3>
+                    <p className="text-sm text-slate-600 mt-1">
+                      Properties using Street View placeholders that need real photos
+                    </p>
+                  </div>
+                  <button
+                    onClick={fetchStreetViewProperties}
+                    disabled={loadingStreetView}
+                    className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors disabled:bg-gray-400"
+                  >
+                    {loadingStreetView ? 'Loading...' : 'Refresh'}
+                  </button>
+                </div>
+
+                {/* Summary */}
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <div className="flex items-center">
+                    <span className="text-3xl font-bold text-red-900 mr-4">{streetViewProperties.length}</span>
+                    <div>
+                      <div className="text-sm font-medium text-red-900">Properties Using Street View</div>
+                      <div className="text-xs text-red-700">Need real property photos</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Properties Table */}
+              <div className="bg-white shadow rounded-lg overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Property</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Current Image</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">New Image URL</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {loadingStreetView ? (
+                        <tr>
+                          <td colSpan={4} className="px-6 py-8 text-center text-gray-500">
+                            Loading...
+                          </td>
+                        </tr>
+                      ) : streetViewProperties.length === 0 ? (
+                        <tr>
+                          <td colSpan={4} className="px-6 py-8 text-center text-gray-500">
+                            ✅ No properties using Street View! All properties have real images.
+                          </td>
+                        </tr>
+                      ) : (
+                        streetViewProperties.map((property: any) => {
+                          const imageUrl = property.imageUrl || property.imageUrls?.[0];
+                          return (
+                            <tr key={property.id} className="hover:bg-gray-50">
+                              <td className="px-6 py-4">
+                                <div className="text-sm font-medium text-gray-900">{property.address}</div>
+                                <div className="text-sm text-gray-500">{property.city}, {property.state}</div>
+                              </td>
+                              <td className="px-6 py-4">
+                                <a
+                                  href={imageUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-xs text-indigo-600 hover:text-indigo-800 break-all"
+                                >
+                                  Street View →
+                                </a>
+                              </td>
+                              <td className="px-6 py-4">
+                                {editingImageUrl === property.id ? (
+                                  <input
+                                    type="url"
+                                    value={newImageUrl}
+                                    onChange={(e) => setNewImageUrl(e.target.value)}
+                                    placeholder="https://example.com/image.jpg"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-indigo-500 focus:border-indigo-500"
+                                    autoFocus
+                                  />
+                                ) : (
+                                  <span className="text-sm text-gray-400">Click edit to add</span>
+                                )}
+                              </td>
+                              <td className="px-6 py-4 text-sm">
+                                {editingImageUrl === property.id ? (
+                                  <div className="flex space-x-2">
+                                    <button
+                                      onClick={async () => {
+                                        try {
+                                          await fetch(`/api/admin/properties/${property.id}`, {
+                                            method: 'PUT',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({
+                                              imageUrl: newImageUrl,
+                                              imageUrls: [newImageUrl]
+                                            })
+                                          });
+                                          setEditingImageUrl(null);
+                                          setNewImageUrl('');
+                                          fetchStreetViewProperties(); // Refresh list
+                                          alert('Image updated successfully!');
+                                        } catch (error) {
+                                          alert('Failed to update image');
+                                          console.error('Update error:', error);
+                                        }
+                                      }}
+                                      className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
+                                    >
+                                      Save
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        setEditingImageUrl(null);
+                                        setNewImageUrl('');
+                                      }}
+                                      className="px-3 py-1 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+                                    >
+                                      Cancel
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <button
+                                    onClick={() => {
+                                      setEditingImageUrl(property.id);
+                                      setNewImageUrl('');
+                                    }}
+                                    className="text-indigo-600 hover:text-indigo-900 font-medium"
+                                  >
+                                    Edit
+                                  </button>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Info Box */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h4 className="font-semibold text-blue-900 mb-2">ℹ️ Automatic Detection</h4>
+                <p className="text-sm text-blue-800">
+                  New properties are automatically checked for Street View images when they're added to the database.
+                  Properties using Street View will appear here so you can replace them with real photos.
+                </p>
               </div>
             </div>
           )}
@@ -2033,7 +2218,7 @@ export default function AdminDashboard() {
                         />
                       </div>
 
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-3 gap-4">
                         <div>
                           <label className="block text-sm font-medium text-slate-700 mb-2">City</label>
                           <input
@@ -2049,6 +2234,15 @@ export default function AdminDashboard() {
                             type="text"
                             value={editForm.state || ''}
                             onChange={(e) => setEditForm({ ...editForm, state: e.target.value })}
+                            className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-2">ZIP Code</label>
+                          <input
+                            type="text"
+                            value={editForm.zipCode || ''}
+                            onChange={(e) => setEditForm({ ...editForm, zipCode: e.target.value })}
                             className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                           />
                         </div>
@@ -2158,7 +2352,7 @@ export default function AdminDashboard() {
                             <input
                               type="number"
                               step="0.1"
-                              value={editForm.downPaymentPercent || ''}
+                              value={editForm.downPaymentPercent ? Math.round(editForm.downPaymentPercent * 100) / 100 : ''}
                               onChange={(e) => setEditForm({ ...editForm, downPaymentPercent: parseFloat(e.target.value) })}
                               placeholder="10"
                               className="w-full pr-10 pl-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"

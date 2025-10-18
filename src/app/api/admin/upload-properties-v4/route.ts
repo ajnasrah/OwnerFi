@@ -6,12 +6,14 @@ import {
   serverTimestamp,
   writeBatch,
   collection,
-  getDocs
+  getDocs,
+  updateDoc
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { logError, logInfo } from '@/lib/logger';
 import { queueNearbyCitiesForProperty } from '@/lib/property-enhancement';
 import { ExtendedSession } from '@/types/session';
+import { analyzePropertyImageAsync } from '@/lib/image-quality-analyzer';
 
 // ==================== DATA NORMALIZATION FUNCTIONS ====================
 
@@ -868,6 +870,21 @@ export async function POST(request: NextRequest) {
         // Queue nearby cities for this batch
         for (const property of batchProperties) {
           queueNearbyCitiesForProperty(property.id, property.city, property.state);
+        }
+
+        // Analyze image quality for new properties in background
+        for (const property of batchProperties) {
+          const imageUrl = (property as any).imageUrl || (Array.isArray((property as any).imageUrls) && (property as any).imageUrls[0]);
+          if (imageUrl && db) {
+            analyzePropertyImageAsync(
+              property.id,
+              imageUrl,
+              property.address,
+              async (data) => {
+                await updateDoc(doc(db, 'properties', property.id), data);
+              }
+            );
+          }
         }
 
       } catch (error) {

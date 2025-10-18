@@ -98,7 +98,21 @@ export interface PropertyListing {
     annualAmount: number;
     assessedValue?: number;
   };
-  
+
+  // Image Quality Analysis
+  imageQuality?: {
+    overallScore: number;              // 1-10 score
+    imageQuality: number;              // Resolution, clarity, lighting
+    professional: number;              // Composition, angles
+    presentation: number;              // Clean, staged, appealing
+    relevance: number;                 // Shows actual property
+    issues: string[];                  // Specific problems identified
+    recommendation: 'KEEP' | 'REPLACE'; // Recommendation
+    reasoning: string;                 // Explanation
+    analyzedAt: string;                // ISO timestamp
+    isStreetView: boolean;             // True if using Google Street View
+  };
+
   // Integration Data
   source: 'manual' | 'import' | 'scraper';
   sourceId?: string;                   // Original ID from source system

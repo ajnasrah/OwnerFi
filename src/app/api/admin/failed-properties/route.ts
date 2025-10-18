@@ -19,7 +19,7 @@ import { ExtendedSession } from '@/types/session';
  * Filters:
  * - validation: Properties with validation errors or incomplete required fields
  * - withdrawn: Properties with status 'withdrawn' or 'expired'
- * - missing-data: Properties missing images, description, or other key data
+ * - missing-data: Properties missing images, address, or price
  * - all: All failed properties (default)
  */
 export async function GET(request: NextRequest) {
@@ -75,11 +75,10 @@ export async function GET(request: NextRequest) {
       // Properties missing critical data
       const missingDataProps = allProperties.filter(prop => {
         const hasImages = Array.isArray(prop.imageUrls) && prop.imageUrls.length > 0;
-        const hasDescription = prop.description && prop.description.trim().length > 10;
         const hasAddress = prop.address && prop.address.trim().length > 0;
         const hasPrice = prop.listPrice && prop.listPrice > 0;
 
-        return !hasImages || !hasDescription || !hasAddress || !hasPrice;
+        return !hasImages || !hasAddress || !hasPrice;
       });
 
       failedProperties.push(...missingDataProps.map(p => ({
@@ -87,7 +86,6 @@ export async function GET(request: NextRequest) {
         failureType: 'missing-data',
         missingFields: [
           !Array.isArray(p.imageUrls) || p.imageUrls.length === 0 ? 'images' : null,
-          !p.description || p.description.trim().length <= 10 ? 'description' : null,
           !p.address || p.address.trim().length === 0 ? 'address' : null,
           !p.listPrice || p.listPrice <= 0 ? 'price' : null
         ].filter(Boolean)

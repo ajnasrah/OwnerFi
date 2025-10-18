@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { logError, logInfo } from '@/lib/logger';
 import { ExtendedSession } from '@/types/session';
 import { PropertyListing } from '@/lib/property-schema';
+import { analyzePropertyImageAsync } from '@/lib/image-quality-analyzer';
 
 /**
  * Create a new property manually via admin form
@@ -156,6 +157,19 @@ export async function POST(request: NextRequest) {
       action: 'admin_manual_property_create',
       metadata: { propertyId, address: body.address }
     });
+
+    // Analyze image quality in background (non-blocking)
+    if (imageUrls.length > 0 && db) {
+      const primaryImage = imageUrls[0];
+      analyzePropertyImageAsync(
+        propertyId,
+        primaryImage,
+        body.address,
+        async (data) => {
+          await updateDoc(doc(db, 'properties', propertyId), data);
+        }
+      );
+    }
 
     return NextResponse.json({
       success: true,

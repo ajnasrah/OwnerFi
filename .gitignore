@@ -70,3 +70,4 @@ heygen-webhook-secrets.json
 
 # Test results
 test-results-*.json
+heygen-webhook-secrets.json

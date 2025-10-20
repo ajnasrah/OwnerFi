@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { LeadDispute } from '@/lib/firebase-models';
 import { PropertyListing } from '@/lib/property-schema';
 import Image from 'next/image';
 import { calculatePropertyFinancials } from '@/lib/property-calculations';
+import { useDropzone } from 'react-dropzone';
 
 // Extended Property interface for admin with legacy imageUrl field
 interface AdminProperty extends PropertyListing {
@@ -17,14 +18,26 @@ interface AdminProperty extends PropertyListing {
 function convertToDirectImageUrl(url: string): string {
   if (!url) return url;
 
+  // Fix malformed URLs (e.g., "mahttps://" or multiple "https://")
+  let cleanedUrl = url;
+
+  // Remove any prefix before "https://" or "http://"
+  const httpMatch = cleanedUrl.match(/(https?:\/\/.+)$/);
+  if (httpMatch) {
+    cleanedUrl = httpMatch[1];
+  }
+
+  // Remove duplicate protocol prefixes
+  cleanedUrl = cleanedUrl.replace(/^(https?:\/\/)+/, 'https://');
+
   // Handle Google Drive sharing links
-  const driveMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+  const driveMatch = cleanedUrl.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
   if (driveMatch) {
     const fileId = driveMatch[1];
     return `https://lh3.googleusercontent.com/d/${fileId}=w1000`;
   }
 
-  return url;
+  return cleanedUrl;
 }
 
 interface BuyerStats {
@@ -108,13 +121,33 @@ export default function AdminDashboard() {
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadResult, setUploadResult] = useState<any>(null);
-  const [uploadMode, setUploadMode] = useState<'csv' | 'manual'>('csv');
+  const [uploadMode, setUploadMode] = useState<'csv' | 'manual' | 'scraper' | 'new-properties'>('csv');
   const [manualPropertyData, setManualPropertyData] = useState<any>({
     propertyType: 'single-family',
     status: 'active',
     isActive: true,
     priority: 5
   });
+
+  // Scraper state
+  const [scraperProgress, setScraperProgress] = useState<{
+    status: 'idle' | 'uploading' | 'scraping' | 'complete' | 'error';
+    message: string;
+    urlsFound?: number;
+    propertiesScraped?: number;
+    total?: number;
+    duplicatesInFile?: number;
+    alreadyInDatabase?: number;
+    newProperties?: number;
+  }>({
+    status: 'idle',
+    message: 'Upload an Excel or CSV file to begin',
+  });
+
+  // New Properties state (zillow_imports collection)
+  const [newPropertiesData, setNewPropertiesData] = useState<any[]>([]);
+  const [loadingNewProperties, setLoadingNewProperties] = useState(false);
+  const [exportingGHL, setExportingGHL] = useState(false);
 
   // Disputes state
   const [disputes, setDisputes] = useState<LeadDispute[]>([]);
@@ -201,7 +234,7 @@ export default function AdminDashboard() {
   };
 
   // Fetch functions
-  const fetchProperties = async (limit?: number) => {
+  const fetchProperties = async (limit?: number, resetPage: boolean = true) => {
     setLoadingProperties(true);
     try {
       const url = limit ? `/api/admin/properties?limit=${limit}` : '/api/admin/properties';
@@ -210,7 +243,7 @@ export default function AdminDashboard() {
       if (data.properties) {
         setProperties(data.properties);
         setStats(prev => ({ ...prev, totalProperties: data.total || data.properties.length }));
-        if (!limit) {
+        if (!limit && resetPage) {
           setCurrentPage(1);
         }
       }
@@ -249,6 +282,44 @@ export default function AdminDashboard() {
       console.error('Failed to fetch Street View properties:', error);
     } finally {
       setLoadingStreetView(false);
+    }
+  };
+
+  const fetchNewProperties = async () => {
+    setLoadingNewProperties(true);
+    try {
+      const response = await fetch('/api/admin/zillow-imports');
+      const data = await response.json();
+      if (data.properties) {
+        setNewPropertiesData(data.properties);
+      }
+    } catch (error) {
+      console.error('Failed to fetch new properties:', error);
+    } finally {
+      setLoadingNewProperties(false);
+    }
+  };
+
+  const handleExportGHL = async () => {
+    setExportingGHL(true);
+    try {
+      const response = await fetch('/api/admin/zillow-imports/export-ghl');
+      if (!response.ok) throw new Error('Export failed');
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `zillow_imports_ghl_${new Date().toISOString().split('T')[0]}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Failed to export to GHL format:', error);
+      alert('Failed to export properties');
+    } finally {
+      setExportingGHL(false);
     }
   };
 
@@ -354,6 +425,50 @@ export default function AdminDashboard() {
       fetchFailedProperties();
     }
   }, [failedPropertiesFilter]);
+
+  // Handle Escape key to exit buyer preview
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && activeTab === 'buyer-preview') {
+        setActiveTab('overview');
+      }
+    };
+
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [activeTab]);
+
+  // Ensure preview index stays within bounds
+  useEffect(() => {
+    if (previewProperties.length > 0 && previewCurrentIndex >= previewProperties.length) {
+      setPreviewCurrentIndex(0);
+    }
+  }, [previewProperties, previewCurrentIndex]);
+
+  // Handle arrow keys for navigation in buyer preview
+  useEffect(() => {
+    if (activeTab !== 'buyer-preview' || previewProperties.length === 0) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        setPreviewCurrentIndex((prev) => (prev - 1 + previewProperties.length) % previewProperties.length);
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        setPreviewCurrentIndex((prev) => (prev + 1) % previewProperties.length);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeTab, previewProperties.length]);
+
+  // Fetch new properties when switching to new-properties tab
+  useEffect(() => {
+    if (activeTab === 'upload' && uploadMode === 'new-properties') {
+      fetchNewProperties();
+    }
+  }, [activeTab, uploadMode]);
 
   // Property management functions
   const handleSort = (field: 'address' | 'city' | 'state' | 'listPrice' | 'bedrooms') => {
@@ -568,6 +683,112 @@ export default function AdminDashboard() {
     }
   };
 
+  // Scraper functions
+  const pollJobStatus = async (jobId: string) => {
+    const interval = setInterval(async () => {
+      try {
+        const response = await fetch(`/api/admin/scraper/status?jobId=${jobId}`);
+        const data = await response.json();
+
+        if (data.status === 'complete') {
+          clearInterval(interval);
+          setScraperProgress({
+            status: 'complete',
+            message: `✅ Complete! Imported ${data.imported} properties to Firebase`,
+            propertiesScraped: data.imported,
+            total: data.total,
+          });
+        } else if (data.status === 'error') {
+          clearInterval(interval);
+          setScraperProgress({
+            status: 'error',
+            message: `❌ Error: ${data.error}`,
+          });
+        } else {
+          setScraperProgress({
+            status: 'scraping',
+            message: `Scraping... ${data.progress || 0}% complete`,
+            propertiesScraped: data.imported || 0,
+            total: data.total || 0,
+          });
+        }
+      } catch (error) {
+        console.error('Error polling status:', error);
+      }
+    }, 3000);
+  };
+
+  const onScraperDrop = useCallback(async (acceptedFiles: File[]) => {
+    if (!acceptedFiles || acceptedFiles.length === 0) return;
+
+    const fileCount = acceptedFiles.length;
+    const fileNames = acceptedFiles.map(f => f.name).join(', ');
+
+    setScraperProgress({
+      status: 'uploading',
+      message: `Uploading ${fileCount} file${fileCount > 1 ? 's' : ''}: ${fileNames}...`,
+      totalFiles: fileCount,
+    });
+
+    const formData = new FormData();
+    acceptedFiles.forEach(file => {
+      formData.append('files', file);
+    });
+
+    try {
+      const response = await fetch('/api/admin/scraper/batch-upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Upload failed');
+      }
+
+      const data = await response.json();
+
+      let message = `Processed ${data.filesProcessed} file${data.filesProcessed > 1 ? 's' : ''}. `;
+      message += `Found ${data.totalUrls} total URLs.`;
+      if (data.duplicatesInFiles > 0) {
+        message += ` Removed ${data.duplicatesInFiles} duplicates.`;
+      }
+      if (data.alreadyInDatabase > 0) {
+        message += ` ${data.alreadyInDatabase} already in database.`;
+      }
+      message += ` Importing ${data.newProperties} new properties...`;
+
+      setScraperProgress({
+        status: 'scraping',
+        message,
+        urlsFound: data.totalUrls,
+        duplicatesInFile: data.duplicatesInFiles,
+        alreadyInDatabase: data.alreadyInDatabase,
+        newProperties: data.newProperties,
+        totalFiles: data.filesProcessed,
+      });
+
+      // Poll for job status
+      pollJobStatus(data.batchJobId);
+
+    } catch (error: any) {
+      setScraperProgress({
+        status: 'error',
+        message: error.message || 'Failed to upload files',
+      });
+    }
+  }, []);
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop: onScraperDrop,
+    accept: {
+      'text/csv': ['.csv'],
+      'application/vnd.ms-excel': ['.xls'],
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
+    },
+    multiple: true,
+  });
+
   // Dispute resolution
   const resolveDispute = async (disputeId: string, action: 'approve' | 'deny', refundCredits: number = 1) => {
     try {
@@ -720,7 +941,7 @@ export default function AdminDashboard() {
                       const data = await response.json();
                       if (data.success) {
                         alert(`Removed ${data.summary.deleted} duplicates`);
-                        fetchProperties();
+                        fetchProperties(undefined, false);
                       }
                     }
                   }}
@@ -729,7 +950,7 @@ export default function AdminDashboard() {
                   Remove Duplicates
                 </button>
                 <button
-                  onClick={() => fetchProperties()}
+                  onClick={() => fetchProperties(undefined, false)}
                   disabled={loadingProperties}
                   className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors disabled:bg-gray-400 shadow-sm"
                 >
@@ -832,10 +1053,10 @@ export default function AdminDashboard() {
               </div>
 
               {/* Quick Actions */}
-              <div className="bg-white shadow rounded-lg">
+              <div className="bg-white shadow rounded-lg overflow-hidden">
                 <div className="px-4 py-5 sm:p-6">
                   <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">Quick Actions</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     <button
                       onClick={() => setActiveTab('upload')}
                       className="relative group bg-gray-50 p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-500 rounded-lg hover:bg-gray-100 transition-colors"
@@ -965,7 +1186,7 @@ export default function AdminDashboard() {
                                 await fetch(`/api/admin/properties/${propertyId}`, { method: 'DELETE' });
                               }
                               setSelectedProperties([]);
-                              fetchProperties();
+                              fetchProperties(undefined, false);
                               alert(`Successfully deleted ${selectedProperties.length} properties`);
                             } catch (error) {
                               alert('Failed to delete some properties');
@@ -987,7 +1208,7 @@ export default function AdminDashboard() {
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th scope="col" className="relative px-6 py-3">
+                      <th scope="col" className="relative px-6 py-4">
                         <input
                           type="checkbox"
                           checked={getPaginatedProperties().length > 0 && getPaginatedProperties().every(p => selectedProperties.includes(p.id))}
@@ -1002,27 +1223,27 @@ export default function AdminDashboard() {
                           className="absolute left-4 top-1/2 -mt-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                         />
                       </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th scope="col" className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
+                      <th scope="col" className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Property
                       </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700" onClick={() => handleSort('city')}>
+                      <th scope="col" className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700" onClick={() => handleSort('city')}>
                         Location {sortField === 'city' && (sortDirection === 'asc' ? '↑' : '↓')}
                       </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700" onClick={() => handleSort('listPrice')}>
+                      <th scope="col" className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700" onClick={() => handleSort('listPrice')}>
                         Price {sortField === 'listPrice' && (sortDirection === 'asc' ? '↑' : '↓')}
                       </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th scope="col" className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Details
-                      </th>
-                      <th scope="col" className="relative px-6 py-3">
-                        <span className="sr-only">Actions</span>
                       </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {getPaginatedProperties().map((property) => (
                       <tr key={property.id} className="hover:bg-gray-50">
-                        <td className="relative px-6 py-4">
+                        <td className="relative px-6 py-6">
                           <input
                             type="checkbox"
                             checked={selectedProperties.includes(property.id)}
@@ -1036,36 +1257,8 @@ export default function AdminDashboard() {
                             className="absolute left-4 top-1/2 -mt-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                           />
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <div className="flex-shrink-0 h-16 w-20">
-                              <Image
-                                src={convertToDirectImageUrl(property.imageUrl || (property as any).imageUrls?.[0]) || '/placeholder-house.svg'}
-                                alt={property.address}
-                                width={80}
-                                height={64}
-                                className="h-16 w-20 rounded-md object-cover"
-                              />
-                            </div>
-                            <div className="ml-4">
-                              <div className="text-sm font-medium text-gray-900">{property.address}</div>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{property.city}, {property.state}</div>
-                          <div className="text-sm text-gray-500">{property.zipCode}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">${property.listPrice?.toLocaleString()}</div>
-                          <div className="text-sm text-gray-500">${property.monthlyPayment?.toLocaleString()}/mo</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          <div>{property.bedrooms} bed • {property.bathrooms} bath</div>
-                          <div>{property.squareFeet?.toLocaleString()} sqft</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <div className="flex items-center space-x-2">
+                        <td className="px-6 py-6 whitespace-nowrap text-sm font-medium">
+                          <div className="flex items-center space-x-3">
                             <button
                               onClick={() => {
                                 setEditingProperty(property);
@@ -1095,7 +1288,7 @@ export default function AdminDashboard() {
                               onClick={async () => {
                                 if (confirm('Delete this property?')) {
                                   await fetch(`/api/admin/properties/${property.id}`, { method: 'DELETE' });
-                                  fetchProperties();
+                                  fetchProperties(undefined, false);
                                 }
                               }}
                               className="text-red-600 hover:text-red-900"
@@ -1103,6 +1296,48 @@ export default function AdminDashboard() {
                               Delete
                             </button>
                           </div>
+                        </td>
+                        <td className="px-6 py-6 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <div className="flex-shrink-0 h-24 w-32">
+                              <Image
+                                src={convertToDirectImageUrl(property.imageUrl || (property as any).imageUrls?.[0]) || '/placeholder-house.svg'}
+                                alt={property.address}
+                                width={128}
+                                height={96}
+                                className="h-24 w-32 rounded-lg object-cover"
+                              />
+                            </div>
+                            <div className="ml-3">
+                              <div className="flex items-center gap-2">
+                                <div className="text-sm font-medium text-gray-900">{property.address}</div>
+                                <button
+                                  onClick={() => {
+                                    const fullAddress = `${property.address}, ${property.city}, ${property.state} ${property.zipCode}`;
+                                    navigator.clipboard.writeText(fullAddress);
+                                  }}
+                                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                                  title="Copy full address"
+                                >
+                                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                  </svg>
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-6 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">{property.city}, {property.state}</div>
+                          <div className="text-sm text-gray-500">{property.zipCode}</div>
+                        </td>
+                        <td className="px-6 py-6 whitespace-nowrap">
+                          <div className="text-sm font-medium text-gray-900">${property.listPrice?.toLocaleString()}</div>
+                          <div className="text-sm text-gray-500">${property.monthlyPayment?.toLocaleString()}/mo</div>
+                        </td>
+                        <td className="px-6 py-6 whitespace-nowrap text-sm text-gray-500">
+                          <div>{property.bedrooms} bed • {property.bathrooms} bath</div>
+                          <div>{property.squareFeet?.toLocaleString()} sqft</div>
                         </td>
                       </tr>
                     ))}
@@ -1440,8 +1675,24 @@ export default function AdminDashboard() {
                           return (
                             <tr key={property.id} className="hover:bg-gray-50">
                               <td className="px-6 py-4">
-                                <div className="text-sm font-medium text-gray-900">{property.address}</div>
-                                <div className="text-sm text-gray-500">{property.city}, {property.state}</div>
+                                <div className="flex items-center gap-2">
+                                  <div>
+                                    <div className="text-sm font-medium text-gray-900">{property.address}</div>
+                                    <div className="text-sm text-gray-500">{property.city}, {property.state} {property.zipCode}</div>
+                                  </div>
+                                  <button
+                                    onClick={() => {
+                                      const fullAddress = `${property.address}, ${property.city}, ${property.state} ${property.zipCode}`;
+                                      navigator.clipboard.writeText(fullAddress);
+                                    }}
+                                    className="text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0"
+                                    title="Copy full address"
+                                  >
+                                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                    </svg>
+                                  </button>
+                                </div>
                               </td>
                               <td className="px-6 py-4">
                                 <a
@@ -1553,6 +1804,26 @@ export default function AdminDashboard() {
                     📄 CSV Upload
                   </button>
                   <button
+                    onClick={() => { setUploadMode('scraper'); setUploadResult(null); }}
+                    className={`px-6 py-3 rounded-lg font-medium transition-colors ${
+                      uploadMode === 'scraper'
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                    }`}
+                  >
+                    🤖 Zillow Scraper
+                  </button>
+                  <button
+                    onClick={() => { setUploadMode('new-properties'); setUploadResult(null); }}
+                    className={`px-6 py-3 rounded-lg font-medium transition-colors ${
+                      uploadMode === 'new-properties'
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                    }`}
+                  >
+                    ✨ New Properties
+                  </button>
+                  <button
                     onClick={() => { setUploadMode('manual'); setUploadResult(null); }}
                     className={`px-6 py-3 rounded-lg font-medium transition-colors ${
                       uploadMode === 'manual'
@@ -1635,6 +1906,299 @@ export default function AdminDashboard() {
                         </div>
                       </div>
                     )}
+                  </div>
+                </div>
+              )}
+
+              {/* Zillow Scraper Mode */}
+              {uploadMode === 'scraper' && (
+                <div className="space-y-6">
+                  {/* Dropzone */}
+                  <div
+                    {...getRootProps()}
+                    className={`border-2 border-dashed rounded-lg p-12 text-center cursor-pointer transition-colors bg-white shadow ${
+                      isDragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-gray-400'
+                    } ${
+                      scraperProgress.status === 'uploading' || scraperProgress.status === 'scraping' ? 'opacity-50 pointer-events-none' : ''
+                    }`}
+                  >
+                    <input {...getInputProps()} />
+
+                    <div className="mb-4">
+                      <svg
+                        className="mx-auto h-12 w-12 text-gray-400"
+                        stroke="currentColor"
+                        fill="none"
+                        viewBox="0 0 48 48"
+                      >
+                        <path
+                          d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                          strokeWidth={2}
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </div>
+
+                    {isDragActive ? (
+                      <p className="text-lg text-blue-600">Drop the files here...</p>
+                    ) : (
+                      <div>
+                        <p className="text-lg mb-2">Drag & drop Excel or CSV files here</p>
+                        <p className="text-sm text-gray-500">or click to select files (multiple files supported)</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Progress */}
+                  {scraperProgress.status !== 'idle' && (
+                    <div
+                      className={`p-6 rounded-lg border-2 bg-white shadow ${
+                        scraperProgress.status === 'error'
+                          ? 'bg-red-50 border-red-200'
+                          : scraperProgress.status === 'complete'
+                          ? 'bg-green-50 border-green-200'
+                          : 'bg-blue-50 border-blue-200'
+                      }`}
+                    >
+                      <div className="flex items-start">
+                        {scraperProgress.status === 'uploading' || scraperProgress.status === 'scraping' ? (
+                          <div className="mr-3">
+                            <div className="animate-spin h-6 w-6 border-2 border-blue-500 border-t-transparent rounded-full"></div>
+                          </div>
+                        ) : scraperProgress.status === 'complete' ? (
+                          <svg
+                            className="h-6 w-6 text-green-600 mr-3"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M5 13l4 4L19 7"
+                            />
+                          </svg>
+                        ) : scraperProgress.status === 'error' ? (
+                          <svg
+                            className="h-6 w-6 text-red-600 mr-3"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M6 18L18 6M6 6l12 12"
+                            />
+                          </svg>
+                        ) : null}
+
+                        <div className="flex-1">
+                          <p className="font-semibold text-lg mb-1">{scraperProgress.message}</p>
+
+                          <div className="mt-3 space-y-1">
+                            {scraperProgress.urlsFound !== undefined && (
+                              <p className="text-sm text-gray-700">
+                                <span className="font-medium">URLs in file:</span> {scraperProgress.urlsFound}
+                              </p>
+                            )}
+
+                            {scraperProgress.duplicatesInFile !== undefined && scraperProgress.duplicatesInFile > 0 && (
+                              <p className="text-sm text-orange-700">
+                                <span className="font-medium">Duplicates in file:</span> {scraperProgress.duplicatesInFile}
+                              </p>
+                            )}
+
+                            {scraperProgress.alreadyInDatabase !== undefined && scraperProgress.alreadyInDatabase > 0 && (
+                              <p className="text-sm text-orange-700">
+                                <span className="font-medium">Already in database:</span> {scraperProgress.alreadyInDatabase}
+                              </p>
+                            )}
+
+                            {scraperProgress.newProperties !== undefined && (
+                              <p className="text-sm text-green-700 font-medium">
+                                <span>New properties:</span> {scraperProgress.newProperties}
+                              </p>
+                            )}
+
+                            {scraperProgress.propertiesScraped !== undefined && (
+                              <p className="text-sm text-gray-700 mt-2">
+                                <span className="font-medium">Properties imported:</span> {scraperProgress.propertiesScraped}
+                                {scraperProgress.total && ` / ${scraperProgress.total}`}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Instructions */}
+                  <div className="bg-gray-50 p-6 rounded-lg shadow">
+                    <h2 className="text-lg font-semibold mb-3">How it works</h2>
+                    <ol className="list-decimal list-inside space-y-2 text-gray-700">
+                      <li>Upload one or multiple CSV/Excel files containing Zillow property URLs</li>
+                      <li>The system combines all files and automatically removes duplicates</li>
+                      <li>Checks against existing properties in the database</li>
+                      <li>Only new properties are sent to Apify for scraping</li>
+                      <li>All data is saved to the <code className="bg-gray-200 px-2 py-1 rounded">zillow_imports</code> collection</li>
+                      <li>Review imported properties in Firebase before moving to production</li>
+                    </ol>
+
+                    <div className="mt-4 p-4 bg-purple-100 rounded">
+                      <p className="text-sm font-medium text-purple-900 mb-1">🔄 Batch Upload Support</p>
+                      <p className="text-sm text-purple-800">
+                        You can upload multiple files at once (up to 20+ files). The system will process all files together, combining URLs and removing duplicates across all files.
+                      </p>
+                    </div>
+
+                    <div className="mt-4 p-4 bg-green-100 rounded">
+                      <p className="text-sm font-medium text-green-900 mb-1">✓ Duplicate Protection</p>
+                      <p className="text-sm text-green-800">
+                        The scraper automatically prevents importing duplicate properties. It checks both within your files and against existing database records.
+                      </p>
+                    </div>
+
+                    <div className="mt-4 p-4 bg-blue-100 rounded">
+                      <p className="text-sm font-medium text-blue-900 mb-1">Expected File Format</p>
+                      <p className="text-sm text-blue-800">
+                        Your file should have a column named <strong>URL</strong>, <strong>url</strong>, or{' '}
+                        <strong>link</strong> containing Zillow property URLs
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* New Properties Mode */}
+              {uploadMode === 'new-properties' && (
+                <div className="space-y-6">
+                  {/* Header with Export Button */}
+                  <div className="bg-white shadow rounded-lg p-6">
+                    <div className="flex justify-between items-center mb-4">
+                      <div>
+                        <h3 className="text-lg leading-6 font-medium text-gray-900">New Properties from Zillow Imports</h3>
+                        <p className="mt-1 text-sm text-gray-500">
+                          Properties scraped from Zillow - {newPropertiesData.length} total
+                        </p>
+                      </div>
+                      <button
+                        onClick={handleExportGHL}
+                        disabled={exportingGHL || newPropertiesData.length === 0}
+                        className="px-6 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                      >
+                        {exportingGHL ? 'Exporting...' : '📥 Export to GHL Format'}
+                      </button>
+                    </div>
+
+                    {/* Loading State */}
+                    {loadingNewProperties && (
+                      <div className="text-center py-12">
+                        <div className="animate-spin inline-block h-8 w-8 border-4 border-indigo-600 border-t-transparent rounded-full"></div>
+                        <p className="mt-4 text-gray-600">Loading properties...</p>
+                      </div>
+                    )}
+
+                    {/* Empty State */}
+                    {!loadingNewProperties && newPropertiesData.length === 0 && (
+                      <div className="text-center py-12">
+                        <p className="text-gray-500">No properties found in zillow_imports collection.</p>
+                        <p className="text-sm text-gray-400 mt-2">Use the Zillow Scraper tab to import properties.</p>
+                      </div>
+                    )}
+
+                    {/* Properties Table */}
+                    {!loadingNewProperties && newPropertiesData.length > 0 && (
+                      <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-gray-200">
+                          <thead className="bg-gray-50">
+                            <tr>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Address
+                              </th>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                City
+                              </th>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                State
+                              </th>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Price
+                              </th>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Beds
+                              </th>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Baths
+                              </th>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Sq Ft
+                              </th>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Type
+                              </th>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Imported
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody className="bg-white divide-y divide-gray-200">
+                            {newPropertiesData.map((property) => (
+                              <tr key={property.id} className="hover:bg-gray-50">
+                                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                                  <a
+                                    href={property.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-indigo-600 hover:text-indigo-900 hover:underline"
+                                  >
+                                    {property.streetAddress || property.fullAddress || 'N/A'}
+                                  </a>
+                                </td>
+                                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                                  {property.city || 'N/A'}
+                                </td>
+                                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                                  {property.state || 'N/A'}
+                                </td>
+                                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
+                                  ${property.price?.toLocaleString() || 'N/A'}
+                                </td>
+                                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                                  {property.bedrooms || 'N/A'}
+                                </td>
+                                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                                  {property.bathrooms || 'N/A'}
+                                </td>
+                                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                                  {property.squareFoot?.toLocaleString() || 'N/A'}
+                                </td>
+                                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                                  {property.buildingType || 'N/A'}
+                                </td>
+                                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                                  {property.importedAt ? new Date(property.importedAt).toLocaleDateString() : 'N/A'}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Info Box */}
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <h4 className="font-semibold text-blue-900 mb-2">ℹ️ GHL Export Format</h4>
+                    <p className="text-sm text-blue-800">
+                      Click "Export to GHL Format" to download an Excel file formatted for GoHighLevel import.
+                      The export includes all required custom fields: property_id, property_address, property_city,
+                      property_state, property_zip, property_price, property_bedrooms, property_bathrooms,
+                      property_sqft, and property_image_url.
+                    </p>
                   </div>
                 </div>
               )}
@@ -1979,8 +2543,9 @@ export default function AdminDashboard() {
                     {buyers.map((buyer) => (
                       <li key={buyer.id}>
                         <div className="px-4 py-4 sm:px-6">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center">
+                          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                            {/* Buyer Info */}
+                            <div className="flex items-center flex-1 min-w-0">
                               <div className="flex-shrink-0">
                                 <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
                                   <span className="text-sm font-medium text-gray-700">
@@ -1988,33 +2553,35 @@ export default function AdminDashboard() {
                                   </span>
                                 </div>
                               </div>
-                              <div className="ml-4">
+                              <div className="ml-4 min-w-0 flex-1">
                                 <div className="text-sm font-medium text-gray-900">
                                   {buyer.firstName && buyer.lastName ? `${buyer.firstName} ${buyer.lastName}` : buyer.email}
                                 </div>
-                                <div className="text-sm text-gray-500">{buyer.email}</div>
+                                <div className="text-sm text-gray-500 break-all">{buyer.email}</div>
                                 {buyer.phone && <div className="text-sm text-gray-500">{buyer.phone}</div>}
                                 {(buyer.city || buyer.primaryCity) && (buyer.state || buyer.primaryState) && (
                                   <div className="text-sm text-gray-500">📍 {buyer.city || buyer.primaryCity}, {buyer.state || buyer.primaryState}</div>
                                 )}
                               </div>
                             </div>
-                            <div className="flex items-center space-x-8">
+
+                            {/* Stats Grid */}
+                            <div className="grid grid-cols-4 gap-3 sm:gap-6 flex-shrink-0">
                               <div className="text-center">
-                                <div className="text-lg font-semibold text-gray-900">{buyer.matchedPropertiesCount || 0}</div>
+                                <div className="text-base sm:text-lg font-semibold text-gray-900">{buyer.matchedPropertiesCount || 0}</div>
                                 <div className="text-xs text-gray-500">Matched</div>
                               </div>
                               <div className="text-center">
-                                <div className="text-lg font-semibold text-gray-900">{buyer.likedPropertiesCount || 0}</div>
+                                <div className="text-base sm:text-lg font-semibold text-gray-900">{buyer.likedPropertiesCount || 0}</div>
                                 <div className="text-xs text-gray-500">Liked</div>
                               </div>
                               <div className="text-center">
-                                <div className="text-lg font-semibold text-gray-900">${(buyer.maxMonthlyPayment || buyer.monthlyBudget || 0).toLocaleString()}</div>
+                                <div className="text-base sm:text-lg font-semibold text-gray-900">${(buyer.maxMonthlyPayment || buyer.monthlyBudget || 0).toLocaleString()}</div>
                                 <div className="text-xs text-gray-500">Budget/mo</div>
                               </div>
                               <div className="text-center">
-                                <div className="text-lg font-semibold text-gray-900">${(buyer.maxDownPayment || buyer.downPayment || 0).toLocaleString()}</div>
-                                <div className="text-xs text-gray-500">Down Payment</div>
+                                <div className="text-base sm:text-lg font-semibold text-gray-900">${(buyer.maxDownPayment || buyer.downPayment || 0).toLocaleString()}</div>
+                                <div className="text-xs text-gray-500">Down Pay</div>
                               </div>
                             </div>
                           </div>
@@ -2274,7 +2841,7 @@ export default function AdminDashboard() {
 
           {/* Buyer Preview Tab */}
           {activeTab === 'buyer-preview' && (
-            <div className="fixed inset-0 bg-slate-900 z-40" style={{ marginLeft: '-18rem' }}>
+            <div className="fixed inset-0 bg-slate-900 z-50 left-0">
               {loadingPreview ? (
                 <div className="h-screen flex items-center justify-center">
                   <div className="text-center">
@@ -2299,6 +2866,7 @@ export default function AdminDashboard() {
                       <button
                         onClick={() => setActiveTab('overview')}
                         className="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
+                        title="Back to Admin Dashboard"
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -2309,110 +2877,122 @@ export default function AdminDashboard() {
                         <div className="text-sm text-slate-400">Showing all {previewProperties.length} properties</div>
                       </div>
                     </div>
-                    <div className="text-emerald-400 font-semibold">
-                      {previewCurrentIndex + 1} / {previewProperties.length}
+                    <div className="flex items-center space-x-4">
+                      <div className="text-emerald-400 font-semibold">
+                        {previewCurrentIndex + 1} / {previewProperties.length}
+                      </div>
+                      <button
+                        onClick={() => setActiveTab('overview')}
+                        className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors font-medium text-sm"
+                      >
+                        Exit Preview
+                      </button>
                     </div>
                   </div>
 
                   {/* Property Card */}
-                  <div className="flex-1 flex items-center justify-center p-6">
+                  <div className="flex-1 flex items-center justify-center p-2 sm:p-4 md:p-6 overflow-hidden">
                     {(() => {
                       const property = previewProperties[previewCurrentIndex];
-                      const imageUrl = property.imageUrls?.[0] || property.zillowImageUrl || property.imageUrl || '/placeholder-home.jpg';
+                      if (!property) {
+                        return (
+                          <div className="text-white text-center">
+                            <div className="text-xl font-bold mb-2">Property Not Found</div>
+                            <div className="text-sm text-slate-400">Index: {previewCurrentIndex} / Total: {previewProperties.length}</div>
+                          </div>
+                        );
+                      }
+                      const imageUrl = (property.imageUrls?.[0] as string | undefined) || (property.zillowImageUrl as string | undefined) || property.imageUrl || '/placeholder-home.jpg';
 
                       return (
-                        <div className="w-full max-w-md">
-                          <div className="bg-white rounded-3xl shadow-2xl overflow-hidden relative" style={{ height: '75vh' }}>
-                            {/* Property Image with Overlay */}
-                            <div className="relative h-full">
+                        <div className="w-full max-w-md sm:max-w-lg my-auto scale-[0.85] sm:scale-90 md:scale-95 lg:scale-100">
+                          {/* Main Card Container */}
+                          <div className="bg-white rounded-2xl sm:rounded-[2rem] shadow-[0_20px_60px_rgba(0,0,0,0.3)] overflow-hidden max-h-[calc(100vh-180px)]">
+                            {/* Image Section - Larger and cleaner */}
+                            <div className="relative h-52 sm:h-64 md:h-80 lg:h-96 bg-slate-200">
                               <Image
-                                src={imageUrl}
+                                src={imageUrl as string}
                                 alt={property.address}
                                 fill
                                 className="object-cover"
                                 unoptimized
                               />
 
-                              {/* Dark Gradient Overlay */}
-                              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
-
                               {/* Property Tag */}
                               {property.displayTag && (
-                                <div className="absolute top-4 right-4 px-4 py-2 bg-emerald-500 text-white text-base font-bold rounded-full shadow-2xl border-2 border-white/20">
-                                  {property.displayTag}
+                                <div className="absolute top-6 right-6 px-4 py-2 bg-emerald-500 text-white text-sm font-bold rounded-full shadow-lg">
+                                  {property.displayTag as string}
                                 </div>
                               )}
+                            </div>
 
-                              {/* Property Info Card - Frosted Glass */}
-                              <div className="absolute bottom-6 left-4 right-4">
-                                <div className="bg-black/70 backdrop-blur-xl rounded-3xl p-5 shadow-2xl border border-white/10">
-                                  {/* Address */}
-                                  <h2 className="text-2xl font-black text-white mb-1 leading-tight drop-shadow-lg">
-                                    {property.address}
-                                  </h2>
-                                  <p className="text-white/90 text-lg font-semibold mb-4 drop-shadow">
-                                    {property.city}, {property.state} {property.zipCode}
-                                  </p>
+                            {/* Content Section */}
+                            <div className="p-3 sm:p-4 md:p-5 lg:p-6 space-y-2 sm:space-y-3 md:space-y-4">
+                              {/* Address */}
+                              <div>
+                                <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-slate-900 mb-0.5 sm:mb-1">
+                                  {property.address}
+                                </h2>
+                                <p className="text-slate-600 text-sm sm:text-base">
+                                  {property.city}, {property.state} {property.zipCode}
+                                </p>
+                              </div>
 
-                                  {/* Property Stats */}
-                                  <div className="flex items-center gap-3 mb-4">
-                                    <div className="bg-white/10 backdrop-blur px-3 py-2 rounded-xl border border-white/20">
-                                      <div className="flex items-center gap-2">
-                                        <span className="text-white text-base">🛏️</span>
-                                        <span className="text-white text-base font-bold">{property.bedrooms || 0}bd</span>
-                                      </div>
-                                    </div>
-                                    <div className="bg-white/10 backdrop-blur px-3 py-2 rounded-xl border border-white/20">
-                                      <div className="flex items-center gap-2">
-                                        <span className="text-white text-base">🛁</span>
-                                        <span className="text-white text-base font-bold">{property.bathrooms || 0}ba</span>
-                                      </div>
-                                    </div>
-                                    <div className="bg-white/10 backdrop-blur px-3 py-2 rounded-xl border border-white/20">
-                                      <div className="flex items-center gap-2">
-                                        <span className="text-white text-base">📏</span>
-                                        <span className="text-white text-base font-bold">{property.squareFeet?.toLocaleString() || 'N/A'} sf</span>
-                                      </div>
+                              {/* Property Stats - Cleaner design */}
+                              <div className="flex items-center gap-2 sm:gap-3 pb-2 sm:pb-3 border-b border-slate-200">
+                                <div className="flex items-center gap-1.5">
+                                  <svg className="w-5 h-5 text-slate-500" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+                                  </svg>
+                                  <span className="text-slate-700 font-semibold">{property.bedrooms || 0} <span className="text-slate-500 font-normal">bed</span></span>
+                                </div>
+                                <div className="w-px h-5 bg-slate-300"></div>
+                                <div className="flex items-center gap-1.5">
+                                  <svg className="w-5 h-5 text-slate-500" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z" clipRule="evenodd" />
+                                  </svg>
+                                  <span className="text-slate-700 font-semibold">{property.bathrooms || 0} <span className="text-slate-500 font-normal">bath</span></span>
+                                </div>
+                                <div className="w-px h-5 bg-slate-300"></div>
+                                <div className="flex items-center gap-1.5">
+                                  <svg className="w-5 h-5 text-slate-500" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
+                                  </svg>
+                                  <span className="text-slate-700 font-semibold">{property.squareFeet?.toLocaleString() || 'N/A'} <span className="text-slate-500 font-normal">sqft</span></span>
+                                </div>
+                              </div>
+
+                              {/* Pricing Section */}
+                              <div className="space-y-2">
+                                {/* List Price - Large and prominent */}
+                                <div className="bg-slate-50 rounded-xl p-2.5 sm:p-3 md:p-4 border border-slate-200">
+                                  <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-0.5">List Price</div>
+                                  <div className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-slate-900">
+                                    ${(property.listPrice || 0).toLocaleString()}
+                                  </div>
+                                </div>
+
+                                {/* Monthly & Down Payment */}
+                                <div className="grid grid-cols-2 gap-2">
+                                  <div className="bg-gradient-to-br from-emerald-50 to-emerald-100/50 rounded-lg p-2.5 sm:p-3 md:p-4 border border-emerald-200">
+                                    <div className="text-xs font-semibold text-emerald-700 uppercase tracking-wider mb-0.5">Monthly</div>
+                                    <div className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-emerald-900">
+                                      ${(property.monthlyPayment || 0).toLocaleString()}
                                     </div>
                                   </div>
-
-                                  {/* Financial Info */}
-                                  <div className="space-y-3">
-                                    {/* List Price */}
-                                    <div className="bg-gradient-to-r from-white/20 to-white/10 backdrop-blur rounded-2xl p-3 border border-white/30">
-                                      <div className="flex items-center justify-between">
-                                        <span className="text-white/80 text-sm font-semibold uppercase tracking-wide">List Price</span>
-                                        <span className="text-white text-2xl font-black drop-shadow-lg">
-                                          ${(property.listPrice || 0).toLocaleString()}
-                                        </span>
-                                      </div>
-                                    </div>
-
-                                    {/* Monthly & Down */}
-                                    <div className="grid grid-cols-2 gap-3">
-                                      <div className="bg-emerald-500/30 backdrop-blur rounded-xl p-3 border border-emerald-400/30">
-                                        <div className="text-emerald-200 text-xs font-semibold uppercase mb-1">Monthly</div>
-                                        <div className="text-emerald-100 text-lg font-black">
-                                          ${(property.monthlyPayment || 0).toLocaleString()}
-                                        </div>
-                                      </div>
-                                      <div className="bg-blue-500/30 backdrop-blur rounded-xl p-3 border border-blue-400/30">
-                                        <div className="text-blue-200 text-xs font-semibold uppercase mb-1">Down</div>
-                                        <div className="text-blue-100 text-lg font-black">
-                                          ${(property.downPaymentAmount || 0).toLocaleString()}
-                                        </div>
-                                      </div>
-                                    </div>
-
-                                    {/* Disclaimer */}
-                                    <div className="text-center pt-1">
-                                      <p className="text-white/50 text-xs font-medium">
-                                        * Estimate excludes taxes, insurance & HOA fees
-                                      </p>
+                                  <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-lg p-2.5 sm:p-3 md:p-4 border border-blue-200">
+                                    <div className="text-xs font-semibold text-blue-700 uppercase tracking-wider mb-0.5">Down</div>
+                                    <div className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-blue-900">
+                                      ${(property.downPaymentAmount || 0).toLocaleString()}
                                     </div>
                                   </div>
                                 </div>
                               </div>
+
+                              {/* Disclaimer */}
+                              <p className="text-xs text-slate-500 text-center pt-0.5 sm:pt-1">
+                                * Estimate excludes taxes, insurance & HOA fees
+                              </p>
                             </div>
                           </div>
                         </div>
@@ -2421,23 +3001,27 @@ export default function AdminDashboard() {
                   </div>
 
                   {/* Navigation Controls */}
-                  <div className="bg-slate-800/80 backdrop-blur-md border-t border-slate-700 p-6">
-                    <div className="max-w-md mx-auto flex items-center justify-between space-x-4">
+                  <div className="bg-slate-800/90 backdrop-blur-md border-t border-slate-700/50 p-3 sm:p-4 md:p-6">
+                    <div className="max-w-lg mx-auto flex items-center gap-2 sm:gap-3 md:gap-4">
                       <button
                         onClick={() => setPreviewCurrentIndex((prev) => (prev - 1 + previewProperties.length) % previewProperties.length)}
-                        className="flex-1 bg-slate-700 hover:bg-slate-600 text-white py-4 rounded-2xl font-bold text-lg transition-all transform hover:scale-105 shadow-lg"
+                        className="flex-1 bg-slate-700/80 hover:bg-slate-600 text-white py-3 sm:py-3.5 md:py-4 rounded-xl sm:rounded-2xl font-semibold text-sm sm:text-base transition-all hover:shadow-lg flex items-center justify-center gap-1.5 sm:gap-2"
                       >
-                        ← PREVIOUS
+                        <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                        </svg>
+                        <span className="hidden sm:inline">Previous</span>
+                        <span className="sm:hidden">Prev</span>
                       </button>
                       <button
                         onClick={() => setPreviewCurrentIndex((prev) => (prev + 1) % previewProperties.length)}
-                        className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white py-4 rounded-2xl font-bold text-lg transition-all transform hover:scale-105 shadow-lg"
+                        className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white py-3 sm:py-3.5 md:py-4 rounded-xl sm:rounded-2xl font-semibold text-sm sm:text-base transition-all hover:shadow-lg flex items-center justify-center gap-1.5 sm:gap-2"
                       >
-                        NEXT →
+                        Next
+                        <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
                       </button>
-                    </div>
-                    <div className="text-center mt-4">
-                      <div className="text-slate-400 text-sm">Use arrow buttons or swipe to navigate</div>
                     </div>
                   </div>
                 </div>
@@ -2705,7 +3289,7 @@ export default function AdminDashboard() {
                       body: JSON.stringify(formDataWithConvertedUrl)
                     });
                     setEditingProperty(null);
-                    fetchProperties();
+                    fetchProperties(undefined, false);
                   }}
                   className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-xl font-medium hover:from-indigo-600 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all transform hover:scale-105 shadow-lg"
                 >

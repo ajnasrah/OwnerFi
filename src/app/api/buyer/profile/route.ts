@@ -108,12 +108,12 @@ export async function POST(request: NextRequest) {
     // Consolidated profile structure - includes lead selling fields
     const profileData = {
       userId: session.user.id,
-      
+
       // Contact info (try request first, fallback to user record)
       firstName: firstName || userRecord?.name?.split(' ')[0] || '',
       lastName: lastName || userRecord?.name?.split(' ').slice(1).join(' ') || '',
       email: session.user.email!,
-      phone: phone || '',
+      phone: phone || userRecord?.phone || '',
       
       // Location (both formats for compatibility)
       preferredCity: city,

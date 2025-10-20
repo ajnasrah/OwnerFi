@@ -737,8 +737,9 @@ export default function SocialMediaDashboard() {
                           </div>
                         )}
                         {workflow.error && (
-                          <div className="mt-3 text-xs text-red-700 bg-red-50 border border-red-200 rounded px-3 py-2">
-                            <span className="font-semibold">Error:</span> {workflow.error}
+                          <div className="mt-3 space-y-2">
+                            <div className="text-xs text-red-700 bg-red-50 border border-red-200 rounded px-3 py-2">
+                              <span className="font-semibold">Error:</span> {workflow.error}
                             </div>
                             <WorkflowRecoveryButtons workflow={workflow} onSuccess={loadWorkflows} />
                           </div>
@@ -891,8 +892,9 @@ export default function SocialMediaDashboard() {
                           </div>
                         )}
                         {workflow.error && (
-                          <div className="mt-3 text-xs text-red-700 bg-red-50 border border-red-200 rounded px-3 py-2">
-                            <span className="font-semibold">Error:</span> {workflow.error}
+                          <div className="mt-3 space-y-2">
+                            <div className="text-xs text-red-700 bg-red-50 border border-red-200 rounded px-3 py-2">
+                              <span className="font-semibold">Error:</span> {workflow.error}
                             </div>
                             <WorkflowRecoveryButtons workflow={workflow} onSuccess={loadWorkflows} />
                           </div>
@@ -1161,8 +1163,9 @@ export default function SocialMediaDashboard() {
                           </div>
                         )}
                         {workflow.error && (
-                          <div className="mt-3 text-xs text-red-700 bg-red-50 border border-red-200 rounded px-3 py-2">
-                            <span className="font-semibold">Error:</span> {workflow.error}
+                          <div className="mt-3 space-y-2">
+                            <div className="text-xs text-red-700 bg-red-50 border border-red-200 rounded px-3 py-2">
+                              <span className="font-semibold">Error:</span> {workflow.error}
                             </div>
                             <WorkflowRecoveryButtons workflow={workflow} onSuccess={loadWorkflows} />
                           </div>
@@ -1201,7 +1204,7 @@ export default function SocialMediaDashboard() {
                   <div className="text-lg font-bold text-slate-900 mt-1">
                     2x Daily
                   </div>
-                  <div className="text-xs text-slate-500 mt-1">10:30 AM, 6:30 PM UTC</div>
+                  <div className="text-xs text-slate-500 mt-1">6 AM, 2 PM CDT</div>
                 </div>
 
                 <div className="bg-slate-50 rounded-lg p-4">

@@ -89,13 +89,11 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
       console.log(`   Video URL: ${downloadUrl}`);
 
-      // Update workflow status to 'posting' or 'publishing'
-      await updateWorkflowForBrand(brand, workflowId, {
-        status: brand === 'podcast' ? 'publishing' : 'posting',
-      });
+      // ⚠️ DO NOT change status yet - wait until R2 upload succeeds
+      // Otherwise, if function times out during upload, workflow is stuck in "posting" with no video
 
       // Process R2 upload and Late posting synchronously
-      // CRITICAL: Must complete before function terminates in serverless environment
+      // Status will be updated inside this function after R2 upload succeeds
       await processVideoAndPost(brand, workflowId, workflow, downloadUrl);
 
       const duration = Date.now() - startTime;
@@ -262,13 +260,16 @@ async function processVideoAndPost(
 
     console.log(`✅ [${brandConfig.displayName}] Video uploaded to R2: ${publicVideoUrl}`);
 
-    // ⚠️ CRITICAL: Save video URL immediately after upload, BEFORE attempting Late posting
-    // This ensures the posting failsafe can retry even if Late posting fails
+    // ⚠️ CRITICAL: Change status to "posting" AND save video URL NOW
+    // This ensures:
+    // 1. Status only changes after R2 upload succeeds (no timeouts leave it stuck)
+    // 2. Video URL is saved before Late posting (failsafe can retry if posting fails)
     await updateWorkflowForBrand(brand, workflowId, {
+      status: brand === 'podcast' ? 'publishing' : 'posting',
       finalVideoUrl: publicVideoUrl,
     });
 
-    console.log(`💾 [${brandConfig.displayName}] Video URL saved to workflow`);
+    console.log(`💾 [${brandConfig.displayName}] Status set to "posting" with video URL saved`);
 
     // Get brand-specific platforms from config
     const platforms = getBrandPlatforms(brand, false); // Use default platforms

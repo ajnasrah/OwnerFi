@@ -314,7 +314,16 @@ async function triggerSubmagicProcessing(
     }
 
     const data = await response.json();
+    console.log(`📦 [${brandConfig.displayName}] Submagic API response:`, JSON.stringify(data, null, 2));
+
     const projectId = data.id || data.project_id || data.projectId;
+
+    // Validate that we received a project ID
+    if (!projectId) {
+      console.error(`❌ [${brandConfig.displayName}] Submagic response missing project ID!`);
+      console.error(`   Full response:`, JSON.stringify(data, null, 2));
+      throw new Error(`Submagic API call failed - no project ID received. Response: ${JSON.stringify(data)}`);
+    }
 
     console.log(`✅ [${brandConfig.displayName}] Submagic project created: ${projectId}`);
 

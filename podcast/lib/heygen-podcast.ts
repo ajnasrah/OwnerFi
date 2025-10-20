@@ -168,7 +168,7 @@ export class HeyGenPodcastGenerator {
       const guestVoice: any = {
         type: 'text',
         input_text: qa.answer,
-        speed: 1.2  // Speed up guest avatar to 1.2x
+        speed: 1.44  // Speed up guest avatar by 20% more (1.2 * 1.2 = 1.44x)
       };
 
       // Only add voice_id if it's provided, otherwise use avatar's default voice
@@ -178,7 +178,7 @@ export class HeyGenPodcastGenerator {
 
       const guestCharacter: any = {
         type: guest.avatar_type,
-        scale: guest.scale || 1.4
+        scale: guest.scale || 1.68  // Zoom in 20% more on guest (1.4 * 1.2 = 1.68)
       };
 
       // Add avatar_id or talking_photo_id based on type

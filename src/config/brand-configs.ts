@@ -229,6 +229,55 @@ export const PODCAST_CONFIG: BrandConfig = {
 };
 
 /**
+ * Benefit Videos Brand Configuration
+ * For Owner Finance informational videos (seller + buyer benefits)
+ */
+export const BENEFIT_CONFIG: BrandConfig = {
+  id: 'benefit',
+  displayName: 'Owner Finance Benefits',
+
+  lateProfileId: process.env.LATE_OWNERFI_PROFILE_ID || '', // Uses OwnerFi's Late profile
+
+  platforms: {
+    default: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'threads'],
+    all: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'threads', 'twitter', 'bluesky', 'pinterest', 'reddit'],
+  },
+
+  webhooks: {
+    heygen: `${BASE_URL}/api/webhooks/heygen/benefit`,
+    submagic: `${BASE_URL}/api/webhooks/submagic/benefit`,
+  },
+
+  content: {
+    youtubeCategory: 'NEWS_POLITICS',
+    defaultHashtags: ['#OwnerFinancing', '#RealEstate', '#Homeownership', '#Investment', '#OwnerFi'],
+    captionStyle: 'educational',
+  },
+
+  collections: {
+    workflows: 'benefit_workflow_queue',
+  },
+
+  rateLimits: {
+    lateAPI: 50,  // 50 posts per hour
+    heygen: 20,   // 20 video generations per hour
+    submagic: 240, // 4 per minute = 240 per hour
+  },
+
+  scheduling: {
+    timezone: 'America/Chicago', // Central Time
+    postingHours: [9, 12, 15, 18, 21],
+    maxPostsPerDay: 2, // 2 benefit videos per day (1 seller, 1 buyer)
+  },
+
+  features: {
+    autoPosting: true,
+    abTesting: false,
+    analytics: true,
+  },
+};
+
+/**
  * Brand Configuration Map
  * Easy lookup of brand configs by brand ID
  */
@@ -236,6 +285,7 @@ export const BRAND_CONFIGS: Record<Brand, BrandConfig> = {
   carz: CARZ_CONFIG,
   ownerfi: OWNERFI_CONFIG,
   podcast: PODCAST_CONFIG,
+  benefit: BENEFIT_CONFIG,
 } as const;
 
 /**
@@ -247,7 +297,7 @@ export const BRAND_CONFIGS: Record<Brand, BrandConfig> = {
 export function getBrandConfig(brand: Brand): BrandConfig {
   const config = BRAND_CONFIGS[brand];
   if (!config) {
-    throw new Error(`Invalid brand: ${brand}. Must be one of: carz, ownerfi, podcast`);
+    throw new Error(`Invalid brand: ${brand}. Must be one of: carz, ownerfi, podcast, benefit`);
   }
   return config;
 }
@@ -343,5 +393,6 @@ export function validateAllBrandConfigs(): Record<Brand, { valid: boolean; error
     carz: validateBrandConfig('carz'),
     ownerfi: validateBrandConfig('ownerfi'),
     podcast: validateBrandConfig('podcast'),
+    benefit: validateBrandConfig('benefit'),
   };
 }

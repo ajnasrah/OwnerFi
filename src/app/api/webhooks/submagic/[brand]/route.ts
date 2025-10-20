@@ -161,12 +161,15 @@ export async function POST(request: NextRequest, context: RouteContext) {
  * Get workflow by Submagic project ID for specific brand
  */
 async function getWorkflowBySubmagicId(
-  brand: 'carz' | 'ownerfi' | 'podcast',
+  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit',
   submagicProjectId: string
 ): Promise<{ workflowId: string; workflow: any } | null> {
   if (brand === 'podcast') {
     const { findPodcastBySubmagicId } = await import('@/lib/feed-store-firestore');
     return await findPodcastBySubmagicId(submagicProjectId);
+  } else if (brand === 'benefit') {
+    const { findBenefitBySubmagicId } = await import('@/lib/feed-store-firestore');
+    return await findBenefitBySubmagicId(submagicProjectId);
   } else {
     const { findWorkflowBySubmagicId } = await import('@/lib/feed-store-firestore');
     const result = await findWorkflowBySubmagicId(submagicProjectId);
@@ -187,13 +190,16 @@ async function getWorkflowBySubmagicId(
  * Update workflow for specific brand
  */
 async function updateWorkflowForBrand(
-  brand: 'carz' | 'ownerfi' | 'podcast',
+  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit',
   workflowId: string,
   updates: Record<string, any>
 ): Promise<void> {
   if (brand === 'podcast') {
     const { updatePodcastWorkflow } = await import('@/lib/feed-store-firestore');
     await updatePodcastWorkflow(workflowId, updates);
+  } else if (brand === 'benefit') {
+    const { updateBenefitWorkflow } = await import('@/lib/feed-store-firestore');
+    await updateBenefitWorkflow(workflowId, updates);
   } else {
     const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
     await updateWorkflowStatus(workflowId, brand, updates);
@@ -238,7 +244,7 @@ async function fetchVideoUrlFromSubmagic(submagicProjectId: string): Promise<str
  * Process video upload to R2 and post to Late
  */
 async function processVideoAndPost(
-  brand: 'carz' | 'ownerfi' | 'podcast',
+  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit',
   workflowId: string,
   workflow: any,
   videoUrl: string
@@ -266,6 +272,9 @@ async function processVideoAndPost(
     if (brand === 'podcast') {
       caption = workflow.episodeTitle || 'New Podcast Episode';
       title = `Episode #${workflow.episodeNumber}: ${workflow.episodeTitle || 'New Episode'}`;
+    } else if (brand === 'benefit') {
+      caption = workflow.caption || 'Learn about owner financing! 🏡';
+      title = workflow.title || 'Owner Finance Benefits';
     } else {
       caption = workflow.caption || 'Check out this video! 🔥';
       title = workflow.title || 'Viral Video';
@@ -323,13 +332,13 @@ async function processVideoAndPost(
  * Send failure alert for brand
  */
 async function sendFailureAlert(
-  brand: 'carz' | 'ownerfi' | 'podcast',
+  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit',
   workflowId: string,
   workflow: any,
   reason: string
 ): Promise<void> {
   try {
-    if (brand !== 'podcast') {
+    if (brand !== 'podcast' && brand !== 'benefit') {
       const { alertWorkflowFailure } = await import('@/lib/error-monitoring');
       await alertWorkflowFailure(
         brand,

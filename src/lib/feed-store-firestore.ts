@@ -82,6 +82,9 @@ const COLLECTIONS = {
   },
   PODCAST: {
     WORKFLOW_QUEUE: 'podcast_workflow_queue',
+  },
+  BENEFIT: {
+    WORKFLOW_QUEUE: 'benefit_workflow_queue',
   }
 };
 
@@ -870,6 +873,177 @@ export async function getPodcastWorkflowById(workflowId: string): Promise<Podcas
   }
 
   console.log(`⚠️  No podcast workflow found with ID: ${workflowId}`);
+  return null;
+}
+
+// ====== BENEFIT VIDEO WORKFLOW MANAGEMENT ======
+
+export interface BenefitWorkflowItem {
+  id: string;
+  benefitId: string;
+  audience: 'seller' | 'buyer';
+  benefitTitle: string;
+  status: 'heygen_processing' | 'submagic_processing' | 'posting' | 'completed' | 'failed';
+  heygenVideoId?: string;
+  submagicProjectId?: string;
+  finalVideoUrl?: string;
+  latePostId?: string; // Late API post ID
+  caption?: string;
+  title?: string;
+  error?: string;
+  createdAt: number;
+  updatedAt: number;
+  completedAt?: number;
+}
+
+export async function addBenefitWorkflow(
+  benefitId: string,
+  audience: 'seller' | 'buyer',
+  benefitTitle: string
+): Promise<BenefitWorkflowItem> {
+  if (!db) throw new Error('Firebase not initialized');
+
+  const queueItem: BenefitWorkflowItem = {
+    id: `benefit_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
+    benefitId,
+    audience,
+    benefitTitle,
+    status: 'heygen_processing',
+    createdAt: Date.now(),
+    updatedAt: Date.now()
+  };
+
+  await setDoc(doc(db, COLLECTIONS.BENEFIT.WORKFLOW_QUEUE, queueItem.id), queueItem);
+  console.log(`✅ Added benefit workflow: ${queueItem.id} - ${benefitTitle} (${audience})`);
+  return queueItem;
+}
+
+export async function updateBenefitWorkflow(
+  workflowId: string,
+  updates: Partial<BenefitWorkflowItem>
+): Promise<void> {
+  if (!db) return;
+
+  const cleanData = removeUndefined({
+    ...updates,
+    updatedAt: Date.now()
+  });
+  await updateDoc(doc(db, COLLECTIONS.BENEFIT.WORKFLOW_QUEUE, workflowId), cleanData);
+}
+
+export async function getBenefitWorkflowById(workflowId: string): Promise<BenefitWorkflowItem | null> {
+  if (!db) return null;
+
+  const docSnap = await getDoc(doc(db, COLLECTIONS.BENEFIT.WORKFLOW_QUEUE, workflowId));
+
+  if (docSnap.exists()) {
+    return docSnap.data() as BenefitWorkflowItem;
+  }
+
+  console.log(`⚠️  No benefit workflow found with ID: ${workflowId}`);
+  return null;
+}
+
+// Find benefit workflow by Submagic project ID (for webhook handling)
+export async function findBenefitBySubmagicId(submagicProjectId: string): Promise<{
+  workflowId: string;
+  workflow: BenefitWorkflowItem;
+} | null> {
+  if (!db) return null;
+
+  const q = query(
+    collection(db, COLLECTIONS.BENEFIT.WORKFLOW_QUEUE),
+    where('submagicProjectId', '==', submagicProjectId),
+    firestoreLimit(1)
+  );
+
+  const snapshot = await getDocs(q);
+
+  if (!snapshot.empty) {
+    const docData = snapshot.docs[0].data() as BenefitWorkflowItem;
+    return {
+      workflowId: snapshot.docs[0].id,
+      workflow: docData
+    };
+  }
+
+  console.log(`⚠️  No benefit workflow found with Submagic ID: ${submagicProjectId}`);
+  return null;
+}
+
+// Find benefit workflow by HeyGen callback ID (for webhook handling)
+export async function findBenefitByHeyGenId(heygenVideoId: string): Promise<{
+  workflowId: string;
+  workflow: BenefitWorkflowItem;
+} | null> {
+  if (!db) return null;
+
+  const q = query(
+    collection(db, COLLECTIONS.BENEFIT.WORKFLOW_QUEUE),
+    where('heygenVideoId', '==', heygenVideoId),
+    firestoreLimit(1)
+  );
+
+  const snapshot = await getDocs(q);
+
+  if (!snapshot.empty) {
+    const docData = snapshot.docs[0].data() as BenefitWorkflowItem;
+    return {
+      workflowId: snapshot.docs[0].id,
+      workflow: docData
+    };
+  }
+
+  console.log(`⚠️  No benefit workflow found with HeyGen ID: ${heygenVideoId}`);
+  return null;
+}
+
+// Find workflow by callback_id (used by HeyGen webhook)
+// This searches across all workflow types (articles, podcasts, benefits)
+export async function findWorkflowByCallbackId(callbackId: string): Promise<{
+  workflowId: string;
+  workflow: any;
+  type: 'article' | 'podcast' | 'benefit';
+  brand?: 'carz' | 'ownerfi';
+} | null> {
+  if (!db) return null;
+
+  // Check benefit workflows first (callback_id is the workflow id)
+  const benefitWorkflow = await getBenefitWorkflowById(callbackId);
+  if (benefitWorkflow) {
+    return {
+      workflowId: callbackId,
+      workflow: benefitWorkflow,
+      type: 'benefit'
+    };
+  }
+
+  // Check podcast workflows
+  const podcastWorkflow = await getPodcastWorkflowById(callbackId);
+  if (podcastWorkflow) {
+    return {
+      workflowId: callbackId,
+      workflow: podcastWorkflow,
+      type: 'podcast'
+    };
+  }
+
+  // Check article workflows (carz and ownerfi)
+  for (const brand of ['carz', 'ownerfi'] as const) {
+    const collectionName = getCollectionName('WORKFLOW_QUEUE', brand);
+    const docSnap = await getDoc(doc(db, collectionName, callbackId));
+
+    if (docSnap.exists()) {
+      return {
+        workflowId: callbackId,
+        workflow: docSnap.data() as WorkflowQueueItem,
+        type: 'article',
+        brand
+      };
+    }
+  }
+
+  console.log(`⚠️  No workflow found with callback ID: ${callbackId}`);
   return null;
 }
 

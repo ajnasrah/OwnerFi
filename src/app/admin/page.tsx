@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { LeadDispute } from '@/lib/firebase-models';
 import { PropertyListing } from '@/lib/property-schema';
 import Image from 'next/image';
+import { calculatePropertyFinancials } from '@/lib/property-calculations';
 
 // Extended Property interface for admin with legacy imageUrl field
 interface AdminProperty extends PropertyListing {
@@ -184,7 +185,7 @@ export default function AdminDashboard() {
       const disputesData = await disputesResponse.json();
 
       setStats({
-        totalProperties: propData.properties?.length || 0,
+        totalProperties: propData.total || 0,
         totalBuyers: buyersData.buyers?.length || 0,
         totalRealtors: realtorsData.realtors?.length || 0,
         pendingDisputes: disputesData.pendingDisputes?.length || 0
@@ -203,7 +204,7 @@ export default function AdminDashboard() {
       const data = await response.json();
       if (data.properties) {
         setProperties(data.properties);
-        setStats(prev => ({ ...prev, totalProperties: data.properties.length }));
+        setStats(prev => ({ ...prev, totalProperties: data.total || data.properties.length }));
         if (!limit) {
           setCurrentPage(1);
         }
@@ -436,6 +437,69 @@ export default function AdminDashboard() {
 
   const filteredProperties = getFilteredProperties();
   const totalPages = Math.ceil(filteredProperties.length / itemsPerPage);
+
+  // Helper function to recalculate financials when price or related fields change
+  const handlePriceChange = (newPrice: number) => {
+    const updatedFinancials = calculatePropertyFinancials({
+      listPrice: newPrice,
+      downPaymentPercent: editForm.downPaymentPercent,
+      downPaymentAmount: editForm.downPaymentAmount,
+      monthlyPayment: editForm.monthlyPayment,
+      interestRate: editForm.interestRate,
+      termYears: editForm.termYears || 20,
+      balloonYears: editForm.balloonYears,
+      balloonPayment: editForm.balloonPayment
+    });
+
+    setEditForm({
+      ...editForm,
+      listPrice: newPrice,
+      downPaymentAmount: updatedFinancials.downPaymentAmount,
+      downPaymentPercent: updatedFinancials.downPaymentPercent,
+      monthlyPayment: updatedFinancials.monthlyPayment,
+      loanAmount: updatedFinancials.loanAmount
+    });
+  };
+
+  // Helper function to recalculate when down payment percent changes
+  const handleDownPaymentPercentChange = (newPercent: number) => {
+    const updatedFinancials = calculatePropertyFinancials({
+      listPrice: editForm.listPrice,
+      downPaymentPercent: newPercent,
+      monthlyPayment: editForm.monthlyPayment,
+      interestRate: editForm.interestRate,
+      termYears: editForm.termYears || 20,
+      balloonYears: editForm.balloonYears,
+      balloonPayment: editForm.balloonPayment
+    });
+
+    setEditForm({
+      ...editForm,
+      downPaymentPercent: newPercent,
+      downPaymentAmount: updatedFinancials.downPaymentAmount,
+      monthlyPayment: updatedFinancials.monthlyPayment,
+      loanAmount: updatedFinancials.loanAmount
+    });
+  };
+
+  // Helper function to recalculate when interest rate changes
+  const handleInterestRateChange = (newRate: number) => {
+    const updatedFinancials = calculatePropertyFinancials({
+      listPrice: editForm.listPrice,
+      downPaymentPercent: editForm.downPaymentPercent,
+      downPaymentAmount: editForm.downPaymentAmount,
+      interestRate: newRate,
+      termYears: editForm.termYears || 20,
+      balloonYears: editForm.balloonYears,
+      balloonPayment: editForm.balloonPayment
+    });
+
+    setEditForm({
+      ...editForm,
+      interestRate: newRate,
+      monthlyPayment: updatedFinancials.monthlyPayment
+    });
+  };
 
   // Upload functions
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1247,14 +1311,15 @@ export default function AdminDashboard() {
                             </td>
                             <td className="px-6 py-4 text-sm">
                               <div className="flex space-x-2">
-                                <a
-                                  href={`/admin/property/edit/${property.id}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
+                                <button
+                                  onClick={() => {
+                                    setEditingProperty(property.id);
+                                    setEditForm(property);
+                                  }}
                                   className="text-indigo-600 hover:text-indigo-900 font-medium"
                                 >
                                   Edit
-                                </a>
+                                </button>
                                 <button
                                   onClick={async () => {
                                     if (confirm(`Delete property: ${property.address}?`)) {
@@ -2294,7 +2359,10 @@ export default function AdminDashboard() {
                           <input
                             type="number"
                             value={editForm.listPrice || ''}
-                            onChange={(e) => setEditForm({ ...editForm, listPrice: parseFloat(e.target.value) })}
+                            onChange={(e) => {
+                              const newPrice = parseFloat(e.target.value) || 0;
+                              handlePriceChange(newPrice);
+                            }}
                             placeholder="169000"
                             className="w-full pl-8 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                           />
@@ -2339,7 +2407,10 @@ export default function AdminDashboard() {
                               type="number"
                               step="0.01"
                               value={editForm.interestRate || ''}
-                              onChange={(e) => setEditForm({ ...editForm, interestRate: parseFloat(e.target.value) })}
+                              onChange={(e) => {
+                                const newRate = parseFloat(e.target.value) || 0;
+                                handleInterestRateChange(newRate);
+                              }}
                               placeholder="6.75"
                               className="w-full pr-10 pl-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                             />
@@ -2353,7 +2424,10 @@ export default function AdminDashboard() {
                               type="number"
                               step="0.1"
                               value={editForm.downPaymentPercent ? Math.round(editForm.downPaymentPercent * 100) / 100 : ''}
-                              onChange={(e) => setEditForm({ ...editForm, downPaymentPercent: parseFloat(e.target.value) })}
+                              onChange={(e) => {
+                                const newPercent = parseFloat(e.target.value) || 0;
+                                handleDownPaymentPercentChange(newPercent);
+                              }}
                               placeholder="10"
                               className="w-full pr-10 pl-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                             />

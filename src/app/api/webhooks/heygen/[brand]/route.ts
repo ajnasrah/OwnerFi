@@ -196,12 +196,15 @@ export async function POST(request: NextRequest, context: RouteContext) {
  * Get workflow for specific brand (NO sequential lookups)
  */
 async function getWorkflowForBrand(
-  brand: 'carz' | 'ownerfi' | 'podcast',
+  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit',
   workflowId: string
 ): Promise<any | null> {
   if (brand === 'podcast') {
     const { getPodcastWorkflowById } = await import('@/lib/feed-store-firestore');
     return await getPodcastWorkflowById(workflowId);
+  } else if (brand === 'benefit') {
+    const { getBenefitWorkflowById } = await import('@/lib/feed-store-firestore');
+    return await getBenefitWorkflowById(workflowId);
   } else {
     const { getWorkflowById } = await import('@/lib/feed-store-firestore');
     const result = await getWorkflowById(workflowId);
@@ -213,13 +216,16 @@ async function getWorkflowForBrand(
  * Update workflow for specific brand
  */
 async function updateWorkflowForBrand(
-  brand: 'carz' | 'ownerfi' | 'podcast',
+  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit',
   workflowId: string,
   updates: Record<string, any>
 ): Promise<void> {
   if (brand === 'podcast') {
     const { updatePodcastWorkflow } = await import('@/lib/feed-store-firestore');
     await updatePodcastWorkflow(workflowId, updates);
+  } else if (brand === 'benefit') {
+    const { updateBenefitWorkflow } = await import('@/lib/feed-store-firestore');
+    await updateBenefitWorkflow(workflowId, updates);
   } else {
     const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
     await updateWorkflowStatus(workflowId, brand, updates);
@@ -230,7 +236,7 @@ async function updateWorkflowForBrand(
  * Trigger Submagic processing with brand-specific webhook
  */
 async function triggerSubmagicProcessing(
-  brand: 'carz' | 'ownerfi' | 'podcast',
+  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit',
   workflowId: string,
   heygenVideoUrl: string,
   workflow: any
@@ -264,7 +270,7 @@ async function triggerSubmagicProcessing(
     const submagicWebhookUrl = brandConfig.webhooks.submagic;
 
     // Prepare title (max 50 characters for Submagic)
-    let title = workflow.articleTitle || workflow.episodeTitle || `${brandConfig.displayName} Video - ${workflowId}`;
+    let title = workflow.articleTitle || workflow.episodeTitle || workflow.benefitTitle || `${brandConfig.displayName} Video - ${workflowId}`;
 
     // Decode HTML entities
     title = title
@@ -343,13 +349,13 @@ async function triggerSubmagicProcessing(
  * Send failure alert for brand
  */
 async function sendFailureAlert(
-  brand: 'carz' | 'ownerfi' | 'podcast',
+  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit',
   workflowId: string,
   workflow: any,
   reason: string
 ): Promise<void> {
   try {
-    if (brand !== 'podcast') {
+    if (brand !== 'podcast' && brand !== 'benefit') {
       const { alertWorkflowFailure } = await import('@/lib/error-monitoring');
       await alertWorkflowFailure(
         brand,

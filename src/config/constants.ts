@@ -173,7 +173,7 @@ export const WORKFLOW = {
 // ============================================================================
 
 export const BRANDS = {
-  VALID_BRANDS: ['carz', 'ownerfi', 'podcast'] as const,
+  VALID_BRANDS: ['carz', 'ownerfi', 'podcast', 'benefit'] as const,
 } as const;
 
 export type Brand = typeof BRANDS.VALID_BRANDS[number];

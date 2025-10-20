@@ -29,8 +29,8 @@ export async function GET(request: NextRequest) {
 
     const stuckWorkflows = [];
 
-    // Check Carz and OwnerFi workflows stuck in 'posting'
-    for (const brand of ['carz', 'ownerfi'] as const) {
+    // Check Carz, OwnerFi, and Benefit workflows stuck in 'posting'
+    for (const brand of ['carz', 'ownerfi', 'benefit'] as const) {
       const collectionName = getCollectionName('WORKFLOW_QUEUE', brand);
       console.log(`\n📂 Checking ${collectionName}...`);
 
@@ -136,6 +136,9 @@ export async function GET(request: NextRequest) {
         if (isPodcast) {
           caption = workflow.episodeTitle || 'New Podcast Episode';
           title = `Episode #${workflow.episodeNumber}: ${workflow.episodeTitle || 'New Episode'}`;
+        } else if (brand === 'benefit') {
+          caption = workflow.caption || 'Learn about owner financing! 🏡';
+          title = workflow.title || 'Owner Finance Benefits';
         } else {
           caption = workflow.caption || 'Check out this video! 🔥';
           title = workflow.title || 'Viral Video';
@@ -158,6 +161,13 @@ export async function GET(request: NextRequest) {
           if (isPodcast) {
             const { updatePodcastWorkflow } = await import('@/lib/feed-store-firestore');
             await updatePodcastWorkflow(workflowId, {
+              status: 'completed',
+              latePostId: postResult.postId,
+              completedAt: Date.now()
+            });
+          } else if (brand === 'benefit') {
+            const { updateBenefitWorkflow } = await import('@/lib/feed-store-firestore');
+            await updateBenefitWorkflow(workflowId, {
               status: 'completed',
               latePostId: postResult.postId,
               completedAt: Date.now()
@@ -189,6 +199,12 @@ export async function GET(request: NextRequest) {
             if (isPodcast) {
               const { updatePodcastWorkflow } = await import('@/lib/feed-store-firestore');
               await updatePodcastWorkflow(workflowId, {
+                status: 'failed',
+                error: `Late API posting failed: ${postResult.error}`
+              });
+            } else if (brand === 'benefit') {
+              const { updateBenefitWorkflow } = await import('@/lib/feed-store-firestore');
+              await updateBenefitWorkflow(workflowId, {
                 status: 'failed',
                 error: `Late API posting failed: ${postResult.error}`
               });

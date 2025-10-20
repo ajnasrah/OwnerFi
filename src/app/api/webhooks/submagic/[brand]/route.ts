@@ -262,6 +262,14 @@ async function processVideoAndPost(
 
     console.log(`✅ [${brandConfig.displayName}] Video uploaded to R2: ${publicVideoUrl}`);
 
+    // ⚠️ CRITICAL: Save video URL immediately after upload, BEFORE attempting Late posting
+    // This ensures the posting failsafe can retry even if Late posting fails
+    await updateWorkflowForBrand(brand, workflowId, {
+      finalVideoUrl: publicVideoUrl,
+    });
+
+    console.log(`💾 [${brandConfig.displayName}] Video URL saved to workflow`);
+
     // Get brand-specific platforms from config
     const platforms = getBrandPlatforms(brand, false); // Use default platforms
 
@@ -297,10 +305,9 @@ async function processVideoAndPost(
       console.log(`   Post ID: ${postResult.postId}`);
       console.log(`   Platforms: ${postResult.platforms?.join(', ')}`);
 
-      // Mark workflow as completed
+      // Mark workflow as completed (video URL already saved above)
       await updateWorkflowForBrand(brand, workflowId, {
         status: 'completed',
-        finalVideoUrl: publicVideoUrl,
         latePostId: postResult.postId,
         completedAt: Date.now(),
       });

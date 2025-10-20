@@ -89,21 +89,28 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
       console.log(`   Video URL: ${downloadUrl}`);
 
-      // ⚠️ DO NOT change status yet - wait until R2 upload succeeds
-      // Otherwise, if function times out during upload, workflow is stuck in "posting" with no video
+      // ✅ SAVE VIDEO URL IMMEDIATELY - This is our backup!
+      // Even if processing fails, we can retry later
+      await updateWorkflowForBrand(brand, workflowId, {
+        submagicDownloadUrl: downloadUrl,  // Save the original Submagic URL
+        status: 'video_processing',        // New intermediate status
+      });
 
-      // Process R2 upload and Late posting synchronously
-      // Status will be updated inside this function after R2 upload succeeds
-      await processVideoAndPost(brand, workflowId, workflow, downloadUrl);
+      console.log(`💾 [${brandConfig.displayName}] Submagic URL saved, triggering async processing...`);
+
+      // Trigger async video processing (non-blocking)
+      // This calls a separate endpoint that has no timeout limits
+      await triggerAsyncVideoProcessing(brand, workflowId, downloadUrl);
 
       const duration = Date.now() - startTime;
-      console.log(`⏱️  [${brandConfig.displayName}] Webhook processed in ${duration}ms`);
+      console.log(`⏱️  [${brandConfig.displayName}] Webhook acknowledged in ${duration}ms`);
 
       return NextResponse.json({
         success: true,
         brand,
         projectId: submagicProjectId,
         workflow_id: workflowId,
+        message: 'Video processing queued',
         processing_time_ms: duration,
       });
     }
@@ -358,6 +365,39 @@ async function sendFailureAlert(
   } catch (error) {
     console.error('Failed to send alert:', error);
     // Don't throw - alerting failure shouldn't block webhook processing
+  }
+}
+
+/**
+ * Trigger async video processing (non-blocking)
+ * Makes a fire-and-forget request to the processing endpoint
+ */
+async function triggerAsyncVideoProcessing(
+  brand: string,
+  workflowId: string,
+  videoUrl: string
+): Promise<void> {
+  try {
+    // Get the base URL for the API
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : 'http://localhost:3000';
+
+    // Trigger the processing endpoint (fire-and-forget)
+    // Don't await - let it run in the background
+    fetch(`${baseUrl}/api/process-video`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ brand, workflowId, videoUrl }),
+    }).catch(err => {
+      console.error('Failed to trigger video processing:', err);
+      // Failure here is OK - the failsafe cron will pick it up
+    });
+
+    console.log(`🚀 Triggered async video processing for ${workflowId}`);
+  } catch (error) {
+    console.error('Error triggering video processing:', error);
+    // Don't throw - webhook should still succeed
   }
 }
 

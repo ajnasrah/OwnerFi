@@ -8,6 +8,7 @@ import {
 import { db } from '@/lib/firebase';
 import { logError, logInfo, logWarn } from '@/lib/logger';
 import { queueNearbyCitiesForProperty } from '@/lib/property-enhancement';
+import { autoCleanPropertyData } from '@/lib/property-auto-cleanup';
 import crypto from 'crypto';
 
 const GHL_WEBHOOK_SECRET = process.env.GHL_WEBHOOK_SECRET || '';
@@ -607,6 +608,23 @@ export async function POST(request: NextRequest) {
         createdAt: serverTimestamp(),
         dateAdded: new Date().toISOString()
       });
+    }
+
+    // Auto-cleanup: Clean address and upgrade image URLs
+    const cleanedData = autoCleanPropertyData({
+      address: propertyData.address,
+      city: propertyData.city,
+      state: propertyData.state,
+      zipCode: propertyData.zipCode,
+      imageUrls: propertyData.imageUrls
+    });
+
+    // Apply cleaned data
+    if (cleanedData.address) {
+      propertyData.address = cleanedData.address;
+    }
+    if (cleanedData.imageUrls && cleanedData.imageUrls.length > 0) {
+      propertyData.imageUrls = cleanedData.imageUrls;
     }
 
     // Save to database

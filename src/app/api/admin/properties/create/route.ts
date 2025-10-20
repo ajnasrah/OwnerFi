@@ -7,6 +7,7 @@ import { logError, logInfo } from '@/lib/logger';
 import { ExtendedSession } from '@/types/session';
 import { PropertyListing } from '@/lib/property-schema';
 import { analyzePropertyImageAsync } from '@/lib/image-quality-analyzer';
+import { autoCleanPropertyData } from '@/lib/property-auto-cleanup';
 
 /**
  * Create a new property manually via admin form
@@ -145,6 +146,23 @@ export async function POST(request: NextRequest) {
       nearbyCitiesSource: undefined,
       nearbyCitiesUpdatedAt: undefined
     };
+
+    // Auto-cleanup: Clean address and upgrade image URLs
+    const cleanedData = autoCleanPropertyData({
+      address: propertyData.address,
+      city: propertyData.city,
+      state: propertyData.state,
+      zipCode: propertyData.zipCode,
+      imageUrl: propertyData.imageUrl,
+      imageUrls: propertyData.imageUrls,
+      zillowImageUrl: propertyData.zillowImageUrl
+    });
+
+    // Apply cleaned data
+    if (cleanedData.address) propertyData.address = cleanedData.address;
+    if (cleanedData.imageUrl) propertyData.imageUrl = cleanedData.imageUrl;
+    if (cleanedData.imageUrls) propertyData.imageUrls = cleanedData.imageUrls;
+    if (cleanedData.zillowImageUrl) propertyData.zillowImageUrl = cleanedData.zillowImageUrl;
 
     // Save to Firestore
     await setDoc(doc(db, 'properties', propertyId), {

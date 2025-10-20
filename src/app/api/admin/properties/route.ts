@@ -15,6 +15,7 @@ import {
 import { db } from '@/lib/firebase';
 import { logError, logInfo } from '@/lib/logger';
 import { ExtendedSession } from '@/types/session';
+import { autoCleanPropertyData } from '@/lib/property-auto-cleanup';
 
 // Get all properties for admin management
 export async function GET(request: NextRequest) {
@@ -113,12 +114,31 @@ export async function PUT(request: NextRequest) {
     }
 
     const { propertyId, updates } = await request.json();
-    
+
     if (!propertyId) {
       return NextResponse.json(
         { error: 'Property ID is required' },
         { status: 400 }
       );
+    }
+
+    // Auto-cleanup: Clean address and upgrade image URLs if they're being updated
+    if (updates.address || updates.imageUrl || updates.imageUrls || updates.zillowImageUrl) {
+      const cleanedData = autoCleanPropertyData({
+        address: updates.address,
+        city: updates.city,
+        state: updates.state,
+        zipCode: updates.zipCode,
+        imageUrl: updates.imageUrl,
+        imageUrls: updates.imageUrls,
+        zillowImageUrl: updates.zillowImageUrl
+      });
+
+      // Apply cleaned data
+      if (cleanedData.address) updates.address = cleanedData.address;
+      if (cleanedData.imageUrl) updates.imageUrl = cleanedData.imageUrl;
+      if (cleanedData.imageUrls) updates.imageUrls = cleanedData.imageUrls;
+      if (cleanedData.zillowImageUrl) updates.zillowImageUrl = cleanedData.zillowImageUrl;
     }
 
     // Update property in Firebase

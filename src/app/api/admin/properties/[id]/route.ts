@@ -5,6 +5,7 @@ import { doc, getDoc, updateDoc, deleteDoc, serverTimestamp } from 'firebase/fir
 import { db } from '@/lib/firebase';
 import { logError, logInfo } from '@/lib/logger';
 import { ExtendedSession } from '@/types/session';
+import { autoCleanPropertyData } from '@/lib/property-auto-cleanup';
 
 // GET single property
 export async function GET(
@@ -87,6 +88,25 @@ export async function PUT(
         // If imageUrl is empty, clear imageUrls
         updates.imageUrls = [];
       }
+    }
+
+    // Auto-cleanup: Clean address and upgrade image URLs if they're being updated
+    if (updates.address || updates.imageUrl || updates.imageUrls || updates.zillowImageUrl) {
+      const cleanedData = autoCleanPropertyData({
+        address: updates.address,
+        city: updates.city,
+        state: updates.state,
+        zipCode: updates.zipCode,
+        imageUrl: updates.imageUrl,
+        imageUrls: updates.imageUrls,
+        zillowImageUrl: updates.zillowImageUrl
+      });
+
+      // Apply cleaned data
+      if (cleanedData.address) updates.address = cleanedData.address;
+      if (cleanedData.imageUrl) updates.imageUrl = cleanedData.imageUrl;
+      if (cleanedData.imageUrls) updates.imageUrls = cleanedData.imageUrls;
+      if (cleanedData.zillowImageUrl) updates.zillowImageUrl = cleanedData.zillowImageUrl;
     }
 
     // Update the property

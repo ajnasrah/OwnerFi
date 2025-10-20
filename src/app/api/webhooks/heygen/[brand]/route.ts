@@ -264,6 +264,16 @@ async function triggerSubmagicProcessing(
     );
 
     console.log(`✅ [${brandConfig.displayName}] R2 URL: ${publicHeygenUrl}`);
+
+    // 🔥 CRITICAL: Save HeyGen video URLs BEFORE attempting Submagic
+    // This ensures we don't lose the video if Submagic fails
+    await updateWorkflowForBrand(brand, workflowId, {
+      heygenVideoUrl: heygenVideoUrl,      // Original HeyGen URL
+      heygenVideoR2Url: publicHeygenUrl,   // R2 backup URL
+      status: 'heygen_completed'           // Mark HeyGen as done
+    });
+    console.log(`💾 [${brandConfig.displayName}] Saved HeyGen URLs to workflow (recovery point created)`);
+
     console.log(`✨ [${brandConfig.displayName}] Step 2: Sending to Submagic...`);
 
     // Use brand-specific webhook URL from config

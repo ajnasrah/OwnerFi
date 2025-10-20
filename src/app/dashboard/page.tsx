@@ -440,77 +440,98 @@ export default function Dashboard() {
               className="w-full h-full object-cover"
               draggable={false}
             />
-            
-            {/* Dark Gradient Overlay for Text Readability */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20"></div>
-            
+
+            {/* Strong Dark Gradient Overlay for Better Text Readability */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
+
             {/* Property Tags */}
             {currentProperty.displayTag && (
-              <div className="absolute top-20 right-4 bg-emerald-500 text-white px-4 py-2 rounded-full text-base font-bold shadow-lg">
+              <div className="absolute top-20 right-4 bg-emerald-500 text-white px-4 py-2 rounded-full text-base font-bold shadow-2xl border-2 border-white/20">
                 {currentProperty.displayTag}
               </div>
             )}
-            
-            {/* Property Info - Tinder Style Overlay */}
+
+            {/* Property Info Card - Frosted Glass Effect */}
             <div className="absolute bottom-24 left-4 right-4">
-              <h2 className="text-2xl font-bold text-white mb-1 leading-tight">
-                {currentProperty.address}
-              </h2>
-              <p className="text-white/90 text-lg font-medium mb-3">
-                {currentProperty.city}, {currentProperty.state} {currentProperty.zipCode || ''}
-              </p>
+              {/* Frosted Glass Background Card */}
+              <div className="bg-black/70 backdrop-blur-xl rounded-3xl p-5 shadow-2xl border border-white/10">
+                {/* Address */}
+                <h2 className="text-2xl font-black text-white mb-1 leading-tight drop-shadow-lg">
+                  {currentProperty.address}
+                </h2>
+                <p className="text-white/90 text-lg font-semibold mb-4 drop-shadow">
+                  {currentProperty.city}, {currentProperty.state} {currentProperty.zipCode || ''}
+                </p>
 
-              {/* Property Stats Row */}
-              <div className="flex items-center gap-4 mb-3">
-                <div className="flex items-center gap-1">
-                  <span className="text-white text-sm">🏠</span>
-                  <span className="text-white text-sm font-semibold">{currentProperty.bedrooms}bd, {currentProperty.bathrooms}ba</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <span className="text-white text-sm">📏</span>
-                  <span className="text-white text-sm font-semibold">{currentProperty.squareFeet?.toLocaleString() || '1,140'} sqft</span>
-                </div>
-              </div>
-
-              {/* Price Info */}
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-white/80 text-lg">💰</span>
-                  <span className="text-white text-xl font-bold">
-                    ${currentProperty.listPrice?.toLocaleString() || '260,000'}
-                  </span>
-                </div>
-
-                <div className="flex gap-3 flex-wrap">
-                  <div className="flex items-center gap-1">
-                    <span className="text-emerald-400 text-base">📅</span>
-                    <span className="text-emerald-400 text-lg font-bold">
-                      ${currentProperty.monthlyPayment ? Math.ceil(currentProperty.monthlyPayment).toLocaleString() : '1,403'}/mo est
-                    </span>
+                {/* Property Stats Row */}
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="bg-white/10 backdrop-blur px-3 py-2 rounded-xl border border-white/20">
+                    <div className="flex items-center gap-2">
+                      <span className="text-white text-base">🛏️</span>
+                      <span className="text-white text-base font-bold">{currentProperty.bedrooms}bd</span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <span className="text-blue-400 text-base">💳</span>
-                    <span className="text-blue-400 text-lg font-bold">
-                      ${currentProperty.downPaymentAmount?.toLocaleString() || '26,000'} down est
-                    </span>
+                  <div className="bg-white/10 backdrop-blur px-3 py-2 rounded-xl border border-white/20">
+                    <div className="flex items-center gap-2">
+                      <span className="text-white text-base">🛁</span>
+                      <span className="text-white text-base font-bold">{currentProperty.bathrooms}ba</span>
+                    </div>
                   </div>
-                  {currentProperty.balloonYears && (
-                    <div className="flex items-center gap-1">
-                      <span className="text-yellow-400 text-sm">🎈</span>
-                      <span className="text-yellow-400 text-sm font-semibold">
-                        {currentProperty.balloonYears} year balloon
+                  <div className="bg-white/10 backdrop-blur px-3 py-2 rounded-xl border border-white/20">
+                    <div className="flex items-center gap-2">
+                      <span className="text-white text-base">📏</span>
+                      <span className="text-white text-base font-bold">{currentProperty.squareFeet?.toLocaleString() || '1,140'} sqft</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Price Info - Enhanced Visibility */}
+                <div className="space-y-3">
+                  {/* List Price - Most Prominent */}
+                  <div className="bg-gradient-to-r from-white/20 to-white/10 backdrop-blur rounded-2xl p-3 border border-white/30">
+                    <div className="flex items-center justify-between">
+                      <span className="text-white/80 text-sm font-semibold uppercase tracking-wide">List Price</span>
+                      <span className="text-white text-2xl font-black drop-shadow-lg">
+                        ${currentProperty.listPrice?.toLocaleString() || '260,000'}
                       </span>
                     </div>
+                  </div>
+
+                  {/* Monthly & Down Payment */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-emerald-500/30 backdrop-blur rounded-xl p-3 border border-emerald-400/30">
+                      <div className="text-emerald-200 text-xs font-semibold uppercase mb-1">Monthly</div>
+                      <div className="text-emerald-100 text-lg font-black">
+                        ${currentProperty.monthlyPayment ? Math.ceil(currentProperty.monthlyPayment).toLocaleString() : '1,403'}
+                      </div>
+                    </div>
+                    <div className="bg-blue-500/30 backdrop-blur rounded-xl p-3 border border-blue-400/30">
+                      <div className="text-blue-200 text-xs font-semibold uppercase mb-1">Down</div>
+                      <div className="text-blue-100 text-lg font-black">
+                        ${currentProperty.downPaymentAmount?.toLocaleString() || '26,000'}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Balloon Payment if exists */}
+                  {currentProperty.balloonYears && (
+                    <div className="bg-yellow-500/20 backdrop-blur rounded-xl px-3 py-2 border border-yellow-400/30">
+                      <div className="flex items-center gap-2">
+                        <span className="text-yellow-300 text-base">🎈</span>
+                        <span className="text-yellow-100 text-sm font-bold">
+                          {currentProperty.balloonYears} year balloon payment
+                        </span>
+                      </div>
+                    </div>
                   )}
-                </div>
 
-                {/* Payment Disclaimer */}
-                <div className="mt-2 text-center">
-                  <p className="text-white/60 text-sm">
-                    * Excludes taxes, insurance, HOA fees
-                  </p>
+                  {/* Payment Disclaimer */}
+                  <div className="text-center pt-2">
+                    <p className="text-white/50 text-xs font-medium">
+                      * Estimate excludes taxes, insurance & HOA fees
+                    </p>
+                  </div>
                 </div>
-
               </div>
             </div>
           </div>

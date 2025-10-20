@@ -78,7 +78,7 @@ interface Stats {
 export default function AdminDashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'overview' | 'properties' | 'failed-properties' | 'upload' | 'disputes' | 'contacts' | 'buyers' | 'realtors' | 'logs' | 'social' | 'articles' | 'image-quality'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'properties' | 'failed-properties' | 'upload' | 'disputes' | 'contacts' | 'buyers' | 'realtors' | 'logs' | 'social' | 'articles' | 'image-quality' | 'buyer-preview'>('overview');
 
   // Stats
   const [stats, setStats] = useState<Stats>({
@@ -137,6 +137,11 @@ export default function AdminDashboard() {
   const [streetViewProperties, setStreetViewProperties] = useState<AdminProperty[]>([]);
   const [loadingStreetView, setLoadingStreetView] = useState(false);
   const [editingImageUrl, setEditingImageUrl] = useState<string | null>(null);
+
+  // Buyer Preview state
+  const [previewProperties, setPreviewProperties] = useState<AdminProperty[]>([]);
+  const [previewCurrentIndex, setPreviewCurrentIndex] = useState(0);
+  const [loadingPreview, setLoadingPreview] = useState(false);
   const [newImageUrl, setNewImageUrl] = useState('');
 
   // Auth check
@@ -306,6 +311,22 @@ export default function AdminDashboard() {
     }
   };
 
+  const fetchPreviewProperties = async () => {
+    setLoadingPreview(true);
+    try {
+      const response = await fetch('/api/admin/properties?limit=1000');
+      const data = await response.json();
+      if (data.properties) {
+        setPreviewProperties(data.properties);
+        setPreviewCurrentIndex(0);
+      }
+    } catch (error) {
+      console.error('Failed to fetch preview properties:', error);
+    } finally {
+      setLoadingPreview(false);
+    }
+  };
+
   // Load data when tab changes
   useEffect(() => {
     if (activeTab === 'properties') {
@@ -322,6 +343,8 @@ export default function AdminDashboard() {
       fetchBuyers();
     } else if (activeTab === 'realtors') {
       fetchRealtors();
+    } else if (activeTab === 'buyer-preview') {
+      fetchPreviewProperties();
     }
   }, [activeTab]);
 
@@ -599,6 +622,7 @@ export default function AdminDashboard() {
           {[
             { key: 'overview', label: 'Overview', icon: '📊', count: null },
             { key: 'properties', label: 'Properties', icon: '🏠', count: stats.totalProperties },
+            { key: 'buyer-preview', label: 'Buyer Preview', icon: '👁️', count: null },
             { key: 'failed-properties', label: 'Failed Properties', icon: '⚠️', count: failedPropertySummary.total || null },
             { key: 'image-quality', label: 'Image Quality', icon: '📸', count: null },
             { key: 'upload', label: 'Upload', icon: '📤', count: null },
@@ -662,6 +686,7 @@ export default function AdminDashboard() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-h-screen w-full overflow-x-hidden">
         {/* Top Header */}
+        {activeTab !== 'buyer-preview' && (
         <header className="bg-white shadow-sm border-b border-slate-200 px-4 md:px-6 lg:px-8 py-4 md:py-6">
           <div className="flex items-center justify-between">
             <div>
@@ -669,6 +694,7 @@ export default function AdminDashboard() {
                 {activeTab === 'overview' && 'Dashboard Overview'}
                 {activeTab === 'properties' && 'Property Management'}
                 {activeTab === 'failed-properties' && 'Failed Properties'}
+                {activeTab === 'buyer-preview' && 'Buyer Preview'}
                 {activeTab === 'image-quality' && 'Image Quality Review'}
                 {activeTab === 'upload' && 'Upload Properties'}
                 {activeTab === 'buyers' && 'Buyer Management'}
@@ -713,6 +739,7 @@ export default function AdminDashboard() {
             )}
           </div>
         </header>
+        )}
 
         {/* Content Area */}
         <main className="flex-1 p-4 md:p-6 lg:p-8 bg-slate-50 overflow-y-auto w-full">
@@ -2242,6 +2269,179 @@ export default function AdminDashboard() {
                   <p className="mt-1 text-sm text-gray-500">Click "View Full Logs" to access detailed system logs</p>
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* Buyer Preview Tab */}
+          {activeTab === 'buyer-preview' && (
+            <div className="fixed inset-0 bg-slate-900 z-40" style={{ marginLeft: '-18rem' }}>
+              {loadingPreview ? (
+                <div className="h-screen flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="w-16 h-16 border-4 border-emerald-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                    <div className="text-lg font-semibold text-white">Loading Properties...</div>
+                    <div className="text-sm text-slate-400 mt-2">{previewProperties.length} properties loaded</div>
+                  </div>
+                </div>
+              ) : previewProperties.length === 0 ? (
+                <div className="h-screen flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="text-6xl mb-4">🏠</div>
+                    <div className="text-xl font-bold text-white mb-2">NO PROPERTIES FOUND</div>
+                    <div className="text-slate-400">Upload some properties to see them here</div>
+                  </div>
+                </div>
+              ) : (
+                <div className="h-screen flex flex-col relative">
+                  {/* Header */}
+                  <div className="bg-slate-800/80 backdrop-blur-md border-b border-slate-700 p-4 flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <button
+                        onClick={() => setActiveTab('overview')}
+                        className="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                        </svg>
+                      </button>
+                      <div>
+                        <div className="text-white font-bold">Buyer Experience Preview</div>
+                        <div className="text-sm text-slate-400">Showing all {previewProperties.length} properties</div>
+                      </div>
+                    </div>
+                    <div className="text-emerald-400 font-semibold">
+                      {previewCurrentIndex + 1} / {previewProperties.length}
+                    </div>
+                  </div>
+
+                  {/* Property Card */}
+                  <div className="flex-1 flex items-center justify-center p-6">
+                    {(() => {
+                      const property = previewProperties[previewCurrentIndex];
+                      const imageUrl = property.imageUrls?.[0] || property.zillowImageUrl || property.imageUrl || '/placeholder-home.jpg';
+
+                      return (
+                        <div className="w-full max-w-md">
+                          <div className="bg-white rounded-3xl shadow-2xl overflow-hidden relative" style={{ height: '75vh' }}>
+                            {/* Property Image with Overlay */}
+                            <div className="relative h-full">
+                              <Image
+                                src={imageUrl}
+                                alt={property.address}
+                                fill
+                                className="object-cover"
+                                unoptimized
+                              />
+
+                              {/* Dark Gradient Overlay */}
+                              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
+
+                              {/* Property Tag */}
+                              {property.displayTag && (
+                                <div className="absolute top-4 right-4 px-4 py-2 bg-emerald-500 text-white text-base font-bold rounded-full shadow-2xl border-2 border-white/20">
+                                  {property.displayTag}
+                                </div>
+                              )}
+
+                              {/* Property Info Card - Frosted Glass */}
+                              <div className="absolute bottom-6 left-4 right-4">
+                                <div className="bg-black/70 backdrop-blur-xl rounded-3xl p-5 shadow-2xl border border-white/10">
+                                  {/* Address */}
+                                  <h2 className="text-2xl font-black text-white mb-1 leading-tight drop-shadow-lg">
+                                    {property.address}
+                                  </h2>
+                                  <p className="text-white/90 text-lg font-semibold mb-4 drop-shadow">
+                                    {property.city}, {property.state} {property.zipCode}
+                                  </p>
+
+                                  {/* Property Stats */}
+                                  <div className="flex items-center gap-3 mb-4">
+                                    <div className="bg-white/10 backdrop-blur px-3 py-2 rounded-xl border border-white/20">
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-white text-base">🛏️</span>
+                                        <span className="text-white text-base font-bold">{property.bedrooms || 0}bd</span>
+                                      </div>
+                                    </div>
+                                    <div className="bg-white/10 backdrop-blur px-3 py-2 rounded-xl border border-white/20">
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-white text-base">🛁</span>
+                                        <span className="text-white text-base font-bold">{property.bathrooms || 0}ba</span>
+                                      </div>
+                                    </div>
+                                    <div className="bg-white/10 backdrop-blur px-3 py-2 rounded-xl border border-white/20">
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-white text-base">📏</span>
+                                        <span className="text-white text-base font-bold">{property.squareFeet?.toLocaleString() || 'N/A'} sf</span>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* Financial Info */}
+                                  <div className="space-y-3">
+                                    {/* List Price */}
+                                    <div className="bg-gradient-to-r from-white/20 to-white/10 backdrop-blur rounded-2xl p-3 border border-white/30">
+                                      <div className="flex items-center justify-between">
+                                        <span className="text-white/80 text-sm font-semibold uppercase tracking-wide">List Price</span>
+                                        <span className="text-white text-2xl font-black drop-shadow-lg">
+                                          ${(property.listPrice || 0).toLocaleString()}
+                                        </span>
+                                      </div>
+                                    </div>
+
+                                    {/* Monthly & Down */}
+                                    <div className="grid grid-cols-2 gap-3">
+                                      <div className="bg-emerald-500/30 backdrop-blur rounded-xl p-3 border border-emerald-400/30">
+                                        <div className="text-emerald-200 text-xs font-semibold uppercase mb-1">Monthly</div>
+                                        <div className="text-emerald-100 text-lg font-black">
+                                          ${(property.monthlyPayment || 0).toLocaleString()}
+                                        </div>
+                                      </div>
+                                      <div className="bg-blue-500/30 backdrop-blur rounded-xl p-3 border border-blue-400/30">
+                                        <div className="text-blue-200 text-xs font-semibold uppercase mb-1">Down</div>
+                                        <div className="text-blue-100 text-lg font-black">
+                                          ${(property.downPaymentAmount || 0).toLocaleString()}
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    {/* Disclaimer */}
+                                    <div className="text-center pt-1">
+                                      <p className="text-white/50 text-xs font-medium">
+                                        * Estimate excludes taxes, insurance & HOA fees
+                                      </p>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+
+                  {/* Navigation Controls */}
+                  <div className="bg-slate-800/80 backdrop-blur-md border-t border-slate-700 p-6">
+                    <div className="max-w-md mx-auto flex items-center justify-between space-x-4">
+                      <button
+                        onClick={() => setPreviewCurrentIndex((prev) => (prev - 1 + previewProperties.length) % previewProperties.length)}
+                        className="flex-1 bg-slate-700 hover:bg-slate-600 text-white py-4 rounded-2xl font-bold text-lg transition-all transform hover:scale-105 shadow-lg"
+                      >
+                        ← PREVIOUS
+                      </button>
+                      <button
+                        onClick={() => setPreviewCurrentIndex((prev) => (prev + 1) % previewProperties.length)}
+                        className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white py-4 rounded-2xl font-bold text-lg transition-all transform hover:scale-105 shadow-lg"
+                      >
+                        NEXT →
+                      </button>
+                    </div>
+                    <div className="text-center mt-4">
+                      <div className="text-slate-400 text-sm">Use arrow buttons or swipe to navigate</div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </main>

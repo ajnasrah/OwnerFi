@@ -65,6 +65,9 @@
     "src/app/api/admin/upload-properties-v4/route.ts": {
       "maxDuration": 300
     },
+    "src/app/api/admin/scraper/upload/route.ts": {
+      "maxDuration": 300
+    },
     "src/app/api/process-video/route.ts": {
       "maxDuration": 300
     },

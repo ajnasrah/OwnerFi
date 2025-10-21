@@ -93,10 +93,20 @@ export async function POST(request: NextRequest) {
 
     console.log(`✅ Added to queue: ${url}`);
 
+    // Trigger immediate processing (don't wait for cron)
+    const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://ownerfi.vercel.app';
+    fetch(`${BASE_URL}/api/cron/process-scraper-queue`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${process.env.CRON_SECRET}`,
+        'User-Agent': 'vercel-cron/1.0'
+      }
+    }).catch(err => console.error('⚠️ Failed to trigger immediate queue processing:', err));
+
     return NextResponse.json(
       {
         success: true,
-        message: 'Added to scraper queue',
+        message: 'Added to scraper queue. Processing started immediately.',
       },
       {
         headers: {

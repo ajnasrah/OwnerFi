@@ -94,6 +94,16 @@ export async function POST(request: NextRequest) {
       urls: newProperties.map(p => p.url),
     });
 
+    // Trigger immediate processing (don't wait for cron)
+    const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://ownerfi.vercel.app';
+    fetch(`${BASE_URL}/api/cron/process-zillow-scraper`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${process.env.CRON_SECRET}`,
+        'User-Agent': 'vercel-cron/1.0'
+      }
+    }).catch(err => console.error('⚠️ Failed to trigger immediate processing:', err));
+
     return NextResponse.json({
       success: true,
       jobId,
@@ -101,7 +111,7 @@ export async function POST(request: NextRequest) {
       duplicatesInFile,
       alreadyInDatabase: alreadyExists,
       newProperties: newProperties.length,
-      message: 'Job queued for processing. Check status in a moment.',
+      message: 'Job queued for processing. Processing started immediately.',
     });
 
   } catch (error: any) {

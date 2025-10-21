@@ -34,83 +34,90 @@ export async function GET(request: NextRequest) {
     // Fetch all properties from zillow_imports collection
     const snapshot = await db.collection('zillow_imports').orderBy('importedAt', 'desc').get();
 
-    // Transform data to GHL format
-    const ghlData = snapshot.docs.map(doc => {
-      const data = doc.data();
+    // Filter properties with agent OR broker phone number, then transform to GHL format
+    const ghlData = snapshot.docs
+      .filter(doc => {
+        const data = doc.data();
+        const hasAgentPhone = !!data.agentPhoneNumber;
+        const hasBrokerPhone = !!data.brokerPhoneNumber;
+        return hasAgentPhone || hasBrokerPhone;
+      })
+      .map(doc => {
+        const data = doc.data();
 
-      // Format address
-      const fullAddress = data.fullAddress || `${data.streetAddress || ''}, ${data.city || ''}, ${data.state || ''} ${data.zipCode || ''}`.trim();
+        // Format address
+        const fullAddress = data.fullAddress || `${data.streetAddress || ''}, ${data.city || ''}, ${data.state || ''} ${data.zipCode || ''}`.trim();
 
-      // Get first image - use firstPropertyImage field (main hero image) with fallback
-      const imageUrl = data.firstPropertyImage
-        || (Array.isArray(data.propertyImages) && data.propertyImages.length > 0 ? data.propertyImages[0] : '')
-        || '';
+        // Get first image - use firstPropertyImage field (main hero image) with fallback
+        const imageUrl = data.firstPropertyImage
+          || (Array.isArray(data.propertyImages) && data.propertyImages.length > 0 ? data.propertyImages[0] : '')
+          || '';
 
-      return {
-        // GHL Custom Fields
-        'property_id': doc.id,
-        'zpid': data.zpid || '',
-        'mls_id': data.mlsId || '',
-        'parcel_id': data.parcelId || '',
-        'property_address': data.streetAddress || data.fullAddress || '',
-        'property_city': data.city || '',
-        'property_state': data.state || '',
-        'property_zip': data.zipCode || '',
-        'county': data.county || '',
-        'subdivision': data.subdivision || '',
-        'neighborhood': data.neighborhood || '',
-        'property_price': data.price || 0,
-        'property_bedrooms': data.bedrooms || 0,
-        'property_bathrooms': data.bathrooms || 0,
-        'property_sqft': data.squareFoot || 0,
-        'lot_sqft': data.lotSquareFoot || 0,
-        'year_built': data.yearBuilt || '',
-        'building_type': data.buildingType || '',
-        'home_type': data.homeType || '',
-        'home_status': data.homeStatus || '',
+        return {
+          // GHL Custom Fields
+          'property_id': doc.id,
+          'zpid': data.zpid || '',
+          'mls_id': data.mlsId || '',
+          'parcel_id': data.parcelId || '',
+          'property_address': data.streetAddress || data.fullAddress || '',
+          'property_city': data.city || '',
+          'property_state': data.state || '',
+          'property_zip': data.zipCode || '',
+          'county': data.county || '',
+          'subdivision': data.subdivision || '',
+          'neighborhood': data.neighborhood || '',
+          'property_price': data.price || 0,
+          'property_bedrooms': data.bedrooms || 0,
+          'property_bathrooms': data.bathrooms || 0,
+          'property_sqft': data.squareFoot || 0,
+          'lot_sqft': data.lotSquareFoot || 0,
+          'year_built': data.yearBuilt || '',
+          'building_type': data.buildingType || '',
+          'home_type': data.homeType || '',
+          'home_status': data.homeStatus || '',
 
-        // Location
-        'latitude': data.latitude || 0,
-        'longitude': data.longitude || 0,
+          // Location
+          'latitude': data.latitude || 0,
+          'longitude': data.longitude || 0,
 
-        // Financial
-        'zestimate': data.estimate || 0,
-        'rent_estimate': data.rentEstimate || 0,
-        'hoa': data.hoa || 0,
-        'annual_tax_paid': data.annualTaxAmount || 0,
-        'tax_assessment_value': data.recentPropertyTaxes || 0,
-        'property_tax_rate': data.propertyTaxRate || 0,
-        'annual_insurance': data.annualHomeownersInsurance || 0,
+          // Financial
+          'zestimate': data.estimate || 0,
+          'rent_estimate': data.rentEstimate || 0,
+          'hoa': data.hoa || 0,
+          'annual_tax_paid': data.annualTaxAmount || 0,
+          'tax_assessment_value': data.recentPropertyTaxes || 0,
+          'property_tax_rate': data.propertyTaxRate || 0,
+          'annual_insurance': data.annualHomeownersInsurance || 0,
 
-        // Listing Info
-        'days_on_zillow': data.daysOnZillow || 0,
-        'date_posted': data.datePostedString || '',
-        'listing_source': data.listingDataSource || '',
+          // Listing Info
+          'days_on_zillow': data.daysOnZillow || 0,
+          'date_posted': data.datePostedString || '',
+          'listing_source': data.listingDataSource || '',
 
-        // Agent/Broker
-        'agent_name': data.agentName || '',
-        'agent_phone': data.agentPhoneNumber || '',
-        'agent_email': data.agentEmail || '',
-        'agent_license': data.agentLicenseNumber || '',
-        'broker_name': data.brokerName || '',
-        'broker_phone': data.brokerPhoneNumber || '',
+          // Agent/Broker
+          'agent_name': data.agentName || '',
+          'agent_phone': data.agentPhoneNumber || '',
+          'agent_email': data.agentEmail || '',
+          'agent_license': data.agentLicenseNumber || '',
+          'broker_name': data.brokerName || '',
+          'broker_phone': data.brokerPhoneNumber || '',
 
-        // URLs
-        'zillow_url': data.url || '',
-        'virtual_tour_url': data.virtualTourUrl || '',
+          // URLs
+          'zillow_url': data.url || '',
+          'virtual_tour_url': data.virtualTourUrl || '',
 
-        // Images
-        'property_image_url': imageUrl,
+          // Images
+          'property_image_url': imageUrl,
 
-        // Description
-        'description': data.description || '',
+          // Description
+          'description': data.description || '',
 
-        // Metadata
-        'full_address': fullAddress,
-        'source': data.source || '',
-        'imported_at': data.importedAt?.toDate?.()?.toISOString() || data.importedAt || '',
-      };
-    });
+          // Metadata
+          'full_address': fullAddress,
+          'source': data.source || '',
+          'imported_at': data.importedAt?.toDate?.()?.toISOString() || data.importedAt || '',
+        };
+      });
 
     // Create workbook and worksheet
     const wb = XLSX.utils.book_new();

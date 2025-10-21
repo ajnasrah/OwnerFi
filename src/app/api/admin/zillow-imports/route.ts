@@ -33,13 +33,23 @@ export async function GET(request: NextRequest) {
     // Fetch all properties from zillow_imports collection
     const snapshot = await db.collection('zillow_imports').orderBy('importedAt', 'desc').get();
 
-    const properties = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      // Convert Firestore timestamps
-      importedAt: doc.data().importedAt?.toDate?.()?.toISOString() || doc.data().importedAt,
-      scrapedAt: doc.data().scrapedAt?.toDate?.()?.toISOString() || doc.data().scrapedAt,
-    }));
+    const properties = snapshot.docs
+      .map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          // Convert Firestore timestamps
+          importedAt: data.importedAt?.toDate?.()?.toISOString() || data.importedAt,
+          scrapedAt: data.scrapedAt?.toDate?.()?.toISOString() || data.scrapedAt,
+        };
+      })
+      // Filter out properties without agent OR broker phone number
+      .filter((property: any) => {
+        const hasAgentPhone = !!property.agentPhoneNumber;
+        const hasBrokerPhone = !!property.brokerPhoneNumber;
+        return hasAgentPhone || hasBrokerPhone;
+      });
 
     return NextResponse.json({
       success: true,

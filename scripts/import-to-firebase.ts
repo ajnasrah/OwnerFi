@@ -279,22 +279,26 @@ class FirebasePropertyImporter {
       price: apifyData.price || apifyData.listPrice || 0,
       estimate: apifyData.zestimate || apifyData.homeValue || apifyData.estimate || 0,
       hoa: apifyData.monthlyHoaFee || apifyData.hoa || 0,
-      annualTaxAmount: apifyData.taxAnnualAmount || apifyData.annualTax || apifyData.annualTaxAmount || 0,
-      recentPropertyTaxes: apifyData.recentTaxAssessment || apifyData.latestTaxAssessment || apifyData.recentPropertyTaxes || 0,
+      annualTaxAmount: apifyData.taxAnnualAmount || apifyData.annualTax || apifyData.annualTaxAmount ||
+                       (Array.isArray(apifyData.taxHistory) && apifyData.taxHistory[0]?.taxPaid) || 0,
+      recentPropertyTaxes: apifyData.recentTaxAssessment || apifyData.latestTaxAssessment || apifyData.recentPropertyTaxes ||
+                          (Array.isArray(apifyData.taxHistory) && apifyData.taxHistory[0]?.value) || 0,
 
       // Description
       description: apifyData.description || '',
 
-      // Agent info
-      agentName: apifyData.agentName || apifyData.listingAgent || '',
-      agentPhoneNumber: apifyData.agentPhoneNumber || apifyData.agentPhone || '',
+      // Agent info - extract from attributionInfo object
+      agentName: apifyData.attributionInfo?.agentName || apifyData.agentName || apifyData.listingAgent || '',
+      agentPhoneNumber: apifyData.attributionInfo?.agentPhoneNumber || apifyData.agentPhoneNumber || apifyData.agentPhone || '',
 
-      // Broker info
-      brokerName: apifyData.brokerName || apifyData.brokerageName || '',
-      brokerPhoneNumber: apifyData.brokerPhoneNumber || apifyData.brokerPhone || '',
+      // Broker info - extract from attributionInfo object
+      brokerName: apifyData.attributionInfo?.brokerName || apifyData.brokerName || apifyData.brokerageName || '',
+      brokerPhoneNumber: apifyData.attributionInfo?.brokerPhoneNumber || apifyData.brokerPhoneNumber || apifyData.brokerPhone || '',
 
-      // Images - get all property image URLs
-      propertyImages: Array.isArray(apifyData.photos)
+      // Images - extract from responsivePhotos array (Apify uses this field)
+      propertyImages: Array.isArray(apifyData.responsivePhotos)
+        ? apifyData.responsivePhotos.map((p: any) => p.url).filter(Boolean)
+        : Array.isArray(apifyData.photos)
         ? apifyData.photos.map((p: any) => typeof p === 'string' ? p : p.url || p.href).filter(Boolean)
         : Array.isArray(apifyData.images)
         ? apifyData.images

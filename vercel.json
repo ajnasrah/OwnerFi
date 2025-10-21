@@ -59,7 +59,7 @@
     },
     {
       "path": "/api/cron/process-scraper-queue",
-      "schedule": "*/15 * * * *"
+      "schedule": "*/10 14-23,0-2 * * *"
     }
   ],
   "functions": {

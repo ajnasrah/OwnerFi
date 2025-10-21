@@ -19,7 +19,7 @@ if (!getApps().length) {
 const db = getFirestore();
 
 // GHL Webhook URL
-const GHL_WEBHOOK_URL = 'https://services.leadconnectorhq.com/hooks/U2B5lSlWrVBgVxHNq5AH/webhook-trigger/35223b5b-19d3-4a7d-942a-592249ceb5e7';
+const GHL_WEBHOOK_URL = 'https://services.leadconnectorhq.com/hooks/U2B5lSlWrVBgVxHNq5AH/webhook-trigger/2be65188-9b2e-43f1-a9d8-33d9907b375c';
 
 export async function POST(request: NextRequest) {
   try {

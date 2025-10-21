@@ -15,7 +15,7 @@
   "crons": [
     {
       "path": "/api/podcast/cron",
-      "schedule": "0 2,14,17,20,23 * * *"
+      "schedule": "0 9,15,21 * * *"
     },
     {
       "path": "/api/cron/fetch-rss",
@@ -27,7 +27,7 @@
     },
     {
       "path": "/api/cron/generate-video",
-      "schedule": "0 2,14,17,20,23 * * *"
+      "schedule": "0 9,15,21 * * *"
     },
     {
       "path": "/api/cron/check-stuck-heygen",
@@ -60,6 +60,10 @@
     {
       "path": "/api/cron/process-zillow-scraper",
       "schedule": "*/2 * * * *"
+    },
+    {
+      "path": "/api/cron/process-scraper-queue",
+      "schedule": "*/15 * * * *"
     }
   ],
   "functions": {

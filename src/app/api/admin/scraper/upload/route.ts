@@ -230,28 +230,8 @@ async function scrapeAndImport(jobId: string, properties: PropertyURL[]) {
       const run = await client.actor(actorId).call(input);
       console.log(`✓ [APIFY] Run completed: ${run.id}`);
 
-      // Request ONLY the exact fields we need (tested and verified)
+      // Don't use fields parameter - get ALL data from Apify to avoid missing fields
       const { items } = await client.dataset(run.defaultDatasetId).listItems({
-        fields: [
-          'streetAddress',      // Street address
-          'city',               // City
-          'state',              // State
-          'zipcode',            // Zip
-          'bedrooms',           // Bed
-          'bathrooms',          // Bath
-          'livingArea',         // Square foot
-          'livingAreaValue',    // Square foot (alt)
-          'propertyTypeDimension', // Building type
-          'homeType',           // Building type (alt)
-          'yearBuilt',          // Year built
-          'zestimate',          // Estimate
-          'monthlyHoaFee',      // HOA
-          'description',        // Description
-          'attributionInfo',    // Contains: agentName, agentPhoneNumber, brokerName, brokerPhoneNumber
-          'resoFacts',          // Contains: lotSize (lot square foot)
-          'taxHistory',         // Contains: taxPaid (annual tax amount)
-          'url',                // Zillow URL
-        ],
         clean: false,
         limit: 1000,
       });

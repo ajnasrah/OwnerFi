@@ -75,11 +75,9 @@ export async function GET(request: NextRequest) {
     items.forEach((item: any) => {
       const propertyData = transformProperty(item);
 
-      // Skip if no contact info (validation check)
+      // Log contact info status for debugging
       if (!propertyData.agentPhoneNumber && !propertyData.brokerPhoneNumber) {
-        console.log(`⚠️ Skipping ZPID ${propertyData.zpid} - no contact info`);
-        skippedCount++;
-        return;
+        console.log(`⚠️ No contact info for ZPID ${propertyData.zpid} - saving anyway`);
       }
 
       const docRef = db.collection('zillow_imports').doc();
@@ -128,11 +126,31 @@ function transformProperty(apifyData: any) {
   const zipCode = addressObj.zipcode || apifyData.zipcode || addressObj.zip || '';
   const fullAddress = `${streetAddress}, ${city}, ${state} ${zipCode}`.trim();
 
+  // ===== CONSTRUCT FULL URL =====
+  let fullUrl = apifyData.url || '';
+  if (!fullUrl || !fullUrl.startsWith('http')) {
+    // If url is missing or relative, construct from hdpUrl or zpid
+    if (apifyData.hdpUrl) {
+      fullUrl = `https://www.zillow.com${apifyData.hdpUrl}`;
+    } else if (apifyData.zpid) {
+      fullUrl = `https://www.zillow.com/homedetails/${apifyData.zpid}_zpid/`;
+    }
+  }
+
   // ===== ENHANCED AGENT/BROKER EXTRACTION =====
-  const agentPhone = apifyData.attributionInfo?.agentPhoneNumber
+  // Try attributionInfo first
+  let agentPhone = apifyData.attributionInfo?.agentPhoneNumber
     || apifyData.agentPhoneNumber
     || apifyData.agentPhone
     || '';
+
+  // If not found, try contactFormRenderData (nested structure)
+  if (!agentPhone && apifyData.contactFormRenderData?.data?.agent_module?.phone) {
+    const phoneObj = apifyData.contactFormRenderData.data.agent_module.phone;
+    if (phoneObj.areacode && phoneObj.prefix && phoneObj.number) {
+      agentPhone = `${phoneObj.areacode}-${phoneObj.prefix}-${phoneObj.number}`;
+    }
+  }
 
   const brokerPhone = apifyData.attributionInfo?.brokerPhoneNumber
     || apifyData.brokerPhoneNumber
@@ -145,6 +163,7 @@ function transformProperty(apifyData: any) {
     || apifyData.agentName
     || apifyData.listingAgent
     || (Array.isArray(apifyData.attributionInfo?.listingAgents) && apifyData.attributionInfo.listingAgents[0]?.memberFullName)
+    || apifyData.contactFormRenderData?.data?.agent_module?.display_name
     || '';
 
   const brokerName = apifyData.attributionInfo?.brokerName
@@ -172,7 +191,7 @@ function transformProperty(apifyData: any) {
     || '';
 
   return {
-    url: apifyData.url || '',
+    url: fullUrl,
     hdpUrl: apifyData.hdpUrl || '',
     virtualTourUrl: apifyData.virtualTourUrl || apifyData.thirdPartyVirtualTour?.externalUrl || '',
     fullAddress,

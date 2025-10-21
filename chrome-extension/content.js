@@ -2,8 +2,8 @@
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'extractProperties') {
     try {
-      const result = extractPropertyURLs();
-      sendResponse(result);
+      const properties = extractPropertyURLs();
+      sendResponse({ success: true, properties });
     } catch (error) {
       sendResponse({ success: false, error: error.message });
     }
@@ -16,10 +16,7 @@ function extractPropertyURLs() {
   const propertyLinks = document.querySelectorAll('a[href*="/homedetails/"]');
 
   if (propertyLinks.length === 0) {
-    return {
-      success: false,
-      error: 'No properties found on this page. Make sure you are on a Zillow search results page.'
-    };
+    throw new Error('No properties found on this page. Make sure you are on a Zillow search results page.');
   }
 
   // Extract unique URLs
@@ -37,8 +34,8 @@ function extractPropertyURLs() {
                    link.closest('[data-test="property-card"]') ||
                    link.parentElement;
 
-      let address = 'N/A';
-      let price = 'N/A';
+      let address = '';
+      let price = '';
 
       if (card) {
         // Try to find address
@@ -62,42 +59,5 @@ function extractPropertyURLs() {
     }
   });
 
-  // Create CSV content
-  const csvRows = [
-    ['Address', 'Price', 'URL'], // Header
-    ...properties.map(p => [
-      p.address.replace(/"/g, '""'), // Escape quotes in CSV
-      p.price.replace(/"/g, '""'),
-      p.url
-    ])
-  ];
-
-  const csvContent = csvRows
-    .map(row => row.map(cell => `"${cell}"`).join(','))
-    .join('\n');
-
-  // Download CSV file
-  downloadCSV(csvContent, `zillow-properties-${Date.now()}.csv`);
-
-  return {
-    success: true,
-    count: properties.length
-  };
-}
-
-function downloadCSV(csvContent, filename) {
-  const blob = new Blob([csvContent], { type: 'text/csv' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  a.style.display = 'none';
-  document.body.appendChild(a);
-  a.click();
-
-  // Cleanup
-  setTimeout(() => {
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }, 100);
+  return properties;
 }

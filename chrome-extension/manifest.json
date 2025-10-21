@@ -1,11 +1,15 @@
 {
   "manifest_version": 3,
-  "name": "Zillow Property URL Collector",
-  "version": "1.0",
-  "description": "Quickly collect all property URLs from Zillow search results",
+  "name": "Zillow to OwnerFi Queue",
+  "version": "2.0",
+  "description": "Save Zillow properties directly to OwnerFi scraper queue",
   "permissions": [
     "activeTab",
-    "clipboardWrite"
+    "storage"
+  ],
+  "host_permissions": [
+    "https://*/*",
+    "http://localhost:*/*"
   ],
   "action": {
     "default_popup": "popup.html",

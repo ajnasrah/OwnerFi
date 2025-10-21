@@ -79,6 +79,9 @@
     "src/app/api/cron/process-zillow-scraper/route.ts": {
       "maxDuration": 300
     },
+    "src/app/api/cron/process-scraper-queue/route.ts": {
+      "maxDuration": 300
+    },
     "src/app/api/process-video/route.ts": {
       "maxDuration": 300
     },

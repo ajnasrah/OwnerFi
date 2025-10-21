@@ -75,7 +75,8 @@ export async function POST(request: NextRequest) {
 
         // Prepare webhook payload with the exact fields you want
         const webhookData = {
-          property_id: data.zpid || data.id || '',
+          firebase_id: data.id || '',
+          property_id: data.zpid || '',
           full_address: data.fullAddress || '',
           street_address: data.streetAddress || '',
           city: data.city || '',

@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
     // Transform and save to Firebase
     const firestoreBatch = db.batch();
     let savedCount = 0;
-    let skippedCount = 0;
+    const savedProperties: Array<{ docRef: any, data: any }> = [];
 
     items.forEach((item: any) => {
       const propertyData = transformProperty(item);
@@ -82,6 +82,7 @@ export async function GET(request: NextRequest) {
 
       const docRef = db.collection('zillow_imports').doc();
       firestoreBatch.set(docRef, propertyData);
+      savedProperties.push({ docRef, data: propertyData });
       savedCount++;
     });
 
@@ -92,9 +93,8 @@ export async function GET(request: NextRequest) {
     // Send properties with contact info to GHL webhook immediately
     const GHL_WEBHOOK_URL = 'https://services.leadconnectorhq.com/hooks/U2B5lSlWrVBgVxHNq5AH/webhook-trigger/2be65188-9b2e-43f1-a9d8-33d9907b375c';
 
-    const propertiesWithContact = items
-      .map((item: any) => transformProperty(item))
-      .filter((prop: any) => prop.agentPhoneNumber || prop.brokerPhoneNumber);
+    const propertiesWithContact = savedProperties
+      .filter((prop: any) => prop.data.agentPhoneNumber || prop.data.brokerPhoneNumber);
 
     console.log(`\n📤 [GHL WEBHOOK] Sending ${propertiesWithContact.length} properties with contact info`);
 
@@ -103,31 +103,36 @@ export async function GET(request: NextRequest) {
     const webhookResults: any[] = [];
 
     for (const property of propertiesWithContact) {
+      const propertyData = property.data;
+      const firebaseId = property.docRef.id;
+
       try {
+
         const webhookData = {
-          property_id: property.zpid || '',
-          full_address: property.fullAddress || '',
-          street_address: property.streetAddress || '',
-          city: property.city || '',
-          state: property.state || '',
-          zip: property.zipCode || '',
-          bedrooms: property.bedrooms || 0,
-          bathrooms: property.bathrooms || 0,
-          square_foot: property.squareFoot || 0,
-          building_type: property.buildingType || property.homeType || '',
-          year_built: property.yearBuilt || 0,
-          lot_square_foot: property.lotSquareFoot || 0,
-          estimate: property.estimate || 0,
-          hoa: property.hoa || 0,
-          description: property.description || '',
-          agent_name: property.agentName || '',
-          agent_phone_number: property.agentPhoneNumber || property.brokerPhoneNumber || '',
-          annual_tax_amount: property.annualTaxAmount || 0,
-          price: property.price || 0,
-          zillow_url: property.url || '',
-          property_image: property.firstPropertyImage || '',
-          broker_name: property.brokerName || '',
-          broker_phone: property.brokerPhoneNumber || '',
+          firebase_id: firebaseId,
+          property_id: propertyData.zpid || '',
+          full_address: propertyData.fullAddress || '',
+          street_address: propertyData.streetAddress || '',
+          city: propertyData.city || '',
+          state: propertyData.state || '',
+          zip: propertyData.zipCode || '',
+          bedrooms: propertyData.bedrooms || 0,
+          bathrooms: propertyData.bathrooms || 0,
+          square_foot: propertyData.squareFoot || 0,
+          building_type: propertyData.buildingType || propertyData.homeType || '',
+          year_built: propertyData.yearBuilt || 0,
+          lot_square_foot: propertyData.lotSquareFoot || 0,
+          estimate: propertyData.estimate || 0,
+          hoa: propertyData.hoa || 0,
+          description: propertyData.description || '',
+          agent_name: propertyData.agentName || '',
+          agent_phone_number: propertyData.agentPhoneNumber || propertyData.brokerPhoneNumber || '',
+          annual_tax_amount: propertyData.annualTaxAmount || 0,
+          price: propertyData.price || 0,
+          zillow_url: propertyData.url || '',
+          property_image: propertyData.firstPropertyImage || '',
+          broker_name: propertyData.brokerName || '',
+          broker_phone: propertyData.brokerPhoneNumber || '',
         };
 
         const response = await fetch(GHL_WEBHOOK_URL, {
@@ -142,26 +147,19 @@ export async function GET(request: NextRequest) {
 
         webhookSuccess++;
         webhookResults.push({
-          zpid: property.zpid,
-          address: property.fullAddress,
+          zpid: propertyData.zpid,
+          address: propertyData.fullAddress,
           status: 'success',
         });
 
         // Update Firebase with GHL send status
-        const docQuery = await db.collection('zillow_imports')
-          .where('zpid', '==', property.zpid)
-          .limit(1)
-          .get();
+        await property.docRef.update({
+          sentToGHL: true,
+          ghlSentAt: new Date(),
+          ghlSendStatus: 'success',
+        });
 
-        if (!docQuery.empty) {
-          await docQuery.docs[0].ref.update({
-            sentToGHL: true,
-            ghlSentAt: new Date(),
-            ghlSendStatus: 'success',
-          });
-        }
-
-        console.log(`✅ Sent: ${property.fullAddress} (${property.agentPhoneNumber})`);
+        console.log(`✅ Sent: ${propertyData.fullAddress} (${propertyData.agentPhoneNumber}) [${firebaseId}]`);
 
         // Small delay to avoid overwhelming webhook
         await new Promise(resolve => setTimeout(resolve, 100));
@@ -169,27 +167,20 @@ export async function GET(request: NextRequest) {
       } catch (error: any) {
         webhookFailed++;
         webhookResults.push({
-          zpid: property.zpid,
-          address: property.fullAddress,
+          zpid: propertyData.zpid,
+          address: propertyData.fullAddress,
           status: 'failed',
           error: error.message,
         });
 
         // Update Firebase with failure status
-        const docQuery = await db.collection('zillow_imports')
-          .where('zpid', '==', property.zpid)
-          .limit(1)
-          .get();
+        await property.docRef.update({
+          sentToGHL: false,
+          ghlSendStatus: 'failed',
+          ghlSendError: error.message,
+        });
 
-        if (!docQuery.empty) {
-          await docQuery.docs[0].ref.update({
-            sentToGHL: false,
-            ghlSendStatus: 'failed',
-            ghlSendError: error.message,
-          });
-        }
-
-        console.error(`❌ Failed: ${property.fullAddress} - ${error.message}`);
+        console.error(`❌ Failed: ${propertyData.fullAddress} - ${error.message}`);
       }
     }
 

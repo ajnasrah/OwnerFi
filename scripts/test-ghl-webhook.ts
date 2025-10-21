@@ -9,6 +9,7 @@ async function testGHLWebhook() {
 
   // Sample property with ALL fields populated
   const sampleProperty = {
+    firebase_id: 'test-firebase-doc-id-12345',
     property_id: '44822781',
     full_address: '6515 Mayhill Ct, Spring Hill, FL 34606',
     street_address: '6515 Mayhill Ct',

@@ -437,7 +437,7 @@ function mapRowToProperty(
     row[header.trim()] = value;  // Also store trimmed version for safety
   });
 
-  // Extract values - headers have NO trailing spaces now
+  // Extract values - headers may have trailing spaces
   let address = getColumnValue(row, [
     'Property Address'
   ]);
@@ -447,11 +447,11 @@ function mapRowToProperty(
   ]);
 
   let state = getColumnValue(row, [
-    'state'
+    'State ', 'state'  // New export uses 'State ' with capital and space
   ]);
 
   let zipCode = getColumnValue(row, [
-    'Zip code'
+    'zip code ', 'Zip code'  // New export uses 'zip code ' lowercase with space
   ]);
 
   // Check if address contains full address (street, city, state, zip)
@@ -467,7 +467,7 @@ function mapRowToProperty(
   }
 
   const price = getNumericValue(row, [
-    'price'  // Exact header name
+    'Price ', 'price'  // New export uses 'Price ' with capital and space
   ]);
 
   // Create failed row data for reporting

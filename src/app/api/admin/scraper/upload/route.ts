@@ -176,7 +176,8 @@ async function checkExistingProperties(urls: string[]): Promise<Set<string>> {
 
 async function scrapeAndImport(jobId: string, properties: PropertyURL[]) {
   const client = new ApifyClient({ token: process.env.APIFY_API_KEY! });
-  const actorId = 'ENK9p4RZHg0iVso52';
+  // Updated to use free tier actor: maxcopell/zillow-detail-scraper
+  const actorId = 'maxcopell/zillow-detail-scraper';
 
   try {
     // Update job status
@@ -194,8 +195,8 @@ async function scrapeAndImport(jobId: string, properties: PropertyURL[]) {
     for (let i = 0; i < properties.length; i += batchSize) {
       const batch = properties.slice(i, i + batchSize);
 
-      // Run Apify
-      const input = { home_urls: batch.map(p => ({ url: p.url })) };
+      // Run Apify (maxcopell/zillow-detail-scraper uses startUrls format)
+      const input = { startUrls: batch.map(p => ({ url: p.url })) };
       const run = await client.actor(actorId).call(input);
       const { items } = await client.dataset(run.defaultDatasetId).listItems();
 

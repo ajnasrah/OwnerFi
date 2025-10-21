@@ -1,4 +1,4 @@
-i13996 Godbold Rd # Environment Variables Documentation
+# Environment Variables Documentation
 
 ## 📋 Complete Environment Variables Reference
 

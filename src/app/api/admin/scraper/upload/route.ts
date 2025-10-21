@@ -86,15 +86,30 @@ export async function POST(request: NextRequest) {
     // Create a job ID using batch_ prefix to match Firebase jobs
     const jobId = `batch_${Date.now()}`;
 
-    // Start scraping - await it to prevent Vercel from killing the function
-    // For large batches, the function will timeout gracefully
-    scrapeAndImport(jobId, newProperties).catch((error) => {
-      console.error('❌ [ERROR] scrapeAndImport failed:', error);
-      db.collection('scraper_jobs').doc(jobId).update({
-        status: 'error',
-        error: error.message || 'Unknown error during scraping',
-      }).catch(console.error);
-    });
+    // For small batches (<= 50), run synchronously
+    // For large batches, process in background and might timeout
+    if (newProperties.length <= 50) {
+      console.log(`📊 [SYNC] Processing ${newProperties.length} properties synchronously`);
+      try {
+        await scrapeAndImport(jobId, newProperties);
+      } catch (error: any) {
+        console.error('❌ [ERROR] scrapeAndImport failed:', error);
+        await db.collection('scraper_jobs').doc(jobId).update({
+          status: 'error',
+          error: error.message || 'Unknown error during scraping',
+        });
+      }
+    } else {
+      console.log(`📊 [ASYNC] Processing ${newProperties.length} properties in background (may timeout)`);
+      // For large batches, start and return (may timeout)
+      scrapeAndImport(jobId, newProperties).catch((error) => {
+        console.error('❌ [ERROR] scrapeAndImport failed:', error);
+        db.collection('scraper_jobs').doc(jobId).update({
+          status: 'error',
+          error: error.message || 'Unknown error during scraping',
+        }).catch(console.error);
+      });
+    }
 
     return NextResponse.json({
       success: true,

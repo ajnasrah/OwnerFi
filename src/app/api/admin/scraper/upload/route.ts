@@ -201,25 +201,41 @@ async function scrapeAndImport(jobId: string, properties: PropertyURL[]) {
       const run = await client.actor(actorId).call(input);
       console.log(`✓ [APIFY] Run completed: ${run.id}`);
 
-      // Request items with specific fields including attributionInfo
+      // Request only the fields we actually need
       const { items } = await client.dataset(run.defaultDatasetId).listItems({
         fields: [
-          'url', 'hdpUrl', 'virtualTourUrl', 'zpid', 'parcelId',
+          // URLs
+          'hdpUrl', 'virtualTourUrl',
+
+          // IDs
+          'zpid', 'parcelId', 'mlsid',
+
+          // Address (includes streetAddress, city, state, zipcode, subdivision, neighborhood)
           'address', 'streetAddress', 'city', 'state', 'zipcode', 'county',
+
+          // Property details
           'bedrooms', 'bathrooms', 'price', 'yearBuilt',
-          'livingArea', 'squareFoot', 'livingAreaValue',
-          'lotSize', 'lotAreaValue', 'lotSquareFoot',
-          'propertyTypeDimension', 'buildingType', 'homeType', 'homeStatus',
+          'livingArea', 'livingAreaValue',
+          'lotSize', 'lotAreaValue',
+          'propertyTypeDimension', 'homeType', 'homeStatus',
           'latitude', 'longitude',
-          'zestimate', 'homeValue', 'estimate', 'rentZestimate',
-          'monthlyHoaFee', 'hoa', 'taxHistory', 'propertyTaxRate', 'annualHomeownersInsurance',
+
+          // Financial
+          'zestimate', 'rentZestimate', 'monthlyHoaFee',
+          'taxHistory', 'propertyTaxRate', 'annualHomeownersInsurance',
+
+          // Listing
           'daysOnZillow', 'datePostedString', 'listingDataSource',
           'description',
-          'attributionInfo',  // CRITICAL: Get agent/broker data
-          'agentName', 'agentPhoneNumber', 'agentPhone',
-          'brokerName', 'brokerPhoneNumber', 'brokerPhone',
-          'responsivePhotos', 'photos', 'images',
-          'desktopWebHdpImageLink', 'hiResImageLink', 'mediumImageLink'
+
+          // Agent/Broker (CRITICAL)
+          'attributionInfo',
+
+          // Images
+          'responsivePhotos', 'desktopWebHdpImageLink', 'hiResImageLink',
+
+          // Additional data
+          'resoFacts', 'collections'
         ],
         clean: false,
         limit: 1000,

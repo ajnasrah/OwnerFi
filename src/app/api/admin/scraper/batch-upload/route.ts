@@ -450,5 +450,11 @@ function transformProperty(apifyData: any) {
     source: 'apify-zillow',
     importedAt: timestamp,
     scrapedAt: timestamp,
+
+    // GHL webhook tracking
+    sentToGHL: false,
+    ghlSentAt: null,
+    ghlSendStatus: null,
+    ghlSendError: null,
   };
 }

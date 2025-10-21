@@ -87,7 +87,113 @@ export async function GET(request: NextRequest) {
 
     await firestoreBatch.commit();
 
-    console.log(`✅ [FIREBASE] Saved ${savedCount} properties, skipped ${skippedCount}`);
+    console.log(`✅ [FIREBASE] Saved ${savedCount} properties`);
+
+    // Send properties with contact info to GHL webhook immediately
+    const GHL_WEBHOOK_URL = 'https://services.leadconnectorhq.com/hooks/U2B5lSlWrVBgVxHNq5AH/webhook-trigger/35223b5b-19d3-4a7d-942a-592249ceb5e7';
+
+    const propertiesWithContact = items
+      .map((item: any) => transformProperty(item))
+      .filter((prop: any) => prop.agentPhoneNumber || prop.brokerPhoneNumber);
+
+    console.log(`\n📤 [GHL WEBHOOK] Sending ${propertiesWithContact.length} properties with contact info`);
+
+    let webhookSuccess = 0;
+    let webhookFailed = 0;
+    const webhookResults: any[] = [];
+
+    for (const property of propertiesWithContact) {
+      try {
+        const webhookData = {
+          property_id: property.zpid || '',
+          full_address: property.fullAddress || '',
+          street_address: property.streetAddress || '',
+          city: property.city || '',
+          state: property.state || '',
+          zip: property.zipCode || '',
+          bedrooms: property.bedrooms || 0,
+          bathrooms: property.bathrooms || 0,
+          square_foot: property.squareFoot || 0,
+          building_type: property.buildingType || property.homeType || '',
+          year_built: property.yearBuilt || 0,
+          lot_square_foot: property.lotSquareFoot || 0,
+          estimate: property.estimate || 0,
+          hoa: property.hoa || 0,
+          description: property.description || '',
+          agent_name: property.agentName || '',
+          agent_phone_number: property.agentPhoneNumber || property.brokerPhoneNumber || '',
+          annual_tax_amount: property.annualTaxAmount || 0,
+          price: property.price || 0,
+          zillow_url: property.url || '',
+          property_image: property.firstPropertyImage || '',
+          broker_name: property.brokerName || '',
+          broker_phone: property.brokerPhoneNumber || '',
+        };
+
+        const response = await fetch(GHL_WEBHOOK_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(webhookData),
+        });
+
+        if (!response.ok) {
+          throw new Error(`${response.status}: ${await response.text()}`);
+        }
+
+        webhookSuccess++;
+        webhookResults.push({
+          zpid: property.zpid,
+          address: property.fullAddress,
+          status: 'success',
+        });
+
+        // Update Firebase with GHL send status
+        const docQuery = await db.collection('zillow_imports')
+          .where('zpid', '==', property.zpid)
+          .limit(1)
+          .get();
+
+        if (!docQuery.empty) {
+          await docQuery.docs[0].ref.update({
+            sentToGHL: true,
+            ghlSentAt: new Date(),
+            ghlSendStatus: 'success',
+          });
+        }
+
+        console.log(`✅ Sent: ${property.fullAddress} (${property.agentPhoneNumber})`);
+
+        // Small delay to avoid overwhelming webhook
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+      } catch (error: any) {
+        webhookFailed++;
+        webhookResults.push({
+          zpid: property.zpid,
+          address: property.fullAddress,
+          status: 'failed',
+          error: error.message,
+        });
+
+        // Update Firebase with failure status
+        const docQuery = await db.collection('zillow_imports')
+          .where('zpid', '==', property.zpid)
+          .limit(1)
+          .get();
+
+        if (!docQuery.empty) {
+          await docQuery.docs[0].ref.update({
+            sentToGHL: false,
+            ghlSendStatus: 'failed',
+            ghlSendError: error.message,
+          });
+        }
+
+        console.error(`❌ Failed: ${property.fullAddress} - ${error.message}`);
+      }
+    }
+
+    console.log(`\n📊 [GHL WEBHOOK] Success: ${webhookSuccess}, Failed: ${webhookFailed}`);
 
     // Mark queue items as completed
     const completeBatch = db.batch();
@@ -105,7 +211,9 @@ export async function GET(request: NextRequest) {
       success: true,
       processed: urls.length,
       saved: savedCount,
-      skipped: skippedCount,
+      webhookSent: webhookSuccess,
+      webhookFailed: webhookFailed,
+      webhookResults,
     });
 
   } catch (error: any) {
@@ -244,5 +352,11 @@ function transformProperty(apifyData: any) {
     source: 'apify-zillow',
     importedAt: timestamp,
     scrapedAt: timestamp,
+
+    // GHL webhook tracking
+    sentToGHL: false,
+    ghlSentAt: null,
+    ghlSendStatus: null,
+    ghlSendError: null,
   };
 }

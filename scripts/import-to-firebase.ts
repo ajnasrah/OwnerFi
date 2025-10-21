@@ -180,6 +180,13 @@ class FirebasePropertyImporter {
     console.log(`📦 Processing ${batches.length} batches\n`);
 
     for (let i = 0; i < batches.length; i++) {
+      // CHECK FOR STOP FILE - allows graceful stopping
+      if (fs.existsSync('.stop-scraper')) {
+        console.log('\n⛔ STOP FILE DETECTED - Stopping import gracefully');
+        console.log('To resume, delete the .stop-scraper file and run again.');
+        break;
+      }
+
       const batch = batches[i];
       console.log(`\n${'='.repeat(60)}`);
       console.log(`🔄 Batch ${i + 1}/${batches.length} (${batch.length} properties)`);

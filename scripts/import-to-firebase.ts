@@ -271,7 +271,7 @@ class FirebasePropertyImporter {
   /**
    * Transform Apify data to our schema
    */
-  private transformProperty(apifyData: any): PropertyData {
+  private transformProperty(apifyData: any): PropertyData | null {
     const timestamp = new Date();
 
     // Parse address components
@@ -293,6 +293,19 @@ class FirebasePropertyImporter {
     // Build Zillow URL if not provided
     const hdpUrl = apifyData.hdpUrl || '';
     const fullUrl = hdpUrl ? `https://www.zillow.com${hdpUrl}` : (apifyData.url || apifyData.addressOrUrlFromInput || '');
+
+    // Extract agent and broker phone numbers
+    const agentPhone = apifyData.attributionInfo?.agentPhoneNumber || apifyData.agentPhoneNumber || apifyData.agentPhone || '';
+    const brokerPhone = apifyData.attributionInfo?.brokerPhoneNumber || apifyData.brokerPhoneNumber || apifyData.brokerPhone || '';
+
+    // VALIDATION: Skip property if no phone number available
+    if (!agentPhone && !brokerPhone) {
+      console.log(`   ⚠️  SKIPPED: No agent or broker phone for ${streetAddress || 'property'} (ZPID: ${zpid})`);
+      return null;
+    }
+
+    // Use broker phone as fallback if agent phone is missing
+    const finalAgentPhone = agentPhone || brokerPhone;
 
     return {
       // URL
@@ -352,13 +365,13 @@ class FirebasePropertyImporter {
 
       // Agent info - extract from attributionInfo object
       agentName: apifyData.attributionInfo?.agentName || apifyData.agentName || apifyData.listingAgent || '',
-      agentPhoneNumber: apifyData.attributionInfo?.agentPhoneNumber || apifyData.agentPhoneNumber || apifyData.agentPhone || '',
+      agentPhoneNumber: finalAgentPhone, // Uses broker phone as fallback
       agentEmail: apifyData.attributionInfo?.agentEmail || '',
       agentLicenseNumber: apifyData.attributionInfo?.agentLicenseNumber || '',
 
       // Broker info - extract from attributionInfo object
       brokerName: apifyData.attributionInfo?.brokerName || apifyData.brokerName || apifyData.brokerageName || '',
-      brokerPhoneNumber: apifyData.attributionInfo?.brokerPhoneNumber || apifyData.brokerPhoneNumber || apifyData.brokerPhone || '',
+      brokerPhoneNumber: brokerPhone,
 
       // Images - extract from responsivePhotos array (Apify uses this field)
       propertyImages: Array.isArray(apifyData.responsivePhotos)
@@ -383,11 +396,19 @@ class FirebasePropertyImporter {
     console.log(`   💾 Saving to Firebase...`);
 
     const batch = db.batch();
+    let skippedCount = 0;
 
     for (const rawProperty of properties) {
       try {
-        // Transform to our schema
+        // Transform to our schema - returns null if no phone numbers
         const propertyData = this.transformProperty(rawProperty);
+
+        // Skip if validation failed (no phone numbers)
+        if (!propertyData) {
+          skippedCount++;
+          this.failedCount++;
+          continue;
+        }
 
         // Create document reference
         const docRef = db.collection(this.collectionName).doc();
@@ -403,7 +424,10 @@ class FirebasePropertyImporter {
 
     // Commit batch
     await batch.commit();
-    console.log(`   ✓ Saved ${properties.length} properties to Firebase`);
+    console.log(`   ✓ Saved ${this.importedCount} properties to Firebase`);
+    if (skippedCount > 0) {
+      console.log(`   ⚠️  Skipped ${skippedCount} properties (no agent/broker phone)`);
+    }
   }
 
   /**

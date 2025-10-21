@@ -287,31 +287,63 @@ class FirebasePropertyImporter {
 
     // Get property IDs
     const zpid = apifyData.zpid || 0;
-    const parcelId = apifyData.parcelId || '';
+    const parcelId = apifyData.parcelId || apifyData.resoFacts?.parcelNumber || '';
     const mlsId = apifyData.attributionInfo?.mlsId || apifyData.mlsid || '';
 
     // Build Zillow URL if not provided
     const hdpUrl = apifyData.hdpUrl || '';
     const fullUrl = hdpUrl ? `https://www.zillow.com${hdpUrl}` : (apifyData.url || apifyData.addressOrUrlFromInput || '');
 
-    // Extract agent and broker phone numbers
-    const agentPhone = apifyData.attributionInfo?.agentPhoneNumber || apifyData.agentPhoneNumber || apifyData.agentPhone || '';
-    const brokerPhone = apifyData.attributionInfo?.brokerPhoneNumber || apifyData.brokerPhoneNumber || apifyData.brokerPhone || '';
+    // ===== ENHANCED AGENT/BROKER EXTRACTION =====
+    // Try multiple paths for agent phone
+    const agentPhone = apifyData.attributionInfo?.agentPhoneNumber
+      || apifyData.agentPhoneNumber
+      || apifyData.agentPhone
+      || '';
+
+    // Try multiple paths for broker phone
+    const brokerPhone = apifyData.attributionInfo?.brokerPhoneNumber
+      || apifyData.brokerPhoneNumber
+      || apifyData.brokerPhone
+      || '';
 
     // VALIDATION: Skip property if no phone number available
     if (!agentPhone && !brokerPhone) {
       console.log(`   ⚠️  SKIPPED: No agent or broker phone for ${streetAddress || 'property'} (ZPID: ${zpid})`);
+      console.log(`      attributionInfo present: ${!!apifyData.attributionInfo}`);
+      console.log(`      agentPhoneNumber: ${apifyData.attributionInfo?.agentPhoneNumber}`);
+      console.log(`      brokerPhoneNumber: ${apifyData.attributionInfo?.brokerPhoneNumber}`);
       return null;
     }
 
     // Use broker phone as fallback if agent phone is missing
     const finalAgentPhone = agentPhone || brokerPhone;
 
+    // Extract agent name from multiple sources
+    const agentName = apifyData.attributionInfo?.agentName
+      || apifyData.agentName
+      || apifyData.listingAgent
+      || (Array.isArray(apifyData.attributionInfo?.listingAgents) && apifyData.attributionInfo.listingAgents[0]?.memberFullName)
+      || '';
+
+    // Extract broker name from multiple sources
+    const brokerName = apifyData.attributionInfo?.brokerName
+      || apifyData.brokerName
+      || apifyData.brokerageName
+      || (Array.isArray(apifyData.attributionInfo?.listingOffices) && apifyData.attributionInfo.listingOffices[0]?.officeName)
+      || '';
+
+    // Log successful contact extraction
+    console.log(`   ✓ CONTACT INFO for ${streetAddress} (ZPID: ${zpid}):`);
+    console.log(`      Agent: ${agentName} | Phone: ${agentPhone || '(using broker phone)'}`);
+    console.log(`      Broker: ${brokerName} | Phone: ${brokerPhone}`);
+    console.log(`      Final Agent Phone: ${finalAgentPhone}`);
+
     return {
       // URL
       url: fullUrl,
       hdpUrl: hdpUrl,
-      virtualTourUrl: apifyData.virtualTourUrl || '',
+      virtualTourUrl: apifyData.virtualTourUrl || apifyData.thirdPartyVirtualTour?.externalUrl || '',
 
       // Address fields
       fullAddress: fullAddress || apifyData.fullAddress || '',
@@ -331,12 +363,12 @@ class FirebasePropertyImporter {
       // Property details
       bedrooms: apifyData.bedrooms || apifyData.beds || 0,
       bathrooms: apifyData.bathrooms || apifyData.baths || 0,
-      squareFoot: apifyData.livingArea || apifyData.squareFoot || apifyData.livingAreaValue || 0,
-      buildingType: apifyData.propertyTypeDimension || apifyData.buildingType || '',
+      squareFoot: apifyData.livingArea || apifyData.livingAreaValue || apifyData.squareFoot || 0,
+      buildingType: apifyData.propertyTypeDimension || apifyData.buildingType || apifyData.homeType || '',
       homeType: apifyData.homeType || '',
       homeStatus: apifyData.homeStatus || '',
       yearBuilt: apifyData.yearBuilt || 0,
-      lotSquareFoot: apifyData.lotSize || apifyData.lotAreaValue || apifyData.lotSquareFoot || 0,
+      lotSquareFoot: apifyData.lotSize || apifyData.lotAreaValue || apifyData.resoFacts?.lotSize || 0,
 
       // Location
       latitude: apifyData.latitude || 0,
@@ -363,14 +395,14 @@ class FirebasePropertyImporter {
       // Description
       description: apifyData.description || '',
 
-      // Agent info - extract from attributionInfo object
-      agentName: apifyData.attributionInfo?.agentName || apifyData.agentName || apifyData.listingAgent || '',
+      // ===== CRITICAL CONTACT INFORMATION =====
+      agentName,
       agentPhoneNumber: finalAgentPhone, // Uses broker phone as fallback
-      agentEmail: apifyData.attributionInfo?.agentEmail || '',
-      agentLicenseNumber: apifyData.attributionInfo?.agentLicenseNumber || '',
-
-      // Broker info - extract from attributionInfo object
-      brokerName: apifyData.attributionInfo?.brokerName || apifyData.brokerName || apifyData.brokerageName || '',
+      agentEmail: apifyData.attributionInfo?.agentEmail || apifyData.agentEmail || '',
+      agentLicenseNumber: apifyData.attributionInfo?.agentLicenseNumber
+        || (Array.isArray(apifyData.attributionInfo?.listingAgents) && apifyData.attributionInfo.listingAgents[0]?.memberStateLicense)
+        || '',
+      brokerName,
       brokerPhoneNumber: brokerPhone,
 
       // Images - extract from responsivePhotos array (Apify uses this field)

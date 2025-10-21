@@ -17,96 +17,101 @@ if (!getApps().length) {
 const db = getFirestore();
 
 export async function GET(request: NextRequest) {
-  console.log('🔄 [CRON] Zillow scraper worker started');
+  console.log('🔄 [QUEUE CRON] Starting queue processor');
 
   try {
-    // Find pending jobs
-    const pendingJobs = await db
-      .collection('scraper_jobs')
+    // Find pending items in queue (limit to 50)
+    const pendingItems = await db
+      .collection('scraper_queue')
       .where('status', '==', 'pending')
-      .limit(1)
+      .orderBy('addedAt', 'asc')
+      .limit(50)
       .get();
 
-    if (pendingJobs.empty) {
-      console.log('✅ [CRON] No pending jobs');
-      return NextResponse.json({ message: 'No pending jobs' });
+    if (pendingItems.empty) {
+      console.log('✅ [QUEUE CRON] No pending items in queue');
+      return NextResponse.json({ message: 'No pending items in queue' });
     }
 
-    const jobDoc = pendingJobs.docs[0];
-    const jobId = jobDoc.id;
-    const jobData = jobDoc.data();
+    const urls = pendingItems.docs.map(doc => doc.data().url);
+    const docIds = pendingItems.docs.map(doc => doc.id);
 
-    console.log(`📋 [CRON] Processing job ${jobId} with ${jobData.urls.length} URLs`);
+    console.log(`📋 [QUEUE CRON] Processing ${urls.length} URLs from queue`);
 
     // Mark as processing
-    await jobDoc.ref.update({
-      status: 'processing',
-      startedAt: new Date(),
+    const batch = db.batch();
+    pendingItems.docs.forEach(doc => {
+      batch.update(doc.ref, {
+        status: 'processing',
+        processingStartedAt: new Date(),
+      });
     });
+    await batch.commit();
 
+    // Call Apify to scrape
     const client = new ApifyClient({ token: process.env.APIFY_API_KEY! });
     const actorId = 'maxcopell/zillow-detail-scraper';
 
-    const urls: string[] = jobData.urls || [];
-    const batchSize = 50;
-    let imported = 0;
+    console.log(`🚀 [APIFY] Starting scraper with ${urls.length} URLs`);
 
-    for (let i = 0; i < urls.length; i += batchSize) {
-      const batch = urls.slice(i, i + batchSize);
+    const input = { startUrls: urls.map(url => ({ url })) };
+    const run = await client.actor(actorId).call(input);
 
-      console.log(`🚀 [APIFY] Starting batch ${i / batchSize + 1} with ${batch.length} URLs`);
+    console.log(`✓ [APIFY] Run completed: ${run.id}`);
 
-      // Run Apify
-      const input = { startUrls: batch.map(url => ({ url })) };
-      const run = await client.actor(actorId).call(input);
-
-      console.log(`✓ [APIFY] Run completed: ${run.id}`);
-
-      // Get ALL data (no fields filter)
-      const { items } = await client.dataset(run.defaultDatasetId).listItems({
-        clean: false,
-        limit: 1000,
-      });
-
-      console.log(`📦 [APIFY] Received ${items.length} items`);
-
-      // Save to Firebase
-      const firestoreBatch = db.batch();
-      items.forEach((item: any) => {
-        const propertyData = transformProperty(item);
-        const docRef = db.collection('zillow_imports').doc();
-        firestoreBatch.set(docRef, propertyData);
-      });
-
-      await firestoreBatch.commit();
-      imported += items.length;
-
-      console.log(`✅ [BATCH] Saved ${items.length} properties (${imported}/${urls.length} total)`);
-
-      // Update progress
-      const progress = Math.round((imported / urls.length) * 100);
-      await jobDoc.ref.update({
-        imported,
-        progress,
-      });
-    }
-
-    // Mark complete
-    await jobDoc.ref.update({
-      status: 'complete',
-      completedAt: new Date(),
+    // Get results (no fields filter to get ALL data)
+    const { items } = await client.dataset(run.defaultDatasetId).listItems({
+      clean: false,
+      limit: 1000,
     });
 
-    console.log(`✅ [CRON] Job ${jobId} completed: ${imported} properties imported`);
+    console.log(`📦 [APIFY] Received ${items.length} items`);
+
+    // Transform and save to Firebase
+    const firestoreBatch = db.batch();
+    let savedCount = 0;
+    let skippedCount = 0;
+
+    items.forEach((item: any) => {
+      const propertyData = transformProperty(item);
+
+      // Skip if no contact info (validation check)
+      if (!propertyData.agentPhoneNumber && !propertyData.brokerPhoneNumber) {
+        console.log(`⚠️ Skipping ZPID ${propertyData.zpid} - no contact info`);
+        skippedCount++;
+        return;
+      }
+
+      const docRef = db.collection('zillow_imports').doc();
+      firestoreBatch.set(docRef, propertyData);
+      savedCount++;
+    });
+
+    await firestoreBatch.commit();
+
+    console.log(`✅ [FIREBASE] Saved ${savedCount} properties, skipped ${skippedCount}`);
+
+    // Mark queue items as completed
+    const completeBatch = db.batch();
+    pendingItems.docs.forEach(doc => {
+      completeBatch.update(doc.ref, {
+        status: 'completed',
+        completedAt: new Date(),
+      });
+    });
+    await completeBatch.commit();
+
+    console.log(`✅ [QUEUE CRON] Completed processing ${urls.length} URLs`);
 
     return NextResponse.json({
       success: true,
-      jobId,
-      imported,
+      processed: urls.length,
+      saved: savedCount,
+      skipped: skippedCount,
     });
 
   } catch (error: any) {
-    console.error('❌ [CRON] Error:', error);
+    console.error('❌ [QUEUE CRON] Error:', error);
     return NextResponse.json(
       { error: error.message },
       { status: 500 }
@@ -124,53 +129,34 @@ function transformProperty(apifyData: any) {
   const fullAddress = `${streetAddress}, ${city}, ${state} ${zipCode}`.trim();
 
   // ===== ENHANCED AGENT/BROKER EXTRACTION =====
-  // Try multiple paths for agent phone
   const agentPhone = apifyData.attributionInfo?.agentPhoneNumber
     || apifyData.agentPhoneNumber
     || apifyData.agentPhone
     || '';
 
-  // Try multiple paths for broker phone
   const brokerPhone = apifyData.attributionInfo?.brokerPhoneNumber
     || apifyData.brokerPhoneNumber
     || apifyData.brokerPhone
     || '';
 
-  // Use broker phone as fallback if agent phone is missing
   const finalAgentPhone = agentPhone || brokerPhone;
 
-  // Extract agent name from multiple sources
   const agentName = apifyData.attributionInfo?.agentName
     || apifyData.agentName
     || apifyData.listingAgent
     || (Array.isArray(apifyData.attributionInfo?.listingAgents) && apifyData.attributionInfo.listingAgents[0]?.memberFullName)
     || '';
 
-  // Extract broker name from multiple sources
   const brokerName = apifyData.attributionInfo?.brokerName
     || apifyData.brokerName
     || apifyData.brokerageName
     || (Array.isArray(apifyData.attributionInfo?.listingOffices) && apifyData.attributionInfo.listingOffices[0]?.officeName)
     || '';
 
-  // DEBUG LOGGING - Remove after confirming data is saving correctly
-  if (!agentPhone && !brokerPhone) {
-    console.log(`⚠️ [CRON] NO PHONE NUMBERS for ZPID ${apifyData.zpid}:`, {
-      agentPhoneFromAttr: apifyData.attributionInfo?.agentPhoneNumber,
-      brokerPhoneFromAttr: apifyData.attributionInfo?.brokerPhoneNumber,
-      hasAttributionInfo: !!apifyData.attributionInfo
-    });
-  } else {
-    console.log(`✓ [CRON] FOUND CONTACT for ZPID ${apifyData.zpid}:`, {
-      agentName,
-      agentPhone,
-      brokerName,
-      brokerPhone,
-      finalAgentPhone
-    });
-  }
+  // Log extraction
+  console.log(`✓ [TRANSFORM] ZPID ${apifyData.zpid}: ${agentName || 'No agent'} | ${finalAgentPhone || 'No phone'}`);
 
-  // Extract images from multiple possible sources
+  // Extract images
   const propertyImages = Array.isArray(apifyData.responsivePhotos)
     ? apifyData.responsivePhotos.map((p: any) => p.url).filter(Boolean)
     : Array.isArray(apifyData.photos)
@@ -179,7 +165,6 @@ function transformProperty(apifyData: any) {
     ? apifyData.images
     : [];
 
-  // Get main hero image from multiple sources
   const firstPropertyImage = apifyData.desktopWebHdpImageLink
     || apifyData.hiResImageLink
     || apifyData.mediumImageLink

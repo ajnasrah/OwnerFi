@@ -313,12 +313,54 @@ function transformProperty(apifyData: any) {
   const zipCode = addressObj.zipcode || apifyData.zipcode || addressObj.zip || '';
   const fullAddress = `${streetAddress}, ${city}, ${state} ${zipCode}`.trim();
 
-  // Extract agent/broker from attributionInfo
-  const agentPhone = apifyData.attributionInfo?.agentPhoneNumber || apifyData.agentPhoneNumber || '';
-  const brokerPhone = apifyData.attributionInfo?.brokerPhoneNumber || apifyData.brokerPhoneNumber || '';
+  // ===== ENHANCED AGENT/BROKER EXTRACTION =====
+  // Try multiple paths for agent phone
+  const agentPhone = apifyData.attributionInfo?.agentPhoneNumber
+    || apifyData.agentPhoneNumber
+    || apifyData.agentPhone
+    || '';
+
+  // Try multiple paths for broker phone
+  const brokerPhone = apifyData.attributionInfo?.brokerPhoneNumber
+    || apifyData.brokerPhoneNumber
+    || apifyData.brokerPhone
+    || '';
+
+  // Use broker phone as fallback if agent phone is missing
   const finalAgentPhone = agentPhone || brokerPhone;
 
-  // Extract images
+  // Extract agent name from multiple sources
+  const agentName = apifyData.attributionInfo?.agentName
+    || apifyData.agentName
+    || apifyData.listingAgent
+    || (Array.isArray(apifyData.attributionInfo?.listingAgents) && apifyData.attributionInfo.listingAgents[0]?.memberFullName)
+    || '';
+
+  // Extract broker name from multiple sources
+  const brokerName = apifyData.attributionInfo?.brokerName
+    || apifyData.brokerName
+    || apifyData.brokerageName
+    || (Array.isArray(apifyData.attributionInfo?.listingOffices) && apifyData.attributionInfo.listingOffices[0]?.officeName)
+    || '';
+
+  // DEBUG LOGGING - Remove after confirming data is saving correctly
+  if (!agentPhone && !brokerPhone) {
+    console.log(`⚠️ NO PHONE NUMBERS for ZPID ${apifyData.zpid}:`, {
+      agentPhoneFromAttr: apifyData.attributionInfo?.agentPhoneNumber,
+      brokerPhoneFromAttr: apifyData.attributionInfo?.brokerPhoneNumber,
+      hasAttributionInfo: !!apifyData.attributionInfo
+    });
+  } else {
+    console.log(`✓ FOUND CONTACT for ZPID ${apifyData.zpid}:`, {
+      agentName,
+      agentPhone,
+      brokerName,
+      brokerPhone,
+      finalAgentPhone
+    });
+  }
+
+  // Extract images from multiple possible sources
   const propertyImages = Array.isArray(apifyData.responsivePhotos)
     ? apifyData.responsivePhotos.map((p: any) => p.url).filter(Boolean)
     : Array.isArray(apifyData.photos)
@@ -327,7 +369,7 @@ function transformProperty(apifyData: any) {
     ? apifyData.images
     : [];
 
-  // Get main hero image
+  // Get main hero image from multiple sources
   const firstPropertyImage = apifyData.desktopWebHdpImageLink
     || apifyData.hiResImageLink
     || apifyData.mediumImageLink
@@ -337,7 +379,7 @@ function transformProperty(apifyData: any) {
   return {
     url: apifyData.url || '',
     hdpUrl: apifyData.hdpUrl || '',
-    virtualTourUrl: apifyData.virtualTourUrl || '',
+    virtualTourUrl: apifyData.virtualTourUrl || apifyData.thirdPartyVirtualTour?.externalUrl || '',
     fullAddress: fullAddress || apifyData.fullAddress || '',
     streetAddress,
     city,
@@ -347,16 +389,16 @@ function transformProperty(apifyData: any) {
     subdivision: addressObj.subdivision || '',
     neighborhood: addressObj.neighborhood || '',
     zpid: apifyData.zpid || 0,
-    parcelId: apifyData.parcelId || '',
+    parcelId: apifyData.parcelId || apifyData.resoFacts?.parcelNumber || '',
     mlsId: apifyData.attributionInfo?.mlsId || apifyData.mlsid || '',
     bedrooms: apifyData.bedrooms || apifyData.beds || 0,
     bathrooms: apifyData.bathrooms || apifyData.baths || 0,
-    squareFoot: apifyData.livingArea || apifyData.squareFoot || apifyData.livingAreaValue || 0,
-    buildingType: apifyData.propertyTypeDimension || apifyData.buildingType || '',
+    squareFoot: apifyData.livingArea || apifyData.livingAreaValue || apifyData.squareFoot || 0,
+    buildingType: apifyData.propertyTypeDimension || apifyData.buildingType || apifyData.homeType || '',
     homeType: apifyData.homeType || '',
     homeStatus: apifyData.homeStatus || '',
     yearBuilt: apifyData.yearBuilt || 0,
-    lotSquareFoot: apifyData.resoFacts?.lotSize || apifyData.lotSize || apifyData.lotAreaValue || 0,
+    lotSquareFoot: apifyData.lotSize || apifyData.lotAreaValue || apifyData.resoFacts?.lotSize || 0,
     latitude: apifyData.latitude || 0,
     longitude: apifyData.longitude || 0,
     price: apifyData.price || apifyData.listPrice || 0,
@@ -371,14 +413,20 @@ function transformProperty(apifyData: any) {
     datePostedString: apifyData.datePostedString || '',
     listingDataSource: apifyData.listingDataSource || '',
     description: apifyData.description || '',
-    agentName: apifyData.attributionInfo?.agentName || apifyData.agentName || '',
+
+    // ===== CRITICAL CONTACT INFORMATION =====
+    agentName,
     agentPhoneNumber: finalAgentPhone,
-    agentEmail: apifyData.attributionInfo?.agentEmail || '',
-    agentLicenseNumber: apifyData.attributionInfo?.agentLicenseNumber || '',
-    brokerName: apifyData.attributionInfo?.brokerName || apifyData.brokerName || '',
+    agentEmail: apifyData.attributionInfo?.agentEmail || apifyData.agentEmail || '',
+    agentLicenseNumber: apifyData.attributionInfo?.agentLicenseNumber
+      || (Array.isArray(apifyData.attributionInfo?.listingAgents) && apifyData.attributionInfo.listingAgents[0]?.memberStateLicense)
+      || '',
+    brokerName,
     brokerPhoneNumber: brokerPhone,
+
     propertyImages,
     firstPropertyImage,
+    photoCount: apifyData.photoCount || propertyImages.length || 0,
     source: 'apify-zillow',
     importedAt: timestamp,
     scrapedAt: timestamp,

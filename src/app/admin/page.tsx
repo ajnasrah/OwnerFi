@@ -148,6 +148,8 @@ export default function AdminDashboard() {
   const [newPropertiesData, setNewPropertiesData] = useState<any[]>([]);
   const [loadingNewProperties, setLoadingNewProperties] = useState(false);
   const [exportingGHL, setExportingGHL] = useState(false);
+  const [sendingToGHL, setSendingToGHL] = useState(false);
+  const [ghlSendResult, setGhlSendResult] = useState<any>(null);
 
   // Disputes state
   const [disputes, setDisputes] = useState<LeadDispute[]>([]);
@@ -320,6 +322,34 @@ export default function AdminDashboard() {
       alert('Failed to export properties');
     } finally {
       setExportingGHL(false);
+    }
+  };
+
+  const handleSendToGHL = async () => {
+    if (!confirm(`Send ${newPropertiesData.length} properties to GoHighLevel webhook?`)) {
+      return;
+    }
+
+    setSendingToGHL(true);
+    setGhlSendResult(null);
+
+    try {
+      const response = await fetch('/api/admin/zillow-imports/send-to-ghl', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ limit: 100 }), // Send up to 100 properties
+      });
+
+      if (!response.ok) throw new Error('Failed to send to GHL');
+
+      const data = await response.json();
+      setGhlSendResult(data);
+      alert(`✅ Success!\n\nSent: ${data.stats.success}\nErrors: ${data.stats.errors}`);
+    } catch (error) {
+      console.error('Failed to send to GHL:', error);
+      alert('❌ Failed to send properties to GHL webhook');
+    } finally {
+      setSendingToGHL(false);
     }
   };
 
@@ -2085,13 +2115,22 @@ export default function AdminDashboard() {
                           Properties scraped from Zillow - {newPropertiesData.length} total
                         </p>
                       </div>
-                      <button
-                        onClick={handleExportGHL}
-                        disabled={exportingGHL || newPropertiesData.length === 0}
-                        className="px-6 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-                      >
-                        {exportingGHL ? 'Exporting...' : '📥 Export to GHL Format'}
-                      </button>
+                      <div className="flex gap-3">
+                        <button
+                          onClick={handleExportGHL}
+                          disabled={exportingGHL || newPropertiesData.length === 0}
+                          className="px-6 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                        >
+                          {exportingGHL ? 'Exporting...' : '📥 Export to GHL Format'}
+                        </button>
+                        <button
+                          onClick={handleSendToGHL}
+                          disabled={sendingToGHL || newPropertiesData.length === 0}
+                          className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                        >
+                          {sendingToGHL ? 'Sending...' : '🚀 Send to GHL Webhook'}
+                        </button>
+                      </div>
                     </div>
 
                     {/* Loading State */}

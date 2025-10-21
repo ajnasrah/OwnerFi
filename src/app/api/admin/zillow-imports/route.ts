@@ -43,13 +43,8 @@ export async function GET(request: NextRequest) {
           importedAt: data.importedAt?.toDate?.()?.toISOString() || data.importedAt,
           scrapedAt: data.scrapedAt?.toDate?.()?.toISOString() || data.scrapedAt,
         };
-      })
-      // Filter out properties without agent OR broker phone number
-      .filter((property: any) => {
-        const hasAgentPhone = !!property.agentPhoneNumber;
-        const hasBrokerPhone = !!property.brokerPhoneNumber;
-        return hasAgentPhone || hasBrokerPhone;
       });
+      // Note: Filter removed - now showing all properties
 
     return NextResponse.json({
       success: true,

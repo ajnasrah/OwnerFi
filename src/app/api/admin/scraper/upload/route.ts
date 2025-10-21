@@ -180,7 +180,14 @@ async function scrapeAndImport(jobId: string, properties: PropertyURL[]) {
   const actorId = 'maxcopell/zillow-detail-scraper';
 
   try {
-    // Update job status
+    // Check if job already exists (prevent duplicate runs)
+    const existingJob = await db.collection('scraper_jobs').doc(jobId).get();
+    if (existingJob.exists) {
+      console.log(`⚠️ Job ${jobId} already exists, skipping duplicate run`);
+      return;
+    }
+
+    // Create job status
     await db.collection('scraper_jobs').doc(jobId).set({
       status: 'scraping',
       total: properties.length,

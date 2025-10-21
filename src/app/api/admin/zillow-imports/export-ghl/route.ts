@@ -101,7 +101,6 @@ export async function GET(request: NextRequest) {
 
         // Images
         'property_image_url': imageUrl,
-        'all_images': Array.isArray(data.propertyImages) ? data.propertyImages.join('|') : '',
 
         // Description
         'description': data.description || '',

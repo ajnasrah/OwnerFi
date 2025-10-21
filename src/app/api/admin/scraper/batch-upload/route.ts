@@ -313,34 +313,72 @@ function transformProperty(apifyData: any) {
   const zipCode = addressObj.zipcode || apifyData.zipcode || addressObj.zip || '';
   const fullAddress = `${streetAddress}, ${city}, ${state} ${zipCode}`.trim();
 
+  // Extract agent/broker from attributionInfo
+  const agentPhone = apifyData.attributionInfo?.agentPhoneNumber || apifyData.agentPhoneNumber || '';
+  const brokerPhone = apifyData.attributionInfo?.brokerPhoneNumber || apifyData.brokerPhoneNumber || '';
+  const finalAgentPhone = agentPhone || brokerPhone;
+
+  // Extract images
+  const propertyImages = Array.isArray(apifyData.responsivePhotos)
+    ? apifyData.responsivePhotos.map((p: any) => p.url).filter(Boolean)
+    : Array.isArray(apifyData.photos)
+    ? apifyData.photos.map((p: any) => typeof p === 'string' ? p : p.url || p.href).filter(Boolean)
+    : Array.isArray(apifyData.images)
+    ? apifyData.images
+    : [];
+
+  // Get main hero image
+  const firstPropertyImage = apifyData.desktopWebHdpImageLink
+    || apifyData.hiResImageLink
+    || apifyData.mediumImageLink
+    || (propertyImages.length > 0 ? propertyImages[0] : '')
+    || '';
+
   return {
     url: apifyData.url || '',
+    hdpUrl: apifyData.hdpUrl || '',
+    virtualTourUrl: apifyData.virtualTourUrl || '',
     fullAddress: fullAddress || apifyData.fullAddress || '',
     streetAddress,
     city,
     state,
     zipCode,
+    county: apifyData.county || '',
+    subdivision: addressObj.subdivision || '',
+    neighborhood: addressObj.neighborhood || '',
+    zpid: apifyData.zpid || 0,
+    parcelId: apifyData.parcelId || '',
+    mlsId: apifyData.attributionInfo?.mlsId || apifyData.mlsid || '',
     bedrooms: apifyData.bedrooms || apifyData.beds || 0,
     bathrooms: apifyData.bathrooms || apifyData.baths || 0,
     squareFoot: apifyData.livingArea || apifyData.squareFoot || apifyData.livingAreaValue || 0,
-    buildingType: apifyData.propertyType || apifyData.homeType || apifyData.buildingType || '',
+    buildingType: apifyData.propertyTypeDimension || apifyData.buildingType || '',
+    homeType: apifyData.homeType || '',
+    homeStatus: apifyData.homeStatus || '',
     yearBuilt: apifyData.yearBuilt || 0,
-    lotSquareFoot: apifyData.lotSize || apifyData.lotAreaValue || apifyData.lotSquareFoot || 0,
+    lotSquareFoot: apifyData.resoFacts?.lotSize || apifyData.lotSize || apifyData.lotAreaValue || 0,
+    latitude: apifyData.latitude || 0,
+    longitude: apifyData.longitude || 0,
     price: apifyData.price || apifyData.listPrice || 0,
     estimate: apifyData.zestimate || apifyData.homeValue || apifyData.estimate || 0,
+    rentEstimate: apifyData.rentZestimate || 0,
     hoa: apifyData.monthlyHoaFee || apifyData.hoa || 0,
-    annualTaxAmount: apifyData.taxAnnualAmount || apifyData.annualTax || apifyData.annualTaxAmount || 0,
-    recentPropertyTaxes: apifyData.recentTaxAssessment || apifyData.latestTaxAssessment || apifyData.recentPropertyTaxes || 0,
+    annualTaxAmount: (Array.isArray(apifyData.taxHistory) && apifyData.taxHistory.find((t: any) => t.taxPaid)?.taxPaid) || 0,
+    recentPropertyTaxes: (Array.isArray(apifyData.taxHistory) && apifyData.taxHistory[0]?.value) || 0,
+    propertyTaxRate: apifyData.propertyTaxRate || 0,
+    annualHomeownersInsurance: apifyData.annualHomeownersInsurance || 0,
+    daysOnZillow: apifyData.daysOnZillow || 0,
+    datePostedString: apifyData.datePostedString || '',
+    listingDataSource: apifyData.listingDataSource || '',
     description: apifyData.description || '',
-    agentName: apifyData.agentName || apifyData.listingAgent || '',
-    agentPhoneNumber: apifyData.agentPhoneNumber || apifyData.agentPhone || '',
-    brokerName: apifyData.brokerName || apifyData.brokerageName || '',
-    brokerPhoneNumber: apifyData.brokerPhoneNumber || apifyData.brokerPhone || '',
-    propertyImages: Array.isArray(apifyData.photos)
-      ? apifyData.photos.map((p: any) => typeof p === 'string' ? p : p.url || p.href).filter(Boolean)
-      : Array.isArray(apifyData.images)
-      ? apifyData.images
-      : [],
+    agentName: apifyData.attributionInfo?.agentName || apifyData.agentName || '',
+    agentPhoneNumber: finalAgentPhone,
+    agentEmail: apifyData.attributionInfo?.agentEmail || '',
+    agentLicenseNumber: apifyData.attributionInfo?.agentLicenseNumber || '',
+    brokerName: apifyData.attributionInfo?.brokerName || apifyData.brokerName || '',
+    brokerPhoneNumber: brokerPhone,
+    propertyImages,
+    firstPropertyImage,
     source: 'apify-zillow',
     importedAt: timestamp,
     scrapedAt: timestamp,

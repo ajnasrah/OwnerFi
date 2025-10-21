@@ -47,9 +47,9 @@ function transformCSVRow(row: any): any | null {
   const hdpUrl = row.hdpUrl || '';
   const fullUrl = hdpUrl ? `https://www.zillow.com${hdpUrl}` : (row.url || '');
 
-  // Extract agent/broker info from CSV columns
-  const agentPhone = row['attributionInfo/agentPhoneNumber'] || '';
-  const brokerPhone = row['attributionInfo/brokerPhoneNumber'] || '';
+  // Extract agent/broker info from CSV columns (support both formats)
+  const agentPhone = row['attributionInfo/agentPhoneNumber'] || row['agentPhoneNumber'] || '';
+  const brokerPhone = row['attributionInfo/brokerPhoneNumber'] || row['brokerPhoneNumber'] || '';
 
   // VALIDATION: Skip if no phone
   if (!agentPhone && !brokerPhone) {
@@ -59,16 +59,25 @@ function transformCSVRow(row: any): any | null {
 
   const finalAgentPhone = agentPhone || brokerPhone;
 
-  // Extract images - look for columns like [Image #1], etc.
+  // Extract images - look for columns like [Image #1], firstPropertyImage, allPropertyImages
   const propertyImages: string[] = [];
-  Object.keys(row).forEach(key => {
-    if (key.match(/\[Image #\d+\]/)) {
-      const imageUrl = row[key];
-      if (imageUrl && imageUrl.trim()) {
-        propertyImages.push(imageUrl.trim());
+  const firstPropertyImage = row['firstPropertyImage'] || row['first_property_image'] || '';
+
+  // Check for allPropertyImages column (pipe-separated)
+  if (row['allPropertyImages']) {
+    const allImages = row['allPropertyImages'].split(' | ').filter(Boolean);
+    propertyImages.push(...allImages);
+  } else {
+    // Fallback: look for numbered image columns
+    Object.keys(row).forEach(key => {
+      if (key.match(/\[Image #\d+\]/)) {
+        const imageUrl = row[key];
+        if (imageUrl && imageUrl.trim()) {
+          propertyImages.push(imageUrl.trim());
+        }
       }
-    }
-  });
+    });
+  }
 
   // Extract tax data
   const annualTaxAmount = row.taxAnnualAmount || row['taxHistory/0/taxPaid'] || 0;
@@ -111,13 +120,14 @@ function transformCSVRow(row: any): any | null {
     datePostedString: row.datePostedString || '',
     listingDataSource: row.listingDataSource || '',
     description: row.description || '',
-    agentName: row['attributionInfo/agentName'] || '',
+    agentName: row['attributionInfo/agentName'] || row['agentName'] || '',
     agentPhoneNumber: finalAgentPhone,
-    agentEmail: row['attributionInfo/agentEmail'] || '',
-    agentLicenseNumber: row['attributionInfo/agentLicenseNumber'] || '',
-    brokerName: row['attributionInfo/brokerName'] || '',
+    agentEmail: row['attributionInfo/agentEmail'] || row['agentEmail'] || '',
+    agentLicenseNumber: row['attributionInfo/agentLicenseNumber'] || row['agentLicenseNumber'] || '',
+    brokerName: row['attributionInfo/brokerName'] || row['brokerName'] || '',
     brokerPhoneNumber: brokerPhone,
     propertyImages,
+    firstPropertyImage: firstPropertyImage || (propertyImages.length > 0 ? propertyImages[0] : ''),
     source: 'apify-zillow-csv',
     importedAt: timestamp,
     scrapedAt: timestamp,

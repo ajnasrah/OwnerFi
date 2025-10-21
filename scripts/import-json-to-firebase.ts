@@ -52,6 +52,7 @@ interface PropertyData {
   latitude: number;
   longitude: number;
   price: number;
+  firstPropertyImage: string;
   estimate: number;
   rentEstimate: number;
   hoa: number;
@@ -158,6 +159,13 @@ function transformProperty(apifyData: any): PropertyData | null {
       : Array.isArray(apifyData.images)
       ? apifyData.images
       : [],
+    firstPropertyImage: apifyData.desktopWebHdpImageLink
+      || apifyData.hiResImageLink
+      || apifyData.mediumImageLink
+      || (Array.isArray(apifyData.responsivePhotos) && apifyData.responsivePhotos[0]?.url)
+      || (Array.isArray(apifyData.photos) && apifyData.photos[0] && (typeof apifyData.photos[0] === 'string' ? apifyData.photos[0] : apifyData.photos[0]?.url))
+      || (Array.isArray(apifyData.images) && apifyData.images[0])
+      || '',
     source: 'apify-zillow',
     importedAt: timestamp,
     scrapedAt: timestamp,

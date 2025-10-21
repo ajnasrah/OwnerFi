@@ -197,8 +197,22 @@ async function scrapeAndImport(jobId: string, properties: PropertyURL[]) {
 
       // Run Apify (maxcopell/zillow-detail-scraper uses startUrls format)
       const input = { startUrls: batch.map(p => ({ url: p.url })) };
+      console.log(`🚀 [APIFY] Starting batch with ${batch.length} URLs`);
       const run = await client.actor(actorId).call(input);
+      console.log(`✓ [APIFY] Run completed: ${run.id}`);
+
       const { items } = await client.dataset(run.defaultDatasetId).listItems();
+      console.log(`📦 [APIFY] Received ${items.length} items from dataset`);
+
+      // Log sample of first item to see structure
+      if (items.length > 0) {
+        const sample = items[0];
+        console.log(`🔍 [APIFY STRUCTURE]`, {
+          hasAttributionInfo: !!sample.attributionInfo,
+          attributionInfoKeys: sample.attributionInfo ? Object.keys(sample.attributionInfo) : [],
+          topLevelKeys: Object.keys(sample).slice(0, 20)
+        });
+      }
 
       // Save to Firebase
       const firestoreBatch = db.batch();

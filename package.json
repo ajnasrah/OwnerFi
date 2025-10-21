@@ -34,7 +34,6 @@
     "next": "15.5.2",
     "next-auth": "^4.24.11",
     "openai": "^5.20.1",
-    "puppeteer": "^24.25.0",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-dropzone": "^14.3.8",

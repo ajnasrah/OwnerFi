@@ -83,11 +83,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create a job ID
-    const jobId = `job_${Date.now()}`;
+    // Create a job ID using batch_ prefix to match Firebase jobs
+    const jobId = `batch_${Date.now()}`;
 
-    // Start scraping in background with only new properties
-    scrapeAndImport(jobId, newProperties).catch(console.error);
+    // Start scraping - await it to prevent Vercel from killing the function
+    // For large batches, the function will timeout gracefully
+    scrapeAndImport(jobId, newProperties).catch((error) => {
+      console.error('❌ [ERROR] scrapeAndImport failed:', error);
+      db.collection('scraper_jobs').doc(jobId).update({
+        status: 'error',
+        error: error.message || 'Unknown error during scraping',
+      }).catch(console.error);
+    });
 
     return NextResponse.json({
       success: true,
@@ -228,11 +235,14 @@ async function scrapeAndImport(jobId: string, properties: PropertyURL[]) {
           'attributionInfo',    // Contains: agentName, agentPhoneNumber, brokerName, brokerPhoneNumber
           'resoFacts',          // Contains: lotSize (lot square foot)
           'taxHistory',         // Contains: taxPaid (annual tax amount)
+          'url',                // Zillow URL
         ],
         clean: false,
         limit: 1000,
       });
       console.log(`📦 [APIFY] Received ${items.length} items from dataset`);
+      console.log(`📦 [APIFY] First item keys:`, items.length > 0 ? Object.keys(items[0]).slice(0, 25) : 'none');
+      console.log(`📦 [APIFY] First item has attributionInfo:`, items.length > 0 ? !!items[0].attributionInfo : false);
 
       // Log sample of first item to see structure
       if (items.length > 0) {
@@ -292,14 +302,22 @@ function transformProperty(apifyData: any) {
   const zipCode = addressObj.zipcode || apifyData.zipcode || addressObj.zip || '';
   const fullAddress = `${streetAddress}, ${city}, ${state} ${zipCode}`.trim();
 
+  // Log what data structure we received from Apify
+  console.log('🔍 [TRANSFORM START]', streetAddress, {
+    hasAttributionInfo: !!apifyData.attributionInfo,
+    attributionInfoType: typeof apifyData.attributionInfo,
+    topLevelKeys: Object.keys(apifyData).length,
+    hasAgentPhone: !!apifyData.agentPhoneNumber,
+    hasBrokerPhone: !!apifyData.brokerPhoneNumber,
+  });
+
   // Extract agent/broker from attributionInfo object
   const agentPhone = apifyData.attributionInfo?.agentPhoneNumber || apifyData.agentPhoneNumber || apifyData.agentPhone || '';
   const brokerPhone = apifyData.attributionInfo?.brokerPhoneNumber || apifyData.brokerPhoneNumber || apifyData.brokerPhone || '';
   const finalAgentPhone = agentPhone || brokerPhone;
 
   // DEBUG: Log attribution info extraction
-  console.log('🔍 [TRANSFORM]', streetAddress || 'unknown address', {
-    hasAttributionInfo: !!apifyData.attributionInfo,
+  console.log('🔍 [TRANSFORM EXTRACT]', streetAddress, {
     agentPhone,
     brokerPhone,
     finalAgentPhone,

@@ -1,5 +1,5 @@
-// API URL - CHANGE THIS TO YOUR DEPLOYED URL
-const API_URL = 'https://ownerfi.vercel.app/api/scraper/add-to-queue';
+// API URL
+const API_URL = 'https://ownerfi.ai/api/scraper/add-to-queue';
 // For local testing: 'http://localhost:3000/api/scraper/add-to-queue'
 
 document.getElementById('extractBtn').addEventListener('click', async () => {

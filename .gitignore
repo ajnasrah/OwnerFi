@@ -71,3 +71,7 @@ heygen-webhook-secrets.json
 # Test results
 test-results-*.json
 heygen-webhook-secrets.json
+
+# Scraper output directories (temporary data)
+apify-output/
+scraper-output/

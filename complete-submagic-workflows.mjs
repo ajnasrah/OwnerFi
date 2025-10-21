@@ -73,32 +73,61 @@ async function completeWorkflow(workflow) {
 
     console.log(`   ✅ Submagic video URL obtained`);
 
-    // Step 2: Complete the workflow using the complete-viral endpoint
-    console.log(`   📡 Completing workflow via complete-viral endpoint...`);
+    // Step 2: Update workflow with finalVideoUrl (required for retry-posting)
+    console.log(`   📝 Updating workflow with video URL...`);
 
-    const completeUrl = workflow.brand === 'podcast'
-      ? `${BASE_URL}/api/podcast/complete`
-      : `${BASE_URL}/api/workflow/complete-viral`;
+    const updateUrl = `${BASE_URL}/api/workflow/update-status`;
+    const updatePayload = {
+      workflowId: workflow.id,
+      brand: workflow.brand,
+      updates: {
+        finalVideoUrl: submagicStatus.videoUrl,
+        submagicDownloadUrl: submagicStatus.videoUrl,
+        status: 'posting' // Set to posting so retry knows where to start
+      }
+    };
 
-    const completeResponse = await fetch(completeUrl, {
+    // Try to update (endpoint may not exist, that's ok)
+    try {
+      await fetch(updateUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatePayload)
+      });
+    } catch (e) {
+      // Ignore - will try direct retry
+    }
+
+    // Step 3: Retry from posting stage using existing admin endpoint
+    console.log(`   📡 Retrying workflow from posting stage...`);
+
+    const retryUrl = `${BASE_URL}/api/admin/retry-workflow`;
+
+    const retryResponse = await fetch(retryUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         workflowId: workflow.id,
         brand: workflow.brand,
-        videoUrl: submagicStatus.videoUrl
+        stage: 'posting',
+        finalVideoUrl: submagicStatus.videoUrl // Provide URL in case workflow doesn't have it
       })
     });
 
-    if (!completeResponse.ok) {
-      const errorText = await completeResponse.text();
-      console.log(`   ❌ Complete failed: ${completeResponse.status} - ${errorText.substring(0, 200)}`);
+    if (!retryResponse.ok) {
+      const errorText = await retryResponse.text();
+      console.log(`   ❌ Failed: ${retryResponse.status} - ${errorText.substring(0, 200)}`);
       return false;
     }
 
-    const result = await completeResponse.json();
-    console.log(`   ✅ Workflow completed and posted to social media!`);
-    return true;
+    const result = await retryResponse.json();
+    if (result.success) {
+      console.log(`   ✅ Posted to social media! Late.so ID: ${result.postId}`);
+      return true;
+    } else {
+      console.log(`   ❌ Retry failed: ${result.error}`);
+      return false;
+    }
 
   } catch (error) {
     console.log(`   ❌ Failed: ${error.message}`);

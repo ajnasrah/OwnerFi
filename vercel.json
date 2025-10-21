@@ -56,6 +56,10 @@
     {
       "path": "/api/cron/cleanup-videos",
       "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/cron/process-zillow-scraper",
+      "schedule": "*/2 * * * *"
     }
   ],
   "functions": {
@@ -66,6 +70,9 @@
       "maxDuration": 300
     },
     "src/app/api/admin/scraper/upload/route.ts": {
+      "maxDuration": 30
+    },
+    "src/app/api/cron/process-zillow-scraper/route.ts": {
       "maxDuration": 300
     },
     "src/app/api/process-video/route.ts": {

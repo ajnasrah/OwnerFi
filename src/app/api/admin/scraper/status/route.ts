@@ -33,8 +33,16 @@ export async function GET(request: NextRequest) {
 
     const jobData = jobDoc.data();
 
+    // Map internal states to user-friendly messages
+    let displayStatus = jobData?.status || 'unknown';
+    if (displayStatus === 'pending') {
+      displayStatus = 'queued';
+    } else if (displayStatus === 'processing') {
+      displayStatus = 'scraping';
+    }
+
     return NextResponse.json({
-      status: jobData?.status || 'unknown',
+      status: displayStatus,
       total: jobData?.total || 0,
       imported: jobData?.imported || 0,
       progress: jobData?.progress || 0,

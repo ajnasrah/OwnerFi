@@ -253,6 +253,15 @@ function transformProperty(apifyData: any) {
   const brokerPhone = apifyData.attributionInfo?.brokerPhoneNumber || apifyData.brokerPhoneNumber || apifyData.brokerPhone || '';
   const finalAgentPhone = agentPhone || brokerPhone;
 
+  // DEBUG: Log attribution info extraction
+  console.log('🔍 [TRANSFORM]', streetAddress || 'unknown address', {
+    hasAttributionInfo: !!apifyData.attributionInfo,
+    agentPhone,
+    brokerPhone,
+    finalAgentPhone,
+    agentName: apifyData.attributionInfo?.agentName || apifyData.agentName || '',
+  });
+
   // Extract images from responsivePhotos
   const propertyImages = Array.isArray(apifyData.responsivePhotos)
     ? apifyData.responsivePhotos.map((p: any) => p.url).filter(Boolean)

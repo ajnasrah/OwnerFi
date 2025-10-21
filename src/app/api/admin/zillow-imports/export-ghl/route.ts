@@ -41,10 +41,10 @@ export async function GET(request: NextRequest) {
       // Format address
       const fullAddress = data.fullAddress || `${data.streetAddress || ''}, ${data.city || ''}, ${data.state || ''} ${data.zipCode || ''}`.trim();
 
-      // Get first image or empty string
-      const imageUrl = Array.isArray(data.propertyImages) && data.propertyImages.length > 0
-        ? data.propertyImages[0]
-        : '';
+      // Get first image - use firstPropertyImage field (main hero image) with fallback
+      const imageUrl = data.firstPropertyImage
+        || (Array.isArray(data.propertyImages) && data.propertyImages.length > 0 ? data.propertyImages[0] : '')
+        || '';
 
       return {
         // GHL Custom Fields

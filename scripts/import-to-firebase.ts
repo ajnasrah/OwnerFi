@@ -30,6 +30,8 @@ interface PropertyURL {
 interface PropertyData {
   // URL
   url: string;
+  hdpUrl: string;
+  virtualTourUrl: string;
 
   // Address fields
   fullAddress: string;
@@ -37,21 +39,43 @@ interface PropertyData {
   city: string;
   state: string;
   zipCode: string;
+  county: string;
+  subdivision: string;
+  neighborhood: string;
+
+  // Property IDs
+  zpid: number;
+  parcelId: string;
+  mlsId: string;
 
   // Property details
   bedrooms: number;
   bathrooms: number;
   squareFoot: number;
   buildingType: string;
+  homeType: string;
+  homeStatus: string;
   yearBuilt: number;
   lotSquareFoot: number;
+
+  // Location
+  latitude: number;
+  longitude: number;
 
   // Financial
   price: number;
   estimate: number;
+  rentEstimate: number;
   hoa: number;
   annualTaxAmount: number;
   recentPropertyTaxes: number;
+  propertyTaxRate: number;
+  annualHomeownersInsurance: number;
+
+  // Listing info
+  daysOnZillow: number;
+  datePostedString: string;
+  listingDataSource: string;
 
   // Description
   description: string;
@@ -59,6 +83,8 @@ interface PropertyData {
   // Agent info
   agentName: string;
   agentPhoneNumber: string;
+  agentEmail: string;
+  agentLicenseNumber: string;
 
   // Broker info
   brokerName: string;
@@ -254,11 +280,25 @@ class FirebasePropertyImporter {
     const city = addressObj.city || apifyData.city || '';
     const state = addressObj.state || apifyData.state || '';
     const zipCode = addressObj.zipcode || apifyData.zipcode || addressObj.zip || '';
+    const county = apifyData.county || '';
+    const subdivision = addressObj.subdivision || '';
+    const neighborhood = addressObj.neighborhood || '';
     const fullAddress = `${streetAddress}, ${city}, ${state} ${zipCode}`.trim();
+
+    // Get property IDs
+    const zpid = apifyData.zpid || 0;
+    const parcelId = apifyData.parcelId || '';
+    const mlsId = apifyData.attributionInfo?.mlsId || apifyData.mlsid || '';
+
+    // Build Zillow URL if not provided
+    const hdpUrl = apifyData.hdpUrl || '';
+    const fullUrl = hdpUrl ? `https://www.zillow.com${hdpUrl}` : (apifyData.url || apifyData.addressOrUrlFromInput || '');
 
     return {
       // URL
-      url: apifyData.url || '',
+      url: fullUrl,
+      hdpUrl: hdpUrl,
+      virtualTourUrl: apifyData.virtualTourUrl || '',
 
       // Address fields
       fullAddress: fullAddress || apifyData.fullAddress || '',
@@ -266,23 +306,46 @@ class FirebasePropertyImporter {
       city,
       state,
       zipCode,
+      county,
+      subdivision,
+      neighborhood,
+
+      // Property IDs
+      zpid,
+      parcelId,
+      mlsId,
 
       // Property details
       bedrooms: apifyData.bedrooms || apifyData.beds || 0,
       bathrooms: apifyData.bathrooms || apifyData.baths || 0,
       squareFoot: apifyData.livingArea || apifyData.squareFoot || apifyData.livingAreaValue || 0,
-      buildingType: apifyData.propertyType || apifyData.homeType || apifyData.buildingType || '',
+      buildingType: apifyData.propertyTypeDimension || apifyData.buildingType || '',
+      homeType: apifyData.homeType || '',
+      homeStatus: apifyData.homeStatus || '',
       yearBuilt: apifyData.yearBuilt || 0,
       lotSquareFoot: apifyData.lotSize || apifyData.lotAreaValue || apifyData.lotSquareFoot || 0,
+
+      // Location
+      latitude: apifyData.latitude || 0,
+      longitude: apifyData.longitude || 0,
 
       // Financial
       price: apifyData.price || apifyData.listPrice || 0,
       estimate: apifyData.zestimate || apifyData.homeValue || apifyData.estimate || 0,
+      rentEstimate: apifyData.rentZestimate || 0,
       hoa: apifyData.monthlyHoaFee || apifyData.hoa || 0,
-      annualTaxAmount: apifyData.taxAnnualAmount || apifyData.annualTax || apifyData.annualTaxAmount ||
-                       (Array.isArray(apifyData.taxHistory) && apifyData.taxHistory[0]?.taxPaid) || 0,
-      recentPropertyTaxes: apifyData.recentTaxAssessment || apifyData.latestTaxAssessment || apifyData.recentPropertyTaxes ||
-                          (Array.isArray(apifyData.taxHistory) && apifyData.taxHistory[0]?.value) || 0,
+      // Tax PAID (actual tax amount) - find the most recent entry with taxPaid value
+      annualTaxAmount: (Array.isArray(apifyData.taxHistory)
+        && apifyData.taxHistory.find((t: any) => t.taxPaid)?.taxPaid) || 0,
+      // Tax assessment value
+      recentPropertyTaxes: (Array.isArray(apifyData.taxHistory) && apifyData.taxHistory[0]?.value) || 0,
+      propertyTaxRate: apifyData.propertyTaxRate || 0,
+      annualHomeownersInsurance: apifyData.annualHomeownersInsurance || 0,
+
+      // Listing info
+      daysOnZillow: apifyData.daysOnZillow || 0,
+      datePostedString: apifyData.datePostedString || '',
+      listingDataSource: apifyData.listingDataSource || '',
 
       // Description
       description: apifyData.description || '',
@@ -290,6 +353,8 @@ class FirebasePropertyImporter {
       // Agent info - extract from attributionInfo object
       agentName: apifyData.attributionInfo?.agentName || apifyData.agentName || apifyData.listingAgent || '',
       agentPhoneNumber: apifyData.attributionInfo?.agentPhoneNumber || apifyData.agentPhoneNumber || apifyData.agentPhone || '',
+      agentEmail: apifyData.attributionInfo?.agentEmail || '',
+      agentLicenseNumber: apifyData.attributionInfo?.agentLicenseNumber || '',
 
       // Broker info - extract from attributionInfo object
       brokerName: apifyData.attributionInfo?.brokerName || apifyData.brokerName || apifyData.brokerageName || '',

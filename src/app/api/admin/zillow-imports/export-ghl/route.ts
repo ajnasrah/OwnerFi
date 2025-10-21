@@ -49,34 +49,67 @@ export async function GET(request: NextRequest) {
       return {
         // GHL Custom Fields
         'property_id': doc.id,
+        'zpid': data.zpid || '',
+        'mls_id': data.mlsId || '',
+        'parcel_id': data.parcelId || '',
         'property_address': data.streetAddress || data.fullAddress || '',
         'property_city': data.city || '',
         'property_state': data.state || '',
         'property_zip': data.zipCode || '',
+        'county': data.county || '',
+        'subdivision': data.subdivision || '',
+        'neighborhood': data.neighborhood || '',
         'property_price': data.price || 0,
         'property_bedrooms': data.bedrooms || 0,
         'property_bathrooms': data.bathrooms || 0,
         'property_sqft': data.squareFoot || 0,
-        'property_image_url': imageUrl,
-
-        // Additional property details for reference
-        'full_address': fullAddress,
-        'building_type': data.buildingType || '',
-        'year_built': data.yearBuilt || '',
         'lot_sqft': data.lotSquareFoot || 0,
-        'estimate': data.estimate || 0,
+        'year_built': data.yearBuilt || '',
+        'building_type': data.buildingType || '',
+        'home_type': data.homeType || '',
+        'home_status': data.homeStatus || '',
+
+        // Location
+        'latitude': data.latitude || 0,
+        'longitude': data.longitude || 0,
+
+        // Financial
+        'zestimate': data.estimate || 0,
+        'rent_estimate': data.rentEstimate || 0,
         'hoa': data.hoa || 0,
-        'annual_tax': data.annualTaxAmount || 0,
-        'recent_property_taxes': data.recentPropertyTaxes || 0,
-        'description': data.description || '',
+        'annual_tax_paid': data.annualTaxAmount || 0,
+        'tax_assessment_value': data.recentPropertyTaxes || 0,
+        'property_tax_rate': data.propertyTaxRate || 0,
+        'annual_insurance': data.annualHomeownersInsurance || 0,
+
+        // Listing Info
+        'days_on_zillow': data.daysOnZillow || 0,
+        'date_posted': data.datePostedString || '',
+        'listing_source': data.listingDataSource || '',
+
+        // Agent/Broker
         'agent_name': data.agentName || '',
         'agent_phone': data.agentPhoneNumber || '',
+        'agent_email': data.agentEmail || '',
+        'agent_license': data.agentLicenseNumber || '',
         'broker_name': data.brokerName || '',
         'broker_phone': data.brokerPhoneNumber || '',
-        'url': data.url || '',
+
+        // URLs
+        'zillow_url': data.url || '',
+        'virtual_tour_url': data.virtualTourUrl || '',
+
+        // Images
+        'property_image_url': imageUrl,
+        'all_images': Array.isArray(data.propertyImages) ? data.propertyImages.join('|') : '',
+
+        // Description
+        'description': data.description || '',
+
+        // Metadata
+        'full_address': fullAddress,
         'source': data.source || '',
         'imported_at': data.importedAt?.toDate?.()?.toISOString() || data.importedAt || '',
-        'all_images': Array.isArray(data.propertyImages) ? data.propertyImages.join('|') : '',
       };
     });
 
@@ -84,35 +117,16 @@ export async function GET(request: NextRequest) {
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.json_to_sheet(ghlData);
 
-    // Set column widths
+    // Auto-size columns based on content
     const colWidths = [
-      { wch: 20 }, // property_id
-      { wch: 40 }, // property_address
-      { wch: 20 }, // property_city
-      { wch: 10 }, // property_state
-      { wch: 10 }, // property_zip
-      { wch: 12 }, // property_price
-      { wch: 10 }, // property_bedrooms
-      { wch: 10 }, // property_bathrooms
-      { wch: 12 }, // property_sqft
-      { wch: 50 }, // property_image_url
-      { wch: 50 }, // full_address
-      { wch: 20 }, // building_type
-      { wch: 10 }, // year_built
-      { wch: 12 }, // lot_sqft
-      { wch: 12 }, // estimate
-      { wch: 10 }, // hoa
-      { wch: 12 }, // annual_tax
-      { wch: 12 }, // recent_property_taxes
-      { wch: 50 }, // description
-      { wch: 20 }, // agent_name
-      { wch: 15 }, // agent_phone
-      { wch: 20 }, // broker_name
-      { wch: 15 }, // broker_phone
-      { wch: 50 }, // url
-      { wch: 15 }, // source
-      { wch: 20 }, // imported_at
-      { wch: 80 }, // all_images
+      { wch: 20 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 40 }, { wch: 20 },
+      { wch: 10 }, { wch: 10 }, { wch: 20 }, { wch: 20 }, { wch: 20 }, { wch: 12 },
+      { wch: 10 }, { wch: 10 }, { wch: 12 }, { wch: 12 }, { wch: 10 }, { wch: 20 },
+      { wch: 20 }, { wch: 20 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 },
+      { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 15 }, { wch: 15 }, { wch: 15 },
+      { wch: 20 }, { wch: 15 }, { wch: 25 }, { wch: 15 }, { wch: 20 }, { wch: 15 },
+      { wch: 50 }, { wch: 50 }, { wch: 50 }, { wch: 80 }, { wch: 60 }, { wch: 50 },
+      { wch: 15 }, { wch: 20 }
     ];
     ws['!cols'] = colWidths;
 

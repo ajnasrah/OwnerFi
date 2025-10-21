@@ -201,7 +201,29 @@ async function scrapeAndImport(jobId: string, properties: PropertyURL[]) {
       const run = await client.actor(actorId).call(input);
       console.log(`✓ [APIFY] Run completed: ${run.id}`);
 
-      const { items } = await client.dataset(run.defaultDatasetId).listItems();
+      // Request items with specific fields including attributionInfo
+      const { items } = await client.dataset(run.defaultDatasetId).listItems({
+        fields: [
+          'url', 'hdpUrl', 'virtualTourUrl', 'zpid', 'parcelId',
+          'address', 'streetAddress', 'city', 'state', 'zipcode', 'county',
+          'bedrooms', 'bathrooms', 'price', 'yearBuilt',
+          'livingArea', 'squareFoot', 'livingAreaValue',
+          'lotSize', 'lotAreaValue', 'lotSquareFoot',
+          'propertyTypeDimension', 'buildingType', 'homeType', 'homeStatus',
+          'latitude', 'longitude',
+          'zestimate', 'homeValue', 'estimate', 'rentZestimate',
+          'monthlyHoaFee', 'hoa', 'taxHistory', 'propertyTaxRate', 'annualHomeownersInsurance',
+          'daysOnZillow', 'datePostedString', 'listingDataSource',
+          'description',
+          'attributionInfo',  // CRITICAL: Get agent/broker data
+          'agentName', 'agentPhoneNumber', 'agentPhone',
+          'brokerName', 'brokerPhoneNumber', 'brokerPhone',
+          'responsivePhotos', 'photos', 'images',
+          'desktopWebHdpImageLink', 'hiResImageLink', 'mediumImageLink'
+        ],
+        clean: false,
+        limit: 1000,
+      });
       console.log(`📦 [APIFY] Received ${items.length} items from dataset`);
 
       // Log sample of first item to see structure

@@ -175,6 +175,20 @@
           "order": "DESCENDING"
         }
       ]
+    },
+    {
+      "collectionGroup": "zillow_imports",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "ghlSendStatus",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "importedAt",
+          "order": "DESCENDING"
+        }
+      ]
     }
   ],
   "fieldOverrides": []

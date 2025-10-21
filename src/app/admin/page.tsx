@@ -433,7 +433,7 @@ export default function AdminDashboard() {
     if (activeTab === 'properties') {
       fetchProperties();
     } else if (activeTab === 'failed-properties') {
-      fetchFailedProperties();
+      fetchNewProperties(); // Fetch failed GHL properties
     } else if (activeTab === 'image-quality') {
       fetchStreetViewProperties();
     } else if (activeTab === 'disputes') {
@@ -448,13 +448,6 @@ export default function AdminDashboard() {
       fetchPreviewProperties();
     }
   }, [activeTab]);
-
-  // Fetch failed properties when filter changes
-  useEffect(() => {
-    if (activeTab === 'failed-properties') {
-      fetchFailedProperties();
-    }
-  }, [failedPropertiesFilter]);
 
   // Handle Escape key to exit buyer preview
   useEffect(() => {
@@ -2106,29 +2099,22 @@ export default function AdminDashboard() {
               {/* New Properties Mode */}
               {uploadMode === 'new-properties' && (
                 <div className="space-y-6">
-                  {/* Header with Export Button */}
+                  {/* Header with Retry Button */}
                   <div className="bg-white shadow rounded-lg p-6">
                     <div className="flex justify-between items-center mb-4">
                       <div>
-                        <h3 className="text-lg leading-6 font-medium text-gray-900">New Properties from Zillow Imports</h3>
+                        <h3 className="text-lg leading-6 font-medium text-gray-900">⚠️ Failed GHL Webhook Sends</h3>
                         <p className="mt-1 text-sm text-gray-500">
-                          Properties scraped from Zillow - {newPropertiesData.length} total
+                          Properties that failed to send to GoHighLevel - {newPropertiesData.length} total
                         </p>
                       </div>
                       <div className="flex gap-3">
-                        <button
-                          onClick={handleExportGHL}
-                          disabled={exportingGHL || newPropertiesData.length === 0}
-                          className="px-6 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-                        >
-                          {exportingGHL ? 'Exporting...' : '📥 Export to GHL Format'}
-                        </button>
                         <button
                           onClick={handleSendToGHL}
                           disabled={sendingToGHL || newPropertiesData.length === 0}
                           className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
                         >
-                          {sendingToGHL ? 'Sending...' : '🚀 Send to GHL Webhook'}
+                          {sendingToGHL ? 'Retrying...' : '🔄 Retry Send to GHL'}
                         </button>
                       </div>
                     </div>
@@ -2137,15 +2123,15 @@ export default function AdminDashboard() {
                     {loadingNewProperties && (
                       <div className="text-center py-12">
                         <div className="animate-spin inline-block h-8 w-8 border-4 border-indigo-600 border-t-transparent rounded-full"></div>
-                        <p className="mt-4 text-gray-600">Loading properties...</p>
+                        <p className="mt-4 text-gray-600">Loading failed properties...</p>
                       </div>
                     )}
 
                     {/* Empty State */}
                     {!loadingNewProperties && newPropertiesData.length === 0 && (
                       <div className="text-center py-12">
-                        <p className="text-gray-500">No properties found in zillow_imports collection.</p>
-                        <p className="text-sm text-gray-400 mt-2">Use the Zillow Scraper tab to import properties.</p>
+                        <p className="text-green-600 font-medium">✅ No failed sends!</p>
+                        <p className="text-sm text-gray-400 mt-2">All properties with contact info have been successfully sent to GHL.</p>
                       </div>
                     )}
 

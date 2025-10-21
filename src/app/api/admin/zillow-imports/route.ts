@@ -30,8 +30,12 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Fetch all properties from zillow_imports collection
-    const snapshot = await db.collection('zillow_imports').orderBy('importedAt', 'desc').get();
+    // Fetch only properties where GHL webhook failed
+    const snapshot = await db
+      .collection('zillow_imports')
+      .where('ghlSendStatus', '==', 'failed')
+      .orderBy('importedAt', 'desc')
+      .get();
 
     const properties = snapshot.docs
       .map(doc => {
@@ -42,9 +46,9 @@ export async function GET(request: NextRequest) {
           // Convert Firestore timestamps
           importedAt: data.importedAt?.toDate?.()?.toISOString() || data.importedAt,
           scrapedAt: data.scrapedAt?.toDate?.()?.toISOString() || data.scrapedAt,
+          ghlSentAt: data.ghlSentAt?.toDate?.()?.toISOString() || data.ghlSentAt,
         };
       });
-      // Note: Filter removed - now showing all properties
 
     return NextResponse.json({
       success: true,

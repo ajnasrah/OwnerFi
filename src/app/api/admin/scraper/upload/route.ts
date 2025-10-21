@@ -201,41 +201,26 @@ async function scrapeAndImport(jobId: string, properties: PropertyURL[]) {
       const run = await client.actor(actorId).call(input);
       console.log(`✓ [APIFY] Run completed: ${run.id}`);
 
-      // Request only the fields we actually need
+      // Request ONLY the exact fields we need (tested and verified)
       const { items } = await client.dataset(run.defaultDatasetId).listItems({
         fields: [
-          // URLs
-          'hdpUrl', 'virtualTourUrl',
-
-          // IDs
-          'zpid', 'parcelId', 'mlsid',
-
-          // Address (includes streetAddress, city, state, zipcode, subdivision, neighborhood)
-          'address', 'streetAddress', 'city', 'state', 'zipcode', 'county',
-
-          // Property details
-          'bedrooms', 'bathrooms', 'price', 'yearBuilt',
-          'livingArea', 'livingAreaValue',
-          'lotSize', 'lotAreaValue',
-          'propertyTypeDimension', 'homeType', 'homeStatus',
-          'latitude', 'longitude',
-
-          // Financial
-          'zestimate', 'rentZestimate', 'monthlyHoaFee',
-          'taxHistory', 'propertyTaxRate', 'annualHomeownersInsurance',
-
-          // Listing
-          'daysOnZillow', 'datePostedString', 'listingDataSource',
-          'description',
-
-          // Agent/Broker (CRITICAL)
-          'attributionInfo',
-
-          // Images
-          'responsivePhotos', 'desktopWebHdpImageLink', 'hiResImageLink',
-
-          // Additional data
-          'resoFacts', 'collections'
+          'streetAddress',      // Street address
+          'city',               // City
+          'state',              // State
+          'zipcode',            // Zip
+          'bedrooms',           // Bed
+          'bathrooms',          // Bath
+          'livingArea',         // Square foot
+          'livingAreaValue',    // Square foot (alt)
+          'propertyTypeDimension', // Building type
+          'homeType',           // Building type (alt)
+          'yearBuilt',          // Year built
+          'zestimate',          // Estimate
+          'monthlyHoaFee',      // HOA
+          'description',        // Description
+          'attributionInfo',    // Contains: agentName, agentPhoneNumber, brokerName, brokerPhoneNumber
+          'resoFacts',          // Contains: lotSize (lot square foot)
+          'taxHistory',         // Contains: taxPaid (annual tax amount)
         ],
         clean: false,
         limit: 1000,

@@ -125,7 +125,7 @@ class FirebasePropertyImporter {
     const workbook = XLSX.readFile(filePath);
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
-    const data: any[] = XLSX.utils.sheet_to_json(worksheet);
+    const data: any[] = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
 
     return this.extractURLs(data);
   }

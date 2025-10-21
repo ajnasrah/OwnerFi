@@ -31,11 +31,11 @@
     },
     {
       "path": "/api/cron/check-stuck-heygen",
-      "schedule": "0 */2 * * *"
+      "schedule": "*/15 * * * *"
     },
     {
       "path": "/api/cron/check-stuck-submagic",
-      "schedule": "0 */2 * * *"
+      "schedule": "*/15 * * * *"
     },
     {
       "path": "/api/cron/check-stuck-posting",

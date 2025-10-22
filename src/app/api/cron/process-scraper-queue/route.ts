@@ -55,12 +55,19 @@ export async function GET(request: NextRequest) {
     console.log(`🚀 [APIFY] Starting scraper with ${urls.length} URLs`);
 
     const input = { startUrls: urls.map(url => ({ url })) };
-    const run = await client.actor(actorId).call(input);
 
-    console.log(`✓ [APIFY] Run completed: ${run.id}`);
+    // Start the run but don't wait for it to finish (use .start() instead of .call())
+    const run = await client.actor(actorId).start(input);
+    console.log(`✓ [APIFY] Run started: ${run.id}`);
+
+    // Wait for the run to finish with a timeout
+    console.log(`⏳ [APIFY] Waiting for run to complete...`);
+    const finishedRun = await client.run(run.id).waitForFinish({ waitSecs: 240 }); // 4 minute max wait
+
+    console.log(`✓ [APIFY] Run completed: ${finishedRun.id} (status: ${finishedRun.status})`);
 
     // Get results (no fields filter to get ALL data)
-    const { items } = await client.dataset(run.defaultDatasetId).listItems({
+    const { items } = await client.dataset(finishedRun.defaultDatasetId).listItems({
       clean: false,
       limit: 1000,
     });

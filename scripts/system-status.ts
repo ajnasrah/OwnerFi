@@ -106,13 +106,13 @@ async function getSystemStatus() {
   console.log('\n🔧 CRON CONFIGURATION:');
   console.log('   ⏰ Schedule: Every 10 minutes');
   console.log('   🕐 Active Hours: 9am-9pm CDT (14:00-02:00 UTC)');
-  console.log('   📦 Batch Size: 20 URLs per run');
+  console.log('   📦 Batch Size: 25 URLs per run');
   console.log('   🔗 Webhook: 2be65188-9b2e-43f1-a9d8-33d9907b375c');
 
   console.log('\n✅ System is configured and ready!');
 
   if (pendingQueue.size > 0) {
-    const nextBatch = Math.min(pendingQueue.size, 20);
+    const nextBatch = Math.min(pendingQueue.size, 25);
     console.log(`\n🔜 Next cron will process: ${nextBatch} properties`);
   } else {
     console.log(`\n✅ Queue is empty - all properties processed!`);

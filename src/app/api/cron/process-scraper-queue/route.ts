@@ -20,12 +20,12 @@ export async function GET(request: NextRequest) {
   console.log('🔄 [QUEUE CRON] Starting queue processor');
 
   try {
-    // Find pending items in queue (limit to 5 for faster processing)
+    // Find pending items in queue (limit to 20 for optimal processing)
     const pendingItems = await db
       .collection('scraper_queue')
       .where('status', '==', 'pending')
       .orderBy('addedAt', 'asc')
-      .limit(5)
+      .limit(20)
       .get();
 
     if (pendingItems.empty) {

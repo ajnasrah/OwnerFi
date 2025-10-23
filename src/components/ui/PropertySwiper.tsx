@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from './Button';
+import Image from 'next/image';
 
 import { PropertyListing } from '@/lib/property-schema';
 
@@ -18,16 +19,19 @@ export function PropertyListingSwiper({ properties, onLike, onPass, favorites, p
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showToast, setShowToast] = useState<{ type: 'saved' | 'deleted'; show: boolean }>({ type: 'saved', show: false });
   const [buttonPressed, setButtonPressed] = useState<'like' | 'pass' | null>(null);
+  const [imageIndex, setImageIndex] = useState(0);
+  const [imageLoading, setImageLoading] = useState(true);
+  const [imageError, setImageError] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
-  
+
   // Filter out passed properties
   const visibleProperties = properties.filter(property => !passedIds.includes(property.id));
-  
+
   // Auto-adjust index if current property was filtered out
-  const safeIndex = currentIndex >= visibleProperties.length ? 
+  const safeIndex = currentIndex >= visibleProperties.length ?
     Math.max(0, visibleProperties.length - 1) : currentIndex;
   const currentPropertyListing = visibleProperties[safeIndex];
-  
+
   // Update index if it was adjusted
   useEffect(() => {
     if (currentIndex !== safeIndex) {
@@ -35,10 +39,39 @@ export function PropertyListingSwiper({ properties, onLike, onPass, favorites, p
     }
   }, [safeIndex, currentIndex]);
 
-  // ONLY use database imageUrls (no API calls)
-  const getHousePhoto = (property: PropertyListing): string => {
-    // All properties should have imageUrls saved in database
-    return property.imageUrls?.[0] || '/placeholder-house.jpg'; // Simple fallback
+  // Reset image index when property changes
+  useEffect(() => {
+    setImageIndex(0);
+    setImageLoading(true);
+    setImageError(false);
+  }, [currentIndex]);
+
+  // Get current image URL
+  const getCurrentImage = (): string => {
+    const images = currentPropertyListing?.imageUrls || [];
+    if (images.length === 0 || imageError) {
+      return '/placeholder-house.jpg';
+    }
+    return images[imageIndex] || images[0] || '/placeholder-house.jpg';
+  };
+
+  // Navigate through images
+  const nextImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const images = currentPropertyListing?.imageUrls || [];
+    if (images.length > 1) {
+      setImageIndex((prev) => (prev + 1) % images.length);
+      setImageLoading(true);
+    }
+  };
+
+  const prevImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const images = currentPropertyListing?.imageUrls || [];
+    if (images.length > 1) {
+      setImageIndex((prev) => (prev - 1 + images.length) % images.length);
+      setImageLoading(true);
+    }
   };
 
   // Loading state
@@ -95,173 +128,188 @@ export function PropertyListingSwiper({ properties, onLike, onPass, favorites, p
   const isFavorited = favorites.includes(currentPropertyListing.id);
 
   return (
-    <div className="flex-1 flex flex-col relative overflow-hidden">
-      {/* Mobile-First PropertyListing Card */}
-      <div className="flex-1 p-4">
-        <div 
+    <div className="h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4 overflow-hidden fixed inset-0">
+      {/* Main Property Card */}
+      <div className="w-full max-w-md h-full max-h-[calc(100vh-2rem)] flex flex-col">
+        <div
           ref={cardRef}
-          className="relative w-full h-full bg-white rounded-3xl shadow-lg overflow-hidden"
+          className="relative w-full flex-1 bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col"
         >
-          {/* PropertyListing Image - Large and Prominent */}
-          <div className="relative h-80">
-            <img
-              src={getHousePhoto(currentPropertyListing)}
+          {/* Property Image Section - Large and Clear */}
+          <div className="relative h-[55%] flex-shrink-0 bg-slate-200">
+            {imageLoading && (
+              <div className="absolute inset-0 flex items-center justify-center bg-slate-100">
+                <div className="w-12 h-12 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin"></div>
+              </div>
+            )}
+
+            <Image
+              src={getCurrentImage()}
               alt={`${currentPropertyListing.address}`}
-              className="w-full h-full object-cover"
+              fill
+              className="object-cover"
+              onLoad={() => setImageLoading(false)}
+              onError={() => {
+                setImageError(true);
+                setImageLoading(false);
+              }}
+              unoptimized
+              priority
             />
 
-            {/* PropertyListing Counter */}
-            <div className="absolute top-4 left-4 bg-black/50 text-white px-3 py-1 rounded-full text-sm font-medium">
+            {/* Image Navigation Arrows */}
+            {currentPropertyListing?.imageUrls && currentPropertyListing.imageUrls.length > 1 && (
+              <>
+                <button
+                  onClick={prevImage}
+                  className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/50 hover:bg-black/70 text-white rounded-full flex items-center justify-center transition-all backdrop-blur-sm z-10"
+                  aria-label="Previous image"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <button
+                  onClick={nextImage}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/50 hover:bg-black/70 text-white rounded-full flex items-center justify-center transition-all backdrop-blur-sm z-10"
+                  aria-label="Next image"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+
+                {/* Image Dots Indicator */}
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+                  {currentPropertyListing.imageUrls.map((_, idx) => (
+                    <button
+                      key={idx}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setImageIndex(idx);
+                        setImageLoading(true);
+                      }}
+                      className={`w-2 h-2 rounded-full transition-all ${
+                        idx === imageIndex
+                          ? 'bg-white w-6'
+                          : 'bg-white/50 hover:bg-white/75'
+                      }`}
+                      aria-label={`Go to image ${idx + 1}`}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+
+            {/* Property Counter Badge */}
+            <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-md text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg">
               {currentIndex + 1} of {visibleProperties.length}
             </div>
 
             {/* Owner Financing Badge */}
-            <div className="absolute bottom-4 left-4 bg-blue-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
+            <div className="absolute top-4 right-4 bg-emerald-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg">
               Owner Finance
             </div>
           </div>
 
-          {/* PropertyListing Navigation Row - Clean and Simple */}
-          <div className="px-6 py-4 border-b border-gray-100">
-            <div className="flex items-center justify-between">
-              <button 
-                onClick={() => setCurrentIndex(prev => prev > 0 ? prev - 1 : visibleProperties.length - 1)}
-                className="p-4 bg-blue-100 hover:bg-blue-200 rounded-full transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-                disabled={visibleProperties.length <= 1}
-              >
-                <svg className="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 19l-7-7 7-7" />
-                </svg>
-              </button>
-              
-              <div className="text-center">
-                <div className="text-sm text-gray-500 mb-1">Browsing Properties</div>
-                <div className="text-lg font-bold text-gray-800">
-                  {currentIndex + 1} of {visibleProperties.length}
+          {/* Property Details Content - Scrollable */}
+          <div className="flex-1 overflow-y-auto">
+            <div className="p-6 space-y-4">
+              {/* Address Section */}
+              <div>
+                <h2 className="text-2xl font-bold text-slate-900 leading-tight">
+                  {currentPropertyListing.address}
+                </h2>
+                <p className="text-slate-600 text-lg mt-1">
+                  {currentPropertyListing.city}, {currentPropertyListing.state} {currentPropertyListing.zipCode}
+                </p>
+              </div>
+
+              {/* Property Stats */}
+              <div className="flex gap-3">
+                <div className="flex-1 bg-slate-100 rounded-xl p-3 text-center border border-slate-200">
+                  <div className="text-2xl font-bold text-slate-900">{currentPropertyListing.bedrooms}</div>
+                  <div className="text-sm text-slate-600 font-medium">Beds</div>
+                </div>
+                <div className="flex-1 bg-slate-100 rounded-xl p-3 text-center border border-slate-200">
+                  <div className="text-2xl font-bold text-slate-900">{currentPropertyListing.bathrooms}</div>
+                  <div className="text-sm text-slate-600 font-medium">Baths</div>
+                </div>
+                <div className="flex-1 bg-slate-100 rounded-xl p-3 text-center border border-slate-200">
+                  <div className="text-2xl font-bold text-slate-900">{currentPropertyListing.squareFeet?.toLocaleString() || 'N/A'}</div>
+                  <div className="text-sm text-slate-600 font-medium">Sq Ft</div>
                 </div>
               </div>
-              
-              <button 
-                onClick={() => setCurrentIndex(prev => prev < visibleProperties.length - 1 ? prev + 1 : 0)}
-                className="p-4 bg-blue-100 hover:bg-blue-200 rounded-full transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-                disabled={visibleProperties.length <= 1}
-              >
-                <svg className="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
-            </div>
-          </div>
 
-          {/* PropertyListing Details */}
-          <div className="p-6 space-y-6">
-            {/* Price & Address Section */}
-            <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
-              <div className="flex justify-between items-start">
-                <div className="flex-1">
-                  <div className="text-sm text-slate-600 mb-1">Asking Price</div>
-                  <div className="text-2xl font-bold text-slate-900">
+              {/* Pricing Section */}
+              <div className="space-y-3">
+                {/* List Price */}
+                <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl p-4 border-2 border-slate-200">
+                  <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">List Price</div>
+                  <div className="text-3xl font-black text-slate-900">
                     ${currentPropertyListing.listPrice?.toLocaleString()}
                   </div>
                 </div>
-                <div className="text-right">
-                  <div className="text-lg font-semibold text-slate-700">{currentPropertyListing.address}</div>
-                  <div className="text-base text-slate-600">{currentPropertyListing.city}, {currentPropertyListing.state} {currentPropertyListing.zipCode}</div>
+
+                {/* Monthly & Down Payment */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl p-4 border-2 border-emerald-200">
+                    <div className="text-xs font-semibold text-emerald-700 uppercase tracking-wide mb-1">Monthly</div>
+                    <div className="text-xl font-bold text-emerald-900">
+                      ${currentPropertyListing.monthlyPayment?.toLocaleString()}/mo
+                    </div>
+                  </div>
+                  <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 border-2 border-blue-200">
+                    <div className="text-xs font-semibold text-blue-700 uppercase tracking-wide mb-1">Down</div>
+                    <div className="text-xl font-bold text-blue-900">
+                      ${currentPropertyListing.downPaymentAmount?.toLocaleString()}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Additional Terms */}
+                <div className="bg-slate-50 rounded-xl p-3 border border-slate-200">
+                  <div className="flex justify-between text-sm mb-2">
+                    <span className="text-slate-600 font-medium">Interest Rate</span>
+                    <span className="text-slate-900 font-bold">{currentPropertyListing.interestRate}%</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-600 font-medium">Term Length</span>
+                    <span className="text-slate-900 font-bold">{currentPropertyListing.termYears} years</span>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* PropertyListing Features Section */}
-            <div className="bg-slate-100 rounded-xl p-4 border border-slate-300">
-              <div className="grid grid-cols-3 gap-4 text-center">
-                <div>
-                  <div className="text-2xl font-bold text-slate-800">{currentPropertyListing.bedrooms}</div>
-                  <div className="text-base text-slate-600">Bedrooms</div>
-                </div>
-                <div>
-                  <div className="text-2xl font-bold text-slate-800">{currentPropertyListing.bathrooms}</div>
-                  <div className="text-base text-slate-600">Bathrooms</div>
-                </div>
-                <div>
-                  <div className="text-2xl font-bold text-slate-800">{currentPropertyListing.squareFeet?.toLocaleString()}</div>
-                  <div className="text-base text-slate-600">Sq Ft</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Owner Financing Terms Section */}
-            <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
-              <h3 className="text-xl font-bold text-center text-blue-700 mb-2">💳 Estimated Owner Financing Terms</h3>
-              <div className="bg-yellow-100 border border-yellow-300 rounded-lg p-2 mb-3">
-                <p className="text-xs text-yellow-800 text-center font-medium">
-                  ⚠️ ESTIMATES ONLY - Not guaranteed. Verify all terms with property owner and licensed professionals.
+              {/* Disclaimer */}
+              <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-3">
+                <p className="text-xs text-yellow-800 font-medium text-center">
+                  ⚠️ Estimates exclude taxes, insurance & HOA fees. Not guaranteed - verify with seller.
                 </p>
               </div>
-              
-              <div className="space-y-2">
-                <div className="flex justify-between items-center border-b border-blue-200 pb-1">
-                  <span className="text-base text-blue-700 font-medium">Monthly Payment:</span>
-                  <div className="text-right">
-                    <div className="text-2xl font-bold text-blue-800">${currentPropertyListing.monthlyPayment?.toLocaleString()}/mo</div>
-                    <div className="text-sm text-blue-600">estimated only</div>
-                  </div>
-                </div>
-                
-                <div className="flex justify-between items-center border-b border-blue-200 pb-1">
-                  <span className="text-base text-blue-700 font-medium">Down Payment:</span>
-                  <div className="text-right">
-                    <div className="text-2xl font-bold text-blue-800">${currentPropertyListing.downPaymentAmount?.toLocaleString()}</div>
-                    <div className="text-sm text-blue-600">estimated only</div>
-                  </div>
-                </div>
-                
-                <div className="flex justify-between items-center border-b border-blue-200 pb-1">
-                  <span className="text-base text-blue-700 font-medium">Interest Rate:</span>
-                  <div className="text-right">
-                    <div className="text-2xl font-bold text-blue-800">{currentPropertyListing.interestRate}%</div>
-                    <div className="text-sm text-blue-600">estimated only</div>
-                  </div>
-                </div>
-                
-                <div className="flex justify-between items-center pt-1">
-                  <span className="text-base text-blue-700 font-medium">Term Length:</span>
-                  <div className="text-right">
-                    <div className="text-2xl font-bold text-blue-800">{currentPropertyListing.termYears} years</div>
-                    <div className="text-sm text-blue-600">estimated only</div>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="bg-red-50 border border-red-200 rounded-lg p-2 mt-3">
-                <p className="text-xs text-red-700 text-center font-semibold mb-1">
-                  ⚠️ NO ESCROW ACCOUNT - You pay taxes/insurance/HOA directly
-                </p>
-                <p className="text-xs text-red-700 text-center">
-                  Property information not verified. OwnerFi is not a licensed broker. Consult real estate professionals before making decisions.
-                </p>
+
+              {/* More Details Link */}
+              <div className="text-center">
+                <a
+                  href={`https://www.google.com/search?q=${encodeURIComponent(`${currentPropertyListing.address} ${currentPropertyListing.city}, ${currentPropertyListing.state} ${currentPropertyListing.zipCode}`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-emerald-600 hover:text-emerald-700 font-semibold transition-colors text-sm"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                  <span>View More Details</span>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                </a>
               </div>
             </div>
+          </div>
 
-            {/* More Details Link */}
-            <div className="text-center mb-4">
-              <a
-                href={`https://www.google.com/search?q=${encodeURIComponent(`${currentPropertyListing.address} ${currentPropertyListing.city}, ${currentPropertyListing.state} ${currentPropertyListing.zipCode}`)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center space-x-2 text-blue-600 hover:text-blue-800 font-medium transition-colors"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-                <span>More Details</span>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                </svg>
-              </a>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex space-x-4">
+          {/* Action Buttons - Fixed at Bottom */}
+          <div className="p-4 border-t border-slate-200 bg-white">
+            <div className="flex gap-3 mb-3">
               <button
                 onClick={() => {
                   setButtonPressed('pass');
@@ -270,16 +318,16 @@ export function PropertyListingSwiper({ properties, onLike, onPass, favorites, p
                   setTimeout(() => {
                     setShowToast({ type: 'deleted', show: false });
                     setButtonPressed(null);
-                  }, 2000);
+                  }, 1500);
                   handleNextPropertyListing();
                 }}
-                className={`flex-1 py-4 px-6 rounded-xl font-semibold transition-all ${
-                  buttonPressed === 'pass' 
-                    ? 'bg-red-500 text-white scale-105' 
-                    : 'bg-red-100 text-red-700 hover:bg-red-200 active:scale-95'
+                className={`flex-1 py-4 rounded-2xl font-bold text-lg transition-all shadow-lg ${
+                  buttonPressed === 'pass'
+                    ? 'bg-red-500 text-white scale-95'
+                    : 'bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 active:scale-95'
                 }`}
               >
-                👎 Pass
+                <span className="text-2xl">👎</span> Pass
               </button>
               <button
                 onClick={() => {
@@ -289,33 +337,51 @@ export function PropertyListingSwiper({ properties, onLike, onPass, favorites, p
                   setTimeout(() => {
                     setShowToast({ type: 'saved', show: false });
                     setButtonPressed(null);
-                  }, 2000);
-                  // Don't auto-advance for likes
+                  }, 1500);
                 }}
-                className={`flex-1 py-4 px-6 rounded-xl font-semibold transition-all ${
-                  buttonPressed === 'like' 
-                    ? 'bg-green-500 text-white scale-105' 
-                    : 'bg-green-100 text-green-700 hover:bg-green-200 active:scale-95'
+                className={`flex-1 py-4 rounded-2xl font-bold text-lg transition-all shadow-lg ${
+                  buttonPressed === 'like'
+                    ? 'bg-green-500 text-white scale-95'
+                    : isFavorited
+                    ? 'bg-gradient-to-r from-pink-500 to-pink-600 text-white hover:from-pink-600 hover:to-pink-700 active:scale-95'
+                    : 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white hover:from-emerald-600 hover:to-emerald-700 active:scale-95'
                 }`}
               >
-                👍 Interested
+                <span className="text-2xl">{isFavorited ? '❤️' : '💚'}</span> {isFavorited ? 'Saved' : 'Like'}
               </button>
             </div>
 
-            {/* Toast Notification */}
-            {showToast.show && (
-              <div className={`fixed top-20 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-full text-white font-semibold shadow-lg z-50 transition-all ${
-                showToast.type === 'saved' 
-                  ? 'bg-green-500' 
-                  : 'bg-red-500'
-              }`}>
-                {showToast.type === 'saved' ? '✅ PropertyListing Saved!' : '🗑️ PropertyListing Deleted!'}
-              </div>
-            )}
+            {/* Property Navigation */}
+            <div className="flex gap-2">
+              <button
+                onClick={() => setCurrentIndex(prev => prev > 0 ? prev - 1 : visibleProperties.length - 1)}
+                className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold transition-all disabled:opacity-30"
+                disabled={visibleProperties.length <= 1}
+              >
+                ← Previous
+              </button>
+              <button
+                onClick={() => setCurrentIndex(prev => prev < visibleProperties.length - 1 ? prev + 1 : 0)}
+                className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold transition-all disabled:opacity-30"
+                disabled={visibleProperties.length <= 1}
+              >
+                Next →
+              </button>
+            </div>
           </div>
-
         </div>
       </div>
+
+      {/* Toast Notification */}
+      {showToast.show && (
+        <div className={`fixed top-8 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-full text-white font-bold shadow-2xl z-[100] transition-all animate-bounce ${
+          showToast.type === 'saved'
+            ? 'bg-gradient-to-r from-green-500 to-emerald-600'
+            : 'bg-gradient-to-r from-red-500 to-red-600'
+        }`}>
+          {showToast.type === 'saved' ? '✅ Property Saved!' : '❌ Property Passed'}
+        </div>
+      )}
     </div>
   );
 }

@@ -8,6 +8,7 @@ import { PropertyListing } from '@/lib/property-schema';
 import Image from 'next/image';
 import { calculatePropertyFinancials } from '@/lib/property-calculations';
 import { useDropzone } from 'react-dropzone';
+import { PropertyListingSwiper } from '@/components/ui/PropertySwiper';
 
 // Extended Property interface for admin with legacy imageUrl field
 interface AdminProperty extends PropertyListing {
@@ -938,7 +939,6 @@ export default function AdminDashboard() {
                 {activeTab === 'overview' && 'Dashboard Overview'}
                 {activeTab === 'properties' && 'Property Management'}
                 {activeTab === 'failed-properties' && 'Failed Properties'}
-                {activeTab === 'buyer-preview' && 'Buyer Preview'}
                 {activeTab === 'image-quality' && 'Image Quality Review'}
                 {activeTab === 'upload' && 'Upload Properties'}
                 {activeTab === 'buyers' && 'Buyer Management'}
@@ -2866,191 +2866,27 @@ export default function AdminDashboard() {
 
           {/* Buyer Preview Tab */}
           {activeTab === 'buyer-preview' && (
-            <div className="fixed inset-0 bg-slate-900 z-50 left-0">
-              {loadingPreview ? (
-                <div className="h-screen flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="w-16 h-16 border-4 border-emerald-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                    <div className="text-lg font-semibold text-white">Loading Properties...</div>
-                    <div className="text-sm text-slate-400 mt-2">{previewProperties.length} properties loaded</div>
-                  </div>
-                </div>
-              ) : previewProperties.length === 0 ? (
-                <div className="h-screen flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="text-6xl mb-4">🏠</div>
-                    <div className="text-xl font-bold text-white mb-2">NO PROPERTIES FOUND</div>
-                    <div className="text-slate-400">Upload some properties to see them here</div>
-                  </div>
-                </div>
-              ) : (
-                <div className="h-screen flex flex-col relative">
-                  {/* Header */}
-                  <div className="bg-slate-800/80 backdrop-blur-md border-b border-slate-700 p-4 flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <button
-                        onClick={() => setActiveTab('overview')}
-                        className="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
-                        title="Back to Admin Dashboard"
-                      >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                        </svg>
-                      </button>
-                      <div>
-                        <div className="text-white font-bold">Buyer Experience Preview</div>
-                        <div className="text-sm text-slate-400">Showing all {previewProperties.length} properties</div>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-4">
-                      <div className="text-emerald-400 font-semibold">
-                        {previewCurrentIndex + 1} / {previewProperties.length}
-                      </div>
-                      <button
-                        onClick={() => setActiveTab('overview')}
-                        className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors font-medium text-sm"
-                      >
-                        Exit Preview
-                      </button>
-                    </div>
-                  </div>
+            <div className="fixed inset-0 z-50 left-0">
+              {/* Exit Button */}
+              <button
+                onClick={() => setActiveTab('overview')}
+                className="fixed top-4 left-4 z-[60] px-4 py-2 bg-slate-800/90 hover:bg-slate-700 text-white rounded-xl transition-colors font-semibold text-sm shadow-lg backdrop-blur-sm flex items-center gap-2"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Exit Preview
+              </button>
 
-                  {/* Property Card */}
-                  <div className="flex-1 flex items-center justify-center p-2 sm:p-4 md:p-6 overflow-hidden">
-                    {(() => {
-                      const property = previewProperties[previewCurrentIndex];
-                      if (!property) {
-                        return (
-                          <div className="text-white text-center">
-                            <div className="text-xl font-bold mb-2">Property Not Found</div>
-                            <div className="text-sm text-slate-400">Index: {previewCurrentIndex} / Total: {previewProperties.length}</div>
-                          </div>
-                        );
-                      }
-                      const imageUrl = (property.imageUrls?.[0] as string | undefined) || (property.zillowImageUrl as string | undefined) || property.imageUrl || '/placeholder-home.jpg';
-
-                      return (
-                        <div className="w-full max-w-md sm:max-w-lg my-auto scale-[0.85] sm:scale-90 md:scale-95 lg:scale-100">
-                          {/* Main Card Container */}
-                          <div className="bg-white rounded-2xl sm:rounded-[2rem] shadow-[0_20px_60px_rgba(0,0,0,0.3)] overflow-hidden max-h-[calc(100vh-180px)]">
-                            {/* Image Section - Larger and cleaner */}
-                            <div className="relative h-52 sm:h-64 md:h-80 lg:h-96 bg-slate-200">
-                              <Image
-                                src={imageUrl as string}
-                                alt={property.address}
-                                fill
-                                className="object-cover"
-                                unoptimized
-                              />
-
-                              {/* Property Tag */}
-                              {property.displayTag && (
-                                <div className="absolute top-6 right-6 px-4 py-2 bg-emerald-500 text-white text-sm font-bold rounded-full shadow-lg">
-                                  {property.displayTag as string}
-                                </div>
-                              )}
-                            </div>
-
-                            {/* Content Section */}
-                            <div className="p-3 sm:p-4 md:p-5 lg:p-6 space-y-2 sm:space-y-3 md:space-y-4">
-                              {/* Address */}
-                              <div>
-                                <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-slate-900 mb-0.5 sm:mb-1">
-                                  {property.address}
-                                </h2>
-                                <p className="text-slate-600 text-sm sm:text-base">
-                                  {property.city}, {property.state} {property.zipCode}
-                                </p>
-                              </div>
-
-                              {/* Property Stats - Cleaner design */}
-                              <div className="flex items-center gap-2 sm:gap-3 pb-2 sm:pb-3 border-b border-slate-200">
-                                <div className="flex items-center gap-1.5">
-                                  <svg className="w-5 h-5 text-slate-500" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
-                                  </svg>
-                                  <span className="text-slate-700 font-semibold">{property.bedrooms || 0} <span className="text-slate-500 font-normal">bed</span></span>
-                                </div>
-                                <div className="w-px h-5 bg-slate-300"></div>
-                                <div className="flex items-center gap-1.5">
-                                  <svg className="w-5 h-5 text-slate-500" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z" clipRule="evenodd" />
-                                  </svg>
-                                  <span className="text-slate-700 font-semibold">{property.bathrooms || 0} <span className="text-slate-500 font-normal">bath</span></span>
-                                </div>
-                                <div className="w-px h-5 bg-slate-300"></div>
-                                <div className="flex items-center gap-1.5">
-                                  <svg className="w-5 h-5 text-slate-500" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
-                                  </svg>
-                                  <span className="text-slate-700 font-semibold">{property.squareFeet?.toLocaleString() || 'N/A'} <span className="text-slate-500 font-normal">sqft</span></span>
-                                </div>
-                              </div>
-
-                              {/* Pricing Section */}
-                              <div className="space-y-2">
-                                {/* List Price - Large and prominent */}
-                                <div className="bg-slate-50 rounded-xl p-2.5 sm:p-3 md:p-4 border border-slate-200">
-                                  <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-0.5">List Price</div>
-                                  <div className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-slate-900">
-                                    ${(property.listPrice || 0).toLocaleString()}
-                                  </div>
-                                </div>
-
-                                {/* Monthly & Down Payment */}
-                                <div className="grid grid-cols-2 gap-2">
-                                  <div className="bg-gradient-to-br from-emerald-50 to-emerald-100/50 rounded-lg p-2.5 sm:p-3 md:p-4 border border-emerald-200">
-                                    <div className="text-xs font-semibold text-emerald-700 uppercase tracking-wider mb-0.5">Monthly</div>
-                                    <div className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-emerald-900">
-                                      ${(property.monthlyPayment || 0).toLocaleString()}
-                                    </div>
-                                  </div>
-                                  <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-lg p-2.5 sm:p-3 md:p-4 border border-blue-200">
-                                    <div className="text-xs font-semibold text-blue-700 uppercase tracking-wider mb-0.5">Down</div>
-                                    <div className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-blue-900">
-                                      ${(property.downPaymentAmount || 0).toLocaleString()}
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-
-                              {/* Disclaimer */}
-                              <p className="text-xs text-slate-500 text-center pt-0.5 sm:pt-1">
-                                * Estimate excludes taxes, insurance & HOA fees
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })()}
-                  </div>
-
-                  {/* Navigation Controls */}
-                  <div className="bg-slate-800/90 backdrop-blur-md border-t border-slate-700/50 p-3 sm:p-4 md:p-6">
-                    <div className="max-w-lg mx-auto flex items-center gap-2 sm:gap-3 md:gap-4">
-                      <button
-                        onClick={() => setPreviewCurrentIndex((prev) => (prev - 1 + previewProperties.length) % previewProperties.length)}
-                        className="flex-1 bg-slate-700/80 hover:bg-slate-600 text-white py-3 sm:py-3.5 md:py-4 rounded-xl sm:rounded-2xl font-semibold text-sm sm:text-base transition-all hover:shadow-lg flex items-center justify-center gap-1.5 sm:gap-2"
-                      >
-                        <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                        </svg>
-                        <span className="hidden sm:inline">Previous</span>
-                        <span className="sm:hidden">Prev</span>
-                      </button>
-                      <button
-                        onClick={() => setPreviewCurrentIndex((prev) => (prev + 1) % previewProperties.length)}
-                        className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white py-3 sm:py-3.5 md:py-4 rounded-xl sm:rounded-2xl font-semibold text-sm sm:text-base transition-all hover:shadow-lg flex items-center justify-center gap-1.5 sm:gap-2"
-                      >
-                        Next
-                        <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
+              {/* PropertyListingSwiper Component */}
+              <PropertyListingSwiper
+                properties={previewProperties}
+                onLike={() => {}} // Dummy handler for preview
+                onPass={() => {}} // Dummy handler for preview
+                favorites={[]}
+                passedIds={[]}
+                isLoading={loadingPreview}
+              />
             </div>
           )}
         </main>

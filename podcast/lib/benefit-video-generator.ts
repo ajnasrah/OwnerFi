@@ -52,23 +52,32 @@ export interface BenefitAvatarConfig {
   background_color: string;
 }
 
-// Default avatars for seller and buyer videos
-const DEFAULT_AVATARS: Record<'seller' | 'buyer', BenefitAvatarConfig> = {
-  seller: {
-    avatar_type: 'talking_photo',
-    avatar_id: 'Wayne_public_3_20240711', // Professional male avatar
-    voice_id: '1bd001e7e50f421d891986aad5158bc8', // Professional male voice
-    scale: 1.4,
-    background_color: '#1e3a8a' // Deep blue for sellers
-  },
-  buyer: {
-    avatar_type: 'talking_photo',
-    avatar_id: 'Kayla_public_2_20240108', // Friendly female avatar
-    voice_id: '2d5b0e6cf36f42589658ee24c6e481c2', // Friendly female voice
-    scale: 1.4,
-    background_color: '#059669' // Green for buyers
-  }
+// Get default avatars from environment variables
+const getDefaultAvatars = (): Record<'seller' | 'buyer', BenefitAvatarConfig> => {
+  // Use your own avatar and voice from environment variables
+  const defaultAvatarId = process.env.BENEFIT_AVATAR_ID || process.env.HEYGEN_AVATAR_ID || '';
+  const defaultVoiceId = process.env.BENEFIT_VOICE_ID || process.env.HEYGEN_VOICE_ID || '';
+  const defaultAvatarType = (process.env.BENEFIT_AVATAR_TYPE || 'talking_photo') as 'avatar' | 'talking_photo';
+
+  return {
+    seller: {
+      avatar_type: defaultAvatarType,
+      avatar_id: process.env.BENEFIT_SELLER_AVATAR_ID || defaultAvatarId,
+      voice_id: process.env.BENEFIT_SELLER_VOICE_ID || defaultVoiceId,
+      scale: Number(process.env.BENEFIT_SELLER_SCALE || '1.4'),
+      background_color: process.env.BENEFIT_SELLER_BG_COLOR || '#1e3a8a' // Deep blue for sellers
+    },
+    buyer: {
+      avatar_type: defaultAvatarType,
+      avatar_id: process.env.BENEFIT_BUYER_AVATAR_ID || defaultAvatarId,
+      voice_id: process.env.BENEFIT_BUYER_VOICE_ID || defaultVoiceId,
+      scale: Number(process.env.BENEFIT_BUYER_SCALE || '1.4'),
+      background_color: process.env.BENEFIT_BUYER_BG_COLOR || '#059669' // Green for buyers
+    }
+  };
 };
+
+const DEFAULT_AVATARS = getDefaultAvatars();
 
 export class BenefitVideoGenerator {
   private apiKey: string;

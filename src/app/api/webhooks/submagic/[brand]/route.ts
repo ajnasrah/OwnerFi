@@ -322,11 +322,8 @@ async function processVideoAndPost(
 
     console.log(`📱 [${brandConfig.displayName}] Posting to platforms: ${platforms.join(', ')}`);
 
-    // Property videos post immediately, others use queue
-    const useQueue = brand !== 'property';
-    if (!useQueue) {
-      console.log(`⚡ [${brandConfig.displayName}] Property video - posting immediately (not using queue)`);
-    }
+    // All videos use queue now (OwnerFi has 15 slots/day)
+    const useQueue = true;
 
     // Post to Late API
     const postResult = await postToLate({
@@ -334,7 +331,7 @@ async function processVideoAndPost(
       caption,
       title,
       platforms: platforms as any[],
-      useQueue, // Property videos post immediately, others use queue
+      useQueue, // All videos use Late.dev queue
       brand,
     });
 

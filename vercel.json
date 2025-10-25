@@ -30,6 +30,14 @@
       "schedule": "0 9,12,15,18,21 * * *"
     },
     {
+      "path": "/api/benefit/cron",
+      "schedule": "20 9,12,15,18,21 * * *"
+    },
+    {
+      "path": "/api/property/video-cron",
+      "schedule": "40 9,12,15,18,21 * * *"
+    },
+    {
       "path": "/api/cron/check-stuck-heygen",
       "schedule": "*/15 * * * *"
     },
@@ -44,14 +52,6 @@
     {
       "path": "/api/cron/check-stuck-video-processing",
       "schedule": "0 */2 * * *"
-    },
-    {
-      "path": "/api/benefit/cron",
-      "schedule": "0 10,13,16,19,22 * * *"
-    },
-    {
-      "path": "/api/property/video-cron",
-      "schedule": "0 11,15,19 * * *"
     },
     {
       "path": "/api/cron/weekly-maintenance",

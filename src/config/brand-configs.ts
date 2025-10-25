@@ -169,8 +169,8 @@ export const OWNERFI_CONFIG: BrandConfig = {
 
   scheduling: {
     timezone: 'America/New_York',
-    postingHours: [9, 12, 15, 18, 21],
-    maxPostsPerDay: 5,
+    postingHours: [9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23], // 15 slots/day
+    maxPostsPerDay: 15, // 5 viral + 5 benefits + 5 properties (flexible)
   },
 
   features: {
@@ -265,8 +265,8 @@ export const BENEFIT_CONFIG: BrandConfig = {
   },
 
   scheduling: {
-    timezone: 'America/Chicago', // Central Time
-    postingHours: [9, 12, 15, 18, 21],
+    timezone: 'America/Chicago', // Central Time (CDT)
+    postingHours: [9, 12, 15, 18, 21], // Offset by 20 min from viral
     maxPostsPerDay: 5, // 5 benefit videos per day
   },
 
@@ -315,8 +315,8 @@ export const PROPERTY_CONFIG: BrandConfig = {
 
   scheduling: {
     timezone: 'America/New_York', // Eastern Time
-    postingHours: [11, 15, 19], // 11 AM, 3 PM, 7 PM
-    maxPostsPerDay: 9, // 3 per cron run × 3 runs
+    postingHours: [9, 12, 15, 18, 21], // Offset by 40 min from viral
+    maxPostsPerDay: 15, // Up to 3 per cron run × 5 runs = 15 max
   },
 
   features: {

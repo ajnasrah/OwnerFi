@@ -79,7 +79,7 @@ export async function GET(request: NextRequest) {
     // Load profiles from Firestore (async)
     await scriptGen.loadProfiles();
 
-    const script = await scriptGen.generateScript(undefined, 2); // 2 Q&A pairs
+    const script = await scriptGen.generateScript(undefined, 1); // 1 Q&A pair (15-20 seconds)
 
     console.log(`✅ Generated script: ${script.episode_title}`);
     console.log(`   Guest: ${script.guest_name}`);

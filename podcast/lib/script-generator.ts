@@ -145,7 +145,30 @@ export class ScriptGenerator {
       messages: [
         {
           role: 'system',
-          content: `You are an ELITE podcast script writer who creates EXPLOSIVE, ENERGETIC content using SIMPLE words a 5th grader can understand. Your style is a mix of Joe Rogan's curiosity, Gary Vee's intensity, and Alex Hormozi's direct communication. Every line should POP with energy and emotion. Make people feel EXCITED to learn. NEVER use names in dialogue - people don't constantly say each other's names in real conversations.`
+          content: `You are an ELITE short-form podcast script writer for Abdullah's personal health brand.
+Your job is to create 15–20 second, EXPLOSIVE, ENERGETIC health scripts that sound like a mix of Joe Rogan's curiosity, Gary Vee's intensity, and Alex Hormozi's directness.
+
+Audience: everyday people who want to get healthier but feel overwhelmed.
+Reading level: 5th grade (SIMPLE words, short sentences, HUGE energy).
+
+Rules:
+- Only ONE question and ONE answer per clip.
+- No names in dialogue.
+- 15–20 seconds when spoken.
+- Add emotion and energy (use words like CRAZY, WILD, MASSIVE, INSANE).
+- Use CAPS to emphasize 1–2 key words.
+- Make it sound like real talk between friends.
+- Each answer should feel like a truth bomb or quick life hack.
+- Topic should connect to daily habits, not science jargon.
+
+Format strictly as:
+Q: [hook question, shocked/curious tone]
+A: [short passionate answer, 2–3 sentences, insider tip or quick win]
+
+At the end of the answer, include a one-line takeaway or teaser for tomorrow's post.
+
+Add this disclaimer at the end (not spoken):
+"This content is for educational purposes only. Always consult a professional before making health changes."`
         },
         {
           role: 'user',
@@ -197,105 +220,41 @@ export class ScriptGenerator {
    * Build the GPT-4 prompt for script generation
    */
   private buildPrompt(guest: GuestProfile, topic: string, count: number): string {
-    return `Create a ${count}-question EXPLOSIVE podcast interview about "${topic}".
+    // Health topics for daily rotation
+    const healthTopics = ['nutrition', 'fitness', 'mindset', 'sleep', 'energy'];
 
-Guest Expert:
-- Name: ${guest.name}
-- Title: ${guest.title}
-- Expertise: ${guest.expertise}
-- Tone: ${guest.tone}
+    return `Create ${count} short health video script(s) for Abdullah's daily posts.
 
-Host: ${this.hostProfile.name}
-
-CRITICAL REQUIREMENTS:
-
-1. ENERGY & EMOTION:
-   - Use POWER WORDS that create excitement: INSANE, CRAZY, SHOCKING, MASSIVE, INCREDIBLE, WILD
-   - Add emphasis with CAPS on key words (but don't overdo it - 1-2 words per answer max)
-   - Use exclamation points! Show emotion! Get hyped!
-   - Questions should sound SHOCKED, CURIOUS, or EXCITED
-   - Answers should sound PASSIONATE like the expert REALLY CARES about this topic
-
-2. CONVERSATIONAL & BOLD:
-   - Make questions sound like "WAIT... are you telling me that...?" or "Hold on, so..." or "No way!"
-   - Answers should start strong: "Listen...", "Here's the crazy part...", "This blows people's minds...", "Okay so..."
-   - Use "you" and "your" to speak directly to the audience
-   - Sound like two friends having an INTENSE conversation
-
-3. SIMPLE BUT PUNCHY (5th grade reading level - CRITICAL):
-   - Short sentences. 10 words max. Punchy. Hard-hitting.
-   - Use ONLY simple words: avoid "groundbreaking", "astonishing", "revolutionize", "shatter"
-   - Use instead: "HUGE", "CRAZY", "WILD", "INSANE", "MASSIVE"
-   - NO fancy words like "optimize", "leverage", "microbiome" - say "gut health" not "gut microbiome"
-   - Under 15 words per sentence
-   - Avoid boring academic language - this is REAL TALK
-   - If a 10-year-old wouldn't understand it, DON'T USE IT
-
-4. PRACTICAL & MIND-BLOWING:
-   - Every answer should drop a truth bomb or life hack
-   - Make it feel like secret insider knowledge
-   - Focus on things that make people go "WHOA I didn't know that!"
-   - 2-3 sentences per answer (30-45 seconds when spoken with energy)
-
-5. NO NAMES IN DIALOGUE (MANDATORY):
-   - NEVER say "Abdullah", "Dr. Smith", or guest names in the dialogue
-   - Don't say "Thanks Abdullah" or "Welcome Dr. Smith"
-   - Just jump right into the content
-   - Natural conversation where people DON'T use names AT ALL
-   - Bad: "Dr. Smith, what do you think?"
-   - Good: "What do you think?"
-   - Bad: "Great question, Abdullah!"
-   - Good: "Great question!"
-
-Format your response as:
-Q1: [Excited/shocked question - no names]
-A1: [Passionate, energetic answer - no names]
-
-Q2: [Another hyped question]
-A2: [Another passionate answer]
-
-... and so on.
+Topics to rotate through: ${healthTopics.join(', ')}
+Current focus topic: ${topic}
 
 EXAMPLES:
 
-❌ BAD (complex words, boring, names):
-Q1: Dr. Smith, what's the most groundbreaking revelation in cardiovascular disease prevention?
-A1: Abdullah, regular cardiovascular exercise is crucial for optimal metabolic function.
+✅ GOOD (Nutrition):
+Q: Why do we feel tired after lunch?
+A: You're eating too much sugar! It spikes, then CRASHES. Switch to protein and healthy fats. You'll stay sharp ALL day. Tomorrow: How to sleep like a baby.
 
-✅ GOOD (simple words, exciting, NO names):
-Q1: Wait, what's the BIGGEST mistake people make with heart health?
-A1: They sit all day! Your body needs to MOVE. Walk for 30 minutes every day. That's it. It can add YEARS to your life!
+✅ GOOD (Fitness):
+Q: Do I really need to work out for an HOUR?
+A: No way! Just 10 minutes of INTENSE movement daily is HUGE. Walk fast. Do push-ups. Your body doesn't care about time—it cares about effort. Tomorrow: The one food killing your energy.
 
-❌ BAD (using names, complex words, formal):
-Q1: Welcome Dr. Smith! Can you elucidate the paradigm of cardiovascular optimization?
-A1: Thanks for having me, Abdullah! Well, aerobic exercise facilitates metabolic enhancement...
+✅ GOOD (Mindset):
+Q: Why can't I stick to my goals?
+A: You're thinking too BIG. Start SMALL. One push-up. One healthy meal. Small wins build momentum. That's how you WIN. Tomorrow: Why you're not sleeping right.
 
-✅ GOOD (NO names, simple words, energetic):
-Q1: What's the one thing everyone gets WRONG about eating healthy?
-A1: Here's the crazy part - you don't need to be perfect! Eat just ONE more veggie a day. That's HUGE. Small wins add up fast!
+✅ GOOD (Sleep):
+Q: Why do I wake up tired?
+A: You're scrolling before bed! Blue light kills melatonin. Put the phone away 30 minutes early. Your body will thank you. Tomorrow: How to double your energy.
 
-✅ MORE GOOD EXAMPLES (NO NAMES, SIMPLE WORDS):
-Q: Hold on. Are most people doing this totally wrong?
-A: YES! And it costs them BIG money. Here's what the pros do instead...
+✅ GOOD (Energy):
+Q: Why am I always LOW on energy?
+A: You're not drinking enough water! Dehydration drains you FAST. Drink a big glass when you wake up. Game changer. Tomorrow: The workout myth nobody talks about.
 
-Q: That sounds INSANE. How is this legal?
-A: I know right?! So here's the trick nobody talks about...
+Format each script as:
+Q: [hook question]
+A: [2-3 sentence answer with quick win] [Tomorrow teaser]
 
-Q: What would you tell someone brand new to this?
-A: Forget everything you know. The real secret is WAY simpler than you think...
-
-WORD SUBSTITUTIONS (use simple words):
-❌ groundbreaking → ✅ HUGE, BIG, MASSIVE
-❌ revolutionary → ✅ CRAZY, WILD
-❌ optimize → ✅ make better, improve
-❌ facilitate → ✅ help, make it happen
-❌ paradigm → ✅ way, method
-❌ elucidate → ✅ explain, show
-❌ cardiovascular → ✅ heart
-❌ microbiome → ✅ gut health
-❌ metabolic → ✅ body's energy
-
-Make every exchange feel URGENT, VALUABLE, and EXCITING. The listener should feel like they're getting insider secrets that could change their life!`;
+This content is for educational purposes only. Always consult a professional before making health changes.`;
   }
 
   /**

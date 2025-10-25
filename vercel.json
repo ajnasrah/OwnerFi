@@ -15,19 +15,19 @@
   "crons": [
     {
       "path": "/api/podcast/cron",
-      "schedule": "0 9,15,21 * * *"
+      "schedule": "0 9,12,15,18,21 * * *"
     },
     {
       "path": "/api/cron/fetch-rss",
-      "schedule": "0 12 * * *"
+      "schedule": "0 8 * * *"
     },
     {
       "path": "/api/cron/rate-articles",
-      "schedule": "0 13 * * *"
+      "schedule": "30 8 * * *"
     },
     {
       "path": "/api/cron/generate-video",
-      "schedule": "0 9,15,21 * * *"
+      "schedule": "0 9,12,15,18,21 * * *"
     },
     {
       "path": "/api/cron/check-stuck-heygen",
@@ -47,7 +47,7 @@
     },
     {
       "path": "/api/benefit/cron",
-      "schedule": "0 11,19 * * *"
+      "schedule": "0 10,13,16,19,22 * * *"
     },
     {
       "path": "/api/cron/weekly-maintenance",

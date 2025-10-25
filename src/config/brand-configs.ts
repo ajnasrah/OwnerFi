@@ -119,8 +119,8 @@ export const CARZ_CONFIG: BrandConfig = {
 
   scheduling: {
     timezone: 'America/New_York',
-    postingHours: [9, 11, 14, 18, 20],
-    maxPostsPerDay: 15,
+    postingHours: [9, 12, 15, 18, 21],
+    maxPostsPerDay: 5,
   },
 
   features: {
@@ -169,8 +169,8 @@ export const OWNERFI_CONFIG: BrandConfig = {
 
   scheduling: {
     timezone: 'America/New_York',
-    postingHours: [9, 11, 14, 18, 20],
-    maxPostsPerDay: 15,
+    postingHours: [9, 12, 15, 18, 21],
+    maxPostsPerDay: 5,
   },
 
   features: {
@@ -218,7 +218,7 @@ export const PODCAST_CONFIG: BrandConfig = {
   scheduling: {
     timezone: 'America/Chicago', // Podcast uses Central Time
     postingHours: [9, 12, 15, 18, 21],
-    maxPostsPerDay: 3, // 3 episodes per day
+    maxPostsPerDay: 5, // 5 episodes per day
   },
 
   features: {
@@ -267,7 +267,7 @@ export const BENEFIT_CONFIG: BrandConfig = {
   scheduling: {
     timezone: 'America/Chicago', // Central Time
     postingHours: [9, 12, 15, 18, 21],
-    maxPostsPerDay: 2, // 2 benefit videos per day (1 seller, 1 buyer)
+    maxPostsPerDay: 5, // 5 benefit videos per day
   },
 
   features: {

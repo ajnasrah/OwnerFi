@@ -8,6 +8,7 @@ import { collection, query, where, getDocs, orderBy, limit as firestoreLimit } f
 const COLLECTIONS = {
   CARZ: 'carz_workflow_queue',
   OWNERFI: 'ownerfi_workflow_queue',
+  VASSDISTRO: 'vassdistro_workflow_queue',
 };
 
 export async function GET(request: Request) {
@@ -20,7 +21,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const includeHistory = searchParams.get('history') === 'true';
 
-    let carzQuery, ownerfiQuery;
+    let carzQuery, ownerfiQuery, vassdistroQuery;
 
     if (includeHistory) {
       // Get all recent workflows (last 50)
@@ -32,6 +33,12 @@ export async function GET(request: Request) {
 
       ownerfiQuery = query(
         collection(db, COLLECTIONS.OWNERFI),
+        orderBy('updatedAt', 'desc'),
+        firestoreLimit(50)
+      );
+
+      vassdistroQuery = query(
+        collection(db, COLLECTIONS.VASSDISTRO),
         orderBy('updatedAt', 'desc'),
         firestoreLimit(50)
       );
@@ -50,21 +57,31 @@ export async function GET(request: Request) {
         orderBy('createdAt', 'desc'),
         firestoreLimit(20)
       );
+
+      vassdistroQuery = query(
+        collection(db, COLLECTIONS.VASSDISTRO),
+        where('status', 'in', ['pending', 'heygen_processing', 'submagic_processing', 'posting']),
+        orderBy('createdAt', 'desc'),
+        firestoreLimit(20)
+      );
     }
 
-    const [carzSnapshot, ownerfiSnapshot] = await Promise.all([
+    const [carzSnapshot, ownerfiSnapshot, vassdistroSnapshot] = await Promise.all([
       getDocs(carzQuery),
-      getDocs(ownerfiQuery)
+      getDocs(ownerfiQuery),
+      getDocs(vassdistroQuery)
     ]);
 
     const carzWorkflows = carzSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     const ownerfiWorkflows = ownerfiSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const vassdistroWorkflows = vassdistroSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
     return NextResponse.json({
       success: true,
       workflows: {
         carz: carzWorkflows,
-        ownerfi: ownerfiWorkflows
+        ownerfi: ownerfiWorkflows,
+        vassdistro: vassdistroWorkflows
       },
       timestamp: new Date().toISOString()
     });

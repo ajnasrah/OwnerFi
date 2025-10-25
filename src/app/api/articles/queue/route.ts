@@ -39,9 +39,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Fetch unprocessed articles for both brands
+    // Fetch unprocessed articles for all brands
     const carzArticles: Article[] = [];
     const ownerfiArticles: Article[] = [];
+    const vassdistroArticles: Article[] = [];
 
     // Get Carz articles (all, not just unprocessed)
     const carzQuery = query(
@@ -93,6 +94,31 @@ export async function GET(request: NextRequest) {
       });
     });
 
+    // Get Vass Distro articles (all, not just unprocessed)
+    const vassdistroQuery = query(
+      collection(db, 'vassdistro_articles'),
+      orderBy('pubDate', 'desc'),
+      firestoreLimit(100)
+    );
+
+    const vassdistroSnapshot = await getDocs(vassdistroQuery);
+    vassdistroSnapshot.docs.forEach(doc => {
+      const data = doc.data();
+      vassdistroArticles.push({
+        id: doc.id,
+        title: data.title || '',
+        description: data.description || '',
+        link: data.link || '',
+        pubDate: data.pubDate || Date.now(),
+        processed: data.processed || false,
+        qualityScore: data.qualityScore,
+        aiReasoning: data.aiReasoning,
+        feedId: data.feedId || '',
+        categories: data.categories || [],
+        author: data.author
+      });
+    });
+
     // Sort by quality score (if available) then by date
     const sortArticles = (articles: Article[]) => {
       return articles.sort((a, b) => {
@@ -112,7 +138,8 @@ export async function GET(request: NextRequest) {
       success: true,
       articles: {
         carz: sortArticles(carzArticles),
-        ownerfi: sortArticles(ownerfiArticles)
+        ownerfi: sortArticles(ownerfiArticles),
+        vassdistro: sortArticles(vassdistroArticles)
       },
       timestamp: new Date().toISOString()
     });

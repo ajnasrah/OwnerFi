@@ -4,10 +4,11 @@ import { getAllFeedSources, getStats } from '@/lib/feed-store-firestore';
 
 export async function GET() {
   try {
-    const [feeds, statsCarz, statsOwnerfi] = await Promise.all([
+    const [feeds, statsCarz, statsOwnerfi, statsVassdistro] = await Promise.all([
       getAllFeedSources(),
       getStats('carz'),
-      getStats('ownerfi')
+      getStats('ownerfi'),
+      getStats('vassdistro')
     ]);
 
     return NextResponse.json({
@@ -15,17 +16,26 @@ export async function GET() {
       scheduler: {
         type: 'serverless-cron',
         status: 'Serverless (Vercel Cron)',
-        message: 'Running via Vercel cron every 2 hours'
+        message: 'Running via Vercel cron every 2 hours',
+        config: {
+          maxVideosPerDay: {
+            carz: 5,
+            ownerfi: 15,
+            vassdistro: 1
+          }
+        }
       },
       feeds: {
         total: feeds.length,
         carz: feeds.filter(f => f.category === 'carz').length,
         ownerfi: feeds.filter(f => f.category === 'ownerfi').length,
+        vassdistro: feeds.filter(f => f.category === 'vassdistro').length,
         list: feeds.map(f => ({ id: f.id, url: f.url, category: f.category, lastFetch: f.lastFetched }))
       },
       stats: {
         carz: statsCarz,
-        ownerfi: statsOwnerfi
+        ownerfi: statsOwnerfi,
+        vassdistro: statsVassdistro
       }
     });
   } catch (error) {

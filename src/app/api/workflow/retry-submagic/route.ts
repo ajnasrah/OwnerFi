@@ -22,9 +22,19 @@ export async function POST(request: NextRequest) {
 
     console.log(`🔄 Retrying Submagic for workflow ${workflowId} (${brandConfig.displayName})`);
 
-    // Get workflow data
-    const { getWorkflowById, updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
-    const workflow = await getWorkflowById(workflowId, validatedBrand);
+    // Get workflow data based on brand type
+    let workflow;
+    if (validatedBrand === 'podcast') {
+      const { getPodcastWorkflowById } = await import('@/lib/feed-store-firestore');
+      workflow = await getPodcastWorkflowById(workflowId);
+    } else if (validatedBrand === 'benefit') {
+      const { getBenefitWorkflowById } = await import('@/lib/feed-store-firestore');
+      workflow = await getBenefitWorkflowById(workflowId);
+    } else {
+      const { getWorkflowById } = await import('@/lib/feed-store-firestore');
+      const result = await getWorkflowById(workflowId);
+      workflow = result?.workflow || null;
+    }
 
     if (!workflow) {
       return NextResponse.json(
@@ -112,13 +122,32 @@ export async function POST(request: NextRequest) {
 
     console.log(`✅ Submagic project created: ${projectId}`);
 
-    // Update workflow
-    await updateWorkflowStatus(workflowId, validatedBrand, {
-      status: 'submagic_processing',
-      submagicVideoId: projectId,
-      submagicProjectId: projectId,
-      error: null // Clear previous error
-    });
+    // Update workflow based on brand type
+    if (validatedBrand === 'podcast') {
+      const { updatePodcastWorkflow } = await import('@/lib/feed-store-firestore');
+      await updatePodcastWorkflow(workflowId, {
+        status: 'submagic_processing',
+        submagicVideoId: projectId,
+        submagicProjectId: projectId,
+        error: null // Clear previous error
+      });
+    } else if (validatedBrand === 'benefit') {
+      const { updateBenefitWorkflow } = await import('@/lib/feed-store-firestore');
+      await updateBenefitWorkflow(workflowId, {
+        status: 'submagic_processing',
+        submagicVideoId: projectId,
+        submagicProjectId: projectId,
+        error: null // Clear previous error
+      });
+    } else {
+      const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
+      await updateWorkflowStatus(workflowId, validatedBrand, {
+        status: 'submagic_processing',
+        submagicVideoId: projectId,
+        submagicProjectId: projectId,
+        error: null // Clear previous error
+      });
+    }
 
     return NextResponse.json({
       success: true,

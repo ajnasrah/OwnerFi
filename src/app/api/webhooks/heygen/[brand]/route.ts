@@ -326,12 +326,23 @@ async function triggerSubmagicProcessing(
     const data = await response.json();
     console.log(`📦 [${brandConfig.displayName}] Submagic API response:`, JSON.stringify(data, null, 2));
 
-    const projectId = data.id || data.project_id || data.projectId;
+    // Extract project ID with multiple fallback options
+    const projectId = data?.id || data?.project_id || data?.projectId || data?.data?.id;
 
     // Validate that we received a project ID
-    if (!projectId) {
+    if (!projectId || projectId === '' || projectId === null || projectId === undefined) {
       console.error(`❌ [${brandConfig.displayName}] Submagic response missing project ID!`);
+      console.error(`   Response status: ${response.status}`);
+      console.error(`   Response headers:`, Object.fromEntries(response.headers.entries()));
       console.error(`   Full response:`, JSON.stringify(data, null, 2));
+      console.error(`   Extracted values - id: ${data?.id}, project_id: ${data?.project_id}, projectId: ${data?.projectId}`);
+
+      // Save the error but keep the HeyGen video
+      await updateWorkflowForBrand(brand, workflowId, {
+        status: 'failed',
+        error: `Submagic API call failed - no project ID received. Status: ${response.status}. Response keys: ${Object.keys(data || {}).join(', ')}`
+      });
+
       throw new Error(`Submagic API call failed - no project ID received. Response: ${JSON.stringify(data)}`);
     }
 

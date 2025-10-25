@@ -31,6 +31,7 @@ export async function GET(request: NextRequest) {
     }
 
     console.log('🏡 Property video cron job triggered');
+    console.log(`📊 Generating 15-second property videos`);
 
     // Get properties that are eligible and haven't had videos generated
     const propertiesSnapshot = await admin
@@ -97,53 +98,11 @@ export async function GET(request: NextRequest) {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 
     for (const property of propertiesToProcess) {
-      console.log(`\n🎥 Generating BOTH variants for ${property.address}`);
+      console.log(`\n🎥 Generating 15-second video for ${property.address}`);
 
-      // Generate 30-second variant
       try {
-        console.log(`   📹 30-second version...`);
-        const response30 = await fetch(`${baseUrl}/api/property/generate-video`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            propertyId: property.id,
-            variant: '30'
-          })
-        });
-
-        const result30 = await response30.json();
-
-        if (result30.success) {
-          console.log(`   ✅ 30-sec variant started`);
-          results.push({
-            propertyId: property.id,
-            address: property.address,
-            variant: '30sec',
-            success: true,
-            workflowId: result30.workflowId
-          });
-        }
-
-        // Wait 2 seconds before next variant
-        await new Promise(resolve => setTimeout(resolve, 2000));
-
-      } catch (error) {
-        console.error(`   ❌ 30-sec variant failed:`, error);
-        results.push({
-          propertyId: property.id,
-          address: property.address,
-          variant: '30sec',
-          success: false,
-          error: error instanceof Error ? error.message : 'Unknown error'
-        });
-      }
-
-      // Generate 15-second variant
-      try {
-        console.log(`   📹 15-second version...`);
-        const response15 = await fetch(`${baseUrl}/api/property/generate-video`, {
+        // Generate 15-second video
+        const response = await fetch(`${baseUrl}/api/property/generate-video`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -154,16 +113,25 @@ export async function GET(request: NextRequest) {
           })
         });
 
-        const result15 = await response15.json();
+        const result = await response.json();
 
-        if (result15.success) {
-          console.log(`   ✅ 15-sec variant started`);
+        if (result.success) {
+          console.log(`✅ 15-sec video started for ${property.address}`);
           results.push({
             propertyId: property.id,
             address: property.address,
             variant: '15sec',
             success: true,
-            workflowId: result15.workflowId
+            workflowId: result.workflowId
+          });
+        } else {
+          console.error(`❌ Failed: ${result.error}`);
+          results.push({
+            propertyId: property.id,
+            address: property.address,
+            variant: '15sec',
+            success: false,
+            error: result.error
           });
         }
 
@@ -171,11 +139,11 @@ export async function GET(request: NextRequest) {
         await new Promise(resolve => setTimeout(resolve, 3000));
 
       } catch (error) {
-        console.error(`   ❌ 15-sec variant failed:`, error);
+        console.error(`❌ Error for ${property.address}:`, error);
         results.push({
           propertyId: property.id,
           address: property.address,
-          variant: '15sec',
+          variant: `${variant}sec`,
           success: false,
           error: error instanceof Error ? error.message : 'Unknown error'
         });
@@ -186,10 +154,11 @@ export async function GET(request: NextRequest) {
 
     console.log(`\n📊 Property video cron summary:`);
     console.log(`   Eligible properties: ${eligibleProperties.length}`);
-    console.log(`   Videos generated: ${successCount}/${propertiesToProcess.length}`);
+    console.log(`   15-sec videos generated: ${successCount}/${propertiesToProcess.length}`);
 
     return NextResponse.json({
       success: true,
+      variant: '15sec',
       generated: successCount,
       total: propertiesToProcess.length,
       eligible: eligibleProperties.length,

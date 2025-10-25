@@ -244,9 +244,20 @@ export async function getAndLockArticle(category: 'carz' | 'ownerfi'): Promise<A
     ...doc.data()
   } as Article));
 
-  // Filter only articles with quality scores and sort
+  // Filter only high-quality articles (score >= 70) and not too old (max 3 days)
+  const threeDaysAgo = Date.now() - (3 * 24 * 60 * 60 * 1000);
   const ratedArticles = articles
-    .filter(a => typeof a.qualityScore === 'number' && a.qualityScore !== undefined)
+    .filter(a => {
+      // Must have quality score >= 70 (video-worthy threshold)
+      if (typeof a.qualityScore !== 'number' || a.qualityScore < 70) {
+        return false;
+      }
+      // Must be recent (published within 3 days)
+      if (a.pubDate && a.pubDate < threeDaysAgo) {
+        return false;
+      }
+      return true;
+    })
     .sort((a, b) => (b.qualityScore || 0) - (a.qualityScore || 0));
 
   if (ratedArticles.length === 0) {

@@ -181,14 +181,9 @@ export async function processFeedSource(feedSource: FeedSource): Promise<{
         continue;
       }
 
-      // Get best available content (use web scraper if RSS content is insufficient)
-      const { getBestAvailableContent } = await import('./article-content-fetcher');
-      const fullContent = await getBestAvailableContent(
-        item.content || '',
-        item.description || '',
-        item.link,
-        200 // minimum 200 chars required
-      );
+      // Use RSS content as-is (quality filter will reject insufficient content later)
+      // Web scraping is unreliable in serverless environments and adds latency
+      const content = item.content || item.description || '';
 
       // Create article (only include author if it exists)
       const article: Omit<Article, 'createdAt'> = {
@@ -196,7 +191,7 @@ export async function processFeedSource(feedSource: FeedSource): Promise<{
         feedId: feedSource.id,
         title: item.title,
         description: item.description || '',
-        content: fullContent,
+        content,
         link: item.link,
         pubDate: articlePubDate,
         ...(item.author && { author: item.author }),

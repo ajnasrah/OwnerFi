@@ -53,16 +53,26 @@ export async function POST(request: NextRequest) {
     console.log(`✅ Got and locked article: ${article.title.substring(0, 50)}...`);
 
     // Validate article content exists and has sufficient length
-    if (!article.content || article.content.trim().length < 50) {
-      console.error(`❌ Article has insufficient content (${article.content?.length || 0} chars): ${article.title}`);
+    const contentLength = article.content?.trim().length || 0;
+
+    if (contentLength === 0) {
+      console.error(`❌ Article has ZERO content: ${article.title}`);
+      console.error(`   Feed ID: ${article.feedId || 'unknown'}`);
+      console.error(`   Link: ${article.link}`);
       return NextResponse.json(
         {
           success: false,
-          error: 'Article has insufficient content for video generation',
-          details: `Content length: ${article.content?.length || 0} chars (minimum 50 required)`
+          error: 'Article has no content - RSS feed may only provide headlines',
+          details: `Content length: 0 chars. This feed (${article.feedId || 'unknown'}) likely needs to be replaced with one that provides full content.`
         },
         { status: 400 }
       );
+    }
+
+    if (contentLength < 200) {
+      console.warn(`⚠️  Article has short content (${contentLength} chars): ${article.title}`);
+      console.warn(`   This may not generate a good video. Consider using feeds with longer articles.`);
+      // Allow it to proceed for now, but log the warning
     }
 
     // Add to workflow queue with 'pending' status

@@ -89,16 +89,100 @@ export class BenefitVideoGenerator {
   }
 
   /**
-   * Generate video script from benefit point with CTA
+   * Generate video script from benefit point using OpenAI (Abdullah Brand style)
    */
-  private generateScript(benefit: BenefitPoint): string {
-    const intro = benefit.audience === 'seller'
-      ? "Attention home sellers!"
-      : "Attention home buyers!";
+  private async generateScript(benefit: BenefitPoint): Promise<string> {
+    const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
-    const cta = "Visit ownerfi.ai to see owner-financed properties in your area today.";
+    // Fallback if no OpenAI key
+    if (!OPENAI_API_KEY) {
+      const intro = benefit.audience === 'seller'
+        ? "Attention home sellers!"
+        : "Attention home buyers!";
+      const cta = "Visit ownerfi.ai to see owner-financed properties in your area today.";
+      return `${intro} ${benefit.shortDescription} ${cta}`;
+    }
 
-    return `${intro} ${benefit.shortDescription} ${cta}`;
+    // Get current day for theme
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const today = days[new Date().getDay()];
+
+    // Build Abdullah Brand prompt
+    const prompt = `Generate a 30-second talking-head script for Abdullah (cartoon avatar) about "${benefit.title}" targeting ${benefit.audience}s.
+
+Today is ${today}.
+
+Topic Context: ${benefit.shortDescription}
+
+${today === 'Tuesday' ? 'Focus: Money & Ownership' : ''}
+${today === 'Sunday' ? 'Focus: Faith & Grounding' : ''}
+${today === 'Wednesday' ? 'Focus: Community & Relationships' : ''}
+${today === 'Thursday' ? 'Focus: Entrepreneurship & Action' : ''}
+${today === 'Friday' ? 'Focus: Reflection & Real Talk' : ''}
+${today === 'Monday' ? 'Focus: Mindset & Motivation' : ''}
+${today === 'Saturday' ? 'Focus: Freedom & Lifestyle' : ''}
+
+CRITICAL REQUIREMENTS:
+- 80-110 words maximum (30 seconds)
+- Start with a natural, thought-provoking question related to owner financing
+- Calm, confident, relatable tone - no hype, no jargon
+- Connect to universal human insight (not just selling)
+- End with a short, memorable takeaway
+- MUST include: "Visit ownerfi.ai" as natural CTA
+
+OUTPUT FORMAT:
+Return ONLY the script text (no labels, no formatting, just the words Abdullah will speak).
+
+DISCLAIMER REQUIRED AT END:
+"This content is for educational purposes only. Do your own research and make decisions that fit your situation."`;
+
+    try {
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${OPENAI_API_KEY}`
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages: [
+            {
+              role: 'system',
+              content: `You are Abdullah, a grounded, motivational entrepreneur who helps people think differently about money, mindset, and community. You write 30-second scripts for a cartoon avatar that connect real estate/owner financing topics to universal human insights. Your tone is calm, confident, and relatable - never hype, never salesy.`
+            },
+            {
+              role: 'user',
+              content: prompt
+            }
+          ],
+          temperature: 0.85,
+          max_tokens: 300
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`OpenAI API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const script = data.choices[0]?.message?.content?.trim();
+
+      if (!script) {
+        throw new Error('No script generated');
+      }
+
+      console.log('✅ Generated Abdullah Brand script:', script.substring(0, 100) + '...');
+      return script;
+
+    } catch (error) {
+      console.error('⚠️  OpenAI script generation failed, using fallback:', error);
+      // Fallback to simple script
+      const intro = benefit.audience === 'seller'
+        ? "Attention home sellers!"
+        : "Attention home buyers!";
+      const cta = "Visit ownerfi.ai to see owner-financed properties in your area today.";
+      return `${intro} ${benefit.shortDescription} ${cta}`;
+    }
   }
 
   /**
@@ -115,8 +199,8 @@ export class BenefitVideoGenerator {
     // Get avatar config (custom or default based on audience)
     const avatarConfig = customAvatar || DEFAULT_AVATARS[benefit.audience];
 
-    // Build video script with CTA
-    const script = this.generateScript(benefit);
+    // Build video script with CTA (now async with OpenAI)
+    const script = await this.generateScript(benefit);
 
     console.log(`Script: ${script.substring(0, 100)}...`);
 

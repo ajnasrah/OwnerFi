@@ -103,12 +103,57 @@ export async function GET(request: NextRequest) {
     console.log(`\n📋 Found ${stuckWorkflows.length} stuck workflows to retry`);
 
     const results = [];
+    const MAX_RETRIES = 3;
+    const MAX_WORKFLOWS_PER_RUN = 10; // Process max 10 workflows per cron run
+
+    // Limit processing to prevent timeouts
+    const workflowsToProcess = stuckWorkflows.slice(0, MAX_WORKFLOWS_PER_RUN);
+    const skippedCount = stuckWorkflows.length - workflowsToProcess.length;
+
+    if (skippedCount > 0) {
+      console.log(`\n⚠️  Limiting to ${MAX_WORKFLOWS_PER_RUN} workflows (${skippedCount} will be processed in next run)`);
+    }
 
     // Retry posting for each stuck workflow
-    for (const item of stuckWorkflows) {
+    for (const item of workflowsToProcess) {
       const { workflowId, brand, isPodcast, workflow, stuckMinutes } = item;
+      const retryCount = workflow?.retryCount || 0;
 
-      console.log(`\n🔄 Retrying ${isPodcast ? 'podcast' : 'workflow'} ${workflowId} (stuck ${stuckMinutes} min)`);
+      // Check if max retries exceeded
+      if (retryCount >= MAX_RETRIES) {
+        console.log(`\n⚠️  Workflow ${workflowId} exceeded max retries (${retryCount}/${MAX_RETRIES}), marking as failed`);
+
+        try {
+          const updates = {
+            status: 'failed' as const,
+            error: `Max retry attempts (${MAX_RETRIES}) exceeded for posting`,
+            failedAt: Date.now()
+          };
+
+          if (isPodcast) {
+            const { updatePodcastWorkflow } = await import('@/lib/feed-store-firestore');
+            await updatePodcastWorkflow(workflowId, updates);
+          } else if (brand === 'benefit') {
+            const { updateBenefitWorkflow } = await import('@/lib/feed-store-firestore');
+            await updateBenefitWorkflow(workflowId, updates);
+          } else {
+            const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
+            await updateWorkflowStatus(workflowId, brand as any, updates);
+          }
+
+          results.push({
+            workflowId,
+            brand,
+            action: 'max_retries_exceeded',
+            retryCount
+          });
+        } catch (err) {
+          console.error(`   ❌ Error marking as failed:`, err);
+        }
+        continue;
+      }
+
+      console.log(`\n🔄 Retrying ${isPodcast ? 'podcast' : 'workflow'} ${workflowId} (stuck ${stuckMinutes} min, attempt ${retryCount + 1}/${MAX_RETRIES})`);
 
       try {
         // Check if we have the video URL
@@ -159,28 +204,24 @@ export async function GET(request: NextRequest) {
         if (postResult.success) {
           console.log(`   ✅ Successfully posted! Post ID: ${postResult.postId}`);
 
-          // Mark as completed
+          // Mark as completed with retry info
+          const completionUpdates = {
+            status: 'completed' as const,
+            latePostId: postResult.postId,
+            completedAt: Date.now(),
+            retryCount: retryCount + 1,
+            lastRetryAt: Date.now()
+          };
+
           if (isPodcast) {
             const { updatePodcastWorkflow } = await import('@/lib/feed-store-firestore');
-            await updatePodcastWorkflow(workflowId, {
-              status: 'completed',
-              latePostId: postResult.postId,
-              completedAt: Date.now()
-            });
+            await updatePodcastWorkflow(workflowId, completionUpdates);
           } else if (brand === 'benefit') {
             const { updateBenefitWorkflow } = await import('@/lib/feed-store-firestore');
-            await updateBenefitWorkflow(workflowId, {
-              status: 'completed',
-              latePostId: postResult.postId,
-              completedAt: Date.now()
-            });
+            await updateBenefitWorkflow(workflowId, completionUpdates);
           } else {
             const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
-            await updateWorkflowStatus(workflowId, brand as any, {
-              status: 'completed',
-              latePostId: postResult.postId,
-              completedAt: Date.now()
-            });
+            await updateWorkflowStatus(workflowId, brand as any, completionUpdates);
           }
 
           results.push({

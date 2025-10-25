@@ -18,35 +18,62 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const SUBMAGIC_API_KEY = process.env.SUBMAGIC_API_KEY;
-    if (!SUBMAGIC_API_KEY) {
-      return NextResponse.json({ error: 'Submagic API key not configured' }, { status: 500 });
+    // Acquire lock to prevent concurrent execution
+    const { withCronLock } = await import('@/lib/cron-lock');
+    const result = await withCronLock('check-stuck-submagic', async () => {
+      return await executeFailsafe();
+    });
+
+    if (result === null) {
+      return NextResponse.json({
+        success: true,
+        message: 'Skipped - another instance is running',
+        skipped: true
+      });
     }
 
-    console.log('🔍 [FAILSAFE] Checking for stuck Submagic workflows...');
+    return NextResponse.json(result);
 
-    // Import the feed store functions that already work
-    const {
-      findWorkflowBySubmagicId,
-      getCollectionName
-    } = await import('@/lib/feed-store-firestore');
+  } catch (error) {
+    console.error('❌ [FAILSAFE] Error:', error);
+    return NextResponse.json({
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined
+    }, { status: 500 });
+  }
+}
 
-    const { db } = await import('@/lib/firebase');
+async function executeFailsafe() {
+  const SUBMAGIC_API_KEY = process.env.SUBMAGIC_API_KEY;
+  if (!SUBMAGIC_API_KEY) {
+    throw new Error('Submagic API key not configured');
+  }
 
-    if (!db) {
-      return NextResponse.json({ error: 'Firebase not initialized' }, { status: 500 });
-    }
+  console.log('🔍 [FAILSAFE] Checking for stuck Submagic workflows...');
 
-    console.log('✅ Firebase initialized');
+  // Import the feed store functions that already work
+  const {
+    findWorkflowBySubmagicId,
+    getCollectionName
+  } = await import('@/lib/feed-store-firestore');
 
-    // Try to get workflows using client SDK (same as feed-store uses)
-    const { collection, getDocs, query, where } = await import('firebase/firestore');
+  const { db } = await import('@/lib/firebase');
 
-    const projects = [];
+  if (!db) {
+    throw new Error('Firebase not initialized');
+  }
 
-    // Check all brand workflows (use submagicVideoId field)
-    for (const brand of ['carz', 'ownerfi', 'vassdistro'] as const) {
-      const collectionName = getCollectionName('WORKFLOW_QUEUE', brand);
+  console.log('✅ Firebase initialized');
+
+  // Try to get workflows using client SDK (same as feed-store uses)
+  const { collection, getDocs, query, where } = await import('firebase/firestore');
+
+  const projects = [];
+  const MAX_WORKFLOWS_PER_RUN = 10; // Process max 10 workflows per cron run to avoid timeouts
+
+  // Check all brand workflows (use submagicVideoId field)
+  for (const brand of ['carz', 'ownerfi', 'vassdistro'] as const) {
+    const collectionName = getCollectionName('WORKFLOW_QUEUE', brand);
       console.log(`\n📂 Checking ${collectionName}...`);
 
       try {
@@ -151,27 +178,72 @@ export async function GET(request: NextRequest) {
 
     console.log(`🌐 Using baseUrl: ${baseUrl}`);
 
+    const MAX_RETRIES = 3;
+
+    // Limit processing to prevent timeouts
+    const projectsToProcess = projects.slice(0, MAX_WORKFLOWS_PER_RUN);
+    const skippedCount = projects.length - projectsToProcess.length;
+
+    if (skippedCount > 0) {
+      console.log(`\n⚠️  Limiting to ${MAX_WORKFLOWS_PER_RUN} workflows (${skippedCount} will be processed in next run)`);
+    }
+
     // Check each stuck workflow's Submagic status
-    for (const project of projects) {
+    for (const project of projectsToProcess) {
       const { projectId, workflowId, brand, isPodcast, shouldFail } = project as any;
+      const workflow = (project as any).workflow;
+      const retryCount = workflow?.retryCount || 0;
+
+      // Check if max retries exceeded
+      if (retryCount >= MAX_RETRIES) {
+        console.log(`\n⚠️  Workflow ${workflowId} exceeded max retries (${retryCount}/${MAX_RETRIES}), marking as failed`);
+
+        try {
+          const updates = {
+            status: 'failed' as const,
+            error: `Max retry attempts (${MAX_RETRIES}) exceeded`,
+            failedAt: Date.now()
+          };
+
+          if (isPodcast) {
+            const { updatePodcastWorkflow } = await import('@/lib/feed-store-firestore');
+            await updatePodcastWorkflow(workflowId, updates);
+          } else {
+            const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
+            await updateWorkflowStatus(workflowId, brand, updates);
+          }
+
+          results.push({
+            workflowId,
+            brand,
+            isPodcast,
+            action: 'max_retries_exceeded',
+            retryCount
+          });
+        } catch (err) {
+          console.error(`   ❌ Error marking as failed:`, err);
+        }
+        continue;
+      }
 
       // Handle workflows that need to be marked as failed
       if (shouldFail || !projectId) {
         console.log(`\n❌ Marking ${isPodcast ? 'podcast' : 'workflow'} ${workflowId} as failed (no Submagic ID)`);
 
         try {
+          const updates = {
+            status: 'failed' as const,
+            error: 'Submagic API call failed - no project ID received',
+            failedAt: Date.now(),
+            retryCount: ((project as any).workflow?.retryCount || 0) + 1
+          };
+
           if (isPodcast) {
             const { updatePodcastWorkflow } = await import('@/lib/feed-store-firestore');
-            await updatePodcastWorkflow(workflowId, {
-              status: 'failed',
-              error: 'Submagic API call failed - no project ID received'
-            });
+            await updatePodcastWorkflow(workflowId, updates);
           } else {
             const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
-            await updateWorkflowStatus(workflowId, brand, {
-              status: 'failed',
-              error: 'Submagic API call failed - no project ID received'
-            });
+            await updateWorkflowStatus(workflowId, brand, updates);
           }
 
           results.push({
@@ -230,17 +302,19 @@ export async function GET(request: NextRequest) {
           const { uploadSubmagicVideo } = await import('@/lib/video-storage');
 
           try {
-            // Update status to 'posting' or 'publishing'
+            // Update status to 'posting' or 'publishing' and increment retry count
+            const retryUpdates = {
+              status: isPodcast ? ('publishing' as const) : ('posting' as const),
+              retryCount: retryCount + 1,
+              lastRetryAt: Date.now()
+            };
+
             if (isPodcast) {
               const { updatePodcastWorkflow } = await import('@/lib/feed-store-firestore');
-              await updatePodcastWorkflow(workflowId, {
-                status: 'publishing'
-              });
+              await updatePodcastWorkflow(workflowId, retryUpdates);
             } else {
               const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
-              await updateWorkflowStatus(workflowId, brand, {
-                status: 'posting'
-              });
+              await updateWorkflowStatus(workflowId, brand, retryUpdates);
             }
 
             // Upload to R2
@@ -412,7 +486,7 @@ export async function GET(request: NextRequest) {
       utilization: projects.length > 0 ? 'ACTIVE' : 'IDLE'
     }));
 
-    return NextResponse.json({
+    return {
       success: true,
       totalWorkflows: projects.length,
       processed: results.length,
@@ -420,14 +494,11 @@ export async function GET(request: NextRequest) {
       failed: failedCount,
       stillProcessing: stillProcessingCount,
       results
-    });
+    };
 
   } catch (error) {
     console.error('❌ [FAILSAFE] Error:', error);
-    return NextResponse.json({
-      error: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined
-    }, { status: 500 });
+    throw error; // Re-throw to be caught by outer handler
   }
 }
 

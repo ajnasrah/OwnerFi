@@ -101,9 +101,18 @@ export async function GET(request: NextRequest) {
     console.log(`\n📋 Found ${stuckWorkflows.length} stuck workflows to retry`);
 
     const results = [];
+    const MAX_WORKFLOWS_PER_RUN = 10; // Process max 10 workflows per cron run
+
+    // Limit processing to prevent timeouts
+    const workflowsToProcess = stuckWorkflows.slice(0, MAX_WORKFLOWS_PER_RUN);
+    const skippedCount = stuckWorkflows.length - workflowsToProcess.length;
+
+    if (skippedCount > 0) {
+      console.log(`\n⚠️  Limiting to ${MAX_WORKFLOWS_PER_RUN} workflows (${skippedCount} will be processed in next run)`);
+    }
 
     // Retry video processing for each stuck workflow
-    for (const item of stuckWorkflows) {
+    for (const item of workflowsToProcess) {
       const { workflowId, brand, workflow, stuckMinutes } = item;
 
       console.log(`\n🔄 Retrying workflow ${workflowId} (stuck ${stuckMinutes} min)`);

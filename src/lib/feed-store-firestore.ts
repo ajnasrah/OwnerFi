@@ -1337,6 +1337,177 @@ export async function getHostProfile(): Promise<HostProfile | null> {
 }
 
 // ============================================================================
+// PROPERTY VIDEO ROTATION QUEUE FUNCTIONS
+// ============================================================================
+
+export interface PropertyRotationQueue {
+  id: string;                      // Same as propertyId
+  propertyId: string;
+
+  // Quick display info
+  address: string;
+  city: string;
+  state: string;
+  downPayment: number;
+  imageUrl: string;
+
+  // Queue position
+  position: number;                // Lower = processes sooner
+  lastVideoGenerated?: number;     // Timestamp of last video
+  videoCount: number;              // How many times showcased
+
+  // Status
+  status: 'queued' | 'processing';
+  updatedAt: number;
+}
+
+/**
+ * Add property to rotation queue
+ */
+export async function addToPropertyRotationQueue(propertyId: string): Promise<void> {
+  if (!db) throw new Error('Firebase not initialized');
+
+  // Check if already in queue
+  const existing = await getDoc(doc(db, 'property_rotation_queue', propertyId));
+  if (existing.exists()) {
+    console.log(`Property ${propertyId} already in rotation queue`);
+    return;
+  }
+
+  // Get property data
+  const propertyDoc = await getDoc(doc(db, 'properties', propertyId));
+  if (!propertyDoc.exists()) {
+    throw new Error(`Property ${propertyId} not found`);
+  }
+
+  const property = propertyDoc.data() as any;
+
+  // Get current max position
+  const maxQuery = query(
+    collection(db, 'property_rotation_queue'),
+    orderBy('position', 'desc'),
+    firestoreLimit(1)
+  );
+  const maxSnapshot = await getDocs(maxQuery);
+  const maxPosition = maxSnapshot.empty ? 0 : maxSnapshot.docs[0].data().position;
+
+  // Add to queue
+  const queueItem: PropertyRotationQueue = {
+    id: propertyId,
+    propertyId,
+    address: property.address || 'Unknown Address',
+    city: property.city || 'Unknown City',
+    state: property.state || 'Unknown',
+    downPayment: property.downPaymentAmount || 0,
+    imageUrl: property.imageUrls?.[0] || '',
+    position: maxPosition + 1,
+    videoCount: 0,
+    status: 'queued',
+    updatedAt: Date.now()
+  };
+
+  await setDoc(doc(db, 'property_rotation_queue', propertyId), queueItem);
+  console.log(`✅ Added to rotation queue: ${property.address} (position ${maxPosition + 1})`);
+}
+
+/**
+ * Get next property from rotation queue
+ */
+export async function getNextPropertyFromRotation(): Promise<PropertyRotationQueue | null> {
+  if (!db) return null;
+
+  const q = query(
+    collection(db, 'property_rotation_queue'),
+    where('status', '==', 'queued'),
+    orderBy('position', 'asc'),
+    firestoreLimit(1)
+  );
+
+  const snapshot = await getDocs(q);
+  if (snapshot.empty) return null;
+
+  const queueItem = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() } as PropertyRotationQueue;
+
+  // Mark as processing
+  await updateDoc(doc(db, 'property_rotation_queue', queueItem.id), {
+    status: 'processing',
+    updatedAt: Date.now()
+  });
+
+  return queueItem;
+}
+
+/**
+ * Send property to back of rotation queue
+ */
+export async function sendPropertyToBackOfQueue(propertyId: string): Promise<void> {
+  if (!db) return;
+
+  // Get current max position
+  const maxQuery = query(
+    collection(db, 'property_rotation_queue'),
+    orderBy('position', 'desc'),
+    firestoreLimit(1)
+  );
+  const maxSnapshot = await getDocs(maxQuery);
+  const maxPosition = maxSnapshot.empty ? 0 : maxSnapshot.docs[0].data().position;
+
+  // Get current item data
+  const currentDoc = await getDoc(doc(db, 'property_rotation_queue', propertyId));
+  const currentData = currentDoc.data();
+
+  // Update to back of queue
+  await updateDoc(doc(db, 'property_rotation_queue', propertyId), {
+    position: maxPosition + 1,
+    status: 'queued',
+    lastVideoGenerated: Date.now(),
+    videoCount: (currentData?.videoCount || 0) + 1,
+    updatedAt: Date.now()
+  });
+
+  console.log(`✅ Property ${propertyId} moved to back of queue (position ${maxPosition + 1})`);
+}
+
+/**
+ * Get rotation queue stats
+ */
+export async function getPropertyRotationStats(): Promise<{
+  total: number;
+  queued: number;
+  processing: number;
+  nextProperty?: PropertyRotationQueue;
+}> {
+  if (!db) return { total: 0, queued: 0, processing: 0 };
+
+  const allSnapshot = await getDocs(collection(db, 'property_rotation_queue'));
+  const queuedSnapshot = await getDocs(query(
+    collection(db, 'property_rotation_queue'),
+    where('status', '==', 'queued')
+  ));
+  const processingSnapshot = await getDocs(query(
+    collection(db, 'property_rotation_queue'),
+    where('status', '==', 'processing')
+  ));
+
+  // Get next property
+  const nextQuery = query(
+    collection(db, 'property_rotation_queue'),
+    where('status', '==', 'queued'),
+    orderBy('position', 'asc'),
+    firestoreLimit(1)
+  );
+  const nextSnapshot = await getDocs(nextQuery);
+  const nextProperty = nextSnapshot.empty ? undefined : nextSnapshot.docs[0].data() as PropertyRotationQueue;
+
+  return {
+    total: allSnapshot.size,
+    queued: queuedSnapshot.size,
+    processing: processingSnapshot.size,
+    nextProperty
+  };
+}
+
+// ============================================================================
 // PROPERTY VIDEO WORKFLOW FUNCTIONS
 // ============================================================================
 

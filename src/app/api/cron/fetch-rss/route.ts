@@ -21,6 +21,16 @@ const RSS_FEEDS = {
     { name: 'Realtor News', url: 'https://www.realtor.com/news/rss' },
     { name: 'HousingWire', url: 'https://www.housingwire.com/feed/' },
     { name: 'Mortgage News Daily', url: 'https://www.mortgagenewsdaily.com/rss' }
+  ],
+  vassdistro: [
+    { name: 'Vaping360', url: 'https://vaping360.com/feed/' },
+    { name: 'Vaping Post', url: 'https://www.vapingpost.com/feed/' },
+    { name: 'ECigIntelligence', url: 'https://ecigintelligence.com/feed/' },
+    { name: 'Tobacco Reporter', url: 'https://tobaccoreporter.com/feed/' },
+    { name: 'FDA Tobacco', url: 'https://www.fda.gov/about-fda/contact-fda/stay-informed/rss-feeds/tobacco-products/rss.xml' },
+    { name: 'Vaping Insider', url: 'https://vapinginsider.com/feed/' },
+    { name: 'Vapouround', url: 'https://vapouround.co.uk/feed/' },
+    { name: 'Planet of the Vapes', url: 'https://www.planetofthevapes.co.uk/feed/' }
   ]
 };
 
@@ -45,11 +55,12 @@ export async function GET(request: NextRequest) {
 
     const results = {
       carz: { fetched: 0, added: 0, duplicates: 0 },
-      ownerfi: { fetched: 0, added: 0, duplicates: 0 }
+      ownerfi: { fetched: 0, added: 0, duplicates: 0 },
+      vassdistro: { fetched: 0, added: 0, duplicates: 0 }
     };
 
-    // Fetch articles for both brands
-    for (const brand of ['carz', 'ownerfi'] as const) {
+    // Fetch articles for all brands
+    for (const brand of ['carz', 'ownerfi', 'vassdistro'] as const) {
       console.log(`📰 Fetching ${brand} articles...`);
 
       for (const feed of RSS_FEEDS[brand]) {

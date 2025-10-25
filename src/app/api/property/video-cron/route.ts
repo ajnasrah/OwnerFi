@@ -31,138 +31,118 @@ export async function GET(request: NextRequest) {
     }
 
     console.log('🏡 Property video cron job triggered');
-    console.log(`📊 Generating 15-second property videos`);
+    console.log(`📊 Using rotating property queue system`);
 
-    // Get properties that are eligible and haven't had videos generated
-    const propertiesSnapshot = await admin
-      .firestore()
-      .collection('properties')
-      .where('status', '==', 'active')
-      .where('isActive', '==', true)
-      .where('downPaymentAmount', '<', 15000)
-      .orderBy('downPaymentAmount', 'asc') // Prioritize lowest down payment
-      .orderBy('dateAdded', 'desc') // Then newest properties
-      .limit(20) // Get top 20 to filter from
-      .get();
+    // Import rotation queue functions
+    const {
+      getNextPropertyFromRotation,
+      sendPropertyToBackOfQueue,
+      getPropertyRotationStats
+    } = await import('@/lib/feed-store-firestore');
 
-    if (propertiesSnapshot.empty) {
-      console.log('⏭️  No eligible properties found');
+    // Get queue stats
+    const stats = await getPropertyRotationStats();
+    console.log(`📋 Rotation queue stats: ${stats.queued} queued, ${stats.processing} processing, ${stats.total} total`);
+
+    if (stats.nextProperty) {
+      console.log(`   Next property: ${stats.nextProperty.address} (shown ${stats.nextProperty.videoCount} times)`);
+    }
+
+    // Get next property from rotation queue
+    const queueItem = await getNextPropertyFromRotation();
+
+    if (!queueItem) {
+      console.log('⚠️  Rotation queue is empty!');
+      console.log('   Run: npx tsx scripts/populate-property-rotation-queue.ts');
       return NextResponse.json({
         success: true,
-        message: 'No eligible properties found',
-        generated: 0
+        message: 'Rotation queue is empty - populate queue first',
+        generated: 0,
+        queueStats: stats
       });
     }
 
-    console.log(`📋 Found ${propertiesSnapshot.size} potential properties`);
-
-    // Filter to properties that don't have videos yet
-    const eligibleProperties: PropertyListing[] = [];
-
-    for (const doc of propertiesSnapshot.docs) {
-      const property = { id: doc.id, ...doc.data() } as PropertyListing;
-
-      // Check if eligible
-      if (!isEligibleForVideo(property)) {
-        continue;
-      }
-
-      // Check if video already exists
-      const existingVideo = await admin
-        .firestore()
-        .collection('property_videos')
-        .where('propertyId', '==', property.id)
-        .limit(1)
-        .get();
-
-      if (existingVideo.empty) {
-        eligibleProperties.push(property);
-      }
-    }
-
-    console.log(`✅ ${eligibleProperties.length} properties eligible for videos`);
-
-    if (eligibleProperties.length === 0) {
-      return NextResponse.json({
-        success: true,
-        message: 'No new properties need videos',
-        generated: 0
-      });
-    }
-
-    // Generate videos for top properties (limit per run)
-    // A/B Testing: Generate BOTH 30-sec and 15-sec variants
-    const propertiesToProcess = eligibleProperties.slice(0, MAX_VIDEOS_PER_RUN);
-    const results = [];
+    console.log(`\n🎥 Generating video for: ${queueItem.address}`);
+    console.log(`   City: ${queueItem.city}, ${queueItem.state}`);
+    console.log(`   Down payment: $${queueItem.downPayment.toLocaleString()}`);
+    console.log(`   Times shown: ${queueItem.videoCount}`);
+    console.log(`   Queue position: ${queueItem.position}`);
 
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    const results = [];
 
-    for (const property of propertiesToProcess) {
-      console.log(`\n🎥 Generating 15-second video for ${property.address}`);
+    try {
+      // Generate 15-second video
+      const response = await fetch(`${baseUrl}/api/property/generate-video`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          propertyId: queueItem.propertyId,
+          variant: '15'
+        })
+      });
 
-      try {
-        // Generate 15-second video
-        const response = await fetch(`${baseUrl}/api/property/generate-video`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            propertyId: property.id,
-            variant: '15'
-          })
-        });
+      const result = await response.json();
 
-        const result = await response.json();
+      if (result.success) {
+        console.log(`✅ Video generation started for ${queueItem.address}`);
 
-        if (result.success) {
-          console.log(`✅ 15-sec video started for ${property.address}`);
-          results.push({
-            propertyId: property.id,
-            address: property.address,
-            variant: '15sec',
-            success: true,
-            workflowId: result.workflowId
-          });
-        } else {
-          console.error(`❌ Failed: ${result.error}`);
-          results.push({
-            propertyId: property.id,
-            address: property.address,
-            variant: '15sec',
-            success: false,
-            error: result.error
-          });
-        }
+        // Send property to back of queue (for next rotation)
+        await sendPropertyToBackOfQueue(queueItem.propertyId);
 
-        // Wait 3 seconds between properties to avoid rate limiting
-        await new Promise(resolve => setTimeout(resolve, 3000));
-
-      } catch (error) {
-        console.error(`❌ Error for ${property.address}:`, error);
         results.push({
-          propertyId: property.id,
-          address: property.address,
+          propertyId: queueItem.propertyId,
+          address: queueItem.address,
+          variant: '15sec',
+          success: true,
+          workflowId: result.workflowId,
+          timesShown: queueItem.videoCount + 1
+        });
+      } else {
+        console.error(`❌ Failed: ${result.error}`);
+
+        // Still send to back of queue (don't block rotation)
+        await sendPropertyToBackOfQueue(queueItem.propertyId);
+
+        results.push({
+          propertyId: queueItem.propertyId,
+          address: queueItem.address,
           variant: '15sec',
           success: false,
-          error: error instanceof Error ? error.message : 'Unknown error'
+          error: result.error
         });
       }
+
+    } catch (error) {
+      console.error(`❌ Error for ${queueItem.address}:`, error);
+
+      // Still send to back of queue
+      await sendPropertyToBackOfQueue(queueItem.propertyId);
+
+      results.push({
+        propertyId: queueItem.propertyId,
+        address: queueItem.address,
+        variant: '15sec',
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
 
     const successCount = results.filter(r => r.success).length;
 
     console.log(`\n📊 Property video cron summary:`);
-    console.log(`   Eligible properties: ${eligibleProperties.length}`);
-    console.log(`   15-sec videos generated: ${successCount}/${propertiesToProcess.length}`);
+    console.log(`   Queue total: ${stats.total} properties`);
+    console.log(`   Video generated: ${successCount > 0 ? 'Yes' : 'No'}`);
+    console.log(`   Property re-queued at position: ${stats.total + 1}`);
 
     return NextResponse.json({
       success: true,
       variant: '15sec',
       generated: successCount,
-      total: propertiesToProcess.length,
-      eligible: eligibleProperties.length,
-      results,
+      property: results[0],
+      queueStats: stats,
       timestamp: new Date().toISOString()
     });
 

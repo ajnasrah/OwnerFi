@@ -189,7 +189,7 @@ interface BrandAnalytics {
 export default function SocialMediaDashboard() {
   const { data: session, status: authStatus } = useSession();
   const router = useRouter();
-  const [activeSubTab, setActiveSubTab] = useState<'carz' | 'ownerfi' | 'podcast' | 'benefit' | 'analytics'>('carz');
+  const [activeSubTab, setActiveSubTab] = useState<'carz' | 'ownerfi' | 'ownerfi-benefits' | 'abdullah' | 'abdullah-podcast' | 'analytics'>('carz');
   const [status, setStatus] = useState<SchedulerStatus | null>(null);
   const [workflows, setWorkflows] = useState<WorkflowLogs | null>(null);
   const [podcastWorkflows, setPodcastWorkflows] = useState<PodcastWorkflowLogs | null>(null);
@@ -530,16 +530,26 @@ export default function SocialMediaDashboard() {
         <div className="flex space-x-2 mb-6">
           {[
             { key: 'carz', label: 'Carz Inc', icon: '🚗' },
-            { key: 'ownerfi', label: 'OwnerFi', icon: '🏠' },
-            { key: 'podcast', label: 'Podcast', icon: '🎙️' },
-            { key: 'benefit', label: 'Benefits', icon: '💎' },
+            { key: 'ownerfi', label: 'OwnerFi', icon: '🏠', hasSubtabs: true },
+            { key: 'abdullah', label: 'Abdullah', icon: '👤', hasSubtabs: true },
             { key: 'analytics', label: 'Analytics', icon: '📊' }
           ].map((tab) => (
             <button
               key={tab.key}
-              onClick={() => setActiveSubTab(tab.key as any)}
+              onClick={() => {
+                // Set default subtab when clicking main tab
+                if (tab.key === 'ownerfi') {
+                  setActiveSubTab('ownerfi' as any);
+                } else if (tab.key === 'abdullah') {
+                  setActiveSubTab('abdullah' as any);
+                } else {
+                  setActiveSubTab(tab.key as any);
+                }
+              }}
               className={`flex items-center space-x-2 px-6 py-3 rounded-xl font-medium transition-all ${
-                activeSubTab === tab.key
+                (activeSubTab === tab.key ||
+                 (tab.key === 'ownerfi' && (activeSubTab === 'ownerfi' || activeSubTab === 'ownerfi-benefits')) ||
+                 (tab.key === 'abdullah' && (activeSubTab === 'abdullah' || activeSubTab === 'abdullah-podcast')))
                   ? 'bg-gradient-to-r from-indigo-500 to-indigo-600 text-white shadow-lg'
                   : 'bg-white text-slate-700 hover:bg-slate-100'
               }`}
@@ -549,6 +559,58 @@ export default function SocialMediaDashboard() {
             </button>
           ))}
         </div>
+
+        {/* Sub-tabs for OwnerFi */}
+        {(activeSubTab === 'ownerfi' || activeSubTab === 'ownerfi-benefits') && (
+          <div className="flex space-x-2 mb-6 ml-4">
+            <button
+              onClick={() => setActiveSubTab('ownerfi')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                activeSubTab === 'ownerfi'
+                  ? 'bg-indigo-100 text-indigo-700'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              Viral Videos
+            </button>
+            <button
+              onClick={() => setActiveSubTab('ownerfi-benefits')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                activeSubTab === 'ownerfi-benefits'
+                  ? 'bg-indigo-100 text-indigo-700'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              💎 Benefits
+            </button>
+          </div>
+        )}
+
+        {/* Sub-tabs for Abdullah */}
+        {(activeSubTab === 'abdullah' || activeSubTab === 'abdullah-podcast') && (
+          <div className="flex space-x-2 mb-6 ml-4">
+            <button
+              onClick={() => setActiveSubTab('abdullah')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                activeSubTab === 'abdullah'
+                  ? 'bg-indigo-100 text-indigo-700'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              Daily Content
+            </button>
+            <button
+              onClick={() => setActiveSubTab('abdullah-podcast')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                activeSubTab === 'abdullah-podcast'
+                  ? 'bg-indigo-100 text-indigo-700'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              🎙️ Podcast
+            </button>
+          </div>
+        )}
 
         {/* Status Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
@@ -913,7 +975,7 @@ export default function SocialMediaDashboard() {
           </div>
         )}
 
-        {activeSubTab === 'podcast' && (
+        {activeSubTab === 'abdullah-podcast' && (
           <div className="space-y-6">
             <div className="bg-white rounded-xl shadow-sm p-6">
               <div className="flex items-center justify-between mb-4">
@@ -1184,7 +1246,7 @@ export default function SocialMediaDashboard() {
           </div>
         )}
 
-        {activeSubTab === 'benefit' && (
+        {activeSubTab === 'ownerfi-benefits' && (
           <div className="space-y-6">
             <div className="bg-white rounded-xl shadow-sm p-6">
               <div className="flex items-center justify-between mb-4">
@@ -1343,6 +1405,41 @@ export default function SocialMediaDashboard() {
                     <div className="text-xs text-slate-400 mt-1">Benefit videos will appear here when being generated</div>
                   </div>
                 )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeSubTab === 'abdullah' && (
+          <div className="space-y-6">
+            <div className="bg-white rounded-xl shadow-sm p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-slate-900">Abdullah Daily Content</h3>
+              </div>
+
+              <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl p-8 text-center">
+                <div className="text-6xl mb-4">🚧</div>
+                <h4 className="text-xl font-bold text-slate-900 mb-2">Coming Soon: Daily Trend-Based Videos</h4>
+                <p className="text-slate-600 mb-4">
+                  Abdullah's daily motivational content system connecting trending topics to mindset, money, and community insights.
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                  <div className="bg-white rounded-lg p-4">
+                    <div className="text-2xl mb-2">📈</div>
+                    <div className="font-semibold text-slate-900">Trend Detection</div>
+                    <div className="text-sm text-slate-600">Auto-detect trending topics</div>
+                  </div>
+                  <div className="bg-white rounded-lg p-4">
+                    <div className="text-2xl mb-2">🎯</div>
+                    <div className="font-semibold text-slate-900">Daily Themes</div>
+                    <div className="text-sm text-slate-600">Mon-Sun themed content</div>
+                  </div>
+                  <div className="bg-white rounded-lg p-4">
+                    <div className="text-2xl mb-2">✍️</div>
+                    <div className="font-semibold text-slate-900">AI Script Writer</div>
+                    <div className="text-sm text-slate-600">Abdullah Brand style</div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

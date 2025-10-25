@@ -4,7 +4,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
 import { getAllFeedSources } from '@/lib/feed-store-firestore';
-import { processFeedSources, getFeedsToFetch } from '@/lib/rss-fetcher';
+import { processFeedSources } from '@/lib/rss-fetcher';
+import { getFeedsToFetch } from '@/config/feed-sources';
 
 export const maxDuration = 300; // 5 minutes
 

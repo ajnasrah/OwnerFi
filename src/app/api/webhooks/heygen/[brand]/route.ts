@@ -196,7 +196,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
  * Get workflow for specific brand (NO sequential lookups)
  */
 async function getWorkflowForBrand(
-  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit',
+  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit' | 'property' | 'vassdistro',
   workflowId: string
 ): Promise<any | null> {
   if (brand === 'podcast') {
@@ -205,6 +205,11 @@ async function getWorkflowForBrand(
   } else if (brand === 'benefit') {
     const { getBenefitWorkflowById } = await import('@/lib/feed-store-firestore');
     return await getBenefitWorkflowById(workflowId);
+  } else if (brand === 'property') {
+    const { db } = await import('@/lib/firebase');
+    const { doc, getDoc } = await import('firebase/firestore');
+    const docSnap = await getDoc(doc(db, 'property_videos', workflowId));
+    return docSnap.exists() ? docSnap.data() : null;
   } else {
     const { getWorkflowById } = await import('@/lib/feed-store-firestore');
     const result = await getWorkflowById(workflowId);
@@ -216,7 +221,7 @@ async function getWorkflowForBrand(
  * Update workflow for specific brand
  */
 async function updateWorkflowForBrand(
-  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit',
+  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit' | 'property' | 'vassdistro',
   workflowId: string,
   updates: Record<string, any>
 ): Promise<void> {
@@ -226,6 +231,9 @@ async function updateWorkflowForBrand(
   } else if (brand === 'benefit') {
     const { updateBenefitWorkflow } = await import('@/lib/feed-store-firestore');
     await updateBenefitWorkflow(workflowId, updates);
+  } else if (brand === 'property') {
+    const { updatePropertyVideo } = await import('@/lib/feed-store-firestore');
+    await updatePropertyVideo(workflowId, updates);
   } else {
     const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
     await updateWorkflowStatus(workflowId, brand, updates);

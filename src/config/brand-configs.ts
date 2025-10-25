@@ -327,6 +327,57 @@ export const PROPERTY_CONFIG: BrandConfig = {
 };
 
 /**
+ * Vass Distro Brand Configuration
+ * For B2B vape wholesale industry content targeting vape store owners
+ */
+export const VASSDISTRO_CONFIG: BrandConfig = {
+  id: 'vassdistro',
+  displayName: 'Vass Distro',
+
+  lateProfileId: process.env.LATE_VASSDISTRO_PROFILE_ID || '',
+
+  platforms: {
+    default: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'threads'],
+    all: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'threads', 'twitter', 'bluesky'],
+  },
+
+  webhooks: {
+    heygen: `${BASE_URL}/api/webhooks/heygen/vassdistro`,
+    submagic: `${BASE_URL}/api/webhooks/submagic/vassdistro`,
+  },
+
+  content: {
+    youtubeCategory: 'NEWS_POLITICS',
+    defaultHashtags: ['#vape', '#vapewholesale', '#vapestore', '#vapebusiness', '#vassdistro'],
+    captionStyle: 'professional',
+  },
+
+  collections: {
+    feeds: 'vassdistro_rss_feeds',
+    articles: 'vassdistro_articles',
+    workflows: 'vassdistro_workflow_queue',
+  },
+
+  rateLimits: {
+    lateAPI: 50,  // 50 posts per hour
+    heygen: 20,   // 20 video generations per hour
+    submagic: 240, // 4 per minute = 240 per hour
+  },
+
+  scheduling: {
+    timezone: 'America/New_York',
+    postingHours: [10], // 1 post per day at 10 AM ET
+    maxPostsPerDay: 1,
+  },
+
+  features: {
+    autoPosting: true,
+    abTesting: false,
+    analytics: true,
+  },
+};
+
+/**
  * Brand Configuration Map
  * Easy lookup of brand configs by brand ID
  */
@@ -336,6 +387,7 @@ export const BRAND_CONFIGS: Record<Brand, BrandConfig> = {
   podcast: PODCAST_CONFIG,
   benefit: BENEFIT_CONFIG,
   property: PROPERTY_CONFIG,
+  vassdistro: VASSDISTRO_CONFIG,
 } as const;
 
 /**
@@ -347,7 +399,7 @@ export const BRAND_CONFIGS: Record<Brand, BrandConfig> = {
 export function getBrandConfig(brand: Brand): BrandConfig {
   const config = BRAND_CONFIGS[brand];
   if (!config) {
-    throw new Error(`Invalid brand: ${brand}. Must be one of: carz, ownerfi, podcast, benefit, property`);
+    throw new Error(`Invalid brand: ${brand}. Must be one of: carz, ownerfi, podcast, benefit, property, vassdistro`);
   }
   return config;
 }
@@ -445,5 +497,6 @@ export function validateAllBrandConfigs(): Record<Brand, { valid: boolean; error
     podcast: validateBrandConfig('podcast'),
     benefit: validateBrandConfig('benefit'),
     property: validateBrandConfig('property'),
+    vassdistro: validateBrandConfig('vassdistro'),
   };
 }

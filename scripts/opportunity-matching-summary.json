@@ -1,0 +1,18 @@
+{
+  "firestore": {
+    "total": 311,
+    "withOpportunityId": 311,
+    "withoutOpportunityId": 0
+  },
+  "gohighlevel": {
+    "total": 990,
+    "exportedToWebsite": 310,
+    "notAvailable": 202
+  },
+  "matching": {
+    "correctlySynced": 310,
+    "shouldDelete": 0,
+    "shouldAdd": 0,
+    "orphaned": 0
+  }
+}

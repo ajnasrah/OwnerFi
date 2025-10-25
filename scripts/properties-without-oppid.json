@@ -1,0 +1,119 @@
+[
+  {
+    "id": "prop_1758055788076_11_jtj3e7zcx",
+    "address": "711 S Pine St",
+    "city": "Rocky Mount",
+    "state": "NC",
+    "price": 69000,
+    "source": "import",
+    "createdAt": {
+      "_seconds": 1758055788,
+      "_nanoseconds": 473000000
+    },
+    "dateAdded": "2025-09-16T20:49:48.103Z"
+  },
+  {
+    "id": "prop_1758055788081_71_gjo9l2i9q",
+    "address": "252 Trillium Rd",
+    "city": "Newland",
+    "state": "NC",
+    "price": 159000,
+    "source": "import",
+    "createdAt": {
+      "_seconds": 1758055788,
+      "_nanoseconds": 473000000
+    },
+    "dateAdded": "2025-09-16T20:49:48.104Z"
+  },
+  {
+    "id": "prop_1758055788081_80_mk1jei6qy",
+    "address": "230 Park Ave",
+    "city": "Rocky Mount",
+    "state": "NC",
+    "price": 49000,
+    "source": "import",
+    "createdAt": {
+      "_seconds": 1758055788,
+      "_nanoseconds": 473000000
+    },
+    "dateAdded": "2025-09-16T20:49:48.104Z"
+  },
+  {
+    "id": "prop_1758055788081_84_klz701xx0",
+    "address": "582 Five Mile Rd",
+    "city": "Richlands",
+    "state": "NC",
+    "price": 144900,
+    "source": "import",
+    "createdAt": {
+      "_seconds": 1758055788,
+      "_nanoseconds": 473000000
+    },
+    "dateAdded": "2025-09-16T20:49:48.104Z"
+  },
+  {
+    "id": "prop_1758055788082_92_h58fvw9rt",
+    "address": "923 Belvedere St",
+    "city": "Rocky Mount",
+    "state": "NC",
+    "price": 155000,
+    "source": "import",
+    "createdAt": {
+      "_seconds": 1758055788,
+      "_nanoseconds": 473000000
+    },
+    "dateAdded": "2025-09-16T20:49:48.104Z"
+  },
+  {
+    "id": "prop_1758055788093_185_h7jbdyxbj",
+    "address": "105 West Oak Hill Dr",
+    "city": "Palatka",
+    "state": "FL",
+    "price": 220000,
+    "source": "import",
+    "createdAt": {
+      "_seconds": 1758055788,
+      "_nanoseconds": 473000000
+    },
+    "dateAdded": "2025-09-16T20:49:48.108Z"
+  },
+  {
+    "id": "prop_1758055788093_187_2qw6yp2sd",
+    "address": "2842 Lucoma Drive",
+    "city": "Jacksonville",
+    "state": "FL",
+    "price": 125000,
+    "source": "import",
+    "createdAt": {
+      "_seconds": 1758055788,
+      "_nanoseconds": 473000000
+    },
+    "dateAdded": "2025-09-16T20:49:48.108Z"
+  },
+  {
+    "id": "prop_1758055788093_191_yg3dxq6sq",
+    "address": "7082 Harvest Way, Milton, Florida 32570",
+    "city": "Milton",
+    "state": "fl",
+    "price": 267000,
+    "source": "import",
+    "createdAt": {
+      "_seconds": 1758055788,
+      "_nanoseconds": 473000000
+    },
+    "dateAdded": "2025-09-16T20:49:48.109Z"
+  },
+  {
+    "id": "prop_1758055788093_197_c6hsmzsmo",
+    "address": "607 E Hollywood Blvd",
+    "city": "Mary Esther",
+    "state": "FL",
+    "price": 217000,
+    "source": "import",
+    "createdAt": {
+      "_seconds": 1758055788,
+      "_nanoseconds": 473000000
+    },
+    "dateAdded": "2025-09-16T20:49:48.109Z"
+  }
+]

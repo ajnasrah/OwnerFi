@@ -143,7 +143,7 @@ export async function GET(request: NextRequest) {
         results.push({
           propertyId: property.id,
           address: property.address,
-          variant: `${variant}sec`,
+          variant: '15sec',
           success: false,
           error: error instanceof Error ? error.message : 'Unknown error'
         });

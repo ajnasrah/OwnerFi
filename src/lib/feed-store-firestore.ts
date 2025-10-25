@@ -3,12 +3,13 @@
 
 import { db } from './firebase';
 import { collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, query, where, orderBy, limit as firestoreLimit } from 'firebase/firestore';
+import { Brand } from '@/config/constants';
 
 export interface FeedSource {
   id: string;
   name: string;
   url: string;
-  category: 'carz' | 'ownerfi';
+  category: Brand;
   subcategory: string;
   enabled: boolean;
   fetchInterval: number; // minutes
@@ -42,7 +43,7 @@ export interface Article {
 export interface WorkflowQueueItem {
   id: string;
   articleId: string;
-  brand: 'carz' | 'ownerfi';
+  brand: Brand;
   status: 'pending' | 'heygen_processing' | 'submagic_processing' | 'posting' | 'completed' | 'failed';
   articleTitle: string;
   workflowId?: string;
@@ -80,6 +81,11 @@ const COLLECTIONS = {
     ARTICLES: 'ownerfi_articles',
     WORKFLOW_QUEUE: 'ownerfi_workflow_queue',
   },
+  VASSDISTRO: {
+    FEEDS: 'vassdistro_rss_feeds',
+    ARTICLES: 'vassdistro_articles',
+    WORKFLOW_QUEUE: 'vassdistro_workflow_queue',
+  },
   PODCAST: {
     WORKFLOW_QUEUE: 'podcast_workflow_queue',
   },
@@ -89,8 +95,13 @@ const COLLECTIONS = {
 };
 
 // Helper to get collection name based on category
-export function getCollectionName(type: 'FEEDS' | 'ARTICLES' | 'WORKFLOW_QUEUE', category: 'carz' | 'ownerfi'): string {
-  return category === 'carz' ? COLLECTIONS.CARZ[type] : COLLECTIONS.OWNERFI[type];
+export function getCollectionName(type: 'FEEDS' | 'ARTICLES' | 'WORKFLOW_QUEUE', category: Brand): string {
+  const brandKey = category.toUpperCase();
+  const collections = COLLECTIONS[brandKey as keyof typeof COLLECTIONS];
+  if (!collections || !(type in collections)) {
+    throw new Error(`Collection ${type} not found for brand ${category}`);
+  }
+  return collections[type as keyof typeof collections] as string;
 }
 
 // Helper to remove undefined values from objects (Firestore doesn't allow undefined)
@@ -119,7 +130,7 @@ export async function addFeedSource(feed: Omit<FeedSource, 'articlesProcessed'>)
   return source;
 }
 
-export async function getAllFeedSources(category?: 'carz' | 'ownerfi'): Promise<FeedSource[]> {
+export async function getAllFeedSources(category?: Brand): Promise<FeedSource[]> {
   if (!db) return [];
 
   const sources: FeedSource[] = [];
@@ -163,7 +174,7 @@ function generateContentHash(title: string, content: string): string {
 }
 
 // Article management
-export async function addArticle(article: Omit<Article, 'createdAt'>, category: 'carz' | 'ownerfi'): Promise<Article> {
+export async function addArticle(article: Omit<Article, 'createdAt'>, category: Brand): Promise<Article> {
   if (!db) throw new Error('Firebase not initialized');
 
   // Generate content hash for deduplication
@@ -181,7 +192,7 @@ export async function addArticle(article: Omit<Article, 'createdAt'>, category: 
   return newArticle;
 }
 
-export async function getArticle(id: string, category: 'carz' | 'ownerfi'): Promise<Article | null> {
+export async function getArticle(id: string, category: Brand): Promise<Article | null> {
   if (!db) return null;
 
   const collectionName = getCollectionName('ARTICLES', category);
@@ -189,7 +200,7 @@ export async function getArticle(id: string, category: 'carz' | 'ownerfi'): Prom
   return docSnap.exists() ? docSnap.data() as Article : null;
 }
 
-export async function getUnprocessedArticles(category: 'carz' | 'ownerfi', limitCount: number = 20): Promise<Article[]> {
+export async function getUnprocessedArticles(category: Brand, limitCount: number = 20): Promise<Article[]> {
   if (!db) return [];
 
   const collectionName = getCollectionName('ARTICLES', category);
@@ -204,7 +215,7 @@ export async function getUnprocessedArticles(category: 'carz' | 'ownerfi', limit
   return snapshot.docs.map(doc => doc.data() as Article);
 }
 
-export async function markArticleProcessed(id: string, category: 'carz' | 'ownerfi', workflowId?: string, error?: string): Promise<void> {
+export async function markArticleProcessed(id: string, category: Brand, workflowId?: string, error?: string): Promise<void> {
   if (!db) return;
 
   const collectionName = getCollectionName('ARTICLES', category);
@@ -219,7 +230,7 @@ export async function markArticleProcessed(id: string, category: 'carz' | 'owner
 
 // Get and lock article for processing (atomic operation to prevent race conditions)
 // Selects the top-rated article (must be pre-rated with qualityScore)
-export async function getAndLockArticle(category: 'carz' | 'ownerfi'): Promise<Article | null> {
+export async function getAndLockArticle(category: Brand): Promise<Article | null> {
   if (!db) return null;
 
   const collectionName = getCollectionName('ARTICLES', category);
@@ -280,7 +291,7 @@ export async function getAndLockArticle(category: 'carz' | 'ownerfi'): Promise<A
   return bestArticle;
 }
 
-export async function markArticleVideoGenerated(id: string, category: 'carz' | 'ownerfi', videoId: string): Promise<void> {
+export async function markArticleVideoGenerated(id: string, category: Brand, videoId: string): Promise<void> {
   if (!db) return;
 
   const collectionName = getCollectionName('ARTICLES', category);
@@ -291,7 +302,7 @@ export async function markArticleVideoGenerated(id: string, category: 'carz' | '
 }
 
 // Check if article already exists (by link)
-export async function articleExists(link: string, category: 'carz' | 'ownerfi'): Promise<boolean> {
+export async function articleExists(link: string, category: Brand): Promise<boolean> {
   if (!db) return false;
 
   const collectionName = getCollectionName('ARTICLES', category);
@@ -309,7 +320,7 @@ export async function articleExists(link: string, category: 'carz' | 'ownerfi'):
 export async function articleExistsByContent(
   title: string,
   content: string,
-  category: 'carz' | 'ownerfi'
+  category: Brand
 ): Promise<boolean> {
   if (!db) return false;
 
@@ -327,7 +338,7 @@ export async function articleExistsByContent(
 }
 
 // Workflow Queue Management
-export async function addWorkflowToQueue(articleId: string, articleTitle: string, brand: 'carz' | 'ownerfi'): Promise<WorkflowQueueItem> {
+export async function addWorkflowToQueue(articleId: string, articleTitle: string, brand: Brand): Promise<WorkflowQueueItem> {
   if (!db) throw new Error('Firebase not initialized');
 
   const queueItem: WorkflowQueueItem = {
@@ -349,7 +360,7 @@ export async function addWorkflowToQueue(articleId: string, articleTitle: string
 
 export async function updateWorkflowStatus(
   workflowId: string,
-  brand: 'carz' | 'ownerfi',
+  brand: Brand,
   updates: Partial<WorkflowQueueItem>
 ): Promise<void> {
   if (!db) return;
@@ -362,7 +373,7 @@ export async function updateWorkflowStatus(
   await updateDoc(doc(db, collectionName, workflowId), cleanData);
 }
 
-export async function getWorkflowQueueStats(category?: 'carz' | 'ownerfi') {
+export async function getWorkflowQueueStats(category?: Brand) {
   if (!db) {
     return {
       pending: 0,
@@ -590,7 +601,7 @@ export async function rateAndCleanupArticles(keepTopN: number = 10): Promise<{
 }
 
 // Statistics
-export async function getStats(category?: 'carz' | 'ownerfi') {
+export async function getStats(category?: Brand) {
   if (!db) {
     return {
       totalFeeds: 0,
@@ -740,7 +751,7 @@ export async function getPodcastWorkflows(limit: number = 20): Promise<PodcastWo
 }
 
 // Retry Failed Workflows
-export async function getRetryableWorkflows(brand: 'carz' | 'ownerfi', maxRetries: number = 3): Promise<WorkflowQueueItem[]> {
+export async function getRetryableWorkflows(brand: Brand, maxRetries: number = 3): Promise<WorkflowQueueItem[]> {
   if (!db) return [];
 
   const collectionName = getCollectionName('WORKFLOW_QUEUE', brand);
@@ -757,7 +768,7 @@ export async function getRetryableWorkflows(brand: 'carz' | 'ownerfi', maxRetrie
   return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as WorkflowQueueItem));
 }
 
-export async function retryWorkflow(workflowId: string, brand: 'carz' | 'ownerfi'): Promise<void> {
+export async function retryWorkflow(workflowId: string, brand: Brand): Promise<void> {
   if (!db) return;
 
   const collectionName = getCollectionName('WORKFLOW_QUEUE', brand);
@@ -852,12 +863,12 @@ export async function findPodcastBySubmagicId(submagicProjectId: string): Promis
 // Get workflow by ID (for webhook handling)
 export async function getWorkflowById(workflowId: string): Promise<{
   workflow: WorkflowQueueItem;
-  brand: 'carz' | 'ownerfi';
+  brand: Brand;
 } | null> {
   if (!db) return null;
 
-  // Try to find in both Carz and OwnerFi workflow queues
-  for (const brand of ['carz', 'ownerfi'] as const) {
+  // Try to find in all brand workflow queues
+  for (const brand of ['carz', 'ownerfi', 'vassdistro'] as const) {
     const collectionName = getCollectionName('WORKFLOW_QUEUE', brand);
     const docSnap = await getDoc(doc(db, collectionName, workflowId));
 
@@ -1015,7 +1026,7 @@ export async function findWorkflowByCallbackId(callbackId: string): Promise<{
   workflowId: string;
   workflow: any;
   type: 'article' | 'podcast' | 'benefit';
-  brand?: 'carz' | 'ownerfi';
+  brand?: Brand;
 } | null> {
   if (!db) return null;
 
@@ -1089,7 +1100,7 @@ function createCentralTimeAsUTC(year: number, month: number, day: number, hour: 
   return new Date(Date.UTC(year, month, day, hour + offsetHours, 0, 0));
 }
 
-export async function getNextAvailableTimeSlot(brand: 'carz' | 'ownerfi'): Promise<Date> {
+export async function getNextAvailableTimeSlot(brand: Brand): Promise<Date> {
   if (!db) {
     // Fallback: return current time + 1 minute if DB not available
     return new Date(Date.now() + 60000);
@@ -1336,14 +1347,12 @@ export async function updatePropertyVideo(
   workflowId: string,
   updates: Record<string, any>
 ): Promise<void> {
-  await admin
-    .firestore()
-    .collection('property_videos')
-    .doc(workflowId)
-    .update({
-      ...updates,
-      updatedAt: Date.now()
-    });
+  if (!db) throw new Error('Firebase not initialized');
+
+  await updateDoc(doc(db, 'property_videos', workflowId), {
+    ...updates,
+    updatedAt: Date.now()
+  });
 }
 
 /**
@@ -1353,20 +1362,23 @@ export async function findPropertyVideoBySubmagicId(submagicProjectId: string): 
   workflowId: string;
   workflow: any;
 } | null> {
-  const snapshot = await admin
-    .firestore()
-    .collection('property_videos')
-    .where('submagicProjectId', '==', submagicProjectId)
-    .limit(1)
-    .get();
+  if (!db) throw new Error('Firebase not initialized');
+
+  const q = query(
+    collection(db, 'property_videos'),
+    where('submagicProjectId', '==', submagicProjectId),
+    firestoreLimit(1)
+  );
+
+  const snapshot = await getDocs(q);
 
   if (snapshot.empty) {
     return null;
   }
 
-  const doc = snapshot.docs[0];
+  const docSnap = snapshot.docs[0];
   return {
-    workflowId: doc.id,
-    workflow: doc.data()
+    workflowId: docSnap.id,
+    workflow: docSnap.data()
   };
 }

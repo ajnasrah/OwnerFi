@@ -106,6 +106,92 @@ export const CARZ_FEEDS: Omit<FeedSource, 'articlesProcessed'>[] = [
 ];
 
 /**
+ * VASS DISTRO FEEDS
+ * Focus: B2B vape wholesale, industry regulations, market trends, supplier news
+ */
+export const VASSDISTRO_FEEDS: Omit<FeedSource, 'articlesProcessed'>[] = [
+  // Vape Industry News
+  {
+    id: 'vassdistro-vaping360',
+    name: 'Vaping360 - Industry News',
+    url: 'https://vaping360.com/feed/',
+    category: 'vassdistro',
+    subcategory: 'news',
+    enabled: true,
+    fetchInterval: 60
+  },
+  {
+    id: 'vassdistro-vapingpost',
+    name: 'Vaping Post - Business News',
+    url: 'https://www.vapingpost.com/feed/',
+    category: 'vassdistro',
+    subcategory: 'news',
+    enabled: true,
+    fetchInterval: 60
+  },
+  {
+    id: 'vassdistro-ecigintelligence',
+    name: 'ECigIntelligence - Market Analysis',
+    url: 'https://ecigintelligence.com/feed/',
+    category: 'vassdistro',
+    subcategory: 'market',
+    enabled: true,
+    fetchInterval: 120
+  },
+  {
+    id: 'vassdistro-tobacco-reporter',
+    name: 'Tobacco Reporter - Vapor News',
+    url: 'https://tobaccoreporter.com/feed/',
+    category: 'vassdistro',
+    subcategory: 'market',
+    enabled: true,
+    fetchInterval: 120
+  },
+
+  // Regulations & Compliance
+  {
+    id: 'vassdistro-fda-tobacco',
+    name: 'FDA Tobacco News',
+    url: 'https://www.fda.gov/about-fda/contact-fda/stay-informed/rss-feeds/tobacco-products/rss.xml',
+    category: 'vassdistro',
+    subcategory: 'regulations',
+    enabled: true,
+    fetchInterval: 120
+  },
+
+  // Wholesale & Business
+  {
+    id: 'vassdistro-vaping-insider',
+    name: 'Vaping Insider - Trade News',
+    url: 'https://vapinginsider.com/feed/',
+    category: 'vassdistro',
+    subcategory: 'trade',
+    enabled: true,
+    fetchInterval: 60
+  },
+  {
+    id: 'vassdistro-vapouround',
+    name: 'Vapouround Magazine - Industry Updates',
+    url: 'https://vapouround.co.uk/feed/',
+    category: 'vassdistro',
+    subcategory: 'trade',
+    enabled: true,
+    fetchInterval: 60
+  },
+
+  // Market Trends & Innovation
+  {
+    id: 'vassdistro-planet-of-vapes',
+    name: 'Planet of the Vapes - Product News',
+    url: 'https://www.planetofthevapes.co.uk/feed/',
+    category: 'vassdistro',
+    subcategory: 'products',
+    enabled: true,
+    fetchInterval: 120
+  }
+];
+
+/**
  * OWNERFI FEEDS
  * Focus: Housing market, mortgages, homeowner savings, real estate tools
  */
@@ -254,9 +340,17 @@ export async function initializeFeedSources() {
     ownerfiCount++;
   }
 
+  // Add Vass Distro feeds
+  let vassdistroCount = 0;
+  for (const feed of VASSDISTRO_FEEDS) {
+    await addFeedSourceFirestore(feed);
+    vassdistroCount++;
+  }
+
   console.log(`\n✅ Initialized ${carzCount} Carz feeds`);
   console.log(`✅ Initialized ${ownerfiCount} OwnerFi feeds`);
-  console.log(`📊 Total: ${carzCount + ownerfiCount} feed sources\n`);
+  console.log(`✅ Initialized ${vassdistroCount} Vass Distro feeds`);
+  console.log(`📊 Total: ${carzCount + ownerfiCount + vassdistroCount} feed sources\n`);
 }
 
 /**

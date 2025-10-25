@@ -1,0 +1,29 @@
+[
+  {
+    "opportunityId": "LYwVyLFvQZrrYEDknUw0",
+    "name": "1944 E Mclemore Ave Memphis TN 38114",
+    "address": "1944 E Mclemore Ave, Memphis, TN 38114",
+    "city": "Memphis",
+    "state": "tn",
+    "stage": "exported to website",
+    "price": "292500"
+  },
+  {
+    "opportunityId": "IIxJPCkQ4YVbGt6pyids",
+    "name": "711 S Pine St",
+    "address": "711 S Pine St",
+    "city": "Rocky Mount",
+    "state": "nc",
+    "stage": "exported to website",
+    "price": "69000"
+  },
+  {
+    "opportunityId": "CFlF7uPp6BDVSCSKkDjZ",
+    "name": "252 Trillium Rd",
+    "address": "252 Trillium Road, Newland, NC 28657",
+    "city": "Newland",
+    "state": "nc",
+    "stage": "exported to website",
+    "price": "159000"
+  }
+]

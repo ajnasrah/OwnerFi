@@ -29,7 +29,7 @@ export function validateBrand(brand: unknown): Brand {
 
   if (!isBrand(normalizedBrand)) {
     throw new Error(
-      `Invalid brand: "${brand}". Must be one of: carz, ownerfi, podcast`
+      `Invalid brand: "${brand}". Must be one of: carz, ownerfi, podcast, benefit, property, vassdistro`
     );
   }
 

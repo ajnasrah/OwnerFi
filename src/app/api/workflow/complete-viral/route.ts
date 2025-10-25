@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
     // Step 1: Get and lock best article from feed (prevents race conditions)
     console.log('📰 Step 1: Fetching and locking best article from RSS...');
     const { getAndLockArticle } = await import('@/lib/feed-store-firestore');
-    const article = await getAndLockArticle(brand as 'carz' | 'ownerfi');
+    const article = await getAndLockArticle(brand as 'carz' | 'ownerfi' | 'vassdistro');
 
     if (!article) {
       return NextResponse.json(
@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
     let workflowId: string | undefined;
     if (article.id) {
       const { addWorkflowToQueue } = await import('@/lib/feed-store-firestore');
-      const queueItem = await addWorkflowToQueue(article.id, article.title, brand as 'carz' | 'ownerfi');
+      const queueItem = await addWorkflowToQueue(article.id, article.title, brand as 'carz' | 'ownerfi' | 'vassdistro');
       workflowId = queueItem.id;
       console.log(`📋 Added to workflow queue: ${workflowId}`);
     }
@@ -72,12 +72,14 @@ export async function POST(request: NextRequest) {
     // Update workflow status to 'heygen_processing'
     if (workflowId) {
       const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
-      await updateWorkflowStatus(workflowId, brand as 'carz' | 'ownerfi', {
+      await updateWorkflowStatus(workflowId, brand as 'carz' | 'ownerfi' | 'vassdistro', {
         status: 'heygen_processing'
       });
     }
 
-    // NOTE: Both Carz and OwnerFi use the same "me" avatar for viral videos
+    // NOTE: Avatar and voice configuration by brand:
+    // - Carz & OwnerFi: Default "me" avatar (31c6b2b6306b47a2ba3572a23be09dbc)
+    // - Vass Distro: Custom avatar (feec83b62d9e48478a988eec5730154c), voice (d2f4f24783d04e22ab49ee8fdc3715e0)
     // The following avatars are available for PODCAST INTERVIEWEES only:
     // - Personal Trainer (Oxana Yoga): talking_photo_id '5eb1adac973c432f90e07a5807059d55'
     // - Real Estate Agent (Zelena): talking_photo_id 'c308729a2d444a09a98cb29baee73d88', voice 'c4313f9f0b214a7a8189c134736ce897'
@@ -86,15 +88,24 @@ export async function POST(request: NextRequest) {
     // - Technology Expert (Vince): talking_photo_id '1727676442', voice '219a23d690fc48c7b3a24ea4a0ac651a'
     // - Financial Advisor (Henry): talking_photo_id '1375223b2cc24ff0a21830fbf5cb45ba', voice '8c0bd8c49b2849dc96f8e89b8eace60'
 
+    // Get brand-specific avatar and voice defaults
+    let defaultAvatarId = '31c6b2b6306b47a2ba3572a23be09dbc'; // Default "me" avatar
+    let defaultVoiceId = '9070a6c2dbd54c10bb111dc8c655bff7'; // Default voice
+
+    if (brand === 'vassdistro') {
+      defaultAvatarId = 'feec83b62d9e48478a988eec5730154c'; // Vass Distro avatar
+      defaultVoiceId = 'd2f4f24783d04e22ab49ee8fdc3715e0'; // Chill Brian voice
+    }
+
     const videoResult = await generateHeyGenVideo({
-      talking_photo_id: body.talking_photo_id || '31c6b2b6306b47a2ba3572a23be09dbc', // Default "me" avatar
-      voice_id: body.voice_id || '9070a6c2dbd54c10bb111dc8c655bff7', // Default voice
+      talking_photo_id: body.talking_photo_id || defaultAvatarId,
+      voice_id: body.voice_id || defaultVoiceId,
       input_text: content.script,
       scale: 1.4,
       width: 1080,
       height: 1920,
       callback_id: workflowId, // Pass workflow ID for webhook callback
-      brand: brand as 'carz' | 'ownerfi' // Pass brand for brand-specific webhook
+      brand: brand as 'carz' | 'ownerfi' | 'vassdistro' // Pass brand for brand-specific webhook
     });
 
     if (!videoResult.success || !videoResult.video_id) {

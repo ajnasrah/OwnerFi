@@ -10,6 +10,26 @@
     "ghlStage": "not available"
   },
   {
+    "id": "LYwVyLFvQZrrYEDknUw0",
+    "opportunityId": "LYwVyLFvQZrrYEDknUw0",
+    "address": "1944 E Mclemore Ave",
+    "city": "Memphis",
+    "state": "TN",
+    "price": 292500,
+    "ghlAddress": "1944 E Mclemore Ave, Memphis, TN 38114",
+    "ghlStage": "not available"
+  },
+  {
+    "id": "IIxJPCkQ4YVbGt6pyids",
+    "opportunityId": "IIxJPCkQ4YVbGt6pyids",
+    "address": "711 S Pine St",
+    "city": "Rocky Mount",
+    "state": "NC",
+    "price": 69000,
+    "ghlAddress": "711 S Pine St",
+    "ghlStage": "not available"
+  },
+  {
     "id": "i8BLtOzOTYeYUhg42Y6z",
     "opportunityId": "i8BLtOzOTYeYUhg42Y6z",
     "address": "216 N Martha Ln",
@@ -17,6 +37,16 @@
     "state": "AZ",
     "price": 200000,
     "ghlAddress": "216 Cane Road, Boone, NC 28607",
+    "ghlStage": "not available"
+  },
+  {
+    "id": "CFlF7uPp6BDVSCSKkDjZ",
+    "opportunityId": "CFlF7uPp6BDVSCSKkDjZ",
+    "address": "252 Trillium Road",
+    "city": "Newland",
+    "state": "NC",
+    "price": 159000,
+    "ghlAddress": "252 Trillium Road, Newland, NC 28657",
     "ghlStage": "not available"
   },
   {
@@ -137,6 +167,16 @@
     "state": "FL",
     "price": 594700,
     "ghlAddress": "16 Monica Dr",
+    "ghlStage": "not available"
+  },
+  {
+    "id": "mT1a3NbMTl3u6tdGtjtp",
+    "opportunityId": "mT1a3NbMTl3u6tdGtjtp",
+    "address": "20810 Trenton Valley Ln",
+    "city": "Katy",
+    "state": "TX",
+    "price": 421000,
+    "ghlAddress": "20810 Trenton Valley Ln",
     "ghlStage": "not available"
   },
   {

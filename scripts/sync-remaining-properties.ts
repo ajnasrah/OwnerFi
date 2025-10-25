@@ -6,7 +6,7 @@ import csv from 'csv-parser';
 dotenv.config({ path: '.env.local' });
 
 const WEBHOOK_URL = 'https://ownerfi.ai/api/gohighlevel/webhook/save-property';
-const CSV_PATH = '/Users/abdullahabunasrah/Downloads/opportunities-2.csv';
+const CSV_PATH = '/Users/abdullahabunasrah/Downloads/opportunities-3.csv';
 
 interface Property {
   opportunityId: string;

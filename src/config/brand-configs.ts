@@ -316,7 +316,7 @@ export const PROPERTY_CONFIG: BrandConfig = {
   scheduling: {
     timezone: 'America/New_York', // Eastern Time
     postingHours: [9, 12, 15, 18, 21], // Offset by 40 min from viral
-    maxPostsPerDay: 15, // Up to 3 per cron run × 5 runs = 15 max
+    maxPostsPerDay: 5, // 1 per cron run × 5 runs = 5 per day
   },
 
   features: {

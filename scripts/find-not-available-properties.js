@@ -66,7 +66,7 @@ async function findNotAvailableProperties() {
 
     // Read CSV file
     console.log('Reading opportunities from CSV...');
-    const csvPath = '/Users/abdullahabunasrah/Downloads/opportunities.csv';
+    const csvPath = '/Users/abdullahabunasrah/Downloads/opportunities-3.csv';
 
     const notAvailableOpportunities = [];
     const shouldBeDeleted = [];

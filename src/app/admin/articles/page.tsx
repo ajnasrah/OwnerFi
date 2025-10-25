@@ -23,6 +23,7 @@ interface ArticlesData {
   articles: {
     carz: Article[];
     ownerfi: Article[];
+    vassdistro?: Article[];
   };
   timestamp: string;
 }
@@ -30,7 +31,7 @@ interface ArticlesData {
 export default function ArticlesPage() {
   const { data: session, status: authStatus } = useSession();
   const router = useRouter();
-  const [activeBrand, setActiveBrand] = useState<'carz' | 'ownerfi'>('carz');
+  const [activeBrand, setActiveBrand] = useState<'carz' | 'ownerfi' | 'vassdistro'>('carz');
   const [activeView, setActiveView] = useState<'queue' | 'unprocessed'>('queue');
   const [articles, setArticles] = useState<ArticlesData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -199,7 +200,7 @@ export default function ArticlesPage() {
     );
   }
 
-  const allArticles = activeBrand === 'carz' ? articles?.articles.carz || [] : articles?.articles.ownerfi || [];
+  const allArticles = activeBrand === 'carz' ? articles?.articles.carz || [] : activeBrand === 'vassdistro' ? articles?.articles.vassdistro || [] : articles?.articles.ownerfi || [];
 
   // Debug logging
   console.log(`[${activeBrand}] Total articles:`, allArticles.length);
@@ -231,7 +232,8 @@ export default function ArticlesPage() {
         <div className="flex space-x-2 mb-6">
           {[
             { key: 'carz', label: 'Carz Inc', icon: '🚗' },
-            { key: 'ownerfi', label: 'OwnerFi', icon: '🏠' }
+            { key: 'ownerfi', label: 'OwnerFi', icon: '🏠' },
+            { key: 'vassdistro', label: 'Vass Distro', icon: '💨' }
           ].map((tab) => (
             <button
               key={tab.key}

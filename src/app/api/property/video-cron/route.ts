@@ -8,7 +8,7 @@ import { isEligibleForVideo } from '@/lib/property-video-generator';
 import type { PropertyListing } from '@/lib/property-schema';
 
 const CRON_SECRET = process.env.CRON_SECRET;
-const MAX_VIDEOS_PER_RUN = 3;
+const MAX_VIDEOS_PER_RUN = 1; // 1 per run × 5 runs = 5 per day
 
 export const maxDuration = 60;
 

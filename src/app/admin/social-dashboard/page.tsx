@@ -13,6 +13,7 @@ interface SchedulerStatus {
       maxVideosPerDay: {
         carz: number;
         ownerfi: number;
+        vassdistro?: number;
       };
     };
   };
@@ -20,10 +21,12 @@ interface SchedulerStatus {
     total: number;
     carz: number;
     ownerfi: number;
+    vassdistro?: number;
   };
   articles?: {
     carz: number;
     ownerfi: number;
+    vassdistro?: number;
   };
   queue: {
     carz: {
@@ -31,6 +34,10 @@ interface SchedulerStatus {
       items: any[];
     };
     ownerfi: {
+      pending: number;
+      items: any[];
+    };
+    vassdistro?: {
       pending: number;
       items: any[];
     };
@@ -54,6 +61,15 @@ interface SchedulerStatus {
       queuePending: number;
       queueProcessing: number;
     };
+    vassdistro?: {
+      totalFeeds: number;
+      activeFeeds: number;
+      totalArticles: number;
+      unprocessedArticles: number;
+      videosGenerated: number;
+      queuePending: number;
+      queueProcessing: number;
+    };
   };
   results?: Array<{
     brand: string;
@@ -68,7 +84,7 @@ interface WorkflowLog {
   id: string;
   articleId: string;
   articleTitle: string;
-  brand: 'carz' | 'ownerfi';
+  brand: 'carz' | 'ownerfi' | 'vassdistro';
   status: 'pending' | 'heygen_processing' | 'submagic_processing' | 'posting' | 'completed' | 'failed';
   heygenVideoId?: string;
   submagicVideoId?: string;
@@ -85,6 +101,7 @@ interface WorkflowLogs {
   workflows: {
     carz: WorkflowLog[];
     ownerfi: WorkflowLog[];
+    vassdistro?: WorkflowLog[];
   };
   timestamp: string;
 }
@@ -159,6 +176,7 @@ interface AnalyticsData {
   brands: {
     carz: BrandAnalytics;
     ownerfi: BrandAnalytics;
+    vassdistro?: BrandAnalytics;
   };
   recommendations: Recommendation[];
   overallHealth: 'excellent' | 'good' | 'fair' | 'poor';
@@ -189,7 +207,7 @@ interface BrandAnalytics {
 export default function SocialMediaDashboard() {
   const { data: session, status: authStatus } = useSession();
   const router = useRouter();
-  const [activeSubTab, setActiveSubTab] = useState<'carz' | 'ownerfi' | 'ownerfi-benefits' | 'abdullah' | 'abdullah-podcast' | 'analytics'>('carz');
+  const [activeSubTab, setActiveSubTab] = useState<'carz' | 'ownerfi' | 'vassdistro' | 'ownerfi-benefits' | 'abdullah' | 'abdullah-podcast' | 'analytics'>('carz');
   const [status, setStatus] = useState<SchedulerStatus | null>(null);
   const [workflows, setWorkflows] = useState<WorkflowLogs | null>(null);
   const [podcastWorkflows, setPodcastWorkflows] = useState<PodcastWorkflowLogs | null>(null);
@@ -360,7 +378,7 @@ export default function SocialMediaDashboard() {
     setTriggeringViral(true);
     try {
       // Determine which brand based on active tab
-      const brand = activeSubTab === 'carz' ? 'carz' : 'ownerfi';
+      const brand = activeSubTab === 'carz' ? 'carz' : activeSubTab === 'vassdistro' ? 'vassdistro' : 'ownerfi';
 
       const response = await fetch('/api/workflow/complete-viral', {
         method: 'POST',
@@ -428,7 +446,7 @@ export default function SocialMediaDashboard() {
     }
   };
 
-  const deleteWorkflow = async (workflowId: string, brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit') => {
+  const deleteWorkflow = async (workflowId: string, brand: 'carz' | 'ownerfi' | 'vassdistro' | 'podcast' | 'benefit') => {
     if (!confirm('Are you sure you want to delete this workflow? This action cannot be undone.')) {
       return;
     }
@@ -531,6 +549,7 @@ export default function SocialMediaDashboard() {
           {[
             { key: 'carz', label: 'Carz Inc', icon: '🚗' },
             { key: 'ownerfi', label: 'OwnerFi', icon: '🏠', hasSubtabs: true },
+            { key: 'vassdistro', label: 'Vass Distro', icon: '💨' },
             { key: 'abdullah', label: 'Abdullah', icon: '👤', hasSubtabs: true },
             { key: 'analytics', label: 'Analytics', icon: '📊' }
           ].map((tab) => (
@@ -637,7 +656,7 @@ export default function SocialMediaDashboard() {
                   {status?.feeds?.total || 0}
                 </div>
                 <div className="text-xs text-slate-500 mt-1">
-                  {status?.feeds?.carz || 0} Carz • {status?.feeds?.ownerfi || 0} OwnerFi
+                  {status?.feeds?.carz || 0} Carz • {status?.feeds?.ownerfi || 0} OwnerFi • {status?.feeds?.vassdistro || 0} Vass
                 </div>
               </div>
               <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
@@ -654,7 +673,7 @@ export default function SocialMediaDashboard() {
                   {(status?.stats?.carz?.unprocessedArticles || 0) + (status?.stats?.ownerfi?.unprocessedArticles || 0)}
                 </div>
                 <div className="text-xs text-slate-500 mt-1">
-                  {status?.stats?.carz?.unprocessedArticles || 0} Carz • {status?.stats?.ownerfi?.unprocessedArticles || 0} OwnerFi
+                  {status?.stats?.carz?.unprocessedArticles || 0} Carz • {status?.stats?.ownerfi?.unprocessedArticles || 0} OwnerFi • {status?.stats?.vassdistro?.unprocessedArticles || 0} Vass
                 </div>
               </div>
               <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
@@ -914,6 +933,161 @@ export default function SocialMediaDashboard() {
                             </span>
                             <button
                               onClick={() => deleteWorkflow(workflow.id, 'ownerfi')}
+                              disabled={deletingWorkflow === workflow.id}
+                              className="text-red-600 hover:text-red-800 hover:bg-red-50 p-2 rounded-lg transition-colors disabled:opacity-50"
+                              title="Delete workflow"
+                            >
+                              {deletingWorkflow === workflow.id ? (
+                                <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24">
+                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
+                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                              ) : (
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                        {(workflow.heygenVideoId || workflow.submagicVideoId || workflow.latePostId || workflow.metricoolPostId) && (
+                          <div className="grid grid-cols-3 gap-2 text-xs">
+                            {workflow.heygenVideoId && (
+                              <div>
+                                <div className="text-slate-500 mb-1">HeyGen</div>
+                                <div className="font-mono text-slate-700 truncate">{workflow.heygenVideoId.substring(0, 12)}...</div>
+                              </div>
+                            )}
+                            {workflow.submagicVideoId && (
+                              <div>
+                                <div className="text-slate-500 mb-1">Submagic</div>
+                                <div className="font-mono text-slate-700 truncate">{workflow.submagicVideoId.substring(0, 12)}...</div>
+                              </div>
+                            )}
+                            {(workflow.latePostId || workflow.metricoolPostId) && (
+                              <div>
+                                <div className="text-slate-500 mb-1">GetLate</div>
+                                <div className="font-mono text-slate-700 truncate">{(workflow.latePostId || workflow.metricoolPostId)?.substring(0, 12)}...</div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        {workflow.error && (
+                          <div className="mt-3 space-y-2">
+                            <div className="text-xs text-red-700 bg-red-50 border border-red-200 rounded px-3 py-2">
+                              <span className="font-semibold">Error:</span> {workflow.error}
+                            </div>
+                            <WorkflowRecoveryButtons workflow={workflow} onSuccess={loadWorkflows} />
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="bg-slate-50 rounded-lg p-8 text-center border border-slate-200">
+                    <div className="text-slate-500 text-sm font-medium">No active workflows</div>
+                    <div className="text-xs text-slate-400 mt-1">Videos will appear here when being processed</div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeSubTab === 'vassdistro' && (
+          <div className="space-y-6">
+            <div className="bg-white rounded-xl shadow-sm p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-slate-900">Vass Distro Status</h3>
+                <button
+                  onClick={triggerCron}
+                  disabled={triggeringViral}
+                  className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:bg-gray-400 transition-colors"
+                >
+                  {triggeringViral ? 'Generating...' : 'Generate Video Now'}
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-slate-50 rounded-lg p-4">
+                  <div className="text-sm text-slate-600">Daily Limit</div>
+                  <div className="text-2xl font-bold text-slate-900 mt-1">
+                    {status?.scheduler?.config?.maxVideosPerDay?.vassdistro || 1}
+                  </div>
+                  <div className="text-xs text-slate-500 mt-1">videos/day</div>
+                </div>
+
+                <div className="bg-slate-50 rounded-lg p-4">
+                  <div className="text-sm text-slate-600">Available Articles</div>
+                  <div className="text-2xl font-bold text-slate-900 mt-1">
+                    {status?.stats?.vassdistro?.unprocessedArticles || 0}
+                  </div>
+                  <div className="text-xs text-slate-500 mt-1">ready to process</div>
+                </div>
+
+                <div className="bg-slate-50 rounded-lg p-4">
+                  <div className="text-sm text-slate-600">In Queue</div>
+                  <div className="text-2xl font-bold text-slate-900 mt-1">
+                    {(status?.stats?.vassdistro?.queuePending || 0) + (status?.stats?.vassdistro?.queueProcessing || 0)}
+                  </div>
+                  <div className="text-xs text-slate-500 mt-1">
+                    {status?.stats?.vassdistro?.queueProcessing || 0} processing
+                  </div>
+                </div>
+
+                <div className="bg-slate-50 rounded-lg p-4">
+                  <div className="text-sm text-slate-600">RSS Feeds</div>
+                  <div className="text-2xl font-bold text-slate-900 mt-1">
+                    {status?.feeds?.vassdistro || 0}
+                  </div>
+                  <div className="text-xs text-slate-500 mt-1">active sources</div>
+                </div>
+              </div>
+
+              <div className="mt-6 pt-6 border-t border-slate-200">
+                <h4 className="text-sm font-semibold text-slate-900 mb-3">Publishing Platforms</h4>
+                <div className="flex flex-wrap gap-2">
+                  {['Instagram', 'TikTok', 'YouTube', 'Facebook', 'LinkedIn', 'Threads'].map((platform) => (
+                    <span key={platform} className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
+                      {platform}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Workflow Logs */}
+              <div className="mt-6 pt-6 border-t border-slate-200">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-sm font-semibold text-slate-900">Workflows</h4>
+                  <button
+                    onClick={() => setShowHistory(!showHistory)}
+                    className="text-xs px-3 py-1 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition-colors"
+                  >
+                    {showHistory ? 'Active Only' : 'Show History'}
+                  </button>
+                </div>
+                {workflows && workflows.workflows && workflows.workflows.vassdistro && workflows.workflows.vassdistro.length > 0 ? (
+                  <div className="space-y-3">
+                    {workflows.workflows.vassdistro.map((workflow) => (
+                      <div key={workflow.id} className="bg-white border border-slate-200 rounded-lg p-4 hover:border-indigo-300 transition-colors">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex-1">
+                            <div className="font-medium text-slate-900 text-sm mb-1" dangerouslySetInnerHTML={{ __html: workflow.articleTitle }} />
+                            <div className="flex items-center gap-2 mt-1">
+                              <div className="text-xs text-slate-500">{formatTimeAgo(workflow.createdAt)}</div>
+                              {workflow.captionTemplate && (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700" title="A/B Test Caption Template">
+                                  🧪 {workflow.captionTemplate.replace(/_/g, ' ')}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(workflow.status)}`}>
+                              {formatStatus(workflow.status)}
+                            </span>
+                            <button
+                              onClick={() => deleteWorkflow(workflow.id, 'vassdistro')}
                               disabled={deletingWorkflow === workflow.id}
                               className="text-red-600 hover:text-red-800 hover:bg-red-50 p-2 rounded-lg transition-colors disabled:opacity-50"
                               title="Delete workflow"

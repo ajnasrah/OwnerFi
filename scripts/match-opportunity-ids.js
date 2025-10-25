@@ -67,7 +67,7 @@ async function matchOpportunityIds() {
 
     // Read CSV file
     console.log('Reading opportunities from GoHighLevel CSV...');
-    const csvPath = '/Users/abdullahabunasrah/Downloads/opportunities-2.csv';
+    const csvPath = '/Users/abdullahabunasrah/Downloads/opportunities-3.csv';
 
     const ghlOpportunities = new Map();
     const ghlExported = new Map();

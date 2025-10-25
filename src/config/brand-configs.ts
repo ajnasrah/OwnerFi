@@ -68,13 +68,27 @@ export interface BrandConfig {
 
 // Get base URL from environment
 const getBaseUrl = (): string => {
-  if (process.env.NEXT_PUBLIC_BASE_URL) {
-    return process.env.NEXT_PUBLIC_BASE_URL;
+  let url = process.env.NEXT_PUBLIC_BASE_URL;
+
+  // Use Vercel URL if NEXT_PUBLIC_BASE_URL not set
+  if (!url && process.env.VERCEL_URL) {
+    url = `https://${process.env.VERCEL_URL}`;
   }
-  if (process.env.VERCEL_URL) {
-    return `https://${process.env.VERCEL_URL}`;
+
+  // Fallback to production domain
+  if (!url) {
+    url = 'https://ownerfi.ai';
   }
-  return 'https://ownerfi.ai'; // fallback
+
+  // Validate HTTPS in production
+  if (process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production') {
+    if (!url.startsWith('https://')) {
+      console.error(`❌ BASE_URL must use HTTPS in production: ${url}`);
+      throw new Error(`BASE_URL must use HTTPS in production. Got: ${url}. Please set NEXT_PUBLIC_BASE_URL to an https:// URL.`);
+    }
+  }
+
+  return url;
 };
 
 const BASE_URL = getBaseUrl();

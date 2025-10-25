@@ -270,7 +270,7 @@ async function fetchVideoUrlFromSubmagic(submagicProjectId: string): Promise<str
  * Process video upload to R2 and post to Late
  */
 async function processVideoAndPost(
-  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit',
+  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit' | 'property' | 'vassdistro',
   workflowId: string,
   workflow: any,
   videoUrl: string
@@ -315,6 +315,9 @@ async function processVideoAndPost(
     } else if (brand === 'property') {
       caption = workflow.caption || 'New owner finance property for sale! 🏡';
       title = workflow.title || 'Property For Sale';
+    } else if (brand === 'vassdistro') {
+      caption = workflow.caption || workflow.articleTitle || 'Check out this vape industry update! 🔥';
+      title = workflow.title || 'Vape Industry News';
     } else {
       caption = workflow.caption || 'Check out this video! 🔥';
       title = workflow.title || 'Viral Video';
@@ -374,18 +377,18 @@ async function processVideoAndPost(
  * Send failure alert for brand
  */
 async function sendFailureAlert(
-  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit',
+  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit' | 'property' | 'vassdistro',
   workflowId: string,
   workflow: any,
   reason: string
 ): Promise<void> {
   try {
-    if (brand !== 'podcast' && brand !== 'benefit') {
+    if (brand !== 'podcast' && brand !== 'benefit' && brand !== 'property') {
       const { alertWorkflowFailure } = await import('@/lib/error-monitoring');
       await alertWorkflowFailure(
         brand,
         workflowId,
-        workflow.articleTitle || 'Unknown',
+        workflow.articleTitle || workflow.title || 'Unknown',
         reason
       );
     }

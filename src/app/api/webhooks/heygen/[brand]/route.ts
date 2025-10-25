@@ -118,14 +118,18 @@ export async function POST(request: NextRequest, context: RouteContext) {
       console.log(`   Video URL: ${event_data.url}`);
       console.log(`   Workflow ID: ${workflowId}`);
 
-      // Trigger Submagic processing synchronously
-      // CRITICAL: Must complete before function terminates in serverless environment
-      await triggerSubmagicProcessing(
+      // Trigger Submagic processing ASYNCHRONOUSLY to avoid webhook timeout
+      // Don't await - let it run in background, failsafe cron will handle failures
+      triggerSubmagicProcessing(
         brand,
         workflowId,
         event_data.url,
         workflow
-      );
+      ).catch(err => {
+        console.error(`❌ [${brandConfig.displayName}] Submagic trigger failed (will be retried by failsafe):`, err);
+        // Don't throw - we've already marked workflow as heygen_processing
+        // Failsafe cron will detect and retry
+      });
 
       const duration = Date.now() - startTime;
       console.log(`⏱️  [${brandConfig.displayName}] Webhook processed in ${duration}ms`);

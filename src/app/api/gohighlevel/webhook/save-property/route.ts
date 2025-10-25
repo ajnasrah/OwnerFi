@@ -635,9 +635,15 @@ export async function POST(request: NextRequest) {
         { merge: isUpdate } // Merge for updates, overwrite for new
       );
 
-      // Queue nearby cities calculation
+      // Queue nearby cities calculation with full property data
       try {
-        queueNearbyCitiesForProperty(propertyId, normalizedCity, normalizedState);
+        queueNearbyCitiesForProperty(propertyId, {
+          address: propertyData.address,
+          city: propertyData.city,
+          state: propertyData.state,
+          zipCode: propertyData.zipCode || undefined
+          // Note: latitude/longitude not available from GHL webhook - will be geocoded if needed
+        });
       } catch (queueError) {
         // Don't fail the webhook if queueing fails
         logWarn('Failed to queue nearby cities calculation', {

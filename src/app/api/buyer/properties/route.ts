@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { 
-  collection, 
+import {
+  collection,
   getDocs,
   query,
   where,
@@ -10,16 +10,19 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { ExtendedSession } from '@/types/session';
 import { PropertyListing } from "@/lib/property-schema";
+import { getCitiesWithinRadiusComprehensive } from '@/lib/comprehensive-cities';
 
 /**
  * BUYER PROPERTY API WITH NEARBY CITIES
- * 
+ *
  * Shows properties that match buyer's simple criteria:
  * 1. DIRECT: Properties in the exact search city
- * 2. NEARBY: Properties from nearby cities (within 30 miles) 
+ * 2. NEARBY: Properties IN nearby cities (within 30 miles of buyer's search city)
  * 3. Budget filters: Monthly payment <= budget, Down payment <= budget
- * 
- * Uses pre-computed nearbyCities data for fast nearby property discovery.
+ *
+ * LOGIC: When buyer searches "Houston", we:
+ * - Get list of cities within 30 miles of Houston (Pearland, Sugarland, etc.)
+ * - Show properties located IN those nearby cities
  */
 
 export async function GET(request: NextRequest) {
@@ -70,10 +73,23 @@ export async function GET(request: NextRequest) {
       likedPropertyIds = profile.likedProperties || [];
     }
 
+    // Get cities within 30 miles of the buyer's search city
+    const nearbyCitiesList = getCitiesWithinRadiusComprehensive(searchCity, searchState, 30);
+
+    // Create a Set of nearby city names for fast lookup (lowercase for comparison)
+    const nearbyCityNames = new Set(
+      nearbyCitiesList.map(city => city.name.toLowerCase())
+    );
+
+    console.log(`[buyer-search] Buyer searching for ${searchCity}, ${searchState}`);
+    console.log(`[buyer-search] Found ${nearbyCityNames.size} nearby cities:`,
+      Array.from(nearbyCityNames).slice(0, 10).join(', ') + (nearbyCityNames.size > 10 ? '...' : '')
+    );
+
     // Get ALL properties
     const snapshot = await getDocs(collection(db, 'properties'));
     const allProperties = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as PropertyListing & { id: string }));
-    
+
     // 1. DIRECT MATCHES: Properties IN the search city AND state
     const directProperties = allProperties.filter((property: PropertyListing & { id: string }) => {
       const propertyCity = property.city?.split(',')[0].trim();
@@ -85,32 +101,28 @@ export async function GET(request: NextRequest) {
              property.isActive !== false &&
              meetsbudget;
     });
-    
-    // 2. NEARBY MATCHES: Properties FROM other cities IN SAME STATE that consider search city nearby
+
+    // 2. NEARBY MATCHES: Properties located IN cities that are within 30 miles of buyer's search city
     const nearbyProperties = allProperties.filter((property: PropertyListing & { id: string }) => {
       const propertyCity = property.city?.split(',')[0].trim();
-      
+
       // Must be different city but SAME STATE
       if (propertyCity?.toLowerCase() === searchCity.toLowerCase()) return false;
       if (property.state !== searchState) return false;
-      
-      // Must have search city in nearbyCities array
-      const considersSearchCityNearby = property.nearbyCities &&
-        Array.isArray(property.nearbyCities) &&
-        property.nearbyCities.some((nearbyCity: any) => {
-          // Handle both string and object formats
-          const cityName = typeof nearbyCity === 'string' ? nearbyCity : nearbyCity.name;
-          return cityName && cityName.toLowerCase() === searchCity.toLowerCase();
-        });
-      
+
+      // Check if property's city is in the list of nearby cities
+      const isInNearbyCity = propertyCity && nearbyCityNames.has(propertyCity.toLowerCase());
+
       // Show properties if they have no pricing data OR meet both budget criteria
       const meetsbudget = (!property.monthlyPayment || property.monthlyPayment <= maxMonthly) &&
                          (!property.downPaymentAmount || property.downPaymentAmount <= maxDown);
 
-      return considersSearchCityNearby &&
+      return isInNearbyCity &&
              property.isActive !== false &&
              meetsbudget;
     });
+
+    console.log(`[buyer-search] Found ${directProperties.length} direct matches, ${nearbyProperties.length} nearby matches`);
 
     // 3. LIKED PROPERTIES: Always include liked properties regardless of search criteria
     const likedProperties = likedPropertyIds.length > 0 ? 

@@ -45,8 +45,9 @@ export async function GET(request: NextRequest) {
 
         snapshot.forEach(doc => {
           const data = doc.data();
-          const updatedAt = data.updatedAt || 0;
-          const stuckMinutes = Math.round((Date.now() - updatedAt) / 60000);
+          // Use statusChangedAt if available (new field), fallback to updatedAt for old workflows
+          const timestamp = data.statusChangedAt || data.updatedAt || 0;
+          const stuckMinutes = Math.round((Date.now() - timestamp) / 60000);
 
           console.log(`   📄 Workflow ${doc.id}: stuck for ${stuckMinutes} min`);
 
@@ -78,8 +79,9 @@ export async function GET(request: NextRequest) {
 
       snapshot.forEach(doc => {
         const data = doc.data();
-        const updatedAt = data.updatedAt || 0;
-        const stuckMinutes = Math.round((Date.now() - updatedAt) / 60000);
+        // Use statusChangedAt if available (new field), fallback to updatedAt for old workflows
+        const timestamp = data.statusChangedAt || data.updatedAt || 0;
+        const stuckMinutes = Math.round((Date.now() - timestamp) / 60000);
 
         console.log(`   📄 Podcast ${doc.id}: stuck for ${stuckMinutes} min`);
 

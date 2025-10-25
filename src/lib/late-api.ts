@@ -34,7 +34,9 @@ export interface LatePostResponse {
   postId?: string;
   scheduledFor?: string;
   platforms?: string[];
+  skippedPlatforms?: string[]; // Platforms that were requested but skipped due to missing accounts
   error?: string;
+  warning?: string; // Non-fatal warnings (e.g., some platforms skipped)
 }
 
 export interface LateProfile {
@@ -198,11 +200,13 @@ export async function postToLate(request: LatePostRequest): Promise<LatePostResp
     const accounts = await getLateAccounts(profileId);
 
     // Map platform names to account IDs
+    const missingPlatforms: string[] = [];
     const platformAccounts = request.platforms
       .map(platform => {
         const account = accounts.find(acc => acc.platform.toLowerCase() === platform.toLowerCase());
         if (!account) {
           console.warn(`⚠️  No ${platform} account found for profile ${profileId}`);
+          missingPlatforms.push(platform);
           return null;
         }
         return {
@@ -212,11 +216,21 @@ export async function postToLate(request: LatePostRequest): Promise<LatePostResp
       })
       .filter(Boolean) as { platform: string; accountId: string }[];
 
-    if (platformAccounts.length === 0) {
-      return {
-        success: false,
-        error: 'No connected accounts found for requested platforms'
-      };
+    // Check for missing platforms
+    if (missingPlatforms.length > 0) {
+      const errorMsg = `Missing connected accounts for platforms: ${missingPlatforms.join(', ')}. Please reconnect these accounts in Late.dev`;
+      console.error(`❌ ${errorMsg}`);
+
+      // If ALL platforms are missing, fail the entire post
+      if (platformAccounts.length === 0) {
+        return {
+          success: false,
+          error: errorMsg
+        };
+      }
+
+      // If SOME platforms are missing, log warning and continue with available platforms
+      console.warn(`⚠️  Continuing with ${platformAccounts.length}/${request.platforms.length} platforms (skipped: ${missingPlatforms.join(', ')})`);
     }
 
     // Build caption with hashtags
@@ -366,12 +380,20 @@ export async function postToLate(request: LatePostRequest): Promise<LatePostResp
             console.log('   Scheduled for:', data.scheduledFor);
           }
 
-          return {
+          const response: LatePostResponse = {
             success: true,
             postId: postId,
             scheduledFor: data.scheduledFor || request.scheduleTime,
             platforms: platformAccounts.map(p => p.platform)
           };
+
+          // Add warning if some platforms were skipped
+          if (missingPlatforms.length > 0) {
+            response.skippedPlatforms = missingPlatforms;
+            response.warning = `Posted to ${platformAccounts.length}/${request.platforms.length} platforms. Skipped: ${missingPlatforms.join(', ')} (accounts not connected)`;
+          }
+
+          return response;
         }); // End circuit breaker
       },
       {

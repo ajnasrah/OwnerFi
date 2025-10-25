@@ -13,10 +13,33 @@ import { PropertyListing } from './property-schema';
  */
 export function queueNearbyCitiesForProperty(
   propertyId: string,
+  propertyData: {
+    address: string;
+    city: string;
+    state: string;
+    zipCode?: string;
+    latitude?: number;
+    longitude?: number;
+  }
+): void {
+  queueNearbyCitiesJob(propertyId, propertyData);
+}
+
+/**
+ * LEGACY: Old signature for backward compatibility
+ * @deprecated Use the new signature with full property data
+ */
+export function queueNearbyCitiesForPropertyLegacy(
+  propertyId: string,
   propertyCity: string,
   propertyState: string
 ): void {
-  queueNearbyCitiesJob(propertyId, propertyCity, propertyState);
+  // Create minimal property data for legacy calls
+  queueNearbyCitiesJob(propertyId, {
+    address: '',
+    city: propertyCity,
+    state: propertyState
+  });
 }
 
 /**

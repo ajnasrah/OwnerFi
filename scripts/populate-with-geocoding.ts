@@ -152,8 +152,8 @@ async function populateMissingNearbyCitiesWithGeocoding() {
 
         // Format nearby cities for storage
         const cityNames = nearbyCities.map(city => ({
-          name: city.city,
-          state: city.stateCode,
+          name: city.name,
+          state: city.state,
           distance: Math.round(city.distance * 10) / 10
         }));
 

@@ -65,7 +65,8 @@ export interface WorkflowQueueItem {
   abTestResultId?: string; // ID of result document for tracking
 
   createdAt: number;
-  updatedAt: number;
+  updatedAt: number; // Updates when meaningful progress happens (video received, etc)
+  statusChangedAt?: number; // When status last changed (for tracking stuck workflows)
   completedAt?: number;
 }
 
@@ -141,11 +142,13 @@ export async function getAllFeedSources(category?: Brand): Promise<FeedSource[]>
     const snapshot = await getDocs(collection(db, collectionName));
     snapshot.docs.forEach(doc => sources.push(doc.data() as FeedSource));
   } else {
-    // Get from both collections
+    // Get from all collections
     const carzSnapshot = await getDocs(collection(db, COLLECTIONS.CARZ.FEEDS));
     const ownerfiSnapshot = await getDocs(collection(db, COLLECTIONS.OWNERFI.FEEDS));
+    const vassdistroSnapshot = await getDocs(collection(db, COLLECTIONS.VASSDISTRO.FEEDS));
     carzSnapshot.docs.forEach(doc => sources.push(doc.data() as FeedSource));
     ownerfiSnapshot.docs.forEach(doc => sources.push(doc.data() as FeedSource));
+    vassdistroSnapshot.docs.forEach(doc => sources.push(doc.data() as FeedSource));
   }
 
   return sources;
@@ -405,10 +408,32 @@ export async function updateWorkflowStatus(
   if (!db) return;
 
   const collectionName = getCollectionName('WORKFLOW_QUEUE', brand);
-  const cleanData = removeUndefined({
-    ...updates,
-    updatedAt: Date.now()
-  });
+
+  // Prepare update data
+  const updateData: any = { ...updates };
+
+  // Always update statusChangedAt when status changes
+  if (updates.status) {
+    updateData.statusChangedAt = Date.now();
+  }
+
+  // Only update updatedAt when meaningful progress happens
+  const hasProgress = Boolean(
+    updates.heygenVideoId ||
+    updates.heygenVideoUrl ||
+    updates.submagicVideoId ||
+    updates.submagicDownloadUrl ||
+    updates.finalVideoUrl ||
+    updates.latePostId ||
+    updates.status === 'completed' ||
+    updates.status === 'failed'
+  );
+
+  if (hasProgress) {
+    updateData.updatedAt = Date.now();
+  }
+
+  const cleanData = removeUndefined(updateData);
   await updateDoc(doc(db, collectionName, workflowId), cleanData);
 }
 

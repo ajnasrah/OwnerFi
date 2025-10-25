@@ -111,15 +111,16 @@ function generateCaption(property: PropertyListing): string {
 
   return `🏡 New Owner Finance Deal in ${property.city}, ${property.state}!
 
+📍 ${property.address}
 💰 Est. ${downPayment} down
 🏠 ${property.bedrooms}BD | ${property.bathrooms}BA${property.squareFeet ? ` | ${formatNumber(property.squareFeet)} sq ft` : ''}
 💵 Est. ${monthlyPayment}/mo (before taxes/insurance)
 
 ${highlight}
 
-We connect buyers with owner-financed homes. This is a marketing platform - not financial/legal advice. All deals subject to seller approval. Always consult professionals before purchasing.
+We connect buyers with owner-financed homes in ${property.city} and surrounding areas. This is a marketing platform - not financial/legal advice. All deals subject to seller approval. Always consult professionals.
 
-See more deals at ownerfi.ai`;
+See more ${property.city} deals at ownerfi.ai`;
 }
 
 /**
@@ -177,7 +178,7 @@ function selectBestHighlight(property: PropertyListing): string {
 }
 
 /**
- * Generate hashtags for property
+ * Generate hashtags for property (with location targeting)
  */
 function generateHashtags(property: PropertyListing): string[] {
   const baseHashtags = [
@@ -187,12 +188,16 @@ function generateHashtags(property: PropertyListing): string[] {
     'OwnerFi'
   ];
 
-  // Add location hashtags
-  const cityTag = property.city.replace(/\s+/g, '');
+  // CRITICAL: Add location hashtags for local targeting
+  // Format: #CityName, #CityNameRealEstate, #CityNameHomes
+  const cityTag = property.city.replace(/\s+/g, ''); // Remove spaces
   const stateTag = property.state;
 
-  baseHashtags.push(`${cityTag}${stateTag}`);
-  baseHashtags.push(`${cityTag}RealEstate`);
+  // Location hashtags (most important for reach)
+  baseHashtags.push(cityTag); // e.g., #Houston
+  baseHashtags.push(`${cityTag}${stateTag}`); // e.g., #HoustonTX
+  baseHashtags.push(`${cityTag}RealEstate`); // e.g., #HoustonRealEstate
+  baseHashtags.push(`${cityTag}Homes`); // e.g., #HoustonHomes
 
   // Add down payment tag
   if (property.downPaymentAmount < 10000) {
@@ -206,7 +211,7 @@ function generateHashtags(property: PropertyListing): string[] {
     baseHashtags.push('MobileHome');
   }
 
-  return baseHashtags.slice(0, 7); // Max 7 hashtags
+  return baseHashtags.slice(0, 10); // Allow up to 10 hashtags for location targeting
 }
 
 /**

@@ -115,6 +115,20 @@ export async function PUT(
       updatedAt: serverTimestamp()
     });
 
+    // Remove from rotation queue if property becomes inactive or ineligible
+    if (updates.isActive === false || updates.status !== 'active') {
+      try {
+        const queueDoc = await getDoc(doc(db, 'property_rotation_queue', resolvedParams.id));
+        if (queueDoc.exists()) {
+          await deleteDoc(doc(db, 'property_rotation_queue', resolvedParams.id));
+          console.log(`✅ Removed inactive property from rotation queue: ${resolvedParams.id}`);
+        }
+      } catch (error) {
+        console.warn('⚠️  Could not remove from queue:', error);
+        // Don't fail the update if queue removal fails
+      }
+    }
+
     return NextResponse.json({
       success: true,
       message: 'Property updated successfully'
@@ -162,6 +176,18 @@ export async function DELETE(
 
     // Delete the property
     await deleteDoc(doc(db, 'properties', resolvedParams.id));
+
+    // Also remove from rotation queue
+    try {
+      const queueDoc = await getDoc(doc(db, 'property_rotation_queue', resolvedParams.id));
+      if (queueDoc.exists()) {
+        await deleteDoc(doc(db, 'property_rotation_queue', resolvedParams.id));
+        console.log(`✅ Removed deleted property from rotation queue: ${resolvedParams.id}`);
+      }
+    } catch (error) {
+      console.warn('⚠️  Could not remove from rotation queue:', error);
+      // Don't fail the delete if queue removal fails
+    }
 
     await logInfo('Property deleted by admin', {
       action: 'admin_property_delete',

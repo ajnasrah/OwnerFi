@@ -14,31 +14,29 @@ export interface PropertyVideoScript {
  * Generate video script for a property listing
  */
 export function generatePropertyScript(property: PropertyListing): PropertyVideoScript {
-  // Format numbers
-  const downPayment = formatCurrency(property.downPaymentAmount);
-  const monthlyPayment = formatCurrency(property.monthlyPayment);
-  const listPrice = formatCurrency(property.listPrice);
+  // Format numbers (no decimals, rounded)
+  const downPayment = formatCurrencyRounded(property.downPaymentAmount);
+  const monthlyPayment = formatCurrencyRounded(property.monthlyPayment);
+  const listPrice = formatCurrencyRounded(property.listPrice);
   const sqft = property.squareFeet ? formatNumber(property.squareFeet) : null;
 
   // Get best highlight
   const highlight = selectBestHighlight(property);
 
-  // Build script with legal disclaimers
+  // Build script with legal disclaimers (30 seconds max = ~75 words)
   const script = `We just found this Owner Finance deal for sale!
 
 ${property.address} in ${property.city}, ${property.state}
 
 ${property.bedrooms} bed, ${property.bathrooms} bath${sqft ? `, ${sqft} square feet` : ''}
 
-Only ${downPayment} down
-${monthlyPayment} per month
-${property.interestRate}% interest for ${property.termYears} years
+The down payment is estimated to be around ${downPayment}. Monthly payment estimated before taxes and insurance is around ${monthlyPayment}.
 
 ${highlight}
 
-If you would like to see other owner finance deals for sale in your area, visit ownerfi.ai and create a free account. You can see the different deals our team found listed on the market.
+If you'd like to see other owner finance deals in your area, visit ownerfi.ai and create a free account.
 
-This is not financial or legal advice. We are a marketing platform connecting buyers with owner-financed properties. All deals are subject to seller approval and terms may change.`;
+This is not financial or legal advice. We are a marketing platform. All deals subject to seller approval and terms may change.`;
 
   // Build caption
   const caption = generateCaption(property);
@@ -61,15 +59,15 @@ This is not financial or legal advice. We are a marketing platform connecting bu
  * Generate social media caption
  */
 function generateCaption(property: PropertyListing): string {
-  const downPayment = formatCurrency(property.downPaymentAmount);
-  const monthlyPayment = formatCurrency(property.monthlyPayment);
+  const downPayment = formatCurrencyRounded(property.downPaymentAmount);
+  const monthlyPayment = formatCurrencyRounded(property.monthlyPayment);
   const highlight = selectBestHighlight(property);
 
   return `🏡 New Owner Finance Deal in ${property.city}, ${property.state}!
 
-💰 Only ${downPayment} down
+💰 Est. ${downPayment} down
 🏠 ${property.bedrooms}BD | ${property.bathrooms}BA${property.squareFeet ? ` | ${formatNumber(property.squareFeet)} sq ft` : ''}
-💵 ${monthlyPayment}/mo at ${property.interestRate}%
+💵 Est. ${monthlyPayment}/mo (before taxes/insurance)
 
 ${highlight}
 
@@ -201,6 +199,16 @@ function formatCurrency(amount: number): string {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0
   }).format(amount);
+}
+
+function formatCurrencyRounded(amount: number): string {
+  // Round to nearest dollar, no decimals
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(Math.round(amount));
 }
 
 function formatNumber(num: number): string {

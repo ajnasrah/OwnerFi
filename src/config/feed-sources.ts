@@ -19,6 +19,15 @@ export const CARZ_FEEDS: Omit<FeedSource, 'articlesProcessed'>[] = [
     fetchInterval: 60 // Every hour
   },
   {
+    id: 'carz-motor1-news',
+    name: 'Motor1 - News',
+    url: 'https://www.motor1.com/rss/news/',
+    category: 'carz',
+    subcategory: 'reviews',
+    enabled: true,
+    fetchInterval: 60
+  },
+  {
     id: 'carz-caranddriver-reviews',
     name: 'Car and Driver - Reviews',
     url: 'https://www.caranddriver.com/rss/all.xml/',
@@ -40,6 +49,51 @@ export const CARZ_FEEDS: Omit<FeedSource, 'articlesProcessed'>[] = [
     id: 'carz-edmunds-reviews',
     name: 'Edmunds - Car Reviews',
     url: 'https://www.edmunds.com/feeds/rss/articles.xml',
+    category: 'carz',
+    subcategory: 'reviews',
+    enabled: true,
+    fetchInterval: 60
+  },
+  {
+    id: 'carz-autoweek',
+    name: 'Autoweek - Car News',
+    url: 'https://www.autoweek.com/rss/',
+    category: 'carz',
+    subcategory: 'reviews',
+    enabled: true,
+    fetchInterval: 60
+  },
+  {
+    id: 'carz-carconnection',
+    name: 'The Car Connection - Reviews',
+    url: 'https://feeds.highgearmedia.com/tcc/news',
+    category: 'carz',
+    subcategory: 'reviews',
+    enabled: true,
+    fetchInterval: 60
+  },
+  {
+    id: 'carz-roadandtrack',
+    name: 'Road & Track',
+    url: 'https://www.roadandtrack.com/rss/all.xml/',
+    category: 'carz',
+    subcategory: 'reviews',
+    enabled: true,
+    fetchInterval: 60
+  },
+  {
+    id: 'carz-carthrottle',
+    name: 'Car Throttle',
+    url: 'https://www.carthrottle.com/rss/',
+    category: 'carz',
+    subcategory: 'reviews',
+    enabled: true,
+    fetchInterval: 60
+  },
+  {
+    id: 'carz-thedrive-news',
+    name: 'The Drive - News',
+    url: 'https://www.thedrive.com/rss/news',
     category: 'carz',
     subcategory: 'reviews',
     enabled: true,
@@ -83,6 +137,60 @@ export const CARZ_FEEDS: Omit<FeedSource, 'articlesProcessed'>[] = [
     enabled: true,
     fetchInterval: 60
   },
+  {
+    id: 'carz-cnet-roadshow',
+    name: 'CNET Roadshow',
+    url: 'https://www.cnet.com/rss/roadshow/',
+    category: 'carz',
+    subcategory: 'market',
+    enabled: true,
+    fetchInterval: 60
+  },
+  {
+    id: 'carz-forbes-autos',
+    name: 'Forbes - Autos',
+    url: 'https://www.forbes.com/autos/feed/',
+    category: 'carz',
+    subcategory: 'market',
+    enabled: true,
+    fetchInterval: 60
+  },
+  {
+    id: 'carz-topgear',
+    name: 'Top Gear',
+    url: 'https://www.topgear.com/rss',
+    category: 'carz',
+    subcategory: 'market',
+    enabled: true,
+    fetchInterval: 60
+  },
+  {
+    id: 'carz-pistonheads',
+    name: 'PistonHeads - News',
+    url: 'https://www.pistonheads.com/xml/news091.asp',
+    category: 'carz',
+    subcategory: 'market',
+    enabled: true,
+    fetchInterval: 60
+  },
+  {
+    id: 'carz-wardsauto',
+    name: 'WardsAuto',
+    url: 'https://www.wardsauto.com/rss.xml',
+    category: 'carz',
+    subcategory: 'market',
+    enabled: true,
+    fetchInterval: 60
+  },
+  {
+    id: 'carz-automotivedive',
+    name: 'Automotive Dive',
+    url: 'https://www.automotivedive.com/feeds/news/',
+    category: 'carz',
+    subcategory: 'market',
+    enabled: true,
+    fetchInterval: 60
+  },
 
   // Electric Vehicles & Innovation
   {
@@ -98,6 +206,78 @@ export const CARZ_FEEDS: Omit<FeedSource, 'articlesProcessed'>[] = [
     id: 'carz-electrek',
     name: 'Electrek - Electric Vehicle News',
     url: 'https://electrek.co/feed/',
+    category: 'carz',
+    subcategory: 'electric',
+    enabled: true,
+    fetchInterval: 60
+  },
+  {
+    id: 'carz-greencarreports',
+    name: 'Green Car Reports',
+    url: 'https://feeds.highgearmedia.com/green-car-reports/news',
+    category: 'carz',
+    subcategory: 'electric',
+    enabled: true,
+    fetchInterval: 60
+  },
+  {
+    id: 'carz-cleantechnica',
+    name: 'CleanTechnica - EVs',
+    url: 'https://cleantechnica.com/feed/',
+    category: 'carz',
+    subcategory: 'electric',
+    enabled: true,
+    fetchInterval: 60
+  },
+  {
+    id: 'carz-evannex',
+    name: 'EVANNEX - EV News',
+    url: 'https://evannex.com/blogs/news.atom',
+    category: 'carz',
+    subcategory: 'electric',
+    enabled: true,
+    fetchInterval: 60
+  },
+  {
+    id: 'carz-hybridcars',
+    name: 'Hybrid Cars',
+    url: 'https://www.hybridcars.com/feed/',
+    category: 'carz',
+    subcategory: 'electric',
+    enabled: true,
+    fetchInterval: 60
+  },
+  {
+    id: 'carz-chargedevs',
+    name: 'Charged EVs',
+    url: 'https://chargedevs.com/feed/',
+    category: 'carz',
+    subcategory: 'electric',
+    enabled: true,
+    fetchInterval: 60
+  },
+  {
+    id: 'carz-evobsession',
+    name: 'EV Obsession',
+    url: 'https://evobsession.com/feed/',
+    category: 'carz',
+    subcategory: 'electric',
+    enabled: true,
+    fetchInterval: 60
+  },
+  {
+    id: 'carz-plugincars',
+    name: 'Plug In Cars',
+    url: 'https://www.plugincars.com/rss.xml',
+    category: 'carz',
+    subcategory: 'electric',
+    enabled: true,
+    fetchInterval: 60
+  },
+  {
+    id: 'carz-evcentral',
+    name: 'EV Central',
+    url: 'https://evcentral.com.au/feed/',
     category: 'carz',
     subcategory: 'electric',
     enabled: true,

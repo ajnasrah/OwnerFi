@@ -21,7 +21,27 @@ export async function POST(request: NextRequest) {
     console.log('📰 Manual article fetch triggered by admin');
 
     // Get all feed sources
-    const feedSources = await getAllFeedSources();
+    let feedSources = await getAllFeedSources();
+
+    // Auto-initialize Vass Distro feeds if they don't exist
+    const hasVassdistroFeeds = feedSources.some(f => f.category === 'vassdistro');
+    if (!hasVassdistroFeeds) {
+      console.log('⚙️  Vass Distro feeds not found - auto-initializing...');
+      const { VASSDISTRO_FEEDS } = await import('@/config/feed-sources');
+      const { addFeedSource } = await import('@/lib/feed-store-firestore');
+
+      for (const feed of VASSDISTRO_FEEDS) {
+        try {
+          await addFeedSource(feed);
+          console.log(`✅ Initialized feed: ${feed.name}`);
+        } catch (error) {
+          console.error(`❌ Failed to init ${feed.name}:`, error);
+        }
+      }
+
+      // Refresh feed sources after initialization
+      feedSources = await getAllFeedSources();
+    }
 
     if (!feedSources || feedSources.length === 0) {
       return NextResponse.json({

@@ -1,8 +1,13 @@
+import { config } from 'dotenv';
 import { getAdminDb } from '../src/lib/firebase-admin';
+import type { Firestore } from 'firebase-admin/firestore';
+
+// Load environment variables from .env.local
+config({ path: '.env.local' });
 
 async function checkNearbyCities() {
   try {
-    const db = await getAdminDb();
+    const db = await getAdminDb() as Firestore | null;
 
     if (!db) {
       console.error('❌ Failed to initialize Firebase Admin SDK');
@@ -87,22 +92,18 @@ async function checkNearbyCities() {
     console.log(`  - invalid type:           ${empty - nullCount - emptyArrayCount}`);
     console.log('═══════════════════════════════════════════════════\n');
 
-    // Show sample of missing properties
+    // Show ALL missing properties
     if (missingProperties.length > 0) {
-      console.log('🔴 Sample Properties Missing nearby_cities:');
+      console.log('🔴 ALL Properties Missing nearby_cities:');
       console.log('───────────────────────────────────────────────────\n');
 
-      missingProperties.slice(0, 15).forEach((prop, idx) => {
+      missingProperties.forEach((prop, idx) => {
         console.log(`${idx + 1}. ${prop.address}`);
         console.log(`   ${prop.city}, ${prop.state} ${prop.zipCode}`);
         console.log(`   ID: ${prop.id}`);
         console.log(`   nearbyCities: ${prop.nearbyCities}`);
         console.log('');
       });
-
-      if (missingProperties.length > 15) {
-        console.log(`... and ${missingProperties.length - 15} more properties\n`);
-      }
     }
 
     // Show sample of populated properties
@@ -121,7 +122,15 @@ async function checkNearbyCities() {
           console.log(`${samplesShown + 1}. ${data.address}`);
           console.log(`   ${data.city}, ${data.state} ${data.zipCode}`);
           console.log(`   ID: ${doc.id}`);
-          console.log(`   nearbyCities (${nearbyCities.length}): ${nearbyCities.slice(0, 5).join(', ')}${nearbyCities.length > 5 ? '...' : ''}`);
+
+          // Format nearby cities properly
+          const cityNames = nearbyCities.map((city: any) => {
+            if (typeof city === 'string') return city;
+            if (city && typeof city === 'object' && city.name) return city.name;
+            return JSON.stringify(city);
+          });
+
+          console.log(`   nearbyCities (${nearbyCities.length}): ${cityNames.slice(0, 5).join(', ')}${nearbyCities.length > 5 ? '...' : ''}`);
           console.log('');
           samplesShown++;
         }

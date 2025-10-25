@@ -1354,10 +1354,11 @@ export interface PropertyRotationQueue {
   // Queue position
   position: number;                // Lower = processes sooner
   lastVideoGenerated?: number;     // Timestamp of last video
-  videoCount: number;              // How many times showcased
+  videoCount: number;              // Total times showcased (across all cycles)
+  currentCycleCount: number;       // Times shown in current cycle
 
   // Status
-  status: 'queued' | 'processing';
+  status: 'queued' | 'processing' | 'completed'; // Completed = done this cycle
   updatedAt: number;
 }
 
@@ -1402,6 +1403,7 @@ export async function addToPropertyRotationQueue(propertyId: string): Promise<vo
     imageUrl: property.imageUrls?.[0] || '',
     position: maxPosition + 1,
     videoCount: 0,
+    currentCycleCount: 0,
     status: 'queued',
     updatedAt: Date.now()
   };
@@ -1438,34 +1440,61 @@ export async function getNextPropertyFromRotation(): Promise<PropertyRotationQue
 }
 
 /**
- * Send property to back of rotation queue
+ * Mark property as completed (done for this cycle)
  */
-export async function sendPropertyToBackOfQueue(propertyId: string): Promise<void> {
+export async function markPropertyCompleted(propertyId: string): Promise<void> {
   if (!db) return;
-
-  // Get current max position
-  const maxQuery = query(
-    collection(db, 'property_rotation_queue'),
-    orderBy('position', 'desc'),
-    firestoreLimit(1)
-  );
-  const maxSnapshot = await getDocs(maxQuery);
-  const maxPosition = maxSnapshot.empty ? 0 : maxSnapshot.docs[0].data().position;
 
   // Get current item data
   const currentDoc = await getDoc(doc(db, 'property_rotation_queue', propertyId));
   const currentData = currentDoc.data();
 
-  // Update to back of queue
+  // Mark as completed (will be reset when cycle refreshes)
   await updateDoc(doc(db, 'property_rotation_queue', propertyId), {
-    position: maxPosition + 1,
-    status: 'queued',
+    status: 'completed',
     lastVideoGenerated: Date.now(),
     videoCount: (currentData?.videoCount || 0) + 1,
+    currentCycleCount: (currentData?.currentCycleCount || 0) + 1,
     updatedAt: Date.now()
   });
 
-  console.log(`✅ Property ${propertyId} moved to back of queue (position ${maxPosition + 1})`);
+  console.log(`✅ Property ${propertyId} marked as completed for this cycle`);
+}
+
+/**
+ * Reset queue for new cycle (all properties back to queued)
+ */
+export async function resetPropertyQueueCycle(): Promise<number> {
+  if (!db) return 0;
+
+  // Get all completed properties
+  const completedQuery = query(
+    collection(db, 'property_rotation_queue'),
+    where('status', '==', 'completed')
+  );
+
+  const snapshot = await getDocs(completedQuery);
+
+  if (snapshot.empty) {
+    console.log('No completed properties to reset');
+    return 0;
+  }
+
+  console.log(`🔄 Resetting ${snapshot.size} properties for new cycle...`);
+
+  // Reset all to queued with fresh positions
+  let position = 1;
+  for (const docSnap of snapshot.docs) {
+    await updateDoc(doc(db, 'property_rotation_queue', docSnap.id), {
+      status: 'queued',
+      position: position++,
+      currentCycleCount: 0, // Reset cycle count
+      updatedAt: Date.now()
+    });
+  }
+
+  console.log(`✅ Queue reset complete - ${snapshot.size} properties ready for new cycle`);
+  return snapshot.size;
 }
 
 /**

@@ -1,0 +1,210 @@
+[dotenv@17.2.2] injecting env (62) from .env.local -- tip: 📡 version env with Radar: https://dotenvx.com/radar
+🔍 Checking nearby_cities population status...
+
+═══════════════════════════════════════════════════
+         NEARBY CITIES POPULATION STATUS
+═══════════════════════════════════════════════════
+Total properties:           307
+With nearby_cities:         272 (88.60%)
+Missing nearby_cities:      35 (11.40%)
+  - null/undefined:         0
+  - empty array:            35
+  - invalid type:           0
+═══════════════════════════════════════════════════
+
+🔴 ALL Properties Missing nearby_cities:
+───────────────────────────────────────────────────
+
+1. 140 Great Oaks Blvd
+   La Vernia, TX 78121
+   ID: 2A69q01bFoJeA9LDM34S
+   nearbyCities: []
+
+2. 11518 Munn St
+   Houston, TX 77029
+   ID: 3rphtuz0gGQA1t9jvcxw
+   nearbyCities: []
+
+3. 4910 38th Way S Apt 111
+   Saint Petersburg, FL 33711
+   ID: AsWG0TpKdKtDRCCu6c7F
+   nearbyCities: []
+
+4. 10251 Crystal View
+   Universal City, TX 78148
+   ID: H86zWNpTrwiLo1H2igHR
+   nearbyCities: []
+
+5. 910 Lohaina Ct
+   Kemp, TX 75143
+   ID: L4eT7xQWWbDz0nA6Nnhu
+   nearbyCities: []
+
+6. 407 N Dallas St
+   Rice, TX 75155
+   ID: MtAFWInNZwI0ZmAaeBZ9
+   nearbyCities: []
+
+7. 1215 E Justin St
+   Pearce, AZ 85625
+   ID: OqCXYUfFhcHDS3TZrU4Q
+   nearbyCities: []
+
+8. 3548 Meadowview Ct
+   Rex, GA 30273
+   ID: QE0EL2G1c9qJvzkFHOyx
+   nearbyCities: []
+
+9. 13351 Welsh Pony
+   San Antonio, TX 78254
+   ID: QRoxZpEx7A42U1CZOtpH
+   nearbyCities: []
+
+10. 6090 S Bella Vista Dr
+   Fort Mohave, AZ 86426
+   ID: QbXEqf3NbEdT7cuV8uNe
+   nearbyCities: []
+
+11. 112 Spring Valley
+   Adkins, TX 78101
+   ID: Qo882DwvYAxuonMz2PtZ
+   nearbyCities: []
+
+12. 36690 W Pima Dr Stanfield, Az 85172
+   Stanfield, AZ 85172
+   ID: R7P5EbwR2lNtEbKs1HJr
+   nearbyCities: []
+
+13. 240 Shadow Oak Dr
+   Bastrop, TX 78602
+   ID: SZyaq663vuD1mnUronuu
+   nearbyCities: []
+
+14. 6541 SW 111th Loop
+   Ocala, FL 34476
+   ID: VgAcLcRETh45crx3MKeA
+   nearbyCities: []
+
+15. 19173 Greenleaf Dr
+   Flint, TX 75762
+   ID: WFbaLReez5s3fLTAfAy5
+   nearbyCities: []
+
+16. 4870 Hwy 67
+   Hasse, TX 76442
+   ID: YW4T5T8AuTnte9gJwuNR
+   nearbyCities: []
+
+17. 5312 Suwannee Rd
+   Weeki Wachee, FL 34607
+   ID: bPkj5Weh6fsqpwVPyeZM
+   nearbyCities: []
+
+18. 212 E Tremont Ave #9
+   Bronx, NY 10457
+   ID: bbuciRFBH7oTyEOMC3wB
+   nearbyCities: []
+
+19. 520 Munson St
+   Tow, TX 78672
+   ID: bvJAU4HJ3HPxaEeliAAM
+   nearbyCities: []
+
+20. 22660 W Old Hwy 66
+   Seligman, AZ 86337
+   ID: c8tKQN9HBNTdFCCa7sor
+   nearbyCities: []
+
+21. 219 Hillcrest St
+   Sanger, TX 76266
+   ID: fcH5UooCLK8HsIiaWpv6
+   nearbyCities: []
+
+22. 833 3rd Ave
+   Waverly, FL 33877
+   ID: ftoeR5whBv5mWmoAdkiI
+   nearbyCities: []
+
+23. 2438 Scotch Moss Dr
+   Corpus Christi, TX 78414
+   ID: gYKm1QOArTsiwoqWz30J
+   nearbyCities: []
+
+24. 444 Beverly Dr
+   San Antonio, TX 78228
+   ID: hmo75vX8EKTYKgaiWvhl
+   nearbyCities: []
+
+25. 4510 Helena St Ne, Saint Petersburg, Florida 33703
+   Saint Petersburg, FL 33703
+   ID: orH1NZiDzSIf0WxlmtV4
+   nearbyCities: []
+
+26. 9543 Enstone Cir
+   Spring, TX 77379
+   ID: qZmy1RwvDWjhjQgiqAxk
+   nearbyCities: []
+
+27. 1469 Twin Cv
+   Kyle, TX 78640
+   ID: sQx2niBBgOfS7EgiW5jw
+   nearbyCities: []
+
+28. 778 F St
+   San Antonio, TX 78220
+   ID: t3UQF2MTqIj7dQ0vEGg1
+   nearbyCities: []
+
+29. 200 Olive St
+   Lone Oak, TX 75453
+   ID: teXK4RTMSYoaYFUgG124
+   nearbyCities: []
+
+30. 411 Future Dr.
+   San Antonio, 25 78213
+   ID: ueMFfR6p7qOxQ0lPJlmn
+   nearbyCities: []
+
+31. 206 E Gilmer St
+   Rice, TX 75155
+   ID: up7ri2TB8SRfwTraIN9G
+   nearbyCities: []
+
+32. 105 Grassy Creek Dr
+   State Road, NC 28676
+   ID: wEBf2FBLG8g9A6slxWmT
+   nearbyCities: []
+
+33. 6770 Shoreline Cir
+   Memphis, TN 38141
+   ID: xxWCpz3tlOm0kYGq3uir
+   nearbyCities: []
+
+34. 2751 Pine View Ct
+   Overgaard, AZ 85933
+   ID: yoDs01KPtWhn3Le5BUt5
+   nearbyCities: []
+
+35. 409 N Dallas St
+   Rice, TX 75155
+   ID: zL2IkYB4FEA7rqG82cMN
+   nearbyCities: []
+
+✅ Sample Properties WITH nearby_cities:
+───────────────────────────────────────────────────
+
+1. 1207 Ocean Blvd. S #50805
+   Myrtle Beach, SC 29577
+   ID: 06L9vdVZEh0IFbnlGbtA
+   nearbyCities (11): Myrtle Beach, Forestbrook, Socastee, Surfside Beach, Garden City...
+
+2. 6394 Roadstead Ct
+   Apollo Beach, FL 33572
+   ID: 0iKKLQfFd5q6Qs3BrX5J
+   nearbyCities (94): Apollo Beach, Ruskin, Sun City Center, Gibsonton, Wimauma...
+
+3. 13996 Godbold Rd
+   Tallahassee, FL 32309
+   ID: 0n7aIm5fUp9UTQfSYHv6
+   nearbyCities (8): Tallahassee, Woodville, Midway, Havana, Crawfordville...
+

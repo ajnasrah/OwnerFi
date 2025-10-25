@@ -36,29 +36,48 @@ export async function GET(request: NextRequest) {
     // Import rotation queue functions
     const {
       getNextPropertyFromRotation,
-      sendPropertyToBackOfQueue,
+      markPropertyCompleted,
+      resetPropertyQueueCycle,
       getPropertyRotationStats
     } = await import('@/lib/feed-store-firestore');
 
     // Get queue stats
     const stats = await getPropertyRotationStats();
-    console.log(`📋 Rotation queue stats: ${stats.queued} queued, ${stats.processing} processing, ${stats.total} total`);
+    console.log(`📋 Queue stats: ${stats.queued} queued, ${stats.processing} processing, ${stats.total} total`);
 
     if (stats.nextProperty) {
-      console.log(`   Next property: ${stats.nextProperty.address} (shown ${stats.nextProperty.videoCount} times)`);
+      console.log(`   Next property: ${stats.nextProperty.address} (cycle ${stats.nextProperty.currentCycleCount + 1})`);
     }
 
     // Get next property from rotation queue
-    const queueItem = await getNextPropertyFromRotation();
+    let queueItem = await getNextPropertyFromRotation();
+
+    // If queue empty, reset cycle and try again
+    if (!queueItem) {
+      console.log('⚠️  All properties completed this cycle!');
+      console.log('🔄 Resetting queue for fresh cycle...');
+
+      const resetCount = await resetPropertyQueueCycle();
+
+      if (resetCount > 0) {
+        console.log(`✅ Queue reset - ${resetCount} properties ready for new cycle`);
+        // Try again after reset
+        queueItem = await getNextPropertyFromRotation();
+      } else {
+        console.log('⚠️  Queue is empty - run populate endpoint first');
+        return NextResponse.json({
+          success: true,
+          message: 'Queue empty - populate via /api/property/populate-queue',
+          generated: 0
+        });
+      }
+    }
 
     if (!queueItem) {
-      console.log('⚠️  Rotation queue is empty!');
-      console.log('   Run: npx tsx scripts/populate-property-rotation-queue.ts');
       return NextResponse.json({
         success: true,
-        message: 'Rotation queue is empty - populate queue first',
-        generated: 0,
-        queueStats: stats
+        message: 'No properties available after reset',
+        generated: 0
       });
     }
 
@@ -89,8 +108,8 @@ export async function GET(request: NextRequest) {
       if (result.success) {
         console.log(`✅ Video generation started for ${queueItem.address}`);
 
-        // Send property to back of queue (for next rotation)
-        await sendPropertyToBackOfQueue(queueItem.propertyId);
+        // Mark property as completed for this cycle
+        await markPropertyCompleted(queueItem.propertyId);
 
         results.push({
           propertyId: queueItem.propertyId,
@@ -98,13 +117,14 @@ export async function GET(request: NextRequest) {
           variant: '15sec',
           success: true,
           workflowId: result.workflowId,
-          timesShown: queueItem.videoCount + 1
+          timesShown: queueItem.videoCount + 1,
+          cycleComplete: true
         });
       } else {
         console.error(`❌ Failed: ${result.error}`);
 
-        // Still send to back of queue (don't block rotation)
-        await sendPropertyToBackOfQueue(queueItem.propertyId);
+        // Still mark as completed (don't retry same property forever)
+        await markPropertyCompleted(queueItem.propertyId);
 
         results.push({
           propertyId: queueItem.propertyId,
@@ -118,8 +138,8 @@ export async function GET(request: NextRequest) {
     } catch (error) {
       console.error(`❌ Error for ${queueItem.address}:`, error);
 
-      // Still send to back of queue
-      await sendPropertyToBackOfQueue(queueItem.propertyId);
+      // Still mark as completed
+      await markPropertyCompleted(queueItem.propertyId);
 
       results.push({
         propertyId: queueItem.propertyId,
@@ -132,17 +152,26 @@ export async function GET(request: NextRequest) {
 
     const successCount = results.filter(r => r.success).length;
 
+    // Get updated stats after processing
+    const updatedStats = await getPropertyRotationStats();
+
     console.log(`\n📊 Property video cron summary:`);
     console.log(`   Queue total: ${stats.total} properties`);
+    console.log(`   Remaining this cycle: ${updatedStats.queued}`);
     console.log(`   Video generated: ${successCount > 0 ? 'Yes' : 'No'}`);
-    console.log(`   Property re-queued at position: ${stats.total + 1}`);
+    console.log(`   Property status: Completed (will reset when cycle finishes)`);
 
     return NextResponse.json({
       success: true,
       variant: '15sec',
       generated: successCount,
       property: results[0],
-      queueStats: stats,
+      queueStats: updatedStats,
+      cycleProgress: {
+        completed: stats.total - updatedStats.queued,
+        remaining: updatedStats.queued,
+        total: stats.total
+      },
       timestamp: new Date().toISOString()
     });
 

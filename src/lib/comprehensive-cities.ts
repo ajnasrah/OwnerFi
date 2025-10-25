@@ -92,6 +92,28 @@ export function getCitiesWithinRadiusComprehensive(
 }
 
 /**
+ * Get all cities within radius using coordinates (for properties where city name isn't in database)
+ */
+export function getCitiesWithinRadiusByCoordinates(
+  centerLat: number,
+  centerLng: number,
+  centerState: string,
+  radiusMiles: number = 35
+): CityWithDistance[] {
+  // Calculate distances to all cities in the same state
+  const nearbyCities = usCities
+    .filter(city => city.state === centerState) // Same state only
+    .map(city => ({
+      ...city,
+      distance: calculateDistance(centerLat, centerLng, city.lat, city.lng)
+    }))
+    .filter(city => city.distance <= radiusMiles)
+    .sort((a, b) => a.distance - b.distance);
+
+  return nearbyCities;
+}
+
+/**
  * Get nearby city names for property storage (excludes center city)
  */
 export function getNearbyCityNamesForProperty(
@@ -101,7 +123,7 @@ export function getNearbyCityNamesForProperty(
   maxCities: number = 100
 ): string[] {
   const nearbyCities = getCitiesWithinRadiusComprehensive(propertyCity, propertyState, radiusMiles);
-  
+
   return nearbyCities
     .filter(city => city.name.toLowerCase() !== propertyCity.toLowerCase()) // Exclude property's own city
     .slice(0, maxCities) // Limit for storage efficiency

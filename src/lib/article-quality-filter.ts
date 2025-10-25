@@ -22,6 +22,27 @@ export async function evaluateArticleQuality(
   content: string,
   category: 'carz' | 'ownerfi'
 ): Promise<QualityScore> {
+  // Pre-check: Reject articles with insufficient content BEFORE calling OpenAI
+  const contentLength = content?.trim().length || 0;
+
+  if (contentLength < 100) {
+    return {
+      score: 0,
+      reasoning: `Article has insufficient content (${contentLength} chars)`,
+      shouldMakeVideo: false,
+      redFlags: ['Insufficient content', 'Too short for video']
+    };
+  }
+
+  if (contentLength < 200) {
+    return {
+      score: 30,
+      reasoning: `Article content is very short (${contentLength} chars)`,
+      shouldMakeVideo: false,
+      redFlags: ['Short content', 'May lack substance']
+    };
+  }
+
   if (!OPENAI_API_KEY) {
     console.warn('⚠️  OpenAI API key not configured, skipping quality filter');
     return {
@@ -119,11 +140,16 @@ RED_FLAGS: [comma-separated issues, or NONE]
 STRENGTHS: [comma-separated positive points, or NONE]
 
 Scoring criteria:
-90-100: MUST-MAKE content (breaking news, major announcements, highly actionable)
-70-89: Great content (interesting, informative, good engagement potential)
-50-69: Decent content (okay but not exciting)
-30-49: Weak content (generic, boring, or low value)
-0-29: Reject (clickbait, ads, irrelevant, or poor quality)
+90-100: MUST-MAKE content (breaking news, major announcements, highly actionable, substantive content)
+70-89: Great content (interesting, informative, good engagement potential, sufficient detail)
+50-69: Decent content (okay but not exciting, may lack depth)
+30-49: Weak content (generic, boring, low value, or insufficient detail)
+0-29: Reject (clickbait, ads, irrelevant, poor quality, or very short/superficial)
+
+IMPORTANT:
+- Articles with less than 200 characters should automatically score below 50
+- Articles that are just headlines or snippets without substance should score 0-29
+- Only recommend videos for scores 70+ with substantive, detailed content
 
 Threshold: Only recommend videos for scores 70+.`,
 

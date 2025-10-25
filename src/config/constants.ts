@@ -24,6 +24,7 @@ export const TIMEOUTS = {
   LATE_API: 30_000,
   OPENAI_API: 60_000, // 60 seconds for AI generation
   RSS_FETCH: 30_000, // 30 seconds for RSS feed fetching
+  WEB_SCRAPE: 15_000, // 15 seconds for web scraping full articles
 
   // Polling timeouts
   HEYGEN_POLL: 45_000, // 45 seconds per poll

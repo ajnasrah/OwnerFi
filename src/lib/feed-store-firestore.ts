@@ -516,17 +516,23 @@ export async function cleanupProcessedArticles(olderThanDays: number = 7): Promi
 export async function rateAndCleanupArticles(keepTopN: number = 10): Promise<{
   carz: { rated: number; kept: number; deleted: number };
   ownerfi: { rated: number; kept: number; deleted: number };
+  vassdistro: { rated: number; kept: number; deleted: number };
 }> {
-  if (!db) return { carz: { rated: 0, kept: 0, deleted: 0 }, ownerfi: { rated: 0, kept: 0, deleted: 0 } };
+  if (!db) return {
+    carz: { rated: 0, kept: 0, deleted: 0 },
+    ownerfi: { rated: 0, kept: 0, deleted: 0 },
+    vassdistro: { rated: 0, kept: 0, deleted: 0 }
+  };
 
   const results = {
     carz: { rated: 0, kept: 0, deleted: 0 },
-    ownerfi: { rated: 0, kept: 0, deleted: 0 }
+    ownerfi: { rated: 0, kept: 0, deleted: 0 },
+    vassdistro: { rated: 0, kept: 0, deleted: 0 }
   };
 
   const { evaluateArticlesBatch } = await import('./article-quality-filter');
 
-  for (const cat of ['carz', 'ownerfi'] as const) {
+  for (const cat of ['carz', 'ownerfi', 'vassdistro'] as const) {
     const collectionName = getCollectionName('ARTICLES', cat);
 
     // Get ALL unprocessed articles

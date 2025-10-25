@@ -35,8 +35,8 @@ export async function GET(request: NextRequest) {
 
     const heygenProjects = [];
 
-    // Check Carz and OwnerFi workflows stuck in heygen_processing
-    for (const brand of ['carz', 'ownerfi'] as const) {
+    // Check all brand workflows stuck in heygen_processing
+    for (const brand of ['carz', 'ownerfi', 'vassdistro'] as const) {
       const collectionName = getCollectionName('WORKFLOW_QUEUE', brand);
       console.log(`\n📂 Checking ${collectionName}...`);
 

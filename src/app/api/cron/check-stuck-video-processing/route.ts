@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
     const stuckWorkflows = [];
 
     // Check all brands for workflows stuck in 'video_processing'
-    for (const brand of ['carz', 'ownerfi', 'benefit'] as const) {
+    for (const brand of ['carz', 'ownerfi', 'vassdistro', 'benefit'] as const) {
       const collectionName = getCollectionName('WORKFLOW_QUEUE', brand);
       console.log(`\n📂 Checking ${collectionName}...`);
 

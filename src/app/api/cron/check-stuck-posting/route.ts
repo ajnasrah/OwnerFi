@@ -29,8 +29,8 @@ export async function GET(request: NextRequest) {
 
     const stuckWorkflows = [];
 
-    // Check Carz, OwnerFi, and Benefit workflows stuck in 'posting'
-    for (const brand of ['carz', 'ownerfi', 'benefit'] as const) {
+    // Check all brand workflows stuck in 'posting'
+    for (const brand of ['carz', 'ownerfi', 'vassdistro', 'benefit'] as const) {
       const collectionName = getCollectionName('WORKFLOW_QUEUE', brand);
       console.log(`\n📂 Checking ${collectionName}...`);
 

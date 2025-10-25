@@ -44,8 +44,8 @@ export async function GET(request: NextRequest) {
 
     const projects = [];
 
-    // Check Carz and OwnerFi workflows (use submagicVideoId field)
-    for (const brand of ['carz', 'ownerfi'] as const) {
+    // Check all brand workflows (use submagicVideoId field)
+    for (const brand of ['carz', 'ownerfi', 'vassdistro'] as const) {
       const collectionName = getCollectionName('WORKFLOW_QUEUE', brand);
       console.log(`\n📂 Checking ${collectionName}...`);
 

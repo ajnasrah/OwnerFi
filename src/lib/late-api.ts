@@ -20,7 +20,7 @@ export interface LatePostRequest {
   hashtags?: string[];
   platforms: ('instagram' | 'tiktok' | 'youtube' | 'facebook' | 'linkedin' | 'threads' | 'twitter' | 'pinterest' | 'reddit' | 'bluesky')[];
   scheduleTime?: string; // ISO 8601 format, or omit for immediate posting
-  brand: 'carz' | 'ownerfi' | 'podcast';
+  brand: 'carz' | 'ownerfi' | 'podcast' | 'property';
   postTypes?: {
     instagram?: 'reel' | 'story';
     facebook?: 'feed' | 'story';
@@ -50,9 +50,10 @@ export interface LateProfile {
 /**
  * Get profile ID for a brand
  */
-function getProfileId(brand: 'carz' | 'ownerfi' | 'podcast'): string | null {
+function getProfileId(brand: 'carz' | 'ownerfi' | 'podcast' | 'property'): string | null {
   switch (brand) {
     case 'ownerfi':
+    case 'property': // Property videos use OwnerFi profile
       return getLateOwnerfiProfileId() || null;
     case 'carz':
       return getLateCarzProfileId() || null;
@@ -403,7 +404,7 @@ export async function postToLate(request: LatePostRequest): Promise<LatePostResp
 /**
  * Get the next available queue slot for a profile
  */
-export async function getNextQueueSlot(brand: 'carz' | 'ownerfi' | 'podcast'): Promise<{ nextSlot: string; timezone: string } | null> {
+export async function getNextQueueSlot(brand: 'carz' | 'ownerfi' | 'podcast' | 'property'): Promise<{ nextSlot: string; timezone: string } | null> {
   const profileId = getProfileId(brand);
   const LATE_API_KEY = getLateApiKey();
   if (!profileId || !LATE_API_KEY) {
@@ -443,7 +444,7 @@ export async function getNextQueueSlot(brand: 'carz' | 'ownerfi' | 'podcast'): P
 /**
  * Get queue schedule for a profile
  */
-export async function getQueueSchedule(brand: 'carz' | 'ownerfi' | 'podcast'): Promise<any> {
+export async function getQueueSchedule(brand: 'carz' | 'ownerfi' | 'podcast' | 'property'): Promise<any> {
   const profileId = getProfileId(brand);
   const LATE_API_KEY = getLateApiKey();
   if (!profileId || !LATE_API_KEY) {
@@ -474,7 +475,7 @@ export async function getQueueSchedule(brand: 'carz' | 'ownerfi' | 'podcast'): P
  * Set or update queue schedule for a profile
  */
 export async function setQueueSchedule(
-  brand: 'carz' | 'ownerfi' | 'podcast',
+  brand: 'carz' | 'ownerfi' | 'podcast' | 'property',
   slots: { dayOfWeek: number; time: string }[],
   timezone: string = 'America/New_York',
   reshuffleExisting: boolean = false
@@ -522,7 +523,7 @@ export async function scheduleVideoPost(
   title: string,
   platforms: ('instagram' | 'tiktok' | 'youtube' | 'facebook' | 'linkedin' | 'threads' | 'twitter')[] | any[],
   delay: 'immediate' | '1hour' | '2hours' | '4hours' | 'optimal' = 'immediate',
-  brand: 'carz' | 'ownerfi' | 'podcast' = 'ownerfi'
+  brand: 'carz' | 'ownerfi' | 'podcast' | 'property' = 'ownerfi'
 ): Promise<LatePostResponse> {
   // Calculate schedule time
   let scheduleTime: string | undefined;

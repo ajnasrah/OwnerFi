@@ -50,6 +50,10 @@
       "schedule": "0 10,13,16,19,22 * * *"
     },
     {
+      "path": "/api/property/video-cron",
+      "schedule": "0 11,17,23 * * *"
+    },
+    {
       "path": "/api/cron/weekly-maintenance",
       "schedule": "0 11 * * 1"
     },
@@ -109,6 +113,12 @@
       "maxDuration": 60
     },
     "src/app/api/benefit/cron/route.ts": {
+      "maxDuration": 60
+    },
+    "src/app/api/property/video-cron/route.ts": {
+      "maxDuration": 60
+    },
+    "src/app/api/property/generate-video/route.ts": {
       "maxDuration": 60
     },
     "src/app/api/cron/cleanup-videos/route.ts": {

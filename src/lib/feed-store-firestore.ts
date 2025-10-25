@@ -1324,3 +1324,49 @@ export async function getHostProfile(): Promise<HostProfile | null> {
   const config = await getPodcastConfig();
   return config?.host || null;
 }
+
+// ============================================================================
+// PROPERTY VIDEO WORKFLOW FUNCTIONS
+// ============================================================================
+
+/**
+ * Update property video workflow
+ */
+export async function updatePropertyVideo(
+  workflowId: string,
+  updates: Record<string, any>
+): Promise<void> {
+  await admin
+    .firestore()
+    .collection('property_videos')
+    .doc(workflowId)
+    .update({
+      ...updates,
+      updatedAt: Date.now()
+    });
+}
+
+/**
+ * Find property video by Submagic project ID
+ */
+export async function findPropertyVideoBySubmagicId(submagicProjectId: string): Promise<{
+  workflowId: string;
+  workflow: any;
+} | null> {
+  const snapshot = await admin
+    .firestore()
+    .collection('property_videos')
+    .where('submagicProjectId', '==', submagicProjectId)
+    .limit(1)
+    .get();
+
+  if (snapshot.empty) {
+    return null;
+  }
+
+  const doc = snapshot.docs[0];
+  return {
+    workflowId: doc.id,
+    workflow: doc.data()
+  };
+}

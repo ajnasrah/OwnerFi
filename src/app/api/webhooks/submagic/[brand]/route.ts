@@ -166,7 +166,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
  * Get workflow by Submagic project ID for specific brand
  */
 async function getWorkflowBySubmagicId(
-  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit',
+  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit' | 'property',
   submagicProjectId: string
 ): Promise<{ workflowId: string; workflow: any } | null> {
   if (brand === 'podcast') {
@@ -175,6 +175,24 @@ async function getWorkflowBySubmagicId(
   } else if (brand === 'benefit') {
     const { findBenefitBySubmagicId } = await import('@/lib/feed-store-firestore');
     return await findBenefitBySubmagicId(submagicProjectId);
+  } else if (brand === 'property') {
+    // Property videos are stored in property_videos collection
+    const admin = (await import('@/lib/firebase-admin')).admin;
+    const propertyVideosSnapshot = await admin
+      .firestore()
+      .collection('property_videos')
+      .where('submagicProjectId', '==', submagicProjectId)
+      .limit(1)
+      .get();
+
+    if (!propertyVideosSnapshot.empty) {
+      const doc = propertyVideosSnapshot.docs[0];
+      return {
+        workflowId: doc.id,
+        workflow: doc.data()
+      };
+    }
+    return null;
   } else {
     const { findWorkflowBySubmagicId } = await import('@/lib/feed-store-firestore');
     const result = await findWorkflowBySubmagicId(submagicProjectId);
@@ -195,7 +213,7 @@ async function getWorkflowBySubmagicId(
  * Update workflow for specific brand
  */
 async function updateWorkflowForBrand(
-  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit',
+  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit' | 'property',
   workflowId: string,
   updates: Record<string, any>
 ): Promise<void> {
@@ -205,6 +223,9 @@ async function updateWorkflowForBrand(
   } else if (brand === 'benefit') {
     const { updateBenefitWorkflow } = await import('@/lib/feed-store-firestore');
     await updateBenefitWorkflow(workflowId, updates);
+  } else if (brand === 'property') {
+    const { updatePropertyVideo } = await import('@/lib/feed-store-firestore');
+    await updatePropertyVideo(workflowId, updates);
   } else {
     const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
     await updateWorkflowStatus(workflowId, brand, updates);
@@ -291,6 +312,9 @@ async function processVideoAndPost(
     } else if (brand === 'benefit') {
       caption = workflow.caption || 'Learn about owner financing! 🏡';
       title = workflow.title || 'Owner Finance Benefits';
+    } else if (brand === 'property') {
+      caption = workflow.caption || 'New owner finance property for sale! 🏡';
+      title = workflow.title || 'Property For Sale';
     } else {
       caption = workflow.caption || 'Check out this video! 🔥';
       title = workflow.title || 'Viral Video';
@@ -298,13 +322,19 @@ async function processVideoAndPost(
 
     console.log(`📱 [${brandConfig.displayName}] Posting to platforms: ${platforms.join(', ')}`);
 
+    // Property videos post immediately, others use queue
+    const useQueue = brand !== 'property';
+    if (!useQueue) {
+      console.log(`⚡ [${brandConfig.displayName}] Property video - posting immediately (not using queue)`);
+    }
+
     // Post to Late API
     const postResult = await postToLate({
       videoUrl: publicVideoUrl,
       caption,
       title,
       platforms: platforms as any[],
-      useQueue: true, // Use Late's queue system
+      useQueue, // Property videos post immediately, others use queue
       brand,
     });
 

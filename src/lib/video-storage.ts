@@ -168,7 +168,7 @@ export async function downloadAndUploadToR2(
     Metadata: {
       'uploaded-at': new Date().toISOString(),
       'source': 'heygen',
-      'auto-delete-after': new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      'auto-delete-after': new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString(), // 72 hours
     },
   }));
 
@@ -248,7 +248,7 @@ export async function uploadSubmagicVideo(
     Metadata: {
       'uploaded-at': new Date().toISOString(),
       'source': 'submagic',
-      'auto-delete-after': new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      'auto-delete-after': new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString(), // 72 hours
     },
   }));
 

@@ -2,7 +2,7 @@
 // Manages feed subscriptions and article storage in Firestore
 
 import { db } from './firebase';
-import { collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, query, where, orderBy, limit as firestoreLimit } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, query, where, orderBy, limit as firestoreLimit, runTransaction } from 'firebase/firestore';
 import { Brand } from '@/config/constants';
 
 export interface FeedSource {
@@ -230,6 +230,7 @@ export async function markArticleProcessed(id: string, category: Brand, workflow
 
 // Get and lock article for processing (atomic operation to prevent race conditions)
 // Selects the top-rated article (must be pre-rated with qualityScore)
+// Uses Firestore transactions to ensure only one process can lock each article
 export async function getAndLockArticle(category: Brand): Promise<Article | null> {
   if (!db) return null;
 
@@ -250,9 +251,9 @@ export async function getAndLockArticle(category: Brand): Promise<Article | null
   }
 
   // Convert to articles and sort by qualityScore in memory
-  const articles = snapshot.docs.map(doc => ({
-    id: doc.id,
-    ...doc.data()
+  const articles = snapshot.docs.map(docSnap => ({
+    id: docSnap.id,
+    ...docSnap.data()
   } as Article));
 
   // Filter only high-quality articles (score >= 70) and not too old (max 3 days)
@@ -276,19 +277,57 @@ export async function getAndLockArticle(category: Brand): Promise<Article | null
     return null;
   }
 
-  const bestArticle = ratedArticles[0];
-  const qualityScore = bestArticle.qualityScore || 0;
+  // Try to lock articles in order (highest score first)
+  // Use transaction to ensure atomic read-write (prevents race conditions)
+  for (const candidate of ratedArticles) {
+    try {
+      // ✅ ATOMIC OPERATION: Read + Write in single transaction
+      // This ensures only ONE process can lock each article, even if multiple processes
+      // are trying to lock at the exact same time
+      const lockedArticle = await runTransaction(db, async (transaction) => {
+        const articleRef = doc(db, collectionName, candidate.id);
+        const freshDoc = await transaction.get(articleRef);
 
-  console.log(`🔒 Locked top-rated article (score: ${qualityScore}): ${bestArticle.title.substring(0, 60)}...`);
+        // Check if article still exists and is still unprocessed
+        // (another process might have locked it between our initial query and now)
+        if (!freshDoc.exists()) {
+          throw new Error('Article no longer exists');
+        }
 
-  // Immediately mark as processed to prevent another process from picking it up
-  await updateDoc(doc(db, collectionName, bestArticle.id), {
-    processed: true,
-    processedAt: Date.now(),
-    processingStartedAt: Date.now()
-  });
+        const freshData = freshDoc.data();
+        if (freshData.processed === true) {
+          throw new Error('Article already locked by another process');
+        }
 
-  return bestArticle;
+        // Lock it atomically - transaction ensures this write only happens
+        // if no other process has modified the document since we read it
+        transaction.update(articleRef, {
+          processed: true,
+          processedAt: Date.now(),
+          processingStartedAt: Date.now()
+        });
+
+        return {
+          id: freshDoc.id,
+          ...freshData
+        } as Article;
+      });
+
+      const qualityScore = lockedArticle.qualityScore || 0;
+      console.log(`🔒 Locked top-rated article (score: ${qualityScore}): ${lockedArticle.title.substring(0, 60)}...`);
+      return lockedArticle;
+
+    } catch (error) {
+      // Article was already locked by another process, try next one in the list
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.log(`⚠️  Could not lock article "${candidate.title.substring(0, 40)}..." (${errorMessage}), trying next...`);
+      continue;
+    }
+  }
+
+  // All high-quality articles were already locked by other processes
+  console.log(`⚠️  All high-quality articles already locked for ${category}`);
+  return null;
 }
 
 export async function markArticleVideoGenerated(id: string, category: Brand, videoId: string): Promise<void> {

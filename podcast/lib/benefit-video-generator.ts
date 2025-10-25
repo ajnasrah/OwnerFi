@@ -34,6 +34,7 @@ interface HeyGenVideoRequest {
   title?: string;
   caption?: boolean;
   callback_id?: string;
+  webhook_url?: string; // CRITICAL: HeyGen webhook callback URL
 }
 
 interface HeyGenVideoResponse {
@@ -207,14 +208,21 @@ DISCLAIMER REQUIRED AT END:
     // Build video scene
     const videoScene = this.buildVideoScene(script, avatarConfig);
 
+    // Get webhook URL using brand-utils
+    const { getBrandWebhookUrl } = await import('@/lib/brand-utils');
+    const webhookUrl = getBrandWebhookUrl('benefit', 'heygen');
+
     // Prepare HeyGen API request
     const request: HeyGenVideoRequest = {
       video_inputs: [videoScene], // Single scene
       dimension: this.dimension,
       title: benefit.title,
       caption: false, // We'll add captions via Submagic
-      callback_id: workflowId // Use workflow ID for webhook tracking
+      callback_id: workflowId, // Use workflow ID for webhook tracking
+      webhook_url: webhookUrl // CRITICAL: Must include webhook callback
     };
+
+    console.log(`📞 Webhook URL: ${webhookUrl}`);
 
     // Call HeyGen API
     const response = await this.callHeyGenAPI(request);
@@ -277,19 +285,28 @@ DISCLAIMER REQUIRED AT END:
   }
 
   /**
-   * Call HeyGen V2 API to generate video
+   * Call HeyGen V2 API to generate video (with circuit breaker & timeout)
    */
   private async callHeyGenAPI(request: HeyGenVideoRequest): Promise<HeyGenVideoResponse> {
     console.log('\n📤 Sending request to HeyGen API...');
 
-    const response = await fetch(this.apiUrl, {
-      method: 'POST',
-      headers: {
-        'accept': 'application/json',
-        'content-type': 'application/json',
-        'x-api-key': this.apiKey
-      },
-      body: JSON.stringify(request)
+    // Use circuit breaker and timeout for reliability (same as Carz/OwnerFi)
+    const { circuitBreakers, fetchWithTimeout, TIMEOUTS } = await import('@/lib/api-utils');
+
+    const response = await circuitBreakers.heygen.execute(async () => {
+      return await fetchWithTimeout(
+        this.apiUrl,
+        {
+          method: 'POST',
+          headers: {
+            'accept': 'application/json',
+            'content-type': 'application/json',
+            'x-api-key': this.apiKey
+          },
+          body: JSON.stringify(request)
+        },
+        TIMEOUTS.HEYGEN_API
+      );
     });
 
     if (!response.ok) {

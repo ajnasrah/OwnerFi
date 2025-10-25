@@ -146,26 +146,36 @@ export async function POST(request: NextRequest) {
     // Build HeyGen request
     const heygenRequest = buildPropertyVideoRequest(property, script);
 
-    // Add webhook URL
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://ownerfi.ai';
-    const webhookUrl = `${baseUrl}/api/webhooks/heygen/property`;
+    // Add webhook URL using brand-utils for consistency
+    const { getBrandWebhookUrl } = await import('@/lib/brand-utils');
+    const webhookUrl = getBrandWebhookUrl('property', 'heygen');
 
     const requestBody = {
       ...heygenRequest,
-      callback_id: workflowId
+      callback_id: workflowId,
+      webhook_url: webhookUrl // CRITICAL: Must include webhook_url
     };
 
     console.log(`🎥 Sending request to HeyGen...`);
+    console.log(`📞 Webhook URL: ${webhookUrl}`);
 
-    // Call HeyGen API
-    const response = await fetch(HEYGEN_API_URL, {
-      method: 'POST',
-      headers: {
-        'accept': 'application/json',
-        'content-type': 'application/json',
-        'x-api-key': HEYGEN_API_KEY
-      },
-      body: JSON.stringify(requestBody)
+    // Call HeyGen API with circuit breaker and timeout (same as Carz/OwnerFi)
+    const { circuitBreakers, fetchWithTimeout, TIMEOUTS } = await import('@/lib/api-utils');
+
+    const response = await circuitBreakers.heygen.execute(async () => {
+      return await fetchWithTimeout(
+        HEYGEN_API_URL,
+        {
+          method: 'POST',
+          headers: {
+            'accept': 'application/json',
+            'content-type': 'application/json',
+            'x-api-key': HEYGEN_API_KEY
+          },
+          body: JSON.stringify(requestBody)
+        },
+        TIMEOUTS.HEYGEN_API
+      );
     });
 
     if (!response.ok) {

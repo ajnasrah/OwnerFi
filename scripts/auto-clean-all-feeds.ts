@@ -1,4 +1,36 @@
-// RSS Feed Source Configuration - AUTO-CLEANED
+#!/usr/bin/env tsx
+// Automatically create a cleaned feed-sources.ts with ONLY working feeds
+
+import * as fs from 'fs';
+import * as path from 'path';
+
+// GOOD feeds identified by audit (KEEP THESE ONLY)
+const GOOD_FEEDS = {
+  ownerfi: [
+    'ownerfi-housingwire',
+    'ownerfi-realtor-news',
+    'ownerfi-zillow-research',
+    'ownerfi-redfin-news',
+    'ownerfi-theclose',
+    'ownerfi-housingwire-realestate',
+    'ownerfi-housingwire-mortgages',
+    'ownerfi-familyhandyman',
+    'ownerfi-homeadvisor-blog'
+  ],
+  carz: [
+    'carz-chargedevs',
+    'carz-evcentral'
+  ],
+  vassdistro: [
+    'vassdistro-tobacco-reporter',
+    'vassdistro-ukvia-news',
+    'vassdistro-vapouround',
+    'vassdistro-ecigclick',
+    'vassdistro-vape-beat'
+  ]
+};
+
+const newConfig = `// RSS Feed Source Configuration - AUTO-CLEANED
 // Broken feeds removed - only working feeds with full content
 
 import { addFeedSource as addFeedSourceFirestore, type FeedSource, getAllFeedSources } from '@/lib/feed-store-firestore';
@@ -169,11 +201,11 @@ export const VASSDISTRO_FEEDS: Omit<FeedSource, 'articlesProcessed'>[] = [
  * Initialize all feed sources in Firestore (only if they don't exist)
  */
 export async function initializeFeedSources() {
-  console.log('🚀 Initializing feed sources (CLEANED - only working feeds)...\n');
+  console.log('🚀 Initializing feed sources (CLEANED - only working feeds)...\\n');
 
   const existingFeeds = await getAllFeedSources();
   if (existingFeeds.length > 0) {
-    console.log(`✅ Feeds already initialized (${existingFeeds.length} total)`);
+    console.log(\`✅ Feeds already initialized (\${existingFeeds.length} total)\`);
     return;
   }
 
@@ -197,10 +229,10 @@ export async function initializeFeedSources() {
     totalCount++;
   }
 
-  console.log(`\n✅ Initialized ${CARZ_FEEDS.length} Carz feeds`);
-  console.log(`✅ Initialized ${OWNERFI_FEEDS.length} OwnerFi feeds`);
-  console.log(`✅ Initialized ${VASSDISTRO_FEEDS.length} Vass Distro feeds`);
-  console.log(`📊 Total: ${totalCount} feed sources (CLEANED)\n`);
+  console.log(\`\\n✅ Initialized \${CARZ_FEEDS.length} Carz feeds\`);
+  console.log(\`✅ Initialized \${OWNERFI_FEEDS.length} OwnerFi feeds\`);
+  console.log(\`✅ Initialized \${VASSDISTRO_FEEDS.length} Vass Distro feeds\`);
+  console.log(\`📊 Total: \${totalCount} feed sources (CLEANED)\\n\`);
 }
 
 /**
@@ -218,3 +250,33 @@ export function getFeedsToFetch(allFeeds: FeedSource[]): FeedSource[] {
     return timeSinceLastFetch >= intervalMs;
   });
 }
+`;
+
+function cleanFeeds() {
+  const feedSourcesPath = path.join(__dirname, '../src/config/feed-sources.ts');
+  const backupPath = path.join(__dirname, '../src/config/feed-sources.ts.backup-' + Date.now());
+
+  console.log('🧹 AUTO-CLEANING ALL BRAND FEEDS...\n');
+
+  // Backup original
+  fs.copyFileSync(feedSourcesPath, backupPath);
+  console.log(`📦 Backed up original to: ${path.basename(backupPath)}`);
+
+  // Write new config
+  fs.writeFileSync(feedSourcesPath, newConfig, 'utf-8');
+
+  console.log('\n✅ CLEANED FEED CONFIG:');
+  console.log('   - OwnerFi: 9 feeds (removed 19 broken)');
+  console.log('   - Carz: 2 feeds (removed 28 broken)');
+  console.log('   - Vass Distro: 5 feeds (removed 17 broken)');
+  console.log('   - Total: 16 feeds (removed 64 broken)\n');
+
+  console.log('📝 NEXT STEPS:');
+  console.log('   1. Review: git diff src/config/feed-sources.ts');
+  console.log('   2. Clean DB: npx tsx scripts/cleanup-empty-articles.ts');
+  console.log('   3. Fetch: curl https://ownerfi.ai/api/cron/fetch-feeds');
+  console.log('   4. Rate: curl https://ownerfi.ai/api/cron/rate-articles');
+  console.log('   5. Test: POST /api/workflow/complete-viral\n');
+}
+
+cleanFeeds();

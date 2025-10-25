@@ -380,7 +380,7 @@ export async function postToLate(request: LatePostRequest): Promise<LatePostResp
             console.log('   Scheduled for:', data.scheduledFor);
           }
 
-          const response: LatePostResponse = {
+          const result: LatePostResponse = {
             success: true,
             postId: postId,
             scheduledFor: data.scheduledFor || request.scheduleTime,
@@ -389,11 +389,11 @@ export async function postToLate(request: LatePostRequest): Promise<LatePostResp
 
           // Add warning if some platforms were skipped
           if (missingPlatforms.length > 0) {
-            response.skippedPlatforms = missingPlatforms;
-            response.warning = `Posted to ${platformAccounts.length}/${request.platforms.length} platforms. Skipped: ${missingPlatforms.join(', ')} (accounts not connected)`;
+            result.skippedPlatforms = missingPlatforms;
+            result.warning = `Posted to ${platformAccounts.length}/${request.platforms.length} platforms. Skipped: ${missingPlatforms.join(', ')} (accounts not connected)`;
           }
 
-          return response;
+          return result;
         }); // End circuit breaker
       },
       {

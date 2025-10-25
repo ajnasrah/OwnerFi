@@ -20,7 +20,7 @@ export interface QualityScore {
 export async function evaluateArticleQuality(
   title: string,
   content: string,
-  category: 'carz' | 'ownerfi'
+  category: 'carz' | 'ownerfi' | 'vassdistro'
 ): Promise<QualityScore> {
   // Pre-check: Reject articles with insufficient content BEFORE calling OpenAI
   const contentLength = content?.trim().length || 0;
@@ -115,43 +115,135 @@ export async function evaluateArticleQuality(
 /**
  * Build the AI prompt for quality evaluation
  */
-function buildQualityPrompt(title: string, content: string, category: 'carz' | 'ownerfi'): {
+function buildQualityPrompt(title: string, content: string, category: 'carz' | 'ownerfi' | 'vassdistro'): {
   system: string;
   user: string;
 } {
   const categoryContext = category === 'carz'
-    ? `This is for a CARZ INC video channel focused on car reviews, automotive news, and vehicle market updates.
-       GOOD CONTENT: New car releases, test drives, buying guides, EV news, industry changes, price drops, recalls, comparisons.
-       BAD CONTENT: Generic listicles, celebrity car collections, clickbait, opinion pieces without substance, pure advertisements.`
-    : `This is for an OWNERFI video channel focused on helping homeowners save money and stay informed about housing.
-       GOOD CONTENT: Mortgage rate changes, housing market trends, money-saving tips, new homeowner tools, tax benefits, insurance tips, market predictions.
-       BAD CONTENT: Generic advice, celebrity homes, pure real estate listings, clickbait, content irrelevant to current homeowners.`;
+    ? `This is for a CARZ INC video channel targeting 30-year-old adults interested in cars and automotive news.
+
+       TARGET AUDIENCE (30-year-olds):
+       - Young professionals considering their next car purchase
+       - Interested in practical value, not just luxury/exotics
+       - Care about EV transition, gas prices, reliability
+       - Use TikTok/Instagram for quick, actionable car info
+       - Want honest reviews, not corporate press releases
+
+       GOOD CONTENT (will watch & enjoy):
+       - New affordable EVs under $40k, best value cars, hidden gems
+       - "Should you buy now or wait?" market timing advice
+       - Real-world test drives, honest pros/cons
+       - Gas vs EV cost comparisons, maintenance hacks
+       - Recalls that actually matter, price drops on popular models
+       - Tech features that are actually useful (not gimmicks)
+
+       BAD CONTENT (will scroll past):
+       - $200k+ supercars, celebrity car collections
+       - Generic "top 10" listicles with no new info
+       - Pure brand advertisements disguised as news
+       - Luxury cars they can't afford
+       - Overly technical deep-dives on obscure models`
+    : category === 'vassdistro'
+    ? `This is for a VASS DISTRO channel targeting vape shop owners and distributors (30-40 year old entrepreneurs).
+
+       TARGET AUDIENCE:
+       - Vape shop owners managing margins and inventory
+       - Distributors looking for competitive advantages
+       - Concerned about regulations impacting their business
+       - Need actionable wholesale/B2B insights
+       - Want insider info to stay profitable
+
+       GOOD CONTENT (will watch & enjoy):
+       - FDA regulations affecting inventory/sales
+       - New wholesale price drops, margin opportunities
+       - Brand approvals/bans with business impact
+       - Market trends affecting retail demand
+       - Supplier advantages, bulk deal alerts
+       - Compliance tips to avoid fines
+
+       BAD CONTENT (will scroll past):
+       - Consumer vaping tips (not B2B)
+       - Generic health debates
+       - Individual product reviews (not wholesale-focused)
+       - Content irrelevant to shop owners/distributors`
+    : `This is for an OWNERFI video channel targeting 30-year-old adults navigating homeownership and housing decisions.
+
+       TARGET AUDIENCE (30-year-olds):
+       - First-time homebuyers trying to enter the market
+       - Recent homeowners (1-3 years) learning the ropes
+       - Renters considering buying vs renting
+       - Care about saving money, building equity
+       - Use social media for financial education
+       - Want practical, actionable advice
+
+       GOOD CONTENT (will watch & enjoy):
+       - Mortgage rate changes affecting affordability
+       - "Rent vs buy" math for current market
+       - Creative financing options (owner financing, down payment assistance)
+       - Money-saving home hacks, tax benefits
+       - Market timing: "Should I buy now or wait?"
+       - First-time buyer programs, hidden costs to expect
+       - Home insurance/property tax saving tips
+       - Real market data (not real estate agent fluff)
+
+       BAD CONTENT (will scroll past):
+       - Luxury mansion tours, celebrity homes
+       - Generic Pinterest-style decorating tips
+       - Real estate agent promotional content
+       - Content for experienced investors (not first-timers)
+       - Overly complex financial jargon
+       - Clickbait with no actionable takeaways`;
 
   return {
-    system: `You are an expert content curator evaluating articles for viral short-form video content.
+    system: `You are an expert content curator evaluating articles for viral short-form video content on TikTok and Instagram.
 
 ${categoryContext}
 
+YOUR TASK: Rate this article based on how likely a 30-year-old adult would stop scrolling, watch the video, and find it valuable.
+
+Ask yourself:
+- Would a 30-year-old care about this RIGHT NOW?
+- Is it actionable or does it help them make a decision?
+- Is it relevant to their life stage (buying cars/homes, managing money)?
+- Would they share this with friends or save it?
+- Or would they immediately scroll past?
+
 Evaluate the article and respond ONLY with this exact format:
 SCORE: [0-100 number]
-REASONING: [one sentence explanation]
+REASONING: [one sentence from a 30-year-old's perspective]
 SHOULD_MAKE_VIDEO: [YES or NO]
 RED_FLAGS: [comma-separated issues, or NONE]
 STRENGTHS: [comma-separated positive points, or NONE]
 
-Scoring criteria:
-90-100: MUST-MAKE content (breaking news, major announcements, highly actionable, substantive content)
-70-89: Great content (interesting, informative, good engagement potential, sufficient detail)
-50-69: Decent content (okay but not exciting, may lack depth)
-30-49: Weak content (generic, boring, low value, or insufficient detail)
-0-29: Reject (clickbait, ads, irrelevant, poor quality, or very short/superficial)
+Scoring criteria (from a 30-year-old viewer's perspective):
+90-100: "This is exactly what I needed!" (immediately actionable, affects my wallet/decisions)
+70-89: "Actually useful, I'm watching this" (relevant, informative, shareable)
+50-69: "Mildly interesting but not for me" (okay info but not compelling)
+30-49: "Why did this show up on my feed?" (generic, boring, not relatable)
+0-29: "Instant scroll" (clickbait, irrelevant, luxury flex, or just a headline)
 
-IMPORTANT:
-- Articles with less than 200 characters should automatically score below 50
-- Articles that are just headlines or snippets without substance should score 0-29
-- Only recommend videos for scores 70+ with substantive, detailed content
+IMPORTANT FILTERS:
+- Articles with less than 200 characters = score below 50 (not enough substance)
+- Headlines/snippets without real content = score 0-29 (no value)
+- Content not relevant to 30-year-olds' financial/lifestyle decisions = score below 50
+- Luxury/celebrity content with no practical value = score 0-29
+- Generic advice found anywhere = score 30-49
 
-Threshold: Only recommend videos for scores 70+.`,
+ENGAGEMENT FACTORS (boost score):
++ Saves money or time
++ Helps with a major life decision
++ Timely/breaking news that affects them
++ Practical how-to or insider tip
++ Data-driven (not just opinions)
+
+SCROLL TRIGGERS (lower score):
+- Feels like an ad
+- Too complicated/technical
+- Not relatable to average 30-year-old
+- Clickbait headline with no substance
+- Luxury content they can't afford
+
+Threshold: Only recommend videos for scores 70+ (content a 30-year-old would genuinely watch).`,
 
     user: `Title: ${title}
 
@@ -216,7 +308,7 @@ export async function evaluateArticlesBatch(
   for (let i = 0; i < articles.length; i += maxConcurrent) {
     const batch = articles.slice(i, i + maxConcurrent);
     const batchResults = await Promise.all(
-      batch.map(article => evaluateArticleQuality(article.title, article.content, article.category as 'carz' | 'ownerfi'))
+      batch.map(article => evaluateArticleQuality(article.title, article.content, article.category))
     );
     results.push(...batchResults);
 

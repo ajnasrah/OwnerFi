@@ -87,7 +87,7 @@ async function rateAndMergeBrand(brand: 'carz' | 'ownerfi' | 'vassdistro') {
 
   console.log(`📝 [${brand}] Need rating: ${needRating.length}, Already rated: ${alreadyRated.length}`);
 
-  // Step 3: Rate new articles with AI
+  // Step 3: Rate new articles with AI (optimized batch size)
   let newlyRatedArticles: any[] = [];
 
   if (needRating.length > 0) {
@@ -99,7 +99,7 @@ async function rateAndMergeBrand(brand: 'carz' | 'ownerfi' | 'vassdistro') {
         content: article.content || article.description,
         category: brand
       })),
-      5 // 5 concurrent API calls
+      10 // 10 concurrent API calls for better throughput (optimized)
     );
 
     // Pair new articles with their scores

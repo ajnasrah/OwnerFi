@@ -150,6 +150,44 @@ interface BenefitWorkflowLogs {
   timestamp: string;
 }
 
+interface PropertyWorkflowLog {
+  id: string;
+  propertyId: string;
+  variant: '15sec' | '30sec';
+  address: string;
+  city: string;
+  state: string;
+  downPayment: number;
+  monthlyPayment: number;
+  status: 'queued' | 'heygen_processing' | 'submagic_processing' | 'posting' | 'completed' | 'failed';
+  heygenVideoId?: string;
+  submagicProjectId?: string;
+  latePostId?: string;
+  error?: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
+interface PropertyWorkflowLogs {
+  success: boolean;
+  workflows: PropertyWorkflowLog[];
+  timestamp: string;
+}
+
+interface PropertyQueueStats {
+  total: number;
+  queued: number;
+  processing: number;
+  nextProperty?: {
+    address: string;
+    city: string;
+    state: string;
+    videoCount: number;
+  };
+  rotationDays: number;
+  videosToday: number;
+}
+
 interface GuestProfile {
   id: string;
   name: string;
@@ -207,17 +245,20 @@ interface BrandAnalytics {
 export default function SocialMediaDashboard() {
   const { data: session, status: authStatus } = useSession();
   const router = useRouter();
-  const [activeSubTab, setActiveSubTab] = useState<'carz' | 'ownerfi' | 'vassdistro' | 'ownerfi-benefits' | 'abdullah' | 'abdullah-podcast' | 'analytics'>('carz');
+  const [activeSubTab, setActiveSubTab] = useState<'carz' | 'ownerfi' | 'vassdistro' | 'ownerfi-benefits' | 'ownerfi-properties' | 'abdullah' | 'abdullah-podcast' | 'analytics'>('carz');
   const [status, setStatus] = useState<SchedulerStatus | null>(null);
   const [workflows, setWorkflows] = useState<WorkflowLogs | null>(null);
   const [podcastWorkflows, setPodcastWorkflows] = useState<PodcastWorkflowLogs | null>(null);
   const [benefitWorkflows, setBenefitWorkflows] = useState<BenefitWorkflowLogs | null>(null);
+  const [propertyWorkflows, setPropertyWorkflows] = useState<PropertyWorkflowLogs | null>(null);
+  const [propertyStats, setPropertyStats] = useState<PropertyQueueStats | null>(null);
   const [guestProfiles, setGuestProfiles] = useState<GuestProfile[]>([]);
   const [editingProfile, setEditingProfile] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [triggeringViral, setTriggeringViral] = useState(false);
   const [triggeringPodcast, setTriggeringPodcast] = useState(false);
   const [triggeringBenefit, setTriggeringBenefit] = useState(false);
+  const [triggeringProperty, setTriggeringProperty] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [deletingWorkflow, setDeletingWorkflow] = useState<string | null>(null);
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
@@ -250,18 +291,24 @@ export default function SocialMediaDashboard() {
       loadWorkflows();
       loadPodcastWorkflows();
       loadBenefitWorkflows();
+      loadPropertyWorkflows();
+      loadPropertyStats();
       loadGuestProfiles();
       loadAnalytics();
       const statusInterval = setInterval(loadStatus, 30000); // Refresh every 30 seconds
       const workflowInterval = setInterval(loadWorkflows, 5000); // Refresh every 5 seconds for real-time updates
       const podcastWorkflowInterval = setInterval(loadPodcastWorkflows, 5000); // Refresh every 5 seconds for real-time updates
       const benefitWorkflowInterval = setInterval(loadBenefitWorkflows, 5000); // Refresh every 5 seconds for real-time updates
+      const propertyWorkflowInterval = setInterval(loadPropertyWorkflows, 5000); // Refresh every 5 seconds for real-time updates
+      const propertyStatsInterval = setInterval(loadPropertyStats, 30000); // Refresh every 30 seconds
       const analyticsInterval = setInterval(loadAnalytics, 24 * 60 * 60 * 1000); // Refresh every 24 hours
       return () => {
         clearInterval(statusInterval);
         clearInterval(workflowInterval);
         clearInterval(podcastWorkflowInterval);
         clearInterval(benefitWorkflowInterval);
+        clearInterval(propertyWorkflowInterval);
+        clearInterval(propertyStatsInterval);
         clearInterval(analyticsInterval);
       };
     }
@@ -297,6 +344,36 @@ export default function SocialMediaDashboard() {
       setBenefitWorkflows(data);
     } catch (error) {
       console.error('Failed to load benefit workflows:', error);
+    }
+  };
+
+  const loadPropertyWorkflows = async () => {
+    try {
+      const url = showHistory ? '/api/property/workflows/logs?history=true' : '/api/property/workflows/logs';
+      const response = await fetch(url);
+      const data = await response.json();
+      setPropertyWorkflows(data);
+    } catch (error) {
+      console.error('Failed to load property workflows:', error);
+    }
+  };
+
+  const loadPropertyStats = async () => {
+    try {
+      const response = await fetch('/api/property/populate-queue');
+      const data = await response.json();
+      if (data.success && data.stats) {
+        setPropertyStats({
+          total: data.stats.total || 0,
+          queued: data.stats.queued || 0,
+          processing: data.stats.processing || 0,
+          nextProperty: data.stats.nextProperty,
+          rotationDays: data.rotationDays || 0,
+          videosToday: 0 // This will be calculated from workflows
+        });
+      }
+    } catch (error) {
+      console.error('Failed to load property stats:', error);
     }
   };
 
@@ -446,7 +523,29 @@ export default function SocialMediaDashboard() {
     }
   };
 
-  const deleteWorkflow = async (workflowId: string, brand: 'carz' | 'ownerfi' | 'vassdistro' | 'podcast' | 'benefit') => {
+  const triggerPropertyCron = async () => {
+    setTriggeringProperty(true);
+    try {
+      const response = await fetch('/api/property/video-cron', { method: 'POST' });
+      const data = await response.json();
+      if (data.success) {
+        const message = data.generated > 0
+          ? `Property video cron triggered successfully!\n\nProperty: ${data.property?.address || 'N/A'}\nWorkflow ID: ${data.property?.workflowId || 'N/A'}`
+          : `Property cron ran but no video generated.\n\n${data.message || ''}`;
+        alert(message);
+        loadPropertyWorkflows();
+        loadPropertyStats();
+      } else {
+        alert(`Error: ${data.error}`);
+      }
+    } catch (error) {
+      alert('Failed to trigger property cron');
+    } finally {
+      setTriggeringProperty(false);
+    }
+  };
+
+  const deleteWorkflow = async (workflowId: string, brand: 'carz' | 'ownerfi' | 'vassdistro' | 'podcast' | 'benefit' | 'property') => {
     if (!confirm('Are you sure you want to delete this workflow? This action cannot be undone.')) {
       return;
     }
@@ -464,6 +563,8 @@ export default function SocialMediaDashboard() {
           await loadPodcastWorkflows();
         } else if (brand === 'benefit') {
           await loadBenefitWorkflows();
+        } else if (brand === 'property') {
+          await loadPropertyWorkflows();
         } else {
           await loadWorkflows();
         }
@@ -567,7 +668,7 @@ export default function SocialMediaDashboard() {
               }}
               className={`flex items-center space-x-2 px-6 py-3 rounded-xl font-medium transition-all ${
                 (activeSubTab === tab.key ||
-                 (tab.key === 'ownerfi' && (activeSubTab === 'ownerfi' || activeSubTab === 'ownerfi-benefits')) ||
+                 (tab.key === 'ownerfi' && activeSubTab.startsWith('ownerfi')) ||
                  (tab.key === 'abdullah' && (activeSubTab === 'abdullah' || activeSubTab === 'abdullah-podcast')))
                   ? 'bg-gradient-to-r from-indigo-500 to-indigo-600 text-white shadow-lg'
                   : 'bg-white text-slate-700 hover:bg-slate-100'
@@ -580,7 +681,7 @@ export default function SocialMediaDashboard() {
         </div>
 
         {/* Sub-tabs for OwnerFi */}
-        {(activeSubTab === 'ownerfi' || activeSubTab === 'ownerfi-benefits') && (
+        {(activeSubTab.startsWith('ownerfi')) && (
           <div className="flex space-x-2 mb-6 ml-4">
             <button
               onClick={() => setActiveSubTab('ownerfi')}
@@ -601,6 +702,16 @@ export default function SocialMediaDashboard() {
               }`}
             >
               💎 Benefits
+            </button>
+            <button
+              onClick={() => setActiveSubTab('ownerfi-properties')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                activeSubTab === 'ownerfi-properties'
+                  ? 'bg-indigo-100 text-indigo-700'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              🏡 Properties
             </button>
           </div>
         )}
@@ -1577,6 +1688,180 @@ export default function SocialMediaDashboard() {
                   <div className="bg-slate-50 rounded-lg p-8 text-center border border-slate-200">
                     <div className="text-slate-500 text-sm font-medium">No active workflows</div>
                     <div className="text-xs text-slate-400 mt-1">Benefit videos will appear here when being generated</div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeSubTab === 'ownerfi-properties' && (
+          <div className="space-y-6">
+            <div className="bg-white rounded-xl shadow-sm p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-slate-900">Property Showcase Videos</h3>
+                <button
+                  onClick={triggerPropertyCron}
+                  disabled={triggeringProperty}
+                  className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:bg-gray-400 transition-colors"
+                >
+                  {triggeringProperty ? 'Generating...' : 'Generate Property Video'}
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-slate-50 rounded-lg p-4">
+                  <div className="text-sm text-slate-600">Rotation Queue Size</div>
+                  <div className="text-2xl font-bold text-slate-900 mt-1">
+                    {propertyStats?.total || 0}
+                  </div>
+                  <div className="text-xs text-slate-500 mt-1">properties</div>
+                </div>
+
+                <div className="bg-slate-50 rounded-lg p-4">
+                  <div className="text-sm text-slate-600">Videos Today</div>
+                  <div className="text-2xl font-bold text-slate-900 mt-1">
+                    {propertyWorkflows?.workflows.filter(w => {
+                      const today = new Date().setHours(0, 0, 0, 0);
+                      return new Date(w.createdAt).setHours(0, 0, 0, 0) === today;
+                    }).length || 0}
+                  </div>
+                  <div className="text-xs text-slate-500 mt-1">generated</div>
+                </div>
+
+                <div className="bg-slate-50 rounded-lg p-4">
+                  <div className="text-sm text-slate-600">Next Property</div>
+                  <div className="text-sm font-bold text-slate-900 mt-1">
+                    {propertyStats?.nextProperty ? (
+                      <>{propertyStats.nextProperty.address.substring(0, 20)}...</>
+                    ) : (
+                      'N/A'
+                    )}
+                  </div>
+                  <div className="text-xs text-slate-500 mt-1">
+                    {propertyStats?.nextProperty && `${propertyStats.nextProperty.city}, ${propertyStats.nextProperty.state}`}
+                  </div>
+                </div>
+
+                <div className="bg-slate-50 rounded-lg p-4">
+                  <div className="text-sm text-slate-600">Rotation Days</div>
+                  <div className="text-2xl font-bold text-slate-900 mt-1">
+                    {propertyStats?.rotationDays || 0}
+                  </div>
+                  <div className="text-xs text-slate-500 mt-1">days per cycle</div>
+                </div>
+              </div>
+
+              <div className="mt-6 pt-6 border-t border-slate-200">
+                <h4 className="text-sm font-semibold text-slate-900 mb-3">Publishing Platforms</h4>
+                <div className="flex flex-wrap gap-2">
+                  {['Instagram', 'TikTok', 'YouTube', 'Facebook', 'LinkedIn', 'Threads'].map((platform) => (
+                    <span key={platform} className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700">
+                      {platform}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mt-6 pt-6 border-t border-slate-200">
+                <h4 className="text-sm font-semibold text-slate-900 mb-3">Video Format</h4>
+                <div className="bg-slate-50 rounded-lg p-4">
+                  <ul className="text-sm text-slate-700 space-y-2">
+                    <li>• <strong>Property showcase format</strong> - 15-second videos</li>
+                    <li>• Rotating queue of active properties with &lt;$15k down</li>
+                    <li>• Smart rotation (each property shown every {propertyStats?.rotationDays || 0} days)</li>
+                    <li>• Features: address, city, down payment, monthly payment</li>
+                    <li>• HeyGen avatar + Submagic captions</li>
+                    <li>• Automatic queue management and analytics tracking</li>
+                  </ul>
+                </div>
+              </div>
+
+              {/* Property Workflow Logs */}
+              <div className="mt-6 pt-6 border-t border-slate-200">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-sm font-semibold text-slate-900">Workflows</h4>
+                  <button
+                    onClick={() => setShowHistory(!showHistory)}
+                    className="text-xs px-3 py-1 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition-colors"
+                  >
+                    {showHistory ? 'Active Only' : 'Show History'}
+                  </button>
+                </div>
+                {propertyWorkflows && propertyWorkflows.workflows && propertyWorkflows.workflows.length > 0 ? (
+                  <div className="space-y-3">
+                    {propertyWorkflows.workflows.map((workflow) => (
+                      <div key={workflow.id} className="bg-white border border-slate-200 rounded-lg p-4 hover:border-indigo-300 transition-colors">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700">
+                                {workflow.variant}
+                              </span>
+                              <div className="font-medium text-slate-900 text-sm">{workflow.address}</div>
+                            </div>
+                            <div className="text-xs text-slate-600 mb-1">
+                              {workflow.city}, {workflow.state} • Down: ${workflow.downPayment.toLocaleString()} • Monthly: ${workflow.monthlyPayment.toLocaleString()}
+                            </div>
+                            <div className="text-xs text-slate-500">{formatTimeAgo(workflow.createdAt)}</div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${getPodcastStatusColor(workflow.status)}`}>
+                              {formatStatus(workflow.status)}
+                            </span>
+                            <button
+                              onClick={() => deleteWorkflow(workflow.id, 'property')}
+                              disabled={deletingWorkflow === workflow.id}
+                              className="text-red-600 hover:text-red-800 hover:bg-red-50 p-2 rounded-lg transition-colors disabled:opacity-50"
+                              title="Delete workflow"
+                            >
+                              {deletingWorkflow === workflow.id ? (
+                                <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24">
+                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
+                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                              ) : (
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                        {(workflow.heygenVideoId || workflow.submagicProjectId || workflow.latePostId) && (
+                          <div className="grid grid-cols-3 gap-2 text-xs">
+                            {workflow.heygenVideoId && (
+                              <div>
+                                <div className="text-slate-500 mb-1">HeyGen</div>
+                                <div className="font-mono text-slate-700 truncate">{workflow.heygenVideoId.substring(0, 12)}...</div>
+                              </div>
+                            )}
+                            {workflow.submagicProjectId && (
+                              <div>
+                                <div className="text-slate-500 mb-1">Submagic</div>
+                                <div className="font-mono text-slate-700 truncate">{workflow.submagicProjectId.substring(0, 12)}...</div>
+                              </div>
+                            )}
+                            {workflow.latePostId && (
+                              <div>
+                                <div className="text-slate-500 mb-1">GetLate</div>
+                                <div className="font-mono text-slate-700 truncate">{workflow.latePostId.substring(0, 12)}...</div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        {workflow.error && (
+                          <div className="mt-3 text-xs text-red-700 bg-red-50 border border-red-200 rounded px-3 py-2">
+                            <span className="font-semibold">Error:</span> {workflow.error}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="bg-slate-50 rounded-lg p-8 text-center border border-slate-200">
+                    <div className="text-slate-500 text-sm font-medium">No active workflows</div>
+                    <div className="text-xs text-slate-400 mt-1">Property videos will appear here when being generated</div>
                   </div>
                 )}
               </div>

@@ -47,8 +47,8 @@ export const CARZ_FEEDS: Omit<FeedSource, 'articlesProcessed'>[] = [
   },
   {
     id: 'carz-edmunds-reviews',
-    name: 'Edmunds - Car Reviews',
-    url: 'https://www.edmunds.com/feeds/rss/articles.xml',
+    name: 'Edmunds - Car News',
+    url: 'https://www.edmunds.com/feeds/rss/articles/all.xml',
     category: 'carz',
     subcategory: 'reviews',
     enabled: true,
@@ -104,7 +104,7 @@ export const CARZ_FEEDS: Omit<FeedSource, 'articlesProcessed'>[] = [
   {
     id: 'carz-autoblog-news',
     name: 'Autoblog - News',
-    url: 'https://www.autoblog.com/rss.xml',
+    url: 'https://www.autoblog.com/rss/full/',
     category: 'carz',
     subcategory: 'market',
     enabled: true,
@@ -130,8 +130,8 @@ export const CARZ_FEEDS: Omit<FeedSource, 'articlesProcessed'>[] = [
   },
   {
     id: 'carz-automotive-news',
-    name: 'Automotive News',
-    url: 'https://www.autonews.com/rss.xml',
+    name: 'Automotive News Daily Drive',
+    url: 'https://feeds.buzzsprout.com/2447022.rss',
     category: 'carz',
     subcategory: 'market',
     enabled: true,
@@ -196,7 +196,7 @@ export const CARZ_FEEDS: Omit<FeedSource, 'articlesProcessed'>[] = [
   {
     id: 'carz-insideevs',
     name: 'InsideEVs - Electric Vehicle News',
-    url: 'https://insideevs.com/rss/news/',
+    url: 'https://insideevs.com/rss/articles/all/',
     category: 'carz',
     subcategory: 'electric',
     enabled: true,
@@ -327,12 +327,75 @@ export const VASSDISTRO_FEEDS: Omit<FeedSource, 'articlesProcessed'>[] = [
     enabled: true,
     fetchInterval: 120
   },
+  {
+    id: 'vassdistro-vapebiz',
+    name: 'Vape Biz - Industry News',
+    url: 'https://vapebiz.net/feed/',
+    category: 'vassdistro',
+    subcategory: 'news',
+    enabled: true,
+    fetchInterval: 60
+  },
+  {
+    id: 'vassdistro-vaping-links',
+    name: 'Vaping Links - News',
+    url: 'https://vapinglinks.com/feed/',
+    category: 'vassdistro',
+    subcategory: 'news',
+    enabled: true,
+    fetchInterval: 60
+  },
+  {
+    id: 'vassdistro-ecigarette-reviewed',
+    name: 'E-Cigarette Reviewed',
+    url: 'https://ecigarettereviewed.com/feed/',
+    category: 'vassdistro',
+    subcategory: 'news',
+    enabled: true,
+    fetchInterval: 60
+  },
+  {
+    id: 'vassdistro-vaping-daily',
+    name: 'Vaping Daily',
+    url: 'https://vapingdaily.com/feed/',
+    category: 'vassdistro',
+    subcategory: 'news',
+    enabled: true,
+    fetchInterval: 60
+  },
 
   // Regulations & Compliance
   {
     id: 'vassdistro-fda-tobacco',
     name: 'FDA Tobacco News',
     url: 'https://www.fda.gov/about-fda/contact-fda/stay-informed/rss-feeds/tobacco-products/rss.xml',
+    category: 'vassdistro',
+    subcategory: 'regulations',
+    enabled: true,
+    fetchInterval: 120
+  },
+  {
+    id: 'vassdistro-tobacco-asia',
+    name: 'Tobacco Asia - Regulations',
+    url: 'https://www.tobaccoasia.com/feed/',
+    category: 'vassdistro',
+    subcategory: 'regulations',
+    enabled: true,
+    fetchInterval: 120
+  },
+  {
+    id: 'vassdistro-smokefree-action',
+    name: 'Smokefree Action Coalition',
+    url: 'https://smokefreepolicy.org/feed/',
+    category: 'vassdistro',
+    subcategory: 'regulations',
+    enabled: true,
+    fetchInterval: 120
+  },
+  {
+    id: 'vassdistro-ukvia-news',
+    name: 'UKVIA - Industry Association',
+    url: 'https://ukvia.co.uk/feed/',
     category: 'vassdistro',
     subcategory: 'regulations',
     enabled: true,
@@ -358,12 +421,75 @@ export const VASSDISTRO_FEEDS: Omit<FeedSource, 'articlesProcessed'>[] = [
     enabled: true,
     fetchInterval: 60
   },
+  {
+    id: 'vassdistro-vapingbusiness',
+    name: 'Vaping Business Magazine',
+    url: 'https://vapingbusinessmagazine.com/feed/',
+    category: 'vassdistro',
+    subcategory: 'trade',
+    enabled: true,
+    fetchInterval: 60
+  },
+  {
+    id: 'vassdistro-vaperanger-news',
+    name: 'Vape Ranger - Wholesale News',
+    url: 'https://vaperanger.com/blogs/news.atom',
+    category: 'vassdistro',
+    subcategory: 'trade',
+    enabled: true,
+    fetchInterval: 60
+  },
+  {
+    id: 'vassdistro-gotvape-blog',
+    name: 'Got Vape Wholesale Blog',
+    url: 'https://www.gotvapewholesale.com/blogs/smoke-shop-business-blog.atom',
+    category: 'vassdistro',
+    subcategory: 'trade',
+    enabled: true,
+    fetchInterval: 60
+  },
+  {
+    id: 'vassdistro-mipod-news',
+    name: 'MiPod Wholesale News',
+    url: 'https://mipodwholesale.com/blogs/news.atom',
+    category: 'vassdistro',
+    subcategory: 'trade',
+    enabled: true,
+    fetchInterval: 60
+  },
 
   // Market Trends & Innovation
   {
     id: 'vassdistro-planet-of-vapes',
     name: 'Planet of the Vapes - Product News',
     url: 'https://www.planetofthevapes.co.uk/feed/',
+    category: 'vassdistro',
+    subcategory: 'products',
+    enabled: true,
+    fetchInterval: 120
+  },
+  {
+    id: 'vassdistro-vaping-hardware',
+    name: 'Vaping Hardware Reviews',
+    url: 'https://vaping.com/blog/feed/',
+    category: 'vassdistro',
+    subcategory: 'products',
+    enabled: true,
+    fetchInterval: 120
+  },
+  {
+    id: 'vassdistro-ecigclick',
+    name: 'Ecigclick - Product News',
+    url: 'https://ecigclick.co.uk/feed/',
+    category: 'vassdistro',
+    subcategory: 'products',
+    enabled: true,
+    fetchInterval: 120
+  },
+  {
+    id: 'vassdistro-vape-beat',
+    name: 'Vape Beat - Industry Trends',
+    url: 'https://vapebeat.com/feed/',
     category: 'vassdistro',
     subcategory: 'products',
     enabled: true,
@@ -413,6 +539,60 @@ export const OWNERFI_FEEDS: Omit<FeedSource, 'articlesProcessed'>[] = [
     enabled: true,
     fetchInterval: 60
   },
+  {
+    id: 'ownerfi-biggerpockets',
+    name: 'BiggerPockets - Real Estate News',
+    url: 'https://www.biggerpockets.com/blog/feed/',
+    category: 'ownerfi',
+    subcategory: 'market',
+    enabled: true,
+    fetchInterval: 60
+  },
+  {
+    id: 'ownerfi-nar-newsroom',
+    name: 'NAR Newsroom',
+    url: 'https://www.nar.realtor/newsroom/rss',
+    category: 'ownerfi',
+    subcategory: 'market',
+    enabled: true,
+    fetchInterval: 60
+  },
+  {
+    id: 'ownerfi-realestate-us-news',
+    name: 'US News - Real Estate',
+    url: 'https://www.usnews.com/rss/news/articles/real-estate',
+    category: 'ownerfi',
+    subcategory: 'market',
+    enabled: true,
+    fetchInterval: 60
+  },
+  {
+    id: 'ownerfi-theclose',
+    name: 'The Close - Real Estate News',
+    url: 'https://theclose.com/feed/',
+    category: 'ownerfi',
+    subcategory: 'market',
+    enabled: true,
+    fetchInterval: 60
+  },
+  {
+    id: 'ownerfi-rismedia',
+    name: 'RISMedia - Real Estate News',
+    url: 'https://www.rismedia.com/feed/',
+    category: 'ownerfi',
+    subcategory: 'market',
+    enabled: true,
+    fetchInterval: 60
+  },
+  {
+    id: 'ownerfi-housingwire-realestate',
+    name: 'HousingWire - Real Estate',
+    url: 'https://www.housingwire.com/category/real-estate/feed/',
+    category: 'ownerfi',
+    subcategory: 'market',
+    enabled: true,
+    fetchInterval: 60
+  },
 
   // Mortgage News & Rates
   {
@@ -442,6 +622,51 @@ export const OWNERFI_FEEDS: Omit<FeedSource, 'articlesProcessed'>[] = [
     enabled: true,
     fetchInterval: 60
   },
+  {
+    id: 'ownerfi-housingwire-mortgages',
+    name: 'HousingWire - Mortgages',
+    url: 'https://www.housingwire.com/category/mortgage/feed/',
+    category: 'ownerfi',
+    subcategory: 'mortgage',
+    enabled: true,
+    fetchInterval: 60
+  },
+  {
+    id: 'ownerfi-mba-news',
+    name: 'MBA - Mortgage Bankers News',
+    url: 'https://www.mba.org/news-and-research/rss-feeds',
+    category: 'ownerfi',
+    subcategory: 'mortgage',
+    enabled: true,
+    fetchInterval: 60
+  },
+  {
+    id: 'ownerfi-forbes-mortgages',
+    name: 'Forbes - Mortgages',
+    url: 'https://www.forbes.com/real-estate/feed/',
+    category: 'ownerfi',
+    subcategory: 'mortgage',
+    enabled: true,
+    fetchInterval: 60
+  },
+  {
+    id: 'ownerfi-lendingtree-mortgages',
+    name: 'LendingTree - Mortgages',
+    url: 'https://www.lendingtree.com/home/mortgage/feed/',
+    category: 'ownerfi',
+    subcategory: 'mortgage',
+    enabled: true,
+    fetchInterval: 60
+  },
+  {
+    id: 'ownerfi-freddiemac-news',
+    name: 'Freddie Mac - News',
+    url: 'https://www.freddiemac.com/rss/news.xml',
+    category: 'ownerfi',
+    subcategory: 'mortgage',
+    enabled: true,
+    fetchInterval: 120
+  },
 
   // Homeowner Tips & Money Saving
   {
@@ -459,13 +684,58 @@ export const OWNERFI_FEEDS: Omit<FeedSource, 'articlesProcessed'>[] = [
     url: 'https://www.thisoldhouse.com/feed',
     category: 'ownerfi',
     subcategory: 'tips',
-    enabled: true,
+    enabled: false,
     fetchInterval: 120
   },
   {
     id: 'ownerfi-bob-vila',
     name: 'Bob Vila - Home Improvement Tips',
     url: 'https://www.bobvila.com/feed/',
+    category: 'ownerfi',
+    subcategory: 'tips',
+    enabled: true,
+    fetchInterval: 120
+  },
+  {
+    id: 'ownerfi-familyhandyman',
+    name: 'Family Handyman',
+    url: 'https://www.familyhandyman.com/feed/',
+    category: 'ownerfi',
+    subcategory: 'tips',
+    enabled: true,
+    fetchInterval: 120
+  },
+  {
+    id: 'ownerfi-houselogic',
+    name: 'HouseLogic - Homeowner Tips',
+    url: 'https://www.houselogic.com/feed/',
+    category: 'ownerfi',
+    subcategory: 'tips',
+    enabled: true,
+    fetchInterval: 120
+  },
+  {
+    id: 'ownerfi-thebalancemoney-homebuying',
+    name: 'The Balance - Home Buying',
+    url: 'https://www.thebalancemoney.com/homebuying-4073993/feed/',
+    category: 'ownerfi',
+    subcategory: 'tips',
+    enabled: true,
+    fetchInterval: 120
+  },
+  {
+    id: 'ownerfi-moneywise-homeownership',
+    name: 'MoneyWise - Homeownership',
+    url: 'https://moneywise.com/homeownership/feed',
+    category: 'ownerfi',
+    subcategory: 'tips',
+    enabled: true,
+    fetchInterval: 120
+  },
+  {
+    id: 'ownerfi-homeadvisor-blog',
+    name: 'HomeAdvisor - Home Tips',
+    url: 'https://www.homeadvisor.com/r/feed/',
     category: 'ownerfi',
     subcategory: 'tips',
     enabled: true,
@@ -486,6 +756,24 @@ export const OWNERFI_FEEDS: Omit<FeedSource, 'articlesProcessed'>[] = [
     id: 'ownerfi-proptech-insider',
     name: 'PropTech Insider',
     url: 'https://www.proptechinsider.com/feed/',
+    category: 'ownerfi',
+    subcategory: 'tools',
+    enabled: false,
+    fetchInterval: 120
+  },
+  {
+    id: 'ownerfi-realestatetechnology',
+    name: 'Real Estate Technology News',
+    url: 'https://www.realestatetechnology.com/feed/',
+    category: 'ownerfi',
+    subcategory: 'tools',
+    enabled: true,
+    fetchInterval: 120
+  },
+  {
+    id: 'ownerfi-geekestatelady',
+    name: 'The Geek Estate - PropTech',
+    url: 'https://thegeekestate.com/feed/',
     category: 'ownerfi',
     subcategory: 'tools',
     enabled: true,

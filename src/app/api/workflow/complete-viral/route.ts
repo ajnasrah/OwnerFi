@@ -52,6 +52,19 @@ export async function POST(request: NextRequest) {
 
     console.log(`✅ Got and locked article: ${article.title.substring(0, 50)}...`);
 
+    // Validate article content exists and has sufficient length
+    if (!article.content || article.content.trim().length < 50) {
+      console.error(`❌ Article has insufficient content (${article.content?.length || 0} chars): ${article.title}`);
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Article has insufficient content for video generation',
+          details: `Content length: ${article.content?.length || 0} chars (minimum 50 required)`
+        },
+        { status: 400 }
+      );
+    }
+
     // Add to workflow queue with 'pending' status
     let workflowId: string | undefined;
     if (article.id) {

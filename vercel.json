@@ -19,11 +19,11 @@
     },
     {
       "path": "/api/cron/fetch-rss",
-      "schedule": "0 8 * * *"
+      "schedule": "0 12 * * *"
     },
     {
       "path": "/api/cron/rate-articles",
-      "schedule": "30 8 * * *"
+      "schedule": "0 13 * * *"
     },
     {
       "path": "/api/cron/generate-video",

@@ -72,14 +72,14 @@ export async function downloadAndUploadVideo(
   const bucket = storage.bucket();
   const file = bucket.file(fileName);
 
-  // Calculate deletion date (7 days from now)
+  // Calculate deletion date (72 hours from now)
   const deletionDate = new Date();
-  deletionDate.setDate(deletionDate.getDate() + 7);
+  deletionDate.setHours(deletionDate.getHours() + 72);
 
   await file.save(buffer, {
     contentType: 'video/mp4',
     metadata: {
-      cacheControl: 'public, max-age=604800', // Cache for 7 days (1 week)
+      cacheControl: 'public, max-age=259200', // Cache for 72 hours (3 days)
       customMetadata: {
         autoDeleteAfter: deletionDate.toISOString(),
         createdAt: new Date().toISOString()
@@ -87,11 +87,11 @@ export async function downloadAndUploadVideo(
     }
   });
 
-  // Generate a signed URL (valid for 7 days) instead of making file public
+  // Generate a signed URL (valid for 72 hours) instead of making file public
   // This works with uniform bucket-level access enabled
   const [signedUrl] = await file.getSignedUrl({
     action: 'read',
-    expires: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
+    expires: Date.now() + 72 * 60 * 60 * 1000, // 72 hours (3 days)
   });
 
   console.log(`✅ Uploaded to Firebase Storage with signed URL`);
@@ -263,8 +263,8 @@ export async function uploadSubmagicVideo(
 }
 
 /**
- * Delete expired videos (older than 7 days)
- * Should be called by a cron job or scheduled task
+ * Delete expired videos (older than 72 hours)
+ * Called daily at 3 AM by cleanup-videos cron
  */
 export async function deleteExpiredVideos(): Promise<{
   deleted: number;

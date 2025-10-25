@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { admin } from '@/lib/firebase-admin';
 import {
   generatePropertyScript,
+  generatePropertyScriptWithAI,
   isEligibleForVideo,
   validatePropertyForVideo,
   buildPropertyVideoRequest
@@ -12,6 +13,7 @@ import {
 import type { PropertyListing } from '@/lib/property-schema';
 
 const HEYGEN_API_KEY = process.env.HEYGEN_API_KEY;
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const HEYGEN_API_URL = 'https://api.heygen.com/v2/video/generate';
 
 export const maxDuration = 60;
@@ -19,7 +21,7 @@ export const maxDuration = 60;
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { propertyId } = body;
+    const { propertyId, variant = '30' } = body; // Default to 30-sec variant
 
     if (!propertyId) {
       return NextResponse.json(
@@ -71,18 +73,42 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate script
-    const { script, caption, title, hashtags } = generatePropertyScript(property);
+    // Generate scripts with AI (both 30-sec and 15-sec)
+    let script, caption, title, hashtags;
+    let variant30Script, variant15Script;
 
-    console.log(`📝 Generated script for ${property.address}`);
-    console.log(`   Script length: ${script.length} chars`);
+    if (OPENAI_API_KEY) {
+      console.log(`🤖 Generating dual-mode scripts with OpenAI...`);
+      const dualScripts = await generatePropertyScriptWithAI(property, OPENAI_API_KEY);
+
+      // Store both variants
+      variant30Script = dualScripts.variant_30;
+      variant15Script = dualScripts.variant_15;
+
+      // Use requested variant (default 30)
+      if (variant === '15') {
+        ({ script, caption, title, hashtags } = variant15Script);
+      } else {
+        ({ script, caption, title, hashtags } = variant30Script);
+      }
+
+      console.log(`📝 Generated BOTH variants for ${property.address}`);
+      console.log(`   30-sec script: ${variant30Script.script.length} chars`);
+      console.log(`   15-sec script: ${variant15Script.script.length} chars`);
+      console.log(`   Using variant: ${variant}-sec`);
+    } else {
+      console.log(`📝 Generating script (fallback - no OpenAI)...`);
+      ({ script, caption, title, hashtags } = generatePropertyScript(property));
+    }
+
     console.log(`   Title: ${title}`);
 
     // Create workflow record
-    const workflowId = `property_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
-    const workflowData = {
+    const workflowId = `property_${variant}sec_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+    const workflowData: any = {
       id: workflowId,
       propertyId: property.id,
+      variant: variant === '15' ? '15sec' : '30sec',
       address: property.address,
       city: property.city,
       state: property.state,
@@ -95,6 +121,14 @@ export async function POST(request: NextRequest) {
       createdAt: Date.now(),
       updatedAt: Date.now()
     };
+
+    // Store both scripts if generated with AI (for analytics)
+    if (variant30Script && variant15Script) {
+      workflowData.scripts = {
+        variant_30: variant30Script,
+        variant_15: variant15Script
+      };
+    }
 
     await admin
       .firestore()

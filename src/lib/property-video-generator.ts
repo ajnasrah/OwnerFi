@@ -1,5 +1,6 @@
 // Property Showcase Video Generator
 // Automatically creates videos for owner-financed properties < $15k down
+// A/B Testing: Generates both 30-sec and 15-sec variants
 
 import { PropertyListing } from './property-schema';
 
@@ -10,8 +11,53 @@ export interface PropertyVideoScript {
   hashtags: string[];
 }
 
+export interface DualPropertyVideoScripts {
+  variant_30: PropertyVideoScript;
+  variant_15: PropertyVideoScript;
+}
+
 /**
- * Generate video script for a property listing
+ * Generate video script for a property listing using OpenAI
+ * Returns both 30-sec and 15-sec variants for A/B testing
+ */
+export async function generatePropertyScriptWithAI(property: PropertyListing, openaiApiKey: string): Promise<DualPropertyVideoScripts> {
+  const prompt = buildPropertyPrompt(property);
+
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${openaiApiKey}`
+    },
+    body: JSON.stringify({
+      model: 'gpt-4o-mini',
+      messages: [
+        {
+          role: 'system',
+          content: getPropertySystemPrompt()
+        },
+        {
+          role: 'user',
+          content: prompt
+        }
+      ],
+      temperature: 0.85,
+      max_tokens: 1000
+    })
+  });
+
+  if (!response.ok) {
+    throw new Error(`OpenAI API error: ${response.status}`);
+  }
+
+  const data = await response.json();
+  const content = data.choices[0]?.message?.content || '';
+
+  return parsePropertyResponse(content, property);
+}
+
+/**
+ * Generate video script for a property listing (fallback without AI)
  */
 export function generatePropertyScript(property: PropertyListing): PropertyVideoScript {
   // Format numbers (no decimals, rounded)
@@ -291,4 +337,145 @@ export function validatePropertyForVideo(property: PropertyListing): { valid: bo
     valid: errors.length === 0,
     errors
   };
+}
+
+/**
+ * Get system prompt for OpenAI property video generation
+ */
+function getPropertySystemPrompt(): string {
+  return `ROLE:
+You are the viral video content generator for OwnerFi.ai, a platform that helps people discover homes they can buy without banks — through seller financing and agent-listed creative deals.
+Your job is to turn property data into two punchy, legally safe scripts for short-form videos (one 30 sec and one 15 sec).
+
+🏡 MODE 1 – 30 SECOND "DEAL EXPLAINER"
+
+STRUCTURE (≈70-80 words):
+0-3 sec – Hook: Stop-scroll statement
+"This home might be cheaper than your rent — and no bank's involved."
+
+3-15 sec – Deal summary:
+Quick stats — price range, city, and key highlight
+"Three-bed in Dallas around $250K, and the seller's open to owner financing."
+
+15-25 sec – Insight:
+Why it's interesting or smart
+"Try finding anything close to this monthly — you can't."
+
+25-30 sec – CTA + Disclaimer:
+"Visit OwnerFi.ai to see more homes near you — all free with agent contact info. Prices and terms may change anytime."
+
+TONE: Real, confident, fast, trustworthy.
+NO: guarantees, promises, or investment talk.
+
+⚡ MODE 2 – 15 SECOND "DEAL DROP"
+
+STRUCTURE (≈45-55 words):
+0-3 sec – Hook:
+"Stop scrolling — this home might be cheaper than rent."
+
+3-10 sec – Quick value:
+"3-bed in Austin around $240K, seller's open to financing."
+
+10-15 sec – CTA + Disclaimer:
+"See more free listings near you at OwnerFi.ai — prices and terms can change anytime."
+
+TONE: High energy, conversational, raw — like a friend dropping insider info fast.
+
+🧠 VOICE & STYLE RULES
+- Authentic, confident, street-smart tone
+- 5th-grade clarity
+- No corporate language
+- Avoid "I think", "maybe", or "you should"
+- Always finish with the legal line: "Prices and terms may change anytime."
+
+🚫 BANNED PHRASES
+❌ "Guaranteed approval"
+❌ "Lock it in now"
+❌ "Investment advice"
+❌ "Will go up in value"
+
+✅ OUTPUT FORMAT
+Return both scripts in one structured response:
+
+TITLE_30: [under 45 characters]
+SCRIPT_30: [spoken text only]
+CAPTION_30: [2–3 sentences + disclaimer + 3–5 hashtags]
+
+TITLE_15: [under 45 characters]
+SCRIPT_15: [spoken text only]
+CAPTION_15: [1–2 sentences + disclaimer + 3–5 hashtags]`;
+}
+
+/**
+ * Build property input prompt for OpenAI
+ */
+function buildPropertyPrompt(property: PropertyListing): string {
+  const price = formatCurrencyRounded(property.listPrice);
+  const monthly = formatCurrencyRounded(property.monthlyPayment);
+  const down = formatCurrencyRounded(property.downPaymentAmount);
+  const highlight = selectBestHighlight(property);
+
+  return `Generate both 30-second and 15-second video scripts for this property:
+
+PROPERTY DATA:
+- City: ${property.city}, ${property.state}
+- Price: ${price}
+- Bedrooms: ${property.bedrooms}
+- Bathrooms: ${property.bathrooms}
+- Square Feet: ${property.squareFeet || 'Not specified'}
+- Monthly Payment: ${monthly} (estimated before taxes/insurance)
+- Down Payment: ${down} (estimated)
+- Highlight: ${highlight}
+
+Generate TITLE_30, SCRIPT_30, CAPTION_30, TITLE_15, SCRIPT_15, and CAPTION_15 following the format exactly.`;
+}
+
+/**
+ * Parse OpenAI response into dual scripts
+ */
+function parsePropertyResponse(content: string, property: PropertyListing): DualPropertyVideoScripts {
+  // Extract 30-second variant
+  const title30Match = content.match(/TITLE_30:\s*(.+)/i);
+  const script30Match = content.match(/SCRIPT_30:\s*"?([^"]+)"?\s*(?=CAPTION_30|TITLE_15|$)/is);
+  const caption30Match = content.match(/CAPTION_30:\s*(.+?)(?=TITLE_15|SCRIPT_15|$)/is);
+
+  // Extract 15-second variant
+  const title15Match = content.match(/TITLE_15:\s*(.+)/i);
+  const script15Match = content.match(/SCRIPT_15:\s*"?([^"]+)"?\s*(?=CAPTION_15|$)/is);
+  const caption15Match = content.match(/CAPTION_15:\s*(.+?)$/is);
+
+  const variant_30: PropertyVideoScript = {
+    title: (title30Match?.[1] || `🏡 Deal in ${property.city}`).trim().substring(0, 50),
+    script: (script30Match?.[1] || generatePropertyScript(property).script).trim(),
+    caption: (caption30Match?.[1] || generatePropertyScript(property).caption).trim(),
+    hashtags: [] // Extracted from caption
+  };
+
+  const variant_15: PropertyVideoScript = {
+    title: (title15Match?.[1] || `💥 ${property.city} Deal`).trim().substring(0, 50),
+    script: (script15Match?.[1] || generateShortScript(property)).trim(),
+    caption: (caption15Match?.[1] || generateShortCaption(property)).trim(),
+    hashtags: []
+  };
+
+  return { variant_30, variant_15 };
+}
+
+/**
+ * Generate short 15-second script (fallback)
+ */
+function generateShortScript(property: PropertyListing): string {
+  const price = formatCurrencyRounded(property.listPrice);
+  const city = property.city;
+  const state = property.state;
+  const beds = property.bedrooms;
+
+  return `Stop scrolling — this ${beds}-bed near ${city} might cost less than rent. It's around ${price} and the seller's open to owner financing. See more free listings at OwnerFi.ai — prices and terms can change anytime.`;
+}
+
+/**
+ * Generate short caption (fallback)
+ */
+function generateShortCaption(property: PropertyListing): string {
+  return `Browse real owner-finance homes for free on OwnerFi.ai. No banks, no catch. Prices and terms may change anytime. #OwnerFi #RealEstate #Homeownership #NoBankLoan`;
 }

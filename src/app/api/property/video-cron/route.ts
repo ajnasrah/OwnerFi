@@ -90,54 +90,92 @@ export async function GET(request: NextRequest) {
     }
 
     // Generate videos for top properties (limit per run)
+    // A/B Testing: Generate BOTH 30-sec and 15-sec variants
     const propertiesToProcess = eligibleProperties.slice(0, MAX_VIDEOS_PER_RUN);
     const results = [];
 
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 
     for (const property of propertiesToProcess) {
-      console.log(`\n🎥 Generating video for ${property.address}`);
+      console.log(`\n🎥 Generating BOTH variants for ${property.address}`);
 
+      // Generate 30-second variant
       try {
-        // Call the generate-video API
-        const response = await fetch(`${baseUrl}/api/property/generate-video`, {
+        console.log(`   📹 30-second version...`);
+        const response30 = await fetch(`${baseUrl}/api/property/generate-video`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            propertyId: property.id
+            propertyId: property.id,
+            variant: '30'
           })
         });
 
-        const result = await response.json();
+        const result30 = await response30.json();
 
-        if (result.success) {
-          console.log(`✅ Video generation started for ${property.address}`);
+        if (result30.success) {
+          console.log(`   ✅ 30-sec variant started`);
           results.push({
             propertyId: property.id,
             address: property.address,
+            variant: '30sec',
             success: true,
-            workflowId: result.workflowId
-          });
-        } else {
-          console.error(`❌ Failed to generate video for ${property.address}:`, result.error);
-          results.push({
-            propertyId: property.id,
-            address: property.address,
-            success: false,
-            error: result.error
+            workflowId: result30.workflowId
           });
         }
 
-        // Wait 2 seconds between requests to avoid rate limiting
+        // Wait 2 seconds before next variant
         await new Promise(resolve => setTimeout(resolve, 2000));
 
       } catch (error) {
-        console.error(`❌ Error generating video for ${property.address}:`, error);
+        console.error(`   ❌ 30-sec variant failed:`, error);
         results.push({
           propertyId: property.id,
           address: property.address,
+          variant: '30sec',
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error'
+        });
+      }
+
+      // Generate 15-second variant
+      try {
+        console.log(`   📹 15-second version...`);
+        const response15 = await fetch(`${baseUrl}/api/property/generate-video`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            propertyId: property.id,
+            variant: '15'
+          })
+        });
+
+        const result15 = await response15.json();
+
+        if (result15.success) {
+          console.log(`   ✅ 15-sec variant started`);
+          results.push({
+            propertyId: property.id,
+            address: property.address,
+            variant: '15sec',
+            success: true,
+            workflowId: result15.workflowId
+          });
+        }
+
+        // Wait 3 seconds between properties to avoid rate limiting
+        await new Promise(resolve => setTimeout(resolve, 3000));
+
+      } catch (error) {
+        console.error(`   ❌ 15-sec variant failed:`, error);
+        results.push({
+          propertyId: property.id,
+          address: property.address,
+          variant: '15sec',
           success: false,
           error: error instanceof Error ? error.message : 'Unknown error'
         });

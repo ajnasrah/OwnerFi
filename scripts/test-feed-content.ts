@@ -25,8 +25,10 @@ async function testFeed(name: string, url: string) {
       const descLength = (item.description || '').length;
       const title = item.title.substring(0, 50);
 
+      const wordCount = contentLength > 0 ? item.content!.split(/\s+/).length : 0;
+
       console.log(`\n   ${index + 1}. "${title}..."`);
-      console.log(`      Content: ${contentLength} chars ${contentLength > 0 ? '✅' : '❌'}`);
+      console.log(`      Content: ${contentLength} chars (~${wordCount} words) ${contentLength > 0 ? '✅' : '❌'}`);
       console.log(`      Description: ${descLength} chars`);
 
       if (contentLength > 0) {

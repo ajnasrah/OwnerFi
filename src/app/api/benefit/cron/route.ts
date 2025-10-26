@@ -41,10 +41,13 @@ export async function GET(request: NextRequest) {
 
     console.log('\n🏡 Benefit video cron triggered');
 
+    // Check for force parameter to bypass daily limit
+    const forceGenerate = request.nextUrl.searchParams.get('force') === 'true';
+
     // Check scheduler
     const videosNeeded = await BenefitScheduler.getVideosNeeded();
 
-    if (videosNeeded === 0) {
+    if (videosNeeded === 0 && !forceGenerate) {
       console.log('⏭️  Already generated 5 videos today - skipping');
 
       const stats = await BenefitScheduler.getStats();
@@ -54,6 +57,10 @@ export async function GET(request: NextRequest) {
         message: 'Daily limit reached (5/5 videos generated)',
         stats
       });
+    }
+
+    if (forceGenerate) {
+      console.log('🔥 FORCE mode enabled - bypassing daily limit check');
     }
 
     console.log(`✅ Need to generate ${videosNeeded} video(s) today`);
@@ -78,18 +85,20 @@ export async function GET(request: NextRequest) {
 
     console.log(`\n📹 Selected benefit: ${benefit.title}`);
 
-    // Claim a slot atomically (prevents race conditions)
-    const claimed = await BenefitScheduler.claimVideoSlot(benefit.id);
+    // Claim a slot atomically (prevents race conditions) - skip if force mode
+    if (!forceGenerate) {
+      const claimed = await BenefitScheduler.claimVideoSlot(benefit.id);
 
-    if (!claimed) {
-      console.log('⚠️  Daily limit reached while claiming slot - skipping');
-      const stats = await BenefitScheduler.getStats();
-      return NextResponse.json({
-        success: true,
-        skipped: true,
-        message: 'Daily limit reached during generation',
-        stats
-      });
+      if (!claimed) {
+        console.log('⚠️  Daily limit reached while claiming slot - skipping');
+        const stats = await BenefitScheduler.getStats();
+        return NextResponse.json({
+          success: true,
+          skipped: true,
+          message: 'Daily limit reached during generation',
+          stats
+        });
+      }
     }
 
     // Create workflow

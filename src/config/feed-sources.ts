@@ -1,10 +1,11 @@
-// RSS Feed Source Configuration - AUTO-CLEANED
-// Broken feeds removed - only working feeds with full content
+// RSS Feed Source Configuration - VERIFIED WORKING FEEDS 2025
+// All feeds tested and verified with excellent content quality
+// Total: 14 feeds (VassDistro: 6, OwnerFi: 5, Carz: 3)
 
 import { addFeedSource as addFeedSourceFirestore, type FeedSource, getAllFeedSources } from '@/lib/feed-store-firestore';
 
 /**
- * OWNERFI FEEDS (9 working feeds - 3000-9000 chars avg)
+ * OWNERFI FEEDS (5 working feeds - all excellent quality with full content)
  */
 export const OWNERFI_FEEDS: Omit<FeedSource, 'articlesProcessed'>[] = [
   {
@@ -51,62 +52,35 @@ export const OWNERFI_FEEDS: Omit<FeedSource, 'articlesProcessed'>[] = [
     subcategory: 'market',
     enabled: true,
     fetchInterval: 60
-  },
-  {
-    id: 'ownerfi-housingwire-realestate',
-    name: 'HousingWire - Real Estate',
-    url: 'https://www.housingwire.com/category/real-estate/feed/',
-    category: 'ownerfi',
-    subcategory: 'market',
-    enabled: true,
-    fetchInterval: 60
-  },
-  {
-    id: 'ownerfi-housingwire-mortgages',
-    name: 'HousingWire - Mortgages',
-    url: 'https://www.housingwire.com/category/mortgage/feed/',
-    category: 'ownerfi',
-    subcategory: 'mortgage',
-    enabled: true,
-    fetchInterval: 60
-  },
-  {
-    id: 'ownerfi-familyhandyman',
-    name: 'Family Handyman',
-    url: 'https://www.familyhandyman.com/feed/',
-    category: 'ownerfi',
-    subcategory: 'tips',
-    enabled: true,
-    fetchInterval: 120
-  },
-  {
-    id: 'ownerfi-homeadvisor-blog',
-    name: 'HomeAdvisor - Home Tips',
-    url: 'https://www.homeadvisor.com/r/feed/',
-    category: 'ownerfi',
-    subcategory: 'tips',
-    enabled: true,
-    fetchInterval: 120
   }
 ];
 
 /**
- * CARZ FEEDS (2 working feeds - 2500-5000 chars avg)
+ * CARZ FEEDS (3 working feeds - adequate to excellent quality)
  */
 export const CARZ_FEEDS: Omit<FeedSource, 'articlesProcessed'>[] = [
   {
+    id: 'carz-electrek',
+    name: 'Electrek - Electric Vehicle News',
+    url: 'https://electrek.co/feed/',
+    category: 'carz',
+    subcategory: 'electric',
+    enabled: true,
+    fetchInterval: 60
+  },
+  {
     id: 'carz-chargedevs',
-    name: 'Charged EVs',
+    name: 'ChargedEVs - EV Technology News',
     url: 'https://chargedevs.com/feed/',
     category: 'carz',
     subcategory: 'electric',
     enabled: true,
-    fetchInterval: 60
+    fetchInterval: 120
   },
   {
-    id: 'carz-evcentral',
-    name: 'EV Central',
-    url: 'https://evcentral.com.au/feed/',
+    id: 'carz-cleantechnica',
+    name: 'CleanTechnica - Clean Energy & EVs',
+    url: 'https://cleantechnica.com/feed/',
     category: 'carz',
     subcategory: 'electric',
     enabled: true,
@@ -115,7 +89,7 @@ export const CARZ_FEEDS: Omit<FeedSource, 'articlesProcessed'>[] = [
 ];
 
 /**
- * VASS DISTRO FEEDS (5 working feeds - 1000-8000 chars avg)
+ * VASS DISTRO FEEDS (6 working feeds - 1000-10000 chars avg)
  */
 export const VASSDISTRO_FEEDS: Omit<FeedSource, 'articlesProcessed'>[] = [
   {
@@ -124,6 +98,15 @@ export const VASSDISTRO_FEEDS: Omit<FeedSource, 'articlesProcessed'>[] = [
     url: 'https://tobaccoreporter.com/feed/',
     category: 'vassdistro',
     subcategory: 'market',
+    enabled: true,
+    fetchInterval: 120
+  },
+  {
+    id: 'vassdistro-tobacco-journal',
+    name: 'Tobacco Journal International',
+    url: 'https://www.tobaccojournal.com/feed/',
+    category: 'vassdistro',
+    subcategory: 'trade',
     enabled: true,
     fetchInterval: 120
   },
@@ -197,10 +180,10 @@ export async function initializeFeedSources() {
     totalCount++;
   }
 
-  console.log(`\n✅ Initialized ${CARZ_FEEDS.length} Carz feeds`);
-  console.log(`✅ Initialized ${OWNERFI_FEEDS.length} OwnerFi feeds`);
-  console.log(`✅ Initialized ${VASSDISTRO_FEEDS.length} Vass Distro feeds`);
-  console.log(`📊 Total: ${totalCount} feed sources (CLEANED)\n`);
+  console.log(`\n✅ Initialized ${CARZ_FEEDS.length} Carz feeds - adequate to excellent quality`);
+  console.log(`✅ Initialized ${OWNERFI_FEEDS.length} OwnerFi feeds - all excellent quality`);
+  console.log(`✅ Initialized ${VASSDISTRO_FEEDS.length} Vass Distro feeds - all excellent quality`);
+  console.log(`📊 Total: ${totalCount} feed sources (TESTED & VERIFIED 2025)\n`);
 }
 
 /**

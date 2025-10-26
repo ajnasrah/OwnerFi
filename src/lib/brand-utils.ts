@@ -9,10 +9,14 @@ import { Brand } from '@/config/constants';
 import {
   getBrandConfig,
   getBrandWebhooks,
-  getBrandPlatforms,
+  getBrandPlatforms as _getBrandPlatforms,
   getBrandCollections,
   isBrand,
 } from '@/config/brand-configs';
+
+// Re-export for convenience
+export { getBrandConfig, getBrandWebhooks, getBrandCollections, isBrand };
+export const getBrandPlatforms = _getBrandPlatforms;
 
 /**
  * Validate and normalize brand input

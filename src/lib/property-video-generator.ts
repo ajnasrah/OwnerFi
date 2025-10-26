@@ -300,9 +300,13 @@ export function buildPropertyVideoRequest(
       character: {
         type: 'talking_photo',
         talking_photo_id: avatarId,
-        scale: 0.6, // Smaller - appears as overlay
+        scale: 0.4, // Smaller overlay (was 0.6)
         talking_photo_style: 'circle', // Circular frame
-        talking_style: 'expressive'
+        talking_style: 'expressive',
+        offset: {
+          x: 0.65, // Position from left (0.65 = right side)
+          y: 0.75  // Position from top (0.75 = bottom area)
+        }
       },
       voice: {
         type: 'text',

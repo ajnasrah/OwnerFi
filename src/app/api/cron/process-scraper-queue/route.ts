@@ -20,6 +20,36 @@ export async function GET(request: NextRequest) {
   console.log('🔄 [QUEUE CRON] Starting queue processor');
 
   try {
+    // Reset stuck processing items (older than 10 minutes)
+    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
+    const stuckItems = await db
+      .collection('scraper_queue')
+      .where('status', '==', 'processing')
+      .get();
+
+    if (!stuckItems.empty) {
+      const resetBatch = db.batch();
+      let resetCount = 0;
+
+      stuckItems.docs.forEach(doc => {
+        const data = doc.data();
+        const processingStartedAt = data.processingStartedAt?.toDate?.();
+
+        if (!processingStartedAt || processingStartedAt < tenMinutesAgo) {
+          resetBatch.update(doc.ref, {
+            status: 'pending',
+            processingStartedAt: null,
+          });
+          resetCount++;
+        }
+      });
+
+      if (resetCount > 0) {
+        await resetBatch.commit();
+        console.log(`🔄 [QUEUE CRON] Reset ${resetCount} stuck items back to pending`);
+      }
+    }
+
     // Find pending items in queue (limit to 25 for optimal processing)
     const pendingItems = await db
       .collection('scraper_queue')

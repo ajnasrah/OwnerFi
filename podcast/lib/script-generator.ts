@@ -269,21 +269,22 @@ This content is for educational purposes only. Always consult a professional bef
     for (const line of lines) {
       const trimmed = line.trim();
 
-      // Match Q1:, Q2:, etc.
-      if (/^Q\d+:/i.test(trimmed)) {
-        currentQuestion = trimmed.replace(/^Q\d+:\s*/i, '').trim();
+      // Match Q1:, Q2:, etc. OR just Q:
+      if (/^Q(\d+)?:/i.test(trimmed)) {
+        currentQuestion = trimmed.replace(/^Q(\d+)?:\s*/i, '').trim();
       }
-      // Match A1:, A2:, etc.
-      else if (/^A\d+:/i.test(trimmed) && currentQuestion) {
-        const answer = trimmed.replace(/^A\d+:\s*/i, '').trim();
+      // Match A1:, A2:, etc. OR just A:
+      else if (/^A(\d+)?:/i.test(trimmed) && currentQuestion) {
+        const answer = trimmed.replace(/^A(\d+)?:\s*/i, '').trim();
         pairs.push({ question: currentQuestion, answer });
         currentQuestion = '';
       }
     }
 
-    // Fallback: if parsing failed, try alternative format
+    // Fallback: if parsing failed, try splitting by Q/A markers
     if (pairs.length === 0) {
-      const sections = response.split(/Q\d+:|A\d+:/i).filter(s => s.trim());
+      console.warn('Primary parsing failed, trying fallback parser...');
+      const sections = response.split(/Q(\d+)?:|A(\d+)?:/i).filter(s => s.trim() && !/^\d+$/.test(s.trim()));
       for (let i = 0; i < sections.length - 1; i += 2) {
         if (sections[i] && sections[i + 1]) {
           pairs.push({
@@ -292,6 +293,11 @@ This content is for educational purposes only. Always consult a professional bef
           });
         }
       }
+    }
+
+    if (pairs.length === 0) {
+      console.error('❌ Failed to parse any Q&A pairs from OpenAI response');
+      console.error('Response:', response.substring(0, 500));
     }
 
     if (pairs.length !== expectedCount) {

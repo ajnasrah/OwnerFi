@@ -4,10 +4,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { admin } from '@/lib/firebase-admin';
 
 export async function GET(request: NextRequest) {
   try {
+    const { admin } = await import('@/lib/firebase-admin');
     const db = admin.firestore();
 
     const searchParams = request.nextUrl.searchParams;

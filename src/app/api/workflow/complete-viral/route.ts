@@ -127,7 +127,7 @@ export async function POST(request: NextRequest) {
       avatar_type: avatarType,
       voice_id: body.voice_id || defaultVoiceId,
       input_text: content.script,
-      scale: 1.4,
+      scale: 1.0,
       width: 1080,
       height: 1920,
       callback_id: workflowId, // Pass workflow ID for webhook callback

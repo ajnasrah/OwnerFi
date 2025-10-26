@@ -146,7 +146,7 @@ export class HeyGenPodcastGenerator {
       // Host asks question
       const hostCharacter: any = {
         type: this.hostProfile.avatar_type,
-        scale: this.hostProfile.scale || 1.4
+        scale: 1.0  // Host uses scale 1.0 to match other brands (not vassdistro)
       };
 
       if (this.hostProfile.avatar_type === 'avatar') {
@@ -154,7 +154,6 @@ export class HeyGenPodcastGenerator {
         hostCharacter.avatar_style = 'normal';
       } else {
         hostCharacter.talking_photo_id = this.hostProfile.avatar_id;
-        hostCharacter.talking_photo_style = 'square';
         hostCharacter.talking_style = 'expressive';
       }
 
@@ -172,11 +171,11 @@ export class HeyGenPodcastGenerator {
         }
       });
 
-      // Guest answers (speed up guest since they talk slow)
+      // Guest answers
       const guestVoice: any = {
         type: 'text',
         input_text: qa.answer,
-        speed: 1.44  // Speed up guest avatar by 20% more (1.2 * 1.2 = 1.44x)
+        speed: 1.25  // Speed up guest avatar slightly
       };
 
       // Only add voice_id if it's provided, otherwise use avatar's default voice
@@ -186,7 +185,7 @@ export class HeyGenPodcastGenerator {
 
       const guestCharacter: any = {
         type: guest.avatar_type,
-        scale: guest.scale || 1.68  // Zoom in 20% more on guest (1.4 * 1.2 = 1.68)
+        scale: 1.4  // Guest should be scaled at 1.4x
       };
 
       // Add avatar_id or talking_photo_id based on type
@@ -195,7 +194,6 @@ export class HeyGenPodcastGenerator {
         guestCharacter.avatar_style = 'normal';  // Options: normal, closeUp, circle
       } else {
         guestCharacter.talking_photo_id = guest.avatar_id;
-        guestCharacter.talking_photo_style = 'square';
         guestCharacter.talking_style = 'expressive';
       }
 

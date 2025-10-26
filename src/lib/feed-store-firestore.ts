@@ -1545,6 +1545,20 @@ export async function markPropertyCompleted(propertyId: string): Promise<void> {
 }
 
 /**
+ * Reset a single property back to queued status (for validation errors)
+ */
+export async function resetPropertyToQueued(propertyId: string): Promise<void> {
+  if (!db) return;
+
+  await updateDoc(doc(db, 'property_rotation_queue', propertyId), {
+    status: 'queued',
+    updatedAt: Date.now()
+  });
+
+  console.log(`↩️  Property ${propertyId} reset to queued status`);
+}
+
+/**
  * Reset queue for new cycle (all properties back to queued)
  */
 export async function resetPropertyQueueCycle(): Promise<number> {

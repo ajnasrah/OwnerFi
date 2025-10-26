@@ -109,24 +109,42 @@ export async function GET(request: NextRequest) {
           cycleComplete: true
         });
       } else {
-        console.error(`❌ Failed: ${result.error}`);
+        const isValidationError = result.error === 'Property not eligible' || result.error === 'Invalid property data';
+        const errorDetails = result.message || result.error;
 
-        // Still mark as completed (don't retry same property forever)
-        await markPropertyCompleted(queueItem.propertyId);
+        console.error(`❌ Failed: ${result.error}`);
+        if (result.message) {
+          console.error(`   Details: ${result.message}`);
+        }
+
+        // For validation errors, don't mark as completed - reset to queued for manual fix
+        // For other errors (HeyGen API, etc.), mark as completed to avoid infinite retries
+        if (!isValidationError) {
+          await markPropertyCompleted(queueItem.propertyId);
+        } else {
+          console.warn(`⚠️  Property ${queueItem.propertyId} skipped due to validation errors`);
+          console.warn(`   Property will be reset to queued - fix the data and try again`);
+
+          // Reset back to queued status so it doesn't block the queue
+          const { resetPropertyToQueued } = await import('@/lib/feed-store-firestore');
+          await resetPropertyToQueued(queueItem.propertyId);
+        }
 
         results.push({
           propertyId: queueItem.propertyId,
           address: queueItem.address,
           variant: '15sec',
           success: false,
-          error: result.error
+          error: result.error,
+          errorDetails: errorDetails,
+          skipped: isValidationError // Flag validation errors as skipped
         });
       }
 
     } catch (error) {
       console.error(`❌ Error for ${queueItem.address}:`, error);
 
-      // Still mark as completed
+      // Still mark as completed (system errors shouldn't block queue)
       await markPropertyCompleted(queueItem.propertyId);
 
       results.push({
@@ -143,16 +161,22 @@ export async function GET(request: NextRequest) {
     // Get updated stats after processing
     const updatedStats = await getPropertyRotationStats();
 
+    const skippedCount = results.filter((r: any) => r.skipped).length;
+
     console.log(`\n📊 Property video cron summary:`);
     console.log(`   Queue total: ${stats.total} properties`);
     console.log(`   Remaining this cycle: ${updatedStats.queued}`);
     console.log(`   Video generated: ${successCount > 0 ? 'Yes' : 'No'}`);
-    console.log(`   Property status: Completed (will reset when cycle finishes)`);
+    if (skippedCount > 0) {
+      console.log(`   ⚠️  Skipped due to validation: ${skippedCount} (fix property data)`);
+    }
+    console.log(`   Property status: ${successCount > 0 ? 'Completed' : skippedCount > 0 ? 'Skipped (in queue)' : 'Failed'}`);
 
     return NextResponse.json({
-      success: true,
+      success: successCount > 0,
       variant: '15sec',
       generated: successCount,
+      skipped: skippedCount,
       property: results[0],
       queueStats: updatedStats,
       cycleProgress: {
@@ -160,6 +184,11 @@ export async function GET(request: NextRequest) {
         remaining: updatedStats.queued,
         total: stats.total
       },
+      message: successCount > 0
+        ? `Video generated successfully`
+        : skippedCount > 0
+        ? `Property skipped due to validation errors: ${results[0].errorDetails || results[0].error}`
+        : `Failed to generate video: ${results[0].error}`,
       timestamp: new Date().toISOString()
     });
 

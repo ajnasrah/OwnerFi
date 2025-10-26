@@ -298,12 +298,12 @@ export function buildPropertyVideoRequest(
       character: {
         type: 'talking_photo',
         talking_photo_id: avatarId,
-        scale: 0.4, // Smaller overlay (was 0.6)
+        scale: 0.35, // Even smaller to fit better with zoom (was 0.4)
         talking_photo_style: 'circle', // Circular frame
         talking_style: 'expressive',
         offset: {
-          x: 0.65, // Position from left (0.65 = right side)
-          y: 0.75  // Position from top (0.75 = bottom area)
+          x: 0.55, // Moved more toward center (was 0.65) - safe from right-edge crop
+          y: 0.70  // Moved up slightly (was 0.75) - safe from bottom crop during zoom
         }
       },
       voice: {

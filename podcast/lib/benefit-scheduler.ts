@@ -1,5 +1,5 @@
-// Daily Benefit Video Scheduler - 2 Videos Per Day (1 Seller, 1 Buyer)
-// Alternates with podcast content for mixed social media feed
+// Daily Benefit Video Scheduler - BUYER-ONLY (5 Videos Per Day)
+// Helps renters become homeowners through owner financing education
 
 interface ScheduleConfig {
   frequency: string;
@@ -10,7 +10,7 @@ interface ScheduleConfig {
 
 interface BenefitVideoRecord {
   benefit_id: string;
-  audience: 'seller' | 'buyer';
+  audience: 'buyer'; // BUYER-ONLY
   generated_at: string;
   video_id: string;
   published: boolean;
@@ -18,15 +18,14 @@ interface BenefitVideoRecord {
 }
 
 interface BenefitSchedulerState {
-  recent_seller_benefits: string[]; // Last 5 seller benefit IDs used
-  recent_buyer_benefits: string[];  // Last 5 buyer benefit IDs used
+  recent_buyer_benefits: string[];  // Last 5 buyer benefit IDs used (avoid repetition)
   videos: BenefitVideoRecord[];
 }
 
-// Static configuration
+// Static configuration - BUYER-ONLY
 const DEFAULT_SCHEDULE: ScheduleConfig = {
   frequency: 'daily',
-  videos_per_day: 2, // 1 seller + 1 buyer
+  videos_per_day: 5, // 5 buyer videos per day
   timezone: 'America/Chicago',
   enabled: true
 };
@@ -38,7 +37,6 @@ export class BenefitScheduler {
   constructor() {
     this.schedule = DEFAULT_SCHEDULE;
     this.state = {
-      recent_seller_benefits: [],
       recent_buyer_benefits: [],
       videos: []
     };
@@ -87,12 +85,12 @@ export class BenefitScheduler {
   }
 
   /**
-   * Check if we should generate benefit videos today
-   * Returns true if we haven't reached the daily limit (2 videos: 1 seller, 1 buyer)
+   * Check if we should generate benefit videos today (BUYER-ONLY)
+   * Returns true if we haven't reached the daily limit (5 buyer videos)
    */
-  shouldGenerateVideos(): { shouldGenerate: boolean; needSeller: boolean; needBuyer: boolean } {
+  shouldGenerateVideos(): { shouldGenerate: boolean; videosNeeded: number } {
     if (!this.schedule.enabled) {
-      return { shouldGenerate: false, needSeller: false, needBuyer: false };
+      return { shouldGenerate: false, videosNeeded: 0 };
     }
 
     // Get current date in Central Time
@@ -104,7 +102,7 @@ export class BenefitScheduler {
       day: '2-digit'
     });
 
-    // Count videos generated today
+    // Count BUYER videos generated today
     const videosToday = this.state.videos.filter(video => {
       const videoDate = new Date(video.generated_at);
       const videoDateInCentral = videoDate.toLocaleString('en-US', {
@@ -116,40 +114,35 @@ export class BenefitScheduler {
       return videoDateInCentral === todayInCentral;
     });
 
-    const sellerToday = videosToday.filter(v => v.audience === 'seller').length;
-    const buyerToday = videosToday.filter(v => v.audience === 'buyer').length;
+    const buyerVideosToday = videosToday.length; // All videos are buyer videos
+    const videosNeeded = Math.max(0, this.schedule.videos_per_day - buyerVideosToday);
+    const shouldGenerate = videosNeeded > 0;
 
-    const needSeller = sellerToday === 0;
-    const needBuyer = buyerToday === 0;
-    const shouldGenerate = needSeller || needBuyer;
+    console.log(`📊 BUYER-ONLY scheduler check: ${buyerVideosToday}/${this.schedule.videos_per_day} buyer videos today (${todayInCentral} ${this.schedule.timezone})`);
+    console.log(`   Videos needed: ${videosNeeded}`);
 
-    console.log(`📊 Benefit scheduler check: ${sellerToday} seller + ${buyerToday} buyer videos today (${todayInCentral} ${this.schedule.timezone})`);
-    console.log(`   Need: ${needSeller ? 'seller' : ''}${needSeller && needBuyer ? ' + ' : ''}${needBuyer ? 'buyer' : ''}`);
-
-    return { shouldGenerate, needSeller, needBuyer };
+    return { shouldGenerate, videosNeeded };
   }
 
   /**
-   * Get recently used benefit IDs for an audience (to avoid repetition)
+   * Get recently used BUYER benefit IDs (to avoid repetition)
+   * BUYER-ONLY: Only tracks buyer benefits
    */
-  getRecentBenefitIds(audience: 'seller' | 'buyer', count: number = 5): string[] {
-    const recentIds = audience === 'seller'
-      ? this.state.recent_seller_benefits
-      : this.state.recent_buyer_benefits;
-    return recentIds.slice(-count);
+  getRecentBenefitIds(count: number = 5): string[] {
+    return this.state.recent_buyer_benefits.slice(-count);
   }
 
   /**
-   * Record a new benefit video
+   * Record a new BUYER benefit video
+   * BUYER-ONLY: Only accepts buyer audience
    */
   async recordBenefitVideo(
     benefitId: string,
-    audience: 'seller' | 'buyer',
     workflowId: string
   ): Promise<void> {
     const video: BenefitVideoRecord = {
       benefit_id: benefitId,
-      audience,
+      audience: 'buyer', // BUYER-ONLY
       generated_at: new Date().toISOString(),
       video_id: workflowId,
       workflow_id: workflowId,
@@ -158,17 +151,10 @@ export class BenefitScheduler {
 
     this.state.videos.push(video);
 
-    // Update recent benefits (keep last 5)
-    if (audience === 'seller') {
-      this.state.recent_seller_benefits.push(benefitId);
-      if (this.state.recent_seller_benefits.length > 5) {
-        this.state.recent_seller_benefits.shift();
-      }
-    } else {
-      this.state.recent_buyer_benefits.push(benefitId);
-      if (this.state.recent_buyer_benefits.length > 5) {
-        this.state.recent_buyer_benefits.shift();
-      }
+    // Update recent buyer benefits (keep last 5 to avoid repetition)
+    this.state.recent_buyer_benefits.push(benefitId);
+    if (this.state.recent_buyer_benefits.length > 5) {
+      this.state.recent_buyer_benefits.shift();
     }
 
     await this.saveStateToFirestore();
@@ -194,46 +180,38 @@ export class BenefitScheduler {
   }
 
   /**
-   * Get statistics
+   * Get statistics (BUYER-ONLY)
    */
   getStats() {
-    const sellerVideos = this.state.videos.filter(v => v.audience === 'seller').length;
-    const buyerVideos = this.state.videos.filter(v => v.audience === 'buyer').length;
+    const totalVideos = this.state.videos.length; // All are buyer videos
     const publishedVideos = this.state.videos.filter(v => v.published).length;
 
     return {
-      total_videos: this.state.videos.length,
-      seller_videos: sellerVideos,
-      buyer_videos: buyerVideos,
+      total_videos: totalVideos,
+      buyer_videos: totalVideos, // BUYER-ONLY system
       published_videos: publishedVideos,
-      recent_seller_benefits: this.state.recent_seller_benefits,
       recent_buyer_benefits: this.state.recent_buyer_benefits,
       schedule_enabled: this.schedule.enabled,
+      videos_per_day: this.schedule.videos_per_day,
       next_scheduled: this.getNextScheduledDate()
     };
   }
 
   /**
-   * Calculate next scheduled video date
+   * Calculate next scheduled video date (BUYER-ONLY)
    */
   private getNextScheduledDate(): string {
     if (!this.schedule.enabled) {
       return 'Disabled';
     }
 
-    const { shouldGenerate, needSeller, needBuyer } = this.shouldGenerateVideos();
+    const { shouldGenerate, videosNeeded } = this.shouldGenerateVideos();
 
     if (shouldGenerate) {
-      if (needSeller && needBuyer) {
-        return 'Immediately (need both seller and buyer)';
-      } else if (needSeller) {
-        return 'Immediately (need seller)';
-      } else if (needBuyer) {
-        return 'Immediately (need buyer)';
-      }
+      return `Immediately (need ${videosNeeded} buyer video${videosNeeded > 1 ? 's' : ''})`;
     }
 
-    // All videos for today generated, next one is tomorrow
+    // All 5 buyer videos for today generated, next batch is tomorrow
     const now = new Date();
     const tomorrow = new Date(now);
     tomorrow.setDate(tomorrow.getDate() + 1);

@@ -613,6 +613,12 @@ async function generateHeyGenVideo(params: {
     console.log(`📞 HeyGen webhook URL (${brand}): ${webhookUrl}`);
 
     // Build character based on avatar type
+    console.log(`🎭 Avatar Config for ${brand}:`, {
+      avatar_id: params.avatar_id,
+      avatar_type: params.avatar_type,
+      voice_id: params.voice_id
+    });
+
     const character: any = {
       type: params.avatar_type,
       scale: params.scale
@@ -626,6 +632,8 @@ async function generateHeyGenVideo(params: {
       character.talking_photo_style = 'square';
       character.talking_style = 'expressive';
     }
+
+    console.log(`📹 HeyGen Character Object:`, JSON.stringify(character, null, 2));
 
     const requestBody: any = {
       video_inputs: [{

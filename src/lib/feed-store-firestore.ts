@@ -263,29 +263,25 @@ export async function getAndLockArticle(category: Brand): Promise<Article | null
   console.log(`📊 [${category}] Found ${articles.length} unprocessed articles`);
   console.log(`   Quality scores: ${articles.map(a => a.qualityScore || 'N/A').join(', ')}`);
 
-  // Filter only high-quality articles (score >= 70) and not too old (max 30 days)
-  const threeDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
+  // Filter only high-quality articles (score >= 70)
+  // NO AGE RESTRICTION - ensures articles are always available for automation
   const ratedArticles = articles
     .filter(a => {
       // Must have quality score >= 70 (video-worthy threshold)
       if (typeof a.qualityScore !== 'number' || a.qualityScore < 70) {
         return false;
       }
-      // Must be recent (published within 30 days)
-      if (a.pubDate && a.pubDate < threeDaysAgo) {
-        return false;
-      }
       return true;
     })
     .sort((a, b) => (b.qualityScore || 0) - (a.qualityScore || 0));
 
-  console.log(`✅ [${category}] Filtered to ${ratedArticles.length} eligible articles (score >= 70, age <= 30 days)`);
+  console.log(`✅ [${category}] Filtered to ${ratedArticles.length} eligible articles (score >= 70)`);
 
   if (ratedArticles.length === 0) {
     console.log(`⚠️  No rated articles available for ${category}`);
     console.log(`   Reasons:`);
     console.log(`     - Articles with score >= 70: ${articles.filter(a => typeof a.qualityScore === 'number' && a.qualityScore >= 70).length}`);
-    console.log(`     - Articles within 30 days: ${articles.filter(a => a.pubDate && a.pubDate >= threeDaysAgo).length}`);
+    console.log(`     - Total unprocessed: ${articles.length}`);
     return null;
   }
 

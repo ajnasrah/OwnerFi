@@ -4,11 +4,14 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { db } from '@/lib/firebase';
+import { collection, query, where, getDocs, orderBy, limit as firestoreLimit } from 'firebase/firestore';
 
 export async function GET(request: NextRequest) {
   try {
-    const { admin } = await import('@/lib/firebase-admin');
-    const db = admin.firestore();
+    if (!db) {
+      return NextResponse.json({ error: 'Firebase not initialized' }, { status: 500 });
+    }
 
     const searchParams = request.nextUrl.searchParams;
     const showHistory = searchParams.get('history') === 'true';
@@ -17,11 +20,13 @@ export async function GET(request: NextRequest) {
 
     if (showHistory) {
       // Get last 20 workflows
-      const snapshot = await db
-        .collection('benefit_workflow_queue')
-        .orderBy('createdAt', 'desc')
-        .limit(20)
-        .get();
+      const snapshot = await getDocs(
+        query(
+          collection(db, 'benefit_workflow_queue'),
+          orderBy('createdAt', 'desc'),
+          firestoreLimit(20)
+        )
+      );
 
       snapshot.forEach(doc => {
         workflows.push({
@@ -30,24 +35,26 @@ export async function GET(request: NextRequest) {
         });
       });
     } else {
-      // Get only active workflows and recently failed ones
+      // Get all recent workflows, then filter in memory to avoid index requirements
+      const snapshot = await getDocs(
+        query(
+          collection(db, 'benefit_workflow_queue'),
+          orderBy('createdAt', 'desc'),
+          firestoreLimit(50)
+        )
+      );
+
       const activeStatuses = ['heygen_processing', 'submagic_processing', 'video_processing', 'posting', 'failed'];
 
-      for (const status of activeStatuses) {
-        const snapshot = await db
-          .collection('benefit_workflow_queue')
-          .where('status', '==', status)
-          .orderBy('createdAt', 'desc')
-          .limit(10)
-          .get();
-
-        snapshot.forEach(doc => {
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        if (activeStatuses.includes(data.status)) {
           workflows.push({
             id: doc.id,
-            ...doc.data()
+            ...data
           });
-        });
-      }
+        }
+      });
     }
 
     // Sort by creation time (newest first)

@@ -1636,10 +1636,32 @@ export async function updatePropertyVideo(
 ): Promise<void> {
   if (!db) throw new Error('Firebase not initialized');
 
-  await updateDoc(doc(db, 'property_videos', workflowId), {
-    ...updates,
-    updatedAt: Date.now()
-  });
+  // Prepare update data
+  const updateData: any = { ...updates };
+
+  // Always update statusChangedAt when status changes
+  if (updates.status) {
+    updateData.statusChangedAt = Date.now();
+  }
+
+  // Only update updatedAt when meaningful progress happens
+  const hasProgress = Boolean(
+    updates.heygenVideoId ||
+    updates.heygenVideoUrl ||
+    updates.submagicVideoId ||
+    updates.submagicProjectId ||
+    updates.submagicDownloadUrl ||
+    updates.finalVideoUrl ||
+    updates.latePostId ||
+    updates.status === 'completed' ||
+    updates.status === 'failed'
+  );
+
+  if (hasProgress) {
+    updateData.updatedAt = Date.now();
+  }
+
+  await updateDoc(doc(db, 'property_videos', workflowId), updateData);
 }
 
 /**

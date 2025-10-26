@@ -112,7 +112,7 @@ interface PodcastWorkflowLog {
   episodeTitle: string;
   guestName: string;
   topic: string;
-  status: 'script_generation' | 'heygen_processing' | 'submagic_processing' | 'publishing' | 'completed' | 'failed';
+  status: 'script_generation' | 'heygen_processing' | 'submagic_processing' | 'posting' | 'publishing' | 'completed' | 'failed'; // Support both 'posting' and 'publishing' for backwards compatibility
   heygenVideoId?: string;
   submagicProjectId?: string;
   finalVideoUrl?: string;

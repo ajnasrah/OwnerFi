@@ -29,7 +29,8 @@ export async function GET(request: Request) {
     const snapshot = await getDocs(podcastQuery);
 
     // Filter in memory if showing active only
-    const activeStatuses = ['script_generation', 'heygen_processing', 'submagic_processing', 'publishing'];
+    // Note: Include both 'posting' and 'publishing' since code uses both names inconsistently
+    const activeStatuses = ['script_generation', 'heygen_processing', 'submagic_processing', 'publishing', 'posting'];
     let docs = snapshot.docs;
 
     if (!includeHistory) {

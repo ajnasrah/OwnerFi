@@ -115,6 +115,10 @@ export async function PUT(
       updatedAt: serverTimestamp()
     });
 
+    // Get current property data to check eligibility
+    const propertyDoc = await getDoc(doc(db, 'properties', resolvedParams.id));
+    const propertyData = propertyDoc.data();
+
     // Remove from rotation queue if property becomes inactive or ineligible
     if (updates.isActive === false || updates.status !== 'active') {
       try {
@@ -126,6 +130,33 @@ export async function PUT(
       } catch (error) {
         console.warn('⚠️  Could not remove from queue:', error);
         // Don't fail the update if queue removal fails
+      }
+    }
+    // Add to queue if property becomes active and has images
+    else if (
+      (updates.status === 'active' || propertyData?.status === 'active') &&
+      (updates.isActive === true || propertyData?.isActive === true) &&
+      ((updates.imageUrls && updates.imageUrls.length > 0) || (propertyData?.imageUrls && propertyData.imageUrls.length > 0))
+    ) {
+      try {
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+        const webhookSecret = process.env.WEBHOOK_SECRET || process.env.CRON_SECRET;
+
+        // Call add-to-queue endpoint in background
+        fetch(`${baseUrl}/api/property/add-to-queue`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${webhookSecret}`
+          },
+          body: JSON.stringify({ propertyId: resolvedParams.id })
+        }).catch(err => {
+          console.error('Failed to auto-add property to queue:', err);
+        });
+
+        console.log(`🎥 Auto-adding updated property ${resolvedParams.id} to video queue`);
+      } catch (error) {
+        console.error('Error triggering auto-add to queue:', error);
       }
     }
 

@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
 
       // Step 2: Update workflow with video URL and set status to "posting"
       await updateWorkflowForBrand(brand, workflowId, {
-        status: brand === 'podcast' ? 'publishing' : 'posting',
+        status: 'posting', // Use 'posting' for all brands including podcast
         finalVideoUrl: publicVideoUrl,
       });
 

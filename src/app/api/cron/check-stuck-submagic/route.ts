@@ -448,9 +448,9 @@ async function executeFailsafe() {
           const { uploadSubmagicVideo } = await import('@/lib/video-storage');
 
           try {
-            // Update status to 'posting' or 'publishing' and increment retry count
+            // Update status to 'posting' for all workflow types
             const retryUpdates = {
-              status: isPodcast ? ('publishing' as const) : ('posting' as const),
+              status: 'posting' as const, // Use 'posting' for all brands including podcast
               retryCount: retryCount + 1,
               lastRetryAt: Date.now()
             };

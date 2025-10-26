@@ -293,7 +293,7 @@ async function processVideoAndPost(
     // 1. Status only changes after R2 upload succeeds (no timeouts leave it stuck)
     // 2. Video URL is saved before Late posting (failsafe can retry if posting fails)
     await updateWorkflowForBrand(brand, workflowId, {
-      status: brand === 'podcast' ? 'publishing' : 'posting',
+      status: 'posting', // Use 'posting' for all brands including podcast
       finalVideoUrl: publicVideoUrl,
     });
 

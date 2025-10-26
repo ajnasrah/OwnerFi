@@ -61,7 +61,7 @@ export class BenefitScheduler {
       const resetState: DailyState = {
         date: today,
         videosGenerated: 0,
-        recentBenefitIds: state.recentBenefitIds, // Keep recent IDs across days
+        recentBenefitIds: state.recentBenefitIds || [], // Keep recent IDs across days (or empty array if undefined)
         lastUpdated: serverTimestamp()
       };
       await setDoc(docRef, resetState);
@@ -116,7 +116,7 @@ export class BenefitScheduler {
    */
   static async getRecentBenefitIds(): Promise<string[]> {
     const state = await this.loadState();
-    return state.recentBenefitIds;
+    return state.recentBenefitIds || [];
   }
 
   /**

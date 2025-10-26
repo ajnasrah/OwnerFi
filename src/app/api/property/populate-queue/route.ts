@@ -57,13 +57,35 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Filter to properties with images
+    // Filter to properties with images AND valid down payment calculation
+    const { calculatePropertyFinancials } = await import('@/lib/property-calculations');
+
     const eligibleProperties = snapshot.docs.filter(doc => {
       const property = doc.data();
-      return property.imageUrls && property.imageUrls.length > 0;
+
+      // Must have images
+      if (!property.imageUrls || property.imageUrls.length === 0) {
+        return false;
+      }
+
+      // Calculate down payment to ensure it's valid
+      const financials = calculatePropertyFinancials({
+        listPrice: property.listPrice,
+        downPaymentAmount: property.downPaymentAmount,
+        downPaymentPercent: property.downPaymentPercent
+      });
+
+      // Must have down payment > $0 and < $15k
+      const isValidDownPayment = financials.downPaymentAmount > 0 && financials.downPaymentAmount < 15000;
+
+      if (!isValidDownPayment) {
+        console.log(`⏭️  Skipping ${property.address}: down payment $${financials.downPaymentAmount.toLocaleString()} (need > $0 and < $15k)`);
+      }
+
+      return isValidDownPayment;
     });
 
-    console.log(`✅ ${eligibleProperties.length} properties have images`);
+    console.log(`✅ ${eligibleProperties.length} properties are fully eligible (with images and valid down payment)`);
 
     // Add to rotation queue
     let added = 0;

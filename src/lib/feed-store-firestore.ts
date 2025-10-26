@@ -1453,6 +1453,14 @@ export async function addToPropertyRotationQueue(propertyId: string): Promise<vo
 
   const property = propertyDoc.data() as any;
 
+  // Calculate actual down payment (handles both amount and percentage)
+  const { calculatePropertyFinancials } = await import('./property-calculations');
+  const financials = calculatePropertyFinancials({
+    listPrice: property.listPrice,
+    downPaymentAmount: property.downPaymentAmount,
+    downPaymentPercent: property.downPaymentPercent
+  });
+
   // Get current max position
   const maxQuery = query(
     collection(db, 'property_rotation_queue'),
@@ -1469,7 +1477,7 @@ export async function addToPropertyRotationQueue(propertyId: string): Promise<vo
     address: property.address || 'Unknown Address',
     city: property.city || 'Unknown City',
     state: property.state || 'Unknown',
-    downPayment: property.downPaymentAmount || 0,
+    downPayment: financials.downPaymentAmount, // Use calculated down payment
     imageUrl: property.imageUrls?.[0] || '',
     position: maxPosition + 1,
     videoCount: 0,

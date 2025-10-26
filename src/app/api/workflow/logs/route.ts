@@ -21,60 +21,29 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const includeHistory = searchParams.get('history') === 'true';
 
-    let carzQuery, ownerfiQuery, vassdistroQuery;
-
-    if (includeHistory) {
-      // Get all recent workflows (last 50)
-      carzQuery = query(
-        collection(db, COLLECTIONS.CARZ),
-        orderBy('updatedAt', 'desc'),
-        firestoreLimit(50)
-      );
-
-      ownerfiQuery = query(
-        collection(db, COLLECTIONS.OWNERFI),
-        orderBy('updatedAt', 'desc'),
-        firestoreLimit(50)
-      );
-
-      vassdistroQuery = query(
-        collection(db, COLLECTIONS.VASSDISTRO),
-        orderBy('updatedAt', 'desc'),
-        firestoreLimit(50)
-      );
-    } else {
-      // Get active workflows only
-      carzQuery = query(
-        collection(db, COLLECTIONS.CARZ),
-        where('status', 'in', ['pending', 'heygen_processing', 'submagic_processing', 'posting']),
-        orderBy('createdAt', 'desc'),
-        firestoreLimit(20)
-      );
-
-      ownerfiQuery = query(
-        collection(db, COLLECTIONS.OWNERFI),
-        where('status', 'in', ['pending', 'heygen_processing', 'submagic_processing', 'posting']),
-        orderBy('createdAt', 'desc'),
-        firestoreLimit(20)
-      );
-
-      vassdistroQuery = query(
-        collection(db, COLLECTIONS.VASSDISTRO),
-        where('status', 'in', ['pending', 'heygen_processing', 'submagic_processing', 'posting']),
-        orderBy('createdAt', 'desc'),
-        firestoreLimit(20)
-      );
-    }
+    // Fetch workflows by createdAt only (no index needed), then filter in memory
+    const fetchLimit = includeHistory ? 50 : 100; // Get more if filtering for active
 
     const [carzSnapshot, ownerfiSnapshot, vassdistroSnapshot] = await Promise.all([
-      getDocs(carzQuery),
-      getDocs(ownerfiQuery),
-      getDocs(vassdistroQuery)
+      getDocs(query(collection(db, COLLECTIONS.CARZ), orderBy('createdAt', 'desc'), firestoreLimit(fetchLimit))),
+      getDocs(query(collection(db, COLLECTIONS.OWNERFI), orderBy('createdAt', 'desc'), firestoreLimit(fetchLimit))),
+      getDocs(query(collection(db, COLLECTIONS.VASSDISTRO), orderBy('createdAt', 'desc'), firestoreLimit(fetchLimit)))
     ]);
 
-    const carzWorkflows = carzSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    const ownerfiWorkflows = ownerfiSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    const vassdistroWorkflows = vassdistroSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    // Filter in memory if showing active only (avoids composite index requirement)
+    const activeStatuses = ['pending', 'heygen_processing', 'submagic_processing', 'posting'];
+
+    const filterWorkflows = (snapshot: any) => {
+      let docs = snapshot.docs;
+      if (!includeHistory) {
+        docs = docs.filter((doc: any) => activeStatuses.includes(doc.data().status)).slice(0, 20);
+      }
+      return docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
+    };
+
+    const carzWorkflows = filterWorkflows(carzSnapshot);
+    const ownerfiWorkflows = filterWorkflows(ownerfiSnapshot);
+    const vassdistroWorkflows = filterWorkflows(vassdistroSnapshot);
 
     return NextResponse.json({
       success: true,

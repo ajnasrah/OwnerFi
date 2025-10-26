@@ -18,27 +18,25 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const includeHistory = searchParams.get('history') === 'true';
 
-    let podcastQuery, snapshot;
+    // Fetch by createdAt only (no composite index needed), filter in memory
+    const fetchLimit = includeHistory ? 50 : 100;
+    const podcastQuery = query(
+      collection(db, PODCAST_COLLECTION),
+      orderBy('createdAt', 'desc'),
+      firestoreLimit(fetchLimit)
+    );
 
-    if (includeHistory) {
-      // Get all recent workflows (last 50)
-      podcastQuery = query(
-        collection(db, PODCAST_COLLECTION),
-        orderBy('updatedAt', 'desc'),
-        firestoreLimit(50)
-      );
-    } else {
-      // Get active workflows only
-      podcastQuery = query(
-        collection(db, PODCAST_COLLECTION),
-        where('status', 'in', ['script_generation', 'heygen_processing', 'submagic_processing', 'publishing']),
-        orderBy('createdAt', 'desc'),
-        firestoreLimit(20)
-      );
+    const snapshot = await getDocs(podcastQuery);
+
+    // Filter in memory if showing active only
+    const activeStatuses = ['script_generation', 'heygen_processing', 'submagic_processing', 'publishing'];
+    let docs = snapshot.docs;
+
+    if (!includeHistory) {
+      docs = docs.filter(doc => activeStatuses.includes(doc.data().status)).slice(0, 20);
     }
 
-    snapshot = await getDocs(podcastQuery);
-    const workflows = snapshot.docs.map(doc => {
+    const workflows = docs.map(doc => {
       const data = doc.data();
       return { id: doc.id, ...data };
     });

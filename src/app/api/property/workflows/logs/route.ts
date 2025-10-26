@@ -21,23 +21,24 @@ export async function GET(request: NextRequest) {
 
     const propertyVideosRef = (adminDb as any).collection('property_videos');
 
-    let query;
-    if (showHistory) {
-      // Show all workflows (completed and failed too)
-      query = propertyVideosRef
-        .orderBy('createdAt', 'desc')
-        .limit(50);
-    } else {
-      // Only show active workflows (not completed or failed)
-      query = propertyVideosRef
-        .where('status', 'in', ['queued', 'heygen_processing', 'submagic_processing', 'posting'])
-        .orderBy('createdAt', 'desc')
-        .limit(20);
-    }
+    // Get recent workflows and filter in memory to avoid index requirements
+    const query = propertyVideosRef
+      .orderBy('createdAt', 'desc')
+      .limit(showHistory ? 50 : 100); // Get more if filtering for active only
 
     const snapshot = await query.get();
 
-    const workflows = snapshot.docs.map(doc => {
+    // Filter in memory if showing active only
+    let docs = snapshot.docs;
+    if (!showHistory) {
+      const activeStatuses = ['queued', 'heygen_processing', 'submagic_processing', 'posting'];
+      docs = docs.filter(doc => {
+        const status = doc.data().status;
+        return activeStatuses.includes(status);
+      }).slice(0, 20); // Limit to 20 after filtering
+    }
+
+    const workflows = docs.map(doc => {
       const data = doc.data();
       return {
         id: doc.id,

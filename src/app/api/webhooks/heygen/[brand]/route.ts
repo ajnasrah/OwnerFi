@@ -5,7 +5,7 @@
  * Each brand has its own isolated webhook endpoint to prevent failures from affecting other brands.
  *
  * Route: /api/webhooks/heygen/[brand]
- * Brands: carz, ownerfi, podcast
+ * Brands: carz, ownerfi, podcast, vassdistro, benefit, property
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -295,22 +295,27 @@ async function triggerSubmagicProcessing(
     }
 
     // Send HeyGen URL directly to Submagic (no R2 upload - faster!)
+    // Full Submagic optimization with all features enabled
+    const submagicConfig: any = {
+      title,
+      language: 'en',
+      videoUrl: heygenVideoUrl, // ⚡ Send HeyGen URL directly (not R2 URL)
+      webhookUrl: submagicWebhookUrl, // Brand-specific webhook
+      templateName: 'Hormozi 2', // Professional captions style
+      magicZooms: true, // Auto zoom on important moments
+      magicBrolls: brand !== 'property', // B-rolls for all brands EXCEPT property
+      magicBrollsPercentage: 75, // Higher percentage for better engagement
+      removeSilencePace: 'fast', // Remove dead air/silence
+      removeBadTakes: true, // Remove filler words and bad takes
+    };
+
     const response = await fetch('https://api.submagic.co/v1/projects', {
       method: 'POST',
       headers: {
         'x-api-key': SUBMAGIC_API_KEY,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
-        title,
-        language: 'en',
-        videoUrl: heygenVideoUrl, // ⚡ Send HeyGen URL directly (not R2 URL)
-        templateName: 'Hormozi 2',
-        magicBrolls: true,
-        magicBrollsPercentage: 50,
-        magicZooms: true,
-        webhookUrl: submagicWebhookUrl // Brand-specific webhook
-      })
+      body: JSON.stringify(submagicConfig)
     });
 
     if (!response.ok) {

@@ -126,13 +126,14 @@ export async function GET(request: NextRequest) {
         ? {
             type: 'talking_photo',
             talking_photo_id: hostProfile.avatar_id,
-            scale: hostProfile.scale,
+            scale: hostProfile.scale || 1.4,
             talking_photo_style: 'square',
             talking_style: 'expressive'
           }
         : {
             type: 'avatar',
             avatar_id: hostProfile.avatar_id,
+            scale: hostProfile.scale || 1.4,
             avatar_style: 'normal'
           };
 
@@ -141,13 +142,14 @@ export async function GET(request: NextRequest) {
         ? {
             type: 'talking_photo',
             talking_photo_id: guestProfile.avatar_id,
-            scale: guestProfile.scale,
+            scale: guestProfile.scale || 1.68,
             talking_photo_style: 'square',
             talking_style: 'expressive'
           }
         : {
             type: 'avatar',
             avatar_id: guestProfile.avatar_id,
+            scale: guestProfile.scale || 1.68,
             avatar_style: 'normal'
           };
 
@@ -158,7 +160,12 @@ export async function GET(request: NextRequest) {
           voice: {
             type: 'text',
             input_text: pair.question,
-            voice_id: hostProfile.voice_id
+            voice_id: hostProfile.voice_id,
+            speed: 1.0
+          },
+          background: {
+            type: 'color',
+            value: hostProfile.background_color || '#ffffff'
           }
         },
         // Scene: Guest answers
@@ -167,7 +174,12 @@ export async function GET(request: NextRequest) {
           voice: {
             type: 'text',
             input_text: pair.answer,
-            voice_id: guestProfile.voice_id
+            voice_id: guestProfile.voice_id,
+            speed: 1.44
+          },
+          background: {
+            type: 'color',
+            value: guestProfile.background_color || '#f5f5f5'
           }
         }
       ];

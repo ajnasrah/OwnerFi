@@ -144,14 +144,22 @@ export class HeyGenPodcastGenerator {
 
     for (const qa of script.qa_pairs) {
       // Host asks question
+      const hostCharacter: any = {
+        type: this.hostProfile.avatar_type,
+        scale: this.hostProfile.scale || 1.4
+      };
+
+      if (this.hostProfile.avatar_type === 'avatar') {
+        hostCharacter.avatar_id = this.hostProfile.avatar_id;
+        hostCharacter.avatar_style = 'normal';
+      } else {
+        hostCharacter.talking_photo_id = this.hostProfile.avatar_id;
+        hostCharacter.talking_photo_style = 'square';
+        hostCharacter.talking_style = 'expressive';
+      }
+
       scenes.push({
-        character: {
-          type: this.hostProfile.avatar_type,
-          talking_photo_id: this.hostProfile.avatar_id,
-          scale: this.hostProfile.scale || 1.4,
-          talking_photo_style: 'square',
-          talking_style: 'expressive'
-        },
+        character: hostCharacter,
         voice: {
           type: 'text',
           voice_id: this.hostProfile.voice_id,

@@ -53,32 +53,15 @@ export interface BenefitAvatarConfig {
   background_color: string;
 }
 
-// Get default avatars from environment variables
-const getDefaultAvatars = (): Record<'seller' | 'buyer', BenefitAvatarConfig> => {
-  // Use your own avatar and voice from environment variables
-  const defaultAvatarId = process.env.BENEFIT_AVATAR_ID || process.env.HEYGEN_AVATAR_ID || '';
-  const defaultVoiceId = process.env.BENEFIT_VOICE_ID || process.env.HEYGEN_VOICE_ID || '';
-  const defaultAvatarType = (process.env.BENEFIT_AVATAR_TYPE || 'talking_photo') as 'avatar' | 'talking_photo';
-
-  return {
-    seller: {
-      avatar_type: defaultAvatarType,
-      avatar_id: process.env.BENEFIT_SELLER_AVATAR_ID || defaultAvatarId,
-      voice_id: process.env.BENEFIT_SELLER_VOICE_ID || defaultVoiceId,
-      scale: Number(process.env.BENEFIT_SELLER_SCALE || '1.4'),
-      background_color: process.env.BENEFIT_SELLER_BG_COLOR || '#1e3a8a' // Deep blue for sellers
-    },
-    buyer: {
-      avatar_type: defaultAvatarType,
-      avatar_id: process.env.BENEFIT_BUYER_AVATAR_ID || defaultAvatarId,
-      voice_id: process.env.BENEFIT_BUYER_VOICE_ID || defaultVoiceId,
-      scale: Number(process.env.BENEFIT_BUYER_SCALE || '1.4'),
-      background_color: process.env.BENEFIT_BUYER_BG_COLOR || '#059669' // Green for buyers
-    }
-  };
+// Default avatar configuration (same as Carz/OwnerFi/Podcast)
+// Uses Abdullah avatar for all benefit videos
+const DEFAULT_BUYER_AVATAR: BenefitAvatarConfig = {
+  avatar_type: 'avatar',
+  avatar_id: '8988e02d16544a4286305603244310fc', // Abdullah avatar (same as other brands)
+  voice_id: '9070a6c2dbd54c10bb111dc8c655bff7', // Default voice
+  scale: 1.4,
+  background_color: '#059669' // Green for buyers
 };
-
-const DEFAULT_AVATARS = getDefaultAvatars();
 
 export class BenefitVideoGenerator {
   private apiKey: string;
@@ -90,52 +73,76 @@ export class BenefitVideoGenerator {
   }
 
   /**
-   * Generate video script from benefit point using OpenAI (Abdullah Brand style)
+   * Generate video script from benefit point using OpenAI (OwnerFi Buyer-Focused System)
+   * BUYER-ONLY: This system only generates scripts for buyers
    */
   private async generateScript(benefit: BenefitPoint): Promise<string> {
+    // ENFORCE BUYER-ONLY
+    if (benefit.audience !== 'buyer') {
+      throw new Error('This system is BUYER-ONLY. Seller benefits are not supported.');
+    }
+
     const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
     // Fallback if no OpenAI key
     if (!OPENAI_API_KEY) {
-      const intro = benefit.audience === 'seller'
-        ? "Attention home sellers!"
-        : "Attention home buyers!";
-      const cta = "Visit ownerfi.ai to see owner-financed properties in your area today.";
-      return `${intro} ${benefit.shortDescription} ${cta}`;
+      const cta = "See what's possible at OwnerFi.ai";
+      return `Attention home buyers! ${benefit.shortDescription} ${cta}`;
     }
 
     // Get current day for theme
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const today = days[new Date().getDay()];
 
-    // Build Abdullah Brand prompt
-    const prompt = `Generate a 30-second talking-head script for Abdullah (cartoon avatar) about "${benefit.title}" targeting ${benefit.audience}s.
+    // Daily theme guidance for content variety
+    const dailyThemes = {
+      'Monday': 'Credit Myths - Debunk common credit score myths that stop people from trying',
+      'Tuesday': 'Real Stories - Share inspiring transformation stories of renters becoming homeowners',
+      'Wednesday': 'How It Works - Explain owner financing process in simple, relatable terms',
+      'Thursday': 'Money Mindset - Challenge limiting beliefs about homeownership and affordability',
+      'Friday': 'Quick Wins - Share actionable tips buyers can implement immediately',
+      'Saturday': 'Comparison - Show owner financing vs traditional bank loans side-by-side',
+      'Sunday': 'Vision & Hope - Paint the picture of homeownership lifestyle and freedom'
+    };
 
-Today is ${today}.
+    const todayTheme = dailyThemes[today as keyof typeof dailyThemes];
 
-Topic Context: ${benefit.shortDescription}
+    // Build OwnerFi Buyer-Focused prompt
+    const prompt = `Generate a video script about "${benefit.title}" for buyers who can't qualify for traditional bank loans.
 
-${today === 'Tuesday' ? 'Focus: Money & Ownership' : ''}
-${today === 'Sunday' ? 'Focus: Faith & Grounding' : ''}
-${today === 'Wednesday' ? 'Focus: Community & Relationships' : ''}
-${today === 'Thursday' ? 'Focus: Entrepreneurship & Action' : ''}
-${today === 'Friday' ? 'Focus: Reflection & Real Talk' : ''}
-${today === 'Monday' ? 'Focus: Mindset & Motivation' : ''}
-${today === 'Saturday' ? 'Focus: Freedom & Lifestyle' : ''}
+TODAY'S THEME (${today}): ${todayTheme}
 
-CRITICAL REQUIREMENTS:
-- 80-110 words maximum (30 seconds)
-- Start with a natural, thought-provoking question related to owner financing
-- Calm, confident, relatable tone - no hype, no jargon
-- Connect to universal human insight (not just selling)
-- End with a short, memorable takeaway
-- MUST include: "Visit ownerfi.ai" as natural CTA
+TOPIC CONTEXT: ${benefit.shortDescription}
+
+YOUR ROLE:
+You are the official social-media scriptwriter for OwnerFi, a platform that helps people become homeowners without traditional banks using owner financing.
+
+YOUR GOAL:
+Make everyday renters stop scrolling and realize — they can actually own a home through owner financing.
+
+STYLE RULES:
+- Reading level: 5th grade — short, clear, natural sentences
+- Tone: Friendly, confident, motivational — like a big brother giving real talk
+- Length: 30 seconds max (≈90 words)
+- Structure: Hook → Story/Insight → Soft CTA
+- Hook (first 3 seconds): Use shock, surprise, or emotion to grab attention
+- CTA: End with "See what's possible at OwnerFi.ai" or "Find homes like this for free at OwnerFi.ai"
+- Do NOT promise approvals, prices, or guarantees
+- All content must be 100% original and copyright-safe
+- NEVER use phrases like "Let me tell you," "You won't believe this," or "I'm going to share"
+- Keep it conversational — written to be spoken, not read
 
 OUTPUT FORMAT:
-Return ONLY the script text (no labels, no formatting, just the words Abdullah will speak).
+Return ONLY the script text in this structure:
 
-DISCLAIMER REQUIRED AT END:
-"This content is for educational purposes only. Do your own research and make decisions that fit your situation."`;
+🎯 [Hook - 3-5 seconds of shock/surprise/emotion]
+💡 [Main message - 15-20 seconds of insight/story]
+🏁 [Soft CTA - 5 seconds with OwnerFi.ai]
+
+EXAMPLE OUTPUT:
+🎯 "Think you need perfect credit to buy a home? Nope — that's the old way."
+💡 "With owner financing, you can buy directly from the seller. No bank hoops, no long waits, just steady income and a down payment. It's how thousands of families finally got keys in their hands."
+🏁 "Search owner-finance homes near you — free at OwnerFi.ai."`;
 
     try {
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -149,7 +156,15 @@ DISCLAIMER REQUIRED AT END:
           messages: [
             {
               role: 'system',
-              content: `You are Abdullah, a grounded, motivational entrepreneur who helps people think differently about money, mindset, and community. You write 30-second scripts for a cartoon avatar that connect real estate/owner financing topics to universal human insights. Your tone is calm, confident, and relatable - never hype, never salesy.`
+              content: `You are the official social-media scriptwriter for OwnerFi, a platform that helps people become homeowners without traditional banks using owner financing.
+
+Your only job: Create short, 30-second max (≈90-word) video scripts that explain, inspire, and educate buyers who think homeownership is out of reach.
+
+GOAL: Make everyday renters stop scrolling and realize — they can actually own a home through owner financing.
+
+STYLE: Friendly, confident, motivational — like a big brother giving real talk. 5th-grade reading level. No hype, no jargon. Always end with "See what's possible at OwnerFi.ai" or similar.
+
+NEVER promise approvals, prices, or guarantees. All content must be 100% original and copyright-safe.`
             },
             {
               role: 'user',
@@ -172,33 +187,35 @@ DISCLAIMER REQUIRED AT END:
         throw new Error('No script generated');
       }
 
-      console.log('✅ Generated Abdullah Brand script:', script.substring(0, 100) + '...');
+      console.log(`✅ Generated OwnerFi Buyer script (${today} - ${todayTheme.split('-')[0].trim()}):`, script.substring(0, 100) + '...');
       return script;
 
     } catch (error) {
       console.error('⚠️  OpenAI script generation failed, using fallback:', error);
-      // Fallback to simple script
-      const intro = benefit.audience === 'seller'
-        ? "Attention home sellers!"
-        : "Attention home buyers!";
-      const cta = "Visit ownerfi.ai to see owner-financed properties in your area today.";
-      return `${intro} ${benefit.shortDescription} ${cta}`;
+      // Fallback to simple buyer-focused script
+      const cta = "See what's possible at OwnerFi.ai";
+      return `Think you can't buy a home? ${benefit.shortDescription} ${cta}`;
     }
   }
 
   /**
-   * Generate a single-scene benefit video
+   * Generate a single-scene benefit video (BUYER-ONLY)
    */
   async generateBenefitVideo(
     benefit: BenefitPoint,
     workflowId: string,
     customAvatar?: BenefitAvatarConfig
   ): Promise<string> {
-    console.log(`\nGenerating benefit video: ${benefit.title}`);
-    console.log(`Audience: ${benefit.audience.toUpperCase()}`);
+    // ENFORCE BUYER-ONLY
+    if (benefit.audience !== 'buyer') {
+      throw new Error('This system is BUYER-ONLY. Seller benefits are not supported.');
+    }
 
-    // Get avatar config (custom or default based on audience)
-    const avatarConfig = customAvatar || DEFAULT_AVATARS[benefit.audience];
+    console.log(`\nGenerating BUYER benefit video: ${benefit.title}`);
+    console.log(`Audience: BUYERS (renters who want to become homeowners)`);
+
+    // Get avatar config (custom or default buyer avatar)
+    const avatarConfig = customAvatar || DEFAULT_BUYER_AVATAR;
 
     // Build video script with CTA (now async with OpenAI)
     const script = await this.generateScript(benefit);
@@ -334,8 +351,8 @@ DISCLAIMER REQUIRED AT END:
   /**
    * Estimate video duration (for planning)
    */
-  estimateVideoDuration(benefit: BenefitPoint): number {
-    const script = this.generateScript(benefit);
+  async estimateVideoDuration(benefit: BenefitPoint): Promise<number> {
+    const script = await this.generateScript(benefit);
     const wordCount = script.split(' ').length;
     // Average speaking rate: 150 words per minute
     return Math.ceil((wordCount / 150) * 60);

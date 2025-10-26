@@ -262,31 +262,14 @@ async function triggerSubmagicProcessing(
   }
 
   try {
-    console.log(`☁️  [${brandConfig.displayName}] Step 1: Uploading to R2...`);
+    // ⚡ FAST PATH: Send HeyGen URL directly to Submagic (no R2 upload yet)
+    // R2 upload will happen AFTER Submagic completes (in Submagic webhook)
+    console.log(`✨ [${brandConfig.displayName}] Sending HeyGen video to Submagic...`);
 
-    // Upload HeyGen video to R2 with brand-specific path
-    const { downloadAndUploadToR2 } = await import('@/lib/video-storage');
-    const { getBrandStoragePath } = await import('@/lib/brand-utils');
-
-    const storagePath = getBrandStoragePath(brand, `heygen-videos/${workflowId}.mp4`);
-    const publicHeygenUrl = await downloadAndUploadToR2(
-      heygenVideoUrl,
-      HEYGEN_API_KEY!,
-      storagePath
-    );
-
-    console.log(`✅ [${brandConfig.displayName}] R2 URL: ${publicHeygenUrl}`);
-
-    // 🔥 CRITICAL: Save HeyGen video URLs BEFORE attempting Submagic
-    // This ensures we don't lose the video if Submagic fails
+    // Save HeyGen URL to workflow for reference
     await updateWorkflowForBrand(brand, workflowId, {
-      heygenVideoUrl: heygenVideoUrl,      // Original HeyGen URL
-      heygenVideoR2Url: publicHeygenUrl,   // R2 backup URL
-      status: 'heygen_completed'           // Mark HeyGen as done
+      heygenVideoUrl: heygenVideoUrl
     });
-    console.log(`💾 [${brandConfig.displayName}] Saved HeyGen URLs to workflow (recovery point created)`);
-
-    console.log(`✨ [${brandConfig.displayName}] Step 2: Sending to Submagic...`);
 
     // Use brand-specific webhook URL from config
     const submagicWebhookUrl = brandConfig.webhooks.submagic;
@@ -311,7 +294,7 @@ async function triggerSubmagicProcessing(
       title = title.substring(0, 47) + '...';
     }
 
-    // Send to Submagic API
+    // Send HeyGen URL directly to Submagic (no R2 upload - faster!)
     const response = await fetch('https://api.submagic.co/v1/projects', {
       method: 'POST',
       headers: {
@@ -321,7 +304,7 @@ async function triggerSubmagicProcessing(
       body: JSON.stringify({
         title,
         language: 'en',
-        videoUrl: publicHeygenUrl,
+        videoUrl: heygenVideoUrl, // ⚡ Send HeyGen URL directly (not R2 URL)
         templateName: 'Hormozi 2',
         magicBrolls: true,
         magicBrollsPercentage: 50,

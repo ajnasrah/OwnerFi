@@ -1,24 +1,22 @@
 /**
  * Benefit Workflow Logs API
- * Returns recent benefit video workflows for the social media dashboard
+ * Returns recent benefit video workflows for monitoring
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { db } from '@/lib/firebase';
+import { collection, getDocs, query, where, orderBy, limit } from 'firebase/firestore';
 
 export async function GET(request: NextRequest) {
   try {
-    const { db } = await import('@/lib/firebase');
-    const { collection, getDocs, query, where, orderBy, limit } = await import('firebase/firestore');
-
     if (!db) {
       return NextResponse.json({ error: 'Firebase not initialized' }, { status: 500 });
     }
 
-    // Check if requesting history or just active workflows
     const searchParams = request.nextUrl.searchParams;
     const showHistory = searchParams.get('history') === 'true';
 
-    const workflows = [];
+    const workflows: any[] = [];
 
     if (showHistory) {
       // Get last 20 workflows
@@ -36,7 +34,7 @@ export async function GET(request: NextRequest) {
         });
       });
     } else {
-      // Get only active workflows (not completed/failed)
+      // Get only active workflows
       const activeStatuses = ['heygen_processing', 'submagic_processing', 'video_processing', 'posting'];
 
       for (const status of activeStatuses) {

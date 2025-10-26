@@ -1,19 +1,32 @@
-// Automated Benefit Video Generation Cron Job
-// Runs 5x daily (9 AM, 12 PM, 3 PM, 6 PM, 9 PM CDT)
-// Generates up to 2 videos per day (1 seller + 1 buyer)
-// Mixes with podcast content for diverse social media feed
+/**
+ * Benefit Video Cron - BUYER-ONLY
+ *
+ * Runs 5x daily to generate up to 5 buyer benefit videos per day
+ * Schedule: 9 AM, 12 PM, 3 PM, 6 PM, 9 PM CDT
+ */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { BenefitScheduler } from '@/lib/benefit-scheduler';
+import { BenefitVideoGenerator } from '@/lib/benefit-video-generator';
+import {
+  getRandomBenefit,
+  generateBenefitCaption,
+  generateBenefitTitle
+} from '@/lib/benefit-content';
+import {
+  addBenefitWorkflow,
+  updateBenefitWorkflow
+} from '@/lib/feed-store-firestore';
 
 const CRON_SECRET = process.env.CRON_SECRET;
 
-export const maxDuration = 60; // 1 minute (webhook-based, no polling)
+export const maxDuration = 60;
 
 export async function GET(request: NextRequest) {
-  const generatedWorkflows: string[] = []; // Track all generated workflows
+  const startTime = Date.now();
 
   try {
-    // Verify authorization - allow dashboard, CRON_SECRET, or Vercel cron
+    // Verify authorization
     const authHeader = request.headers.get('authorization');
     const referer = request.headers.get('referer');
     const userAgent = request.headers.get('user-agent');
@@ -23,210 +36,127 @@ export async function GET(request: NextRequest) {
     const isVercelCron = userAgent === 'vercel-cron/1.0';
 
     if (!isFromDashboard && !hasValidSecret && !isVercelCron) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Check for force parameter (from dashboard button)
-    const { searchParams } = new URL(request.url);
-    const force = searchParams.get('force') === 'true';
+    console.log('\n🏡 Benefit video cron triggered');
 
-    console.log('🏡 Benefit video cron job triggered - Generating daily videos');
-    if (force) {
-      console.log('⚡ Force mode enabled - Bypassing scheduler check');
-    }
+    // Check scheduler
+    const videosNeeded = await BenefitScheduler.getVideosNeeded();
 
-    // Import libraries
-    const BenefitScheduler = (await import('../../../../../podcast/lib/benefit-scheduler')).default;
-    const BenefitVideoGenerator = (await import('../../../../../podcast/lib/benefit-video-generator')).default;
-    const {
-      getRandomBenefit,
-      generateBenefitCaption,
-      generateBenefitTitle
-    } = await import('../../../../../podcast/lib/benefit-content');
-    const {
-      addBenefitWorkflow,
-      updateBenefitWorkflow
-    } = await import('@/lib/feed-store-firestore');
+    if (videosNeeded === 0) {
+      console.log('⏭️  Already generated 5 videos today - skipping');
 
-    // Check if we should generate videos
-    const scheduler = new BenefitScheduler();
-    await scheduler.loadStateFromFirestore();
-
-    const { shouldGenerate, needSeller, needBuyer } = scheduler.shouldGenerateVideos();
-
-    if (!force && !shouldGenerate) {
-      console.log('⏭️  Skipping - Already generated today\'s videos');
+      const stats = await BenefitScheduler.getStats();
       return NextResponse.json({
         success: true,
         skipped: true,
-        message: 'Already generated today\'s videos',
-        stats: scheduler.getStats()
+        message: 'Daily limit reached (5/5 videos generated)',
+        stats
       });
     }
 
-    console.log('✅ Time to generate benefit videos!');
-    console.log(`   Needs: ${needSeller ? 'seller' : ''}${needSeller && needBuyer ? ' + ' : ''}${needBuyer ? 'buyer' : ''}`);
+    console.log(`✅ Need to generate ${videosNeeded} video(s) today`);
 
-    // Get API keys
+    // Get API key
     const HEYGEN_API_KEY = process.env.HEYGEN_API_KEY;
     if (!HEYGEN_API_KEY) {
       throw new Error('HEYGEN_API_KEY not configured');
     }
 
     const generator = new BenefitVideoGenerator(HEYGEN_API_KEY);
-    const { getBrandWebhookUrl } = await import('@/lib/brand-utils');
     const results: any[] = [];
 
-    // Generate seller video if needed
-    if (force || needSeller) {
-      console.log('\n📹 Generating SELLER benefit video...');
+    // Generate ONE video per cron run (5 runs per day = 5 videos)
+    // This prevents timeout issues and allows for better error recovery
+    const recentIds = await BenefitScheduler.getRecentBenefitIds();
+    const benefit = getRandomBenefit(recentIds);
 
-      const recentSellerIds = scheduler.getRecentBenefitIds('seller', 5);
-      const sellerBenefit = getRandomBenefit('seller', recentSellerIds);
+    if (!benefit) {
+      throw new Error('No available benefits (all recently used - should not happen with 10 benefits)');
+    }
 
-      if (!sellerBenefit) {
-        throw new Error('No available seller benefits (all recently used)');
-      }
+    console.log(`\n📹 Selected benefit: ${benefit.title}`);
 
-      console.log(`   Selected: ${sellerBenefit.title}`);
+    // Claim a slot atomically (prevents race conditions)
+    const claimed = await BenefitScheduler.claimVideoSlot(benefit.id);
 
-      // Create workflow
-      const sellerWorkflow = await addBenefitWorkflow(
-        sellerBenefit.id,
-        'seller',
-        sellerBenefit.title
-      );
-      generatedWorkflows.push(sellerWorkflow.id);
-
-      // Generate video with HeyGen
-      const webhookUrl = getBrandWebhookUrl('benefit', 'heygen');
-      const videoId = await generator.generateBenefitVideo(
-        sellerBenefit,
-        sellerWorkflow.id
-      );
-
-      // Update workflow
-      await updateBenefitWorkflow(sellerWorkflow.id, {
-        heygenVideoId: videoId,
-        caption: generateBenefitCaption(sellerBenefit),
-        title: generateBenefitTitle(sellerBenefit)
-      });
-
-      // Record in scheduler
-      await scheduler.recordBenefitVideo(
-        sellerBenefit.id,
-        'seller',
-        sellerWorkflow.id
-      );
-
-      console.log(`✅ Seller video initiated - Workflow ID: ${sellerWorkflow.id}`);
-
-      results.push({
-        audience: 'seller',
-        benefit_id: sellerBenefit.id,
-        benefit_title: sellerBenefit.title,
-        video_id: videoId,
-        workflow_id: sellerWorkflow.id
+    if (!claimed) {
+      console.log('⚠️  Daily limit reached while claiming slot - skipping');
+      const stats = await BenefitScheduler.getStats();
+      return NextResponse.json({
+        success: true,
+        skipped: true,
+        message: 'Daily limit reached during generation',
+        stats
       });
     }
 
-    // Generate buyer video if needed
-    if (force || needBuyer) {
-      console.log('\n📹 Generating BUYER benefit video...');
+    // Create workflow
+    const workflow = await addBenefitWorkflow(
+      benefit.id,
+      'buyer',
+      benefit.title
+    );
 
-      const recentBuyerIds = scheduler.getRecentBenefitIds('buyer', 5);
-      const buyerBenefit = getRandomBenefit('buyer', recentBuyerIds);
+    console.log(`📝 Created workflow: ${workflow.id}`);
 
-      if (!buyerBenefit) {
-        throw new Error('No available buyer benefits (all recently used)');
-      }
-
-      console.log(`   Selected: ${buyerBenefit.title}`);
-
-      // Create workflow
-      const buyerWorkflow = await addBenefitWorkflow(
-        buyerBenefit.id,
-        'buyer',
-        buyerBenefit.title
-      );
-      generatedWorkflows.push(buyerWorkflow.id);
-
-      // Generate video with HeyGen
-      const videoId = await generator.generateBenefitVideo(
-        buyerBenefit,
-        buyerWorkflow.id
-      );
+    try {
+      // Generate video
+      const videoId = await generator.generateVideo(benefit, workflow.id);
 
       // Update workflow
-      await updateBenefitWorkflow(buyerWorkflow.id, {
+      await updateBenefitWorkflow(workflow.id, {
         heygenVideoId: videoId,
-        caption: generateBenefitCaption(buyerBenefit),
-        title: generateBenefitTitle(buyerBenefit)
+        caption: generateBenefitCaption(benefit),
+        title: generateBenefitTitle(benefit)
       });
 
-      // Record in scheduler
-      await scheduler.recordBenefitVideo(
-        buyerBenefit.id,
-        'buyer',
-        buyerWorkflow.id
-      );
-
-      console.log(`✅ Buyer video initiated - Workflow ID: ${buyerWorkflow.id}`);
+      console.log(`✅ Video initiated - Workflow ID: ${workflow.id}`);
 
       results.push({
-        audience: 'buyer',
-        benefit_id: buyerBenefit.id,
-        benefit_title: buyerBenefit.title,
+        benefit_id: benefit.id,
+        benefit_title: benefit.title,
         video_id: videoId,
-        workflow_id: buyerWorkflow.id
+        workflow_id: workflow.id
       });
+
+    } catch (error) {
+      // Mark workflow as failed
+      await updateBenefitWorkflow(workflow.id, {
+        status: 'failed',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+      throw error;
     }
 
-    console.log(`\n🎉 Generated ${results.length} benefit video(s)!`);
-    console.log(`   ⚡ HeyGen → Submagic → Late API (automatic via webhooks)`);
+    const duration = Date.now() - startTime;
+    console.log(`\n🎉 Benefit video generation complete in ${duration}ms`);
+    console.log(`   ⚡ Next: HeyGen → Submagic → Late API (automatic via webhooks)`);
+
+    const stats = await BenefitScheduler.getStats();
 
     return NextResponse.json({
       success: true,
       videos: results,
-      message: `Benefit video generation started. Workflow continues via webhooks (HeyGen → Submagic → Late API).`,
+      stats,
+      duration_ms: duration,
+      message: 'Benefit video generation started. Workflow continues via webhooks.',
       timestamp: new Date().toISOString()
     });
 
   } catch (error) {
-    console.error('❌ Benefit cron job error:', error);
+    console.error('❌ Benefit cron error:', error);
 
-    // Try to mark all workflows as failed
-    if (generatedWorkflows.length > 0) {
-      try {
-        const { updateBenefitWorkflow } = await import('@/lib/feed-store-firestore');
-        for (const workflowId of generatedWorkflows) {
-          await updateBenefitWorkflow(workflowId, {
-            status: 'failed',
-            error: error instanceof Error ? error.message : 'Unknown error'
-          });
-        }
-        console.log(`✅ Marked ${generatedWorkflows.length} workflow(s) as failed`);
-      } catch (updateError) {
-        console.error('Failed to update workflow statuses:', updateError);
-      }
-    }
-
-    return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-        workflow_ids: generatedWorkflows,
-        timestamp: new Date().toISOString()
-      },
-      { status: 500 }
-    );
+    return NextResponse.json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      timestamp: new Date().toISOString()
+    }, { status: 500 });
   }
 }
 
-// Also support POST for Vercel cron
+// Support POST for Vercel cron
 export async function POST(request: NextRequest) {
   return GET(request);
 }

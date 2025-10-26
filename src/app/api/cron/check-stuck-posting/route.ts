@@ -29,27 +29,36 @@ export async function GET(request: NextRequest) {
 
     const stuckWorkflows = [];
 
-    // Check all brand workflows stuck in 'posting'
+    // Check all brand workflows stuck in 'posting' OR 'video_processing'
     for (const brand of ['carz', 'ownerfi', 'vassdistro', 'benefit'] as const) {
       const collectionName = getCollectionName('WORKFLOW_QUEUE', brand);
       console.log(`\n📂 Checking ${collectionName}...`);
 
       try {
-        const q = query(
+        const qPosting = query(
           collection(db, collectionName),
           where('status', '==', 'posting')
         );
+        const qProcessing = query(
+          collection(db, collectionName),
+          where('status', '==', 'video_processing')
+        );
 
-        const snapshot = await getDocs(q);
-        console.log(`   Found ${snapshot.size} workflows in 'posting'`);
+        const [postingSnapshot, processingSnapshot] = await Promise.all([
+          getDocs(qPosting),
+          getDocs(qProcessing)
+        ]);
 
-        snapshot.forEach(doc => {
+        console.log(`   Found ${postingSnapshot.size} in 'posting', ${processingSnapshot.size} in 'video_processing'`);
+
+        // Process both status types
+        [...postingSnapshot.docs, ...processingSnapshot.docs].forEach(doc => {
           const data = doc.data();
           // Use statusChangedAt if available (new field), fallback to updatedAt for old workflows
           const timestamp = data.statusChangedAt || data.updatedAt || 0;
           const stuckMinutes = Math.round((Date.now() - timestamp) / 60000);
 
-          console.log(`   📄 Workflow ${doc.id}: stuck for ${stuckMinutes} min`);
+          console.log(`   📄 Workflow ${doc.id}: ${data.status} for ${stuckMinutes} min`);
 
           // Only retry if stuck > 10 minutes (allows for normal processing time)
           if (stuckMinutes > 10) {
@@ -67,24 +76,33 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Check Podcast workflows stuck in 'publishing'
+    // Check Podcast workflows stuck in 'publishing' OR 'video_processing'
     console.log(`\n📂 Checking podcast_workflow_queue...`);
     try {
-      const q = query(
+      const qPublishing = query(
         collection(db, 'podcast_workflow_queue'),
         where('status', '==', 'publishing')
       );
+      const qProcessing = query(
+        collection(db, 'podcast_workflow_queue'),
+        where('status', '==', 'video_processing')
+      );
 
-      const snapshot = await getDocs(q);
-      console.log(`   Found ${snapshot.size} podcasts in 'publishing'`);
+      const [publishingSnapshot, processingSnapshot] = await Promise.all([
+        getDocs(qPublishing),
+        getDocs(qProcessing)
+      ]);
 
-      snapshot.forEach(doc => {
+      console.log(`   Found ${publishingSnapshot.size} in 'publishing', ${processingSnapshot.size} in 'video_processing'`);
+
+      // Process both status types
+      [...publishingSnapshot.docs, ...processingSnapshot.docs].forEach(doc => {
         const data = doc.data();
         // Use statusChangedAt if available (new field), fallback to updatedAt for old workflows
         const timestamp = data.statusChangedAt || data.updatedAt || 0;
         const stuckMinutes = Math.round((Date.now() - timestamp) / 60000);
 
-        console.log(`   📄 Podcast ${doc.id}: stuck for ${stuckMinutes} min`);
+        console.log(`   📄 Podcast ${doc.id}: ${data.status} for ${stuckMinutes} min`);
 
         if (stuckMinutes > 10) {
           stuckWorkflows.push({
@@ -100,24 +118,33 @@ export async function GET(request: NextRequest) {
       console.error(`   ❌ Error querying podcast_workflow_queue:`, err);
     }
 
-    // Check Property videos stuck in 'posting'
+    // Check Property videos stuck in 'posting' OR 'video_processing'
     console.log(`\n📂 Checking property_videos...`);
     try {
-      const q = query(
+      const qPosting = query(
         collection(db, 'property_videos'),
         where('status', '==', 'posting')
       );
+      const qProcessing = query(
+        collection(db, 'property_videos'),
+        where('status', '==', 'video_processing')
+      );
 
-      const snapshot = await getDocs(q);
-      console.log(`   Found ${snapshot.size} property videos in 'posting'`);
+      const [postingSnapshot, processingSnapshot] = await Promise.all([
+        getDocs(qPosting),
+        getDocs(qProcessing)
+      ]);
 
-      snapshot.forEach(doc => {
+      console.log(`   Found ${postingSnapshot.size} in 'posting', ${processingSnapshot.size} in 'video_processing'`);
+
+      // Process both status types
+      [...postingSnapshot.docs, ...processingSnapshot.docs].forEach(doc => {
         const data = doc.data();
         // Use statusChangedAt if available (new field), fallback to updatedAt for old workflows
         const timestamp = data.statusChangedAt || data.updatedAt || 0;
         const stuckMinutes = Math.round((Date.now() - timestamp) / 60000);
 
-        console.log(`   📄 Property ${doc.id}: stuck for ${stuckMinutes} min`);
+        console.log(`   📄 Property ${doc.id}: ${data.status} for ${stuckMinutes} min`);
 
         if (stuckMinutes > 10) {
           stuckWorkflows.push({
@@ -192,7 +219,65 @@ export async function GET(request: NextRequest) {
       console.log(`\n🔄 Retrying ${isPodcast ? 'podcast' : 'workflow'} ${workflowId} (stuck ${stuckMinutes} min, attempt ${retryCount + 1}/${MAX_RETRIES})`);
 
       try {
-        // Check if we have the video URL
+        // If workflow is in 'video_processing' status, trigger the video processing endpoint
+        if (workflow.status === 'video_processing') {
+          console.log(`   🎬 Workflow stuck in video_processing, triggering process-video endpoint...`);
+
+          const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://ownerfi.ai';
+          const videoUrl = workflow.submagicDownloadUrl;
+          const submagicProjectId = workflow.submagicProjectId;
+
+          if (!videoUrl && !submagicProjectId) {
+            console.error(`   ❌ No submagicDownloadUrl or submagicProjectId found`);
+            results.push({
+              workflowId,
+              brand,
+              action: 'failed',
+              error: 'No Submagic video URL or project ID found'
+            });
+            continue;
+          }
+
+          try {
+            const response = await fetch(`${baseUrl}/api/process-video`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                brand,
+                workflowId,
+                videoUrl,
+                submagicProjectId
+              })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+              console.log(`   ✅ Video processing completed! Post ID: ${result.postId}`);
+              results.push({
+                workflowId,
+                brand,
+                action: 'completed',
+                postId: result.postId,
+                stuckMinutes
+              });
+            } else {
+              throw new Error(result.error || 'Video processing failed');
+            }
+          } catch (error) {
+            console.error(`   ❌ Video processing failed:`, error);
+            results.push({
+              workflowId,
+              brand,
+              action: 'retry_failed',
+              error: error instanceof Error ? error.message : 'Unknown error',
+              stuckMinutes
+            });
+          }
+          continue;
+        }
+
+        // Check if we have the video URL (for 'posting' status)
         const videoUrl = workflow.finalVideoUrl;
         if (!videoUrl) {
           console.error(`   ❌ No finalVideoUrl found for workflow ${workflowId}`);

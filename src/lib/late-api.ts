@@ -12,6 +12,7 @@ const getLateApiKey = () => process.env.LATE_API_KEY;
 const getLateOwnerfiProfileId = () => process.env.LATE_OWNERFI_PROFILE_ID;
 const getLateCarzProfileId = () => process.env.LATE_CARZ_PROFILE_ID;
 const getLatePodcastProfileId = () => process.env.LATE_PODCAST_PROFILE_ID;
+const getLateVassDistroProfileId = () => process.env.LATE_VASSDISTRO_PROFILE_ID;
 
 export interface LatePostRequest {
   videoUrl: string;
@@ -20,7 +21,7 @@ export interface LatePostRequest {
   hashtags?: string[];
   platforms: ('instagram' | 'tiktok' | 'youtube' | 'facebook' | 'linkedin' | 'threads' | 'twitter' | 'pinterest' | 'reddit' | 'bluesky')[];
   scheduleTime?: string; // ISO 8601 format, or omit for immediate posting
-  brand: 'carz' | 'ownerfi' | 'podcast' | 'property';
+  brand: 'carz' | 'ownerfi' | 'podcast' | 'property' | 'vassdistro' | 'benefit';
   postTypes?: {
     instagram?: 'reel' | 'story';
     facebook?: 'feed' | 'story';
@@ -52,15 +53,18 @@ export interface LateProfile {
 /**
  * Get profile ID for a brand
  */
-function getProfileId(brand: 'carz' | 'ownerfi' | 'podcast' | 'property'): string | null {
+function getProfileId(brand: 'carz' | 'ownerfi' | 'podcast' | 'property' | 'vassdistro' | 'benefit'): string | null {
   switch (brand) {
     case 'ownerfi':
     case 'property': // Property videos use OwnerFi profile
+    case 'benefit': // Benefit videos also use OwnerFi profile
       return getLateOwnerfiProfileId() || null;
     case 'carz':
       return getLateCarzProfileId() || null;
     case 'podcast':
       return getLatePodcastProfileId() || null;
+    case 'vassdistro':
+      return getLateVassDistroProfileId() || null;
   }
 }
 
@@ -170,7 +174,15 @@ export async function postToLate(request: LatePostRequest): Promise<LatePostResp
   // Get profile ID for brand
   const profileId = getProfileId(request.brand);
   if (!profileId) {
-    const brandName = request.brand === 'carz' ? 'Carz' : request.brand === 'ownerfi' ? 'OwnerFi' : 'Podcast';
+    const brandNameMap: Record<string, string> = {
+      'carz': 'Carz',
+      'ownerfi': 'OwnerFi',
+      'podcast': 'Podcast',
+      'property': 'Property',
+      'vassdistro': 'VassDistro',
+      'benefit': 'Benefit'
+    };
+    const brandName = brandNameMap[request.brand] || request.brand;
     console.error(`❌ Profile ID not configured for ${brandName}`);
     return {
       success: false,
@@ -242,7 +254,14 @@ export async function postToLate(request: LatePostRequest): Promise<LatePostResp
       fullCaption = `${request.caption}\n\n${formattedHashtags}`;
     }
 
-    const brandName = request.brand === 'carz' ? 'Carz' : request.brand === 'ownerfi' ? 'OwnerFi' : 'Podcast';
+    const brandNameMap: Record<string, string> = {
+      'carz': 'Carz',
+      'ownerfi': 'OwnerFi',
+      'podcast': 'Podcast',
+      'property': 'Property',
+      'vassdistro': 'VassDistro'
+    };
+    const brandName = brandNameMap[request.brand] || request.brand;
     console.log(`📤 Posting to Late (${brandName})...`);
     console.log('   Profile ID:', profileId);
     console.log('   Platforms:', platformAccounts.map(p => p.platform).join(', '));
@@ -426,7 +445,7 @@ export async function postToLate(request: LatePostRequest): Promise<LatePostResp
 /**
  * Get the next available queue slot for a profile
  */
-export async function getNextQueueSlot(brand: 'carz' | 'ownerfi' | 'podcast' | 'property'): Promise<{ nextSlot: string; timezone: string } | null> {
+export async function getNextQueueSlot(brand: 'carz' | 'ownerfi' | 'podcast' | 'property' | 'vassdistro' | 'benefit'): Promise<{ nextSlot: string; timezone: string } | null> {
   const profileId = getProfileId(brand);
   const LATE_API_KEY = getLateApiKey();
   if (!profileId || !LATE_API_KEY) {
@@ -466,7 +485,7 @@ export async function getNextQueueSlot(brand: 'carz' | 'ownerfi' | 'podcast' | '
 /**
  * Get queue schedule for a profile
  */
-export async function getQueueSchedule(brand: 'carz' | 'ownerfi' | 'podcast' | 'property'): Promise<any> {
+export async function getQueueSchedule(brand: 'carz' | 'ownerfi' | 'podcast' | 'property' | 'vassdistro' | 'benefit'): Promise<any> {
   const profileId = getProfileId(brand);
   const LATE_API_KEY = getLateApiKey();
   if (!profileId || !LATE_API_KEY) {
@@ -497,7 +516,7 @@ export async function getQueueSchedule(brand: 'carz' | 'ownerfi' | 'podcast' | '
  * Set or update queue schedule for a profile
  */
 export async function setQueueSchedule(
-  brand: 'carz' | 'ownerfi' | 'podcast' | 'property',
+  brand: 'carz' | 'ownerfi' | 'podcast' | 'property' | 'vassdistro' | 'benefit',
   slots: { dayOfWeek: number; time: string }[],
   timezone: string = 'America/New_York',
   reshuffleExisting: boolean = false
@@ -545,7 +564,7 @@ export async function scheduleVideoPost(
   title: string,
   platforms: ('instagram' | 'tiktok' | 'youtube' | 'facebook' | 'linkedin' | 'threads' | 'twitter')[] | any[],
   delay: 'immediate' | '1hour' | '2hours' | '4hours' | 'optimal' = 'immediate',
-  brand: 'carz' | 'ownerfi' | 'podcast' | 'property' = 'ownerfi'
+  brand: 'carz' | 'ownerfi' | 'podcast' | 'property' | 'vassdistro' | 'benefit' = 'ownerfi'
 ): Promise<LatePostResponse> {
   // Calculate schedule time
   let scheduleTime: string | undefined;

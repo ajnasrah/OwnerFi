@@ -17,19 +17,22 @@ import { NextRequest, NextResponse } from 'next/server';
 import { postToLate } from '@/lib/late-api';
 import { getBrandConfig } from '@/config/brand-configs';
 import { getBrandPlatforms, getBrandStoragePath, validateBrand } from '@/lib/brand-utils';
+import { fetchWithTimeout, circuitBreakers, TIMEOUTS } from '@/lib/api-utils';
 
 export const maxDuration = 300; // 5 minutes - plenty of time for download/upload
+
+const SUBMAGIC_API_KEY = process.env.SUBMAGIC_API_KEY;
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
 
   try {
     const body = await request.json();
-    const { brand: brandStr, workflowId, videoUrl } = body;
+    const { brand: brandStr, workflowId, videoUrl, submagicProjectId } = body;
 
-    if (!brandStr || !workflowId || !videoUrl) {
+    if (!brandStr || !workflowId) {
       return NextResponse.json({
-        error: 'Missing required fields: brand, workflowId, videoUrl'
+        error: 'Missing required fields: brand, workflowId'
       }, { status: 400 });
     }
 
@@ -37,7 +40,6 @@ export async function POST(request: NextRequest) {
     const brandConfig = getBrandConfig(brand);
 
     console.log(`🎬 [${brandConfig.displayName}] Processing video for workflow ${workflowId}`);
-    console.log(`   Video URL: ${videoUrl.substring(0, 80)}...`);
 
     // Get workflow from Firestore
     const workflow = await getWorkflowForBrand(brand, workflowId);
@@ -60,12 +62,38 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-      // Step 1: Upload to R2
+      // Step 1: Get fresh Submagic download URL
+      // Use submagicProjectId from request body or workflow data
+      const projectId = submagicProjectId || workflow.submagicProjectId;
+      let downloadUrl = videoUrl;
+
+      if (projectId) {
+        // Fetch fresh URL from Submagic API to avoid expired URLs
+        console.log(`🔄 Fetching fresh download URL from Submagic API...`);
+        console.log(`   Project ID: ${projectId}`);
+
+        try {
+          downloadUrl = await fetchVideoUrlFromSubmagic(projectId);
+          console.log(`✅ Fresh URL obtained from Submagic API`);
+        } catch (error) {
+          console.warn(`⚠️  Failed to fetch from Submagic API, falling back to provided URL:`, error);
+          // Fall back to provided videoUrl if API fetch fails
+          if (!videoUrl) {
+            throw new Error('No video URL available and Submagic API fetch failed');
+          }
+        }
+      } else if (!videoUrl) {
+        throw new Error('No submagicProjectId or videoUrl provided');
+      }
+
+      console.log(`   Download URL: ${downloadUrl.substring(0, 80)}...`);
+
+      // Step 2: Upload to R2
       console.log(`☁️  Uploading to R2...`);
       const { uploadSubmagicVideo } = await import('@/lib/video-storage');
       const storagePath = getBrandStoragePath(brand, `submagic-videos/${workflowId}.mp4`);
 
-      const publicVideoUrl = await uploadSubmagicVideo(videoUrl, storagePath);
+      const publicVideoUrl = await uploadSubmagicVideo(downloadUrl, storagePath);
 
       console.log(`✅ Video uploaded to R2: ${publicVideoUrl}`);
 
@@ -191,4 +219,37 @@ async function updateWorkflowForBrand(
     const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
     await updateWorkflowStatus(workflowId, brand, updates);
   }
+}
+
+/**
+ * Fetch fresh video URL from Submagic API
+ * This ensures we always get a valid, non-expired download URL
+ */
+async function fetchVideoUrlFromSubmagic(submagicProjectId: string): Promise<string> {
+  if (!SUBMAGIC_API_KEY) {
+    throw new Error('Submagic API key not configured');
+  }
+
+  const response = await circuitBreakers.submagic.execute(async () => {
+    return await fetchWithTimeout(
+      `https://api.submagic.co/v1/projects/${submagicProjectId}`,
+      {
+        headers: { 'x-api-key': SUBMAGIC_API_KEY }
+      },
+      TIMEOUTS.SUBMAGIC_API
+    );
+  });
+
+  if (!response.ok) {
+    throw new Error(`Submagic API returned ${response.status}: ${response.statusText}`);
+  }
+
+  const projectData = await response.json();
+  const videoUrl = projectData.media_url || projectData.video_url || projectData.downloadUrl;
+
+  if (!videoUrl) {
+    throw new Error('No video URL found in Submagic project data');
+  }
+
+  return videoUrl;
 }

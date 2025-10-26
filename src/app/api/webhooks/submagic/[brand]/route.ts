@@ -100,7 +100,8 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
       // Trigger async video processing (non-blocking)
       // This calls a separate endpoint that has no timeout limits
-      await triggerAsyncVideoProcessing(brand, workflowId, downloadUrl);
+      // Pass submagicProjectId so we can fetch a fresh URL when downloading
+      await triggerAsyncVideoProcessing(brand, workflowId, downloadUrl, submagicProjectId);
 
       const duration = Date.now() - startTime;
       console.log(`⏱️  [${brandConfig.displayName}] Webhook acknowledged in ${duration}ms`);
@@ -405,7 +406,8 @@ async function sendFailureAlert(
 async function triggerAsyncVideoProcessing(
   brand: string,
   workflowId: string,
-  videoUrl: string
+  videoUrl: string,
+  submagicProjectId?: string
 ): Promise<void> {
   try {
     // Get the base URL for the API
@@ -415,10 +417,11 @@ async function triggerAsyncVideoProcessing(
 
     // Trigger the processing endpoint (fire-and-forget)
     // Don't await - let it run in the background
+    // Pass submagicProjectId so we can fetch a fresh URL later
     fetch(`${baseUrl}/api/process-video`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ brand, workflowId, videoUrl }),
+      body: JSON.stringify({ brand, workflowId, videoUrl, submagicProjectId }),
     }).catch(err => {
       console.error('Failed to trigger video processing:', err);
       // Failure here is OK - the failsafe cron will pick it up

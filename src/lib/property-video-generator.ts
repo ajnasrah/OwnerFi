@@ -298,12 +298,12 @@ export function buildPropertyVideoRequest(
       character: {
         type: 'talking_photo',
         talking_photo_id: avatarId,
-        scale: 0.35, // Even smaller to fit better with zoom (was 0.4)
+        scale: 0.5, // Larger so HeyGen renders it (was 0.35 - too small!)
         talking_photo_style: 'circle', // Circular frame
         talking_style: 'expressive',
         offset: {
-          x: 0.55, // Moved more toward center (was 0.65) - safe from right-edge crop
-          y: 0.70  // Moved up slightly (was 0.75) - safe from bottom crop during zoom
+          x: 0.60, // Bottom-right position
+          y: 0.72  // Safe from crop
         }
       },
       voice: {

@@ -60,3 +60,7 @@ export async function getAdminAuth() {
 
 // Legacy exports for backward compatibility (these will be null initially)
 export { adminDb, adminAuth };
+
+// Alias export for common usage pattern
+export const db = adminDb;
+export const admin = { db: adminDb, auth: adminAuth };

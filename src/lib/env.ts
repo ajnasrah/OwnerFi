@@ -31,6 +31,7 @@ const envSchema = z.object({
   LATE_OWNERFI_PROFILE_ID: z.string().min(1, 'GetLate OwnerFi profile ID is required'),
   LATE_CARZ_PROFILE_ID: z.string().min(1, 'GetLate Carz profile ID is required'),
   LATE_PODCAST_PROFILE_ID: z.string().min(1, 'GetLate Podcast profile ID is required'),
+  LATE_VASSDISTRO_PROFILE_ID: z.string().min(1, 'GetLate VassDistro profile ID is required'),
 
   // Cloudflare R2 Storage
   R2_ACCOUNT_ID: z.string().min(1, 'R2 account ID is required'),

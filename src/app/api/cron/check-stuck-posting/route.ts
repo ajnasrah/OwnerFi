@@ -100,6 +100,39 @@ export async function GET(request: NextRequest) {
       console.error(`   ❌ Error querying podcast_workflow_queue:`, err);
     }
 
+    // Check Property videos stuck in 'posting'
+    console.log(`\n📂 Checking property_videos...`);
+    try {
+      const q = query(
+        collection(db, 'property_videos'),
+        where('status', '==', 'posting')
+      );
+
+      const snapshot = await getDocs(q);
+      console.log(`   Found ${snapshot.size} property videos in 'posting'`);
+
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        // Use statusChangedAt if available (new field), fallback to updatedAt for old workflows
+        const timestamp = data.statusChangedAt || data.updatedAt || 0;
+        const stuckMinutes = Math.round((Date.now() - timestamp) / 60000);
+
+        console.log(`   📄 Property ${doc.id}: stuck for ${stuckMinutes} min`);
+
+        if (stuckMinutes > 10) {
+          stuckWorkflows.push({
+            workflowId: doc.id,
+            brand: 'property',
+            isProperty: true,
+            workflow: data,
+            stuckMinutes
+          });
+        }
+      });
+    } catch (err) {
+      console.error(`   ❌ Error querying property_videos:`, err);
+    }
+
     console.log(`\n📋 Found ${stuckWorkflows.length} stuck workflows to retry`);
 
     const results = [];
@@ -116,7 +149,7 @@ export async function GET(request: NextRequest) {
 
     // Retry posting for each stuck workflow
     for (const item of workflowsToProcess) {
-      const { workflowId, brand, isPodcast, workflow, stuckMinutes } = item;
+      const { workflowId, brand, isPodcast, isProperty, workflow, stuckMinutes } = item as any;
       const retryCount = workflow?.retryCount || 0;
 
       // Check if max retries exceeded
@@ -136,6 +169,9 @@ export async function GET(request: NextRequest) {
           } else if (brand === 'benefit') {
             const { updateBenefitWorkflow } = await import('@/lib/feed-store-firestore');
             await updateBenefitWorkflow(workflowId, updates);
+          } else if (brand === 'property' || isProperty) {
+            const { updatePropertyVideo } = await import('@/lib/feed-store-firestore');
+            await updatePropertyVideo(workflowId, updates);
           } else {
             const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
             await updateWorkflowStatus(workflowId, brand as any, updates);
@@ -186,6 +222,9 @@ export async function GET(request: NextRequest) {
         } else if (brand === 'benefit') {
           caption = workflow.caption || 'Learn about owner financing! 🏡';
           title = workflow.title || 'Owner Finance Benefits';
+        } else if (brand === 'property' || isProperty) {
+          caption = workflow.caption || 'New owner finance property for sale! 🏡';
+          title = workflow.title || 'Property For Sale';
         } else {
           caption = workflow.caption || 'Check out this video! 🔥';
           title = workflow.title || 'Viral Video';
@@ -219,6 +258,9 @@ export async function GET(request: NextRequest) {
           } else if (brand === 'benefit') {
             const { updateBenefitWorkflow } = await import('@/lib/feed-store-firestore');
             await updateBenefitWorkflow(workflowId, completionUpdates);
+          } else if (brand === 'property' || isProperty) {
+            const { updatePropertyVideo } = await import('@/lib/feed-store-firestore');
+            await updatePropertyVideo(workflowId, completionUpdates);
           } else {
             const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
             await updateWorkflowStatus(workflowId, brand as any, completionUpdates);
@@ -248,6 +290,12 @@ export async function GET(request: NextRequest) {
             } else if (brand === 'benefit') {
               const { updateBenefitWorkflow } = await import('@/lib/feed-store-firestore');
               await updateBenefitWorkflow(workflowId, {
+                status: 'failed',
+                error: `Late API posting failed: ${postResult.error}`
+              });
+            } else if (brand === 'property' || isProperty) {
+              const { updatePropertyVideo } = await import('@/lib/feed-store-firestore');
+              await updatePropertyVideo(workflowId, {
                 status: 'failed',
                 error: `Late API posting failed: ${postResult.error}`
               });

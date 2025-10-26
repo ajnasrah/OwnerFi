@@ -117,6 +117,9 @@ export async function POST(request: NextRequest) {
       } else if (brand === 'benefit') {
         caption = workflow.caption || 'Learn about owner financing! 🏡';
         title = workflow.title || 'Owner Finance Benefits';
+      } else if (brand === 'property') {
+        caption = workflow.caption || 'New owner finance property for sale! 🏡';
+        title = workflow.title || 'Property For Sale';
       } else {
         caption = workflow.caption || 'Check out this video! 🔥';
         title = workflow.title || 'Viral Video';
@@ -186,7 +189,7 @@ export async function POST(request: NextRequest) {
  * Get workflow for specific brand
  */
 async function getWorkflowForBrand(
-  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit',
+  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit' | 'property',
   workflowId: string
 ): Promise<any | null> {
   if (brand === 'podcast') {
@@ -195,6 +198,9 @@ async function getWorkflowForBrand(
   } else if (brand === 'benefit') {
     const { getBenefitWorkflowById } = await import('@/lib/feed-store-firestore');
     return await getBenefitWorkflowById(workflowId);
+  } else if (brand === 'property') {
+    const { getPropertyVideoById } = await import('@/lib/feed-store-firestore');
+    return await getPropertyVideoById(workflowId);
   } else {
     const { getWorkflowById } = await import('@/lib/feed-store-firestore');
     return await getWorkflowById(workflowId, brand);
@@ -205,7 +211,7 @@ async function getWorkflowForBrand(
  * Update workflow for specific brand
  */
 async function updateWorkflowForBrand(
-  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit',
+  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit' | 'property',
   workflowId: string,
   updates: Record<string, any>
 ): Promise<void> {
@@ -215,6 +221,9 @@ async function updateWorkflowForBrand(
   } else if (brand === 'benefit') {
     const { updateBenefitWorkflow } = await import('@/lib/feed-store-firestore');
     await updateBenefitWorkflow(workflowId, updates);
+  } else if (brand === 'property') {
+    const { updatePropertyVideo } = await import('@/lib/feed-store-firestore');
+    await updatePropertyVideo(workflowId, updates);
   } else {
     const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
     await updateWorkflowStatus(workflowId, brand, updates);

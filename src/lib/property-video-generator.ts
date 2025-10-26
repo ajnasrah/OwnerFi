@@ -298,13 +298,10 @@ export function buildPropertyVideoRequest(
       character: {
         type: 'talking_photo',
         talking_photo_id: avatarId,
-        scale: 0.5, // Visible size
+        scale: 0.8, // Larger than 0.5 but smaller than benefit videos (1.4)
         talking_photo_style: 'circle', // Circular frame
-        talking_style: 'expressive',
-        offset: {
-          x: 0.5,  // DEAD CENTER horizontally (0.5 = exact middle)
-          y: 0.85  // Bottom of frame (0.85 = near bottom but safe from crop)
-        }
+        talking_style: 'expressive'
+        // REMOVED offset - let HeyGen position it automatically at default location
       },
       voice: {
         type: 'text',

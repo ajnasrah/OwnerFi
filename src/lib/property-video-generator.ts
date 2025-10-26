@@ -348,8 +348,8 @@ export function validatePropertyForVideo(property: PropertyListing): { valid: bo
   if (!property.address) errors.push('Missing address');
   if (!property.city) errors.push('Missing city');
   if (!property.state) errors.push('Missing state');
-  if (!property.bedrooms) errors.push('Missing bedrooms');
-  if (!property.bathrooms) errors.push('Missing bathrooms');
+  if (property.bedrooms === undefined || property.bedrooms === null) errors.push('Missing bedrooms');
+  if (property.bathrooms === undefined || property.bathrooms === null) errors.push('Missing bathrooms');
 
   // Check either downPaymentAmount OR downPaymentPercent exists (0 is valid)
   if ((property.downPaymentAmount === undefined || property.downPaymentAmount === null) && !property.downPaymentPercent) {

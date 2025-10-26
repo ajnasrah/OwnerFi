@@ -44,12 +44,14 @@ export async function GET(request: NextRequest) {
 }
 
 async function executeFailsafe() {
-  const SUBMAGIC_API_KEY = process.env.SUBMAGIC_API_KEY;
-  if (!SUBMAGIC_API_KEY) {
-    throw new Error('Submagic API key not configured');
-  }
+  try {
+    const startTime = Date.now();
+    const SUBMAGIC_API_KEY = process.env.SUBMAGIC_API_KEY;
+    if (!SUBMAGIC_API_KEY) {
+      throw new Error('Submagic API key not configured');
+    }
 
-  console.log('🔍 [FAILSAFE] Checking for stuck Submagic workflows...');
+    console.log('🔍 [FAILSAFE] Checking for stuck Submagic workflows...');
 
   // Import the feed store functions that already work
   const {
@@ -471,20 +473,20 @@ async function executeFailsafe() {
     const completedCount = results.filter(r => r.action === 'completed_via_failsafe').length;
     const failedCount = results.filter(r => r.action === 'marked_failed').length;
     const stillProcessingCount = results.filter(r => r.action === 'still_processing').length;
+    const maxRetriesCount = results.filter(r => r.action === 'max_retries_exceeded').length;
 
     console.log(`\n✅ [FAILSAFE] Checked ${projects.length} stuck workflows (${completedCount} completed)`);
 
-    // Log metrics for monitoring failsafe usage
-    console.log(JSON.stringify({
-      event: 'failsafe_check',
-      type: 'submagic',
-      timestamp: new Date().toISOString(),
+    // Track failsafe execution metrics
+    const { trackFailsafeExecution } = await import('@/lib/monitoring');
+    await trackFailsafeExecution('check-stuck-submagic', {
       found: projects.length,
+      processed: projectsToProcess.length,
       completed: completedCount,
-      failed: failedCount,
-      stillProcessing: stillProcessingCount,
-      utilization: projects.length > 0 ? 'ACTIVE' : 'IDLE'
-    }));
+      failed: failedCount + maxRetriesCount,
+      skipped: skippedCount,
+      duration: Date.now() - startTime
+    });
 
     return {
       success: true,

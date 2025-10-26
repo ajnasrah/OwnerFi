@@ -37,13 +37,12 @@ export async function POST(request: NextRequest) {
     const currentStats = await getPropertyRotationStats();
     console.log(`📊 Current queue: ${currentStats.total} properties`);
 
-    // Get all active properties with < $15k down
+    // Get all active properties (no down payment filter)
     console.log('🔍 Finding eligible properties...');
     const propertiesQuery = query(
       collection(db, 'properties'),
       where('status', '==', 'active'),
-      where('isActive', '==', true),
-      where('downPaymentAmount', '<', 15000)
+      where('isActive', '==', true)
     );
 
     const snapshot = await getDocs(propertiesQuery);
@@ -57,35 +56,13 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Filter to properties with images AND valid down payment calculation
-    const { calculatePropertyFinancials } = await import('@/lib/property-calculations');
-
+    // Filter to properties with images only
     const eligibleProperties = snapshot.docs.filter(doc => {
       const property = doc.data();
-
-      // Must have images
-      if (!property.imageUrls || property.imageUrls.length === 0) {
-        return false;
-      }
-
-      // Calculate down payment to ensure it's valid
-      const financials = calculatePropertyFinancials({
-        listPrice: property.listPrice,
-        downPaymentAmount: property.downPaymentAmount,
-        downPaymentPercent: property.downPaymentPercent
-      });
-
-      // Must have down payment > $0 and < $15k
-      const isValidDownPayment = financials.downPaymentAmount > 0 && financials.downPaymentAmount < 15000;
-
-      if (!isValidDownPayment) {
-        console.log(`⏭️  Skipping ${property.address}: down payment $${financials.downPaymentAmount.toLocaleString()} (need > $0 and < $15k)`);
-      }
-
-      return isValidDownPayment;
+      return property.imageUrls && property.imageUrls.length > 0;
     });
 
-    console.log(`✅ ${eligibleProperties.length} properties are fully eligible (with images and valid down payment)`);
+    console.log(`✅ ${eligibleProperties.length} properties have images`);
 
     // Add to rotation queue
     let added = 0;

@@ -232,22 +232,23 @@ export async function syncBuyerToGHL(buyer: BuyerData): Promise<{ success: boole
     }
 
     // Send buyer data to GoHighLevel webhook
+    // Using snake_case and GHL standard field names for proper mapping
     const buyerPayload = {
-      buyerId: buyer.id,
-      userId: buyer.userId,
-      firstName: buyer.firstName || '',
-      lastName: buyer.lastName || '',
-      fullName: `${buyer.firstName} ${buyer.lastName}`.trim(),
+      buyer_id: buyer.id,
+      user_id: buyer.userId,
+      first_name: buyer.firstName || '',
+      last_name: buyer.lastName || '',
+      full_name: `${buyer.firstName} ${buyer.lastName}`.trim(),
       email: buyer.email,
       phone: buyer.phone || '',
       city: buyer.city || '',
       state: buyer.state || '',
-      maxMonthlyPayment: buyer.maxMonthlyPayment || 0,
-      maxDownPayment: buyer.maxDownPayment || 0,
-      searchRadius: buyer.searchRadius || 25,
+      max_monthly_payment: buyer.maxMonthlyPayment || 0,
+      max_down_payment: buyer.maxDownPayment || 0,
+      search_radius: buyer.searchRadius || 25,
       languages: buyer.languages?.join(', ') || 'English',
       source: 'ownerfi_platform',
-      createdAt: buyer.createdAt || new Date().toISOString()
+      created_at: buyer.createdAt || new Date().toISOString()
     };
 
     logInfo(`Sending buyer ${buyer.id} to GoHighLevel webhook`, {

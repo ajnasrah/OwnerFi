@@ -164,11 +164,11 @@ const DEFAULT_CONFIG = {
   "host": {
     "name": "Abdullah",
     "avatar_type": "talking_photo",
-    "avatar_id": "31c6b2b6306b47a2ba3572a23be09dbc",
+    "avatar_id": "f40972493dd74bbe829f30daa09ea1a9",
     "voice_id": "9070a6c2dbd54c10bb111dc8c655bff7",
     "scale": 1.4,
     "background_color": "#ffffff",
-    "description": "Host - uses same avatar from social media system"
+    "description": "Host - uses motion-enabled avatar from social media system"
   },
   "video_settings": {
     "dimension": {

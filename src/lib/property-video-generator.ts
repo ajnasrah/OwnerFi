@@ -287,7 +287,7 @@ function formatNumber(num: number): string {
 export function buildPropertyVideoRequest(
   property: PropertyListing,
   script: string,
-  avatarId: string = '31c6b2b6306b47a2ba3572a23be09dbc',
+  avatarId: string = 'f40972493dd74bbe829f30daa09ea1a9',
   voiceId: string = '9070a6c2dbd54c10bb111dc8c655bff7'
 ) {
   // Get best property image (prefer exterior shots)

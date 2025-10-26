@@ -11,7 +11,7 @@ const HEYGEN_API_URL = 'https://api.heygen.com/v2/video/generate';
 
 // Abdullah avatar config (same as viral system)
 const AVATAR_CONFIG = {
-  talking_photo_id: '31c6b2b6306b47a2ba3572a23be09dbc', // Same as viral/carz/ownerfi
+  talking_photo_id: 'f40972493dd74bbe829f30daa09ea1a9', // Motion-enabled avatar
   voice_id: '9070a6c2dbd54c10bb111dc8c655bff7',
   scale: 1.4, // Same scale as viral videos
   background_color: '#059669' // Green for buyers

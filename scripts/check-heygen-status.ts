@@ -1,3 +1,6 @@
+import dotenv from 'dotenv';
+dotenv.config({ path: '.env.local' });
+
 const videoId = process.argv[2] || '16a81a7572244f9a9731b10c7d7eec6c';
 const HEYGEN_API_KEY = process.env.HEYGEN_API_KEY;
 

@@ -8,7 +8,7 @@ import { PropertyListing } from '@/lib/property-schema';
 import Image from 'next/image';
 import { calculatePropertyFinancials } from '@/lib/property-calculations';
 import { useDropzone } from 'react-dropzone';
-import { PropertyListingSwiper } from '@/components/ui/PropertySwiper';
+import { PropertySwiper2 } from '@/components/ui/PropertySwiper2';
 
 // Extended Property interface for admin with legacy imageUrl field
 interface AdminProperty extends PropertyListing {
@@ -2878,8 +2878,8 @@ export default function AdminDashboard() {
                 Exit Preview
               </button>
 
-              {/* PropertyListingSwiper Component */}
-              <PropertyListingSwiper
+              {/* PropertySwiper2 Component - Modern Swiper with Optimized Performance */}
+              <PropertySwiper2
                 properties={previewProperties}
                 onLike={() => {}} // Dummy handler for preview
                 onPass={() => {}} // Dummy handler for preview

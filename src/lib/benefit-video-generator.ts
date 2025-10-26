@@ -162,7 +162,8 @@ EXAMPLE OUTPUT:
             type: 'talking_photo',
             talking_photo_id: AVATAR_CONFIG.talking_photo_id,
             scale: AVATAR_CONFIG.scale,
-            talking_photo_style: 'circle'
+            talking_photo_style: 'square', // Full screen, not circle
+            talking_style: 'expressive'
           },
           voice: {
             type: 'text',

@@ -38,7 +38,7 @@ This is much more engaging than a static avatar!`;
         type: 'talking_photo',
         talking_photo_id: MOTION_AVATAR_ID,
         scale: 1.4,
-        talking_photo_style: 'circle',
+        talking_photo_style: 'square', // Full screen
         talking_style: 'expressive',
         offset: {
           x: 0,

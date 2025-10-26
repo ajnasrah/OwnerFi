@@ -128,17 +128,62 @@ export async function GET(request: NextRequest) {
       console.error(`   ❌ Error querying podcast_workflow_queue:`, err);
     }
 
+    // Check Property video workflows stuck in heygen_processing
+    console.log(`\n📂 Checking property_video_workflows...`);
+    try {
+      const q = query(
+        collection(db, 'property_video_workflows'),
+        where('status', '==', 'heygen_processing')
+      );
+
+      const snapshot = await getDocs(q);
+      console.log(`   Found ${snapshot.size} property workflows in heygen_processing`);
+
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const heygenVideoId = data.heygenVideoId;
+        const timestamp = data.statusChangedAt || data.updatedAt || 0;
+        const stuckMinutes = Math.round((Date.now() - timestamp) / 60000);
+
+        console.log(`   📄 Property ${doc.id}: heygenVideoId = ${heygenVideoId || 'MISSING'}, stuck for ${stuckMinutes} min`);
+
+        if (heygenVideoId) {
+          heygenProjects.push({
+            videoId: heygenVideoId,
+            workflowId: doc.id,
+            brand: 'property',
+            isProperty: true,
+            stuckMinutes,
+            workflow: data
+          });
+        } else if (stuckMinutes > 30) {
+          console.warn(`   ❌ Property ${doc.id} has no heygenVideoId after ${stuckMinutes} min - marking failed`);
+          heygenProjects.push({
+            videoId: null,
+            workflowId: doc.id,
+            brand: 'property',
+            isProperty: true,
+            shouldFail: true,
+            workflow: data
+          });
+        }
+      });
+    } catch (err) {
+      console.error(`   ❌ Error querying property_video_workflows:`, err);
+    }
+
     console.log(`\n📋 Found ${heygenProjects.length} stuck HeyGen workflows`);
 
     const results = [];
 
     // Check each stuck workflow's HeyGen status
     for (const project of heygenProjects) {
-      const { videoId, workflowId, brand, stuckMinutes, shouldFail, workflow, isPodcast } = project as any;
+      const { videoId, workflowId, brand, stuckMinutes, shouldFail, workflow, isPodcast, isProperty } = project as any;
 
       // Handle workflows that should be marked as failed
       if (shouldFail || !videoId) {
-        console.log(`\n❌ Marking ${isPodcast ? 'podcast' : 'workflow'} ${workflowId} as failed (no HeyGen video ID)`);
+        const workflowType = isPodcast ? 'podcast' : isProperty ? 'property' : 'workflow';
+        console.log(`\n❌ Marking ${workflowType} ${workflowId} as failed (no HeyGen video ID)`);
 
         try {
           if (isPodcast) {
@@ -146,6 +191,13 @@ export async function GET(request: NextRequest) {
             await updatePodcastWorkflow(workflowId, {
               status: 'failed',
               error: 'HeyGen video generation failed - no video ID received'
+            });
+          } else if (isProperty) {
+            const { doc, updateDoc } = await import('firebase/firestore');
+            await updateDoc(doc(db, 'property_video_workflows', workflowId), {
+              status: 'failed',
+              error: 'HeyGen video generation failed - no video ID received',
+              updatedAt: Date.now()
             });
           } else {
             const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
@@ -159,11 +211,12 @@ export async function GET(request: NextRequest) {
             workflowId,
             brand,
             isPodcast,
+            isProperty,
             action: 'marked_failed',
             reason: 'no_heygen_id'
           });
         } catch (err) {
-          console.error(`   ❌ Error marking ${isPodcast ? 'podcast' : 'workflow'} as failed:`, err);
+          console.error(`   ❌ Error marking ${workflowType} as failed:`, err);
         }
         continue;
       }
@@ -218,9 +271,14 @@ export async function GET(request: NextRequest) {
             const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ||
                             (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
                             'https://ownerfi.ai';
-            const webhookUrl = isPodcast ? `${baseUrl}/api/webhooks/submagic-podcast` : `${baseUrl}/api/webhooks/submagic`;
+            const webhookUrl = isPodcast
+              ? `${baseUrl}/api/webhooks/submagic-podcast`
+              : isProperty
+                ? `${baseUrl}/api/webhooks/submagic-property`
+                : `${baseUrl}/api/webhooks/submagic`;
 
-            let title = workflow.articleTitle || workflow.topic || `${isPodcast ? 'Podcast' : 'Viral Video'} - ${workflowId}`;
+            let title = workflow.articleTitle || workflow.topic || workflow.propertyAddress ||
+              `${isPodcast ? 'Podcast' : isProperty ? 'Property' : 'Viral Video'} - ${workflowId}`;
 
             // Decode HTML entities before measuring length
             title = title
@@ -273,6 +331,14 @@ export async function GET(request: NextRequest) {
                 status: 'submagic_processing',
                 submagicVideoId: projectId
               });
+            } else if (isProperty) {
+              const { doc, updateDoc } = await import('firebase/firestore');
+              await updateDoc(doc(db, 'property_video_workflows', workflowId), {
+                status: 'submagic_processing',
+                submagicVideoId: projectId,
+                heygenVideoUrl: videoUrl,
+                updatedAt: Date.now()
+              });
             } else {
               const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
               await updateWorkflowStatus(workflowId, brand, {
@@ -286,6 +352,7 @@ export async function GET(request: NextRequest) {
               workflowId,
               brand,
               isPodcast,
+              isProperty,
               action: 'advanced_to_submagic',
               submagicProjectId: projectId,
               success: true
@@ -298,6 +365,13 @@ export async function GET(request: NextRequest) {
               await updatePodcastWorkflow(workflowId, {
                 status: 'failed',
                 error: submagicError instanceof Error ? submagicError.message : 'Unknown error'
+              });
+            } else if (isProperty) {
+              const { doc, updateDoc } = await import('firebase/firestore');
+              await updateDoc(doc(db, 'property_video_workflows', workflowId), {
+                status: 'failed',
+                error: submagicError instanceof Error ? submagicError.message : 'Unknown error',
+                updatedAt: Date.now()
               });
             } else {
               const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');

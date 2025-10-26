@@ -237,6 +237,20 @@
       ]
     },
     {
+      "collectionGroup": "scraper_queue",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "addedAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
       "collectionGroup": "zillow_imports",
       "queryScope": "COLLECTION",
       "fields": [

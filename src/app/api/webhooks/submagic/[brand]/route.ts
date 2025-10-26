@@ -5,7 +5,7 @@
  * Each brand has its own isolated webhook endpoint to prevent failures from affecting other brands.
  *
  * Route: /api/webhooks/submagic/[brand]
- * Brands: carz, ownerfi, podcast
+ * Brands: carz, ownerfi, podcast, vassdistro, benefit, property
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -167,7 +167,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
  * Get workflow by Submagic project ID for specific brand
  */
 async function getWorkflowBySubmagicId(
-  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit' | 'property',
+  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit' | 'property' | 'vassdistro',
   submagicProjectId: string
 ): Promise<{ workflowId: string; workflow: any } | null> {
   if (brand === 'podcast') {

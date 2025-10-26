@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
     // - Financial Advisor (Henry): talking_photo_id '1375223b2cc24ff0a21830fbf5cb45ba', voice '8c0bd8c49b2849dc96f8e89b8eace60'
 
     // Get brand-specific avatar and voice defaults
-    let defaultAvatarId = '8988e02d16544a4286305603244310fc'; // Abdullah avatar for Carz/OwnerFi/Benefit
+    let defaultAvatarId = 'f40972493dd74bbe829f30daa09ea1a9'; // Abdullah avatar for Carz/OwnerFi/Benefit
     let defaultVoiceId = '9070a6c2dbd54c10bb111dc8c655bff7'; // Default voice
     let avatarType: 'avatar' | 'talking_photo' = 'avatar'; // Use avatar type for Abdullah
 

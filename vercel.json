@@ -43,18 +43,14 @@
     },
     {
       "path": "/api/cron/check-stuck-heygen",
-      "schedule": "*/15 * * * *"
+      "schedule": "0 */6 * * *"
     },
     {
       "path": "/api/cron/check-stuck-submagic",
-      "schedule": "*/15 * * * *"
-    },
-    {
-      "path": "/api/cron/check-stuck-posting",
       "schedule": "0 */2 * * *"
     },
     {
-      "path": "/api/cron/check-stuck-video-processing",
+      "path": "/api/cron/check-stuck-posting",
       "schedule": "0 */2 * * *"
     },
     {
@@ -118,9 +114,6 @@
       "maxDuration": 60
     },
     "src/app/api/cron/check-stuck-posting/route.ts": {
-      "maxDuration": 60
-    },
-    "src/app/api/cron/check-stuck-video-processing/route.ts": {
       "maxDuration": 60
     },
     "src/app/api/benefit/cron/route.ts": {

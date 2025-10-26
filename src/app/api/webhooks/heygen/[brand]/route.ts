@@ -303,8 +303,8 @@ async function triggerSubmagicProcessing(
       webhookUrl: submagicWebhookUrl, // Brand-specific webhook
       templateName: 'Hormozi 2', // Professional captions style
       magicZooms: true, // Auto zoom on important moments (enabled for ALL brands)
-      magicBrolls: brand !== 'property', // B-rolls DISABLED for property videos
-      magicBrollsPercentage: brand !== 'property' ? 75 : 0, // 0% for property, 75% for others
+      magicBrolls: brand !== 'property' && brand !== 'podcast', // B-rolls DISABLED for property and podcast
+      magicBrollsPercentage: (brand !== 'property' && brand !== 'podcast') ? 75 : 0, // 0% for property/podcast, 75% for others
       removeSilencePace: brand !== 'property' ? 'fast' : 'off', // OFF for property (keep full script)
       removeBadTakes: brand !== 'property', // OFF for property (keep all content)
     };

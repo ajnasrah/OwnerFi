@@ -630,7 +630,8 @@ async function generateHeyGenVideo(params: {
     } else {
       character.talking_photo_id = params.avatar_id;
       character.talking_style = 'expressive';
-      character.matting = true; // Remove background
+      // NOTE: No matting - keep avatar's original background
+      // Property videos use circle style with background removal, but not viral videos
     }
 
     console.log(`📹 HeyGen Character Object:`, JSON.stringify(character, null, 2));

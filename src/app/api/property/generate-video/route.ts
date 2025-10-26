@@ -55,13 +55,29 @@ export async function POST(request: NextRequest) {
 
     const property = { id: propertyDoc.id, ...propertyDoc.data() } as PropertyListing;
 
+    console.log(`📋 Property data check:`);
+    console.log(`   Address: ${property.address}`);
+    console.log(`   List Price: $${property.listPrice}`);
+    console.log(`   Down Payment Amount: $${property.downPaymentAmount}`);
+    console.log(`   Down Payment Percent: ${property.downPaymentPercent}%`);
+    console.log(`   Status: ${property.status}`);
+    console.log(`   isActive: ${property.isActive}`);
+    console.log(`   Images: ${property.imageUrls?.length || 0}`);
+
     // Check eligibility
     if (!isEligibleForVideo(property)) {
+      // Get detailed validation errors
+      const validation = validatePropertyForVideo(property);
+
+      console.error(`❌ Property not eligible`);
+      console.error(`   Validation errors: ${validation.errors.join(', ')}`);
+
       return NextResponse.json(
         {
           success: false,
           error: 'Property not eligible',
-          reason: 'Must be active with <$15k down and have images'
+          reason: 'Must be active with <$15k down and have images',
+          details: validation.errors
         },
         { status: 400 }
       );

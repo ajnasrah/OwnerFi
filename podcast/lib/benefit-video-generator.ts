@@ -289,6 +289,7 @@ DISCLAIMER REQUIRED AT END:
    */
   private async callHeyGenAPI(request: HeyGenVideoRequest): Promise<HeyGenVideoResponse> {
     console.log('\n📤 Sending request to HeyGen API...');
+    console.log('Request body:', JSON.stringify(request, null, 2));
 
     // Use circuit breaker and timeout for reliability (same as Carz/OwnerFi)
     const { circuitBreakers, fetchWithTimeout, TIMEOUTS } = await import('@/lib/api-utils');
@@ -310,13 +311,23 @@ DISCLAIMER REQUIRED AT END:
     });
 
     if (!response.ok) {
-      const error = await response.text();
-      console.error('❌ API Error Response:', error);
-      throw new Error(`HeyGen API request failed: ${response.status} - ${error}`);
+      const errorText = await response.text();
+      console.error('❌ API Error Response:', errorText);
+
+      // Try to parse as JSON for better error messages
+      let errorData;
+      try {
+        errorData = JSON.parse(errorText);
+      } catch {
+        errorData = { message: errorText };
+      }
+
+      throw new Error(`HeyGen API request failed: ${response.status} - ${JSON.stringify(errorData)}`);
     }
 
     const result = await response.json();
     console.log('📥 API Response received');
+    console.log('Full response:', JSON.stringify(result, null, 2));
     return result;
   }
 

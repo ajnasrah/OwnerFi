@@ -112,16 +112,19 @@ export async function POST(request: NextRequest) {
     // - Financial Advisor (Henry): talking_photo_id '1375223b2cc24ff0a21830fbf5cb45ba', voice '8c0bd8c49b2849dc96f8e89b8eace60'
 
     // Get brand-specific avatar and voice defaults
-    let defaultAvatarId = '31c6b2b6306b47a2ba3572a23be09dbc'; // Default "me" avatar
+    let defaultAvatarId = '8988e02d16544a4286305603244310fc'; // Abdullah avatar for Carz/OwnerFi/Benefit
     let defaultVoiceId = '9070a6c2dbd54c10bb111dc8c655bff7'; // Default voice
+    let avatarType: 'avatar' | 'talking_photo' = 'avatar'; // Use avatar type for Abdullah
 
     if (brand === 'vassdistro') {
-      defaultAvatarId = 'feec83b62d9e48478a988eec5730154c'; // Vass Distro avatar
-      defaultVoiceId = '35659e86ce244d8389d525a9648d9c4a'; // Carter Lee voice
+      defaultAvatarId = '30697231fc7f4c1c98193c7f55001cd1'; // VassDistro avatar (updated)
+      defaultVoiceId = '9070a6c2dbd54c10bb111dc8c655bff7'; // Use same voice as other brands
+      avatarType = 'talking_photo'; // VassDistro uses talking_photo
     }
 
     const videoResult = await generateHeyGenVideo({
-      talking_photo_id: body.talking_photo_id || defaultAvatarId,
+      avatar_id: body.avatar_id || defaultAvatarId,
+      avatar_type: avatarType,
       voice_id: body.voice_id || defaultVoiceId,
       input_text: content.script,
       scale: 1.4,
@@ -592,14 +595,15 @@ async function generateViralContent(content: string, brand: string): Promise<{ s
 
 // Helper: Generate HeyGen video
 async function generateHeyGenVideo(params: {
-  talking_photo_id: string;
+  avatar_id: string;
+  avatar_type: 'avatar' | 'talking_photo';
   voice_id: string;
   input_text: string;
   scale: number;
   width: number;
   height: number;
   callback_id?: string;
-  brand?: 'carz' | 'ownerfi';
+  brand?: 'carz' | 'ownerfi' | 'vassdistro';
 }): Promise<{ success: boolean; video_id?: string; error?: string }> {
   try {
     // Use brand-specific webhook URL from configuration
@@ -608,15 +612,24 @@ async function generateHeyGenVideo(params: {
     const webhookUrl = getBrandWebhookUrl(brand, 'heygen');
     console.log(`📞 HeyGen webhook URL (${brand}): ${webhookUrl}`);
 
+    // Build character based on avatar type
+    const character: any = {
+      type: params.avatar_type,
+      scale: params.scale
+    };
+
+    if (params.avatar_type === 'avatar') {
+      character.avatar_id = params.avatar_id;
+      character.avatar_style = 'normal';
+    } else {
+      character.talking_photo_id = params.avatar_id;
+      character.talking_photo_style = 'square';
+      character.talking_style = 'expressive';
+    }
+
     const requestBody: any = {
       video_inputs: [{
-        character: {
-          type: 'talking_photo',
-          talking_photo_id: params.talking_photo_id,
-          scale: params.scale,
-          talking_photo_style: 'square',
-          talking_style: 'expressive'
-        },
+        character,
         voice: {
           type: 'text',
           input_text: params.input_text,

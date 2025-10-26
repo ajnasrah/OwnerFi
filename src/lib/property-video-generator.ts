@@ -351,8 +351,8 @@ export function validatePropertyForVideo(property: PropertyListing): { valid: bo
   if (!property.bedrooms) errors.push('Missing bedrooms');
   if (!property.bathrooms) errors.push('Missing bathrooms');
 
-  // Check either downPaymentAmount OR downPaymentPercent exists
-  if (!property.downPaymentAmount && !property.downPaymentPercent) {
+  // Check either downPaymentAmount OR downPaymentPercent exists (0 is valid)
+  if ((property.downPaymentAmount === undefined || property.downPaymentAmount === null) && !property.downPaymentPercent) {
     errors.push('Missing down payment (need either amount or percent)');
   }
 

@@ -74,7 +74,7 @@ async function executeFailsafe() {
   const MAX_WORKFLOWS_PER_RUN = 10; // Process max 10 workflows per cron run to avoid timeouts
 
   // Check all brand workflows (use submagicVideoId field)
-  for (const brand of ['carz', 'ownerfi', 'vassdistro'] as const) {
+  for (const brand of ['carz', 'ownerfi', 'vassdistro', 'benefit'] as const) {
     const collectionName = getCollectionName('WORKFLOW_QUEUE', brand);
       console.log(`\n📂 Checking ${collectionName}...`);
 
@@ -371,10 +371,58 @@ async function executeFailsafe() {
               } else {
                 throw new Error('Podcast workflow not found');
               }
+            } else if (brand === 'benefit') {
+              // BENEFIT: Educational videos about owner financing
+              const { getBenefitWorkflowById } = await import('@/lib/feed-store-firestore');
+              const workflow = await getBenefitWorkflowById(workflowId);
+
+              if (workflow) {
+                console.log(`   📱 Posting benefit video to social media via Late queue...`);
+
+                const { postToLate } = await import('@/lib/late-api');
+
+                // Post to all platforms using queue
+                const allPlatforms = ['facebook', 'instagram', 'tiktok', 'youtube', 'linkedin', 'threads'] as any[];
+
+                const postResult = await postToLate({
+                  videoUrl: publicVideoUrl,
+                  caption: workflow.caption || 'Learn about owner financing! 🏡',
+                  title: workflow.title || 'Owner Finance Benefits',
+                  platforms: allPlatforms,
+                  useQueue: true,
+                  brand: 'benefit'
+                });
+
+                console.log(`   ${postResult.success ? '✅' : '❌'} Late post: ${postResult.postId || postResult.error}`);
+
+                if (postResult.success) {
+                  console.log(`   ✅ Posted benefit video to Late!`);
+                  const { updateBenefitWorkflow } = await import('@/lib/feed-store-firestore');
+                  await updateBenefitWorkflow(workflowId, {
+                    status: 'completed',
+                    finalVideoUrl: publicVideoUrl,
+                    latePostId: postResult.postId,
+                    completedAt: Date.now()
+                  });
+
+                  results.push({
+                    projectId,
+                    workflowId,
+                    brand,
+                    isPodcast: false,
+                    action: 'completed_via_failsafe',
+                    success: true
+                  });
+                } else {
+                  throw new Error(`Benefit Late posting failed: ${postResult.error}`);
+                }
+              } else {
+                throw new Error('Benefit workflow not found');
+              }
             } else {
-              // SOCIAL MEDIA: Post to Reels/Shorts + Stories
+              // SOCIAL MEDIA (carz, ownerfi, vassdistro): Post to Reels/Shorts + Stories
               const { getWorkflowById } = await import('@/lib/feed-store-firestore');
-              const workflowData = await getWorkflowById(workflowId);
+              const workflowData = await getWorkflowById(workflowId, brand);
               const workflow = workflowData?.workflow;
 
               if (workflow) {

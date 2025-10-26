@@ -295,18 +295,18 @@ async function triggerSubmagicProcessing(
     }
 
     // Send HeyGen URL directly to Submagic (no R2 upload - faster!)
-    // Full Submagic optimization with all features enabled
+    // Full Submagic optimization with brand-specific features
     const submagicConfig: any = {
       title,
       language: 'en',
       videoUrl: heygenVideoUrl, // ⚡ Send HeyGen URL directly (not R2 URL)
       webhookUrl: submagicWebhookUrl, // Brand-specific webhook
       templateName: 'Hormozi 2', // Professional captions style
-      magicZooms: true, // Auto zoom on important moments
-      magicBrolls: brand !== 'property', // B-rolls for all brands EXCEPT property
-      magicBrollsPercentage: 75, // Higher percentage for better engagement
-      removeSilencePace: 'fast', // Remove dead air/silence
-      removeBadTakes: true, // Remove filler words and bad takes
+      magicZooms: true, // Auto zoom on important moments (enabled for ALL brands)
+      magicBrolls: brand !== 'property', // B-rolls DISABLED for property videos
+      magicBrollsPercentage: brand !== 'property' ? 75 : 0, // 0% for property, 75% for others
+      removeSilencePace: brand !== 'property' ? 'fast' : 'off', // OFF for property (keep full script)
+      removeBadTakes: brand !== 'property', // OFF for property (keep all content)
     };
 
     const response = await fetch('https://api.submagic.co/v1/projects', {

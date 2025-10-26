@@ -3,6 +3,7 @@
 // A/B Testing: Generates both 30-sec and 15-sec variants
 
 import { PropertyListing } from './property-schema';
+import { calculatePropertyFinancials } from './property-calculations';
 
 export interface PropertyVideoScript {
   script: string;
@@ -60,9 +61,19 @@ export async function generatePropertyScriptWithAI(property: PropertyListing, op
  * Generate video script for a property listing (fallback without AI)
  */
 export function generatePropertyScript(property: PropertyListing): PropertyVideoScript {
+  // Calculate financials to get downPaymentAmount (handles both downPaymentAmount and downPaymentPercent)
+  const financials = calculatePropertyFinancials({
+    listPrice: property.listPrice,
+    downPaymentAmount: property.downPaymentAmount,
+    downPaymentPercent: property.downPaymentPercent,
+    monthlyPayment: property.monthlyPayment,
+    interestRate: property.interestRate,
+    termYears: property.termYears
+  });
+
   // Format numbers (no decimals, rounded)
-  const downPayment = formatCurrencyRounded(property.downPaymentAmount);
-  const monthlyPayment = formatCurrencyRounded(property.monthlyPayment);
+  const downPayment = formatCurrencyRounded(financials.downPaymentAmount);
+  const monthlyPayment = formatCurrencyRounded(financials.monthlyPayment);
   const listPrice = formatCurrencyRounded(property.listPrice);
   const sqft = property.squareFeet ? formatNumber(property.squareFeet) : null;
 
@@ -218,8 +229,15 @@ function generateHashtags(property: PropertyListing): string[] {
  * Check if property is eligible for video generation
  */
 export function isEligibleForVideo(property: PropertyListing): boolean {
+  // Calculate financials to get downPaymentAmount (handles both downPaymentAmount and downPaymentPercent)
+  const financials = calculatePropertyFinancials({
+    listPrice: property.listPrice,
+    downPaymentAmount: property.downPaymentAmount,
+    downPaymentPercent: property.downPaymentPercent
+  });
+
   return (
-    property.downPaymentAmount < 15000 &&
+    financials.downPaymentAmount < 15000 &&
     property.status === 'active' &&
     property.isActive === true &&
     property.imageUrls &&
@@ -332,7 +350,12 @@ export function validatePropertyForVideo(property: PropertyListing): { valid: bo
   if (!property.state) errors.push('Missing state');
   if (!property.bedrooms) errors.push('Missing bedrooms');
   if (!property.bathrooms) errors.push('Missing bathrooms');
-  if (!property.downPaymentAmount) errors.push('Missing down payment');
+
+  // Check either downPaymentAmount OR downPaymentPercent exists
+  if (!property.downPaymentAmount && !property.downPaymentPercent) {
+    errors.push('Missing down payment (need either amount or percent)');
+  }
+
   if (!property.monthlyPayment) errors.push('Missing monthly payment');
   if (!property.interestRate) errors.push('Missing interest rate');
   if (!property.termYears) errors.push('Missing term years');

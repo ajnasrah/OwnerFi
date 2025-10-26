@@ -3,7 +3,6 @@
 // Runs 3x daily: 11 AM, 5 PM, 11 PM EST
 
 import { NextRequest, NextResponse } from 'next/server';
-import { admin } from '@/lib/firebase-admin';
 import { isEligibleForVideo } from '@/lib/property-video-generator';
 import type { PropertyListing } from '@/lib/property-schema';
 

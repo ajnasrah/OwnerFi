@@ -2,7 +2,7 @@
 // Generates HeyGen videos for owner-financed properties
 
 import { NextRequest, NextResponse } from 'next/server';
-import { admin } from '@/lib/firebase-admin';
+import { getAdminDb } from '@/lib/firebase-admin';
 import {
   generatePropertyScript,
   generatePropertyScriptWithAI,
@@ -33,8 +33,15 @@ export async function POST(request: NextRequest) {
     console.log(`🏡 Generating video for property: ${propertyId}`);
 
     // Get property from Firestore
-    const propertyDoc = await admin
-      .firestore()
+    const adminDb = await getAdminDb();
+    if (!adminDb) {
+      return NextResponse.json(
+        { success: false, error: 'Firebase Admin not initialized' },
+        { status: 500 }
+      );
+    }
+
+    const propertyDoc = await (adminDb as any)
       .collection('properties')
       .doc(propertyId)
       .get();
@@ -130,8 +137,7 @@ export async function POST(request: NextRequest) {
       };
     }
 
-    await admin
-      .firestore()
+    await (adminDb as any)
       .collection('property_videos')
       .doc(workflowId)
       .set(workflowData);
@@ -196,8 +202,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Update workflow with HeyGen video ID
-    await admin
-      .firestore()
+    await (adminDb as any)
       .collection('property_videos')
       .doc(workflowId)
       .update({

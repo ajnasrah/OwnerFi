@@ -2,7 +2,7 @@
 // Returns workflow logs for property video generation
 
 import { NextRequest, NextResponse } from 'next/server';
-import { admin } from '@/lib/firebase-admin';
+import { getAdminDb } from '@/lib/firebase-admin';
 
 export const maxDuration = 60;
 
@@ -11,8 +11,15 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const showHistory = searchParams.get('history') === 'true';
 
-    const db = admin.firestore();
-    const propertyVideosRef = db.collection('property_videos');
+    const adminDb = await getAdminDb();
+    if (!adminDb) {
+      return NextResponse.json(
+        { success: false, error: 'Firebase Admin not initialized' },
+        { status: 500 }
+      );
+    }
+
+    const propertyVideosRef = (adminDb as any).collection('property_videos');
 
     let query;
     if (showHistory) {

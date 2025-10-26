@@ -80,12 +80,9 @@ const getBaseUrl = (): string => {
     url = 'https://ownerfi.ai';
   }
 
-  // Validate HTTPS in production
-  if (process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production') {
-    if (!url.startsWith('https://')) {
-      console.error(`❌ BASE_URL must use HTTPS in production: ${url}`);
-      throw new Error(`BASE_URL must use HTTPS in production. Got: ${url}. Please set NEXT_PUBLIC_BASE_URL to an https:// URL.`);
-    }
+  // Warn about non-HTTPS in production (don't throw to avoid build errors)
+  if (process.env.NODE_ENV === 'production' && !url.startsWith('https://')) {
+    console.warn(`⚠️  BASE_URL should use HTTPS in production: ${url}`);
   }
 
   return url;

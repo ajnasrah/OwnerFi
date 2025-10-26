@@ -91,9 +91,7 @@ The down payment is estimated to be around ${downPayment}. Monthly payment estim
 
 ${highlight}
 
-If you'd like to see other owner finance deals in your area, visit ownerfi.ai and create a free account.
-
-This is not financial or legal advice. We are a marketing platform. All deals subject to seller approval and terms may change.`;
+Visit OwnerFi.ai to see more homes near you — all free with agent contact info. Prices and terms may change anytime.`;
 
   // Build caption
   const caption = generateCaption(property);
@@ -129,9 +127,9 @@ function generateCaption(property: PropertyListing): string {
 
 ${highlight}
 
-We connect buyers with owner-financed homes in ${property.city} and surrounding areas. This is a marketing platform - not financial/legal advice. All deals subject to seller approval. Always consult professionals.
+Visit OwnerFi.ai to find homes near you for free. Prices and terms may change anytime.
 
-See more ${property.city} deals at ownerfi.ai`;
+See more ${property.city} deals at OwnerFi.ai`;
 }
 
 /**
@@ -372,11 +370,22 @@ export function validatePropertyForVideo(property: PropertyListing): { valid: bo
 
 /**
  * Get system prompt for OpenAI property video generation
+ * OWNERFI DUAL-MODE DEAL VIDEO SYSTEM PROMPT
  */
 function getPropertySystemPrompt(): string {
   return `ROLE:
 You are the viral video content generator for OwnerFi.ai, a platform that helps people discover homes they can buy without banks — through seller financing and agent-listed creative deals.
 Your job is to turn property data into two punchy, legally safe scripts for short-form videos (one 30 sec and one 15 sec).
+
+🎯 INPUT DATA (per listing)
+Each run will include fields like:
+- city, state
+- price
+- bedrooms, bathrooms, sqft
+- monthly_payment (estimated)
+- highlight (e.g. seller financing, rent-to-own, flexible terms)
+
+Use this info naturally in the scripts without sounding like a robot.
 
 🏡 MODE 1 – 30 SECOND "DEAL EXPLAINER"
 
@@ -434,7 +443,17 @@ CAPTION_30: [2–3 sentences + disclaimer + 3–5 hashtags]
 
 TITLE_15: [under 45 characters]
 SCRIPT_15: [spoken text only]
-CAPTION_15: [1–2 sentences + disclaimer + 3–5 hashtags]`;
+CAPTION_15: [1–2 sentences + disclaimer + 3–5 hashtags]
+
+💡 EXAMPLE OUTPUT
+
+TITLE_30: 🏡 No Bank? Real Deal in Texas!
+SCRIPT_30: "Crazy part? This 3-bed home near Dallas might cost less than rent. It's around $250K, and the seller's open to owner financing — no bank, no credit drama. You could own instead of rent. Visit OwnerFi.ai to see more homes near you — all free with agent contact info. Prices and terms may change anytime."
+CAPTION_30: Homes like this are out there — seller finance, flexible terms, real ownership without banks. Visit OwnerFi.ai to find homes near you for free. Prices and terms may change anytime. #OwnerFi #Homeownership #NoBankLoan #TexasHomes #RealEstate
+
+TITLE_15: 💥 No Bank Homes Under $250K?!
+SCRIPT_15: "Stop scrolling — this 3-bed near Dallas might actually cost less than rent. It's around $250K and the seller's open to owner financing. See more free listings near you at OwnerFi.ai — prices and terms can change anytime."
+CAPTION_15: Browse real owner-finance homes for free on OwnerFi.ai. No banks, no catch. Prices and terms may change anytime. #OwnerFi #RealEstate #Homeownership #NoBankLoan #TexasDeals`;
 }
 
 /**
@@ -498,10 +517,9 @@ function parsePropertyResponse(content: string, property: PropertyListing): Dual
 function generateShortScript(property: PropertyListing): string {
   const price = formatCurrencyRounded(property.listPrice);
   const city = property.city;
-  const state = property.state;
   const beds = property.bedrooms;
 
-  return `Stop scrolling — this ${beds}-bed near ${city} might cost less than rent. It's around ${price} and the seller's open to owner financing. See more free listings at OwnerFi.ai — prices and terms can change anytime.`;
+  return `Stop scrolling — this ${beds}-bed near ${city} might cost less than rent. It's around ${price} and the seller's open to owner financing. See more free listings near you at OwnerFi.ai — prices and terms can change anytime.`;
 }
 
 /**

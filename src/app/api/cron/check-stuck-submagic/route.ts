@@ -125,6 +125,149 @@ async function executeFailsafe() {
       }
     }
 
+    // Check Property videos stuck in HeyGen processing
+    console.log(`\n📂 Checking property_videos (heygen_processing)...`);
+    try {
+      const q = query(
+        collection(db, 'property_videos'),
+        where('status', '==', 'heygen_processing')
+      );
+
+      const snapshot = await getDocs(q);
+      console.log(`   Found ${snapshot.size} property videos in heygen_processing`);
+
+      for (const doc of snapshot.docs) {
+        const data = doc.data();
+        const heygenVideoId = data.heygenVideoId;
+        const timestamp = data.updatedAt || 0;
+        const stuckMinutes = Math.round((Date.now() - timestamp) / 60000);
+
+        console.log(`   📄 Property ${doc.id}: heygenVideoId = ${heygenVideoId || 'MISSING'}, stuck for ${stuckMinutes} min`);
+
+        // Check HeyGen status if stuck > 5 minutes
+        if (heygenVideoId && stuckMinutes > 5) {
+          const HEYGEN_API_KEY = process.env.HEYGEN_API_KEY;
+          try {
+            const heygenResponse = await fetch(
+              `https://api.heygen.com/v1/video_status.get?video_id=${heygenVideoId}`,
+              {
+                headers: {
+                  'accept': 'application/json',
+                  'x-api-key': HEYGEN_API_KEY!
+                }
+              }
+            );
+
+            if (heygenResponse.ok) {
+              const heygenData = await heygenResponse.json();
+              if (heygenData.data?.status === 'completed' && heygenData.data?.video_url) {
+                console.log(`   ✅ HeyGen completed! Recovering workflow...`);
+
+                // Upload to R2
+                const {downloadAndUploadToR2} = await import('@/lib/video-storage');
+                const r2Url = await downloadAndUploadToR2(
+                  heygenData.data.video_url,
+                  HEYGEN_API_KEY!,
+                  `property-videos/${doc.id}.mp4`
+                );
+
+                // Update workflow
+                const { doc: firestoreDoc, updateDoc } = await import('firebase/firestore');
+                await updateDoc(firestoreDoc(db, 'property_videos', doc.id), {
+                  heygenVideoUrl: heygenData.data.video_url,
+                  heygenVideoR2Url: r2Url,
+                  status: 'heygen_completed',
+                  updatedAt: Date.now()
+                });
+
+                // Send to Submagic
+                const SUBMAGIC_API_KEY = process.env.SUBMAGIC_API_KEY;
+                const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://ownerfi.ai';
+                const submagicWebhookUrl = `${baseUrl}/api/webhooks/submagic/property`;
+
+                const submagicResponse = await fetch('https://api.submagic.co/v1/projects', {
+                  method: 'POST',
+                  headers: {
+                    'x-api-key': SUBMAGIC_API_KEY!,
+                    'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify({
+                    title: `${data.address} - Property Video`,
+                    language: 'en',
+                    videoUrl: r2Url,
+                    templateName: 'Hormozi 2',
+                    magicBrolls: true,
+                    magicBrollsPercentage: 50,
+                    magicZooms: true,
+                    webhookUrl: submagicWebhookUrl
+                  })
+                });
+
+                const submagicData = await submagicResponse.json();
+                const projectId = submagicData?.id || submagicData?.project_id;
+
+                if (projectId) {
+                  await updateDoc(firestoreDoc(db, 'property_videos', doc.id), {
+                    submagicProjectId: projectId,
+                    submagicVideoId: projectId,
+                    status: 'submagic_processing',
+                    updatedAt: Date.now()
+                  });
+
+                  console.log(`   ✅ Property video recovered and sent to Submagic: ${projectId}`);
+                  results.push({
+                    workflowId: doc.id,
+                    brand: 'property',
+                    action: 'heygen_recovered',
+                    success: true
+                  });
+                } else {
+                  console.error(`   ❌ Failed to create Submagic project`);
+                }
+              }
+            }
+          } catch (err) {
+            console.error(`   ❌ Error recovering property video ${doc.id}:`, err);
+          }
+        }
+      }
+    } catch (err) {
+      console.error(`   ❌ Error querying property_videos:`, err);
+    }
+
+    // Check Property videos in Submagic processing
+    console.log(`\n📂 Checking property_videos (submagic_processing)...`);
+    try {
+      const q = query(
+        collection(db, 'property_videos'),
+        where('status', '==', 'submagic_processing')
+      );
+
+      const snapshot = await getDocs(q);
+      console.log(`   Found ${snapshot.size} property videos in submagic_processing`);
+
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const submagicProjectId = data.submagicProjectId || data.submagicVideoId;
+        const timestamp = data.updatedAt || 0;
+        const stuckMinutes = Math.round((Date.now() - timestamp) / 60000);
+
+        console.log(`   📄 Property ${doc.id}: submagicProjectId = ${submagicProjectId || 'MISSING'}, stuck for ${stuckMinutes} min`);
+
+        if (submagicProjectId) {
+          projects.push({
+            projectId: submagicProjectId,
+            workflowId: doc.id,
+            brand: 'property',
+            isPodcast: false,
+            isProperty: true
+          });
+        }
+      });
+    } catch (err) {
+      console.error(`   ❌ Error querying property_videos (submagic):`, err);
+    }
+
     // Check Podcast workflows (use submagicProjectId field)
     console.log(`\n📂 Checking podcast_workflow_queue...`);
     try {
@@ -298,7 +441,8 @@ async function executeFailsafe() {
             continue;
           }
 
-          console.log(`   ✅ COMPLETED! Processing ${isPodcast ? 'podcast' : 'workflow'} directly...`);
+          const isProperty = (project as any).isProperty;
+          console.log(`   ✅ COMPLETED! Processing ${isPodcast ? 'podcast' : isProperty ? 'property video' : 'workflow'} directly...`);
 
           // Process workflow completion directly (no webhook fetch needed)
           const { uploadSubmagicVideo } = await import('@/lib/video-storage');
@@ -314,6 +458,9 @@ async function executeFailsafe() {
             if (isPodcast) {
               const { updatePodcastWorkflow } = await import('@/lib/feed-store-firestore');
               await updatePodcastWorkflow(workflowId, retryUpdates);
+            } else if (isProperty) {
+              const { doc: firestoreDoc, updateDoc } = await import('firebase/firestore');
+              await updateDoc(firestoreDoc(db, 'property_videos', workflowId), retryUpdates);
             } else {
               const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
               await updateWorkflowStatus(workflowId, brand, retryUpdates);

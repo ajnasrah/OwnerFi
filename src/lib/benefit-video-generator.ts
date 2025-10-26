@@ -9,11 +9,11 @@ import { getBrandWebhookUrl } from '@/lib/brand-utils';
 
 const HEYGEN_API_URL = 'https://api.heygen.com/v2/video/generate';
 
-// Abdullah avatar config (same as Carz/OwnerFi/Podcast)
+// Abdullah avatar config (same as viral system)
 const AVATAR_CONFIG = {
-  avatar_id: '8988e02d16544a4286305603244310fc',
+  talking_photo_id: '31c6b2b6306b47a2ba3572a23be09dbc', // Same as viral/carz/ownerfi
   voice_id: '9070a6c2dbd54c10bb111dc8c655bff7',
-  scale: 1.4,
+  scale: 1.4, // Same scale as viral videos
   background_color: '#059669' // Green for buyers
 };
 
@@ -159,10 +159,10 @@ EXAMPLE OUTPUT:
       video_inputs: [
         {
           character: {
-            type: 'avatar',
-            avatar_id: AVATAR_CONFIG.avatar_id,
+            type: 'talking_photo',
+            talking_photo_id: AVATAR_CONFIG.talking_photo_id,
             scale: AVATAR_CONFIG.scale,
-            avatar_style: 'normal'
+            talking_photo_style: 'circle'
           },
           voice: {
             type: 'text',

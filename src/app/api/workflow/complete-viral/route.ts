@@ -629,8 +629,8 @@ async function generateHeyGenVideo(params: {
       character.avatar_style = 'normal';
     } else {
       character.talking_photo_id = params.avatar_id;
-      character.talking_photo_style = 'square';
       character.talking_style = 'expressive';
+      character.matting = true; // Remove background
     }
 
     console.log(`📹 HeyGen Character Object:`, JSON.stringify(character, null, 2));

@@ -237,7 +237,7 @@ export function isEligibleForVideo(property: PropertyListing): boolean {
   });
 
   return (
-    financials.downPaymentAmount < 15000 &&
+    financials.downPaymentAmount <= 15000 && // Allow up to $15k (inclusive)
     property.status === 'active' &&
     property.isActive === true &&
     property.imageUrls &&

@@ -35,14 +35,41 @@ export class BenefitVideoGenerator {
   }
 
   /**
+   * Validate script meets minimum requirements
+   */
+  private validateScript(script: string): { valid: boolean; reason?: string } {
+    if (!script || script.trim().length === 0) {
+      return { valid: false, reason: 'Script is empty' };
+    }
+
+    const wordCount = script.trim().split(/\s+/).length;
+    if (wordCount < 10) {
+      return { valid: false, reason: `Script too short (${wordCount} words, need at least 10)` };
+    }
+
+    if (wordCount > 200) {
+      return { valid: false, reason: `Script too long (${wordCount} words, max 200)` };
+    }
+
+    // Check for common failure patterns
+    if (script.includes('undefined') || script.includes('null')) {
+      return { valid: false, reason: 'Script contains invalid placeholders' };
+    }
+
+    return { valid: true };
+  }
+
+  /**
    * Generate AI video script using OpenAI
    */
   private async generateScript(benefit: BenefitPoint): Promise<string> {
     const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
     if (!OPENAI_API_KEY) {
+      console.warn('⚠️  No OPENAI_API_KEY - using fallback script');
       // Fallback if no OpenAI key
-      return `Think you can't buy a home? ${benefit.shortDescription} See what's possible at OwnerFi.ai`;
+      const fallback = `Think you can't buy a home? ${benefit.shortDescription} See what's possible at OwnerFi.ai`;
+      return fallback;
     }
 
     // Daily themes for variety
@@ -122,24 +149,70 @@ EXAMPLE OUTPUT:
       });
 
       if (!response.ok) {
-        throw new Error(`OpenAI API error: ${response.status}`);
+        const errorText = await response.text();
+        console.error('❌ OpenAI API error:', errorText);
+        throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
       }
 
       const data = await response.json();
       const script = data.choices[0]?.message?.content?.trim();
 
       if (!script) {
-        throw new Error('No script generated');
+        throw new Error('OpenAI returned empty script');
+      }
+
+      // Validate the generated script
+      const validation = this.validateScript(script);
+      if (!validation.valid) {
+        throw new Error(`Invalid script: ${validation.reason}`);
       }
 
       console.log(`✅ Generated script (${today} - ${todayTheme.split('-')[0].trim()}):`);
       console.log(script.substring(0, 100) + '...');
+      console.log(`   📊 Word count: ${script.split(/\s+/).length} words`);
       return script;
 
     } catch (error) {
       console.error('⚠️  OpenAI script generation failed, using fallback:', error);
-      return `Think you can't buy a home? ${benefit.shortDescription} See what's possible at OwnerFi.ai`;
+      const fallback = `Think you can't buy a home? ${benefit.shortDescription} See what's possible at OwnerFi.ai`;
+
+      // Validate fallback too
+      const validation = this.validateScript(fallback);
+      if (!validation.valid) {
+        throw new Error(`Even fallback script is invalid: ${validation.reason}`);
+      }
+
+      return fallback;
     }
+  }
+
+  /**
+   * Validate HeyGen request before sending
+   */
+  private validateHeyGenRequest(request: any): { valid: boolean; reason?: string } {
+    if (!request.video_inputs || !Array.isArray(request.video_inputs)) {
+      return { valid: false, reason: 'video_inputs is not an array' };
+    }
+
+    if (request.video_inputs.length === 0) {
+      return { valid: false, reason: 'video_inputs array is empty' };
+    }
+
+    const scene = request.video_inputs[0];
+
+    if (!scene.character?.talking_photo_id) {
+      return { valid: false, reason: 'Missing talking_photo_id' };
+    }
+
+    if (!scene.voice?.input_text || scene.voice.input_text.trim().length === 0) {
+      return { valid: false, reason: 'Missing or empty input_text' };
+    }
+
+    if (!scene.voice?.voice_id) {
+      return { valid: false, reason: 'Missing voice_id' };
+    }
+
+    return { valid: true };
   }
 
   /**
@@ -147,9 +220,19 @@ EXAMPLE OUTPUT:
    */
   async generateVideo(benefit: BenefitPoint, workflowId: string): Promise<string> {
     console.log(`\n📹 Generating benefit video: ${benefit.title}`);
+    console.log(`   Workflow ID: ${workflowId}`);
 
-    // Generate script
+    // Generate script with validation
     const script = await this.generateScript(benefit);
+    console.log(`   ✅ Script generated and validated`);
+
+    // Validate avatar config
+    if (!AVATAR_CONFIG.talking_photo_id) {
+      throw new Error('CRITICAL: talking_photo_id is missing from AVATAR_CONFIG');
+    }
+    if (!AVATAR_CONFIG.voice_id) {
+      throw new Error('CRITICAL: voice_id is missing from AVATAR_CONFIG');
+    }
 
     // Get webhook URL
     const webhookUrl = getBrandWebhookUrl('benefit', 'heygen');
@@ -187,29 +270,51 @@ EXAMPLE OUTPUT:
       webhook_url: webhookUrl
     };
 
-    console.log(`📞 Webhook URL: ${webhookUrl}`);
-    console.log(`📝 Script length: ${script.split(' ').length} words`);
+    // Validate request before sending
+    const validation = this.validateHeyGenRequest(request);
+    if (!validation.valid) {
+      console.error('❌ CRITICAL: Invalid HeyGen request:', validation.reason);
+      console.error('   Request:', JSON.stringify(request, null, 2));
+      throw new Error(`Invalid HeyGen request: ${validation.reason}`);
+    }
+
+    console.log(`   ✅ HeyGen request validated`);
+    console.log(`   📞 Webhook URL: ${webhookUrl}`);
+    console.log(`   📝 Script: ${script.split(' ').length} words`);
+    console.log(`   🎭 Avatar: ${AVATAR_CONFIG.talking_photo_id.substring(0, 8)}...`);
+    console.log(`   🗣️  Voice: ${AVATAR_CONFIG.voice_id.substring(0, 8)}...`);
 
     // Call HeyGen API
-    const response = await circuitBreakers.heygen.execute(async () => {
-      return await fetchWithTimeout(
-        HEYGEN_API_URL,
-        {
-          method: 'POST',
-          headers: {
-            'accept': 'application/json',
-            'content-type': 'application/json',
-            'x-api-key': this.apiKey
+    console.log(`   🚀 Sending request to HeyGen...`);
+    let response;
+    try {
+      response = await circuitBreakers.heygen.execute(async () => {
+        return await fetchWithTimeout(
+          HEYGEN_API_URL,
+          {
+            method: 'POST',
+            headers: {
+              'accept': 'application/json',
+              'content-type': 'application/json',
+              'x-api-key': this.apiKey
+            },
+            body: JSON.stringify(request)
           },
-          body: JSON.stringify(request)
-        },
-        TIMEOUTS.HEYGEN_API
-      );
-    });
+          TIMEOUTS.HEYGEN_API
+        );
+      });
+    } catch (fetchError) {
+      console.error('❌ CRITICAL: Failed to send HeyGen request:', fetchError);
+      console.error('   Request that failed:', JSON.stringify(request, null, 2));
+      throw new Error(`Failed to send HeyGen request: ${fetchError instanceof Error ? fetchError.message : 'Unknown error'}`);
+    }
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('❌ HeyGen API Error:', errorText);
+      console.error('❌ HeyGen API Error Response:');
+      console.error('   Status:', response.status);
+      console.error('   Body:', errorText);
+      console.error('   Request that was sent:', JSON.stringify(request, null, 2));
 
       let errorData;
       try {
@@ -218,24 +323,32 @@ EXAMPLE OUTPUT:
         errorData = { message: errorText };
       }
 
-      throw new Error(`HeyGen API request failed: ${response.status} - ${JSON.stringify(errorData)}`);
+      throw new Error(`HeyGen API error: ${response.status} - ${JSON.stringify(errorData)}`);
     }
 
     const result: HeyGenVideoResponse = await response.json();
+    console.log(`   📬 HeyGen response:`, JSON.stringify(result, null, 2));
 
     if (result.error) {
       const errorMessage = typeof result.error === 'string'
         ? result.error
         : JSON.stringify(result.error);
+      console.error('❌ HeyGen returned error in response:', errorMessage);
+      console.error('   Request that caused error:', JSON.stringify(request, null, 2));
       throw new Error(`HeyGen API error: ${errorMessage}`);
     }
 
     if (!result.data || !result.data.video_id) {
+      console.error('❌ HeyGen response missing video_id');
+      console.error('   Response:', JSON.stringify(result, null, 2));
+      console.error('   Request:', JSON.stringify(request, null, 2));
       throw new Error('HeyGen API did not return a video ID');
     }
 
     const videoId = result.data.video_id;
-    console.log(`✅ Video generation started. Video ID: ${videoId}`);
+    console.log(`✅ Video generation started successfully!`);
+    console.log(`   Video ID: ${videoId}`);
+    console.log(`   Workflow ID: ${workflowId}`);
 
     return videoId;
   }

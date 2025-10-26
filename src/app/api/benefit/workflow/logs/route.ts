@@ -4,14 +4,11 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/firebase';
-import { collection, getDocs, query, where, orderBy, limit } from 'firebase/firestore';
+import { admin } from '@/lib/firebase-admin';
 
 export async function GET(request: NextRequest) {
   try {
-    if (!db) {
-      return NextResponse.json({ error: 'Firebase not initialized' }, { status: 500 });
-    }
+    const db = admin.firestore();
 
     const searchParams = request.nextUrl.searchParams;
     const showHistory = searchParams.get('history') === 'true';
@@ -20,13 +17,12 @@ export async function GET(request: NextRequest) {
 
     if (showHistory) {
       // Get last 20 workflows
-      const q = query(
-        collection(db, 'benefit_workflow_queue'),
-        orderBy('createdAt', 'desc'),
-        limit(20)
-      );
+      const snapshot = await db
+        .collection('benefit_workflow_queue')
+        .orderBy('createdAt', 'desc')
+        .limit(20)
+        .get();
 
-      const snapshot = await getDocs(q);
       snapshot.forEach(doc => {
         workflows.push({
           id: doc.id,
@@ -34,18 +30,17 @@ export async function GET(request: NextRequest) {
         });
       });
     } else {
-      // Get only active workflows
-      const activeStatuses = ['heygen_processing', 'submagic_processing', 'video_processing', 'posting'];
+      // Get only active workflows and recently failed ones
+      const activeStatuses = ['heygen_processing', 'submagic_processing', 'video_processing', 'posting', 'failed'];
 
       for (const status of activeStatuses) {
-        const q = query(
-          collection(db, 'benefit_workflow_queue'),
-          where('status', '==', status),
-          orderBy('createdAt', 'desc'),
-          limit(10)
-        );
+        const snapshot = await db
+          .collection('benefit_workflow_queue')
+          .where('status', '==', status)
+          .orderBy('createdAt', 'desc')
+          .limit(10)
+          .get();
 
-        const snapshot = await getDocs(q);
         snapshot.forEach(doc => {
           workflows.push({
             id: doc.id,

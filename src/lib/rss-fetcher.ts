@@ -129,7 +129,15 @@ function parseRSSItem(itemXml: string): RSSItem {
 export async function fetchRSSFeed(url: string): Promise<RSSFeed> {
   return retry(
     async () => {
-      const response = await fetchWithTimeout(url, {}, TIMEOUTS.RSS_FETCH);
+      // Add proper headers to avoid 403 Forbidden / 404 errors from RSS feeds
+      const response = await fetchWithTimeout(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (compatible; OwnerFi/1.0; +https://ownerfi.ai)',
+          'Accept': 'application/rss+xml, application/xml, text/xml, */*',
+          'Accept-Language': 'en-US,en;q=0.9',
+          'Cache-Control': 'no-cache'
+        }
+      }, TIMEOUTS.RSS_FETCH);
 
       if (!response.ok) {
         throw new Error(`Failed to fetch RSS feed: ${response.statusText}`);

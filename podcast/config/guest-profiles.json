@@ -108,6 +108,7 @@
       "avatar_type": "avatar",
       "avatar_id": "Vince_sitting_businesstraining_front",
       "voice_id": "d2f4f24783d04e22ab49ee8fdc3715e0",
+      "voice_speed": 1.0,
       "scale": 1.68,
       "description": "Tech enthusiast helping people navigate the digital world",
       "question_topics": [
@@ -154,11 +155,11 @@
   "host": {
     "name": "Abdullah",
     "avatar_type": "talking_photo",
-    "avatar_id": "f40972493dd74bbe829f30daa09ea1a9",
+    "avatar_id": "d33fe3abc2914faa88309c3bdb9f47f4",
     "voice_id": "9070a6c2dbd54c10bb111dc8c655bff7",
-    "scale": 1.68,
+    "scale": 1.0,
     "background_color": "#1a1a1a",
-    "description": "Host - uses motion-enabled avatar from social media system with dark studio background"
+    "description": "Host - uses motion-enabled avatar matching Carz/OwnerFi/Benefit brands with dark studio background"
   },
   "video_settings": {
     "dimension": {

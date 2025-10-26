@@ -86,23 +86,12 @@ export async function GET(request: NextRequest) {
     console.log(`   Times shown: ${queueItem.videoCount}`);
     console.log(`   Queue position: ${queueItem.position}`);
 
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
     const results = [];
 
     try {
-      // Generate 15-second video
-      const response = await fetch(`${baseUrl}/api/property/generate-video`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          propertyId: queueItem.propertyId,
-          variant: '15'
-        })
-      });
-
-      const result = await response.json();
+      // Generate 15-second video using shared service (no HTTP fetch needed)
+      const { generatePropertyVideo } = await import('@/lib/property-video-service');
+      const result = await generatePropertyVideo(queueItem.propertyId, '15');
 
       if (result.success) {
         console.log(`✅ Video generation started for ${queueItem.address}`);

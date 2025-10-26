@@ -298,10 +298,13 @@ export function buildPropertyVideoRequest(
       character: {
         type: 'talking_photo',
         talking_photo_id: avatarId,
-        scale: 0.8, // Larger than 0.5 but smaller than benefit videos (1.4)
+        scale: 0.4, // Smaller - show more property
         talking_photo_style: 'circle', // Circular frame
-        talking_style: 'expressive'
-        // REMOVED offset - let HeyGen position it automatically at default location
+        talking_style: 'expressive',
+        offset: {
+          x: 0.25, // Left side (0.25 = left quarter of screen)
+          y: 0.375 // Slightly higher than 0.4
+        }
       },
       voice: {
         type: 'text',
@@ -312,6 +315,7 @@ export function buildPropertyVideoRequest(
       background: {
         type: 'image',
         url: backgroundImage
+        // Using default fit: 'cover' - fills screen without black bars
       }
     }],
     dimension: { width: 1080, height: 1920 },

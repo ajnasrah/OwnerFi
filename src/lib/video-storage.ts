@@ -196,11 +196,55 @@ export async function uploadSubmagicVideo(
   console.log('📥 Downloading video from Submagic...');
   console.log(`   URL: ${submagicDownloadUrl.substring(0, 80)}...`);
 
-  // Download video
-  const response = await fetch(submagicDownloadUrl);
+  // Download video with timeout and retry
+  let response: Response;
+  let lastError: Error | undefined;
 
-  if (!response.ok) {
-    throw new Error(`Failed to download video: ${response.status} - ${response.statusText}`);
+  // Retry up to 3 times with exponential backoff
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      console.log(`   Attempt ${attempt}/3...`);
+
+      // Use AbortController for timeout (5 minutes for large video downloads)
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5 * 60 * 1000);
+
+      response = await fetch(submagicDownloadUrl, {
+        signal: controller.signal,
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (compatible; OwnerFi/1.0)',
+        }
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      // Success - break out of retry loop
+      console.log(`   ✅ Connected successfully`);
+      break;
+
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      console.error(`   ❌ Attempt ${attempt} failed:`, lastError.message);
+
+      // If this is the last attempt, throw the error
+      if (attempt === 3) {
+        throw new Error(`Failed to download video from Submagic after 3 attempts: ${lastError.message}`);
+      }
+
+      // Wait before retrying (exponential backoff: 2s, 4s)
+      const backoffMs = Math.pow(2, attempt) * 1000;
+      console.log(`   ⏳ Retrying in ${backoffMs / 1000}s...`);
+      await new Promise(resolve => setTimeout(resolve, backoffMs));
+    }
+  }
+
+  // response! is safe here because we either have it or threw an error above
+  if (!response!) {
+    throw new Error('Failed to download video - no response received');
   }
 
   const arrayBuffer = await response.arrayBuffer();

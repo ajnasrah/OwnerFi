@@ -431,13 +431,61 @@ async function executeFailsafe() {
 
         if (status === 'completed' || status === 'done' || status === 'ready') {
           if (!downloadUrl) {
-            console.log(`   ⚠️  Complete but no download URL`);
-            results.push({
-              projectId,
-              workflowId,
-              action: 'no_url',
-              status
-            });
+            console.log(`   ⚠️  Complete but no download URL - triggering export...`);
+
+            // Project is complete (captions done) but not exported yet
+            // Call /export to generate the final video
+            try {
+              const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ||
+                              (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
+                              'https://ownerfi.ai';
+
+              const webhookUrl = `${baseUrl}/api/webhooks/submagic/${brand}`;
+
+              const exportResponse = await fetch(`https://api.submagic.co/v1/projects/${projectId}/export`, {
+                method: 'POST',
+                headers: {
+                  'x-api-key': SUBMAGIC_API_KEY,
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                  webhookUrl,
+                  format: 'mp4',
+                  quality: 'high'
+                })
+              });
+
+              if (!exportResponse.ok) {
+                const exportError = await exportResponse.text();
+                console.error(`   ❌ Export trigger failed:`, exportError);
+
+                results.push({
+                  projectId,
+                  workflowId,
+                  action: 'export_failed',
+                  error: exportError
+                });
+              } else {
+                console.log(`   ✅ Export triggered - webhook will fire when complete`);
+
+                results.push({
+                  projectId,
+                  workflowId,
+                  brand,
+                  action: 'export_triggered',
+                  success: true
+                });
+              }
+            } catch (exportError) {
+              console.error(`   ❌ Error triggering export:`, exportError);
+              results.push({
+                projectId,
+                workflowId,
+                action: 'export_error',
+                error: exportError instanceof Error ? exportError.message : 'Unknown error'
+              });
+            }
+
             continue;
           }
 

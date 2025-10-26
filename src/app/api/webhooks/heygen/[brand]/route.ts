@@ -347,6 +347,8 @@ async function triggerSubmagicProcessing(
     }
 
     console.log(`✅ [${brandConfig.displayName}] Submagic project created: ${projectId}`);
+    console.log(`   ⏳ Waiting for Submagic to process captions...`);
+    console.log(`   📞 Webhook will be called when project completes: ${submagicWebhookUrl}`);
 
     // Update workflow with Submagic ID and status
     await updateWorkflowForBrand(brand, workflowId, {
@@ -355,31 +357,9 @@ async function triggerSubmagicProcessing(
       submagicProjectId: projectId, // For podcast compatibility
     });
 
-    // ⚡ CRITICAL: Trigger export to start rendering and enable webhook callback
-    // According to Submagic docs, the webhook is ONLY sent when you call /export
-    console.log(`📤 [${brandConfig.displayName}] Triggering Submagic export for webhook delivery...`);
-
-    const exportResponse = await fetch(`https://api.submagic.co/v1/projects/${projectId}/export`, {
-      method: 'POST',
-      headers: {
-        'x-api-key': SUBMAGIC_API_KEY,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        webhookUrl: submagicWebhookUrl, // Webhook fires when export completes
-        format: 'mp4', // Default format
-        quality: 'high' // High quality export
-      })
-    });
-
-    if (!exportResponse.ok) {
-      const exportError = await exportResponse.text();
-      console.error(`❌ [${brandConfig.displayName}] Submagic export failed:`, exportError);
-      // Don't fail the whole workflow - the check-stuck-submagic cron will retry
-      console.warn(`⚠️  Export failed but project is created. Cron will retry export.`);
-    } else {
-      console.log(`✅ [${brandConfig.displayName}] Submagic export triggered - webhook will fire when complete`);
-    }
+    // NOTE: We do NOT call /export here!
+    // The webhook URL provided during project creation will be called when captions are done.
+    // The Submagic webhook handler will then call /export to generate the final video.
 
   } catch (error) {
     console.error(`❌ [${brandConfig.displayName}] Error triggering Submagic:`, error);

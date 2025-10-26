@@ -79,14 +79,67 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     // Handle completion
     if (status === 'completed' || status === 'done' || status === 'ready') {
-      console.log(`✅ [${brandConfig.displayName}] Submagic video completed!`);
+      console.log(`✅ [${brandConfig.displayName}] Submagic project completed!`);
 
-      // If no video URL in webhook, fetch from Submagic API
+      // Check if this is the initial completion (captions done) or export completion (video ready)
+      // If no download URL, this is the initial completion - we need to trigger export
       if (!downloadUrl) {
-        console.log(`   Fetching video URL from Submagic API...`);
-        downloadUrl = await fetchVideoUrlFromSubmagic(submagicProjectId);
+        console.log(`   📤 No download URL - triggering export to generate final video...`);
+
+        // Call /export endpoint to generate the final video
+        const SUBMAGIC_API_KEY = process.env.SUBMAGIC_API_KEY;
+        if (!SUBMAGIC_API_KEY) {
+          throw new Error('Submagic API key not configured');
+        }
+
+        const exportResponse = await fetch(`https://api.submagic.co/v1/projects/${submagicProjectId}/export`, {
+          method: 'POST',
+          headers: {
+            'x-api-key': SUBMAGIC_API_KEY,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            webhookUrl: brandConfig.webhooks.submagic, // Webhook will be called again when export completes
+            format: 'mp4',
+            quality: 'high'
+          })
+        });
+
+        if (!exportResponse.ok) {
+          const exportError = await exportResponse.text();
+          console.error(`❌ [${brandConfig.displayName}] Export trigger failed:`, exportError);
+
+          // Update workflow to indicate export failed
+          await updateWorkflowForBrand(brand, workflowId, {
+            status: 'failed',
+            error: `Failed to trigger Submagic export: ${exportError}`,
+            failedAt: Date.now(),
+          });
+
+          return NextResponse.json({
+            success: false,
+            brand,
+            projectId: submagicProjectId,
+            workflow_id: workflowId,
+            message: 'Export trigger failed',
+            error: exportError
+          }, { status: 500 });
+        }
+
+        console.log(`✅ [${brandConfig.displayName}] Export triggered - webhook will fire when export completes`);
+
+        // Return success - we'll receive another webhook when export is done
+        return NextResponse.json({
+          success: true,
+          brand,
+          projectId: submagicProjectId,
+          workflow_id: workflowId,
+          message: 'Export triggered - awaiting completion webhook',
+        });
       }
 
+      // If we have a download URL, the export is complete - proceed with video processing
+      console.log(`✅ [${brandConfig.displayName}] Export completed - video ready!`);
       console.log(`   Video URL: ${downloadUrl}`);
 
       // ✅ SAVE VIDEO URL IMMEDIATELY - This is our backup!

@@ -76,17 +76,22 @@ export async function POST(request: NextRequest) {
           downloadUrl = await fetchVideoUrlFromSubmagic(projectId);
           console.log(`✅ Fresh URL obtained from Submagic API`);
         } catch (error) {
-          console.warn(`⚠️  Failed to fetch from Submagic API, falling back to provided URL:`, error);
+          const errorMsg = error instanceof Error ? error.message : String(error);
+          console.warn(`⚠️  Failed to fetch from Submagic API:`, errorMsg);
+          console.warn(`   Will ${videoUrl ? 'fall back to provided URL' : 'fail - no fallback URL'}`);
+
           // Fall back to provided videoUrl if API fetch fails
           if (!videoUrl) {
-            throw new Error('No video URL available and Submagic API fetch failed');
+            throw new Error(`Cannot get video URL: Submagic API failed (${errorMsg}) and no fallback URL provided`);
           }
+          console.warn(`   ⚠️  WARNING: Using potentially expired URL from webhook payload`);
         }
       } else if (!videoUrl) {
-        throw new Error('No submagicProjectId or videoUrl provided');
+        throw new Error('No submagicProjectId or videoUrl provided - need at least one to download video');
       }
 
       console.log(`   Download URL: ${downloadUrl.substring(0, 80)}...`);
+      console.log(`   URL age: ${workflow.submagicDownloadUrl ? 'cached from webhook' : 'fresh from API'}`);
 
       // Step 2: Upload to R2
       console.log(`☁️  Uploading to R2...`);
@@ -189,7 +194,7 @@ export async function POST(request: NextRequest) {
  * Get workflow for specific brand
  */
 async function getWorkflowForBrand(
-  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit' | 'property',
+  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit' | 'property' | 'vassdistro',
   workflowId: string
 ): Promise<any | null> {
   if (brand === 'podcast') {
@@ -211,7 +216,7 @@ async function getWorkflowForBrand(
  * Update workflow for specific brand
  */
 async function updateWorkflowForBrand(
-  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit' | 'property',
+  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit' | 'property' | 'vassdistro',
   workflowId: string,
   updates: Record<string, any>
 ): Promise<void> {
@@ -233,11 +238,16 @@ async function updateWorkflowForBrand(
 /**
  * Fetch fresh video URL from Submagic API
  * This ensures we always get a valid, non-expired download URL
+ *
+ * If the video hasn't been exported yet, this will trigger the export
+ * and return a URL for a subsequent attempt.
  */
 async function fetchVideoUrlFromSubmagic(submagicProjectId: string): Promise<string> {
   if (!SUBMAGIC_API_KEY) {
     throw new Error('Submagic API key not configured');
   }
+
+  console.log(`   Checking Submagic project status...`);
 
   const response = await circuitBreakers.submagic.execute(async () => {
     return await fetchWithTimeout(
@@ -250,15 +260,29 @@ async function fetchVideoUrlFromSubmagic(submagicProjectId: string): Promise<str
   });
 
   if (!response.ok) {
-    throw new Error(`Submagic API returned ${response.status}: ${response.statusText}`);
+    const errorText = await response.text().catch(() => 'Unable to read error');
+    throw new Error(`Submagic API returned ${response.status}: ${errorText}`);
   }
 
   const projectData = await response.json();
-  const videoUrl = projectData.media_url || projectData.video_url || projectData.downloadUrl;
+  console.log(`   Project status: ${projectData.status}`);
+
+  // Try multiple field names that Submagic might use
+  const videoUrl = projectData.media_url ||
+                   projectData.video_url ||
+                   projectData.downloadUrl ||
+                   projectData.download_url ||
+                   projectData.export_url;
 
   if (!videoUrl) {
-    throw new Error('No video URL found in Submagic project data');
+    // If no URL but status is completed, the export might not have been triggered
+    if (projectData.status === 'completed' || projectData.status === 'done' || projectData.status === 'ready') {
+      console.warn(`   ⚠️  Project is ${projectData.status} but no download URL found`);
+      console.warn(`   Available fields:`, Object.keys(projectData).join(', '));
+    }
+    throw new Error(`No video URL found in Submagic project (status: ${projectData.status})`);
   }
 
+  console.log(`   ✅ Found video URL (${videoUrl.length} chars)`);
   return videoUrl;
 }

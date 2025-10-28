@@ -92,6 +92,10 @@ const COLLECTIONS = {
   },
   BENEFIT: {
     WORKFLOW_QUEUE: 'benefit_workflow_queue',
+  },
+  ABDULLAH: {
+    CONTENT: 'abdullah_daily_content',
+    WORKFLOW_QUEUE: 'abdullah_workflow_queue',
   }
 };
 

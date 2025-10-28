@@ -389,6 +389,55 @@ export const VASSDISTRO_CONFIG: BrandConfig = {
 };
 
 /**
+ * Abdullah Personal Brand Configuration
+ * For personal brand content - daily mindset, business, and life content
+ */
+export const ABDULLAH_CONFIG: BrandConfig = {
+  id: 'abdullah',
+  displayName: 'Abdullah Personal Brand',
+
+  lateProfileId: process.env.LATE_ABDULLAH_PROFILE_ID || '', // Create new Late profile for Abdullah
+
+  platforms: {
+    default: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin'],
+    all: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'threads', 'twitter', 'bluesky'],
+  },
+
+  webhooks: {
+    heygen: `${BASE_URL}/api/webhooks/heygen/abdullah`,
+    submagic: `${BASE_URL}/api/webhooks/submagic/abdullah`,
+  },
+
+  content: {
+    youtubeCategory: 'NEWS_POLITICS',
+    defaultHashtags: ['#Abdullah', '#Mindset', '#Business', '#Entrepreneur', '#Growth'],
+    captionStyle: 'casual',
+  },
+
+  collections: {
+    workflows: 'abdullah_workflow_queue',
+  },
+
+  rateLimits: {
+    lateAPI: 50,  // 50 posts per hour
+    heygen: 30,   // 30 video generations per hour (5 daily videos)
+    submagic: 240, // 4 per minute = 240 per hour
+  },
+
+  scheduling: {
+    timezone: 'America/Chicago', // Central Time (CDT)
+    postingHours: [9, 12, 15, 18, 21], // 5 posts per day staggered throughout day
+    maxPostsPerDay: 5, // 5 daily videos
+  },
+
+  features: {
+    autoPosting: true,
+    abTesting: false, // No A/B testing for personal brand
+    analytics: true,
+  },
+};
+
+/**
  * Brand Configuration Map
  * Easy lookup of brand configs by brand ID
  */
@@ -399,6 +448,7 @@ export const BRAND_CONFIGS: Record<Brand, BrandConfig> = {
   benefit: BENEFIT_CONFIG,
   property: PROPERTY_CONFIG,
   vassdistro: VASSDISTRO_CONFIG,
+  abdullah: ABDULLAH_CONFIG,
 } as const;
 
 /**
@@ -410,7 +460,7 @@ export const BRAND_CONFIGS: Record<Brand, BrandConfig> = {
 export function getBrandConfig(brand: Brand): BrandConfig {
   const config = BRAND_CONFIGS[brand];
   if (!config) {
-    throw new Error(`Invalid brand: ${brand}. Must be one of: carz, ownerfi, podcast, benefit, property, vassdistro`);
+    throw new Error(`Invalid brand: ${brand}. Must be one of: carz, ownerfi, podcast, benefit, property, vassdistro, abdullah`);
   }
   return config;
 }
@@ -509,5 +559,6 @@ export function validateAllBrandConfigs(): Record<Brand, { valid: boolean; error
     benefit: validateBrandConfig('benefit'),
     property: validateBrandConfig('property'),
     vassdistro: validateBrandConfig('vassdistro'),
+    abdullah: validateBrandConfig('abdullah'),
   };
 }

@@ -72,6 +72,10 @@
     {
       "path": "/api/benefit/workflow/auto-retry",
       "schedule": "15 * * * *"
+    },
+    {
+      "path": "/api/cron/generate-abdullah-daily",
+      "schedule": "0 11 * * *"
     }
   ],
   "functions": {
@@ -137,6 +141,12 @@
     },
     "src/app/api/benefit/workflow/retry/route.ts": {
       "maxDuration": 60
+    },
+    "src/app/api/cron/generate-abdullah-daily/route.ts": {
+      "maxDuration": 300
+    },
+    "src/app/api/workflow/complete-abdullah/route.ts": {
+      "maxDuration": 300
     }
   },
   "headers": [

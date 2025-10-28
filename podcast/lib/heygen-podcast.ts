@@ -171,7 +171,7 @@ export class HeyGenPodcastGenerator {
       const guestVoice: any = {
         type: 'text',
         input_text: qa.answer,
-        speed: guest.voice_speed || 1.25  // Use guest's voice_speed or default to 1.25
+        speed: guest.voice_speed || 1.15  // Use guest's voice_speed or default to 1.15
       };
 
       // Only add voice_id if it's provided, otherwise use avatar's default voice

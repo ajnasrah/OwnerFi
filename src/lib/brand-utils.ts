@@ -33,7 +33,7 @@ export function validateBrand(brand: unknown): Brand {
 
   if (!isBrand(normalizedBrand)) {
     throw new Error(
-      `Invalid brand: "${brand}". Must be one of: carz, ownerfi, podcast, benefit, property, vassdistro`
+      `Invalid brand: "${brand}". Must be one of: carz, ownerfi, podcast, benefit, property, vassdistro, abdullah`
     );
   }
 
@@ -304,7 +304,7 @@ export function validateBrands(brands: unknown[]): Brand[] {
  * @returns Array of valid brand IDs
  */
 export function getAllBrandIds(): Brand[] {
-  return ['carz', 'ownerfi', 'podcast'];
+  return ['carz', 'ownerfi', 'podcast', 'benefit', 'property', 'vassdistro', 'abdullah'];
 }
 
 /**
@@ -337,6 +337,13 @@ export function sanitizeBrandInput(input: string): Brand | null {
     'owner': 'ownerfi',
     'podcast': 'podcast',
     'podcasts': 'podcast',
+    'benefit': 'benefit',
+    'benefits': 'benefit',
+    'property': 'property',
+    'properties': 'property',
+    'vassdistro': 'vassdistro',
+    'vass': 'vassdistro',
+    'abdullah': 'abdullah',
   };
 
   return variations[normalized] || null;

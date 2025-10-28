@@ -72,71 +72,102 @@ export class BenefitVideoGenerator {
       return fallback;
     }
 
-    // Daily themes for variety
+    // Daily themes with emotion pairing for variety
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const today = days[new Date().getDay()];
 
     const dailyThemes = {
-      'Monday': 'Credit Myths - Debunk common credit score myths that stop people from trying',
-      'Tuesday': 'Real Stories - Share inspiring transformation stories of renters becoming homeowners',
-      'Wednesday': 'How It Works - Explain owner financing process in simple, relatable terms',
-      'Thursday': 'Money Mindset - Challenge limiting beliefs about homeownership and affordability',
-      'Friday': 'Quick Wins - Share actionable tips buyers can implement immediately',
-      'Saturday': 'Comparison - Show owner financing vs traditional bank loans side-by-side',
-      'Sunday': 'Vision & Hope - Paint the picture of homeownership lifestyle and freedom'
+      'Monday': { theme: 'Credit Myths', emotion: 'Shock / Proof' },
+      'Tuesday': { theme: 'Real Stories', emotion: 'Empathy / Inspiration' },
+      'Wednesday': { theme: 'How It Works', emotion: 'Curiosity' },
+      'Thursday': { theme: 'Money Mindset', emotion: 'Frustration / Hope' },
+      'Friday': { theme: 'Quick Wins', emotion: 'Inspiration / Proof' },
+      'Saturday': { theme: 'Comparison', emotion: 'Shock / Reality' },
+      'Sunday': { theme: 'Vision & Hope', emotion: 'Hope / Inspiration' }
     };
 
     const todayTheme = dailyThemes[today as keyof typeof dailyThemes];
 
-    const prompt = `Generate a video script about "${benefit.title}" for buyers who can't qualify for traditional bank loans.
+    // Rotating CTA pool based on day's emotion
+    const ctaPool = {
+      curiosity: [
+        "See what's possible at OwnerFi.ai.",
+        "Find homes near you — free at OwnerFi.ai.",
+        "Search real homes selling without banks — OwnerFi.ai.",
+        "Check what's available in your city at OwnerFi.ai."
+      ],
+      emotion: [
+        "Your rent's paying someone's mortgage — flip the script at OwnerFi.ai.",
+        "The next homeowner in your family could be you — start at OwnerFi.ai.",
+        "Don't wait for perfect — see your options at OwnerFi.ai.",
+        "You don't need a bank to start — just curiosity. OwnerFi.ai."
+      ],
+      hope: [
+        "Your key might not come from a bank — OwnerFi.ai.",
+        "If they did it, why not you? OwnerFi.ai.",
+        "Every big dream starts with a click — OwnerFi.ai.",
+        "This time, the keys could be yours — OwnerFi.ai."
+      ]
+    };
 
-TODAY'S THEME (${today}): ${todayTheme}
+    // Select CTA pool based on day
+    let ctaCategory: 'curiosity' | 'emotion' | 'hope' = 'curiosity';
+    if (['Monday', 'Tuesday', 'Wednesday'].includes(today)) {
+      ctaCategory = 'curiosity';
+    } else if (['Thursday', 'Friday'].includes(today)) {
+      ctaCategory = 'emotion';
+    } else {
+      ctaCategory = 'hope';
+    }
 
-TOPIC CONTEXT: ${benefit.shortDescription}
+    const prompt = `You are the official social-media scriptwriter for OwnerFi.ai — pronounced "Owner-Fy dot A Eye."
+OwnerFi is a platform that helps people become homeowners without traditional bank loans using owner financing.
 
-YOUR ROLE:
-You are the official social-media scriptwriter for OwnerFi, a platform that helps people become homeowners without traditional banks using owner financing.
+YOUR MISSION: Create short, 30-second-max (≈90-word) video scripts that explain, inspire, and educate renters who think homeownership is out of reach.
+Each script should sound friendly, confident, motivational, and easy to understand (5th-grade reading level).
+Never promise, guarantee, or imply financing approval — keep it hopeful and factual.
 
-YOUR GOAL:
-Make everyday renters stop scrolling and realize — they can actually own a home through owner financing.
+PRONUNCIATION GUIDE:
+- OwnerFi = "Owner-Fy" (not "Owner-Fee")
+- OwnerFi.ai = "Owner-Fy dot A Eye" (spell out A-I)
+
+TODAY'S THEME & EMOTION:
+Day: ${today}
+Theme: ${todayTheme.theme}
+Emotion/Hook Style: ${todayTheme.emotion}
+
+TOPIC: ${benefit.title}
+CONTEXT: ${benefit.shortDescription}
 
 STYLE RULES:
 - Reading level: 5th grade — short, clear, natural sentences
 - Tone: Friendly, confident, motivational — like a big brother giving real talk
 - Length: 30 seconds max (≈90 words)
-- Structure: Hook → Story/Insight → Soft CTA → Call to Action
-- Hook (first 3 seconds): Use shock, surprise, or emotion to grab attention
-- CTA: End with "See what's possible at OwnerFi.ai" or "Find homes like this for free at OwnerFi.ai"
-- Do NOT promise approvals, prices, or guarantees
-- All content must be 100% original and copyright-safe
-- NEVER use phrases like "Let me tell you," "You won't believe this," or "I'm going to share"
+- Structure: Hook → Story/Insight → Soft CTA
+- Hook (first 3 seconds): Use ${todayTheme.emotion.toLowerCase()} to grab attention
+- Never use: "Let me tell you," "You won't believe this," "I'm going to share," "Welcome back"
+- Avoid financial guarantees or exact numbers
 - Keep it conversational — written to be spoken, not read
+- Always include a CTA from the approved list below
 
-CALL TO ACTION (MANDATORY):
-Always end every script with a short, natural call to action that sounds like a real person — not an ad.
-Use one of these variations at random for freshness:
-"Follow OwnerFi for daily updates."
-"Follow OwnerFi to learn the real game."
-"Follow OwnerFi — new updates every day."
-"Follow OwnerFi and don't get played again."
-"Follow OwnerFi to see what's really happening."
-"Follow OwnerFi for more insights like this."
-"Follow OwnerFi to stay ahead of the game."
-Keep it under 8 words when possible. Never add extra hashtags or filler after it.
+APPROVED CTA POOL (${ctaCategory.toUpperCase()}):
+${ctaPool[ctaCategory].map((cta, i) => `${i + 1}. "${cta}"`).join('\n')}
+
+Pick ONE CTA from above that best matches today's emotion.
+IMPORTANT: When saying "OwnerFi.ai" pronounce it as "Owner-Fy dot A Eye"
+Never add links, numbers, or hashtags in the script.
 
 OUTPUT FORMAT:
 Return ONLY the script text in this structure:
 
-🎯 [Hook - 3-5 seconds of shock/surprise/emotion]
-💡 [Main message - 15-20 seconds of insight/story]
-🏁 [Soft CTA - 5 seconds with OwnerFi.ai]
-📢 [Call to Action - Natural follow prompt under 8 words]
+🎯 [Hook - 3–5 seconds of ${todayTheme.emotion.toLowerCase()}]
+💡 [Main message - 15–20 seconds of relatable story or insight]
+🏁 [Soft CTA - 5 seconds, pulled from the approved CTA pool above]
 
 EXAMPLE OUTPUT:
-🎯 "Think you need perfect credit to buy a home? Nope — that's the old way."
-💡 "With owner financing, you can buy directly from the seller. No bank hoops, no long waits, just steady income and a down payment. It's how thousands of families finally got keys in their hands."
-🏁 "Search owner-finance homes near you — free at OwnerFi.ai."
-📢 "Follow OwnerFi for daily updates."`;
+🎯 "Think you need perfect credit to buy a home? That's the biggest myth out there."
+💡 "Owner financing lets you buy directly from the seller — no bank hoops, no waiting years for approval. Just proof of income and a down payment. It's how thousands of families finally got keys in their hands."
+🏁 "See what's possible at Owner-Fy dot A Eye."`;
 
     try {
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -150,7 +181,7 @@ EXAMPLE OUTPUT:
           messages: [
             {
               role: 'system',
-              content: 'You are the official social-media scriptwriter for OwnerFi. Create short, 30-second max (≈90-word) video scripts that explain, inspire, and educate buyers who think homeownership is out of reach. Style: Friendly, confident, motivational. 5th-grade reading level. No hype, no jargon.'
+              content: 'You are the official social-media scriptwriter for OwnerFi.ai (pronounced "Owner-Fy dot A Eye"). Create short, 30-second-max (≈90-word) video scripts that explain, inspire, and educate renters who think homeownership is out of reach. Each script should sound friendly, confident, motivational, and easy to understand (5th-grade reading level). Never promise, guarantee, or imply financing approval — keep it hopeful and factual. Always pronounce OwnerFi.ai as "Owner-Fy dot A Eye".'
             },
             {
               role: 'user',
@@ -181,8 +212,9 @@ EXAMPLE OUTPUT:
         throw new Error(`Invalid script: ${validation.reason}`);
       }
 
-      console.log(`✅ Generated script (${today} - ${todayTheme.split('-')[0].trim()}):`);
-      console.log(script.substring(0, 100) + '...');
+      console.log(`✅ Generated script (${today} - ${todayTheme.theme}):`);
+      console.log(`   🎭 Emotion: ${todayTheme.emotion}`);
+      console.log(`   📝 Script: ${script.substring(0, 100)}...`);
       console.log(`   📊 Word count: ${script.split(/\s+/).length} words`);
       return script;
 

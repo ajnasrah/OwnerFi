@@ -496,9 +496,17 @@ async function executeFailsafe() {
           const { uploadSubmagicVideo } = await import('@/lib/video-storage');
 
           try {
-            // Update status to 'posting' for all workflow types
+            // CRITICAL FIX: Upload to R2 FIRST, then change status
+            // If R2 upload fails, status stays as 'submagic_processing' for retry
+            console.log(`   ☁️  Uploading to R2...`);
+            const publicVideoUrl = await uploadSubmagicVideo(downloadUrl);
+            console.log(`   ✅ R2 upload complete: ${publicVideoUrl.substring(0, 80)}...`);
+
+            // NOW update status to 'posting' with video URL and retry info
             const retryUpdates = {
-              status: 'posting' as const, // Use 'posting' for all brands including podcast
+              status: 'posting' as const,
+              finalVideoUrl: publicVideoUrl, // CRITICAL: Save video URL immediately
+              submagicDownloadUrl: downloadUrl, // Save original Submagic URL as backup
               retryCount: retryCount + 1,
               lastRetryAt: Date.now()
             };
@@ -514,10 +522,7 @@ async function executeFailsafe() {
               await updateWorkflowStatus(workflowId, brand, retryUpdates);
             }
 
-            // Upload to R2
-            console.log(`   ☁️  Uploading to R2...`);
-            const publicVideoUrl = await uploadSubmagicVideo(downloadUrl);
-            console.log(`   ✅ R2 upload complete`);
+            console.log(`   💾 Status updated to 'posting' with video URL saved`);
 
             if (isPodcast) {
               // PODCAST: Post as SHORT VIDEOS (Reels/Shorts) - same as carz/ownerfi
@@ -613,6 +618,60 @@ async function executeFailsafe() {
                 }
               } else {
                 throw new Error('Benefit workflow not found');
+              }
+            } else if (isProperty) {
+              // PROPERTY: Property listing videos with owner finance deals
+              const { getPropertyVideoById } = await import('@/lib/feed-store-firestore');
+              const workflow = await getPropertyVideoById(workflowId);
+
+              if (workflow) {
+                console.log(`   📱 Posting property video to social media via Late queue...`);
+
+                const { postToLate } = await import('@/lib/late-api');
+
+                // Post to all platforms using OwnerFi queue
+                const allPlatforms = ['facebook', 'instagram', 'tiktok', 'youtube', 'linkedin', 'threads'] as any[];
+
+                // Generate caption from property data
+                const caption = workflow.caption ||
+                  `${workflow.address}, ${workflow.city}, ${workflow.state} • Down: $${workflow.downPayment?.toLocaleString()} • Monthly: $${workflow.monthlyPayment?.toLocaleString()} 🏡`;
+
+                const title = workflow.title || `${workflow.address} - Owner Finance Property`;
+
+                const postResult = await postToLate({
+                  videoUrl: publicVideoUrl,
+                  caption,
+                  title,
+                  platforms: allPlatforms,
+                  useQueue: true,
+                  brand: 'ownerfi' // Property videos use OwnerFi profile
+                });
+
+                console.log(`   ${postResult.success ? '✅' : '❌'} Late post: ${postResult.postId || postResult.error}`);
+
+                if (postResult.success) {
+                  console.log(`   ✅ Posted property video to Late!`);
+                  const { updatePropertyVideo } = await import('@/lib/feed-store-firestore');
+                  await updatePropertyVideo(workflowId, {
+                    status: 'completed',
+                    finalVideoUrl: publicVideoUrl,
+                    latePostId: postResult.postId,
+                    completedAt: Date.now()
+                  });
+
+                  results.push({
+                    projectId,
+                    workflowId,
+                    brand: 'property',
+                    isProperty: true,
+                    action: 'completed_via_failsafe',
+                    success: true
+                  });
+                } else {
+                  throw new Error(`Property Late posting failed: ${postResult.error}`);
+                }
+              } else {
+                throw new Error('Property workflow not found');
               }
             } else {
               // SOCIAL MEDIA (carz, ownerfi, vassdistro): Post to Reels/Shorts + Stories

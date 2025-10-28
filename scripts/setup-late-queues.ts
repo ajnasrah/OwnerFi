@@ -24,6 +24,7 @@ console.log('  LATE_API_KEY:', process.env.LATE_API_KEY ? '✅ Set' : '❌ Missi
 console.log('  LATE_OWNERFI_PROFILE_ID:', process.env.LATE_OWNERFI_PROFILE_ID ? '✅ Set' : '❌ Missing');
 console.log('  LATE_CARZ_PROFILE_ID:', process.env.LATE_CARZ_PROFILE_ID ? '✅ Set' : '❌ Missing');
 console.log('  LATE_PODCAST_PROFILE_ID:', process.env.LATE_PODCAST_PROFILE_ID ? '✅ Set' : '❌ Missing');
+console.log('  LATE_VASSDISTRO_PROFILE_ID:', process.env.LATE_VASSDISTRO_PROFILE_ID ? '✅ Set' : '❌ Missing');
 console.log('');
 
 import { setQueueSchedule, getQueueSchedule } from '../src/lib/late-api';
@@ -245,7 +246,52 @@ const PODCAST_QUEUE = {
   ]
 };
 
-async function setupQueue(brand: 'carz' | 'ownerfi' | 'podcast', config: typeof OWNERFI_QUEUE) {
+// VassDistro - 5 POSTS PER DAY (B2B optimized times)
+const VASSDISTRO_QUEUE = {
+  timezone: 'America/New_York',
+  slots: [
+    // Monday - 5 slots per day (8 AM, 11 AM, 2 PM, 5 PM, 8 PM)
+    { dayOfWeek: 1, time: '08:00' }, // 8 AM - Morning commute
+    { dayOfWeek: 1, time: '11:00' }, // 11 AM - Mid-morning break
+    { dayOfWeek: 1, time: '14:00' }, // 2 PM - Lunch hour
+    { dayOfWeek: 1, time: '17:00' }, // 5 PM - End of day
+    { dayOfWeek: 1, time: '20:00' }, // 8 PM - Evening research
+    // Tuesday
+    { dayOfWeek: 2, time: '08:00' },
+    { dayOfWeek: 2, time: '11:00' },
+    { dayOfWeek: 2, time: '14:00' },
+    { dayOfWeek: 2, time: '17:00' },
+    { dayOfWeek: 2, time: '20:00' },
+    // Wednesday
+    { dayOfWeek: 3, time: '08:00' },
+    { dayOfWeek: 3, time: '11:00' },
+    { dayOfWeek: 3, time: '14:00' },
+    { dayOfWeek: 3, time: '17:00' },
+    { dayOfWeek: 3, time: '20:00' },
+    // Thursday
+    { dayOfWeek: 4, time: '08:00' },
+    { dayOfWeek: 4, time: '11:00' },
+    { dayOfWeek: 4, time: '14:00' },
+    { dayOfWeek: 4, time: '17:00' },
+    { dayOfWeek: 4, time: '20:00' },
+    // Friday
+    { dayOfWeek: 5, time: '08:00' },
+    { dayOfWeek: 5, time: '11:00' },
+    { dayOfWeek: 5, time: '14:00' },
+    { dayOfWeek: 5, time: '17:00' },
+    { dayOfWeek: 5, time: '20:00' },
+    // Saturday - 3 slots (late morning, afternoon, evening)
+    { dayOfWeek: 6, time: '10:00' }, // 10 AM
+    { dayOfWeek: 6, time: '14:00' }, // 2 PM
+    { dayOfWeek: 6, time: '19:00' }, // 7 PM
+    // Sunday - 3 slots
+    { dayOfWeek: 0, time: '10:00' },
+    { dayOfWeek: 0, time: '14:00' },
+    { dayOfWeek: 0, time: '19:00' },
+  ]
+};
+
+async function setupQueue(brand: 'carz' | 'ownerfi' | 'podcast' | 'vassdistro', config: typeof OWNERFI_QUEUE) {
   console.log(`\n📅 Setting up queue for ${brand.toUpperCase()}...`);
   console.log(`   Timezone: ${config.timezone}`);
   console.log(`   Slots: ${config.slots.length} per week`);
@@ -291,7 +337,7 @@ async function setupQueue(brand: 'carz' | 'ownerfi' | 'podcast', config: typeof 
 async function viewCurrentQueues() {
   console.log('\n📋 Current Queue Configurations:\n');
 
-  for (const brand of ['ownerfi', 'carz', 'podcast'] as const) {
+  for (const brand of ['ownerfi', 'carz', 'podcast', 'vassdistro'] as const) {
     try {
       const schedule = await getQueueSchedule(brand);
 
@@ -332,17 +378,18 @@ async function main() {
   const results = await Promise.all([
     setupQueue('ownerfi', OWNERFI_QUEUE),
     setupQueue('carz', CARZ_QUEUE),
-    setupQueue('podcast', PODCAST_QUEUE)
+    setupQueue('podcast', PODCAST_QUEUE),
+    setupQueue('vassdistro', VASSDISTRO_QUEUE)
   ]);
 
   const successCount = results.filter(r => r).length;
 
   console.log('\n' + '='.repeat(60));
-  if (successCount === 3) {
-    console.log('✅ All 3 queues configured successfully!');
-    console.log('   Note: OwnerFi queue handles both viral videos AND benefit videos');
+  if (successCount === 4) {
+    console.log('✅ All 4 queues configured successfully!');
+    console.log('   Note: OwnerFi queue handles viral videos, benefit videos, AND property videos');
   } else {
-    console.log(`⚠️  ${successCount}/3 queues configured successfully`);
+    console.log(`⚠️  ${successCount}/4 queues configured successfully`);
   }
   console.log('='.repeat(60));
 

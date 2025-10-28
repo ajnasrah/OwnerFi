@@ -5,7 +5,7 @@
  * Each brand has its own isolated webhook endpoint to prevent failures from affecting other brands.
  *
  * Route: /api/webhooks/heygen/[brand]
- * Brands: carz, ownerfi, podcast, vassdistro, benefit, property
+ * Brands: carz, ownerfi, podcast, vassdistro, benefit, property, abdullah
  */
 
 import { NextRequest, NextResponse } from 'next/server';

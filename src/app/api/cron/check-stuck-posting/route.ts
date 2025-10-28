@@ -290,12 +290,92 @@ export async function GET(request: NextRequest) {
         const videoUrl = workflow.finalVideoUrl;
         if (!videoUrl) {
           console.error(`   ❌ No finalVideoUrl found for workflow ${workflowId}`);
-          results.push({
-            workflowId,
-            brand,
-            action: 'failed',
-            error: 'No video URL found'
-          });
+
+          // CRITICAL FIX: If no video URL but has Submagic project ID, change status back to submagic_processing
+          // This allows check-stuck-submagic cron to retry the download/upload
+          const submagicProjectId = workflow.submagicProjectId || workflow.submagicVideoId;
+
+          if (submagicProjectId) {
+            console.log(`   🔄 Has Submagic project ID (${submagicProjectId}) - reverting to submagic_processing for retry`);
+
+            try {
+              const revertUpdates = {
+                status: 'submagic_processing' as const,
+                error: undefined, // Clear any previous error
+                retryCount: (workflow.retryCount || 0) // Keep retry count
+              };
+
+              if (isPodcast) {
+                const { updatePodcastWorkflow } = await import('@/lib/feed-store-firestore');
+                await updatePodcastWorkflow(workflowId, revertUpdates);
+              } else if (brand === 'benefit') {
+                const { updateBenefitWorkflow } = await import('@/lib/feed-store-firestore');
+                await updateBenefitWorkflow(workflowId, revertUpdates);
+              } else if (brand === 'property' || isProperty) {
+                const { updateDoc, doc } = await import('firebase/firestore');
+                await updateDoc(doc(db, 'property_videos', workflowId), revertUpdates);
+              } else {
+                const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
+                await updateWorkflowStatus(workflowId, brand as any, revertUpdates);
+              }
+
+              console.log(`   ✅ Reverted to submagic_processing - check-stuck-submagic will retry`);
+
+              results.push({
+                workflowId,
+                brand,
+                action: 'reverted_to_submagic_processing',
+                reason: 'Missing video URL - needs R2 upload retry'
+              });
+            } catch (err) {
+              console.error(`   ❌ Error reverting status:`, err);
+            }
+          } else {
+            console.error(`   ❌ No Submagic project ID either - cannot recover`);
+
+            // Mark as failed if stuck > 60 minutes with no recovery path
+            if (stuckMinutes > 60) {
+              console.log(`   ❌ Marking as failed (no recovery path after 60+ min)`);
+
+              const failUpdates = {
+                status: 'failed' as const,
+                error: 'No video URL and no Submagic project ID - cannot recover',
+                failedAt: Date.now()
+              };
+
+              if (isPodcast) {
+                const { updatePodcastWorkflow } = await import('@/lib/feed-store-firestore');
+                await updatePodcastWorkflow(workflowId, failUpdates);
+              } else if (brand === 'benefit') {
+                const { updateBenefitWorkflow } = await import('@/lib/feed-store-firestore');
+                await updateBenefitWorkflow(workflowId, failUpdates);
+              } else if (brand === 'property' || isProperty) {
+                const { updateDoc, doc } = await import('firebase/firestore');
+                await updateDoc(doc(db, 'properties', workflowId), {
+                  'workflowStatus.stage': 'Failed',
+                  'workflowStatus.error': 'No video URL and no Submagic project ID - cannot recover',
+                  'workflowStatus.lastUpdated': Date.now()
+                });
+              } else {
+                const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
+                await updateWorkflowStatus(workflowId, brand as any, failUpdates);
+              }
+
+              results.push({
+                workflowId,
+                brand,
+                action: 'marked_failed',
+                error: 'No recovery path'
+              });
+            } else {
+              results.push({
+                workflowId,
+                brand,
+                action: 'failed',
+                error: 'No video URL found'
+              });
+            }
+          }
           continue;
         }
 

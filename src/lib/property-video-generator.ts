@@ -405,6 +405,18 @@ Why it's interesting or smart
 25-30 sec – CTA + Disclaimer:
 "Visit OwnerFi.ai to see more homes near you — all free with agent contact info. Prices and terms may change anytime."
 
+30 sec – Call to Action (MANDATORY):
+End every script with a short, natural call to action that sounds like a real person — not an ad.
+Use one of these variations at random for freshness:
+"Follow OwnerFi for daily updates."
+"Follow OwnerFi to learn the real game."
+"Follow OwnerFi — new updates every day."
+"Follow OwnerFi and don't get played again."
+"Follow OwnerFi to see what's really happening."
+"Follow OwnerFi for more deals like this."
+"Follow OwnerFi to stay ahead of the game."
+Keep it under 8 words when possible. Never add extra hashtags or filler after it.
+
 TONE: Real, confident, fast, trustworthy.
 NO: guarantees, promises, or investment talk.
 
@@ -419,6 +431,18 @@ STRUCTURE (≈45-55 words):
 
 10-15 sec – CTA + Disclaimer:
 "See more free listings near you at OwnerFi.ai — prices and terms can change anytime."
+
+15 sec – Call to Action (MANDATORY):
+End every script with a short, natural call to action that sounds like a real person — not an ad.
+Use one of these variations at random for freshness:
+"Follow OwnerFi for daily updates."
+"Follow OwnerFi to learn the real game."
+"Follow OwnerFi — new updates every day."
+"Follow OwnerFi and don't get played again."
+"Follow OwnerFi to see what's really happening."
+"Follow OwnerFi for more deals like this."
+"Follow OwnerFi to stay ahead of the game."
+Keep it under 8 words when possible. Never add extra hashtags or filler after it.
 
 TONE: High energy, conversational, raw — like a friend dropping insider info fast.
 

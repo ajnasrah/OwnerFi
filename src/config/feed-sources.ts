@@ -56,7 +56,7 @@ export const OWNERFI_FEEDS: Omit<FeedSource, 'articlesProcessed'>[] = [
 ];
 
 /**
- * CARZ FEEDS (3 working feeds - adequate to excellent quality)
+ * CARZ FEEDS (4 working feeds - mix of excellent and adequate quality)
  */
 export const CARZ_FEEDS: Omit<FeedSource, 'articlesProcessed'>[] = [
   {
@@ -81,6 +81,15 @@ export const CARZ_FEEDS: Omit<FeedSource, 'articlesProcessed'>[] = [
     id: 'carz-cleantechnica',
     name: 'CleanTechnica - Clean Energy & EVs',
     url: 'https://cleantechnica.com/feed/',
+    category: 'carz',
+    subcategory: 'electric',
+    enabled: true,
+    fetchInterval: 60
+  },
+  {
+    id: 'carz-evannex',
+    name: 'EVANNEX Blog - Tesla & EV News',
+    url: 'https://evannex.com/blogs/news.atom',
     category: 'carz',
     subcategory: 'electric',
     enabled: true,
@@ -180,7 +189,7 @@ export async function initializeFeedSources() {
     totalCount++;
   }
 
-  console.log(`\n✅ Initialized ${CARZ_FEEDS.length} Carz feeds - adequate to excellent quality`);
+  console.log(`\n✅ Initialized ${CARZ_FEEDS.length} Carz feeds - 1 excellent + 3 adequate quality`);
   console.log(`✅ Initialized ${OWNERFI_FEEDS.length} OwnerFi feeds - all excellent quality`);
   console.log(`✅ Initialized ${VASSDISTRO_FEEDS.length} Vass Distro feeds - all excellent quality`);
   console.log(`📊 Total: ${totalCount} feed sources (TESTED & VERIFIED 2025)\n`);

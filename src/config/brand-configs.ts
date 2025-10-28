@@ -377,8 +377,8 @@ export const VASSDISTRO_CONFIG: BrandConfig = {
 
   scheduling: {
     timezone: 'America/New_York',
-    postingHours: [10], // 1 post per day at 10 AM ET
-    maxPostsPerDay: 1,
+    postingHours: [8, 11, 14, 17, 20], // 5 posts per day - B2B optimized times
+    maxPostsPerDay: 5,
   },
 
   features: {

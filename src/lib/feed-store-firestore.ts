@@ -1639,6 +1639,7 @@ export async function getPropertyRotationStats(): Promise<{
 
 /**
  * Update property video workflow
+ * ALSO syncs workflowStatus to the main properties collection for UI display
  */
 export async function updatePropertyVideo(
   workflowId: string,
@@ -1671,7 +1672,69 @@ export async function updatePropertyVideo(
     updateData.updatedAt = Date.now();
   }
 
+  // Update property_videos workflow collection
   await updateDoc(doc(db, 'property_videos', workflowId), updateData);
+
+  // CRITICAL: Also sync workflowStatus to main properties collection for UI
+  // Get the property_videos doc to find the propertyId
+  try {
+    const workflowDoc = await getDoc(doc(db, 'property_videos', workflowId));
+    if (workflowDoc.exists()) {
+      const workflowData = workflowDoc.data();
+      const propertyId = workflowData.propertyId;
+
+      if (propertyId) {
+        // Map status to workflowStatus.stage for properties collection
+        const propertyUpdates: Record<string, any> = {};
+
+        if (updates.status) {
+          // Map internal statuses to UI-friendly stages
+          const stageMap: Record<string, string> = {
+            'heygen_processing': 'Processing',
+            'submagic_processing': 'Processing',
+            'video_processing': 'Processing',
+            'posting': 'Posting',
+            'completed': 'Completed',
+            'failed': 'Failed'
+          };
+          propertyUpdates['workflowStatus.stage'] = stageMap[updates.status] || 'Processing';
+        }
+
+        if (updates.heygenVideoId) {
+          propertyUpdates['workflowStatus.heygenVideoId'] = updates.heygenVideoId;
+        }
+
+        if (updates.submagicVideoId || updates.submagicProjectId) {
+          propertyUpdates['workflowStatus.submagicVideoId'] = updates.submagicVideoId || updates.submagicProjectId;
+        }
+
+        if (updates.finalVideoUrl) {
+          propertyUpdates['workflowStatus.finalVideoUrl'] = updates.finalVideoUrl;
+        }
+
+        if (updates.latePostId) {
+          propertyUpdates['workflowStatus.latePostId'] = updates.latePostId;
+        }
+
+        if (updates.error) {
+          propertyUpdates['workflowStatus.error'] = updates.error;
+        }
+
+        if (updates.completedAt) {
+          propertyUpdates['workflowStatus.completedAt'] = updates.completedAt;
+        }
+
+        // Always update lastUpdated
+        propertyUpdates['workflowStatus.lastUpdated'] = Date.now();
+
+        // Update the main properties collection
+        await updateDoc(doc(db, 'properties', propertyId), propertyUpdates);
+      }
+    }
+  } catch (error) {
+    // Don't fail the whole update if properties sync fails
+    console.error('Warning: Failed to sync workflowStatus to properties collection:', error);
+  }
 }
 
 /**

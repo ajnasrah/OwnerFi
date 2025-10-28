@@ -67,7 +67,7 @@ const DEFAULT_CONFIG = {
       "expertise": "Car Buying & Vehicle Maintenance",
       "avatar_type": "avatar",
       "avatar_id": "Brandon_Business_Sitting_Front_public",
-      "voice_id": "827d0da125f140fd8b6d010f32cd9f2e",
+      "voice_id": "bd9106cb6c9949449bac016c271bd657",
       "scale": 1.4,
       "description": "20 years in automotive sales and customer service",
       "question_topics": [
@@ -116,8 +116,8 @@ const DEFAULT_CONFIG = {
       "title": "Technology Consultant",
       "expertise": "Consumer Technology & Digital Tools",
       "avatar_type": "avatar",
-      "avatar_id": "Shawn_Business_Front_public",
-      "voice_id": "d2f4f24783d04e22ab49ee8fdc3715e0",
+      "avatar_id": "Shawn_Therapist_public",
+      "voice_id": "52910929f49f41c99f07fee83cb687d8",
       "scale": 1.4,
       "description": "Tech enthusiast helping people navigate the digital world",
       "question_topics": [
@@ -141,8 +141,8 @@ const DEFAULT_CONFIG = {
       "title": "Certified Fitness Trainer",
       "expertise": "Exercise & Nutrition",
       "avatar_type": "avatar",
-      "avatar_id": "Adriana_Business_Front_public",
-      "voice_id": "7aafc1296f5c4d418703c5716d83a4a0",
+      "avatar_id": "Scarlett_sitting_couch2_front",
+      "voice_id": "ed7148e110b6477aa012861c6df616b5",
       "scale": 1.4,
       "description": "Personal trainer specializing in sustainable fitness",
       "question_topics": [
@@ -164,11 +164,11 @@ const DEFAULT_CONFIG = {
   "host": {
     "name": "Abdullah",
     "avatar_type": "talking_photo",
-    "avatar_id": "f40972493dd74bbe829f30daa09ea1a9",
-    "voice_id": "9070a6c2dbd54c10bb111dc8c655bff7",
+    "avatar_id": "d33fe3abc2914faa88309c3bdb9f47f4",
+    "voice_id": "5bd25d00f41c477989e1e121a16986d3",
     "scale": 1.4,
     "background_color": "#ffffff",
-    "description": "Host - uses motion-enabled avatar from social media system"
+    "description": "Host - uses motion-enabled avatar matching Benefit/Viral brands"
   },
   "video_settings": {
     "dimension": {

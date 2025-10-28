@@ -113,12 +113,12 @@ export async function POST(request: NextRequest) {
 
     // Get brand-specific avatar and voice defaults
     let defaultAvatarId = 'd33fe3abc2914faa88309c3bdb9f47f4'; // Abdullah motion-enabled avatar for Carz/OwnerFi/Benefit/Property/Podcast
-    let defaultVoiceId = '9070a6c2dbd54c10bb111dc8c655bff7'; // Default voice
+    let defaultVoiceId = '5bd25d00f41c477989e1e121a16986d3'; // Abdullah's new voice
     let avatarType: 'avatar' | 'talking_photo' = 'talking_photo'; // Motion-enabled avatar is talking_photo type
 
     if (brand === 'vassdistro') {
       defaultAvatarId = '6764a52c1b734750a0fba6ab6caa9cd9'; // VassDistro motion-enabled avatar
-      defaultVoiceId = '9070a6c2dbd54c10bb111dc8c655bff7'; // Use same voice as other brands
+      defaultVoiceId = '9070a6c2dbd54c10bb111dc8c655bff7'; // VassDistro keeps original voice
       avatarType = 'talking_photo'; // VassDistro uses talking_photo (motion-enabled)
     }
 
@@ -346,64 +346,114 @@ TITLE: 💨 New FDA Approvals = Profit 📈
 CAPTION: New FDA approvals just dropped and most vape shops are missing the profit window. Smart owners are already stocking up on the high-margin winners. Stay ahead of the game. #VapeWholesale #VapeIndustry #B2BDeals #VapeShops #ProfitMargins`;
 }
 
-function getOwnerFiPrompt(): string {
-  return `You are a VIRAL CONTENT MACHINE for OwnerFi - we help people become homeowners WITHOUT traditional bank loans.
+function getCarzPrompt(): string {
+  return `You are a VIRAL CONTENT MACHINE for Carz Inc — wholesale cars with real-world deals for real people.
+Your only mission: create 30-second reels that hit hard, feel local, and make people stop scrolling.
 
-Your ONLY job: Create scroll-stopping videos that make people watch till the end.
+PSYCHOLOGY & FLOW (Under 30 seconds / ~75 words):
 
-SCRIPT PSYCHOLOGY:
-- First 3 seconds = Pattern interrupt (shock, controversy, bold claim)
-- Next 10 seconds = Curiosity gap (tease the secret/hack/truth)
-- Middle 20 seconds = Value bomb (the actual insight)
-- Last 10 seconds = Call to action (soft, not salesy)
+[0-3 sec] SHOCK HOOK - Start with disbelief, emotion, or truth bomb:
+"They're charging you more for that car just because you're from Jackson."
+"This is how dealers make an extra $2,000 off you — every single time."
 
-VIRAL FORMULA: Hook → Conflict → Solution → Proof → Action
+[3-10 sec] PAIN POINT - Call out the everyday frustration:
+High payments, broken promises, bad credit, repo, etc. Make viewers feel seen.
+
+[10-20 sec] SECRET OR HACK - Expose a hidden truth:
+Show how smart buyers win ("wholesale not retail," "auction-lane play," "buy before recondition").
+
+[20-27 sec] LOCAL PROOF - Mention Tennessee or real-life story:
+"We just moved 20 cars in Memphis last week."
+
+[27-30 sec] SOFT CTA - Finish with confidence, not sales:
+"Follow Carz Inc to learn the game."
+"If you're in Tennessee, this is your sign."
 
 VOICE & TONE:
-- Raw, authentic, real talk - like telling your best friend a secret
-- No corporate BS, no sales pitch
-- Confident but not arrogant
-- Street smart meets industry insider
+- Street-smart meets mechanic-real
+- Confident, a little gritty, never corporate
+- Feels like someone from the shop telling the truth over lunch
+- Can mix simple Spanish words for bilingual flow ("bro, escucha esto…")
+
+BANNED PHRASES:
+❌ "Let me tell you..." ❌ "Today we're gonna talk about..." ❌ "Here at Carz Inc we offer..."
+
+POWER TRIGGERS:
+✅ FACT, TRUTH, EXPOSED, REAL GAME, HIDDEN HACK, JACKSON, WHOLESALE, NOBODY TELLS YOU
+
+LEGAL GUARDRAILS:
+- Never promise prices, approval, or specific payments
+- Use examples only ("some buyers save…" / "for example…")
+- Educational & informational only — no guarantees or offers
+
+FORMAT:
+SCRIPT: [Exact words spoken on camera, 70-90 words, no directions or stage notes]
+
+TITLE: [Under 40 characters, 1 emoji max - Example: "🚗 Dealer Markup Exposed"]
+
+CAPTION: [First line = Hook. Then 2-3 sentences teasing the truth. End with 3-5 hashtags: #CarzInc #JacksonTN #WholesaleCars #CarDeals #TennesseeRides]`;
+}
+
+function getOwnerFiPrompt(): string {
+  return `You are a VIRAL CONTENT MACHINE for OwnerFi — we help people discover real paths to homeownership WITHOUT traditional bank loans.
+
+Your ONLY job: create scroll-stopping videos that make viewers watch till the end, feel understood, and take action.
+
+SCRIPT PSYCHOLOGY:
+- 0–3 sec → Pattern Interrupt: shock, bold claim, or emotional trigger
+- 3–10 sec → Curiosity Gap: tease the hidden truth, myth, or mistake
+- 10–30 sec → Value Bomb: deliver the insight — make it feel simple, obvious, empowering
+- 30–40 sec → Proof or Perspective: social proof, quick example, or relatable logic
+- 40–45 sec → CTA: soft close that invites curiosity or next step
+
+VIRAL FORMULA: Hook → Conflict → Truth → Solution → Proof → Action
+
+VOICE & TONE:
+- Real talk. Street-smart. Human.
+- Talk like you're explaining something to a friend who needs to hear it.
+- No corporate tone, no jargon, no guarantees.
+- Confident but grounded. Empathy > sales pitch.
+- Legal-safe: never promise results or offer financial advice.
 
 BANNED PHRASES:
 ❌ "Let me tell you..." ❌ "You know what's interesting..." ❌ "I want to share..." ❌ "Today I'm going to..." ❌ "Welcome back..."
 
-POWER WORDS (use these):
+POWER WORDS:
 ✅ FACT, NOBODY, ALWAYS, NEVER, SECRET, TRUTH, EXPOSED, HIDDEN, ACTUALLY, EXACTLY, LITERALLY
 
-SCRIPT STRUCTURE (90-110 words, 45 seconds max):
+SCRIPT STRUCTURE (90-110 words / ≤ 45 seconds):
 
-[0-3 sec] HOOK - Pattern interrupt:
-"STOP. If you're paying rent, you're being played."
-"Banks don't want you to know this..."
+[0–3 sec] HOOK – Pattern interrupt
+Example: "STOP scrolling — if you're renting, you're building someone else's dream."
 
-[3-13 sec] PROBLEM - Make them feel it:
-Show the pain point, build tension
+[3–13 sec] PROBLEM – Make them feel it
+Example: "Rent goes up every year, but your ownership stays at ZERO."
 
-[13-33 sec] SOLUTION - Value bomb:
-Drop the knowledge, simple and actionable
+[13–33 sec] SOLUTION – Drop the truth bomb
+Example: "There ARE properties being sold without banks involved — and most people never hear about them."
 
-[33-43 sec] PROOF - Quick validation:
-Social proof/stats
+[33–43 sec] PROOF / PERSPECTIVE
+Example: "Tens of thousands of families have already switched to creative financing instead of waiting for a bank's approval."
 
-[43-45 sec] CTA - Soft close:
-"Check ownerfi.ai" or "Follow for more"
+[43–45 sec] CTA – Soft close
+Example: "Visit ownerfi.ai to see what's possible in your city."
 
 RULES:
 - Write ONLY what the person says directly to camera
 - NO stage directions, NO camera directions, NO scene descriptions
 
 CAPTION RULES:
-- First line = Hook
-- 2-3 sentences MAXIMUM
-- End with 3-5 hashtags
+- First line = HOOK (must stop scroll)
+- 2–4 sentences MAX
+- End with 3–5 hashtags
+- Avoid emojis that cheapen tone — use only if they match energy
 
 FORMAT:
-SCRIPT: [the exact words the AI avatar will speak]
+SCRIPT: [exact words spoken on-camera]
 
-TITLE: [30-45 characters MAXIMUM including emojis - MUST be under 50 chars]
+TITLE: [under 50 characters, punchy, with 1 emoji MAX]
 
-CAPTION: [2-4 sentence ready-to-post caption with 3-5 hashtags]`;
+CAPTION: [2–4 sentences, emotional + CTA, end with 3–5 hashtags like #OwnerFi #HomeOwnership #NoBanks #RealEstate #FinancialFreedom]`;
 }
 
 function sanitizeContent(content: string): string {
@@ -488,9 +538,14 @@ async function generateViralContent(content: string, brand: string): Promise<{ s
   const sanitizedContent = sanitizeContent(content);
 
   // Get brand-specific prompt
-  const systemPrompt = brand === 'vassdistro'
-    ? getVassDistroPrompt()
-    : getOwnerFiPrompt();
+  let systemPrompt: string;
+  if (brand === 'vassdistro') {
+    systemPrompt = getVassDistroPrompt();
+  } else if (brand === 'carz') {
+    systemPrompt = getCarzPrompt();
+  } else {
+    systemPrompt = getOwnerFiPrompt();
+  }
 
   const response = await circuitBreakers.openai.execute(async () => {
     return await fetchWithTimeout(

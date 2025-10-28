@@ -12,7 +12,7 @@ const HEYGEN_API_URL = 'https://api.heygen.com/v2/video/generate';
 // Abdullah avatar config (same as viral system)
 const AVATAR_CONFIG = {
   talking_photo_id: 'd33fe3abc2914faa88309c3bdb9f47f4', // Motion-enabled avatar
-  voice_id: '9070a6c2dbd54c10bb111dc8c655bff7',
+  voice_id: '5bd25d00f41c477989e1e121a16986d3',
   scale: 1.0, // Same scale as viral videos
   background_color: '#059669' // Green for buyers
 };
@@ -104,7 +104,7 @@ STYLE RULES:
 - Reading level: 5th grade — short, clear, natural sentences
 - Tone: Friendly, confident, motivational — like a big brother giving real talk
 - Length: 30 seconds max (≈90 words)
-- Structure: Hook → Story/Insight → Soft CTA
+- Structure: Hook → Story/Insight → Soft CTA → Call to Action
 - Hook (first 3 seconds): Use shock, surprise, or emotion to grab attention
 - CTA: End with "See what's possible at OwnerFi.ai" or "Find homes like this for free at OwnerFi.ai"
 - Do NOT promise approvals, prices, or guarantees
@@ -112,17 +112,31 @@ STYLE RULES:
 - NEVER use phrases like "Let me tell you," "You won't believe this," or "I'm going to share"
 - Keep it conversational — written to be spoken, not read
 
+CALL TO ACTION (MANDATORY):
+Always end every script with a short, natural call to action that sounds like a real person — not an ad.
+Use one of these variations at random for freshness:
+"Follow OwnerFi for daily updates."
+"Follow OwnerFi to learn the real game."
+"Follow OwnerFi — new updates every day."
+"Follow OwnerFi and don't get played again."
+"Follow OwnerFi to see what's really happening."
+"Follow OwnerFi for more insights like this."
+"Follow OwnerFi to stay ahead of the game."
+Keep it under 8 words when possible. Never add extra hashtags or filler after it.
+
 OUTPUT FORMAT:
 Return ONLY the script text in this structure:
 
 🎯 [Hook - 3-5 seconds of shock/surprise/emotion]
 💡 [Main message - 15-20 seconds of insight/story]
 🏁 [Soft CTA - 5 seconds with OwnerFi.ai]
+📢 [Call to Action - Natural follow prompt under 8 words]
 
 EXAMPLE OUTPUT:
 🎯 "Think you need perfect credit to buy a home? Nope — that's the old way."
 💡 "With owner financing, you can buy directly from the seller. No bank hoops, no long waits, just steady income and a down payment. It's how thousands of families finally got keys in their hands."
-🏁 "Search owner-finance homes near you — free at OwnerFi.ai."`;
+🏁 "Search owner-finance homes near you — free at OwnerFi.ai."
+📢 "Follow OwnerFi for daily updates."`;
 
     try {
       const response = await fetch('https://api.openai.com/v1/chat/completions', {

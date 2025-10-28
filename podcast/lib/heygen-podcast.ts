@@ -164,10 +164,6 @@ export class HeyGenPodcastGenerator {
           voice_id: this.hostProfile.voice_id,
           input_text: qa.question,
           speed: 1.0
-        },
-        background: {
-          type: 'color',
-          value: this.hostProfile.background_color || '#ffffff'
         }
       });
 
@@ -185,7 +181,7 @@ export class HeyGenPodcastGenerator {
 
       const guestCharacter: any = {
         type: guest.avatar_type,
-        scale: 1.4  // Guest should be scaled at 1.4x
+        scale: guest.scale || 1.4  // Use guest's configured scale
       };
 
       // Add avatar_id or talking_photo_id based on type
@@ -199,11 +195,7 @@ export class HeyGenPodcastGenerator {
 
       scenes.push({
         character: guestCharacter,
-        voice: guestVoice,
-        background: {
-          type: 'color',
-          value: guest.background_color || '#f5f5f5'
-        }
+        voice: guestVoice
       });
     }
 

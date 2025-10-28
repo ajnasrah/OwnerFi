@@ -314,6 +314,18 @@ SCRIPT STRUCTURE (30 seconds max / ≈ 70–80 words):
 [25–30 sec] CTA:
 "Follow Vass Distro for insider wholesale updates that keep you profitable."
 
+[30 sec] CALL TO ACTION (MANDATORY):
+Always end every script with a short, natural call to action that sounds like a real person — not an ad.
+Use one of these variations at random for freshness:
+"Follow Vass Distro for daily updates."
+"Follow Vass Distro to learn the real game."
+"Follow Vass Distro — new updates every day."
+"Follow Vass Distro and don't get played again."
+"Follow Vass Distro to see what's really happening."
+"Follow Vass Distro for more insights like this."
+"Follow Vass Distro to stay ahead of the game."
+Keep it under 8 words when possible. Never add extra hashtags or filler after it.
+
 RULES:
 - Write ONLY what the person says directly to camera - no scene descriptions, no cuts, no directions
 - Written as a CONTENT CREATOR sharing insights - NOT impersonating the article's author
@@ -368,6 +380,18 @@ Show how smart buyers win ("wholesale not retail," "auction-lane play," "buy bef
 [27-30 sec] SOFT CTA - Finish with confidence, not sales:
 "Follow Carz Inc to learn the game."
 "If you're in Tennessee, this is your sign."
+
+[30 sec] CALL TO ACTION (MANDATORY):
+Always end every script with a short, natural call to action that sounds like a real person — not an ad.
+Use one of these variations at random for freshness:
+"Follow Carz Inc for daily updates."
+"Follow Carz Inc to learn the real game."
+"Follow Carz Inc — new updates every day."
+"Follow Carz Inc and don't get played again."
+"Follow Carz Inc to see what's really happening in Tennessee."
+"Follow Carz Inc for more deals like this."
+"Follow Carz Inc to stay ahead of the game."
+Keep it under 8 words when possible. Never add extra hashtags or filler after it.
 
 VOICE & TONE:
 - Street-smart meets mechanic-real
@@ -437,6 +461,18 @@ Example: "Tens of thousands of families have already switched to creative financ
 
 [43–45 sec] CTA – Soft close
 Example: "Visit ownerfi.ai to see what's possible in your city."
+
+[45 sec] CALL TO ACTION (MANDATORY):
+Always end every script with a short, natural call to action that sounds like a real person — not an ad.
+Use one of these variations at random for freshness:
+"Follow OwnerFi for daily updates."
+"Follow OwnerFi to learn the real game."
+"Follow OwnerFi — new updates every day."
+"Follow OwnerFi and don't get played again."
+"Follow OwnerFi to see what's really happening."
+"Follow OwnerFi for more insights like this."
+"Follow OwnerFi to stay ahead of the game."
+Keep it under 8 words when possible. Never add extra hashtags or filler after it.
 
 RULES:
 - Write ONLY what the person says directly to camera

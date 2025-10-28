@@ -166,11 +166,24 @@ RULES:
 - Use CAPS for 1–2 emotional emphasis words (e.g., WILD, REAL, CRAZY, MASSIVE).
 - End with a short takeaway or teaser for tomorrow's post.
 
+CALL TO ACTION (MANDATORY):
+Always end every script with a short, natural call to action that sounds like a real person — not an ad.
+Use one of these variations at random for freshness (replace {company page} with the podcast/brand name):
+"Follow {company page} for daily updates."
+"Follow {company page} to learn the real game."
+"Follow {company page} — new updates every day."
+"Follow {company page} and don't get played again."
+"Follow {company page} to see what's really happening."
+"Follow {company page} for more insights like this."
+"Follow {company page} to stay ahead of the game."
+Keep it under 8 words when possible. Never add extra hashtags or filler after it.
+
 Format strictly as:
 Q: [Hook-style question — something that instantly grabs attention]
 A: [2–3 sentences — emotional, thought-provoking, or eye-opening answer. No instructions or recommendations.]
 
-Takeaway: [1-line quote or teaser for tomorrow's post]`
+Takeaway: [1-line quote or teaser for tomorrow's post]
+CTA: [Natural follow prompt under 8 words using one of the variations above]`
         },
         {
           role: 'user',
@@ -233,31 +246,37 @@ EXAMPLES:
 Q: Why do we wait until everything falls apart before changing?
 A: Because pain wakes us up faster than comfort. It's not that we don't know what to do — it's that we don't MOVE until it hurts.
 Takeaway: Tomorrow — the weird truth about comfort zones.
+CTA: Follow for daily updates.
 
 ✅ GOOD (Money):
 Q: Why do some people make more but still feel broke?
 A: Because it's not the paycheck — it's the pattern. You can't out-earn chaos.
 Takeaway: Tomorrow — the silent habits that drain your wallet.
+CTA: Follow to learn the real game.
 
 ✅ GOOD (Fitness):
 Q: Why do we wait for motivation to start anything?
 A: Because we think energy comes first — but it's the ACTION that builds it. You don't need motivation, you need momentum.
 Takeaway: Tomorrow — how tiny wins change everything.
+CTA: Follow for more insights like this.
 
 ✅ GOOD (Health):
 Q: Why do we ignore our bodies until something breaks?
 A: Because feeling "fine" is the biggest lie we tell ourselves. You don't notice the slow fade until it's LOUD.
 Takeaway: Tomorrow — the one signal everyone misses.
+CTA: Follow to stay ahead of the game.
 
 ✅ GOOD (Mindset):
 Q: Why is it easier to help others than ourselves?
 A: Because we judge ourselves harder than anyone else. We give grace to everyone but the person in the mirror.
 Takeaway: Tomorrow — the truth about self-talk.
+CTA: Follow — new updates every day.
 
 Format each script as:
 Q: [hook question]
 A: [2-3 sentence answer — thought-provoking, no advice]
-Takeaway: [tomorrow teaser]`;
+Takeaway: [tomorrow teaser]
+CTA: [Natural follow prompt under 8 words]`;
   }
 
   /**

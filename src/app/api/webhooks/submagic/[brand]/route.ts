@@ -463,10 +463,12 @@ async function triggerAsyncVideoProcessing(
   submagicProjectId?: string
 ): Promise<void> {
   try {
-    // Get the base URL for the API
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : 'http://localhost:3000';
+    // Get the base URL for the API - FIXED: Proper precedence
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ||
+                    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
+
+    console.log(`🌐 [${brand}] Triggering process-video at: ${baseUrl}/api/process-video`);
+    console.log(`   Workflow: ${workflowId}`);
 
     // Trigger the processing endpoint (fire-and-forget)
     // Don't await - let it run in the background
@@ -476,13 +478,13 @@ async function triggerAsyncVideoProcessing(
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ brand, workflowId, videoUrl, submagicProjectId }),
     }).catch(err => {
-      console.error('Failed to trigger video processing:', err);
+      console.error(`❌ [${brand}] Failed to trigger video processing:`, err);
       // Failure here is OK - the failsafe cron will pick it up
     });
 
-    console.log(`🚀 Triggered async video processing for ${workflowId}`);
+    console.log(`✅ [${brand}] Triggered async video processing for ${workflowId}`);
   } catch (error) {
-    console.error('Error triggering video processing:', error);
+    console.error(`❌ [${brand}] Error triggering video processing:`, error);
     // Don't throw - webhook should still succeed
   }
 }

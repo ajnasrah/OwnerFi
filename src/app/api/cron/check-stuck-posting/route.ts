@@ -119,45 +119,49 @@ export async function GET(request: NextRequest) {
     }
 
     // Check Property videos stuck in 'posting' OR 'video_processing'
-    console.log(`\n📂 Checking property_videos...`);
+    // Properties use nested workflowStatus.stage field in properties collection
+    console.log(`\n📂 Checking properties...`);
     try {
       const qPosting = query(
-        collection(db, 'property_videos'),
-        where('status', '==', 'posting')
-      );
-      const qProcessing = query(
-        collection(db, 'property_videos'),
-        where('status', '==', 'video_processing')
+        collection(db, 'properties'),
+        where('workflowStatus.stage', '==', 'Posting')
       );
 
-      const [postingSnapshot, processingSnapshot] = await Promise.all([
-        getDocs(qPosting),
-        getDocs(qProcessing)
-      ]);
+      const postingSnapshot = await getDocs(qPosting);
 
-      console.log(`   Found ${postingSnapshot.size} in 'posting', ${processingSnapshot.size} in 'video_processing'`);
+      console.log(`   Found ${postingSnapshot.size} in 'Posting'`);
 
-      // Process both status types
-      [...postingSnapshot.docs, ...processingSnapshot.docs].forEach(doc => {
+      // Process properties stuck in Posting stage
+      postingSnapshot.docs.forEach(doc => {
         const data = doc.data();
-        // Use statusChangedAt if available (new field), fallback to updatedAt for old workflows
-        const timestamp = data.statusChangedAt || data.updatedAt || 0;
+        // Use workflowStatus.lastUpdated for properties
+        const timestamp = data.workflowStatus?.lastUpdated || data.updatedAt || 0;
         const stuckMinutes = Math.round((Date.now() - timestamp) / 60000);
 
-        console.log(`   📄 Property ${doc.id}: ${data.status} for ${stuckMinutes} min`);
+        console.log(`   📄 Property ${doc.id}: ${data.address} - Posting for ${stuckMinutes} min`);
 
         if (stuckMinutes > 10) {
           stuckWorkflows.push({
             workflowId: doc.id,
             brand: 'property',
             isProperty: true,
-            workflow: data,
+            workflow: {
+              ...data,
+              // Map workflowStatus to flat structure for consistency with processing logic
+              status: 'posting',
+              submagicProjectId: data.workflowStatus?.submagicVideoId,
+              finalVideoUrl: data.workflowStatus?.finalVideoUrl,
+              submagicDownloadUrl: data.workflowStatus?.submagicDownloadUrl,
+              heygenVideoId: data.workflowStatus?.heygenVideoId,
+              caption: `${data.address}, ${data.city}, ${data.state} • Down: $${data.downPayment?.toLocaleString()} • Monthly: $${data.monthlyPayment?.toLocaleString()} 🏡`,
+              title: `${data.address} - Owner Finance Property`
+            },
             stuckMinutes
           });
         }
       });
     } catch (err) {
-      console.error(`   ❌ Error querying property_videos:`, err);
+      console.error(`   ❌ Error querying properties:`, err);
     }
 
     console.log(`\n📋 Found ${stuckWorkflows.length} stuck workflows to retry`);
@@ -197,8 +201,13 @@ export async function GET(request: NextRequest) {
             const { updateBenefitWorkflow } = await import('@/lib/feed-store-firestore');
             await updateBenefitWorkflow(workflowId, updates);
           } else if (brand === 'property' || isProperty) {
-            const { updatePropertyVideo } = await import('@/lib/feed-store-firestore');
-            await updatePropertyVideo(workflowId, updates);
+            // Properties use nested workflowStatus structure
+            const { updateDoc, doc } = await import('firebase/firestore');
+            await updateDoc(doc(db, 'properties', workflowId), {
+              'workflowStatus.stage': 'Failed',
+              'workflowStatus.error': `Max retry attempts (${MAX_RETRIES}) exceeded for posting`,
+              'workflowStatus.lastUpdated': Date.now()
+            });
           } else {
             const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
             await updateWorkflowStatus(workflowId, brand as any, updates);
@@ -344,8 +353,14 @@ export async function GET(request: NextRequest) {
             const { updateBenefitWorkflow } = await import('@/lib/feed-store-firestore');
             await updateBenefitWorkflow(workflowId, completionUpdates);
           } else if (brand === 'property' || isProperty) {
-            const { updatePropertyVideo } = await import('@/lib/feed-store-firestore');
-            await updatePropertyVideo(workflowId, completionUpdates);
+            // Properties use nested workflowStatus structure
+            const { updateDoc, doc } = await import('firebase/firestore');
+            await updateDoc(doc(db, 'properties', workflowId), {
+              'workflowStatus.stage': 'Completed',
+              'workflowStatus.latePostId': postResult.postId,
+              'workflowStatus.lastUpdated': Date.now(),
+              'workflowStatus.completedAt': Date.now()
+            });
           } else {
             const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
             await updateWorkflowStatus(workflowId, brand as any, completionUpdates);
@@ -379,10 +394,12 @@ export async function GET(request: NextRequest) {
                 error: `Late API posting failed: ${postResult.error}`
               });
             } else if (brand === 'property' || isProperty) {
-              const { updatePropertyVideo } = await import('@/lib/feed-store-firestore');
-              await updatePropertyVideo(workflowId, {
-                status: 'failed',
-                error: `Late API posting failed: ${postResult.error}`
+              // Properties use nested workflowStatus structure
+              const { updateDoc, doc } = await import('firebase/firestore');
+              await updateDoc(doc(db, 'properties', workflowId), {
+                'workflowStatus.stage': 'Failed',
+                'workflowStatus.error': `Late API posting failed: ${postResult.error}`,
+                'workflowStatus.lastUpdated': Date.now()
               });
             } else {
               const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');

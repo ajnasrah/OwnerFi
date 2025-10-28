@@ -172,6 +172,10 @@ export async function GET(request: NextRequest) {
     }
     console.log(`   Property status: ${successCount > 0 ? 'Completed' : skippedCount > 0 ? 'Skipped (in queue)' : 'Failed'}`);
 
+    const errorMessage = skippedCount > 0
+      ? `Property skipped due to validation errors: ${results[0].errorDetails || results[0].error}`
+      : results[0]?.error || 'Unknown error';
+
     return NextResponse.json({
       success: successCount > 0,
       variant: '15sec',
@@ -186,9 +190,8 @@ export async function GET(request: NextRequest) {
       },
       message: successCount > 0
         ? `Video generated successfully`
-        : skippedCount > 0
-        ? `Property skipped due to validation errors: ${results[0].errorDetails || results[0].error}`
-        : `Failed to generate video: ${results[0].error}`,
+        : errorMessage,
+      error: successCount > 0 ? undefined : errorMessage, // Add error field for frontend compatibility
       timestamp: new Date().toISOString()
     });
 

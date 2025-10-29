@@ -140,96 +140,77 @@ export default function BuyerSettings() {
 
   return (
     <div className="min-h-screen bg-slate-900">
-      {/* Header with Navigation */}
-      <header className="relative z-20 bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50 px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-black text-white">SETTINGS</h1>
-            <p className="text-sm text-slate-400 mt-1 font-semibold">UPDATE YOUR SEARCH PREFERENCES</p>
-          </div>
-          
-          <div className="flex items-center space-x-6">
-            <div className="flex space-x-4">
-              <Link href="/dashboard" className="flex flex-col items-center group">
-                <div className="w-12 h-12 bg-slate-700/50 hover:bg-slate-600/50 rounded-xl flex items-center justify-center transition-colors group-hover:scale-110">
-                  <span className="text-slate-300 text-xl">🏠</span>
-                </div>
-                <span className="text-xs font-bold text-slate-400 mt-1">BROWSE</span>
-              </Link>
-              
-              <Link href="/dashboard/liked" className="flex flex-col items-center group">
-                <div className="w-12 h-12 bg-slate-700/50 hover:bg-slate-600/50 rounded-xl flex items-center justify-center transition-colors group-hover:scale-110">
-                  <span className="text-slate-300 text-xl">♥</span>
-                </div>
-                <span className="text-xs font-bold text-slate-400 mt-1">SAVED</span>
-              </Link>
-              
-              <Link href="/dashboard/settings" className="flex flex-col items-center group">
-                <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                  <span className="text-white text-xl">⚙</span>
-                </div>
-                <span className="text-xs font-bold text-emerald-400 mt-1">SETTINGS</span>
-              </Link>
-            </div>
-            
+      {/* Minimal Header */}
+      <header className="sticky top-0 z-20 bg-slate-900/95 backdrop-blur-sm border-b border-slate-800">
+        <div className="px-3 py-2 flex items-center justify-between">
+          <Link href="/dashboard" className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            <span className="text-sm font-bold">Settings</span>
+          </Link>
+
+          <div className="flex items-center gap-2">
+            <Link href="/dashboard/liked" className="w-8 h-8 bg-slate-800 hover:bg-slate-700 rounded-lg flex items-center justify-center transition-colors">
+              <span className="text-sm">❤️</span>
+            </Link>
             <button
               onClick={() => signOut({ callbackUrl: '/' })}
-              className="flex flex-col items-center group"
+              className="w-8 h-8 bg-slate-800 hover:bg-red-900/30 rounded-lg flex items-center justify-center transition-colors"
             >
-              <div className="w-12 h-12 bg-slate-700/50 hover:bg-red-600/30 rounded-xl flex items-center justify-center transition-all group-hover:scale-110 duration-300">
-                <span className="text-slate-300 group-hover:text-red-400 text-xl transition-colors">⏻</span>
-              </div>
-              <span className="text-xs font-bold text-slate-400 group-hover:text-red-400 mt-1 transition-colors">LOGOUT</span>
+              <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
             </button>
           </div>
         </div>
       </header>
 
-      {/* Main Content - COMPLETELY REDESIGNED */}
-      <main className="px-4 pt-8 pb-8">
-        <div className="max-w-lg mx-auto">
-          
-          <form onSubmit={handleSubmit} className="space-y-8">
+      {/* Main Content - Compact Mobile Layout */}
+      <main className="px-3 py-4 pb-20">
+        <div className="max-w-md mx-auto space-y-4">
+
+          <form onSubmit={handleSubmit} className="space-y-4">
             {/* Status Messages */}
             {error && (
-              <div className="bg-red-600/20 backdrop-blur-lg border border-red-500/30 rounded-xl p-4">
-                <p className="text-red-300 font-semibold">{error}</p>
+              <div className="bg-red-900/30 border border-red-500/50 rounded-lg p-3">
+                <p className="text-red-300 text-sm font-medium">{error}</p>
               </div>
             )}
 
             {success && (
-              <div className="bg-green-600/20 backdrop-blur-lg border border-green-500/30 rounded-xl p-4">
-                <p className="text-green-300 font-semibold">{success}</p>
+              <div className="bg-green-900/30 border border-green-500/50 rounded-lg p-3">
+                <p className="text-green-300 text-sm font-medium">{success}</p>
               </div>
             )}
 
             {/* City Selection */}
-            <div className="bg-slate-800/50 backdrop-blur-lg border border-slate-700/50 rounded-2xl p-6">
-              <label className="block text-lg font-bold text-white mb-4">
-                SEARCH LOCATION
+            <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4">
+              <label className="block text-sm font-bold text-white mb-2">
+                Search Location
               </label>
               <GooglePlacesAutocomplete
                 value={formData.city}
                 onChange={(city) => setFormData(prev => ({ ...prev, city }))}
                 placeholder="Dallas, TX"
               />
-              <p className="text-sm text-slate-400 mt-3 font-medium">
-                Enter the city where you want to find properties
+              <p className="text-xs text-slate-400 mt-2">
+                City where you want to find properties
               </p>
             </div>
 
             {/* Budget Settings */}
-            <div className="bg-slate-800/50 backdrop-blur-lg border border-slate-700/50 rounded-2xl p-6 space-y-6">
-              <h3 className="text-lg font-bold text-white">BUDGET LIMITS</h3>
-              
+            <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4 space-y-4">
+              <h3 className="text-sm font-bold text-white">Budget Limits</h3>
+
               {/* Monthly Payment */}
               <div>
-                <label className="block text-sm font-semibold text-white mb-3">
-                  Maximum Monthly Payment
+                <label className="block text-xs font-semibold text-slate-300 mb-2">
+                  Max Monthly Payment
                 </label>
-                <div className="bg-emerald-500/10 border border-emerald-400/30 rounded-xl p-4">
+                <div className="bg-slate-900/50 border border-emerald-500/30 rounded-lg p-3">
                   <div className="flex items-center">
-                    <span className="text-2xl font-bold text-emerald-400 mr-2">$</span>
+                    <span className="text-lg font-bold text-emerald-400 mr-1">$</span>
                     <input
                       type="text"
                       inputMode="numeric"
@@ -239,7 +220,7 @@ export default function BuyerSettings() {
                         const value = e.target.value.replace(/[^\d]/g, '');
                         setFormData(prev => ({ ...prev, maxMonthlyPayment: value }));
                       }}
-                      className="flex-1 text-2xl font-bold text-white bg-transparent border-none outline-none placeholder-slate-400"
+                      className="flex-1 text-lg font-bold text-white bg-transparent border-none outline-none placeholder-slate-500"
                       placeholder="1,500"
                     />
                   </div>
@@ -248,12 +229,12 @@ export default function BuyerSettings() {
 
               {/* Down Payment */}
               <div>
-                <label className="block text-sm font-semibold text-white mb-3">
-                  Maximum Down Payment
+                <label className="block text-xs font-semibold text-slate-300 mb-2">
+                  Max Down Payment
                 </label>
-                <div className="bg-emerald-500/10 border border-emerald-400/30 rounded-xl p-4">
+                <div className="bg-slate-900/50 border border-emerald-500/30 rounded-lg p-3">
                   <div className="flex items-center">
-                    <span className="text-2xl font-bold text-emerald-400 mr-2">$</span>
+                    <span className="text-lg font-bold text-emerald-400 mr-1">$</span>
                     <input
                       type="text"
                       inputMode="numeric"
@@ -263,7 +244,7 @@ export default function BuyerSettings() {
                         const value = e.target.value.replace(/[^\d]/g, '');
                         setFormData(prev => ({ ...prev, maxDownPayment: value }));
                       }}
-                      className="flex-1 text-2xl font-bold text-white bg-transparent border-none outline-none placeholder-slate-400"
+                      className="flex-1 text-lg font-bold text-white bg-transparent border-none outline-none placeholder-slate-500"
                       placeholder="30,000"
                     />
                   </div>
@@ -275,15 +256,15 @@ export default function BuyerSettings() {
             <button
               type="submit"
               disabled={saving}
-              className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white py-4 px-6 rounded-xl font-bold text-lg transition-all duration-300 hover:scale-105 shadow-2xl shadow-emerald-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white py-3 px-4 rounded-lg font-bold text-sm transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {saving ? (
-                <span className="flex items-center justify-center">
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                  UPDATING PREFERENCES...
+                <span className="flex items-center justify-center gap-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                  Updating...
                 </span>
               ) : (
-                'UPDATE SEARCH PREFERENCES'
+                'Save Preferences'
               )}
             </button>
           </form>

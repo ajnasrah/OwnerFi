@@ -177,44 +177,44 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="h-screen bg-slate-900 flex items-center justify-center p-4 overflow-hidden fixed inset-0">
-          <div className="text-center max-w-sm w-full">
+      <div className="h-screen bg-slate-900 flex items-center justify-center p-6 overflow-hidden fixed inset-0">
+          <div className="text-center max-w-sm w-full flex flex-col justify-center min-h-0">
             {/* Animated Logo/Icon */}
-            <div className="mb-8">
-              <div className="w-20 h-20 mx-auto mb-4 relative">
+            <div className="mb-6">
+              <div className="w-16 h-16 mx-auto mb-3 relative">
                 <div className="absolute inset-0 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-3xl animate-pulse"></div>
                 <div className="absolute inset-2 bg-slate-900 rounded-2xl flex items-center justify-center">
-                  <span className="text-3xl font-black">🏠</span>
+                  <span className="text-2xl font-black">🏠</span>
                 </div>
               </div>
 
               {/* Animated Spinner */}
-              <div className="flex justify-center mb-4">
-                <div className="w-16 h-16 border-4 border-slate-700 border-t-emerald-400 rounded-full animate-spin"></div>
+              <div className="flex justify-center">
+                <div className="w-12 h-12 border-4 border-slate-700 border-t-emerald-400 rounded-full animate-spin"></div>
               </div>
             </div>
 
             {/* Main Status */}
-            <h1 className="text-3xl font-black text-white mb-3">
+            <h1 className="text-2xl font-black text-white mb-2">
               Finding Your Home
             </h1>
-            <p className="text-slate-400 text-lg mb-8">
+            <p className="text-slate-400 text-sm mb-4">
               Searching for owner-financed properties in {profile?.city || 'your area'}...
             </p>
 
             {/* Loading Progress Bar */}
-            <div className="bg-slate-700/50 rounded-full h-3 mb-6 overflow-hidden">
+            <div className="bg-slate-700/50 rounded-full h-2 mb-4 overflow-hidden">
               <div className="h-full bg-gradient-to-r from-emerald-400 to-blue-500 rounded-full animate-pulse w-3/4"></div>
             </div>
 
-            {/* Fun Fact Section - Larger and More Prominent */}
+            {/* Fun Fact Section - Compact */}
             {currentFact && (
-              <div className="bg-gradient-to-br from-emerald-500/10 to-blue-500/10 border-2 border-emerald-500/30 rounded-2xl p-6">
-                <div className="flex items-start gap-4">
-                  <div className="text-3xl flex-shrink-0">💡</div>
-                  <div className="text-left">
-                    <h3 className="text-emerald-400 font-black text-base mb-3">Did You Know?</h3>
-                    <p className="text-slate-200 text-base leading-relaxed">
+              <div className="bg-gradient-to-br from-emerald-500/10 to-blue-500/10 border border-emerald-500/30 rounded-xl p-4 max-h-[40vh] overflow-y-auto">
+                <div className="flex items-start gap-3">
+                  <div className="text-xl flex-shrink-0">💡</div>
+                  <div className="text-left flex-1 min-w-0">
+                    <h3 className="text-emerald-400 font-bold text-sm mb-2">Did You Know?</h3>
+                    <p className="text-slate-200 text-sm leading-relaxed">
                       {currentFact.replace(/^[^\s]+\s/, '')}
                     </p>
                   </div>
@@ -298,48 +298,51 @@ export default function Dashboard() {
         onComplete={() => setShowTutorial(false)}
       />
 
-      {/* Top Navigation - Clean Minimal Design */}
-      <div className="fixed top-0 left-0 right-0 z-[60] bg-gradient-to-b from-slate-900/95 to-transparent backdrop-blur-sm">
-        <div className="max-w-md mx-auto px-4 py-3">
+      {/* Top Navigation - Compact Design */}
+      <div className="fixed top-0 left-0 right-0 z-[60] bg-gradient-to-b from-slate-900/90 to-transparent backdrop-blur-sm">
+        <div className="max-w-md mx-auto px-3 py-2">
           {/* Single Row Layout */}
-          <div className="flex items-center justify-between gap-3">
-            {/* Left: Location */}
-            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-xl rounded-full px-4 py-2 border border-white/20">
-              <span className="text-base">📍</span>
-              <span className="text-white font-bold text-sm">{profile?.city}</span>
-            </div>
+          <div className="flex items-center justify-between gap-2">
+            {/* Left: Location - Clickable to edit */}
+            <Link
+              href="/dashboard/settings"
+              className="flex items-center gap-1.5 bg-white/10 backdrop-blur-xl rounded-full px-3 py-1.5 border border-white/20 hover:bg-white/20 transition-colors active:scale-95"
+            >
+              <span className="text-sm">📍</span>
+              <span className="text-white font-bold text-xs">{profile?.city}</span>
+            </Link>
 
             {/* Right: Action Buttons */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               <Link
                 href="/dashboard/liked"
-                className="relative w-10 h-10 bg-white/10 backdrop-blur-xl hover:bg-white/20 rounded-full flex items-center justify-center transition-all border border-white/20"
+                className="relative w-8 h-8 bg-white/10 backdrop-blur-xl hover:bg-white/20 rounded-full flex items-center justify-center transition-all border border-white/20"
               >
-                <span className="text-lg">❤️</span>
+                <span className="text-sm">❤️</span>
                 {likedProperties.length > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold border-2 border-slate-900">
+                  <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center font-bold border border-slate-900">
                     {likedProperties.length}
                   </span>
                 )}
               </Link>
               <Link
                 href="/dashboard/settings"
-                className="w-10 h-10 bg-white/10 backdrop-blur-xl hover:bg-white/20 rounded-full flex items-center justify-center transition-all border border-white/20"
+                className="w-8 h-8 bg-white/10 backdrop-blur-xl hover:bg-white/20 rounded-full flex items-center justify-center transition-all border border-white/20"
               >
-                <span className="text-lg">⚙️</span>
+                <span className="text-sm">⚙️</span>
               </Link>
               <button
                 onClick={() => setShowTutorial(true)}
-                className="w-10 h-10 bg-white/10 backdrop-blur-xl hover:bg-white/20 rounded-full flex items-center justify-center transition-all border border-white/20"
+                className="w-8 h-8 bg-white/10 backdrop-blur-xl hover:bg-white/20 rounded-full flex items-center justify-center transition-all border border-white/20"
                 title="Show Help"
               >
-                <span className="text-lg">❓</span>
+                <span className="text-sm">❓</span>
               </button>
               <button
                 onClick={() => router.push('/')}
-                className="w-10 h-10 bg-white/10 backdrop-blur-xl hover:bg-white/20 rounded-full flex items-center justify-center transition-all border border-white/20"
+                className="w-8 h-8 bg-white/10 backdrop-blur-xl hover:bg-white/20 rounded-full flex items-center justify-center transition-all border border-white/20"
               >
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>

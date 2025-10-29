@@ -167,16 +167,16 @@ export function PropertyCard({ property, onLike, onPass, isFavorited, style }: P
         </div>
 
         {/* Top Info Bar */}
-        <div className="absolute top-0 left-0 right-0 p-4 flex items-start justify-between z-10">
+        <div className="absolute top-0 left-0 right-0 p-3 flex items-start justify-between z-10">
           {/* Owner Finance Badge */}
-          <div className="bg-emerald-500 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg flex items-center gap-2">
-            <span className="text-base">🏠</span>
+          <div className="bg-emerald-500 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg flex items-center gap-1.5">
+            <span className="text-sm">🏠</span>
             <span>Owner Finance</span>
           </div>
 
           {/* Favorite Badge */}
           {isFavorited && (
-            <div className="bg-pink-500 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg">
+            <div className="bg-pink-500 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg">
               ❤️ Saved
             </div>
           )}
@@ -231,19 +231,19 @@ export function PropertyCard({ property, onLike, onPass, isFavorited, style }: P
         )}
 
         {/* Bottom Info Panel - Fixed Height Container */}
-        <div className="absolute bottom-0 left-0 right-0 z-10 h-[70vh] pointer-events-none">
+        <div className="absolute bottom-0 left-0 right-0 z-10 h-[80vh] pointer-events-none">
           {/* Expandable Details Panel - GPU Accelerated Transform Animation */}
           <div
-            className="absolute bottom-0 left-0 right-0 bg-white/98 backdrop-blur-sm rounded-t-3xl h-[70vh] pointer-events-auto shadow-2xl"
+            className="absolute bottom-0 left-0 right-0 bg-white/98 backdrop-blur-sm rounded-t-3xl h-[80vh] pointer-events-auto shadow-2xl"
             style={{
               transform: showDetails
                 ? `translate3d(0, ${drawerOffset}px, 0)`
-                : `translate3d(0, calc(70vh - 240px + ${drawerOffset}px), 0)`,
+                : `translate3d(0, calc(80vh - 140px + ${drawerOffset}px), 0)`,
               transition: drawerDragStart === null ? 'transform 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none',
               willChange: 'transform',
               WebkitTransform: showDetails
                 ? `translate3d(0, ${drawerOffset}px, 0)`
-                : `translate3d(0, calc(70vh - 240px + ${drawerOffset}px), 0)`,
+                : `translate3d(0, calc(80vh - 140px + ${drawerOffset}px), 0)`,
               backfaceVisibility: 'hidden',
               WebkitBackfaceVisibility: 'hidden',
             }}
@@ -259,7 +259,7 @@ export function PropertyCard({ property, onLike, onPass, isFavorited, style }: P
             </div>
 
             <div
-              className="px-6 pb-6 overflow-y-auto h-[calc(70vh-3rem)]"
+              className="px-6 pb-6 overflow-y-auto h-[calc(80vh-3rem)]"
               style={{
                 WebkitOverflowScrolling: 'touch',
                 overscrollBehavior: 'contain',
@@ -267,55 +267,55 @@ export function PropertyCard({ property, onLike, onPass, isFavorited, style }: P
               }}
               data-drawer-scroll
             >
-              {/* Price - Hero Element */}
-              <div className="mb-4">
-                <div className="text-4xl font-black text-slate-900 mb-1">
+              {/* Price - Compact */}
+              <div className="mb-2">
+                <div className="text-2xl font-black text-slate-900 mb-0">
                   ${property.listPrice?.toLocaleString()}
                 </div>
-                <div className="text-emerald-600 font-bold text-xl">
+                <div className="text-emerald-600 font-bold text-sm">
                   est. ${monthlyPayment.toLocaleString()}/month
                 </div>
               </div>
 
               {/* Address */}
-              <div className="mb-4">
-                <h2 className="text-xl font-bold text-slate-900 leading-tight">
+              <div className="mb-2">
+                <h2 className="text-sm font-bold text-slate-900 leading-tight">
                   {property.address}
                 </h2>
-                <p className="text-slate-600 text-base">
+                <p className="text-slate-600 text-xs">
                   {property.city}, {property.state} {property.zipCode}
                 </p>
               </div>
 
               {/* Quick Stats */}
-              <div className="flex gap-4 mb-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center">
-                    <span className="text-lg">🛏️</span>
+              <div className="flex gap-2 mb-2">
+                <div className="flex items-center gap-1">
+                  <div className="w-7 h-7 bg-slate-100 rounded-full flex items-center justify-center">
+                    <span className="text-xs">🛏️</span>
                   </div>
                   <div>
-                    <div className="text-lg font-bold text-slate-900">{property.bedrooms}</div>
-                    <div className="text-xs text-slate-600">beds</div>
+                    <div className="text-sm font-bold text-slate-900">{property.bedrooms}</div>
+                    <div className="text-[9px] text-slate-600">beds</div>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center">
-                    <span className="text-lg">🚿</span>
+                <div className="flex items-center gap-1">
+                  <div className="w-7 h-7 bg-slate-100 rounded-full flex items-center justify-center">
+                    <span className="text-xs">🚿</span>
                   </div>
                   <div>
-                    <div className="text-lg font-bold text-slate-900">{property.bathrooms}</div>
-                    <div className="text-xs text-slate-600">baths</div>
+                    <div className="text-sm font-bold text-slate-900">{property.bathrooms}</div>
+                    <div className="text-[9px] text-slate-600">baths</div>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center">
-                    <span className="text-lg">📏</span>
+                <div className="flex items-center gap-1">
+                  <div className="w-7 h-7 bg-slate-100 rounded-full flex items-center justify-center">
+                    <span className="text-xs">📏</span>
                   </div>
                   <div>
-                    <div className="text-lg font-bold text-slate-900">
+                    <div className="text-sm font-bold text-slate-900">
                       {property.squareFeet?.toLocaleString() || 'N/A'}
                     </div>
-                    <div className="text-xs text-slate-600">sq ft</div>
+                    <div className="text-[9px] text-slate-600">sq ft</div>
                   </div>
                 </div>
               </div>
@@ -419,20 +419,20 @@ export function PropertyCard({ property, onLike, onPass, isFavorited, style }: P
                     </p>
                   </div>
 
-                  {/* More Info Button - Large and Prominent */}
+                  {/* More Info Button - Compact */}
                   <div className="text-center pt-2">
                     <a
                       href={`https://www.google.com/search?q=${encodeURIComponent(`${property.address} ${property.city}, ${property.state} ${property.zipCode}`)}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="w-full block bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-4 px-6 rounded-2xl font-bold text-lg shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-95 transition-all"
+                      className="w-full block bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-2.5 px-4 rounded-xl font-bold text-sm shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-95 transition-all"
                     >
-                      <div className="flex items-center justify-center gap-3">
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div className="flex items-center justify-center gap-2">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
                         <span>Search Property Online</span>
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                         </svg>
                       </div>
@@ -441,14 +441,14 @@ export function PropertyCard({ property, onLike, onPass, isFavorited, style }: P
                 </div>
               )}
 
-              {/* Swipe Instructions - Enhanced */}
+              {/* Swipe Instructions - Compact */}
               {!showDetails && (
-                <div className="text-center mt-3">
-                  <div className="inline-flex items-center gap-2 bg-slate-100 px-4 py-2 rounded-full">
-                    <svg className="w-5 h-5 text-slate-600 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="text-center mt-2">
+                  <div className="inline-flex items-center gap-1.5 bg-slate-100 px-3 py-1.5 rounded-full">
+                    <svg className="w-4 h-4 text-slate-600 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 15l7-7 7 7" />
                     </svg>
-                    <span className="text-slate-700 font-bold text-sm">Swipe up for full details</span>
+                    <span className="text-slate-700 font-bold text-xs">Swipe up for details</span>
                   </div>
                 </div>
               )}

@@ -298,24 +298,24 @@ export function PropertySwiper2({
         )}
       </div>
 
-      {/* Bottom Action Buttons - Clean Simple Layout */}
-      <div className="absolute bottom-8 left-0 right-0 z-50 px-4">
-        <div className="max-w-md mx-auto flex items-center justify-center gap-6">
+      {/* Bottom Action Buttons - Compact Layout */}
+      <div className="absolute bottom-6 left-0 right-0 z-[100] px-3">
+        <div className="max-w-md mx-auto flex items-center justify-center gap-4">
           {/* Pass Button */}
           <button
             onClick={handlePassButton}
             disabled={animating}
-            className="w-16 h-16 bg-gradient-to-br from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 disabled:from-slate-600 disabled:to-slate-700 text-white rounded-full shadow-2xl flex items-center justify-center transform hover:scale-110 active:scale-95 transition-all disabled:opacity-50"
+            className="w-14 h-14 bg-gradient-to-br from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 disabled:from-slate-600 disabled:to-slate-700 text-white rounded-full shadow-xl flex items-center justify-center transform hover:scale-110 active:scale-95 transition-all disabled:opacity-50"
             aria-label="Pass"
           >
-            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
 
           {/* Property Counter */}
-          <div className="px-6 py-3 bg-white/90 backdrop-blur-lg rounded-full shadow-xl">
-            <span className="text-slate-600 font-bold text-sm">
+          <div className="px-4 py-2 bg-white/90 backdrop-blur-lg rounded-full shadow-lg">
+            <span className="text-slate-600 font-bold text-xs">
               {currentIndex + 1} / {visibleProperties.length}
             </span>
           </div>
@@ -324,14 +324,14 @@ export function PropertySwiper2({
           <button
             onClick={handleLikeButton}
             disabled={animating}
-            className={`w-16 h-16 ${
+            className={`w-14 h-14 ${
               isFavorited
                 ? 'bg-gradient-to-br from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700'
                 : 'bg-gradient-to-br from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700'
-            } disabled:from-slate-600 disabled:to-slate-700 text-white rounded-full shadow-2xl flex items-center justify-center transform hover:scale-110 active:scale-95 transition-all disabled:opacity-50`}
+            } disabled:from-slate-600 disabled:to-slate-700 text-white rounded-full shadow-xl flex items-center justify-center transform hover:scale-110 active:scale-95 transition-all disabled:opacity-50`}
             aria-label="Like"
           >
-            <svg className="w-8 h-8" fill={isFavorited ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-6 h-6" fill={isFavorited ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={isFavorited ? 0 : 2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
             </svg>
           </button>

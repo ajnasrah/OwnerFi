@@ -147,18 +147,43 @@ export default function AnalyticsDashboard() {
   if (!data) {
     return (
       <div className="p-8 text-center">
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 max-w-2xl mx-auto">
-          <p className="text-xl font-semibold text-yellow-800 mb-2">📊 No Analytics Data Found</p>
-          <p className="text-gray-600 mb-4">
-            Analytics data hasn't been collected yet. Click the button below to sync data from Late.dev.
-          </p>
-          <button
-            onClick={syncData}
-            disabled={syncing}
-            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-          >
-            {syncing ? 'Syncing Data...' : 'Sync Analytics Data'}
-          </button>
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 max-w-3xl mx-auto">
+          <p className="text-2xl font-semibold text-blue-900 mb-3">📊 Analytics System Information</p>
+
+          <div className="bg-white rounded-lg p-5 mb-4 text-left">
+            <h3 className="font-bold text-gray-900 mb-2">⚠️ Important: Late.dev API Limitation</h3>
+            <p className="text-gray-700 mb-3">
+              Late.dev's API <strong>does not provide analytics metrics</strong> (views, likes, engagement).
+              They only handle post scheduling and publishing.
+            </p>
+            <p className="text-gray-700 mb-3">
+              To get real analytics data, you need to integrate with platform-specific APIs:
+            </p>
+            <ul className="list-disc list-inside text-gray-700 space-y-1 ml-4">
+              <li><strong>Instagram:</strong> Meta Graph API (Instagram Insights)</li>
+              <li><strong>TikTok:</strong> TikTok Content Posting API</li>
+              <li><strong>YouTube:</strong> YouTube Analytics API</li>
+              <li><strong>Twitter/X:</strong> Twitter API v2 (Tweet Metrics)</li>
+              <li><strong>LinkedIn:</strong> LinkedIn Marketing API</li>
+            </ul>
+          </div>
+
+          <div className="bg-gray-50 rounded-lg p-4 text-left">
+            <h3 className="font-bold text-gray-900 mb-2">📈 What You CAN Track</h3>
+            <p className="text-gray-700">
+              Your system currently tracks: posting schedule, content types, platforms, and workflow completion.
+              Check the Social Dashboard for workflow status and posting activity.
+            </p>
+          </div>
+
+          <div className="mt-4">
+            <a
+              href="/admin/social-dashboard"
+              className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 inline-block"
+            >
+              View Social Media Dashboard
+            </a>
+          </div>
         </div>
       </div>
     );

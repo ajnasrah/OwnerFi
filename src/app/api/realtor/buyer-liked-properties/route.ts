@@ -5,6 +5,8 @@ import { FirebaseDB } from '@/lib/firebase-db';
 import { ExtendedSession } from '@/types/session';
 import { BuyerProfile } from '@/lib/firebase-models';
 import { PropertyListing } from '@/lib/property-schema';
+import { collection, query, where, getDocs, documentId } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 export async function GET(request: NextRequest) {
   try {
@@ -41,13 +43,26 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Fetch property details directly from properties database
+    // PERFORMANCE FIX: Batch fetch properties instead of N+1 queries
+    // Firestore 'in' operator supports max 10 values, so we batch
     const likedProperties = [];
-    
-    for (const propertyId of likedPropertyIds) {
+
+    if (!db) {
+      return NextResponse.json({ error: 'Database not available' }, { status: 500 });
+    }
+
+    for (let i = 0; i < likedPropertyIds.length; i += 10) {
+      const batchIds = likedPropertyIds.slice(i, i + 10);
+
       try {
-        const property = await FirebaseDB.getDocument('properties', propertyId) as PropertyListing;
-        if (property) {
+        const batchQuery = query(
+          collection(db, 'properties'),
+          where(documentId(), 'in', batchIds)
+        );
+        const batchSnapshot = await getDocs(batchQuery);
+
+        batchSnapshot.docs.forEach(doc => {
+          const property = doc.data() as PropertyListing;
           // Format property data with all needed fields
           likedProperties.push({
             ...property,
@@ -62,9 +77,9 @@ export async function GET(request: NextRequest) {
             downPaymentAmount: property.downPaymentAmount || 0,
             imageUrl: property.imageUrl || property.zillowImageUrl
           });
-        }
+        });
       } catch (err) {
-        // Failed to load property
+        console.error('Failed to load property batch:', err);
       }
     }
 

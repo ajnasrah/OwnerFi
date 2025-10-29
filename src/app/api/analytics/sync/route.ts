@@ -66,6 +66,48 @@ export async function POST(request: NextRequest) {
         // Skip if no Late post ID
         if (!workflow.latePostId) continue;
 
+        // Fetch analytics from Late.dev
+        let lateAnalytics: any = null;
+        try {
+          const response = await fetch(`https://getlate.dev/api/v1/posts/${workflow.latePostId}`, {
+            headers: {
+              'Authorization': `Bearer ${process.env.LATE_API_KEY}`,
+              'Content-Type': 'application/json'
+            }
+          });
+
+          if (response.ok) {
+            lateAnalytics = await response.json();
+          }
+        } catch (error) {
+          console.log(`   ⚠️  Failed to fetch analytics for ${workflow.latePostId}`);
+        }
+
+        // Calculate metrics from Late.dev data
+        let totalViews = 0;
+        let totalLikes = 0;
+        let totalComments = 0;
+        let totalShares = 0;
+        let totalSaves = 0;
+        const platformMetrics: any = {};
+
+        if (lateAnalytics?.platforms) {
+          lateAnalytics.platforms.forEach((p: any) => {
+            const stats = p.analytics || p.stats || {};
+            if (stats.views || stats.likes || stats.comments) {
+              platformMetrics[p.platform] = stats;
+              totalViews += stats.views || 0;
+              totalLikes += stats.likes || 0;
+              totalComments += stats.comments || 0;
+              totalShares += stats.shares || 0;
+              totalSaves += stats.saves || 0;
+            }
+          });
+        }
+
+        const totalEngagement = totalLikes + totalComments + totalShares;
+        const overallEngagementRate = totalViews > 0 ? (totalEngagement / totalViews) * 100 : 0;
+
         // Create analytics document
         const analyticsData = {
           workflowId: doc.id,
@@ -76,15 +118,16 @@ export async function POST(request: NextRequest) {
           scheduledTime: workflow.scheduledTime,
           postedAt: workflow.postedAt || workflow.completedAt,
 
-          // Platform metrics (if available)
-          platformMetrics: workflow.platformMetrics || {},
+          // Platform metrics
+          platformMetrics,
 
           // Calculate totals
-          totalViews: workflow.totalViews || 0,
-          totalLikes: workflow.totalLikes || 0,
-          totalComments: workflow.totalComments || 0,
-          totalShares: workflow.totalShares || 0,
-          overallEngagementRate: workflow.overallEngagementRate || 0,
+          totalViews,
+          totalLikes,
+          totalComments,
+          totalShares,
+          totalSaves,
+          overallEngagementRate,
 
           // Time slot data
           timeSlot: workflow.timeSlot || extractTimeSlot(workflow.scheduledTime),

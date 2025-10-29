@@ -131,11 +131,17 @@ export const unifiedDb = {
       return buyerDoc.exists() ? { id: buyerDoc.id, ...buyerDoc.data() } as BuyerProfile & { id: string } : null;
     },
 
-    async findAllActive(): Promise<(BuyerProfile & { id: string })[]> {
+    async findAllActive(limitCount: number = 100): Promise<(BuyerProfile & { id: string })[]> {
       if (!firebaseDb) {
         throw new Error('Firebase not initialized - missing environment variables');
       }
-      const buyersQuery = query(collection(firebaseDb, 'buyerProfiles'), where('isActive', '==', true));
+      // PERFORMANCE FIX: Added limit parameter to prevent unbounded queries
+      const buyersQuery = query(
+        collection(firebaseDb, 'buyerProfiles'),
+        where('isActive', '==', true),
+        orderBy('createdAt', 'desc'),
+        limit(limitCount)
+      );
       const buyerDocs = await getDocs(buyersQuery);
       return buyerDocs.docs.map(doc => ({ id: doc.id, ...doc.data() } as BuyerProfile & { id: string }));
     }
@@ -185,11 +191,17 @@ export const unifiedDb = {
       return propertyDoc.exists() ? { id: propertyDoc.id, ...propertyDoc.data() } as PropertyListing & { id: string } : null;
     },
 
-    async findAllActive(): Promise<(PropertyListing & { id: string })[]> {
+    async findAllActive(limitCount: number = 100): Promise<(PropertyListing & { id: string })[]> {
       if (!firebaseDb) {
         throw new Error('Firebase not initialized - missing environment variables');
       }
-      const propertiesQuery = query(collection(firebaseDb, 'properties'), where('isActive', '==', true));
+      // PERFORMANCE FIX: Added limit parameter to prevent unbounded queries
+      const propertiesQuery = query(
+        collection(firebaseDb, 'properties'),
+        where('isActive', '==', true),
+        orderBy('createdAt', 'desc'),
+        limit(limitCount)
+      );
       const propertyDocs = await getDocs(propertiesQuery);
       return propertyDocs.docs.map(doc => ({ id: doc.id, ...doc.data() } as PropertyListing & { id: string }));
     },

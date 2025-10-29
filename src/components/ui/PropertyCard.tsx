@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useRef } from 'react';
 import Image from 'next/image';
 import { PropertyListing } from '@/lib/property-schema';
 
@@ -18,6 +18,8 @@ export function PropertyCard({ property, onLike, onPass, isFavorited, style }: P
   const [imageError, setImageError] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [drawerDragStart, setDrawerDragStart] = useState<number | null>(null);
+  const [drawerOffset, setDrawerOffset] = useState(0);
+  const rafRef = useRef<number | null>(null);
 
   // Memoize expensive calculations
   const images = useMemo(() => property.imageUrls || [], [property.imageUrls]);
@@ -55,40 +57,80 @@ export function PropertyCard({ property, onLike, onPass, isFavorited, style }: P
     }
   }, [images.length]);
 
-  // Drawer swipe handlers - More sensitive
+  // Drawer swipe handlers - Buttery smooth for mobile
   const handleDrawerTouchStart = useCallback((e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    setDrawerDragStart(touch.clientY);
+    setDrawerOffset(0);
+
+    // Stop propagation to prevent parent swiper from interfering
     e.stopPropagation();
-    setDrawerDragStart(e.touches[0].clientY);
   }, []);
 
   const handleDrawerTouchMove = useCallback((e: React.TouchEvent) => {
-    e.stopPropagation();
+    if (drawerDragStart === null) return;
+
+    const touch = e.touches[0];
+    const deltaY = drawerDragStart - touch.clientY;
+
     // Allow scrolling if drawer is expanded and user is scrolling content
     if (showDetails) {
       const target = e.target as HTMLElement;
       const scrollContainer = target.closest('[data-drawer-scroll]');
+
       if (scrollContainer) {
-        // Let the scroll happen naturally, don't interfere
-        return;
+        const isScrolledToTop = scrollContainer.scrollTop <= 0;
+        const isScrollingDown = deltaY < 0;
+
+        // Only allow drawer to close if scrolled to top and swiping down
+        if (!isScrolledToTop || !isScrollingDown) {
+          return;
+        }
       }
     }
-  }, [showDetails]);
+
+    // Stop propagation to prevent parent swiper interference
+    e.stopPropagation();
+
+    // Use RAF for 60fps smooth updates
+    if (rafRef.current !== null) {
+      cancelAnimationFrame(rafRef.current);
+    }
+
+    rafRef.current = requestAnimationFrame(() => {
+      // Provide real-time visual feedback with rubber-band effect
+      if (!showDetails && deltaY > 0) {
+        // Dragging up to open - show preview with resistance
+        const resistance = deltaY > 100 ? 0.5 : 1;
+        setDrawerOffset(Math.min(deltaY * resistance, 150));
+      } else if (showDetails && deltaY < 0) {
+        // Dragging down to close - show preview with resistance
+        const resistance = Math.abs(deltaY) > 100 ? 0.5 : 1;
+        setDrawerOffset(Math.max(deltaY * resistance, -150));
+      }
+    });
+  }, [drawerDragStart, showDetails]);
 
   const handleDrawerTouchEnd = useCallback((e: React.TouchEvent) => {
-    e.stopPropagation();
     if (drawerDragStart === null) return;
 
     const touchEnd = e.changedTouches[0].clientY;
     const deltaY = drawerDragStart - touchEnd;
 
-    // Lower threshold for better responsiveness - if swiped up/down more than 20px
-    if (deltaY > 20 && !showDetails) {
+    // Stop propagation
+    e.stopPropagation();
+
+    // Increased threshold for better control - 60px swipe required
+    const threshold = 60;
+
+    if (deltaY > threshold && !showDetails) {
       setShowDetails(true);
-    } else if (deltaY < -20 && showDetails) {
+    } else if (deltaY < -threshold && showDetails) {
       setShowDetails(false);
     }
 
     setDrawerDragStart(null);
+    setDrawerOffset(0);
   }, [drawerDragStart, showDetails]);
 
   return (
@@ -115,8 +157,9 @@ export function PropertyCard({ property, onLike, onPass, isFavorited, style }: P
               setImageError(true);
               setImageLoading(false);
             }}
-            unoptimized
-            priority
+            sizes="(max-width: 768px) 100vw, 50vw"
+            quality={85}
+            priority={imageIndex === 0}
           />
 
           {/* Gradient Overlay for Text Readability */}
@@ -187,31 +230,41 @@ export function PropertyCard({ property, onLike, onPass, isFavorited, style }: P
           </>
         )}
 
-        {/* Bottom Info Panel */}
-        <div
-          className="absolute bottom-0 left-0 right-0 z-10"
-          onTouchStart={handleDrawerTouchStart}
-          onTouchMove={handleDrawerTouchMove}
-          onTouchEnd={handleDrawerTouchEnd}
-          onMouseDown={(e) => e.stopPropagation()}
-          onMouseMove={(e) => e.stopPropagation()}
-          onMouseUp={(e) => e.stopPropagation()}
-        >
-          {/* Expandable Details Panel */}
+        {/* Bottom Info Panel - Fixed Height Container */}
+        <div className="absolute bottom-0 left-0 right-0 z-10 h-[70vh] pointer-events-none">
+          {/* Expandable Details Panel - GPU Accelerated Transform Animation */}
           <div
-            className={`bg-white/95 backdrop-blur-xl rounded-t-3xl transition-[max-height] duration-200 ease-out ${
-              showDetails ? 'max-h-[70vh]' : 'max-h-[240px]'
-            } overflow-hidden will-change-[max-height]`}
+            className="absolute bottom-0 left-0 right-0 bg-white/98 backdrop-blur-sm rounded-t-3xl h-[70vh] pointer-events-auto shadow-2xl"
+            style={{
+              transform: showDetails
+                ? `translate3d(0, ${drawerOffset}px, 0)`
+                : `translate3d(0, calc(70vh - 240px + ${drawerOffset}px), 0)`,
+              transition: drawerDragStart === null ? 'transform 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none',
+              willChange: 'transform',
+              WebkitTransform: showDetails
+                ? `translate3d(0, ${drawerOffset}px, 0)`
+                : `translate3d(0, calc(70vh - 240px + ${drawerOffset}px), 0)`,
+              backfaceVisibility: 'hidden',
+              WebkitBackfaceVisibility: 'hidden',
+            }}
+            onTouchStart={handleDrawerTouchStart}
+            onTouchMove={handleDrawerTouchMove}
+            onTouchEnd={handleDrawerTouchEnd}
           >
             {/* Handle Bar - Swipeable Area */}
-            <div className="w-full py-2 flex justify-center">
-              <div className={`w-12 h-1.5 bg-slate-400 rounded-full transition-transform ${showDetails ? 'rotate-180' : ''}`}>
-                <div className="w-full h-full bg-gradient-to-r from-slate-300 to-slate-400 rounded-full" />
+            <div className="w-full py-3 flex justify-center cursor-grab active:cursor-grabbing">
+              <div className="w-16 h-1.5 bg-slate-300 rounded-full">
+                <div className="w-full h-full bg-gradient-to-r from-slate-400 to-slate-500 rounded-full" />
               </div>
             </div>
 
             <div
-              className={`px-6 pb-6 ${showDetails ? 'overflow-y-auto max-h-[calc(70vh-3rem)]' : 'overflow-hidden'}`}
+              className="px-6 pb-6 overflow-y-auto h-[calc(70vh-3rem)]"
+              style={{
+                WebkitOverflowScrolling: 'touch',
+                overscrollBehavior: 'contain',
+                touchAction: 'pan-y',
+              }}
               data-drawer-scroll
             >
               {/* Price - Hero Element */}
@@ -388,10 +441,15 @@ export function PropertyCard({ property, onLike, onPass, isFavorited, style }: P
                 </div>
               )}
 
-              {/* Swipe Instructions */}
+              {/* Swipe Instructions - Enhanced */}
               {!showDetails && (
-                <div className="text-center text-slate-500 text-sm mt-2">
-                  Tap ↑ for details • Swipe to browse
+                <div className="text-center mt-3">
+                  <div className="inline-flex items-center gap-2 bg-slate-100 px-4 py-2 rounded-full">
+                    <svg className="w-5 h-5 text-slate-600 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 15l7-7 7 7" />
+                    </svg>
+                    <span className="text-slate-700 font-bold text-sm">Swipe up for full details</span>
+                  </div>
                 </div>
               )}
             </div>

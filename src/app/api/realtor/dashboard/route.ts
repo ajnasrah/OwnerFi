@@ -160,15 +160,19 @@ export async function GET() {
 // Get available buyer leads for this realtor
 async function getAvailableLeads(userId: string, realtorData: Record<string, unknown>): Promise<LeadData[]> {
   try {
-    // Get all complete buyer profiles
-    const allBuyers = await FirebaseDB.getCompleteBuyers();
-    
+    // PERFORMANCE FIX: Added limit to prevent unbounded query
+    const allBuyers = await FirebaseDB.getCompleteBuyers(100);
+
     // Get already purchased leads to filter them out
     const purchasedLeads = await FirebaseDB.queryDocuments(
       'leadPurchases',
       [{ field: 'realtorUserId', operator: '==', value: userId }]
     );
-    const purchasedBuyerIds = (purchasedLeads as Array<{ buyerId: string; [key: string]: unknown }>).map((p: { buyerId: string; [key: string]: unknown }) => p.buyerId);
+    // PERFORMANCE FIX: Use Set for O(1) lookups instead of O(n) array.includes()
+    const purchasedBuyerIds = new Set(
+      (purchasedLeads as Array<{ buyerId: string; [key: string]: unknown }>)
+        .map((p: { buyerId: string; [key: string]: unknown }) => p.buyerId)
+    );
 
     // Get realtor's service cities
     const serviceCities = RealtorDataHelper.getAllCitiesServed(realtorData as { serviceArea: { primaryCity: ValidatedCity; nearbyCities: ValidatedCity[] } });
@@ -178,8 +182,8 @@ async function getAvailableLeads(userId: string, realtorData: Record<string, unk
     const availableLeads = [];
 
     for (const buyer of allBuyers) {
-      // Skip if already purchased by this realtor
-      if (purchasedBuyerIds.includes(buyer.id)) {
+      // Skip if already purchased by this realtor (O(1) lookup with Set)
+      if (purchasedBuyerIds.has(buyer.id)) {
         continue;
       }
 

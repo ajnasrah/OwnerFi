@@ -128,11 +128,41 @@ export async function GET(request: NextRequest) {
     const snapshot = await query.get();
 
     if (snapshot.empty) {
+      // Return empty analytics structure instead of error
       return NextResponse.json({
-        success: false,
-        error: 'No analytics data found. Please run data collection first.',
-        hint: 'Run: npx tsx scripts/collect-analytics-data.ts'
-      }, { status: 404 });
+        success: true,
+        data: {
+          timeSeries: [],
+          timeSlots: [],
+          dayOfWeek: [],
+          contentTypes: [],
+          hooks: [],
+          platforms: [],
+          topPerformers: {
+            commonTraits: {
+              mostCommonTimeSlot: 'N/A',
+              mostCommonHook: 'N/A',
+              mostCommonContentType: 'N/A',
+              avgVideoLength: 'N/A',
+              bestPlatform: 'N/A'
+            },
+            posts: []
+          },
+          overall: {
+            totalPosts: 0,
+            totalViews: 0,
+            avgEngagement: 0,
+            growthRate: 0
+          }
+        },
+        meta: {
+          brand: brand || 'all',
+          days,
+          totalPosts: 0,
+          generatedAt: new Date().toISOString(),
+          note: 'Late.dev API does not provide analytics metrics. Please integrate platform-specific analytics APIs for view counts and engagement data.'
+        }
+      });
     }
 
     // Collect all posts

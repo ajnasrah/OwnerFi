@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import WorkflowRecoveryButtons from '@/components/WorkflowRecoveryButtons';
+import AnalyticsDashboard from '@/components/AnalyticsDashboard';
 
 interface SchedulerStatus {
   timestamp: string;
@@ -84,7 +85,7 @@ interface WorkflowLog {
   id: string;
   articleId: string;
   articleTitle: string;
-  brand: 'carz' | 'ownerfi' | 'vassdistro';
+  brand: 'carz' | 'ownerfi' | 'vassdistro' | 'abdullah';
   status: 'pending' | 'heygen_processing' | 'submagic_processing' | 'posting' | 'completed' | 'failed';
   heygenVideoId?: string;
   submagicVideoId?: string;
@@ -102,6 +103,7 @@ interface WorkflowLogs {
     carz: WorkflowLog[];
     ownerfi: WorkflowLog[];
     vassdistro?: WorkflowLog[];
+    abdullah?: WorkflowLog[];
   };
   timestamp: string;
 }
@@ -259,6 +261,7 @@ export default function SocialMediaDashboard() {
   const [triggeringPodcast, setTriggeringPodcast] = useState(false);
   const [triggeringBenefit, setTriggeringBenefit] = useState(false);
   const [triggeringProperty, setTriggeringProperty] = useState(false);
+  const [triggeringAbdullah, setTriggeringAbdullah] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [deletingWorkflow, setDeletingWorkflow] = useState<string | null>(null);
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
@@ -295,12 +298,12 @@ export default function SocialMediaDashboard() {
       loadPropertyStats();
       loadGuestProfiles();
       loadAnalytics();
-      const statusInterval = setInterval(loadStatus, 30000); // Refresh every 30 seconds
-      const workflowInterval = setInterval(loadWorkflows, 5000); // Refresh every 5 seconds for real-time updates
-      const podcastWorkflowInterval = setInterval(loadPodcastWorkflows, 5000); // Refresh every 5 seconds for real-time updates
-      const benefitWorkflowInterval = setInterval(loadBenefitWorkflows, 5000); // Refresh every 5 seconds for real-time updates
-      const propertyWorkflowInterval = setInterval(loadPropertyWorkflows, 5000); // Refresh every 5 seconds for real-time updates
-      const propertyStatsInterval = setInterval(loadPropertyStats, 30000); // Refresh every 30 seconds
+      const statusInterval = setInterval(loadStatus, 60000); // Refresh every 60 seconds (reduced from 30s)
+      const workflowInterval = setInterval(loadWorkflows, 30000); // Refresh every 30 seconds (reduced from 5s for better performance)
+      const podcastWorkflowInterval = setInterval(loadPodcastWorkflows, 30000); // Refresh every 30 seconds (reduced from 5s)
+      const benefitWorkflowInterval = setInterval(loadBenefitWorkflows, 30000); // Refresh every 30 seconds (reduced from 5s)
+      const propertyWorkflowInterval = setInterval(loadPropertyWorkflows, 30000); // Refresh every 30 seconds (reduced from 5s)
+      const propertyStatsInterval = setInterval(loadPropertyStats, 60000); // Refresh every 60 seconds (reduced from 30s)
       const analyticsInterval = setInterval(loadAnalytics, 24 * 60 * 60 * 1000); // Refresh every 24 hours
       return () => {
         clearInterval(statusInterval);
@@ -545,7 +548,46 @@ export default function SocialMediaDashboard() {
     }
   };
 
-  const deleteWorkflow = async (workflowId: string, brand: 'carz' | 'ownerfi' | 'vassdistro' | 'podcast' | 'benefit' | 'property') => {
+  const triggerAbdullahWorkflow = async () => {
+    setTriggeringAbdullah(true);
+    try {
+      const response = await fetch('/api/workflow/complete-abdullah', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          platforms: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin'],
+          schedule: 'staggered' // Posts throughout the day
+        })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Abdullah workflow failed:', response.status, errorText);
+        alert(`Failed to start Abdullah workflow (${response.status}): ${errorText}`);
+        return;
+      }
+
+      const data = await response.json();
+
+      if (data.success) {
+        const videosGenerated = data.videos?.length || 0;
+        alert(`Abdullah workflow started!\n\n${videosGenerated} videos generating...\n\nThemes: Mindset, Business, Money, Freedom, Story/Lesson`);
+        loadWorkflows();
+      } else {
+        alert(`Error: ${data.error || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Abdullah workflow error:', error);
+      alert(`Failed to start Abdullah workflow: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setTriggeringAbdullah(false);
+    }
+  };
+
+  const deleteWorkflow = async (workflowId: string, brand: 'carz' | 'ownerfi' | 'vassdistro' | 'podcast' | 'benefit' | 'property' | 'abdullah') => {
     if (!confirm('Are you sure you want to delete this workflow? This action cannot be undone.')) {
       return;
     }
@@ -1873,38 +1915,160 @@ export default function SocialMediaDashboard() {
           <div className="space-y-6">
             <div className="bg-white rounded-xl shadow-sm p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-slate-900">Abdullah Daily Content</h3>
+                <h3 className="text-lg font-semibold text-slate-900">Abdullah Personal Brand</h3>
+                <button
+                  onClick={() => triggerAbdullahWorkflow()}
+                  disabled={triggeringAbdullah}
+                  className="px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 disabled:bg-gray-400 transition-colors"
+                >
+                  {triggeringAbdullah ? 'Generating...' : 'Generate 5 Videos Now'}
+                </button>
               </div>
 
-              <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl p-8 text-center">
-                <div className="text-6xl mb-4">🚧</div>
-                <h4 className="text-xl font-bold text-slate-900 mb-2">Coming Soon: Daily Trend-Based Videos</h4>
-                <p className="text-slate-600 mb-4">
-                  Abdullah's daily motivational content system connecting trending topics to mindset, money, and community insights.
-                </p>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-                  <div className="bg-white rounded-lg p-4">
-                    <div className="text-2xl mb-2">📈</div>
-                    <div className="font-semibold text-slate-900">Trend Detection</div>
-                    <div className="text-sm text-slate-600">Auto-detect trending topics</div>
-                  </div>
-                  <div className="bg-white rounded-lg p-4">
-                    <div className="text-2xl mb-2">🎯</div>
-                    <div className="font-semibold text-slate-900">Daily Themes</div>
-                    <div className="text-sm text-slate-600">Mon-Sun themed content</div>
-                  </div>
-                  <div className="bg-white rounded-lg p-4">
-                    <div className="text-2xl mb-2">✍️</div>
-                    <div className="font-semibold text-slate-900">AI Script Writer</div>
-                    <div className="text-sm text-slate-600">Abdullah Brand style</div>
-                  </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-slate-50 rounded-lg p-4">
+                  <div className="text-sm text-slate-600">Daily Videos</div>
+                  <div className="text-2xl font-bold text-slate-900 mt-1">5</div>
+                  <div className="text-xs text-slate-500 mt-1">videos/day</div>
                 </div>
+
+                <div className="bg-slate-50 rounded-lg p-4">
+                  <div className="text-sm text-slate-600">Content Type</div>
+                  <div className="text-sm font-bold text-slate-900 mt-1">AI Generated</div>
+                  <div className="text-xs text-slate-500 mt-1">no RSS needed</div>
+                </div>
+
+                <div className="bg-slate-50 rounded-lg p-4">
+                  <div className="text-sm text-slate-600">In Queue</div>
+                  <div className="text-2xl font-bold text-slate-900 mt-1">
+                    {workflows?.workflows?.abdullah?.filter((w: WorkflowLog) => ['pending', 'heygen_processing', 'submagic_processing', 'posting'].includes(w.status)).length || 0}
+                  </div>
+                  <div className="text-xs text-slate-500 mt-1">processing</div>
+                </div>
+
+                <div className="bg-slate-50 rounded-lg p-4">
+                  <div className="text-sm text-slate-600">Schedule</div>
+                  <div className="text-sm font-bold text-slate-900 mt-1">6 AM CST</div>
+                  <div className="text-xs text-slate-500 mt-1">daily automation</div>
+                </div>
+              </div>
+
+              <div className="mt-6 pt-6 border-t border-slate-200">
+                <h4 className="text-sm font-semibold text-slate-900 mb-3">Daily Themes</h4>
+                <div className="flex flex-wrap gap-2">
+                  {['Mindset', 'Business', 'Money', 'Freedom', 'Story/Lesson'].map((theme) => (
+                    <span key={theme} className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
+                      {theme}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mt-6 pt-6 border-t border-slate-200">
+                <h4 className="text-sm font-semibold text-slate-900 mb-3">Publishing Platforms</h4>
+                <div className="flex flex-wrap gap-2">
+                  {['Instagram', 'TikTok', 'YouTube', 'Facebook', 'LinkedIn'].map((platform) => (
+                    <span key={platform} className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700">
+                      {platform}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Workflow Logs */}
+              <div className="mt-6 pt-6 border-t border-slate-200">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-sm font-semibold text-slate-900">Workflows</h4>
+                  <button
+                    onClick={() => setShowHistory(!showHistory)}
+                    className="text-xs px-3 py-1 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition-colors"
+                  >
+                    {showHistory ? 'Active Only' : 'Show History'}
+                  </button>
+                </div>
+                {workflows && workflows.workflows && workflows.workflows.abdullah && workflows.workflows.abdullah.length > 0 ? (
+                  <div className="space-y-3">
+                    {workflows.workflows.abdullah.map((workflow) => (
+                      <div key={workflow.id} className="bg-white border border-slate-200 rounded-lg p-4 hover:border-purple-300 transition-colors">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex-1">
+                            <div className="font-medium text-slate-900 text-sm mb-1" dangerouslySetInnerHTML={{ __html: workflow.articleTitle }} />
+                            <div className="flex items-center gap-2 mt-1">
+                              <div className="text-xs text-slate-500">{formatTimeAgo(workflow.createdAt)}</div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(workflow.status)}`}>
+                              {formatStatus(workflow.status)}
+                            </span>
+                            <button
+                              onClick={() => deleteWorkflow(workflow.id, 'abdullah')}
+                              disabled={deletingWorkflow === workflow.id}
+                              className="text-red-600 hover:text-red-800 hover:bg-red-50 p-2 rounded-lg transition-colors disabled:opacity-50"
+                              title="Delete workflow"
+                            >
+                              {deletingWorkflow === workflow.id ? (
+                                <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24">
+                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
+                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                              ) : (
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                        {(workflow.heygenVideoId || workflow.submagicVideoId || workflow.latePostId || workflow.metricoolPostId) && (
+                          <div className="grid grid-cols-3 gap-2 text-xs">
+                            {workflow.heygenVideoId && (
+                              <div>
+                                <div className="text-slate-500 mb-1">HeyGen</div>
+                                <div className="font-mono text-slate-700 truncate">{workflow.heygenVideoId.substring(0, 12)}...</div>
+                              </div>
+                            )}
+                            {workflow.submagicVideoId && (
+                              <div>
+                                <div className="text-slate-500 mb-1">Submagic</div>
+                                <div className="font-mono text-slate-700 truncate">{workflow.submagicVideoId.substring(0, 12)}...</div>
+                              </div>
+                            )}
+                            {(workflow.latePostId || workflow.metricoolPostId) && (
+                              <div>
+                                <div className="text-slate-500 mb-1">GetLate</div>
+                                <div className="font-mono text-slate-700 truncate">{(workflow.latePostId || workflow.metricoolPostId)?.substring(0, 12)}...</div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        {workflow.error && (
+                          <div className="mt-3 space-y-2">
+                            <div className="text-xs text-red-700 bg-red-50 border border-red-200 rounded px-3 py-2">
+                              <span className="font-semibold">Error:</span> {workflow.error}
+                            </div>
+                            <WorkflowRecoveryButtons workflow={workflow} onSuccess={loadWorkflows} />
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="bg-slate-50 rounded-lg p-8 text-center border border-slate-200">
+                    <div className="text-slate-500 text-sm font-medium">No active workflows</div>
+                    <div className="text-xs text-slate-400 mt-1">Videos will appear here when being processed</div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
         )}
 
         {activeSubTab === 'analytics' && (
+          <AnalyticsDashboard />
+        )}
+
+        {activeSubTab === 'old_analytics_backup' && (
           <div className="space-y-6">
             {/* Overall Health */}
             {analytics && (

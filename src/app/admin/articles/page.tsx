@@ -55,7 +55,7 @@ export default function ArticlesPage() {
   useEffect(() => {
     if (authStatus === 'authenticated' && (session?.user as { role?: string })?.role === 'admin') {
       loadArticles();
-      const interval = setInterval(loadArticles, 30000); // Refresh every 30 seconds
+      const interval = setInterval(loadArticles, 60000); // Refresh every 60 seconds (reduced from 30s for better performance)
       return () => clearInterval(interval);
     }
   }, [authStatus, session]);

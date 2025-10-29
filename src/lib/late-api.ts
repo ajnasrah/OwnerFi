@@ -427,6 +427,22 @@ export async function postToLate(request: LatePostRequest): Promise<LatePostResp
   } catch (error) {
     console.error('❌ Error posting to Late:', error);
 
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+
+    // Log failure to database for tracking
+    try {
+      await logLateFailure({
+        brand: request.brand,
+        profileId: profileId || undefined,
+        platforms: request.platforms,
+        caption: fullCaption || request.caption,
+        videoUrl: request.videoUrl,
+        error: errorMessage,
+      });
+    } catch (logError) {
+      console.error('Failed to log Late failure:', logError);
+    }
+
     // Provide more specific error messages
     if (error instanceof RateLimitError) {
       return {
@@ -437,7 +453,7 @@ export async function postToLate(request: LatePostRequest): Promise<LatePostResp
 
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: errorMessage
     };
   }
 }
@@ -608,4 +624,39 @@ export async function scheduleVideoPost(
     scheduleTime,
     brand
   });
+}
+
+/**
+ * Log Late posting failure to database for tracking
+ */
+async function logLateFailure(data: {
+  brand: string;
+  profileId?: string;
+  platforms: string[];
+  caption: string;
+  videoUrl: string;
+  error: string;
+  postId?: string;
+  workflowId?: string;
+}): Promise<void> {
+  try {
+    // Only log in production/server environment
+    if (typeof window !== 'undefined') {
+      return;
+    }
+
+    const response = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/admin/late-failures`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      console.error('Failed to log Late failure:', await response.text());
+    }
+  } catch (error) {
+    console.error('Error logging Late failure:', error);
+  }
 }

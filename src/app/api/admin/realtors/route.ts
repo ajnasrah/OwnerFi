@@ -61,7 +61,8 @@ export async function GET(request: NextRequest) {
     const usersSnapshot = await getDocs(usersQuery);
     const realtorStats: RealtorStats[] = [];
 
-    // Batch fetch all related data - leadPurchases and buyer profiles only
+    // OPTIMIZATION: Batch fetch all related data - leadPurchases and buyer profiles in parallel
+    // Note: Consider adding pagination to these queries if collections grow very large
     const [leadPurchasesSnapshot, buyerProfilesSnapshot] = await Promise.all([
       getDocs(query(collection(db, 'leadPurchases'))),
       getDocs(query(collection(db, 'buyerProfiles'),

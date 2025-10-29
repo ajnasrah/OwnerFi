@@ -76,6 +76,10 @@
     {
       "path": "/api/cron/generate-abdullah-daily",
       "schedule": "0 11 * * *"
+    },
+    {
+      "path": "/api/cron/process-abdullah-queue",
+      "schedule": "30 8,11,14,17,20 * * *"
     }
   ],
   "functions": {
@@ -147,6 +151,9 @@
     },
     "src/app/api/workflow/complete-abdullah/route.ts": {
       "maxDuration": 300
+    },
+    "src/app/api/cron/process-abdullah-queue/route.ts": {
+      "maxDuration": 60
     }
   },
   "headers": [

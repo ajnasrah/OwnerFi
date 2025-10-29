@@ -1,39 +1,15 @@
 /**
  * OwnerFi Property System - Clean Architecture
- * 
+ *
  * PRINCIPLES:
  * 1. Buyer profiles store only preferences (cities, budget, requirements)
- * 2. Property matches are calculated and stored separately 
+ * 2. Property matches are calculated and stored separately
  * 3. Property actions (like/pass) are stored as immutable events
  * 4. Both buyers and realtors read from the same data sources
  */
 
 import { PropertyListing } from './property-schema';
-
-export interface BuyerProfile {
-  id: string;
-  userId: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  
-  // Search Preferences (Step 1)
-  searchCriteria: {
-    cities: string[];           // ["Jacksonville", "Orange Park", "Fleming Island"]
-    state: string;              // "FL" 
-    maxMonthlyPayment: number;  // 5500
-    maxDownPayment: number;     // 300000
-    minBedrooms?: number;       // 3
-    minBathrooms?: number;      // 2
-    searchRadius: number;       // 25
-  };
-  
-  // Metadata
-  profileComplete: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
+import { BuyerProfile } from './firebase-models';
 
 export interface PropertyMatch {
   id: string;

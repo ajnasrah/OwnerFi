@@ -12,27 +12,11 @@ import {
 import { db } from '@/lib/firebase';
 import { logError } from '@/lib/logger';
 import { ExtendedSession } from '@/types/session';
-
-interface Buyer {
-  id: string;
-  email: string;
-  firstName?: string;
-  lastName?: string;
-  phone?: string;
-  city?: string;
-  state?: string;
-  maxMonthlyPayment?: number;
-  maxDownPayment?: number;
-  createdAt: string;
-  matchedPropertiesCount: number;
-  likedPropertiesCount: number;
-  loginCount: number;
-  lastSignIn?: string;
-  isActive?: boolean;
-}
+import { BuyerAdminView, firestoreToBuyerProfile, toBuyerAdminView } from '@/lib/view-models';
+import { convertTimestampToDate } from '@/lib/firebase-models';
 
 // GET - Fetch all buyers
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     if (!db) {
       return NextResponse.json(
@@ -51,7 +35,11 @@ export async function GET() {
       );
     }
 
-    // Get all users with role 'buyer'
+    // Add pagination support
+    const { searchParams } = new URL(request.url);
+    const limit = parseInt(searchParams.get('limit') || '100');
+
+    // Get all users with role 'buyer' with pagination
     const usersQuery = query(
       collection(db, 'users'),
       where('role', '==', 'buyer')
@@ -67,57 +55,68 @@ export async function GET() {
     buyerProfilesSnapshot.docs.forEach(doc => {
       const data = doc.data();
       if (data.userId) {
-        buyerProfilesMap.set(data.userId, { ...data, profileId: doc.id });
+        buyerProfilesMap.set(data.userId, firestoreToBuyerProfile(doc.id, data));
       }
     });
 
-    const buyers: Buyer[] = [];
+    // OPTIMIZATION: Fetch all matched properties in one query instead of N queries
+    const allBuyerIds = usersSnapshot.docs.map(doc => doc.id);
+    const matchedCountsMap = new Map<string, number>();
+
+    // Batch fetch matched properties for all buyers at once
+    if (allBuyerIds.length > 0) {
+      // Firestore 'in' operator supports up to 10 values, so we need to batch
+      const batchSize = 10;
+      for (let i = 0; i < allBuyerIds.length; i += batchSize) {
+        const batchIds = allBuyerIds.slice(i, i + batchSize);
+        const matchedQuery = query(
+          collection(db, 'matchedProperties'),
+          where('buyerId', 'in', batchIds)
+        );
+        const matchedSnapshot = await getDocs(matchedQuery);
+
+        // Count matches per buyer
+        matchedSnapshot.docs.forEach(doc => {
+          const buyerId = doc.data().buyerId;
+          matchedCountsMap.set(buyerId, (matchedCountsMap.get(buyerId) || 0) + 1);
+        });
+      }
+    }
+
+    const buyers: BuyerAdminView[] = [];
 
     for (const userDoc of usersSnapshot.docs) {
       const userData = userDoc.data();
       const buyerProfile = buyerProfilesMap.get(userDoc.id);
 
-      // Get matched properties count
-      const matchedQuery = query(
-        collection(db, 'matchedProperties'),
-        where('buyerId', '==', userDoc.id)
-      );
-      const matchedSnapshot = await getDocs(matchedQuery);
-      const matchedPropertiesCount = matchedSnapshot.size;
+      if (!buyerProfile) continue; // Skip users without buyer profiles
 
-      // Get liked properties count
-      const likedQuery = query(
-        collection(db, 'likedProperties'),
-        where('buyerId', '==', userDoc.id)
-      );
-      const likedSnapshot = await getDocs(likedQuery);
-      const likedPropertiesCount = likedSnapshot.size;
+      // Get matched properties count from pre-computed map (no query here!)
+      const matchedPropertiesCount = matchedCountsMap.get(userDoc.id) || 0;
 
-      const buyer: Buyer = {
-        id: userDoc.id,
-        email: userData.email || 'N/A',
-        firstName: buyerProfile?.firstName || userData.firstName,
-        lastName: buyerProfile?.lastName || userData.lastName,
-        phone: buyerProfile?.phone || userData.phone,
-        city: buyerProfile?.preferredCity || buyerProfile?.city || userData.city,
-        state: buyerProfile?.preferredState || buyerProfile?.state || userData.state,
-        maxMonthlyPayment: buyerProfile?.maxMonthlyPayment,
-        maxDownPayment: buyerProfile?.maxDownPayment,
-        createdAt: userData.createdAt?.toDate?.()?.toISOString() ||
-                   userData.registeredAt?.toDate?.()?.toISOString() ||
-                   new Date().toISOString(),
+      // Get liked properties count from likedPropertyIds
+      const likedPropertiesCount = buyerProfile.likedPropertyIds?.length || 0;
+
+      const buyer = toBuyerAdminView(buyerProfile, {
         matchedPropertiesCount,
         likedPropertiesCount,
         loginCount: userData.loginCount || 0,
-        lastSignIn: userData.lastSignIn?.toDate?.()?.toISOString(),
-        isActive: userData.isActive !== false
-      };
+        lastSignIn: convertTimestampToDate(userData.lastSignIn),
+      });
 
       buyers.push(buyer);
     }
 
     // Sort by creation date (newest first)
-    buyers.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    buyers.sort((a, b) => {
+      const dateA = a.createdAt && typeof a.createdAt === 'object' && 'toDate' in a.createdAt
+        ? (a.createdAt as any).toDate().getTime()
+        : new Date(a.createdAt as any).getTime();
+      const dateB = b.createdAt && typeof b.createdAt === 'object' && 'toDate' in b.createdAt
+        ? (b.createdAt as any).toDate().getTime()
+        : new Date(b.createdAt as any).getTime();
+      return dateB - dateA;
+    });
 
     return NextResponse.json({
       buyers,
@@ -174,7 +173,7 @@ export async function DELETE(request: NextRequest) {
         // Delete from users collection
         await deleteDoc(doc(db, 'users', buyerId));
 
-        // Also try to delete from buyerProfiles collection
+        // Delete from buyerProfiles collection
         const profileQuery = query(
           collection(db, 'buyerProfiles'),
           where('userId', '==', buyerId)
@@ -183,6 +182,28 @@ export async function DELETE(request: NextRequest) {
 
         for (const profileDoc of profileSnapshot.docs) {
           await deleteDoc(doc(db, 'buyerProfiles', profileDoc.id));
+        }
+
+        // Delete from likedProperties collection
+        const likedQuery = query(
+          collection(db, 'likedProperties'),
+          where('buyerId', '==', buyerId)
+        );
+        const likedSnapshot = await getDocs(likedQuery);
+
+        for (const likedDoc of likedSnapshot.docs) {
+          await deleteDoc(doc(db, 'likedProperties', likedDoc.id));
+        }
+
+        // Delete from matchedProperties collection
+        const matchedQuery = query(
+          collection(db, 'matchedProperties'),
+          where('buyerId', '==', buyerId)
+        );
+        const matchedSnapshot = await getDocs(matchedQuery);
+
+        for (const matchedDoc of matchedSnapshot.docs) {
+          await deleteDoc(doc(db, 'matchedProperties', matchedDoc.id));
         }
 
         deletedCount++;

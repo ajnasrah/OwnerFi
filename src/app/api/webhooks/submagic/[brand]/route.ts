@@ -220,7 +220,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
  * Get workflow by Submagic project ID for specific brand
  */
 async function getWorkflowBySubmagicId(
-  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit' | 'property' | 'vassdistro',
+  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit' | 'property' | 'vassdistro' | 'abdullah',
   submagicProjectId: string
 ): Promise<{ workflowId: string; workflow: any } | null> {
   if (brand === 'podcast') {
@@ -267,7 +267,7 @@ async function getWorkflowBySubmagicId(
  * Update workflow for specific brand
  */
 async function updateWorkflowForBrand(
-  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit' | 'property',
+  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit' | 'property' | 'abdullah',
   workflowId: string,
   updates: Record<string, any>
 ): Promise<void> {
@@ -280,6 +280,13 @@ async function updateWorkflowForBrand(
   } else if (brand === 'property') {
     const { updatePropertyVideo } = await import('@/lib/feed-store-firestore');
     await updatePropertyVideo(workflowId, updates);
+  } else if (brand === 'abdullah') {
+    const { db } = await import('@/lib/firebase');
+    const { doc, updateDoc } = await import('firebase/firestore');
+    await updateDoc(doc(db, 'abdullah_workflow_queue', workflowId), {
+      ...updates,
+      updatedAt: Date.now()
+    });
   } else {
     const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
     await updateWorkflowStatus(workflowId, brand, updates);

@@ -9,17 +9,7 @@ import Tutorial from '@/components/dashboard/Tutorial';
 import { PropertySwiper2 } from '@/components/ui/PropertySwiper2';
 
 import { PropertyListing } from '@/lib/property-schema';
-
-interface BuyerProfile {
-  id: string;
-  firstName: string;
-  lastName: string;
-  phone: string;
-  city: string;
-  state?: string;
-  maxMonthlyPayment: number;
-  maxDownPayment: number;
-}
+import { BuyerDashboardView } from '@/lib/view-models';
 
 // Extended Property interface that includes PropertyListing fields
 interface Property extends Partial<PropertyListing> {
@@ -70,7 +60,7 @@ export default function Dashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
 
-  const [profile, setProfile] = useState<BuyerProfile | null>(null);
+  const [profile, setProfile] = useState<BuyerDashboardView | null>(null);
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [likedProperties, setLikedProperties] = useState<string[]>([]);
@@ -122,11 +112,24 @@ export default function Dashboard() {
         return;
       }
 
-      setProfile(profileData.profile);
-      setLikedProperties(profileData.profile.likedProperties || []);
+      // Convert to BuyerDashboardView format
+      const dashboardProfile: BuyerDashboardView = {
+        id: profileData.profile.id,
+        firstName: profileData.profile.firstName,
+        lastName: profileData.profile.lastName,
+        phone: profileData.profile.phone,
+        city: profileData.profile.preferredCity || profileData.profile.city,
+        state: profileData.profile.preferredState || profileData.profile.state || 'TX',
+        maxMonthlyPayment: profileData.profile.maxMonthlyPayment,
+        maxDownPayment: profileData.profile.maxDownPayment,
+        likedProperties: profileData.profile.likedPropertyIds || profileData.profile.likedProperties || [],
+      };
+
+      setProfile(dashboardProfile);
+      setLikedProperties(dashboardProfile.likedProperties || []);
 
       const propertiesRes = await fetch(
-        `/api/buyer/properties?city=${encodeURIComponent(profileData.profile.city)}&state=${encodeURIComponent(profileData.profile.state || 'TX')}&maxMonthlyPayment=${profileData.profile.maxMonthlyPayment}&maxDownPayment=${profileData.profile.maxDownPayment}`
+        `/api/buyer/properties?city=${encodeURIComponent(dashboardProfile.city)}&state=${encodeURIComponent(dashboardProfile.state)}&maxMonthlyPayment=${dashboardProfile.maxMonthlyPayment}&maxDownPayment=${dashboardProfile.maxDownPayment}`
       );
       const propertiesData = await propertiesRes.json();
 

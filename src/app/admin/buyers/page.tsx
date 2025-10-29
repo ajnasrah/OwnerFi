@@ -4,24 +4,12 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-
-interface Buyer {
-  id: string;
-  email: string;
-  firstName?: string;
-  lastName?: string;
-  phone?: string;
-  city?: string;
-  state?: string;
-  maxMonthlyPayment?: number;
-  maxDownPayment?: number;
-  createdAt: string;
-}
+import { BuyerAdminView } from '@/lib/view-models';
 
 export default function AdminBuyers() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [buyers, setBuyers] = useState<Buyer[]>([]);
+  const [buyers, setBuyers] = useState<BuyerAdminView[]>([]);
   const [selectedBuyers, setSelectedBuyers] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
@@ -176,6 +164,7 @@ export default function AdminBuyers() {
                   <th className="p-3 text-left">Monthly Payment</th>
                   <th className="p-3 text-left">Down Payment</th>
                   <th className="p-3 text-left">Joined</th>
+                  <th className="p-3 text-left">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-700">
@@ -197,7 +186,9 @@ export default function AdminBuyers() {
                     <td className="p-3 text-slate-300">{buyer.email}</td>
                     <td className="p-3 text-slate-300">{buyer.phone || 'N/A'}</td>
                     <td className="p-3 text-slate-300">
-                      {buyer.city && buyer.state ? `${buyer.city}, ${buyer.state}` : 'N/A'}
+                      {(buyer.preferredCity || buyer.city) && (buyer.preferredState || buyer.state)
+                        ? `${buyer.preferredCity || buyer.city}, ${buyer.preferredState || buyer.state}`
+                        : 'N/A'}
                     </td>
                     <td className="p-3 text-slate-300">
                       {buyer.maxMonthlyPayment
@@ -210,7 +201,19 @@ export default function AdminBuyers() {
                         : '$0'}
                     </td>
                     <td className="p-3 text-slate-300">
-                      {new Date(buyer.createdAt).toLocaleDateString()}
+                      {buyer.createdAt && typeof buyer.createdAt === 'object' && 'toDate' in buyer.createdAt
+                        ? new Date((buyer.createdAt as any).toDate()).toLocaleDateString()
+                        : buyer.createdAt
+                        ? new Date(buyer.createdAt as any).toLocaleDateString()
+                        : 'N/A'}
+                    </td>
+                    <td className="p-3">
+                      <Link
+                        href={`/admin/buyers/preview/${buyer.id}`}
+                        className="text-emerald-400 hover:text-emerald-300 font-semibold text-sm"
+                      >
+                        👁️ Preview
+                      </Link>
                     </td>
                   </tr>
                 ))}

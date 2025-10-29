@@ -209,21 +209,13 @@ export default function AdminDashboard() {
 
   const loadStats = async () => {
     try {
-      // Load properties count
-      const propResponse = await fetch('/api/admin/properties?limit=1');
-      const propData = await propResponse.json();
-
-      // Load buyers count
-      const buyersResponse = await fetch('/api/admin/buyers');
-      const buyersData = await buyersResponse.json();
-
-      // Load realtors count
-      const realtorsResponse = await fetch('/api/admin/realtors');
-      const realtorsData = await realtorsResponse.json();
-
-      // Load disputes count
-      const disputesResponse = await fetch('/api/admin/disputes');
-      const disputesData = await disputesResponse.json();
+      // Load all stats in parallel for better performance
+      const [propData, buyersData, realtorsData, disputesData] = await Promise.all([
+        fetch('/api/admin/properties?limit=1').then(r => r.json()),
+        fetch('/api/admin/buyers').then(r => r.json()),
+        fetch('/api/admin/realtors').then(r => r.json()),
+        fetch('/api/admin/disputes').then(r => r.json())
+      ]);
 
       setStats({
         totalProperties: propData.total || 0,
@@ -236,8 +228,8 @@ export default function AdminDashboard() {
     }
   };
 
-  // Fetch functions
-  const fetchProperties = async (limit?: number, resetPage: boolean = true) => {
+  // Fetch functions (wrapped in useCallback for performance optimization)
+  const fetchProperties = useCallback(async (limit?: number, resetPage: boolean = true) => {
     setLoadingProperties(true);
     try {
       const url = limit ? `/api/admin/properties?limit=${limit}` : '/api/admin/properties';
@@ -255,9 +247,9 @@ export default function AdminDashboard() {
     } finally {
       setLoadingProperties(false);
     }
-  };
+  }, []);
 
-  const fetchFailedProperties = async () => {
+  const fetchFailedProperties = useCallback(async () => {
     setLoadingFailedProperties(true);
     try {
       const response = await fetch(`/api/admin/failed-properties?filter=${failedPropertiesFilter}`);
@@ -271,9 +263,9 @@ export default function AdminDashboard() {
     } finally {
       setLoadingFailedProperties(false);
     }
-  };
+  }, [failedPropertiesFilter]);
 
-  const fetchStreetViewProperties = async () => {
+  const fetchStreetViewProperties = useCallback(async () => {
     setLoadingStreetView(true);
     try {
       const response = await fetch('/api/admin/street-view-properties');
@@ -286,9 +278,9 @@ export default function AdminDashboard() {
     } finally {
       setLoadingStreetView(false);
     }
-  };
+  }, []);
 
-  const fetchNewProperties = async () => {
+  const fetchNewProperties = useCallback(async () => {
     setLoadingNewProperties(true);
     try {
       const response = await fetch('/api/admin/zillow-imports');
@@ -301,7 +293,7 @@ export default function AdminDashboard() {
     } finally {
       setLoadingNewProperties(false);
     }
-  };
+  }, []);
 
   const handleExportGHL = async () => {
     setExportingGHL(true);

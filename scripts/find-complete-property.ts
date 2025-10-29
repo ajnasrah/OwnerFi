@@ -23,7 +23,7 @@ async function findCompleteProperty() {
   const propertiesQuery = query(
     collection(db, 'properties'),
     where('status', '==', 'active'),
-    where('isActive', '==', true'),
+    where('isActive', '==', true),
     orderBy('createdAt', 'desc'),
     limit(50)
   );

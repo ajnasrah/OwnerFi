@@ -1,5 +1,7 @@
 import { unifiedDb } from './unified-db';
+import { BuyerProfile } from './firebase-models';
 
+// Simplified property interface for matching algorithm
 interface PropertyForMatching {
   id: string;
   monthlyPayment: number;
@@ -12,6 +14,8 @@ interface PropertyForMatching {
   bathrooms: number;
 }
 
+// Simplified buyer interface for matching algorithm
+// Extracted from BuyerProfile (firebase-models.ts)
 interface BuyerForMatching {
   id: string;
   maxMonthlyPayment: number;

@@ -200,7 +200,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
  * Get workflow for specific brand (NO sequential lookups)
  */
 async function getWorkflowForBrand(
-  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit' | 'property' | 'vassdistro',
+  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit' | 'property' | 'vassdistro' | 'abdullah',
   workflowId: string
 ): Promise<any | null> {
   if (brand === 'podcast') {
@@ -214,6 +214,11 @@ async function getWorkflowForBrand(
     const { doc, getDoc } = await import('firebase/firestore');
     const docSnap = await getDoc(doc(db, 'property_videos', workflowId));
     return docSnap.exists() ? docSnap.data() : null;
+  } else if (brand === 'abdullah') {
+    const { db } = await import('@/lib/firebase');
+    const { doc, getDoc } = await import('firebase/firestore');
+    const docSnap = await getDoc(doc(db, 'abdullah_workflow_queue', workflowId));
+    return docSnap.exists() ? docSnap.data() : null;
   } else {
     const { getWorkflowById } = await import('@/lib/feed-store-firestore');
     const result = await getWorkflowById(workflowId);
@@ -225,7 +230,7 @@ async function getWorkflowForBrand(
  * Update workflow for specific brand
  */
 async function updateWorkflowForBrand(
-  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit' | 'property' | 'vassdistro',
+  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit' | 'property' | 'vassdistro' | 'abdullah',
   workflowId: string,
   updates: Record<string, any>
 ): Promise<void> {
@@ -238,6 +243,13 @@ async function updateWorkflowForBrand(
   } else if (brand === 'property') {
     const { updatePropertyVideo } = await import('@/lib/feed-store-firestore');
     await updatePropertyVideo(workflowId, updates);
+  } else if (brand === 'abdullah') {
+    const { db } = await import('@/lib/firebase');
+    const { doc, updateDoc } = await import('firebase/firestore');
+    await updateDoc(doc(db, 'abdullah_workflow_queue', workflowId), {
+      ...updates,
+      updatedAt: Date.now()
+    });
   } else {
     const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
     await updateWorkflowStatus(workflowId, brand, updates);
@@ -248,7 +260,7 @@ async function updateWorkflowForBrand(
  * Trigger Submagic processing with brand-specific webhook
  */
 async function triggerSubmagicProcessing(
-  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit',
+  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit' | 'property' | 'vassdistro' | 'abdullah',
   workflowId: string,
   heygenVideoUrl: string,
   workflow: any
@@ -385,7 +397,7 @@ async function triggerSubmagicProcessing(
  * Send failure alert for brand
  */
 async function sendFailureAlert(
-  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit',
+  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit' | 'property' | 'vassdistro' | 'abdullah',
   workflowId: string,
   workflow: any,
   reason: string

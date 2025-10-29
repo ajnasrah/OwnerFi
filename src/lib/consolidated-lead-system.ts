@@ -30,13 +30,15 @@ export interface RealtorMatchProfile {
   state: string;                 // Primary state
 }
 
+// BuyerDetails is a simplified view for lead display
+// Uses fields from BuyerProfile (firebase-models.ts)
 export interface BuyerDetails {
   firstName: string;
   lastName: string;
   email: string;
   phone: string;
-  city: string;
-  state: string;
+  city: string;         // Maps to preferredCity from BuyerProfile
+  state: string;        // Maps to preferredState from BuyerProfile
   maxMonthlyPayment: number;
   maxDownPayment: number;
 }

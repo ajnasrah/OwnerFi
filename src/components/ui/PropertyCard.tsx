@@ -270,6 +270,19 @@ export function PropertyCard({ property, onLike, onPass, isFavorited, style }: P
               {/* Expanded Details */}
               {showDetails && (
                 <div className="space-y-4 pt-4 border-t border-slate-200">
+                  {/* Property Description */}
+                  {property.description && (
+                    <div className="bg-gradient-to-br from-slate-50 to-blue-50 rounded-2xl p-4">
+                      <h3 className="font-bold text-slate-900 mb-3 flex items-center gap-2 text-base">
+                        <span className="text-lg">📝</span>
+                        <span>Property Description</span>
+                      </h3>
+                      <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-line break-words overflow-wrap-anywhere">
+                        {property.description}
+                      </p>
+                    </div>
+                  )}
+
                   {/* Monthly Payment Breakdown */}
                   <div className="bg-slate-50 rounded-2xl p-4">
                     <h3 className="font-bold text-slate-900 mb-3 flex items-center gap-2">
@@ -349,7 +362,7 @@ export function PropertyCard({ property, onLike, onPass, isFavorited, style }: P
                   {/* Disclaimer */}
                   <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-3">
                     <p className="text-xs text-yellow-800">
-                      💡 Estimates shown are not guaranteed. Taxes, insurance, and HOA fees may vary. Please verify all details with the seller.
+                      💡 Estimates shown are not guaranteed. Monthly payments may or may not include property taxes and insurance. Taxes, insurance, and HOA fees vary by property. Please verify all payment details and what's included with the seller.
                     </p>
                   </div>
 

@@ -9,6 +9,7 @@ const COLLECTIONS = {
   CARZ: 'carz_workflow_queue',
   OWNERFI: 'ownerfi_workflow_queue',
   VASSDISTRO: 'vassdistro_workflow_queue',
+  ABDULLAH: 'abdullah_workflow_queue',
 };
 
 export async function GET(request: Request) {
@@ -24,10 +25,11 @@ export async function GET(request: Request) {
     // Fetch workflows by createdAt only (no index needed), then filter in memory
     const fetchLimit = includeHistory ? 50 : 100; // Get more if filtering for active
 
-    const [carzSnapshot, ownerfiSnapshot, vassdistroSnapshot] = await Promise.all([
+    const [carzSnapshot, ownerfiSnapshot, vassdistroSnapshot, abdullahSnapshot] = await Promise.all([
       getDocs(query(collection(db, COLLECTIONS.CARZ), orderBy('createdAt', 'desc'), firestoreLimit(fetchLimit))),
       getDocs(query(collection(db, COLLECTIONS.OWNERFI), orderBy('createdAt', 'desc'), firestoreLimit(fetchLimit))),
-      getDocs(query(collection(db, COLLECTIONS.VASSDISTRO), orderBy('createdAt', 'desc'), firestoreLimit(fetchLimit)))
+      getDocs(query(collection(db, COLLECTIONS.VASSDISTRO), orderBy('createdAt', 'desc'), firestoreLimit(fetchLimit))),
+      getDocs(query(collection(db, COLLECTIONS.ABDULLAH), orderBy('createdAt', 'desc'), firestoreLimit(fetchLimit)))
     ]);
 
     // Filter in memory if showing active only (avoids composite index requirement)
@@ -44,13 +46,15 @@ export async function GET(request: Request) {
     const carzWorkflows = filterWorkflows(carzSnapshot);
     const ownerfiWorkflows = filterWorkflows(ownerfiSnapshot);
     const vassdistroWorkflows = filterWorkflows(vassdistroSnapshot);
+    const abdullahWorkflows = filterWorkflows(abdullahSnapshot);
 
     return NextResponse.json({
       success: true,
       workflows: {
         carz: carzWorkflows,
         ownerfi: ownerfiWorkflows,
-        vassdistro: vassdistroWorkflows
+        vassdistro: vassdistroWorkflows,
+        abdullah: abdullahWorkflows
       },
       timestamp: new Date().toISOString()
     });

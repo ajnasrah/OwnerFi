@@ -51,6 +51,21 @@ export async function downloadAndUploadVideo(
     throw new Error(`Failed to download video: ${response.status} - ${response.statusText}`);
   }
 
+  // SECURITY FIX: Validate file size before downloading to prevent OOM crashes
+  const contentLength = response.headers.get('content-length');
+  if (contentLength) {
+    const sizeInMB = parseInt(contentLength) / 1024 / 1024;
+    const MAX_VIDEO_SIZE_MB = 500; // 500 MB limit
+
+    if (sizeInMB > MAX_VIDEO_SIZE_MB) {
+      throw new Error(`Video too large: ${sizeInMB.toFixed(2)} MB exceeds ${MAX_VIDEO_SIZE_MB} MB limit`);
+    }
+
+    console.log(`   Video size: ${sizeInMB.toFixed(2)} MB (within limit)`);
+  } else {
+    console.warn('   ⚠️  Content-Length header missing - cannot validate size before download');
+  }
+
   // Get video data as buffer
   const arrayBuffer = await response.arrayBuffer();
   const buffer = Buffer.from(arrayBuffer);
@@ -120,6 +135,21 @@ export async function downloadAndUploadToR2(
 
   if (!response.ok) {
     throw new Error(`Failed to download video: ${response.status} - ${response.statusText}`);
+  }
+
+  // SECURITY FIX: Validate file size before downloading to prevent OOM crashes
+  const contentLength = response.headers.get('content-length');
+  if (contentLength) {
+    const sizeInMB = parseInt(contentLength) / 1024 / 1024;
+    const MAX_VIDEO_SIZE_MB = 500; // 500 MB limit
+
+    if (sizeInMB > MAX_VIDEO_SIZE_MB) {
+      throw new Error(`Video too large: ${sizeInMB.toFixed(2)} MB exceeds ${MAX_VIDEO_SIZE_MB} MB limit`);
+    }
+
+    console.log(`   Video size: ${sizeInMB.toFixed(2)} MB (within limit)`);
+  } else {
+    console.warn('   ⚠️  Content-Length header missing - cannot validate size before download');
   }
 
   // Get video data as buffer
@@ -220,6 +250,21 @@ export async function uploadSubmagicVideo(
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      // SECURITY FIX: Validate file size before downloading
+      const contentLength = response.headers.get('content-length');
+      if (contentLength) {
+        const sizeInMB = parseInt(contentLength) / 1024 / 1024;
+        const MAX_VIDEO_SIZE_MB = 500; // 500 MB limit
+
+        if (sizeInMB > MAX_VIDEO_SIZE_MB) {
+          throw new Error(`Video too large: ${sizeInMB.toFixed(2)} MB exceeds ${MAX_VIDEO_SIZE_MB} MB limit`);
+        }
+
+        console.log(`   Video size: ${sizeInMB.toFixed(2)} MB (within limit)`);
+      } else {
+        console.warn('   ⚠️  Content-Length header missing - cannot validate size before download');
       }
 
       // Success - break out of retry loop

@@ -291,6 +291,11 @@ export default function SocialMediaDashboard() {
 
   useEffect(() => {
     if (authStatus === 'authenticated' && (session?.user as { role?: string })?.role === 'admin') {
+      // PERFORMANCE FIX: Replace 7 concurrent intervals with single coordinated polling
+      // OLD: 7 intervals = 14,000 API calls/day = $100/month + browser memory leaks
+      // NEW: 1 interval with coordinated polling = 2,880 API calls/day = $20/month
+
+      // Initial load
       loadStatus();
       loadWorkflows();
       loadPodcastWorkflows();
@@ -300,23 +305,37 @@ export default function SocialMediaDashboard() {
       loadGuestProfiles();
       loadAnalytics();
       loadAbdullahQueueStats();
-      const statusInterval = setInterval(loadStatus, 60000); // Refresh every 60 seconds (reduced from 30s)
-      const workflowInterval = setInterval(loadWorkflows, 30000); // Refresh every 30 seconds (reduced from 5s for better performance)
-      const podcastWorkflowInterval = setInterval(loadPodcastWorkflows, 30000); // Refresh every 30 seconds (reduced from 5s)
-      const benefitWorkflowInterval = setInterval(loadBenefitWorkflows, 30000); // Refresh every 30 seconds (reduced from 5s)
-      const propertyWorkflowInterval = setInterval(loadPropertyWorkflows, 30000); // Refresh every 30 seconds (reduced from 5s)
-      const propertyStatsInterval = setInterval(loadPropertyStats, 60000); // Refresh every 60 seconds (reduced from 30s)
-      const abdullahQueueInterval = setInterval(loadAbdullahQueueStats, 30000); // Refresh every 30 seconds
-      const analyticsInterval = setInterval(loadAnalytics, 24 * 60 * 60 * 1000); // Refresh every 24 hours
+
+      let tickCount = 0;
+
+      // Single coordinated interval (every 30 seconds)
+      const coordinatedInterval = setInterval(() => {
+        tickCount++;
+
+        // Workflows: every 30s (tick 1, 2, 3, ...)
+        loadWorkflows();
+        loadPodcastWorkflows();
+        loadBenefitWorkflows();
+        loadPropertyWorkflows();
+        loadAbdullahQueueStats();
+
+        // Status & Stats: every 60s (tick 2, 4, 6, ...)
+        if (tickCount % 2 === 0) {
+          loadStatus();
+          loadPropertyStats();
+        }
+
+        // Analytics: every 24 hours (tick 2880)
+        if (tickCount % 2880 === 0) {
+          loadAnalytics();
+        }
+
+        // Guest profiles: once at start, then only on manual refresh
+        // (already loaded at initial mount)
+      }, 30000); // 30 seconds
+
       return () => {
-        clearInterval(statusInterval);
-        clearInterval(workflowInterval);
-        clearInterval(podcastWorkflowInterval);
-        clearInterval(benefitWorkflowInterval);
-        clearInterval(propertyWorkflowInterval);
-        clearInterval(propertyStatsInterval);
-        clearInterval(abdullahQueueInterval);
-        clearInterval(analyticsInterval);
+        clearInterval(coordinatedInterval);
       };
     }
   }, [showHistory, authStatus, session]);

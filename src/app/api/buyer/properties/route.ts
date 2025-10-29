@@ -4,6 +4,8 @@ import {
   getDocs,
   query,
   where,
+  orderBy,
+  limit,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { getServerSession } from 'next-auth/next';
@@ -86,49 +88,84 @@ export async function GET(request: NextRequest) {
       Array.from(nearbyCityNames).slice(0, 10).join(', ') + (nearbyCityNames.size > 10 ? '...' : '')
     );
 
-    // Get ALL properties
-    const snapshot = await getDocs(collection(db, 'properties'));
+    // PERFORMANCE FIX: Query only properties in the relevant state with budget filters
+    // This reduces from loading ALL properties (1000s) to only relevant ones (100-200)
+    const propertiesQuery = query(
+      collection(db, 'properties'),
+      where('isActive', '==', true),
+      where('state', '==', searchState), // Only properties in buyer's state
+      where('monthlyPayment', '<=', maxMonthly), // Within budget
+      orderBy('monthlyPayment', 'asc'),
+      limit(500) // Reasonable limit - gets properties in state within budget
+    );
+
+    const snapshot = await getDocs(propertiesQuery);
     const allProperties = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as PropertyListing & { id: string }));
 
     // 1. DIRECT MATCHES: Properties IN the search city AND state
     const directProperties = allProperties.filter((property: PropertyListing & { id: string }) => {
       const propertyCity = property.city?.split(',')[0].trim();
-      // Show properties if they have no pricing data OR meet both budget criteria
-      const meetsbudget = (!property.monthlyPayment || property.monthlyPayment <= maxMonthly) &&
-                         (!property.downPaymentAmount || property.downPaymentAmount <= maxDown);
-      return propertyCity?.toLowerCase() === searchCity.toLowerCase() &&
-             property.state === searchState &&
-             property.isActive !== false &&
-             meetsbudget;
+      // Check down payment budget (monthly payment already filtered in query)
+      const meetsDownPaymentBudget = !property.downPaymentAmount || property.downPaymentAmount <= maxDown;
+      return propertyCity?.toLowerCase() === searchCity.toLowerCase() && meetsDownPaymentBudget;
     });
 
     // 2. NEARBY MATCHES: Properties located IN cities that are within 30 miles of buyer's search city
     const nearbyProperties = allProperties.filter((property: PropertyListing & { id: string }) => {
       const propertyCity = property.city?.split(',')[0].trim();
 
-      // Must be different city but SAME STATE
+      // Must be different city (state already filtered in query)
       if (propertyCity?.toLowerCase() === searchCity.toLowerCase()) return false;
-      if (property.state !== searchState) return false;
 
       // Check if property's city is in the list of nearby cities
       const isInNearbyCity = propertyCity && nearbyCityNames.has(propertyCity.toLowerCase());
 
-      // Show properties if they have no pricing data OR meet both budget criteria
-      const meetsbudget = (!property.monthlyPayment || property.monthlyPayment <= maxMonthly) &&
-                         (!property.downPaymentAmount || property.downPaymentAmount <= maxDown);
+      // Check down payment budget (monthly payment and state already filtered in query)
+      const meetsDownPaymentBudget = !property.downPaymentAmount || property.downPaymentAmount <= maxDown;
 
-      return isInNearbyCity &&
-             property.isActive !== false &&
-             meetsbudget;
+      return isInNearbyCity && meetsDownPaymentBudget;
     });
 
     console.log(`[buyer-search] Found ${directProperties.length} direct matches, ${nearbyProperties.length} nearby matches`);
 
     // 3. LIKED PROPERTIES: Always include liked properties regardless of search criteria
-    const likedProperties = likedPropertyIds.length > 0 ? 
-      allProperties.filter((property: PropertyListing & { id: string }) => 
-        likedPropertyIds.includes(property.id) && property.isActive !== false
-      ) : [];
+    // Need separate query since liked properties might not be in buyer's state
+    let likedProperties: Array<PropertyListing & { id: string }> = [];
+    if (likedPropertyIds.length > 0) {
+      // First check if any liked properties are in our already-fetched results
+      const likedInResults = allProperties.filter(property =>
+        likedPropertyIds.includes(property.id)
+      );
+
+      // For any liked properties not in results, fetch them separately in batches of 10
+      const missingLikedIds = likedPropertyIds.filter(id =>
+        !allProperties.some(p => p.id === id)
+      );
+
+      if (missingLikedIds.length > 0) {
+        // Firestore 'in' operator supports max 10 values
+        for (let i = 0; i < missingLikedIds.length; i += 10) {
+          const batchIds = missingLikedIds.slice(i, i + 10);
+          const { documentId } = await import('firebase/firestore');
+
+          const likedQuery = query(
+            collection(db, 'properties'),
+            where(documentId(), 'in', batchIds),
+            where('isActive', '==', true)
+          );
+
+          const likedSnapshot = await getDocs(likedQuery);
+          const likedBatch = likedSnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          } as PropertyListing & { id: string }));
+
+          likedInResults.push(...likedBatch);
+        }
+      }
+
+      likedProperties = likedInResults;
+    }
 
     // 4. COMBINE AND FORMAT FOR BUYER DASHBOARD WITH SMART DE-DUPLICATION
     const processedResults = new Map();

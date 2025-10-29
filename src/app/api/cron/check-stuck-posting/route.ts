@@ -122,14 +122,18 @@ export async function GET(request: NextRequest) {
     // Properties use nested workflowStatus.stage field in properties collection
     console.log(`\n📂 Checking properties...`);
     try {
+      // PERFORMANCE FIX: Add limit to prevent scanning all properties
+      const { limit: firestoreLimit, orderBy } = await import('firebase/firestore');
       const qPosting = query(
         collection(db, 'properties'),
-        where('workflowStatus.stage', '==', 'Posting')
+        where('workflowStatus.stage', '==', 'Posting'),
+        orderBy('workflowStatus.lastUpdated', 'asc'),
+        firestoreLimit(20) // Process max 20 stuck properties per run
       );
 
       const postingSnapshot = await getDocs(qPosting);
 
-      console.log(`   Found ${postingSnapshot.size} in 'Posting'`);
+      console.log(`   Found ${postingSnapshot.size} in 'Posting' (limited to 20)`);
 
       // Process properties stuck in Posting stage
       postingSnapshot.docs.forEach(doc => {

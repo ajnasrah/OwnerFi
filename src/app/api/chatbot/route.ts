@@ -72,26 +72,84 @@ export async function POST(request: Request) {
       );
     }
 
+    // SECURITY FIX: Rate limit by IP (10 requests per minute)
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+               request.headers.get('x-real-ip') ||
+               'unknown';
+
+    const { rateLimit } = await import('@/lib/rate-limiter');
+    const rateLimitCheck = await rateLimit(`chatbot:${ip}`, 10, 60);
+
+    if (!rateLimitCheck.allowed) {
+      return NextResponse.json({
+        error: `Too many requests. Please try again in ${rateLimitCheck.retryAfter} seconds.`,
+        rateLimitExceeded: true,
+        retryAfter: rateLimitCheck.retryAfter
+      }, {
+        status: 429,
+        headers: {
+          'Retry-After': rateLimitCheck.retryAfter?.toString() || '60'
+        }
+      });
+    }
+
     // Always use AI to respond to user questions intelligently
     let response = '';
 
     try {
-      const openai = getOpenAIClient();
+      // BUDGET CHECK: Estimate cost before making request
+      const { estimateTokens, calculateCost, checkBudget, trackUsage } = await import('@/lib/openai-budget-tracker');
+
       const messages = [
         { role: 'system', content: OWNERFI_CONTEXT },
         ...conversationHistory,
         { role: 'user', content: message }
       ];
 
+      const estimatedInputTokens = estimateTokens(JSON.stringify(messages));
+      const estimatedOutputTokens = 80; // max_tokens
+      const estimatedCost = calculateCost(estimatedInputTokens, estimatedOutputTokens, 'gpt-4o-mini');
+
+      console.log(`💬 [chatbot] Estimated cost: $${estimatedCost.toFixed(6)} (${estimatedInputTokens} input + ${estimatedOutputTokens} output tokens)`);
+
+      // Check daily budget
+      const dailyBudgetCheck = await checkBudget(estimatedCost, 'daily');
+
+      if (!dailyBudgetCheck.allowed) {
+        console.error(`❌ [chatbot] Daily budget exceeded: ${dailyBudgetCheck.reason}`);
+        return NextResponse.json({
+          reply: 'Our AI assistant is temporarily unavailable due to high usage. Please try again tomorrow or browse our properties.',
+          budgetExceeded: true
+        });
+      }
+
+      const openai = getOpenAIClient();
+
       const completion = await openai.chat.completions.create({
-        model: 'gpt-4',
+        model: 'gpt-4o-mini',  // COST FIX: Use cheaper model (10x less expensive than GPT-4)
         messages: messages as OpenAI.Chat.Completions.ChatCompletionMessageParam[],
         max_tokens: 80,
         temperature: 0.7,
       });
 
       response = completion.choices[0]?.message?.content || 'How can I help you with OwnerFi today?';
-    } catch {
+
+      // Track actual usage
+      await trackUsage({
+        inputTokens: completion.usage?.prompt_tokens || estimatedInputTokens,
+        outputTokens: completion.usage?.completion_tokens || estimatedOutputTokens,
+        totalTokens: completion.usage?.total_tokens || (estimatedInputTokens + estimatedOutputTokens),
+        estimatedCost: calculateCost(
+          completion.usage?.prompt_tokens || estimatedInputTokens,
+          completion.usage?.completion_tokens || estimatedOutputTokens,
+          'gpt-4o-mini'
+        ),
+        model: 'gpt-4o-mini',
+        timestamp: Date.now()
+      });
+
+    } catch (error) {
+      console.error('[chatbot] OpenAI error:', error);
       response = 'I\'m having trouble connecting right now. How can I help you with OwnerFi? Feel free to explore our platform or sign up to get started!';
     }
 

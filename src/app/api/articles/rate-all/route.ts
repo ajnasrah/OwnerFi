@@ -111,9 +111,15 @@ export async function POST(request: NextRequest) {
     if (articlesToDelete.length > 0) {
       console.log(`🧹 ${brand}: Deleting ${articlesToDelete.length} low-quality articles`);
 
-      for (const item of articlesToDelete) {
-        await deleteDoc(doc(db, collectionName, item.article.id));
-      }
+      // PERFORMANCE FIX: Use batch delete instead of sequential
+      const { writeBatch } = await import('firebase/firestore');
+      const batch = writeBatch(db);
+
+      articlesToDelete.forEach(item => {
+        batch.delete(doc(db, collectionName, item.article.id));
+      });
+
+      await batch.commit(); // Single atomic operation
     }
 
     const brandResults = {

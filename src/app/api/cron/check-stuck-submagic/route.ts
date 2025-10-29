@@ -79,9 +79,13 @@ async function executeFailsafe() {
       console.log(`\n📂 Checking ${collectionName}...`);
 
       try {
+        // PERFORMANCE FIX: Add limit and orderBy to prevent unbounded queries
+        const { limit: firestoreLimit, orderBy } = await import('firebase/firestore');
         const q = query(
           collection(db, collectionName),
-          where('status', '==', 'submagic_processing')
+          where('status', '==', 'submagic_processing'),
+          orderBy('updatedAt', 'asc'),
+          firestoreLimit(15) // Process max 15 per brand per run
         );
 
         const snapshot = await getDocs(q);
@@ -128,9 +132,13 @@ async function executeFailsafe() {
     // Check Property videos stuck in HeyGen processing
     console.log(`\n📂 Checking property_videos (heygen_processing)...`);
     try {
+      // PERFORMANCE FIX: Add limit to prevent scanning all property videos
+      const { limit: firestoreLimit, orderBy } = await import('firebase/firestore');
       const q = query(
         collection(db, 'property_videos'),
-        where('status', '==', 'heygen_processing')
+        where('status', '==', 'heygen_processing'),
+        orderBy('updatedAt', 'asc'),
+        firestoreLimit(15) // Process max 15 per run
       );
 
       const snapshot = await getDocs(q);
@@ -238,9 +246,13 @@ async function executeFailsafe() {
     // Check Property videos in Submagic processing
     console.log(`\n📂 Checking property_videos (submagic_processing)...`);
     try {
+      // PERFORMANCE FIX: Add limit to prevent scanning all property videos
+      const { limit: firestoreLimit, orderBy } = await import('firebase/firestore');
       const q = query(
         collection(db, 'property_videos'),
-        where('status', '==', 'submagic_processing')
+        where('status', '==', 'submagic_processing'),
+        orderBy('updatedAt', 'asc'),
+        firestoreLimit(15) // Process max 15 per run
       );
 
       const snapshot = await getDocs(q);
@@ -271,9 +283,13 @@ async function executeFailsafe() {
     // Check Podcast workflows (use submagicProjectId field)
     console.log(`\n📂 Checking podcast_workflow_queue...`);
     try {
+      // PERFORMANCE FIX: Add limit to prevent scanning all podcasts
+      const { limit: firestoreLimit, orderBy } = await import('firebase/firestore');
       const q = query(
         collection(db, 'podcast_workflow_queue'),
-        where('status', '==', 'submagic_processing')
+        where('status', '==', 'submagic_processing'),
+        orderBy('updatedAt', 'asc'),
+        firestoreLimit(15) // Process max 15 per run
       );
 
       const snapshot = await getDocs(q);

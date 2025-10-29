@@ -59,10 +59,13 @@ async function rateAndMergeBrand(brand: 'carz' | 'ownerfi' | 'vassdistro') {
 
   const collectionName = getCollectionName('ARTICLES', brand);
 
-  // Step 1: Get ALL unprocessed articles
+  // Step 1: Get unprocessed articles (PERFORMANCE FIX: Added limit)
+  const { limit: firestoreLimit, orderBy } = await import('firebase/firestore');
   const unprocessedQuery = query(
     collection(db!, collectionName),
-    where('processed', '==', false)
+    where('processed', '==', false),
+    orderBy('pubDate', 'desc'), // Process newest first
+    firestoreLimit(100) // Process max 100 articles per run
   );
 
   const snapshot = await getDocs(unprocessedQuery);
@@ -93,6 +96,45 @@ async function rateAndMergeBrand(brand: 'carz' | 'ownerfi' | 'vassdistro') {
   if (needRating.length > 0) {
     console.log(`🤖 [${brand}] Rating ${needRating.length} new articles with OpenAI...`);
 
+    // BUDGET CHECK: Estimate cost before making API calls
+    const { estimateTokens, calculateCost, checkBudget, trackUsage } = await import('@/lib/openai-budget-tracker');
+
+    // Rough estimate: title + content per article
+    const estimatedInputTokens = needRating.reduce((sum: number, article: any) =>
+      sum + estimateTokens(`${article.title}\n${article.content || article.description}`), 0
+    );
+    // Output is typically 50-100 tokens per article
+    const estimatedOutputTokens = needRating.length * 75;
+    const estimatedCost = calculateCost(estimatedInputTokens, estimatedOutputTokens);
+
+    console.log(`💰 [${brand}] Estimated cost: $${estimatedCost.toFixed(4)} (${estimatedInputTokens.toLocaleString()} input + ${estimatedOutputTokens.toLocaleString()} output tokens)`);
+
+    // Check both daily and monthly budgets
+    const dailyCheck = await checkBudget(estimatedCost, 'daily');
+    const monthlyCheck = await checkBudget(estimatedCost, 'monthly');
+
+    if (!dailyCheck.allowed) {
+      console.error(`❌ [${brand}] ${dailyCheck.reason}`);
+      return {
+        newlyRated: 0,
+        totalInQueue: alreadyRated.length,
+        deleted: 0,
+        skipped: needRating.length,
+        reason: 'Daily budget exceeded'
+      };
+    }
+
+    if (!monthlyCheck.allowed) {
+      console.error(`❌ [${brand}] ${monthlyCheck.reason}`);
+      return {
+        newlyRated: 0,
+        totalInQueue: alreadyRated.length,
+        deleted: 0,
+        skipped: needRating.length,
+        reason: 'Monthly budget exceeded'
+      };
+    }
+
     const qualityScores = await evaluateArticlesBatch(
       needRating.map((article: any) => ({
         title: article.title,
@@ -101,6 +143,16 @@ async function rateAndMergeBrand(brand: 'carz' | 'ownerfi' | 'vassdistro') {
       })),
       10 // 10 concurrent API calls for better throughput (optimized)
     );
+
+    // Track actual usage
+    await trackUsage({
+      inputTokens: estimatedInputTokens,
+      outputTokens: estimatedOutputTokens,
+      totalTokens: estimatedInputTokens + estimatedOutputTokens,
+      estimatedCost,
+      model: 'gpt-4o-mini',
+      timestamp: Date.now()
+    });
 
     // Pair new articles with their scores
     newlyRatedArticles = needRating.map((article: any, index) => ({

@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { 
-  collection, 
-  getDocs
+import {
+  collection,
+  getDocs,
+  query,
+  where,
+  orderBy,
+  limit as firestoreLimit
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { expandSearchToNearbyCities, enhancePropertyWithNearbyCities } from '@/lib/property-enhancement';
@@ -43,22 +47,26 @@ export async function GET(request: NextRequest) {
 
     // Get all cities within 30-mile radius
     const searchCities = expandSearchToNearbyCities(city, state, 30);
-    
 
-    // Get all properties and filter in JavaScript (since we need complex city matching)
-    const snapshot = await getDocs(collection(db, 'properties'));
+    // PERFORMANCE FIX: Query only active properties in the same state, ordered by monthlyPayment
+    // This reduces from loading ALL properties (1000s) to only relevant ones (100-200)
+    const propertiesQuery = query(
+      collection(db, 'properties'),
+      where('isActive', '==', true),
+      where('state', '==', state), // Only properties in same state
+      orderBy('monthlyPayment', 'asc'),
+      firestoreLimit(200) // Get more than needed for filtering by city/price/beds/baths
+    );
+
+    const snapshot = await getDocs(propertiesQuery);
     
     const similarProperties = snapshot.docs
       .map(doc => ({ id: doc.id, ...doc.data() } as PropertyListing & { id: string }))
       .filter((property: PropertyListing & { id: string }) => {
         // Exclude the original property
         if (property.id === propertyId) return false;
-        
-        // Must be active
-        if (property.isActive === false) return false;
-        
-        // Must be in same state first
-        if (property.state !== state) return false;
+
+        // isActive and state already filtered in query
         
         // Check if property city is in our nearby cities list
         const propertyCity = property.city?.split(',')[0].trim();

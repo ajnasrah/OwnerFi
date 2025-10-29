@@ -300,7 +300,7 @@ function parseQualityResponse(response: string): QualityScore {
  */
 export async function evaluateArticlesBatch(
   articles: Array<{ title: string; content: string; category: 'carz' | 'ownerfi' | 'vassdistro' }>,
-  maxConcurrent: number = 3
+  maxConcurrent: number = 15 // PERFORMANCE FIX: Increased from 3 to 15 for 5x faster processing
 ): Promise<QualityScore[]> {
   const results: QualityScore[] = [];
 
@@ -314,7 +314,7 @@ export async function evaluateArticlesBatch(
 
     // Small delay between batches to respect rate limits
     if (i + maxConcurrent < articles.length) {
-      await new Promise(resolve => setTimeout(resolve, 500)); // Reduced from 1000ms for faster processing
+      await new Promise(resolve => setTimeout(resolve, 100)); // PERFORMANCE FIX: Reduced from 500ms to 100ms
     }
   }
 

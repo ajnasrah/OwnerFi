@@ -899,6 +899,27 @@ export default function AdminDashboard() {
           ))}
         </nav>
 
+        {/* External Dashboards */}
+        <div className="p-4 space-y-2 border-t border-slate-200">
+          <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider px-4 mb-2">
+            Dashboards
+          </div>
+          <a
+            href="/admin/analytics"
+            className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-left transition-all duration-200 text-slate-700 hover:bg-slate-100 hover:text-slate-900"
+          >
+            <span className="text-lg">📈</span>
+            <span className="font-medium">Analytics</span>
+          </a>
+          <a
+            href="/admin/costs"
+            className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-left transition-all duration-200 text-slate-700 hover:bg-slate-100 hover:text-slate-900"
+          >
+            <span className="text-lg">💰</span>
+            <span className="font-medium">Cost Tracking</span>
+          </a>
+        </div>
+
         {/* User Section */}
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-200 bg-white">
           <div className="flex items-center justify-between">
@@ -1131,6 +1152,40 @@ export default function AdminDashboard() {
                         </p>
                       </div>
                     </button>
+
+                    <a
+                      href="/admin/analytics"
+                      className="relative group bg-gradient-to-br from-blue-50 to-indigo-50 p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-blue-500 rounded-lg hover:from-blue-100 hover:to-indigo-100 transition-colors"
+                    >
+                      <div>
+                        <span className="rounded-lg inline-flex p-3 bg-blue-500 text-white group-hover:bg-blue-600">
+                          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                          </svg>
+                        </span>
+                      </div>
+                      <div className="mt-8">
+                        <h3 className="text-lg font-medium text-gray-900">Analytics Dashboard</h3>
+                        <p className="mt-2 text-sm text-gray-600">View social media performance insights</p>
+                      </div>
+                    </a>
+
+                    <a
+                      href="/admin/costs"
+                      className="relative group bg-gradient-to-br from-green-50 to-emerald-50 p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-green-500 rounded-lg hover:from-green-100 hover:to-emerald-100 transition-colors"
+                    >
+                      <div>
+                        <span className="rounded-lg inline-flex p-3 bg-green-500 text-white group-hover:bg-green-600">
+                          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        </span>
+                      </div>
+                      <div className="mt-8">
+                        <h3 className="text-lg font-medium text-gray-900">Cost Dashboard</h3>
+                        <p className="mt-2 text-sm text-gray-600">Track API costs and budget usage</p>
+                      </div>
+                    </a>
                   </div>
                 </div>
               </div>

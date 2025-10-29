@@ -15,7 +15,7 @@ import { firestoreToBuyerProfile } from '@/lib/view-models';
 // GET - Fetch single buyer profile for admin preview
 export async function GET(
   request: NextRequest,
-  { params }: { params: { buyerId: string } }
+  { params }: { params: Promise<{ buyerId: string }> }
 ) {
   try {
     if (!db) {
@@ -35,7 +35,8 @@ export async function GET(
       );
     }
 
-    const buyerId = params.buyerId;
+    // Await params in Next.js 15+
+    const { buyerId } = await params;
 
     // Get buyer profile
     const profileQuery = query(

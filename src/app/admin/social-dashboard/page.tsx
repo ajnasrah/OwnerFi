@@ -267,6 +267,7 @@ export default function SocialMediaDashboard() {
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [copiedRecId, setCopiedRecId] = useState<string | null>(null);
   const [refreshingAnalytics, setRefreshingAnalytics] = useState(false);
+  const [abdullahQueueStats, setAbdullahQueueStats] = useState<any>(null);
 
   // Auth check
   useEffect(() => {
@@ -298,12 +299,14 @@ export default function SocialMediaDashboard() {
       loadPropertyStats();
       loadGuestProfiles();
       loadAnalytics();
+      loadAbdullahQueueStats();
       const statusInterval = setInterval(loadStatus, 60000); // Refresh every 60 seconds (reduced from 30s)
       const workflowInterval = setInterval(loadWorkflows, 30000); // Refresh every 30 seconds (reduced from 5s for better performance)
       const podcastWorkflowInterval = setInterval(loadPodcastWorkflows, 30000); // Refresh every 30 seconds (reduced from 5s)
       const benefitWorkflowInterval = setInterval(loadBenefitWorkflows, 30000); // Refresh every 30 seconds (reduced from 5s)
       const propertyWorkflowInterval = setInterval(loadPropertyWorkflows, 30000); // Refresh every 30 seconds (reduced from 5s)
       const propertyStatsInterval = setInterval(loadPropertyStats, 60000); // Refresh every 60 seconds (reduced from 30s)
+      const abdullahQueueInterval = setInterval(loadAbdullahQueueStats, 30000); // Refresh every 30 seconds
       const analyticsInterval = setInterval(loadAnalytics, 24 * 60 * 60 * 1000); // Refresh every 24 hours
       return () => {
         clearInterval(statusInterval);
@@ -312,6 +315,7 @@ export default function SocialMediaDashboard() {
         clearInterval(benefitWorkflowInterval);
         clearInterval(propertyWorkflowInterval);
         clearInterval(propertyStatsInterval);
+        clearInterval(abdullahQueueInterval);
         clearInterval(analyticsInterval);
       };
     }
@@ -412,6 +416,18 @@ export default function SocialMediaDashboard() {
       console.error('Failed to load analytics:', error);
     } finally {
       if (manual) setRefreshingAnalytics(false);
+    }
+  };
+
+  const loadAbdullahQueueStats = async () => {
+    try {
+      const response = await fetch('/api/admin/abdullah-queue-stats');
+      const data = await response.json();
+      if (data.success) {
+        setAbdullahQueueStats(data.stats);
+      }
+    } catch (error) {
+      console.error('Failed to load Abdullah queue stats:', error);
     }
   };
 
@@ -1925,7 +1941,84 @@ export default function SocialMediaDashboard() {
                 </button>
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {/* Queue Stats */}
+              <div className="mb-6">
+                <h4 className="text-sm font-semibold text-slate-900 mb-3">Daily Content Queue</h4>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                  <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                    <div className="text-sm text-blue-600 font-medium">Pending</div>
+                    <div className="text-2xl font-bold text-blue-900 mt-1">
+                      {abdullahQueueStats?.queue?.pending || 0}
+                    </div>
+                    <div className="text-xs text-blue-600 mt-1">in queue</div>
+                  </div>
+
+                  <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
+                    <div className="text-sm text-yellow-600 font-medium">Generating</div>
+                    <div className="text-2xl font-bold text-yellow-900 mt-1">
+                      {abdullahQueueStats?.queue?.generating || 0}
+                    </div>
+                    <div className="text-xs text-yellow-600 mt-1">processing now</div>
+                  </div>
+
+                  <div className="bg-green-50 rounded-lg p-4 border border-green-200">
+                    <div className="text-sm text-green-600 font-medium">Today</div>
+                    <div className="text-2xl font-bold text-green-900 mt-1">
+                      {abdullahQueueStats?.queue?.completedToday || 0}
+                    </div>
+                    <div className="text-xs text-green-600 mt-1">completed</div>
+                  </div>
+
+                  <div className="bg-red-50 rounded-lg p-4 border border-red-200">
+                    <div className="text-sm text-red-600 font-medium">Failed</div>
+                    <div className="text-2xl font-bold text-red-900 mt-1">
+                      {abdullahQueueStats?.queue?.failed || 0}
+                    </div>
+                    <div className="text-xs text-red-600 mt-1">need retry</div>
+                  </div>
+
+                  <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
+                    <div className="text-sm text-purple-600 font-medium">Total</div>
+                    <div className="text-2xl font-bold text-purple-900 mt-1">
+                      {abdullahQueueStats?.queue?.total || 0}
+                    </div>
+                    <div className="text-xs text-purple-600 mt-1">all items</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Next Scheduled Items */}
+              {abdullahQueueStats?.nextItems && abdullahQueueStats.nextItems.length > 0 && (
+                <div className="mb-6 pb-6 border-b border-slate-200">
+                  <h4 className="text-sm font-semibold text-slate-900 mb-3">Upcoming Videos</h4>
+                  <div className="space-y-2">
+                    {abdullahQueueStats.nextItems.map((item: any, index: number) => (
+                      <div key={item.id} className="flex items-center justify-between bg-slate-50 rounded-lg p-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-purple-100 text-purple-700 font-bold flex items-center justify-center text-sm">
+                            {index + 1}
+                          </div>
+                          <div>
+                            <div className="font-medium text-slate-900 text-sm">{item.title}</div>
+                            <div className="text-xs text-slate-500 capitalize">{item.theme}</div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-xs text-slate-600">
+                            Generate: {new Date(item.scheduledGenerationTime).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/Chicago' })} CST
+                          </div>
+                          <div className="text-xs text-slate-500">
+                            Post: {new Date(item.scheduledPostTime).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/Chicago' })} CST
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* System Info */}
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
                 <div className="bg-slate-50 rounded-lg p-4">
                   <div className="text-sm text-slate-600">Daily Videos</div>
                   <div className="text-2xl font-bold text-slate-900 mt-1">5</div>
@@ -1935,21 +2028,13 @@ export default function SocialMediaDashboard() {
                 <div className="bg-slate-50 rounded-lg p-4">
                   <div className="text-sm text-slate-600">Content Type</div>
                   <div className="text-sm font-bold text-slate-900 mt-1">AI Generated</div>
-                  <div className="text-xs text-slate-500 mt-1">no RSS needed</div>
-                </div>
-
-                <div className="bg-slate-50 rounded-lg p-4">
-                  <div className="text-sm text-slate-600">In Queue</div>
-                  <div className="text-2xl font-bold text-slate-900 mt-1">
-                    {workflows?.workflows?.abdullah?.filter((w: WorkflowLog) => ['pending', 'heygen_processing', 'submagic_processing', 'posting'].includes(w.status)).length || 0}
-                  </div>
-                  <div className="text-xs text-slate-500 mt-1">processing</div>
+                  <div className="text-xs text-slate-500 mt-1">queue system</div>
                 </div>
 
                 <div className="bg-slate-50 rounded-lg p-4">
                   <div className="text-sm text-slate-600">Schedule</div>
-                  <div className="text-sm font-bold text-slate-900 mt-1">6 AM CST</div>
-                  <div className="text-xs text-slate-500 mt-1">daily automation</div>
+                  <div className="text-sm font-bold text-slate-900 mt-1">11 AM CST</div>
+                  <div className="text-xs text-slate-500 mt-1">daily scripts</div>
                 </div>
               </div>
 

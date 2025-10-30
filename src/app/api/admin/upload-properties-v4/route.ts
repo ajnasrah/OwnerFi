@@ -552,29 +552,7 @@ function mapRowToProperty(
     imageUrl = `https://maps.googleapis.com/maps/api/streetview?size=800x600&location=${encodeURIComponent(fullAddress)}&key=${process.env.GOOGLE_MAPS_API_KEY}`;
   }
 
-  // Calculate balloon payment if balloon years is provided
-  let balloonPaymentAmount: number | undefined = undefined;
-  if (balloonYears && balloonYears > 0 && price > 0) {
-    // Calculate remaining loan balance after balloon years
-    const effectiveInterestRate = interestRate || 6;
-    const effectiveDownPayment = downPaymentAmount || (price * 0.10);
-    const loanAmount = price - effectiveDownPayment;
-    const monthlyRate = effectiveInterestRate / 100 / 12;
-    const totalTermMonths = 20 * 12; // Assume 20 year amortization
-    const balloonMonths = balloonYears * 12;
-
-    if (monthlyRate > 0) {
-      // Calculate remaining balance after balloon years of payments
-      const principalPaid = loanAmount *
-        (Math.pow(1 + monthlyRate, balloonMonths) - 1) /
-        (Math.pow(1 + monthlyRate, totalTermMonths) - 1);
-      balloonPaymentAmount = Math.round(loanAmount - principalPaid);
-    } else {
-      // No interest case
-      const principalPerMonth = loanAmount / totalTermMonths;
-      balloonPaymentAmount = Math.round(loanAmount - (principalPerMonth * balloonMonths));
-    }
-  }
+  // No balloon payment calculation - just store years until refinance
 
   // Determine property type
   const homeType = getColumnValue(row, ['homeType', 'Home Type', 'propertyType']).toLowerCase();
@@ -606,7 +584,7 @@ function mapRowToProperty(
       interestRate,
       termYears: 20,
       balloonYears: balloonYears > 0 ? balloonYears : null,
-      balloonPayment: balloonPaymentAmount,
+      balloonPayment: null, // No longer calculated - just store years until refinance
       imageUrl,
       source: 'import',
       status: 'active',

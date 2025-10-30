@@ -38,8 +38,8 @@ export interface PropertyListing {
   monthlyPayment: number;              // Monthly payment amount
   interestRate: number;                // Owner financing interest rate
   termYears: number;                   // Financing term in years
-  balloonPayment?: number;             // Balloon payment amount (if applicable)
-  balloonYears?: number;               // Years until balloon payment due
+  balloonPayment?: number;             // DEPRECATED: No longer calculated. Use balloonYears instead.
+  balloonYears?: number;               // Years until refinance required (balloon period)
   
   // Property Features
   features?: string[];                 // Array of features ['hardwood floors', 'updated kitchen', 'pool']

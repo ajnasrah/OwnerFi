@@ -504,23 +504,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Calculate balloon payment ONLY if we have balloon years AND interest rate
-    let balloonPaymentAmount: number | null = null;
+    // Parse balloon years (years until refinance) - no calculation needed
     const balloonYears = parseNumberField(payload.balloon);
-    if (balloonYears > 0 && price > 0 && interestRate > 0 && downPaymentAmount >= 0) {
-      const loanAmount = price - downPaymentAmount;
-      const monthlyRate = interestRate / 100 / 12;
-      const totalTermMonths = termYears * 12;
-      const balloonMonths = balloonYears * 12;
-
-      if (monthlyRate > 0 && loanAmount > 0 && balloonMonths < totalTermMonths) {
-        // Calculate remaining balance after balloon years of payments
-        const principalPaid = loanAmount *
-          (Math.pow(1 + monthlyRate, balloonMonths) - 1) /
-          (Math.pow(1 + monthlyRate, totalTermMonths) - 1);
-        balloonPaymentAmount = Math.round(loanAmount - principalPaid);
-      }
-    }
 
     // Generate image URL if not provided
     let imageUrl = payload.imageLink || '';
@@ -584,7 +569,7 @@ export async function POST(request: NextRequest) {
       interestRate,
       termYears,
       balloonYears: balloonYears > 0 ? balloonYears : null,
-      balloonPayment: balloonPaymentAmount,
+      balloonPayment: null, // No longer calculated - just store years until refinance
 
       // Images
       imageUrls: imageUrl ? [imageUrl] : [],

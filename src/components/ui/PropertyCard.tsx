@@ -396,18 +396,18 @@ export function PropertyCard({ property, onLike, onPass, isFavorited, style }: P
                     </div>
                   </div>
 
-                  {/* Balloon Payment Warning */}
-                  {property.balloonPayment && (
-                    <div className="bg-orange-50 border-2 border-orange-200 rounded-2xl p-4">
-                      <h3 className="font-bold text-orange-900 mb-2 flex items-center gap-2">
-                        <span>⚠️</span>
-                        <span>Est. Balloon Payment</span>
+                  {/* Refinance Timeline */}
+                  {property.balloonYears && property.balloonYears > 0 && (
+                    <div className="bg-blue-50 border-2 border-blue-200 rounded-2xl p-4">
+                      <h3 className="font-bold text-blue-900 mb-2 flex items-center gap-2">
+                        <span>📅</span>
+                        <span>Refinance Timeline</span>
                       </h3>
-                      <p className="text-sm text-orange-800 mb-2">
-                        Approximately <strong>est. ${property.balloonPayment.toLocaleString()}</strong> due after {property.balloonYears} years
+                      <p className="text-sm text-blue-800 mb-2">
+                        Plan to refinance after <strong>{property.balloonYears} {property.balloonYears === 1 ? 'year' : 'years'}</strong>
                       </p>
-                      <p className="text-xs text-orange-700 bg-orange-100 rounded-lg p-2">
-                        💡 <strong>Note:</strong> You can refinance this balloon payment with a traditional mortgage or negotiate new terms before it's due. This gives you flexibility to manage the remaining balance.
+                      <p className="text-xs text-blue-700 bg-blue-100 rounded-lg p-2">
+                        💡 <strong>Note:</strong> You'll need to refinance with a traditional mortgage or negotiate new terms with the seller after {property.balloonYears} {property.balloonYears === 1 ? 'year' : 'years'}. This gives you time to improve your credit and build equity.
                       </p>
                     </div>
                   )}

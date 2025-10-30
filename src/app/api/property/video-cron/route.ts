@@ -37,7 +37,8 @@ export async function GET(request: NextRequest) {
       getNextPropertyFromRotation,
       markPropertyCompleted,
       resetPropertyQueueCycle,
-      getPropertyRotationStats
+      getPropertyRotationStats,
+      addToPropertyRotationQueue
     } = await import('@/lib/feed-store-firestore');
 
     // Get queue stats
@@ -63,12 +64,75 @@ export async function GET(request: NextRequest) {
         // Try again after reset
         queueItem = await getNextPropertyFromRotation();
       } else {
-        console.log('⚠️  Queue is empty - run populate endpoint first');
-        return NextResponse.json({
-          success: true,
-          message: 'Queue empty - populate via /api/property/populate-queue',
-          generated: 0
-        });
+        // Queue is truly empty - auto-populate with active properties
+        console.log('⚠️  Queue is empty! Auto-populating with active properties...');
+
+        try {
+          const { db } = await import('@/lib/firebase');
+          const { collection, query, where, getDocs } = await import('firebase/firestore');
+
+          if (!db) {
+            console.error('❌ Firebase not initialized');
+            return NextResponse.json({
+              success: false,
+              error: 'Firebase not initialized',
+              generated: 0
+            }, { status: 500 });
+          }
+
+          // Get all active properties with images
+          const propertiesQuery = query(
+            collection(db, 'properties'),
+            where('status', '==', 'active'),
+            where('isActive', '==', true)
+          );
+
+          const snapshot = await getDocs(propertiesQuery);
+          console.log(`   Found ${snapshot.size} active properties`);
+
+          // Filter to properties with images only
+          const eligibleProperties = snapshot.docs.filter(doc => {
+            const property = doc.data();
+            return property.imageUrls && property.imageUrls.length > 0;
+          });
+
+          console.log(`   ${eligibleProperties.length} have images`);
+
+          // Add to rotation queue
+          let added = 0;
+          for (const docSnap of eligibleProperties) {
+            try {
+              await addToPropertyRotationQueue(docSnap.id);
+              added++;
+            } catch (error) {
+              // Skip if already in queue (shouldn't happen since queue was empty)
+              if (!(error instanceof Error && error.message.includes('already in rotation queue'))) {
+                console.error(`   Error adding ${docSnap.data().address}:`, error);
+              }
+            }
+          }
+
+          console.log(`✅ Auto-populated queue with ${added} properties`);
+
+          if (added > 0) {
+            // Try to get next property after population
+            queueItem = await getNextPropertyFromRotation();
+          } else {
+            return NextResponse.json({
+              success: false,
+              error: 'No eligible properties found to populate queue',
+              generated: 0
+            });
+          }
+
+        } catch (error) {
+          console.error('❌ Error auto-populating queue:', error);
+          return NextResponse.json({
+            success: false,
+            error: error instanceof Error ? error.message : 'Failed to auto-populate queue',
+            generated: 0
+          }, { status: 500 });
+        }
       }
     }
 

@@ -207,9 +207,9 @@ export const costs = {
   // Cost per unit (for estimation)
   costPerUnit: {
     heygenCredit: 0.50, // $330 / 660 credits = $0.50 per credit
-    submagicCredit: 0.25, // $150 / 600 credits = $0.25 per credit
-    openaiGpt4oMiniInput: 0.00015, // $0.15 per 1M input tokens
-    openaiGpt4oMiniOutput: 0.0006, // $0.60 per 1M output tokens
+    submagicCredit: 1.27, // $19 / 15 videos = $1.27 per video (Starter plan)
+    openaiGpt4oMiniInput: 0.15, // $0.15 per 1M input tokens
+    openaiGpt4oMiniOutput: 0.60, // $0.60 per 1M output tokens
     latePost: 0, // Unlimited at $50/month
     r2StoragePerGB: 0.015, // $0.015 per GB/month
   },

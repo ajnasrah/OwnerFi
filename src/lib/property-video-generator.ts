@@ -530,12 +530,12 @@ Generate TITLE_30, SCRIPT_30, CAPTION_30, TITLE_15, SCRIPT_15, and CAPTION_15 fo
 function parsePropertyResponse(content: string, property: PropertyListing): DualPropertyVideoScripts {
   // Extract 30-second variant
   const title30Match = content.match(/TITLE_30:\s*(.+)/i);
-  const script30Match = content.match(/SCRIPT_30:\s*"?([^"]+)"?\s*(?=CAPTION_30|TITLE_15|$)/is);
-  const caption30Match = content.match(/CAPTION_30:\s*(.+?)(?=TITLE_15|SCRIPT_15|$)/is);
+  const script30Match = content.match(/SCRIPT_30:\s*(.+?)(?=\n\s*CAPTION_30|TITLE_15|$)/is);
+  const caption30Match = content.match(/CAPTION_30:\s*(.+?)(?=\n\s*TITLE_15|SCRIPT_15|$)/is);
 
   // Extract 15-second variant
   const title15Match = content.match(/TITLE_15:\s*(.+)/i);
-  const script15Match = content.match(/SCRIPT_15:\s*"?([^"]+)"?\s*(?=CAPTION_15|$)/is);
+  const script15Match = content.match(/SCRIPT_15:\s*(.+?)(?=\n\s*CAPTION_15|$)/is);
   const caption15Match = content.match(/CAPTION_15:\s*(.+?)$/is);
 
   const variant_30: PropertyVideoScript = {

@@ -21,36 +21,36 @@ if (getApps().length === 0) {
 
 const db = getFirestore();
 
-// AGGRESSIVE scaling - use max scale and NEGATIVE offset to move UP
+// Balanced scaling - fill frame but show faces
 const guestConfigs = {
   doctor: {
-    scale: 4.5,
-    offset: { x: 0, y: -0.3 }  // Move UP significantly
+    scale: 3.2,
+    offset: { x: 0, y: -0.1 }
   },
   real_estate_agent: {
-    scale: 4.5,
-    offset: { x: 0, y: -0.3 }  // Move UP significantly
+    scale: 3.2,
+    offset: { x: 0, y: -0.1 }
   },
   car_salesman: {
-    scale: 4.5,
-    offset: { x: 0, y: -0.3 }  // Move UP significantly
+    scale: 3.2,
+    offset: { x: 0, y: -0.1 }
   },
   financial_advisor: {
-    scale: 4.5,
-    offset: { x: 0, y: -0.3 }  // Move UP significantly
+    scale: 3.2,
+    offset: { x: 0, y: -0.1 }
   },
   tech_expert: {
-    scale: 3.5,  // Standing avatar
-    offset: { x: 0, y: -0.2 }  // Move UP
+    scale: 2.5,  // Standing avatar needs less
+    offset: { x: 0, y: -0.05 }
   },
   fitness_trainer: {
-    scale: 4.5,
-    offset: { x: 0, y: -0.3 }  // Move UP significantly
+    scale: 3.2,
+    offset: { x: 0, y: -0.1 }
   }
 };
 
 async function applyAggressiveScaling() {
-  console.log('🚀 Applying AGGRESSIVE scaling to fill frame completely...\n');
+  console.log('🎯 Applying balanced scaling (3.2) to fill frame and show faces...\n');
 
   for (const [guestId, config] of Object.entries(guestConfigs)) {
     await db.collection('podcast_guest_profiles').doc(guestId).update({
@@ -63,7 +63,7 @@ async function applyAggressiveScaling() {
     console.log(`✅ ${guestId}: scale ${config.scale}, offset (${config.offset.x}, ${config.offset.y})`);
   }
 
-  console.log('\n✅ All guests set to MAXIMUM scale (4.5) to eliminate black bars');
+  console.log('\n✅ All guests set to balanced scale (3.2) - fills frame while showing faces');
 }
 
 applyAggressiveScaling().then(() => process.exit(0)).catch(err => {

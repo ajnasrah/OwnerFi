@@ -15,10 +15,32 @@
  * - Historical cost analytics
  */
 
-import { db } from './firebase';
-import { doc, getDoc, setDoc, updateDoc, increment, Timestamp, collection, query, where, getDocs, orderBy, limit as firestoreLimit } from 'firebase/firestore';
+import * as admin from 'firebase-admin';
 import { costs, monitoring, features } from './env-config';
 import { Brand } from '@/config/constants';
+
+// Initialize Firebase Admin SDK if not already initialized
+function getFirestore() {
+  if (admin.apps.length === 0) {
+    const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID;
+    const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+    const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+
+    if (!projectId || !clientEmail || !privateKey) {
+      throw new Error('Firebase Admin credentials not configured for cost tracking');
+    }
+
+    admin.initializeApp({
+      credential: admin.credential.cert({
+        projectId,
+        clientEmail,
+        privateKey,
+      }),
+    });
+  }
+
+  return admin.firestore();
+}
 
 // ============================================================================
 // Types & Interfaces
@@ -148,6 +170,8 @@ export async function trackCost(
   metadata?: Record<string, any>
 ): Promise<void> {
   try {
+    const db = getFirestore();
+
     const costEntry: CostEntry = {
       id: `${brand}_${service}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       timestamp: Date.now(),
@@ -161,7 +185,7 @@ export async function trackCost(
     };
 
     // Save individual cost entry
-    await setDoc(doc(db, 'cost_entries', costEntry.id), costEntry);
+    await db.collection('cost_entries').doc(costEntry.id).set(costEntry);
 
     // Update daily aggregates
     await updateDailyCosts(brand, service, units, costUSD);
@@ -186,14 +210,15 @@ async function updateDailyCosts(
   units: number,
   costUSD: number
 ): Promise<void> {
+  const db = getFirestore();
   const date = getTodayDate();
   const docId = `${brand}_${date}`;
-  const docRef = doc(db, 'daily_costs', docId);
+  const docRef = db.collection('daily_costs').doc(docId);
 
   try {
-    const docSnap = await getDoc(docRef);
+    const docSnap = await docRef.get();
 
-    if (!docSnap.exists()) {
+    if (!docSnap.exists) {
       // Create new daily document
       const dailyCosts: DailyCosts = {
         date,
@@ -211,13 +236,14 @@ async function updateDailyCosts(
       dailyCosts[service] = { units, costUSD };
       dailyCosts.total = costUSD;
 
-      await setDoc(docRef, dailyCosts);
+      await docRef.set(dailyCosts);
     } else {
-      // Update existing daily document
-      await updateDoc(docRef, {
-        [`${service}.units`]: increment(units),
-        [`${service}.costUSD`]: increment(costUSD),
-        total: increment(costUSD),
+      // Update existing daily document using FieldValue.increment
+      const FieldValue = admin.firestore.FieldValue;
+      await docRef.update({
+        [`${service}.units`]: FieldValue.increment(units),
+        [`${service}.costUSD`]: FieldValue.increment(costUSD),
+        total: FieldValue.increment(costUSD),
         updatedAt: Date.now(),
       });
     }
@@ -235,14 +261,15 @@ async function updateMonthlyCosts(
   units: number,
   costUSD: number
 ): Promise<void> {
+  const db = getFirestore();
   const month = getCurrentMonth();
   const docId = `${brand}_${month}`;
-  const docRef = doc(db, 'monthly_costs', docId);
+  const docRef = db.collection('monthly_costs').doc(docId);
 
   try {
-    const docSnap = await getDoc(docRef);
+    const docSnap = await docRef.get();
 
-    if (!docSnap.exists()) {
+    if (!docSnap.exists) {
       // Create new monthly document
       const monthlyCosts: MonthlyCosts = {
         month,
@@ -260,13 +287,14 @@ async function updateMonthlyCosts(
       monthlyCosts[service] = { units, costUSD };
       monthlyCosts.total = costUSD;
 
-      await setDoc(docRef, monthlyCosts);
+      await docRef.set(monthlyCosts);
     } else {
-      // Update existing monthly document
-      await updateDoc(docRef, {
-        [`${service}.units`]: increment(units),
-        [`${service}.costUSD`]: increment(costUSD),
-        total: increment(costUSD),
+      // Update existing monthly document using FieldValue.increment
+      const FieldValue = admin.firestore.FieldValue;
+      await docRef.update({
+        [`${service}.units`]: FieldValue.increment(units),
+        [`${service}.costUSD`]: FieldValue.increment(costUSD),
+        total: FieldValue.increment(costUSD),
         updatedAt: Date.now(),
       });
     }
@@ -283,12 +311,13 @@ async function updateMonthlyCosts(
  * Get daily costs for a specific brand and service
  */
 export async function getDailyCosts(brand: Brand, date?: string): Promise<DailyCosts | null> {
+  const db = getFirestore();
   const targetDate = date || getTodayDate();
   const docId = `${brand}_${targetDate}`;
 
   try {
-    const docSnap = await getDoc(doc(db, 'daily_costs', docId));
-    return docSnap.exists() ? (docSnap.data() as DailyCosts) : null;
+    const docSnap = await db.collection('daily_costs').doc(docId).get();
+    return docSnap.exists ? (docSnap.data() as DailyCosts) : null;
   } catch (error) {
     console.error('❌ Error getting daily costs:', error);
     return null;
@@ -299,12 +328,13 @@ export async function getDailyCosts(brand: Brand, date?: string): Promise<DailyC
  * Get monthly costs for a specific brand
  */
 export async function getMonthlyCosts(brand: Brand, month?: string): Promise<MonthlyCosts | null> {
+  const db = getFirestore();
   const targetMonth = month || getCurrentMonth();
   const docId = `${brand}_${targetMonth}`;
 
   try {
-    const docSnap = await getDoc(doc(db, 'monthly_costs', docId));
-    return docSnap.exists() ? (docSnap.data() as MonthlyCosts) : null;
+    const docSnap = await db.collection('monthly_costs').doc(docId).get();
+    return docSnap.exists ? (docSnap.data() as MonthlyCosts) : null;
   } catch (error) {
     console.error('❌ Error getting monthly costs:', error);
     return null;
@@ -315,15 +345,14 @@ export async function getMonthlyCosts(brand: Brand, month?: string): Promise<Mon
  * Get total daily costs across all brands
  */
 export async function getTotalDailyCosts(date?: string): Promise<{ [brand: string]: DailyCosts }> {
+  const db = getFirestore();
   const targetDate = date || getTodayDate();
 
   try {
-    const q = query(
-      collection(db, 'daily_costs'),
-      where('date', '==', targetDate)
-    );
+    const snapshot = await db.collection('daily_costs')
+      .where('date', '==', targetDate)
+      .get();
 
-    const snapshot = await getDocs(q);
     const costs: { [brand: string]: DailyCosts } = {};
 
     snapshot.forEach((doc) => {
@@ -342,15 +371,14 @@ export async function getTotalDailyCosts(date?: string): Promise<{ [brand: strin
  * Get total monthly costs across all brands
  */
 export async function getTotalMonthlyCosts(month?: string): Promise<{ [brand: string]: MonthlyCosts }> {
+  const db = getFirestore();
   const targetMonth = month || getCurrentMonth();
 
   try {
-    const q = query(
-      collection(db, 'monthly_costs'),
-      where('month', '==', targetMonth)
-    );
+    const snapshot = await db.collection('monthly_costs')
+      .where('month', '==', targetMonth)
+      .get();
 
-    const snapshot = await getDocs(q);
     const costs: { [brand: string]: MonthlyCosts } = {};
 
     snapshot.forEach((doc) => {
@@ -540,16 +568,16 @@ export async function getCostHistory(
   startDate: string,
   endDate: string
 ): Promise<DailyCosts[]> {
-  try {
-    const q = query(
-      collection(db, 'daily_costs'),
-      where('brand', '==', brand),
-      where('date', '>=', startDate),
-      where('date', '<=', endDate),
-      orderBy('date', 'desc')
-    );
+  const db = getFirestore();
 
-    const snapshot = await getDocs(q);
+  try {
+    const snapshot = await db.collection('daily_costs')
+      .where('brand', '==', brand)
+      .where('date', '>=', startDate)
+      .where('date', '<=', endDate)
+      .orderBy('date', 'desc')
+      .get();
+
     return snapshot.docs.map((doc) => doc.data() as DailyCosts);
   } catch (error) {
     console.error('❌ Error getting cost history:', error);
@@ -561,14 +589,14 @@ export async function getCostHistory(
  * Get recent cost entries for audit trail
  */
 export async function getRecentCostEntries(limitCount: number = 100): Promise<CostEntry[]> {
-  try {
-    const q = query(
-      collection(db, 'cost_entries'),
-      orderBy('timestamp', 'desc'),
-      firestoreLimit(limitCount)
-    );
+  const db = getFirestore();
 
-    const snapshot = await getDocs(q);
+  try {
+    const snapshot = await db.collection('cost_entries')
+      .orderBy('timestamp', 'desc')
+      .limit(limitCount)
+      .get();
+
     return snapshot.docs.map((doc) => doc.data() as CostEntry);
   } catch (error) {
     console.error('❌ Error getting recent cost entries:', error);

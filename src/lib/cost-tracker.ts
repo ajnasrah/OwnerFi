@@ -22,11 +22,22 @@ import admin from 'firebase-admin';
 
 // Get Firestore instance using the existing Firebase Admin setup
 async function getFirestore() {
-  const db = await getAdminDb();
-  if (!db) {
-    throw new Error('Firebase Admin not initialized for cost tracking');
+  console.log(`🔍 [COST DEBUG] getFirestore called`);
+  try {
+    const db = await getAdminDb();
+    console.log(`🔍 [COST DEBUG] getAdminDb returned:`, db ? 'object' : 'null/undefined');
+
+    if (!db) {
+      console.error('❌ [COST DEBUG] Firebase Admin not initialized - db is null!');
+      throw new Error('Firebase Admin not initialized for cost tracking');
+    }
+
+    console.log(`🔍 [COST DEBUG] Returning Firestore instance`);
+    return db as FirebaseFirestore.Firestore;
+  } catch (error) {
+    console.error('❌ [COST DEBUG] Error in getFirestore:', error);
+    throw error;
   }
-  return db as FirebaseFirestore.Firestore;
 }
 
 // ============================================================================
@@ -156,8 +167,12 @@ export async function trackCost(
   workflowId?: string,
   metadata?: Record<string, any>
 ): Promise<void> {
+  console.log(`🔍 [COST DEBUG] trackCost called: ${brand} - ${service} - $${costUSD.toFixed(4)}`);
+
   try {
+    console.log(`🔍 [COST DEBUG] Getting Firestore instance...`);
     const db = await getFirestore();
+    console.log(`🔍 [COST DEBUG] Firestore instance obtained:`, db ? 'SUCCESS' : 'NULL');
 
     const costEntry: CostEntry = {
       id: `${brand}_${service}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -171,19 +186,27 @@ export async function trackCost(
       metadata,
     };
 
+    console.log(`🔍 [COST DEBUG] Writing cost entry with ID: ${costEntry.id}`);
+
     // Save individual cost entry
     await db.collection('cost_entries').doc(costEntry.id).set(costEntry);
+    console.log(`🔍 [COST DEBUG] Cost entry written successfully`);
 
     // Update daily aggregates
+    console.log(`🔍 [COST DEBUG] Updating daily costs...`);
     await updateDailyCosts(brand, service, units, costUSD);
+    console.log(`🔍 [COST DEBUG] Daily costs updated`);
 
     // Update monthly aggregates
+    console.log(`🔍 [COST DEBUG] Updating monthly costs...`);
     await updateMonthlyCosts(brand, service, units, costUSD);
+    console.log(`🔍 [COST DEBUG] Monthly costs updated`);
 
     console.log(`💰 [COST] ${brand} - ${service}: $${costUSD.toFixed(4)} (${units} units)`);
 
   } catch (error) {
-    console.error('❌ Error tracking cost:', error);
+    console.error('❌ [COST DEBUG] Error tracking cost:', error);
+    console.error('❌ [COST DEBUG] Error details:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
     // Don't throw - cost tracking failure shouldn't break workflows
   }
 }

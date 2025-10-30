@@ -1,8 +1,9 @@
-export const dynamic = "force-dynamic";
 'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+
+export const dynamic = "force-dynamic";
 import Link from 'next/link';
 
 interface ActiveSubscription {

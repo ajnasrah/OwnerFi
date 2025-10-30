@@ -1,8 +1,9 @@
-export const dynamic = "force-dynamic";
 'use client';
 
 import React, { useState } from 'react';
 import HeyGenAvatarSelector from '@/components/ui/HeyGenAvatarSelector';
+
+export const dynamic = "force-dynamic";
 
 export default function HeyGenAvatarsPage() {
   const [selectedAvatar, setSelectedAvatar] = useState<{ id: string; name: string } | null>(null);

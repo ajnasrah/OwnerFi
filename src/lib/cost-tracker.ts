@@ -15,31 +15,18 @@
  * - Historical cost analytics
  */
 
-import * as admin from 'firebase-admin';
+import { getAdminDb } from './firebase-admin';
 import { costs, monitoring, features } from './env-config';
 import { Brand } from '@/config/constants';
+import admin from 'firebase-admin';
 
-// Initialize Firebase Admin SDK if not already initialized
-function getFirestore() {
-  if (admin.apps.length === 0) {
-    const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID;
-    const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-    const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
-
-    if (!projectId || !clientEmail || !privateKey) {
-      throw new Error('Firebase Admin credentials not configured for cost tracking');
-    }
-
-    admin.initializeApp({
-      credential: admin.credential.cert({
-        projectId,
-        clientEmail,
-        privateKey,
-      }),
-    });
+// Get Firestore instance using the existing Firebase Admin setup
+async function getFirestore() {
+  const db = await getAdminDb();
+  if (!db) {
+    throw new Error('Firebase Admin not initialized for cost tracking');
   }
-
-  return admin.firestore();
+  return db as FirebaseFirestore.Firestore;
 }
 
 // ============================================================================
@@ -170,7 +157,7 @@ export async function trackCost(
   metadata?: Record<string, any>
 ): Promise<void> {
   try {
-    const db = getFirestore();
+    const db = await getFirestore();
 
     const costEntry: CostEntry = {
       id: `${brand}_${service}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -210,7 +197,7 @@ async function updateDailyCosts(
   units: number,
   costUSD: number
 ): Promise<void> {
-  const db = getFirestore();
+  const db = await getFirestore();
   const date = getTodayDate();
   const docId = `${brand}_${date}`;
   const docRef = db.collection('daily_costs').doc(docId);
@@ -261,7 +248,7 @@ async function updateMonthlyCosts(
   units: number,
   costUSD: number
 ): Promise<void> {
-  const db = getFirestore();
+  const db = await getFirestore();
   const month = getCurrentMonth();
   const docId = `${brand}_${month}`;
   const docRef = db.collection('monthly_costs').doc(docId);
@@ -311,7 +298,7 @@ async function updateMonthlyCosts(
  * Get daily costs for a specific brand and service
  */
 export async function getDailyCosts(brand: Brand, date?: string): Promise<DailyCosts | null> {
-  const db = getFirestore();
+  const db = await getFirestore();
   const targetDate = date || getTodayDate();
   const docId = `${brand}_${targetDate}`;
 
@@ -328,7 +315,7 @@ export async function getDailyCosts(brand: Brand, date?: string): Promise<DailyC
  * Get monthly costs for a specific brand
  */
 export async function getMonthlyCosts(brand: Brand, month?: string): Promise<MonthlyCosts | null> {
-  const db = getFirestore();
+  const db = await getFirestore();
   const targetMonth = month || getCurrentMonth();
   const docId = `${brand}_${targetMonth}`;
 
@@ -345,7 +332,7 @@ export async function getMonthlyCosts(brand: Brand, month?: string): Promise<Mon
  * Get total daily costs across all brands
  */
 export async function getTotalDailyCosts(date?: string): Promise<{ [brand: string]: DailyCosts }> {
-  const db = getFirestore();
+  const db = await getFirestore();
   const targetDate = date || getTodayDate();
 
   try {
@@ -371,7 +358,7 @@ export async function getTotalDailyCosts(date?: string): Promise<{ [brand: strin
  * Get total monthly costs across all brands
  */
 export async function getTotalMonthlyCosts(month?: string): Promise<{ [brand: string]: MonthlyCosts }> {
-  const db = getFirestore();
+  const db = await getFirestore();
   const targetMonth = month || getCurrentMonth();
 
   try {
@@ -568,7 +555,7 @@ export async function getCostHistory(
   startDate: string,
   endDate: string
 ): Promise<DailyCosts[]> {
-  const db = getFirestore();
+  const db = await getFirestore();
 
   try {
     const snapshot = await db.collection('daily_costs')
@@ -589,7 +576,7 @@ export async function getCostHistory(
  * Get recent cost entries for audit trail
  */
 export async function getRecentCostEntries(limitCount: number = 100): Promise<CostEntry[]> {
-  const db = getFirestore();
+  const db = await getFirestore();
 
   try {
     const snapshot = await db.collection('cost_entries')

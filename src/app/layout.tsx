@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
+import { Suspense } from "react";
 import "./globals.css";
 import { Providers } from './providers';
 import AnalyticsScripts from '@/components/analytics/AnalyticsScripts';
@@ -101,7 +102,9 @@ export default function RootLayout({
         <AnalyticsScripts />
         <Providers>
           <AnalyticsProvider>
-            {children}
+            <Suspense fallback={<div>Loading...</div>}>
+              {children}
+            </Suspense>
           </AnalyticsProvider>
         </Providers>
         {process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY && (

@@ -197,8 +197,8 @@ export default function Chatbot({ isOpen, onClose }: ChatbotProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-      <div className="bg-white border border-slate-200 rounded-3xl shadow-2xl w-full max-w-sm mx-4 h-[650px] flex flex-col overflow-hidden">
+    <div className="fixed bottom-20 right-4 z-[9998] w-[360px] h-[480px]">
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-2xl w-full h-full flex flex-col overflow-hidden">
         {/* Phone-style Header */}
         <div className="bg-slate-50 px-4 py-3 border-b border-slate-200">
           <div className="flex items-center justify-between">

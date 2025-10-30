@@ -6,6 +6,7 @@ import { scheduleVideoPost } from '@/lib/late-api'; // Switched from Metricool t
 import { circuitBreakers, fetchWithTimeout, TIMEOUTS } from '@/lib/api-utils';
 import { CompleteWorkflowRequestSchema, safeParse } from '@/lib/validation-schemas';
 import { ERROR_MESSAGES } from '@/config/constants';
+import { generateCaptionAndComment } from '@/lib/caption-intelligence';
 
 const HEYGEN_API_KEY = process.env.HEYGEN_API_KEY;
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
@@ -84,10 +85,29 @@ export async function POST(request: NextRequest) {
       console.log(`📋 Added to workflow queue: ${workflowId}`);
     }
 
-    // Step 2: Generate viral script + caption with OpenAI
-    console.log('🤖 Step 2: Generating viral script and caption...');
-    const content = await generateViralContent(article.content, brand);
-    console.log(`✅ Generated: ${content.script.substring(0, 50)}...`);
+    // Step 2: Generate viral script with OpenAI
+    console.log('🤖 Step 2: Generating viral script...');
+    const scriptContent = await generateViralContent(article.content, brand);
+    console.log(`✅ Generated script: ${scriptContent.script.substring(0, 50)}...`);
+
+    // Step 2b: Generate optimized caption + first comment using data-backed formula
+    console.log('📝 Step 2b: Generating optimized caption and first comment...');
+    const captionData = await generateCaptionAndComment({
+      topic: article.title,
+      brand: brand as 'ownerfi' | 'carz' | 'podcast' | 'property' | 'vassdistro' | 'benefit',
+      script: scriptContent.script,
+      platform: 'both' // Works for both YouTube and Instagram
+    });
+    console.log(`✅ Caption (${captionData.metadata.captionLength} chars): ${captionData.caption.substring(0, 80)}...`);
+    console.log(`✅ First comment: ${captionData.firstComment.substring(0, 80)}...`);
+
+    // Combine with script
+    const content = {
+      script: scriptContent.script,
+      title: scriptContent.title,
+      caption: captionData.caption,
+      firstComment: captionData.firstComment
+    };
 
     // Step 3: Generate HeyGen video
     console.log('🎥 Step 3: Creating HeyGen video...');
@@ -819,7 +839,7 @@ async function waitForHeyGenAndProcess(
   videoId: string,
   workflowId: string,
   brand: 'carz' | 'ownerfi',
-  content: { script: string; title: string; caption: string },
+  content: { script: string; title: string; caption: string; firstComment?: string },
   platforms: any[],
   schedule: string
 ): Promise<string | null> {
@@ -893,7 +913,7 @@ async function waitForHeyGenAndProcess(
             const { uploadSubmagicVideo } = await import('@/lib/video-storage');
             const publicVideoUrl = await uploadSubmagicVideo(videoUrl);
 
-            // Post to Late
+            // Post to Late with optimized caption + first comment
             await updateWorkflowStatus(workflowId, brand, { status: 'posting' });
 
             const postResult = await scheduleVideoPost(
@@ -901,8 +921,9 @@ async function waitForHeyGenAndProcess(
               content.caption,
               content.title,
               platforms,
-              schedule,
-              brand
+              schedule as 'immediate' | '1hour' | '2hours' | '4hours' | 'optimal',
+              brand,
+              content.firstComment // Include first comment for engagement boost
             );
 
             if (postResult.success) {

@@ -28,6 +28,7 @@ export interface LatePostRequest {
   };
   useQueue?: boolean; // If true, automatically get next queue slot and mark as queued
   timezone?: string; // Timezone for scheduling (used with queue)
+  firstComment?: string; // First comment to auto-post (boosts engagement + adds extra hashtags)
 }
 
 export interface LatePostResponse {
@@ -332,6 +333,11 @@ export async function postToLate(request: LatePostRequest): Promise<LatePostResp
             ]
           };
 
+          // Add first comment if provided (boosts engagement + extra hashtags)
+          if (request.firstComment) {
+            requestBody.firstComment = request.firstComment;
+          }
+
           // Add scheduling
           if (scheduleTime) {
             requestBody.scheduledFor = scheduleTime;
@@ -596,7 +602,8 @@ export async function scheduleVideoPost(
   title: string,
   platforms: ('instagram' | 'tiktok' | 'youtube' | 'facebook' | 'linkedin' | 'threads' | 'twitter')[] | any[],
   delay: 'immediate' | '1hour' | '2hours' | '4hours' | 'optimal' = 'immediate',
-  brand: 'carz' | 'ownerfi' | 'podcast' | 'property' | 'vassdistro' | 'benefit' = 'ownerfi'
+  brand: 'carz' | 'ownerfi' | 'podcast' | 'property' | 'vassdistro' | 'benefit' = 'ownerfi',
+  firstComment?: string // Optional first comment for engagement boost
 ): Promise<LatePostResponse> {
   // Calculate schedule time
   let scheduleTime: string | undefined;
@@ -638,7 +645,8 @@ export async function scheduleVideoPost(
     hashtags,
     platforms: platforms as any,
     scheduleTime,
-    brand
+    brand,
+    firstComment // Pass through first comment
   });
 }
 

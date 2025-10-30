@@ -264,6 +264,7 @@ interface GHLPropertyPayload {
   lotSizes?: string;
   homeType?: string;
   imageLink?: string;
+  description?: string;
   downPaymentAmount?: number | string;
   downPayment?: number | string; // Percentage
   interestRate?: number | string;
@@ -387,6 +388,7 @@ export async function POST(request: NextRequest) {
       lotSizes: request.headers.get('lotsizes') || request.headers.get('lotSizes') || '',
       homeType: request.headers.get('hometype') || request.headers.get('homeType') || 'SINGLE_FAMILY',
       imageLink: request.headers.get('imagelink') || request.headers.get('imageLink') || '',
+      description: request.headers.get('description') || request.headers.get('propertyDescription') || request.headers.get('propertydescription') || '',
       downPaymentAmount: request.headers.get('downpaymentamount') || request.headers.get('downPaymentAmount') || '',
       downPayment: request.headers.get('downpayment') || request.headers.get('downPayment') || '',
       interestRate: request.headers.get('interestrate') || request.headers.get('interestRate') || '',
@@ -569,6 +571,7 @@ export async function POST(request: NextRequest) {
       yearBuilt: yearBuilt || 0,
       lotSize: normalizeLotSize(payload.lotSizes || ''),
       propertyType,
+      description: payload.description?.trim() || '',
 
       // Financial Details - all calculated
       monthlyPayment: calculatedMonthlyPayment,

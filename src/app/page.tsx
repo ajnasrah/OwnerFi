@@ -224,7 +224,7 @@ export default async function HomePage() {
                     <span className="text-emerald-400 text-xs font-semibold">Trusted by 1,000+ Homebuyers</span>
                   </div>
 
-                  <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-black text-white leading-tight mb-4">
+                  <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-black text-white leading-tight mb-4">
                     Swipe Your Way
                     <span className="block text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-blue-400 to-purple-400">
                       Into Your Dream Home

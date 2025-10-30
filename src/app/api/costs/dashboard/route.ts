@@ -30,6 +30,27 @@ try {
 }
 
 export async function GET() {
+  // Temporarily disabled - returns mock data
+  return NextResponse.json({
+    success: true,
+    timestamp: Date.now(),
+    summary: {
+      todaySpend: 0,
+      monthSpend: 0,
+      monthBudget: 700,
+      monthPercentage: 0,
+      daysLeftInMonth: 1,
+      projectedMonthlySpend: 0
+    },
+    dailyCosts: {},
+    monthlyCosts: {},
+    breakdown: { byBrand: {}, byService: {}, total: 0 },
+    budgets: { heygen: {}, submagic: {}, openai: {} },
+    recentActivity: [],
+    config: {}
+  });
+
+  /* DISABLED - env-config issues
   try {
     // Check if Firebase is initialized
     if (!db) {

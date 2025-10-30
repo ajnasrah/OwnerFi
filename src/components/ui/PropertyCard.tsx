@@ -22,11 +22,11 @@ export function PropertyCard({ property, onLike, onPass, isFavorited, style }: P
   const rafRef = useRef<number | null>(null);
 
   // IMAGE VARIATION SELECTOR - Change this number to test different styles
-  // 1 = scale(1.4) - Shows 40% more of the image (moderate zoom out)
-  // 2 = object-contain (shows entire image, may have gray bars)
-  // 3 = scale(1.25) - Shows 25% more of the image (subtle zoom out)
-  // 4 = scale(1.6) - Shows 60% more of the image (aggressive zoom out)
-  const IMAGE_VARIATION = 1;
+  // 1 = object-cover 70% height - crops edges, fills space
+  // 2 = object-cover 75% height - crops edges, more space at bottom
+  // 3 = object-cover 40% height - crops edges, centered with top space
+  // 4 = object-cover 80% height - crops edges, minimal bottom space
+  const IMAGE_VARIATION = 3;
 
   // Memoize expensive calculations
   const images = useMemo(() => property.imageUrls || [], [property.imageUrls]);
@@ -215,7 +215,7 @@ export function PropertyCard({ property, onLike, onPass, isFavorited, style }: P
     >
       <div className="relative w-full h-full bg-white rounded-3xl shadow-2xl overflow-hidden">
         {/* Property Image - Full Screen Background */}
-        <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute inset-0 overflow-hidden bg-slate-100">
           {imageLoading && (
             <div className="absolute inset-0 flex items-center justify-center bg-slate-200">
               <div className="w-16 h-16 border-4 border-emerald-300 border-t-emerald-600 rounded-full animate-spin"></div>
@@ -223,19 +223,20 @@ export function PropertyCard({ property, onLike, onPass, isFavorited, style }: P
           )}
 
           <div
-            className="absolute inset-0"
+            className="absolute inset-x-0 overflow-hidden"
             style={{
-              transform: IMAGE_VARIATION === 1 ? 'scale(1.4)' :
-                        IMAGE_VARIATION === 3 ? 'scale(1.25)' :
-                        IMAGE_VARIATION === 4 ? 'scale(1.6)' :
-                        'scale(1)',
+              top: '10%',
+              height: IMAGE_VARIATION === 1 ? '70%' :
+                     IMAGE_VARIATION === 2 ? '75%' :
+                     IMAGE_VARIATION === 3 ? '40%' :
+                     IMAGE_VARIATION === 4 ? '80%' : '70%'
             }}
           >
             <Image
               src={currentImage}
               alt={property.address}
               fill
-              className={IMAGE_VARIATION === 2 ? "object-contain" : "object-cover"}
+              className="object-cover"
               onLoad={() => setImageLoading(false)}
               onError={() => {
                 setImageError(true);
@@ -253,10 +254,19 @@ export function PropertyCard({ property, onLike, onPass, isFavorited, style }: P
 
         {/* Top Info Bar */}
         <div className="absolute top-0 left-0 right-0 p-3 flex items-start justify-between z-10">
-          {/* Owner Finance Badge */}
-          <div className="bg-emerald-500 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg flex items-center gap-1.5">
-            <span className="text-sm">🏠</span>
-            <span>Owner Finance</span>
+          {/* Left Side Badges - Horizontal */}
+          <div className="flex gap-2">
+            {/* Owner Finance Badge */}
+            <div className="bg-emerald-500 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg flex items-center gap-1.5">
+              <span className="text-sm">🏠</span>
+              <span>Owner Finance</span>
+            </div>
+
+            {/* Negotiable Badge */}
+            <div className="bg-blue-500 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg flex items-center gap-1.5">
+              <span className="text-sm">💬</span>
+              <span>Negotiable</span>
+            </div>
           </div>
 
           {/* Favorite Badge */}
@@ -315,22 +325,25 @@ export function PropertyCard({ property, onLike, onPass, isFavorited, style }: P
           </>
         )}
 
-        {/* Bottom Info Panel - Fixed Height Container */}
+        {/* Swipe Instructions - In gray space above drawer */}
+        {!showDetails && (
+          <div className="absolute left-0 right-0 z-10 flex justify-center items-center" style={{ top: '52.5%', height: '50px' }}>
+            <div className="inline-flex items-center gap-1.5 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg">
+              <span className="text-slate-700 font-bold text-xs">👆 Swipe to browse • Tap buttons to save</span>
+            </div>
+          </div>
+        )}
+
+        {/* Bottom Info Panel - Can expand over card */}
         <div className="absolute bottom-0 left-0 right-0 z-10 h-[80vh] pointer-events-none">
-          {/* Expandable Details Panel - GPU Accelerated Transform Animation */}
+          {/* Expandable Details Panel */}
           <div
-            className="absolute bottom-0 left-0 right-0 bg-white/98 backdrop-blur-sm rounded-t-3xl h-[80vh] pointer-events-auto shadow-2xl"
+            className="absolute bottom-0 left-0 right-0 bg-white/98 backdrop-blur-sm rounded-t-3xl pointer-events-auto shadow-2xl h-full"
             style={{
               transform: showDetails
-                ? `translate3d(0, ${drawerOffset}px, 0)`
-                : `translate3d(0, calc(80vh - 140px + ${drawerOffset}px), 0)`,
-              transition: drawerDragStart === null ? 'transform 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none',
-              willChange: 'transform',
-              WebkitTransform: showDetails
-                ? `translate3d(0, ${drawerOffset}px, 0)`
-                : `translate3d(0, calc(80vh - 140px + ${drawerOffset}px), 0)`,
-              backfaceVisibility: 'hidden',
-              WebkitBackfaceVisibility: 'hidden',
+                ? `translate3d(0, ${Math.max(drawerOffset, 0)}px, 0)`
+                : `translate3d(0, calc(80vh - 180px + ${Math.max(drawerOffset, 0)}px), 0)`,
+              transition: drawerDragStart === null ? 'transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none',
             }}
             onTouchStart={handleDrawerTouchStart}
             onTouchMove={handleDrawerTouchMove}
@@ -348,8 +361,9 @@ export function PropertyCard({ property, onLike, onPass, isFavorited, style }: P
             </div>
 
             <div
-              className="px-6 pb-6 overflow-y-auto h-[calc(80vh-3rem)]"
+              className="px-6 pb-6 overflow-y-auto"
               style={{
+                height: 'calc(80vh - 3rem)',
                 WebkitOverflowScrolling: 'touch',
                 overscrollBehavior: 'contain',
                 touchAction: 'pan-y',
@@ -361,7 +375,7 @@ export function PropertyCard({ property, onLike, onPass, isFavorited, style }: P
                 <div className="text-2xl font-black text-slate-900 mb-0">
                   ${property.listPrice?.toLocaleString()}
                 </div>
-                <div className="text-emerald-600 font-bold text-sm">
+                <div className="text-emerald-600 font-bold text-xs">
                   est. ${monthlyPayment.toLocaleString()}/month
                 </div>
               </div>
@@ -427,11 +441,11 @@ export function PropertyCard({ property, onLike, onPass, isFavorited, style }: P
 
                   {/* Monthly Payment Breakdown */}
                   <div className="bg-slate-50 rounded-2xl p-4">
-                    <h3 className="font-bold text-slate-900 mb-3 flex items-center gap-2">
+                    <h3 className="font-bold text-slate-900 mb-3 flex items-center gap-2 text-sm">
                       <span>💰</span>
                       <span>Est. Monthly Payment Breakdown</span>
                     </h3>
-                    <div className="space-y-2 text-sm">
+                    <div className="space-y-2 text-xs">
                       <div className="flex justify-between">
                         <span className="text-slate-600">Principal & Interest</span>
                         <span className="font-bold text-slate-900">est. ${monthlyPayment.toLocaleString()}</span>
@@ -446,18 +460,18 @@ export function PropertyCard({ property, onLike, onPass, isFavorited, style }: P
                       </div>
                       <div className="flex justify-between pt-2 border-t border-slate-300">
                         <span className="font-bold text-slate-900">Total Monthly</span>
-                        <span className="font-black text-emerald-600 text-lg">est. ${totalMonthly.toLocaleString()}</span>
+                        <span className="font-black text-emerald-600 text-sm">est. ${totalMonthly.toLocaleString()}</span>
                       </div>
                     </div>
                   </div>
 
                   {/* Down Payment */}
                   <div className="bg-blue-50 rounded-2xl p-4">
-                    <h3 className="font-bold text-blue-900 mb-2 flex items-center gap-2">
+                    <h3 className="font-bold text-blue-900 mb-2 flex items-center gap-2 text-sm">
                       <span>💵</span>
                       <span>Est. Down Payment Required</span>
                     </h3>
-                    <div className="text-2xl font-black text-blue-900">
+                    <div className="text-xl font-black text-blue-900">
                       est. ${property.downPaymentAmount?.toLocaleString()}
                     </div>
                     <p className="text-xs text-blue-700 mt-1">
@@ -530,17 +544,6 @@ export function PropertyCard({ property, onLike, onPass, isFavorited, style }: P
                 </div>
               )}
 
-              {/* Swipe Instructions - Compact */}
-              {!showDetails && (
-                <div className="text-center mt-2">
-                  <div className="inline-flex items-center gap-1.5 bg-slate-100 px-3 py-1.5 rounded-full">
-                    <svg className="w-4 h-4 text-slate-600 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 15l7-7 7 7" />
-                    </svg>
-                    <span className="text-slate-700 font-bold text-xs">Swipe up for details</span>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         </div>

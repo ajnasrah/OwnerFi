@@ -338,16 +338,6 @@ export function PropertySwiper2({
         </div>
       </div>
 
-      {/* Instructions Hint */}
-      {!isDragging && currentIndex === 0 && (
-        <div className="absolute top-24 left-0 right-0 flex justify-center z-30 pointer-events-none">
-          <div className="bg-white/90 backdrop-blur-lg px-6 py-3 rounded-full shadow-xl animate-bounce">
-            <p className="text-slate-700 font-semibold text-sm">
-              👆 Swipe to browse • Tap buttons to save
-            </p>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

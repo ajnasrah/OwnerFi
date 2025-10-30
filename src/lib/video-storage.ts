@@ -418,7 +418,7 @@ export async function deleteExpiredVideos(): Promise<{
     const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
     const accessKeyId = process.env.R2_ACCESS_KEY_ID;
     const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
-    const bucketName = process.env.R2_BUCKET_NAME || 'ownerfi-videos';
+    const bucketName = process.env.R2_BUCKET_NAME || 'ownerfi-podcast-videos';
 
     if (accountId && accessKeyId && secretAccessKey) {
       const { S3Client, ListObjectsV2Command, DeleteObjectCommand } = await import('@aws-sdk/client-s3');

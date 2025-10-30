@@ -209,6 +209,26 @@ export async function downloadAndUploadToR2(
 
   console.log(`✅ Uploaded to R2: ${publicUrl}`);
 
+  // Track R2 storage cost
+  try {
+    const { trackCost, calculateR2Cost } = await import('@/lib/cost-tracker');
+    const fileSizeGB = parseFloat(sizeInMB) / 1024; // Convert MB to GB
+
+    // Determine brand from fileName (format: heygen-videos/timestamp-random.mp4)
+    // For now, track under 'ownerfi' as default - can be improved to parse brand from path
+    await trackCost(
+      'ownerfi',
+      'r2',
+      'video_upload',
+      fileSizeGB,
+      calculateR2Cost(fileSizeGB),
+      undefined
+    );
+    console.log(`💰 [R2] Tracked storage cost: $${calculateR2Cost(fileSizeGB).toFixed(6)} (${sizeInMB} MB)`);
+  } catch (costError) {
+    console.error(`⚠️  Failed to track R2 cost:`, costError);
+  }
+
   return publicUrl;
 }
 
@@ -347,6 +367,30 @@ export async function uploadSubmagicVideo(
     : `https://pub-${accountId}.r2.dev/${fileName}`;
 
   console.log(`✅ Uploaded to R2: ${publicUrl}`);
+
+  // Track R2 storage cost
+  try {
+    const { trackCost, calculateR2Cost } = await import('@/lib/cost-tracker');
+    const fileSizeGB = parseFloat(sizeInMB) / 1024; // Convert MB to GB
+
+    // Parse brand from fileName path (format: viral-videos/carz-timestamp-random.mp4)
+    let brand: string = 'ownerfi'; // default
+    if (fileName.includes('carz-')) brand = 'carz';
+    else if (fileName.includes('vassdistro-')) brand = 'vassdistro';
+    else if (fileName.includes('podcast-')) brand = 'podcast';
+
+    await trackCost(
+      brand,
+      'r2',
+      'video_upload',
+      fileSizeGB,
+      calculateR2Cost(fileSizeGB),
+      undefined
+    );
+    console.log(`💰 [R2] Tracked storage cost: $${calculateR2Cost(fileSizeGB).toFixed(6)} (${sizeInMB} MB)`);
+  } catch (costError) {
+    console.error(`⚠️  Failed to track R2 cost:`, costError);
+  }
 
   return publicUrl;
 }

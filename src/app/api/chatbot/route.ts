@@ -148,6 +148,25 @@ export async function POST(request: Request) {
         timestamp: Date.now()
       });
 
+      // Track cost in main cost tracking system
+      try {
+        const { trackCost, calculateOpenAICost } = await import('@/lib/cost-tracker');
+        const inputTokens = completion.usage?.prompt_tokens || estimatedInputTokens;
+        const outputTokens = completion.usage?.completion_tokens || estimatedOutputTokens;
+        const cost = calculateOpenAICost(inputTokens, outputTokens);
+
+        await trackCost(
+          'ownerfi', // Chatbot is OwnerFi brand
+          'openai',
+          'chatbot_message',
+          completion.usage?.total_tokens || (estimatedInputTokens + estimatedOutputTokens),
+          cost
+        );
+        console.log(`💰 [Chatbot] Tracked OpenAI cost: $${cost.toFixed(4)}`);
+      } catch (costError) {
+        console.error(`⚠️  [Chatbot] Failed to track OpenAI cost:`, costError);
+      }
+
     } catch (error) {
       console.error('[chatbot] OpenAI error:', error);
       response = 'I\'m having trouble connecting right now. How can I help you with OwnerFi? Feel free to explore our platform or sign up to get started!';

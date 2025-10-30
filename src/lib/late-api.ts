@@ -399,6 +399,22 @@ export async function postToLate(request: LatePostRequest): Promise<LatePostResp
             console.log('   Scheduled for:', data.scheduledFor);
           }
 
+          // Track Late cost
+          try {
+            const { trackCost } = await import('@/lib/cost-tracker');
+            await trackCost(
+              request.brand,
+              'late',
+              'social_post',
+              1, // 1 post
+              0, // Late is flat rate subscription ($50/month), track individual posts as $0
+              undefined // No specific workflow ID available here
+            );
+            console.log(`💰 [${brandName}] Tracked Late cost: $0.00 (flat rate subscription)`);
+          } catch (costError) {
+            console.error(`⚠️  Failed to track Late cost:`, costError);
+          }
+
           const result: LatePostResponse = {
             success: true,
             postId: postId,

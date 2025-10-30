@@ -362,6 +362,23 @@ async function triggerSubmagicProcessing(
     console.log(`   ⏳ Waiting for Submagic to process captions...`);
     console.log(`   📞 Webhook will be called when project completes: ${submagicWebhookUrl}`);
 
+    // Track Submagic cost
+    try {
+      const { trackCost, calculateSubmagicCost } = await import('@/lib/cost-tracker');
+      await trackCost(
+        brand,
+        'submagic',
+        'caption_generation',
+        1, // 1 credit per video
+        calculateSubmagicCost(1), // $0.25
+        workflowId
+      );
+      console.log(`💰 [${brandConfig.displayName}] Tracked Submagic cost: $0.25`);
+    } catch (costError) {
+      console.error(`⚠️  [${brandConfig.displayName}] Failed to track Submagic cost:`, costError);
+      // Don't fail the workflow if cost tracking fails
+    }
+
     // Update workflow with Submagic ID and status
     await updateWorkflowForBrand(brand, workflowId, {
       status: 'submagic_processing',

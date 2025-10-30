@@ -75,7 +75,7 @@ async function generateTestVideo() {
         type: 'avatar',
         avatar_id: guestProfile.avatar_id,
         scale: 2.8,  // MUCH larger scale to fill vertical frame
-        offset: { x: 0, y: 0 }
+        offset: { x: 0, y: 0.2 }  // Move DOWN to center in frame
       };
 
   const videoInputs = [

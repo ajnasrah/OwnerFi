@@ -2,9 +2,8 @@
 // Only modifies property data, does not touch buyer or realtor modules
 
 import { getCitiesWithinRadius, calculateDistance, getCityCoordinates } from './cities';
+import { getCitiesWithinRadiusComprehensive } from './comprehensive-cities';
 import { queueNearbyCitiesJob } from './background-jobs';
-import { getNearbyCitiesUltraFast } from './cities-service-v2';
-import { getCitiesNearProperty } from './comprehensive-us-cities';
 import { PropertyListing } from './property-schema';
 
 /**
@@ -51,18 +50,18 @@ export async function populateNearbyCitiesForPropertyFast(
   propertyState: string,
   radiusMiles: number = 30
 ): Promise<string[]> {
-  // Use comprehensive database first (covers all US cities)
+  // Use comprehensive database (covers all 28K+ US cities)
   try {
-    const comprehensiveResults = await getCitiesNearProperty(propertyCity, propertyState, radiusMiles);
+    const comprehensiveResults = getCitiesWithinRadiusComprehensive(propertyCity, propertyState, radiusMiles);
     if (comprehensiveResults.length > 0) {
-      return comprehensiveResults;
+      return comprehensiveResults.map(city => city.name);
     }
   } catch (error) {
-    
+    console.error('Error getting nearby cities from comprehensive database:', error);
   }
-  
-  // Fallback to limited database if needed
-  const nearbyCities = await getNearbyCitiesUltraFast(propertyCity, propertyState, radiusMiles);
+
+  // Fallback to limited database if city not found in comprehensive DB
+  const nearbyCities = getCitiesWithinRadius(propertyCity, propertyState, radiusMiles);
   return nearbyCities.map(city => city.name);
 }
 

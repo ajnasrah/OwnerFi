@@ -13,7 +13,7 @@ import {
   DocumentData
 } from 'firebase/firestore';
 import { db } from './firebase';
-import { getNearbyCitiesDirect } from './cities-service';
+import { getCitiesWithinRadius } from './cities';
 import { PropertyListing } from "./property-schema";
 
 export interface PropertySearchCriteria {
@@ -148,7 +148,7 @@ export async function searchPropertiesWithNearby(
   
   try {
     // Get all cities to search (center + nearby)
-    const nearbyCities = await getNearbyCitiesDirect(centerCity, state, 30);
+    const nearbyCities = getCitiesWithinRadius(centerCity, state, 30);
     const allCities = [centerCity, ...nearbyCities.map(city => city.name)];
     
     
@@ -185,7 +185,7 @@ export async function getSimilarProperties(
     }
     
     // Get nearby cities for the original property
-    const nearbyCities = await getNearbyCitiesDirect(
+    const nearbyCities = getCitiesWithinRadius(
       propertyCity,
       originalProperty.state,
       30

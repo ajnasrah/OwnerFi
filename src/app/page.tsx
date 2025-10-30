@@ -212,62 +212,34 @@ export default async function HomePage() {
         </header>
 
         <main>
-          {/* Hero Section - Modern App Showcase */}
-          <section className="px-6 lg:px-12 py-16 min-h-screen flex items-center">
+          {/* Section 1: Hero - Full Screen with CTA Only */}
+          <section className="min-h-screen flex items-center justify-center px-4 py-16">
             <div className="max-w-7xl mx-auto w-full">
-              <div className="grid lg:grid-cols-2 gap-12 items-center">
+              <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
                 {/* Left: Main Message */}
-                <div>
+                <div className="text-center lg:text-left">
                   {/* Trust Badge */}
-                  <div className="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/30 rounded-full px-4 py-2 mb-6">
+                  <div className="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/30 rounded-full px-3 py-1.5 mb-4">
                     <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-                    <span className="text-emerald-400 text-sm font-semibold">Trusted by 1,000+ Homebuyers</span>
+                    <span className="text-emerald-400 text-xs font-semibold">Trusted by 1,000+ Homebuyers</span>
                   </div>
 
-                  <h1 className="text-5xl md:text-6xl lg:text-7xl font-black text-white leading-[1.1] mb-6">
+                  <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-black text-white leading-tight mb-4">
                     Swipe Your Way
                     <span className="block text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-blue-400 to-purple-400">
                       Into Your Dream Home
                     </span>
                   </h1>
 
-                  <p className="text-xl md:text-2xl text-slate-300 leading-relaxed mb-8 max-w-xl">
+                  <p className="text-base sm:text-lg lg:text-xl text-slate-300 leading-relaxed mb-6 max-w-xl mx-auto lg:mx-0">
                     The modern way to find owner-financed homes. <span className="text-white font-semibold">No bank approval needed.</span> Swipe through real properties you can afford today.
                   </p>
 
-                  {/* Key Benefits */}
-                  <div className="space-y-3 mb-8">
-                    <div className="flex items-center gap-3">
-                      <div className="w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center flex-shrink-0">
-                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                        </svg>
-                      </div>
-                      <span className="text-slate-200 text-lg">No bank approval or credit check required</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
-                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                        </svg>
-                      </div>
-                      <span className="text-slate-200 text-lg">Real properties with verified financing terms</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
-                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                        </svg>
-                      </div>
-                      <span className="text-slate-200 text-lg">Match with properties you can actually afford</span>
-                    </div>
-                  </div>
-
-                  {/* CTA Buttons */}
-                  <div className="flex flex-col sm:flex-row gap-4 mb-6">
+                  {/* CTA Buttons - Large and Prominent */}
+                  <div className="flex flex-col gap-3 mb-6 max-w-md mx-auto lg:mx-0">
                     <Link
                       href="/signup"
-                      className="group bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white px-8 py-4 rounded-2xl font-bold text-lg transition-all duration-300 hover:scale-[1.02] shadow-xl hover:shadow-2xl text-center flex items-center justify-center gap-2"
+                      className="group bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white px-6 py-3.5 rounded-xl font-bold text-base transition-all duration-300 hover:scale-[1.02] shadow-xl hover:shadow-2xl text-center flex items-center justify-center gap-2"
                       data-event="cta_click"
                       data-location="hero"
                     >
@@ -279,47 +251,23 @@ export default async function HomePage() {
 
                     <Link
                       href="#how-it-works"
-                      className="bg-slate-800/50 hover:bg-slate-700/50 border-2 border-slate-600 hover:border-slate-500 text-white px-8 py-4 rounded-2xl font-bold text-lg transition-all duration-300 hover:scale-[1.02] text-center"
+                      className="bg-slate-800/50 hover:bg-slate-700/50 border-2 border-slate-600 hover:border-slate-500 text-white px-6 py-3.5 rounded-xl font-semibold text-base transition-all duration-300 hover:scale-[1.02] text-center"
                     >
                       See How It Works
                     </Link>
                   </div>
 
-                  {/* Social Media Caption */}
-                  <div className="mb-8 p-4 bg-slate-800/30 border border-slate-700/50 rounded-xl">
-                    <p className="text-slate-300 text-center text-sm">
-                      Swipe real owner-finance homes at <span className="text-white font-semibold">OwnerFi</span> — follow{' '}
-                      <a
-                        href="https://www.tiktok.com/@ownerfi.ai"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-emerald-400 hover:text-emerald-300 font-semibold transition-colors"
-                      >
-                        @OwnerFi.ai
-                      </a>
-                      {' '}for daily updates
-                    </p>
-                  </div>
-
-                  {/* Trust Indicators */}
-                  <div className="flex items-center gap-6 text-sm text-slate-400">
-                    <div className="flex items-center gap-2">
-                      <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                      </svg>
-                      <span>Bank-level security</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      <span>100% Free to browse</span>
-                    </div>
+                  {/* Scroll Indicator */}
+                  <div className="text-center lg:text-left mt-8">
+                    <p className="text-slate-400 text-sm mb-2">Scroll to learn more</p>
+                    <svg className="w-6 h-6 text-slate-400 animate-bounce mx-auto lg:mx-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                    </svg>
                   </div>
                 </div>
 
                 {/* Right: App Preview / Phone Mockup */}
-                <div className="relative hidden lg:block">
+                <div className="relative">
                   {/* Floating Stats */}
                   <div className="absolute -top-8 -left-8 bg-slate-800/90 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-4 shadow-2xl z-10 animate-float">
                     <div className="text-3xl font-black text-emerald-400">500+</div>
@@ -349,89 +297,144 @@ export default async function HomePage() {
             </div>
           </section>
 
-          {/* How It Works Section */}
-          <section id="how-it-works" className="bg-slate-800/30 py-20 px-6">
-            <div className="max-w-6xl mx-auto">
-              <div className="text-center mb-16">
-                <h2 className="text-4xl md:text-5xl font-black text-white mb-4">
-                  How It Works
+          {/* Section Divider */}
+          <div className="h-px bg-gradient-to-r from-transparent via-slate-700 to-transparent"></div>
+
+          {/* Section 2: Why Choose Us / Benefits */}
+          <section className="min-h-screen flex items-center justify-center py-16 px-4">
+            <div className="max-w-4xl mx-auto">
+              <div className="text-center mb-12">
+                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white mb-3">
+                  Why Choose OwnerFi?
                 </h2>
-                <p className="text-xl text-slate-300 max-w-2xl mx-auto">
-                  Three simple steps to find your perfect home without bank approval
+                <p className="text-base sm:text-lg text-slate-300 max-w-2xl mx-auto">
+                  The modern alternative to traditional home buying
                 </p>
               </div>
 
-              <div className="grid md:grid-cols-3 gap-8 mb-16">
+              <div className="grid sm:grid-cols-3 gap-6 mb-12">
+                <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-6 text-center">
+                  <div className="w-12 h-12 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <h3 className="text-base font-bold text-white mb-2">Skip the Banks</h3>
+                  <p className="text-sm text-slate-300">Work directly with sellers for flexible financing</p>
+                </div>
+
+                <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-6 text-center">
+                  <div className="w-12 h-12 bg-blue-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-base font-bold text-white mb-2">Find Homes Fast</h3>
+                  <p className="text-sm text-slate-300">Swipe through properties that match your budget</p>
+                </div>
+
+                <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-6 text-center">
+                  <div className="w-12 h-12 bg-purple-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                    </svg>
+                  </div>
+                  <h3 className="text-base font-bold text-white mb-2">Real Properties</h3>
+                  <p className="text-sm text-slate-300">500+ verified owner-financed homes</p>
+                </div>
+              </div>
+
+              {/* Social Media Caption */}
+              <div className="p-4 bg-slate-800/30 border border-slate-700/50 rounded-xl text-center">
+                <p className="text-slate-300 text-sm">
+                  Follow{' '}
+                  <a
+                    href="https://www.tiktok.com/@ownerfi.ai"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-emerald-400 hover:text-emerald-300 font-semibold transition-colors"
+                  >
+                    @OwnerFi.ai
+                  </a>
+                  {' '}for daily property updates
+                </p>
+              </div>
+            </div>
+          </section>
+
+          {/* Section Divider */}
+          <div className="h-px bg-gradient-to-r from-transparent via-slate-700 to-transparent"></div>
+
+          {/* Section 3: How It Works */}
+          <section id="how-it-works" className="min-h-screen flex items-center justify-center py-16 px-4">
+            <div className="max-w-4xl mx-auto w-full">
+              <div className="text-center mb-12">
+                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white mb-3">
+                  How It Works
+                </h2>
+                <p className="text-base sm:text-lg text-slate-300 max-w-2xl mx-auto">
+                  Three simple steps to find your perfect home
+                </p>
+              </div>
+
+              <div className="grid md:grid-cols-3 gap-6">
                 {/* Step 1 */}
                 <div className="relative">
-                  <div className="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-2xl p-8 text-center h-full">
-                    <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-12 h-12 bg-emerald-500 rounded-full flex items-center justify-center text-white font-black text-xl shadow-xl">
+                  <div className="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-xl p-6 text-center h-full">
+                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center text-white font-black text-lg shadow-xl">
                       1
                     </div>
-                    <div className="text-5xl mb-6 mt-2">📝</div>
-                    <h3 className="text-xl font-bold text-white mb-3">Set Your Budget</h3>
-                    <p className="text-slate-300">
-                      Tell us your max monthly payment and down payment. We'll only show you homes you can actually afford.
+                    <div className="text-4xl mb-4 mt-2">📝</div>
+                    <h3 className="text-base font-bold text-white mb-2">Set Your Budget</h3>
+                    <p className="text-sm text-slate-300">
+                      Tell us your max monthly payment and down payment. We'll only show homes you can afford.
                     </p>
                   </div>
                 </div>
 
                 {/* Step 2 */}
                 <div className="relative">
-                  <div className="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-2xl p-8 text-center h-full">
-                    <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white font-black text-xl shadow-xl">
+                  <div className="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-xl p-6 text-center h-full">
+                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-black text-lg shadow-xl">
                       2
                     </div>
-                    <div className="text-5xl mb-6 mt-2">👆</div>
-                    <h3 className="text-xl font-bold text-white mb-3">Swipe Through Homes</h3>
-                    <p className="text-slate-300">
-                      Swipe right on homes you love, left on ones you don't. Just like your favorite dating app, but for houses!
+                    <div className="text-4xl mb-4 mt-2">👆</div>
+                    <h3 className="text-base font-bold text-white mb-2">Swipe Through Homes</h3>
+                    <p className="text-sm text-slate-300">
+                      Swipe right on homes you love, left on ones you don't. Just like your favorite dating app!
                     </p>
                   </div>
                 </div>
 
                 {/* Step 3 */}
                 <div className="relative">
-                  <div className="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-2xl p-8 text-center h-full">
-                    <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center text-white font-black text-xl shadow-xl">
+                  <div className="bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-xl p-6 text-center h-full">
+                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center text-white font-black text-lg shadow-xl">
                       3
                     </div>
-                    <div className="text-5xl mb-6 mt-2">🏡</div>
-                    <h3 className="text-xl font-bold text-white mb-3">Connect & Buy</h3>
-                    <p className="text-slate-300">
-                      Found your dream home? We connect you directly with sellers for owner financing. No bank needed.
+                    <div className="text-4xl mb-4 mt-2">🏡</div>
+                    <h3 className="text-base font-bold text-white mb-2">Connect & Buy</h3>
+                    <p className="text-sm text-slate-300">
+                      Found your dream home? We connect you directly with sellers. No bank needed.
                     </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Interactive App Demo Video/GIF Placeholder */}
-              <div className="bg-gradient-to-br from-slate-800 to-slate-900 border-2 border-slate-700 rounded-3xl p-8 text-center">
-                <div className="max-w-4xl mx-auto">
-                  <h3 className="text-2xl font-bold text-white mb-4">See It In Action</h3>
-                  <div className="relative aspect-video bg-gradient-to-br from-slate-700 to-slate-800 rounded-2xl overflow-hidden">
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="text-center">
-                        <div className="text-6xl mb-4">🎬</div>
-                        <p className="text-slate-300 text-lg">Interactive demo coming soon</p>
-                        <p className="text-slate-400 text-sm mt-2">Watch how easy it is to swipe through properties</p>
-                      </div>
-                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </section>
 
-          {/* Social Proof / Testimonials */}
-          <section className="py-20 px-6 bg-slate-900">
-            <div className="max-w-6xl mx-auto">
-              <div className="text-center mb-16">
-                <h2 className="text-4xl md:text-5xl font-black text-white mb-4">
+          {/* Section Divider */}
+          <div className="h-px bg-gradient-to-r from-transparent via-slate-700 to-transparent"></div>
+
+          {/* Section 4: Social Proof / Testimonials */}
+          <section className="min-h-screen flex items-center justify-center py-16 px-4">
+            <div className="max-w-4xl mx-auto w-full">
+              <div className="text-center mb-12">
+                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white mb-3">
                   Real People, Real Homes
                 </h2>
-                <p className="text-xl text-slate-300 max-w-2xl mx-auto">
-                  Join thousands of renters who found their dream home without bank approval
+                <p className="text-base sm:text-lg text-slate-300 max-w-2xl mx-auto">
+                  Join thousands who found their dream home
                 </p>
               </div>
 

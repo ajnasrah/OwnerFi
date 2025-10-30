@@ -202,18 +202,18 @@ export default function Chatbot({ isOpen, onClose }: ChatbotProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-xs mx-4 h-[450px] flex flex-col overflow-hidden" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-2 sm:p-4">
+      <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-sm mx-auto max-h-[95vh] sm:max-h-[90vh] flex flex-col overflow-hidden" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', height: 'min(600px, 95vh)' }}>
         
         {/* iPhone-style Header */}
-        <div className="bg-slate-50 px-4 py-4 flex items-center justify-between border-b border-slate-100">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
-              <span className="text-white text-lg">👩</span>
+        <div className="bg-slate-50 px-3 py-3 flex items-center justify-between border-b border-slate-100 flex-shrink-0">
+          <div className="flex items-center gap-2">
+            <div className="w-9 h-9 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+              <span className="text-white text-base">👩</span>
             </div>
-            <div>
+            <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <h3 className="text-slate-900 font-semibold">Sarah</h3>
+                <h3 className="text-slate-900 font-semibold text-sm">Sarah</h3>
                 <div className="flex items-center gap-1">
                   <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                   <span className="text-xs text-green-600 font-medium">LIVE</span>
@@ -223,7 +223,7 @@ export default function Chatbot({ isOpen, onClose }: ChatbotProps) {
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 bg-slate-200 hover:bg-slate-300 rounded-full flex items-center justify-center transition-colors"
+            className="w-7 h-7 bg-slate-200 hover:bg-slate-300 rounded-full flex items-center justify-center transition-colors flex-shrink-0"
           >
             <svg className="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -232,17 +232,17 @@ export default function Chatbot({ isOpen, onClose }: ChatbotProps) {
         </div>
 
         {/* iPhone Messages Area */}
-        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3" style={{ backgroundColor: '#f8f9fa' }}>
+        <div className="flex-1 overflow-y-auto px-3 py-3 space-y-2.5 overscroll-contain" style={{ backgroundColor: '#f8f9fa' }}>
           {messages.map((message, index) => (
             <div
               key={index}
               className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               <div
-                className={`max-w-[75%] px-4 py-3 rounded-3xl shadow-sm ${
+                className={`max-w-[80%] px-3 py-2.5 rounded-3xl shadow-sm break-words ${
                   message.role === 'user'
-                    ? 'bg-blue-500 text-white ml-12'
-                    : 'bg-white text-slate-800 border border-slate-100 mr-12'
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-white text-slate-800 border border-slate-100'
                 }`}
               >
                 <p className="text-sm leading-relaxed">{message.content}</p>
@@ -274,14 +274,14 @@ export default function Chatbot({ isOpen, onClose }: ChatbotProps) {
           
           {isLoading && (
             <div className="flex justify-start">
-              <div className="bg-white text-slate-800 border border-slate-100 rounded-3xl px-4 py-3 shadow-sm mr-12">
+              <div className="bg-white text-slate-800 border border-slate-100 rounded-3xl px-3 py-2.5 shadow-sm max-w-[80%]">
                 <div className="flex items-center gap-2">
                   <div className="flex gap-1">
                     <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></div>
                     <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
                     <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                   </div>
-                  <span className="text-xs text-slate-500">Sarah is typing...</span>
+                  <span className="text-xs text-slate-500 whitespace-nowrap">Sarah is typing...</span>
                 </div>
               </div>
             </div>
@@ -290,10 +290,10 @@ export default function Chatbot({ isOpen, onClose }: ChatbotProps) {
         </div>
 
         {/* iPhone-style Input */}
-        <div className="p-4 bg-white border-t border-slate-100">
-          <div className="flex items-center gap-3">
+        <div className="p-3 bg-white border-t border-slate-100 flex-shrink-0">
+          <div className="flex items-center gap-2">
             <div className="flex-1 relative">
-              <div className="flex items-center bg-slate-100 rounded-full px-4 h-10">
+              <div className="flex items-center bg-slate-100 rounded-full px-3 h-9">
                 <input
                   type="text"
                   value={inputMessage}
@@ -321,7 +321,7 @@ export default function Chatbot({ isOpen, onClose }: ChatbotProps) {
             <button
               onClick={sendMessage}
               disabled={!inputMessage.trim() || isLoading}
-              className="w-10 h-10 bg-blue-500 hover:bg-blue-600 disabled:bg-slate-300 text-white rounded-full flex items-center justify-center transition-colors"
+              className="w-9 h-9 bg-blue-500 hover:bg-blue-600 disabled:bg-slate-300 text-white rounded-full flex items-center justify-center transition-colors flex-shrink-0"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />

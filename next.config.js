@@ -229,6 +229,12 @@ const nextConfig = {
       { source: '/rent-to-own/:location', destination: '/owner-financing-:location', permanent: true },
       { source: '/seller-financing/:location', destination: '/owner-financing-:location', permanent: true },
       { source: '/owner-finance/:location', destination: '/owner-financing-:location', permanent: true },
+
+      // SEO-friendly redirects for common search queries
+      { source: '/what-is-owner-financing', destination: '/how-owner-finance-works', permanent: true },
+      { source: '/whats-owner-financing', destination: '/how-owner-finance-works', permanent: true },
+      { source: '/owner-financing-explained', destination: '/how-owner-finance-works', permanent: true },
+      { source: '/what-is-seller-financing', destination: '/how-owner-finance-works', permanent: true },
     ]
   }
 };

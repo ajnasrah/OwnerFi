@@ -241,7 +241,7 @@ export function PropertySwiper2({
   return (
     <div
       ref={containerRef}
-      className="fixed inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 overflow-hidden z-40"
+      className="fixed inset-0 bg-gradient-to-br from-indigo-950 via-slate-900 to-emerald-950 overflow-hidden z-40"
       onTouchStart={handleStart}
       onTouchMove={handleMove}
       onTouchEnd={handleEnd}

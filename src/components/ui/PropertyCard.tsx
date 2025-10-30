@@ -213,9 +213,9 @@ export function PropertyCard({ property, onLike, onPass, isFavorited, style }: P
       className="absolute inset-0 w-full h-full"
       style={style}
     >
-      <div className="relative w-full h-full bg-white rounded-3xl shadow-2xl overflow-hidden">
+      <div className="relative w-full h-full bg-gradient-to-br from-slate-50 via-blue-50 to-emerald-50 rounded-3xl shadow-2xl overflow-hidden">
         {/* Property Image - Full Screen Background */}
-        <div className="absolute inset-0 overflow-hidden bg-slate-100">
+        <div className="absolute inset-0 overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-emerald-50">
           {imageLoading && (
             <div className="absolute inset-0 flex items-center justify-center bg-slate-200">
               <div className="w-16 h-16 border-4 border-emerald-300 border-t-emerald-600 rounded-full animate-spin"></div>
@@ -342,7 +342,7 @@ export function PropertyCard({ property, onLike, onPass, isFavorited, style }: P
             style={{
               transform: showDetails
                 ? `translate3d(0, ${Math.max(drawerOffset, 0)}px, 0)`
-                : `translate3d(0, calc(50vh - 250px + ${Math.max(drawerOffset, 0)}px), 0)`,
+                : `translate3d(0, calc(50vh - 290px + ${Math.max(drawerOffset, 0)}px), 0)`,
               transition: drawerDragStart === null ? 'transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none',
             }}
             onTouchStart={handleDrawerTouchStart}

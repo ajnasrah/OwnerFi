@@ -136,6 +136,74 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // Sync queue with properties database (add new, remove deleted)
+    // Run this occasionally to keep queue in sync
+    if (Math.random() < 0.1) { // 10% chance on each cron run (~1x per day)
+      console.log('🔄 Syncing queue with properties database...');
+      try {
+        const { db: adminDb } = await import('@/lib/firebase-admin');
+        if (adminDb) {
+          // Get all property IDs in queue
+          const queueSnapshot = await adminDb.collection('property_rotation_queue').get();
+          const queuePropertyIds = new Set(queueSnapshot.docs.map(doc => doc.data().propertyId));
+
+          // Get all active property IDs from properties collection
+          const propertiesSnapshot = await adminDb.collection('properties')
+            .where('isActive', '==', true)
+            .where('status', '==', 'active')
+            .get();
+
+          const activePropertyIds = new Set<string>();
+          const newProperties: any[] = [];
+
+          propertiesSnapshot.docs.forEach(doc => {
+            const data = doc.data();
+            if (data.imageUrls && data.imageUrls.length > 0) {
+              activePropertyIds.add(doc.id);
+              if (!queuePropertyIds.has(doc.id)) {
+                newProperties.push(doc.id);
+              }
+            }
+          });
+
+          // Add new properties to queue
+          let addedCount = 0;
+          for (const propId of newProperties) {
+            try {
+              await addToPropertyRotationQueue(propId);
+              addedCount++;
+            } catch (err) {
+              // Skip if already exists
+            }
+          }
+
+          // Remove deleted/inactive properties from queue
+          let removedCount = 0;
+          const batch = adminDb.batch();
+          queueSnapshot.docs.forEach(doc => {
+            const propId = doc.data().propertyId;
+            if (!activePropertyIds.has(propId)) {
+              batch.delete(doc.ref);
+              removedCount++;
+            }
+          });
+
+          if (removedCount > 0) {
+            await batch.commit();
+          }
+
+          if (addedCount > 0 || removedCount > 0) {
+            console.log(`   ✅ Queue synced: +${addedCount} new, -${removedCount} deleted`);
+          } else {
+            console.log(`   ✅ Queue already in sync`);
+          }
+        }
+      } catch (error) {
+        console.error('   ⚠️  Queue sync failed (non-critical):', error);
+        // Don't fail the whole cron if sync fails
+      }
+    }
+
     if (!queueItem) {
       return NextResponse.json({
         success: true,

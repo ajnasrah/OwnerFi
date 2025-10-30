@@ -420,6 +420,8 @@ export async function deleteExpiredVideos(): Promise<{
     const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
     const bucketName = process.env.R2_BUCKET_NAME || 'ownerfi-podcast-videos';
 
+    console.log(`  📊 R2 Config: bucket=${bucketName}, accountId=${accountId ? 'SET' : 'MISSING'}, accessKey=${accessKeyId ? 'SET' : 'MISSING'}`);
+
     if (accountId && accessKeyId && secretAccessKey) {
       const { S3Client, ListObjectsV2Command, DeleteObjectCommand } = await import('@aws-sdk/client-s3');
 
@@ -429,10 +431,20 @@ export async function deleteExpiredVideos(): Promise<{
         credentials: { accessKeyId, secretAccessKey },
       });
 
+      console.log(`  🔍 Listing objects in bucket: ${bucketName}...`);
       const listResponse = await r2Client.send(new ListObjectsV2Command({ Bucket: bucketName }));
       const objects = listResponse.Contents || [];
 
-      console.log(`  Found ${objects.length} objects in R2`);
+      console.log(`  ✅ Found ${objects.length} objects in R2`);
+
+      // Log details about first few objects for debugging
+      if (objects.length > 0) {
+        objects.slice(0, 3).forEach(obj => {
+          const ageMs = now - (obj.LastModified?.getTime() || 0);
+          const ageHours = (ageMs / 1000 / 60 / 60).toFixed(1);
+          console.log(`     - ${obj.Key}: ${ageHours}h old, ${((obj.Size || 0) / 1024 / 1024).toFixed(2)} MB`);
+        });
+      }
 
       for (const obj of objects) {
         try {

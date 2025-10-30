@@ -1,8 +1,15 @@
 // Retry workflows that failed due to LinkedIn visibility error
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
   try {
+    // Require admin authentication
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.is_admin) {
+      return NextResponse.json({ error: 'Unauthorized - Admin access required' }, { status: 401 });
+    }
     console.log('🔍 Finding workflows that failed due to LinkedIn visibility error...');
 
     // Import Firebase Admin for direct Firestore access

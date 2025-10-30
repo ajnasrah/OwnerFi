@@ -2,11 +2,18 @@
 // Use this to see what's actually in Firestore
 
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 
 export const maxDuration = 30;
 
 export async function GET(request: NextRequest) {
   try {
+    // Require admin authentication
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.is_admin) {
+      return NextResponse.json({ error: 'Unauthorized - Admin access required' }, { status: 401 });
+    }
     const { db } = await import('@/lib/firebase');
     const { collection, getDocs, query, where, orderBy, limit } = await import('firebase/firestore');
     const { getCollectionName } = await import('@/lib/feed-store-firestore');

@@ -1,9 +1,16 @@
 // Debug endpoint to check scheduler status
 import { NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 import { getAllFeedSources, getStats } from '@/lib/feed-store-firestore';
 
 export async function GET() {
   try {
+    // Require admin authentication
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.is_admin) {
+      return NextResponse.json({ error: 'Unauthorized - Admin access required' }, { status: 401 });
+    }
     const [feeds, statsCarz, statsOwnerfi, statsVassdistro] = await Promise.all([
       getAllFeedSources(),
       getStats('carz'),

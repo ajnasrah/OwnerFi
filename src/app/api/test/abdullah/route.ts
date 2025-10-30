@@ -9,12 +9,19 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 import { generateAbdullahDailyContent, validateAbdullahScript } from '@/lib/abdullah-content-generator';
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 export async function GET(request: NextRequest) {
   try {
+    // Require admin authentication
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.is_admin) {
+      return NextResponse.json({ error: 'Unauthorized - Admin access required' }, { status: 401 });
+    }
     console.log('\n' + '='.repeat(60));
     console.log('🧪 ABDULLAH CONTENT TEST');
     console.log('='.repeat(60) + '\n');

@@ -1,9 +1,16 @@
 // Manually complete a stuck Submagic video
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 
 // GET: Auto-find and complete all stuck Submagic workflows
 export async function GET(request: NextRequest) {
   try {
+    // Require admin authentication
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.is_admin) {
+      return NextResponse.json({ error: 'Unauthorized - Admin access required' }, { status: 401 });
+    }
     const SUBMAGIC_API_KEY = process.env.SUBMAGIC_API_KEY;
     if (!SUBMAGIC_API_KEY) {
       return NextResponse.json({ error: 'Submagic API key not configured' }, { status: 500 });
@@ -130,6 +137,12 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    // Require admin authentication
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.is_admin) {
+      return NextResponse.json({ error: 'Unauthorized - Admin access required' }, { status: 401 });
+    }
+
     const { projectId } = await request.json();
 
     if (!projectId) {

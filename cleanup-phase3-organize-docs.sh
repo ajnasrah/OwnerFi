@@ -5,7 +5,7 @@
 # Created: 2025-10-30
 # Risk Level: LOW - Files are moved, not deleted
 
-set -e
+# set -e  # Disabled to continue through missing files
 
 echo "=========================================="
 echo "OWNERFI CLEANUP - PHASE 3: ORGANIZE DOCS"

@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from './providers';
+import AnalyticsScripts from '@/components/analytics/AnalyticsScripts';
+import AnalyticsProvider from '@/components/analytics/AnalyticsProvider';
 
 const inter = Inter({
   variable: "--font-inter",
@@ -85,11 +87,22 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" data-scroll-behavior="smooth">
+      <head>
+        {/* Performance: Preconnect to external domains */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://maps.googleapis.com" />
+        <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+        <link rel="dns-prefetch" href="https://maps.googleapis.com" />
+      </head>
       <body
         className={`${inter.variable} antialiased bg-slate-900`}
       >
+        <AnalyticsScripts />
         <Providers>
-          {children}
+          <AnalyticsProvider>
+            {children}
+          </AnalyticsProvider>
         </Providers>
         {process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY && (
           <script

@@ -220,6 +220,10 @@ export function PropertyCard({ property, onLike, onPass, isFavorited, style }: P
             alt={property.address}
             fill
             className="object-cover"
+            style={{
+              transform: 'scale(0.5)',
+              transformOrigin: 'center center'
+            }}
             onLoad={() => setImageLoading(false)}
             onError={() => {
               setImageError(true);
@@ -318,6 +322,10 @@ export function PropertyCard({ property, onLike, onPass, isFavorited, style }: P
             onTouchStart={handleDrawerTouchStart}
             onTouchMove={handleDrawerTouchMove}
             onTouchEnd={handleDrawerTouchEnd}
+            onMouseDown={handleDrawerMouseStart}
+            onMouseMove={handleDrawerMouseMove}
+            onMouseUp={handleDrawerMouseEnd}
+            onMouseLeave={handleDrawerMouseEnd}
           >
             {/* Handle Bar - Swipeable Area */}
             <div className="w-full py-3 flex justify-center cursor-grab active:cursor-grabbing">

@@ -85,10 +85,24 @@ const nextConfig = {
       config.optimization.splitChunks = {
         chunks: 'all',
         cacheGroups: {
+          // PERFORMANCE FIX: Separate Firebase into its own chunk (3MB!)
+          firebase: {
+            name: 'firebase',
+            test: /[\\/]node_modules[\\/](@firebase|firebase)[\\/]/,
+            priority: 50,
+            enforce: true,
+          },
           framework: {
             name: 'framework',
             test: /[\\/]node_modules[\\/](react|react-dom|next)[\\/]/,
             priority: 40,
+            enforce: true,
+          },
+          // PERFORMANCE FIX: Separate Google Maps
+          googleMaps: {
+            name: 'google-maps',
+            test: /[\\/]node_modules[\\/](@googlemaps|@react-google-maps)[\\/]/,
+            priority: 45,
             enforce: true,
           },
           vendor: {
@@ -96,13 +110,18 @@ const nextConfig = {
             test: /[\\/]node_modules[\\/]/,
             priority: 30,
             minChunks: 1,
-            maxSize: 244 * 1024, // 244kb
+            maxSize: 200 * 1024, // Reduced from 244kb to 200kb
           }
         }
       };
     }
 
     return config;
+  },
+
+  // PERFORMANCE FIX: Enable CSS optimization
+  experimental: {
+    optimizeCss: true,
   },
 
   // Environment variables that should be available client-side

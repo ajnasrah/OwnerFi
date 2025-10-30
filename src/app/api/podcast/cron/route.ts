@@ -126,15 +126,12 @@ export async function GET(request: NextRequest) {
         ? {
             type: 'talking_photo',
             talking_photo_id: hostProfile.avatar_id,
-            scale: hostProfile.scale || 1.4,
-            talking_photo_style: 'square',
-            talking_style: 'expressive'
+            scale: hostProfile.scale || 1.0
           }
         : {
             type: 'avatar',
             avatar_id: hostProfile.avatar_id,
-            scale: hostProfile.scale || 1.4,
-            avatar_style: 'normal'
+            scale: hostProfile.scale || 1.0
           };
 
       // Build guest character config based on avatar type
@@ -142,15 +139,12 @@ export async function GET(request: NextRequest) {
         ? {
             type: 'talking_photo',
             talking_photo_id: guestProfile.avatar_id,
-            scale: guestProfile.scale || 1.68,
-            talking_photo_style: 'square',
-            talking_style: 'expressive'
+            scale: guestProfile.scale || 1.4
           }
         : {
             type: 'avatar',
             avatar_id: guestProfile.avatar_id,
-            scale: guestProfile.scale || 1.68,
-            avatar_style: 'normal'
+            scale: guestProfile.scale || 1.4
           };
 
       return [
@@ -175,7 +169,7 @@ export async function GET(request: NextRequest) {
             type: 'text',
             input_text: pair.answer,
             voice_id: guestProfile.voice_id,
-            speed: 1.44
+            speed: guestProfile.voice_speed || 1.15
           },
           background: {
             type: 'color',

@@ -5,7 +5,7 @@
 # Created: 2025-10-30
 # Risk Level: LOW - Scripts are moved, not deleted (can be restored)
 
-set -e
+# set -e  # Disabled to continue through missing files
 
 echo "=========================================="
 echo "OWNERFI CLEANUP - PHASE 2: ARCHIVE SCRIPTS"

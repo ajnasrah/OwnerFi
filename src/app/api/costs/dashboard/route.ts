@@ -13,10 +13,29 @@ import {
 } from '@/lib/cost-tracker';
 import { getHeyGenQuota } from '@/lib/heygen-client';
 import { costs } from '@/lib/env-config';
+import { db } from '@/lib/firebase';
 
 export async function GET() {
   try {
-    // Fetch all cost data in parallel
+    // Check if Firebase is initialized
+    if (!db) {
+      console.error('❌ Firebase not initialized in cost dashboard API');
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Firebase not initialized - check environment variables',
+          hint: 'Ensure NEXT_PUBLIC_FIREBASE_* environment variables are set'
+        },
+        { status: 500 }
+      );
+    }
+
+    // Log initialization
+    console.log('📊 Cost Dashboard API called');
+    console.log('Cost config available:', !!costs);
+    console.log('Daily budget:', costs?.dailyBudget);
+
+    // Fetch all cost data in parallel with detailed error logging
     const [
       dailyCosts,
       monthlyCosts,
@@ -27,14 +46,14 @@ export async function GET() {
       heygenQuota,
       recentEntries,
     ] = await Promise.all([
-      getTotalDailyCosts().catch(() => ({})),
-      getTotalMonthlyCosts().catch(() => ({})),
-      getMonthlyBreakdown().catch(() => ({ byBrand: {}, byService: { heygen: { units: 0, costUSD: 0 }, submagic: { units: 0, costUSD: 0 }, late: { units: 0, costUSD: 0 }, openai: { units: 0, costUSD: 0 }, r2: { units: 0, costUSD: 0 } }, total: 0 })),
-      checkBudget('heygen', 'daily').catch(() => ({ service: 'heygen' as const, period: 'daily' as const, used: 0, limit: costs.dailyBudget.heygen, percentage: 0, exceeded: false, nearLimit: false })),
-      checkBudget('submagic', 'daily').catch(() => ({ service: 'submagic' as const, period: 'daily' as const, used: 0, limit: costs.dailyBudget.submagic, percentage: 0, exceeded: false, nearLimit: false })),
-      checkBudget('openai', 'daily').catch(() => ({ service: 'openai' as const, period: 'daily' as const, used: 0, limit: costs.dailyBudget.openai, percentage: 0, exceeded: false, nearLimit: false })),
-      getHeyGenQuota().catch(() => ({ remaining_quota: 0, remainingCredits: 0 })),
-      getRecentCostEntries(50).catch(() => []),
+      getTotalDailyCosts().catch((err) => { console.error('getTotalDailyCosts error:', err); return {}; }),
+      getTotalMonthlyCosts().catch((err) => { console.error('getTotalMonthlyCosts error:', err); return {}; }),
+      getMonthlyBreakdown().catch((err) => { console.error('getMonthlyBreakdown error:', err); return { byBrand: {}, byService: { heygen: { units: 0, costUSD: 0 }, submagic: { units: 0, costUSD: 0 }, late: { units: 0, costUSD: 0 }, openai: { units: 0, costUSD: 0 }, r2: { units: 0, costUSD: 0 } }, total: 0 }; }),
+      checkBudget('heygen', 'daily').catch((err) => { console.error('checkBudget heygen error:', err); return { service: 'heygen' as const, period: 'daily' as const, used: 0, limit: costs.dailyBudget.heygen, percentage: 0, exceeded: false, nearLimit: false }; }),
+      checkBudget('submagic', 'daily').catch((err) => { console.error('checkBudget submagic error:', err); return { service: 'submagic' as const, period: 'daily' as const, used: 0, limit: costs.dailyBudget.submagic, percentage: 0, exceeded: false, nearLimit: false }; }),
+      checkBudget('openai', 'daily').catch((err) => { console.error('checkBudget openai error:', err); return { service: 'openai' as const, period: 'daily' as const, used: 0, limit: costs.dailyBudget.openai, percentage: 0, exceeded: false, nearLimit: false }; }),
+      getHeyGenQuota().catch((err) => { console.error('getHeyGenQuota error:', err); return { remaining_quota: 0, remainingCredits: 0 }; }),
+      getRecentCostEntries(50).catch((err) => { console.error('getRecentCostEntries error:', err); return []; }),
     ]);
 
     // Calculate totals

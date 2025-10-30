@@ -1642,6 +1642,22 @@ export async function getPropertyRotationStats(): Promise<{
 // ============================================================================
 
 /**
+ * Get property video workflow by ID
+ */
+export async function getPropertyVideoById(workflowId: string): Promise<any | null> {
+  if (!db) return null;
+
+  const docSnap = await getDoc(doc(db, 'property_videos', workflowId));
+
+  if (docSnap.exists()) {
+    return docSnap.data();
+  }
+
+  console.log(`⚠️  No property video workflow found with ID: ${workflowId}`);
+  return null;
+}
+
+/**
  * Update property video workflow
  * ALSO syncs workflowStatus to the main properties collection for UI display
  */

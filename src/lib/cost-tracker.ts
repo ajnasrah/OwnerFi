@@ -18,7 +18,7 @@
 import { getAdminDb } from './firebase-admin';
 import { costs, monitoring, features } from './env-config';
 import { Brand } from '@/config/constants';
-import admin from 'firebase-admin';
+import * as admin from 'firebase-admin';
 
 // Get Firestore instance using the existing Firebase Admin setup
 async function getFirestore() {

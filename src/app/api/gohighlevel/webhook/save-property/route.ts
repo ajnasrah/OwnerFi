@@ -488,7 +488,15 @@ export async function POST(request: NextRequest) {
     // Use provided monthly payment or calculate ONLY if we have interest rate
     let calculatedMonthlyPayment = parseNumberField(payload.monthlyPayment);
     const interestRate = parseNumberField(payload.interestRate);
-    const termYears = 20; // Term years is still needed for calculation structure
+
+    // Dynamic amortization based on price
+    const getDefaultTermYears = (listPrice: number): number => {
+      if (listPrice < 150000) return 15;
+      if (listPrice < 300000) return 20;
+      if (listPrice < 600000) return 25;
+      return 30;
+    };
+    const termYears = getDefaultTermYears(price);
 
     // Only calculate monthly payment if we have both interest rate AND down payment info
     if (!calculatedMonthlyPayment && interestRate > 0 && downPaymentAmount >= 0 && price) {

@@ -145,7 +145,7 @@ export async function GET(request: NextRequest) {
             type: 'avatar',
             avatar_id: guestProfile.avatar_id,
             scale: guestProfile.scale || 2.8,
-            offset: { x: 0, y: 0.2 }  // Center in vertical frame
+            offset: guestProfile.offset || { x: 0, y: 0.2 }  // Use guest-specific offset from Firestore
           };
 
       return [

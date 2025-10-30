@@ -254,7 +254,7 @@ export function PropertySwiper2({
       <div className="absolute inset-4 flex items-center justify-center">
         {/* Next Card (Behind) */}
         {nextProperty && (
-          <div className="absolute w-full max-w-md h-full max-h-[calc(100vh-8rem)]">
+          <div className="absolute w-full max-w-md h-full max-h-[calc(100vh-12rem)]">
             <PropertyCard
               property={nextProperty}
               onLike={() => {}}
@@ -266,7 +266,7 @@ export function PropertySwiper2({
         )}
 
         {/* Current Card */}
-        <div className="absolute w-full max-w-md h-full max-h-[calc(100vh-8rem)]">
+        <div className="absolute w-full max-w-md h-full max-h-[calc(100vh-12rem)]">
           <PropertyCard
             property={currentProperty}
             onLike={handleLikeButton}

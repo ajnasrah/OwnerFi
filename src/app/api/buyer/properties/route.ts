@@ -255,7 +255,7 @@ export async function GET(request: NextRequest) {
       })
       .slice(0, pageSize);
 
-    // Debug logging
+    // Debug logging - Enhanced for debugging low results
     console.log(`Properties API Debug:
       Total properties in DB: ${allProperties.length}
       Search city: ${searchCity}, state: ${searchState}
@@ -264,6 +264,10 @@ export async function GET(request: NextRequest) {
       Nearby matches: ${nearbyProperties.length}
       Liked matches: ${likedProperties.length}
       Total results: ${allResults.length}
+
+      Sample property monthly payments: ${allProperties.slice(0, 5).map(p => p.monthlyPayment).join(', ')}
+      Sample property down payments: ${allProperties.slice(0, 5).map(p => p.downPaymentAmount).join(', ')}
+      Properties filtered out by down payment: ${allProperties.filter(p => p.downPaymentAmount > maxDown).length}
     `);
 
     return NextResponse.json({

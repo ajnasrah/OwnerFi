@@ -28,13 +28,27 @@ export interface PartialPropertyData {
  * Calculate missing financial fields based on provided data
  * Can handle various combinations of provided/missing fields
  */
+/**
+ * Calculate default amortization period based on property price
+ * <150k: 15 years
+ * 150k-300k: 20 years
+ * 300k-600k: 25 years
+ * 600k+: 30 years
+ */
+function getDefaultTermYears(listPrice: number): number {
+  if (listPrice < 150000) return 15;
+  if (listPrice < 300000) return 20;
+  if (listPrice < 600000) return 25;
+  return 30;
+}
+
 export function calculatePropertyFinancials(data: PartialPropertyData): PropertyFinancials {
   const listPrice = data.listPrice || 0;
   let downPaymentAmount = data.downPaymentAmount || 0;
   let downPaymentPercent = data.downPaymentPercent || 0;
   let monthlyPayment = data.monthlyPayment || 0;
   const interestRate = data.interestRate || 7.0; // Default 7% if not provided
-  const termYears = data.termYears || 20; // Default 20 years
+  const termYears = data.termYears || getDefaultTermYears(listPrice);
 
   // Calculate missing down payment fields
   if (listPrice > 0) {

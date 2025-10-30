@@ -37,18 +37,18 @@ async function generateAllGuestsTestVideo() {
     throw new Error('Host profile not found in Firestore');
   }
 
-  // Get all guests from Firestore - only use guests with working avatars
-  const workingGuestIds = ['doctor', 'real_estate_agent', 'car_salesman', 'financial_advisor'];
+  // Get ALL guests from Firestore
+  const allGuestIds = ['doctor', 'real_estate_agent', 'car_salesman', 'financial_advisor', 'tech_expert', 'fitness_trainer'];
   const guests: any[] = [];
 
-  for (const guestId of workingGuestIds) {
+  for (const guestId of allGuestIds) {
     const guestDoc = await db.collection('podcast_guest_profiles').doc(guestId).get();
     if (guestDoc.exists) {
       guests.push({ id: guestDoc.id, ...guestDoc.data() });
     }
   }
 
-  console.log(`Found ${guests.length} working guests\n`);
+  console.log(`Found ${guests.length} guests with individual positioning\n`);
 
   // Build video scenes - host introduces, then each guest speaks
   const videoInputs: any[] = [];
@@ -88,13 +88,13 @@ async function generateAllGuestsTestVideo() {
       ? {
           type: 'talking_photo',
           talking_photo_id: guest.avatar_id,
-          scale: 2.8  // Same scale that worked for Dr. Sofia
+          scale: guest.scale || 2.8
         }
       : {
           type: 'avatar',
           avatar_id: guest.avatar_id,
-          scale: 2.8,  // Same scale that worked for Dr. Sofia
-          offset: { x: 0, y: 0.2 }  // Same offset that worked for Dr. Sofia
+          scale: guest.scale || 2.8,
+          offset: guest.offset || { x: 0, y: 0.2 }  // Use guest-specific offset
         };
 
     const intro = `Hi, I'm ${guest.name}. ${guest.description || 'I specialize in ' + guest.expertise}`;

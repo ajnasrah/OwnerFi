@@ -36,10 +36,10 @@ async function syncProfiles() {
   for (const guest of guests) {
     console.log(`📝 Syncing guest: ${guest.name} (${guest.id})`);
 
-    // Set voice_speed to 1.15 and scale to 1.40 for all guests
+    // Set voice_speed to 1.15 and scale to 2.8 for all guests
     const guestData = {
       ...guest,
-      scale: 1.40,        // FORCE all guests to 1.40
+      scale: 2.8,         // FORCE all guests to 2.8 (fills vertical frame)
       voice_speed: 1.15,  // FORCE all guests to 1.15
       updatedAt: Date.now()
     };

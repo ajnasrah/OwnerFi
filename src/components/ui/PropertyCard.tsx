@@ -335,14 +335,14 @@ export function PropertyCard({ property, onLike, onPass, isFavorited, style }: P
         )}
 
         {/* Bottom Info Panel - Can expand over card */}
-        <div className="absolute bottom-0 left-0 right-0 z-10 h-[80vh] pointer-events-none">
+        <div className="absolute bottom-0 left-0 right-0 z-10 h-[50vh] pointer-events-none">
           {/* Expandable Details Panel */}
           <div
             className="absolute bottom-0 left-0 right-0 bg-white/98 backdrop-blur-sm rounded-t-3xl pointer-events-auto shadow-2xl h-full"
             style={{
               transform: showDetails
                 ? `translate3d(0, ${Math.max(drawerOffset, 0)}px, 0)`
-                : `translate3d(0, calc(80vh - 180px + ${Math.max(drawerOffset, 0)}px), 0)`,
+                : `translate3d(0, calc(50vh - 250px + ${Math.max(drawerOffset, 0)}px), 0)`,
               transition: drawerDragStart === null ? 'transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none',
             }}
             onTouchStart={handleDrawerTouchStart}
@@ -363,7 +363,7 @@ export function PropertyCard({ property, onLike, onPass, isFavorited, style }: P
             <div
               className="px-6 pb-6 overflow-y-auto"
               style={{
-                height: 'calc(80vh - 3rem)',
+                height: 'calc(50vh - 3rem)',
                 WebkitOverflowScrolling: 'touch',
                 overscrollBehavior: 'contain',
                 touchAction: 'pan-y',

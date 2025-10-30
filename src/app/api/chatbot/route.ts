@@ -62,8 +62,11 @@ RESPONSE APPROACH:
 `;
 
 export async function POST(request: Request) {
+  console.log(`🚀 [CHATBOT DEBUG] POST request received at ${new Date().toISOString()}`);
+
   try {
     const { message, conversationHistory = [] } = await request.json();
+    console.log(`🚀 [CHATBOT DEBUG] Message: "${message?.substring(0, 50)}..."`);
 
     if (!process.env.OPENAI_API_KEY) {
       return NextResponse.json(

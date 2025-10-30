@@ -600,7 +600,7 @@ export default function AdminDashboard() {
       downPaymentAmount: editForm.downPaymentAmount,
       monthlyPayment: editForm.monthlyPayment,
       interestRate: editForm.interestRate,
-      termYears: editForm.termYears || 20,
+      termYears: editForm.termYears, // Let calculatePropertyFinancials use dynamic default
       balloonYears: editForm.balloonYears,
       balloonPayment: editForm.balloonPayment
     });
@@ -622,7 +622,7 @@ export default function AdminDashboard() {
       downPaymentPercent: newPercent,
       monthlyPayment: editForm.monthlyPayment,
       interestRate: editForm.interestRate,
-      termYears: editForm.termYears || 20,
+      termYears: editForm.termYears, // Let calculatePropertyFinancials use dynamic default
       balloonYears: editForm.balloonYears,
       balloonPayment: editForm.balloonPayment
     });
@@ -643,7 +643,7 @@ export default function AdminDashboard() {
       downPaymentPercent: editForm.downPaymentPercent,
       downPaymentAmount: editForm.downPaymentAmount,
       interestRate: newRate,
-      termYears: editForm.termYears || 20,
+      termYears: editForm.termYears, // Let calculatePropertyFinancials use dynamic default
       balloonYears: editForm.balloonYears,
       balloonPayment: editForm.balloonPayment
     });
@@ -1345,6 +1345,7 @@ export default function AdminDashboard() {
                                   downPaymentAmount: property.downPaymentAmount,
                                   interestRate: property.interestRate,
                                   downPaymentPercent: property.downPaymentPercent,
+                                  termYears: (property as any).termYears,
                                   balloonYears: (property as any).balloonYears,
                                   imageUrl: property.imageUrl || (property as any).imageUrls?.[0] || '',
                                   imageUrls: (property as any).imageUrls || (property.imageUrl ? [property.imageUrl] : [])
@@ -3126,6 +3127,25 @@ export default function AdminDashboard() {
                             <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-500 font-medium">%</span>
                           </div>
                         </div>
+                      </div>
+
+                      {/* Term Years (Amortization) */}
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-2">Amortization Term Years</label>
+                        <div className="relative">
+                          <input
+                            type="number"
+                            step="1"
+                            min="1"
+                            max="40"
+                            value={editForm.termYears || ''}
+                            onChange={(e) => setEditForm({ ...editForm, termYears: parseInt(e.target.value) || undefined })}
+                            placeholder="Auto-calculated based on price"
+                            className="w-full pr-16 pl-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                          />
+                          <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-500 font-medium">years</span>
+                        </div>
+                        <p className="mt-1 text-sm text-slate-500">Leave blank for auto: &lt;150k=15yr, 150-300k=20yr, 300-600k=25yr, 600k+=30yr</p>
                       </div>
 
                       {/* Balloon Year Term */}

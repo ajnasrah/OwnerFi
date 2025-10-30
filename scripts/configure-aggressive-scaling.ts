@@ -29,7 +29,7 @@ const guestConfigs = {
   },
   real_estate_agent: {
     scale: 3.2,
-    offset: { x: -0.05, y: 0.15 }  // DOWN and LEFT
+    offset: { x: -0.12, y: 0.05 }  // UP and MORE LEFT
   },
   car_salesman: {
     scale: 3.2,

@@ -404,51 +404,90 @@ export async function deleteExpiredVideos(): Promise<{
   errors: number;
   totalSize: number;
 }> {
-  console.log('🗑️  Checking for expired videos...');
-
-  const storage = getFirebaseAdmin();
-  const bucket = storage.bucket();
-
-  // List all files in the viral-videos directory
-  const [files] = await bucket.getFiles({
-    prefix: 'viral-videos/'
-  });
+  console.log('🗑️  Checking for expired videos in R2 and Firebase...');
 
   let deleted = 0;
   let errors = 0;
   let totalSize = 0;
-  const now = new Date();
+  const now = Date.now();
+  const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
 
-  for (const file of files) {
-    try {
-      // Get file metadata
-      const [metadata] = await file.getMetadata();
-      const autoDeleteAfter = metadata.metadata?.autoDeleteAfter;
+  // ===== CLOUDFLARE R2 CLEANUP =====
+  console.log('☁️  Cleaning up R2...');
+  try {
+    const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
+    const accessKeyId = process.env.R2_ACCESS_KEY_ID;
+    const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
+    const bucketName = process.env.R2_BUCKET_NAME || 'ownerfi-videos';
 
-      if (!autoDeleteAfter) {
-        // Skip files without autoDeleteAfter metadata
-        continue;
+    if (accountId && accessKeyId && secretAccessKey) {
+      const { S3Client, ListObjectsV2Command, DeleteObjectCommand } = await import('@aws-sdk/client-s3');
+
+      const r2Client = new S3Client({
+        region: 'auto',
+        endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
+        credentials: { accessKeyId, secretAccessKey },
+      });
+
+      const listResponse = await r2Client.send(new ListObjectsV2Command({ Bucket: bucketName }));
+      const objects = listResponse.Contents || [];
+
+      console.log(`  Found ${objects.length} objects in R2`);
+
+      for (const obj of objects) {
+        try {
+          if (!obj.Key || !obj.LastModified) continue;
+
+          const ageMs = now - obj.LastModified.getTime();
+
+          if (ageMs > THREE_DAYS_MS) {
+            console.log(`  Deleting R2: ${obj.Key} (${((obj.Size || 0) / 1024 / 1024).toFixed(2)} MB, ${(ageMs / 1000 / 60 / 60).toFixed(1)}h old)`);
+            await r2Client.send(new DeleteObjectCommand({ Bucket: bucketName, Key: obj.Key }));
+            deleted++;
+            totalSize += (obj.Size || 0);
+          }
+        } catch (error) {
+          console.error(`  Error deleting R2 ${obj.Key}:`, error);
+          errors++;
+        }
       }
-
-      const deleteDate = new Date(autoDeleteAfter as string);
-
-      // Check if file is expired
-      if (now >= deleteDate) {
-        const size = parseInt(String(metadata.size || '0'));
-        totalSize += size;
-
-        console.log(`  Deleting expired video: ${file.name} (${(size / 1024 / 1024).toFixed(2)} MB)`);
-        await file.delete();
-        deleted++;
-      }
-    } catch (error) {
-      console.error(`  Error processing ${file.name}:`, error);
-      errors++;
+    } else {
+      console.warn('⚠️  R2 credentials not configured');
     }
+  } catch (error) {
+    console.error('❌ R2 cleanup error:', error);
+    errors++;
   }
 
-  const totalSizeMB = (totalSize / 1024 / 1024).toFixed(2);
-  console.log(`✅ Cleanup complete: ${deleted} videos deleted (${totalSizeMB} MB freed), ${errors} errors`);
+  // ===== FIREBASE CLEANUP (legacy) =====
+  console.log('🔥 Cleaning up Firebase...');
+  try {
+    const storage = getFirebaseAdmin();
+    const bucket = storage.bucket();
+    const [files] = await bucket.getFiles({ prefix: 'viral-videos/' });
 
+    for (const file of files) {
+      try {
+        const [metadata] = await file.getMetadata();
+        const autoDeleteAfter = metadata.metadata?.autoDeleteAfter;
+        if (!autoDeleteAfter) continue;
+
+        if (now >= new Date(autoDeleteAfter as string).getTime()) {
+          const size = parseInt(String(metadata.size || '0'));
+          console.log(`  Deleting Firebase: ${file.name} (${(size / 1024 / 1024).toFixed(2)} MB)`);
+          await file.delete();
+          deleted++;
+          totalSize += size;
+        }
+      } catch (error) {
+        console.error(`  Error deleting Firebase ${file.name}:`, error);
+        errors++;
+      }
+    }
+  } catch (error) {
+    console.error('❌ Firebase cleanup error:', error);
+  }
+
+  console.log(`✅ Cleanup: ${deleted} deleted, ${(totalSize / 1024 / 1024).toFixed(2)} MB freed, ${errors} errors`);
   return { deleted, errors, totalSize };
 }

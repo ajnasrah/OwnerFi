@@ -3,7 +3,7 @@
 // Runs daily at 4 AM via Vercel Cron
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getFirestore } from '@/lib/firebase-admin';
+import { getAdminDb } from '@/lib/firebase-admin';
 
 export const maxDuration = 300; // 5 minutes max
 
@@ -121,7 +121,13 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const db = getFirestore();
+    const db = await getAdminDb();
+    if (!db) {
+      return NextResponse.json(
+        { error: 'Firebase not initialized' },
+        { status: 500 }
+      );
+    }
     const propertiesRef = db.collection('properties');
     const snapshot = await propertiesRef.get();
 

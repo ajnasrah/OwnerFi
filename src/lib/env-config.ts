@@ -121,11 +121,11 @@ export const firebase = {
 // Cloudflare R2 Storage Configuration
 export const cloudflare = {
   r2: {
-    accountId: requireEnv('CLOUDFLARE_ACCOUNT_ID', 'Cloudflare account ID'),
-    accessKeyId: requireEnv('CLOUDFLARE_R2_ACCESS_KEY_ID', 'Cloudflare R2 access key'),
-    secretAccessKey: requireEnv('CLOUDFLARE_R2_SECRET_ACCESS_KEY', 'Cloudflare R2 secret key'),
-    bucketName: requireEnv('CLOUDFLARE_R2_BUCKET_NAME', 'Cloudflare R2 bucket name'),
-    publicUrl: requireEnv('CLOUDFLARE_R2_PUBLIC_URL', 'Cloudflare R2 public URL'),
+    accountId: requireEnv('R2_ACCOUNT_ID', 'Cloudflare account ID') || requireEnv('CLOUDFLARE_ACCOUNT_ID', 'Cloudflare account ID'),
+    accessKeyId: requireEnv('R2_ACCESS_KEY_ID', 'Cloudflare R2 access key') || requireEnv('CLOUDFLARE_R2_ACCESS_KEY_ID', 'Cloudflare R2 access key'),
+    secretAccessKey: requireEnv('R2_SECRET_ACCESS_KEY', 'Cloudflare R2 secret key') || requireEnv('CLOUDFLARE_R2_SECRET_ACCESS_KEY', 'Cloudflare R2 secret key'),
+    bucketName: requireEnv('R2_BUCKET_NAME', 'Cloudflare R2 bucket name') || requireEnv('CLOUDFLARE_R2_BUCKET_NAME', 'Cloudflare R2 bucket name'),
+    publicUrl: requireEnv('R2_PUBLIC_URL', 'Cloudflare R2 public URL') || requireEnv('CLOUDFLARE_R2_PUBLIC_URL', 'Cloudflare R2 public URL'),
   },
 };
 

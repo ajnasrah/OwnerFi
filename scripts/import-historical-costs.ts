@@ -12,9 +12,26 @@
  * - R2: Cloudflare R2 storage usage
  */
 
-import { db } from '../src/lib/firebase';
-import { setDoc, doc } from 'firebase/firestore';
+import { config } from 'dotenv';
+import { initializeApp, cert, getApps } from 'firebase-admin/app';
+import { getFirestore } from 'firebase-admin/firestore';
 import { Brand } from '../src/config/constants';
+
+// Load environment variables
+config({ path: '.env.local' });
+
+// Initialize Firebase Admin
+if (getApps().length === 0) {
+  initializeApp({
+    credential: cert({
+      projectId: process.env.FIREBASE_PROJECT_ID,
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n')
+    })
+  });
+}
+
+const db = getFirestore();
 
 // Get API key from environment
 const OPENAI_ADMIN_KEY = process.env.OPENAI_ADMIN_API_KEY || process.env.OPENAI_API_KEY;
@@ -186,13 +203,12 @@ async function importOpenAIHistory(startDate: Date, endDate: Date, brand: Brand 
       };
 
       // Save to cost_entries
-      await setDoc(doc(db, 'cost_entries', costEntry.id), costEntry);
+      await db.collection('cost_entries').doc(costEntry.id).set(costEntry);
 
       // Update daily_costs
       const dailyDocId = `${brand}_${dateStr}`;
-      const dailyDocRef = doc(db, 'daily_costs', dailyDocId);
 
-      await setDoc(dailyDocRef, {
+      await db.collection('daily_costs').doc(dailyDocId).set({
         date: dateStr,
         brand,
         heygen: { units: 0, costUSD: 0 },
@@ -207,9 +223,8 @@ async function importOpenAIHistory(startDate: Date, endDate: Date, brand: Brand 
       // Update monthly_costs
       const monthStr = dateStr.substring(0, 7); // YYYY-MM
       const monthlyDocId = `${brand}_${monthStr}`;
-      const monthlyDocRef = doc(db, 'monthly_costs', monthlyDocId);
 
-      await setDoc(monthlyDocRef, {
+      await db.collection('monthly_costs').doc(monthlyDocId).set({
         month: monthStr,
         brand,
         heygen: { units: 0, costUSD: 0 },

@@ -57,13 +57,19 @@ export function PropertyCard({ property, onLike, onPass, isFavorited, style }: P
     }
   }, [images.length]);
 
-  // Drawer swipe handlers - Buttery smooth for mobile
+  // Drawer swipe handlers - Buttery smooth for mobile AND desktop
   const handleDrawerTouchStart = useCallback((e: React.TouchEvent) => {
     const touch = e.touches[0];
     setDrawerDragStart(touch.clientY);
     setDrawerOffset(0);
 
     // Stop propagation to prevent parent swiper from interfering
+    e.stopPropagation();
+  }, []);
+
+  const handleDrawerMouseStart = useCallback((e: React.MouseEvent) => {
+    setDrawerDragStart(e.clientY);
+    setDrawerOffset(0);
     e.stopPropagation();
   }, []);
 
@@ -111,6 +117,49 @@ export function PropertyCard({ property, onLike, onPass, isFavorited, style }: P
     });
   }, [drawerDragStart, showDetails]);
 
+  const handleDrawerMouseMove = useCallback((e: React.MouseEvent) => {
+    if (drawerDragStart === null) return;
+
+    const deltaY = drawerDragStart - e.clientY;
+
+    // Allow scrolling if drawer is expanded and user is scrolling content
+    if (showDetails) {
+      const target = e.target as HTMLElement;
+      const scrollContainer = target.closest('[data-drawer-scroll]');
+
+      if (scrollContainer) {
+        const isScrolledToTop = scrollContainer.scrollTop <= 0;
+        const isScrollingDown = deltaY < 0;
+
+        // Only allow drawer to close if scrolled to top and swiping down
+        if (!isScrolledToTop || !isScrollingDown) {
+          return;
+        }
+      }
+    }
+
+    // Stop propagation to prevent parent swiper interference
+    e.stopPropagation();
+
+    // Use RAF for 60fps smooth updates
+    if (rafRef.current !== null) {
+      cancelAnimationFrame(rafRef.current);
+    }
+
+    rafRef.current = requestAnimationFrame(() => {
+      // Provide real-time visual feedback with rubber-band effect
+      if (!showDetails && deltaY > 0) {
+        // Dragging up to open - show preview with resistance
+        const resistance = deltaY > 100 ? 0.5 : 1;
+        setDrawerOffset(Math.min(deltaY * resistance, 150));
+      } else if (showDetails && deltaY < 0) {
+        // Dragging down to close - show preview with resistance
+        const resistance = Math.abs(deltaY) > 100 ? 0.5 : 1;
+        setDrawerOffset(Math.max(deltaY * resistance, -150));
+      }
+    });
+  }, [drawerDragStart, showDetails]);
+
   const handleDrawerTouchEnd = useCallback((e: React.TouchEvent) => {
     if (drawerDragStart === null) return;
 
@@ -118,6 +167,25 @@ export function PropertyCard({ property, onLike, onPass, isFavorited, style }: P
     const deltaY = drawerDragStart - touchEnd;
 
     // Stop propagation
+    e.stopPropagation();
+
+    // Increased threshold for better control - 60px swipe required
+    const threshold = 60;
+
+    if (deltaY > threshold && !showDetails) {
+      setShowDetails(true);
+    } else if (deltaY < -threshold && showDetails) {
+      setShowDetails(false);
+    }
+
+    setDrawerDragStart(null);
+    setDrawerOffset(0);
+  }, [drawerDragStart, showDetails]);
+
+  const handleDrawerMouseEnd = useCallback((e: React.MouseEvent) => {
+    if (drawerDragStart === null) return;
+
+    const deltaY = drawerDragStart - e.clientY;
     e.stopPropagation();
 
     // Increased threshold for better control - 60px swipe required

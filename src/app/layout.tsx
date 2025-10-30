@@ -12,6 +12,11 @@ const inter = Inter({
   display: 'swap',
 });
 
+// TEMP: Force all pages to be dynamic to fix useSearchParams build errors
+export const dynamic = 'force-dynamic';
+export const dynamicParams = true;
+export const revalidate = 0;
+
 export const metadata: Metadata = {
   title: "OwnerFi - Owner Financed Properties | No Bank Financing Needed",
   description: "Find owner financed homes in Texas, Florida, and Georgia. Skip the bank, buy directly from owners with flexible financing. Low down payments, no credit checks required.",

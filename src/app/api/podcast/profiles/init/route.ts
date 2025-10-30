@@ -164,8 +164,8 @@ const DEFAULT_CONFIG = {
   "host": {
     "name": "Abdullah",
     "avatar_type": "talking_photo",
-    "avatar_id": "d33fe3abc2914faa88309c3bdb9f47f4",
-    "voice_id": "5bd25d00f41c477989e1e121a16986d3",
+    "avatar_id": "f40972493dd74bbe829f30daa09ea1a9",
+    "voice_id": "9070a6c2dbd54c10bb111dc8c655bff7",
     "scale": 1.4,
     "background_color": "#ffffff",
     "description": "Host - uses motion-enabled avatar matching Benefit/Viral brands"

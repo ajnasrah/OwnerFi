@@ -75,13 +75,14 @@ export function buildAbdullahVideoRequest(
     video_inputs: [{
       character: {
         type: 'talking_photo',
-        talking_photo_id: 'd33fe3abc2914faa88309c3bdb9f47f4', // Abdullah avatar
+        talking_photo_id: 'f40972493dd74bbe829f30daa09ea1a9', // Motion-enabled avatar
         scale: 1.0,
+        talking_style: 'expressive'
       },
       voice: {
         type: 'text',
         input_text: video.script,
-        voice_id: '5bd25d00f41c477989e1e121a16986d3', // Abdullah voice
+        voice_id: '9070a6c2dbd54c10bb111dc8c655bff7', // Original voice
         speed: 1.1,
       }
     }],

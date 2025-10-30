@@ -27,14 +27,14 @@ export async function GET() {
       heygenQuota,
       recentEntries,
     ] = await Promise.all([
-      getTotalDailyCosts(),
-      getTotalMonthlyCosts(),
-      getMonthlyBreakdown(),
-      checkBudget('heygen', 'daily'),
-      checkBudget('submagic', 'daily'),
-      checkBudget('openai', 'daily'),
+      getTotalDailyCosts().catch(() => ({})),
+      getTotalMonthlyCosts().catch(() => ({})),
+      getMonthlyBreakdown().catch(() => ({ byBrand: {}, byService: { heygen: { units: 0, costUSD: 0 }, submagic: { units: 0, costUSD: 0 }, late: { units: 0, costUSD: 0 }, openai: { units: 0, costUSD: 0 }, r2: { units: 0, costUSD: 0 } }, total: 0 })),
+      checkBudget('heygen', 'daily').catch(() => ({ service: 'heygen' as const, period: 'daily' as const, used: 0, limit: costs.dailyBudget.heygen, percentage: 0, exceeded: false, nearLimit: false })),
+      checkBudget('submagic', 'daily').catch(() => ({ service: 'submagic' as const, period: 'daily' as const, used: 0, limit: costs.dailyBudget.submagic, percentage: 0, exceeded: false, nearLimit: false })),
+      checkBudget('openai', 'daily').catch(() => ({ service: 'openai' as const, period: 'daily' as const, used: 0, limit: costs.dailyBudget.openai, percentage: 0, exceeded: false, nearLimit: false })),
       getHeyGenQuota().catch(() => ({ remaining_quota: 0, remainingCredits: 0 })),
-      getRecentCostEntries(50),
+      getRecentCostEntries(50).catch(() => []),
     ]);
 
     // Calculate totals

@@ -663,23 +663,15 @@ export async function POST(request: NextRequest) {
       // Only if property is active and has images
       if (propertyData.status === 'active' && propertyData.isActive && propertyData.imageUrls && propertyData.imageUrls.length > 0) {
         try {
-          const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-          const webhookSecret = process.env.WEBHOOK_SECRET || process.env.CRON_SECRET;
-
-          // Call add-to-queue endpoint in background
-          fetch(`${baseUrl}/api/property/add-to-queue`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${webhookSecret}`
-            },
-            body: JSON.stringify({ propertyId })
-          }).catch(err => {
-            // Log but don't fail property creation
-            console.error('Failed to auto-add property to queue:', err);
-          });
+          // Import the function directly instead of making HTTP call
+          const { addToPropertyRotationQueue } = await import('@/lib/feed-store-firestore');
 
           console.log(`🎥 Auto-adding property ${propertyId} to video queue`);
+
+          // Add to queue directly (non-blocking - don't await)
+          addToPropertyRotationQueue(propertyId).catch(err => {
+            console.error('Failed to auto-add property to queue:', err);
+          });
         } catch (error) {
           console.error('Error triggering auto-add to queue:', error);
           // Don't fail property creation if queue add fails

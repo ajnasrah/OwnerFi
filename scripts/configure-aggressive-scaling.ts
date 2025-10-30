@@ -21,31 +21,37 @@ if (getApps().length === 0) {
 
 const db = getFirestore();
 
-// Individual positioning for each guest - manually calibrated
+// Individual positioning - analyzed from screenshots to center nose
 const guestConfigs = {
   doctor: {
+    // Dr. Sofia - slightly left of center, needs to go right
     scale: 3.2,
-    offset: { x: 0.08, y: 0.10 }  // UP and MORE RIGHT
+    offset: { x: 0.10, y: 0 }
   },
   real_estate_agent: {
+    // Zelena - right of center, needs to go left
     scale: 3.2,
-    offset: { x: -0.12, y: 0.05 }  // UP and MORE LEFT
+    offset: { x: -0.15, y: 0 }
   },
   car_salesman: {
+    // Colton - way right of center, needs to go far left
     scale: 3.2,
-    offset: { x: -0.05, y: 0.15 }  // DOWN and LEFT
+    offset: { x: -0.35, y: 0 }
   },
   financial_advisor: {
+    // Henry - centered horizontally but needs down vertically
     scale: 3.2,
-    offset: { x: 0, y: 0.2 }  // STRAIGHT DOWN
+    offset: { x: 0, y: 0.1 }
   },
   tech_expert: {
-    scale: 2.5,  // Standing avatar needs less
-    offset: { x: 0, y: 0.15 }  // STRAIGHT DOWN
+    // Vince - standing avatar, estimate centered
+    scale: 2.5,
+    offset: { x: 0, y: 0 }
   },
   fitness_trainer: {
+    // Oxana - estimate centered
     scale: 3.2,
-    offset: { x: 0, y: 0.2 }  // STRAIGHT DOWN
+    offset: { x: 0, y: 0 }
   }
 };
 

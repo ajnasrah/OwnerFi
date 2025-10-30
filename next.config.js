@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // TEMP: Disable static optimization to fix useSearchParams errors
+  output: 'standalone',
+
   // Production optimizations
   compress: true,
 

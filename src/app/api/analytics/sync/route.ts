@@ -66,10 +66,10 @@ export async function POST(request: NextRequest) {
         // Skip if no Late post ID
         if (!workflow.latePostId) continue;
 
-        // Fetch analytics from Late.dev
+        // Fetch analytics from Late.dev Analytics API
         let lateAnalytics: any = null;
         try {
-          const response = await fetch(`https://getlate.dev/api/v1/posts/${workflow.latePostId}`, {
+          const response = await fetch(`https://getlate.dev/api/v1/analytics?postId=${workflow.latePostId}`, {
             headers: {
               'Authorization': `Bearer ${process.env.LATE_API_KEY}`,
               'Content-Type': 'application/json'
@@ -77,13 +77,15 @@ export async function POST(request: NextRequest) {
           });
 
           if (response.ok) {
-            lateAnalytics = await response.json();
+            const data = await response.json();
+            // Analytics API returns posts array
+            lateAnalytics = data.posts && data.posts.length > 0 ? data.posts[0] : null;
           }
         } catch (error) {
           console.log(`   ⚠️  Failed to fetch analytics for ${workflow.latePostId}`);
         }
 
-        // Calculate metrics from Late.dev data
+        // Calculate metrics from Late.dev analytics data
         let totalViews = 0;
         let totalLikes = 0;
         let totalComments = 0;
@@ -91,17 +93,20 @@ export async function POST(request: NextRequest) {
         let totalSaves = 0;
         const platformMetrics: any = {};
 
+        // Use analytics from the analytics endpoint
+        if (lateAnalytics?.analytics) {
+          totalViews = lateAnalytics.analytics.views || 0;
+          totalLikes = lateAnalytics.analytics.likes || 0;
+          totalComments = lateAnalytics.analytics.comments || 0;
+          totalShares = lateAnalytics.analytics.shares || 0;
+          totalSaves = lateAnalytics.analytics.saves || 0;
+        }
+
+        // Per-platform analytics
         if (lateAnalytics?.platforms) {
           lateAnalytics.platforms.forEach((p: any) => {
-            const stats = p.analytics || p.stats || {};
-            if (stats.views || stats.likes || stats.comments) {
-              platformMetrics[p.platform] = stats;
-              totalViews += stats.views || 0;
-              totalLikes += stats.likes || 0;
-              totalComments += stats.comments || 0;
-              totalShares += stats.shares || 0;
-              totalSaves += stats.saves || 0;
-            }
+            const stats = p.analytics || {};
+            platformMetrics[p.platform] = stats;
           });
         }
 

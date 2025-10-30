@@ -21,31 +21,31 @@ if (getApps().length === 0) {
 
 const db = getFirestore();
 
-// Balanced scaling - fill frame but show faces
+// Individual positioning for each guest - manually calibrated
 const guestConfigs = {
   doctor: {
     scale: 3.2,
-    offset: { x: 0, y: -0.1 }
+    offset: { x: 0.08, y: 0.10 }  // UP and MORE RIGHT
   },
   real_estate_agent: {
     scale: 3.2,
-    offset: { x: 0, y: -0.1 }
+    offset: { x: -0.05, y: 0.15 }  // DOWN and LEFT
   },
   car_salesman: {
     scale: 3.2,
-    offset: { x: 0, y: -0.1 }
+    offset: { x: -0.05, y: 0.15 }  // DOWN and LEFT
   },
   financial_advisor: {
     scale: 3.2,
-    offset: { x: 0, y: -0.1 }
+    offset: { x: 0, y: 0.2 }  // STRAIGHT DOWN
   },
   tech_expert: {
     scale: 2.5,  // Standing avatar needs less
-    offset: { x: 0, y: -0.05 }
+    offset: { x: 0, y: 0.15 }  // STRAIGHT DOWN
   },
   fitness_trainer: {
     scale: 3.2,
-    offset: { x: 0, y: -0.1 }
+    offset: { x: 0, y: 0.2 }  // STRAIGHT DOWN
   }
 };
 

@@ -75,3 +75,4 @@ heygen-webhook-secrets.json
 # Scraper output directories (temporary data)
 apify-output/
 scraper-output/
+.DS_Store

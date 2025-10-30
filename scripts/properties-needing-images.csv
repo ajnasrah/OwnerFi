@@ -1,5 +1,0 @@
-Address,City,State,Score,Recommendation,Issues,Image URL
-"13996 Godbold Rd","Tallahassee","FL",1,"REPLACE","No image available","https://maps.googleapis.com/maps/api/streetview?size=800x600&location=13996%20Godbold%20Rd%2C%20Tallahassee%2C%20FL&key=AIzaSyCelger3EPc8GzTOQq7-cv6tUeVh_XN9jE"
-"4055 Victor Blvd","Kemp","TX",1,"REPLACE","No actual imagery; Displays placeholder text","https://maps.googleapis.com/maps/api/streetview?size=800x600&location=4055%20Victor%20Blvd%2C%20Kemp%2C%20TX&key=AIzaSyCelger3EPc8GzTOQq7-cv6tUeVh_XN9jE"
-"512 Raven Way","Naples","FL",6,"REPLACE","Vehicles obstructing view; Needs better composition; A bit bland without staging","https://maps.googleapis.com/maps/api/streetview?size=800x600&location=512%20Raven%20WAY%2C%20Naples%2C%20FL&key=AIzaSyCelger3EPc8GzTOQq7-cv6tUeVh_XN9jE"
-"9 Apple Tree Cir, Little Rock, Ar 72210","Little Rock","AR",6,"REPLACE","Harsh lighting creates shadows; Needs better lawn maintenance; Improvement in composition","https://photos.zillowstatic.com/fp/6831e46f88a573eeab72d4ed5798ad14-cc_ft_768.webp"

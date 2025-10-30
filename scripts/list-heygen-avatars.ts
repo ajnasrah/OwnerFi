@@ -3,6 +3,10 @@
  * Usage: npx tsx scripts/list-heygen-avatars.ts
  */
 
+import { config } from 'dotenv';
+
+config({ path: '.env.local' });
+
 const HEYGEN_API_KEY = process.env.HEYGEN_API_KEY;
 
 if (!HEYGEN_API_KEY) {

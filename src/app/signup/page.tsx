@@ -107,54 +107,53 @@ export default function SignUp() {
   };
 
   return (
-    <div className="h-screen bg-slate-900 flex items-center justify-center overflow-hidden">
-      <div className="w-full max-w-lg mx-auto px-4">
-        <div className="bg-slate-800/50 backdrop-blur-lg border border-slate-700/50 rounded-2xl p-4 max-h-[95vh] overflow-y-auto">
-          <div className="text-center mb-4">
-            <h1 className="text-xl sm:text-2xl font-bold text-white mb-2">Skip the bank. Buy direct.</h1>
-            <p className="text-white font-normal mb-3 text-sm">Real people selling real homes without traditional mortgages</p>
-            <div className="space-y-1 text-sm">
-              <p className="text-white">
-                Already have an account?{' '}
-                <Link href="/auth/signin" className="text-emerald-400 hover:text-emerald-300 font-semibold transition-colors">
-                  Sign In
-                </Link>
-              </p>
-              <p className="text-xs text-white">
-                Real estate professional?{' '}
-                <Link href="/realtor-signup" className="text-blue-400 hover:text-blue-300 font-semibold transition-colors">
-                  Join as a Realtor
-                </Link>
-              </p>
-            </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-2xl mb-4 shadow-lg">
+            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+            </svg>
           </div>
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">Join OwnerFi</h1>
+          <p className="text-slate-600 text-lg mb-4">Skip the bank. Buy direct.</p>
+          <p className="text-sm text-slate-500">
+            Already have an account?{' '}
+            <Link href="/auth/signin" className="text-emerald-600 hover:text-emerald-700 font-semibold transition-colors">
+              Sign in
+            </Link>
+          </p>
+        </div>
 
+        {/* Form Card */}
+        <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-8">
           {error && (
-            <div className="mb-3 bg-red-600/20 backdrop-blur-lg border border-red-500/30 rounded-lg p-3">
-              <p className="text-red-300 font-semibold text-sm">{error}</p>
+            <div className="mb-6 bg-red-50 border border-red-200 rounded-xl p-4">
+              <p className="text-red-700 text-sm font-medium">{error}</p>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-3">
-            <div className="grid grid-cols-2 gap-3">
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-white mb-1">First name</label>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">First name</label>
                 <input
                   type="text"
                   required
-                  className="w-full px-3 py-2 bg-emerald-500/10 border border-emerald-400/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 text-white placeholder-slate-400 font-normal text-sm"
-                  placeholder="First name"
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-slate-900 placeholder-slate-400 transition-all"
+                  placeholder="John"
                   value={formData.firstName}
                   onChange={(e) => handleInputChange('firstName', e.target.value)}
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-white mb-1">Last name</label>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Last name</label>
                 <input
                   type="text"
                   required
-                  className="w-full px-3 py-2 bg-emerald-500/10 border border-emerald-400/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 text-white placeholder-slate-400 font-normal text-sm"
-                  placeholder="Last name"
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-slate-900 placeholder-slate-400 transition-all"
+                  placeholder="Doe"
                   value={formData.lastName}
                   onChange={(e) => handleInputChange('lastName', e.target.value)}
                 />
@@ -162,91 +161,106 @@ export default function SignUp() {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-white mb-1">Email address</label>
+              <label className="block text-sm font-semibold text-slate-700 mb-2">Email address</label>
               <input
                 type="email"
                 required
-                className="w-full px-3 py-2 bg-emerald-500/10 border border-emerald-400/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 text-white placeholder-slate-400 font-normal text-sm"
-                placeholder="Enter your email"
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-slate-900 placeholder-slate-400 transition-all"
+                placeholder="john@example.com"
                 value={formData.email}
                 onChange={(e) => handleInputChange('email', e.target.value)}
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-white mb-1">Phone number</label>
+              <label className="block text-sm font-semibold text-slate-700 mb-2">Phone number</label>
               <input
                 type="tel"
                 required
-                className="w-full px-3 py-2 bg-emerald-500/10 border border-emerald-400/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 text-white placeholder-slate-400 font-normal text-sm"
-                placeholder="Your phone number"
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-slate-900 placeholder-slate-400 transition-all"
+                placeholder="(555) 123-4567"
                 value={formData.phone}
                 onChange={(e) => handleInputChange('phone', e.target.value)}
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-white mb-1">Password</label>
+              <label className="block text-sm font-semibold text-slate-700 mb-2">Password</label>
               <input
                 type="password"
                 required
-                className="w-full px-3 py-2 bg-emerald-500/10 border border-emerald-400/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 text-white placeholder-slate-400 font-normal text-sm"
-                placeholder="Create password"
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-slate-900 placeholder-slate-400 transition-all"
+                placeholder="At least 6 characters"
                 value={formData.password}
                 onChange={(e) => handleInputChange('password', e.target.value)}
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-white mb-1">Confirm password</label>
+              <label className="block text-sm font-semibold text-slate-700 mb-2">Confirm password</label>
               <input
                 type="password"
                 required
-                className="w-full px-3 py-2 bg-emerald-500/10 border border-emerald-400/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 text-white placeholder-slate-400 font-normal text-sm"
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-slate-900 placeholder-slate-400 transition-all"
                 placeholder="Re-enter password"
                 value={formData.confirmPassword}
                 onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
               />
             </div>
 
-            {/* Simple Consent Notice */}
-            <div className="bg-slate-700/30 border border-slate-600/30 rounded-lg p-3 mt-4">
-              <p className="text-xs text-slate-300 text-center leading-relaxed">
-                By creating an account, you agree to our{' '}
-                <Link href="/terms" className="text-emerald-400 underline" target="_blank">Terms of Service</Link>
-                {' '}and{' '}
-                <Link href="/privacy" className="text-emerald-400 underline" target="_blank">Privacy Policy</Link>
-                {' '}and consent to receiving marketing messages and phone calls from OwnerFi and licensed real estate agents, including automated calls and texts.
-              </p>
-            </div>
-
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white py-2.5 px-4 rounded-lg font-semibold text-sm transition-all duration-200 shadow-lg shadow-emerald-500/25 disabled:opacity-50 disabled:cursor-not-allowed mt-4"
+              className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white py-4 px-6 rounded-xl font-semibold text-base transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
-              {loading ? 'Creating account...' : 'Create account'}
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Creating account...
+                </span>
+              ) : (
+                'Create account'
+              )}
             </button>
+
+            {/* Consent Notice - Minimal */}
+            <p className="text-xs text-slate-500 text-center leading-relaxed pt-2">
+              By creating an account, you agree to our{' '}
+              <Link href="/terms" className="text-emerald-600 hover:underline" target="_blank">Terms</Link>
+              {' '}and{' '}
+              <Link href="/privacy" className="text-emerald-600 hover:underline" target="_blank">Privacy Policy</Link>.
+            </p>
           </form>
+        </div>
 
-          <div className="mt-3 bg-emerald-500/10 border border-emerald-400/30 rounded-lg p-3">
-            <h3 className="font-bold text-white mb-2 text-sm">OwnerFi Platform:</h3>
-            <ul className="space-y-1 text-xs text-white">
-              <li className="flex items-center">
-                <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full mr-2"></div>
-                Lead generation platform
-              </li>
-              <li className="flex items-center">
-                <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full mr-2"></div>
-                Connects with licensed agents
-              </li>
-              <li className="flex items-center">
-                <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full mr-2"></div>
-                Information only - not advice
-              </li>
-            </ul>
+        {/* Bottom Links */}
+        <div className="mt-6 text-center">
+          <p className="text-sm text-slate-600">
+            Real estate professional?{' '}
+            <Link href="/realtor-signup" className="text-emerald-600 hover:text-emerald-700 font-semibold transition-colors">
+              Join as a Realtor
+            </Link>
+          </p>
+        </div>
+
+        {/* Info Badge */}
+        <div className="mt-6 bg-white/60 backdrop-blur border border-slate-200 rounded-xl p-4">
+          <div className="flex items-start gap-3">
+            <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="font-semibold text-slate-900 text-sm mb-1">OwnerFi connects you with opportunities</h3>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                We're a lead generation platform connecting buyers with licensed real estate agents. Information provided is for educational purposes only and not financial advice.
+              </p>
+            </div>
           </div>
-
         </div>
       </div>
     </div>

@@ -139,12 +139,13 @@ export async function GET(request: NextRequest) {
         ? {
             type: 'talking_photo',
             talking_photo_id: guestProfile.avatar_id,
-            scale: guestProfile.scale || 1.4
+            scale: guestProfile.scale || 2.8
           }
         : {
             type: 'avatar',
             avatar_id: guestProfile.avatar_id,
-            scale: guestProfile.scale || 1.4
+            scale: guestProfile.scale || 2.8,
+            offset: { x: 0, y: 0.2 }  // Center in vertical frame
           };
 
       return [

@@ -21,6 +21,13 @@ export function PropertyCard({ property, onLike, onPass, isFavorited, style }: P
   const [drawerOffset, setDrawerOffset] = useState(0);
   const rafRef = useRef<number | null>(null);
 
+  // IMAGE VARIATION SELECTOR - Change this number to test different styles
+  // 1 = scale(1.4) - Shows 40% more of the image (moderate zoom out)
+  // 2 = object-contain (shows entire image, may have gray bars)
+  // 3 = scale(1.25) - Shows 25% more of the image (subtle zoom out)
+  // 4 = scale(1.6) - Shows 60% more of the image (aggressive zoom out)
+  const IMAGE_VARIATION = 1;
+
   // Memoize expensive calculations
   const images = useMemo(() => property.imageUrls || [], [property.imageUrls]);
   const currentImage = useMemo(() =>
@@ -208,31 +215,37 @@ export function PropertyCard({ property, onLike, onPass, isFavorited, style }: P
     >
       <div className="relative w-full h-full bg-white rounded-3xl shadow-2xl overflow-hidden">
         {/* Property Image - Full Screen Background */}
-        <div className="absolute inset-0">
+        <div className="absolute inset-0 overflow-hidden">
           {imageLoading && (
             <div className="absolute inset-0 flex items-center justify-center bg-slate-200">
               <div className="w-16 h-16 border-4 border-emerald-300 border-t-emerald-600 rounded-full animate-spin"></div>
             </div>
           )}
 
-          <Image
-            src={currentImage}
-            alt={property.address}
-            fill
-            className="object-cover"
+          <div
+            className="absolute inset-0"
             style={{
-              transform: 'scale(0.5)',
-              transformOrigin: 'center center'
+              transform: IMAGE_VARIATION === 1 ? 'scale(1.4)' :
+                        IMAGE_VARIATION === 3 ? 'scale(1.25)' :
+                        IMAGE_VARIATION === 4 ? 'scale(1.6)' :
+                        'scale(1)',
             }}
-            onLoad={() => setImageLoading(false)}
-            onError={() => {
-              setImageError(true);
-              setImageLoading(false);
-            }}
-            sizes="(max-width: 768px) 100vw, 50vw"
-            quality={85}
-            priority={imageIndex === 0}
-          />
+          >
+            <Image
+              src={currentImage}
+              alt={property.address}
+              fill
+              className={IMAGE_VARIATION === 2 ? "object-contain" : "object-cover"}
+              onLoad={() => setImageLoading(false)}
+              onError={() => {
+                setImageError(true);
+                setImageLoading(false);
+              }}
+              sizes="(max-width: 768px) 100vw, 50vw"
+              quality={85}
+              priority={imageIndex === 0}
+            />
+          </div>
 
           {/* Gradient Overlay for Text Readability */}
           <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/90" />

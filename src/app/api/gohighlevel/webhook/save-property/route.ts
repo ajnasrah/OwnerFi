@@ -622,6 +622,13 @@ export async function POST(request: NextRequest) {
     if (cleanedData.imageUrls && cleanedData.imageUrls.length > 0) {
       propertyData.imageUrls = cleanedData.imageUrls;
     }
+    // Mark images as enhanced (set by auto-cleanup)
+    if (cleanedData.imageEnhanced !== undefined) {
+      propertyData.imageEnhanced = cleanedData.imageEnhanced;
+    }
+    if (cleanedData.imageEnhancedAt) {
+      propertyData.imageEnhancedAt = cleanedData.imageEnhancedAt;
+    }
 
     // Save to database
     try {

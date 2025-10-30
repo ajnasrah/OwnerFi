@@ -13,6 +13,7 @@ const getLateOwnerfiProfileId = () => process.env.LATE_OWNERFI_PROFILE_ID;
 const getLateCarzProfileId = () => process.env.LATE_CARZ_PROFILE_ID;
 const getLatePodcastProfileId = () => process.env.LATE_PODCAST_PROFILE_ID;
 const getLateVassDistroProfileId = () => process.env.LATE_VASSDISTRO_PROFILE_ID;
+const getLateAbdullahProfileId = () => process.env.LATE_ABDULLAH_PROFILE_ID;
 
 export interface LatePostRequest {
   videoUrl: string;

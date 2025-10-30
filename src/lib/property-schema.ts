@@ -113,6 +113,10 @@ export interface PropertyListing {
     isStreetView: boolean;             // True if using Google Street View
   };
 
+  // Image Enhancement Tracking
+  imageEnhanced?: boolean;             // True if image URLs have been upgraded to high-res
+  imageEnhancedAt?: string;            // ISO timestamp when enhancement was applied
+
   // Integration Data
   source: 'manual' | 'import' | 'scraper';
   sourceId?: string;                   // Original ID from source system

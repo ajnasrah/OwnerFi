@@ -3,11 +3,11 @@
  * Performance analytics from Late.dev social media posts
  */
 
-import AnalyticsDashboard from '@/components/AnalyticsDashboard';
+import PlatformAnalyticsDashboard from '@/components/PlatformAnalyticsDashboard';
 
 export const metadata = {
-  title: 'Analytics Dashboard | Admin',
-  description: 'Social media performance analytics and insights',
+  title: 'Platform Analytics | Admin',
+  description: 'Platform-specific social media performance analytics and AI-powered recommendations',
 };
 
 export default function AnalyticsDashboardPage() {
@@ -16,14 +16,14 @@ export default function AnalyticsDashboardPage() {
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">📊 Analytics Dashboard</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">📊 Platform Analytics Dashboard</h1>
           <p className="text-gray-600">
-            Performance insights from Late.dev - analyze time slots, content types, hooks, and platforms
+            Platform-specific insights, peak times, engagement trends, and AI-powered recommendations
           </p>
         </div>
 
         {/* Dashboard */}
-        <AnalyticsDashboard />
+        <PlatformAnalyticsDashboard />
 
         {/* Back to Admin */}
         <div className="mt-8">

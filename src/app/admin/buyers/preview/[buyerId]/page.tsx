@@ -272,34 +272,42 @@ export default function BuyerPreview() {
         onComplete={() => setShowTutorial(false)}
       />
 
-      {/* Top Navigation - Clean Minimal Design (offset for admin banner) */}
-      <div className="fixed top-12 left-0 right-0 z-[60] bg-gradient-to-b from-slate-900/95 to-transparent backdrop-blur-sm">
-        <div className="max-w-md mx-auto px-4 py-3">
+      {/* Top Navigation - Compact Design (offset for admin banner) */}
+      <div className="fixed top-12 left-0 right-0 z-[60] bg-gradient-to-b from-slate-900/90 to-transparent backdrop-blur-sm">
+        <div className="max-w-md mx-auto px-3 py-2">
           {/* Single Row Layout */}
-          <div className="flex items-center justify-between gap-3">
-            {/* Left: Location */}
-            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-xl rounded-full px-4 py-2 border border-white/20">
-              <span className="text-base">📍</span>
-              <span className="text-white font-bold text-sm">{profile?.city}</span>
+          <div className="flex items-center justify-between gap-2">
+            {/* Left: Location - Clickable (disabled in preview) */}
+            <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur-xl rounded-full px-3 py-1.5 border border-white/20 opacity-90 cursor-not-allowed">
+              <span className="text-sm">📍</span>
+              <span className="text-white font-bold text-xs">{profile?.city}</span>
             </div>
 
             {/* Right: Action Buttons */}
-            <div className="flex items-center gap-2">
-              <div className="relative w-10 h-10 bg-white/10 backdrop-blur-xl rounded-full flex items-center justify-center border border-white/20">
-                <span className="text-lg">❤️</span>
+            <div className="flex items-center gap-1.5">
+              <div className="relative w-8 h-8 bg-white/10 backdrop-blur-xl rounded-full flex items-center justify-center border border-white/20">
+                <span className="text-sm">❤️</span>
                 {likedProperties.length > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold border-2 border-slate-900">
+                  <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center font-bold border border-slate-900">
                     {likedProperties.length}
                   </span>
                 )}
               </div>
+              <div className="w-8 h-8 bg-white/10 backdrop-blur-xl rounded-full flex items-center justify-center border border-white/20 opacity-50 cursor-not-allowed">
+                <span className="text-sm">⚙️</span>
+              </div>
               <button
                 onClick={() => setShowTutorial(true)}
-                className="w-10 h-10 bg-white/10 backdrop-blur-xl hover:bg-white/20 rounded-full flex items-center justify-center transition-all border border-white/20"
+                className="w-8 h-8 bg-white/10 backdrop-blur-xl hover:bg-white/20 rounded-full flex items-center justify-center transition-all border border-white/20"
                 title="Show Help"
               >
-                <span className="text-lg">❓</span>
+                <span className="text-sm">❓</span>
               </button>
+              <div className="w-8 h-8 bg-white/10 backdrop-blur-xl rounded-full flex items-center justify-center border border-white/20 opacity-50 cursor-not-allowed">
+                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </div>
             </div>
           </div>
         </div>

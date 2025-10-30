@@ -17,15 +17,15 @@ function upgradeZillowImageUrl(url: string): string {
 
   let upgraded = url;
 
-  // Replace all small sizes with 1536px (highest quality)
-  const sizes = [
+  // Only upgrade LOW-RES images (≤768px)
+  // 960px+ are already good quality and don't need upgrading
+  const lowResSizes = [
     'p_c.jpg', 'p_e.jpg', 'p_f.jpg', 'p_g.jpg', 'p_h.jpg',
     'cc_ft_192.webp', 'cc_ft_384.webp', 'cc_ft_576.webp',
-    'cc_ft_768.webp', 'cc_ft_960.webp', 'cc_ft_1152.webp',
-    'cc_ft_1344.webp'
+    'cc_ft_768.webp'
   ];
 
-  for (const size of sizes) {
+  for (const size of lowResSizes) {
     if (upgraded.includes(size)) {
       // Try uncropped full size first
       upgraded = upgraded.replace(size, 'uncropped_scaled_within_1536_1152.webp');
@@ -129,9 +129,42 @@ export async function GET(request: NextRequest) {
       );
     }
     const propertiesRef = db.collection('properties');
-    const snapshot = await propertiesRef.get();
 
-    console.log(`📊 Processing ${snapshot.size} properties...`);
+    // Only process properties that haven't been enhanced yet
+    // We need to query in two ways since Firestore doesn't support OR queries easily:
+    // 1. Properties where imageEnhanced == false
+    // 2. Properties where imageEnhanced doesn't exist (null)
+    // For simplicity, we'll just query where imageEnhanced is false or missing
+    const BATCH_SIZE = 500;
+
+    // First, try to get properties where imageEnhanced is explicitly false
+    let snapshot = await propertiesRef
+      .where('imageEnhanced', '==', false)
+      .limit(BATCH_SIZE)
+      .get();
+
+    // If we didn't get enough, also get properties where imageEnhanced doesn't exist
+    // (This is for legacy properties that don't have the field yet)
+    if (snapshot.size === 0) {
+      // Get all properties and filter in memory for those missing imageEnhanced field
+      // We'll do this in small batches to avoid memory issues
+      const allSnapshot = await propertiesRef.limit(BATCH_SIZE).get();
+
+      // Filter for properties without imageEnhanced field
+      const docsWithoutField = allSnapshot.docs.filter(doc => {
+        const data = doc.data();
+        return data.imageEnhanced !== true;
+      });
+
+      // Create a new snapshot-like object
+      snapshot = {
+        size: docsWithoutField.length,
+        docs: docsWithoutField,
+        empty: docsWithoutField.length === 0
+      } as any;
+    }
+
+    console.log(`📊 Found ${snapshot.size} unprocessed properties (batch size: ${BATCH_SIZE})...`);
 
     let processedCount = 0;
     let upgradedCount = 0;
@@ -228,6 +261,8 @@ export async function GET(request: NextRequest) {
         try {
           await propertiesRef.doc(update.id).update({
             ...update.data,
+            imageEnhanced: true,
+            imageEnhancedAt: new Date().toISOString(),
             updatedAt: new Date()
           });
         } catch (error) {
@@ -237,12 +272,42 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // Mark all processed properties as enhanced (even if no updates were needed)
+    // This prevents reprocessing the same properties on next run
+    const noUpdateNeeded = snapshot.docs.filter(doc => {
+      return !updates.find(u => u.id === doc.id);
+    });
+
+    if (noUpdateNeeded.length > 0) {
+      console.log(`📝 Marking ${noUpdateNeeded.length} properties as already enhanced...`);
+
+      for (const doc of noUpdateNeeded) {
+        try {
+          await propertiesRef.doc(doc.id).update({
+            imageEnhanced: true,
+            imageEnhancedAt: new Date().toISOString(),
+            updatedAt: new Date()
+          });
+        } catch (error) {
+          console.error(`❌ Error marking ${doc.id}:`, error);
+        }
+      }
+    }
+
     console.log('✅ Image enhancement completed!');
+    console.log(`   Properties in batch: ${snapshot.size}`);
     console.log(`   Properties processed: ${processedCount}`);
     console.log(`   Zillow images upgraded: ${stats.zillow.upgraded}`);
     console.log(`   Google Drive links fixed: ${stats.googleDrive.upgraded}`);
     console.log(`   Total properties updated: ${updates.length - errorCount}`);
+    console.log(`   Properties marked as complete: ${noUpdateNeeded.length}`);
     console.log(`   Errors: ${errorCount}`);
+
+    if (snapshot.size === BATCH_SIZE) {
+      console.log(`\n⚠️  More properties may need processing. Batch limit reached.`);
+    } else {
+      console.log(`\n✅ All unprocessed properties have been enhanced!`);
+    }
 
     // Send alert if there were many errors
     if (errorCount > 5) {
@@ -260,8 +325,12 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
+      batchSize: snapshot.size,
+      maxBatchSize: BATCH_SIZE,
+      moreToProcess: snapshot.size === BATCH_SIZE,
       processed: processedCount,
-      upgraded: upgradedCount - errorCount,
+      upgraded: updates.length - errorCount,
+      markedComplete: noUpdateNeeded.length,
       errors: errorCount,
       stats,
       timestamp: new Date().toISOString()

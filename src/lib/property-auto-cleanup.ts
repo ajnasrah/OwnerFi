@@ -66,11 +66,13 @@ function escapeRegex(str: string): string {
  * - cc_ft_384.webp = 384px
  * - cc_ft_576.webp = 576px
  * - cc_ft_768.webp = 768px
- * - cc_ft_960.webp = 960px
- * - cc_ft_1152.webp = 1152px
- * - cc_ft_1344.webp = 1344px
+ * - cc_ft_960.webp = 960px (GOOD QUALITY - not upgraded)
+ * - cc_ft_1152.webp = 1152px (GOOD QUALITY - not upgraded)
+ * - cc_ft_1344.webp = 1344px (EXCELLENT QUALITY - not upgraded)
  * - cc_ft_1536.webp = 1536px (best)
  * - uncropped_scaled_within_1536_1152.webp = full size
+ *
+ * Only upgrades images ≤768px to avoid unnecessary processing
  */
 export function upgradeZillowImageUrl(url: string): string {
   if (!url || !url.includes('zillowstatic.com')) {
@@ -80,15 +82,15 @@ export function upgradeZillowImageUrl(url: string): string {
   // Replace low-res with high-res
   let upgraded = url;
 
-  // Replace all small sizes with full-size uncropped version
-  const sizes = [
+  // Only upgrade LOW-RES images (≤768px)
+  // 960px+ are already good quality and don't need upgrading
+  const lowResSizes = [
     'p_c.jpg', 'p_e.jpg', 'p_f.jpg', 'p_g.jpg', 'p_h.jpg',
     'cc_ft_192.webp', 'cc_ft_384.webp', 'cc_ft_576.webp',
-    'cc_ft_768.webp', 'cc_ft_960.webp', 'cc_ft_1152.webp',
-    'cc_ft_1344.webp'
+    'cc_ft_768.webp'
   ];
 
-  for (const size of sizes) {
+  for (const size of lowResSizes) {
     if (upgraded.includes(size)) {
       // Try uncropped full size first
       upgraded = upgraded.replace(size, 'uncropped_scaled_within_1536_1152.webp');
@@ -171,12 +173,16 @@ export function autoCleanPropertyData(propertyData: {
   imageUrl?: string;
   imageUrls?: string[];
   zillowImageUrl?: string;
+  imageEnhanced?: boolean;
+  imageEnhancedAt?: string;
 } {
   const cleaned: {
     address?: string;
     imageUrl?: string;
     imageUrls?: string[];
     zillowImageUrl?: string;
+    imageEnhanced?: boolean;
+    imageEnhancedAt?: string;
   } = {};
 
   // Clean address
@@ -203,6 +209,10 @@ export function autoCleanPropertyData(propertyData: {
   if (propertyData.zillowImageUrl) {
     cleaned.zillowImageUrl = upgradeImageUrl(propertyData.zillowImageUrl);
   }
+
+  // Mark property as enhanced since we just upgraded the images
+  cleaned.imageEnhanced = true;
+  cleaned.imageEnhancedAt = new Date().toISOString();
 
   return cleaned;
 }

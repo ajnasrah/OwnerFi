@@ -12,8 +12,22 @@ import {
   getRecentCostEntries,
 } from '@/lib/cost-tracker';
 import { getHeyGenQuota } from '@/lib/heygen-client';
-import { costs } from '@/lib/env-config';
 import { db } from '@/lib/firebase';
+
+// Import costs safely - if env-config throws, catch it
+let costs: any;
+try {
+  costs = require('@/lib/env-config').costs;
+} catch (error) {
+  console.error('Failed to load costs config:', error);
+  // Provide fallback costs
+  costs = {
+    dailyBudget: { heygen: 100, submagic: 50, openai: 50 },
+    monthlyBudget: { total: 700 },
+    costPerUnit: {},
+    alertThresholds: {}
+  };
+}
 
 export async function GET() {
   try {

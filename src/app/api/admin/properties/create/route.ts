@@ -8,6 +8,7 @@ import { ExtendedSession } from '@/types/session';
 import { PropertyListing } from '@/lib/property-schema';
 import { analyzePropertyImageAsync } from '@/lib/image-quality-analyzer';
 import { autoCleanPropertyData } from '@/lib/property-auto-cleanup';
+import { calculatePropertyFinancials } from '@/lib/property-calculations';
 
 /**
  * Create a new property manually via admin form
@@ -34,12 +35,11 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
 
-    // Validate required fields
+    // Validate required fields (termYears is now optional - will be auto-calculated)
     const requiredFields = [
       'address', 'city', 'state', 'zipCode',
       'propertyType', 'bedrooms', 'bathrooms',
-      'listPrice', 'downPaymentAmount', 'downPaymentPercent',
-      'monthlyPayment', 'interestRate', 'termYears'
+      'listPrice'
     ];
 
     const missingFields = requiredFields.filter(field => !body[field]);
@@ -49,6 +49,16 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Calculate financials automatically
+    const financials = calculatePropertyFinancials({
+      listPrice: Number(body.listPrice),
+      downPaymentAmount: body.downPaymentAmount ? Number(body.downPaymentAmount) : undefined,
+      downPaymentPercent: body.downPaymentPercent ? Number(body.downPaymentPercent) : undefined,
+      monthlyPayment: body.monthlyPayment ? Number(body.monthlyPayment) : undefined,
+      interestRate: body.interestRate ? Number(body.interestRate) : undefined,
+      termYears: body.termYears ? Number(body.termYears) : undefined, // Will use dynamic default if not provided
+    });
 
     // Generate property ID
     const propertyId = `prop_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -87,13 +97,14 @@ export async function POST(request: NextRequest) {
       stories: body.stories ? Number(body.stories) : undefined,
       garage: body.garage ? Number(body.garage) : undefined,
 
-      // Financial Information
-      listPrice: Number(body.listPrice),
-      downPaymentAmount: Number(body.downPaymentAmount),
-      downPaymentPercent: Number(body.downPaymentPercent),
-      monthlyPayment: Number(body.monthlyPayment),
-      interestRate: Number(body.interestRate),
-      termYears: Number(body.termYears),
+      // Financial Information - Use calculated values
+      listPrice: financials.listPrice,
+      downPaymentAmount: financials.downPaymentAmount,
+      downPaymentPercent: financials.downPaymentPercent,
+      monthlyPayment: financials.monthlyPayment,
+      loanAmount: financials.loanAmount,
+      interestRate: body.interestRate ? Number(body.interestRate) : 7.0,
+      termYears: financials.termYears, // Automatically calculated based on price
       balloonPayment: body.balloonPayment ? Number(body.balloonPayment) : null,
       balloonYears: body.balloonYears ? Number(body.balloonYears) : undefined,
 

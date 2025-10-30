@@ -186,10 +186,15 @@ export async function trackCost(
       metadata,
     };
 
+    // Filter out undefined values for Firestore Admin SDK
+    const cleanedEntry = Object.fromEntries(
+      Object.entries(costEntry).filter(([_, value]) => value !== undefined)
+    );
+
     console.log(`🔍 [COST DEBUG] Writing cost entry with ID: ${costEntry.id}`);
 
-    // Save individual cost entry
-    await db.collection('cost_entries').doc(costEntry.id).set(costEntry);
+    // Save individual cost entry (with undefined values removed)
+    await db.collection('cost_entries').doc(costEntry.id).set(cleanedEntry);
     console.log(`🔍 [COST DEBUG] Cost entry written successfully`);
 
     // Update daily aggregates

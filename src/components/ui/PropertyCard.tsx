@@ -354,10 +354,18 @@ export function PropertyCard({ property, onLike, onPass, isFavorited, style }: P
             onMouseLeave={handleDrawerMouseEnd}
           >
             {/* Handle Bar - Swipeable Area */}
-            <div className="w-full py-3 flex justify-center cursor-grab active:cursor-grabbing">
+            <div className="w-full py-3 flex flex-col items-center gap-2 cursor-grab active:cursor-grabbing">
               <div className="w-16 h-1.5 bg-slate-300 rounded-full">
                 <div className="w-full h-full bg-gradient-to-r from-slate-400 to-slate-500 rounded-full" />
               </div>
+              {!showDetails && (
+                <div className="inline-flex items-center gap-1.5 bg-slate-100 px-3 py-1 rounded-full">
+                  <svg className="w-3 h-3 text-slate-600 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 15l7-7 7 7" />
+                  </svg>
+                  <span className="text-slate-700 font-bold text-xs">Swipe up for more details</span>
+                </div>
+              )}
             </div>
 
             <div
@@ -490,11 +498,11 @@ export function PropertyCard({ property, onLike, onPass, isFavorited, style }: P
                     <div className="grid grid-cols-2 gap-3 text-sm">
                       <div>
                         <div className="text-slate-600 text-xs mb-1">Interest Rate</div>
-                        <div className="font-bold text-slate-900 text-lg">{property.interestRate}%</div>
+                        <div className="font-bold text-slate-900 text-lg">est. {property.interestRate}%</div>
                       </div>
                       <div>
                         <div className="text-slate-600 text-xs mb-1">Loan Term</div>
-                        <div className="font-bold text-slate-900 text-lg">{property.termYears} years</div>
+                        <div className="font-bold text-slate-900 text-lg">est. {property.termYears} years</div>
                       </div>
                     </div>
                   </div>
@@ -522,24 +530,37 @@ export function PropertyCard({ property, onLike, onPass, isFavorited, style }: P
                     </p>
                   </div>
 
-                  {/* More Info Button - Compact */}
-                  <div className="text-center pt-2">
+                  {/* Action Buttons - Compact */}
+                  <div className="grid grid-cols-2 gap-3 pt-2">
                     <a
                       href={`https://www.google.com/search?q=${encodeURIComponent(`${property.address} ${property.city}, ${property.state} ${property.zipCode}`)}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="w-full block bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-2.5 px-4 rounded-xl font-bold text-sm shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-95 transition-all"
+                      className="block bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-2.5 px-4 rounded-xl font-bold text-sm shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-95 transition-all"
                     >
                       <div className="flex items-center justify-center gap-2">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
-                        <span>Search Property Online</span>
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                        </svg>
+                        <span>Search Online</span>
                       </div>
                     </a>
+
+                    <button
+                      onClick={() => {
+                        const message = `I'm interested in the property at ${property.address}, ${property.city}, ${property.state}. Found through OwnerFi.`;
+                        const phone = property.agentPhone || property.phone || '+1234567890';
+                        window.open(`sms:${phone}&body=${encodeURIComponent(message)}`, '_self');
+                      }}
+                      className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white py-2.5 px-4 rounded-xl font-bold text-sm shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-95 transition-all"
+                    >
+                      <div className="flex items-center justify-center gap-2">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                        </svg>
+                        <span>Contact Agent</span>
+                      </div>
+                    </button>
                   </div>
                 </div>
               )}

@@ -12,7 +12,7 @@ interface PropertyCardProps {
   style?: React.CSSProperties;
 }
 
-export function PropertyCard({ property, onLike, onPass, isFavorited, style }: PropertyCardProps) {
+export const PropertyCard = React.memo(function PropertyCard({ property, onLike, onPass, isFavorited, style }: PropertyCardProps) {
   const [imageIndex, setImageIndex] = useState(0);
   const [imageLoading, setImageLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
@@ -21,12 +21,6 @@ export function PropertyCard({ property, onLike, onPass, isFavorited, style }: P
   const [drawerOffset, setDrawerOffset] = useState(0);
   const rafRef = useRef<number | null>(null);
 
-  // IMAGE VARIATION SELECTOR - Change this number to test different styles
-  // 1 = object-cover 70% height - crops edges, fills space
-  // 2 = object-cover 75% height - crops edges, more space at bottom
-  // 3 = object-cover 40% height - crops edges, centered with top space
-  // 4 = object-cover 80% height - crops edges, minimal bottom space
-  const IMAGE_VARIATION = 3;
 
   // Memoize expensive calculations
   const images = useMemo(() => property.imageUrls || [], [property.imageUrls]);
@@ -70,7 +64,7 @@ export function PropertyCard({ property, onLike, onPass, isFavorited, style }: P
     setDrawerDragStart(touch.clientY);
     setDrawerOffset(0);
 
-    // Stop propagation to prevent parent swiper from interfering
+    // CRITICAL: Stop propagation to block parent swiper
     e.stopPropagation();
   }, []);
 
@@ -102,7 +96,7 @@ export function PropertyCard({ property, onLike, onPass, isFavorited, style }: P
       }
     }
 
-    // Stop propagation to prevent parent swiper interference
+    // CRITICAL: Stop propagation to block parent swiper
     e.stopPropagation();
 
     // Use RAF for 60fps smooth updates
@@ -226,10 +220,7 @@ export function PropertyCard({ property, onLike, onPass, isFavorited, style }: P
             className="absolute inset-x-0 overflow-hidden"
             style={{
               top: '10%',
-              height: IMAGE_VARIATION === 1 ? '70%' :
-                     IMAGE_VARIATION === 2 ? '75%' :
-                     IMAGE_VARIATION === 3 ? '40%' :
-                     IMAGE_VARIATION === 4 ? '80%' : '70%'
+              height: '40%'
             }}
           >
             <Image
@@ -243,8 +234,9 @@ export function PropertyCard({ property, onLike, onPass, isFavorited, style }: P
                 setImageLoading(false);
               }}
               sizes="(max-width: 768px) 100vw, 50vw"
-              quality={85}
+              quality={75}
               priority={imageIndex === 0}
+              loading={imageIndex === 0 ? "eager" : "lazy"}
             />
           </div>
 
@@ -344,6 +336,7 @@ export function PropertyCard({ property, onLike, onPass, isFavorited, style }: P
                 ? `translate3d(0, ${Math.max(drawerOffset, 0)}px, 0)`
                 : `translate3d(0, calc(50vh - 290px + ${Math.max(drawerOffset, 0)}px), 0)`,
               transition: drawerDragStart === null ? 'transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none',
+              willChange: 'transform',
             }}
             onTouchStart={handleDrawerTouchStart}
             onTouchMove={handleDrawerTouchMove}
@@ -375,6 +368,7 @@ export function PropertyCard({ property, onLike, onPass, isFavorited, style }: P
                 WebkitOverflowScrolling: 'touch',
                 overscrollBehavior: 'contain',
                 touchAction: 'pan-y',
+                willChange: showDetails ? 'scroll-position' : 'auto',
               }}
               data-drawer-scroll
             >
@@ -571,4 +565,4 @@ export function PropertyCard({ property, onLike, onPass, isFavorited, style }: P
       </div>
     </div>
   );
-}
+});

@@ -168,7 +168,7 @@ export function PropertySwiper2({
         transform: 'scale(0.95) translateY(20px) translateZ(0)',
         opacity: 0.8,
         zIndex: 1,
-        willChange: 'transform, opacity',
+        pointerEvents: 'none' as const,
       };
     }
 
@@ -180,9 +180,10 @@ export function PropertySwiper2({
       transition: isDragging || animating ? 'none' : 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
       opacity: 1,
       zIndex: 10,
-      willChange: 'transform',
+      willChange: isDragging || animating ? 'transform' : 'auto',
       backfaceVisibility: 'hidden' as const,
       WebkitBackfaceVisibility: 'hidden' as const,
+      WebkitTransform: `translate3d(${dragOffset.x}px, ${dragOffset.y}px, 0) rotate(${rotation}deg) scale(${scale})`,
     };
   };
 
@@ -249,12 +250,13 @@ export function PropertySwiper2({
       onMouseMove={handleMove}
       onMouseUp={handleEnd}
       onMouseLeave={handleEnd}
+      style={{ width: '100vw', maxWidth: '100vw', overflowX: 'hidden' }}
     >
       {/* Cards Stack */}
-      <div className="absolute inset-4 flex items-center justify-center">
+      <div className="absolute inset-2 sm:inset-4 flex items-center justify-center" style={{ maxWidth: '100%' }}>
         {/* Next Card (Behind) */}
         {nextProperty && (
-          <div className="absolute w-full max-w-md h-full max-h-[calc(100vh-12rem)]">
+          <div className="absolute w-[calc(100%-1rem)] sm:w-full max-w-[min(28rem,calc(100vw-2rem))] h-full max-h-[calc(100vh-12rem)]">
             <PropertyCard
               property={nextProperty}
               onLike={() => {}}
@@ -266,7 +268,7 @@ export function PropertySwiper2({
         )}
 
         {/* Current Card */}
-        <div className="absolute w-full max-w-md h-full max-h-[calc(100vh-12rem)]">
+        <div className="absolute w-[calc(100%-1rem)] sm:w-full max-w-[min(28rem,calc(100vw-2rem))] h-full max-h-[calc(100vh-12rem)]">
           <PropertyCard
             property={currentProperty}
             onLike={handleLikeButton}

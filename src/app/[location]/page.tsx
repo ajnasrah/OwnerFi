@@ -2,8 +2,7 @@ import { Metadata } from 'next'
 import Link from 'next/link'
 import Script from 'next/script'
 import { LegalFooter } from '@/components/ui/LegalFooter'
-import { db } from '@/lib/firebase'
-import { collection, getDocs, query, where } from 'firebase/firestore'
+import { getAdminDb } from '@/lib/firebase-admin'
 import { notFound } from 'next/navigation'
 
 // This handles ALL location-based pages dynamically
@@ -73,9 +72,15 @@ export async function generateMetadata({ params }: { params: Promise<{ location:
   }
 }
 
-// Get location data from Firebase
+// Get location data from Firebase Admin SDK (server-side)
 async function getLocationData(locationSlug: string): Promise<LocationData | null> {
   try {
+    const adminDb = await getAdminDb()
+    if (!adminDb) {
+      console.error('Firebase Admin SDK not initialized')
+      return null
+    }
+
     // First, check if it's a state
     const stateMapping: Record<string, string> = {
       'texas': 'TX', 'florida': 'FL', 'georgia': 'GA', 'california': 'CA',
@@ -92,13 +97,15 @@ async function getLocationData(locationSlug: string): Promise<LocationData | nul
 
     if (stateCode) {
       // It's a state - get all properties in this state
-      const propertiesRef = collection(db, 'properties')
-      const stateQuery = query(propertiesRef, where('state', '==', stateCode), where('isActive', '==', true))
-      const snapshot = await getDocs(stateQuery)
+      const snapshot = await adminDb
+        .collection('properties')
+        .where('state', '==', stateCode)
+        .where('isActive', '==', true)
+        .get()
 
       // Get unique cities in this state
       const cities = new Set<string>()
-      snapshot.docs.forEach(doc => {
+      snapshot.docs.forEach((doc: any) => {
         const data = doc.data()
         if (data.city) cities.add(data.city)
       })
@@ -119,24 +126,21 @@ async function getLocationData(locationSlug: string): Promise<LocationData | nul
         word.charAt(0).toUpperCase() + word.slice(1)
       ).join(' ')
 
-      const propertiesRef = collection(db, 'properties')
-      const cityQuery = query(
-        propertiesRef,
-        where('city', '==', cityName),
-        where('isActive', '==', true)
-      )
-      const snapshot = await getDocs(cityQuery)
+      let snapshot = await adminDb
+        .collection('properties')
+        .where('city', '==', cityName)
+        .where('isActive', '==', true)
+        .get()
 
       if (snapshot.empty) {
         // Try with lowercase
-        const cityQueryLower = query(
-          propertiesRef,
-          where('city', '==', cityName.toLowerCase()),
-          where('isActive', '==', true)
-        )
-        const snapshotLower = await getDocs(cityQueryLower)
-        if (snapshotLower.empty) return null
-        snapshot.docs.push(...snapshotLower.docs)
+        snapshot = await adminDb
+          .collection('properties')
+          .where('city', '==', cityName.toLowerCase())
+          .where('isActive', '==', true)
+          .get()
+
+        if (snapshot.empty) return null
       }
 
       // Get state from first property
@@ -146,9 +150,13 @@ async function getLocationData(locationSlug: string): Promise<LocationData | nul
       // Get nearby cities
       const nearbyCities = new Set<string>()
       if (state) {
-        const stateQuery = query(propertiesRef, where('state', '==', state), where('isActive', '==', true))
-        const stateSnapshot = await getDocs(stateQuery)
-        stateSnapshot.docs.forEach(doc => {
+        const stateSnapshot = await adminDb
+          .collection('properties')
+          .where('state', '==', state)
+          .where('isActive', '==', true)
+          .get()
+
+        stateSnapshot.docs.forEach((doc: any) => {
           const data = doc.data()
           if (data.city && data.city !== cityName) {
             nearbyCities.add(data.city)

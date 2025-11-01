@@ -1,11 +1,14 @@
+import type { Firestore } from 'firebase-admin/firestore';
+import type { Auth } from 'firebase-admin/auth';
+
 // Lazy initialization to prevent build-time Firebase imports
-let adminDb: unknown = null;
-let adminAuth: unknown = null;
+let adminDb: Firestore | null = null;
+let adminAuth: Auth | null = null;
 let isInitialized = false;
 
 async function initializeAdminSDK() {
   if (isInitialized) return { adminDb, adminAuth };
-  
+
   try {
     // Dynamic imports to avoid build-time initialization
     const { initializeApp, getApps, cert } = await import('firebase-admin/app');
@@ -37,18 +40,18 @@ async function initializeAdminSDK() {
     const app = getApps()[0];
     adminDb = getFirestore(app);
     adminAuth = getAuth(app);
-    
+
   } catch (error) {
     adminDb = null;
     adminAuth = null;
   }
-  
+
   isInitialized = true;
   return { adminDb, adminAuth };
 }
 
 // Export functions that initialize on demand
-export async function getAdminDb() {
+export async function getAdminDb(): Promise<Firestore | null> {
   const { adminDb } = await initializeAdminSDK();
   return adminDb;
 }

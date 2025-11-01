@@ -15,21 +15,22 @@
  * - Scheduling conflicts where all posts try to go out at once
  */
 
-import { db } from '@/lib/firebase';
-import {
-  collection,
-  addDoc,
-  query,
-  where,
-  orderBy,
-  limit,
-  getDocs,
-  doc,
-  updateDoc,
-  Timestamp,
-  getDoc
-} from 'firebase/firestore';
+import { initializeApp, cert, getApps } from 'firebase-admin/app';
+import { getFirestore, Timestamp } from 'firebase-admin/firestore';
 import type { AbdullahVideoScript } from './abdullah-content-generator';
+
+// Initialize Firebase Admin (server-side only!)
+if (getApps().length === 0) {
+  initializeApp({
+    credential: cert({
+      projectId: process.env.FIREBASE_PROJECT_ID,
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n')
+    })
+  });
+}
+
+const db = getFirestore();
 
 export interface AbdullahQueueItem {
   id?: string;
@@ -118,7 +119,7 @@ export async function addScriptsToQueue(scripts: AbdullahVideoScript[]): Promise
     };
 
     try {
-      const docRef = await addDoc(collection(db, COLLECTION_NAME), {
+      const docRef = await db.collection(COLLECTION_NAME).add({
         ...queueItem,
         createdAt: Timestamp.fromDate(queueItem.createdAt),
         updatedAt: Timestamp.fromDate(queueItem.updatedAt),
@@ -147,16 +148,13 @@ export async function getNextPendingItem(): Promise<AbdullahQueueItem | null> {
     const now = new Date();
 
     // Query for pending items where scheduled time has arrived
-    const q = query(
-      collection(db, COLLECTION_NAME),
-      where('status', '==', 'pending'),
-      where('scheduledGenerationTime', '<=', Timestamp.fromDate(now)),
-      orderBy('scheduledGenerationTime', 'asc'),
-      orderBy('priority', 'asc'),
-      limit(1)
-    );
-
-    const snapshot = await getDocs(q);
+    const snapshot = await db.collection(COLLECTION_NAME)
+      .where('status', '==', 'pending')
+      .where('scheduledGenerationTime', '<=', Timestamp.fromDate(now))
+      .orderBy('scheduledGenerationTime', 'asc')
+      .orderBy('priority', 'asc')
+      .limit(1)
+      .get();
 
     if (snapshot.empty) {
       return null;
@@ -202,8 +200,6 @@ export async function updateQueueItem(
   updates: Partial<AbdullahQueueItem>
 ): Promise<void> {
   try {
-    const docRef = doc(db, COLLECTION_NAME, queueId);
-
     const updateData: any = {
       ...updates,
       updatedAt: Timestamp.fromDate(new Date()),
@@ -223,7 +219,7 @@ export async function updateQueueItem(
       updateData.scheduledPostTime = Timestamp.fromDate(updates.scheduledPostTime);
     }
 
-    await updateDoc(docRef, updateData);
+    await db.collection(COLLECTION_NAME).doc(queueId).update(updateData);
 
   } catch (error) {
     console.error(`❌ Error updating queue item ${queueId}:`, error);
@@ -236,30 +232,29 @@ export async function updateQueueItem(
  */
 export async function getQueueStats() {
   try {
-    const qRef = collection(db, COLLECTION_NAME);
-
     // Get pending count
-    const pendingQuery = query(qRef, where('status', '==', 'pending'));
-    const pendingSnap = await getDocs(pendingQuery);
+    const pendingSnap = await db.collection(COLLECTION_NAME)
+      .where('status', '==', 'pending')
+      .get();
 
     // Get generating count
-    const generatingQuery = query(qRef, where('status', '==', 'generating'));
-    const generatingSnap = await getDocs(generatingQuery);
+    const generatingSnap = await db.collection(COLLECTION_NAME)
+      .where('status', '==', 'generating')
+      .get();
 
     // Get completed today
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
 
-    const completedQuery = query(
-      qRef,
-      where('status', '==', 'completed'),
-      where('completedAt', '>=', Timestamp.fromDate(todayStart))
-    );
-    const completedSnap = await getDocs(completedQuery);
+    const completedSnap = await db.collection(COLLECTION_NAME)
+      .where('status', '==', 'completed')
+      .where('completedAt', '>=', Timestamp.fromDate(todayStart))
+      .get();
 
     // Get failed count
-    const failedQuery = query(qRef, where('status', '==', 'failed'));
-    const failedSnap = await getDocs(failedQuery);
+    const failedSnap = await db.collection(COLLECTION_NAME)
+      .where('status', '==', 'failed')
+      .get();
 
     return {
       pending: pendingSnap.size,
@@ -292,14 +287,12 @@ export async function hasQueuedItemsForToday(): Promise<boolean> {
     const todayEnd = new Date(todayStart);
     todayEnd.setDate(todayEnd.getDate() + 1);
 
-    const q = query(
-      collection(db, COLLECTION_NAME),
-      where('createdAt', '>=', Timestamp.fromDate(todayStart)),
-      where('createdAt', '<', Timestamp.fromDate(todayEnd)),
-      limit(1)
-    );
+    const snapshot = await db.collection(COLLECTION_NAME)
+      .where('createdAt', '>=', Timestamp.fromDate(todayStart))
+      .where('createdAt', '<', Timestamp.fromDate(todayEnd))
+      .limit(1)
+      .get();
 
-    const snapshot = await getDocs(q);
     return !snapshot.empty;
 
   } catch (error) {
@@ -313,14 +306,13 @@ export async function hasQueuedItemsForToday(): Promise<boolean> {
  */
 export async function getQueueItemById(queueId: string): Promise<AbdullahQueueItem | null> {
   try {
-    const docRef = doc(db, COLLECTION_NAME, queueId);
-    const docSnap = await getDoc(docRef);
+    const docSnap = await db.collection(COLLECTION_NAME).doc(queueId).get();
 
-    if (!docSnap.exists()) {
+    if (!docSnap.exists) {
       return null;
     }
 
-    const data = docSnap.data();
+    const data = docSnap.data()!;
 
     return {
       id: docSnap.id,

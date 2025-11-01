@@ -175,7 +175,7 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
 
         {/* Swipe Instructions - Above drawer, always visible */}
         {!showDetails && (
-          <div className="absolute left-0 right-0 z-20 flex justify-center items-center pointer-events-none" style={{ top: '55%' }}>
+          <div className="absolute left-0 right-0 z-20 flex justify-center items-center pointer-events-none" style={{ top: '52%' }}>
             <div className="inline-flex items-center gap-1.5 bg-white/95 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg border border-slate-200">
               <span className="text-slate-700 font-bold text-xs">👆 Swipe to browse • Tap buttons to save</span>
             </div>

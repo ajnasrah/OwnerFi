@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useCallback, useRef } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import Image from 'next/image';
 import { PropertyListing } from '@/lib/property-schema';
 
@@ -12,184 +12,11 @@ interface PropertyCardProps {
   style?: React.CSSProperties;
 }
 
-// Memoized description component to prevent re-renders on drawer state changes
-const PropertyDescription = React.memo(({ description }: { description: string }) => {
-  return (
-    <div className="bg-gradient-to-br from-slate-50 to-blue-50 rounded-2xl p-4">
-      <h3 className="font-bold text-slate-900 mb-3 flex items-center gap-2 text-base">
-        <span className="text-lg">📝</span>
-        <span>Property Description</span>
-      </h3>
-      <p
-        className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap max-w-full"
-        style={{
-          wordBreak: 'break-word',
-          overflowWrap: 'break-word',
-          // Optimize text rendering for performance
-          contain: 'layout style paint',
-        }}
-      >
-        {description}
-      </p>
-    </div>
-  );
-});
-
-PropertyDescription.displayName = 'PropertyDescription';
-
-// Memoized expanded details section for better performance
-const ExpandedDetails = React.memo(({
-  property,
-  monthlyPayment,
-  estimatedTaxes,
-  estimatedInsurance,
-  totalMonthly,
-}: {
-  property: PropertyListing;
-  monthlyPayment: number;
-  estimatedTaxes: number;
-  estimatedInsurance: number;
-  totalMonthly: number;
-}) => {
-  return (
-    <div className="space-y-4 pt-4 border-t border-slate-200" style={{ contain: 'layout style paint' }}>
-      {/* Property Description */}
-      {property.description && (
-        <PropertyDescription description={property.description} />
-      )}
-
-      {/* Monthly Payment Breakdown */}
-      <div className="bg-slate-50 rounded-2xl p-4">
-        <h3 className="font-bold text-slate-900 mb-3 flex items-center gap-2 text-sm">
-          <span>💰</span>
-          <span>Est. Monthly Payment Breakdown</span>
-        </h3>
-        <div className="space-y-2 text-xs">
-          <div className="flex justify-between">
-            <span className="text-slate-600">Principal & Interest</span>
-            <span className="font-bold text-slate-900">est. ${monthlyPayment.toLocaleString()}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-slate-600">Property Tax</span>
-            <span className="font-bold text-slate-900">est. ${estimatedTaxes.toLocaleString()}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-slate-600">Insurance</span>
-            <span className="font-bold text-slate-900">est. ${estimatedInsurance.toLocaleString()}</span>
-          </div>
-          <div className="flex justify-between pt-2 border-t border-slate-300">
-            <span className="font-bold text-slate-900">Total Monthly</span>
-            <span className="font-black text-emerald-600 text-sm">est. ${totalMonthly.toLocaleString()}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Down Payment */}
-      <div className="bg-blue-50 rounded-2xl p-4">
-        <h3 className="font-bold text-blue-900 mb-2 flex items-center gap-2 text-sm">
-          <span>💵</span>
-          <span>Est. Down Payment Required</span>
-        </h3>
-        <div className="text-xl font-black text-blue-900">
-          est. ${property.downPaymentAmount?.toLocaleString()}
-        </div>
-        <p className="text-xs text-blue-700 mt-1">
-          {property.downPaymentAmount && property.listPrice
-            ? `Approximately ${Math.round((property.downPaymentAmount / property.listPrice) * 100)}% of purchase price`
-            : ''}
-        </p>
-      </div>
-
-      {/* Financing Terms */}
-      <div className="bg-slate-50 rounded-2xl p-4">
-        <h3 className="font-bold text-slate-900 mb-3 flex items-center gap-2">
-          <span>📋</span>
-          <span>Financing Terms</span>
-        </h3>
-        <div className="grid grid-cols-2 gap-3 text-sm">
-          <div>
-            <div className="text-slate-600 text-xs mb-1">Interest Rate</div>
-            <div className="font-bold text-slate-900 text-lg">est. {property.interestRate}%</div>
-          </div>
-          <div>
-            <div className="text-slate-600 text-xs mb-1">Loan Term</div>
-            <div className="font-bold text-slate-900 text-lg">est. {property.termYears} years</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Refinance Timeline */}
-      {property.balloonYears && property.balloonYears > 0 && (
-        <div className="bg-blue-50 border-2 border-blue-200 rounded-2xl p-4">
-          <h3 className="font-bold text-blue-900 mb-2 flex items-center gap-2">
-            <span>📅</span>
-            <span>Refinance Timeline</span>
-          </h3>
-          <p className="text-sm text-blue-800 mb-2">
-            Plan to refinance after <strong>{property.balloonYears} {property.balloonYears === 1 ? 'year' : 'years'}</strong>
-          </p>
-          <p className="text-xs text-blue-700 bg-blue-100 rounded-lg p-2">
-            💡 <strong>Note:</strong> You'll need to refinance with a traditional mortgage or negotiate new terms with the seller after {property.balloonYears} {property.balloonYears === 1 ? 'year' : 'years'}. This gives you time to improve your credit and build equity.
-          </p>
-        </div>
-      )}
-
-      {/* Disclaimer */}
-      <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-3">
-        <p className="text-xs text-yellow-800">
-          💡 Estimates shown are not guaranteed. Monthly payments may or may not include property taxes and insurance. Taxes, insurance, and HOA fees vary by property. Please verify all payment details and what's included with the seller.
-        </p>
-      </div>
-
-      {/* Action Buttons - Compact */}
-      <div className="grid grid-cols-2 gap-3 pt-2">
-        <a
-          href={`https://www.google.com/search?q=${encodeURIComponent(`${property.address} ${property.city}, ${property.state} ${property.zipCode}`)}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-2.5 px-4 rounded-xl font-bold text-sm shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-95 transition-all"
-        >
-          <div className="flex items-center justify-center gap-2">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-            <span>Search Online</span>
-          </div>
-        </a>
-
-        <button
-          onClick={() => {
-            const message = `I'm interested in the property at ${property.address}, ${property.city}, ${property.state}. Found through OwnerFi.`;
-            const phone = property.agentPhone || property.phone || '+1234567890';
-            window.open(`sms:${phone}&body=${encodeURIComponent(message)}`, '_self');
-          }}
-          className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white py-2.5 px-4 rounded-xl font-bold text-sm shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-95 transition-all"
-        >
-          <div className="flex items-center justify-center gap-2">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-            </svg>
-            <span>Contact Agent</span>
-          </div>
-        </button>
-      </div>
-    </div>
-  );
-});
-
-ExpandedDetails.displayName = 'ExpandedDetails';
-
 export const PropertyCard = React.memo(function PropertyCard({ property, onLike, onPass, isFavorited, style }: PropertyCardProps) {
   const [imageIndex, setImageIndex] = useState(0);
   const [imageLoading, setImageLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
-  const [drawerDragStart, setDrawerDragStart] = useState<number | null>(null);
-  const [drawerOffset, setDrawerOffset] = useState(0);
-  const [isAnimating, setIsAnimating] = useState(false);
-  const rafRef = useRef<number | null>(null);
-  const drawerRef = useRef<HTMLDivElement>(null);
-
 
   // Memoize expensive calculations
   const images = useMemo(() => property.imageUrls || [], [property.imageUrls]);
@@ -210,15 +37,6 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
     };
   }, [property.monthlyPayment]);
 
-  // Cleanup RAF on unmount
-  React.useEffect(() => {
-    return () => {
-      if (rafRef.current !== null) {
-        cancelAnimationFrame(rafRef.current);
-      }
-    };
-  }, []);
-
   // Memoized event handlers
   const nextImage = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -236,167 +54,9 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
     }
   }, [images.length]);
 
-  // Drawer swipe handlers - Buttery smooth for mobile AND desktop
-  const handleDrawerTouchStart = useCallback((e: React.TouchEvent) => {
-    const touch = e.touches[0];
-    setDrawerDragStart(touch.clientY);
-    setDrawerOffset(0);
-
-    // CRITICAL: Stop propagation to block parent swiper
-    e.stopPropagation();
+  const toggleDetails = useCallback(() => {
+    setShowDetails(prev => !prev);
   }, []);
-
-  const handleDrawerMouseStart = useCallback((e: React.MouseEvent) => {
-    setDrawerDragStart(e.clientY);
-    setDrawerOffset(0);
-    e.stopPropagation();
-  }, []);
-
-  const handleDrawerTouchMove = useCallback((e: React.TouchEvent) => {
-    if (drawerDragStart === null) return;
-
-    const touch = e.touches[0];
-    const deltaY = drawerDragStart - touch.clientY;
-
-    // Allow scrolling if drawer is expanded and user is scrolling content
-    if (showDetails) {
-      const target = e.target as HTMLElement;
-      const scrollContainer = target.closest('[data-drawer-scroll]');
-
-      if (scrollContainer) {
-        const isScrolledToTop = scrollContainer.scrollTop <= 0;
-        const isScrollingDown = deltaY < 0;
-
-        // Only allow drawer to close if scrolled to top and swiping down
-        if (!isScrolledToTop || !isScrollingDown) {
-          // Let the scroll happen naturally
-          return;
-        }
-        // If we're at top and swiping down, stop propagation to enable drawer close
-        e.stopPropagation();
-      }
-    } else {
-      // When drawer is collapsed, stop propagation for handle bar swipes
-      e.stopPropagation();
-    }
-
-    // Use RAF for 60fps smooth updates
-    if (rafRef.current !== null) {
-      cancelAnimationFrame(rafRef.current);
-    }
-
-    rafRef.current = requestAnimationFrame(() => {
-      // Provide real-time visual feedback with rubber-band effect
-      if (!showDetails && deltaY > 0) {
-        // Dragging up to open - show preview with resistance
-        const resistance = deltaY > 100 ? 0.5 : 1;
-        setDrawerOffset(Math.min(deltaY * resistance, 150));
-      } else if (showDetails && deltaY < 0) {
-        // Dragging down to close - show preview with resistance
-        const resistance = Math.abs(deltaY) > 100 ? 0.5 : 1;
-        setDrawerOffset(Math.max(deltaY * resistance, -150));
-      }
-    });
-  }, [drawerDragStart, showDetails, rafRef]);
-
-  const handleDrawerMouseMove = useCallback((e: React.MouseEvent) => {
-    if (drawerDragStart === null) return;
-
-    const deltaY = drawerDragStart - e.clientY;
-
-    // Allow scrolling if drawer is expanded and user is scrolling content
-    if (showDetails) {
-      const target = e.target as HTMLElement;
-      const scrollContainer = target.closest('[data-drawer-scroll]');
-
-      if (scrollContainer) {
-        const isScrolledToTop = scrollContainer.scrollTop <= 0;
-        const isScrollingDown = deltaY < 0;
-
-        // Only allow drawer to close if scrolled to top and swiping down
-        if (!isScrolledToTop || !isScrollingDown) {
-          // Let the scroll happen naturally
-          return;
-        }
-        // If we're at top and swiping down, stop propagation to enable drawer close
-        e.stopPropagation();
-      }
-    } else {
-      // When drawer is collapsed, stop propagation for handle bar drags
-      e.stopPropagation();
-    }
-
-    // Use RAF for 60fps smooth updates
-    if (rafRef.current !== null) {
-      cancelAnimationFrame(rafRef.current);
-    }
-
-    rafRef.current = requestAnimationFrame(() => {
-      // Provide real-time visual feedback with rubber-band effect
-      if (!showDetails && deltaY > 0) {
-        // Dragging up to open - show preview with resistance
-        const resistance = deltaY > 100 ? 0.5 : 1;
-        setDrawerOffset(Math.min(deltaY * resistance, 150));
-      } else if (showDetails && deltaY < 0) {
-        // Dragging down to close - show preview with resistance
-        const resistance = Math.abs(deltaY) > 100 ? 0.5 : 1;
-        setDrawerOffset(Math.max(deltaY * resistance, -150));
-      }
-    });
-  }, [drawerDragStart, showDetails, rafRef]);
-
-  const handleDrawerTouchEnd = useCallback((e: React.TouchEvent) => {
-    if (drawerDragStart === null) return;
-
-    const touchEnd = e.changedTouches[0].clientY;
-    const deltaY = drawerDragStart - touchEnd;
-
-    // Stop propagation
-    e.stopPropagation();
-
-    // MUCH LOWER threshold - only 30px swipe for easier opening
-    const threshold = 30;
-
-    // Start animation state
-    setIsAnimating(true);
-
-    if (deltaY > threshold && !showDetails) {
-      setShowDetails(true);
-    } else if (deltaY < -threshold && showDetails) {
-      setShowDetails(false);
-    }
-
-    setDrawerDragStart(null);
-    setDrawerOffset(0);
-
-    // End animation state after transition
-    setTimeout(() => setIsAnimating(false), 300);
-  }, [drawerDragStart, showDetails]);
-
-  const handleDrawerMouseEnd = useCallback((e: React.MouseEvent) => {
-    if (drawerDragStart === null) return;
-
-    const deltaY = drawerDragStart - e.clientY;
-    e.stopPropagation();
-
-    // MUCH LOWER threshold - only 30px swipe for easier opening
-    const threshold = 30;
-
-    // Start animation state
-    setIsAnimating(true);
-
-    if (deltaY > threshold && !showDetails) {
-      setShowDetails(true);
-    } else if (deltaY < -threshold && showDetails) {
-      setShowDetails(false);
-    }
-
-    setDrawerDragStart(null);
-    setDrawerOffset(0);
-
-    // End animation state after transition
-    setTimeout(() => setIsAnimating(false), 300);
-  }, [drawerDragStart, showDetails]);
 
   return (
     <div
@@ -526,31 +186,16 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
         <div className="absolute bottom-0 left-0 right-0 z-10 h-[50vh] pointer-events-none">
           {/* Expandable Details Panel */}
           <div
-            ref={drawerRef}
-            className="absolute bottom-0 left-0 right-0 bg-white/98 backdrop-blur-sm rounded-t-3xl pointer-events-auto shadow-2xl h-full"
+            className="absolute bottom-0 left-0 right-0 bg-white/98 backdrop-blur-sm rounded-t-3xl pointer-events-auto shadow-2xl transition-transform duration-300 ease-out"
             style={{
-              transform: showDetails
-                ? `translate3d(0, ${Math.max(drawerOffset, 0)}px, 0)`
-                : `translate3d(0, calc(50vh - 240px + ${Math.max(drawerOffset, 0)}px), 0)`,
-              transition: drawerDragStart === null ? 'transform 0.35s cubic-bezier(0.32, 0.72, 0, 1)' : 'none',
-              willChange: isAnimating || drawerDragStart !== null ? 'transform' : 'auto',
-              backfaceVisibility: 'hidden',
-              WebkitBackfaceVisibility: 'hidden',
-              WebkitFontSmoothing: 'antialiased',
-              isolation: 'isolate',
-              contain: 'layout style paint',
+              transform: showDetails ? 'translateY(0)' : 'translateY(calc(100% - 240px))',
+              height: '100%',
             }}
           >
-            {/* Handle Bar - Swipeable Area - BIGGER TOUCH TARGET */}
-            <div
-              className="w-full py-4 flex flex-col items-center gap-3 cursor-grab active:cursor-grabbing"
-              onTouchStart={handleDrawerTouchStart}
-              onTouchMove={handleDrawerTouchMove}
-              onTouchEnd={handleDrawerTouchEnd}
-              onMouseDown={handleDrawerMouseStart}
-              onMouseMove={handleDrawerMouseMove}
-              onMouseUp={handleDrawerMouseEnd}
-              onMouseLeave={handleDrawerMouseEnd}
+            {/* Handle Bar - Click to expand/collapse */}
+            <button
+              onClick={toggleDetails}
+              className="w-full py-4 flex flex-col items-center gap-3 cursor-pointer hover:bg-slate-50/50 transition-colors"
             >
               <div className="w-20 h-1.5 bg-slate-300 rounded-full">
                 <div className="w-full h-full bg-gradient-to-r from-slate-400 to-slate-500 rounded-full" />
@@ -560,28 +205,24 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
                   <svg className="w-4 h-4 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 15l7-7 7 7" />
                   </svg>
-                  <span className="font-bold text-sm">Swipe up for details</span>
+                  <span className="font-bold text-sm">Tap for details</span>
                 </div>
               )}
-            </div>
+              {showDetails && (
+                <div className="inline-flex items-center gap-1.5 text-slate-600 px-4 py-2">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
+                  </svg>
+                  <span className="font-bold text-sm">Tap to collapse</span>
+                </div>
+              )}
+            </button>
 
             <div
               className="px-6 pb-6 overflow-y-auto"
               style={{
-                height: 'calc(50vh - 3rem)',
-                WebkitOverflowScrolling: 'touch',
-                overscrollBehavior: 'contain',
-                touchAction: 'pan-y',
-                transform: 'translateZ(0)', // GPU acceleration
-                backfaceVisibility: 'hidden',
-                WebkitBackfaceVisibility: 'hidden',
-                willChange: showDetails ? 'scroll-position' : 'auto',
-                contain: 'layout style paint', // Don't use 'strict' as it blocks scrolling
+                height: 'calc(100% - 5rem)',
               }}
-              data-drawer-scroll
-              onTouchStart={handleDrawerTouchStart}
-              onTouchMove={handleDrawerTouchMove}
-              onTouchEnd={handleDrawerTouchEnd}
             >
               {/* Price - Compact */}
               <div className="mb-2">
@@ -638,13 +279,136 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
 
               {/* Expanded Details */}
               {showDetails && (
-                <ExpandedDetails
-                  property={property}
-                  monthlyPayment={monthlyPayment}
-                  estimatedTaxes={estimatedTaxes}
-                  estimatedInsurance={estimatedInsurance}
-                  totalMonthly={totalMonthly}
-                />
+                <div className="space-y-4 pt-4 border-t border-slate-200">
+                  {/* Property Description */}
+                  {property.description && (
+                    <div className="bg-gradient-to-br from-slate-50 to-blue-50 rounded-2xl p-4">
+                      <h3 className="font-bold text-slate-900 mb-3 flex items-center gap-2 text-base">
+                        <span className="text-lg">📝</span>
+                        <span>Property Description</span>
+                      </h3>
+                      <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">
+                        {property.description}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Monthly Payment Breakdown */}
+                  <div className="bg-slate-50 rounded-2xl p-4">
+                    <h3 className="font-bold text-slate-900 mb-3 flex items-center gap-2 text-sm">
+                      <span>💰</span>
+                      <span>Est. Monthly Payment Breakdown</span>
+                    </h3>
+                    <div className="space-y-2 text-xs">
+                      <div className="flex justify-between">
+                        <span className="text-slate-600">Principal & Interest</span>
+                        <span className="font-bold text-slate-900">est. ${monthlyPayment.toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-600">Property Tax</span>
+                        <span className="font-bold text-slate-900">est. ${estimatedTaxes.toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-600">Insurance</span>
+                        <span className="font-bold text-slate-900">est. ${estimatedInsurance.toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between pt-2 border-t border-slate-300">
+                        <span className="font-bold text-slate-900">Total Monthly</span>
+                        <span className="font-black text-emerald-600 text-sm">est. ${totalMonthly.toLocaleString()}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Down Payment */}
+                  <div className="bg-blue-50 rounded-2xl p-4">
+                    <h3 className="font-bold text-blue-900 mb-2 flex items-center gap-2 text-sm">
+                      <span>💵</span>
+                      <span>Est. Down Payment Required</span>
+                    </h3>
+                    <div className="text-xl font-black text-blue-900">
+                      est. ${property.downPaymentAmount?.toLocaleString()}
+                    </div>
+                    <p className="text-xs text-blue-700 mt-1">
+                      {property.downPaymentAmount && property.listPrice
+                        ? `Approximately ${Math.round((property.downPaymentAmount / property.listPrice) * 100)}% of purchase price`
+                        : ''}
+                    </p>
+                  </div>
+
+                  {/* Financing Terms */}
+                  <div className="bg-slate-50 rounded-2xl p-4">
+                    <h3 className="font-bold text-slate-900 mb-3 flex items-center gap-2">
+                      <span>📋</span>
+                      <span>Financing Terms</span>
+                    </h3>
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div>
+                        <div className="text-slate-600 text-xs mb-1">Interest Rate</div>
+                        <div className="font-bold text-slate-900 text-lg">est. {property.interestRate}%</div>
+                      </div>
+                      <div>
+                        <div className="text-slate-600 text-xs mb-1">Loan Term</div>
+                        <div className="font-bold text-slate-900 text-lg">est. {property.termYears} years</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Refinance Timeline */}
+                  {property.balloonYears && property.balloonYears > 0 && (
+                    <div className="bg-blue-50 border-2 border-blue-200 rounded-2xl p-4">
+                      <h3 className="font-bold text-blue-900 mb-2 flex items-center gap-2">
+                        <span>📅</span>
+                        <span>Refinance Timeline</span>
+                      </h3>
+                      <p className="text-sm text-blue-800 mb-2">
+                        Plan to refinance after <strong>{property.balloonYears} {property.balloonYears === 1 ? 'year' : 'years'}</strong>
+                      </p>
+                      <p className="text-xs text-blue-700 bg-blue-100 rounded-lg p-2">
+                        💡 <strong>Note:</strong> You'll need to refinance with a traditional mortgage or negotiate new terms with the seller after {property.balloonYears} {property.balloonYears === 1 ? 'year' : 'years'}. This gives you time to improve your credit and build equity.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Disclaimer */}
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-3">
+                    <p className="text-xs text-yellow-800">
+                      💡 Estimates shown are not guaranteed. Monthly payments may or may not include property taxes and insurance. Taxes, insurance, and HOA fees vary by property. Please verify all payment details and what's included with the seller.
+                    </p>
+                  </div>
+
+                  {/* Action Buttons - Compact */}
+                  <div className="grid grid-cols-2 gap-3 pt-2">
+                    <a
+                      href={`https://www.google.com/search?q=${encodeURIComponent(`${property.address} ${property.city}, ${property.state} ${property.zipCode}`)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-2.5 px-4 rounded-xl font-bold text-sm shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-95 transition-all"
+                    >
+                      <div className="flex items-center justify-center gap-2">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                        <span>Search Online</span>
+                      </div>
+                    </a>
+
+                    <button
+                      onClick={() => {
+                        const message = `I'm interested in the property at ${property.address}, ${property.city}, ${property.state}. Found through OwnerFi.`;
+                        const phone = property.agentPhone || property.phone || '+1234567890';
+                        window.open(`sms:${phone}&body=${encodeURIComponent(message)}`, '_self');
+                      }}
+                      className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white py-2.5 px-4 rounded-xl font-bold text-sm shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-95 transition-all"
+                    >
+                      <div className="flex items-center justify-center gap-2">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                        </svg>
+                        <span>Contact Agent</span>
+                      </div>
+                    </button>
+                  </div>
+                </div>
               )}
 
             </div>

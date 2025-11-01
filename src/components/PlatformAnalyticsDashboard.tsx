@@ -48,13 +48,31 @@ interface PlatformRecommendations {
   };
 }
 
+interface OptimizationInsight {
+  platform: string;
+  totalPosts: number;
+  avgReach: number;
+  avgViews: number;
+  avgEngagement: number;
+  trend: 'improving' | 'declining' | 'stable';
+  trendPercent: string;
+  bestHours: Array<{ hour: number; score: string }>;
+  worstHours: Array<{ hour: number; score: string }>;
+  bestDays: string[];
+  worstDays: string[];
+  actions: string[];
+  priority: 'urgent' | 'double-down' | 'optimize';
+}
+
 export default function PlatformAnalyticsDashboard() {
   const [platforms, setPlatforms] = useState<PlatformPerformance[]>([]);
   const [recommendations, setRecommendations] = useState<PlatformRecommendations | null>(null);
+  const [optimizationInsights, setOptimizationInsights] = useState<OptimizationInsight[] | null>(null);
   const [loading, setLoading] = useState(true);
-  const [selectedBrand, setSelectedBrand] = useState<string>('ownerfi');
-  const [days, setDays] = useState<number>(7);
+  const [selectedBrand, setSelectedBrand] = useState<string>('carz');
+  const [days, setDays] = useState<number>(30);
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
+  const [showOptimization, setShowOptimization] = useState(false);
 
   useEffect(() => {
     loadAnalytics();
@@ -73,15 +91,18 @@ export default function PlatformAnalyticsDashboard() {
       if (result.success) {
         setPlatforms(result.data.platforms || []);
         setRecommendations(result.data.recommendations);
+        setOptimizationInsights(result.data.optimizationInsights || []);
       } else {
         console.error('Failed to load analytics:', result.error);
         setPlatforms([]);
         setRecommendations(null);
+        setOptimizationInsights(null);
       }
     } catch (error) {
       console.error('Error loading analytics:', error);
       setPlatforms([]);
       setRecommendations(null);
+      setOptimizationInsights(null);
     } finally {
       setLoading(false);
     }
@@ -125,12 +146,24 @@ export default function PlatformAnalyticsDashboard() {
       <div className="bg-white rounded-lg shadow p-6">
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-2xl font-bold text-gray-900">📱 Platform-Specific Analytics</h1>
-          <button
-            onClick={loadAnalytics}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm"
-          >
-            🔄 Refresh
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowOptimization(!showOptimization)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                showOptimization
+                  ? 'bg-green-600 text-white hover:bg-green-700'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+            >
+              {showOptimization ? '✅ Optimization View' : '🎯 Show Optimization'}
+            </button>
+            <button
+              onClick={loadAnalytics}
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm"
+            >
+              🔄 Refresh
+            </button>
+          </div>
         </div>
 
         {/* Filters */}
@@ -166,7 +199,125 @@ export default function PlatformAnalyticsDashboard() {
         </div>
       </div>
 
+      {/* Optimization Insights Section */}
+      {showOptimization && optimizationInsights && optimizationInsights.length > 0 && (
+        <div className="bg-gradient-to-br from-green-50 to-blue-50 rounded-lg shadow-lg p-6 border-2 border-green-200">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">🎯 Optimization Roadmap</h2>
+          <p className="text-gray-700 mb-6">
+            Actionable insights to improve performance across all platforms
+          </p>
+
+          {/* Priority Sections */}
+          {['urgent', 'double-down', 'optimize'].map(priority => {
+            const priorityInsights = optimizationInsights.filter(i => i.priority === priority);
+            if (priorityInsights.length === 0) return null;
+
+            const priorityConfig = {
+              urgent: { title: '🚨 URGENT - Fix These First', color: 'red', bgColor: 'bg-red-50', borderColor: 'border-red-300' },
+              'double-down': { title: '✅ DOUBLE DOWN - Keep Doing What Works', color: 'green', bgColor: 'bg-green-50', borderColor: 'border-green-300' },
+              optimize: { title: '⚙️ OPTIMIZE - Make Small Adjustments', color: 'blue', bgColor: 'bg-blue-50', borderColor: 'border-blue-300' },
+            };
+
+            const config = priorityConfig[priority as keyof typeof priorityConfig];
+
+            return (
+              <div key={priority} className={`${config.bgColor} border ${config.borderColor} rounded-lg p-6 mb-4`}>
+                <h3 className="text-xl font-bold text-gray-900 mb-4">{config.title}</h3>
+
+                <div className="space-y-4">
+                  {priorityInsights.map((insight) => (
+                    <div key={insight.platform} className="bg-white rounded-lg p-5 shadow">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-3">
+                          <h4 className="text-lg font-bold uppercase">{insight.platform}</h4>
+                          <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                            insight.trend === 'improving' ? 'bg-green-100 text-green-800' :
+                            insight.trend === 'declining' ? 'bg-red-100 text-red-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {insight.trend === 'improving' ? '📈' : insight.trend === 'declining' ? '📉' : '➡️'} {insight.trend} ({insight.trendPercent}%)
+                          </span>
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          {insight.totalPosts} posts
+                        </div>
+                      </div>
+
+                      {/* Metrics Row */}
+                      <div className="grid grid-cols-3 gap-4 mb-4">
+                        <div className="bg-gray-50 rounded p-3">
+                          <p className="text-xs text-gray-600 mb-1">Avg Reach</p>
+                          <p className="text-lg font-bold text-gray-900">{insight.avgReach.toFixed(0)}</p>
+                        </div>
+                        <div className="bg-gray-50 rounded p-3">
+                          <p className="text-xs text-gray-600 mb-1">Avg Views</p>
+                          <p className="text-lg font-bold text-gray-900">{insight.avgViews.toFixed(0)}</p>
+                        </div>
+                        <div className="bg-gray-50 rounded p-3">
+                          <p className="text-xs text-gray-600 mb-1">Avg Engagement</p>
+                          <p className="text-lg font-bold text-gray-900">{insight.avgEngagement.toFixed(2)}</p>
+                        </div>
+                      </div>
+
+                      {/* Best Times */}
+                      <div className="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                          <p className="text-sm font-semibold text-gray-700 mb-2">✅ Best Hours:</p>
+                          <div className="flex gap-2">
+                            {insight.bestHours.map((h, i) => (
+                              <span key={i} className="bg-green-100 text-green-800 px-3 py-1 rounded text-sm font-medium">
+                                {h.hour.toString().padStart(2, '0')}:00
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold text-gray-700 mb-2">❌ Worst Hours:</p>
+                          <div className="flex gap-2">
+                            {insight.worstHours.map((h, i) => (
+                              <span key={i} className="bg-red-100 text-red-800 px-3 py-1 rounded text-sm font-medium">
+                                {h.hour.toString().padStart(2, '0')}:00
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Best/Worst Days */}
+                      <div className="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                          <p className="text-sm font-semibold text-gray-700 mb-2">✅ Best Days:</p>
+                          <p className="text-sm text-gray-600">{insight.bestDays.join(', ')}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold text-gray-700 mb-2">❌ Worst Days:</p>
+                          <p className="text-sm text-gray-600">{insight.worstDays.join(', ')}</p>
+                        </div>
+                      </div>
+
+                      {/* Action Items */}
+                      <div className="border-t border-gray-200 pt-4">
+                        <p className="text-sm font-semibold text-gray-700 mb-2">🎯 Actions:</p>
+                        <ul className="space-y-2">
+                          {insight.actions.map((action, i) => (
+                            <li key={i} className="flex items-start gap-2">
+                              <span className="text-blue-600 font-bold mt-0.5">{i + 1}.</span>
+                              <span className="text-sm text-gray-700">{action}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
       {/* Platform Comparison Cards */}
+      {!showOptimization && (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {platforms.map((platform, index) => (
           <div
@@ -216,9 +367,10 @@ export default function PlatformAnalyticsDashboard() {
           </div>
         ))}
       </div>
+      )}
 
       {/* Platform Deep-Dive */}
-      {selectedPlatformData && (
+      {!showOptimization && selectedPlatformData && (
         <div className="bg-white rounded-lg shadow p-6">
           <h2 className="text-xl font-bold text-gray-900 mb-4 capitalize">
             {selectedPlatformData.platform} Deep Dive
@@ -310,7 +462,7 @@ export default function PlatformAnalyticsDashboard() {
       )}
 
       {/* Recommendations */}
-      {recommendations && (
+      {!showOptimization && recommendations && (
         <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg shadow p-6">
           <h2 className="text-xl font-bold text-gray-900 mb-4">🎯 AI-Powered Recommendations</h2>
 
@@ -360,6 +512,7 @@ export default function PlatformAnalyticsDashboard() {
       )}
 
       {/* Heatmap Visualization */}
+      {!showOptimization && (
       <div className="bg-white rounded-lg shadow p-6">
         <h2 className="text-xl font-bold text-gray-900 mb-4">🔥 Posting Time Heatmap</h2>
         <p className="text-sm text-gray-600 mb-4">
@@ -370,6 +523,7 @@ export default function PlatformAnalyticsDashboard() {
           <HeatmapVisualization platforms={platforms} />
         </div>
       </div>
+      )}
     </div>
   );
 }

@@ -12,6 +12,9 @@ const HEYGEN_API_KEY = process.env.HEYGEN_API_KEY;
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const SUBMAGIC_API_KEY = process.env.SUBMAGIC_API_KEY;
 
+// Import HeyGen client with cost tracking
+import { generateHeyGenVideo as generateHeyGenVideoWithTracking } from '@/lib/heygen-client';
+
 export async function POST(request: NextRequest) {
   try {
     // Parse and validate request body
@@ -142,17 +145,46 @@ export async function POST(request: NextRequest) {
       avatarType = 'talking_photo'; // VassDistro uses talking_photo (motion-enabled)
     }
 
-    const videoResult = await generateHeyGenVideo({
-      avatar_id: body.avatar_id || defaultAvatarId,
-      avatar_type: avatarType,
-      voice_id: body.voice_id || defaultVoiceId,
-      input_text: content.script,
-      scale: 1.0,
-      width: 1080,
-      height: 1920,
-      callback_id: workflowId, // Pass workflow ID for webhook callback
-      brand: brand as 'carz' | 'ownerfi' | 'vassdistro' // Pass brand for brand-specific webhook
-    });
+    // Build HeyGen request with webhook URL
+    const { getBrandWebhookUrl } = await import('@/lib/brand-utils');
+    const webhookUrl = getBrandWebhookUrl(brand as 'carz' | 'ownerfi' | 'vassdistro', 'heygen');
+
+    const character: any = {
+      type: avatarType,
+      scale: 1.0
+    };
+
+    if (avatarType === 'avatar') {
+      character.avatar_id = body.avatar_id || defaultAvatarId;
+      character.avatar_style = 'normal';
+    } else {
+      character.talking_photo_id = body.avatar_id || defaultAvatarId;
+      character.talking_style = 'expressive';
+    }
+
+    const heygenRequest = {
+      video_inputs: [{
+        character,
+        voice: {
+          type: 'text' as const,
+          input_text: content.script,
+          voice_id: body.voice_id || defaultVoiceId,
+          speed: 1.1
+        }
+      }],
+      caption: false,
+      dimension: { width: 1080, height: 1920 },
+      test: false,
+      webhook_url: webhookUrl,
+      callback_id: workflowId
+    };
+
+    // Use the heygen-client function that includes cost tracking
+    const videoResult = await generateHeyGenVideoWithTracking(
+      heygenRequest,
+      brand as 'carz' | 'ownerfi' | 'vassdistro',
+      workflowId
+    );
 
     if (!videoResult.success || !videoResult.video_id) {
       // Update workflow status to 'failed'
@@ -679,6 +711,33 @@ async function generateViralContent(content: string, brand: string): Promise<{ s
     throw new Error('Invalid OpenAI API response - no choices returned');
   }
 
+  // Track OpenAI cost
+  const { trackCost } = await import('@/lib/cost-tracker');
+  const inputTokens = data.usage?.prompt_tokens || 0;
+  const outputTokens = data.usage?.completion_tokens || 0;
+  const totalTokens = data.usage?.total_tokens || 0;
+
+  // GPT-4o-mini pricing: $0.15/1M input tokens, $0.60/1M output tokens
+  const inputCost = (inputTokens / 1_000_000) * 0.15;
+  const outputCost = (outputTokens / 1_000_000) * 0.60;
+  const totalCost = inputCost + outputCost;
+
+  await trackCost(
+    brand as 'carz' | 'ownerfi' | 'vassdistro',
+    'openai',
+    'script_generation',
+    totalTokens,
+    totalCost,
+    undefined, // No workflowId at this stage
+    {
+      model: 'gpt-4o-mini',
+      input_tokens: inputTokens,
+      output_tokens: outputTokens
+    }
+  );
+
+  console.log(`💰 OpenAI cost tracked: ${totalTokens} tokens = $${totalCost.toFixed(6)}`);
+
   const fullResponse = data.choices[0]?.message?.content?.trim() || '';
 
   console.log('🤖 OpenAI full response:', fullResponse);
@@ -742,97 +801,7 @@ async function generateViralContent(content: string, brand: string): Promise<{ s
 }
 
 // Helper: Generate HeyGen video
-async function generateHeyGenVideo(params: {
-  avatar_id: string;
-  avatar_type: 'avatar' | 'talking_photo';
-  voice_id: string;
-  input_text: string;
-  scale: number;
-  width: number;
-  height: number;
-  callback_id?: string;
-  brand?: 'carz' | 'ownerfi' | 'vassdistro';
-}): Promise<{ success: boolean; video_id?: string; error?: string }> {
-  try {
-    // Use brand-specific webhook URL from configuration
-    const { getBrandWebhookUrl } = await import('@/lib/brand-utils');
-    const brand = params.brand || 'ownerfi'; // Default to ownerfi for backwards compatibility
-    const webhookUrl = getBrandWebhookUrl(brand, 'heygen');
-    console.log(`📞 HeyGen webhook URL (${brand}): ${webhookUrl}`);
-
-    // Build character based on avatar type
-    console.log(`🎭 Avatar Config for ${brand}:`, {
-      avatar_id: params.avatar_id,
-      avatar_type: params.avatar_type,
-      voice_id: params.voice_id
-    });
-
-    const character: any = {
-      type: params.avatar_type,
-      scale: params.scale
-    };
-
-    if (params.avatar_type === 'avatar') {
-      character.avatar_id = params.avatar_id;
-      character.avatar_style = 'normal';
-    } else {
-      character.talking_photo_id = params.avatar_id;
-      character.talking_style = 'expressive';
-      // NOTE: No matting - keep avatar's original background
-      // Property videos use circle style with background removal, but not viral videos
-    }
-
-    console.log(`📹 HeyGen Character Object:`, JSON.stringify(character, null, 2));
-
-    const requestBody: any = {
-      video_inputs: [{
-        character,
-        voice: {
-          type: 'text',
-          input_text: params.input_text,
-          voice_id: params.voice_id,
-          speed: 1.1
-        }
-      }],
-      caption: false,
-      dimension: { width: params.width, height: params.height },
-      test: false
-    };
-
-    // Add webhook callback if callback_id provided
-    if (params.callback_id) {
-      requestBody.webhook_url = webhookUrl;
-      requestBody.callback_id = params.callback_id;
-    }
-
-    // Use circuit breaker to prevent cascading failures
-    return await circuitBreakers.heygen.execute(async () => {
-      const response = await fetchWithTimeout(
-        'https://api.heygen.com/v2/video/generate',
-        {
-          method: 'POST',
-          headers: {
-            'accept': 'application/json',
-            'content-type': 'application/json',
-            'x-api-key': HEYGEN_API_KEY!,
-          },
-          body: JSON.stringify(requestBody)
-        },
-        TIMEOUTS.HEYGEN_API
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(`HeyGen API error: ${JSON.stringify(errorData)}`);
-      }
-
-      const data = await response.json();
-      return { success: true, video_id: data.data?.video_id || data.video_id };
-    });
-  } catch (error) {
-    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
-  }
-}
+// Removed: Local generateHeyGenVideo function - now using heygen-client.ts with cost tracking
 
 // LOCAL DEV ONLY: Poll HeyGen and process entire workflow synchronously
 async function waitForHeyGenAndProcess(

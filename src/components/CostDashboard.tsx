@@ -19,10 +19,13 @@ interface CostDashboardData {
   summary: {
     todaySpend: number;
     monthSpend: number;
+    previousMonthSpend: number;
     monthBudget: number;
     monthPercentage: number;
     daysLeftInMonth: number;
     projectedMonthlySpend: number;
+    currentMonthName: string;
+    previousMonthName: string;
   };
   breakdown: {
     byService: {
@@ -145,21 +148,10 @@ export default function CostDashboard() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {/* Today's Spend */}
-        <div className="bg-gray-800 p-6 rounded-lg">
-          <div className="text-gray-400 text-sm mb-2">Today's Spend</div>
-          <div className="text-3xl font-bold text-white mb-1">
-            ${summary.todaySpend.toFixed(2)}
-          </div>
-          <div className="text-sm text-gray-500">
-            of ${config.dailyLimits.heygen + config.dailyLimits.submagic + config.dailyLimits.openai} daily budget
-          </div>
-        </div>
-
-        {/* Month-to-Date */}
-        <div className="bg-gray-800 p-6 rounded-lg">
-          <div className="text-gray-400 text-sm mb-2">Month-to-Date</div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Current Month */}
+        <div className="bg-gray-800 p-6 rounded-lg border-2 border-green-500">
+          <div className="text-gray-400 text-sm mb-2">{summary.currentMonthName}</div>
           <div className="text-3xl font-bold text-white mb-1">
             ${summary.monthSpend.toFixed(2)}
           </div>
@@ -168,14 +160,25 @@ export default function CostDashboard() {
               {summary.monthPercentage.toFixed(1)}%
             </span>
             <span className="text-gray-500">
-              of ${summary.monthBudget}
+              of ${summary.monthBudget} • {summary.daysLeftInMonth} days left
             </span>
+          </div>
+        </div>
+
+        {/* Previous Month */}
+        <div className="bg-gray-800 p-6 rounded-lg">
+          <div className="text-gray-400 text-sm mb-2">{summary.previousMonthName}</div>
+          <div className="text-3xl font-bold text-white mb-1">
+            ${summary.previousMonthSpend.toFixed(2)}
+          </div>
+          <div className="text-sm text-gray-500">
+            Last completed month
           </div>
         </div>
 
         {/* Projected Monthly */}
         <div className="bg-gray-800 p-6 rounded-lg">
-          <div className="text-gray-400 text-sm mb-2">Projected Monthly</div>
+          <div className="text-gray-400 text-sm mb-2">Projected This Month</div>
           <div className="text-3xl font-bold text-white mb-1">
             ${summary.projectedMonthlySpend.toFixed(2)}
           </div>
@@ -185,17 +188,6 @@ export default function CostDashboard() {
             ) : (
               <span className="text-green-500">✓ Within budget</span>
             )}
-          </div>
-        </div>
-
-        {/* Days Left */}
-        <div className="bg-gray-800 p-6 rounded-lg">
-          <div className="text-gray-400 text-sm mb-2">Days Left</div>
-          <div className="text-3xl font-bold text-white mb-1">
-            {summary.daysLeftInMonth}
-          </div>
-          <div className="text-sm text-gray-500">
-            days remaining in month
           </div>
         </div>
       </div>
@@ -257,6 +249,45 @@ export default function CostDashboard() {
         </div>
       </div>
 
+      {/* Key Metrics */}
+      <div className="bg-gradient-to-r from-blue-900/50 to-purple-900/50 p-6 rounded-lg border border-blue-500">
+        <h3 className="text-lg font-semibold text-white mb-4">📊 Key Metrics - Real Numbers From Service Usage</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <div className="text-gray-400 text-sm mb-1">Cost Per Video (All Services)</div>
+            <div className="text-2xl font-bold text-white">
+              ${(() => {
+                const totalVideos = (breakdown.byService.submagic?.units || 0) + (breakdown.byService.heygen?.units || 0);
+                if (totalVideos === 0) return '0.00';
+                // Total spend divided by total videos from actual API usage
+                return (breakdown.total / totalVideos).toFixed(2);
+              })()}
+            </div>
+            <div className="text-xs text-gray-500 mt-1">
+              Includes video gen, captions, AI, storage, posting
+            </div>
+          </div>
+          <div>
+            <div className="text-gray-400 text-sm mb-1">Total Videos Produced</div>
+            <div className="text-2xl font-bold text-white">
+              {(breakdown.byService.submagic?.units || 0) + (breakdown.byService.heygen?.units || 0)}
+            </div>
+            <div className="text-xs text-gray-500 mt-1">
+              {breakdown.byService.submagic?.units || 0} Submagic + {breakdown.byService.heygen?.units || 0} HeyGen (real API calls)
+            </div>
+          </div>
+          <div>
+            <div className="text-gray-400 text-sm mb-1">Posts Published</div>
+            <div className="text-2xl font-bold text-white">
+              {breakdown.byService.late?.units || 0}
+            </div>
+            <div className="text-xs text-gray-500 mt-1">
+              Via Late API (free tier)
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Cost Breakdown */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* By Service */}
@@ -268,7 +299,9 @@ export default function CostDashboard() {
                 <span className="text-gray-300 capitalize">{service}</span>
                 <div className="text-right">
                   <div className="text-white font-medium">${data.costUSD.toFixed(2)}</div>
-                  <div className="text-xs text-gray-500">{data.units} units</div>
+                  <div className="text-xs text-gray-500">
+                    {data.units} {service === 'openai' ? 'tokens' : service === 'r2' ? 'GB' : 'videos'}
+                  </div>
                 </div>
               </div>
             ))}

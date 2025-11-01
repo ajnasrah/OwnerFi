@@ -49,10 +49,16 @@ export async function GET() {
     console.log('Cost config available:', !!costs);
     console.log('Daily budget:', costs?.dailyBudget);
 
+    // Get previous month for comparison (in case we just rolled into a new month)
+    const now = new Date();
+    const prevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const prevMonthStr = `${prevMonth.getFullYear()}-${String(prevMonth.getMonth() + 1).padStart(2, '0')}`;
+
     // Fetch all cost data in parallel with detailed error logging
     const [
       dailyCosts,
       monthlyCosts,
+      previousMonthCosts,
       monthlyBreakdown,
       heygenBudget,
       submagicBudget,
@@ -62,6 +68,7 @@ export async function GET() {
     ] = await Promise.all([
       getTotalDailyCosts().catch((err) => { console.error('getTotalDailyCosts error:', err); return {}; }),
       getTotalMonthlyCosts().catch((err) => { console.error('getTotalMonthlyCosts error:', err); return {}; }),
+      getTotalMonthlyCosts(prevMonthStr).catch((err) => { console.error('getTotalMonthlyCosts prev error:', err); return {}; }),
       getMonthlyBreakdown().catch((err) => { console.error('getMonthlyBreakdown error:', err); return { byBrand: {}, byService: { heygen: { units: 0, costUSD: 0 }, submagic: { units: 0, costUSD: 0 }, late: { units: 0, costUSD: 0 }, openai: { units: 0, costUSD: 0 }, r2: { units: 0, costUSD: 0 } }, total: 0 }; }),
       checkBudget('heygen', 'daily').catch((err) => { console.error('checkBudget heygen error:', err); return { service: 'heygen' as const, period: 'daily' as const, used: 0, limit: costs.dailyBudget.heygen, percentage: 0, exceeded: false, nearLimit: false }; }),
       checkBudget('submagic', 'daily').catch((err) => { console.error('checkBudget submagic error:', err); return { service: 'submagic' as const, period: 'daily' as const, used: 0, limit: costs.dailyBudget.submagic, percentage: 0, exceeded: false, nearLimit: false }; }),
@@ -73,10 +80,15 @@ export async function GET() {
     // Calculate totals
     const totalDailySpend = Object.values(dailyCosts).reduce((sum, costs) => sum + costs.total, 0);
     const totalMonthlySpend = Object.values(monthlyCosts).reduce((sum, costs) => sum + costs.total, 0);
+    const totalPreviousMonthSpend = Object.values(previousMonthCosts).reduce((sum, costs) => sum + costs.total, 0);
 
     // Get monthly budgets
     const monthlyBudgets = costs.monthlyBudget;
     const monthlyPercentage = (totalMonthlySpend / monthlyBudgets.total) * 100;
+
+    // Format month names for display
+    const currentMonthName = now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    const prevMonthName = prevMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 
     // Build response
     const response = {
@@ -87,10 +99,13 @@ export async function GET() {
       summary: {
         todaySpend: totalDailySpend,
         monthSpend: totalMonthlySpend,
+        previousMonthSpend: totalPreviousMonthSpend,
         monthBudget: monthlyBudgets.total,
         monthPercentage: monthlyPercentage,
         daysLeftInMonth: getDaysLeftInMonth(),
         projectedMonthlySpend: projectMonthlySpend(totalMonthlySpend),
+        currentMonthName: currentMonthName,
+        previousMonthName: prevMonthName,
       },
 
       // Daily costs by brand
@@ -98,6 +113,9 @@ export async function GET() {
 
       // Monthly costs by brand
       monthlyCosts,
+
+      // Previous month costs by brand
+      previousMonthCosts,
 
       // Breakdown by service
       breakdown: monthlyBreakdown,

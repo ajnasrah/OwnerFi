@@ -102,8 +102,8 @@ export default function AdminBuyers() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 p-8">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-slate-900 p-8 relative isolate">
+      <div className="max-w-7xl mx-auto relative">
         {/* Header */}
         <div className="mb-8">
           <Link href="/admin" className="text-emerald-400 hover:text-emerald-300 mb-4 inline-block">

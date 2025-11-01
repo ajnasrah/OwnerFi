@@ -317,7 +317,7 @@ async function triggerSubmagicProcessing(
       magicZooms: true, // Auto zoom on important moments (enabled for ALL brands)
       magicBrolls: brand !== 'property' && brand !== 'podcast', // B-rolls DISABLED for property and podcast
       magicBrollsPercentage: (brand !== 'property' && brand !== 'podcast') ? 75 : 0, // 0% for property/podcast, 75% for others
-      removeSilencePace: brand !== 'property' ? 'fast' : 'off', // OFF for property (keep full script)
+      removeSilencePace: brand !== 'property' ? 'fast' : 'natural', // Natural pace for property (keep most of script), fast for others
       removeBadTakes: brand !== 'property', // OFF for property (keep all content)
     };
 

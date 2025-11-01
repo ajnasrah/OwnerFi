@@ -191,6 +191,12 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
               transform: showDetails ? 'translateY(0)' : 'translateY(calc(100% - 240px))',
               height: '100%',
             }}
+            onTouchStart={(e) => { if (showDetails) e.stopPropagation(); }}
+            onTouchMove={(e) => { if (showDetails) e.stopPropagation(); }}
+            onTouchEnd={(e) => { if (showDetails) e.stopPropagation(); }}
+            onMouseDown={(e) => { if (showDetails) e.stopPropagation(); }}
+            onMouseMove={(e) => { if (showDetails) e.stopPropagation(); }}
+            onMouseUp={(e) => { if (showDetails) e.stopPropagation(); }}
           >
             {/* Handle Bar - Click to expand/collapse */}
             <button
@@ -223,6 +229,12 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
               style={{
                 height: 'calc(100% - 5rem)',
               }}
+              onTouchStart={(e) => e.stopPropagation()}
+              onTouchMove={(e) => e.stopPropagation()}
+              onTouchEnd={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
+              onMouseMove={(e) => e.stopPropagation()}
+              onMouseUp={(e) => e.stopPropagation()}
             >
               {/* Price - Compact */}
               <div className="mb-2">

@@ -269,13 +269,16 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
 
         // Only allow drawer to close if scrolled to top and swiping down
         if (!isScrolledToTop || !isScrollingDown) {
+          // Let the scroll happen naturally
           return;
         }
+        // If we're at top and swiping down, stop propagation to enable drawer close
+        e.stopPropagation();
       }
+    } else {
+      // When drawer is collapsed, stop propagation for handle bar swipes
+      e.stopPropagation();
     }
-
-    // CRITICAL: Stop propagation to block parent swiper
-    e.stopPropagation();
 
     // Use RAF for 60fps smooth updates
     if (rafRef.current !== null) {
@@ -312,13 +315,16 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
 
         // Only allow drawer to close if scrolled to top and swiping down
         if (!isScrolledToTop || !isScrollingDown) {
+          // Let the scroll happen naturally
           return;
         }
+        // If we're at top and swiping down, stop propagation to enable drawer close
+        e.stopPropagation();
       }
+    } else {
+      // When drawer is collapsed, stop propagation for handle bar drags
+      e.stopPropagation();
     }
-
-    // Stop propagation to prevent parent swiper interference
-    e.stopPropagation();
 
     // Use RAF for 60fps smooth updates
     if (rafRef.current !== null) {
@@ -534,16 +540,18 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
               isolation: 'isolate',
               contain: 'layout style paint',
             }}
-            onTouchStart={handleDrawerTouchStart}
-            onTouchMove={handleDrawerTouchMove}
-            onTouchEnd={handleDrawerTouchEnd}
-            onMouseDown={handleDrawerMouseStart}
-            onMouseMove={handleDrawerMouseMove}
-            onMouseUp={handleDrawerMouseEnd}
-            onMouseLeave={handleDrawerMouseEnd}
           >
             {/* Handle Bar - Swipeable Area - BIGGER TOUCH TARGET */}
-            <div className="w-full py-4 flex flex-col items-center gap-3 cursor-grab active:cursor-grabbing">
+            <div
+              className="w-full py-4 flex flex-col items-center gap-3 cursor-grab active:cursor-grabbing"
+              onTouchStart={handleDrawerTouchStart}
+              onTouchMove={handleDrawerTouchMove}
+              onTouchEnd={handleDrawerTouchEnd}
+              onMouseDown={handleDrawerMouseStart}
+              onMouseMove={handleDrawerMouseMove}
+              onMouseUp={handleDrawerMouseEnd}
+              onMouseLeave={handleDrawerMouseEnd}
+            >
               <div className="w-20 h-1.5 bg-slate-300 rounded-full">
                 <div className="w-full h-full bg-gradient-to-r from-slate-400 to-slate-500 rounded-full" />
               </div>
@@ -568,9 +576,12 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
                 backfaceVisibility: 'hidden',
                 WebkitBackfaceVisibility: 'hidden',
                 willChange: showDetails ? 'scroll-position' : 'auto',
-                contain: 'strict',
+                contain: 'layout style paint', // Don't use 'strict' as it blocks scrolling
               }}
               data-drawer-scroll
+              onTouchStart={handleDrawerTouchStart}
+              onTouchMove={handleDrawerTouchMove}
+              onTouchEnd={handleDrawerTouchEnd}
             >
               {/* Price - Compact */}
               <div className="mb-2">

@@ -373,27 +373,28 @@ export async function POST(request: NextRequest) {
     }
 
     // Read all property data from HEADERS (where GoHighLevel sends it)
+    // BUT ALSO check body for fields that might be there instead (like description)
     const payload: GHLPropertyPayload = {
       opportunityId: opportunityId,
-      opportunityName: request.headers.get('opportunityname') || request.headers.get('opportunityName') || '',
-      propertyAddress: request.headers.get('propertyaddress') || request.headers.get('propertyAddress') || '',
-      propertyCity: request.headers.get('propertycity') || request.headers.get('propertyCity') || '',
-      state: request.headers.get('state') || '',
-      zipCode: request.headers.get('zipcode') || request.headers.get('zipCode') || '',
-      price: request.headers.get('price') || '0',
-      bedrooms: request.headers.get('bedrooms') || '',
-      bathrooms: request.headers.get('bathrooms') || '',
-      livingArea: request.headers.get('livingarea') || request.headers.get('livingArea') || '',
-      yearBuilt: request.headers.get('yearbuilt') || request.headers.get('yearBuilt') || '',
-      lotSizes: request.headers.get('lotsizes') || request.headers.get('lotSizes') || '',
-      homeType: request.headers.get('hometype') || request.headers.get('homeType') || 'SINGLE_FAMILY',
-      imageLink: request.headers.get('imagelink') || request.headers.get('imageLink') || '',
-      description: request.headers.get('description') || request.headers.get('propertyDescription') || request.headers.get('propertydescription') || '',
-      downPaymentAmount: request.headers.get('downpaymentamount') || request.headers.get('downPaymentAmount') || '',
-      downPayment: request.headers.get('downpayment') || request.headers.get('downPayment') || '',
-      interestRate: request.headers.get('interestrate') || request.headers.get('interestRate') || '',
-      monthlyPayment: request.headers.get('monthlypayment') || request.headers.get('monthlyPayment') || '',
-      balloon: request.headers.get('balloon') || ''
+      opportunityName: request.headers.get('opportunityname') || request.headers.get('opportunityName') || bodyData.opportunityName || '',
+      propertyAddress: request.headers.get('propertyaddress') || request.headers.get('propertyAddress') || bodyData.propertyAddress || bodyData.address || '',
+      propertyCity: request.headers.get('propertycity') || request.headers.get('propertyCity') || bodyData.propertyCity || bodyData.city || '',
+      state: request.headers.get('state') || bodyData.state || '',
+      zipCode: request.headers.get('zipcode') || request.headers.get('zipCode') || bodyData.zipCode || bodyData.zip || '',
+      price: request.headers.get('price') || bodyData.price || '0',
+      bedrooms: request.headers.get('bedrooms') || bodyData.bedrooms || bodyData.beds || '',
+      bathrooms: request.headers.get('bathrooms') || bodyData.bathrooms || bodyData.baths || '',
+      livingArea: request.headers.get('livingarea') || request.headers.get('livingArea') || bodyData.livingArea || bodyData.squareFeet || '',
+      yearBuilt: request.headers.get('yearbuilt') || request.headers.get('yearBuilt') || bodyData.yearBuilt || '',
+      lotSizes: request.headers.get('lotsizes') || request.headers.get('lotSizes') || bodyData.lotSizes || bodyData.lotSize || '',
+      homeType: request.headers.get('hometype') || request.headers.get('homeType') || bodyData.homeType || bodyData.propertyType || 'SINGLE_FAMILY',
+      imageLink: request.headers.get('imagelink') || request.headers.get('imageLink') || bodyData.imageLink || bodyData.image || bodyData.imageUrl || '',
+      description: request.headers.get('description') || request.headers.get('propertyDescription') || request.headers.get('propertydescription') || bodyData.description || bodyData.propertyDescription || bodyData.notes || '',
+      downPaymentAmount: request.headers.get('downpaymentamount') || request.headers.get('downPaymentAmount') || bodyData.downPaymentAmount || '',
+      downPayment: request.headers.get('downpayment') || request.headers.get('downPayment') || bodyData.downPayment || bodyData.downPaymentPercent || '',
+      interestRate: request.headers.get('interestrate') || request.headers.get('interestRate') || bodyData.interestRate || '',
+      monthlyPayment: request.headers.get('monthlypayment') || request.headers.get('monthlyPayment') || bodyData.monthlyPayment || '',
+      balloon: request.headers.get('balloon') || bodyData.balloon || bodyData.balloonYears || ''
     };
 
     logInfo('GoHighLevel save property webhook parsed', {
@@ -402,7 +403,16 @@ export async function POST(request: NextRequest) {
         opportunityId: payload.opportunityId,
         address: payload.propertyAddress,
         city: payload.propertyCity,
-        price: payload.price
+        price: payload.price,
+        hasDescription: !!payload.description,
+        descriptionLength: payload.description?.length || 0,
+        descriptionSource: payload.description ?
+          (request.headers.get('description') ? 'header:description' :
+           request.headers.get('propertyDescription') ? 'header:propertyDescription' :
+           request.headers.get('propertydescription') ? 'header:propertydescription' :
+           bodyData.description ? 'body:description' :
+           bodyData.propertyDescription ? 'body:propertyDescription' :
+           bodyData.notes ? 'body:notes' : 'unknown') : 'MISSING'
       }
     });
 
@@ -546,7 +556,7 @@ export async function POST(request: NextRequest) {
     const yearBuilt = parseNumberField(payload.yearBuilt);
 
     // Prepare property data for database
-    const propertyData = {
+    const propertyData: any = {
       // IDs and Names
       id: propertyId,
       opportunityId: payload.opportunityId,

@@ -1,0 +1,20 @@
+{
+  "total": 24,
+  "success": 21,
+  "failed": 1,
+  "skipped": 2,
+  "errors": [
+    {
+      "property": "20810 Trenton Valley Ln Katy TX 77449",
+      "error": "Cannot convert argument to a ByteString because the character at index 409 has a value of 8212 which is greater than 255."
+    },
+    {
+      "property": "716 Florida St San Antonio TX 78210",
+      "error": "Invalid price: tx"
+    },
+    {
+      "property": "14247 Greenhaw Ln",
+      "error": "Invalid price: tx"
+    }
+  ]
+}

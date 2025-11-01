@@ -1,0 +1,242 @@
+[
+  {
+    "opportunityId": "0sSN14ZEkd2dUnk4bPxV",
+    "name": "1346 San Marco Rd",
+    "address": "1346 San Marco Rd",
+    "city": "Marco island ",
+    "state": "fl",
+    "price": "1795000",
+    "createdOn": "2025-10-22T23:06:25.349Z",
+    "updatedOn": "2025-10-22T23:09:10.181Z"
+  },
+  {
+    "opportunityId": "kqaNP28YlOY6kNLBNAZH",
+    "name": "801 Hayden St El Campo TX 77437",
+    "address": "801 Hayden St",
+    "city": "El Campo",
+    "state": "TX",
+    "price": "149989",
+    "createdOn": "2025-10-22T01:38:38.372Z",
+    "updatedOn": "2025-10-25T18:49:39.013Z"
+  },
+  {
+    "opportunityId": "LEwTlKWbBxUxGOxRLFPu",
+    "name": "50 Cedar Road Ocala FL 34472",
+    "address": "50 Cedar Road, Ocala, FL 34472",
+    "city": "Ocala",
+    "state": "fl",
+    "price": "220000",
+    "createdOn": "2025-10-18T21:38:24.750Z",
+    "updatedOn": "2025-10-20T23:03:19.010Z"
+  },
+  {
+    "opportunityId": "IAIIf9iOZWV6lLje0p4L",
+    "name": "793 Apple Valley Rd Loris SC 29569",
+    "address": "793 Apple Valley Rd, Loris, SC 29569",
+    "city": "Loris",
+    "state": "sc",
+    "price": "239900",
+    "createdOn": "2025-09-04T08:58:38.420Z",
+    "updatedOn": "2025-10-22T22:57:41.201Z"
+  },
+  {
+    "opportunityId": "kBLwvVi70gd0WU20oeGS",
+    "name": "3151 Holly Loop Conway SC 29527",
+    "address": "3151 Holly Loop, Conway, SC 29527",
+    "city": "Conway",
+    "state": "sc",
+    "price": "274900",
+    "createdOn": "2025-09-04T08:58:29.259Z",
+    "updatedOn": "2025-10-25T18:47:50.845Z"
+  },
+  {
+    "opportunityId": "zdtlZydQyMuSdOzl5tFs",
+    "name": "3305 Friar Tuck Rd Raleigh NC 27610",
+    "address": "3305 Friar Tuck Rd, Raleigh, NC 27610",
+    "city": "Raleigh",
+    "state": "nc",
+    "price": "388400",
+    "createdOn": "2025-09-04T08:57:36.084Z",
+    "updatedOn": "2025-10-22T22:59:02.665Z"
+  },
+  {
+    "opportunityId": "h0flKfbxg6KyT2NkhyBm",
+    "name": "706 S Olive San Antonio TX 78203",
+    "address": "706 S Olive, San Antonio, TX 78203",
+    "city": "San Antonio",
+    "state": "tx",
+    "price": "280000",
+    "createdOn": "2025-09-04T08:53:29.495Z",
+    "updatedOn": "2025-10-22T23:00:00.560Z"
+  },
+  {
+    "opportunityId": "orH1NZiDzSIf0WxlmtV4",
+    "name": "4510 Helena St NE Saint Petersburg Florida 33703",
+    "address": "4510 Helena St NE, Saint Petersburg, Florida 33703",
+    "city": "saint petersburg",
+    "state": "fl",
+    "price": "345000",
+    "createdOn": "2025-09-03T19:08:36.125Z",
+    "updatedOn": "2025-10-20T23:07:17.869Z"
+  },
+  {
+    "opportunityId": "mYqDowWHB9vNv0lP2oqB",
+    "name": "105 West Oak Hill Dr Palatka Florida 32177",
+    "address": "105 West Oak Hill Dr, Palatka, Florida 32177",
+    "city": "Palatka",
+    "state": "fl",
+    "price": "220000",
+    "createdOn": "2025-09-03T19:07:45.965Z",
+    "updatedOn": "2025-10-20T23:07:18.515Z"
+  },
+  {
+    "opportunityId": "salXW7ti3Z36Vnd63i5E",
+    "name": "2842 LUCOMA Drive Jacksonville Florida 32254",
+    "address": "2842 LUCOMA Drive, Jacksonville, Florida 32254",
+    "city": "Jacksonville",
+    "state": "fl",
+    "price": "125000",
+    "createdOn": "2025-09-03T19:07:01.636Z",
+    "updatedOn": "2025-10-20T23:07:19.246Z"
+  },
+  {
+    "opportunityId": "pTrs9iPADle4bacRF915",
+    "name": "6432 Sarasota St Pensacola Florida 32526",
+    "address": "6432 Sarasota St, Pensacola, Florida 32526",
+    "city": "Pensacola",
+    "state": "fl",
+    "price": "292000",
+    "createdOn": "2025-09-03T19:05:14.868Z",
+    "updatedOn": "2025-10-20T23:07:19.850Z"
+  },
+  {
+    "opportunityId": "SfStYbNcSdBuyn1tQZRr",
+    "name": "7082 Harvest Way Milton Florida 32570",
+    "address": "7082 Harvest Way, Milton, Florida 32570",
+    "city": "Milton",
+    "state": "fl",
+    "price": "267000",
+    "createdOn": "2025-09-03T19:04:09.638Z",
+    "updatedOn": "2025-10-20T23:07:20.493Z"
+  },
+  {
+    "opportunityId": "fq9E0Yxcy05qgYa7chxL",
+    "name": "7304 Ellie B Dr Panama City Florida 32404",
+    "address": "7304 Ellie B Dr, Panama City, Florida 32404",
+    "city": "Panama City",
+    "state": "fl",
+    "price": "275000",
+    "createdOn": "2025-09-03T19:03:17.602Z",
+    "updatedOn": "2025-10-20T23:07:21.108Z"
+  },
+  {
+    "opportunityId": "Gpl5Z4v7T73HPprXejM2",
+    "name": "911 Indiana Avenue Lynn Haven FL 32444",
+    "address": "911 Indiana Ave, Lynn Haven, FL 32444",
+    "city": "Lynn Haven",
+    "state": "fl",
+    "price": "199000",
+    "createdOn": "2025-09-03T19:02:28.639Z",
+    "updatedOn": "2025-10-20T23:07:21.715Z"
+  },
+  {
+    "opportunityId": "8mrX4IiJlXYs2RZKVva4",
+    "name": "607 E Hollywood Blvd Mary Esther Florida 32569",
+    "address": "607 E Hollywood Blvd, Mary Esther, Florida 32569",
+    "city": "Mary Esther",
+    "state": "fl",
+    "price": "217000",
+    "createdOn": "2025-09-03T18:58:49.174Z",
+    "updatedOn": "2025-10-20T23:07:23.701Z"
+  },
+  {
+    "opportunityId": "ju5QMBVCzrFvcNrOs4P0",
+    "name": "2543 Wisdom Court Jacksonville Florida 32210",
+    "address": "2543 Wisdom Court, Jacksonville, Florida 32210",
+    "city": "Jacksonville",
+    "state": "fl",
+    "price": "250000",
+    "createdOn": "2025-09-03T18:57:48.891Z",
+    "updatedOn": "2025-10-20T23:07:24.324Z"
+  },
+  {
+    "opportunityId": "vEFlRn2dib2RRmu6D6Py",
+    "name": "475 Mount Vernon Hwy NE APT C230",
+    "address": "475 Mount Vernon Hwy NE APT C230, Sandy Springs, GA 30328",
+    "city": "Sandy Springs",
+    "state": "GA",
+    "price": "155000",
+    "createdOn": "2025-09-02T17:21:32.709Z",
+    "updatedOn": "2025-10-20T23:07:35.354Z"
+  },
+  {
+    "opportunityId": "2WITspjSCUha4B7kmrCw",
+    "name": "191 Kyndal Dr",
+    "address": "191 Kyndal Dr, Hampton, GA 30228",
+    "city": "Hampton",
+    "state": "GA",
+    "price": "440000",
+    "createdOn": "2025-09-02T17:20:38.239Z",
+    "updatedOn": "2025-10-22T23:02:00.832Z"
+  },
+  {
+    "opportunityId": "AXu6fUYcdMgUYSlgQII5",
+    "name": "50 Cedar Road Ocala FL 34472",
+    "address": "50 Cedar Road, Ocala, FL 34472",
+    "city": "Ocala",
+    "state": "FL",
+    "price": "235000",
+    "createdOn": "2025-08-13T16:33:16.063Z",
+    "updatedOn": "2025-10-20T23:04:47.507Z"
+  },
+  {
+    "opportunityId": "mT1a3NbMTl3u6tdGtjtp",
+    "name": "20810 Trenton Valley Ln Katy TX 77449",
+    "address": "20810 Trenton Valley Ln",
+    "city": "Katy",
+    "state": "TX",
+    "price": "421000",
+    "createdOn": "2025-08-13T16:33:07.777Z",
+    "updatedOn": "2025-10-20T23:04:53.016Z"
+  },
+  {
+    "opportunityId": "3p3hkBJUT4mPosAvrTCr",
+    "name": "11949 Jim Webb Dr El Paso TX 79934",
+    "address": "11949 Jim Webb Dr",
+    "city": "El Paso",
+    "state": "TX",
+    "price": "225000",
+    "createdOn": "2025-08-13T16:32:42.706Z",
+    "updatedOn": "2025-10-20T23:05:07.514Z"
+  },
+  {
+    "opportunityId": "A6QczF4ja3fOFseTUzHf",
+    "name": "278 DORIE ST San Antonio TX 78220",
+    "address": "278 DORIE ST",
+    "city": "San Antonio",
+    "state": "tx",
+    "price": "225000",
+    "createdOn": "2025-07-26T19:35:43.782Z",
+    "updatedOn": "2025-10-22T01:51:15.985Z"
+  },
+  {
+    "opportunityId": "suaZa2j1RFjlZYKIWgBI",
+    "name": "716 Florida St San Antonio TX 78210",
+    "address": "716 Florida St",
+    "city": "San Antonio",
+    "state": "tx",
+    "price": "tx",
+    "createdOn": "2025-07-26T19:35:16.204Z",
+    "updatedOn": "2025-10-20T23:06:12.880Z"
+  },
+  {
+    "opportunityId": "VFFVan1Gq7e7DA4i8vIR",
+    "name": "14247 Greenhaw Ln",
+    "address": "14247 Greenhaw Ln, Dallas, TX 75253",
+    "city": "Dallas",
+    "state": "tx",
+    "price": "tx",
+    "createdOn": "2025-07-26T19:33:19.428Z",
+    "updatedOn": "2025-10-20T23:06:55.101Z"
+  }
+]

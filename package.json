@@ -28,6 +28,7 @@
     "cheerio": "^1.1.2",
     "cities.json": "^1.1.50",
     "critters": "^0.0.23",
+    "csv-parse": "^6.1.0",
     "dotenv": "^17.2.2",
     "firebase": "^12.2.1",
     "firebase-admin": "^13.5.0",

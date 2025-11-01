@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ApifyClient } from 'apify-client';
 import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
+import { sanitizeDescription } from '@/lib/description-sanitizer';
 
 // Initialize Firebase Admin
 if (!getApps().length) {
@@ -222,7 +223,7 @@ function transformProperty(apifyData: any) {
     daysOnZillow: apifyData.daysOnZillow || 0,
     datePostedString: apifyData.datePostedString || '',
     listingDataSource: apifyData.listingDataSource || '',
-    description: apifyData.description || '',
+    description: sanitizeDescription(apifyData.description), // Clean description at source
 
     // ===== CRITICAL CONTACT INFORMATION =====
     agentName,

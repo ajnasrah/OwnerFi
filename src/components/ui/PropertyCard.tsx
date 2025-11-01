@@ -12,6 +12,173 @@ interface PropertyCardProps {
   style?: React.CSSProperties;
 }
 
+// Memoized description component to prevent re-renders on drawer state changes
+const PropertyDescription = React.memo(({ description }: { description: string }) => {
+  return (
+    <div className="bg-gradient-to-br from-slate-50 to-blue-50 rounded-2xl p-4">
+      <h3 className="font-bold text-slate-900 mb-3 flex items-center gap-2 text-base">
+        <span className="text-lg">📝</span>
+        <span>Property Description</span>
+      </h3>
+      <p
+        className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap max-w-full"
+        style={{
+          wordBreak: 'break-word',
+          overflowWrap: 'break-word',
+          // Optimize text rendering for performance
+          contain: 'layout style paint',
+        }}
+      >
+        {description}
+      </p>
+    </div>
+  );
+});
+
+PropertyDescription.displayName = 'PropertyDescription';
+
+// Memoized expanded details section for better performance
+const ExpandedDetails = React.memo(({
+  property,
+  monthlyPayment,
+  estimatedTaxes,
+  estimatedInsurance,
+  totalMonthly,
+}: {
+  property: PropertyListing;
+  monthlyPayment: number;
+  estimatedTaxes: number;
+  estimatedInsurance: number;
+  totalMonthly: number;
+}) => {
+  return (
+    <div className="space-y-4 pt-4 border-t border-slate-200" style={{ contain: 'layout style paint' }}>
+      {/* Property Description */}
+      {property.description && (
+        <PropertyDescription description={property.description} />
+      )}
+
+      {/* Monthly Payment Breakdown */}
+      <div className="bg-slate-50 rounded-2xl p-4">
+        <h3 className="font-bold text-slate-900 mb-3 flex items-center gap-2 text-sm">
+          <span>💰</span>
+          <span>Est. Monthly Payment Breakdown</span>
+        </h3>
+        <div className="space-y-2 text-xs">
+          <div className="flex justify-between">
+            <span className="text-slate-600">Principal & Interest</span>
+            <span className="font-bold text-slate-900">est. ${monthlyPayment.toLocaleString()}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-slate-600">Property Tax</span>
+            <span className="font-bold text-slate-900">est. ${estimatedTaxes.toLocaleString()}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-slate-600">Insurance</span>
+            <span className="font-bold text-slate-900">est. ${estimatedInsurance.toLocaleString()}</span>
+          </div>
+          <div className="flex justify-between pt-2 border-t border-slate-300">
+            <span className="font-bold text-slate-900">Total Monthly</span>
+            <span className="font-black text-emerald-600 text-sm">est. ${totalMonthly.toLocaleString()}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Down Payment */}
+      <div className="bg-blue-50 rounded-2xl p-4">
+        <h3 className="font-bold text-blue-900 mb-2 flex items-center gap-2 text-sm">
+          <span>💵</span>
+          <span>Est. Down Payment Required</span>
+        </h3>
+        <div className="text-xl font-black text-blue-900">
+          est. ${property.downPaymentAmount?.toLocaleString()}
+        </div>
+        <p className="text-xs text-blue-700 mt-1">
+          {property.downPaymentAmount && property.listPrice
+            ? `Approximately ${Math.round((property.downPaymentAmount / property.listPrice) * 100)}% of purchase price`
+            : ''}
+        </p>
+      </div>
+
+      {/* Financing Terms */}
+      <div className="bg-slate-50 rounded-2xl p-4">
+        <h3 className="font-bold text-slate-900 mb-3 flex items-center gap-2">
+          <span>📋</span>
+          <span>Financing Terms</span>
+        </h3>
+        <div className="grid grid-cols-2 gap-3 text-sm">
+          <div>
+            <div className="text-slate-600 text-xs mb-1">Interest Rate</div>
+            <div className="font-bold text-slate-900 text-lg">est. {property.interestRate}%</div>
+          </div>
+          <div>
+            <div className="text-slate-600 text-xs mb-1">Loan Term</div>
+            <div className="font-bold text-slate-900 text-lg">est. {property.termYears} years</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Refinance Timeline */}
+      {property.balloonYears && property.balloonYears > 0 && (
+        <div className="bg-blue-50 border-2 border-blue-200 rounded-2xl p-4">
+          <h3 className="font-bold text-blue-900 mb-2 flex items-center gap-2">
+            <span>📅</span>
+            <span>Refinance Timeline</span>
+          </h3>
+          <p className="text-sm text-blue-800 mb-2">
+            Plan to refinance after <strong>{property.balloonYears} {property.balloonYears === 1 ? 'year' : 'years'}</strong>
+          </p>
+          <p className="text-xs text-blue-700 bg-blue-100 rounded-lg p-2">
+            💡 <strong>Note:</strong> You'll need to refinance with a traditional mortgage or negotiate new terms with the seller after {property.balloonYears} {property.balloonYears === 1 ? 'year' : 'years'}. This gives you time to improve your credit and build equity.
+          </p>
+        </div>
+      )}
+
+      {/* Disclaimer */}
+      <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-3">
+        <p className="text-xs text-yellow-800">
+          💡 Estimates shown are not guaranteed. Monthly payments may or may not include property taxes and insurance. Taxes, insurance, and HOA fees vary by property. Please verify all payment details and what's included with the seller.
+        </p>
+      </div>
+
+      {/* Action Buttons - Compact */}
+      <div className="grid grid-cols-2 gap-3 pt-2">
+        <a
+          href={`https://www.google.com/search?q=${encodeURIComponent(`${property.address} ${property.city}, ${property.state} ${property.zipCode}`)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-2.5 px-4 rounded-xl font-bold text-sm shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-95 transition-all"
+        >
+          <div className="flex items-center justify-center gap-2">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <span>Search Online</span>
+          </div>
+        </a>
+
+        <button
+          onClick={() => {
+            const message = `I'm interested in the property at ${property.address}, ${property.city}, ${property.state}. Found through OwnerFi.`;
+            const phone = property.agentPhone || property.phone || '+1234567890';
+            window.open(`sms:${phone}&body=${encodeURIComponent(message)}`, '_self');
+          }}
+          className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white py-2.5 px-4 rounded-xl font-bold text-sm shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-95 transition-all"
+        >
+          <div className="flex items-center justify-center gap-2">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+            <span>Contact Agent</span>
+          </div>
+        </button>
+      </div>
+    </div>
+  );
+});
+
+ExpandedDetails.displayName = 'ExpandedDetails';
+
 export const PropertyCard = React.memo(function PropertyCard({ property, onLike, onPass, isFavorited, style }: PropertyCardProps) {
   const [imageIndex, setImageIndex] = useState(0);
   const [imageLoading, setImageLoading] = useState(true);
@@ -19,7 +186,9 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
   const [showDetails, setShowDetails] = useState(false);
   const [drawerDragStart, setDrawerDragStart] = useState<number | null>(null);
   const [drawerOffset, setDrawerOffset] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
   const rafRef = useRef<number | null>(null);
+  const drawerRef = useRef<HTMLDivElement>(null);
 
 
   // Memoize expensive calculations
@@ -40,6 +209,15 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
       totalMonthly: monthly + taxes + insurance
     };
   }, [property.monthlyPayment]);
+
+  // Cleanup RAF on unmount
+  React.useEffect(() => {
+    return () => {
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current);
+      }
+    };
+  }, []);
 
   // Memoized event handlers
   const nextImage = useCallback((e: React.MouseEvent) => {
@@ -116,7 +294,7 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
         setDrawerOffset(Math.max(deltaY * resistance, -150));
       }
     });
-  }, [drawerDragStart, showDetails]);
+  }, [drawerDragStart, showDetails, rafRef]);
 
   const handleDrawerMouseMove = useCallback((e: React.MouseEvent) => {
     if (drawerDragStart === null) return;
@@ -159,7 +337,7 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
         setDrawerOffset(Math.max(deltaY * resistance, -150));
       }
     });
-  }, [drawerDragStart, showDetails]);
+  }, [drawerDragStart, showDetails, rafRef]);
 
   const handleDrawerTouchEnd = useCallback((e: React.TouchEvent) => {
     if (drawerDragStart === null) return;
@@ -173,6 +351,9 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
     // MUCH LOWER threshold - only 30px swipe for easier opening
     const threshold = 30;
 
+    // Start animation state
+    setIsAnimating(true);
+
     if (deltaY > threshold && !showDetails) {
       setShowDetails(true);
     } else if (deltaY < -threshold && showDetails) {
@@ -181,6 +362,9 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
 
     setDrawerDragStart(null);
     setDrawerOffset(0);
+
+    // End animation state after transition
+    setTimeout(() => setIsAnimating(false), 300);
   }, [drawerDragStart, showDetails]);
 
   const handleDrawerMouseEnd = useCallback((e: React.MouseEvent) => {
@@ -192,6 +376,9 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
     // MUCH LOWER threshold - only 30px swipe for easier opening
     const threshold = 30;
 
+    // Start animation state
+    setIsAnimating(true);
+
     if (deltaY > threshold && !showDetails) {
       setShowDetails(true);
     } else if (deltaY < -threshold && showDetails) {
@@ -200,6 +387,9 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
 
     setDrawerDragStart(null);
     setDrawerOffset(0);
+
+    // End animation state after transition
+    setTimeout(() => setIsAnimating(false), 300);
   }, [drawerDragStart, showDetails]);
 
   return (
@@ -330,13 +520,19 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
         <div className="absolute bottom-0 left-0 right-0 z-10 h-[50vh] pointer-events-none">
           {/* Expandable Details Panel */}
           <div
+            ref={drawerRef}
             className="absolute bottom-0 left-0 right-0 bg-white/98 backdrop-blur-sm rounded-t-3xl pointer-events-auto shadow-2xl h-full"
             style={{
               transform: showDetails
                 ? `translate3d(0, ${Math.max(drawerOffset, 0)}px, 0)`
                 : `translate3d(0, calc(50vh - 240px + ${Math.max(drawerOffset, 0)}px), 0)`,
-              transition: drawerDragStart === null ? 'transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none',
-              willChange: 'transform',
+              transition: drawerDragStart === null ? 'transform 0.35s cubic-bezier(0.32, 0.72, 0, 1)' : 'none',
+              willChange: isAnimating || drawerDragStart !== null ? 'transform' : 'auto',
+              backfaceVisibility: 'hidden',
+              WebkitBackfaceVisibility: 'hidden',
+              WebkitFontSmoothing: 'antialiased',
+              isolation: 'isolate',
+              contain: 'layout style paint',
             }}
             onTouchStart={handleDrawerTouchStart}
             onTouchMove={handleDrawerTouchMove}
@@ -368,7 +564,11 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
                 WebkitOverflowScrolling: 'touch',
                 overscrollBehavior: 'contain',
                 touchAction: 'pan-y',
+                transform: 'translateZ(0)', // GPU acceleration
+                backfaceVisibility: 'hidden',
+                WebkitBackfaceVisibility: 'hidden',
                 willChange: showDetails ? 'scroll-position' : 'auto',
+                contain: 'strict',
               }}
               data-drawer-scroll
             >
@@ -427,136 +627,13 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
 
               {/* Expanded Details */}
               {showDetails && (
-                <div className="space-y-4 pt-4 border-t border-slate-200">
-                  {/* Property Description */}
-                  {property.description && (
-                    <div className="bg-gradient-to-br from-slate-50 to-blue-50 rounded-2xl p-4">
-                      <h3 className="font-bold text-slate-900 mb-3 flex items-center gap-2 text-base">
-                        <span className="text-lg">📝</span>
-                        <span>Property Description</span>
-                      </h3>
-                      <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap break-words" style={{ wordBreak: 'break-word', overflowWrap: 'break-word', maxWidth: '100%' }}>
-                        {property.description}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Monthly Payment Breakdown */}
-                  <div className="bg-slate-50 rounded-2xl p-4">
-                    <h3 className="font-bold text-slate-900 mb-3 flex items-center gap-2 text-sm">
-                      <span>💰</span>
-                      <span>Est. Monthly Payment Breakdown</span>
-                    </h3>
-                    <div className="space-y-2 text-xs">
-                      <div className="flex justify-between">
-                        <span className="text-slate-600">Principal & Interest</span>
-                        <span className="font-bold text-slate-900">est. ${monthlyPayment.toLocaleString()}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-slate-600">Property Tax</span>
-                        <span className="font-bold text-slate-900">est. ${estimatedTaxes.toLocaleString()}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-slate-600">Insurance</span>
-                        <span className="font-bold text-slate-900">est. ${estimatedInsurance.toLocaleString()}</span>
-                      </div>
-                      <div className="flex justify-between pt-2 border-t border-slate-300">
-                        <span className="font-bold text-slate-900">Total Monthly</span>
-                        <span className="font-black text-emerald-600 text-sm">est. ${totalMonthly.toLocaleString()}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Down Payment */}
-                  <div className="bg-blue-50 rounded-2xl p-4">
-                    <h3 className="font-bold text-blue-900 mb-2 flex items-center gap-2 text-sm">
-                      <span>💵</span>
-                      <span>Est. Down Payment Required</span>
-                    </h3>
-                    <div className="text-xl font-black text-blue-900">
-                      est. ${property.downPaymentAmount?.toLocaleString()}
-                    </div>
-                    <p className="text-xs text-blue-700 mt-1">
-                      {property.downPaymentAmount && property.listPrice
-                        ? `Approximately ${Math.round((property.downPaymentAmount / property.listPrice) * 100)}% of purchase price`
-                        : ''}
-                    </p>
-                  </div>
-
-                  {/* Financing Terms */}
-                  <div className="bg-slate-50 rounded-2xl p-4">
-                    <h3 className="font-bold text-slate-900 mb-3 flex items-center gap-2">
-                      <span>📋</span>
-                      <span>Financing Terms</span>
-                    </h3>
-                    <div className="grid grid-cols-2 gap-3 text-sm">
-                      <div>
-                        <div className="text-slate-600 text-xs mb-1">Interest Rate</div>
-                        <div className="font-bold text-slate-900 text-lg">est. {property.interestRate}%</div>
-                      </div>
-                      <div>
-                        <div className="text-slate-600 text-xs mb-1">Loan Term</div>
-                        <div className="font-bold text-slate-900 text-lg">est. {property.termYears} years</div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Refinance Timeline */}
-                  {property.balloonYears && property.balloonYears > 0 && (
-                    <div className="bg-blue-50 border-2 border-blue-200 rounded-2xl p-4">
-                      <h3 className="font-bold text-blue-900 mb-2 flex items-center gap-2">
-                        <span>📅</span>
-                        <span>Refinance Timeline</span>
-                      </h3>
-                      <p className="text-sm text-blue-800 mb-2">
-                        Plan to refinance after <strong>{property.balloonYears} {property.balloonYears === 1 ? 'year' : 'years'}</strong>
-                      </p>
-                      <p className="text-xs text-blue-700 bg-blue-100 rounded-lg p-2">
-                        💡 <strong>Note:</strong> You'll need to refinance with a traditional mortgage or negotiate new terms with the seller after {property.balloonYears} {property.balloonYears === 1 ? 'year' : 'years'}. This gives you time to improve your credit and build equity.
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Disclaimer */}
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-3">
-                    <p className="text-xs text-yellow-800">
-                      💡 Estimates shown are not guaranteed. Monthly payments may or may not include property taxes and insurance. Taxes, insurance, and HOA fees vary by property. Please verify all payment details and what's included with the seller.
-                    </p>
-                  </div>
-
-                  {/* Action Buttons - Compact */}
-                  <div className="grid grid-cols-2 gap-3 pt-2">
-                    <a
-                      href={`https://www.google.com/search?q=${encodeURIComponent(`${property.address} ${property.city}, ${property.state} ${property.zipCode}`)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-2.5 px-4 rounded-xl font-bold text-sm shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-95 transition-all"
-                    >
-                      <div className="flex items-center justify-center gap-2">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                        <span>Search Online</span>
-                      </div>
-                    </a>
-
-                    <button
-                      onClick={() => {
-                        const message = `I'm interested in the property at ${property.address}, ${property.city}, ${property.state}. Found through OwnerFi.`;
-                        const phone = property.agentPhone || property.phone || '+1234567890';
-                        window.open(`sms:${phone}&body=${encodeURIComponent(message)}`, '_self');
-                      }}
-                      className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white py-2.5 px-4 rounded-xl font-bold text-sm shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-95 transition-all"
-                    >
-                      <div className="flex items-center justify-center gap-2">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                        </svg>
-                        <span>Contact Agent</span>
-                      </div>
-                    </button>
-                  </div>
-                </div>
+                <ExpandedDetails
+                  property={property}
+                  monthlyPayment={monthlyPayment}
+                  estimatedTaxes={estimatedTaxes}
+                  estimatedInsurance={estimatedInsurance}
+                  totalMonthly={totalMonthly}
+                />
               )}
 
             </div>

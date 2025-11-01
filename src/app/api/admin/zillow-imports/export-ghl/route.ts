@@ -5,6 +5,7 @@ import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { ExtendedSession } from '@/types/session';
 import * as XLSX from 'xlsx';
+import { sanitizeDescription } from '@/lib/description-sanitizer';
 
 // Initialize Firebase Admin (if not already initialized)
 if (!getApps().length) {
@@ -109,8 +110,8 @@ export async function GET(request: NextRequest) {
           // Images
           'property_image_url': imageUrl,
 
-          // Description
-          'description': data.description || '',
+          // Description (sanitized for GHL compatibility)
+          'description': sanitizeDescription(data.description),
 
           // Metadata
           'full_address': fullAddress,

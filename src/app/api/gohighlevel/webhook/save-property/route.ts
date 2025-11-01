@@ -9,6 +9,7 @@ import { db } from '@/lib/firebase';
 import { logError, logInfo, logWarn } from '@/lib/logger';
 import { queueNearbyCitiesForProperty } from '@/lib/property-enhancement';
 import { autoCleanPropertyData } from '@/lib/property-auto-cleanup';
+import { sanitizeDescription } from '@/lib/description-sanitizer';
 import crypto from 'crypto';
 
 const GHL_WEBHOOK_SECRET = process.env.GHL_WEBHOOK_SECRET || '';
@@ -581,7 +582,7 @@ export async function POST(request: NextRequest) {
       yearBuilt: yearBuilt || 0,
       lotSize: normalizeLotSize(payload.lotSizes || ''),
       propertyType,
-      description: payload.description?.trim() || '',
+      description: sanitizeDescription(payload.description), // Sanitize description for safety
 
       // Financial Details - all calculated
       monthlyPayment: calculatedMonthlyPayment,

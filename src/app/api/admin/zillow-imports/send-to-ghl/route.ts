@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { ExtendedSession } from '@/types/session';
+import { sanitizeDescription } from '@/lib/description-sanitizer';
 
 // Initialize Firebase Admin (if not already initialized)
 if (!getApps().length) {
@@ -90,7 +91,7 @@ export async function POST(request: NextRequest) {
           lot_square_foot: data.lotSquareFoot || 0,
           estimate: data.estimate || 0,
           hoa: data.hoa || 0,
-          description: data.description || '',
+          description: sanitizeDescription(data.description), // Clean description for GHL
           agent_name: data.agentName || '',
           agent_phone_number: data.agentPhoneNumber || data.brokerPhoneNumber || '',
           annual_tax_amount: data.annualTaxAmount || 0,

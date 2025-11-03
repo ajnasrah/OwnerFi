@@ -19,6 +19,7 @@ import {
   getBrandStoragePath,
 } from '@/lib/brand-utils';
 import { getBrandConfig } from '@/config/brand-configs';
+import { postToMultiplePlatformGroups, getScheduleDescription } from '@/lib/platform-scheduling';
 
 interface RouteContext {
   params: {
@@ -384,50 +385,47 @@ async function processVideoAndPost(
       title = workflow.title || 'Viral Video';
     }
 
-    console.log(`📱 [${brandConfig.displayName}] Posting to platforms: ${platforms.join(', ')}`);
+    console.log(`📱 [${brandConfig.displayName}] Posting to multiple platform groups at optimal times`);
+    console.log(`   ${getScheduleDescription(brand)}`);
 
-    // Schedule for 24 hours from now (gives buffer for any processing delays)
-    // Calculate time in Central Time (CST/CDT)
-    const now = new Date();
-    const scheduleDateUTC = new Date(now.getTime() + (24 * 60 * 60 * 1000)); // +24 hours
-    const scheduleTime = scheduleDateUTC.toISOString(); // ISO 8601 format
-
-    // Format for logging in Central Time
-    const cstTime = scheduleDateUTC.toLocaleString('en-US', {
-      timeZone: 'America/Chicago',
-      dateStyle: 'medium',
-      timeStyle: 'short'
-    });
-
-    console.log(`📅 Scheduling post for exactly 24 hours from now:`);
-    console.log(`   UTC: ${scheduleTime}`);
-    console.log(`   CST: ${cstTime}`);
-
-    // Post to Late API
-    const postResult = await postToLate({
-      videoUrl: publicVideoUrl,
+    // Post to platform groups at their optimal times
+    // This schedules different platforms for different times tomorrow:
+    // - Professional platforms (LinkedIn, Twitter, Bluesky): 8 AM CST
+    // - Midday platforms (Facebook, YouTube): 1 PM CST
+    // - Evening platforms (TikTok, Instagram, Threads): 7 PM CST
+    const postResult = await postToMultiplePlatformGroups(
+      publicVideoUrl,
       caption,
       title,
-      platforms: platforms as any[],
-      scheduleTime, // Exact time: 24 hours from now (UTC)
-      timezone: 'America/Chicago', // CST/CDT timezone
-      useQueue: false, // FALSE - Direct posting, no queue
       brand,
-    });
+      {
+        // Future: Add first comment for engagement boost
+        // firstComment: getEngagementComment(brand),
+      }
+    );
 
     if (postResult.success) {
-      console.log(`✅ [${brandConfig.displayName}] Posted to Late!`);
-      console.log(`   Post ID: ${postResult.postId}`);
-      console.log(`   Platforms: ${postResult.platforms?.join(', ')}`);
+      console.log(`✅ [${brandConfig.displayName}] Posted to Late (all groups)!`);
+      console.log(`   Total platforms scheduled: ${postResult.scheduledPlatforms}/${postResult.totalPlatforms}`);
+      console.log(`   Platform groups: ${postResult.groups.length}`);
+
+      // Collect all post IDs from all groups
+      const postIds = postResult.groups
+        .map(g => g.result.postId)
+        .filter(Boolean)
+        .join(', ');
 
       // Mark workflow as completed (video URL already saved above)
       await updateWorkflowForBrand(brand, workflowId, {
         status: 'completed',
-        latePostId: postResult.postId,
+        latePostId: postIds, // Store all post IDs
         completedAt: Date.now(),
+        platformGroups: postResult.groups.length,
+        scheduledPlatforms: postResult.scheduledPlatforms,
       });
     } else {
-      throw new Error(`Late posting failed: ${postResult.error}`);
+      const errorMsg = postResult.errors.join('; ') || 'Unknown platform scheduling error';
+      throw new Error(`Late posting failed: ${errorMsg}`);
     }
 
   } catch (error) {

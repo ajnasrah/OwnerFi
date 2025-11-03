@@ -414,7 +414,7 @@ export async function GET(request: NextRequest) {
           caption,
           title,
           platforms,
-          useQueue: true,
+          useQueue: false, // Direct posting, no queue
           brand: brand as any
         });
 

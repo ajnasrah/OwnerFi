@@ -386,8 +386,8 @@ async function processVideoAndPost(
 
     console.log(`📱 [${brandConfig.displayName}] Posting to platforms: ${platforms.join(', ')}`);
 
-    // All videos use queue now (OwnerFi has 15 slots/day)
-    const useQueue = true;
+    // DISABLED queue - post directly to ensure exact timing control
+    const useQueue = false;
 
     // Post to Late API
     const postResult = await postToLate({
@@ -395,7 +395,8 @@ async function processVideoAndPost(
       caption,
       title,
       platforms: platforms as any[],
-      useQueue, // All videos use Late.dev queue
+      scheduleTime: workflow.scheduleTime, // Use exact schedule time if provided
+      useQueue, // FALSE - Direct posting, no queue
       brand,
     });
 

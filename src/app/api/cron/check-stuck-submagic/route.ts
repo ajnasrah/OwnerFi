@@ -557,7 +557,7 @@ async function executeFailsafe() {
                   caption: workflow.episodeTitle || 'New Podcast Episode',
                   title: `Episode #${workflow.episodeNumber}: ${workflow.episodeTitle || 'New Episode'}`,
                   platforms: allPlatforms,
-                  useQueue: true,  // Use Late's queue system
+                  useQueue: false, // Direct posting, no queue  // Use Late's queue system
                   brand: 'podcast'
                 });
 
@@ -605,7 +605,7 @@ async function executeFailsafe() {
                   caption: workflow.caption || 'Learn about owner financing! 🏡',
                   title: workflow.title || 'Owner Finance Benefits',
                   platforms: allPlatforms,
-                  useQueue: true,
+                  useQueue: false, // Direct posting, no queue
                   brand: 'benefit'
                 });
 
@@ -659,7 +659,7 @@ async function executeFailsafe() {
                   caption,
                   title,
                   platforms: allPlatforms,
-                  useQueue: true,
+                  useQueue: false, // Direct posting, no queue
                   brand: 'ownerfi' // Property videos use OwnerFi profile
                 });
 
@@ -711,7 +711,7 @@ async function executeFailsafe() {
                   caption: workflow.caption || 'Check out this video! 🔥',
                   title: workflow.title || 'Viral Video',
                   platforms: allPlatforms,
-                  useQueue: true,  // Use Late's queue system
+                  useQueue: false, // Direct posting, no queue  // Use Late's queue system
                   brand: brand
                 });
 

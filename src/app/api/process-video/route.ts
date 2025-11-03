@@ -138,12 +138,16 @@ export async function POST(request: NextRequest) {
 
       console.log(`📱 Posting to Late API (${platforms.join(', ')})...`);
 
+      // Get schedule time from workflow if available
+      const scheduleTime = workflow.scheduleTime || undefined; // ISO 8601 format
+
       const postResult = await postToLate({
         videoUrl: publicVideoUrl,
         caption,
         title,
         platforms: platforms as any[],
-        useQueue: true,
+        scheduleTime, // Use exact schedule time, not queue
+        useQueue: false, // DISABLED - Post at exact time instead of using queue
         brand,
       });
 

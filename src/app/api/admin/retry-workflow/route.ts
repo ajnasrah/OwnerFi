@@ -241,7 +241,7 @@ async function retryPosting(
     caption,
     title,
     platforms: platforms as any[],
-    useQueue: true,
+    useQueue: false, // Direct posting, no queue
     brand,
   });
 

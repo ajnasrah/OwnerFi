@@ -102,13 +102,19 @@ export async function POST(request: NextRequest) {
 
       console.log(`✅ Video uploaded to R2: ${publicVideoUrl}`);
 
-      // Step 2: Update workflow with video URL and set status to "posting"
+      // CRITICAL: Save video URL IMMEDIATELY before changing status
+      // This ensures we don't lose the URL if status update fails
       await updateWorkflowForBrand(brand, workflowId, {
-        status: 'posting', // Use 'posting' for all brands including podcast
         finalVideoUrl: publicVideoUrl,
       });
+      console.log(`💾 Video URL saved to workflow`);
 
-      console.log(`💾 Status set to "posting" with video URL saved`);
+      // Now update status to "posting"
+      await updateWorkflowForBrand(brand, workflowId, {
+        status: 'posting', // Use 'posting' for all brands including podcast
+      });
+
+      console.log(`📝 Status set to "posting"`);
 
       // Step 3: Post to Late API
       const platforms = getBrandPlatforms(brand, false);

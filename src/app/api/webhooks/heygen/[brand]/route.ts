@@ -119,17 +119,30 @@ export async function POST(request: NextRequest, context: RouteContext) {
       console.log(`   Workflow ID: ${workflowId}`);
 
       // Trigger Submagic processing ASYNCHRONOUSLY to avoid webhook timeout
-      // Don't await - let it run in background, failsafe cron will handle failures
-      triggerSubmagicProcessing(
+      // Store the promise so we can track it, but don't await to prevent webhook timeout
+      const submagicPromise = triggerSubmagicProcessing(
         brand,
         workflowId,
         event_data.url,
         workflow
-      ).catch(err => {
-        console.error(`❌ [${brandConfig.displayName}] Submagic trigger failed (will be retried by failsafe):`, err);
-        // Don't throw - we've already marked workflow as heygen_processing
-        // Failsafe cron will detect and retry
+      ).catch(async err => {
+        console.error(`❌ [${brandConfig.displayName}] Submagic trigger failed:`, err);
+
+        // CRITICAL: Mark workflow as failed so it doesn't stay stuck forever
+        try {
+          await updateWorkflowForBrand(brand, workflowId, {
+            status: 'failed',
+            error: `Submagic trigger failed: ${err instanceof Error ? err.message : 'Unknown error'}`,
+            failedAt: Date.now()
+          });
+          console.log(`✅ Marked workflow ${workflowId} as failed due to Submagic error`);
+        } catch (updateErr) {
+          console.error(`❌ Failed to update workflow status:`, updateErr);
+        }
       });
+
+      // Log that we've started the process
+      console.log(`📤 [${brandConfig.displayName}] Triggered Submagic processing for workflow ${workflowId}`);
 
       const duration = Date.now() - startTime;
       console.log(`⏱️  [${brandConfig.displayName}] Webhook processed in ${duration}ms`);
@@ -341,8 +354,8 @@ async function triggerSubmagicProcessing(
     // Extract project ID with multiple fallback options
     const projectId = data?.id || data?.project_id || data?.projectId || data?.data?.id;
 
-    // Validate that we received a project ID
-    if (!projectId || projectId === '' || projectId === null || projectId === undefined) {
+    // Validate that we received a valid project ID (string with length > 0)
+    if (!projectId || typeof projectId !== 'string' || projectId.trim().length === 0) {
       console.error(`❌ [${brandConfig.displayName}] Submagic response missing project ID!`);
       console.error(`   Response status: ${response.status}`);
       console.error(`   Response headers:`, Object.fromEntries(response.headers.entries()));

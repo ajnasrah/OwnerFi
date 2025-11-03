@@ -16,6 +16,9 @@ const SUBMAGIC_API_KEY = process.env.SUBMAGIC_API_KEY;
 import { generateHeyGenVideo as generateHeyGenVideoWithTracking } from '@/lib/heygen-client';
 
 export async function POST(request: NextRequest) {
+  let workflowId: string | undefined; // Declare at function scope so catch block can access it
+  let brand: string | undefined; // Declare at function scope so catch block can access it
+
   try {
     // Parse and validate request body
     const rawBody = await request.json();
@@ -33,7 +36,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = validation.data;
-    const brand = body.brand;
+    brand = body.brand;
     const platforms = body.platforms;
     const schedule = body.schedule;
 
@@ -80,7 +83,6 @@ export async function POST(request: NextRequest) {
     }
 
     // Add to workflow queue with 'pending' status
-    let workflowId: string | undefined;
     if (article.id) {
       const { addWorkflowToQueue } = await import('@/lib/feed-store-firestore');
       const queueItem = await addWorkflowToQueue(article.id, article.title, brand as 'carz' | 'ownerfi' | 'vassdistro');
@@ -270,13 +272,28 @@ export async function POST(request: NextRequest) {
     console.error('❌ Workflow error:', error);
 
     // Update workflow status to 'failed' if we have a workflowId
-    // Note: workflowId may not be in scope here, so we'll need to handle this differently
+    if (workflowId && brand) {
+      try {
+        const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
+        await updateWorkflowStatus(workflowId, brand as 'carz' | 'ownerfi' | 'vassdistro', {
+          status: 'failed',
+          error: error instanceof Error ? error.message : 'Unknown error',
+          failedAt: Date.now()
+        });
+        console.log(`✅ Marked workflow ${workflowId} as failed`);
+      } catch (updateError) {
+        console.error(`❌ Failed to update workflow status:`, updateError);
+      }
+    } else {
+      console.warn(`⚠️  Cannot mark workflow as failed - missing workflowId or brand`);
+    }
 
     return NextResponse.json(
       {
         success: false,
         error: 'Workflow failed',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        details: error instanceof Error ? error.message : 'Unknown error',
+        workflow_id: workflowId
       },
       { status: 500 }
     );

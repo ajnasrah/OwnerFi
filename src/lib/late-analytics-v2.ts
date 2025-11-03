@@ -387,8 +387,17 @@ export async function analyzePlatformPerformance(
   for (const [platform, posts] of platformData.entries()) {
     const totalPosts = posts.length;
 
+    // Helper function to get visibility metric based on platform
+    const getVisibility = (post: any): number => {
+      // Instagram uses 'reach', TikTok and YouTube use 'views'
+      if (platform.toLowerCase() === 'instagram') {
+        return post.reach || 0;
+      }
+      return post.views || 0;
+    };
+
     // Calculate averages
-    const avgViews = posts.reduce((sum, p) => sum + (p.views || 0), 0) / totalPosts;
+    const avgViews = posts.reduce((sum, p) => sum + getVisibility(p), 0) / totalPosts;
     const avgLikes = posts.reduce((sum, p) => sum + (p.likes || 0), 0) / totalPosts;
     const avgComments = posts.reduce((sum, p) => sum + (p.comments || 0), 0) / totalPosts;
     const avgShares = posts.reduce((sum, p) => sum + (p.shares || 0), 0) / totalPosts;
@@ -400,7 +409,7 @@ export async function analyzePlatformPerformance(
     posts.forEach(post => {
       const hour = post.hour;
       const existing = hourData.get(hour) || { totalViews: 0, totalEngagement: 0, count: 0 };
-      existing.totalViews += post.views || 0;
+      existing.totalViews += getVisibility(post);
       existing.totalEngagement += post.engagementRate || 0;
       existing.count += 1;
       hourData.set(hour, existing);
@@ -421,7 +430,7 @@ export async function analyzePlatformPerformance(
     posts.forEach(post => {
       const day = post.dayOfWeek;
       const existing = dayData.get(day) || { totalViews: 0, totalEngagement: 0, count: 0 };
-      existing.totalViews += post.views || 0;
+      existing.totalViews += getVisibility(post);
       existing.totalEngagement += post.engagementRate || 0;
       existing.count += 1;
       dayData.set(day, existing);
@@ -445,11 +454,11 @@ export async function analyzePlatformPerformance(
     const olderPosts = posts.filter(p => p.lastUpdated < midpoint);
 
     const recentAvgViews = recentPosts.length > 0
-      ? recentPosts.reduce((sum, p) => sum + (p.views || 0), 0) / recentPosts.length
+      ? recentPosts.reduce((sum, p) => sum + getVisibility(p), 0) / recentPosts.length
       : 0;
 
     const olderAvgViews = olderPosts.length > 0
-      ? olderPosts.reduce((sum, p) => sum + (p.views || 0), 0) / olderPosts.length
+      ? olderPosts.reduce((sum, p) => sum + getVisibility(p), 0) / olderPosts.length
       : 0;
 
     const weekOverWeekGrowth = olderAvgViews > 0

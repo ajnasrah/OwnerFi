@@ -109,7 +109,14 @@ async function getOptimizationInsights(brand?: string, days: number = 30) {
   platformData.forEach((posts, platform) => {
     // Calculate performance score
     const calculateScore = (p: any) => {
-      const visibility = p.views > 0 ? p.views : p.reach;
+      // Instagram uses 'reach', TikTok uses 'views', YouTube uses 'views'
+      let visibility = 0;
+      if (platform.toLowerCase() === 'instagram') {
+        visibility = p.reach || 0;
+      } else {
+        // TikTok, YouTube, and other platforms use 'views'
+        visibility = p.views || 0;
+      }
       const engagement = (p.likes || 0) + (p.comments || 0) + (p.shares || 0) + (p.saves || 0);
       return visibility + (engagement * 10);
     };
@@ -166,7 +173,15 @@ async function getOptimizationInsights(brand?: string, days: number = 30) {
     // Calculate metrics
     const totalPosts = posts.length;
     const avgReach = posts.reduce((sum, p) => sum + (p.reach || 0), 0) / totalPosts;
-    const avgViews = posts.reduce((sum, p) => sum + (p.views || 0), 0) / totalPosts;
+
+    // Use platform-specific visibility metric
+    const getVisibility = (p: any): number => {
+      if (platform.toLowerCase() === 'instagram') {
+        return p.reach || 0;
+      }
+      return p.views || 0;
+    };
+    const avgViews = posts.reduce((sum, p) => sum + getVisibility(p), 0) / totalPosts;
     const totalEngagement = posts.reduce((sum, p) => sum + (p.likes || 0) + (p.comments || 0) + (p.shares || 0) + (p.saves || 0), 0);
     const avgEngagement = totalEngagement / totalPosts;
 

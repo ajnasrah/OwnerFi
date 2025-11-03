@@ -386,8 +386,22 @@ async function processVideoAndPost(
 
     console.log(`📱 [${brandConfig.displayName}] Posting to platforms: ${platforms.join(', ')}`);
 
-    // DISABLED queue - post directly to ensure exact timing control
-    const useQueue = false;
+    // Schedule for 24 hours from now (gives buffer for any processing delays)
+    // Calculate time in Central Time (CST/CDT)
+    const now = new Date();
+    const scheduleDateUTC = new Date(now.getTime() + (24 * 60 * 60 * 1000)); // +24 hours
+    const scheduleTime = scheduleDateUTC.toISOString(); // ISO 8601 format
+
+    // Format for logging in Central Time
+    const cstTime = scheduleDateUTC.toLocaleString('en-US', {
+      timeZone: 'America/Chicago',
+      dateStyle: 'medium',
+      timeStyle: 'short'
+    });
+
+    console.log(`📅 Scheduling post for exactly 24 hours from now:`);
+    console.log(`   UTC: ${scheduleTime}`);
+    console.log(`   CST: ${cstTime}`);
 
     // Post to Late API
     const postResult = await postToLate({
@@ -395,8 +409,8 @@ async function processVideoAndPost(
       caption,
       title,
       platforms: platforms as any[],
-      scheduleTime: workflow.scheduleTime, // Use exact schedule time if provided
-      useQueue, // FALSE - Direct posting, no queue
+      scheduleTime, // Exact time: 24 hours from now
+      useQueue: false, // FALSE - Direct posting, no queue
       brand,
     });
 

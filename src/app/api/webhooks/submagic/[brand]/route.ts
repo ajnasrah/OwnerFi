@@ -409,7 +409,8 @@ async function processVideoAndPost(
       caption,
       title,
       platforms: platforms as any[],
-      scheduleTime, // Exact time: 24 hours from now
+      scheduleTime, // Exact time: 24 hours from now (UTC)
+      timezone: 'America/Chicago', // CST/CDT timezone
       useQueue: false, // FALSE - Direct posting, no queue
       brand,
     });

@@ -92,22 +92,127 @@ export function getPlatformGroups(brand: Brand): PlatformGroup[] {
  *
  * @param hourCST - Hour in CST (0-23)
  * @param baseDate - Base date to add 24 hours to (defaults to now)
+ * @param dayOffset - Number of days to add (0 = today+24h, 1 = today+48h, etc.)
  * @returns ISO 8601 UTC timestamp
  */
-export function createScheduleTime(hourCST: number, baseDate: Date = new Date()): string {
-  // Add 24 hours to base date (schedule for tomorrow)
-  const tomorrow = new Date(baseDate.getTime() + (24 * 60 * 60 * 1000));
+export function createScheduleTime(hourCST: number, baseDate: Date = new Date(), dayOffset: number = 0): string {
+  // Add 24 hours + dayOffset to base date
+  const targetDate = new Date(baseDate.getTime() + ((24 + (dayOffset * 24)) * 60 * 60 * 1000));
 
   // Set hour in CST timezone
   // Note: toLocaleString creates a date in CST, then we parse it back
-  const cstDate = new Date(tomorrow.toLocaleString('en-US', { timeZone: 'America/Chicago' }));
+  const cstDate = new Date(targetDate.toLocaleString('en-US', { timeZone: 'America/Chicago' }));
   cstDate.setHours(hourCST, 0, 0, 0);
 
   // Calculate offset to convert CST time back to UTC
-  const offset = cstDate.getTime() - tomorrow.getTime();
-  const utcSchedule = new Date(tomorrow.getTime() - offset);
+  const offset = cstDate.getTime() - targetDate.getTime();
+  const utcSchedule = new Date(targetDate.getTime() - offset);
 
   return utcSchedule.toISOString();
+}
+
+/**
+ * Post to platforms with day offset for multi-post-per-day schedules
+ *
+ * @param videoUrl - URL of video to post
+ * @param caption - Post caption
+ * @param title - Video title
+ * @param brand - Brand identifier
+ * @param dayOffset - Days to offset (0 = tomorrow, 1 = day after, 2 = 2 days later, etc.)
+ * @param options - Additional options
+ */
+export async function postToMultiplePlatformGroupsWithOffset(
+  videoUrl: string,
+  caption: string,
+  title: string,
+  brand: Brand,
+  dayOffset: number = 0,
+  options?: {
+    firstComment?: string;
+    hashtags?: string[];
+    postTypes?: LatePostRequest['postTypes'];
+  }
+): Promise<{
+  success: boolean;
+  groups: {
+    group: PlatformGroup;
+    result: LatePostResponse;
+  }[];
+  totalPlatforms: number;
+  scheduledPlatforms: number;
+  errors: string[];
+}> {
+  const groups = getPlatformGroups(brand);
+  const results: { group: PlatformGroup; result: LatePostResponse }[] = [];
+  const errors: string[] = [];
+
+  console.log(`📅 Scheduling to ${groups.length} platform groups for ${brand} (day offset: +${dayOffset}):`);
+
+  for (const group of groups) {
+    // Create schedule time with day offset
+    const scheduleTime = createScheduleTime(group.hourCST, new Date(), dayOffset);
+
+    // Format for logging
+    const cstTime = new Date(scheduleTime).toLocaleString('en-US', {
+      timeZone: 'America/Chicago',
+      dateStyle: 'medium',
+      timeStyle: 'short'
+    });
+
+    console.log(`   ${group.label} (${group.platforms.join(', ')})`);
+    console.log(`     → Scheduled for: ${cstTime} CST`);
+    console.log(`     → UTC: ${scheduleTime}`);
+
+    try {
+      // Post to this platform group
+      const result = await postToLate({
+        videoUrl,
+        caption,
+        title,
+        hashtags: options?.hashtags,
+        platforms: group.platforms as any[],
+        scheduleTime, // Scheduled for optimal time + offset
+        useQueue: false,
+        brand,
+        firstComment: options?.firstComment,
+        postTypes: options?.postTypes,
+      });
+
+      results.push({ group, result });
+
+      if (result.success) {
+        console.log(`     ✅ Scheduled (Post ID: ${result.postId})`);
+      } else {
+        console.error(`     ❌ Failed: ${result.error}`);
+        errors.push(`${group.label}: ${result.error}`);
+      }
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      console.error(`     ❌ Error: ${errorMsg}`);
+      errors.push(`${group.label}: ${errorMsg}`);
+    }
+  }
+
+  // Calculate totals
+  const totalPlatforms = groups.reduce((sum, g) => sum + g.platforms.length, 0);
+  const scheduledPlatforms = results
+    .filter(r => r.result.success)
+    .reduce((sum, r) => sum + (r.result.platforms?.length || r.group.platforms.length), 0);
+
+  const success = scheduledPlatforms > 0;
+
+  console.log(`\n${success ? '✅' : '❌'} Scheduled ${scheduledPlatforms}/${totalPlatforms} platforms`);
+  if (errors.length > 0) {
+    console.warn(`⚠️  Errors: ${errors.join('; ')}`);
+  }
+
+  return {
+    success,
+    groups: results,
+    totalPlatforms,
+    scheduledPlatforms,
+    errors,
+  };
 }
 
 /**

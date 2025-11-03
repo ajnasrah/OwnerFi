@@ -129,10 +129,10 @@ export async function GET(request: NextRequest) {
     }
 
     // Check Property video workflows stuck in heygen_processing
-    console.log(`\n📂 Checking property_video_workflows...`);
+    console.log(`\n📂 Checking property_videos...`);
     try {
       const q = query(
-        collection(db, 'property_video_workflows'),
+        collection(db, 'property_videos'),
         where('status', '==', 'heygen_processing')
       );
 
@@ -169,7 +169,7 @@ export async function GET(request: NextRequest) {
         }
       });
     } catch (err) {
-      console.error(`   ❌ Error querying property_video_workflows:`, err);
+      console.error(`   ❌ Error querying property_videos:`, err);
     }
 
     console.log(`\n📋 Found ${heygenProjects.length} stuck HeyGen workflows`);
@@ -194,7 +194,7 @@ export async function GET(request: NextRequest) {
             });
           } else if (isProperty) {
             const { doc, updateDoc } = await import('firebase/firestore');
-            await updateDoc(doc(db, 'property_video_workflows', workflowId), {
+            await updateDoc(doc(db, 'property_videos', workflowId), {
               status: 'failed',
               error: 'HeyGen video generation failed - no video ID received',
               updatedAt: Date.now()
@@ -271,11 +271,8 @@ export async function GET(request: NextRequest) {
             const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ||
                             (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
                             'https://ownerfi.ai';
-            const webhookUrl = isPodcast
-              ? `${baseUrl}/api/webhooks/submagic-podcast`
-              : isProperty
-                ? `${baseUrl}/api/webhooks/submagic-property`
-                : `${baseUrl}/api/webhooks/submagic`;
+            // Use correct brand-specific webhook pattern: /api/webhooks/submagic/[brand]
+            const webhookUrl = `${baseUrl}/api/webhooks/submagic/${brand}`;
 
             let title = workflow.articleTitle || workflow.topic || workflow.propertyAddress ||
               `${isPodcast ? 'Podcast' : isProperty ? 'Property' : 'Viral Video'} - ${workflowId}`;
@@ -296,6 +293,10 @@ export async function GET(request: NextRequest) {
               title = title.substring(0, 47) + '...';
             }
 
+            // Brand-specific B-roll settings
+            const shouldUseBrolls = brand !== 'property' && brand !== 'podcast';
+            const brollPercentage = shouldUseBrolls ? 75 : 0;
+
             const submagicResponse = await fetch('https://api.submagic.co/v1/projects', {
               method: 'POST',
               headers: {
@@ -307,8 +308,8 @@ export async function GET(request: NextRequest) {
                 language: 'en',
                 videoUrl: publicHeygenUrl,
                 templateName: 'Hormozi 2',
-                magicBrolls: true,
-                magicBrollsPercentage: 50,
+                magicBrolls: shouldUseBrolls,
+                magicBrollsPercentage: brollPercentage,
                 magicZooms: true,
                 webhookUrl: webhookUrl
               })
@@ -333,7 +334,7 @@ export async function GET(request: NextRequest) {
               });
             } else if (isProperty) {
               const { doc, updateDoc } = await import('firebase/firestore');
-              await updateDoc(doc(db, 'property_video_workflows', workflowId), {
+              await updateDoc(doc(db, 'property_videos', workflowId), {
                 status: 'submagic_processing',
                 submagicVideoId: projectId,
                 heygenVideoUrl: videoUrl,
@@ -368,7 +369,7 @@ export async function GET(request: NextRequest) {
               });
             } else if (isProperty) {
               const { doc, updateDoc } = await import('firebase/firestore');
-              await updateDoc(doc(db, 'property_video_workflows', workflowId), {
+              await updateDoc(doc(db, 'property_videos', workflowId), {
                 status: 'failed',
                 error: submagicError instanceof Error ? submagicError.message : 'Unknown error',
                 updatedAt: Date.now()

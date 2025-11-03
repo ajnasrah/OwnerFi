@@ -100,9 +100,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            webhookUrl: brandConfig.webhooks.submagic, // Webhook will be called again when export completes
-            format: 'mp4',
-            quality: 'high'
+            webhookUrl: brandConfig.webhooks.submagic // Webhook will be called again when export completes
           })
         });
 

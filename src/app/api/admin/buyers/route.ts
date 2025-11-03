@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
       for (let i = 0; i < allBuyerIds.length; i += batchSize) {
         const batchIds = allBuyerIds.slice(i, i + batchSize);
         const matchedQuery = query(
-          collection(db, 'matchedProperties'),
+          collection(db, 'propertyBuyerMatches'),
           where('buyerId', 'in', batchIds)
         );
         const matchedSnapshot = await getDocs(matchedQuery);

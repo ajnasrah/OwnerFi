@@ -103,7 +103,14 @@ export async function getHeyGenQuota(): Promise<HeyGenQuotaResponse> {
     const remainingQuota = data.remaining_quota || 0;
     const remainingCredits = Math.floor(remainingQuota / 60); // Convert quota to credits
 
+    console.log(`💳 HeyGen Quota API Response:`, JSON.stringify(data, null, 2));
     console.log(`💳 HeyGen Quota: ${remainingQuota} units (${remainingCredits} credits remaining)`);
+
+    // Warn if quota seems suspiciously low compared to typical plans
+    if (remainingQuota > 0 && remainingQuota < 60) {
+      console.warn(`⚠️  WARNING: Remaining quota is only ${remainingQuota} units (< 1 credit)`);
+      console.warn(`   This will show as 0 credits. If HeyGen dashboard shows more credits, there may be an API sync issue.`);
+    }
 
     return {
       remaining_quota: remainingQuota,
@@ -150,9 +157,18 @@ export async function checkHeyGenQuota(
     // 2. Check actual HeyGen account quota
     const quota = await getHeyGenQuota();
 
-    if (quota.remainingCredits < videosToGenerate) {
+    // TEMPORARY: Skip quota check if BYPASS_HEYGEN_QUOTA_CHECK is set
+    // Use this when HeyGen dashboard shows credits but API reports 0
+    const bypassQuotaCheck = process.env.BYPASS_HEYGEN_QUOTA_CHECK === 'true';
+
+    if (bypassQuotaCheck) {
+      console.warn(`⚠️  BYPASSING HeyGen quota check (BYPASS_HEYGEN_QUOTA_CHECK=true)`);
+      console.warn(`   API reports: ${quota.remainingCredits} credits`);
+      console.warn(`   Proceeding anyway - verify HeyGen dashboard shows sufficient credits`);
+    } else if (quota.remainingCredits < videosToGenerate) {
       const errorMsg = `Insufficient HeyGen quota: ${quota.remainingCredits} credits remaining, need ${videosToGenerate}`;
       console.error(`❌ ${errorMsg}`);
+      console.error(`   If HeyGen dashboard shows more credits, set BYPASS_HEYGEN_QUOTA_CHECK=true`);
 
       return {
         allowed: false,

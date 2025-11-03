@@ -44,11 +44,11 @@ export async function POST(request: NextRequest, context: RouteContext) {
     console.log(`   Payload:`, JSON.stringify(body, null, 2));
 
     // Extract Submagic webhook data
-    // Payload: { projectId: "uuid", status: "completed", downloadUrl: "url", ... }
+    // Payload: { projectId: "uuid", status: "completed", downloadUrl: "url", directUrl: "url", ... }
     // OR: { id: "uuid", status: "completed", media_url: "url", ... }
     submagicProjectId = body.projectId || body.id;
     const status = body.status;
-    let downloadUrl = body.downloadUrl || body.media_url || body.mediaUrl || body.video_url || body.videoUrl || body.download_url;
+    let downloadUrl = body.downloadUrl || body.directUrl || body.media_url || body.mediaUrl || body.video_url || body.videoUrl || body.download_url;
 
     if (!submagicProjectId) {
       console.warn(`⚠️ [${brandConfig.displayName}] Missing projectId in webhook`);

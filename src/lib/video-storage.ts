@@ -209,6 +209,21 @@ export async function downloadAndUploadToR2(
 
   console.log(`✅ Uploaded to R2: ${publicUrl}`);
 
+  // Test URL accessibility (helps diagnose 401 errors)
+  try {
+    const testResponse = await fetch(publicUrl, { method: 'HEAD' });
+    if (!testResponse.ok) {
+      console.error(`⚠️  WARNING: R2 URL returned ${testResponse.status} ${testResponse.statusText}`);
+      console.error(`   URL: ${publicUrl}`);
+      console.error(`   This will cause Late.dev posting to fail!`);
+      console.error(`   Solution: Enable public access in Cloudflare R2 dashboard for bucket: ${bucketName}`);
+    } else {
+      console.log(`✅ R2 URL is publicly accessible`);
+    }
+  } catch (testError) {
+    console.warn(`⚠️  Could not test R2 URL accessibility:`, testError);
+  }
+
   // Track R2 storage cost
   try {
     const { trackCost, calculateR2Cost } = await import('@/lib/cost-tracker');
@@ -367,6 +382,21 @@ export async function uploadSubmagicVideo(
     : `https://pub-${accountId}.r2.dev/${fileName}`;
 
   console.log(`✅ Uploaded to R2: ${publicUrl}`);
+
+  // Test URL accessibility (helps diagnose 401 errors)
+  try {
+    const testResponse = await fetch(publicUrl, { method: 'HEAD' });
+    if (!testResponse.ok) {
+      console.error(`⚠️  WARNING: R2 URL returned ${testResponse.status} ${testResponse.statusText}`);
+      console.error(`   URL: ${publicUrl}`);
+      console.error(`   This will cause Late.dev posting to fail!`);
+      console.error(`   Solution: Enable public access in Cloudflare R2 dashboard for bucket: ${bucketName}`);
+    } else {
+      console.log(`✅ R2 URL is publicly accessible`);
+    }
+  } catch (testError) {
+    console.warn(`⚠️  Could not test R2 URL accessibility:`, testError);
+  }
 
   // Track R2 storage cost
   try {

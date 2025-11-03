@@ -180,7 +180,7 @@ export async function DELETE(request: NextRequest) {
       getDocs(query(collection(db, 'likedProperties'), where('buyerId', '==', buyerId)))
     );
     const allMatchedPromises = buyerIds.map(buyerId =>
-      getDocs(query(collection(db, 'matchedProperties'), where('buyerId', '==', buyerId)))
+      getDocs(query(collection(db, 'propertyBuyerMatches'), where('buyerId', '==', buyerId)))
     );
 
     // Execute all queries in parallel (3 concurrent batches)
@@ -219,7 +219,7 @@ export async function DELETE(request: NextRequest) {
       // Matched properties documents
       allMatched[index].docs.forEach(matchedDoc => {
         docsToDelete.push({
-          ref: doc(db, 'matchedProperties', matchedDoc.id),
+          ref: doc(db, 'propertyBuyerMatches', matchedDoc.id),
           buyerId
         });
       });

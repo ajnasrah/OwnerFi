@@ -210,14 +210,19 @@ export async function generateHeyGenVideo(
   workflowId?: string
 ): Promise<HeyGenVideoResponse> {
   try {
-    // 1. Check quota and budget BEFORE generating
-    const quotaCheck = await checkHeyGenQuota(1, brand);
+    // 1. Check quota and budget BEFORE generating (WARNING ONLY - DO NOT BLOCK)
+    try {
+      const quotaCheck = await checkHeyGenQuota(1, brand);
 
-    if (!quotaCheck.allowed) {
-      return {
-        success: false,
-        error: quotaCheck.reason || 'Budget limit exceeded',
-      };
+      if (!quotaCheck.allowed) {
+        // LOG WARNING but DO NOT block generation
+        // The quota API has been unreliable - trust HeyGen dashboard instead
+        console.warn(`⚠️  Quota check failed: ${quotaCheck.reason}`);
+        console.warn(`⚠️  Proceeding anyway - verify HeyGen dashboard shows sufficient credits`);
+      }
+    } catch (quotaError) {
+      // If quota check fails, log but continue
+      console.warn(`⚠️  Quota check error (continuing anyway):`, quotaError);
     }
 
     // 2. Generate the video

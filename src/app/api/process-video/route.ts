@@ -136,28 +136,34 @@ export async function POST(request: NextRequest) {
         title = workflow.title || 'Viral Video';
       }
 
-      console.log(`📱 Posting to Late API (${platforms.join(', ')})...`);
+      console.log(`📱 Scheduling posts to Late API across multiple platform groups...`);
 
-      // Get schedule time from workflow if available
-      const scheduleTime = workflow.scheduleTime || undefined; // ISO 8601 format
+      // Use platform-specific scheduling for optimal engagement times
+      const { postToMultiplePlatformGroups } = await import('@/lib/platform-scheduling');
 
-      const postResult = await postToLate({
-        videoUrl: publicVideoUrl,
+      const postResult = await postToMultiplePlatformGroups(
+        publicVideoUrl,
         caption,
         title,
-        platforms: platforms as any[],
-        scheduleTime, // Use exact schedule time, not queue
-        useQueue: false, // DISABLED - Post at exact time instead of using queue
-        brand,
-      });
+        brand
+      );
 
       if (postResult.success) {
-        console.log(`✅ Posted to Late! Post ID: ${postResult.postId}`);
+        // Collect all post IDs from all groups
+        const postIds = postResult.groups
+          .map(g => g.result.postId)
+          .filter(Boolean)
+          .join(', ');
+
+        console.log(`✅ Scheduled to ${postResult.scheduledPlatforms} platforms across ${postResult.groups.length} groups`);
+        console.log(`   Post IDs: ${postIds}`);
 
         // Mark as completed
         await updateWorkflowForBrand(brand, workflowId, {
           status: 'completed',
-          latePostId: postResult.postId,
+          latePostId: postIds || postResult.groups[0]?.result.postId,
+          scheduledPlatforms: postResult.scheduledPlatforms,
+          totalPlatforms: postResult.totalPlatforms,
           completedAt: Date.now(),
         });
 
@@ -168,12 +174,15 @@ export async function POST(request: NextRequest) {
           success: true,
           workflowId,
           videoUrl: publicVideoUrl,
-          postId: postResult.postId,
-          platforms: postResult.platforms,
+          postIds: postIds,
+          scheduledPlatforms: postResult.scheduledPlatforms,
+          totalPlatforms: postResult.totalPlatforms,
+          groups: postResult.groups.length,
           processing_time_ms: duration,
         });
       } else {
-        throw new Error(`Late posting failed: ${postResult.error}`);
+        const errorMsg = postResult.errors.join('; ') || 'Unknown error';
+        throw new Error(`Late posting failed: ${errorMsg}`);
       }
 
     } catch (error) {

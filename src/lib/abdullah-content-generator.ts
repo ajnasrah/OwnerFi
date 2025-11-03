@@ -76,7 +76,7 @@ export function buildAbdullahVideoRequest(
       character: {
         type: 'talking_photo',
         talking_photo_id: 'f40972493dd74bbe829f30daa09ea1a9', // Motion-enabled avatar
-        scale: 1.0,
+        scale: 1.4,  // Proper scale for vertical 9:16 social media videos
         talking_style: 'expressive'
       },
       voice: {

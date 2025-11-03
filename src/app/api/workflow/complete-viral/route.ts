@@ -151,7 +151,7 @@ export async function POST(request: NextRequest) {
 
     const character: any = {
       type: avatarType,
-      scale: 1.0
+      scale: 1.4  // Proper scale for vertical 9:16 social media videos
     };
 
     if (avatarType === 'avatar') {

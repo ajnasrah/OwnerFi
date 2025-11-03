@@ -13,7 +13,7 @@ const HEYGEN_API_URL = 'https://api.heygen.com/v2/video/generate';
 const AVATAR_CONFIG = {
   talking_photo_id: 'f40972493dd74bbe829f30daa09ea1a9', // Motion-enabled avatar
   voice_id: '9070a6c2dbd54c10bb111dc8c655bff7',
-  scale: 1.0, // Same scale as viral videos
+  scale: 1.4,  // Proper scale for vertical 9:16 social media videos
   background_color: '#059669' // Green for buyers
 };
 

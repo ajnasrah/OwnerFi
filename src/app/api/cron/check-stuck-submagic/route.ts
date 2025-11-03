@@ -74,7 +74,7 @@ async function executeFailsafe() {
   const MAX_WORKFLOWS_PER_RUN = 10; // Process max 10 workflows per cron run to avoid timeouts
 
   // Check all brand workflows (use submagicVideoId field)
-  for (const brand of ['carz', 'ownerfi', 'vassdistro', 'benefit'] as const) {
+  for (const brand of ['carz', 'ownerfi', 'vassdistro', 'benefit', 'abdullah'] as const) {
     const collectionName = getCollectionName('WORKFLOW_QUEUE', brand);
       console.log(`\n📂 Checking ${collectionName}...`);
 

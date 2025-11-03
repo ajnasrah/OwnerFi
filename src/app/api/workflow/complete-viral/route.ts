@@ -77,9 +77,19 @@ export async function POST(request: NextRequest) {
     }
 
     if (contentLength < 200) {
-      console.warn(`⚠️  Article has short content (${contentLength} chars): ${article.title}`);
-      console.warn(`   This may not generate a good video. Consider using feeds with longer articles.`);
-      // Allow it to proceed for now, but log the warning
+      console.error(`❌ Article content too short (${contentLength} chars < 200 minimum): ${article.title}`);
+      console.error(`   This would waste HeyGen credits on poor quality video.`);
+
+      // Mark article as processed so it's not retried
+      const { markArticleAsProcessed } = await import('@/lib/feed-store-firestore');
+      await markArticleAsProcessed(article.id);
+
+      return NextResponse.json({
+        success: false,
+        error: 'Article content too short for video generation',
+        details: `Content length: ${contentLength} chars (minimum: 200 chars required)`,
+        article_title: article.title
+      }, { status: 400 });
     }
 
     // Add to workflow queue with 'pending' status

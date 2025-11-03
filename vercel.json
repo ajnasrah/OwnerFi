@@ -74,12 +74,8 @@
       "schedule": "15 * * * *"
     },
     {
-      "path": "/api/cron/generate-abdullah-daily",
-      "schedule": "0 11 * * *"
-    },
-    {
-      "path": "/api/cron/process-abdullah-queue",
-      "schedule": "30 8,11,14,17,20 * * *"
+      "path": "/api/cron/abdullah",
+      "schedule": "0 9,12,15,18,21 * * *"
     },
     {
       "path": "/api/cron/enhance-property-images",
@@ -150,13 +146,7 @@
     "src/app/api/benefit/workflow/retry/route.ts": {
       "maxDuration": 60
     },
-    "src/app/api/cron/generate-abdullah-daily/route.ts": {
-      "maxDuration": 300
-    },
-    "src/app/api/workflow/complete-abdullah/route.ts": {
-      "maxDuration": 300
-    },
-    "src/app/api/cron/process-abdullah-queue/route.ts": {
+    "src/app/api/cron/abdullah/route.ts": {
       "maxDuration": 60
     },
     "src/app/api/cron/enhance-property-images/route.ts": {

@@ -402,17 +402,16 @@ async function processVideoAndPost(
       title = workflow.title || 'Viral Video';
     }
 
-    console.log(`📱 [${brandConfig.displayName}] Posting with weekly optimal schedule`);
-    console.log(`   Each platform will receive 3 posts this week at optimal times`);
+    console.log(`📱 [${brandConfig.displayName}] Posting with same-day multi-platform schedule`);
+    console.log(`   All platforms will post TODAY at their optimal hours`);
 
-    // Import weekly posting system
-    const { postVideoWeekly } = await import('@/lib/weekly-posting');
+    // Import same-day posting system
+    const { postVideoSameDay } = await import('@/lib/same-day-posting');
 
-    // Post to all platforms 3 times each across the week
-    // Each platform gets posted at its own optimal times based on analytics
-    // Example for Instagram: Tuesday 11 AM, Thursday 2 PM, Saturday 10 AM
-    // Example for YouTube: Thursday 11 AM, Friday 9 AM, Saturday 12 PM
-    const postResult = await postVideoWeekly(
+    // Post to all platforms on the SAME DAY at different optimal hours
+    // Each platform gets posted at its optimal hour for today
+    // Example for Monday: TikTok 7 AM, Instagram 11 AM, Facebook 1 PM, YouTube 3 PM, LinkedIn 10 AM
+    const postResult = await postVideoSameDay(
       publicVideoUrl,
       caption,
       title,
@@ -424,9 +423,9 @@ async function processVideoAndPost(
     );
 
     if (postResult.success) {
-      console.log(`✅ [${brandConfig.displayName}] Posted to Late (weekly schedule)!`);
+      console.log(`✅ [${brandConfig.displayName}] Posted to Late (same-day schedule)!`);
       console.log(`   Total posts created: ${postResult.totalPosts}`);
-      console.log(`   Posts per platform: 3`);
+      console.log(`   All platforms posting today at optimal hours`);
 
       // Collect all post IDs
       const postIds = postResult.posts

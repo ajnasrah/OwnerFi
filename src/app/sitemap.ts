@@ -79,10 +79,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }))
 
-  // Major city pages
+  // Major city pages - All cities with population > 50k
   const cityPages: MetadataRoute.Sitemap = [
+    // Top 10 cities
     'new-york-city', 'los-angeles', 'chicago', 'houston', 'phoenix', 'philadelphia',
-    'san-antonio', 'san-diego', 'dallas', 'austin', 'miami'
+    'san-antonio', 'san-diego', 'dallas', 'austin',
+    // Additional major cities (50k+ population)
+    'miami', 'san-francisco', 'san-jose', 'sacramento', 'fort-worth',
+    'orlando', 'tampa', 'jacksonville', 'buffalo', 'pittsburgh',
+    'tucson', 'atlanta', 'las-vegas', 'seattle', 'denver',
+    'boston', 'detroit', 'nashville', 'portland', 'charlotte',
+    'indianapolis', 'columbus', 'milwaukee', 'kansas-city', 'baltimore'
   ].map(city => ({
     url: `${baseUrl}/${city}-owner-financing`,
     lastModified: new Date(),

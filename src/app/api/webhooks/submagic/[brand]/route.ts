@@ -268,7 +268,7 @@ async function getWorkflowBySubmagicId(
  * Update workflow for specific brand
  */
 async function updateWorkflowForBrand(
-  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit' | 'property' | 'abdullah',
+  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit' | 'property' | 'vassdistro' | 'abdullah',
   workflowId: string,
   updates: Record<string, any>
 ): Promise<void> {
@@ -332,7 +332,7 @@ async function fetchVideoUrlFromSubmagic(submagicProjectId: string): Promise<str
  * Process video upload to R2 and post to Late
  */
 async function processVideoAndPost(
-  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit' | 'property' | 'vassdistro',
+  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit' | 'property' | 'vassdistro' | 'abdullah',
   workflowId: string,
   workflow: any,
   videoUrl: string

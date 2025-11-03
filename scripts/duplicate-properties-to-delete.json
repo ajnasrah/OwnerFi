@@ -1,0 +1,82 @@
+[
+  {
+    "id": "AXu6fUYcdMgUYSlgQII5",
+    "address": "50 Cedar Road",
+    "city": "Ocala",
+    "state": "FL",
+    "price": 235000,
+    "opportunityId": "AXu6fUYcdMgUYSlgQII5",
+    "createdAt": {
+      "_seconds": 1761424699,
+      "_nanoseconds": 951000000
+    },
+    "updatedAt": {
+      "_seconds": 1761424699,
+      "_nanoseconds": 951000000
+    }
+  },
+  {
+    "id": "IIxJPCkQ4YVbGt6pyids",
+    "address": "711 S Pine St",
+    "city": "Rocky Mount",
+    "state": "NC",
+    "price": 69000,
+    "opportunityId": "IIxJPCkQ4YVbGt6pyids",
+    "createdAt": {
+      "_seconds": 1760824531,
+      "_nanoseconds": 289000000
+    },
+    "updatedAt": {
+      "_seconds": 1760978674,
+      "_nanoseconds": 450000000
+    }
+  },
+  {
+    "id": "KsDtgvIhv1IwSlHS6NgZ",
+    "address": "1944 E Mclemore Ave",
+    "city": "Memphis",
+    "state": "TN",
+    "price": 279000,
+    "opportunityId": "KsDtgvIhv1IwSlHS6NgZ",
+    "createdAt": {
+      "_seconds": 1761417907,
+      "_nanoseconds": 583000000
+    },
+    "updatedAt": {
+      "_seconds": 1761417907,
+      "_nanoseconds": 583000000
+    }
+  },
+  {
+    "id": "SfStYbNcSdBuyn1tQZRr",
+    "address": "7082 Harvest Way, Milton, Florida 32570",
+    "city": "Milton",
+    "state": "FL",
+    "price": 267000,
+    "opportunityId": "SfStYbNcSdBuyn1tQZRr",
+    "createdAt": {
+      "_seconds": 1761424693,
+      "_nanoseconds": 148000000
+    },
+    "updatedAt": {
+      "_seconds": 1761424693,
+      "_nanoseconds": 148000000
+    }
+  },
+  {
+    "id": "YOTApG7gzweNqANV72fU",
+    "address": "20810 Trenton Valley Ln",
+    "city": "Katy",
+    "state": "TX",
+    "price": 421000,
+    "opportunityId": "YOTApG7gzweNqANV72fU",
+    "createdAt": {
+      "_seconds": 1761427056,
+      "_nanoseconds": 559000000
+    },
+    "updatedAt": {
+      "_seconds": 1761427056,
+      "_nanoseconds": 559000000
+    }
+  }
+]

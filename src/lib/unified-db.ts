@@ -1,16 +1,17 @@
 // Unified database layer - use Firebase only, disable SQLite
-import { 
-  collection, 
-  doc, 
-  getDoc, 
-  getDocs, 
-  setDoc, 
-  updateDoc, 
-  query, 
-  where, 
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  setDoc,
+  updateDoc,
+  query,
+  where,
   orderBy,
   limit as firestoreLimit,
-  serverTimestamp 
+  serverTimestamp,
+  documentId
 } from 'firebase/firestore';
 import { db as firebaseDb } from './firebase';
 import { RealtorProfile, BuyerProfile, PropertyMatch, RealtorSubscription, User } from './firebase-models';
@@ -140,7 +141,7 @@ export const unifiedDb = {
         collection(firebaseDb, 'buyerProfiles'),
         where('isActive', '==', true),
         orderBy('createdAt', 'desc'),
-        limit(limitCount)
+        firestoreLimit(limitCount)
       );
       const buyerDocs = await getDocs(buyersQuery);
       return buyerDocs.docs.map(doc => ({ id: doc.id, ...doc.data() } as BuyerProfile & { id: string }));
@@ -176,10 +177,17 @@ export const unifiedDb = {
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       });
-      
+
       // Queue nearby cities population (non-blocking)
-      queueNearbyCitiesForProperty(id, propertyData.city as string, propertyData.state as string);
-      
+      queueNearbyCitiesForProperty(id, {
+        address: propertyData.address as string,
+        city: propertyData.city as string,
+        state: propertyData.state as string,
+        zipCode: propertyData.zipCode as string,
+        latitude: propertyData.latitude as number,
+        longitude: propertyData.longitude as number
+      });
+
       return { ...propertyData, id, nearbyCities: [] };
     },
 
@@ -200,7 +208,7 @@ export const unifiedDb = {
         collection(firebaseDb, 'properties'),
         where('isActive', '==', true),
         orderBy('createdAt', 'desc'),
-        limit(limitCount)
+        firestoreLimit(limitCount)
       );
       const propertyDocs = await getDocs(propertiesQuery);
       return propertyDocs.docs.map(doc => ({ id: doc.id, ...doc.data() } as PropertyListing & { id: string }));
@@ -318,12 +326,44 @@ export const unifiedDb = {
         orderBy('matchScore', 'desc')
       );
       const matchDocs = await getDocs(matchesQuery);
-      
-      // Get property details for each match
+
+      // OPTIMIZATION: Batch fetch all properties instead of N+1 queries
+      // Extract all property IDs first
+      const matchesData = matchDocs.docs.map(matchDoc => ({
+        id: matchDoc.id,
+        ...matchDoc.data()
+      } as PropertyMatch));
+
+      if (matchesData.length === 0) {
+        return [];
+      }
+
+      const propertyIds = matchesData.map(match => match.propertyId);
+
+      // Batch fetch properties using documentId() - Firestore supports max 10 per query
+      // So we split into chunks of 10
+      const propertyMap = new Map<string, PropertyListing & { id: string }>();
+
+      for (let i = 0; i < propertyIds.length; i += 10) {
+        const chunk = propertyIds.slice(i, i + 10);
+        const propertiesQuery = query(
+          collection(firebaseDb, 'properties'),
+          where(documentId(), 'in', chunk)
+        );
+        const propertyDocs = await getDocs(propertiesQuery);
+
+        propertyDocs.docs.forEach(propertyDoc => {
+          propertyMap.set(propertyDoc.id, {
+            id: propertyDoc.id,
+            ...propertyDoc.data()
+          } as PropertyListing & { id: string });
+        });
+      }
+
+      // Combine matches with their properties
       const matches = [];
-      for (const matchDoc of matchDocs.docs) {
-        const matchData = { id: matchDoc.id, ...matchDoc.data() } as PropertyMatch;
-        const property = await unifiedDb.properties.findById(matchData.propertyId);
+      for (const matchData of matchesData) {
+        const property = propertyMap.get(matchData.propertyId);
         if (property) {
           matches.push({
             property,
@@ -331,6 +371,7 @@ export const unifiedDb = {
           });
         }
       }
+
       return matches;
     }
   }

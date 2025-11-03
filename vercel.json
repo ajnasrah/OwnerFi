@@ -43,7 +43,7 @@
     },
     {
       "path": "/api/cron/check-stuck-heygen",
-      "schedule": "0 */6 * * *"
+      "schedule": "*/10 * * * *"
     },
     {
       "path": "/api/cron/check-stuck-submagic",
@@ -71,7 +71,7 @@
     },
     {
       "path": "/api/benefit/workflow/auto-retry",
-      "schedule": "15 * * * *"
+      "schedule": "0 */2 * * *"
     },
     {
       "path": "/api/cron/abdullah",

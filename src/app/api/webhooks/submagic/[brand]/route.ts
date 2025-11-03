@@ -402,15 +402,17 @@ async function processVideoAndPost(
       title = workflow.title || 'Viral Video';
     }
 
-    console.log(`📱 [${brandConfig.displayName}] Posting to multiple platform groups at optimal times`);
-    console.log(`   ${getScheduleDescription(brand)}`);
+    console.log(`📱 [${brandConfig.displayName}] Posting with weekly optimal schedule`);
+    console.log(`   Each platform will receive 3 posts this week at optimal times`);
 
-    // Post to platform groups at their optimal times
-    // This schedules different platforms for different times tomorrow:
-    // - Professional platforms (LinkedIn, Twitter, Bluesky): 8 AM CST
-    // - Midday platforms (Facebook, YouTube): 1 PM CST
-    // - Evening platforms (TikTok, Instagram, Threads): 7 PM CST
-    const postResult = await postToMultiplePlatformGroups(
+    // Import weekly posting system
+    const { postVideoWeekly } = await import('@/lib/weekly-posting');
+
+    // Post to all platforms 3 times each across the week
+    // Each platform gets posted at its own optimal times based on analytics
+    // Example for Instagram: Tuesday 11 AM, Thursday 2 PM, Saturday 10 AM
+    // Example for YouTube: Thursday 11 AM, Friday 9 AM, Saturday 12 PM
+    const postResult = await postVideoWeekly(
       publicVideoUrl,
       caption,
       title,
@@ -422,23 +424,26 @@ async function processVideoAndPost(
     );
 
     if (postResult.success) {
-      console.log(`✅ [${brandConfig.displayName}] Posted to Late (all groups)!`);
-      console.log(`   Total platforms scheduled: ${postResult.scheduledPlatforms}/${postResult.totalPlatforms}`);
-      console.log(`   Platform groups: ${postResult.groups.length}`);
+      console.log(`✅ [${brandConfig.displayName}] Posted to Late (weekly schedule)!`);
+      console.log(`   Total posts created: ${postResult.totalPosts}`);
+      console.log(`   Posts per platform: 3`);
 
-      // Collect all post IDs from all groups
-      const postIds = postResult.groups
-        .map(g => g.result.postId)
+      // Collect all post IDs
+      const postIds = postResult.posts
+        .map(p => p.result.postId)
         .filter(Boolean)
         .join(', ');
+
+      // Get unique platforms count
+      const platforms = new Set(postResult.posts.map(p => p.platform));
 
       // Mark workflow as completed (video URL already saved above)
       await updateWorkflowForBrand(brand, workflowId, {
         status: 'completed',
         latePostId: postIds, // Store all post IDs
         completedAt: Date.now(),
-        platformGroups: postResult.groups.length,
-        scheduledPlatforms: postResult.scheduledPlatforms,
+        weeklyPosts: postResult.totalPosts,
+        platformsUsed: platforms.size,
       });
     } else {
       const errorMsg = postResult.errors.join('; ') || 'Unknown platform scheduling error';

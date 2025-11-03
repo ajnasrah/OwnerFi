@@ -82,7 +82,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Major city pages
   const cityPages: MetadataRoute.Sitemap = [
     'new-york-city', 'los-angeles', 'chicago', 'houston', 'phoenix', 'philadelphia',
-    'san-antonio', 'san-diego', 'dallas', 'austin'
+    'san-antonio', 'san-diego', 'dallas', 'austin', 'miami'
   ].map(city => ({
     url: `${baseUrl}/${city}-owner-financing`,
     lastModified: new Date(),

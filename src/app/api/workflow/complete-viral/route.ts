@@ -107,14 +107,25 @@ export async function POST(request: NextRequest) {
 
     // Step 2b: Generate optimized caption + first comment using data-backed formula
     console.log('📝 Step 2b: Generating optimized caption and first comment...');
-    const captionData = await generateCaptionAndComment({
-      topic: article.title,
-      brand: brand as 'ownerfi' | 'carz' | 'podcast' | 'property' | 'vassdistro' | 'benefit',
-      script: scriptContent.script,
-      platform: 'both' // Works for both YouTube and Instagram
-    });
-    console.log(`✅ Caption (${captionData.metadata.captionLength} chars): ${captionData.caption.substring(0, 80)}...`);
-    console.log(`✅ First comment: ${captionData.firstComment.substring(0, 80)}...`);
+    let captionData;
+    try {
+      captionData = await generateCaptionAndComment({
+        topic: article.title,
+        brand: brand as 'ownerfi' | 'carz' | 'podcast' | 'property' | 'vassdistro' | 'benefit',
+        script: scriptContent.script,
+        platform: 'both' // Works for both YouTube and Instagram
+      });
+      console.log(`✅ Caption (${captionData.metadata.captionLength} chars): ${captionData.caption.substring(0, 80)}...`);
+      console.log(`✅ First comment: ${captionData.firstComment.substring(0, 80)}...`);
+    } catch (captionError) {
+      console.warn(`⚠️  Caption generation failed (using fallback):`, captionError);
+      // Use fallback caption - don't block the entire workflow
+      captionData = {
+        caption: `${article.title}\n\n#${brand}`,
+        firstComment: 'What do you think?',
+        metadata: { captionLength: article.title.length + brand.length + 4 }
+      };
+    }
 
     // Combine with script
     const content = {

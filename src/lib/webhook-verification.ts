@@ -18,7 +18,8 @@ import { Brand } from '@/config/constants';
 // Get secrets from environment
 const HEYGEN_WEBHOOK_SECRET = process.env.HEYGEN_WEBHOOK_SECRET;
 const SUBMAGIC_WEBHOOK_SECRET = process.env.SUBMAGIC_WEBHOOK_SECRET;
-const ENFORCE_VERIFICATION = process.env.ENFORCE_WEBHOOK_VERIFICATION === 'true';
+// ENFORCE verification in production, allow bypass in dev/test only
+const ENFORCE_VERIFICATION = process.env.NODE_ENV === 'production' || process.env.ENFORCE_WEBHOOK_VERIFICATION === 'true';
 
 /**
  * Verify HeyGen webhook signature

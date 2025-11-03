@@ -58,49 +58,50 @@ function requireEnvUrl(key: string, description?: string): string {
   }
 }
 
-// API Keys Configuration
+// API Keys Configuration with lazy evaluation (prevents stale keys in serverless)
+// Uses getters to read env vars fresh on each access
 export const apiKeys = {
   // HeyGen - Video Generation ($330/month for 660 credits)
-  heygen: requireEnv('HEYGEN_API_KEY', 'HeyGen video generation API key'),
-  heygenWebhookSecret: optionalEnv('HEYGEN_WEBHOOK_SECRET'),
+  get heygen() { return requireEnv('HEYGEN_API_KEY', 'HeyGen video generation API key'); },
+  get heygenWebhookSecret() { return optionalEnv('HEYGEN_WEBHOOK_SECRET'); },
 
   // Submagic - Caption Generation ($150/month for 600 credits)
-  submagic: requireEnv('SUBMAGIC_API_KEY', 'Submagic caption generation API key'),
-  submagicWebhookSecret: optionalEnv('SUBMAGIC_WEBHOOK_SECRET'),
+  get submagic() { return requireEnv('SUBMAGIC_API_KEY', 'Submagic caption generation API key'); },
+  get submagicWebhookSecret() { return optionalEnv('SUBMAGIC_WEBHOOK_SECRET'); },
 
   // Late - Social Media Posting ($50/month unlimited)
-  late: requireEnv('LATE_API_KEY', 'Late social media posting API key'),
+  get late() { return requireEnv('LATE_API_KEY', 'Late social media posting API key'); },
 
   // OpenAI - Script Generation
-  openai: requireEnv('OPENAI_API_KEY', 'OpenAI GPT script generation API key'),
+  get openai() { return requireEnv('OPENAI_API_KEY', 'OpenAI GPT script generation API key'); },
 
   // ElevenLabs - Voice Synthesis (optional)
-  elevenlabs: optionalEnv('ELEVENLABS_API_KEY'),
+  get elevenlabs() { return optionalEnv('ELEVENLABS_API_KEY'); },
 
   // Google Maps - Location Services
-  googleMaps: optionalEnv('GOOGLE_MAPS_API_KEY'),
+  get googleMaps() { return optionalEnv('GOOGLE_MAPS_API_KEY'); },
 
   // Stripe - Payment Processing
   stripe: {
-    secretKey: optionalEnv('STRIPE_SECRET_KEY'),
-    publishableKey: optionalEnv('STRIPE_PUBLISHABLE_KEY'),
-    webhookSecret: optionalEnv('STRIPE_WEBHOOK_SECRET'),
+    get secretKey() { return optionalEnv('STRIPE_SECRET_KEY'); },
+    get publishableKey() { return optionalEnv('STRIPE_PUBLISHABLE_KEY'); },
+    get webhookSecret() { return optionalEnv('STRIPE_WEBHOOK_SECRET'); },
   },
 
   // GoHighLevel - CRM Integration
   goHighLevel: {
-    apiKey: optionalEnv('GOHIGHLEVEL_API_KEY'),
-    locationId: optionalEnv('GOHIGHLEVEL_LOCATION_ID'),
+    get apiKey() { return optionalEnv('GOHIGHLEVEL_API_KEY'); },
+    get locationId() { return optionalEnv('GOHIGHLEVEL_LOCATION_ID'); },
   },
 };
 
-// Late API Profile IDs (one per brand)
+// Late API Profile IDs (one per brand) - lazy evaluation
 export const lateProfiles = {
-  carz: optionalEnv('LATE_CARZ_PROFILE_ID'),
-  ownerfi: optionalEnv('LATE_OWNERFI_PROFILE_ID'),
-  podcast: optionalEnv('LATE_PODCAST_PROFILE_ID'),
-  vassdistro: optionalEnv('LATE_VASSDISTRO_PROFILE_ID'),
-  abdullah: optionalEnv('LATE_ABDULLAH_PROFILE_ID'),
+  get carz() { return optionalEnv('LATE_CARZ_PROFILE_ID'); },
+  get ownerfi() { return optionalEnv('LATE_OWNERFI_PROFILE_ID'); },
+  get podcast() { return optionalEnv('LATE_PODCAST_PROFILE_ID'); },
+  get vassdistro() { return optionalEnv('LATE_VASSDISTRO_PROFILE_ID'); },
+  get abdullah() { return optionalEnv('LATE_ABDULLAH_PROFILE_ID'); },
 };
 
 // Firebase Configuration

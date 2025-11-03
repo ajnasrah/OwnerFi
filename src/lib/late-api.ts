@@ -439,10 +439,11 @@ export async function postToLate(request: LatePostRequest): Promise<LatePostResp
         }); // End circuit breaker
       },
       {
-        maxAttempts: 3,
+        maxAttempts: 5, // Increased from 3 to 5 to handle Late.dev platform timeouts
         backoff: 'exponential',
         onRetry: (attempt, error) => {
-          console.log(`Late retry ${attempt}:`, error.message);
+          console.log(`📡 Late API retry ${attempt}/5:`, error.message);
+          console.log(`   Platforms attempted: ${platformAccounts.map(p => p.platform).join(', ')}`);
         }
       }
     );

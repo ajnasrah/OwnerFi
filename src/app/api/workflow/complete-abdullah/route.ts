@@ -47,16 +47,18 @@ export async function POST(request: NextRequest) {
     const platforms = body.platforms || ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin'];
     const schedule = body.schedule || 'staggered'; // 'staggered' or 'immediate'
     const date = body.date ? new Date(body.date) : new Date();
+    const count = body.count !== undefined ? parseInt(body.count, 10) : 5; // Default to 5 videos
 
     console.log(`📋 Configuration:`);
     console.log(`   Date: ${date.toLocaleDateString()}`);
+    console.log(`   Count: ${count} video${count !== 1 ? 's' : ''}`);
     console.log(`   Platforms: ${platforms.join(', ')}`);
     console.log(`   Schedule: ${schedule}`);
     console.log();
 
-    // Step 1: Generate 5 daily scripts with OpenAI
-    console.log('🤖 Step 1: Generating 5 daily video scripts...');
-    const dailyContent = await generateAbdullahDailyContent(OPENAI_API_KEY, date);
+    // Step 1: Generate daily scripts with OpenAI
+    console.log(`🤖 Step 1: Generating ${count} daily video script${count !== 1 ? 's' : ''}...`);
+    const dailyContent = await generateAbdullahDailyContent(OPENAI_API_KEY, date, count);
 
     console.log(`✅ Generated ${dailyContent.videos.length} scripts:`);
     dailyContent.videos.forEach((video, i) => {

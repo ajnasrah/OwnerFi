@@ -30,7 +30,7 @@ async function getMilwaukeeProperties() {
     const q = query(
       propertiesRef,
       where('isActive', '==', true),
-      where('city', 'in', ['Milwaukee', 'Downtown', 'East Side', 'Bay View', 'Third Ward', 'Walker's Point'])
+      where('city', 'in', ['Milwaukee', 'Downtown', 'East Side', 'Bay View', 'Third Ward', 'Walker Point'])
     )
     const snapshot = await getDocs(q)
 
@@ -81,7 +81,7 @@ export default async function OwnerFinancingMilwaukee() {
         "name": "What neighborhoods in Milwaukee offer owner financed homes?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Owner financed homes are available throughout Milwaukee including Downtown, East Side, Bay View, Third Ward, Walker's Point, and more."
+          "text": "Owner financed homes are available throughout Milwaukee including Downtown, East Side, Bay View, Third Ward, Walker Point, and more."
         }
       },
       {
@@ -109,7 +109,7 @@ export default async function OwnerFinancingMilwaukee() {
         { "@type": "Neighborhood", "name": "East Side" },
         { "@type": "Neighborhood", "name": "Bay View" },
         { "@type": "Neighborhood", "name": "Third Ward" },
-        { "@type": "Neighborhood", "name": "Walker's Point" }
+        { "@type": "Neighborhood", "name": "Walker Point" }
       ]
     }
   }
@@ -251,10 +251,10 @@ export default async function OwnerFinancingMilwaukee() {
               </div>
               <div className="p-6 bg-gradient-to-br from-teal-50 to-teal-50 rounded-xl border-2 border-teal-200">
                 <h3 className="text-xl font-bold text-teal-900 mb-2">
-                  Walker's Point
+                  Walker Point
                 </h3>
                 <p className="text-teal-700 mb-2">
-                  {areaCounts['Walker's Point'] || 'Premium'} owner financed properties
+                  {areaCounts['Walker Point'] || 'Premium'} owner financed properties
                 </p>
                 <p className="text-sm text-teal-600 mb-3">
                   Great neighborhood with owner financing options

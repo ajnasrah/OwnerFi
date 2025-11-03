@@ -162,14 +162,20 @@ Make it unique, valuable, and optimized for short-form video virality.`;
 }
 
 /**
- * Generate Abdullah's 5 daily videos
+ * Generate Abdullah's daily videos
+ * @param count - Number of videos to generate (1-5). Defaults to 5 if not specified.
  */
 export async function generateAbdullahDailyContent(
   openaiApiKey: string,
-  date: Date = new Date()
+  date: Date = new Date(),
+  count: number = 5
 ): Promise<AbdullahDailyContent> {
-  const themes: Array<'mindset' | 'business' | 'money' | 'freedom' | 'story'> =
+  const allThemes: Array<'mindset' | 'business' | 'money' | 'freedom' | 'story'> =
     ['mindset', 'business', 'money', 'freedom', 'story'];
+
+  // Validate count and limit to available themes
+  const videoCount = Math.max(1, Math.min(count, allThemes.length));
+  const themes = allThemes.slice(0, videoCount);
 
   const videos: AbdullahVideo[] = [];
 

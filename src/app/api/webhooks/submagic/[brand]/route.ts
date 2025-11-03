@@ -232,9 +232,9 @@ async function getWorkflowBySubmagicId(
     return await findBenefitBySubmagicId(submagicProjectId);
   } else if (brand === 'property') {
     // Property videos are stored in property_videos collection
-    const admin = (await import('@/lib/firebase-admin')).admin;
-    const propertyVideosSnapshot = await admin
-      .firestore()
+    const { getAdminDb } = await import('@/lib/firebase-admin');
+    const adminDb = await getAdminDb();
+    const propertyVideosSnapshot = await adminDb
       .collection('property_videos')
       .where('submagicProjectId', '==', submagicProjectId)
       .limit(1)
@@ -242,6 +242,25 @@ async function getWorkflowBySubmagicId(
 
     if (!propertyVideosSnapshot.empty) {
       const doc = propertyVideosSnapshot.docs[0];
+      return {
+        workflowId: doc.id,
+        workflow: doc.data()
+      };
+    }
+    return null;
+  } else if (brand === 'abdullah') {
+    // Abdullah workflows use client SDK
+    const { db } = await import('@/lib/firebase');
+    const { collection, query, where, getDocs, limit } = await import('firebase/firestore');
+    const q = query(
+      collection(db, 'abdullah_workflow_queue'),
+      where('submagicVideoId', '==', submagicProjectId),
+      limit(1)
+    );
+    const snapshot = await getDocs(q);
+
+    if (!snapshot.empty) {
+      const doc = snapshot.docs[0];
       return {
         workflowId: doc.id,
         workflow: doc.data()

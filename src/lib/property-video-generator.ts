@@ -343,25 +343,26 @@ function selectBestPropertyImage(property: PropertyListing): string {
 
 /**
  * Validate property data before video generation
+ * NOTE: Financial fields (interestRate, monthlyPayment, termYears) can be calculated
+ * if missing, so we only validate REQUIRED fields that cannot be calculated
  */
 export function validatePropertyForVideo(property: PropertyListing): { valid: boolean; errors: string[] } {
   const errors: string[] = [];
 
+  // Critical fields that MUST exist (cannot be calculated)
   if (!property.address) errors.push('Missing address');
   if (!property.city) errors.push('Missing city');
   if (!property.state) errors.push('Missing state');
   if (property.bedrooms === undefined || property.bedrooms === null) errors.push('Missing bedrooms');
   if (property.bathrooms === undefined || property.bathrooms === null) errors.push('Missing bathrooms');
-
-  // Check either downPaymentAmount OR downPaymentPercent exists (0 is valid)
-  if ((property.downPaymentAmount === undefined || property.downPaymentAmount === null) && !property.downPaymentPercent) {
-    errors.push('Missing down payment (need either amount or percent)');
-  }
-
-  if (!property.monthlyPayment) errors.push('Missing monthly payment');
-  if (!property.interestRate) errors.push('Missing interest rate');
-  if (!property.termYears) errors.push('Missing term years');
   if (!property.imageUrls || property.imageUrls.length === 0) errors.push('Missing images');
+
+  // List price is required to calculate financials
+  if (!property.listPrice || property.listPrice <= 0) errors.push('Missing or invalid list price');
+
+  // Down payment: Either amount OR percent is fine (will be calculated in enrichment)
+  // Payment fields: Will be calculated if missing (using calculatePropertyFinancials)
+  // So NO errors for missing interestRate, monthlyPayment, termYears - they'll be defaulted
 
   return {
     valid: errors.length === 0,

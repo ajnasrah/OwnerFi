@@ -158,12 +158,12 @@ export async function POST(request: NextRequest) {
     // - Financial Advisor (Henry): talking_photo_id '1375223b2cc24ff0a21830fbf5cb45ba', voice '8c0bd8c49b2849dc96f8e89b8eace60'
 
     // Get brand-specific avatar and voice defaults
-    let defaultAvatarId = 'f40972493dd74bbe829f30daa09ea1a9'; // Motion-enabled avatar for Carz/OwnerFi/Benefit/Property/Podcast
+    let defaultAvatarId = 'd33fe3abc2914faa88309c3bdb9f47f4'; // Abdullah avatar for Carz/OwnerFi
     let defaultVoiceId = '9070a6c2dbd54c10bb111dc8c655bff7'; // Original voice
     let avatarType: 'avatar' | 'talking_photo' = 'talking_photo'; // Motion-enabled avatar is talking_photo type
 
     if (brand === 'vassdistro') {
-      defaultAvatarId = '6764a52c1b734750a0fba6ab6caa9cd9'; // VassDistro motion-enabled avatar
+      defaultAvatarId = '6764a52c1b734750a0fba6ab6caa9cd9'; // VassDistro keeps its own avatar (unchanged)
       defaultVoiceId = '9070a6c2dbd54c10bb111dc8c655bff7'; // VassDistro uses same voice
       avatarType = 'talking_photo'; // VassDistro uses talking_photo (motion-enabled)
     }

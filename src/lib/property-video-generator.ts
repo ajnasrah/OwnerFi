@@ -287,7 +287,7 @@ function formatNumber(num: number): string {
 export function buildPropertyVideoRequest(
   property: PropertyListing,
   script: string,
-  avatarId: string = 'f40972493dd74bbe829f30daa09ea1a9', // Motion-enabled avatar (same as benefits)
+  avatarId: string = 'd33fe3abc2914faa88309c3bdb9f47f4', // Abdullah avatar (same as all other brands)
   voiceId: string = '9070a6c2dbd54c10bb111dc8c655bff7'
 ) {
   // Get best property image (prefer exterior shots)

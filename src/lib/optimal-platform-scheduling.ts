@@ -26,25 +26,22 @@ export function createScheduleTime(hourCST: number, baseDate: Date = new Date())
   // Start with tomorrow (24 hours from now)
   const tomorrow = new Date(baseDate.getTime() + (24 * 60 * 60 * 1000));
 
-  // Convert to CST timezone
-  const cstDateStr = tomorrow.toLocaleString('en-US', { timeZone: 'America/Chicago' });
-  const cstDate = new Date(cstDateStr);
+  // Format as YYYY-MM-DD in CST timezone
+  const tomorrowStr = tomorrow.toLocaleString('en-US', {
+    timeZone: 'America/Chicago',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  });
 
-  // Set the desired hour
-  cstDate.setHours(hourCST, 0, 0, 0);
+  // Parse the date parts (format is MM/DD/YYYY)
+  const [month, day, year] = tomorrowStr.split('/');
 
-  // Get the offset between CST and UTC for this date
-  const utcDate = new Date(cstDate.toLocaleString('en-US', { timeZone: 'UTC' }));
-  const offset = cstDate.getTime() - utcDate.getTime();
+  // Create ISO 8601 datetime string
+  // Format: YYYY-MM-DDTHH:MM:SS
+  const scheduleTime = `${year}-${month}-${day}T${String(hourCST).padStart(2, '0')}:00:00`;
 
-  // Apply offset to get correct UTC time
-  const scheduledUTC = new Date(tomorrow.getTime() + offset);
-  scheduledUTC.setHours(hourCST, 0, 0, 0);
-
-  // Adjust for timezone offset
-  const finalDate = new Date(scheduledUTC.getTime() - offset);
-
-  return finalDate.toISOString();
+  return scheduleTime;
 }
 
 /**
@@ -134,9 +131,10 @@ export async function scheduleVideoToAllPlatforms(
         title,
         hashtags: options?.hashtags,
         platforms: platforms as any[],
-        scheduleTime,
+        scheduleTime, // Time in CST format (YYYY-MM-DDTHH:MM:SS)
+        timezone: 'America/Chicago', // Tell Late.dev this is CST
         useQueue: false,
-        brand,
+        brand: brand as any,
         firstComment: options?.firstComment,
         postTypes: options?.postTypes,
       });

@@ -53,15 +53,17 @@ export async function POST(request: NextRequest) {
 
     const profileDoc = snapshot.docs[0];
 
-    // Update liked properties array
+    // Update liked properties array (using likedPropertyIds to match the schema)
     if (action === 'like') {
       await updateDoc(profileDoc.ref, {
-        likedProperties: arrayUnion(propertyId),
+        likedPropertyIds: arrayUnion(propertyId),
+        likedProperties: arrayUnion(propertyId), // Keep legacy field for backward compat
         updatedAt: serverTimestamp()
       });
     } else if (action === 'unlike') {
       await updateDoc(profileDoc.ref, {
-        likedProperties: arrayRemove(propertyId),
+        likedPropertyIds: arrayRemove(propertyId),
+        likedProperties: arrayRemove(propertyId), // Keep legacy field for backward compat
         updatedAt: serverTimestamp()
       });
     }

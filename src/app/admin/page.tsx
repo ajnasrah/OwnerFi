@@ -858,9 +858,9 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-slate-50 flex max-w-full overflow-x-hidden">
       {/* Left Sidebar */}
-      <div className="w-64 lg:w-72 bg-white shadow-xl border-r border-slate-200 flex-shrink-0">
+      <div className="w-64 lg:w-72 bg-white shadow-xl border-r border-slate-200 flex-shrink-0 relative flex flex-col h-screen">
         {/* Logo Section */}
-        <div className="p-6 border-b border-slate-200">
+        <div className="p-6 border-b border-slate-200 flex-shrink-0">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
               <div className="w-5 h-5 bg-white rounded-md"></div>
@@ -873,7 +873,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Navigation Menu */}
-        <nav className="p-4 space-y-2">
+        <nav className="p-4 space-y-2 flex-1 overflow-y-auto">
           {[
             { key: 'overview', label: 'Overview', icon: '📊', count: null },
             { key: 'properties', label: 'Properties', icon: '🏠', count: stats.totalProperties },
@@ -918,7 +918,7 @@ export default function AdminDashboard() {
         </nav>
 
         {/* External Dashboards */}
-        <div className="p-4 space-y-2 border-t border-slate-200">
+        <div className="p-4 space-y-2 border-t border-slate-200 flex-shrink-0">
           <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider px-4 mb-2">
             Dashboards
           </div>
@@ -939,7 +939,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* User Section */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-200 bg-white">
+        <div className="p-4 border-t border-slate-200 bg-white flex-shrink-0 mt-auto">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <div className="w-2 h-2 bg-green-500 rounded-full"></div>

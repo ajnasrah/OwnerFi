@@ -4,7 +4,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 const CRON_SECRET = process.env.CRON_SECRET;
-export const maxDuration = 60; // 1 minute
+export const maxDuration = 300; // 5 minutes - needs time to post to Late API
 
 export async function GET(request: NextRequest) {
   try {

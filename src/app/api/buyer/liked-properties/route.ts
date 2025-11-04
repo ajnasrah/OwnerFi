@@ -42,7 +42,7 @@ export async function GET() {
     }
 
     const profile = snapshot.docs[0].data();
-    const likedPropertyIds = profile.likedProperties || [];
+    const likedPropertyIds = profile.likedPropertyIds || profile.likedProperties || [];
 
     if (likedPropertyIds.length === 0) {
       return NextResponse.json({ 

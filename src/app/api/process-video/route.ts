@@ -219,7 +219,7 @@ export async function POST(request: NextRequest) {
  * Get workflow for specific brand
  */
 async function getWorkflowForBrand(
-  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit' | 'property' | 'vassdistro',
+  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit' | 'property' | 'vassdistro' | 'abdullah',
   workflowId: string
 ): Promise<any | null> {
   if (brand === 'podcast') {
@@ -231,6 +231,11 @@ async function getWorkflowForBrand(
   } else if (brand === 'property') {
     const { getPropertyVideoById } = await import('@/lib/feed-store-firestore');
     return await getPropertyVideoById(workflowId);
+  } else if (brand === 'abdullah') {
+    const { db } = await import('@/lib/firebase');
+    const { doc, getDoc } = await import('firebase/firestore');
+    const docSnap = await getDoc(doc(db, 'abdullah_content_queue', workflowId));
+    return docSnap.exists() ? docSnap.data() : null;
   } else {
     const { getWorkflowById } = await import('@/lib/feed-store-firestore');
     return await getWorkflowById(workflowId, brand);
@@ -241,7 +246,7 @@ async function getWorkflowForBrand(
  * Update workflow for specific brand
  */
 async function updateWorkflowForBrand(
-  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit' | 'property' | 'vassdistro',
+  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit' | 'property' | 'vassdistro' | 'abdullah',
   workflowId: string,
   updates: Record<string, any>
 ): Promise<void> {
@@ -254,6 +259,13 @@ async function updateWorkflowForBrand(
   } else if (brand === 'property') {
     const { updatePropertyVideo } = await import('@/lib/feed-store-firestore');
     await updatePropertyVideo(workflowId, updates);
+  } else if (brand === 'abdullah') {
+    const { db } = await import('@/lib/firebase');
+    const { doc, updateDoc } = await import('firebase/firestore');
+    await updateDoc(doc(db, 'abdullah_content_queue', workflowId), {
+      ...updates,
+      updatedAt: Date.now()
+    });
   } else {
     const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
     await updateWorkflowStatus(workflowId, brand, updates);

@@ -71,6 +71,7 @@ async function executeFailsafe() {
   const { collection, getDocs, query, where } = await import('firebase/firestore');
 
   const projects = [];
+  const results: any[] = []; // Initialize results EARLY - used throughout the function
   const MAX_WORKFLOWS_PER_RUN = 10; // Process max 10 workflows per cron run to avoid timeouts
 
   // Check all brand workflows (use submagicVideoId field)
@@ -332,7 +333,6 @@ async function executeFailsafe() {
 
     console.log(`\n📋 Found ${projects.length} total stuck workflows`);
 
-    const results = [];
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ||
                     (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
                     'https://ownerfi.ai';

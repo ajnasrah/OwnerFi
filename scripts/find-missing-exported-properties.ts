@@ -69,7 +69,7 @@ function parseCSV(csvContent: string): CSVProperty[] {
 async function findMissingProperties() {
   try {
     // Read CSV file
-    const csvPath = '/Users/abdullahabunasrah/Downloads/opportunities_cleaned.csv';
+    const csvPath = '/Users/abdullahabunasrah/Downloads/opportunities.csv';
     const csvContent = fs.readFileSync(csvPath, 'utf-8');
 
     // Parse CSV

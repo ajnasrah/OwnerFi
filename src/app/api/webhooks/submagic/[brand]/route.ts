@@ -512,16 +512,46 @@ async function triggerAsyncVideoProcessing(
     console.log(`🌐 [${brand}] Triggering process-video at: ${baseUrl}/api/process-video`);
     console.log(`   Workflow: ${workflowId}`);
 
-    // Trigger the processing endpoint (fire-and-forget)
+    // Trigger the processing endpoint (fire-and-forget with error handling)
     // Don't await - let it run in the background
     // Pass submagicProjectId so we can fetch a fresh URL later
     fetch(`${baseUrl}/api/process-video`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ brand, workflowId, videoUrl, submagicProjectId }),
-    }).catch(err => {
+    }).then(async (response) => {
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        console.error(`❌ [${brand}] process-video failed (${response.status}):`, errorData.error);
+
+        // Update workflow to failed status so it can be retried
+        try {
+          await updateWorkflowForBrand(brand, workflowId, {
+            status: 'video_processing_failed',
+            error: `process-video failed: ${errorData.error}`,
+            failedAt: Date.now(),
+          });
+          console.log(`   Updated workflow ${workflowId} to failed status for retry`);
+        } catch (updateErr) {
+          console.error(`   Failed to update workflow status:`, updateErr);
+        }
+      } else {
+        console.log(`✅ [${brand}] process-video completed successfully for ${workflowId}`);
+      }
+    }).catch(async (err) => {
       console.error(`❌ [${brand}] Failed to trigger video processing:`, err);
-      // Failure here is OK - the failsafe cron will pick it up
+
+      // Update workflow to failed status so it can be retried
+      try {
+        await updateWorkflowForBrand(brand, workflowId, {
+          status: 'video_processing_failed',
+          error: `process-video network error: ${err.message}`,
+          failedAt: Date.now(),
+        });
+        console.log(`   Updated workflow ${workflowId} to failed status for retry`);
+      } catch (updateErr) {
+        console.error(`   Failed to update workflow status:`, updateErr);
+      }
     });
 
     console.log(`✅ [${brand}] Triggered async video processing for ${workflowId}`);

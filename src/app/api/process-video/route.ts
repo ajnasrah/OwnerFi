@@ -234,7 +234,7 @@ async function getWorkflowForBrand(
   } else if (brand === 'abdullah') {
     const { db } = await import('@/lib/firebase');
     const { doc, getDoc } = await import('firebase/firestore');
-    const docSnap = await getDoc(doc(db, 'abdullah_content_queue', workflowId));
+    const docSnap = await getDoc(doc(db, 'abdullah_workflow_queue', workflowId));
     return docSnap.exists() ? docSnap.data() : null;
   } else {
     const { getWorkflowById } = await import('@/lib/feed-store-firestore');
@@ -262,7 +262,7 @@ async function updateWorkflowForBrand(
   } else if (brand === 'abdullah') {
     const { db } = await import('@/lib/firebase');
     const { doc, updateDoc } = await import('firebase/firestore');
-    await updateDoc(doc(db, 'abdullah_content_queue', workflowId), {
+    await updateDoc(doc(db, 'abdullah_workflow_queue', workflowId), {
       ...updates,
       updatedAt: Date.now()
     });

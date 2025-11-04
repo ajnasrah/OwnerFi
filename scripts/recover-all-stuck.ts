@@ -30,7 +30,7 @@ async function recoverAllStuckWorkflows() {
 
     const collectionName = brand === 'podcast' ? 'podcast_workflow_queue' :
                           brand === 'benefit' ? 'benefit_workflow_queue' :
-                          brand === 'abdullah' ? 'abdullah_content_queue' :
+                          brand === 'abdullah' ? 'abdullah_workflow_queue' :
                           `${brand}_workflow_queue`;
 
     // Check for workflows stuck at submagic_processing or video_processing

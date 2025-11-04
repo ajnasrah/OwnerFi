@@ -5,7 +5,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 const CRON_SECRET = process.env.CRON_SECRET;
-export const maxDuration = 60; // 1 minute
+export const maxDuration = 300; // 5 minutes - needs time to upload videos to R2 and post to Late
 
 export async function GET(request: NextRequest) {
   try {
@@ -465,9 +465,8 @@ async function executeFailsafe() {
                   'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                  webhookUrl,
-                  format: 'mp4',
-                  quality: 'high'
+                  webhookUrl
+                  // REMOVED format and quality - these fields are unsupported and cause validation errors
                 })
               });
 

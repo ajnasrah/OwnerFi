@@ -7,7 +7,7 @@
  * 3. Tracks success/failure
  */
 
-import { db } from '../src/lib/firebase-admin-init';
+import { db } from '../src/lib/firebase';
 import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 
 const BRANDS = ['carz', 'ownerfi', 'vassdistro', 'podcast', 'benefit'];

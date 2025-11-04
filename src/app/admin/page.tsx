@@ -43,6 +43,7 @@ function convertToDirectImageUrl(url: string): string {
 
 interface BuyerStats {
   id: string;
+  userId: string;  // User ID for deletion (different from profile ID)
   name: string;
   email: string;
   phone?: string;
@@ -109,7 +110,7 @@ export default function AdminDashboard() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(75);
   const [addressSearch, setAddressSearch] = useState('');
-  const [sortField, setSortField] = useState<'address' | 'city' | 'state' | 'listPrice' | 'bedrooms' | null>('address');
+  const [sortField, setSortField] = useState<'address' | 'city' | 'state' | 'listPrice' | 'bedrooms' | 'downPaymentAmount' | 'monthlyPayment' | null>('address');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   // Failed Properties state
@@ -162,6 +163,7 @@ export default function AdminDashboard() {
   // Buyers and Realtors state
   const [buyers, setBuyers] = useState<BuyerStats[]>([]);
   const [loadingBuyers, setLoadingBuyers] = useState(false);
+  const [selectedBuyers, setSelectedBuyers] = useState<string[]>([]);
   const [realtors, setRealtors] = useState<RealtorStats[]>([]);
   const [loadingRealtors, setLoadingRealtors] = useState(false);
 
@@ -487,7 +489,7 @@ export default function AdminDashboard() {
   }, [activeTab, uploadMode]);
 
   // Property management functions
-  const handleSort = (field: 'address' | 'city' | 'state' | 'listPrice' | 'bedrooms') => {
+  const handleSort = (field: 'address' | 'city' | 'state' | 'listPrice' | 'bedrooms' | 'downPaymentAmount' | 'monthlyPayment') => {
     const newDirection = sortField === field && sortDirection === 'asc' ? 'desc' : 'asc';
     setSortField(field);
     setSortDirection(newDirection);
@@ -516,6 +518,14 @@ export default function AdminDashboard() {
         case 'bedrooms':
           aValue = a.bedrooms ?? 0;
           bValue = b.bedrooms ?? 0;
+          break;
+        case 'downPaymentAmount':
+          aValue = a.downPaymentAmount ?? 0;
+          bValue = b.downPaymentAmount ?? 0;
+          break;
+        case 'monthlyPayment':
+          aValue = a.monthlyPayment ?? 0;
+          bValue = b.monthlyPayment ?? 0;
           break;
       }
 
@@ -565,6 +575,14 @@ export default function AdminDashboard() {
           case 'bedrooms':
             aValue = a.bedrooms || 0;
             bValue = b.bedrooms || 0;
+            break;
+          case 'downPaymentAmount':
+            aValue = a.downPaymentAmount ?? 0;
+            bValue = b.downPaymentAmount ?? 0;
+            break;
+          case 'monthlyPayment':
+            aValue = a.monthlyPayment ?? 0;
+            bValue = b.monthlyPayment ?? 0;
             break;
         }
 
@@ -1278,7 +1296,7 @@ export default function AdminDashboard() {
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th scope="col" className="relative px-6 py-4">
+                      <th scope="col" className="relative px-3 py-3">
                         <input
                           type="checkbox"
                           checked={getPaginatedProperties().length > 0 && getPaginatedProperties().every(p => selectedProperties.includes(p.id))}
@@ -1293,27 +1311,30 @@ export default function AdminDashboard() {
                           className="absolute left-4 top-1/2 -mt-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                         />
                       </th>
-                      <th scope="col" className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Actions
                       </th>
-                      <th scope="col" className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Property
                       </th>
-                      <th scope="col" className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700" onClick={() => handleSort('city')}>
+                      <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700" onClick={() => handleSort('city')}>
                         Location {sortField === 'city' && (sortDirection === 'asc' ? '↑' : '↓')}
                       </th>
-                      <th scope="col" className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700" onClick={() => handleSort('listPrice')}>
+                      <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700" onClick={() => handleSort('listPrice')}>
                         Price {sortField === 'listPrice' && (sortDirection === 'asc' ? '↑' : '↓')}
                       </th>
-                      <th scope="col" className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Details
+                      <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700" onClick={() => handleSort('downPaymentAmount')}>
+                        Down Payment {sortField === 'downPaymentAmount' && (sortDirection === 'asc' ? '↑' : '↓')}
+                      </th>
+                      <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700" onClick={() => handleSort('monthlyPayment')}>
+                        Monthly Payment {sortField === 'monthlyPayment' && (sortDirection === 'asc' ? '↑' : '↓')}
                       </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {getPaginatedProperties().map((property) => (
                       <tr key={property.id} className="hover:bg-gray-50">
-                        <td className="relative px-6 py-6">
+                        <td className="relative px-3 py-4">
                           <input
                             type="checkbox"
                             checked={selectedProperties.includes(property.id)}
@@ -1327,8 +1348,8 @@ export default function AdminDashboard() {
                             className="absolute left-4 top-1/2 -mt-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                           />
                         </td>
-                        <td className="px-6 py-6 whitespace-nowrap text-sm font-medium">
-                          <div className="flex items-center space-x-3">
+                        <td className="px-3 py-4 whitespace-nowrap text-sm font-medium">
+                          <div className="flex items-center space-x-2">
                             <button
                               onClick={() => {
                                 setEditingProperty(property);
@@ -1368,19 +1389,19 @@ export default function AdminDashboard() {
                             </button>
                           </div>
                         </td>
-                        <td className="px-6 py-6 whitespace-nowrap">
+                        <td className="px-3 py-4 whitespace-nowrap">
                           <div className="flex items-center">
-                            <div className="flex-shrink-0 h-24 w-32">
+                            <div className="flex-shrink-0 h-20 w-28">
                               <Image
                                 src={convertToDirectImageUrl(property.imageUrl || (property as any).imageUrls?.[0]) || '/placeholder-house.svg'}
                                 alt={property.address}
-                                width={128}
-                                height={96}
-                                className="h-24 w-32 rounded-lg object-cover"
+                                width={112}
+                                height={80}
+                                className="h-20 w-28 rounded-lg object-cover"
                               />
                             </div>
-                            <div className="ml-3">
-                              <div className="flex items-center gap-2">
+                            <div className="ml-2">
+                              <div className="flex items-center gap-1">
                                 <div className="text-sm font-medium text-gray-900">{property.address}</div>
                                 <button
                                   onClick={() => {
@@ -1395,20 +1416,23 @@ export default function AdminDashboard() {
                                   </svg>
                                 </button>
                               </div>
+                              <div className="text-xs text-gray-500">{property.bedrooms} bed • {property.bathrooms} bath • {property.squareFeet?.toLocaleString()} sqft</div>
                             </div>
                           </div>
                         </td>
-                        <td className="px-6 py-6 whitespace-nowrap">
+                        <td className="px-3 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-900">{property.city}, {property.state}</div>
                           <div className="text-sm text-gray-500">{property.zipCode}</div>
                         </td>
-                        <td className="px-6 py-6 whitespace-nowrap">
+                        <td className="px-3 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900">${property.listPrice?.toLocaleString()}</div>
-                          <div className="text-sm text-gray-500">${property.monthlyPayment?.toLocaleString()}/mo</div>
                         </td>
-                        <td className="px-6 py-6 whitespace-nowrap text-sm text-gray-500">
-                          <div>{property.bedrooms} bed • {property.bathrooms} bath</div>
-                          <div>{property.squareFeet?.toLocaleString()} sqft</div>
+                        <td className="px-3 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-gray-900">${property.downPaymentAmount?.toLocaleString()}</div>
+                          <div className="text-xs text-gray-500">{property.downPaymentPercent ? `${Math.round(property.downPaymentPercent)}%` : ''}</div>
+                        </td>
+                        <td className="px-3 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-gray-900">${property.monthlyPayment?.toLocaleString()}/mo</div>
                         </td>
                       </tr>
                     ))}
@@ -2601,14 +2625,68 @@ export default function AdminDashboard() {
             <div className="bg-white shadow rounded-lg">
               <div className="px-4 py-5 sm:p-6">
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg leading-6 font-medium text-gray-900">Registered Buyers</h3>
-                  <button
-                    onClick={fetchBuyers}
-                    disabled={loadingBuyers}
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-gray-400"
-                  >
-                    {loadingBuyers ? 'Loading...' : 'Refresh'}
-                  </button>
+                  <div className="flex items-center gap-4">
+                    <h3 className="text-lg leading-6 font-medium text-gray-900">Registered Buyers</h3>
+                    <label className="flex items-center gap-2 text-sm text-gray-600">
+                      <input
+                        type="checkbox"
+                        checked={buyers.length > 0 && selectedBuyers.length === buyers.length}
+                        onChange={() => {
+                          if (selectedBuyers.length === buyers.length) {
+                            setSelectedBuyers([]);
+                          } else {
+                            setSelectedBuyers(buyers.map(b => b.userId));
+                          }
+                        }}
+                        className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                      />
+                      Select All
+                    </label>
+                    {selectedBuyers.length > 0 && (
+                      <span className="text-sm text-gray-500">
+                        {selectedBuyers.length} selected
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {selectedBuyers.length > 0 && (
+                      <button
+                        onClick={async () => {
+                          if (confirm(`Delete ${selectedBuyers.length} selected buyers? This action cannot be undone.`)) {
+                            try {
+                              const response = await fetch('/api/admin/buyers', {
+                                method: 'DELETE',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ buyerIds: selectedBuyers })
+                              });
+                              if (response.ok) {
+                                const result = await response.json();
+                                alert(`Successfully deleted ${result.deletedCount} buyer(s)`);
+                                setSelectedBuyers([]);
+                                fetchBuyers();
+                              } else {
+                                const error = await response.json();
+                                alert(`Error: ${error.error}`);
+                              }
+                            } catch (error) {
+                              alert('Failed to delete buyers');
+                              console.error('Delete error:', error);
+                            }
+                          }
+                        }}
+                        className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                      >
+                        Delete {selectedBuyers.length} Selected
+                      </button>
+                    )}
+                    <button
+                      onClick={fetchBuyers}
+                      disabled={loadingBuyers}
+                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-gray-400"
+                    >
+                      {loadingBuyers ? 'Loading...' : 'Refresh'}
+                    </button>
+                  </div>
                 </div>
 
                 <div className="overflow-hidden bg-white shadow sm:rounded-md">
@@ -2619,6 +2697,18 @@ export default function AdminDashboard() {
                           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                             {/* Buyer Info */}
                             <div className="flex items-center flex-1 min-w-0">
+                              <input
+                                type="checkbox"
+                                checked={selectedBuyers.includes(buyer.userId)}
+                                onChange={() => {
+                                  if (selectedBuyers.includes(buyer.userId)) {
+                                    setSelectedBuyers(prev => prev.filter(id => id !== buyer.userId));
+                                  } else {
+                                    setSelectedBuyers(prev => [...prev, buyer.userId]);
+                                  }
+                                }}
+                                className="h-4 w-4 mr-3 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                              />
                               <div className="flex-shrink-0">
                                 <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
                                   <span className="text-sm font-medium text-gray-700">

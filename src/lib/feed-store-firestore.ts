@@ -55,6 +55,7 @@ export interface WorkflowQueueItem {
   title?: string; // Store for webhooks
   scheduledFor?: number; // Timestamp for when post should go live
   platforms?: string[]; // Platforms posted to
+  videoIndex?: number; // Which post of the day this is (0-4 for 5 posts/day)
   error?: string;
   retryCount?: number;
   lastRetryAt?: number;
@@ -389,7 +390,36 @@ export async function articleExistsByContent(
 }
 
 // Workflow Queue Management
-export async function addWorkflowToQueue(articleId: string, articleTitle: string, brand: Brand): Promise<WorkflowQueueItem> {
+
+/**
+ * Get workflows created today for a brand
+ * Used to determine videoIndex (which post of the day this is)
+ */
+export async function getWorkflowsCreatedToday(brand: Brand): Promise<WorkflowQueueItem[]> {
+  if (!db) throw new Error('Firebase not initialized');
+
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const todayStartTimestamp = todayStart.getTime();
+
+  const collectionName = getCollectionName('WORKFLOW_QUEUE', brand);
+  const querySnapshot = await getDocs(
+    query(
+      collection(db, collectionName),
+      where('createdAt', '>=', todayStartTimestamp),
+      orderBy('createdAt', 'asc')
+    )
+  );
+
+  return querySnapshot.docs.map(doc => doc.data() as WorkflowQueueItem);
+}
+
+export async function addWorkflowToQueue(
+  articleId: string,
+  articleTitle: string,
+  brand: Brand,
+  videoIndex?: number
+): Promise<WorkflowQueueItem> {
   if (!db) throw new Error('Firebase not initialized');
 
   const queueItem: WorkflowQueueItem = {
@@ -400,12 +430,13 @@ export async function addWorkflowToQueue(articleId: string, articleTitle: string
     status: 'pending',
     retryCount: 0,
     createdAt: Date.now(),
-    updatedAt: Date.now()
+    updatedAt: Date.now(),
+    videoIndex, // Add videoIndex (which post of the day: 0-4)
   };
 
   const collectionName = getCollectionName('WORKFLOW_QUEUE', brand);
   await setDoc(doc(db, collectionName, queueItem.id), queueItem);
-  console.log(`✅ Added workflow to queue: ${queueItem.id} (${brand})`);
+  console.log(`✅ Added workflow to queue: ${queueItem.id} (${brand}, videoIndex: ${videoIndex})`);
   return queueItem;
 }
 

@@ -136,34 +136,40 @@ export async function POST(request: NextRequest) {
         title = workflow.title || 'Viral Video';
       }
 
-      console.log(`📱 Scheduling posts to Late API across multiple platform groups...`);
+      console.log(`📱 Scheduling posts to Late API with optimal platform timing...`);
 
-      // Use platform-specific scheduling for optimal engagement times
-      const { postToMultiplePlatformGroups } = await import('@/lib/platform-scheduling');
+      // Use optimal platform-specific scheduling based on videoIndex
+      const { scheduleVideoToAllPlatforms } = await import('@/lib/optimal-platform-scheduling');
 
-      const postResult = await postToMultiplePlatformGroups(
+      // Get videoIndex from workflow (defaults to 0 if not set)
+      const videoIndex = workflow.videoIndex ?? 0;
+
+      console.log(`   Video index: ${videoIndex} (determines which time slots to use)`);
+
+      const postResult = await scheduleVideoToAllPlatforms(
         publicVideoUrl,
         caption,
         title,
-        brand
+        brand,
+        videoIndex // Determines which of the 3 optimal hours to use per platform
       );
 
       if (postResult.success) {
-        // Collect all post IDs from all groups
-        const postIds = postResult.groups
-          .map(g => g.result.postId)
+        // Collect all post IDs from scheduled posts
+        const postIds = postResult.scheduledPosts
+          .map(p => p.postId)
           .filter(Boolean)
           .join(', ');
 
-        console.log(`✅ Scheduled to ${postResult.scheduledPlatforms} platforms across ${postResult.groups.length} groups`);
+        const totalPlatforms = postResult.scheduledPosts.reduce((sum, p) => sum + p.platforms.length, 0);
+
+        console.log(`✅ Scheduled to ${totalPlatforms} platforms across ${postResult.totalScheduled} time slots`);
         console.log(`   Post IDs: ${postIds}`);
 
         // Mark as completed
         await updateWorkflowForBrand(brand, workflowId, {
           status: 'completed',
-          latePostId: postIds || postResult.groups[0]?.result.postId,
-          scheduledPlatforms: postResult.scheduledPlatforms,
-          totalPlatforms: postResult.totalPlatforms,
+          latePostId: postIds,
           completedAt: Date.now(),
         });
 
@@ -175,9 +181,9 @@ export async function POST(request: NextRequest) {
           workflowId,
           videoUrl: publicVideoUrl,
           postIds: postIds,
-          scheduledPlatforms: postResult.scheduledPlatforms,
-          totalPlatforms: postResult.totalPlatforms,
-          groups: postResult.groups.length,
+          totalPlatforms,
+          timeSlots: postResult.totalScheduled,
+          videoIndex,
           processing_time_ms: duration,
         });
       } else {

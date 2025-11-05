@@ -1,0 +1,601 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "carz_articles",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "processed",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "qualityScore",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "ownerfi_articles",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "processed",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "qualityScore",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "vassdistro_articles",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "processed",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "qualityScore",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "carz_articles",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "processed",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "locked",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "qualityScore",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "ownerfi_articles",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "processed",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "locked",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "qualityScore",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "vassdistro_articles",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "processed",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "locked",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "qualityScore",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "carz_workflow_queue",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "updatedAt",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "ownerfi_workflow_queue",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "updatedAt",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "vassdistro_workflow_queue",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "updatedAt",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "podcast_workflow_queue",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "updatedAt",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "podcast_workflow_queue",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "ownerfi_workflow_queue",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "completedAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "carz_workflow_queue",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "completedAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "vassdistro_workflow_queue",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "completedAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "scraper_queue",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "addedAt",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "scraper_queue",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "completedAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "scraper_queue",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "addedAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "zillow_imports",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "ghlSendStatus",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "importedAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "properties",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "isActive",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "properties",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "isActive",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "downPaymentAmount",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "property_rotation_queue",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "position",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "property_videos",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "property_videos",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "updatedAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "property_videos",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "updatedAt",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "property_videos",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "completedAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "benefit_workflow_queue",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "vassdistro_articles",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "processed",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "pubDate",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "propertyMatches",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "buyerId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "matchScore",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "properties",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "isActive",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "state",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "monthlyPayment",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "buyerProfiles",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "searchCriteria.state",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "searchCriteria.maxMonthlyPayment",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "cost_entries",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "brand",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "timestamp",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "cost_entries",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "brand",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "timestamp",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "platform_analytics",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "brand",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "lastUpdated",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "platform_analytics",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "lastUpdated",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "platform_analytics",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "brand",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "lastUpdated",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "views",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "properties",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "imageEnhanced",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "platform_analytics",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "brand",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "syncedAt",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "abdullah_content_queue",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "completedAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "abdullah_content_queue",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "carz_workflow_queue",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "createdAt",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "ownerfi_workflow_queue",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "createdAt",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "vassdistro_workflow_queue",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "createdAt",
+          "order": "ASCENDING"
+        }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

@@ -120,7 +120,7 @@
       "maxDuration": 60
     },
     "src/app/api/cron/check-stuck-submagic/route.ts": {
-      "maxDuration": 60
+      "maxDuration": 300
     },
     "src/app/api/cron/check-stuck-heygen/route.ts": {
       "maxDuration": 60

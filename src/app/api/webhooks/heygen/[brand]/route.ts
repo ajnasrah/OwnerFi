@@ -334,6 +334,8 @@ async function triggerSubmagicProcessing(
       removeBadTakes: brand !== 'property', // OFF for property (keep all content)
     };
 
+    console.log(`📤 [${brandConfig.displayName}] Sending Submagic request:`, JSON.stringify(submagicConfig, null, 2));
+
     const response = await fetch('https://api.submagic.co/v1/projects', {
       method: 'POST',
       headers: {

@@ -22,7 +22,7 @@ export interface LatePostRequest {
   hashtags?: string[];
   platforms: ('instagram' | 'tiktok' | 'youtube' | 'facebook' | 'linkedin' | 'threads' | 'twitter' | 'pinterest' | 'reddit' | 'bluesky')[];
   scheduleTime?: string; // ISO 8601 format, or omit for immediate posting
-  brand: 'carz' | 'ownerfi' | 'podcast' | 'property' | 'vassdistro' | 'benefit';
+  brand: 'carz' | 'ownerfi' | 'podcast' | 'property' | 'vassdistro' | 'benefit' | 'abdullah';
   postTypes?: {
     instagram?: 'reel' | 'story';
     facebook?: 'feed' | 'story';
@@ -55,7 +55,7 @@ export interface LateProfile {
 /**
  * Get profile ID for a brand
  */
-function getProfileId(brand: 'carz' | 'ownerfi' | 'podcast' | 'property' | 'vassdistro' | 'benefit'): string | null {
+function getProfileId(brand: 'carz' | 'ownerfi' | 'podcast' | 'property' | 'vassdistro' | 'benefit' | 'abdullah'): string | null {
   switch (brand) {
     case 'ownerfi':
     case 'property': // Property videos use OwnerFi profile
@@ -67,6 +67,8 @@ function getProfileId(brand: 'carz' | 'ownerfi' | 'podcast' | 'property' | 'vass
       return getLatePodcastProfileId() || null;
     case 'vassdistro':
       return getLateVassDistroProfileId() || null;
+    case 'abdullah':
+      return getLateAbdullahProfileId() || null;
   }
 }
 
@@ -91,7 +93,7 @@ export async function getLateProfiles(): Promise<LateProfile[]> {
           'Content-Type': 'application/json',
         }
       },
-      TIMEOUTS.EXTERNAL_API
+      TIMEOUTS.LATE_API
     );
 
     if (!response.ok) {
@@ -136,7 +138,7 @@ export async function getLateAccounts(profileId: string): Promise<any[]> {
           'Content-Type': 'application/json',
         }
       },
-      TIMEOUTS.EXTERNAL_API
+      TIMEOUTS.LATE_API
     );
 
     if (!response.ok) {
@@ -182,7 +184,8 @@ export async function postToLate(request: LatePostRequest): Promise<LatePostResp
       'podcast': 'Podcast',
       'property': 'Property',
       'vassdistro': 'VassDistro',
-      'benefit': 'Benefit'
+      'benefit': 'Benefit',
+      'abdullah': 'Abdullah'
     };
     const brandName = brandNameMap[request.brand] || request.brand;
     console.error(`❌ Profile ID not configured for ${brandName}`);
@@ -261,7 +264,8 @@ export async function postToLate(request: LatePostRequest): Promise<LatePostResp
       'ownerfi': 'OwnerFi',
       'podcast': 'Podcast',
       'property': 'Property',
-      'vassdistro': 'VassDistro'
+      'vassdistro': 'VassDistro',
+      'abdullah': 'Abdullah'
     };
     const brandName = brandNameMap[request.brand] || request.brand;
     console.log(`📤 Posting to Late (${brandName})...`);
@@ -365,7 +369,7 @@ export async function postToLate(request: LatePostRequest): Promise<LatePostResp
               },
               body: JSON.stringify(requestBody)
             },
-            TIMEOUTS.EXTERNAL_API
+            TIMEOUTS.LATE_API
           );
 
           console.log(`🔍 Late API Response Status: ${response.status} ${response.statusText}`);
@@ -502,7 +506,7 @@ export async function getNextQueueSlot(brand: 'carz' | 'ownerfi' | 'podcast' | '
           'Content-Type': 'application/json',
         }
       },
-      TIMEOUTS.EXTERNAL_API
+      TIMEOUTS.LATE_API
     );
 
     if (!response.ok) {
@@ -541,7 +545,7 @@ export async function getQueueSchedule(brand: 'carz' | 'ownerfi' | 'podcast' | '
         'Content-Type': 'application/json',
       }
     },
-    TIMEOUTS.EXTERNAL_API
+    TIMEOUTS.LATE_API
   );
 
   if (!response.ok) {
@@ -583,7 +587,7 @@ export async function setQueueSchedule(
         reshuffleExisting
       })
     },
-    TIMEOUTS.EXTERNAL_API
+    TIMEOUTS.LATE_API
   );
 
   if (!response.ok) {
@@ -604,7 +608,7 @@ export async function scheduleVideoPost(
   title: string,
   platforms: ('instagram' | 'tiktok' | 'youtube' | 'facebook' | 'linkedin' | 'threads' | 'twitter')[] | any[],
   delay: 'immediate' | '1hour' | '2hours' | '4hours' | 'optimal' = 'immediate',
-  brand: 'carz' | 'ownerfi' | 'podcast' | 'property' | 'vassdistro' | 'benefit' = 'ownerfi',
+  brand: 'carz' | 'ownerfi' | 'podcast' | 'property' | 'vassdistro' | 'benefit' | 'abdullah' = 'ownerfi',
   firstComment?: string // Optional first comment for engagement boost
 ): Promise<LatePostResponse> {
   // Calculate schedule time

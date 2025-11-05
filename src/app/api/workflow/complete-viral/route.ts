@@ -25,11 +25,12 @@ export async function POST(request: NextRequest) {
     const validation = safeParse(CompleteWorkflowRequestSchema, rawBody);
 
     if (!validation.success) {
+      const errors = 'errors' in validation ? validation.errors : ['Validation failed'];
       return NextResponse.json(
         {
           success: false,
           error: ERROR_MESSAGES.MISSING_REQUIRED_FIELD,
-          details: validation.errors.join(', ')
+          details: errors.join(', ')
         },
         { status: 400 }
       );
@@ -81,8 +82,8 @@ export async function POST(request: NextRequest) {
       console.error(`   This would waste HeyGen credits on poor quality video.`);
 
       // Mark article as processed so it's not retried
-      const { markArticleAsProcessed } = await import('@/lib/feed-store-firestore');
-      await markArticleAsProcessed(article.id);
+      const { markArticleProcessed } = await import('@/lib/feed-store-firestore');
+      await markArticleProcessed(article.id, brand as 'carz' | 'ownerfi' | 'vassdistro', undefined, 'Content too short');
 
       return NextResponse.json({
         success: false,
@@ -189,13 +190,9 @@ export async function POST(request: NextRequest) {
       scale: 1.4  // Proper scale for vertical 9:16 social media videos
     };
 
-    if (avatarType === 'avatar') {
-      character.avatar_id = body.avatar_id || defaultAvatarId;
-      character.avatar_style = 'normal';
-    } else {
-      character.talking_photo_id = body.avatar_id || defaultAvatarId;
-      character.talking_style = 'expressive';
-    }
+    // All brands now use talking_photo type (motion-enabled avatar)
+    character.talking_photo_id = body.talking_photo_id || defaultAvatarId;
+    character.talking_style = 'expressive';
 
     const heygenRequest = {
       video_inputs: [{
@@ -267,7 +264,7 @@ export async function POST(request: NextRequest) {
         message: '✅ Local dev workflow completed',
         workflow_id: workflowId,
         brand,
-        article: { title: article.title, source: article.source },
+        article: { title: article.title, link: article.link },
         content: { script: content.script, title: content.title, caption: content.caption },
         video: { heygen_video_id: videoResult.video_id, status: heygenUrl ? 'completed' : 'processing' }
       });
@@ -285,7 +282,7 @@ export async function POST(request: NextRequest) {
       message: '🚀 Viral video workflow started! Webhooks will complete the process.',
       workflow_id: workflowId,
       brand,
-      article: { title: article.title, source: article.source },
+      article: { title: article.title, link: article.link },
       content: { script: content.script, title: content.title, caption: content.caption },
       video: { heygen_video_id: videoResult.video_id, status: 'heygen_processing' },
       tracking: {
@@ -310,8 +307,7 @@ export async function POST(request: NextRequest) {
         const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
         await updateWorkflowStatus(workflowId, brand as 'carz' | 'ownerfi' | 'vassdistro', {
           status: 'failed',
-          error: error instanceof Error ? error.message : 'Unknown error',
-          failedAt: Date.now()
+          error: error instanceof Error ? error.message : 'Unknown error'
         });
         console.log(`✅ Marked workflow ${workflowId} as failed`);
       } catch (updateError) {

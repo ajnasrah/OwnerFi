@@ -334,7 +334,11 @@ async function triggerSubmagicProcessing(
       removeBadTakes: brand !== 'property', // OFF for property (keep all content)
     };
 
-    console.log(`📤 [${brandConfig.displayName}] Sending Submagic request:`, JSON.stringify(submagicConfig, null, 2));
+    console.log(`📤 [${brandConfig.displayName}] Sending Submagic request:`);
+    console.log(`   Video URL: ${heygenVideoUrl}`);
+    console.log(`   Webhook URL: ${submagicWebhookUrl}`);
+    console.log(`   Title: ${title}`);
+    console.log(`   Config:`, JSON.stringify(submagicConfig, null, 2));
 
     const response = await fetch('https://api.submagic.co/v1/projects', {
       method: 'POST',
@@ -345,13 +349,25 @@ async function triggerSubmagicProcessing(
       body: JSON.stringify(submagicConfig)
     });
 
+    console.log(`📡 [${brandConfig.displayName}] Submagic API response status: ${response.status}`);
+
     if (!response.ok) {
       const errorText = await response.text();
+      console.error(`❌ [${brandConfig.displayName}] Submagic API error response:`, errorText);
       throw new Error(`Submagic API error: ${response.status} - ${errorText}`);
     }
 
-    const data = await response.json();
-    console.log(`📦 [${brandConfig.displayName}] Submagic API response:`, JSON.stringify(data, null, 2));
+    const responseText = await response.text();
+    console.log(`📦 [${brandConfig.displayName}] Submagic API raw response:`, responseText.substring(0, 500));
+
+    let data;
+    try {
+      data = JSON.parse(responseText);
+      console.log(`📦 [${brandConfig.displayName}] Submagic API parsed response:`, JSON.stringify(data, null, 2));
+    } catch (parseError) {
+      console.error(`❌ [${brandConfig.displayName}] Failed to parse Submagic response as JSON:`, parseError);
+      throw new Error(`Submagic returned invalid JSON: ${responseText.substring(0, 200)}`);
+    }
 
     // Extract project ID with multiple fallback options
     const projectId = data?.id || data?.project_id || data?.projectId || data?.data?.id;

@@ -8,15 +8,17 @@
 
 ## 📊 Weekly Posting Schedule Matrix
 
-| Day | Instagram | TikTok | YouTube | Facebook | Threads |
+| Day | Instagram | TikTok | YouTube | Facebook* | Threads |
 |-----|-----------|--------|---------|----------|---------|
 | **Sunday** | 6:00 PM 🟡 | 12:00 PM 🔴 | 6:00 AM 🟡 | 9:00 AM 🔴 | 1:00 PM 🟡 |
 | **Monday** | 8:00 PM 🟢 | 7:00 AM 🟢 | 6:00 AM 🟢 | 6:00 AM 🟡 | 10:00 PM 🟢 |
-| **Tuesday** | 7:00 PM 🟢 | 4:00 PM 🟡 | 8:00 AM 🟡 | 6:00 AM 🟡 | 11:00 AM 🟢 |
-| **Wednesday** | 4:00 PM 🟢 | 9:00 PM 🔴 | 5:00 PM 🟡 | 12:00 AM 🟡 | 4:00 PM 🟡 |
+| **Tuesday** | 7:00 PM 🟢 | 4:00 PM 🟡 | 8:00 AM 🟡 | 6:00 PM 🔴 | 11:00 AM 🟢 |
+| **Wednesday** | 4:00 PM 🟢 | 9:00 PM 🔴 | 5:00 PM 🟡 | 6:00 AM 🟡 | 4:00 PM 🟡 |
 | **Thursday** | 4:00 PM 🟡 | 12:00 PM 🟡 | 10:00 AM 🟡 | 6:00 AM 🟡 | 12:00 PM 🟢 |
-| **Friday** | 2:00 PM 🟢 | 9:00 PM 🔴 | 9:00 AM 🟡 | 12:00 AM 🔴 | 2:00 PM 🟡 |
+| **Friday** | 2:00 PM 🟢 | 9:00 PM 🔴 | 9:00 AM 🟡 | 6:00 AM 🟡 | 2:00 PM 🟡 |
 | **Saturday** | 10:00 AM 🟡 | 9:00 PM 🔴 | 12:00 PM 🟡 | 6:00 AM 🔴 | 12:00 PM 🟡 |
+
+*_Facebook data has critical quality issues (no view/reach data) - times based only on interactions_
 
 **Confidence Levels:**
 - 🟢 **High** (5+ posts analyzed)
@@ -116,29 +118,49 @@
 
 ---
 
-### FACEBOOK (Low Confidence)
-**Poor data quality - 7.4% data coverage ⚠️**
+### FACEBOOK (Low Confidence - Data Quality Issues)
+**Critical Issue: NO view/reach/impression data - 7.4% data coverage ⚠️**
 
-| Day | Time | Engagement | Avg Views | Confidence |
-|-----|------|------------|-----------|------------|
-| Sunday | 9:00 AM | 0.00% | 0 | 🔴 Low |
-| Monday | 6:00 AM | 0.00% | 0 | 🟡 Medium |
-| Tuesday | 6:00 AM | 0.00% | 0 | 🟡 Medium |
-| Wednesday | 12:00 AM | 0.00% | 0 | 🟡 Medium |
-| Thursday | 6:00 AM | 0.00% | 0 | 🟡 Medium |
-| Friday | 12:00 AM | 0.00% | 0 | 🔴 Low |
-| Saturday | 6:00 AM | 0.00% | 0 | 🔴 Low |
+| Day | Time | Engagement* | Avg Interactions** | Confidence |
+|-----|------|-------------|-------------------|------------|
+| **Sunday** | 9:00 AM | N/A | 2.00 | 🔴 Low (1 post) |
+| **Monday** | 6:00 AM | N/A | 2.67 | 🟡 Medium (3 posts) |
+| **Tuesday** | 6:00 PM | N/A | 6.00 | 🔴 Low (1 post) |
+| **Wednesday** | 6:00 AM | N/A | 2.75 | 🟡 Medium (4 posts) |
+| **Thursday** | 6:00 AM | N/A | 2.67 | 🟡 Medium (3 posts) |
+| **Friday** | 6:00 AM | N/A | 1.50 | 🟡 Medium (2 posts) |
+| **Saturday** | 6:00 AM | N/A | 2.00 | 🔴 Low (1 post) |
+
+*_Cannot calculate engagement rate without view data_
+**_Based only on likes + comments + shares (no views/reach/impressions available)_
+
+**⚠️ CRITICAL DATA LIMITATIONS:**
+- **0 posts** have view/reach/impression data (100% missing)
+- Only **32 out of 432 posts** (7.4%) have ANY engagement data
+- **All 432 posts show 0 views, 0 reach, 0 impressions**
+- Engagement exists (likes/comments/shares) but no viewership metrics
+- Cannot calculate true engagement rates
+
+**Top Performing Times (by raw interactions only):**
+1. **6:00 AM** - 2.41 avg interactions (17 posts) - Most reliable
+2. **6:00 PM** - 6.00 avg interactions (1 post) - Highest but unreliable
+3. **9:00 AM** - 2.00 avg interactions (1 post)
 
 **Key Insights:**
-- Zero views on all posts analyzed
-- Analytics integration may be broken
-- 432 posts but only 32 have any data (7.4%)
-- Cannot make reliable recommendations
+- **6:00 AM is most consistent** across weekdays (Mon-Sat)
+- Tuesday 6:00 PM had highest interactions (6) but only 1 post
+- Thursday shows best average engagement (2.67 interactions)
+- GetLate API is **not receiving viewership data from Facebook**
 
-**🚨 Critical Action Required:**
-1. Verify Facebook analytics integration with GetLate
-2. Check Facebook Graph API permissions
-3. Investigate why views are not being tracked
+**🚨 CRITICAL ACTION REQUIRED:**
+1. **Verify Facebook Graph API integration** - Check if GetLate has proper access
+2. **Check permissions** - Ensure access token has `pages_read_engagement`, `pages_show_list`, `pages_read_user_content`
+3. **Investigate API limitation** - Facebook may not be sharing view/reach data with GetLate
+4. **Contact GetLate Support** - Ask why Facebook viewership metrics are missing
+5. **Alternative:** Use **Meta Business Suite** for accurate Facebook analytics
+6. **Consider deprioritizing Facebook** until analytics are fixed
+
+**⚠️ These recommendations are UNRELIABLE - Use with extreme caution**
 
 ---
 
@@ -247,6 +269,18 @@ export const PLATFORM_DAY_OPTIMAL_HOURS: Record<string, Record<string, number>> 
     thursday: 12,  // 12:00 PM (0.00% engagement)
     friday: 14,    // 2:00 PM (0.00% engagement)
     saturday: 12,  // 12:00 PM (0.00% engagement)
+  },
+
+  // ⚠️ FACEBOOK - UNRELIABLE DATA (no views/reach/impressions)
+  // Based only on likes + comments + shares
+  facebook: {
+    sunday: 9,     // 9:00 AM (2.00 avg interactions)
+    monday: 6,     // 6:00 AM (2.67 avg interactions)
+    tuesday: 18,   // 6:00 PM (6.00 avg interactions, only 1 post)
+    wednesday: 6,  // 6:00 AM (2.75 avg interactions)
+    thursday: 6,   // 6:00 AM (2.67 avg interactions)
+    friday: 6,     // 6:00 AM (1.50 avg interactions)
+    saturday: 6,   // 6:00 AM (2.00 avg interactions)
   },
 };
 

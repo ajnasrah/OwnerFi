@@ -53,8 +53,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Prepare caption
-    const caption = workflow.caption || workflow.articleTitle || workflow.episodeTitle || 'Check out this video!';
+    // Prepare caption - generate from benefit data if missing
+    let caption = workflow.caption;
+    if (!caption && validatedBrand === 'benefit') {
+      const benefitId = workflow.benefitId;
+      if (benefitId) {
+        const { getBenefitById, generateBenefitCaption } = await import('@/lib/benefit-content');
+        const benefit = getBenefitById(benefitId);
+        if (benefit) {
+          caption = generateBenefitCaption(benefit);
+        }
+      }
+    }
+    // Final fallback
+    caption = caption || workflow.articleTitle || workflow.episodeTitle || 'Check out this video!';
 
     // Schedule post
     const scheduledDate = new Date(Date.now() + 2 * 60 * 1000).toISOString(); // 2 minutes from now

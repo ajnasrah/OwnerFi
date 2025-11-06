@@ -389,8 +389,21 @@ async function processVideoAndPost(
       caption = workflow.episodeTitle || 'New Podcast Episode';
       title = `Episode #${workflow.episodeNumber}: ${workflow.episodeTitle || 'New Episode'}`;
     } else if (brand === 'benefit') {
-      caption = workflow.caption || 'Learn about owner financing! 🏡';
-      title = workflow.title || 'Owner Finance Benefits';
+      // Generate caption from benefit data if missing
+      if (!workflow.caption || !workflow.title) {
+        const benefitId = workflow.benefitId;
+        if (benefitId) {
+          const { getBenefitById, generateBenefitCaption, generateBenefitTitle } = await import('@/lib/benefit-content');
+          const benefit = getBenefitById(benefitId);
+          if (benefit) {
+            caption = workflow.caption || generateBenefitCaption(benefit);
+            title = workflow.title || generateBenefitTitle(benefit);
+          }
+        }
+      }
+      // Final fallbacks
+      caption = caption || workflow.caption || 'Learn about owner financing! 🏡';
+      title = title || workflow.title || 'Owner Finance Benefits';
     } else if (brand === 'property') {
       caption = workflow.caption || 'New owner finance property for sale! 🏡';
       title = workflow.title || 'Property For Sale';

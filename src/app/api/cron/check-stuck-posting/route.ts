@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
     console.log('🔍 [FAILSAFE-POSTING] Checking workflows stuck in posting/publishing...');
 
     const { db } = await import('@/lib/firebase');
-    const { collection, getDocs, query, where, or } = await import('firebase/firestore');
+    const { collection, getDocs, query, where, or, limit: firestoreLimit, orderBy } = await import('firebase/firestore');
     const { getCollectionName } = await import('@/lib/feed-store-firestore');
 
     if (!db) {
@@ -123,7 +123,6 @@ export async function GET(request: NextRequest) {
     console.log(`\n📂 Checking properties...`);
     try {
       // PERFORMANCE FIX: Add limit to prevent scanning all properties
-      const { limit: firestoreLimit, orderBy } = await import('firebase/firestore');
       const qPosting = query(
         collection(db, 'properties'),
         where('workflowStatus.stage', '==', 'Posting'),

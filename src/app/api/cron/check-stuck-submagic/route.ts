@@ -68,7 +68,7 @@ async function executeFailsafe() {
   console.log('✅ Firebase initialized');
 
   // Try to get workflows using client SDK (same as feed-store uses)
-  const { collection, getDocs, query, where } = await import('firebase/firestore');
+  const { collection, getDocs, query, where, limit: firestoreLimit, orderBy } = await import('firebase/firestore');
 
   const projects = [];
   const results: any[] = []; // Initialize results EARLY - used throughout the function
@@ -81,7 +81,6 @@ async function executeFailsafe() {
 
       try {
         // PERFORMANCE FIX: Add limit and orderBy to prevent unbounded queries
-        const { limit: firestoreLimit, orderBy } = await import('firebase/firestore');
         const q = query(
           collection(db, collectionName),
           where('status', '==', 'submagic_processing'),
@@ -134,7 +133,6 @@ async function executeFailsafe() {
     console.log(`\n📂 Checking property_videos (heygen_processing)...`);
     try {
       // PERFORMANCE FIX: Add limit to prevent scanning all property videos
-      const { limit: firestoreLimit, orderBy } = await import('firebase/firestore');
       const q = query(
         collection(db, 'property_videos'),
         where('status', '==', 'heygen_processing'),
@@ -248,7 +246,6 @@ async function executeFailsafe() {
     console.log(`\n📂 Checking property_videos (submagic_processing)...`);
     try {
       // PERFORMANCE FIX: Add limit to prevent scanning all property videos
-      const { limit: firestoreLimit, orderBy } = await import('firebase/firestore');
       const q = query(
         collection(db, 'property_videos'),
         where('status', '==', 'submagic_processing'),
@@ -285,7 +282,6 @@ async function executeFailsafe() {
     console.log(`\n📂 Checking podcast_workflow_queue...`);
     try {
       // PERFORMANCE FIX: Add limit to prevent scanning all podcasts
-      const { limit: firestoreLimit, orderBy } = await import('firebase/firestore');
       const q = query(
         collection(db, 'podcast_workflow_queue'),
         where('status', '==', 'submagic_processing'),

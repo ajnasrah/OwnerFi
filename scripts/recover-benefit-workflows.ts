@@ -5,6 +5,7 @@
 
 import { db } from '../src/lib/firebase';
 import { collection, query, where, getDocs, doc as firestoreDoc, updateDoc } from 'firebase/firestore';
+import { getBenefitById, generateBenefitCaption, generateBenefitTitle } from '../src/lib/benefit-content';
 
 const SUBMAGIC_API_KEY = process.env.SUBMAGIC_API_KEY;
 const MAX_TO_RECOVER = 5; // Process max 5 at a time to avoid timeout
@@ -103,7 +104,33 @@ async function recoverBenefitWorkflows() {
           updatedAt: Date.now()
         });
 
-        // 3. Post to Late
+        // 3. Generate caption and title if missing
+        let caption = workflow.data.caption;
+        let title = workflow.data.title;
+
+        if (!caption || !title) {
+          console.log(`   📝 Generating caption and title from benefit data...`);
+          const benefitId = workflow.data.benefitId;
+          if (benefitId) {
+            const benefit = getBenefitById(benefitId);
+            if (benefit) {
+              caption = caption || generateBenefitCaption(benefit);
+              title = title || generateBenefitTitle(benefit);
+              console.log(`   ✅ Generated from benefit: ${benefit.title}`);
+            }
+          }
+
+          // Final fallback
+          if (!caption) {
+            caption = 'Learn about owner financing! 🏡';
+            console.log(`   ⚠️  Using generic fallback caption`);
+          }
+          if (!title) {
+            title = workflow.data.benefitTitle || 'Owner Finance Benefits';
+          }
+        }
+
+        // 4. Post to Late
         console.log(`   📱 Posting to Late...`);
         const { postToLate } = await import('../src/lib/late-api');
 
@@ -111,8 +138,8 @@ async function recoverBenefitWorkflows() {
 
         const postResult = await postToLate({
           videoUrl: publicVideoUrl,
-          caption: workflow.data.caption || 'Learn about owner financing! 🏡',
-          title: workflow.data.title || 'Owner Finance Benefits',
+          caption,
+          title,
           platforms: allPlatforms as any[],
           useQueue: false,
           brand: 'benefit'
@@ -121,11 +148,13 @@ async function recoverBenefitWorkflows() {
         if (postResult.success) {
           console.log(`   ✅ Posted to Late!`);
 
-          // 4. Mark as completed
+          // 5. Mark as completed and save caption/title
           await updateDoc(firestoreDoc(db, 'benefit_workflow_queue', workflow.id), {
             status: 'completed',
             finalVideoUrl: publicVideoUrl,
             latePostId: postResult.postId,
+            caption, // Save the generated caption
+            title,   // Save the generated title
             completedAt: Date.now(),
             updatedAt: Date.now()
           });

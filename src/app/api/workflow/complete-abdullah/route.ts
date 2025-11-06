@@ -87,11 +87,12 @@ export async function POST(request: NextRequest) {
       console.log(`   Script: ${video.script.substring(0, 80)}...`);
 
       try {
-        // Create workflow queue item
+        // Create workflow queue item with videoIndex
         const queueItem = await addWorkflowToQueue(
           `abdullah_daily_${Date.now()}_${i}`, // Unique article ID
           video.title,
-          'abdullah'
+          'abdullah',
+          i // Pass video index (0-4) for optimal time slot distribution
         );
 
         const workflowId = queueItem.id;

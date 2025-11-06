@@ -116,9 +116,7 @@ export async function POST(request: NextRequest) {
 
       console.log(`📝 Status set to "posting"`);
 
-      // Step 3: Post to Late API
-      const platforms = getBrandPlatforms(brand, false);
-
+      // Step 3: Get caption and title
       let caption: string;
       let title: string;
 

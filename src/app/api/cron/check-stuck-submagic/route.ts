@@ -695,6 +695,32 @@ async function executeFailsafe() {
 
                 const { postToLate } = await import('@/lib/late-api');
 
+                // Generate caption and title if missing (especially for benefit workflows)
+                let caption = workflow.caption;
+                let title = workflow.title;
+
+                if ((!caption || !title) && brand === 'benefit') {
+                  console.log(`   📝 Generating caption/title for benefit workflow...`);
+                  const benefitId = workflow.benefitId;
+                  if (benefitId) {
+                    const { getBenefitById, generateBenefitCaption, generateBenefitTitle } = await import('@/lib/benefit-content');
+                    const benefit = getBenefitById(benefitId);
+                    if (benefit) {
+                      caption = caption || generateBenefitCaption(benefit);
+                      title = title || generateBenefitTitle(benefit);
+                      console.log(`   ✅ Generated from benefit: ${benefit.title}`);
+                    }
+                  }
+                }
+
+                // Final fallbacks
+                if (!caption) {
+                  caption = 'Check out this video! 🔥';
+                }
+                if (!title) {
+                  title = workflow.benefitTitle || workflow.articleTitle || workflow.episodeTitle || 'Viral Video';
+                }
+
                 // Post to all platforms using queue
                 const allPlatforms = ['facebook', 'instagram', 'tiktok', 'youtube', 'linkedin', 'threads'] as any[];
                 if (brand === 'ownerfi') {
@@ -703,8 +729,8 @@ async function executeFailsafe() {
 
                 const postResult = await postToLate({
                   videoUrl: publicVideoUrl,
-                  caption: workflow.caption || 'Check out this video! 🔥',
-                  title: workflow.title || 'Viral Video',
+                  caption,
+                  title,
                   platforms: allPlatforms,
                   useQueue: false, // Direct posting, no queue  // Use Late's queue system
                   brand: brand
@@ -719,6 +745,8 @@ async function executeFailsafe() {
                     status: 'completed',
                     finalVideoUrl: publicVideoUrl,
                     latePostId: postResult.postId,
+                    caption, // Save the generated caption
+                    title,   // Save the generated title
                     completedAt: Date.now()
                   });
 

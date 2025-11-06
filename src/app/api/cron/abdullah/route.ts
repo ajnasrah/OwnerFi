@@ -81,25 +81,16 @@ export async function GET(request: NextRequest) {
     console.log(`   Script: ${script.script.substring(0, 80)}...`);
     console.log();
 
-    // Step 2: Create workflow queue item with videoIndex
+    // Step 2: Create workflow queue item
     console.log('📝 Step 2: Creating workflow...');
-
-    // Calculate video index (which post of the day this is: 0-4)
-    const { getWorkflowsCreatedToday } = await import('@/lib/feed-store-firestore');
-    const todayWorkflows = await getWorkflowsCreatedToday('abdullah');
-    const videoIndex = todayWorkflows.length; // 0-based index
-
-    console.log(`   This is video ${videoIndex + 1} of the day for abdullah`);
-
     const queueItem = await addWorkflowToQueue(
       `abdullah_${theme}_${Date.now()}`,
       script.title,
-      'abdullah',
-      videoIndex // Pass video index for optimal time slot distribution
+      'abdullah'
     );
 
     const workflowId = queueItem.id;
-    console.log(`   Workflow ID: ${workflowId} (videoIndex: ${videoIndex})`);
+    console.log(`   Workflow ID: ${workflowId}`);
 
     // Update with caption and title for webhooks
     await updateWorkflowStatus(workflowId, 'abdullah', {

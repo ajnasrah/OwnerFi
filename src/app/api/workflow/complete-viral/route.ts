@@ -95,22 +95,15 @@ export async function POST(request: NextRequest) {
 
     // Add to workflow queue with 'pending' status
     if (article.id) {
-      const { addWorkflowToQueue, getWorkflowsCreatedToday } = await import('@/lib/feed-store-firestore');
-
-      // Calculate video index (which post of the day this is: 0-4)
-      const todayWorkflows = await getWorkflowsCreatedToday(brand as 'carz' | 'ownerfi' | 'vassdistro' | 'podcast' | 'benefit' | 'abdullah');
-      const videoIndex = todayWorkflows.length; // 0-based index
-
-      console.log(`📊 This is video ${videoIndex + 1} of the day for ${brand}`);
+      const { addWorkflowToQueue } = await import('@/lib/feed-store-firestore');
 
       const queueItem = await addWorkflowToQueue(
         article.id,
         article.title,
-        brand as 'carz' | 'ownerfi' | 'vassdistro',
-        videoIndex // Pass video index
+        brand as 'carz' | 'ownerfi' | 'vassdistro'
       );
       workflowId = queueItem.id;
-      console.log(`📋 Added to workflow queue: ${workflowId} (videoIndex: ${videoIndex})`);
+      console.log(`📋 Added to workflow queue: ${workflowId}`);
     }
 
     // Step 2: Generate viral script with OpenAI

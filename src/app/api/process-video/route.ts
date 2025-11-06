@@ -136,40 +136,34 @@ export async function POST(request: NextRequest) {
         title = workflow.title || 'Viral Video';
       }
 
-      console.log(`📱 Scheduling posts to Late API with optimal platform timing...`);
+      console.log(`📱 Scheduling posts to Late API using queue system...`);
 
-      // Use optimal platform-specific scheduling based on videoIndex
-      const { scheduleVideoToAllPlatforms } = await import('@/lib/optimal-platform-scheduling');
+      // Use Late's queue system - no custom timing logic
+      const { postToLate } = await import('@/lib/late-api');
+      const { getBrandPlatforms } = await import('@/lib/brand-utils');
 
-      // Get videoIndex from workflow (defaults to 0 if not set)
-      const videoIndex = workflow.videoIndex ?? 0;
+      const platforms = getBrandPlatforms(brand, false);
+      console.log(`   Platforms: ${platforms.join(', ')}`);
 
-      console.log(`   Video index: ${videoIndex} (determines which time slots to use)`);
-
-      const postResult = await scheduleVideoToAllPlatforms(
-        publicVideoUrl,
+      const postResult = await postToLate({
+        videoUrl: publicVideoUrl,
         caption,
         title,
-        brand,
-        videoIndex // Determines which of the 3 optimal hours to use per platform
-      );
+        platforms: platforms as any[],
+        brand: brand as any,
+        useQueue: true, // Use Late's queue system
+        timezone: 'America/Chicago'
+      });
 
       if (postResult.success) {
-        // Collect all post IDs from scheduled posts
-        const postIds = postResult.scheduledPosts
-          .map(p => p.postId)
-          .filter(Boolean)
-          .join(', ');
-
-        const totalPlatforms = postResult.scheduledPosts.reduce((sum, p) => sum + p.platforms.length, 0);
-
-        console.log(`✅ Scheduled to ${totalPlatforms} platforms across ${postResult.totalScheduled} time slots`);
-        console.log(`   Post IDs: ${postIds}`);
+        console.log(`✅ Posted to Late queue successfully`);
+        console.log(`   Post ID: ${postResult.postId}`);
+        console.log(`   Scheduled for: ${postResult.scheduledFor}`);
 
         // Mark as completed
         await updateWorkflowForBrand(brand, workflowId, {
           status: 'completed',
-          latePostId: postIds,
+          latePostId: postResult.postId,
           completedAt: Date.now(),
         });
 
@@ -180,15 +174,13 @@ export async function POST(request: NextRequest) {
           success: true,
           workflowId,
           videoUrl: publicVideoUrl,
-          postIds: postIds,
-          totalPlatforms,
-          timeSlots: postResult.totalScheduled,
-          videoIndex,
+          postId: postResult.postId,
+          scheduledFor: postResult.scheduledFor,
+          platforms: postResult.platforms,
           processing_time_ms: duration,
         });
       } else {
-        const errorMsg = postResult.errors.join('; ') || 'Unknown error';
-        throw new Error(`Late posting failed: ${errorMsg}`);
+        throw new Error(`Late posting failed: ${postResult.error}`);
       }
 
     } catch (error) {

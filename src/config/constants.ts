@@ -21,7 +21,7 @@ export const TIMEOUTS = {
   EXTERNAL_API: 30_000, // 30 seconds
   HEYGEN_API: 30_000,
   SUBMAGIC_API: 30_000,
-  LATE_API: 120_000, // 120 seconds (2 min) - Late needs time to upload large videos to multiple platforms
+  LATE_API: 300_000, // 300 seconds (5 min) - Late needs time to upload large videos (50+ MB) to 6+ platforms
   OPENAI_API: 60_000, // 60 seconds for AI generation
   RSS_FETCH: 30_000, // 30 seconds for RSS feed fetching
   WEB_SCRAPE: 15_000, // 15 seconds for web scraping full articles

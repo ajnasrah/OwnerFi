@@ -333,6 +333,35 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
                     </div>
                   )}
 
+                  {/* Rental Estimate */}
+                  {property.rentZestimate && property.rentZestimate > 0 && (
+                    <div className="bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-200 rounded-2xl p-4">
+                      <h3 className="font-bold text-purple-900 mb-2 flex items-center gap-2 text-sm">
+                        <span>🏘️</span>
+                        <span>Investment Potential</span>
+                      </h3>
+                      <div className="space-y-2">
+                        <div>
+                          <div className="text-xs text-purple-700 mb-1">Est. Monthly Rent (Zillow)</div>
+                          <div className="text-2xl font-black text-purple-900">
+                            ${property.rentZestimate.toLocaleString()}/mo
+                          </div>
+                        </div>
+                        {property.monthlyPayment && property.rentZestimate > property.monthlyPayment && (
+                          <div className="bg-white/60 rounded-lg p-2 mt-2">
+                            <div className="text-xs text-purple-700 mb-1">Potential Monthly Cash Flow</div>
+                            <div className="text-lg font-bold text-green-600">
+                              +${(property.rentZestimate - property.monthlyPayment).toLocaleString()}/mo
+                            </div>
+                            <p className="text-[10px] text-purple-600 mt-1">
+                              Rent could cover mortgage + generate positive cash flow
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Monthly Payment Breakdown */}
                   <div className="bg-slate-50 rounded-2xl p-4">
                     <h3 className="font-bold text-slate-900 mb-3 flex items-center gap-2 text-sm">

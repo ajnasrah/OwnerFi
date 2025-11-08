@@ -141,13 +141,11 @@ async function main() {
   console.log('🔧 Recovering Stuck Submagic Workflows\n');
   console.log('═'.repeat(60));
 
-  const result = await getAdminDb();
-  if (!result || !result.adminDb) {
+  const adminDb = await getAdminDb();
+  if (!adminDb) {
     console.error('❌ Firebase Admin not initialized. Make sure FIREBASE_* env vars are set.');
     process.exit(1);
   }
-
-  const { adminDb } = result;
 
   const brands = [
     { name: 'benefit', collection: 'benefit_workflow_queue' },

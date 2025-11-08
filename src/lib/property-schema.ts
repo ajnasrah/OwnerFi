@@ -81,7 +81,8 @@ export interface PropertyListing {
   schoolRating?: number;               // School district rating
   
   // Market Data
-  estimatedValue?: number;             // Market value estimate
+  estimatedValue?: number;             // Market value estimate (Zestimate)
+  rentZestimate?: number;              // Rental value estimate from Zillow
   pricePerSqFt?: number;              // Price per square foot
   daysOnMarket?: number;               // Days since listed
   viewCount?: number;                  // Number of times viewed

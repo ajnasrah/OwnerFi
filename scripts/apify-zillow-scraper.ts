@@ -25,6 +25,8 @@ interface ApifyPropertyData {
   propertyType?: string;
   description?: string;
   images?: string[];
+  zestimate?: number;              // Zillow's home value estimate
+  rentZestimate?: number;          // Zillow's rental value estimate
   [key: string]: any;
 }
 
@@ -260,6 +262,8 @@ class ApifyZillowScraper {
       URL: property.url,
       Address: property.address || '',
       Price: property.price || '',
+      Zestimate: property.zestimate || '',
+      'Rent Zestimate': property.rentZestimate || '',
       Bedrooms: property.bedrooms || '',
       Bathrooms: property.bathrooms || '',
       'Living Area (sqft)': property.livingArea || '',
@@ -286,15 +290,17 @@ class ApifyZillowScraper {
     const outputDir = path.join(process.cwd(), 'apify-output');
 
     const headers = [
-      'URL', 'Address', 'Price', 'Bedrooms', 'Bathrooms',
-      'Living Area (sqft)', 'Lot Size (sqft)', 'Year Built',
-      'Property Type', 'Description'
+      'URL', 'Address', 'Price', 'Zestimate', 'Rent Zestimate',
+      'Bedrooms', 'Bathrooms', 'Living Area (sqft)', 'Lot Size (sqft)',
+      'Year Built', 'Property Type', 'Description'
     ];
 
     const rows = this.allResults.map(property => [
       property.url,
       property.address || '',
       property.price || '',
+      property.zestimate || '',
+      property.rentZestimate || '',
       property.bedrooms || '',
       property.bathrooms || '',
       property.livingArea || '',

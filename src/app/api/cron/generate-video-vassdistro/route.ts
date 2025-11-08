@@ -80,20 +80,36 @@ export async function GET(request: NextRequest) {
         const response = await startWorkflow(mockRequest as any);
         const data = await response.json();
 
+        // Log detailed response for debugging
+        if (response.status !== 200) {
+          console.error(`❌ VassDistro workflow failed with status ${response.status}:`);
+          console.error(`   Response:`, JSON.stringify(data, null, 2));
+        }
+
         results.push({
           brand: 'vassdistro',
           success: response.status === 200,
           workflowId: data.workflow_id,
-          article: vassdistroArticles[0].title.substring(0, 60)
+          article: vassdistroArticles[0].title.substring(0, 60),
+          error: response.status !== 200 ? (data.error || data.message || 'Unknown error') : undefined,
+          details: response.status !== 200 ? data.details : undefined
         });
 
-        console.log(`✅ VassDistro workflow triggered: ${data.workflow_id}`);
+        if (response.status === 200) {
+          console.log(`✅ VassDistro workflow triggered: ${data.workflow_id}`);
+        } else {
+          console.error(`❌ VassDistro workflow creation failed`);
+          console.error(`   Error: ${data.error || 'Unknown'}`);
+          console.error(`   Details: ${data.details || 'None'}`);
+        }
       } catch (error) {
         console.error('❌ VassDistro workflow error:', error);
+        console.error('   Stack:', error instanceof Error ? error.stack : 'No stack trace');
         results.push({
           brand: 'vassdistro',
           success: false,
-          error: error instanceof Error ? error.message : 'Unknown error'
+          error: error instanceof Error ? error.message : 'Unknown error',
+          stack: error instanceof Error ? error.stack : undefined
         });
       }
     } else {

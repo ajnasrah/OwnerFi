@@ -18,15 +18,13 @@ export async function GET(request: NextRequest) {
 
     console.log(`🔧 Recovering stuck Submagic workflows for ${brand}...`);
 
-    const result = await getAdminDb();
-    if (!result || !result.adminDb) {
+    const adminDb = await getAdminDb();
+    if (!adminDb) {
       return NextResponse.json({
         success: false,
         error: 'Firebase Admin not initialized'
       }, { status: 500 });
     }
-
-    const { adminDb } = result;
 
     const collections: Record<string, string> = {
       benefit: 'benefit_workflow_queue',
@@ -98,7 +96,8 @@ export async function GET(request: NextRequest) {
 
             if (videoUrl) {
               // Trigger webhook manually
-              const webhookResponse = await fetch(`https://ownerfi.ai/api/webhooks/submagic/${brandName}`, {
+              const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL || 'http://localhost:3000';
+              const webhookResponse = await fetch(`${baseUrl}/api/webhooks/submagic/${brandName}`, {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json'

@@ -118,14 +118,24 @@ export async function POST(request: NextRequest, context: RouteContext) {
       console.log(`   Video URL: ${event_data.url}`);
       console.log(`   Workflow ID: ${workflowId}`);
 
-      // Trigger Submagic processing ASYNCHRONOUSLY to avoid webhook timeout
-      // Store the promise so we can track it, but don't await to prevent webhook timeout
-      const submagicPromise = triggerSubmagicProcessing(
-        brand,
-        workflowId,
-        event_data.url,
-        workflow
-      ).catch(async err => {
+      // Trigger Submagic processing with timeout protection
+      // Wait up to 25 seconds for Submagic API call to complete
+      // This ensures we catch immediate failures but don't timeout the webhook
+      try {
+        await Promise.race([
+          triggerSubmagicProcessing(
+            brand,
+            workflowId,
+            event_data.url,
+            workflow
+          ),
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Submagic trigger timeout after 25s')), 25000)
+          )
+        ]);
+
+        console.log(`✅ [${brandConfig.displayName}] Submagic processing triggered successfully`);
+      } catch (err) {
         console.error(`❌ [${brandConfig.displayName}] Submagic trigger failed:`, err);
 
         // CRITICAL: Mark workflow as failed so it doesn't stay stuck forever
@@ -139,10 +149,15 @@ export async function POST(request: NextRequest, context: RouteContext) {
         } catch (updateErr) {
           console.error(`❌ Failed to update workflow status:`, updateErr);
         }
-      });
 
-      // Log that we've started the process
-      console.log(`📤 [${brandConfig.displayName}] Triggered Submagic processing for workflow ${workflowId}`);
+        // Return error response
+        return NextResponse.json({
+          success: false,
+          brand,
+          workflow_id: workflowId,
+          error: err instanceof Error ? err.message : 'Submagic trigger failed',
+        }, { status: 500 });
+      }
 
       const duration = Date.now() - startTime;
       console.log(`⏱️  [${brandConfig.displayName}] Webhook processed in ${duration}ms`);
@@ -216,26 +231,26 @@ async function getWorkflowForBrand(
   brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit' | 'property' | 'vassdistro' | 'abdullah',
   workflowId: string
 ): Promise<any | null> {
+  const { getAdminDb } = await import('@/lib/firebase-admin');
+  const adminDb = await getAdminDb();
+
   if (brand === 'podcast') {
-    const { getPodcastWorkflowById } = await import('@/lib/feed-store-firestore');
-    return await getPodcastWorkflowById(workflowId);
+    const docSnap = await adminDb.collection('podcast_workflow_queue').doc(workflowId).get();
+    return docSnap.exists ? docSnap.data() : null;
   } else if (brand === 'benefit') {
-    const { getBenefitWorkflowById } = await import('@/lib/feed-store-firestore');
-    return await getBenefitWorkflowById(workflowId);
+    const docSnap = await adminDb.collection('benefit_workflow_queue').doc(workflowId).get();
+    return docSnap.exists ? docSnap.data() : null;
   } else if (brand === 'property') {
-    const { db } = await import('@/lib/firebase');
-    const { doc, getDoc } = await import('firebase/firestore');
-    const docSnap = await getDoc(doc(db, 'property_videos', workflowId));
-    return docSnap.exists() ? docSnap.data() : null;
+    const docSnap = await adminDb.collection('property_videos').doc(workflowId).get();
+    return docSnap.exists ? docSnap.data() : null;
   } else if (brand === 'abdullah') {
-    const { db } = await import('@/lib/firebase');
-    const { doc, getDoc } = await import('firebase/firestore');
-    const docSnap = await getDoc(doc(db, 'abdullah_workflow_queue', workflowId));
-    return docSnap.exists() ? docSnap.data() : null;
+    const docSnap = await adminDb.collection('abdullah_workflow_queue').doc(workflowId).get();
+    return docSnap.exists ? docSnap.data() : null;
   } else {
-    const { getWorkflowById } = await import('@/lib/feed-store-firestore');
-    const result = await getWorkflowById(workflowId);
-    return result?.workflow || null;
+    // For carz, ownerfi, vassdistro
+    const collectionName = `${brand}_workflow_queue`;
+    const docSnap = await adminDb.collection(collectionName).doc(workflowId).get();
+    return docSnap.exists ? docSnap.data() : null;
   }
 }
 
@@ -247,26 +262,17 @@ async function updateWorkflowForBrand(
   workflowId: string,
   updates: Record<string, any>
 ): Promise<void> {
-  if (brand === 'podcast') {
-    const { updatePodcastWorkflow } = await import('@/lib/feed-store-firestore');
-    await updatePodcastWorkflow(workflowId, updates);
-  } else if (brand === 'benefit') {
-    const { updateBenefitWorkflow } = await import('@/lib/feed-store-firestore');
-    await updateBenefitWorkflow(workflowId, updates);
-  } else if (brand === 'property') {
-    const { updatePropertyVideo } = await import('@/lib/feed-store-firestore');
-    await updatePropertyVideo(workflowId, updates);
-  } else if (brand === 'abdullah') {
-    const { db } = await import('@/lib/firebase');
-    const { doc, updateDoc } = await import('firebase/firestore');
-    await updateDoc(doc(db, 'abdullah_workflow_queue', workflowId), {
-      ...updates,
-      updatedAt: Date.now()
-    });
-  } else {
-    const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
-    await updateWorkflowStatus(workflowId, brand, updates);
-  }
+  const { getAdminDb } = await import('@/lib/firebase-admin');
+  const adminDb = await getAdminDb();
+
+  const collectionName = brand === 'property'
+    ? 'property_videos'
+    : `${brand}_workflow_queue`;
+
+  await adminDb.collection(collectionName).doc(workflowId).update({
+    ...updates,
+    updatedAt: Date.now()
+  });
 }
 
 /**

@@ -431,7 +431,7 @@ export async function addWorkflowToQueue(
     retryCount: 0,
     createdAt: Date.now(),
     updatedAt: Date.now(),
-    videoIndex, // Add videoIndex (which post of the day: 0-4)
+    ...(videoIndex !== undefined && { videoIndex }), // Only include if defined (Firestore doesn't allow undefined)
   };
 
   const collectionName = getCollectionName('WORKFLOW_QUEUE', brand);

@@ -26,6 +26,8 @@ interface PropertyData {
   downPaymentAmount?: number;
   interestRate?: number;
   description?: string;
+  estimatedValue?: number;        // Zestimate
+  rentZestimate?: number;          // Rental value estimate
   [key: string]: any;
 }
 
@@ -80,6 +82,8 @@ export async function syncPropertyToGHL(property: PropertyData): Promise<{ succe
         { id: 'property_interest_rate', value: property.interestRate || 0 },
         { id: 'property_image_url', value: property.imageUrl || property.imageUrls?.[0] || '' },
         { id: 'property_id', value: property.id },
+        { id: 'property_zestimate', value: property.estimatedValue || 0 },
+        { id: 'property_rent_zestimate', value: property.rentZestimate || 0 },
       ]
     };
 

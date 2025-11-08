@@ -271,6 +271,8 @@ interface GHLPropertyPayload {
   interestRate?: number | string;
   monthlyPayment?: number | string;
   balloon?: number | string; // Years
+  zestimate?: number | string; // Zillow home value estimate
+  rentZestimate?: number | string; // Zillow rental estimate
 }
 
 // Helper function to safely parse numbers
@@ -395,7 +397,9 @@ export async function POST(request: NextRequest) {
       downPayment: request.headers.get('downpayment') || request.headers.get('downPayment') || bodyData.downPayment || bodyData.downPaymentPercent || '',
       interestRate: request.headers.get('interestrate') || request.headers.get('interestRate') || bodyData.interestRate || '',
       monthlyPayment: request.headers.get('monthlypayment') || request.headers.get('monthlyPayment') || bodyData.monthlyPayment || '',
-      balloon: request.headers.get('balloon') || bodyData.balloon || bodyData.balloonYears || ''
+      balloon: request.headers.get('balloon') || bodyData.balloon || bodyData.balloonYears || '',
+      zestimate: request.headers.get('zestimate') || request.headers.get('propertyZestimate') || bodyData.zestimate || bodyData.estimatedValue || '',
+      rentZestimate: request.headers.get('rentzestimate') || request.headers.get('rentZestimate') || request.headers.get('propertyRentZestimate') || bodyData.rentZestimate || ''
     };
 
     logInfo('GoHighLevel save property webhook parsed', {
@@ -555,6 +559,8 @@ export async function POST(request: NextRequest) {
     const bathrooms = Math.max(0, parseNumberField(payload.bathrooms));
     const squareFeet = Math.max(0, parseNumberField(payload.livingArea));
     const yearBuilt = parseNumberField(payload.yearBuilt);
+    const zestimate = parseNumberField(payload.zestimate);
+    const rentZestimate = parseNumberField(payload.rentZestimate);
 
     // Prepare property data for database
     const propertyData: any = {
@@ -583,6 +589,10 @@ export async function POST(request: NextRequest) {
       lotSize: normalizeLotSize(payload.lotSizes || ''),
       propertyType,
       description: sanitizeDescription(payload.description), // Sanitize description for safety
+
+      // Market Data
+      estimatedValue: zestimate > 0 ? zestimate : undefined,
+      rentZestimate: rentZestimate > 0 ? rentZestimate : undefined,
 
       // Financial Details - all calculated
       monthlyPayment: calculatedMonthlyPayment,

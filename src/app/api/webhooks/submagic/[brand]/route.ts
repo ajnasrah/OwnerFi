@@ -222,63 +222,50 @@ async function getWorkflowBySubmagicId(
   brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit' | 'property' | 'vassdistro' | 'abdullah',
   submagicProjectId: string
 ): Promise<{ workflowId: string; workflow: any } | null> {
+  const { getAdminDb } = await import('@/lib/firebase-admin');
+  const adminDb = await getAdminDb();
+
+  // Determine collection name
+  let collectionName: string;
   if (brand === 'podcast') {
-    const { findPodcastBySubmagicId } = await import('@/lib/feed-store-firestore');
-    return await findPodcastBySubmagicId(submagicProjectId);
+    collectionName = 'podcast_workflow_queue';
   } else if (brand === 'benefit') {
-    const { findBenefitBySubmagicId } = await import('@/lib/feed-store-firestore');
-    return await findBenefitBySubmagicId(submagicProjectId);
+    collectionName = 'benefit_workflow_queue';
   } else if (brand === 'property') {
-    // Property videos are stored in property_videos collection
-    const { getAdminDb } = await import('@/lib/firebase-admin');
-    const adminDb = await getAdminDb();
-    const propertyVideosSnapshot = await adminDb
-      .collection('property_videos')
-      .where('submagicProjectId', '==', submagicProjectId)
+    collectionName = 'property_videos';
+  } else if (brand === 'abdullah') {
+    collectionName = 'abdullah_workflow_queue';
+  } else {
+    collectionName = `${brand}_workflow_queue`;
+  }
+
+  // Try BOTH field names to handle legacy workflows
+  // First try submagicProjectId (standardized field)
+  let snapshot = await adminDb
+    .collection(collectionName)
+    .where('submagicProjectId', '==', submagicProjectId)
+    .limit(1)
+    .get();
+
+  // If not found, try legacy field name submagicVideoId
+  if (snapshot.empty) {
+    console.log(`   Trying legacy field submagicVideoId for brand ${brand}...`);
+    snapshot = await adminDb
+      .collection(collectionName)
+      .where('submagicVideoId', '==', submagicProjectId)
       .limit(1)
       .get();
-
-    if (!propertyVideosSnapshot.empty) {
-      const doc = propertyVideosSnapshot.docs[0];
-      return {
-        workflowId: doc.id,
-        workflow: doc.data()
-      };
-    }
-    return null;
-  } else if (brand === 'abdullah') {
-    // Abdullah workflows use client SDK
-    const { db } = await import('@/lib/firebase');
-    const { collection, query, where, getDocs, limit } = await import('firebase/firestore');
-    const q = query(
-      collection(db, 'abdullah_workflow_queue'),
-      where('submagicVideoId', '==', submagicProjectId),
-      limit(1)
-    );
-    const snapshot = await getDocs(q);
-
-    if (!snapshot.empty) {
-      const doc = snapshot.docs[0];
-      return {
-        workflowId: doc.id,
-        workflow: doc.data()
-      };
-    }
-    return null;
-  } else {
-    const { findWorkflowBySubmagicId } = await import('@/lib/feed-store-firestore');
-    const result = await findWorkflowBySubmagicId(submagicProjectId);
-
-    // Ensure the workflow belongs to the correct brand
-    if (result && result.brand === brand) {
-      return {
-        workflowId: result.workflowId,
-        workflow: result.workflow,
-      };
-    }
-
-    return null;
   }
+
+  if (!snapshot.empty) {
+    const doc = snapshot.docs[0];
+    return {
+      workflowId: doc.id,
+      workflow: doc.data()
+    };
+  }
+
+  return null;
 }
 
 /**

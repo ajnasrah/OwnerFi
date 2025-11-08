@@ -1,5 +1,5 @@
 // VassDistro Video Generation Cron Job
-// Runs 1 time daily (10am ET)
+// Runs 5 times daily (9am, 12pm, 3pm, 6pm, 9pm ET)
 // Takes top-rated unprocessed article and generates video
 
 import { NextRequest, NextResponse } from 'next/server';

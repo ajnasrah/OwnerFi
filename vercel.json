@@ -31,7 +31,7 @@
     },
     {
       "path": "/api/cron/generate-video-vassdistro",
-      "schedule": "0 10 * * *"
+      "schedule": "0 9,12,15,18,21 * * *"
     },
     {
       "path": "/api/benefit/cron",

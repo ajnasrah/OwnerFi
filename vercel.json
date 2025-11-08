@@ -43,19 +43,19 @@
     },
     {
       "path": "/api/cron/check-stuck-heygen",
-      "schedule": "*/10 * * * *"
+      "schedule": "*/30 14-23,0-4 * * *"
     },
     {
       "path": "/api/cron/check-stuck-submagic",
-      "schedule": "*/15 * * * *"
+      "schedule": "*/30 14-23,0-4 * * *"
     },
     {
       "path": "/api/cron/check-stuck-posting",
-      "schedule": "*/15 * * * *"
+      "schedule": "*/30 14-23,0-4 * * *"
     },
     {
       "path": "/api/cron/start-pending-workflows",
-      "schedule": "*/10 * * * *"
+      "schedule": "*/30 14-23,0-4 * * *"
     },
     {
       "path": "/api/cron/weekly-maintenance",

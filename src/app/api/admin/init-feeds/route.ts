@@ -32,8 +32,8 @@ export async function POST(request: NextRequest) {
         if (feedSnap.exists()) {
           // Reset lastFetched to 0 so it fetches immediately
           await feedRef.update({
-            lastFetched: 0,
-            ...feed // Update with latest config
+            ...feed,
+            lastFetched: 0 // MUST be after spread to ensure it overrides
           });
           console.log(`🔄 ${feed.id} - updated and reset`);
           updated++;

@@ -342,7 +342,7 @@ export async function uploadSubmagicVideo(
 
   console.log('☁️  Uploading to Cloudflare R2...');
 
-  // Upload to R2
+  // Upload to R2 with retry logic
   const { S3Client, PutObjectCommand } = await import('@aws-sdk/client-s3');
 
   const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
@@ -364,39 +364,76 @@ export async function uploadSubmagicVideo(
 
   const bucketName = process.env.R2_BUCKET_NAME || 'ownerfi-podcast-videos';
 
-  await r2Client.send(new PutObjectCommand({
-    Bucket: bucketName,
-    Key: fileName,
-    Body: buffer,
-    ContentType: 'video/mp4',
-    Metadata: {
-      'uploaded-at': new Date().toISOString(),
-      'source': 'submagic',
-      'auto-delete-after': new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString(), // 72 hours
-    },
-  }));
-
-  // Construct public URL
+  // Construct public URL (needed for verification)
   const publicUrl = process.env.R2_PUBLIC_URL
     ? `${process.env.R2_PUBLIC_URL}/${fileName}`
     : `https://pub-${accountId}.r2.dev/${fileName}`;
 
-  console.log(`✅ Uploaded to R2: ${publicUrl}`);
+  // Retry upload up to 3 times with verification
+  let uploadSuccess = false;
+  let lastUploadError: Error | undefined;
 
-  // Test URL accessibility (helps diagnose 401 errors)
-  try {
-    const testResponse = await fetch(publicUrl, { method: 'HEAD' });
-    if (!testResponse.ok) {
-      console.error(`⚠️  WARNING: R2 URL returned ${testResponse.status} ${testResponse.statusText}`);
-      console.error(`   URL: ${publicUrl}`);
-      console.error(`   This will cause Late.dev posting to fail!`);
-      console.error(`   Solution: Enable public access in Cloudflare R2 dashboard for bucket: ${bucketName}`);
-    } else {
-      console.log(`✅ R2 URL is publicly accessible`);
+  for (let uploadAttempt = 1; uploadAttempt <= 3; uploadAttempt++) {
+    try {
+      console.log(`   Upload attempt ${uploadAttempt}/3...`);
+
+      // Upload to R2
+      await r2Client.send(new PutObjectCommand({
+        Bucket: bucketName,
+        Key: fileName,
+        Body: buffer,
+        ContentType: 'video/mp4',
+        Metadata: {
+          'uploaded-at': new Date().toISOString(),
+          'source': 'submagic',
+          'auto-delete-after': new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString(), // 72 hours
+        },
+      }));
+
+      console.log(`   ✅ Upload completed, verifying accessibility...`);
+
+      // CRITICAL: Verify URL is publicly accessible
+      // Wait 2 seconds for R2 to propagate
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      const testResponse = await fetch(publicUrl, { method: 'HEAD' });
+
+      if (!testResponse.ok) {
+        throw new Error(
+          `R2 upload verification failed: ${testResponse.status} ${testResponse.statusText}. ` +
+          `URL ${publicUrl} is not publicly accessible. ` +
+          `This will cause Late.dev posting to fail. ` +
+          `Solution: Enable public access in Cloudflare R2 dashboard for bucket: ${bucketName}`
+        );
+      }
+
+      console.log(`   ✅ R2 URL verified publicly accessible: ${publicUrl}`);
+      uploadSuccess = true;
+      break; // Success - exit retry loop
+
+    } catch (error) {
+      lastUploadError = error instanceof Error ? error : new Error(String(error));
+      console.error(`   ❌ Upload attempt ${uploadAttempt} failed:`, lastUploadError.message);
+
+      // If this is the last attempt, throw the error
+      if (uploadAttempt === 3) {
+        throw new Error(
+          `Failed to upload and verify video to R2 after 3 attempts: ${lastUploadError.message}`
+        );
+      }
+
+      // Wait before retrying (exponential backoff: 3s, 6s)
+      const backoffMs = Math.pow(2, uploadAttempt) * 1500;
+      console.log(`   ⏳ Retrying upload in ${backoffMs / 1000}s...`);
+      await new Promise(resolve => setTimeout(resolve, backoffMs));
     }
-  } catch (testError) {
-    console.warn(`⚠️  Could not test R2 URL accessibility:`, testError);
   }
+
+  if (!uploadSuccess) {
+    throw new Error('R2 upload failed - this should never happen (retry logic failed)');
+  }
+
+  console.log(`✅ Video uploaded and verified: ${publicUrl}`);
 
   // Track R2 storage cost
   try {

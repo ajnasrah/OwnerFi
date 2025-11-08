@@ -49,24 +49,14 @@ async function downloadAndPostVideo(
   videoUrl: string,
   adminDb: any
 ) {
-  console.log(`   📥 Downloading video from: ${videoUrl.substring(0, 60)}...`);
+  console.log(`   📥 Downloading and uploading video...`);
 
-  // Download the video
-  const videoResponse = await fetch(videoUrl);
-  if (!videoResponse.ok) {
-    throw new Error(`Failed to download video: ${videoResponse.status}`);
-  }
-
-  const videoBuffer = await videoResponse.arrayBuffer();
-  const videoSize = videoBuffer.byteLength;
-  console.log(`   ✅ Downloaded ${(videoSize / 1024 / 1024).toFixed(2)} MB`);
-
-  // Upload to Firebase Storage
-  const { uploadVideoToStorage } = await import('../src/lib/video-storage');
+  // Upload to Firebase Storage using the video-storage utility
+  const { uploadSubmagicVideo } = await import('../src/lib/video-storage');
   console.log(`   📤 Uploading to Firebase Storage...`);
 
-  const storageUrl = await uploadVideoToStorage(
-    Buffer.from(videoBuffer),
+  const storageUrl = await uploadSubmagicVideo(
+    videoUrl,
     `benefit/${workflowId}.mp4`
   );
 

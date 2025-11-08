@@ -93,36 +93,72 @@ export async function POST(request: NextRequest, context: RouteContext) {
           throw new Error('Submagic API key not configured');
         }
 
-        const exportResponse = await fetch(`https://api.submagic.co/v1/projects/${submagicProjectId}/export`, {
-          method: 'POST',
-          headers: {
-            'x-api-key': SUBMAGIC_API_KEY,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            webhookUrl: brandConfig.webhooks.submagic // Webhook will be called again when export completes
-          })
-        });
+        // Retry logic for export trigger (max 3 attempts)
+        let exportResponse;
+        let exportError;
+        const maxRetries = 3;
 
-        if (!exportResponse.ok) {
-          const exportError = await exportResponse.text();
-          console.error(`❌ [${brandConfig.displayName}] Export trigger failed:`, exportError);
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+          try {
+            console.log(`   Attempt ${attempt}/${maxRetries} to trigger export...`);
 
-          // Update workflow to indicate export failed
-          await updateWorkflowForBrand(brand, workflowId, {
-            status: 'failed',
-            error: `Failed to trigger Submagic export: ${exportError}`,
-            failedAt: Date.now(),
-          });
+            exportResponse = await fetch(`https://api.submagic.co/v1/projects/${submagicProjectId}/export`, {
+              method: 'POST',
+              headers: {
+                'x-api-key': SUBMAGIC_API_KEY,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                webhookUrl: brandConfig.webhooks.submagic // Webhook will be called again when export completes
+              })
+            });
 
-          return NextResponse.json({
-            success: false,
-            brand,
-            projectId: submagicProjectId,
-            workflow_id: workflowId,
-            message: 'Export trigger failed',
-            error: exportError
-          }, { status: 500 });
+            if (exportResponse.ok) {
+              console.log(`✅ [${brandConfig.displayName}] Export triggered successfully on attempt ${attempt}`);
+              break; // Success - exit retry loop
+            }
+
+            exportError = await exportResponse.text();
+            console.warn(`⚠️  [${brandConfig.displayName}] Export trigger failed on attempt ${attempt}: ${exportError}`);
+
+            // If this was the last attempt, throw error
+            if (attempt === maxRetries) {
+              throw new Error(`Export trigger failed after ${maxRetries} attempts: ${exportError}`);
+            }
+
+            // Wait before retrying (exponential backoff: 2s, 4s, 8s)
+            const delayMs = Math.pow(2, attempt) * 1000;
+            console.log(`   Waiting ${delayMs}ms before retry...`);
+            await new Promise(resolve => setTimeout(resolve, delayMs));
+
+          } catch (err) {
+            exportError = err instanceof Error ? err.message : 'Unknown error';
+            console.error(`❌ [${brandConfig.displayName}] Export trigger error on attempt ${attempt}:`, exportError);
+
+            // If this was the last attempt, update workflow as failed but keep it retryable
+            if (attempt === maxRetries) {
+              // Update workflow to indicate export failed (but keep submagic data for retry)
+              await updateWorkflowForBrand(brand, workflowId, {
+                status: 'export_failed',
+                error: `Failed to trigger Submagic export after ${maxRetries} attempts: ${exportError}`,
+                exportRetries: (workflow.exportRetries || 0) + 1,
+                lastExportAttempt: Date.now(),
+              });
+
+              return NextResponse.json({
+                success: false,
+                brand,
+                projectId: submagicProjectId,
+                workflow_id: workflowId,
+                message: `Export trigger failed after ${maxRetries} attempts - workflow can be retried`,
+                error: exportError
+              }, { status: 500 });
+            }
+
+            // Wait before retrying
+            const delayMs = Math.pow(2, attempt) * 1000;
+            await new Promise(resolve => setTimeout(resolve, delayMs));
+          }
         }
 
         console.log(`✅ [${brandConfig.displayName}] Export triggered - webhook will fire when export completes`);

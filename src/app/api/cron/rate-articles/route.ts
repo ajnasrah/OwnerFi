@@ -182,9 +182,9 @@ async function rateAndMergeBrand(brand: 'carz' | 'ownerfi' | 'vassdistro') {
 
   console.log(`📊 [${brand}] Top 20 scores: ${allRatedArticles.slice(0, 20).map(a => a.qualityScore).join(', ')}`);
 
-  // Step 5: Keep top 20 (increased from 10 for better buffer), delete the rest
-  const toKeep = allRatedArticles.slice(0, 20);
-  const toDelete = allRatedArticles.slice(20);
+  // Step 5: Keep top 50 (increased from 20 for larger buffer to prevent running out), delete the rest
+  const toKeep = allRatedArticles.slice(0, 50);
+  const toDelete = allRatedArticles.slice(50);
 
   if (toDelete.length > 0) {
     console.log(`🧹 [${brand}] Deleting ${toDelete.length} low-quality articles...`);

@@ -651,11 +651,16 @@ export async function POST(request: NextRequest) {
       propertyData.imageEnhancedAt = cleanedData.imageEnhancedAt;
     }
 
+    // Strip undefined values to prevent Firestore errors
+    const cleanPropertyData = Object.fromEntries(
+      Object.entries(propertyData).filter(([_, value]) => value !== undefined)
+    );
+
     // Save to database
     try {
       await setDoc(
         doc(db, 'properties', propertyId),
-        propertyData,
+        cleanPropertyData,
         { merge: isUpdate } // Merge for updates, overwrite for new
       );
 

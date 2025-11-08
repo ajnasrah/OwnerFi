@@ -297,6 +297,27 @@ async function triggerSubmagicProcessing(
     // R2 upload will happen AFTER Submagic completes (in Submagic webhook)
     console.log(`✨ [${brandConfig.displayName}] Sending HeyGen video to Submagic...`);
 
+    // Validate HeyGen video URL before sending to Submagic
+    if (!heygenVideoUrl || typeof heygenVideoUrl !== 'string' || heygenVideoUrl.trim().length === 0) {
+      throw new Error(`Invalid HeyGen video URL: ${heygenVideoUrl}`);
+    }
+
+    // Check if URL is accessible
+    try {
+      console.log(`🔍 [${brandConfig.displayName}] Validating HeyGen video URL...`);
+      const headResponse = await fetch(heygenVideoUrl, { method: 'HEAD' });
+      if (!headResponse.ok) {
+        console.warn(`⚠️  [${brandConfig.displayName}] HeyGen video URL returned ${headResponse.status}`);
+      } else {
+        const contentType = headResponse.headers.get('content-type');
+        const contentLength = headResponse.headers.get('content-length');
+        console.log(`✅ [${brandConfig.displayName}] Video URL valid - Type: ${contentType}, Size: ${contentLength} bytes`);
+      }
+    } catch (urlCheckError) {
+      console.warn(`⚠️  [${brandConfig.displayName}] Could not validate video URL:`, urlCheckError);
+      // Don't fail the workflow - URL might be temporarily unavailable
+    }
+
     // Save HeyGen URL to workflow for reference
     await updateWorkflowForBrand(brand, workflowId, {
       heygenVideoUrl: heygenVideoUrl

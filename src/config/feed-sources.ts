@@ -1,11 +1,11 @@
 // RSS Feed Source Configuration - VERIFIED WORKING FEEDS 2025
 // All feeds tested and verified with excellent content quality
-// Total: 14 feeds (VassDistro: 6, OwnerFi: 5, Carz: 3)
+// Total: 25 feeds (VassDistro: 6, OwnerFi: 15, Carz: 4)
 
 import { addFeedSource as addFeedSourceFirestore, type FeedSource, getAllFeedSources } from '@/lib/feed-store-firestore';
 
 /**
- * OWNERFI FEEDS (5 working feeds - all excellent quality with full content)
+ * OWNERFI FEEDS (15 working feeds - all excellent quality with full content)
  */
 export const OWNERFI_FEEDS: Omit<FeedSource, 'articlesProcessed'>[] = [
   {
@@ -52,6 +52,96 @@ export const OWNERFI_FEEDS: Omit<FeedSource, 'articlesProcessed'>[] = [
     subcategory: 'market',
     enabled: true,
     fetchInterval: 60
+  },
+  {
+    id: 'ownerfi-inman',
+    name: 'Inman - Real Estate News',
+    url: 'https://www.inman.com/feed/',
+    category: 'ownerfi',
+    subcategory: 'market',
+    enabled: true,
+    fetchInterval: 60
+  },
+  {
+    id: 'ownerfi-mpamag',
+    name: 'Mortgage Professional America',
+    url: 'https://www.mpamag.com/us/rss',
+    category: 'ownerfi',
+    subcategory: 'mortgage',
+    enabled: true,
+    fetchInterval: 120
+  },
+  {
+    id: 'ownerfi-bankrate-mortgages',
+    name: 'Bankrate - Mortgage News',
+    url: 'https://www.bankrate.com/feeds/rss/mortgage.xml',
+    category: 'ownerfi',
+    subcategory: 'mortgage',
+    enabled: true,
+    fetchInterval: 120
+  },
+  {
+    id: 'ownerfi-forbes-realestate',
+    name: 'Forbes - Real Estate',
+    url: 'https://www.forbes.com/real-estate/feed/',
+    category: 'ownerfi',
+    subcategory: 'market',
+    enabled: true,
+    fetchInterval: 120
+  },
+  {
+    id: 'ownerfi-housingwire-reverse',
+    name: 'HousingWire - Reverse Mortgage',
+    url: 'https://www.housingwire.com/articles/category/reverse-mortgage/feed/',
+    category: 'ownerfi',
+    subcategory: 'mortgage',
+    enabled: true,
+    fetchInterval: 120
+  },
+  {
+    id: 'ownerfi-mpamag-brokers',
+    name: 'MPA - Mortgage Brokers',
+    url: 'https://www.mpamag.com/us/mortgage-brokers/rss',
+    category: 'ownerfi',
+    subcategory: 'mortgage',
+    enabled: true,
+    fetchInterval: 120
+  },
+  {
+    id: 'ownerfi-globe-st',
+    name: 'GlobeSt - Real Estate News',
+    url: 'https://www.globest.com/feed/',
+    category: 'ownerfi',
+    subcategory: 'market',
+    enabled: true,
+    fetchInterval: 120
+  },
+  {
+    id: 'ownerfi-national-mortgage',
+    name: 'National Mortgage Professional',
+    url: 'https://nationalmortgageprofessional.com/rss.xml',
+    category: 'ownerfi',
+    subcategory: 'mortgage',
+    enabled: true,
+    fetchInterval: 120
+  },
+  {
+    id: 'ownerfi-apartment-therapy',
+    name: 'Apartment Therapy - Home News',
+    url: 'https://www.apartmenttherapy.com/main.rss',
+    category: 'ownerfi',
+    subcategory: 'market',
+    enabled: true,
+    fetchInterval: 120
+  },
+  {
+    id: 'ownerfi-credible',
+    name: 'Credible - Mortgage & Home Buying',
+    url: 'https://www.credible.com/blog/feed/',
+    category: 'ownerfi',
+    subcategory: 'mortgage',
+    enabled: true,
+    fetchInterval: 120
   }
 ];
 

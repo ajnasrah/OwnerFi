@@ -91,13 +91,19 @@ async function downloadAndPostVideo(
   console.log(`   📅 Scheduled for: ${lateResult.scheduledFor}`);
 
   // Update workflow to completed
-  await adminDb.collection('benefit_workflow_queue').doc(workflowId).update({
+  const updateData: any = {
     status: 'completed',
     latePostId: lateResult.postId,
-    scheduledFor: lateResult.scheduledFor,
     completedAt: Date.now(),
     updatedAt: Date.now()
-  });
+  };
+
+  // Only add scheduledFor if it exists
+  if (lateResult.scheduledFor) {
+    updateData.scheduledFor = lateResult.scheduledFor;
+  }
+
+  await adminDb.collection('benefit_workflow_queue').doc(workflowId).update(updateData);
 
   console.log(`   ✅ Workflow completed!\n`);
 }

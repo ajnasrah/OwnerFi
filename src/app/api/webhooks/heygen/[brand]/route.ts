@@ -118,6 +118,19 @@ export async function POST(request: NextRequest, context: RouteContext) {
       console.log(`   Video URL: ${event_data.url}`);
       console.log(`   Workflow ID: ${workflowId}`);
 
+      // CRITICAL FIX: Save HeyGen video URL IMMEDIATELY before doing anything else
+      // This ensures we can recover even if Submagic trigger fails
+      try {
+        await updateWorkflowForBrand(brand, workflowId, {
+          heygenVideoUrl: event_data.url,
+          heygenCompletedAt: Date.now()
+        });
+        console.log(`💾 [${brandConfig.displayName}] HeyGen video URL saved to workflow (enables recovery if Submagic fails)`);
+      } catch (saveError) {
+        console.error(`❌ [${brandConfig.displayName}] CRITICAL: Failed to save HeyGen URL:`, saveError);
+        // Don't fail the webhook - try to continue anyway
+      }
+
       // Trigger Submagic processing with timeout protection
       // Wait up to 25 seconds for Submagic API call to complete
       // This ensures we catch immediate failures but don't timeout the webhook
@@ -139,13 +152,14 @@ export async function POST(request: NextRequest, context: RouteContext) {
         console.error(`❌ [${brandConfig.displayName}] Submagic trigger failed:`, err);
 
         // CRITICAL: Mark workflow as failed so it doesn't stay stuck forever
+        // NOTE: heygenVideoUrl was already saved above, so recovery is possible via scripts
         try {
           await updateWorkflowForBrand(brand, workflowId, {
             status: 'failed',
             error: `Submagic trigger failed: ${err instanceof Error ? err.message : 'Unknown error'}`,
             failedAt: Date.now()
           });
-          console.log(`✅ Marked workflow ${workflowId} as failed due to Submagic error`);
+          console.log(`✅ Marked workflow ${workflowId} as failed due to Submagic error (recoverable - HeyGen URL saved)`);
         } catch (updateErr) {
           console.error(`❌ Failed to update workflow status:`, updateErr);
         }

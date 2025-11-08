@@ -31,13 +31,13 @@
 ### Monitoring & Recovery Crons
 | Cron Job | Schedule | Per Day | Per Month | Description |
 |----------|----------|---------|-----------|-------------|
-| `/api/cron/check-stuck-heygen` | `*/30 * * * *` | 48 | **1,440** | Check stuck HeyGen videos (every 30 min) ✅ |
-| `/api/cron/check-stuck-submagic` | `*/30 * * * *` | 48 | **1,440** | Check stuck Submagic captions (every 30 min) ✅ |
-| `/api/cron/check-stuck-posting` | `*/30 * * * *` | 48 | **1,440** | Check stuck social posts (every 30 min) ✅ |
-| `/api/cron/start-pending-workflows` | `*/30 * * * *` | 48 | **1,440** | Start pending workflows (every 30 min) ✅ |
+| `/api/cron/check-stuck-heygen` | `*/30 14-23,0-4 * * *` | 28 | **840** | Check stuck HeyGen videos (every 30 min, 8am-10pm CST) ✅ |
+| `/api/cron/check-stuck-submagic` | `*/30 14-23,0-4 * * *` | 28 | **840** | Check stuck Submagic captions (every 30 min, 8am-10pm CST) ✅ |
+| `/api/cron/check-stuck-posting` | `*/30 14-23,0-4 * * *` | 28 | **840** | Check stuck social posts (every 30 min, 8am-10pm CST) ✅ |
+| `/api/cron/start-pending-workflows` | `*/30 14-23,0-4 * * *` | 28 | **840** | Start pending workflows (every 30 min, 8am-10pm CST) ✅ |
 | `/api/benefit/workflow/auto-retry` | `0 */2 * * *` | 12 | **360** | Auto-retry failed benefit workflows (every 2 hours) |
 
-**Monitoring & Recovery Subtotal:** 6,120 executions/month (was 14,760 - **saved 8,640!**)
+**Monitoring & Recovery Subtotal:** 3,720 executions/month (was 14,760 - **saved 11,040!**)
 
 ---
 
@@ -56,21 +56,21 @@
 
 | Category | Executions/Month | Percentage | Change |
 |----------|------------------|------------|--------|
-| **Monitoring & Recovery** | 6,120 | 81.4% | ⬇️ -8,640 |
-| **Video Generation** | 900 | 12.0% | - |
-| **Content Management** | 390 | 5.2% | - |
-| **Maintenance & Cleanup** | 64 | 0.9% | - |
-| **TOTAL** | **7,474** | 100% | ⬇️ **-53.6%** |
+| **Monitoring & Recovery** | 3,720 | 73.7% | ⬇️ -11,040 |
+| **Video Generation** | 900 | 17.8% | - |
+| **Content Management** | 390 | 7.7% | - |
+| **Maintenance & Cleanup** | 64 | 1.3% | - |
+| **TOTAL** | **5,074** | 100% | ⬇️ **-68.5%** |
 
 ---
 
 ## Key Insights
 
 ### Highest Frequency Crons (Most Executions)
-1. 🔄 **check-stuck-heygen** - 1,440/month (every 30 minutes) ✅ Reduced
-2. 🔄 **start-pending-workflows** - 1,440/month (every 30 minutes) ✅ Reduced
-3. 🔄 **check-stuck-submagic** - 1,440/month (every 30 minutes) ✅ Reduced
-4. 🔄 **check-stuck-posting** - 1,440/month (every 30 minutes) ✅ Reduced
+1. 🔄 **check-stuck-heygen** - 840/month (every 30 min, 8am-10pm CST) ✅ Optimized
+2. 🔄 **start-pending-workflows** - 840/month (every 30 min, 8am-10pm CST) ✅ Optimized
+3. 🔄 **check-stuck-submagic** - 840/month (every 30 min, 8am-10pm CST) ✅ Optimized
+4. 🔄 **check-stuck-posting** - 840/month (every 30 min, 8am-10pm CST) ✅ Optimized
 
 ### Video Generation Breakdown
 - **6 brands** generating videos 5x daily each
@@ -84,11 +84,17 @@
 
 ### ✅ Optimization Applied (January 2025)
 1. **Monitoring frequency reduced** from 10-15 min → 30 min
-   - **Saved 8,640 executions/month (53.6% reduction)**
-   - Trade-off: Stuck workflows detected within 30 min instead of 10-15 min
-   - Impact: Minimal - 30 min detection window is acceptable for most issues
-2. **Weekly maintenance** is very light (only 4/month)
-3. **Video generation** is already optimized at 5x daily per brand
+   - **Time-limited** to 8am-10pm CST (14 hours/day instead of 24 hours)
+   - **Saved 11,040 executions/month (68.5% reduction)**
+   - Trade-off:
+     - Stuck workflows detected within 30 min instead of 10-15 min
+     - No monitoring 10pm-8am CST (off-peak hours)
+   - Impact: Minimal - most content creation happens during business hours
+2. **Monitoring window:** 14 hours/day (8am-10pm CST)
+   - Covers all video generation times (9am, 12pm, 3pm, 6pm, 9pm)
+   - Allows overnight workflows to complete without intervention
+3. **Weekly maintenance** is very light (only 4/month)
+4. **Video generation** is already optimized at 5x daily per brand
 
 ---
 
@@ -116,16 +122,20 @@
 - Monthly monitoring overhead: 14,760 executions
 
 ### After Optimization (Current)
-- Total executions: **7,474/month** ⬇️ **-53.6%**
-- Monitoring frequency: Every 30 minutes ✅
-- Monthly monitoring overhead: 6,120 executions
-- **Saved: 8,640 executions/month**
+- Total executions: **5,074/month** ⬇️ **-68.5%**
+- Monitoring frequency: Every 30 minutes (8am-10pm CST only) ✅
+- Monitoring hours: 14 hours/day (instead of 24)
+- Monthly monitoring overhead: 3,720 executions
+- **Saved: 11,040 executions/month**
 
 ### Impact Assessment
-✅ **Cost savings:** ~54% reduction in cron executions
-✅ **Acceptable trade-off:** 30-min detection window vs 10-15 min
-✅ **Reliability maintained:** Still checking every 30 min
-✅ **Resource efficiency:** Reduced load on Vercel infrastructure
+✅ **Cost savings:** ~68.5% reduction in cron executions
+✅ **Acceptable trade-off:**
+   - 30-min detection window vs 10-15 min
+   - No monitoring during off-peak hours (10pm-8am CST)
+✅ **Reliability maintained:** Active monitoring during all video generation times
+✅ **Resource efficiency:** Massive reduction in Vercel infrastructure load
+✅ **Business hours coverage:** All video generation happens during monitored hours
 
 ---
 

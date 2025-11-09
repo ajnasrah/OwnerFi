@@ -8,12 +8,13 @@ import { ERROR_MESSAGES } from '@/config/constants';
 const LATE_BASE_URL = 'https://getlate.dev/api/v1';
 
 // Late API credentials - use getters to read at runtime, not at module load time
-const getLateApiKey = () => process.env.LATE_API_KEY;
-const getLateOwnerfiProfileId = () => process.env.LATE_OWNERFI_PROFILE_ID;
-const getLateCarzProfileId = () => process.env.LATE_CARZ_PROFILE_ID;
-const getLatePodcastProfileId = () => process.env.LATE_PODCAST_PROFILE_ID;
-const getLateVassDistroProfileId = () => process.env.LATE_VASSDISTRO_PROFILE_ID;
-const getLateAbdullahProfileId = () => process.env.LATE_ABDULLAH_PROFILE_ID;
+// Trim to remove any trailing newlines or whitespace
+const getLateApiKey = () => process.env.LATE_API_KEY?.trim();
+const getLateOwnerfiProfileId = () => process.env.LATE_OWNERFI_PROFILE_ID?.trim();
+const getLateCarzProfileId = () => process.env.LATE_CARZ_PROFILE_ID?.trim();
+const getLatePodcastProfileId = () => process.env.LATE_PODCAST_PROFILE_ID?.trim();
+const getLateVassDistroProfileId = () => process.env.LATE_VASSDISTRO_PROFILE_ID?.trim();
+const getLateAbdullahProfileId = () => process.env.LATE_ABDULLAH_PROFILE_ID?.trim();
 
 export interface LatePostRequest {
   videoUrl: string;

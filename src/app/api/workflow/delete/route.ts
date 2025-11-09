@@ -1,26 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
 import { deleteDoc, doc } from 'firebase/firestore';
-import { getCollectionName } from '@/lib/feed-store-firestore';
 
 export async function DELETE(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const workflowId = searchParams.get('workflowId');
-    const brand = searchParams.get('brand') as 'carz' | 'ownerfi' | 'podcast';
+    const brand = searchParams.get('brand');
 
     console.log('Delete workflow request:', { workflowId, brand });
 
     if (!workflowId || !brand) {
       return NextResponse.json(
         { error: 'Missing workflowId or brand parameter' },
-        { status: 400 }
-      );
-    }
-
-    if (brand !== 'carz' && brand !== 'ownerfi' && brand !== 'podcast') {
-      return NextResponse.json(
-        { error: 'Invalid brand. Must be "carz", "ownerfi", or "podcast"' },
         { status: 400 }
       );
     }
@@ -33,12 +25,24 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Get the collection name for the specific brand/type
-    let collectionName: string;
-    if (brand === 'podcast') {
-      collectionName = 'podcast_workflow_queue';
-    } else {
-      collectionName = getCollectionName('WORKFLOW_QUEUE', brand);
+    // Map brand to collection name
+    const collectionMap: Record<string, string> = {
+      'carz': 'carz_workflow_queue',
+      'ownerfi': 'ownerfi_workflow_queue',
+      'podcast': 'podcast_workflow_queue',
+      'benefit': 'benefit_workflow_queue',
+      'property': 'property_videos',
+      'vassdistro': 'vassdistro_workflow_queue',
+      'abdullah': 'abdullah_workflow_queue',
+    };
+
+    const collectionName = collectionMap[brand];
+
+    if (!collectionName) {
+      return NextResponse.json(
+        { error: `Invalid brand: "${brand}". Must be one of: carz, ownerfi, podcast, benefit, property, vassdistro, abdullah` },
+        { status: 400 }
+      );
     }
 
     console.log('Deleting from collection:', collectionName);

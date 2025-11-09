@@ -24,14 +24,17 @@ export async function POST(request: NextRequest) {
 
     // Get workflow data
     const { getWorkflowById, updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
-    const workflow = await getWorkflowById(workflowId, validatedBrand);
+    const result = await getWorkflowById(workflowId);
 
-    if (!workflow) {
+    if (!result) {
       return NextResponse.json(
         { success: false, error: 'Workflow not found' },
         { status: 404 }
       );
     }
+
+    // Unwrap the workflow object
+    const workflow = result.workflow;
 
     // Check if we have the HeyGen video URL
     const finalVideoUrl = workflow.heygenVideoR2Url || workflow.heygenVideoUrl;

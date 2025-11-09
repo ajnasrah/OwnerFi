@@ -120,6 +120,13 @@ export async function POST(request: NextRequest) {
       let caption: string;
       let title: string;
 
+      // DEBUG: Log what we have in the workflow
+      console.log(`🔍 DEBUG: Workflow caption data:`);
+      console.log(`   workflow.caption exists: ${!!workflow.caption}`);
+      console.log(`   workflow.caption value: ${workflow.caption ? `"${workflow.caption.substring(0, 100)}..."` : 'UNDEFINED'}`);
+      console.log(`   workflow.title exists: ${!!workflow.title}`);
+      console.log(`   workflow.title value: ${workflow.title || 'UNDEFINED'}`);
+
       if (brand === 'podcast') {
         caption = workflow.episodeTitle || 'New Podcast Episode';
         title = `Episode #${workflow.episodeNumber}: ${workflow.episodeTitle || 'New Episode'}`;
@@ -146,6 +153,9 @@ export async function POST(request: NextRequest) {
         caption = workflow.caption || 'Check out this video! 🔥';
         title = workflow.title || 'Viral Video';
       }
+
+      console.log(`📝 Final caption being sent to Late: "${caption.substring(0, 100)}..."`);
+      console.log(`📝 Final title being sent to Late: "${title}"`)
 
       console.log(`📱 Scheduling posts to Late API using queue system...`);
 
@@ -241,7 +251,9 @@ async function getWorkflowForBrand(
     return docSnap.exists() ? docSnap.data() : null;
   } else {
     const { getWorkflowById } = await import('@/lib/feed-store-firestore');
-    return await getWorkflowById(workflowId, brand);
+    const result = await getWorkflowById(workflowId);
+    // getWorkflowById returns { workflow, brand }, so unwrap it
+    return result ? result.workflow : null;
   }
 }
 

@@ -257,6 +257,17 @@ Disclaimer: "For entertainment and reflection only."`
     // Parse the response into structured Q&A pairs
     const qaPairs = this.parseQAPairs(response, questionsCount);
 
+    // Validate parsing succeeded
+    if (qaPairs.length === 0) {
+      console.error('❌ Failed to parse Q&A pairs from OpenAI response:');
+      console.error(response);
+      throw new Error(`Failed to parse Q&A pairs from OpenAI. Expected ${questionsCount} pairs but got 0. Response format may be incorrect.`);
+    }
+
+    if (qaPairs.length < questionsCount) {
+      console.warn(`⚠️ Parsed ${qaPairs.length} Q&A pairs but expected ${questionsCount}`);
+    }
+
     // Generate full dialogue for HeyGen TTS (concatenate all Q&A pairs)
     const fullDialogue = qaPairs.map(pair =>
       `${pair.question} ${pair.answer}`
@@ -338,46 +349,89 @@ CTA: [Natural follow prompt under 8 words]`;
    */
   private parseQAPairs(response: string, expectedCount: number): QAPair[] {
     const pairs: QAPair[] = [];
-    const lines = response.split('\n').filter(line => line.trim());
 
+    console.log('🔍 Parsing OpenAI response for Q&A pairs...');
+    console.log(`   Response length: ${response.length} chars`);
+
+    // Method 1: Line-by-line parsing
+    const lines = response.split('\n').filter(line => line.trim());
     let currentQuestion = '';
+    let currentAnswer = '';
 
     for (const line of lines) {
       const trimmed = line.trim();
 
       // Match Q1:, Q2:, etc. OR just Q:
       if (/^Q(\d+)?:/i.test(trimmed)) {
+        // Save previous pair if we have one
+        if (currentQuestion && currentAnswer) {
+          pairs.push({ question: currentQuestion, answer: currentAnswer });
+          currentAnswer = '';
+        }
         currentQuestion = trimmed.replace(/^Q(\d+)?:\s*/i, '').trim();
       }
       // Match A1:, A2:, etc. OR just A:
       else if (/^A(\d+)?:/i.test(trimmed) && currentQuestion) {
-        const answer = trimmed.replace(/^A(\d+)?:\s*/i, '').trim();
-        pairs.push({ question: currentQuestion, answer });
-        currentQuestion = '';
+        const answerText = trimmed.replace(/^A(\d+)?:\s*/i, '').trim();
+        // Handle multiline answers (collect until next marker)
+        currentAnswer = answerText;
       }
-    }
-
-    // Fallback: if parsing failed, try splitting by Q/A markers
-    if (pairs.length === 0) {
-      console.warn('Primary parsing failed, trying fallback parser...');
-      const sections = response.split(/Q(\d+)?:|A(\d+)?:/i).filter(s => s.trim() && !/^\d+$/.test(s.trim()));
-      for (let i = 0; i < sections.length - 1; i += 2) {
-        if (sections[i] && sections[i + 1]) {
-          pairs.push({
-            question: sections[i].trim(),
-            answer: sections[i + 1].trim()
-          });
+      // Skip Takeaway and CTA lines
+      else if (/^(Takeaway|CTA|Hashtags|Disclaimer):/i.test(trimmed)) {
+        // Save the current pair if complete
+        if (currentQuestion && currentAnswer) {
+          pairs.push({ question: currentQuestion, answer: currentAnswer });
+          currentQuestion = '';
+          currentAnswer = '';
         }
       }
+      // Continue multiline answer
+      else if (currentAnswer && !trimmed.startsWith('Q') && !trimmed.startsWith('A')) {
+        currentAnswer += ' ' + trimmed;
+      }
+    }
+
+    // Save last pair if exists
+    if (currentQuestion && currentAnswer) {
+      pairs.push({ question: currentQuestion, answer: currentAnswer });
+    }
+
+    console.log(`   Method 1 found ${pairs.length} pairs`);
+
+    // Method 2: Regex-based fallback
+    if (pairs.length === 0) {
+      console.warn('⚠️ Method 1 failed, trying regex-based parsing...');
+
+      // Try to extract Q/A pairs using more flexible regex
+      const qPattern = /Q(?:\d+)?:\s*([^\n]+(?:\n(?![QA]\d*:)[^\n]+)*)/gi;
+      const aPattern = /A(?:\d+)?:\s*([^\n]+(?:\n(?![QATakeaway])[^\n]+)*)/gi;
+
+      const questions = [...response.matchAll(qPattern)].map(m => m[1].trim());
+      const answers = [...response.matchAll(aPattern)].map(m => m[1].trim());
+
+      console.log(`   Found ${questions.length} questions, ${answers.length} answers`);
+
+      const minLength = Math.min(questions.length, answers.length);
+      for (let i = 0; i < minLength; i++) {
+        pairs.push({
+          question: questions[i],
+          answer: answers[i]
+        });
+      }
     }
 
     if (pairs.length === 0) {
-      console.error('❌ Failed to parse any Q&A pairs from OpenAI response');
-      console.error('Response:', response.substring(0, 500));
+      console.error('❌ All parsing methods failed');
+      console.error('First 800 chars of response:', response.substring(0, 800));
+    } else {
+      console.log(`✅ Successfully parsed ${pairs.length} Q&A pairs`);
+      pairs.forEach((pair, i) => {
+        console.log(`   Pair ${i + 1}: Q="${pair.question.substring(0, 50)}..." A="${pair.answer.substring(0, 50)}..."`);
+      });
     }
 
     if (pairs.length !== expectedCount) {
-      console.warn(`Expected ${expectedCount} Q&A pairs, got ${pairs.length}`);
+      console.warn(`⚠️ Expected ${expectedCount} Q&A pairs, got ${pairs.length}`);
     }
 
     return pairs.slice(0, expectedCount);

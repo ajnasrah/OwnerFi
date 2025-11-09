@@ -84,6 +84,12 @@ export async function GET(request: NextRequest) {
     console.log(`✅ Generated script: ${script.episode_title}`);
     console.log(`   Guest: ${script.guest_name}`);
     console.log(`   Topic: ${script.topic}`);
+    console.log(`   Q&A pairs count: ${script.qa_pairs?.length || 0}`);
+
+    // Validate script has Q&A pairs
+    if (!script.qa_pairs || script.qa_pairs.length === 0) {
+      throw new Error(`Script generation failed: no Q&A pairs generated for episode "${script.episode_title}". This would result in empty video_inputs.`);
+    }
 
     // Update workflow with script details
     await updatePodcastWorkflow(workflow.id, {
@@ -181,6 +187,17 @@ export async function GET(request: NextRequest) {
     });
 
     console.log(`   Generated ${videoInputs.length} scenes (${script.qa_pairs.length} Q&A pairs)`);
+
+    // Final validation before sending to HeyGen
+    if (videoInputs.length === 0) {
+      throw new Error('video_inputs is empty! Cannot send to HeyGen API. Check script generation and character configuration.');
+    }
+
+    // Log the request for debugging
+    console.log(`   Sending ${videoInputs.length} video scenes to HeyGen...`);
+    videoInputs.forEach((scene, i) => {
+      console.log(`   Scene ${i + 1}: ${scene.character.type} (${scene.character.talking_photo_id || scene.character.avatar_id})`);
+    });
 
     // Use multi-scene format: each entry in video_inputs is a separate scene
     const response = await fetch('https://api.heygen.com/v2/video/generate', {

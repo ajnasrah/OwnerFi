@@ -97,9 +97,52 @@ console.log(`📝 Final title being sent to Late: "${title}"`);
 - **Deployed:** Automatically via Vercel on push to main
 - **Status:** ✅ Live
 
+## All Fixed Endpoints
+
+### Fixed in This Update ✅
+1. **`/src/app/api/process-video/route.ts`** (Commit: 5279e3f1)
+   - Used by: All brands via Submagic webhook → triggerAsyncVideoProcessing
+   - Impact: HIGH - Main posting endpoint for all workflows
+
+2. **`/src/app/api/admin/force-complete-workflow/route.ts`** (Commit: ee646226)
+   - Used by: Manual admin intervention
+   - Impact: MEDIUM - Used for stuck workflows
+
+3. **`/src/app/api/workflow/complete-without-submagic/route.ts`** (Commit: ee646226)
+   - Used by: Videos that skip Submagic
+   - Impact: MEDIUM - Alternative posting path
+
+### Already Correct ✅
+4. **`/src/app/api/admin/retry-workflow/route.ts`**
+   - Line 106: `return result?.workflow || null;` ✅
+
+5. **`/src/app/api/workflow/retry-submagic/route.ts`**
+   - Line 36: `workflow = result?.workflow || null;` ✅
+
+6. **`/src/app/api/workflow/fetch-heygen-video/route.ts`**
+   - Line 41: `const workflow = result.workflow;` ✅
+
+7. **`/src/app/api/workflow/status/[id]/route.ts`**
+   - Line 30-31: Returns full object correctly ✅
+
+8. **`/src/app/api/cron/check-stuck-submagic/route.ts`**
+   - Line 691: `const workflow = workflowData?.workflow;` ✅
+
+## Brands Affected (ALL NOW FIXED)
+
+✅ **ownerfi** - Real estate, owner financing
+✅ **carz** - Electric vehicles, car news
+✅ **vassdistro** - Vape distribution business
+✅ **podcast** - Podcast interviews
+✅ **benefit** - Financial benefits videos
+✅ **property** - Property listing videos
+✅ **abdullah** - Personal brand content
+
 ## Related Files
 
-- `/src/app/api/process-video/route.ts` - Main fix location
-- `/src/lib/feed-store-firestore.ts` - getWorkflowById function
-- `/src/app/api/workflow/complete-viral/route.ts` - Caption generation and saving
+- `/src/app/api/process-video/route.ts` - Main posting endpoint (FIXED)
+- `/src/app/api/admin/force-complete-workflow/route.ts` - Admin retry (FIXED)
+- `/src/app/api/workflow/complete-without-submagic/route.ts` - Skip Submagic path (FIXED)
+- `/src/lib/feed-store-firestore.ts` - getWorkflowById function (returns { workflow, brand })
+- `/src/app/api/workflow/complete-viral/route.ts` - Caption generation and saving (working correctly)
 - `/src/lib/caption-intelligence.ts` - Caption generation system (working correctly)

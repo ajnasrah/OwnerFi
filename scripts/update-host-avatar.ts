@@ -1,6 +1,6 @@
 // Quick script to update host avatar in Firestore
 import { initializeApp } from 'firebase/app';
-import { getFirestore, doc, updateDoc } from 'firebase/firestore';
+import { getFirestore, doc, getDoc, setDoc } from 'firebase/firestore';
 
 // Initialize Firebase
 const app = initializeApp({
@@ -18,11 +18,19 @@ async function main() {
   try {
     console.log('🔧 Updating host avatar...');
 
-    await updateDoc(doc(db, 'podcast_config', 'main'), {
-      'host.avatar_id': 'd33fe3abc2914faa88309c3bdb9f47f4',
-      'host.avatar_type': 'talking_photo',
-      'host.scale': 1.0
-    });
+    const configRef = doc(db, 'podcast_config', 'main');
+    const configSnap = await getDoc(configRef);
+
+    if (!configSnap.exists()) {
+      throw new Error('Podcast config not found');
+    }
+
+    const config = configSnap.data();
+    config.host.avatar_id = 'd33fe3abc2914faa88309c3bdb9f47f4';
+    config.host.avatar_type = 'talking_photo';
+    config.host.scale = 1.0;
+
+    await setDoc(configRef, config);
 
     console.log('✅ Host avatar updated successfully!');
     console.log('   Avatar ID: d33fe3abc2914faa88309c3bdb9f47f4');

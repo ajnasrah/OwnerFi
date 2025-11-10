@@ -415,18 +415,27 @@ export async function GET(request: NextRequest) {
         } else if (brand === 'property' || isProperty) {
           caption = workflow.caption || 'New owner finance property for sale! 🏡';
           title = workflow.title || 'Property For Sale';
+        } else if (brand === 'ownerfi') {
+          caption = workflow.caption || workflow.articleTitle || 'Discover owner financing opportunities! 🏡';
+          title = workflow.title || workflow.articleTitle || 'Owner Finance News';
+        } else if (brand === 'carz') {
+          caption = workflow.caption || workflow.articleTitle || 'Electric vehicle news and updates! ⚡';
+          title = workflow.title || workflow.articleTitle || 'EV News';
+        } else if (brand === 'vassdistro') {
+          caption = workflow.caption || workflow.articleTitle || 'Check out this vape industry update! 🔥';
+          title = workflow.title || workflow.articleTitle || 'Industry Update';
         } else {
-          caption = workflow.caption || 'Check out this video! 🔥';
-          title = workflow.title || 'Viral Video';
+          caption = workflow.caption || workflow.articleTitle || workflow.episodeTitle || 'Check out this video! 🔥';
+          title = workflow.title || workflow.articleTitle || workflow.episodeTitle || 'Viral Video';
         }
 
-        // Retry posting
+        // Retry posting using GetLate's queue
         const postResult = await postToLate({
           videoUrl,
           caption,
           title,
           platforms,
-          useQueue: false, // Direct posting, no queue
+          useQueue: true, // Use GetLate's queue system
           brand: brand as any
         });
 

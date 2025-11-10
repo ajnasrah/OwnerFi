@@ -214,6 +214,22 @@ async function executeFailsafe() {
                 const projectId = submagicData?.id || submagicData?.project_id;
 
                 if (projectId) {
+                  // Track Submagic cost
+                  try {
+                    const { trackCost, calculateSubmagicCost } = await import('@/lib/cost-tracker');
+                    await trackCost(
+                      'property',
+                      'submagic',
+                      'caption_generation_stuck_recovery',
+                      1,
+                      calculateSubmagicCost(1),
+                      doc.id
+                    );
+                    console.log('   💰 Tracked Submagic cost: $0.25');
+                  } catch (costError) {
+                    console.error('   ⚠️  Failed to track Submagic cost:', costError);
+                  }
+
                   await updateDoc(firestoreDoc(db, 'property_videos', doc.id), {
                     submagicProjectId: projectId,
                     submagicVideoId: projectId,
@@ -559,7 +575,7 @@ async function executeFailsafe() {
                   caption: workflow.episodeTitle || 'New Podcast Episode',
                   title: `Episode #${workflow.episodeNumber}: ${workflow.episodeTitle || 'New Episode'}`,
                   platforms: allPlatforms,
-                  useQueue: false, // Direct posting, no queue  // Use Late's queue system
+                  useQueue: true, // Use GetLate's queue system
                   brand: 'podcast'
                 });
 
@@ -607,7 +623,7 @@ async function executeFailsafe() {
                   caption: workflow.caption || 'Learn about owner financing! 🏡',
                   title: workflow.title || 'Owner Finance Benefits',
                   platforms: allPlatforms,
-                  useQueue: false, // Direct posting, no queue
+                  useQueue: true, // Use GetLate's queue system
                   brand: 'benefit'
                 });
 
@@ -661,7 +677,7 @@ async function executeFailsafe() {
                   caption,
                   title,
                   platforms: allPlatforms,
-                  useQueue: false, // Direct posting, no queue
+                  useQueue: true, // Use GetLate's queue system
                   brand: 'ownerfi' // Property videos use OwnerFi profile
                 });
 
@@ -751,7 +767,7 @@ async function executeFailsafe() {
                   caption,
                   title,
                   platforms: allPlatforms,
-                  useQueue: false, // Direct posting, no queue  // Use Late's queue system
+                  useQueue: true, // Use GetLate's queue system
                   brand: brand
                 });
 

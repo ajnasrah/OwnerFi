@@ -430,59 +430,50 @@ async function processVideoAndPost(
     } else if (brand === 'property') {
       caption = workflow.caption || 'New owner finance property for sale! 🏡';
       title = workflow.title || 'Property For Sale';
+    } else if (brand === 'ownerfi') {
+      caption = workflow.caption || workflow.articleTitle || 'Discover owner financing opportunities! 🏡';
+      title = workflow.title || workflow.articleTitle || 'Owner Finance News';
+    } else if (brand === 'carz') {
+      caption = workflow.caption || workflow.articleTitle || 'Electric vehicle news and updates! ⚡';
+      title = workflow.title || workflow.articleTitle || 'EV News';
     } else if (brand === 'vassdistro') {
       caption = workflow.caption || workflow.articleTitle || 'Check out this vape industry update! 🔥';
-      title = workflow.title || 'Vape Industry News';
+      title = workflow.title || workflow.articleTitle || 'Vape Industry News';
     } else {
-      caption = workflow.caption || 'Check out this video! 🔥';
-      title = workflow.title || 'Viral Video';
+      caption = workflow.caption || workflow.articleTitle || workflow.episodeTitle || 'Check out this video! 🔥';
+      title = workflow.title || workflow.articleTitle || workflow.episodeTitle || 'Viral Video';
     }
 
-    console.log(`📱 [${brandConfig.displayName}] Posting with same-day multi-platform schedule`);
-    console.log(`   All platforms will post TODAY at their optimal hours`);
+    console.log(`📱 [${brandConfig.displayName}] Posting to GetLate's scheduling queue`);
+    console.log(`   GetLate will automatically schedule at optimal times`);
 
-    // Import same-day posting system
-    const { postVideoSameDay } = await import('@/lib/same-day-posting');
-
-    // Post to all platforms on the SAME DAY at different optimal hours
-    // Each platform gets posted at its optimal hour for today
-    // Example for Monday: TikTok 7 AM, Instagram 11 AM, Facebook 1 PM, YouTube 3 PM, LinkedIn 10 AM
-    const postResult = await postVideoSameDay(
-      publicVideoUrl,
+    // Use GetLate's queue system - it handles optimal scheduling automatically
+    const postResult = await postToLate({
+      videoUrl: publicVideoUrl,
       caption,
       title,
-      brand,
-      {
-        // Future: Add first comment for engagement boost
-        // firstComment: getEngagementComment(brand),
-      }
-    );
+      platforms: platforms as any[],
+      brand: brand as any,
+      useQueue: true, // Use GetLate's queue system for optimal scheduling
+      timezone: brandConfig.scheduling.timezone
+    });
 
     if (postResult.success) {
-      console.log(`✅ [${brandConfig.displayName}] Posted to Late (same-day schedule)!`);
-      console.log(`   Total posts created: ${postResult.totalPosts}`);
-      console.log(`   All platforms posting today at optimal hours`);
-
-      // Collect all post IDs
-      const postIds = postResult.posts
-        .map(p => p.result.postId)
-        .filter(Boolean)
-        .join(', ');
-
-      // Get unique platforms count
-      const platforms = new Set(postResult.posts.map(p => p.platform));
+      console.log(`✅ [${brandConfig.displayName}] Posted to GetLate queue successfully!`);
+      console.log(`   Post ID: ${postResult.postId}`);
+      console.log(`   Scheduled for: ${postResult.scheduledFor || 'Next available queue slot'}`);
+      console.log(`   Platforms: ${postResult.platforms?.join(', ') || platforms.join(', ')}`);
 
       // Mark workflow as completed (video URL already saved above)
       await updateWorkflowForBrand(brand, workflowId, {
         status: 'completed',
-        latePostId: postIds, // Store all post IDs
+        latePostId: postResult.postId,
         completedAt: Date.now(),
-        weeklyPosts: postResult.totalPosts,
-        platformsUsed: platforms.size,
+        scheduledFor: postResult.scheduledFor,
+        platformsUsed: postResult.platforms?.length || platforms.length,
       });
     } else {
-      const errorMsg = postResult.errors.join('; ') || 'Unknown platform scheduling error';
-      throw new Error(`Late posting failed: ${errorMsg}`);
+      throw new Error(`GetLate posting failed: ${postResult.error}`);
     }
 
   } catch (error) {

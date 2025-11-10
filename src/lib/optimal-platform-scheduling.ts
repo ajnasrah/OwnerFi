@@ -133,7 +133,7 @@ export async function scheduleVideoToAllPlatforms(
         platforms: platforms as any[],
         scheduleTime, // Time in CST format (YYYY-MM-DDTHH:MM:SS)
         timezone: 'America/Chicago', // Tell Late.dev this is CST
-        useQueue: false,
+        useQueue: true, // Use GetLate's queue system
         brand: brand as any,
         firstComment: options?.firstComment,
         postTypes: options?.postTypes,

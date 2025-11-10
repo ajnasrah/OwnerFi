@@ -150,6 +150,25 @@ export async function POST(request: NextRequest) {
         } else {
           await deleteDoc(propertyRef);
           deletedProperties.push(propertyId);
+
+          // Also remove from rotation queue
+          try {
+            const queueDoc = await getDoc(doc(db, 'property_rotation_queue', propertyId));
+            if (queueDoc.exists()) {
+              await deleteDoc(doc(db, 'property_rotation_queue', propertyId));
+              logInfo(`Removed deleted property from rotation queue: ${propertyId}`, {
+                action: 'queue_cleanup',
+                metadata: { propertyId }
+              });
+            }
+          } catch (queueError) {
+            logWarn(`Could not remove from rotation queue: ${propertyId}`, {
+              action: 'queue_cleanup_error',
+              metadata: { propertyId, error: (queueError as Error).message }
+            });
+            // Don't fail the delete if queue removal fails
+          }
+
           logInfo(`Successfully deleted property ${propertyId}`, {
             action: 'property_deleted',
             metadata: { propertyId }
@@ -166,6 +185,7 @@ export async function POST(request: NextRequest) {
 
     if (payload.propertyIds && Array.isArray(payload.propertyIds)) {
       const batch = writeBatch(db);
+      const queueCleanupIds: string[] = [];
 
       for (const id of payload.propertyIds) {
         try {
@@ -177,6 +197,7 @@ export async function POST(request: NextRequest) {
           } else {
             batch.delete(propertyRef);
             deletedProperties.push(id);
+            queueCleanupIds.push(id);
           }
         } catch (error) {
           errors.push(`Failed to process property ${id}: ${error}`);
@@ -187,6 +208,22 @@ export async function POST(request: NextRequest) {
       if (deletedProperties.length > 0) {
         await batch.commit();
         logInfo(`Batch deleted ${deletedProperties.length} properties`);
+
+        // Clean up rotation queue for batch deleted properties
+        for (const id of queueCleanupIds) {
+          try {
+            const queueDoc = await getDoc(doc(db, 'property_rotation_queue', id));
+            if (queueDoc.exists()) {
+              await deleteDoc(doc(db, 'property_rotation_queue', id));
+            }
+          } catch (queueError) {
+            logWarn(`Could not remove ${id} from rotation queue`, {
+              action: 'queue_cleanup_error',
+              metadata: { propertyId: id }
+            });
+          }
+        }
+        logInfo(`Cleaned up ${queueCleanupIds.length} entries from rotation queue`);
       }
     }
 
@@ -216,14 +253,32 @@ export async function POST(request: NextRequest) {
           errors.push(`No properties found with ${field} = ${value}`);
         } else {
           const batch = writeBatch(db);
+          const deleteByCleanupIds: string[] = [];
 
           snapshot.forEach((doc) => {
             batch.delete(doc.ref);
             deletedProperties.push(doc.id);
+            deleteByCleanupIds.push(doc.id);
           });
 
           await batch.commit();
           logInfo(`Deleted ${deletedProperties.length} properties where ${field} = ${value}`);
+
+          // Clean up rotation queue for deleted properties
+          for (const id of deleteByCleanupIds) {
+            try {
+              const queueDoc = await getDoc(doc(db, 'property_rotation_queue', id));
+              if (queueDoc.exists()) {
+                await deleteDoc(doc(db, 'property_rotation_queue', id));
+              }
+            } catch (queueError) {
+              logWarn(`Could not remove ${id} from rotation queue`, {
+                action: 'queue_cleanup_error',
+                metadata: { propertyId: id }
+              });
+            }
+          }
+          logInfo(`Cleaned up ${deleteByCleanupIds.length} entries from rotation queue`);
         }
       } catch (error) {
         errors.push(`Failed to delete properties by ${field}: ${error}`);

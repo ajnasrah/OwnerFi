@@ -38,6 +38,50 @@ export async function GET(request: NextRequest) {
       console.log('⚡ Force mode enabled - Bypassing scheduler check');
     }
 
+    // CRITICAL: Use cron lock to prevent concurrent executions (avoid duplicate videos)
+    const { withCronLock } = await import('@/lib/cron-lock');
+
+    const result = await withCronLock('podcast-generation', async () => {
+      return await executePodcastGeneration(force, workflowId);
+    });
+
+    if (result === null) {
+      return NextResponse.json({
+        success: false,
+        message: 'Another podcast generation is already running',
+        skipped: true
+      });
+    }
+
+    return result;
+
+  } catch (error) {
+    console.error('❌ Podcast cron job error:', error);
+
+    // Try to mark workflow as failed (if workflow was created)
+    if (workflowId) {
+      try {
+        const { updatePodcastWorkflow } = await import('@/lib/feed-store-firestore');
+        await updatePodcastWorkflow(workflowId, {
+          status: 'failed' as const,
+          error: error instanceof Error ? error.message : 'Unknown error'
+        });
+      } catch (updateError) {
+        console.error('Failed to mark workflow as failed:', updateError);
+      }
+    }
+
+    return NextResponse.json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      workflow_id: workflowId
+    }, { status: 500 });
+  }
+}
+
+async function executePodcastGeneration(force: boolean, workflowId: string | null): Promise<NextResponse> {
+  try {
+
     // Import podcast generation libraries
     const { PodcastScheduler } = await import('../../../../../podcast/lib/podcast-scheduler');
     const ScriptGenerator = (await import('../../../../../podcast/lib/script-generator')).default;
@@ -296,4 +340,5 @@ export async function GET(request: NextRequest) {
 // Also support POST for Vercel cron
 export async function POST(request: NextRequest) {
   return GET(request);
+}
 }

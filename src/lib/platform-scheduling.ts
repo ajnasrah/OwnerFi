@@ -172,7 +172,7 @@ export async function postToMultiplePlatformGroupsWithOffset(
         hashtags: options?.hashtags,
         platforms: group.platforms as any[],
         scheduleTime, // Scheduled for optimal time + offset
-        useQueue: false,
+        useQueue: true, // Use GetLate's queue system
         brand,
         firstComment: options?.firstComment,
         postTypes: options?.postTypes,
@@ -277,7 +277,7 @@ export async function postToMultiplePlatformGroups(
         platforms: group.platforms as any[],
         scheduleTime,
         timezone: 'America/Chicago',
-        useQueue: false, // Direct scheduling, no queue
+        useQueue: true, // Use GetLate's queue system
         brand: brand as any,
         firstComment: options?.firstComment,
         hashtags: options?.hashtags,

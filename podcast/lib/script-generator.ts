@@ -141,7 +141,7 @@ export class ScriptGenerator {
     const prompt = this.buildPrompt(guest, topic, questionsCount);
 
     const completion = await this.openai.chat.completions.create({
-      model: 'gpt-4o',
+      model: 'gpt-4o-mini', // 90% cheaper than gpt-4o for simple script generation
       messages: [
         {
           role: 'system',

@@ -257,15 +257,22 @@ export async function GET(request: NextRequest) {
               throw new Error('Submagic API key not configured');
             }
 
-            console.log('   ☁️  Uploading HeyGen video to R2...');
-            const { downloadAndUploadToR2 } = await import('@/lib/video-storage');
-            const publicHeygenUrl = await downloadAndUploadToR2(
-              videoUrl,
-              HEYGEN_API_KEY,
-              `heygen-videos/${workflowId}.mp4`
-            );
+            // Check if already uploaded to R2 (prevent duplicate storage costs)
+            let publicHeygenUrl = workflow.heygenVideoUrl;
 
-            console.log('   ✅ R2 upload complete');
+            if (!publicHeygenUrl) {
+              console.log('   ☁️  Uploading HeyGen video to R2...');
+              const { downloadAndUploadToR2 } = await import('@/lib/video-storage');
+              publicHeygenUrl = await downloadAndUploadToR2(
+                videoUrl,
+                HEYGEN_API_KEY,
+                `heygen-videos/${workflowId}.mp4`
+              );
+
+              console.log('   ✅ R2 upload complete');
+            } else {
+              console.log('   ⏭️  Skipping R2 upload - already exists at:', publicHeygenUrl.substring(0, 80));
+            }
             console.log('   ✨ Sending to Submagic...');
 
             const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ||
@@ -324,6 +331,22 @@ export async function GET(request: NextRequest) {
             const projectId = submagicData.id || submagicData.project_id || submagicData.projectId;
 
             console.log('   ✅ Submagic project created:', projectId);
+
+            // Track Submagic cost
+            try {
+              const { trackCost, calculateSubmagicCost } = await import('@/lib/cost-tracker');
+              await trackCost(
+                brand,
+                'submagic',
+                'caption_generation_stuck_recovery',
+                1,
+                calculateSubmagicCost(1),
+                workflowId
+              );
+              console.log('   💰 Tracked Submagic cost: $0.25');
+            } catch (costError) {
+              console.error('   ⚠️  Failed to track Submagic cost:', costError);
+            }
 
             // Update workflow to submagic_processing
             if (isPodcast) {

@@ -194,21 +194,21 @@ export const costs = {
     heygen: parseInt(optionalEnv('MONTHLY_BUDGET_HEYGEN', '330')), // $330/month
     submagic: parseInt(optionalEnv('MONTHLY_BUDGET_SUBMAGIC', '150')), // $150/month
     late: parseInt(optionalEnv('MONTHLY_BUDGET_LATE', '50')), // $50/month
-    openai: parseInt(optionalEnv('MONTHLY_BUDGET_OPENAI', '100')), // $100/month estimated
-    total: parseInt(optionalEnv('MONTHLY_BUDGET_TOTAL', '700')), // $700/month total
+    openai: parseInt(optionalEnv('MONTHLY_BUDGET_OPENAI', '15000')), // $15,000/month for high-volume usage
+    total: parseInt(optionalEnv('MONTHLY_BUDGET_TOTAL', '15700')), // Updated total
   },
 
   // Daily budget caps (prevents runaway spending)
   dailyBudget: {
     heygen: parseInt(optionalEnv('DAILY_BUDGET_HEYGEN', '50')), // ~$15/day
     submagic: parseInt(optionalEnv('DAILY_BUDGET_SUBMAGIC', '50')), // ~$7/day
-    openai: parseInt(optionalEnv('DAILY_BUDGET_OPENAI', '500')), // ~$3/day
+    openai: parseInt(optionalEnv('DAILY_BUDGET_OPENAI', '15000')), // $15,000/day for high-volume usage
   },
 
   // Cost per unit (for estimation)
   costPerUnit: {
     heygenCredit: 0.50, // $330 / 660 credits = $0.50 per credit
-    submagicCredit: 1.27, // $19 / 15 videos = $1.27 per video (Starter plan)
+    submagicCredit: 0.25, // $150 / 600 videos = $0.25 per video (correct pricing)
     openaiGpt4oMiniInput: 0.15, // $0.15 per 1M input tokens
     openaiGpt4oMiniOutput: 0.60, // $0.60 per 1M output tokens
     latePost: 0, // Unlimited at $50/month

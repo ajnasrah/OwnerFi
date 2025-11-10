@@ -902,6 +902,22 @@ async function waitForHeyGenAndProcess(
         const submagicData = await submagicResponse.json();
         const projectId = submagicData.id || submagicData.project_id;
 
+        // Track Submagic cost
+        try {
+          const { trackCost, calculateSubmagicCost } = await import('@/lib/cost-tracker');
+          await trackCost(
+            brand as any,
+            'submagic',
+            'caption_generation',
+            1,
+            calculateSubmagicCost(1),
+            workflowId
+          );
+          console.log(`💰 Tracked Submagic cost: $0.25`);
+        } catch (costError) {
+          console.error(`⚠️  Failed to track Submagic cost:`, costError);
+        }
+
         // Poll Submagic for completion (max 30 attempts = 22.5 minutes)
         console.log('⏳ Waiting for Submagic...');
         for (let i = 0; i < 30; i++) {

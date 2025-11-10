@@ -122,6 +122,22 @@ export async function POST(request: NextRequest) {
 
     console.log(`✅ Submagic project created: ${projectId}`);
 
+    // Track Submagic cost
+    try {
+      const { trackCost, calculateSubmagicCost } = await import('@/lib/cost-tracker');
+      await trackCost(
+        brand,
+        'submagic',
+        'caption_generation_retry',
+        1,
+        calculateSubmagicCost(1),
+        workflowId
+      );
+      console.log(`💰 Tracked Submagic cost: $0.25`);
+    } catch (costError) {
+      console.error(`⚠️  Failed to track Submagic cost:`, costError);
+    }
+
     // Update workflow based on brand type
     if (validatedBrand === 'podcast') {
       const { updatePodcastWorkflow } = await import('@/lib/feed-store-firestore');

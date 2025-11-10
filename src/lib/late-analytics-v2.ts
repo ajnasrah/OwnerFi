@@ -297,7 +297,7 @@ export async function syncPlatformAnalytics(
       const platformAnalytics = {
         postId: post._id,
         brand,
-        platform: platformData.platform,
+        platform: platformData.platform.toLowerCase(), // Normalize platform name to lowercase
         publishedAt: post.publishedAt || post.scheduledFor,
 
         // Metrics

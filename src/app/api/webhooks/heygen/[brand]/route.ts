@@ -71,21 +71,29 @@ export async function POST(request: NextRequest, context: RouteContext) {
     // Structure: { event_type: "avatar_video.success", event_data: { video_id, url, callback_id, ... } }
     const { event_type, event_data } = body;
 
-    // Check idempotency - prevent duplicate processing
+    // Check idempotency - prevent duplicate processing (CRITICAL for cost)
     const { isWebhookProcessed, markWebhookProcessed } = await import('@/lib/webhook-idempotency');
     const videoId = event_data?.video_id;
 
-    if (videoId) {
-      const idempotencyCheck = await isWebhookProcessed('heygen', videoId, brand, body);
+    // CRITICAL: Require video_id for idempotency - without it, retries will duplicate processing
+    if (!videoId) {
+      console.error(`❌ [${brandConfig.displayName}] CRITICAL: Missing video_id in webhook - cannot ensure idempotency`);
+      return NextResponse.json({
+        success: false,
+        brand,
+        message: 'Missing video_id - required for idempotency',
+      }, { status: 400 });
+    }
 
-      if (idempotencyCheck.processed) {
-        console.log(`⚠️  [${brandConfig.displayName}] Webhook already processed, returning cached response`);
-        return NextResponse.json(idempotencyCheck.previousResponse || {
-          success: true,
-          brand,
-          message: 'Already processed',
-        });
-      }
+    const idempotencyCheck = await isWebhookProcessed('heygen', videoId, brand, body);
+
+    if (idempotencyCheck.processed) {
+      console.log(`⚠️  [${brandConfig.displayName}] Webhook already processed, returning cached response`);
+      return NextResponse.json(idempotencyCheck.previousResponse || {
+        success: true,
+        brand,
+        message: 'Already processed',
+      });
     }
 
     if (!event_data || !event_data.callback_id) {

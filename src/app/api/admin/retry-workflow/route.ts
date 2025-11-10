@@ -241,7 +241,7 @@ async function retryPosting(
     caption,
     title,
     platforms: platforms as any[],
-    useQueue: false, // Direct posting, no queue
+    useQueue: true, // Use GetLate's queue system
     brand,
   });
 

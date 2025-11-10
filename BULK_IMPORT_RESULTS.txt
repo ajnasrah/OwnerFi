@@ -1,0 +1,16 @@
+
+BULK IMPORT RESULTS - 2025-11-09T16:56:44.629Z
+================================================
+
+Total: 16
+Successful: 15
+Failed: 1
+
+
+ERRORS:
+
+- 509 N 6th St, Donna, TX
+  Opportunity ID: rcuP9y5jXJe58nk6I7Vt
+  Error: Cannot convert argument to a ByteString because the character at index 344 has a value of 8212 which is greater than 255.
+
+

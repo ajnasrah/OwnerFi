@@ -191,6 +191,22 @@ export async function POST(request: NextRequest) {
 
         console.log(`   ✅ Submagic project created: ${projectId}`);
 
+        // Track Submagic cost
+        try {
+          const { trackCost, calculateSubmagicCost } = await import('@/lib/cost-tracker');
+          await trackCost(
+            'abdullah',
+            'submagic',
+            'caption_generation_recovery',
+            1,
+            calculateSubmagicCost(1),
+            workflow.id
+          );
+          console.log(`   💰 Tracked Submagic cost: $0.25`);
+        } catch (costError) {
+          console.error(`   ⚠️  Failed to track Submagic cost:`, costError);
+        }
+
         // Update workflow status
         const docRef = doc(db, 'abdullah_workflow_queue', workflow.id);
         await updateDoc(docRef, {

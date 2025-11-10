@@ -507,11 +507,18 @@ async function executeFailsafe() {
           const { uploadSubmagicVideo } = await import('@/lib/video-storage');
 
           try {
-            // CRITICAL FIX: Upload to R2 FIRST, then change status
-            // If R2 upload fails, status stays as 'submagic_processing' for retry
-            console.log(`   ☁️  Uploading to R2...`);
-            const publicVideoUrl = await uploadSubmagicVideo(downloadUrl);
-            console.log(`   ✅ R2 upload complete: ${publicVideoUrl.substring(0, 80)}...`);
+            // Check if already uploaded to R2 (prevent duplicate storage costs)
+            let publicVideoUrl = workflow.finalVideoUrl;
+
+            if (!publicVideoUrl) {
+              // CRITICAL FIX: Upload to R2 FIRST, then change status
+              // If R2 upload fails, status stays as 'submagic_processing' for retry
+              console.log(`   ☁️  Uploading to R2...`);
+              publicVideoUrl = await uploadSubmagicVideo(downloadUrl);
+              console.log(`   ✅ R2 upload complete: ${publicVideoUrl.substring(0, 80)}...`);
+            } else {
+              console.log(`   ⏭️  Skipping R2 upload - already exists at: ${publicVideoUrl.substring(0, 80)}...`);
+            }
 
             // NOW update status to 'posting' with video URL and retry info
             const retryUpdates = {
@@ -699,7 +706,8 @@ async function executeFailsafe() {
                 let caption = workflow.caption;
                 let title = workflow.title;
 
-                if ((!caption || !title) && brand === 'benefit') {
+                // Brand-specific caption generation
+                if (brand === 'benefit') {
                   console.log(`   📝 Generating caption/title for benefit workflow...`);
                   const benefitId = workflow.benefitId;
                   if (benefitId) {
@@ -711,14 +719,25 @@ async function executeFailsafe() {
                       console.log(`   ✅ Generated from benefit: ${benefit.title}`);
                     }
                   }
-                }
-
-                // Final fallbacks
-                if (!caption) {
-                  caption = 'Check out this video! 🔥';
-                }
-                if (!title) {
-                  title = workflow.benefitTitle || workflow.articleTitle || workflow.episodeTitle || 'Viral Video';
+                  // Benefit fallback
+                  caption = caption || 'Learn about owner financing! 🏡';
+                  title = title || 'Owner Finance Benefits';
+                } else if (brand === 'ownerfi') {
+                  // OwnerFi uses article-based content
+                  caption = caption || workflow.articleTitle || 'Discover owner financing opportunities! 🏡';
+                  title = title || workflow.articleTitle || 'Owner Finance News';
+                } else if (brand === 'carz') {
+                  // Carz uses article-based content
+                  caption = caption || workflow.articleTitle || 'Electric vehicle news and updates! ⚡';
+                  title = title || workflow.articleTitle || 'EV News';
+                } else if (brand === 'vassdistro') {
+                  // VassDistro uses article-based content
+                  caption = caption || workflow.articleTitle || 'Check out this vape industry update! 🔥';
+                  title = title || workflow.articleTitle || 'Industry Update';
+                } else {
+                  // Generic fallbacks for other brands
+                  caption = caption || workflow.articleTitle || workflow.episodeTitle || 'Check out this video! 🔥';
+                  title = title || workflow.benefitTitle || workflow.articleTitle || workflow.episodeTitle || 'Viral Video';
                 }
 
                 // Post to all platforms using queue

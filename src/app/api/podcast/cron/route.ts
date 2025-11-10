@@ -341,4 +341,3 @@ async function executePodcastGeneration(force: boolean, workflowId: string | nul
 export async function POST(request: NextRequest) {
   return GET(request);
 }
-}

@@ -270,6 +270,8 @@ interface GHLPropertyPayload {
   downPayment?: number | string; // Percentage
   interestRate?: number | string;
   monthlyPayment?: number | string;
+  termYears?: number | string; // Amortization schedule term in years
+  amortizationSchedule?: number | string; // Alternative field name for term years
   balloon?: number | string; // Years
   zestimate?: number | string; // Zillow home value estimate
   rentZestimate?: number | string; // Zillow rental estimate
@@ -397,9 +399,11 @@ export async function POST(request: NextRequest) {
       downPayment: request.headers.get('downpayment') || request.headers.get('downPayment') || bodyData.downPayment || bodyData.downPaymentPercent || '',
       interestRate: request.headers.get('interestrate') || request.headers.get('interestRate') || bodyData.interestRate || '',
       monthlyPayment: request.headers.get('monthlypayment') || request.headers.get('monthlyPayment') || bodyData.monthlyPayment || '',
+      termYears: request.headers.get('termyears') || request.headers.get('termYears') || bodyData.termYears || '',
+      amortizationSchedule: request.headers.get('amortizationschedule') || request.headers.get('amortizationSchedule') || bodyData.amortizationSchedule || '',
       balloon: request.headers.get('balloon') || bodyData.balloon || bodyData.balloonYears || '',
       zestimate: request.headers.get('zestimate') || request.headers.get('propertyZestimate') || bodyData.zestimate || bodyData.estimatedValue || '',
-      rentZestimate: request.headers.get('rentzestimate') || request.headers.get('rentZestimate') || request.headers.get('propertyRentZestimate') || bodyData.rentZestimate || ''
+      rentZestimate: request.headers.get('rentzestimate') || request.headers.get('rentZestimate') || request.headers.get('propertyRentZestimate') || bodyData.rentZestimate || bodyData.rent_estimate || ''
     };
 
     logInfo('GoHighLevel save property webhook parsed', {
@@ -488,7 +492,7 @@ export async function POST(request: NextRequest) {
       }, checkError as Error);
     }
 
-    // Process financial calculations - NO DEFAULTS, only use what's provided
+    // Process financial calculations with priority logic
     let downPaymentAmount = parseNumberField(payload.downPaymentAmount);
     let downPaymentPercent = parseNumberField(payload.downPayment);
 
@@ -502,35 +506,73 @@ export async function POST(request: NextRequest) {
       downPaymentPercent = (downPaymentAmount / price) * 100;
     }
 
-    // Use provided monthly payment or calculate ONLY if we have interest rate
-    let calculatedMonthlyPayment = parseNumberField(payload.monthlyPayment);
+    // Parse financial fields
+    const providedMonthlyPayment = parseNumberField(payload.monthlyPayment);
     const interestRate = parseNumberField(payload.interestRate);
+    const providedTermYears = parseNumberField(payload.termYears || payload.amortizationSchedule);
+    const balloonYears = parseNumberField(payload.balloon);
 
-    // Dynamic amortization based on price
+    // Dynamic amortization based on price (fallback)
     const getDefaultTermYears = (listPrice: number): number => {
       if (listPrice < 150000) return 15;
       if (listPrice < 300000) return 20;
       if (listPrice < 600000) return 25;
       return 30;
     };
-    const termYears = getDefaultTermYears(price);
 
-    // Only calculate monthly payment if we have both interest rate AND down payment info
-    if (!calculatedMonthlyPayment && interestRate > 0 && downPaymentAmount >= 0 && price) {
-      const loanAmount = price - downPaymentAmount;
-      const monthlyRate = interestRate / 100 / 12;
-      const numPayments = termYears * 12;
+    // Calculate loan amount
+    const loanAmount = price - downPaymentAmount;
 
-      if (monthlyRate > 0 && loanAmount > 0) {
-        calculatedMonthlyPayment = Math.round(
-          loanAmount * (monthlyRate * Math.pow(1 + monthlyRate, numPayments)) /
-          (Math.pow(1 + monthlyRate, numPayments) - 1)
-        );
+    // PRIORITY CALCULATION LOGIC
+    let calculatedMonthlyPayment = 0;
+    let termYears = 0;
+
+    if (providedMonthlyPayment > 0) {
+      // PRIORITY 1: Monthly payment provided - use it directly
+      calculatedMonthlyPayment = providedMonthlyPayment;
+
+      if (interestRate > 0 && loanAmount > 0) {
+        // If we have interest rate, calculate term from monthly payment
+        const { calculateTermYears } = await import('@/lib/property-calculations');
+        termYears = calculateTermYears(providedMonthlyPayment, loanAmount, interestRate);
+      } else {
+        // No interest rate - use provided term or price-based default
+        termYears = providedTermYears > 0 ? providedTermYears : getDefaultTermYears(price);
       }
-    }
 
-    // Parse balloon years (years until refinance) - no calculation needed
-    const balloonYears = parseNumberField(payload.balloon);
+    } else if (interestRate > 0 && providedTermYears > 0) {
+      // PRIORITY 2: Interest rate + term years provided - calculate monthly payment
+      termYears = providedTermYears;
+      if (loanAmount > 0) {
+        const monthlyRate = interestRate / 100 / 12;
+        const numPayments = termYears * 12;
+        if (monthlyRate > 0) {
+          calculatedMonthlyPayment = Math.round(
+            loanAmount * (monthlyRate * Math.pow(1 + monthlyRate, numPayments)) /
+            (Math.pow(1 + monthlyRate, numPayments) - 1)
+          );
+        }
+      }
+
+    } else if (interestRate > 0) {
+      // PRIORITY 3: Only interest rate provided - use price-based term
+      termYears = getDefaultTermYears(price);
+      if (loanAmount > 0) {
+        const monthlyRate = interestRate / 100 / 12;
+        const numPayments = termYears * 12;
+        if (monthlyRate > 0) {
+          calculatedMonthlyPayment = Math.round(
+            loanAmount * (monthlyRate * Math.pow(1 + monthlyRate, numPayments)) /
+            (Math.pow(1 + monthlyRate, numPayments) - 1)
+          );
+        }
+      }
+
+    } else {
+      // PRIORITY 4: Nothing provided - use defaults
+      termYears = providedTermYears > 0 ? providedTermYears : getDefaultTermYears(price);
+      // No calculation without interest rate
+    }
 
     // Generate image URL if not provided
     let imageUrl = payload.imageLink || '';

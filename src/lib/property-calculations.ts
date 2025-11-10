@@ -46,9 +46,9 @@ export function calculatePropertyFinancials(data: PartialPropertyData): Property
   const listPrice = data.listPrice || 0;
   let downPaymentAmount = data.downPaymentAmount || 0;
   let downPaymentPercent = data.downPaymentPercent || 0;
-  let monthlyPayment = data.monthlyPayment || 0;
-  const interestRate = data.interestRate || 7.0; // Default 7% if not provided
-  const termYears = data.termYears || getDefaultTermYears(listPrice);
+  const providedMonthlyPayment = data.monthlyPayment || 0;
+  const providedInterestRate = data.interestRate;
+  const providedTermYears = data.termYears;
 
   // Calculate missing down payment fields
   if (listPrice > 0) {
@@ -68,9 +68,47 @@ export function calculatePropertyFinancials(data: PartialPropertyData): Property
   // Calculate loan amount
   const loanAmount = listPrice - downPaymentAmount;
 
-  // Calculate monthly payment if not provided
-  if (monthlyPayment === 0 && loanAmount > 0 && interestRate > 0 && termYears > 0) {
-    monthlyPayment = calculateMonthlyPayment(loanAmount, interestRate, termYears);
+  // PRIORITY CALCULATION LOGIC
+  let monthlyPayment = 0;
+  let termYears = 0;
+  let interestRate = 0;
+
+  if (providedMonthlyPayment > 0) {
+    // PRIORITY 1: Monthly payment provided - use it directly
+    monthlyPayment = providedMonthlyPayment;
+    interestRate = providedInterestRate || 7.0; // Default if not provided
+
+    if (providedInterestRate && providedInterestRate > 0 && loanAmount > 0) {
+      // Calculate term from monthly payment + interest rate
+      termYears = calculateTermYears(providedMonthlyPayment, loanAmount, providedInterestRate);
+    } else {
+      // Use provided term or price-based default
+      termYears = providedTermYears || getDefaultTermYears(listPrice);
+    }
+
+  } else if (providedInterestRate && providedInterestRate > 0 && providedTermYears && providedTermYears > 0) {
+    // PRIORITY 2: Interest rate + term years provided - calculate monthly payment
+    interestRate = providedInterestRate;
+    termYears = providedTermYears;
+    if (loanAmount > 0) {
+      monthlyPayment = calculateMonthlyPayment(loanAmount, interestRate, termYears);
+    }
+
+  } else if (providedInterestRate && providedInterestRate > 0) {
+    // PRIORITY 3: Only interest rate provided - use price-based term
+    interestRate = providedInterestRate;
+    termYears = getDefaultTermYears(listPrice);
+    if (loanAmount > 0) {
+      monthlyPayment = calculateMonthlyPayment(loanAmount, interestRate, termYears);
+    }
+
+  } else {
+    // PRIORITY 4: Nothing provided - use defaults
+    interestRate = providedInterestRate || 7.0;
+    termYears = providedTermYears || getDefaultTermYears(listPrice);
+    if (loanAmount > 0 && interestRate > 0) {
+      monthlyPayment = calculateMonthlyPayment(loanAmount, interestRate, termYears);
+    }
   }
 
   // Validate and ensure reasonable values
@@ -122,19 +160,57 @@ export function calculateLoanAmount(
   termYears: number
 ): number {
   if (monthlyPayment <= 0 || annualRate <= 0 || termYears <= 0) return 0;
-  
+
   const monthlyRate = annualRate / 100 / 12;
   const numPayments = termYears * 12;
-  
+
   if (monthlyRate === 0) {
     return monthlyPayment * numPayments;
   }
-  
-  const loanAmount = monthlyPayment * 
-    (Math.pow(1 + monthlyRate, numPayments) - 1) / 
+
+  const loanAmount = monthlyPayment *
+    (Math.pow(1 + monthlyRate, numPayments) - 1) /
     (monthlyRate * Math.pow(1 + monthlyRate, numPayments));
-    
+
   return Math.round(loanAmount * 100) / 100;
+}
+
+/**
+ * Calculate term years from monthly payment (reverse calculation)
+ * Solves for N in the amortization formula: M = P * [r(1+r)^n] / [(1+r)^n - 1]
+ * Uses logarithms to solve for n (number of payments)
+ */
+export function calculateTermYears(
+  monthlyPayment: number,
+  loanAmount: number,
+  annualRate: number
+): number {
+  if (monthlyPayment <= 0 || loanAmount <= 0 || annualRate < 0) return 0;
+
+  const monthlyRate = annualRate / 100 / 12;
+
+  // Special case: 0% interest
+  if (monthlyRate === 0) {
+    const months = loanAmount / monthlyPayment;
+    return Math.round((months / 12) * 10) / 10; // Round to 1 decimal
+  }
+
+  // Check if payment is sufficient to cover interest
+  const minPayment = loanAmount * monthlyRate;
+  if (monthlyPayment <= minPayment) {
+    // Payment doesn't cover interest - would take forever
+    return 50; // Return max term
+  }
+
+  // Solve for n using logarithms:
+  // n = log(M / (M - P*r)) / log(1 + r)
+  const numerator = Math.log(monthlyPayment / (monthlyPayment - loanAmount * monthlyRate));
+  const denominator = Math.log(1 + monthlyRate);
+  const numPayments = numerator / denominator;
+
+  // Convert months to years and round to 1 decimal
+  const years = numPayments / 12;
+  return Math.round(years * 10) / 10;
 }
 
 

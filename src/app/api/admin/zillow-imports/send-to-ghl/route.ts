@@ -90,6 +90,7 @@ export async function POST(request: NextRequest) {
           year_built: data.yearBuilt || 0,
           lot_square_foot: data.lotSquareFoot || 0,
           estimate: data.estimate || 0,
+          rent_estimate: data.rentZestimate || 0,
           hoa: data.hoa || 0,
           description: sanitizeDescription(data.description), // Clean description for GHL
           agent_name: data.agentName || '',

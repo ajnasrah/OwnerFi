@@ -31,9 +31,9 @@ export async function GET(request: NextRequest) {
       // Get quality stats
       const allArticles = allSnapshot.docs.map(d => d.data());
       const rated = allArticles.filter(a => typeof a.qualityScore === 'number');
-      const highQuality = rated.filter(a => a.qualityScore >= 70);
+      const highQuality = rated.filter(a => a.qualityScore >= 65);
       const availableForVideos = allArticles.filter(a =>
-        !a.processed && typeof a.qualityScore === 'number' && a.qualityScore >= 70
+        !a.processed && typeof a.qualityScore === 'number' && a.qualityScore >= 65
       );
 
       const contentLengths = allArticles.map(a => (a.content || '').length);

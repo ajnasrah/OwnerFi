@@ -1478,9 +1478,14 @@ export interface PropertyRotationQueue {
 export async function addToPropertyRotationQueue(propertyId: string): Promise<void> {
   if (!db) throw new Error('Firebase not initialized');
 
-  // Check if already in queue
-  const existing = await getDoc(doc(db, 'property_rotation_queue', propertyId));
-  if (existing.exists()) {
+  // Check if already in queue (using property_videos collection - the actual queue)
+  const queueQuery = query(
+    collection(db, 'property_videos'),
+    where('propertyId', '==', propertyId)
+  );
+  const existingQueue = await getDocs(queueQuery);
+
+  if (!existingQueue.empty) {
     console.log(`Property ${propertyId} already in rotation queue`);
     return;
   }
@@ -1493,41 +1498,23 @@ export async function addToPropertyRotationQueue(propertyId: string): Promise<vo
 
   const property = propertyDoc.data() as any;
 
-  // Calculate actual down payment (handles both amount and percentage)
-  const { calculatePropertyFinancials } = await import('./property-calculations');
-  const financials = calculatePropertyFinancials({
-    listPrice: property.listPrice,
-    downPaymentAmount: property.downPaymentAmount,
-    downPaymentPercent: property.downPaymentPercent
-  });
+  // Validate property has images
+  if (!property.imageUrls || property.imageUrls.length === 0) {
+    throw new Error(`Property ${propertyId} has no images - cannot add to video queue`);
+  }
 
-  // Get current max position
-  const maxQuery = query(
-    collection(db, 'property_rotation_queue'),
-    orderBy('position', 'desc'),
-    firestoreLimit(1)
-  );
-  const maxSnapshot = await getDocs(maxQuery);
-  const maxPosition = maxSnapshot.empty ? 0 : maxSnapshot.docs[0].data().position;
-
-  // Add to queue
-  const queueItem: PropertyRotationQueue = {
-    id: propertyId,
+  // Create workflow entry in property_videos collection
+  const workflowId = `prop-${propertyId}-${Date.now()}`;
+  const workflowData = {
     propertyId,
-    address: property.address || 'Unknown Address',
-    city: property.city || 'Unknown City',
-    state: property.state || 'Unknown',
-    downPayment: financials.downPaymentAmount, // Use calculated down payment
-    imageUrl: property.imageUrls?.[0] || '',
-    position: maxPosition + 1,
-    videoCount: 0,
-    currentCycleCount: 0,
-    status: 'queued',
-    updatedAt: Date.now()
+    status: 'pending',
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+    source: 'auto_add',
   };
 
-  await setDoc(doc(db, 'property_rotation_queue', propertyId), queueItem);
-  console.log(`✅ Added to rotation queue: ${property.address} (position ${maxPosition + 1})`);
+  await setDoc(doc(db, 'property_videos', workflowId), workflowData);
+  console.log(`✅ Added property ${propertyId} to rotation queue (workflow: ${workflowId})`);
 }
 
 /**

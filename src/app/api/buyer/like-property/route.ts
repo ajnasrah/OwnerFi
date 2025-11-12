@@ -32,8 +32,9 @@ export async function POST(request: NextRequest) {
   // Standardized body parsing
   const bodyResult = await parseRequestBody<LikePropertyRequest>(request);
   if (!bodyResult.success) {
-    return bodyResult.response;
+    return (bodyResult as { success: false; response: NextResponse }).response;
   }
+
   const { propertyId, action } = bodyResult.data;
 
   // Validation

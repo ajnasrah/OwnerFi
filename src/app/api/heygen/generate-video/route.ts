@@ -38,8 +38,9 @@ export async function POST(request: NextRequest) {
     // Parse and validate request body
     const bodyResult = await parseRequestBody<HeyGenRequest>(request);
     if (!bodyResult.success) {
-      return bodyResult.response;
+      return (bodyResult as { success: false; response: NextResponse }).response;
     }
+
     const body = bodyResult.data;
 
     // Validate required fields

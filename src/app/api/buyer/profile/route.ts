@@ -85,8 +85,9 @@ export async function POST(request: NextRequest) {
   // Standardized body parsing
   const bodyResult = await parseRequestBody<BuyerProfileUpdate>(request);
   if (!bodyResult.success) {
-    return bodyResult.response;
+    return (bodyResult as { success: false; response: NextResponse }).response;
   }
+
   const body = bodyResult.data;
 
   try {

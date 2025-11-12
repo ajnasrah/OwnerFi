@@ -768,37 +768,86 @@ export async function POST(request: NextRequest) {
         console.log(`   ⏭️  Skipping queue add for ${propertyId}: status=${propertyData.status}, isActive=${propertyData.isActive}, hasImages=${!!(propertyData.imageUrls && propertyData.imageUrls.length > 0)}`);
       }
 
-      // Trigger buyer matching and notifications (non-blocking)
+      // Trigger buyer matching and notifications
       // This will find all buyers that match this property and send SMS notifications
+      // IMPORTANT: We MUST await this in serverless to ensure it completes before function terminates
       if (propertyData.status === 'active' && propertyData.isActive) {
         try {
-          const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ||
-                          (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
-
           console.log(`🔔 Triggering buyer matching for ${isUpdate ? 'updated' : 'new'} property ${propertyId}`);
 
-          // Fire and forget - don't block the webhook response
-          fetch(`${baseUrl}/api/properties/sync-matches`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              action: isUpdate ? 'update' : 'add',
-              propertyId: propertyId,
-              propertyData: cleanPropertyData
-            })
-          }).then(async (response) => {
-            if (response.ok) {
-              const result = await response.json();
-              console.log(`   ✅ Buyer matching completed: ${result.message}`);
-            } else {
-              const errorText = await response.text().catch(() => 'Unknown error');
-              console.error(`   ❌ Buyer matching failed (${response.status}): ${errorText}`);
-            }
-          }).catch(err => {
-            console.error(`   ❌ Failed to trigger buyer matching:`, err);
-          });
+          // Import and call the matching logic directly
+          const { collection: firestoreCollection, query: firestoreQuery, where: firestoreWhere, getDocs: firestoreGetDocs, updateDoc, doc: firestoreDoc, arrayUnion, serverTimestamp: firestoreServerTimestamp } = await import('firebase/firestore');
+
+          // Get relevant buyers in the same state
+          const relevantBuyersQuery = firestoreQuery(
+            firestoreCollection(db, 'buyerProfiles'),
+            firestoreWhere('preferredState', '==', cleanPropertyData.state),
+            firestoreWhere('isActive', '==', true)
+          );
+
+          const buyerDocs = await firestoreGetDocs(relevantBuyersQuery);
+          console.log(`   Found ${buyerDocs.size} buyers in ${cleanPropertyData.state}`);
+
+          const matchedBuyers: any[] = [];
+
+          // Check each buyer for match
+          for (const buyerDoc of buyerDocs.docs) {
+            const buyerData = buyerDoc.data();
+            const criteria = buyerData.searchCriteria || {};
+            const buyerCities = criteria.cities || [buyerData.preferredCity];
+
+            // Check location match
+            const locationMatch = buyerCities.some((cityName: string) =>
+              cleanPropertyData.city.toLowerCase() === cityName.toLowerCase()
+            );
+
+            if (!locationMatch) continue;
+
+            // Check budget match (OR logic)
+            const maxMonthly = criteria.maxMonthlyPayment || buyerData.maxMonthlyPayment || 0;
+            const maxDown = criteria.maxDownPayment || buyerData.maxDownPayment || 0;
+            const monthlyMatch = cleanPropertyData.monthlyPayment <= maxMonthly;
+            const downMatch = cleanPropertyData.downPaymentAmount <= maxDown;
+            const budgetMatch = monthlyMatch || downMatch;
+
+            if (!budgetMatch) continue;
+
+            // Check requirements
+            const requirementsMatch =
+              (!buyerData.minBedrooms || cleanPropertyData.bedrooms >= buyerData.minBedrooms) &&
+              (!buyerData.minBathrooms || cleanPropertyData.bathrooms >= buyerData.minBathrooms);
+
+            if (!requirementsMatch) continue;
+
+            // This buyer matches! Add property to their matches
+            const buyerRef = firestoreDoc(db, 'buyerProfiles', buyerDoc.id);
+            await updateDoc(buyerRef, {
+              matchedPropertyIds: arrayUnion(propertyId),
+              lastMatchUpdate: firestoreServerTimestamp(),
+              updatedAt: firestoreServerTimestamp()
+            });
+
+            matchedBuyers.push({ ...buyerData, id: buyerDoc.id });
+          }
+
+          console.log(`   ✅ Matched ${matchedBuyers.length} buyers`);
+
+          // Send notifications if we have matches
+          if (matchedBuyers.length > 0) {
+            console.log(`   📱 Sending SMS notifications to ${matchedBuyers.length} buyers...`);
+
+            const { sendBatchPropertyMatchNotifications } = await import('@/lib/gohighlevel-notifications');
+            const result = await sendBatchPropertyMatchNotifications(
+              { ...cleanPropertyData, id: propertyId } as any,
+              matchedBuyers,
+              isUpdate ? 'buyer_criteria_changed' : 'new_property_added'
+            );
+
+            console.log(`   ✅ Notifications: ${result.sent} sent, ${result.failed} failed`);
+          }
+
         } catch (error) {
-          console.error('Error triggering buyer matching:', error);
+          console.error('Error in buyer matching:', error);
           // Don't fail property creation if matching fails
         }
       } else {

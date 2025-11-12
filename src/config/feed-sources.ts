@@ -1,6 +1,6 @@
 // RSS Feed Source Configuration - VERIFIED WORKING FEEDS 2025
 // All feeds tested and verified with excellent content quality
-// Total: 55 feeds (VassDistro: 16, OwnerFi: 25, Carz: 14)
+// Total: 38 enabled feeds (VassDistro: 9, OwnerFi: 19, Carz: 10)
 
 import { addFeedSource as addFeedSourceFirestore, type FeedSource, getAllFeedSources } from '@/lib/feed-store-firestore';
 
@@ -158,7 +158,7 @@ export const OWNERFI_FEEDS: Omit<FeedSource, 'articlesProcessed'>[] = [
     url: 'https://www.nationalmortgagenews.com/feed',
     category: 'ownerfi',
     subcategory: 'mortgage',
-    enabled: true,
+    enabled: false,
     fetchInterval: 60
   },
   {
@@ -167,7 +167,7 @@ export const OWNERFI_FEEDS: Omit<FeedSource, 'articlesProcessed'>[] = [
     url: 'https://www.mortgagenewsdaily.com/rss/full-rss.xml',
     category: 'ownerfi',
     subcategory: 'mortgage',
-    enabled: true,
+    enabled: false,
     fetchInterval: 60
   },
   {
@@ -185,7 +185,7 @@ export const OWNERFI_FEEDS: Omit<FeedSource, 'articlesProcessed'>[] = [
     url: 'https://www.cpexecutive.com/feed/',
     category: 'ownerfi',
     subcategory: 'market',
-    enabled: true,
+    enabled: false,
     fetchInterval: 120
   },
   {
@@ -194,7 +194,7 @@ export const OWNERFI_FEEDS: Omit<FeedSource, 'articlesProcessed'>[] = [
     url: 'https://www.proptechinsider.com/feed/',
     category: 'ownerfi',
     subcategory: 'market',
-    enabled: true,
+    enabled: false,
     fetchInterval: 120
   },
   {
@@ -203,7 +203,7 @@ export const OWNERFI_FEEDS: Omit<FeedSource, 'articlesProcessed'>[] = [
     url: 'https://therealdeal.com/feed/',
     category: 'ownerfi',
     subcategory: 'market',
-    enabled: true,
+    enabled: false,
     fetchInterval: 60
   },
   {
@@ -221,7 +221,7 @@ export const OWNERFI_FEEDS: Omit<FeedSource, 'articlesProcessed'>[] = [
     url: 'https://www.propertymanagementinsider.com/feed/',
     category: 'ownerfi',
     subcategory: 'market',
-    enabled: true,
+    enabled: false,
     fetchInterval: 120
   },
   {
@@ -278,7 +278,7 @@ export const CARZ_FEEDS: Omit<FeedSource, 'articlesProcessed'>[] = [
   {
     id: 'carz-greencarreports',
     name: 'Green Car Reports - EV & Hybrid News',
-    url: 'https://www.greencarreports.com/rss/news',
+    url: 'https://feeds.highgearmedia.com/?sites=GreenCarReports',
     category: 'carz',
     subcategory: 'electric',
     enabled: true,
@@ -287,16 +287,16 @@ export const CARZ_FEEDS: Omit<FeedSource, 'articlesProcessed'>[] = [
   {
     id: 'carz-insideevs',
     name: 'InsideEVs - Electric Vehicle News',
-    url: 'https://insideevs.com/news/rss/',
+    url: 'https://insideevs.com/rss/',
     category: 'carz',
     subcategory: 'electric',
-    enabled: true,
+    enabled: false,
     fetchInterval: 60
   },
   {
     id: 'carz-motorauthority-ev',
     name: 'Motor Authority - Electric Vehicles',
-    url: 'https://www.motorauthority.com/rss/news',
+    url: 'https://feeds.feedburner.com/motorauthority2',
     category: 'carz',
     subcategory: 'electric',
     enabled: true,
@@ -317,7 +317,7 @@ export const CARZ_FEEDS: Omit<FeedSource, 'articlesProcessed'>[] = [
     url: 'https://www.autonews.com/rss/section/electric-vehicles',
     category: 'carz',
     subcategory: 'electric',
-    enabled: true,
+    enabled: false,
     fetchInterval: 120
   },
   {
@@ -335,7 +335,7 @@ export const CARZ_FEEDS: Omit<FeedSource, 'articlesProcessed'>[] = [
     url: 'https://evmagazine.com/rss',
     category: 'carz',
     subcategory: 'electric',
-    enabled: true,
+    enabled: false,
     fetchInterval: 120
   },
   {
@@ -344,7 +344,7 @@ export const CARZ_FEEDS: Omit<FeedSource, 'articlesProcessed'>[] = [
     url: 'https://www.topgear.com/rss/car-news/electric',
     category: 'carz',
     subcategory: 'electric',
-    enabled: true,
+    enabled: false,
     fetchInterval: 120
   },
   {
@@ -362,7 +362,7 @@ export const CARZ_FEEDS: Omit<FeedSource, 'articlesProcessed'>[] = [
     url: 'https://www.thedrive.com/rss/news',
     category: 'carz',
     subcategory: 'electric',
-    enabled: true,
+    enabled: false,
     fetchInterval: 120
   }
 ];
@@ -431,7 +431,7 @@ export const VASSDISTRO_FEEDS: Omit<FeedSource, 'articlesProcessed'>[] = [
     url: 'https://vaping360.com/feed/',
     category: 'vassdistro',
     subcategory: 'market',
-    enabled: true,
+    enabled: false,
     fetchInterval: 60
   },
   {
@@ -449,7 +449,7 @@ export const VASSDISTRO_FEEDS: Omit<FeedSource, 'articlesProcessed'>[] = [
     url: 'https://www.ecigarettedirect.co.uk/ashtray-blog/feed',
     category: 'vassdistro',
     subcategory: 'products',
-    enabled: true,
+    enabled: false,
     fetchInterval: 120
   },
   {
@@ -458,7 +458,7 @@ export const VASSDISTRO_FEEDS: Omit<FeedSource, 'articlesProcessed'>[] = [
     url: 'https://www.planetofthevapes.co.uk/news/vaping-news/feed',
     category: 'vassdistro',
     subcategory: 'products',
-    enabled: true,
+    enabled: false,
     fetchInterval: 120
   },
   {
@@ -467,7 +467,7 @@ export const VASSDISTRO_FEEDS: Omit<FeedSource, 'articlesProcessed'>[] = [
     url: 'https://www.vapeclub.co.uk/vape-news/feed',
     category: 'vassdistro',
     subcategory: 'market',
-    enabled: true,
+    enabled: false,
     fetchInterval: 120
   },
   {
@@ -476,7 +476,7 @@ export const VASSDISTRO_FEEDS: Omit<FeedSource, 'articlesProcessed'>[] = [
     url: 'https://ecigintelligence.com/feed/',
     category: 'vassdistro',
     subcategory: 'trade',
-    enabled: true,
+    enabled: false,
     fetchInterval: 120
   },
   {
@@ -494,7 +494,7 @@ export const VASSDISTRO_FEEDS: Omit<FeedSource, 'articlesProcessed'>[] = [
     url: 'https://vapebusiness.com/feed/',
     category: 'vassdistro',
     subcategory: 'trade',
-    enabled: true,
+    enabled: false,
     fetchInterval: 120
   },
   {
@@ -512,7 +512,7 @@ export const VASSDISTRO_FEEDS: Omit<FeedSource, 'articlesProcessed'>[] = [
     url: 'https://www.vapeactive.com/blog/feed/',
     category: 'vassdistro',
     subcategory: 'market',
-    enabled: true,
+    enabled: false,
     fetchInterval: 120
   }
 ];
@@ -549,9 +549,9 @@ export async function initializeFeedSources() {
     totalCount++;
   }
 
-  console.log(`\n✅ Initialized ${CARZ_FEEDS.length} Carz feeds - 1 excellent + 3 adequate quality`);
-  console.log(`✅ Initialized ${OWNERFI_FEEDS.length} OwnerFi feeds - all excellent quality`);
-  console.log(`✅ Initialized ${VASSDISTRO_FEEDS.length} Vass Distro feeds - all excellent quality`);
+  console.log(`\n✅ Initialized ${CARZ_FEEDS.length} Carz feeds - expanded coverage with major EV news sources`);
+  console.log(`✅ Initialized ${OWNERFI_FEEDS.length} OwnerFi feeds - comprehensive real estate & mortgage coverage`);
+  console.log(`✅ Initialized ${VASSDISTRO_FEEDS.length} Vass Distro feeds - global vaping industry sources`);
   console.log(`📊 Total: ${totalCount} feed sources (TESTED & VERIFIED 2025)\n`);
 }
 

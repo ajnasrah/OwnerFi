@@ -1,40 +1,55 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth';
-import { ExtendedSession } from '@/types/session';
-import { 
-  collection, 
-  query, 
-  where, 
+import {
+  collection,
+  query,
+  where,
   getDocs,
   doc,
   updateDoc,
-  serverTimestamp 
+  serverTimestamp
 } from 'firebase/firestore';
 import { getSafeDb } from '@/lib/firebase-safe';
+import { requireRole, extractActorFromRequest } from '@/lib/auth-helpers';
+import {
+  ErrorResponses,
+  createSuccessResponse,
+  parseRequestBody,
+  logError
+} from '@/lib/api-error-handler';
+import { AuditHelpers } from '@/lib/audit-logger';
+
+interface AddCreditsRequest {
+  realtorEmail: string;
+  credits: number;
+}
 
 export async function POST(request: NextRequest) {
+  // Standardized admin authentication
+  const authResult = await requireRole(request, 'admin');
+  if ('error' in authResult) return authResult.error;
+  const { session } = authResult;
+
+  // Standardized body parsing
+  const bodyResult = await parseRequestBody<AddCreditsRequest>(request);
+  if (!bodyResult.success) {
+    return bodyResult.response;
+  }
+  const { realtorEmail, credits } = bodyResult.data;
+
+  // Validation
+  if (!realtorEmail || !credits) {
+    return ErrorResponses.validationError(
+      'Realtor email and credits amount required'
+    );
+  }
+
+  if (typeof credits !== 'number' || credits <= 0) {
+    return ErrorResponses.validationError(
+      'Credits must be a positive number'
+    );
+  }
+
   try {
-    // Admin access control
-    const session = await // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    getServerSession(authOptions as any) as ExtendedSession;
-    
-    if (!session?.user || session.user?.role !== 'admin') {
-      return NextResponse.json(
-        { error: 'Access denied. Admin access required.' },
-        { status: 403 }
-      );
-    }
-
-    const { realtorEmail, credits } = await request.json();
-    
-    if (!realtorEmail || !credits) {
-      return NextResponse.json(
-        { error: 'Realtor email and credits amount required' },
-        { status: 400 }
-      );
-    }
-
     // Find realtor by email
     const db = getSafeDb();
     const usersQuery = query(
@@ -43,42 +58,43 @@ export async function POST(request: NextRequest) {
       where('role', '==', 'realtor')
     );
     const userDocs = await getDocs(usersQuery);
-    
+
     if (userDocs.empty) {
-      return NextResponse.json(
-        { error: 'Realtor not found' },
-        { status: 404 }
-      );
+      return ErrorResponses.notFound('Realtor');
     }
 
     const user = userDocs.docs[0];
-    
+
     // Find realtor profile
     const realtorsQuery = query(
       collection(db, 'realtors'),
       where('userId', '==', user.id)
     );
     const realtorDocs = await getDocs(realtorsQuery);
-    
+
     if (realtorDocs.empty) {
-      return NextResponse.json(
-        { error: 'Realtor profile not found' },
-        { status: 404 }
-      );
+      return ErrorResponses.notFound('Realtor profile');
     }
 
     const realtorDoc = realtorDocs.docs[0];
     const currentCredits = realtorDoc.data().credits || 0;
-    const newCredits = currentCredits + parseInt(credits);
-    
+    const newCredits = currentCredits + credits;
+
     // Update credits
     await updateDoc(doc(db, 'realtors', realtorDoc.id), {
       credits: newCredits,
       updatedAt: serverTimestamp()
     });
-    
-    return NextResponse.json({
-      success: true,
+
+    // AUDIT LOG - Critical admin action
+    await AuditHelpers.logCreditsAdded(
+      extractActorFromRequest(request, session),
+      realtorDoc.id,
+      realtorEmail,
+      credits
+    );
+
+    return createSuccessResponse({
       message: `Added ${credits} credits to ${realtorEmail}`,
       previousCredits: currentCredits,
       newCredits: newCredits,
@@ -86,9 +102,11 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    return NextResponse.json(
-      { error: 'Failed to add credits', details: (error as Error).message },
-      { status: 500 }
-    );
+    logError('POST /api/admin/add-credits', error, {
+      adminId: session.user.id,
+      realtorEmail,
+      credits
+    });
+    return ErrorResponses.databaseError('Failed to add credits', error);
   }
 }

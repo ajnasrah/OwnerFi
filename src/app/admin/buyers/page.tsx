@@ -5,17 +5,34 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { BuyerAdminView } from '@/lib/view-models';
+import { CityRadiusSearch } from '@/components/admin/CityRadiusSearch';
+
+interface CityCoordinates {
+  lat: number;
+  lng: number;
+  city: string;
+  state: string;
+  formattedAddress: string;
+}
 
 export default function AdminBuyers() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [buyers, setBuyers] = useState<BuyerAdminView[]>([]);
-  const [filteredBuyers, setFilteredBuyers] = useState<BuyerAdminView[]>([]);
   const [selectedBuyers, setSelectedBuyers] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
   const [selectAll, setSelectAll] = useState(false);
-  const [cityFilter, setCityFilter] = useState('');
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalBuyers, setTotalBuyers] = useState(0);
+
+  // Search state
+  const [searchCity, setSearchCity] = useState<CityCoordinates | null>(null);
+  const [searchRadius, setSearchRadius] = useState(30);
+  const [searchState, setSearchState] = useState<string | null>(null);
 
   useEffect(() => {
     if (status === 'loading') return;
@@ -26,14 +43,34 @@ export default function AdminBuyers() {
     }
   }, [status, session, router]);
 
-  const loadBuyers = async () => {
+  const loadBuyers = async (page = 1) => {
     try {
       setLoading(true);
-      const response = await fetch('/api/admin/buyers');
+
+      // Build query params
+      const params = new URLSearchParams({
+        page: page.toString(),
+      });
+
+      // Add location filter if searching by city
+      if (searchCity) {
+        params.append('lat', searchCity.lat.toString());
+        params.append('lng', searchCity.lng.toString());
+        params.append('radius', searchRadius.toString());
+      }
+
+      // Add state filter if searching by state
+      if (searchState) {
+        params.append('state', searchState);
+      }
+
+      const response = await fetch(`/api/admin/buyers?${params.toString()}`);
       if (response.ok) {
         const data = await response.json();
         setBuyers(data.buyers || []);
-        setFilteredBuyers(data.buyers || []);
+        setTotalPages(data.totalPages || 1);
+        setCurrentPage(data.currentPage || 1);
+        setTotalBuyers(data.total || 0);
       }
     } catch (error) {
       console.error('Error loading buyers:', error);
@@ -42,21 +79,19 @@ export default function AdminBuyers() {
     }
   };
 
-  // Filter buyers by city whenever cityFilter changes
+  // Reload buyers when search filters or page changes
   useEffect(() => {
-    if (!cityFilter.trim()) {
-      setFilteredBuyers(buyers);
-    } else {
-      const filtered = buyers.filter(buyer => {
-        const buyerCity = (buyer.preferredCity || buyer.city || '').toLowerCase();
-        return buyerCity.includes(cityFilter.toLowerCase());
-      });
-      setFilteredBuyers(filtered);
+    if (status === 'authenticated') {
+      loadBuyers(currentPage);
     }
-    // Clear selection when filter changes
+  }, [searchCity, searchRadius, searchState, currentPage]);
+
+  // Reset to page 1 when search filters change
+  useEffect(() => {
+    setCurrentPage(1);
     setSelectedBuyers(new Set());
     setSelectAll(false);
-  }, [cityFilter, buyers]);
+  }, [searchCity, searchRadius, searchState]);
 
   const toggleSelectBuyer = (buyerId: string) => {
     const newSelected = new Set(selectedBuyers);
@@ -74,11 +109,28 @@ export default function AdminBuyers() {
       setSelectedBuyers(new Set());
       setSelectAll(false);
     } else {
-      // Select only filtered buyers
-      const allBuyerIds = new Set(filteredBuyers.map(b => b.id));
+      // Select only buyers on current page
+      const allBuyerIds = new Set(buyers.map(b => b.id));
       setSelectedBuyers(allBuyerIds);
       setSelectAll(true);
     }
+  };
+
+  const handleSearch = (
+    cityData: CityCoordinates | null,
+    radius: number,
+    state: string | null
+  ) => {
+    setSearchCity(cityData);
+    setSearchRadius(radius);
+    setSearchState(state);
+    setCurrentPage(1); // Reset to first page
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+    setSelectedBuyers(new Set());
+    setSelectAll(false);
   };
 
   const deleteBuyers = async () => {
@@ -100,7 +152,7 @@ export default function AdminBuyers() {
         alert(`Successfully deleted ${result.deletedCount} buyer(s)`);
         setSelectedBuyers(new Set());
         setSelectAll(false);
-        loadBuyers();
+        loadBuyers(currentPage);
       } else {
         const error = await response.json();
         alert(`Error: ${error.error}`);
@@ -131,31 +183,12 @@ export default function AdminBuyers() {
           </Link>
           <h1 className="text-3xl font-bold text-white mb-2">Manage Buyers</h1>
           <p className="text-slate-400">
-            {cityFilter ? `Showing ${filteredBuyers.length} of ${buyers.length} buyers` : `Total: ${buyers.length} buyers`}
+            Total: {totalBuyers} buyer{totalBuyers !== 1 ? 's' : ''} | Page {currentPage} of {totalPages}
           </p>
         </div>
 
-        {/* City Filter */}
-        <div className="bg-slate-800 rounded-lg p-4 mb-4">
-          <label className="block text-white mb-2 font-semibold">
-            🔍 Filter by City
-          </label>
-          <input
-            type="text"
-            value={cityFilter}
-            onChange={(e) => setCityFilter(e.target.value)}
-            placeholder="Enter city name (e.g., Memphis, Dallas, Houston...)"
-            className="w-full px-4 py-2 rounded-lg bg-slate-700 border border-slate-600 text-white placeholder-slate-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none"
-          />
-          {cityFilter && (
-            <button
-              onClick={() => setCityFilter('')}
-              className="mt-2 text-emerald-400 hover:text-emerald-300 text-sm"
-            >
-              ✕ Clear filter
-            </button>
-          )}
-        </div>
+        {/* Search Component */}
+        <CityRadiusSearch onSearch={handleSearch} className="mb-6" />
 
         {/* Actions Bar */}
         <div className="bg-slate-800 rounded-lg p-4 mb-6 flex items-center justify-between">
@@ -213,7 +246,7 @@ export default function AdminBuyers() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-700">
-                {filteredBuyers.map((buyer) => (
+                {buyers.map((buyer) => (
                   <tr key={buyer.id} className="hover:bg-slate-700/50 transition-colors">
                     <td className="p-3">
                       <input
@@ -270,13 +303,77 @@ export default function AdminBuyers() {
               </tbody>
             </table>
 
-            {filteredBuyers.length === 0 && (
+            {buyers.length === 0 && (
               <div className="p-8 text-center text-slate-400">
-                {cityFilter ? `No buyers found in "${cityFilter}"` : 'No buyers found'}
+                {searchCity || searchState ? 'No buyers found matching your search criteria' : 'No buyers found'}
               </div>
             )}
           </div>
         </div>
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="mt-6 flex items-center justify-between bg-slate-800 rounded-lg p-4">
+            <div className="text-slate-400">
+              Showing {((currentPage - 1) * 25) + 1} to {Math.min(currentPage * 25, totalBuyers)} of {totalBuyers} buyers
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
+                  currentPage === 1
+                    ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
+                    : 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                }`}
+              >
+                Previous
+              </button>
+
+              <div className="flex gap-1">
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => handlePageChange(pageNum)}
+                      className={`px-3 py-2 rounded-lg font-semibold transition-colors ${
+                        currentPage === pageNum
+                          ? 'bg-emerald-500 text-white'
+                          : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
+                  currentPage === totalPages
+                    ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
+                    : 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                }`}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

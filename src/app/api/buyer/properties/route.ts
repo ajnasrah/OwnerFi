@@ -8,12 +8,11 @@ import {
   limit,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth';
-import { ExtendedSession } from '@/types/session';
 import { PropertyListing } from "@/lib/property-schema";
 import { getCitiesWithinRadiusComprehensive } from '@/lib/comprehensive-cities';
-import { checkDatabaseAvailable, applyRateLimit, getClientIp, createErrorResponse } from '@/lib/api-guards';
+import { checkDatabaseAvailable, applyRateLimit, getClientIp } from '@/lib/api-guards';
+import { requireAuth } from '@/lib/auth-helpers';
+import { ErrorResponses, createSuccessResponse, logError } from '@/lib/api-error-handler';
 
 /**
  * BUYER PROPERTY API WITH NEARBY CITIES
@@ -29,23 +28,21 @@ import { checkDatabaseAvailable, applyRateLimit, getClientIp, createErrorRespons
  */
 
 export async function GET(request: NextRequest) {
+  // Standardized authentication
+  const authResult = await requireAuth(request);
+  if ('error' in authResult) return authResult.error;
+  const { session } = authResult;
+
+  // Check database availability
+  const dbError = checkDatabaseAvailable(db);
+  if (dbError) return dbError;
+
+  // Apply rate limiting (60 requests per minute per user)
+  const ip = getClientIp(request.headers);
+  const rateLimitError = await applyRateLimit(`buyer-properties:${ip}`, 60, 60);
+  if (rateLimitError) return rateLimitError;
+
   try {
-    // Check database availability
-    const dbError = checkDatabaseAvailable(db);
-    if (dbError) return dbError;
-
-    // Apply rate limiting (60 requests per minute per user)
-    const ip = getClientIp(request.headers);
-    const rateLimitError = await applyRateLimit(`buyer-properties:${ip}`, 60, 60);
-    if (rateLimitError) return rateLimitError;
-
-    const session = await // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    getServerSession(authOptions as any) as ExtendedSession | null;
-
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     // Get buyer's search criteria from URL params
     const { searchParams } = new URL(request.url);
     const city = searchParams.get('city');
@@ -53,11 +50,11 @@ export async function GET(request: NextRequest) {
     const maxMonthlyPayment = searchParams.get('maxMonthlyPayment');
     const maxDownPayment = searchParams.get('maxDownPayment');
     const pageSize = parseInt(searchParams.get('limit') || '20');
-    
+
     if (!city || !state || !maxMonthlyPayment || !maxDownPayment) {
-      return NextResponse.json({ 
-        error: 'Missing required parameters: city, state, maxMonthlyPayment, maxDownPayment' 
-      }, { status: 400 });
+      return ErrorResponses.validationError(
+        'Missing required parameters: city, state, maxMonthlyPayment, maxDownPayment'
+      );
     }
 
     // Validate and parse numeric inputs
@@ -65,15 +62,15 @@ export async function GET(request: NextRequest) {
     const maxDown = Number(maxDownPayment);
 
     if (isNaN(maxMonthly) || maxMonthly < 0) {
-      return NextResponse.json({
-        error: 'Invalid maxMonthlyPayment: must be a positive number'
-      }, { status: 400 });
+      return ErrorResponses.validationError(
+        'Invalid maxMonthlyPayment: must be a positive number'
+      );
     }
 
     if (isNaN(maxDown) || maxDown < 0) {
-      return NextResponse.json({
-        error: 'Invalid maxDownPayment: must be a positive number'
-      }, { status: 400 });
+      return ErrorResponses.validationError(
+        'Invalid maxDownPayment: must be a positive number'
+      );
     }
 
     const searchCity = city.split(',')[0].trim();
@@ -382,6 +379,9 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    return createErrorResponse('Failed to load buyer properties', error);
+    logError('GET /api/buyer/properties', error, {
+      userId: session.user.id
+    });
+    return ErrorResponses.databaseError('Failed to load buyer properties', error);
   }
 }

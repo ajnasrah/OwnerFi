@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { 
-  collection, 
-  query, 
-  where, 
+import {
+  collection,
+  query,
+  where,
   getDocs,
   updateDoc,
   arrayUnion,
@@ -10,32 +10,44 @@ import {
   serverTimestamp
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth';
-import { ExtendedSession } from '@/types/session';
+import { requireRole } from '@/lib/auth-helpers';
+import {
+  ErrorResponses,
+  createSuccessResponse,
+  parseRequestBody,
+  logError
+} from '@/lib/api-error-handler';
+
+interface LikePropertyRequest {
+  propertyId: string;
+  action: 'like' | 'unlike';
+}
 
 export async function POST(request: NextRequest) {
+  // Standardized authentication
+  const authResult = await requireRole(request, 'buyer');
+  if ('error' in authResult) return authResult.error;
+  const { session } = authResult;
+
+  // Standardized body parsing
+  const bodyResult = await parseRequestBody<LikePropertyRequest>(request);
+  if (!bodyResult.success) {
+    return bodyResult.response;
+  }
+  const { propertyId, action } = bodyResult.data;
+
+  // Validation
+  if (!propertyId || !action) {
+    return ErrorResponses.validationError('Missing propertyId or action');
+  }
+
+  if (action !== 'like' && action !== 'unlike') {
+    return ErrorResponses.validationError('Action must be "like" or "unlike"');
+  }
+
   try {
     if (!db) {
-      return NextResponse.json(
-        { error: 'Database not available' },
-        { status: 500 }
-      );
-    }
-
-    const session = await // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    getServerSession(authOptions as any) as ExtendedSession | null;
-    
-    if (!session?.user || session.user.role !== 'buyer') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const { propertyId, action } = await request.json(); // action: 'like' or 'unlike'
-    
-    if (!propertyId || !action) {
-      return NextResponse.json({ 
-        error: 'Missing propertyId or action' 
-      }, { status: 400 });
+      return ErrorResponses.serviceUnavailable('Database not available');
     }
 
     // Get buyer profile
@@ -46,9 +58,7 @@ export async function POST(request: NextRequest) {
     const snapshot = await getDocs(profilesQuery);
 
     if (snapshot.empty) {
-      return NextResponse.json({ 
-        error: 'Buyer profile not found' 
-      }, { status: 404 });
+      return ErrorResponses.notFound('Buyer profile');
     }
 
     const profileDoc = snapshot.docs[0];
@@ -60,7 +70,7 @@ export async function POST(request: NextRequest) {
         likedProperties: arrayUnion(propertyId), // Keep legacy field for backward compat
         updatedAt: serverTimestamp()
       });
-    } else if (action === 'unlike') {
+    } else {
       await updateDoc(profileDoc.ref, {
         likedPropertyIds: arrayRemove(propertyId),
         likedProperties: arrayRemove(propertyId), // Keep legacy field for backward compat
@@ -68,15 +78,18 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    return NextResponse.json({ 
-      success: true,
+    return createSuccessResponse({
       action,
-      propertyId 
+      propertyId,
+      message: `Property ${action}d successfully`
     });
 
   } catch (error) {
-    return NextResponse.json({ 
-      error: 'Failed to update property preference' 
-    }, { status: 500 });
+    logError('POST /api/buyer/like-property', error, {
+      userId: session.user.id,
+      propertyId,
+      action
+    });
+    return ErrorResponses.databaseError('Failed to update property preference', error);
   }
 }

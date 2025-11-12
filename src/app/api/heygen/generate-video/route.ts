@@ -1,24 +1,51 @@
 import { NextRequest, NextResponse } from 'next/server';
+import {
+  ErrorResponses,
+  createSuccessResponse,
+  parseRequestBody,
+  logError
+} from '@/lib/api-error-handler';
+import { fetchWithTimeout, ServiceTimeouts, TimeoutError } from '@/lib/fetch-with-timeout';
 
 const HEYGEN_API_KEY = process.env.HEYGEN_API_KEY;
 const HEYGEN_API_URL = 'https://api.heygen.com/v2/video/generate';
 
+interface HeyGenRequest {
+  talking_photo_id: string;
+  input_text: string;
+  voice_id: string;
+  scale?: number;
+  width?: number;
+  height?: number;
+  speed?: number;
+  caption?: boolean;
+  title?: string;
+  test?: boolean;
+  callback_id?: string;
+  talking_photo_style?: string;
+  talking_style?: string;
+  super_resolution?: boolean;
+  offset?: { x: number; y: number };
+}
+
 export async function POST(request: NextRequest) {
   try {
+    // Check API key configuration
     if (!HEYGEN_API_KEY) {
-      return NextResponse.json(
-        { error: 'HeyGen API key not configured' },
-        { status: 500 }
-      );
+      return ErrorResponses.configError('HeyGen API key not configured');
     }
 
-    const body = await request.json();
+    // Parse and validate request body
+    const bodyResult = await parseRequestBody<HeyGenRequest>(request);
+    if (!bodyResult.success) {
+      return bodyResult.response;
+    }
+    const body = bodyResult.data;
 
     // Validate required fields
     if (!body.talking_photo_id || !body.input_text || !body.voice_id) {
-      return NextResponse.json(
-        { error: 'Missing required fields: talking_photo_id, input_text, voice_id' },
-        { status: 400 }
+      return ErrorResponses.validationError(
+        'Missing required fields: talking_photo_id, input_text, voice_id'
       );
     }
 
@@ -69,42 +96,48 @@ export async function POST(request: NextRequest) {
       text_length: body.input_text.length
     });
 
-    const response = await fetch(HEYGEN_API_URL, {
+    // Make API call with timeout and retry
+    const response = await fetchWithTimeout(HEYGEN_API_URL, {
       method: 'POST',
       headers: {
         'accept': 'application/json',
         'content-type': 'application/json',
         'x-api-key': HEYGEN_API_KEY,
       },
-      body: JSON.stringify(heygenRequest)
+      body: JSON.stringify(heygenRequest),
+      timeout: ServiceTimeouts.HEYGEN,
+      retries: 2,
+      retryDelay: 1000,
+      onRetry: (attempt, error) => {
+        console.warn(`[HeyGen] Retry attempt ${attempt}:`, error.message);
+      }
     });
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      console.error('HeyGen API error:', errorData);
-      return NextResponse.json(
-        { error: 'Failed to generate video', details: errorData },
-        { status: response.status }
-      );
+      logError('HeyGen API returned error', new Error(`Status ${response.status}`), {
+        status: response.status,
+        errorData,
+        talking_photo_id: body.talking_photo_id
+      });
+      return ErrorResponses.externalApiError('HeyGen', errorData);
     }
 
     const data = await response.json();
 
-    return NextResponse.json({
-      success: true,
+    return createSuccessResponse({
       video_id: data.data?.video_id || data.video_id,
       data: data
     });
 
   } catch (error) {
-    console.error('Error generating HeyGen video:', error);
-    return NextResponse.json(
-      {
-        error: 'Internal server error',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      },
-      { status: 500 }
-    );
+    logError('POST /api/heygen/generate-video', error);
+
+    if (error instanceof TimeoutError) {
+      return ErrorResponses.timeout('HeyGen video generation');
+    }
+
+    return ErrorResponses.externalApiError('HeyGen', error);
   }
 }
 

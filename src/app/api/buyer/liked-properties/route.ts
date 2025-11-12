@@ -1,30 +1,28 @@
-import { NextResponse } from 'next/server';
-import { 
-  collection, 
-  query, 
-  where, 
+import { NextRequest, NextResponse } from 'next/server';
+import {
+  collection,
+  query,
+  where,
   getDocs,
   documentId
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth';
-import { ExtendedSession } from '@/types/session';
+import { requireRole } from '@/lib/auth-helpers';
+import {
+  ErrorResponses,
+  createSuccessResponse,
+  logError
+} from '@/lib/api-error-handler';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  // Standardized authentication
+  const authResult = await requireRole(request, 'buyer');
+  if ('error' in authResult) return authResult.error;
+  const { session } = authResult;
+
   try {
     if (!db) {
-      return NextResponse.json(
-        { error: 'Database not available' },
-        { status: 500 }
-      );
-    }
-
-    const session = await // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    getServerSession(authOptions as any) as ExtendedSession | null;
-    
-    if (!session?.user || session.user.role !== 'buyer') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return ErrorResponses.serviceUnavailable('Database not available');
     }
 
     // Get buyer profile with liked properties
@@ -35,9 +33,10 @@ export async function GET() {
     const snapshot = await getDocs(profilesQuery);
 
     if (snapshot.empty) {
-      return NextResponse.json({ 
+      return createSuccessResponse({
         likedProperties: [],
-        profile: null 
+        profile: null,
+        total: 0
       });
     }
 
@@ -45,45 +44,45 @@ export async function GET() {
     const likedPropertyIds = profile.likedPropertyIds || profile.likedProperties || [];
 
     if (likedPropertyIds.length === 0) {
-      return NextResponse.json({ 
+      return createSuccessResponse({
         likedProperties: [],
-        profile 
+        profile,
+        total: 0
       });
     }
 
     // Get property details for liked properties
     const allProperties = [];
-    
+
     // Batch fetch in groups of 10 (Firestore limit)
     for (let i = 0; i < likedPropertyIds.length; i += 10) {
       const batch = likedPropertyIds.slice(i, i + 10);
-      
+
       const batchQuery = query(
         collection(db, 'properties'),
         where(documentId(), 'in', batch)
       );
-      
+
       const batchSnapshot = await getDocs(batchQuery);
       const batchProperties = batchSnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
         isLiked: true
       }));
-      
+
       allProperties.push(...batchProperties);
     }
 
-
-    return NextResponse.json({
+    return createSuccessResponse({
       likedProperties: allProperties,
       profile,
       total: allProperties.length
     });
 
   } catch (error) {
-    return NextResponse.json({ 
-      error: 'Failed to load liked properties',
-      likedProperties: []
-    }, { status: 500 });
+    logError('GET /api/buyer/liked-properties', error, {
+      userId: session.user.id
+    });
+    return ErrorResponses.databaseError('Failed to load liked properties', error);
   }
 }

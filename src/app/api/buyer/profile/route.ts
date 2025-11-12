@@ -10,12 +10,16 @@ import {
   serverTimestamp
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth';
 import { unifiedDb } from '@/lib/unified-db';
-import { ExtendedSession } from '@/types/session';
 import { syncBuyerToGHL } from '@/lib/gohighlevel-api';
 import { logInfo, logWarn } from '@/lib/logger';
+import { requireRole } from '@/lib/auth-helpers';
+import {
+  ErrorResponses,
+  createSuccessResponse,
+  parseRequestBody,
+  logError
+} from '@/lib/api-error-handler';
 
 /**
  * SIMPLIFIED BUYER PROFILE API
@@ -27,20 +31,15 @@ import { logInfo, logWarn } from '@/lib/logger';
  * NO realtor matching, NO complex algorithms, NO dependencies.
  */
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  // Standardized authentication
+  const authResult = await requireRole(request, 'buyer');
+  if ('error' in authResult) return authResult.error;
+  const { session } = authResult;
+
   try {
     if (!db) {
-      return NextResponse.json(
-        { error: 'Database not available' },
-        { status: 500 }
-      );
-    }
-
-    const session = await // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    getServerSession(authOptions as any) as ExtendedSession | null;
-    
-    if (!session?.user || session.user.role !== 'buyer') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return ErrorResponses.serviceUnavailable('Database not available');
     }
 
     // Get buyer profile
@@ -51,7 +50,7 @@ export async function GET() {
     const snapshot = await getDocs(profilesQuery);
 
     if (snapshot.empty) {
-      return NextResponse.json({ profile: null });
+      return createSuccessResponse({ profile: null });
     }
 
     const profile = {
@@ -59,31 +58,42 @@ export async function GET() {
       ...snapshot.docs[0].data()
     };
 
-    return NextResponse.json({ profile });
+    return createSuccessResponse({ profile });
 
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to load profile' }, { status: 500 });
+    logError('GET /api/buyer/profile', error, { userId: session.user.id });
+    return ErrorResponses.databaseError('Failed to load profile', error);
   }
 }
 
+interface BuyerProfileUpdate {
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  city: string;
+  state: string;
+  maxMonthlyPayment: number;
+  maxDownPayment: number;
+}
+
 export async function POST(request: NextRequest) {
+  // Standardized authentication
+  const authResult = await requireRole(request, 'buyer');
+  if ('error' in authResult) return authResult.error;
+  const { session } = authResult;
+
+  // Standardized body parsing
+  const bodyResult = await parseRequestBody<BuyerProfileUpdate>(request);
+  if (!bodyResult.success) {
+    return bodyResult.response;
+  }
+  const body = bodyResult.data;
+
   try {
     if (!db) {
-      return NextResponse.json(
-        { error: 'Database not available' },
-        { status: 500 }
-      );
+      return ErrorResponses.serviceUnavailable('Database not available');
     }
 
-    const session = await // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    getServerSession(authOptions as any) as ExtendedSession | null;
-    
-    if (!session?.user || session.user.role !== 'buyer') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const body = await request.json();
-    
     const {
       firstName,
       lastName,
@@ -94,12 +104,11 @@ export async function POST(request: NextRequest) {
       maxDownPayment
     } = body;
 
-
     // Validate required fields
     if (!city || !state || !maxMonthlyPayment || !maxDownPayment) {
-      return NextResponse.json({ 
-        error: 'Missing required: city, state, maxMonthlyPayment, maxDownPayment' 
-      }, { status: 400 });
+      return ErrorResponses.validationError(
+        'Missing required: city, state, maxMonthlyPayment, maxDownPayment'
+      );
     }
 
     // Get user contact info from database if not provided
@@ -214,16 +223,18 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    return NextResponse.json({
-      success: true,
+    return createSuccessResponse({
       buyerId,
       message: 'Profile saved successfully'
     });
 
   } catch (error) {
-    return NextResponse.json({ 
-      error: 'Failed to save profile' 
-    }, { status: 500 });
+    logError('POST /api/buyer/profile', error, {
+      userId: session.user.id,
+      city: body.city,
+      state: body.state
+    });
+    return ErrorResponses.databaseError('Failed to save profile', error);
   }
 }
 

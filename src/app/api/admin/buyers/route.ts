@@ -15,6 +15,49 @@ import { ExtendedSession } from '@/types/session';
 import { BuyerAdminView, firestoreToBuyerProfile, toBuyerAdminView } from '@/lib/view-models';
 import { convertTimestampToDate } from '@/lib/firebase-models';
 
+// Helper function to calculate distance between two coordinates (Haversine formula)
+function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 3959; // Earth's radius in miles
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+// Helper function to geocode a city using Google Maps API
+async function geocodeCity(city: string, state: string): Promise<{ lat: number; lng: number } | null> {
+  try {
+    const googleApiKey = process.env.GOOGLE_MAPS_API_KEY;
+    if (!googleApiKey) return null;
+
+    const address = `${city}, ${state}, USA`;
+    const response = await fetch(
+      `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${googleApiKey}`,
+      { cache: 'force-cache' } // Cache geocoding results
+    );
+
+    if (!response.ok) return null;
+
+    const data = await response.json();
+    if (data.status === 'OK' && data.results?.[0]?.geometry?.location) {
+      return {
+        lat: data.results[0].geometry.location.lat,
+        lng: data.results[0].geometry.location.lng
+      };
+    }
+
+    return null;
+  } catch (error) {
+    console.error('Geocoding error:', error);
+    return null;
+  }
+}
+
 // GET - Fetch all buyers
 export async function GET(request: NextRequest) {
   try {
@@ -35,9 +78,12 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Add pagination support
+    // Add pagination support and radius filtering
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit') || '100');
+    const searchLat = searchParams.get('lat');
+    const searchLng = searchParams.get('lng');
+    const searchRadius = searchParams.get('radius');
 
     // Get all users with role 'buyer' with pagination
     const usersQuery = query(
@@ -84,6 +130,14 @@ export async function GET(request: NextRequest) {
     }
 
     const buyers: BuyerAdminView[] = [];
+    const buyersWithDistance: Array<BuyerAdminView & { distance?: number }> = [];
+
+    // Parse filter parameters
+    const hasLocationFilter = searchLat && searchLng && searchRadius;
+    const centerLat = searchLat ? parseFloat(searchLat) : null;
+    const centerLng = searchLng ? parseFloat(searchLng) : null;
+    const radiusMiles = searchRadius ? parseFloat(searchRadius) : null;
+    const stateFilter = searchParams.get('state')?.toUpperCase();
 
     for (const userDoc of usersSnapshot.docs) {
       const userData = userDoc.data();
@@ -104,23 +158,68 @@ export async function GET(request: NextRequest) {
         lastSignIn: convertTimestampToDate(userData.lastSignIn),
       });
 
+      // Apply state filter first (fast filter)
+      if (stateFilter) {
+        const buyerState = (buyer.preferredState || buyer.state || '').toUpperCase();
+        if (buyerState !== stateFilter) {
+          continue; // Skip buyers not in the selected state
+        }
+      }
+
       buyers.push(buyer);
     }
 
-    // Sort by creation date (newest first)
-    buyers.sort((a, b) => {
-      const dateA = a.createdAt && typeof a.createdAt === 'object' && 'toDate' in a.createdAt
-        ? (a.createdAt as any).toDate().getTime()
-        : new Date(a.createdAt as any).getTime();
-      const dateB = b.createdAt && typeof b.createdAt === 'object' && 'toDate' in b.createdAt
-        ? (b.createdAt as any).toDate().getTime()
-        : new Date(b.createdAt as any).getTime();
-      return dateB - dateA;
-    });
+    // Apply location-based filtering if coordinates provided
+    let filteredBuyers = buyers;
+
+    if (hasLocationFilter && centerLat !== null && centerLng !== null && radiusMiles !== null) {
+      // Geocode each buyer's city and calculate distance
+      for (const buyer of buyers) {
+        const buyerCity = buyer.preferredCity || buyer.city;
+        const buyerState = buyer.preferredState || buyer.state;
+
+        if (buyerCity && buyerState) {
+          const coords = await geocodeCity(buyerCity, buyerState);
+
+          if (coords) {
+            const distance = calculateDistance(centerLat, centerLng, coords.lat, coords.lng);
+
+            if (distance <= radiusMiles) {
+              buyersWithDistance.push({ ...buyer, distance });
+            }
+          }
+        }
+      }
+
+      // Sort by distance (closest first)
+      buyersWithDistance.sort((a, b) => (a.distance || 999) - (b.distance || 999));
+      filteredBuyers = buyersWithDistance;
+    } else {
+      // Sort by creation date (newest first)
+      filteredBuyers.sort((a, b) => {
+        const dateA = a.createdAt && typeof a.createdAt === 'object' && 'toDate' in a.createdAt
+          ? (a.createdAt as any).toDate().getTime()
+          : new Date(a.createdAt as any).getTime();
+        const dateB = b.createdAt && typeof b.createdAt === 'object' && 'toDate' in b.createdAt
+          ? (b.createdAt as any).toDate().getTime()
+          : new Date(b.createdAt as any).getTime();
+        return dateB - dateA;
+      });
+    }
+
+    // Implement pagination
+    const page = parseInt(searchParams.get('page') || '1');
+    const pageSize = 25;
+    const startIndex = (page - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    const paginatedBuyers = filteredBuyers.slice(startIndex, endIndex);
 
     return NextResponse.json({
-      buyers,
-      total: buyers.length
+      buyers: paginatedBuyers,
+      total: filteredBuyers.length,
+      totalPages: Math.ceil(filteredBuyers.length / pageSize),
+      currentPage: page,
+      pageSize: pageSize
     });
 
   } catch (error) {

@@ -268,19 +268,19 @@ export async function getAndLockArticle(category: Brand): Promise<Article | null
   console.log(`📊 [${category}] Found ${articles.length} unprocessed articles`);
   console.log(`   Quality scores: ${articles.map(a => a.qualityScore || 'N/A').join(', ')}`);
 
-  // Filter only high-quality articles (score >= 70)
+  // Filter only high-quality articles (score >= 65)
   // NO AGE RESTRICTION - ensures articles are always available for automation
   const ratedArticles = articles
     .filter(a => {
-      // Must have quality score >= 70 (video-worthy threshold)
-      if (typeof a.qualityScore !== 'number' || a.qualityScore < 70) {
+      // Must have quality score >= 65 (video-worthy threshold)
+      if (typeof a.qualityScore !== 'number' || a.qualityScore < 65) {
         return false;
       }
       return true;
     })
     .sort((a, b) => (b.qualityScore || 0) - (a.qualityScore || 0));
 
-  console.log(`✅ [${category}] Filtered to ${ratedArticles.length} eligible articles (score >= 70)`);
+  console.log(`✅ [${category}] Filtered to ${ratedArticles.length} eligible articles (score >= 65)`);
 
   if (ratedArticles.length === 0) {
     console.log(`⚠️  No rated articles available for ${category}`);

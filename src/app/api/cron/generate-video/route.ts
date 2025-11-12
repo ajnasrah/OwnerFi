@@ -3,8 +3,8 @@
 // Takes top-rated unprocessed article and generates video
 
 import { NextRequest, NextResponse } from 'next/server';
-
-const CRON_SECRET = process.env.CRON_SECRET;
+import { requireCronAuthFlexible } from '@/lib/auth-helpers';
+import { createSuccessResponse, logError } from '@/lib/api-error-handler';
 
 export async function GET(request: NextRequest) {
   const startTime = Date.now();
@@ -13,30 +13,13 @@ export async function GET(request: NextRequest) {
   console.log(`Time: ${new Date().toISOString()}`);
   console.log(`${'='.repeat(60)}\n`);
 
+  // Standardized cron authentication (temporarily flexible for backward compatibility)
+  const authResult = requireCronAuthFlexible(request);
+  if ('error' in authResult) return authResult.error;
+
+  console.log(`✅ Authorization passed\n`);
+
   try {
-    // Verify authorization - either via Bearer token OR admin session OR Vercel cron
-    const authHeader = request.headers.get('authorization');
-    const userAgent = request.headers.get('user-agent');
-
-    console.log(`📋 Request details:`);
-    console.log(`   User-Agent: ${userAgent}`);
-    console.log(`   Has Auth Header: ${!!authHeader}`);
-    console.log(`   CRON_SECRET set: ${!!CRON_SECRET}`);
-
-    // Don't await getServerSession - it can timeout and block the cron
-    const isVercelCron = userAgent === 'vercel-cron/1.0';
-
-    console.log(`   Is Vercel Cron: ${isVercelCron}`);
-
-    if (CRON_SECRET && authHeader !== `Bearer ${CRON_SECRET}` && !isVercelCron) {
-      console.error(`❌ Authorization failed - rejecting request`);
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    console.log(`✅ Authorization passed\n`);
 
     console.log(`📚 Loading feed-store-firestore module...`);
     const { getUnprocessedArticles } = await import('@/lib/feed-store-firestore');
@@ -188,6 +171,12 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     const duration = Date.now() - startTime;
+
+    logError('GET /api/cron/generate-video', error, {
+      duration,
+      timestamp: new Date().toISOString()
+    });
+
     console.error(`\n❌ VIDEO GENERATION CRON ERROR (${duration}ms):`, error);
     console.error(`   Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     if (error instanceof Error && error.stack) {
@@ -199,7 +188,6 @@ export async function GET(request: NextRequest) {
       {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : undefined,
         duration: `${duration}ms`
       },
       { status: 500 }

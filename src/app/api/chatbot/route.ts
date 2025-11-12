@@ -183,10 +183,13 @@ export async function POST(request: Request) {
       ]
     });
 
-  } catch {
-    // Chatbot API error
+  } catch (error) {
+    console.error('Chatbot API error:', error);
     return NextResponse.json(
-      { error: 'Failed to process chat message' },
+      {
+        error: 'Failed to process chat message',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     );
   }

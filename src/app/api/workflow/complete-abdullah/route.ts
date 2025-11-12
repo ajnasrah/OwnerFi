@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
     let body: any = {};
     try {
       body = await request.json();
-    } catch {
+    } catch (error) {
       // No body is fine - use defaults
     }
 

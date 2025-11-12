@@ -109,7 +109,7 @@ export async function GET(request: NextRequest) {
       properties: similarProperties
     });
 
-  } catch {
+  } catch (error) {
     return NextResponse.json({ 
       error: 'Failed to find similar properties',
       properties: []

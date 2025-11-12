@@ -184,7 +184,7 @@ export async function POST(request: NextRequest) {
       goodMatches: matches.filter(m => m.matchScore >= 70 && m.matchScore < 90).length
     });
 
-  } catch {
+  } catch (error) {
     return NextResponse.json({ error: 'Failed to calculate matches' }, { status: 500 });
   }
 }

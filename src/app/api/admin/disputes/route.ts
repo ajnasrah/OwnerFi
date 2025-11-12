@@ -71,7 +71,7 @@ export async function GET() {
               }
             }
           }
-        } catch {
+        } catch (error) {
         }
       }
       

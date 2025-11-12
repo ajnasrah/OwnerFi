@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
       
       default:
     }
-  } catch {
+  } catch (error) {
     return NextResponse.json(
       { error: 'Webhook handler failed' },
       { status: 500 }
@@ -145,7 +145,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       createdAt: new Date()
     });
     
-  } catch {
+  } catch (error) {
     // Log error but don't fail the webhook
   }
 }
@@ -181,7 +181,7 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
       realtorData: updatedRealtorData,
       updatedAt: new Date()
     });
-  } catch {
+  } catch (error) {
     // Error:('Error in handleSubscriptionUpdated:', error);
     // Error occurred
   }
@@ -214,7 +214,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
       realtorData: updatedRealtorData,
       updatedAt: new Date()
     });
-  } catch {
+  } catch (error) {
     // Error:('Error in handleSubscriptionDeleted:', error);
     // Error occurred
   }
@@ -278,7 +278,7 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
       creditPackageId: creditPackId,
       createdAt: new Date()
     });
-  } catch {
+  } catch (error) {
     // Error:('Error in handlePaymentSucceeded:', error);
     // Error occurred
   }
@@ -326,7 +326,7 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
       amount: (invoice.amount_due || 0) / 100,
       createdAt: new Date()
     });
-  } catch {
+  } catch (error) {
     // Error:('Error in handlePaymentFailed:', error);
     // Error occurred
   }

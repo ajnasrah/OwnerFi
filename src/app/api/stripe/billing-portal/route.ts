@@ -77,7 +77,7 @@ export async function GET() {
 
     return NextResponse.json({ subscriptions: formattedSubscriptions });
 
-  } catch {
+  } catch (error) {
     return NextResponse.json(
       { error: 'Failed to fetch subscriptions' },
       { status: 500 }

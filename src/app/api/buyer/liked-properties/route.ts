@@ -80,7 +80,7 @@ export async function GET() {
       total: allProperties.length
     });
 
-  } catch {
+  } catch (error) {
     return NextResponse.json({ 
       error: 'Failed to load liked properties',
       likedProperties: []

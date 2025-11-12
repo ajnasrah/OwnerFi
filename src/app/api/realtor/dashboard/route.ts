@@ -235,7 +235,7 @@ async function getAvailableLeads(userId: string, realtorData: Record<string, unk
 
     return availableLeads.slice(0, 20); // Limit to 20 most recent
 
-  } catch {
+  } catch (error) {
     return [];
   }
 }
@@ -291,7 +291,7 @@ async function getOwnedBuyers(userId: string): Promise<OwnedBuyer[]> {
 
     return ownedBuyers;
 
-  } catch {
+  } catch (error) {
     return [];
   }
 }
@@ -334,7 +334,7 @@ async function getTransactionHistory(userId: string): Promise<Transaction[]> {
       details: transaction.details || {}
     }));
 
-  } catch {
+  } catch (error) {
     return [];
   }
 }
@@ -422,7 +422,7 @@ async function getMatchedBuyerLeads(realtorData: {
     
     return convertedLeads;
     
-  } catch {
+  } catch (error) {
     // Fallback to empty array if matching fails
     return [];
   }

@@ -50,7 +50,7 @@ export async function GET() {
       totalContacts: contacts.length
     });
 
-  } catch {
+  } catch (error) {
     return NextResponse.json(
       { error: 'Failed to load contact submissions' },
       { status: 500 }
@@ -95,7 +95,7 @@ export async function DELETE(request: NextRequest) {
       message: 'Contact deleted successfully'
     });
 
-  } catch {
+  } catch (error) {
     return NextResponse.json(
       { error: 'Failed to delete contact' },
       { status: 500 }

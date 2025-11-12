@@ -3,21 +3,9 @@
 // Runs weekly on Sundays at 2 AM via Vercel Cron
 
 import { NextRequest, NextResponse } from 'next/server';
-import { initializeApp, cert, getApps } from 'firebase-admin/app';
-import { getFirestore, Timestamp } from 'firebase-admin/firestore';
+import { getAdminDb } from '@/lib/firebase-admin';
 
 export const maxDuration = 300; // 5 minutes max
-
-// Initialize Firebase Admin (only once)
-if (getApps().length === 0) {
-  initializeApp({
-    credential: cert({
-      projectId: process.env.FIREBASE_PROJECT_ID,
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n')
-    })
-  });
-}
 
 export async function GET(request: NextRequest) {
   console.log('🧹 Starting stale property cleanup cron job...');
@@ -38,12 +26,19 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const db = getFirestore();
+    const db = await getAdminDb();
+
+    if (!db) {
+      console.error('❌ Failed to initialize Firebase Admin');
+      return NextResponse.json(
+        { error: 'Database not available' },
+        { status: 500 }
+      );
+    }
 
     // Calculate cutoff date (60 days ago)
     const sixtyDaysAgo = new Date();
     sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
-    const cutoffTimestamp = Timestamp.fromDate(sixtyDaysAgo);
 
     console.log(`📅 Cutoff date: ${sixtyDaysAgo.toISOString()}`);
     console.log(`🔍 Finding properties with no updates since ${sixtyDaysAgo.toLocaleDateString()}...`);

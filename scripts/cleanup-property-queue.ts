@@ -56,9 +56,10 @@ async function cleanupPropertyQueue() {
   console.log('\n📊 Step 3: Identifying orphaned queue entries...');
   const propertiesToRemove: string[] = [];
   queueSnapshot.docs.forEach(doc => {
-    const propId = doc.data().propertyId;
-    if (!activePropertyIds.has(propId)) {
-      propertiesToRemove.push(propId);
+    // Use doc.id as the primary key (not doc.data().propertyId which may be stale)
+    const queueDocId = doc.id;
+    if (!activePropertyIds.has(queueDocId)) {
+      propertiesToRemove.push(queueDocId);
     }
   });
 

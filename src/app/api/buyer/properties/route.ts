@@ -88,29 +88,40 @@ export async function GET(request: NextRequest) {
       Array.from(nearbyCityNames).slice(0, 10).join(', ') + (nearbyCityNames.size > 10 ? '...' : '')
     );
 
-    // PERFORMANCE FIX: Query only properties in the relevant state with budget filters
-    // This reduces from loading ALL properties (1000s) to only relevant ones (100-200)
+    // PERFORMANCE FIX: Query only properties in the relevant state
+    // NEW: Removed budget filters from query to allow OR logic (show properties matching EITHER budget criterion)
     const propertiesQuery = query(
       collection(db, 'properties'),
       where('isActive', '==', true),
       where('state', '==', searchState), // Only properties in buyer's state
-      where('monthlyPayment', '<=', maxMonthly), // Within budget
       orderBy('monthlyPayment', 'asc'),
-      limit(500) // Reasonable limit - gets properties in state within budget
+      limit(1000) // Increased limit to allow more partial matches
     );
 
     const snapshot = await getDocs(propertiesQuery);
     const allProperties = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as PropertyListing & { id: string }));
 
-    // 1. DIRECT MATCHES: Properties IN the search city AND state
+    // Helper function to determine budget match type
+    const getBudgetMatchType = (property: PropertyListing & { id: string }) => {
+      const monthlyMatch = property.monthlyPayment <= maxMonthly;
+      const downMatch = !property.downPaymentAmount || property.downPaymentAmount <= maxDown;
+
+      if (monthlyMatch && downMatch) return 'both';
+      if (monthlyMatch) return 'monthly_only';
+      if (downMatch) return 'down_only';
+      return 'neither';
+    };
+
+    // 1. DIRECT MATCHES: Properties IN the search city AND state that match at least ONE budget criterion
     const directProperties = allProperties.filter((property: PropertyListing & { id: string }) => {
       const propertyCity = property.city?.split(',')[0].trim();
-      // Check down payment budget (monthly payment already filtered in query)
-      const meetsDownPaymentBudget = !property.downPaymentAmount || property.downPaymentAmount <= maxDown;
-      return propertyCity?.toLowerCase() === searchCity.toLowerCase() && meetsDownPaymentBudget;
+      const budgetMatchType = getBudgetMatchType(property);
+
+      // NEW: Show if city matches AND at least one budget criterion matches
+      return propertyCity?.toLowerCase() === searchCity.toLowerCase() && budgetMatchType !== 'neither';
     });
 
-    // 2. NEARBY MATCHES: Properties located IN cities that are within 30 miles of buyer's search city
+    // 2. NEARBY MATCHES: Properties located IN cities that are within 30 miles that match at least ONE budget criterion
     const nearbyProperties = allProperties.filter((property: PropertyListing & { id: string }) => {
       const propertyCity = property.city?.split(',')[0].trim();
 
@@ -120,10 +131,10 @@ export async function GET(request: NextRequest) {
       // Check if property's city is in the list of nearby cities
       const isInNearbyCity = propertyCity && nearbyCityNames.has(propertyCity.toLowerCase());
 
-      // Check down payment budget (monthly payment and state already filtered in query)
-      const meetsDownPaymentBudget = !property.downPaymentAmount || property.downPaymentAmount <= maxDown;
+      // NEW: Check if at least one budget criterion matches
+      const budgetMatchType = getBudgetMatchType(property);
 
-      return isInNearbyCity && meetsDownPaymentBudget;
+      return isInNearbyCity && budgetMatchType !== 'neither';
     });
 
     console.log(`[buyer-search] Found ${directProperties.length} direct matches, ${nearbyProperties.length} nearby matches`);

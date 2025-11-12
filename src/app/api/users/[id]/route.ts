@@ -40,7 +40,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       user: userData
     });
 
-  } catch {
+  } catch (error) {
     return NextResponse.json(
       { error: 'Failed to fetch user data' },
       { status: 500 }

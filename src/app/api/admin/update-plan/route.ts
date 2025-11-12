@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
       updatedSubscriptions: subscriptionDocs.docs.length
     });
     
-  } catch {
+  } catch (error) {
     return NextResponse.json(
       { error: 'Failed to update plan' },
       { status: 500 }

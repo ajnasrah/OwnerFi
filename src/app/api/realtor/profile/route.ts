@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
       }
     });
 
-  } catch {
+  } catch (error) {
     return NextResponse.json(
       { error: 'Failed to fetch profile data' },
       { status: 500 }
@@ -106,7 +106,7 @@ export async function POST(request: NextRequest) {
       message: 'Settings saved successfully'
     });
 
-  } catch {
+  } catch (error) {
     return NextResponse.json(
       { error: 'Failed to save settings' },
       { status: 500 }
@@ -173,7 +173,7 @@ export async function DELETE(request: NextRequest) {
       updatedServiceCities: updatedServiceCities
     });
 
-  } catch {
+  } catch (error) {
     return NextResponse.json(
       { error: 'Failed to remove city' },
       { status: 500 }

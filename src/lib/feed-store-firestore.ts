@@ -268,11 +268,9 @@ export async function getAndLockArticle(category: Brand): Promise<Article | null
   console.log(`📊 [${category}] Found ${articles.length} unprocessed articles`);
   console.log(`   Quality scores: ${articles.map(a => a.qualityScore || 'N/A').join(', ')}`);
 
-  // Filter only high-quality articles
-  // Carz has lower threshold (60) because automotive RSS feeds only provide summaries
-  // OwnerFi/VassDistro have higher threshold (65) because they get full articles
+  // Filter articles with score >= 50 (we pick top-rated anyway, so lower bar is fine)
   // NO AGE RESTRICTION - ensures articles are always available for automation
-  const threshold = category === 'carz' ? 60 : 65;
+  const threshold = 50;
 
   const ratedArticles = articles
     .filter(a => {

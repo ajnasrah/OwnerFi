@@ -208,9 +208,9 @@ export default function ArticlesPage() {
   console.log(`[${activeBrand}] Unprocessed count:`, allArticles.filter(a => !a.processed).length);
   console.log(`[${activeBrand}] With scores:`, allArticles.filter(a => a.qualityScore !== undefined).length);
 
-  // Article Queue: Unprocessed articles with scores >= 65, sorted by score DESC
+  // Article Queue: Unprocessed articles with scores >= 50, sorted by score DESC
   const queueArticles = allArticles
-    .filter(a => !a.processed && a.qualityScore !== undefined && a.qualityScore >= 65)
+    .filter(a => !a.processed && a.qualityScore !== undefined && a.qualityScore >= 50)
     .sort((a, b) => (b.qualityScore || 0) - (a.qualityScore || 0));
 
   // Unprocessed: All unprocessed articles (for rating)

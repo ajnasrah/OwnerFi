@@ -5,7 +5,7 @@
  * by calling the /api/process-video endpoint directly.
  */
 
-import { initializeApp, cert } from 'firebase-admin/app';
+import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import * as dotenv from 'dotenv';
 import * as path from 'path';
@@ -13,12 +13,16 @@ import * as path from 'path';
 // Load environment variables
 dotenv.config({ path: path.join(__dirname, '../.env.local') });
 
-// Initialize Firebase Admin
-const serviceAccount = require(path.join(__dirname, '../serviceAccountKey.json'));
-
-initializeApp({
-  credential: cert(serviceAccount)
-});
+// Initialize Firebase Admin using environment variables
+if (getApps().length === 0) {
+  initializeApp({
+    credential: cert({
+      projectId: process.env.FIREBASE_PROJECT_ID,
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n')
+    })
+  });
+}
 
 const db = getFirestore();
 

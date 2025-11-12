@@ -542,11 +542,19 @@ async function triggerAsyncVideoProcessing(
     // Trigger the processing endpoint (fire-and-forget with error handling)
     // Don't await - let it run in the background
     // Pass submagicProjectId so we can fetch a fresh URL later
+    //
+    // FIX: Add timeout and retry logic to prevent "fetch failed" network errors
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
+
     fetch(`${baseUrl}/api/process-video`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ brand, workflowId, videoUrl, submagicProjectId }),
+      signal: controller.signal,
     }).then(async (response) => {
+      clearTimeout(timeoutId);
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
         console.error(`❌ [${brand}] process-video failed (${response.status}):`, errorData.error);
@@ -566,18 +574,37 @@ async function triggerAsyncVideoProcessing(
         console.log(`✅ [${brand}] process-video completed successfully for ${workflowId}`);
       }
     }).catch(async (err) => {
+      clearTimeout(timeoutId);
       console.error(`❌ [${brand}] Failed to trigger video processing:`, err);
 
-      // Update workflow to failed status so it can be retried
-      try {
-        await updateWorkflowForBrand(brand, workflowId, {
-          status: 'video_processing_failed',
-          error: `process-video network error: ${err.message}`,
-          failedAt: Date.now(),
-        });
-        console.log(`   Updated workflow ${workflowId} to failed status for retry`);
-      } catch (updateErr) {
-        console.error(`   Failed to update workflow status:`, updateErr);
+      // Check if it's a timeout or network error
+      const errorType = err.name === 'AbortError' ? 'timeout' : 'network error';
+      const errorMessage = err.name === 'AbortError'
+        ? 'Request timeout after 30s'
+        : err.message;
+
+      console.error(`   Error type: ${errorType}`);
+      console.error(`   Error message: ${errorMessage}`);
+
+      // CRITICAL FIX: Don't mark as failed immediately for network errors
+      // The cron job will retry these workflows
+      // Only mark as failed if we're sure the processing logic failed
+      if (errorType === 'network error') {
+        console.log(`⚠️  [${brand}] Network error - leaving workflow in "video_processing" status for cron retry`);
+        console.log(`   The check-stuck-posting cron will retry this workflow`);
+        // Don't update status - let cron job handle retry
+      } else {
+        // For timeouts, mark as failed so cron can retry
+        try {
+          await updateWorkflowForBrand(brand, workflowId, {
+            status: 'video_processing_failed',
+            error: `process-video ${errorType}: ${errorMessage}`,
+            failedAt: Date.now(),
+          });
+          console.log(`   Updated workflow ${workflowId} to failed status for cron retry`);
+        } catch (updateErr) {
+          console.error(`   Failed to update workflow status:`, updateErr);
+        }
       }
     });
 

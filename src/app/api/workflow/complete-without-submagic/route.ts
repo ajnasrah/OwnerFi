@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getBrandConfig } from '@/config/brand-configs';
-import { validateBrand } from '@/lib/brand-utils';
+import { validateBrand, getBrandPlatforms } from '@/lib/brand-utils';
 
 /**
  * Complete a workflow using HeyGen video directly (skip Submagic)
@@ -47,15 +47,6 @@ export async function POST(request: NextRequest) {
 
     console.log(`📹 Using HeyGen video as final: ${finalVideoUrl}`);
 
-    // Post to Late.so (or Metricool for backwards compatibility)
-    const LATE_API_KEY = process.env.LATE_API_KEY;
-    if (!LATE_API_KEY) {
-      return NextResponse.json(
-        { success: false, error: 'Late API key not configured' },
-        { status: 500 }
-      );
-    }
-
     // Prepare caption - generate from benefit data if missing
     let caption = workflow.caption;
     if (!caption && validatedBrand === 'benefit') {
@@ -70,34 +61,31 @@ export async function POST(request: NextRequest) {
     }
     // Final fallback
     caption = caption || workflow.articleTitle || workflow.episodeTitle || 'Check out this video!';
+    const title = workflow.title || workflow.articleTitle || workflow.episodeTitle || 'Video';
 
-    // Schedule post
-    const scheduledDate = new Date(Date.now() + 2 * 60 * 1000).toISOString(); // 2 minutes from now
+    // Get brand platforms
+    const platforms = getBrandPlatforms(validatedBrand, false);
 
-    const lateResponse = await fetch('https://api.getlate.so/v1/posts', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LATE_API_KEY}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        text: caption,
-        mediaUrls: [finalVideoUrl],
-        scheduledDate: scheduledDate,
-        platforms: ['instagram', 'tiktok', 'youtube', 'linkedin', 'twitter']
-      })
+    // Post using GetLate's queue system
+    const { postToLate } = await import('@/lib/late-api');
+    const lateResult = await postToLate({
+      videoUrl: finalVideoUrl,
+      caption,
+      title,
+      platforms: platforms as any[],
+      brand: validatedBrand,
+      useQueue: true, // ✅ Use GetLate's queue system
+      timezone: brandConfig.scheduling.timezone
     });
 
-    if (!lateResponse.ok) {
-      const errorText = await lateResponse.text();
+    if (!lateResult.success) {
       return NextResponse.json(
-        { success: false, error: `Late API error: ${lateResponse.status} - ${errorText}` },
+        { success: false, error: `Late posting failed: ${lateResult.error}` },
         { status: 500 }
       );
     }
 
-    const lateData = await lateResponse.json();
-    const postId = lateData.id || lateData.postId;
+    const postId = lateResult.postId;
 
     console.log(`✅ Posted to Late: ${postId}`);
 

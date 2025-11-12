@@ -167,8 +167,9 @@ export const cron = {
 
 // Security Configuration
 export const security = {
-  // Webhook verification enforcement
-  enforceWebhookVerification: optionalEnv('ENFORCE_WEBHOOK_VERIFICATION', 'false') === 'true',
+  // Webhook verification enforcement - ENABLED BY DEFAULT for security
+  // Set ENFORCE_WEBHOOK_VERIFICATION=false to disable (not recommended in production)
+  enforceWebhookVerification: optionalEnv('ENFORCE_WEBHOOK_VERIFICATION', 'true') === 'true',
 
   // Session secrets
   jwtSecret: optionalEnv('JWT_SECRET'),

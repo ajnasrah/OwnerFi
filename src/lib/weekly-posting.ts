@@ -78,15 +78,17 @@ export async function postVideoWeekly(
       console.log(`   Post ${i + 1}: ${slot.label} (${scheduledFor.split('T')[0]})`);
 
       try {
-        // Create the post
+        // Create the post using GetLate's queue system
         const result = await postToLate({
           videoUrl,
           caption,
           title,
           brand,
           platforms: [platform],
-          scheduledFor,
+          scheduleTime: scheduledFor,
           postTypes: options?.postTypes,
+          useQueue: true, // ✅ Use GetLate's queue system
+          timezone: 'America/Chicago'
         });
 
         if (result.success) {

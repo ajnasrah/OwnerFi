@@ -100,9 +100,9 @@ export const CARZ_CONFIG: BrandConfig = {
   lateProfileId: process.env.LATE_CARZ_PROFILE_ID || '',
 
   platforms: {
-    default: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'threads'],
+    default: ['instagram', 'tiktok', 'facebook', 'linkedin', 'threads'],
     all: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'threads', 'pinterest'],
-    excludeFromDefault: ['twitter', 'bluesky'], // Carz doesn't use Twitter/Bluesky
+    excludeFromDefault: ['twitter', 'bluesky', 'youtube'], // Carz doesn't use Twitter/Bluesky; YouTube temporarily disabled due to quota limits
   },
 
   webhooks: {
@@ -151,8 +151,9 @@ export const OWNERFI_CONFIG: BrandConfig = {
   lateProfileId: process.env.LATE_OWNERFI_PROFILE_ID || '',
 
   platforms: {
-    default: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'threads', 'twitter', 'bluesky'],
+    default: ['instagram', 'tiktok', 'facebook', 'linkedin', 'threads', 'twitter', 'bluesky'],
     all: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'threads', 'twitter', 'bluesky', 'pinterest', 'reddit'],
+    excludeFromDefault: ['youtube'], // YouTube temporarily disabled due to API quota limits
   },
 
   webhooks: {
@@ -201,8 +202,9 @@ export const PODCAST_CONFIG: BrandConfig = {
   lateProfileId: process.env.LATE_PODCAST_PROFILE_ID || '',
 
   platforms: {
-    default: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'threads'],
+    default: ['instagram', 'tiktok', 'facebook', 'linkedin', 'threads'],
     all: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'threads', 'twitter', 'bluesky'],
+    excludeFromDefault: ['youtube'], // YouTube temporarily disabled due to API quota limits
   },
 
   webhooks: {
@@ -250,8 +252,9 @@ export const BENEFIT_CONFIG: BrandConfig = {
   lateProfileId: process.env.LATE_OWNERFI_PROFILE_ID || '', // Uses OwnerFi's Late profile
 
   platforms: {
-    default: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'threads'],
+    default: ['instagram', 'tiktok', 'facebook', 'linkedin', 'threads'],
     all: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'threads', 'twitter', 'bluesky', 'pinterest', 'reddit'],
+    excludeFromDefault: ['youtube'], // YouTube temporarily disabled due to API quota limits
   },
 
   webhooks: {
@@ -299,8 +302,9 @@ export const PROPERTY_CONFIG: BrandConfig = {
   lateProfileId: process.env.LATE_OWNERFI_PROFILE_ID || '', // Uses OwnerFi's Late profile
 
   platforms: {
-    default: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'threads'],
+    default: ['instagram', 'tiktok', 'facebook', 'linkedin', 'threads'],
     all: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'threads', 'twitter', 'bluesky', 'pinterest', 'reddit'],
+    excludeFromDefault: ['youtube'], // YouTube disabled - shares OwnerFi's account (quota exhaustion)
   },
 
   webhooks: {
@@ -348,8 +352,9 @@ export const VASSDISTRO_CONFIG: BrandConfig = {
   lateProfileId: process.env.LATE_VASSDISTRO_PROFILE_ID || '',
 
   platforms: {
-    default: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'threads'],
+    default: ['instagram', 'tiktok', 'facebook', 'linkedin', 'threads'],
     all: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'threads', 'twitter', 'bluesky'],
+    excludeFromDefault: ['youtube'], // YouTube temporarily disabled due to API quota limits
   },
 
   webhooks: {
@@ -399,8 +404,9 @@ export const ABDULLAH_CONFIG: BrandConfig = {
   lateProfileId: process.env.LATE_ABDULLAH_PROFILE_ID || '', // Create new Late profile for Abdullah
 
   platforms: {
-    default: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin'],
+    default: ['instagram', 'tiktok', 'facebook', 'linkedin'],
     all: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'threads', 'twitter', 'bluesky'],
+    excludeFromDefault: ['youtube'], // YouTube disabled - shares OwnerFi's account (quota exhaustion)
   },
 
   webhooks: {

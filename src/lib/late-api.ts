@@ -251,15 +251,6 @@ export async function postToLate(request: LatePostRequest): Promise<LatePostResp
       console.warn(`⚠️  Continuing with ${platformAccounts.length}/${request.platforms.length} platforms (skipped: ${missingPlatforms.join(', ')})`);
     }
 
-    // Build caption with hashtags
-    let fullCaption = request.caption;
-    if (request.hashtags && request.hashtags.length > 0) {
-      const formattedHashtags = request.hashtags
-        .map(tag => tag.startsWith('#') ? tag : `#${tag}`)
-        .join(' ');
-      fullCaption = `${request.caption}\n\n${formattedHashtags}`;
-    }
-
     const brandNameMap: Record<string, string> = {
       'carz': 'Carz',
       'ownerfi': 'OwnerFi',
@@ -272,10 +263,20 @@ export async function postToLate(request: LatePostRequest): Promise<LatePostResp
     console.log(`📤 Posting to Late (${brandName})...`);
     console.log('   Profile ID:', profileId);
     console.log('   Platforms:', platformAccounts.map(p => p.platform).join(', '));
-    console.log('   Caption:', fullCaption.substring(0, 100) + '...');
 
     return await retry(
       async () => {
+        // Build caption with hashtags
+        let fullCaption = request.caption;
+        if (request.hashtags && request.hashtags.length > 0) {
+          const formattedHashtags = request.hashtags
+            .map(tag => tag.startsWith('#') ? tag : `#${tag}`)
+            .join(' ');
+          fullCaption = `${request.caption}\n\n${formattedHashtags}`;
+        }
+
+        console.log('   Caption:', fullCaption.substring(0, 100) + '...');
+
         // Use circuit breaker to prevent cascading failures
         return await circuitBreakers.late.execute(async () => {
           // Build platforms with story support
@@ -464,7 +465,7 @@ export async function postToLate(request: LatePostRequest): Promise<LatePostResp
         brand: request.brand,
         profileId: profileId || undefined,
         platforms: request.platforms,
-        caption: fullCaption || request.caption,
+        caption: request.caption, // Use original caption since fullCaption is out of scope
         videoUrl: request.videoUrl,
         error: errorMessage,
       });
@@ -490,7 +491,7 @@ export async function postToLate(request: LatePostRequest): Promise<LatePostResp
 /**
  * Get the next available queue slot for a profile
  */
-export async function getNextQueueSlot(brand: 'carz' | 'ownerfi' | 'podcast' | 'property' | 'vassdistro' | 'benefit'): Promise<{ nextSlot: string; timezone: string } | null> {
+export async function getNextQueueSlot(brand: 'carz' | 'ownerfi' | 'podcast' | 'property' | 'vassdistro' | 'benefit' | 'abdullah'): Promise<{ nextSlot: string; timezone: string } | null> {
   const profileId = getProfileId(brand);
   const LATE_API_KEY = getLateApiKey();
   if (!profileId || !LATE_API_KEY) {
@@ -602,6 +603,10 @@ export async function setQueueSchedule(
 /**
  * Schedule video post using Late
  * Drop-in replacement for scheduleVideoPost from metricool-api
+ *
+ * ⚠️ IMPORTANT: This function now ALWAYS uses GetLate's queue system
+ * for optimal scheduling. The delay parameter is deprecated but kept
+ * for backwards compatibility.
  */
 export async function scheduleVideoPost(
   videoUrl: string,
@@ -612,38 +617,14 @@ export async function scheduleVideoPost(
   brand: 'carz' | 'ownerfi' | 'podcast' | 'property' | 'vassdistro' | 'benefit' | 'abdullah' = 'ownerfi',
   firstComment?: string // Optional first comment for engagement boost
 ): Promise<LatePostResponse> {
-  // Calculate schedule time
-  let scheduleTime: string | undefined;
-
-  if (delay !== 'immediate') {
-    const now = new Date();
-
-    switch (delay) {
-      case '1hour':
-        now.setHours(now.getHours() + 1);
-        break;
-      case '2hours':
-        now.setHours(now.getHours() + 2);
-        break;
-      case '4hours':
-        now.setHours(now.getHours() + 4);
-        break;
-      case 'optimal':
-        // Schedule for next optimal time (e.g., 7 PM)
-        now.setHours(19, 0, 0, 0);
-        if (now.getTime() < Date.now()) {
-          now.setDate(now.getDate() + 1);
-        }
-        break;
-    }
-
-    scheduleTime = now.toISOString();
-  }
-
   // Extract hashtags from caption
   const hashtagRegex = /#[\w]+/g;
   const hashtags = caption.match(hashtagRegex) || [];
   const cleanCaption = caption.replace(hashtagRegex, '').trim();
+
+  // ⚠️ ALWAYS use GetLate's queue system for optimal scheduling
+  // The 'delay' parameter is now deprecated - GetLate handles optimal timing
+  console.log(`📅 Using GetLate queue for ${brand} (delay parameter "${delay}" ignored - queue handles optimal timing)`);
 
   return postToLate({
     videoUrl,
@@ -651,9 +632,10 @@ export async function scheduleVideoPost(
     title,
     hashtags,
     platforms: platforms as any,
-    scheduleTime,
     brand,
-    firstComment // Pass through first comment
+    firstComment, // Pass through first comment
+    useQueue: true, // ✅ ALWAYS use GetLate's queue system
+    timezone: 'America/Chicago' // Use CST timezone
   });
 }
 

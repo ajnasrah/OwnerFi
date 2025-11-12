@@ -508,7 +508,7 @@ export async function POST(request: NextRequest) {
 
     // Parse financial fields
     const providedMonthlyPayment = parseNumberField(payload.monthlyPayment);
-    const interestRate = parseNumberField(payload.interestRate);
+    const providedInterestRate = parseNumberField(payload.interestRate);
     const providedTermYears = parseNumberField(payload.termYears || payload.amortizationSchedule);
     const balloonYears = parseNumberField(payload.balloon);
 
@@ -525,26 +525,30 @@ export async function POST(request: NextRequest) {
 
     // PRIORITY CALCULATION LOGIC
     let calculatedMonthlyPayment = 0;
+    let calculatedInterestRate = providedInterestRate; // Track calculated vs provided
     let termYears = 0;
 
     if (providedMonthlyPayment > 0) {
       // PRIORITY 1: Monthly payment provided - use it directly
       calculatedMonthlyPayment = providedMonthlyPayment;
 
-      if (interestRate > 0 && loanAmount > 0) {
+      if (providedInterestRate > 0 && loanAmount > 0) {
         // If we have interest rate, calculate term from monthly payment
+        calculatedInterestRate = providedInterestRate;
         const { calculateTermYears } = await import('@/lib/property-calculations');
-        termYears = calculateTermYears(providedMonthlyPayment, loanAmount, interestRate);
+        termYears = calculateTermYears(providedMonthlyPayment, loanAmount, providedInterestRate);
       } else {
-        // No interest rate - use provided term or price-based default
+        // No interest rate provided - leave as 0 (will show as N/A in UI)
+        calculatedInterestRate = 0;
         termYears = providedTermYears > 0 ? providedTermYears : getDefaultTermYears(price);
       }
 
-    } else if (interestRate > 0 && providedTermYears > 0) {
+    } else if (providedInterestRate > 0 && providedTermYears > 0) {
       // PRIORITY 2: Interest rate + term years provided - calculate monthly payment
+      calculatedInterestRate = providedInterestRate;
       termYears = providedTermYears;
       if (loanAmount > 0) {
-        const monthlyRate = interestRate / 100 / 12;
+        const monthlyRate = calculatedInterestRate / 100 / 12;
         const numPayments = termYears * 12;
         if (monthlyRate > 0) {
           calculatedMonthlyPayment = Math.round(
@@ -554,11 +558,12 @@ export async function POST(request: NextRequest) {
         }
       }
 
-    } else if (interestRate > 0) {
+    } else if (providedInterestRate > 0) {
       // PRIORITY 3: Only interest rate provided - use price-based term
+      calculatedInterestRate = providedInterestRate;
       termYears = getDefaultTermYears(price);
       if (loanAmount > 0) {
-        const monthlyRate = interestRate / 100 / 12;
+        const monthlyRate = calculatedInterestRate / 100 / 12;
         const numPayments = termYears * 12;
         if (monthlyRate > 0) {
           calculatedMonthlyPayment = Math.round(
@@ -569,9 +574,10 @@ export async function POST(request: NextRequest) {
       }
 
     } else {
-      // PRIORITY 4: Nothing provided - use defaults
+      // PRIORITY 4: Nothing provided - no defaults
+      calculatedInterestRate = 0; // Leave as 0 (will show as N/A in UI)
       termYears = providedTermYears > 0 ? providedTermYears : getDefaultTermYears(price);
-      // No calculation without interest rate
+      // No calculation without provided data
     }
 
     // Generate image URL if not provided
@@ -640,7 +646,7 @@ export async function POST(request: NextRequest) {
       monthlyPayment: calculatedMonthlyPayment,
       downPaymentAmount,
       downPaymentPercent,
-      interestRate,
+      interestRate: calculatedInterestRate, // Use calculated value
       termYears,
       balloonYears: balloonYears > 0 ? balloonYears : null,
       balloonPayment: null, // No longer calculated - just store years until refinance
@@ -747,13 +753,19 @@ export async function POST(request: NextRequest) {
           console.log(`🎥 Auto-adding property ${propertyId} to video queue`);
 
           // Add to queue directly (non-blocking - don't await)
-          addToPropertyRotationQueue(propertyId).catch(err => {
-            console.error('Failed to auto-add property to queue:', err);
-          });
+          addToPropertyRotationQueue(propertyId)
+            .then(() => {
+              console.log(`   ✅ Successfully added ${propertyId} to rotation queue`);
+            })
+            .catch(err => {
+              console.error(`   ❌ Failed to auto-add property to queue:`, err);
+            });
         } catch (error) {
           console.error('Error triggering auto-add to queue:', error);
           // Don't fail property creation if queue add fails
         }
+      } else {
+        console.log(`   ⏭️  Skipping queue add for ${propertyId}: status=${propertyData.status}, isActive=${propertyData.isActive}, hasImages=${!!(propertyData.imageUrls && propertyData.imageUrls.length > 0)}`);
       }
 
       return NextResponse.json({

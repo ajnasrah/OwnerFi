@@ -137,12 +137,12 @@ export async function GET(request: NextRequest) {
     }
 
     // Sync queue with properties database (add new, remove deleted)
-    // Run this occasionally to keep queue in sync
-    if (Math.random() < 0.1) { // 10% chance on each cron run (~1x per day)
-      console.log('🔄 Syncing queue with properties database...');
-      try {
-        const { db: adminDb } = await import('@/lib/firebase-admin');
-        if (adminDb) {
+    // Run on EVERY cron execution to ensure queue stays in sync
+    // This is a lightweight operation (just Firestore queries + batch delete)
+    console.log('🔄 Syncing queue with properties database...');
+    try {
+      const { db: adminDb } = await import('@/lib/firebase-admin');
+      if (adminDb) {
           // Get all property IDs in queue
           const queueSnapshot = await adminDb.collection('property_rotation_queue').get();
           const queuePropertyIds = new Set(queueSnapshot.docs.map(doc => doc.data().propertyId));
@@ -181,8 +181,9 @@ export async function GET(request: NextRequest) {
           let removedCount = 0;
           const batch = adminDb.batch();
           queueSnapshot.docs.forEach(doc => {
-            const propId = doc.data().propertyId;
-            if (!activePropertyIds.has(propId)) {
+            // Use doc.id as the primary key (doc.data().propertyId may be stale/different)
+            const queueDocId = doc.id;
+            if (!activePropertyIds.has(queueDocId)) {
               batch.delete(doc.ref);
               removedCount++;
             }
@@ -197,11 +198,10 @@ export async function GET(request: NextRequest) {
           } else {
             console.log(`   ✅ Queue already in sync`);
           }
-        }
-      } catch (error) {
-        console.error('   ⚠️  Queue sync failed (non-critical):', error);
-        // Don't fail the whole cron if sync fails
       }
+    } catch (error) {
+      console.error('   ⚠️  Queue sync failed (non-critical):', error);
+      // Don't fail the whole cron if sync fails
     }
 
     if (!queueItem) {

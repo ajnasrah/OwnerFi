@@ -13,6 +13,7 @@ import { authOptions } from '@/lib/auth';
 import { ExtendedSession } from '@/types/session';
 import { PropertyListing } from "@/lib/property-schema";
 import { getCitiesWithinRadiusComprehensive } from '@/lib/comprehensive-cities';
+import { checkDatabaseAvailable, applyRateLimit, getClientIp, createErrorResponse } from '@/lib/api-guards';
 
 /**
  * BUYER PROPERTY API WITH NEARBY CITIES
@@ -29,16 +30,18 @@ import { getCitiesWithinRadiusComprehensive } from '@/lib/comprehensive-cities';
 
 export async function GET(request: NextRequest) {
   try {
-    if (!db) {
-      return NextResponse.json(
-        { error: 'Database not available' },
-        { status: 500 }
-      );
-    }
+    // Check database availability
+    const dbError = checkDatabaseAvailable(db);
+    if (dbError) return dbError;
+
+    // Apply rate limiting (60 requests per minute per user)
+    const ip = getClientIp(request.headers);
+    const rateLimitError = await applyRateLimit(`buyer-properties:${ip}`, 60, 60);
+    if (rateLimitError) return rateLimitError;
 
     const session = await // eslint-disable-next-line @typescript-eslint/no-explicit-any
     getServerSession(authOptions as any) as ExtendedSession | null;
-    
+
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -57,10 +60,36 @@ export async function GET(request: NextRequest) {
       }, { status: 400 });
     }
 
+    // Validate and parse numeric inputs
     const maxMonthly = Number(maxMonthlyPayment);
     const maxDown = Number(maxDownPayment);
+
+    if (isNaN(maxMonthly) || maxMonthly < 0) {
+      return NextResponse.json({
+        error: 'Invalid maxMonthlyPayment: must be a positive number'
+      }, { status: 400 });
+    }
+
+    if (isNaN(maxDown) || maxDown < 0) {
+      return NextResponse.json({
+        error: 'Invalid maxDownPayment: must be a positive number'
+      }, { status: 400 });
+    }
+
     const searchCity = city.split(',')[0].trim();
     const searchState = state;
+
+    if (!searchCity || searchCity.length < 2) {
+      return NextResponse.json({
+        error: 'Invalid city: must be at least 2 characters'
+      }, { status: 400 });
+    }
+
+    if (!searchState || searchState.length !== 2) {
+      return NextResponse.json({
+        error: 'Invalid state: must be 2-letter state code'
+      }, { status: 400 });
+    }
 
     // Get buyer's liked properties first
     const buyerProfileQuery = query(
@@ -88,29 +117,40 @@ export async function GET(request: NextRequest) {
       Array.from(nearbyCityNames).slice(0, 10).join(', ') + (nearbyCityNames.size > 10 ? '...' : '')
     );
 
-    // PERFORMANCE FIX: Query only properties in the relevant state with budget filters
-    // This reduces from loading ALL properties (1000s) to only relevant ones (100-200)
+    // PERFORMANCE FIX: Query only properties in the relevant state
+    // NEW: Removed budget filters from query to allow OR logic (show properties matching EITHER budget criterion)
     const propertiesQuery = query(
       collection(db, 'properties'),
       where('isActive', '==', true),
       where('state', '==', searchState), // Only properties in buyer's state
-      where('monthlyPayment', '<=', maxMonthly), // Within budget
       orderBy('monthlyPayment', 'asc'),
-      limit(500) // Reasonable limit - gets properties in state within budget
+      limit(1000) // Increased limit to allow more partial matches
     );
 
     const snapshot = await getDocs(propertiesQuery);
     const allProperties = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as PropertyListing & { id: string }));
 
-    // 1. DIRECT MATCHES: Properties IN the search city AND state
+    // Helper function to determine budget match type
+    const getBudgetMatchType = (property: PropertyListing & { id: string }) => {
+      const monthlyMatch = property.monthlyPayment <= maxMonthly;
+      const downMatch = !property.downPaymentAmount || property.downPaymentAmount <= maxDown;
+
+      if (monthlyMatch && downMatch) return 'both';
+      if (monthlyMatch) return 'monthly_only';
+      if (downMatch) return 'down_only';
+      return 'neither';
+    };
+
+    // 1. DIRECT MATCHES: Properties IN the search city AND state that match at least ONE budget criterion
     const directProperties = allProperties.filter((property: PropertyListing & { id: string }) => {
       const propertyCity = property.city?.split(',')[0].trim();
-      // Check down payment budget (monthly payment already filtered in query)
-      const meetsDownPaymentBudget = !property.downPaymentAmount || property.downPaymentAmount <= maxDown;
-      return propertyCity?.toLowerCase() === searchCity.toLowerCase() && meetsDownPaymentBudget;
+      const budgetMatchType = getBudgetMatchType(property);
+
+      // NEW: Show if city matches AND at least one budget criterion matches
+      return propertyCity?.toLowerCase() === searchCity.toLowerCase() && budgetMatchType !== 'neither';
     });
 
-    // 2. NEARBY MATCHES: Properties located IN cities that are within 30 miles of buyer's search city
+    // 2. NEARBY MATCHES: Properties located IN cities that are within 30 miles that match at least ONE budget criterion
     const nearbyProperties = allProperties.filter((property: PropertyListing & { id: string }) => {
       const propertyCity = property.city?.split(',')[0].trim();
 
@@ -120,10 +160,10 @@ export async function GET(request: NextRequest) {
       // Check if property's city is in the list of nearby cities
       const isInNearbyCity = propertyCity && nearbyCityNames.has(propertyCity.toLowerCase());
 
-      // Check down payment budget (monthly payment and state already filtered in query)
-      const meetsDownPaymentBudget = !property.downPaymentAmount || property.downPaymentAmount <= maxDown;
+      // NEW: Check if at least one budget criterion matches
+      const budgetMatchType = getBudgetMatchType(property);
 
-      return isInNearbyCity && meetsDownPaymentBudget;
+      return isInNearbyCity && budgetMatchType !== 'neither';
     });
 
     console.log(`[buyer-search] Found ${directProperties.length} direct matches, ${nearbyProperties.length} nearby matches`);
@@ -167,88 +207,141 @@ export async function GET(request: NextRequest) {
       likedProperties = likedInResults;
     }
 
-    // 4. COMBINE AND FORMAT FOR BUYER DASHBOARD WITH SMART DE-DUPLICATION
+    // 4. COMBINE AND FORMAT FOR BUYER DASHBOARD WITH SMART DE-DUPLICATION AND 3-TIER BUDGET TAGS
     const processedResults = new Map();
-    
+
+    // Helper to generate budget tag and description
+    const getBudgetTagInfo = (property: PropertyListing & { id: string }) => {
+      const budgetMatchType = getBudgetMatchType(property);
+      const monthlyOver = property.monthlyPayment > maxMonthly ? property.monthlyPayment - maxMonthly : 0;
+      const downOver = property.downPaymentAmount > maxDown ? property.downPaymentAmount - maxDown : 0;
+
+      switch (budgetMatchType) {
+        case 'both':
+          return { tag: '✅ Within Budget', tier: 0, description: 'Fits both monthly and down payment budget' };
+        case 'monthly_only':
+          return {
+            tag: '🟡 Low Monthly Payment',
+            tier: 1,
+            description: `Monthly payment fits, down payment $${downOver.toLocaleString()} over budget`
+          };
+        case 'down_only':
+          return {
+            tag: '🟡 Low Down Payment',
+            tier: 1,
+            description: `Down payment fits, monthly payment $${monthlyOver.toFixed(0)}/mo over budget`
+          };
+        case 'neither':
+          return {
+            tag: '🔴 Over Budget',
+            tier: 2,
+            description: 'Exceeds both budget criteria'
+          };
+      }
+    };
+
     // First add liked properties (highest priority)
     likedProperties.forEach(property => {
       const propertyCity = property.city?.split(',')[0].trim();
       const isInSearchCity = propertyCity?.toLowerCase() === searchCity.toLowerCase() && property.state === searchState;
-      const meetsCurrentBudget = property.monthlyPayment <= maxMonthly && property.downPaymentAmount <= maxDown;
-      
+      const budgetInfo = getBudgetTagInfo(property);
+
       let displayTag = '❤️ Liked';
       let matchReason = 'Previously liked';
-      const sortOrder = 0; // Highest priority
-      
-      if (!meetsCurrentBudget) {
-        displayTag = '❤️ Liked (Over Budget)';
-        matchReason = 'Previously liked - exceeds current budget';
+      let sortOrder = 0; // Highest priority for liked
+
+      // Add budget tier info to liked properties
+      if (budgetInfo.tier > 0) {
+        displayTag = `❤️ Liked • ${budgetInfo.tag}`;
+        matchReason = `Previously liked - ${budgetInfo.description}`;
       } else if (isInSearchCity) {
-        displayTag = '❤️ Liked';
-        matchReason = `Previously liked - located in ${searchCity}`;
+        displayTag = '❤️ Liked • ✅ Perfect Match';
+        matchReason = `Previously liked - located in ${searchCity}, within budget`;
       } else if (property.state !== searchState) {
         displayTag = `❤️ Liked from ${property.city}`;
         matchReason = `Previously liked from ${property.city}, ${property.state}`;
       } else {
-        displayTag = `❤️ Liked from ${propertyCity}`;
-        matchReason = `Previously liked from ${propertyCity}`;
+        displayTag = '❤️ Liked';
+        matchReason = `Previously liked - ${budgetInfo.description}`;
       }
-      
+
       processedResults.set(property.id, {
         ...property,
         resultType: 'liked',
         displayTag,
         sortOrder,
+        budgetTier: budgetInfo.tier,
+        budgetMatchType: getBudgetMatchType(property),
         matchReason,
         isLiked: true
       });
     });
-    
+
     // Then add direct properties (if not already added as liked)
     directProperties.forEach(property => {
       if (!processedResults.has(property.id)) {
+        const budgetInfo = getBudgetTagInfo(property);
+        const budgetMatchType = getBudgetMatchType(property);
+
+        // Sort order: Perfect matches (tier 0) get sortOrder 1, partial matches get sortOrder 2-3
+        const sortOrder = budgetMatchType === 'both' ? 1 : (budgetMatchType === 'monthly_only' ? 2 : 3);
+
         processedResults.set(property.id, {
           ...property,
           resultType: 'direct',
-          displayTag: null,
-          sortOrder: 1,
-          matchReason: `Located in ${searchCity}`,
+          displayTag: budgetInfo.tag,
+          sortOrder,
+          budgetTier: budgetInfo.tier,
+          budgetMatchType,
+          matchReason: `Located in ${searchCity} - ${budgetInfo.description}`,
           isLiked: false
         });
       } else {
         // If it's already added as liked, update the match reason to show both
         const existing = processedResults.get(property.id);
-        existing.matchReason = `❤️ Liked - located in ${searchCity}`;
-        existing.displayTag = '❤️ Liked';
+        const budgetInfo = getBudgetTagInfo(property);
+        existing.matchReason = `❤️ Liked - located in ${searchCity}, ${budgetInfo.description.toLowerCase()}`;
+        existing.displayTag = budgetInfo.tier === 0 ? '❤️ Liked • ✅ Perfect Match' : `❤️ Liked • ${budgetInfo.tag}`;
       }
     });
-    
+
     // Finally add nearby properties (if not already added)
     nearbyProperties.forEach(property => {
       if (!processedResults.has(property.id)) {
+        const budgetInfo = getBudgetTagInfo(property);
+        const budgetMatchType = getBudgetMatchType(property);
+
+        // Sort order: Perfect matches get 4, partial matches get 5-6
+        const sortOrder = budgetMatchType === 'both' ? 4 : (budgetMatchType === 'monthly_only' ? 5 : 6);
+
         processedResults.set(property.id, {
           ...property,
           resultType: 'nearby',
-          displayTag: 'Nearby',
-          sortOrder: 2,
-          matchReason: `Near ${searchCity} (in ${property.city?.split(',')[0].trim()})`,
+          displayTag: `Nearby • ${budgetInfo.tag}`,
+          sortOrder,
+          budgetTier: budgetInfo.tier,
+          budgetMatchType,
+          matchReason: `Near ${searchCity} (in ${property.city?.split(',')[0].trim()}) - ${budgetInfo.description}`,
           isLiked: false
         });
       } else {
         // If it's already added as liked, update to show it's also nearby
         const existing = processedResults.get(property.id);
         if (existing.resultType === 'liked') {
-          existing.matchReason = `❤️ Liked - near ${searchCity} (in ${property.city?.split(',')[0].trim()})`;
-          existing.displayTag = '❤️ Liked • Nearby';
+          const budgetInfo = getBudgetTagInfo(property);
+          existing.matchReason = `❤️ Liked - near ${searchCity} (in ${property.city?.split(',')[0].trim()}), ${budgetInfo.description.toLowerCase()}`;
+          existing.displayTag = `❤️ Liked • Nearby • ${budgetInfo.tag}`;
         }
       }
     });
 
     const allResults = Array.from(processedResults.values())
       .sort((a, b) => {
-        // First sort by type (liked -> direct -> nearby), then by monthly payment
+        // First sort by sortOrder (liked -> direct perfect -> direct partial -> nearby perfect -> nearby partial)
         if (a.sortOrder !== b.sortOrder) return a.sortOrder - b.sortOrder;
-        // Handle properties without monthly payment
+        // Then by budget tier (perfect -> monthly_only -> down_only)
+        if (a.budgetTier !== b.budgetTier) return a.budgetTier - b.budgetTier;
+        // Finally by monthly payment (lowest first)
         const aPayment = a.monthlyPayment || 0;
         const bPayment = b.monthlyPayment || 0;
         return aPayment - bPayment;
@@ -288,11 +381,7 @@ export async function GET(request: NextRequest) {
       }
     });
 
-  } catch {
-    return NextResponse.json({ 
-      error: 'Failed to load properties',
-      properties: [],
-      total: 0 
-    }, { status: 500 });
+  } catch (error) {
+    return createErrorResponse('Failed to load buyer properties', error);
   }
 }

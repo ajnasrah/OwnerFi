@@ -1,0 +1,252 @@
+/**
+ * GoHighLevel SMS Notification System
+ *
+ * This module handles sending property match notifications to buyers via GoHighLevel webhooks.
+ */
+
+import { BuyerProfile } from './firebase-models';
+import { PropertyListing } from './property-schema';
+
+interface PropertyMatchNotificationOptions {
+  buyer: BuyerProfile;
+  property: PropertyListing;
+  trigger: 'new_property_added' | 'buyer_criteria_changed' | 'manual_trigger';
+  baseUrl?: string;
+}
+
+/**
+ * Send a property match notification to a buyer via GoHighLevel
+ *
+ * This function triggers our internal webhook which forwards to GoHighLevel
+ * to send an SMS notification to the buyer.
+ */
+export async function sendPropertyMatchNotification(
+  options: PropertyMatchNotificationOptions
+): Promise<{ success: boolean; logId?: string; error?: string }> {
+  try {
+    const { buyer, property, trigger, baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://ownerfi.com' } = options;
+
+    // Validate buyer has phone number
+    if (!buyer.phone) {
+      console.warn(`[GoHighLevel] Buyer ${buyer.id} has no phone number, skipping SMS`);
+      return {
+        success: false,
+        error: 'Buyer has no phone number',
+      };
+    }
+
+    // Check if buyer has SMS notifications enabled
+    if (buyer.smsNotifications === false) {
+      console.log(`[GoHighLevel] Buyer ${buyer.id} has SMS notifications disabled`);
+      return {
+        success: false,
+        error: 'Buyer has SMS notifications disabled',
+      };
+    }
+
+    // Prepare webhook payload
+    const payload = {
+      // Buyer Information
+      buyerId: buyer.id,
+      buyerName: `${buyer.firstName} ${buyer.lastName}`,
+      buyerFirstName: buyer.firstName,
+      buyerLastName: buyer.lastName,
+      buyerPhone: buyer.phone,
+      buyerEmail: buyer.email,
+      buyerCity: buyer.preferredCity || buyer.city || '',
+      buyerState: buyer.preferredState || buyer.state || '',
+      buyerMaxMonthlyPayment: buyer.maxMonthlyPayment,
+      buyerMaxDownPayment: buyer.maxDownPayment,
+
+      // Property Information
+      propertyId: property.id,
+      propertyAddress: property.address,
+      propertyCity: property.city,
+      propertyState: property.state,
+      monthlyPayment: property.monthlyPayment,
+      downPaymentAmount: property.downPaymentAmount,
+      listPrice: property.listPrice,
+      bedrooms: property.bedrooms,
+      bathrooms: property.bathrooms,
+
+      // Additional Data
+      dashboardUrl: `${baseUrl}/dashboard`,
+      trigger,
+    };
+
+    console.log(`[GoHighLevel] Sending notification for property ${property.id} to buyer ${buyer.id}`);
+
+    // Call our internal webhook endpoint
+    const response = await fetch(`${baseUrl}/api/webhooks/gohighlevel/property-match`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok || !result.success) {
+      throw new Error(result.error || 'Failed to send notification');
+    }
+
+    console.log(`[GoHighLevel] Notification sent successfully. Log ID: ${result.logId}`);
+
+    return {
+      success: true,
+      logId: result.logId,
+    };
+
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('[GoHighLevel] Failed to send notification:', errorMessage);
+
+    return {
+      success: false,
+      error: errorMessage,
+    };
+  }
+}
+
+/**
+ * Send batch notifications to multiple buyers
+ *
+ * Useful when a new property is added that matches multiple buyers.
+ */
+export async function sendBatchPropertyMatchNotifications(
+  property: PropertyListing,
+  buyers: BuyerProfile[],
+  trigger: 'new_property_added' | 'buyer_criteria_changed' | 'manual_trigger' = 'new_property_added'
+): Promise<{ sent: number; failed: number; results: Array<{ buyerId: string; success: boolean; error?: string }> }> {
+  console.log(`[GoHighLevel] Sending batch notifications for property ${property.id} to ${buyers.length} buyers`);
+
+  const results = await Promise.allSettled(
+    buyers.map(buyer =>
+      sendPropertyMatchNotification({
+        buyer,
+        property,
+        trigger,
+      })
+    )
+  );
+
+  const sent = results.filter(r => r.status === 'fulfilled' && r.value.success).length;
+  const failed = results.length - sent;
+
+  const detailedResults = buyers.map((buyer, index) => {
+    const result = results[index];
+    if (result.status === 'fulfilled') {
+      return {
+        buyerId: buyer.id,
+        success: result.value.success,
+        error: result.value.error,
+      };
+    } else {
+      return {
+        buyerId: buyer.id,
+        success: false,
+        error: result.reason,
+      };
+    }
+  });
+
+  console.log(`[GoHighLevel] Batch complete: ${sent} sent, ${failed} failed`);
+
+  return {
+    sent,
+    failed,
+    results: detailedResults,
+  };
+}
+
+/**
+ * Check if a buyer should receive notifications for a property
+ *
+ * Helps prevent spam by checking:
+ * - Buyer has SMS notifications enabled
+ * - Buyer hasn't already been notified about this property recently
+ * - Property matches buyer's criteria
+ */
+export function shouldNotifyBuyer(
+  buyer: BuyerProfile,
+  property: PropertyListing,
+  recentNotifications: string[] = []
+): { shouldNotify: boolean; reason?: string } {
+  // Check if buyer has SMS enabled
+  if (buyer.smsNotifications === false) {
+    return {
+      shouldNotify: false,
+      reason: 'SMS notifications disabled',
+    };
+  }
+
+  // Check if buyer has phone number
+  if (!buyer.phone) {
+    return {
+      shouldNotify: false,
+      reason: 'No phone number',
+    };
+  }
+
+  // Check if buyer is active
+  if (buyer.isActive === false) {
+    return {
+      shouldNotify: false,
+      reason: 'Buyer profile inactive',
+    };
+  }
+
+  // Check if already notified recently
+  if (recentNotifications.includes(property.id)) {
+    return {
+      shouldNotify: false,
+      reason: 'Already notified about this property',
+    };
+  }
+
+  // Check if buyer has already liked or passed this property
+  if (buyer.likedPropertyIds?.includes(property.id)) {
+    return {
+      shouldNotify: false,
+      reason: 'Buyer already liked this property',
+    };
+  }
+
+  if (buyer.passedPropertyIds?.includes(property.id)) {
+    return {
+      shouldNotify: false,
+      reason: 'Buyer already passed on this property',
+    };
+  }
+
+  // Check basic matching criteria
+  if (property.monthlyPayment > buyer.maxMonthlyPayment) {
+    return {
+      shouldNotify: false,
+      reason: 'Monthly payment exceeds budget',
+    };
+  }
+
+  if (property.downPaymentAmount > buyer.maxDownPayment) {
+    return {
+      shouldNotify: false,
+      reason: 'Down payment exceeds budget',
+    };
+  }
+
+  // Check location match
+  const buyerCity = buyer.preferredCity || buyer.city;
+  const buyerState = buyer.preferredState || buyer.state;
+
+  if (property.state !== buyerState) {
+    return {
+      shouldNotify: false,
+      reason: 'Property not in buyer\'s preferred state',
+    };
+  }
+
+  return {
+    shouldNotify: true,
+  };
+}

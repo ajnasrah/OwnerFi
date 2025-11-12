@@ -84,6 +84,10 @@
     {
       "path": "/api/cron/enhance-property-images",
       "schedule": "0 4 * * *"
+    },
+    {
+      "path": "/api/cron/cleanup-stale-properties",
+      "schedule": "0 2 * * 0"
     }
   ],
   "functions": {
@@ -157,6 +161,9 @@
       "maxDuration": 60
     },
     "src/app/api/cron/enhance-property-images/route.ts": {
+      "maxDuration": 300
+    },
+    "src/app/api/cron/cleanup-stale-properties/route.ts": {
       "maxDuration": 300
     }
   },

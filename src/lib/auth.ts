@@ -102,12 +102,12 @@ export const authOptions = {
       name: `next-auth.session-token`,
       options: {
         httpOnly: true,
-        // Use 'none' for cross-origin compatibility with Google Maps API
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+        // Use 'lax' for better CSRF protection
+        // Only use 'none' if you have a specific cross-origin need AND have CSRF protection
+        sameSite: 'lax',
         path: '/',
         secure: process.env.NODE_ENV === 'production',
         maxAge: 30 * 24 * 60 * 60, // 30 days
-        // Remove domain restriction to prevent Google Maps API cross-origin issues
         domain: undefined
       }
     }

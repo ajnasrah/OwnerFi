@@ -100,7 +100,8 @@ export async function getHeyGenQuota(): Promise<HeyGenQuotaResponse> {
     }
 
     const data = await response.json();
-    const remainingQuota = data.remaining_quota || 0;
+    // HeyGen API v2 returns data nested under "data" property
+    const remainingQuota = data.data?.remaining_quota || data.remaining_quota || 0;
     const remainingCredits = Math.floor(remainingQuota / 60); // Convert quota to credits
 
     console.log(`💳 HeyGen Quota API Response:`, JSON.stringify(data, null, 2));
@@ -115,7 +116,7 @@ export async function getHeyGenQuota(): Promise<HeyGenQuotaResponse> {
     return {
       remaining_quota: remainingQuota,
       remainingCredits,
-      details: data.details,
+      details: data.data?.details || data.details,
     };
   } catch (error) {
     console.error('❌ Error fetching HeyGen quota:', error);

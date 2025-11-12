@@ -119,23 +119,24 @@ async function addPropertyToMatchingBuyers(property: PropertyListing & { id: str
     // For immediate response, we queue the property and process buyers in background
     // This prevents timeout on large buyer lists (1000+ buyers)
 
-    // OPTIMIZATION: Only check buyers in the same state with compatible budget
+    // OPTIMIZATION: Only check buyers in the same state
+    // NEW: Removed maxMonthlyPayment filter to allow OR logic (property might match on down payment only)
     const { limit: firestoreLimit } = await import('firebase/firestore');
     const relevantBuyersQuery = query(
       collection(db!, 'buyerProfiles'),
       where('searchCriteria.state', '==', property.state),
-      where('searchCriteria.maxMonthlyPayment', '>=', property.monthlyPayment),
-      firestoreLimit(200) // Process in batches to prevent timeout
+      firestoreLimit(500) // Increased limit since we can't pre-filter by monthly payment anymore
     );
     const buyerDocs = await getDocs(relevantBuyersQuery);
 
     const updatePromises = [];
+    const matchedBuyers: BuyerProfile[] = [];
 
     for (const buyerDoc of buyerDocs.docs) {
-      const buyerData = buyerDoc.data();
+      const buyerData = buyerDoc.data() as BuyerProfile;
 
       // Check if this property matches the buyer's criteria
-      const matches = await checkPropertyMatchesBuyer(property, buyerData as BuyerProfile);
+      const matches = await checkPropertyMatchesBuyer(property, buyerData);
 
       if (matches) {
         const buyerRef = doc(db!, 'buyerProfiles', buyerDoc.id);
@@ -146,10 +147,30 @@ async function addPropertyToMatchingBuyers(property: PropertyListing & { id: str
             updatedAt: serverTimestamp()
           })
         );
+
+        // Track matched buyers for GoHighLevel notifications
+        matchedBuyers.push({ ...buyerData, id: buyerDoc.id });
       }
     }
 
     await Promise.all(updatePromises);
+
+    // Send GoHighLevel SMS notifications to matched buyers (non-blocking)
+    if (matchedBuyers.length > 0) {
+      console.log(`🔔 Triggering SMS notifications for ${matchedBuyers.length} matched buyers`);
+
+      // Import and trigger notifications in background
+      const { sendBatchPropertyMatchNotifications } = await import('@/lib/gohighlevel-notifications');
+
+      // Fire and forget - don't block the sync-matches response
+      sendBatchPropertyMatchNotifications(property, matchedBuyers, 'new_property_added')
+        .then(result => {
+          console.log(`✅ GoHighLevel notifications sent: ${result.sent} sent, ${result.failed} failed`);
+        })
+        .catch(err => {
+          console.error('❌ Failed to send GoHighLevel notifications:', err);
+        });
+    }
 
   } catch (error) {
     // Error occurred
@@ -157,6 +178,7 @@ async function addPropertyToMatchingBuyers(property: PropertyListing & { id: str
 }
 
 // Check if a property matches a buyer's criteria
+// NEW: Uses OR logic - property matches if it meets at least ONE budget criterion
 async function checkPropertyMatchesBuyer(property: PropertyListing & { id: string }, buyerData: BuyerProfile): Promise<boolean> {
   try {
     // Location match - use buyer's stored cities from searchCriteria
@@ -166,25 +188,29 @@ async function checkPropertyMatchesBuyer(property: PropertyListing & { id: strin
       property.city.toLowerCase() === cityName.toLowerCase() &&
       property.state === (criteria.state || buyerData.preferredState)
     );
-    
+
     if (!locationMatch) return false;
 
-    // Budget match - read from nested structure
-    const budgetMatch = 
-      property.monthlyPayment <= (criteria.maxMonthlyPayment || buyerData.maxMonthlyPayment || 0) &&
-      property.downPaymentAmount <= (criteria.maxDownPayment || buyerData.maxDownPayment || 0);
-    
+    // NEW: Budget match with OR logic - matches if EITHER criterion is met
+    const maxMonthly = criteria.maxMonthlyPayment || buyerData.maxMonthlyPayment || 0;
+    const maxDown = criteria.maxDownPayment || buyerData.maxDownPayment || 0;
+
+    const monthlyPaymentMatch = property.monthlyPayment <= maxMonthly;
+    const downPaymentMatch = property.downPaymentAmount <= maxDown;
+
+    const budgetMatch = monthlyPaymentMatch || downPaymentMatch;
+
     if (!budgetMatch) return false;
 
     // Requirements match
-    const requirementsMatch = 
+    const requirementsMatch =
       (!buyerData.minBedrooms || property.bedrooms >= buyerData.minBedrooms) &&
       (!buyerData.minBathrooms || property.bathrooms >= buyerData.minBathrooms) &&
       (!buyerData.minPrice || property.listPrice >= buyerData.minPrice) &&
       (!buyerData.maxPrice || property.listPrice <= buyerData.maxPrice);
-    
+
     return requirementsMatch;
-    
+
   } catch (error) {
     return false;
   }
@@ -251,15 +277,14 @@ export async function GET(request: NextRequest) {
       const buyerData = buyerDoc.data();
       const criteria = buyerData.searchCriteria || {};
 
-      // CRITICAL FIX: Query only properties in buyer's state with compatible budget
-      // This reduces from 10,000 properties to ~100-200 relevant properties
+      // CRITICAL FIX: Query only properties in buyer's state
+      // NEW: Removed monthlyPayment filter to allow OR logic (property might match on down payment only)
       const propertiesQuery = query(
         collection(db!, 'properties'),
         where('isActive', '==', true),
         where('state', '==', criteria.state || buyerData.preferredState || ''),
-        where('monthlyPayment', '<=', criteria.maxMonthlyPayment || buyerData.maxMonthlyPayment || 999999),
         orderBy('monthlyPayment', 'asc'),
-        firestoreLimit(500)
+        firestoreLimit(1000) // Increased limit to capture more properties for OR logic
       );
 
       const propertiesSnapshot = await getDocs(propertiesQuery);

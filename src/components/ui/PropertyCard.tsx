@@ -19,7 +19,17 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
   const [showDetails, setShowDetails] = useState(false);
 
   // Memoize expensive calculations
-  const images = useMemo(() => property.imageUrls || [], [property.imageUrls]);
+  // BUGFIX: Prioritize legacy imageUrl field (Zillow images) before imageUrls array (Street View)
+  // This ensures we show real property photos instead of Google Street View when available
+  const images = useMemo(() => {
+    const legacyImageUrl = (property as any).imageUrl;
+    if (legacyImageUrl) {
+      // If we have a legacy imageUrl, use it as the first image
+      return [legacyImageUrl, ...(property.imageUrls || [])];
+    }
+    return property.imageUrls || [];
+  }, [property]);
+
   const currentImage = useMemo(() =>
     images.length > 0 && !imageError ? images[imageIndex] : '/placeholder-house.jpg',
     [images, imageIndex, imageError]

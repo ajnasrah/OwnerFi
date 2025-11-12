@@ -768,6 +768,43 @@ export async function POST(request: NextRequest) {
         console.log(`   ⏭️  Skipping queue add for ${propertyId}: status=${propertyData.status}, isActive=${propertyData.isActive}, hasImages=${!!(propertyData.imageUrls && propertyData.imageUrls.length > 0)}`);
       }
 
+      // Trigger buyer matching and notifications (non-blocking)
+      // This will find all buyers that match this property and send SMS notifications
+      if (propertyData.status === 'active' && propertyData.isActive) {
+        try {
+          const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ||
+                          (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
+
+          console.log(`🔔 Triggering buyer matching for ${isUpdate ? 'updated' : 'new'} property ${propertyId}`);
+
+          // Fire and forget - don't block the webhook response
+          fetch(`${baseUrl}/api/properties/sync-matches`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: isUpdate ? 'update' : 'add',
+              propertyId: propertyId,
+              propertyData: cleanPropertyData
+            })
+          }).then(async (response) => {
+            if (response.ok) {
+              const result = await response.json();
+              console.log(`   ✅ Buyer matching completed: ${result.message}`);
+            } else {
+              const errorText = await response.text().catch(() => 'Unknown error');
+              console.error(`   ❌ Buyer matching failed (${response.status}): ${errorText}`);
+            }
+          }).catch(err => {
+            console.error(`   ❌ Failed to trigger buyer matching:`, err);
+          });
+        } catch (error) {
+          console.error('Error triggering buyer matching:', error);
+          // Don't fail property creation if matching fails
+        }
+      } else {
+        console.log(`   ⏭️  Skipping buyer matching for ${propertyId}: status=${propertyData.status}, isActive=${propertyData.isActive}`);
+      }
+
       return NextResponse.json({
         success: true,
         data: {

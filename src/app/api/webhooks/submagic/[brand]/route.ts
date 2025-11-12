@@ -545,7 +545,7 @@ async function triggerAsyncVideoProcessing(
     //
     // FIX: Add timeout and retry logic to prevent "fetch failed" network errors
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
+    const timeoutId = setTimeout(() => controller.abort(), 120000); // 120s timeout (video download/upload can be slow)
 
     fetch(`${baseUrl}/api/process-video`, {
       method: 'POST',
@@ -580,7 +580,7 @@ async function triggerAsyncVideoProcessing(
       // Check if it's a timeout or network error
       const errorType = err.name === 'AbortError' ? 'timeout' : 'network error';
       const errorMessage = err.name === 'AbortError'
-        ? 'Request timeout after 30s'
+        ? 'Request timeout after 120s'
         : err.message;
 
       console.error(`   Error type: ${errorType}`);

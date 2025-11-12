@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     console.log('🔄 [SYNC-QUEUE] Starting property queue sync...');
 
     const { db } = await import('@/lib/firebase');
-    const { collection, getDocs, doc, setDoc, query, where } = await import('firebase/firestore');
+    const { collection, getDocs, doc, setDoc, deleteDoc, query, where } = await import('firebase/firestore');
 
     if (!db) {
       return NextResponse.json({ error: 'Firebase not initialized' }, { status: 500 });
@@ -50,15 +50,51 @@ export async function GET(request: NextRequest) {
     console.log('📊 Loading queue...');
     const queueSnapshot = await getDocs(collection(db, 'property_videos'));
     const queuedPropertyIds = new Set();
+    const invalidQueueItems: any[] = [];
 
     queueSnapshot.docs.forEach(doc => {
       const workflow = doc.data();
       queuedPropertyIds.add(workflow.propertyId);
+
+      // Check if property exists and is valid
+      const property = activeProperties.get(workflow.propertyId);
+      if (!property) {
+        invalidQueueItems.push({
+          workflowId: doc.id,
+          propertyId: workflow.propertyId,
+          reason: 'Property deleted or inactive'
+        });
+      }
     });
 
-    console.log(`   ${queuedPropertyIds.size} properties already in queue`);
+    console.log(`   ${queuedPropertyIds.size} properties in queue`);
+    console.log(`   ${invalidQueueItems.length} invalid queue items to delete`);
 
-    // 3. Find missing properties
+    // 3. Delete invalid queue items
+    let deleted = 0;
+    let deleteFailed = 0;
+
+    if (invalidQueueItems.length > 0) {
+      console.log('🗑️  Deleting invalid queue items...');
+
+      for (const item of invalidQueueItems) {
+        try {
+          await deleteDoc(doc(db, 'property_videos', item.workflowId));
+          deleted++;
+
+          if (deleted % 10 === 0) {
+            console.log(`   Progress: ${deleted}/${invalidQueueItems.length}...`);
+          }
+        } catch (error) {
+          deleteFailed++;
+          console.error(`   ❌ Failed to delete ${item.workflowId}:`, error);
+        }
+      }
+
+      console.log(`   ✅ Deleted ${deleted} invalid queue items`);
+    }
+
+    // 4. Find missing properties
     const missingProperties: any[] = [];
     activeProperties.forEach((prop, propId) => {
       if (!queuedPropertyIds.has(propId)) {
@@ -68,55 +104,51 @@ export async function GET(request: NextRequest) {
 
     console.log(`📋 Missing from queue: ${missingProperties.length} properties`);
 
-    if (missingProperties.length === 0) {
-      console.log('✅ All properties already in queue');
-      return NextResponse.json({
-        success: true,
-        message: 'Queue already synced',
-        totalProperties: activeProperties.size,
-        inQueue: queuedPropertyIds.size,
-        added: 0
-      });
-    }
-
-    // 4. Add missing properties to queue
-    console.log('🔧 Adding missing properties to queue...');
-
+    // 5. Add missing properties to queue
     let added = 0;
-    let failed = 0;
+    let addFailed = 0;
 
-    for (const prop of missingProperties) {
-      try {
-        const workflowId = `prop-${prop.id}-${Date.now()}`;
-        const workflowData = {
-          propertyId: prop.id,
-          status: 'pending',
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-          source: 'cron_sync',
-        };
+    if (missingProperties.length > 0) {
+      console.log('🔧 Adding missing properties to queue...');
 
-        await setDoc(doc(db, 'property_videos', workflowId), workflowData);
-        added++;
+      for (const prop of missingProperties) {
+        try {
+          const workflowId = `prop-${prop.id}-${Date.now()}`;
+          const workflowData = {
+            propertyId: prop.id,
+            status: 'pending',
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+            source: 'cron_sync',
+          };
 
-        if (added % 50 === 0) {
-          console.log(`   Progress: ${added}/${missingProperties.length}...`);
+          await setDoc(doc(db, 'property_videos', workflowId), workflowData);
+          added++;
+
+          if (added % 50 === 0) {
+            console.log(`   Progress: ${added}/${missingProperties.length}...`);
+          }
+        } catch (error) {
+          addFailed++;
+          console.error(`   ❌ Failed to add ${prop.id}:`, error);
         }
-      } catch (error) {
-        failed++;
-        console.error(`   ❌ Failed to add ${prop.id}:`, error);
       }
+
+      console.log(`   ✅ Added ${added} missing properties`);
     }
 
-    console.log(`\n✅ [SYNC-QUEUE] Sync complete: ${added} added, ${failed} failed`);
+    console.log(`\n✅ [SYNC-QUEUE] Sync complete: ${added} added, ${deleted} deleted, ${addFailed + deleteFailed} failed`);
 
     return NextResponse.json({
       success: true,
       totalProperties: activeProperties.size,
-      inQueue: queuedPropertyIds.size,
+      inQueue: queuedPropertyIds.size - deleted + added,
       missing: missingProperties.length,
+      invalid: invalidQueueItems.length,
       added,
-      failed
+      deleted,
+      addFailed,
+      deleteFailed
     });
 
   } catch (error) {

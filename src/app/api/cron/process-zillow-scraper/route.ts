@@ -49,11 +49,21 @@ export async function GET(request: NextRequest) {
     const actorId = 'maxcopell/zillow-detail-scraper';
 
     const urls: string[] = jobData.urls || [];
+
+    // Deduplicate URLs to prevent scraping same property multiple times
+    const uniqueUrls = Array.from(new Set(urls));
+    const duplicatesRemoved = urls.length - uniqueUrls.length;
+
+    if (duplicatesRemoved > 0) {
+      console.log(`🔄 [DEDUP] Removed ${duplicatesRemoved} duplicate URLs (${urls.length} → ${uniqueUrls.length})`);
+    }
+
     const batchSize = 50;
     let imported = 0;
+    let updated = 0;
 
-    for (let i = 0; i < urls.length; i += batchSize) {
-      const batch = urls.slice(i, i + batchSize);
+    for (let i = 0; i < uniqueUrls.length; i += batchSize) {
+      const batch = uniqueUrls.slice(i, i + batchSize);
 
       console.log(`🚀 [APIFY] Starting batch ${i / batchSize + 1} with ${batch.length} URLs`);
 
@@ -71,23 +81,57 @@ export async function GET(request: NextRequest) {
 
       console.log(`📦 [APIFY] Received ${items.length} items`);
 
-      // Save to Firebase
+      // Save to Firebase with ZPID-based deduplication
       const firestoreBatch = db.batch();
-      items.forEach((item: any) => {
+      let batchImported = 0;
+      let batchUpdated = 0;
+
+      for (const item of items) {
         const propertyData = transformProperty(item);
-        const docRef = db.collection('zillow_imports').doc();
-        firestoreBatch.set(docRef, propertyData);
-      });
+        const zpid = String(item.zpid || item.id || '');
+
+        if (!zpid) {
+          console.warn(`⚠️ [SKIP] Property without ZPID: ${item.url}`);
+          continue;
+        }
+
+        // Use ZPID as document ID to prevent duplicates
+        const docRef = db.collection('zillow_imports').doc(zpid);
+
+        // Check if document exists
+        const existingDoc = await docRef.get();
+
+        if (existingDoc.exists()) {
+          // Update existing property
+          firestoreBatch.set(docRef, {
+            ...propertyData,
+            updatedAt: new Date(),
+            lastScrapedAt: new Date(),
+          }, { merge: true });
+          batchUpdated++;
+        } else {
+          // Create new property
+          firestoreBatch.set(docRef, {
+            ...propertyData,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            lastScrapedAt: new Date(),
+          });
+          batchImported++;
+        }
+      }
 
       await firestoreBatch.commit();
-      imported += items.length;
+      imported += batchImported;
+      updated += batchUpdated;
 
-      console.log(`✅ [BATCH] Saved ${items.length} properties (${imported}/${urls.length} total)`);
+      console.log(`✅ [BATCH] New: ${batchImported}, Updated: ${batchUpdated} (${imported} new / ${updated} updated total)`);
 
       // Update progress
-      const progress = Math.round((imported / urls.length) * 100);
+      const progress = Math.round(((imported + updated) / uniqueUrls.length) * 100);
       await jobDoc.ref.update({
         imported,
+        updated,
         progress,
       });
     }
@@ -96,9 +140,11 @@ export async function GET(request: NextRequest) {
     await jobDoc.ref.update({
       status: 'complete',
       completedAt: new Date(),
+      imported,
+      updated,
     });
 
-    console.log(`✅ [CRON] Job ${jobId} completed: ${imported} properties imported`);
+    console.log(`✅ [CRON] Job ${jobId} completed: ${imported} new, ${updated} updated`);
 
     return NextResponse.json({
       success: true,

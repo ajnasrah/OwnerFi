@@ -1,11 +1,11 @@
 // RSS Feed Source Configuration - VERIFIED WORKING FEEDS 2025
 // All feeds tested and verified with excellent content quality
-// Total: 25 feeds (VassDistro: 6, OwnerFi: 15, Carz: 4)
+// Total: 55 feeds (VassDistro: 16, OwnerFi: 25, Carz: 14)
 
 import { addFeedSource as addFeedSourceFirestore, type FeedSource, getAllFeedSources } from '@/lib/feed-store-firestore';
 
 /**
- * OWNERFI FEEDS (15 working feeds - all excellent quality with full content)
+ * OWNERFI FEEDS (25 working feeds - all excellent quality with full content)
  */
 export const OWNERFI_FEEDS: Omit<FeedSource, 'articlesProcessed'>[] = [
   {
@@ -142,11 +142,101 @@ export const OWNERFI_FEEDS: Omit<FeedSource, 'articlesProcessed'>[] = [
     subcategory: 'mortgage',
     enabled: true,
     fetchInterval: 120
+  },
+  {
+    id: 'ownerfi-mortgagereports',
+    name: 'The Mortgage Reports - Rates & Strategy',
+    url: 'https://themortgagereports.com/feed',
+    category: 'ownerfi',
+    subcategory: 'mortgage',
+    enabled: true,
+    fetchInterval: 60
+  },
+  {
+    id: 'ownerfi-nationalmortgagenews',
+    name: 'National Mortgage News - Industry News',
+    url: 'https://www.nationalmortgagenews.com/feed',
+    category: 'ownerfi',
+    subcategory: 'mortgage',
+    enabled: true,
+    fetchInterval: 60
+  },
+  {
+    id: 'ownerfi-mortgagenewsdaily',
+    name: 'Mortgage News Daily - Breaking News',
+    url: 'https://www.mortgagenewsdaily.com/rss/full-rss.xml',
+    category: 'ownerfi',
+    subcategory: 'mortgage',
+    enabled: true,
+    fetchInterval: 60
+  },
+  {
+    id: 'ownerfi-bisnow',
+    name: 'Bisnow - Commercial Real Estate',
+    url: 'https://www.bisnow.com/rss/',
+    category: 'ownerfi',
+    subcategory: 'market',
+    enabled: true,
+    fetchInterval: 120
+  },
+  {
+    id: 'ownerfi-cpexecutive',
+    name: 'Commercial Property Executive',
+    url: 'https://www.cpexecutive.com/feed/',
+    category: 'ownerfi',
+    subcategory: 'market',
+    enabled: true,
+    fetchInterval: 120
+  },
+  {
+    id: 'ownerfi-proptech',
+    name: 'PropTech Insider - Real Estate Tech',
+    url: 'https://www.proptechinsider.com/feed/',
+    category: 'ownerfi',
+    subcategory: 'market',
+    enabled: true,
+    fetchInterval: 120
+  },
+  {
+    id: 'ownerfi-therealdeal',
+    name: 'The Real Deal - Real Estate News',
+    url: 'https://therealdeal.com/feed/',
+    category: 'ownerfi',
+    subcategory: 'market',
+    enabled: true,
+    fetchInterval: 60
+  },
+  {
+    id: 'ownerfi-curbed',
+    name: 'Curbed - Real Estate & Design',
+    url: 'https://www.curbed.com/rss/index.xml',
+    category: 'ownerfi',
+    subcategory: 'market',
+    enabled: true,
+    fetchInterval: 120
+  },
+  {
+    id: 'ownerfi-propertymanagementinsider',
+    name: 'Property Management Insider',
+    url: 'https://www.propertymanagementinsider.com/feed/',
+    category: 'ownerfi',
+    subcategory: 'market',
+    enabled: true,
+    fetchInterval: 120
+  },
+  {
+    id: 'ownerfi-multifamilyexecutive',
+    name: 'Multifamily Executive Magazine',
+    url: 'https://www.multifamilyexecutive.com/rss.xml',
+    category: 'ownerfi',
+    subcategory: 'market',
+    enabled: true,
+    fetchInterval: 120
   }
 ];
 
 /**
- * CARZ FEEDS (4 working feeds - mix of excellent and adequate quality)
+ * CARZ FEEDS (14 working feeds - mix of excellent and adequate quality)
  */
 export const CARZ_FEEDS: Omit<FeedSource, 'articlesProcessed'>[] = [
   {
@@ -184,11 +274,101 @@ export const CARZ_FEEDS: Omit<FeedSource, 'articlesProcessed'>[] = [
     subcategory: 'electric',
     enabled: true,
     fetchInterval: 60
+  },
+  {
+    id: 'carz-greencarreports',
+    name: 'Green Car Reports - EV & Hybrid News',
+    url: 'https://www.greencarreports.com/rss/news',
+    category: 'carz',
+    subcategory: 'electric',
+    enabled: true,
+    fetchInterval: 60
+  },
+  {
+    id: 'carz-insideevs',
+    name: 'InsideEVs - Electric Vehicle News',
+    url: 'https://insideevs.com/news/rss/',
+    category: 'carz',
+    subcategory: 'electric',
+    enabled: true,
+    fetchInterval: 60
+  },
+  {
+    id: 'carz-motorauthority-ev',
+    name: 'Motor Authority - Electric Vehicles',
+    url: 'https://www.motorauthority.com/rss/news',
+    category: 'carz',
+    subcategory: 'electric',
+    enabled: true,
+    fetchInterval: 60
+  },
+  {
+    id: 'carz-teslarati',
+    name: 'Teslarati - Tesla & EV News',
+    url: 'https://www.teslarati.com/feed/',
+    category: 'carz',
+    subcategory: 'electric',
+    enabled: true,
+    fetchInterval: 60
+  },
+  {
+    id: 'carz-autonews-ev',
+    name: 'Automotive News - Electric Vehicles',
+    url: 'https://www.autonews.com/rss/section/electric-vehicles',
+    category: 'carz',
+    subcategory: 'electric',
+    enabled: true,
+    fetchInterval: 120
+  },
+  {
+    id: 'carz-electrive',
+    name: 'electrive.com - EV Industry News',
+    url: 'https://www.electrive.com/feed/',
+    category: 'carz',
+    subcategory: 'electric',
+    enabled: true,
+    fetchInterval: 120
+  },
+  {
+    id: 'carz-evmagazine',
+    name: 'EV Magazine - Electric Vehicle News',
+    url: 'https://evmagazine.com/rss',
+    category: 'carz',
+    subcategory: 'electric',
+    enabled: true,
+    fetchInterval: 120
+  },
+  {
+    id: 'carz-topgear-electric',
+    name: 'Top Gear - Electric Vehicles',
+    url: 'https://www.topgear.com/rss/car-news/electric',
+    category: 'carz',
+    subcategory: 'electric',
+    enabled: true,
+    fetchInterval: 120
+  },
+  {
+    id: 'carz-carscoops',
+    name: 'Carscoops - Latest Auto News',
+    url: 'https://www.carscoops.com/feed/',
+    category: 'carz',
+    subcategory: 'electric',
+    enabled: true,
+    fetchInterval: 120
+  },
+  {
+    id: 'carz-thedrive',
+    name: 'The Drive - Car News',
+    url: 'https://www.thedrive.com/rss/news',
+    category: 'carz',
+    subcategory: 'electric',
+    enabled: true,
+    fetchInterval: 120
   }
 ];
 
 /**
- * VASS DISTRO FEEDS (6 working feeds - 1000-10000 chars avg)
+ * VASS DISTRO FEEDS (16 working feeds - 1000-10000 chars avg)
  */
 export const VASSDISTRO_FEEDS: Omit<FeedSource, 'articlesProcessed'>[] = [
   {
@@ -242,6 +422,96 @@ export const VASSDISTRO_FEEDS: Omit<FeedSource, 'articlesProcessed'>[] = [
     url: 'https://vapebeat.com/feed/',
     category: 'vassdistro',
     subcategory: 'products',
+    enabled: true,
+    fetchInterval: 120
+  },
+  {
+    id: 'vassdistro-vaping360',
+    name: 'Vaping360 - Global Vape News',
+    url: 'https://vaping360.com/feed/',
+    category: 'vassdistro',
+    subcategory: 'market',
+    enabled: true,
+    fetchInterval: 60
+  },
+  {
+    id: 'vassdistro-vapingpost',
+    name: 'Vaping Post - Breaking News',
+    url: 'https://www.vapingpost.com/feed/',
+    category: 'vassdistro',
+    subcategory: 'market',
+    enabled: true,
+    fetchInterval: 60
+  },
+  {
+    id: 'vassdistro-ashtray-blog',
+    name: 'Ashtray Blog - ECigaretteDirect',
+    url: 'https://www.ecigarettedirect.co.uk/ashtray-blog/feed',
+    category: 'vassdistro',
+    subcategory: 'products',
+    enabled: true,
+    fetchInterval: 120
+  },
+  {
+    id: 'vassdistro-planetofthevapes',
+    name: 'Planet of the Vapes - Reviews & News',
+    url: 'https://www.planetofthevapes.co.uk/news/vaping-news/feed',
+    category: 'vassdistro',
+    subcategory: 'products',
+    enabled: true,
+    fetchInterval: 120
+  },
+  {
+    id: 'vassdistro-vapeclub',
+    name: 'Vape Club - Industry News',
+    url: 'https://www.vapeclub.co.uk/vape-news/feed',
+    category: 'vassdistro',
+    subcategory: 'market',
+    enabled: true,
+    fetchInterval: 120
+  },
+  {
+    id: 'vassdistro-ecigintelligence',
+    name: 'ECigIntelligence - Industry Analysis',
+    url: 'https://ecigintelligence.com/feed/',
+    category: 'vassdistro',
+    subcategory: 'trade',
+    enabled: true,
+    fetchInterval: 120
+  },
+  {
+    id: 'vassdistro-vapestaff',
+    name: 'VapeStaff - Business & Regulations',
+    url: 'https://vapestaff.com/feed/',
+    category: 'vassdistro',
+    subcategory: 'trade',
+    enabled: true,
+    fetchInterval: 120
+  },
+  {
+    id: 'vassdistro-vapebusiness',
+    name: 'Vape Business - Trade News',
+    url: 'https://vapebusiness.com/feed/',
+    category: 'vassdistro',
+    subcategory: 'trade',
+    enabled: true,
+    fetchInterval: 120
+  },
+  {
+    id: 'vassdistro-vaperanks',
+    name: 'Vape Ranks - Product Reviews',
+    url: 'https://vaperanks.com/feed/',
+    category: 'vassdistro',
+    subcategory: 'products',
+    enabled: true,
+    fetchInterval: 120
+  },
+  {
+    id: 'vassdistro-vapeactive',
+    name: 'Vape Active - Health & Science',
+    url: 'https://www.vapeactive.com/blog/feed/',
+    category: 'vassdistro',
+    subcategory: 'market',
     enabled: true,
     fetchInterval: 120
   }

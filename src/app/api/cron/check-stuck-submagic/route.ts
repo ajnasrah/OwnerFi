@@ -53,12 +53,6 @@ async function executeFailsafe() {
 
     console.log('🔍 [FAILSAFE] Checking for stuck Submagic workflows...');
 
-  // Import the feed store functions that already work
-  const {
-    findWorkflowBySubmagicId,
-    getCollectionName
-  } = await import('@/lib/feed-store-firestore');
-
   const { db } = await import('@/lib/firebase');
 
   if (!db) {
@@ -74,9 +68,18 @@ async function executeFailsafe() {
   const results: any[] = []; // Initialize results EARLY - used throughout the function
   const MAX_WORKFLOWS_PER_RUN = 10; // Process max 10 workflows per cron run to avoid timeouts
 
+  // Map brands to their collection names directly (avoiding dynamic getCollectionName call)
+  const brandCollections: Record<string, string> = {
+    'carz': 'carz_workflow_queue',
+    'ownerfi': 'ownerfi_workflow_queue',
+    'vassdistro': 'vassdistro_workflow_queue',
+    'benefit': 'benefit_workflow_queue',
+    'abdullah': 'abdullah_workflow_queue',
+  };
+
   // Check all brand workflows (use submagicVideoId field)
   for (const brand of ['carz', 'ownerfi', 'vassdistro', 'benefit', 'abdullah'] as const) {
-    const collectionName = getCollectionName('WORKFLOW_QUEUE', brand);
+    const collectionName = brandCollections[brand];
       console.log(`\n📂 Checking ${collectionName}...`);
 
       try {

@@ -753,13 +753,19 @@ export async function POST(request: NextRequest) {
           console.log(`🎥 Auto-adding property ${propertyId} to video queue`);
 
           // Add to queue directly (non-blocking - don't await)
-          addToPropertyRotationQueue(propertyId).catch(err => {
-            console.error('Failed to auto-add property to queue:', err);
-          });
+          addToPropertyRotationQueue(propertyId)
+            .then(() => {
+              console.log(`   ✅ Successfully added ${propertyId} to rotation queue`);
+            })
+            .catch(err => {
+              console.error(`   ❌ Failed to auto-add property to queue:`, err);
+            });
         } catch (error) {
           console.error('Error triggering auto-add to queue:', error);
           // Don't fail property creation if queue add fails
         }
+      } else {
+        console.log(`   ⏭️  Skipping queue add for ${propertyId}: status=${propertyData.status}, isActive=${propertyData.isActive}, hasImages=${!!(propertyData.imageUrls && propertyData.imageUrls.length > 0)}`);
       }
 
       return NextResponse.json({

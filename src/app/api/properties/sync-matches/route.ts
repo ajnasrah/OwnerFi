@@ -130,12 +130,13 @@ async function addPropertyToMatchingBuyers(property: PropertyListing & { id: str
     const buyerDocs = await getDocs(relevantBuyersQuery);
 
     const updatePromises = [];
+    const matchedBuyers: BuyerProfile[] = [];
 
     for (const buyerDoc of buyerDocs.docs) {
-      const buyerData = buyerDoc.data();
+      const buyerData = buyerDoc.data() as BuyerProfile;
 
       // Check if this property matches the buyer's criteria
-      const matches = await checkPropertyMatchesBuyer(property, buyerData as BuyerProfile);
+      const matches = await checkPropertyMatchesBuyer(property, buyerData);
 
       if (matches) {
         const buyerRef = doc(db!, 'buyerProfiles', buyerDoc.id);
@@ -146,10 +147,30 @@ async function addPropertyToMatchingBuyers(property: PropertyListing & { id: str
             updatedAt: serverTimestamp()
           })
         );
+
+        // Track matched buyers for GoHighLevel notifications
+        matchedBuyers.push({ ...buyerData, id: buyerDoc.id });
       }
     }
 
     await Promise.all(updatePromises);
+
+    // Send GoHighLevel SMS notifications to matched buyers (non-blocking)
+    if (matchedBuyers.length > 0) {
+      console.log(`🔔 Triggering SMS notifications for ${matchedBuyers.length} matched buyers`);
+
+      // Import and trigger notifications in background
+      const { sendBatchPropertyMatchNotifications } = await import('@/lib/gohighlevel-notifications');
+
+      // Fire and forget - don't block the sync-matches response
+      sendBatchPropertyMatchNotifications(property, matchedBuyers, 'new_property_added')
+        .then(result => {
+          console.log(`✅ GoHighLevel notifications sent: ${result.sent} sent, ${result.failed} failed`);
+        })
+        .catch(err => {
+          console.error('❌ Failed to send GoHighLevel notifications:', err);
+        });
+    }
 
   } catch (error) {
     // Error occurred

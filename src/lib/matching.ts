@@ -32,6 +32,7 @@ interface BuyerForMatching {
 interface MatchResult {
   matches: boolean;
   score: number;
+  budgetMatchType: 'both' | 'monthly_only' | 'down_only' | 'neither';
   matchedOn: {
     monthly_payment: boolean;
     down_payment: boolean;
@@ -44,6 +45,7 @@ interface MatchResult {
 
 
 // Check if a property matches a buyer's criteria
+// NEW: Uses OR logic for budget criteria - property matches if it meets ONE OR BOTH budget requirements
 export function isPropertyMatch(property: PropertyForMatching, buyer: BuyerForMatching): MatchResult {
   const matchedOn = {
     monthly_payment: false,
@@ -52,28 +54,44 @@ export function isPropertyMatch(property: PropertyForMatching, buyer: BuyerForMa
     bedrooms: false,
     bathrooms: false
   };
-  
+
   let score = 0;
   let totalCriteria = 0;
 
-  // 1. Monthly Payment Check (CRITICAL)
+  // 1. Monthly Payment Check
   totalCriteria++;
-  if (property.monthlyPayment <= buyer.maxMonthlyPayment) {
+  const monthlyPaymentMatch = property.monthlyPayment <= buyer.maxMonthlyPayment;
+  if (monthlyPaymentMatch) {
     matchedOn.monthly_payment = true;
     score++;
-  } else {
-    // If monthly payment doesn't match, it's not a valid match
-    return { matches: false, score: 0, matchedOn };
   }
 
-  // 2. Down Payment Check (CRITICAL)  
+  // 2. Down Payment Check
   totalCriteria++;
-  if (property.downPaymentAmount <= buyer.maxDownPayment) {
+  const downPaymentMatch = property.downPaymentAmount <= buyer.maxDownPayment;
+  if (downPaymentMatch) {
     matchedOn.down_payment = true;
     score++;
+  }
+
+  // NEW: OR logic - property matches if it meets at least ONE budget criterion
+  const budgetMatch = monthlyPaymentMatch || downPaymentMatch;
+
+  // Determine budget match type for UI display
+  let budgetMatchType: 'both' | 'monthly_only' | 'down_only' | 'neither';
+  if (monthlyPaymentMatch && downPaymentMatch) {
+    budgetMatchType = 'both';
+  } else if (monthlyPaymentMatch) {
+    budgetMatchType = 'monthly_only';
+  } else if (downPaymentMatch) {
+    budgetMatchType = 'down_only';
   } else {
-    // If down payment doesn't match, it's not a valid match
-    return { matches: false, score: 0, matchedOn };
+    budgetMatchType = 'neither';
+  }
+
+  // If neither budget criterion matches, reject immediately
+  if (!budgetMatch) {
+    return { matches: false, score: 0, budgetMatchType: 'neither', matchedOn };
   }
 
   // 3. Location Check (CRITICAL) - Within buyer's search radius
@@ -85,7 +103,7 @@ export function isPropertyMatch(property: PropertyForMatching, buyer: BuyerForMa
     score++;
   } else {
     // If location doesn't match, it's not a valid match
-    return { matches: false, score: 0, matchedOn };
+    return { matches: false, score: 0, budgetMatchType: 'neither', matchedOn };
   }
 
   // 4. Bedrooms (Optional - if buyer specified)
@@ -107,11 +125,12 @@ export function isPropertyMatch(property: PropertyForMatching, buyer: BuyerForMa
   }
 
   const finalScore = score / totalCriteria;
-  
-  return { 
-    matches: true, // All critical criteria passed
+
+  return {
+    matches: true, // All critical criteria passed (location + at least one budget criterion)
     score: finalScore,
-    matchedOn 
+    budgetMatchType,
+    matchedOn
   };
 }
 

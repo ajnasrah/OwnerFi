@@ -268,19 +268,23 @@ export async function getAndLockArticle(category: Brand): Promise<Article | null
   console.log(`📊 [${category}] Found ${articles.length} unprocessed articles`);
   console.log(`   Quality scores: ${articles.map(a => a.qualityScore || 'N/A').join(', ')}`);
 
-  // Filter only high-quality articles (score >= 65)
+  // Filter only high-quality articles
+  // Carz has lower threshold (60) because automotive RSS feeds only provide summaries
+  // OwnerFi/VassDistro have higher threshold (65) because they get full articles
   // NO AGE RESTRICTION - ensures articles are always available for automation
+  const threshold = category === 'carz' ? 60 : 65;
+
   const ratedArticles = articles
     .filter(a => {
-      // Must have quality score >= 65 (video-worthy threshold)
-      if (typeof a.qualityScore !== 'number' || a.qualityScore < 65) {
+      // Must have quality score >= threshold (video-worthy)
+      if (typeof a.qualityScore !== 'number' || a.qualityScore < threshold) {
         return false;
       }
       return true;
     })
     .sort((a, b) => (b.qualityScore || 0) - (a.qualityScore || 0));
 
-  console.log(`✅ [${category}] Filtered to ${ratedArticles.length} eligible articles (score >= 65)`);
+  console.log(`✅ [${category}] Filtered to ${ratedArticles.length} eligible articles (score >= ${threshold})`);
 
   if (ratedArticles.length === 0) {
     console.log(`⚠️  No rated articles available for ${category}`);

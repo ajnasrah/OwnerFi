@@ -181,8 +181,9 @@ export async function GET(request: NextRequest) {
           let removedCount = 0;
           const batch = adminDb.batch();
           queueSnapshot.docs.forEach(doc => {
-            const propId = doc.data().propertyId;
-            if (!activePropertyIds.has(propId)) {
+            // Use doc.id as the primary key (doc.data().propertyId may be stale/different)
+            const queueDocId = doc.id;
+            if (!activePropertyIds.has(queueDocId)) {
               batch.delete(doc.ref);
               removedCount++;
             }

@@ -10,10 +10,12 @@ export default function AdminBuyers() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [buyers, setBuyers] = useState<BuyerAdminView[]>([]);
+  const [filteredBuyers, setFilteredBuyers] = useState<BuyerAdminView[]>([]);
   const [selectedBuyers, setSelectedBuyers] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
   const [selectAll, setSelectAll] = useState(false);
+  const [cityFilter, setCityFilter] = useState('');
 
   useEffect(() => {
     if (status === 'loading') return;
@@ -31,6 +33,7 @@ export default function AdminBuyers() {
       if (response.ok) {
         const data = await response.json();
         setBuyers(data.buyers || []);
+        setFilteredBuyers(data.buyers || []);
       }
     } catch (error) {
       console.error('Error loading buyers:', error);
@@ -38,6 +41,22 @@ export default function AdminBuyers() {
       setLoading(false);
     }
   };
+
+  // Filter buyers by city whenever cityFilter changes
+  useEffect(() => {
+    if (!cityFilter.trim()) {
+      setFilteredBuyers(buyers);
+    } else {
+      const filtered = buyers.filter(buyer => {
+        const buyerCity = (buyer.preferredCity || buyer.city || '').toLowerCase();
+        return buyerCity.includes(cityFilter.toLowerCase());
+      });
+      setFilteredBuyers(filtered);
+    }
+    // Clear selection when filter changes
+    setSelectedBuyers(new Set());
+    setSelectAll(false);
+  }, [cityFilter, buyers]);
 
   const toggleSelectBuyer = (buyerId: string) => {
     const newSelected = new Set(selectedBuyers);
@@ -55,7 +74,8 @@ export default function AdminBuyers() {
       setSelectedBuyers(new Set());
       setSelectAll(false);
     } else {
-      const allBuyerIds = new Set(buyers.map(b => b.id));
+      // Select only filtered buyers
+      const allBuyerIds = new Set(filteredBuyers.map(b => b.id));
       setSelectedBuyers(allBuyerIds);
       setSelectAll(true);
     }
@@ -110,7 +130,31 @@ export default function AdminBuyers() {
             ← Back to Admin Dashboard
           </Link>
           <h1 className="text-3xl font-bold text-white mb-2">Manage Buyers</h1>
-          <p className="text-slate-400">Total: {buyers.length} buyers</p>
+          <p className="text-slate-400">
+            {cityFilter ? `Showing ${filteredBuyers.length} of ${buyers.length} buyers` : `Total: ${buyers.length} buyers`}
+          </p>
+        </div>
+
+        {/* City Filter */}
+        <div className="bg-slate-800 rounded-lg p-4 mb-4">
+          <label className="block text-white mb-2 font-semibold">
+            🔍 Filter by City
+          </label>
+          <input
+            type="text"
+            value={cityFilter}
+            onChange={(e) => setCityFilter(e.target.value)}
+            placeholder="Enter city name (e.g., Memphis, Dallas, Houston...)"
+            className="w-full px-4 py-2 rounded-lg bg-slate-700 border border-slate-600 text-white placeholder-slate-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none"
+          />
+          {cityFilter && (
+            <button
+              onClick={() => setCityFilter('')}
+              className="mt-2 text-emerald-400 hover:text-emerald-300 text-sm"
+            >
+              ✕ Clear filter
+            </button>
+          )}
         </div>
 
         {/* Actions Bar */}
@@ -169,7 +213,7 @@ export default function AdminBuyers() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-700">
-                {buyers.map((buyer) => (
+                {filteredBuyers.map((buyer) => (
                   <tr key={buyer.id} className="hover:bg-slate-700/50 transition-colors">
                     <td className="p-3">
                       <input
@@ -226,9 +270,9 @@ export default function AdminBuyers() {
               </tbody>
             </table>
 
-            {buyers.length === 0 && (
+            {filteredBuyers.length === 0 && (
               <div className="p-8 text-center text-slate-400">
-                No buyers found
+                {cityFilter ? `No buyers found in "${cityFilter}"` : 'No buyers found'}
               </div>
             )}
           </div>

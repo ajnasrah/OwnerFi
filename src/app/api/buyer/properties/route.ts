@@ -178,88 +178,141 @@ export async function GET(request: NextRequest) {
       likedProperties = likedInResults;
     }
 
-    // 4. COMBINE AND FORMAT FOR BUYER DASHBOARD WITH SMART DE-DUPLICATION
+    // 4. COMBINE AND FORMAT FOR BUYER DASHBOARD WITH SMART DE-DUPLICATION AND 3-TIER BUDGET TAGS
     const processedResults = new Map();
-    
+
+    // Helper to generate budget tag and description
+    const getBudgetTagInfo = (property: PropertyListing & { id: string }) => {
+      const budgetMatchType = getBudgetMatchType(property);
+      const monthlyOver = property.monthlyPayment > maxMonthly ? property.monthlyPayment - maxMonthly : 0;
+      const downOver = property.downPaymentAmount > maxDown ? property.downPaymentAmount - maxDown : 0;
+
+      switch (budgetMatchType) {
+        case 'both':
+          return { tag: '✅ Within Budget', tier: 0, description: 'Fits both monthly and down payment budget' };
+        case 'monthly_only':
+          return {
+            tag: '🟡 Low Monthly Payment',
+            tier: 1,
+            description: `Monthly payment fits, down payment $${downOver.toLocaleString()} over budget`
+          };
+        case 'down_only':
+          return {
+            tag: '🟡 Low Down Payment',
+            tier: 1,
+            description: `Down payment fits, monthly payment $${monthlyOver.toFixed(0)}/mo over budget`
+          };
+        case 'neither':
+          return {
+            tag: '🔴 Over Budget',
+            tier: 2,
+            description: 'Exceeds both budget criteria'
+          };
+      }
+    };
+
     // First add liked properties (highest priority)
     likedProperties.forEach(property => {
       const propertyCity = property.city?.split(',')[0].trim();
       const isInSearchCity = propertyCity?.toLowerCase() === searchCity.toLowerCase() && property.state === searchState;
-      const meetsCurrentBudget = property.monthlyPayment <= maxMonthly && property.downPaymentAmount <= maxDown;
-      
+      const budgetInfo = getBudgetTagInfo(property);
+
       let displayTag = '❤️ Liked';
       let matchReason = 'Previously liked';
-      const sortOrder = 0; // Highest priority
-      
-      if (!meetsCurrentBudget) {
-        displayTag = '❤️ Liked (Over Budget)';
-        matchReason = 'Previously liked - exceeds current budget';
+      let sortOrder = 0; // Highest priority for liked
+
+      // Add budget tier info to liked properties
+      if (budgetInfo.tier > 0) {
+        displayTag = `❤️ Liked • ${budgetInfo.tag}`;
+        matchReason = `Previously liked - ${budgetInfo.description}`;
       } else if (isInSearchCity) {
-        displayTag = '❤️ Liked';
-        matchReason = `Previously liked - located in ${searchCity}`;
+        displayTag = '❤️ Liked • ✅ Perfect Match';
+        matchReason = `Previously liked - located in ${searchCity}, within budget`;
       } else if (property.state !== searchState) {
         displayTag = `❤️ Liked from ${property.city}`;
         matchReason = `Previously liked from ${property.city}, ${property.state}`;
       } else {
-        displayTag = `❤️ Liked from ${propertyCity}`;
-        matchReason = `Previously liked from ${propertyCity}`;
+        displayTag = '❤️ Liked';
+        matchReason = `Previously liked - ${budgetInfo.description}`;
       }
-      
+
       processedResults.set(property.id, {
         ...property,
         resultType: 'liked',
         displayTag,
         sortOrder,
+        budgetTier: budgetInfo.tier,
+        budgetMatchType: getBudgetMatchType(property),
         matchReason,
         isLiked: true
       });
     });
-    
+
     // Then add direct properties (if not already added as liked)
     directProperties.forEach(property => {
       if (!processedResults.has(property.id)) {
+        const budgetInfo = getBudgetTagInfo(property);
+        const budgetMatchType = getBudgetMatchType(property);
+
+        // Sort order: Perfect matches (tier 0) get sortOrder 1, partial matches get sortOrder 2-3
+        const sortOrder = budgetMatchType === 'both' ? 1 : (budgetMatchType === 'monthly_only' ? 2 : 3);
+
         processedResults.set(property.id, {
           ...property,
           resultType: 'direct',
-          displayTag: null,
-          sortOrder: 1,
-          matchReason: `Located in ${searchCity}`,
+          displayTag: budgetInfo.tag,
+          sortOrder,
+          budgetTier: budgetInfo.tier,
+          budgetMatchType,
+          matchReason: `Located in ${searchCity} - ${budgetInfo.description}`,
           isLiked: false
         });
       } else {
         // If it's already added as liked, update the match reason to show both
         const existing = processedResults.get(property.id);
-        existing.matchReason = `❤️ Liked - located in ${searchCity}`;
-        existing.displayTag = '❤️ Liked';
+        const budgetInfo = getBudgetTagInfo(property);
+        existing.matchReason = `❤️ Liked - located in ${searchCity}, ${budgetInfo.description.toLowerCase()}`;
+        existing.displayTag = budgetInfo.tier === 0 ? '❤️ Liked • ✅ Perfect Match' : `❤️ Liked • ${budgetInfo.tag}`;
       }
     });
-    
+
     // Finally add nearby properties (if not already added)
     nearbyProperties.forEach(property => {
       if (!processedResults.has(property.id)) {
+        const budgetInfo = getBudgetTagInfo(property);
+        const budgetMatchType = getBudgetMatchType(property);
+
+        // Sort order: Perfect matches get 4, partial matches get 5-6
+        const sortOrder = budgetMatchType === 'both' ? 4 : (budgetMatchType === 'monthly_only' ? 5 : 6);
+
         processedResults.set(property.id, {
           ...property,
           resultType: 'nearby',
-          displayTag: 'Nearby',
-          sortOrder: 2,
-          matchReason: `Near ${searchCity} (in ${property.city?.split(',')[0].trim()})`,
+          displayTag: `Nearby • ${budgetInfo.tag}`,
+          sortOrder,
+          budgetTier: budgetInfo.tier,
+          budgetMatchType,
+          matchReason: `Near ${searchCity} (in ${property.city?.split(',')[0].trim()}) - ${budgetInfo.description}`,
           isLiked: false
         });
       } else {
         // If it's already added as liked, update to show it's also nearby
         const existing = processedResults.get(property.id);
         if (existing.resultType === 'liked') {
-          existing.matchReason = `❤️ Liked - near ${searchCity} (in ${property.city?.split(',')[0].trim()})`;
-          existing.displayTag = '❤️ Liked • Nearby';
+          const budgetInfo = getBudgetTagInfo(property);
+          existing.matchReason = `❤️ Liked - near ${searchCity} (in ${property.city?.split(',')[0].trim()}), ${budgetInfo.description.toLowerCase()}`;
+          existing.displayTag = `❤️ Liked • Nearby • ${budgetInfo.tag}`;
         }
       }
     });
 
     const allResults = Array.from(processedResults.values())
       .sort((a, b) => {
-        // First sort by type (liked -> direct -> nearby), then by monthly payment
+        // First sort by sortOrder (liked -> direct perfect -> direct partial -> nearby perfect -> nearby partial)
         if (a.sortOrder !== b.sortOrder) return a.sortOrder - b.sortOrder;
-        // Handle properties without monthly payment
+        // Then by budget tier (perfect -> monthly_only -> down_only)
+        if (a.budgetTier !== b.budgetTier) return a.budgetTier - b.budgetTier;
+        // Finally by monthly payment (lowest first)
         const aPayment = a.monthlyPayment || 0;
         const bPayment = b.monthlyPayment || 0;
         return aPayment - bPayment;

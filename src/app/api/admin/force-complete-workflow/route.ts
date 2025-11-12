@@ -62,13 +62,17 @@ export async function POST(request: NextRequest) {
     console.log(`   📱 Posting to social media...`);
 
     const caption = workflow.caption || workflow.articleTitle || 'Check this out!';
+    const title = workflow.title || workflow.articleTitle || 'Check this out!';
     const platforms = getBrandPlatforms(validatedBrand);
 
     const lateResponse = await postToLate({
       videoUrl: r2Url,
       caption: caption,
+      title: title,
       platforms: platforms,
-      schedule: 'now' as const
+      brand: validatedBrand,
+      useQueue: true, // ✅ Use GetLate's queue system
+      timezone: 'America/Chicago'
     });
 
     console.log(`   ✅ Posted to Late.so: ${lateResponse.postId}`);

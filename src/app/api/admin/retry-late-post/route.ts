@@ -61,13 +61,16 @@ export async function POST(request: NextRequest) {
     console.log(`   Failure ID: ${failureId}`);
     console.log(`   Platforms: ${platforms.join(', ')}`);
 
-    // Attempt to post to Late again
+    // Attempt to post to Late again using queue system
     const result = await postToLate({
       brand: brand as any,
       platforms: platforms as any,
       caption: caption || '',
+      title: caption || 'Retry Post',
       videoUrl: videoUrl,
       scheduleTime: scheduleTime,
+      useQueue: true, // ✅ Use GetLate's queue system
+      timezone: 'America/Chicago'
     });
 
     if (result.success) {

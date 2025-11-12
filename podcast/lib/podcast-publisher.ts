@@ -139,12 +139,15 @@ From Episode #${metadata.episode_number}: ${metadata.guest_name} on ${metadata.t
 
 #podcast #shorts #viral #education`;
 
-        // Post to Reels/Shorts on all platforms
+        // Post to Reels/Shorts on all platforms using queue system
         const reelsResult = await postToLate({
           videoUrl: clip.videoUrl,
           caption: fullCaption,
+          title: `${metadata.episode_title} - Clip ${i + 1}`,
           platforms: allPlatforms,
-          brand: 'podcast'
+          brand: 'podcast',
+          useQueue: true, // ✅ Use GetLate's queue system
+          timezone: 'America/Chicago'
         });
 
         results.push(reelsResult);

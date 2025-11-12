@@ -7,9 +7,30 @@ import {
   limit as firestoreLimit
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { rateLimit } from '@/lib/rate-limiter';
 
 export async function GET(request: NextRequest) {
   try {
+    // Rate limiting: 100 requests per minute per IP
+    const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
+    const rateLimitKey = `properties:${ip}`;
+    const rateLimitResult = await rateLimit(rateLimitKey, 100, 60);
+
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        {
+          error: 'Too many requests',
+          retryAfter: rateLimitResult.retryAfter
+        },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': String(rateLimitResult.retryAfter || 60)
+          }
+        }
+      );
+    }
+
     if (!db) {
       return NextResponse.json(
         { error: 'Database not available' },

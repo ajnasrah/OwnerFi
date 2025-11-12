@@ -25,7 +25,28 @@
       {
         "name": "next"
       }
-    ]
+    ],
+
+    // INCREMENTAL STRICT MODE MIGRATION (Phase 1)
+    // These checks are safe to enable and catch real bugs
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "noImplicitThis": true,
+    "alwaysStrict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true
+
+    // Note: strictPropertyInitialization requires strictNullChecks
+    // Will enable both in Phase 2
+
+    // TODO Phase 2: Enable after fixing 'any' types
+    // "noImplicitAny": true,
+    // "strictNullChecks": true,
+
+    // TODO Phase 3: Enable full strict mode
+    // "strict": true
   },
   "include": [
     "next-env.d.ts",

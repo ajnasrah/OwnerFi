@@ -13,6 +13,7 @@ import { authOptions } from '@/lib/auth';
 import { ExtendedSession } from '@/types/session';
 import { PropertyListing } from "@/lib/property-schema";
 import { getCitiesWithinRadiusComprehensive } from '@/lib/comprehensive-cities';
+import { checkDatabaseAvailable, applyRateLimit, getClientIp, createErrorResponse } from '@/lib/api-guards';
 
 /**
  * BUYER PROPERTY API WITH NEARBY CITIES
@@ -29,16 +30,18 @@ import { getCitiesWithinRadiusComprehensive } from '@/lib/comprehensive-cities';
 
 export async function GET(request: NextRequest) {
   try {
-    if (!db) {
-      return NextResponse.json(
-        { error: 'Database not available' },
-        { status: 500 }
-      );
-    }
+    // Check database availability
+    const dbError = checkDatabaseAvailable(db);
+    if (dbError) return dbError;
+
+    // Apply rate limiting (60 requests per minute per user)
+    const ip = getClientIp(request.headers);
+    const rateLimitError = await applyRateLimit(`buyer-properties:${ip}`, 60, 60);
+    if (rateLimitError) return rateLimitError;
 
     const session = await // eslint-disable-next-line @typescript-eslint/no-explicit-any
     getServerSession(authOptions as any) as ExtendedSession | null;
-    
+
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -57,10 +60,36 @@ export async function GET(request: NextRequest) {
       }, { status: 400 });
     }
 
+    // Validate and parse numeric inputs
     const maxMonthly = Number(maxMonthlyPayment);
     const maxDown = Number(maxDownPayment);
+
+    if (isNaN(maxMonthly) || maxMonthly < 0) {
+      return NextResponse.json({
+        error: 'Invalid maxMonthlyPayment: must be a positive number'
+      }, { status: 400 });
+    }
+
+    if (isNaN(maxDown) || maxDown < 0) {
+      return NextResponse.json({
+        error: 'Invalid maxDownPayment: must be a positive number'
+      }, { status: 400 });
+    }
+
     const searchCity = city.split(',')[0].trim();
     const searchState = state;
+
+    if (!searchCity || searchCity.length < 2) {
+      return NextResponse.json({
+        error: 'Invalid city: must be at least 2 characters'
+      }, { status: 400 });
+    }
+
+    if (!searchState || searchState.length !== 2) {
+      return NextResponse.json({
+        error: 'Invalid state: must be 2-letter state code'
+      }, { status: 400 });
+    }
 
     // Get buyer's liked properties first
     const buyerProfileQuery = query(
@@ -352,11 +381,7 @@ export async function GET(request: NextRequest) {
       }
     });
 
-  } catch {
-    return NextResponse.json({ 
-      error: 'Failed to load properties',
-      properties: [],
-      total: 0 
-    }, { status: 500 });
+  } catch (error) {
+    return createErrorResponse('Failed to load buyer properties', error);
   }
 }

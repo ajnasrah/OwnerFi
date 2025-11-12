@@ -522,8 +522,8 @@ async function sendFailureAlert(
 }
 
 /**
- * Trigger async video processing (non-blocking)
- * Makes a fire-and-forget request to the processing endpoint
+ * Trigger async video processing using Cloud Tasks (or fallback to fetch)
+ * This provides reliable async job execution with automatic retries
  */
 async function triggerAsyncVideoProcessing(
   brand: string,
@@ -532,86 +532,32 @@ async function triggerAsyncVideoProcessing(
   submagicProjectId?: string
 ): Promise<void> {
   try {
-    // Get the base URL for the API - FIXED: Proper precedence
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ||
-                    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
+    console.log(`🚀 [${brand}] Creating Cloud Task for workflow ${workflowId}`);
 
-    console.log(`🌐 [${brand}] Triggering process-video at: ${baseUrl}/api/process-video`);
-    console.log(`   Workflow: ${workflowId}`);
+    // Use Cloud Tasks for reliable async processing
+    const { createVideoProcessingTask } = await import('@/lib/cloud-tasks');
 
-    // Trigger the processing endpoint (fire-and-forget with error handling)
-    // Don't await - let it run in the background
-    // Pass submagicProjectId so we can fetch a fresh URL later
-    //
-    // FIX: Add timeout and retry logic to prevent "fetch failed" network errors
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 120000); // 120s timeout (video download/upload can be slow)
+    const payload = {
+      brand,
+      workflowId,
+      videoUrl,
+      submagicProjectId,
+    };
 
-    fetch(`${baseUrl}/api/process-video`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ brand, workflowId, videoUrl, submagicProjectId }),
-      signal: controller.signal,
-    }).then(async (response) => {
-      clearTimeout(timeoutId);
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-        console.error(`❌ [${brand}] process-video failed (${response.status}):`, errorData.error);
-
-        // Update workflow to failed status so it can be retried
-        try {
-          await updateWorkflowForBrand(brand, workflowId, {
-            status: 'video_processing_failed',
-            error: `process-video failed: ${errorData.error}`,
-            failedAt: Date.now(),
-          });
-          console.log(`   Updated workflow ${workflowId} to failed status for retry`);
-        } catch (updateErr) {
-          console.error(`   Failed to update workflow status:`, updateErr);
-        }
-      } else {
-        console.log(`✅ [${brand}] process-video completed successfully for ${workflowId}`);
-      }
-    }).catch(async (err) => {
-      clearTimeout(timeoutId);
-      console.error(`❌ [${brand}] Failed to trigger video processing:`, err);
-
-      // Check if it's a timeout or network error
-      const errorType = err.name === 'AbortError' ? 'timeout' : 'network error';
-      const errorMessage = err.name === 'AbortError'
-        ? 'Request timeout after 120s'
-        : err.message;
-
-      console.error(`   Error type: ${errorType}`);
-      console.error(`   Error message: ${errorMessage}`);
-
-      // CRITICAL FIX: Don't mark as failed immediately for network errors
-      // The cron job will retry these workflows
-      // Only mark as failed if we're sure the processing logic failed
-      if (errorType === 'network error') {
-        console.log(`⚠️  [${brand}] Network error - leaving workflow in "video_processing" status for cron retry`);
-        console.log(`   The check-stuck-posting cron will retry this workflow`);
-        // Don't update status - let cron job handle retry
-      } else {
-        // For timeouts, mark as failed so cron can retry
-        try {
-          await updateWorkflowForBrand(brand, workflowId, {
-            status: 'video_processing_failed',
-            error: `process-video ${errorType}: ${errorMessage}`,
-            failedAt: Date.now(),
-          });
-          console.log(`   Updated workflow ${workflowId} to failed status for cron retry`);
-        } catch (updateErr) {
-          console.error(`   Failed to update workflow status:`, updateErr);
-        }
-      }
+    // Create task with 5-second delay to ensure webhook response completes first
+    const result = await createVideoProcessingTask(payload, {
+      delaySeconds: 5,
+      queueName: 'video-processing',
     });
 
-    console.log(`✅ [${brand}] Triggered async video processing for ${workflowId}`);
+    console.log(`✅ [${brand}] Cloud Task created: ${result.taskName}`);
+    console.log(`   Scheduled for: ${result.scheduleTime.toISOString()}`);
+    console.log(`   Workflow will be processed asynchronously with automatic retries`);
+
   } catch (error) {
-    console.error(`❌ [${brand}] Error triggering video processing:`, error);
-    // Don't throw - webhook should still succeed
+    console.error(`❌ [${brand}] Error creating Cloud Task:`, error);
+    // Don't throw - webhook should still succeed even if task creation fails
+    // The cron job will pick up stuck workflows as a failsafe
   }
 }
 

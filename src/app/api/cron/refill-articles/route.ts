@@ -8,7 +8,7 @@ import { collection, getDocs, updateDoc, doc, query, where } from 'firebase/fire
 
 export const maxDuration = 60;
 
-const REFILL_THRESHOLD = 5; // Refill if fewer than 5 unprocessed articles with score >= 70
+const REFILL_THRESHOLD = 15; // Refill if fewer than 15 unprocessed articles with score >= 70
 
 export async function GET(request: NextRequest) {
   try {

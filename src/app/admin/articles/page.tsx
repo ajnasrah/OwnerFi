@@ -150,7 +150,7 @@ export default function ArticlesPage() {
 
   const rateAllArticles = async () => {
     const unprocessedCount = allArticles.filter(a => !a.processed).length;
-    if (!confirm(`Rate all ${unprocessedCount} unprocessed ${activeBrand} articles with AI?\n\nThis will:\n- Score all articles with OpenAI GPT-4o-mini\n- Keep top 10 articles\n- Delete low-quality ones\n\nThis may take 1-2 minutes.`)) {
+    if (!confirm(`Rate all ${unprocessedCount} unprocessed ${activeBrand} articles with AI?\n\nThis will:\n- Score all articles with OpenAI GPT-4o-mini\n- Keep top 100 articles (increased buffer)\n- Delete low-quality ones (score <70)\n\nThis may take 1-2 minutes.`)) {
       return;
     }
 
@@ -208,11 +208,10 @@ export default function ArticlesPage() {
   console.log(`[${activeBrand}] Unprocessed count:`, allArticles.filter(a => !a.processed).length);
   console.log(`[${activeBrand}] With scores:`, allArticles.filter(a => a.qualityScore !== undefined).length);
 
-  // Top 10 Queue: Unprocessed articles with scores, sorted by score DESC, limit 10
+  // Article Queue: Unprocessed articles with scores >= 70, sorted by score DESC
   const queueArticles = allArticles
-    .filter(a => !a.processed && a.qualityScore !== undefined)
-    .sort((a, b) => (b.qualityScore || 0) - (a.qualityScore || 0))
-    .slice(0, 10);
+    .filter(a => !a.processed && a.qualityScore !== undefined && a.qualityScore >= 70)
+    .sort((a, b) => (b.qualityScore || 0) - (a.qualityScore || 0));
 
   // Unprocessed: All unprocessed articles (for rating)
   const unprocessedArticles = allArticles.filter(a => !a.processed);
@@ -253,7 +252,7 @@ export default function ArticlesPage() {
         {/* View Tabs */}
         <div className="flex space-x-2 mb-6">
           {[
-            { key: 'queue', label: 'Top 10 Queue', icon: '🎯', count: queueArticles.length },
+            { key: 'queue', label: 'Video-Ready Queue (70+)', icon: '🎯', count: queueArticles.length },
             { key: 'unprocessed', label: 'Unprocessed Articles', icon: '📝', count: unprocessedArticles.length }
           ].map((tab) => (
             <button
@@ -280,7 +279,7 @@ export default function ArticlesPage() {
         <div className="bg-white rounded-xl shadow-sm p-6">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-lg font-semibold text-slate-900">
-              {activeView === 'queue' ? 'Top 10 Rated Articles' : 'All Unprocessed Articles'}
+              {activeView === 'queue' ? `Video-Ready Articles (${queueArticles.length} with score ≥70)` : 'All Unprocessed Articles'}
             </h2>
             <div className="flex items-center gap-2">
               <button
@@ -384,11 +383,11 @@ export default function ArticlesPage() {
             <div className="bg-slate-50 rounded-lg p-12 text-center border border-slate-200">
               <div className="text-4xl mb-3">📭</div>
               <div className="text-slate-500 text-sm font-medium">
-                {activeView === 'queue' ? 'No articles in top 10 queue' : 'No unprocessed articles'}
+                {activeView === 'queue' ? 'No video-ready articles (score ≥70)' : 'No unprocessed articles'}
               </div>
               <div className="text-xs text-slate-400 mt-1">
                 {activeView === 'queue'
-                  ? 'Rate unprocessed articles to populate the queue'
+                  ? 'Rate unprocessed articles to populate the queue with high-quality content'
                   : 'Articles will appear here when fetched from RSS feeds'}
               </div>
             </div>
@@ -396,21 +395,23 @@ export default function ArticlesPage() {
         </div>
 
         {/* Stats Summary */}
-        <div className="mt-6 grid grid-cols-3 gap-4">
+        <div className="mt-6 grid grid-cols-4 gap-4">
           <div className="bg-white rounded-lg shadow-sm p-4">
-            <div className="text-sm text-slate-600">Top 10 Queue</div>
-            <div className="text-2xl font-bold text-slate-900 mt-1">
+            <div className="text-sm text-slate-600">Video-Ready Queue</div>
+            <div className="text-2xl font-bold text-green-600 mt-1">
               {queueArticles.length}
             </div>
+            <div className="text-xs text-slate-500 mt-1">Score ≥70</div>
           </div>
           <div className="bg-white rounded-lg shadow-sm p-4">
-            <div className="text-sm text-slate-600">Unprocessed</div>
+            <div className="text-sm text-slate-600">Total Unprocessed</div>
             <div className="text-2xl font-bold text-slate-900 mt-1">
               {unprocessedArticles.length}
             </div>
+            <div className="text-xs text-slate-500 mt-1">Needs rating</div>
           </div>
           <div className="bg-white rounded-lg shadow-sm p-4">
-            <div className="text-sm text-slate-600">Avg Score (Top 10)</div>
+            <div className="text-sm text-slate-600">Avg Score (Queue)</div>
             <div className="text-2xl font-bold text-slate-900 mt-1">
               {queueArticles.length > 0
                 ? Math.round(
@@ -420,6 +421,14 @@ export default function ArticlesPage() {
                   )
                 : 'N/A'}
             </div>
+            <div className="text-xs text-slate-500 mt-1">Quality rating</div>
+          </div>
+          <div className="bg-white rounded-lg shadow-sm p-4">
+            <div className="text-sm text-slate-600">Total Articles</div>
+            <div className="text-2xl font-bold text-slate-900 mt-1">
+              {allArticles.length}
+            </div>
+            <div className="text-xs text-slate-500 mt-1">In database</div>
           </div>
         </div>
       </div>

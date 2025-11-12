@@ -836,14 +836,59 @@ export async function POST(request: NextRequest) {
           if (matchedBuyers.length > 0) {
             console.log(`   📱 Sending SMS notifications to ${matchedBuyers.length} buyers...`);
 
-            const { sendBatchPropertyMatchNotifications } = await import('@/lib/gohighlevel-notifications');
-            const result = await sendBatchPropertyMatchNotifications(
-              { ...cleanPropertyData, id: propertyId } as any,
-              matchedBuyers,
-              isUpdate ? 'buyer_criteria_changed' : 'new_property_added'
-            );
+            // Get GoHighLevel webhook URL
+            const ghlWebhookUrl = process.env.GOHIGHLEVEL_WEBHOOK_URL;
 
-            console.log(`   ✅ Notifications: ${result.sent} sent, ${result.failed} failed`);
+            if (!ghlWebhookUrl) {
+              console.warn('   ⚠️  GOHIGHLEVEL_WEBHOOK_URL not configured - skipping notifications');
+            } else {
+              // Send directly to GoHighLevel (no internal API call)
+              let sent = 0;
+              let failed = 0;
+
+              for (const buyer of matchedBuyers) {
+                try {
+                  const smsMessage = `🏠 New Property Match!
+
+Hi ${buyer.firstName}! We found a home for you in ${cleanPropertyData.city}, ${cleanPropertyData.state}:
+
+📍 ${cleanPropertyData.address}
+🛏️ ${cleanPropertyData.bedrooms} bed, ${cleanPropertyData.bathrooms} bath
+💰 $${cleanPropertyData.price?.toLocaleString()} list price
+💵 $${cleanPropertyData.monthlyPayment}/mo, $${cleanPropertyData.downPaymentAmount?.toLocaleString()} down
+
+View it now: https://ownerfi.ai/dashboard
+
+Reply STOP to unsubscribe`;
+
+                  const response = await fetch(ghlWebhookUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      phone: buyer.phone,
+                      message: smsMessage,
+                      buyerId: buyer.id,
+                      buyerName: `${buyer.firstName} ${buyer.lastName}`,
+                      propertyId: propertyId,
+                      propertyAddress: cleanPropertyData.address,
+                      trigger: isUpdate ? 'buyer_criteria_changed' : 'new_property_added',
+                    }),
+                  });
+
+                  if (response.ok) {
+                    sent++;
+                  } else {
+                    failed++;
+                    console.warn(`   ⚠️  Failed to send to ${buyer.phone}: ${response.status}`);
+                  }
+                } catch (err) {
+                  failed++;
+                  console.error(`   ❌ Error sending to ${buyer.phone}:`, err);
+                }
+              }
+
+              console.log(`   ✅ Notifications: ${sent} sent, ${failed} failed`);
+            }
           }
 
         } catch (error) {

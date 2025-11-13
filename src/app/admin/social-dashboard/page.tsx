@@ -746,12 +746,25 @@ export default function SocialMediaDashboard() {
   };
 
   const formatTimeAgo = (timestamp: number) => {
+    // Validate timestamp
+    if (!timestamp || isNaN(timestamp) || timestamp <= 0) {
+      return 'Just now';
+    }
+
     const seconds = Math.floor((Date.now() - timestamp) / 1000);
+
+    // Handle invalid calculations
+    if (isNaN(seconds) || seconds < 0) {
+      return 'Just now';
+    }
+
     if (seconds < 60) return `${seconds}s ago`;
     const minutes = Math.floor(seconds / 60);
     if (minutes < 60) return `${minutes}m ago`;
     const hours = Math.floor(minutes / 60);
-    return `${hours}h ago`;
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    return `${days}d ago`;
   };
 
   if (authStatus === 'loading' || loading) {

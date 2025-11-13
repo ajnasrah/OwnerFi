@@ -43,18 +43,32 @@ export async function GET(request: NextRequest) {
       }).slice(0, 20);
     }
 
-    const workflows = docs.map(doc => {
+    const workflows = await Promise.all(docs.map(async (doc) => {
       const data = doc.data();
+
+      // Fetch property details if propertyId exists
+      let propertyData: any = {};
+      if (data.propertyId) {
+        try {
+          const propertyDoc = await (adminDb as any).collection('properties').doc(data.propertyId).get();
+          if (propertyDoc.exists) {
+            propertyData = propertyDoc.data();
+          }
+        } catch (error) {
+          console.error(`Failed to fetch property ${data.propertyId}:`, error);
+        }
+      }
+
       return {
         id: doc.id,
         propertyId: data.propertyId,
         variant: data.variant || '15sec',
         language: data.language || 'es',
-        address: data.address || 'Unknown Address',
-        city: data.city || 'Unknown City',
-        state: data.state || '',
-        downPayment: data.downPayment || 0,
-        monthlyPayment: data.monthlyPayment || 0,
+        address: data.address || propertyData.address || 'Unknown Address',
+        city: data.city || propertyData.city || 'Unknown City',
+        state: data.state || propertyData.state || '',
+        downPayment: data.downPayment || propertyData.downPayment || 0,
+        monthlyPayment: data.monthlyPayment || propertyData.monthlyPayment || 0,
         status: data.status || 'queued',
         heygenVideoId: data.heygenVideoId,
         submagicProjectId: data.submagicProjectId,
@@ -63,7 +77,7 @@ export async function GET(request: NextRequest) {
         createdAt: data.createdAt || Date.now(),
         updatedAt: data.updatedAt || Date.now()
       };
-    });
+    }));
 
     return NextResponse.json({
       success: true,

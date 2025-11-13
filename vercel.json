@@ -14,7 +14,7 @@
   },
   "crons": [
     {
-      "path": "/api/podcast/cron",
+      "path": "/api/cron/generate-videos",
       "schedule": "0 9,12,15,18,21 * * *"
     },
     {
@@ -24,14 +24,6 @@
     {
       "path": "/api/cron/rate-articles",
       "schedule": "0 13 * * *"
-    },
-    {
-      "path": "/api/cron/generate-video",
-      "schedule": "0 9,12,15,18,21 * * *"
-    },
-    {
-      "path": "/api/cron/generate-video-vassdistro",
-      "schedule": "0 9,12,15,18,21 * * *"
     },
     {
       "path": "/api/benefit/cron",
@@ -46,19 +38,7 @@
       "schedule": "0 7,11,15,19 * * *"
     },
     {
-      "path": "/api/cron/check-stuck-heygen",
-      "schedule": "*/30 14-23,0-4 * * *"
-    },
-    {
-      "path": "/api/cron/check-stuck-submagic",
-      "schedule": "*/30 14-23,0-4 * * *"
-    },
-    {
-      "path": "/api/cron/check-stuck-posting",
-      "schedule": "*/30 14-23,0-4 * * *"
-    },
-    {
-      "path": "/api/cron/start-pending-workflows",
+      "path": "/api/cron/check-stuck-workflows",
       "schedule": "*/30 14-23,0-4 * * *"
     },
     {
@@ -66,7 +46,7 @@
       "schedule": "0 11 * * 1"
     },
     {
-      "path": "/api/cron/cleanup-videos",
+      "path": "/api/cron/daily-maintenance",
       "schedule": "0 3 * * *"
     },
     {
@@ -84,14 +64,6 @@
     {
       "path": "/api/cron/abdullah",
       "schedule": "0 9,12,15,18,21 * * *"
-    },
-    {
-      "path": "/api/cron/enhance-property-images",
-      "schedule": "0 4 * * *"
-    },
-    {
-      "path": "/api/cron/cleanup-stale-properties",
-      "schedule": "0 2 * * 0"
     },
     {
       "path": "/api/cron/sync-property-queue",
@@ -121,35 +93,23 @@
     "app/api/podcast/generate/route.ts": {
       "maxDuration": 300
     },
-    "app/api/podcast/cron/route.ts": {
-      "maxDuration": 60
-    },
     "src/app/api/cron/fetch-rss/route.ts": {
       "maxDuration": 300
     },
     "src/app/api/cron/rate-articles/route.ts": {
       "maxDuration": 300
     },
-    "src/app/api/cron/generate-video/route.ts": {
-      "maxDuration": 300
+    "src/app/api/cron/generate-videos/route.ts": {
+      "maxDuration": 60
     },
-    "src/app/api/cron/generate-video-vassdistro/route.ts": {
+    "src/app/api/cron/check-stuck-workflows/route.ts": {
       "maxDuration": 300
     },
     "src/app/api/cron/weekly-maintenance/route.ts": {
       "maxDuration": 60
     },
-    "src/app/api/cron/check-stuck-submagic/route.ts": {
+    "src/app/api/cron/daily-maintenance/route.ts": {
       "maxDuration": 300
-    },
-    "src/app/api/cron/check-stuck-heygen/route.ts": {
-      "maxDuration": 60
-    },
-    "src/app/api/cron/check-stuck-posting/route.ts": {
-      "maxDuration": 300
-    },
-    "src/app/api/cron/start-pending-workflows/route.ts": {
-      "maxDuration": 60
     },
     "src/app/api/benefit/cron/route.ts": {
       "maxDuration": 60
@@ -160,9 +120,6 @@
     "src/app/api/property/generate-video/route.ts": {
       "maxDuration": 60
     },
-    "src/app/api/cron/cleanup-videos/route.ts": {
-      "maxDuration": 300
-    },
     "src/app/api/benefit/workflow/auto-retry/route.ts": {
       "maxDuration": 60
     },
@@ -171,12 +128,6 @@
     },
     "src/app/api/cron/abdullah/route.ts": {
       "maxDuration": 60
-    },
-    "src/app/api/cron/enhance-property-images/route.ts": {
-      "maxDuration": 300
-    },
-    "src/app/api/cron/cleanup-stale-properties/route.ts": {
-      "maxDuration": 300
     },
     "src/app/api/cron/sync-property-queue/route.ts": {
       "maxDuration": 300

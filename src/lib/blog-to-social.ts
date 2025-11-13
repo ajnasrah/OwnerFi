@@ -6,8 +6,8 @@
  */
 
 import { Brand } from '@/config/constants';
-import { BlogPost, generateSocialCaption } from './blog-models';
-import { generateOGImageUrl, downloadOGImage } from './blog-og-generator';
+import { BlogPost } from './blog-models';
+import { generateSocialCaption, downloadOGImage } from './blog-og-generator';
 import { postToLate, LatePostRequest } from './late-api';
 import { uploadVideoToR2 } from './video-storage';
 import { PLATFORM_OPTIMAL_HOURS } from '@/config/platform-optimal-times';
@@ -51,10 +51,10 @@ function getOptimalTimeForPlatform(platform: string, dayOffset: number = 0): Dat
 }
 
 /**
- * Convert blog carousel images to video format for social posting
- * (Creates a simple slideshow video from the carousel images)
+ * Get the social media image URL for posting
+ * Downloads OG image and uploads to R2 for Instagram/Threads compatibility
  */
-async function generateCarouselVideo(
+async function getSocialImageUrl(
   brand: Brand,
   blogPost: BlogPost
 ): Promise<string> {
@@ -65,15 +65,28 @@ async function generateCarouselVideo(
     throw new Error('No carousel images found in blog post');
   }
 
-  // For now, use the first slide as a static image
-  // TODO: Enhance this to create actual video slideshow using ffmpeg or similar
+  // Get the first slide URL (Vercel OG image API route)
   const firstSlideUrl = carouselImages[0].generatedUrl;
 
   if (!firstSlideUrl) {
     throw new Error('Carousel slide URL not generated');
   }
 
-  return firstSlideUrl;
+  console.log(`   📸 Downloading OG image from Vercel...`);
+
+  // Download the OG image
+  const imageBuffer = await downloadOGImage(firstSlideUrl);
+
+  console.log(`   ✅ Downloaded image (${(imageBuffer.length / 1024).toFixed(1)} KB)`);
+  console.log('   ☁️  Uploading to R2...');
+
+  // Upload to R2 storage (Instagram/Threads requires direct image URL)
+  const fileName = `blog-social/${brand}/${blogPost.slug}-${Date.now()}.png`;
+  const r2Url = await uploadVideoToR2(imageBuffer, fileName, 'image/png');
+
+  console.log(`   ✅ Uploaded to R2: ${r2Url}`);
+
+  return r2Url;
 }
 
 /**
@@ -128,8 +141,8 @@ export async function scheduleBlogToSocial(
       blogPost.sections
     );
 
-    // Get carousel video URL (using first slide for now)
-    const videoUrl = await generateCarouselVideo(blogPost.brand, blogPost);
+    // Get social image URL (Vercel OG image)
+    const imageUrl = await getSocialImageUrl(blogPost.brand, blogPost);
 
     // Schedule to each platform at optimal time
     for (let i = 0; i < platforms.length; i++) {
@@ -151,7 +164,7 @@ export async function scheduleBlogToSocial(
         })}`);
 
         const postRequest: LatePostRequest = {
-          videoUrl,
+          imageUrl, // Use imageUrl instead of videoUrl
           caption,
           title: blogPost.title,
           platforms: [platform] as any,
@@ -217,8 +230,8 @@ function getBrandPlatformPriority(brand: Brand): SocialPlatform[] {
       return ['instagram', 'facebook', 'linkedin', 'threads', 'twitter'];
 
     case 'carz':
-      // Cars: Instagram (visual), Facebook (marketplace), Twitter (quick updates)
-      return ['instagram', 'facebook', 'twitter', 'threads', 'linkedin'];
+      // Cars: Instagram (visual), Facebook (marketplace), LinkedIn (professional)
+      return ['instagram', 'facebook', 'linkedin', 'threads'];
 
     case 'abdullah':
       // Personal brand: Instagram (lifestyle), LinkedIn (professional), Twitter (thoughts)

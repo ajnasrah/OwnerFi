@@ -463,6 +463,75 @@ export async function uploadSubmagicVideo(
 }
 
 /**
+ * Upload a buffer (image or video) directly to Cloudflare R2
+ * Returns a permanent public URL
+ */
+export async function uploadVideoToR2(
+  buffer: Buffer,
+  fileName: string,
+  contentType: string = 'video/mp4'
+): Promise<string> {
+  const sizeInMB = (buffer.length / 1024 / 1024).toFixed(2);
+  console.log(`☁️  Uploading ${contentType} to R2 (${sizeInMB} MB)...`);
+
+  const { S3Client, PutObjectCommand } = await import('@aws-sdk/client-s3');
+
+  const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
+  const accessKeyId = process.env.R2_ACCESS_KEY_ID;
+  const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
+
+  if (!accountId || !accessKeyId || !secretAccessKey) {
+    throw new Error('R2 credentials not configured');
+  }
+
+  const r2Client = new S3Client({
+    region: 'auto',
+    endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
+    credentials: {
+      accessKeyId,
+      secretAccessKey,
+    },
+  });
+
+  const bucketName = process.env.R2_BUCKET_NAME || 'ownerfi-podcast-videos';
+
+  await r2Client.send(new PutObjectCommand({
+    Bucket: bucketName,
+    Key: fileName,
+    Body: buffer,
+    ContentType: contentType,
+    Metadata: {
+      'uploaded-at': new Date().toISOString(),
+      'source': 'blog-automation',
+    },
+  }));
+
+  // Construct public URL
+  const publicUrl = process.env.R2_PUBLIC_URL
+    ? `${process.env.R2_PUBLIC_URL}/${fileName}`
+    : `https://pub-${accountId}.r2.dev/${fileName}`;
+
+  console.log(`✅ Uploaded to R2: ${publicUrl}`);
+
+  // Test URL accessibility
+  try {
+    const testResponse = await fetch(publicUrl, { method: 'HEAD' });
+    if (!testResponse.ok) {
+      console.error(`⚠️  WARNING: R2 URL returned ${testResponse.status} ${testResponse.statusText}`);
+      console.error(`   URL: ${publicUrl}`);
+      console.error(`   This will cause Late.dev posting to fail!`);
+      console.error(`   Solution: Enable public access in Cloudflare R2 dashboard for bucket: ${bucketName}`);
+    } else {
+      console.log(`✅ R2 URL is publicly accessible`);
+    }
+  } catch (testError) {
+    console.warn(`⚠️  Could not test R2 URL accessibility:`, testError);
+  }
+
+  return publicUrl;
+}
+
+/**
  * Delete expired videos (older than 72 hours)
  * Called daily at 3 AM by cleanup-videos cron
  */

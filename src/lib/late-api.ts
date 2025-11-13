@@ -18,7 +18,8 @@ const getLateAbdullahProfileId = () => process.env.LATE_ABDULLAH_PROFILE_ID?.tri
 const getLatePersonalProfileId = () => process.env.LATE_PERSONAL_PROFILE_ID?.trim();
 
 export interface LatePostRequest {
-  videoUrl: string;
+  videoUrl?: string; // For video posts
+  imageUrl?: string; // For image posts
   caption: string;
   title?: string;
   hashtags?: string[];
@@ -26,7 +27,7 @@ export interface LatePostRequest {
   scheduleTime?: string; // ISO 8601 format, or omit for immediate posting
   brand: 'carz' | 'ownerfi' | 'podcast' | 'property' | 'vassdistro' | 'benefit' | 'abdullah';
   postTypes?: {
-    instagram?: 'reel' | 'story';
+    instagram?: 'reel' | 'story' | 'feed'; // Added 'feed' for image posts
     facebook?: 'feed' | 'story';
   };
   useQueue?: boolean; // If true, automatically get next queue slot and mark as queued
@@ -291,9 +292,11 @@ export async function postToLate(request: LatePostRequest): Promise<LatePostResp
               platformSpecificData: {}
             };
 
-            // Instagram: Support Reel or Story
+            // Instagram: Support Feed (image), Reel (video), or Story
             if (p.platform === 'instagram') {
-              const contentType = request.postTypes?.instagram || 'reel';
+              // Default to 'feed' for images, 'reel' for videos
+              const defaultType = request.imageUrl ? 'feed' : 'reel';
+              const contentType = request.postTypes?.instagram || defaultType;
               platformConfig.platformSpecificData.contentType = contentType;
             }
 
@@ -333,13 +336,20 @@ export async function postToLate(request: LatePostRequest): Promise<LatePostResp
           });
 
           // Build request body
+          const mediaUrl = request.videoUrl || request.imageUrl;
+          const mediaType = request.videoUrl ? 'video' : 'image';
+
+          if (!mediaUrl) {
+            throw new Error('Either videoUrl or imageUrl must be provided');
+          }
+
           const requestBody: any = {
             content: fullCaption,
             platforms: platforms,
             mediaItems: [
               {
-                type: 'video',
-                url: request.videoUrl
+                type: mediaType,
+                url: mediaUrl
               }
             ]
           };

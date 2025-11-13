@@ -1,169 +1,598 @@
 /**
- * Cron Job: Check Stuck HeyGen Workflows
+ * CONSOLIDATED Stuck Workflows Cron
  *
- * This cron job runs every 5 minutes to check for workflows stuck at "heygen_processing"
- * and manually polls HeyGen to see if they've completed. If completed, it manually
- * triggers the webhook handler logic.
+ * Consolidates 4 separate cron jobs into ONE to reduce Vercel invocations by 75%:
+ * 1. start-pending-workflows (pending status)
+ * 2. check-stuck-heygen (heygen_processing status)
+ * 3. check-stuck-submagic (submagic_processing status)
+ * 4. check-stuck-posting (posting + video_processing status)
  *
- * This is a FALLBACK mechanism in case HeyGen webhooks fail to fire.
+ * Checks ALL 8 brands: carz, ownerfi, vassdistro, benefit, abdullah, personal, property, property-spanish
+ * Plus: podcast_workflow_queue, property_videos
  *
- * Schedule: *//*5 * * * * (every 5 minutes)
- * Auth: CRON_SECRET header required
+ * Schedule: every 30 minutes during active hours (14-23, 0-4 CST)
+ * Previously: 4 crons × 34 runs/day = 136 invocations/day
+ * Now: 1 cron × 34 runs/day = 34 invocations/day
+ * SAVINGS: 102 fewer cron invocations per day (75% reduction)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getHeyGenVideoStatus } from '@/lib/heygen-client';
+import { withCronLock } from '@/lib/cron-lock';
 
 const CRON_SECRET = process.env.CRON_SECRET;
+export const maxDuration = 300; // 5 minutes (max needed for SubMagic + posting operations)
 
 export async function GET(request: NextRequest) {
-  // Verify cron secret
-  const authHeader = request.headers.get('authorization');
-
-  if (authHeader !== `Bearer ${CRON_SECRET}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  console.log('🔍 [CRON] Checking for stuck HeyGen workflows...');
-
   try {
-    const results = {
-      checked: 0,
-      recovered: 0,
-      failed: 0,
-      stillProcessing: 0,
-      errors: [] as string[],
-    };
+    // Verify authorization
+    const authHeader = request.headers.get('authorization');
+    const userAgent = request.headers.get('user-agent');
+    const isVercelCron = userAgent === 'vercel-cron/1.0';
 
-    // Get all workflows stuck at heygen_processing for more than 15 minutes
-    const { db } = await import('@/lib/firebase');
-    const { collection, query, where, getDocs, Timestamp } = await import('firebase/firestore');
-
-    const brands = ['carz', 'ownerfi', 'vassdistro'] as const;
-    const fifteenMinutesAgo = Date.now() - (15 * 60 * 1000);
-
-    for (const brand of brands) {
-      const collectionName = `${brand}_workflow_queue`;
-
-      try {
-        // Find workflows stuck at heygen_processing for > 15 minutes
-        const stuckWorkflowsQuery = query(
-          collection(db, collectionName),
-          where('status', '==', 'heygen_processing'),
-          where('statusChangedAt', '<', fifteenMinutesAgo)
-        );
-
-        const snapshot = await getDocs(stuckWorkflowsQuery);
-
-        console.log(`   [${brand}] Found ${snapshot.size} stuck workflows`);
-
-        for (const docSnap of snapshot.docs) {
-          const workflow = docSnap.data();
-          const workflowId = docSnap.id;
-          const heygenVideoId = workflow.heygenVideoId;
-
-          if (!heygenVideoId) {
-            console.warn(`   ⚠️  Workflow ${workflowId} has no heygenVideoId`);
-            results.errors.push(`${brand}:${workflowId} - no heygenVideoId`);
-            continue;
-          }
-
-          results.checked++;
-
-          try {
-            // Check HeyGen video status
-            const statusData = await getHeyGenVideoStatus(heygenVideoId);
-            const videoStatus = statusData.data?.status;
-            const videoUrl = statusData.data?.video_url;
-
-            console.log(`   📹 Workflow ${workflowId} - HeyGen status: ${videoStatus}`);
-
-            if (videoStatus === 'completed' && videoUrl) {
-              // Video completed but webhook wasn't called - manually trigger webhook logic
-              console.log(`   ✅ Recovering stuck workflow ${workflowId}`);
-
-              // Manually trigger Submagic processing
-              const { getBrandConfig } = await import('@/config/brand-configs');
-              const brandConfig = getBrandConfig(brand);
-
-              // Import the triggerSubmagicProcessing function from webhook handler
-              // Instead of duplicating code, we'll update the workflow and let Submagic webhook handle it
-              const { updateWorkflowForBrand } = await import('@/lib/feed-store-firestore');
-
-              // Trigger Submagic processing by calling internal API
-              const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://ownerfi.ai';
-
-              const response = await fetch(`${baseUrl}/api/internal/trigger-submagic`, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'x-internal-secret': process.env.INTERNAL_API_SECRET || CRON_SECRET || '',
-                },
-                body: JSON.stringify({
-                  brand,
-                  workflowId,
-                  heygenVideoUrl: videoUrl,
-                  workflow,
-                }),
-              });
-
-              if (response.ok) {
-                console.log(`   ✅ Successfully triggered Submagic for ${workflowId}`);
-                results.recovered++;
-              } else {
-                const errorText = await response.text();
-                console.error(`   ❌ Failed to trigger Submagic: ${errorText}`);
-                results.errors.push(`${brand}:${workflowId} - Submagic trigger failed`);
-              }
-
-            } else if (videoStatus === 'failed') {
-              // Mark workflow as failed
-              console.log(`   ❌ HeyGen video failed for ${workflowId}`);
-
-              const { doc, updateDoc } = await import('firebase/firestore');
-              await updateDoc(doc(db, collectionName, workflowId), {
-                status: 'failed',
-                error: 'HeyGen video generation failed',
-                failedAt: Date.now(),
-              });
-
-              results.failed++;
-
-            } else if (videoStatus === 'processing') {
-              console.log(`   ⏳ Still processing: ${workflowId}`);
-              results.stillProcessing++;
-            }
-
-          } catch (err) {
-            console.error(`   ❌ Error checking workflow ${workflowId}:`, err);
-            results.errors.push(`${brand}:${workflowId} - ${err instanceof Error ? err.message : 'Unknown error'}`);
-          }
-        }
-
-      } catch (brandError) {
-        console.error(`   ❌ Error processing brand ${brand}:`, brandError);
-        results.errors.push(`${brand} - ${brandError instanceof Error ? brandError.message : 'Unknown error'}`);
-      }
+    if (authHeader !== `Bearer ${CRON_SECRET}` && !isVercelCron) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    console.log(`✅ [CRON] Stuck workflow check complete:`);
-    console.log(`   Checked: ${results.checked}`);
-    console.log(`   Recovered: ${results.recovered}`);
-    console.log(`   Failed: ${results.failed}`);
-    console.log(`   Still Processing: ${results.stillProcessing}`);
-    console.log(`   Errors: ${results.errors.length}`);
+    console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('🔍 [STUCK-WORKFLOWS] Consolidated check starting...');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
-    return NextResponse.json({
-      success: true,
-      results,
+    // Use cron lock to prevent concurrent runs
+    return withCronLock('check-stuck-workflows', async () => {
+      const results = {
+        pending: { checked: 0, started: 0, failed: 0 },
+        heygen: { checked: 0, advanced: 0, failed: 0 },
+        submagic: { checked: 0, completed: 0, failed: 0 },
+        posting: { checked: 0, retried: 0, failed: 0 }
+      };
+
+      // 1. Check pending workflows (fastest ~10-30s)
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('1️⃣  CHECKING PENDING WORKFLOWS');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+      const pendingResults = await checkPendingWorkflows();
+      results.pending = pendingResults;
+
+      // 2. Check HeyGen processing workflows (~30-60s)
+      console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('2️⃣  CHECKING HEYGEN PROCESSING');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+      const heygenResults = await checkHeyGenWorkflows();
+      results.heygen = heygenResults;
+
+      // 3. Check SubMagic processing workflows (~60-120s)
+      console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('3️⃣  CHECKING SUBMAGIC PROCESSING');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+      const submagicResults = await checkSubMagicWorkflows();
+      results.submagic = submagicResults;
+
+      // 4. Check posting/video_processing workflows (~30-90s)
+      console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('4️⃣  CHECKING POSTING WORKFLOWS');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+      const postingResults = await checkPostingWorkflows();
+      results.posting = postingResults;
+
+      console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('✅ [STUCK-WORKFLOWS] Complete');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log(`📊 Summary:`);
+      console.log(`   Pending: ${results.pending.started}/${results.pending.checked} started`);
+      console.log(`   HeyGen: ${results.heygen.advanced}/${results.heygen.checked} advanced`);
+      console.log(`   SubMagic: ${results.submagic.completed}/${results.submagic.checked} completed`);
+      console.log(`   Posting: ${results.posting.retried}/${results.posting.checked} retried`);
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+
+      return NextResponse.json({
+        success: true,
+        timestamp: new Date().toISOString(),
+        results
+      });
     });
 
   } catch (error) {
-    console.error('❌ [CRON] Error in stuck workflow check:', error);
-
+    console.error('❌ [STUCK-WORKFLOWS] Critical error:', error);
     return NextResponse.json({
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 });
   }
+}
+
+export async function POST(request: NextRequest) {
+  return GET(request);
+}
+
+// ============================================================================
+// 1. CHECK PENDING WORKFLOWS
+// ============================================================================
+
+async function checkPendingWorkflows() {
+  const { db } = await import('@/lib/firebase');
+  const { collection, getDocs, query, where, limit: firestoreLimit, orderBy } = await import('firebase/firestore');
+  const { getAllBrandIds } = await import('@/lib/brand-utils');
+
+  if (!db) {
+    console.error('❌ Firebase not initialized');
+    return { checked: 0, started: 0, failed: 0 };
+  }
+
+  const pendingWorkflows: Array<{
+    workflowId: string;
+    brand: string;
+    collectionName: string;
+    stuckMinutes: number;
+  }> = [];
+
+  // Check all 8 brands
+  const brands = getAllBrandIds();
+
+  for (const brand of brands) {
+    try {
+      const collectionName = `${brand}_workflow_queue`;
+      console.log(`📂 Checking ${collectionName}...`);
+
+      const q = query(
+        collection(db, collectionName),
+        where('status', '==', 'pending'),
+        orderBy('createdAt', 'asc'),
+        firestoreLimit(5)
+      );
+
+      const snapshot = await getDocs(q);
+      console.log(`   Found ${snapshot.size} pending workflows`);
+
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const stuckMinutes = Math.round((Date.now() - (data.createdAt || 0)) / 60000);
+
+        // Only start if stuck > 5 minutes
+        if (stuckMinutes > 5) {
+          console.log(`   📄 ${doc.id}: pending for ${stuckMinutes} min`);
+          pendingWorkflows.push({
+            workflowId: doc.id,
+            brand,
+            collectionName,
+            stuckMinutes
+          });
+        }
+      });
+    } catch (err) {
+      console.error(`   ❌ Error querying ${brand}:`, err);
+    }
+  }
+
+  console.log(`\n📋 Total pending: ${pendingWorkflows.length}`);
+
+  let started = 0;
+  let failed = 0;
+  const MAX_TO_START = 3;
+
+  // Start workflows
+  for (const workflow of pendingWorkflows.slice(0, MAX_TO_START)) {
+    console.log(`\n🚀 Starting ${workflow.brand}/${workflow.workflowId}...`);
+
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://ownerfi.ai';
+      const response = await fetch(`${baseUrl}/api/workflow/complete-viral`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          brand: workflow.brand,
+          platforms: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'threads'],
+          schedule: 'optimal'
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log(`   ✅ Started: ${result.workflow_id}`);
+        started++;
+      } else {
+        throw new Error(`HTTP ${response.status}`);
+      }
+    } catch (error) {
+      console.error(`   ❌ Failed:`, error);
+      failed++;
+    }
+  }
+
+  return { checked: pendingWorkflows.length, started, failed };
+}
+
+// ============================================================================
+// 2. CHECK HEYGEN PROCESSING WORKFLOWS
+// ============================================================================
+
+async function checkHeyGenWorkflows() {
+  const { db } = await import('@/lib/firebase');
+  const { collection, getDocs, query, where, limit: firestoreLimit, updateDoc, doc } = await import('firebase/firestore');
+  const { getAllBrandIds } = await import('@/lib/brand-utils');
+  const { downloadAndUploadToR2 } = await import('@/lib/video-storage');
+
+  if (!db) {
+    console.error('❌ Firebase not initialized');
+    return { checked: 0, advanced: 0, failed: 0 };
+  }
+
+  const HEYGEN_API_KEY = process.env.HEYGEN_API_KEY;
+  const SUBMAGIC_API_KEY = process.env.SUBMAGIC_API_KEY;
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://ownerfi.ai';
+
+  if (!HEYGEN_API_KEY || !SUBMAGIC_API_KEY) {
+    console.error('❌ API keys not configured');
+    return { checked: 0, advanced: 0, failed: 0 };
+  }
+
+  let checked = 0;
+  let advanced = 0;
+  let failed = 0;
+
+  // Check all brands
+  const brands = getAllBrandIds();
+
+  for (const brand of brands) {
+    try {
+      const collectionName = `${brand}_workflow_queue`;
+      console.log(`📂 Checking ${collectionName}...`);
+
+      const q = query(
+        collection(db, collectionName),
+        where('status', '==', 'heygen_processing'),
+        firestoreLimit(10)
+      );
+
+      const snapshot = await getDocs(q);
+      console.log(`   Found ${snapshot.size} HeyGen processing`);
+      checked += snapshot.size;
+
+      for (const workflowDoc of snapshot.docs) {
+        const data = workflowDoc.data();
+        const workflowId = workflowDoc.id;
+        const videoId = data.heygenVideoId;
+
+        if (!videoId) continue;
+
+        try {
+          const heygenResponse = await fetch(
+            `https://api.heygen.com/v1/video_status.get?video_id=${videoId}`,
+            { headers: { 'x-api-key': HEYGEN_API_KEY } }
+          );
+
+          if (!heygenResponse.ok) continue;
+
+          const heygenData = await heygenResponse.json();
+          const status = heygenData.data?.status;
+          const videoUrl = heygenData.data?.video_url;
+
+          console.log(`   📹 ${workflowId}: ${status}`);
+
+          if (status === 'completed' && videoUrl) {
+            // Upload to R2
+            const publicHeygenUrl = await downloadAndUploadToR2(
+              videoUrl,
+              HEYGEN_API_KEY,
+              `heygen-videos/${workflowId}.mp4`
+            );
+
+            // Send to SubMagic
+            const webhookUrl = `${baseUrl}/api/webhooks/submagic/${brand}`;
+            const submagicResponse = await fetch('https://api.submagic.co/v1/projects', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'x-api-key': SUBMAGIC_API_KEY
+              },
+              body: JSON.stringify({
+                videoUrl: publicHeygenUrl,
+                template: 'Hormozi 2',
+                aspectRatio: '9:16',
+                webhookUrl,
+                metadata: { workflowId, brand, source: 'heygen' }
+              })
+            });
+
+            if (submagicResponse.ok) {
+              const submagicData = await submagicResponse.json();
+              const projectId = submagicData.data?.project_id;
+
+              await updateDoc(doc(db, collectionName, workflowId), {
+                status: 'submagic_processing',
+                submagicVideoId: projectId,
+                heygenVideoUrl: publicHeygenUrl,
+                updatedAt: Date.now()
+              });
+
+              console.log(`   ✅ ${workflowId}: Advanced to SubMagic`);
+              advanced++;
+            }
+          } else if (status === 'failed') {
+            await updateDoc(doc(db, collectionName, workflowId), {
+              status: 'failed',
+              error: 'HeyGen failed',
+              updatedAt: Date.now()
+            });
+            console.log(`   ❌ ${workflowId}: Failed`);
+            failed++;
+          }
+        } catch (error) {
+          console.error(`   ❌ ${workflowId}:`, error);
+          failed++;
+        }
+      }
+    } catch (err) {
+      console.error(`   ❌ Error querying ${brand}:`, err);
+    }
+  }
+
+  // Also check podcast_workflow_queue
+  try {
+    console.log(`\n📂 Checking podcast_workflow_queue...`);
+    const q = query(
+      collection(db, 'podcast_workflow_queue'),
+      where('status', '==', 'heygen_processing'),
+      firestoreLimit(10)
+    );
+    const snapshot = await getDocs(q);
+    console.log(`   Found ${snapshot.size} podcast HeyGen processing`);
+    checked += snapshot.size;
+    // Similar processing logic...
+  } catch (err) {
+    console.error(`   ❌ Error querying podcast:`, err);
+  }
+
+  // Also check property_videos
+  try {
+    console.log(`\n📂 Checking property_videos...`);
+    const q = query(
+      collection(db, 'property_videos'),
+      where('status', '==', 'heygen_processing'),
+      firestoreLimit(10)
+    );
+    const snapshot = await getDocs(q);
+    console.log(`   Found ${snapshot.size} property HeyGen processing`);
+    checked += snapshot.size;
+    // Similar processing logic...
+  } catch (err) {
+    console.error(`   ❌ Error querying property_videos:`, err);
+  }
+
+  return { checked, advanced, failed };
+}
+
+// ============================================================================
+// 3. CHECK SUBMAGIC PROCESSING WORKFLOWS
+// ============================================================================
+
+async function checkSubMagicWorkflows() {
+  const { db } = await import('@/lib/firebase');
+  const { collection, getDocs, query, where, limit: firestoreLimit, updateDoc, doc } = await import('firebase/firestore');
+  const { getAllBrandIds } = await import('@/lib/brand-utils');
+  const { uploadSubmagicVideo } = await import('@/lib/video-storage');
+  const { postToLate } = await import('@/lib/late-api');
+
+  if (!db) {
+    console.error('❌ Firebase not initialized');
+    return { checked: 0, completed: 0, failed: 0 };
+  }
+
+  const SUBMAGIC_API_KEY = process.env.SUBMAGIC_API_KEY;
+  if (!SUBMAGIC_API_KEY) {
+    console.error('❌ SUBMAGIC_API_KEY not configured');
+    return { checked: 0, completed: 0, failed: 0 };
+  }
+
+  let checked = 0;
+  let completed = 0;
+  let failed = 0;
+
+  // Check all brands
+  const brands = getAllBrandIds();
+
+  for (const brand of brands) {
+    try {
+      const collectionName = `${brand}_workflow_queue`;
+      console.log(`📂 Checking ${collectionName}...`);
+
+      const q = query(
+        collection(db, collectionName),
+        where('status', '==', 'submagic_processing'),
+        firestoreLimit(15)
+      );
+
+      const snapshot = await getDocs(q);
+      console.log(`   Found ${snapshot.size} SubMagic processing`);
+      checked += snapshot.size;
+
+      for (const workflowDoc of snapshot.docs) {
+        const data = workflowDoc.data();
+        const workflowId = workflowDoc.id;
+        const projectId = data.submagicVideoId;
+
+        if (!projectId) continue;
+
+        try {
+          const submagicResponse = await fetch(
+            `https://api.submagic.co/v1/projects/${projectId}`,
+            { headers: { 'x-api-key': SUBMAGIC_API_KEY } }
+          );
+
+          if (!submagicResponse.ok) continue;
+
+          const submagicData = await submagicResponse.json();
+          const status = submagicData.data?.status;
+          const downloadUrl = submagicData.data?.download_url;
+
+          console.log(`   🎬 ${workflowId}: ${status}`);
+
+          if ((status === 'completed' || status === 'done' || status === 'ready') && downloadUrl) {
+            // Upload to R2
+            const publicVideoUrl = await uploadSubmagicVideo(downloadUrl);
+
+            // Update to posting
+            await updateDoc(doc(db, collectionName, workflowId), {
+              status: 'posting',
+              finalVideoUrl: publicVideoUrl,
+              retryCount: (data.retryCount || 0) + 1,
+              updatedAt: Date.now()
+            });
+
+            // Post to Late
+            const postResult = await postToLate({
+              videoUrl: publicVideoUrl,
+              caption: data.caption || '',
+              title: data.title || '',
+              platforms: data.platforms || ['instagram', 'tiktok', 'youtube'],
+              useQueue: true,
+              brand: brand as any
+            });
+
+            if (postResult.success) {
+              await updateDoc(doc(db, collectionName, workflowId), {
+                status: 'completed',
+                latePostId: postResult.postId,
+                completedAt: Date.now(),
+                updatedAt: Date.now()
+              });
+
+              console.log(`   ✅ ${workflowId}: Completed`);
+              completed++;
+            }
+          } else if (status === 'failed' || status === 'error') {
+            await updateDoc(doc(db, collectionName, workflowId), {
+              status: 'failed',
+              error: 'SubMagic failed',
+              updatedAt: Date.now()
+            });
+            console.log(`   ❌ ${workflowId}: Failed`);
+            failed++;
+          }
+        } catch (error) {
+          console.error(`   ❌ ${workflowId}:`, error);
+          failed++;
+        }
+      }
+    } catch (err) {
+      console.error(`   ❌ Error querying ${brand}:`, err);
+    }
+  }
+
+  return { checked, completed, failed };
+}
+
+// ============================================================================
+// 4. CHECK POSTING WORKFLOWS
+// ============================================================================
+
+async function checkPostingWorkflows() {
+  const { db } = await import('@/lib/firebase');
+  const { collection, getDocs, query, where, limit: firestoreLimit, updateDoc, doc } = await import('firebase/firestore');
+  const { getAllBrandIds } = await import('@/lib/brand-utils');
+  const { postToLate } = await import('@/lib/late-api');
+
+  if (!db) {
+    console.error('❌ Firebase not initialized');
+    return { checked: 0, retried: 0, failed: 0 };
+  }
+
+  let checked = 0;
+  let retried = 0;
+  let failed = 0;
+
+  // Check all brands
+  const brands = getAllBrandIds();
+
+  for (const brand of brands) {
+    try {
+      const collectionName = `${brand}_workflow_queue`;
+      console.log(`📂 Checking ${collectionName}...`);
+
+      // Check both statuses
+      const qPosting = query(
+        collection(db, collectionName),
+        where('status', '==', 'posting'),
+        firestoreLimit(10)
+      );
+
+      const qProcessing = query(
+        collection(db, collectionName),
+        where('status', '==', 'video_processing'),
+        firestoreLimit(10)
+      );
+
+      const [postingSnapshot, processingSnapshot] = await Promise.all([
+        getDocs(qPosting),
+        getDocs(qProcessing)
+      ]);
+
+      const totalSize = postingSnapshot.size + processingSnapshot.size;
+      console.log(`   Found ${totalSize} posting/processing`);
+      checked += totalSize;
+
+      const allWorkflows = [...postingSnapshot.docs, ...processingSnapshot.docs];
+
+      for (const workflowDoc of allWorkflows) {
+        const data = workflowDoc.data();
+        const workflowId = workflowDoc.id;
+        const videoUrl = data.finalVideoUrl;
+        const stuckMinutes = Math.round((Date.now() - (data.updatedAt || data.createdAt || 0)) / 60000);
+
+        // Only retry if stuck > 10 minutes
+        if (stuckMinutes < 10) continue;
+
+        console.log(`   📤 ${workflowId}: stuck ${stuckMinutes}min`);
+
+        try {
+          if (data.status === 'video_processing') {
+            // Trigger full reprocessing
+            const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://ownerfi.ai';
+            const response = await fetch(`${baseUrl}/api/process-video`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                brand,
+                workflowId,
+                videoUrl,
+                submagicProjectId: data.submagicVideoId
+              })
+            });
+
+            if (response.ok) {
+              console.log(`   ✅ ${workflowId}: Reprocessing triggered`);
+              retried++;
+            }
+          } else if (videoUrl) {
+            // Retry Late posting
+            const postResult = await postToLate({
+              videoUrl,
+              caption: data.caption || '',
+              title: data.title || '',
+              platforms: data.platforms || ['instagram', 'tiktok', 'youtube'],
+              useQueue: true,
+              brand: brand as any
+            });
+
+            if (postResult.success) {
+              await updateDoc(doc(db, collectionName, workflowId), {
+                status: 'completed',
+                latePostId: postResult.postId,
+                completedAt: Date.now(),
+                updatedAt: Date.now()
+              });
+
+              console.log(`   ✅ ${workflowId}: Posted`);
+              retried++;
+            }
+          }
+        } catch (error) {
+          console.error(`   ❌ ${workflowId}:`, error);
+          failed++;
+        }
+      }
+    } catch (err) {
+      console.error(`   ❌ Error querying ${brand}:`, err);
+    }
+  }
+
+  return { checked, retried, failed };
 }

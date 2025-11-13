@@ -5,7 +5,7 @@
  * Focuses on tips, knowledge, and educational content (NO promotional)
  */
 
-import { getFirestore } from './firebase-admin';
+import { getAdminDb } from './firebase-admin';
 import { Brand } from '@/config/constants';
 
 /**
@@ -103,7 +103,8 @@ export async function addToBlogQueue(
     scheduledFor?: Date;
   } = {}
 ): Promise<BlogQueueItem> {
-  const db = getFirestore();
+  const db = await getAdminDb();
+  if (!db) throw new Error('Firebase not initialized');
   const collection = getBlogQueueCollection(brand);
 
   const { priority = 5, scheduledFor } = options;
@@ -216,7 +217,8 @@ export async function populateBlogQueue(
  * Get next pending blog from queue
  */
 export async function getNextBlogFromQueue(brand: Brand): Promise<BlogQueueItem | null> {
-  const db = getFirestore();
+  const db = await getAdminDb();
+  if (!db) throw new Error('Firebase not initialized');
   const collection = getBlogQueueCollection(brand);
 
   const snapshot = await db
@@ -254,7 +256,8 @@ export async function updateBlogQueueStatus(
     error?: string;
   } = {}
 ): Promise<void> {
-  const db = getFirestore();
+  const db = await getAdminDb();
+  if (!db) throw new Error('Firebase not initialized');
   const collection = getBlogQueueCollection(brand);
 
   await db.collection(collection).doc(itemId).update({
@@ -279,7 +282,8 @@ export async function getBlogQueueStats(brand: Brand): Promise<{
   posted: number;
   failed: number;
 }> {
-  const db = getFirestore();
+  const db = await getAdminDb();
+  if (!db) throw new Error('Firebase not initialized');
   const collection = getBlogQueueCollection(brand);
 
   const [total, pending, generating, generated, scheduled, posted, failed] = await Promise.all([

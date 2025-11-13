@@ -100,7 +100,7 @@ export const CARZ_CONFIG: BrandConfig = {
   lateProfileId: process.env.LATE_CARZ_PROFILE_ID || '',
 
   platforms: {
-    default: ['instagram', 'tiktok', 'facebook', 'linkedin', 'threads'],
+    default: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'threads'],
     all: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'threads', 'pinterest'],
     excludeFromDefault: ['twitter', 'bluesky'], // Carz doesn't use Twitter/Bluesky
   },
@@ -151,7 +151,7 @@ export const OWNERFI_CONFIG: BrandConfig = {
   lateProfileId: process.env.LATE_OWNERFI_PROFILE_ID || '',
 
   platforms: {
-    default: ['instagram', 'tiktok', 'facebook', 'linkedin', 'threads', 'twitter', 'bluesky'],
+    default: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'threads', 'twitter', 'bluesky'],
     all: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'threads', 'twitter', 'bluesky', 'pinterest', 'reddit'],
     excludeFromDefault: [], // All platforms enabled
   },
@@ -202,7 +202,7 @@ export const PODCAST_CONFIG: BrandConfig = {
   lateProfileId: process.env.LATE_PODCAST_PROFILE_ID || '',
 
   platforms: {
-    default: ['instagram', 'tiktok', 'facebook', 'linkedin', 'threads'],
+    default: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'threads'],
     all: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'threads', 'twitter', 'bluesky'],
     excludeFromDefault: [], // All platforms enabled
   },
@@ -252,7 +252,7 @@ export const BENEFIT_CONFIG: BrandConfig = {
   lateProfileId: process.env.LATE_OWNERFI_PROFILE_ID || '', // Uses OwnerFi's Late profile
 
   platforms: {
-    default: ['instagram', 'tiktok', 'facebook', 'linkedin', 'threads'],
+    default: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'threads'],
     all: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'threads', 'twitter', 'bluesky', 'pinterest', 'reddit'],
     excludeFromDefault: [], // All platforms enabled
   },
@@ -302,7 +302,7 @@ export const PROPERTY_CONFIG: BrandConfig = {
   lateProfileId: process.env.LATE_OWNERFI_PROFILE_ID || '', // Uses OwnerFi's Late profile
 
   platforms: {
-    default: ['instagram', 'tiktok', 'facebook', 'linkedin', 'threads'],
+    default: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'threads'],
     all: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'threads', 'twitter', 'bluesky', 'pinterest', 'reddit'],
     excludeFromDefault: [], // All platforms enabled
   },
@@ -353,7 +353,7 @@ export const PROPERTY_SPANISH_CONFIG: BrandConfig = {
   lateProfileId: process.env.LATE_OWNERFI_PROFILE_ID || '', // Uses OwnerFi's Late profile
 
   platforms: {
-    default: ['instagram', 'tiktok', 'facebook', 'linkedin', 'threads'],
+    default: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'threads'],
     all: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'threads', 'twitter', 'bluesky', 'pinterest', 'reddit'],
     excludeFromDefault: [], // All platforms enabled
   },
@@ -403,7 +403,7 @@ export const VASSDISTRO_CONFIG: BrandConfig = {
   lateProfileId: process.env.LATE_VASSDISTRO_PROFILE_ID || '',
 
   platforms: {
-    default: ['instagram', 'tiktok', 'facebook', 'linkedin', 'threads'],
+    default: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'threads'],
     all: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'threads', 'twitter', 'bluesky'],
     excludeFromDefault: [], // All platforms enabled
   },
@@ -455,7 +455,7 @@ export const ABDULLAH_CONFIG: BrandConfig = {
   lateProfileId: process.env.LATE_ABDULLAH_PROFILE_ID || '', // Create new Late profile for Abdullah
 
   platforms: {
-    default: ['instagram', 'tiktok', 'facebook', 'linkedin'],
+    default: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin'],
     all: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'threads', 'twitter', 'bluesky'],
     excludeFromDefault: [], // All platforms enabled
   },

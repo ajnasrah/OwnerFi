@@ -24,15 +24,20 @@ export async function POST(request: NextRequest) {
   const startTime = Date.now();
 
   try {
-    // Verify authorization - accept either Cloud Tasks auth OR internal cron calls
+    // Verify authorization - accept either Cloud Tasks auth OR internal server calls
     const authHeader = request.headers.get('X-Cloud-Tasks-Worker') ||
                        request.headers.get('Authorization')?.replace('Bearer ', '');
-    const userAgent = request.headers.get('user-agent');
-    const isInternalCron = userAgent?.includes('node') || userAgent?.includes('vercel-cron');
+    const forwardedFor = request.headers.get('x-forwarded-for');
+    const isInternalCall = !forwardedFor || forwardedFor === '127.0.0.1'; // Server-to-server has no forwarded IP
 
-    // Allow if: valid auth token OR internal cron call
-    if (authHeader !== CLOUD_TASKS_SECRET && !isInternalCron) {
-      console.warn('❌ Unauthorized worker request', { authHeader: !!authHeader, userAgent, CLOUD_TASKS_SECRET: !!CLOUD_TASKS_SECRET });
+    // Allow if: valid auth token OR internal server call
+    if (authHeader !== CLOUD_TASKS_SECRET && !isInternalCall) {
+      console.warn('❌ Unauthorized worker request', {
+        authHeader: !!authHeader,
+        forwardedFor,
+        isInternal: isInternalCall,
+        CLOUD_TASKS_SECRET: !!CLOUD_TASKS_SECRET
+      });
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

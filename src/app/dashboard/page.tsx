@@ -107,7 +107,16 @@ export default function Dashboard() {
       const profileRes = await fetch('/api/buyer/profile');
       const profileData = await profileRes.json();
 
+      console.log('📊 [DASHBOARD] Profile API response:', {
+        hasProfile: !!profileData.profile,
+        profileId: profileData.profile?.id,
+        hasCity: !!profileData.profile?.city || !!profileData.profile?.preferredCity,
+        hasMaxMonthlyPayment: !!profileData.profile?.maxMonthlyPayment,
+        hasMaxDownPayment: !!profileData.profile?.maxDownPayment
+      });
+
       if (!profileData.profile) {
+        console.log('🔄 [DASHBOARD] No profile found, redirecting to setup');
         router.push('/dashboard/setup');
         return;
       }

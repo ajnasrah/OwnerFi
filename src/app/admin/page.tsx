@@ -162,8 +162,11 @@ export default function AdminDashboard() {
 
   // Buyers and Realtors state
   const [buyers, setBuyers] = useState<BuyerStats[]>([]);
+  const [filteredBuyers, setFilteredBuyers] = useState<BuyerStats[]>([]);
   const [loadingBuyers, setLoadingBuyers] = useState(false);
   const [selectedBuyers, setSelectedBuyers] = useState<string[]>([]);
+  const [cityFilter, setCityFilter] = useState('');
+  const [stateFilter, setStateFilter] = useState('');
   const [realtors, setRealtors] = useState<RealtorStats[]>([]);
   const [loadingRealtors, setLoadingRealtors] = useState(false);
 
@@ -384,6 +387,7 @@ export default function AdminDashboard() {
       if (!response.ok) return;
       const data = await response.json();
       setBuyers(data.buyers || []);
+      setFilteredBuyers(data.buyers || []);
       setStats(prev => ({ ...prev, totalBuyers: data.buyers?.length || 0 }));
     } catch (error) {
       console.error('Failed to fetch buyers:', error);
@@ -406,6 +410,26 @@ export default function AdminDashboard() {
       setLoadingRealtors(false);
     }
   };
+
+  // Filter buyers by city and state whenever filters change
+  useEffect(() => {
+    if (!cityFilter.trim() && !stateFilter.trim()) {
+      setFilteredBuyers(buyers);
+    } else {
+      const filtered = buyers.filter(buyer => {
+        const buyerCity = (buyer.primaryCity || buyer.city || '').toLowerCase();
+        const buyerState = (buyer.primaryState || buyer.state || '').toUpperCase();
+
+        const cityMatch = !cityFilter.trim() || buyerCity.includes(cityFilter.toLowerCase());
+        const stateMatch = !stateFilter.trim() || buyerState === stateFilter.toUpperCase();
+
+        return cityMatch && stateMatch;
+      });
+      setFilteredBuyers(filtered);
+    }
+    // Clear selection when filter changes
+    setSelectedBuyers([]);
+  }, [cityFilter, stateFilter, buyers]);
 
   const fetchPreviewProperties = async () => {
     setLoadingPreview(true);
@@ -2624,18 +2648,62 @@ export default function AdminDashboard() {
           {activeTab === 'buyers' && (
             <div className="bg-white shadow rounded-lg">
               <div className="px-4 py-5 sm:p-6">
+                {/* Filter Section */}
+                <div className="mb-6 bg-gray-50 p-4 rounded-lg">
+                  <h4 className="text-sm font-medium text-gray-900 mb-3">🔍 Filter Buyers</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1">City</label>
+                      <input
+                        type="text"
+                        value={cityFilter}
+                        onChange={(e) => setCityFilter(e.target.value)}
+                        placeholder="Enter city name (e.g., Memphis, Dallas...)"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1">State</label>
+                      <input
+                        type="text"
+                        value={stateFilter}
+                        onChange={(e) => setStateFilter(e.target.value)}
+                        placeholder="Enter state (e.g., TX, TN, CA...)"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
+                        maxLength={2}
+                      />
+                    </div>
+                  </div>
+                  {(cityFilter || stateFilter) && (
+                    <div className="mt-3 flex items-center justify-between">
+                      <span className="text-sm text-gray-600">
+                        Showing {filteredBuyers.length} of {buyers.length} buyers
+                      </span>
+                      <button
+                        onClick={() => {
+                          setCityFilter('');
+                          setStateFilter('');
+                        }}
+                        className="text-sm text-indigo-600 hover:text-indigo-700"
+                      >
+                        ✕ Clear filters
+                      </button>
+                    </div>
+                  )}
+                </div>
+
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-4">
                     <h3 className="text-lg leading-6 font-medium text-gray-900">Registered Buyers</h3>
                     <label className="flex items-center gap-2 text-sm text-gray-600">
                       <input
                         type="checkbox"
-                        checked={buyers.length > 0 && selectedBuyers.length === buyers.length}
+                        checked={filteredBuyers.length > 0 && selectedBuyers.length === filteredBuyers.length}
                         onChange={() => {
-                          if (selectedBuyers.length === buyers.length) {
+                          if (selectedBuyers.length === filteredBuyers.length) {
                             setSelectedBuyers([]);
                           } else {
-                            setSelectedBuyers(buyers.map(b => b.userId));
+                            setSelectedBuyers(filteredBuyers.map(b => b.userId));
                           }
                         }}
                         className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
@@ -2691,7 +2759,7 @@ export default function AdminDashboard() {
 
                 <div className="overflow-hidden bg-white shadow sm:rounded-md">
                   <ul className="divide-y divide-gray-200">
-                    {buyers.map((buyer) => (
+                    {filteredBuyers.map((buyer) => (
                       <li key={buyer.id}>
                         <div className="px-4 py-4 sm:px-6">
                           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
@@ -2752,6 +2820,11 @@ export default function AdminDashboard() {
                       </li>
                     ))}
                   </ul>
+                  {filteredBuyers.length === 0 && (
+                    <div className="p-8 text-center text-gray-500">
+                      {cityFilter || stateFilter ? 'No buyers found matching your filters' : 'No buyers found'}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

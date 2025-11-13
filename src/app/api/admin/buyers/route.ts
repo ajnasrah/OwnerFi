@@ -109,6 +109,14 @@ export async function GET(request: NextRequest) {
     const allBuyerIds = usersSnapshot.docs.map(doc => doc.id);
     const matchedCountsMap = new Map<string, number>();
 
+    // First, fetch all active property IDs to validate matches
+    const activePropertiesQuery = query(
+      collection(db, 'properties'),
+      where('isActive', '==', true)
+    );
+    const activePropertiesSnapshot = await getDocs(activePropertiesQuery);
+    const activePropertyIds = new Set(activePropertiesSnapshot.docs.map(doc => doc.id));
+
     // Batch fetch matched properties for all buyers at once
     if (allBuyerIds.length > 0) {
       // Firestore 'in' operator supports up to 10 values, so we need to batch
@@ -121,10 +129,16 @@ export async function GET(request: NextRequest) {
         );
         const matchedSnapshot = await getDocs(matchedQuery);
 
-        // Count matches per buyer
+        // Count matches per buyer, but ONLY for active properties
         matchedSnapshot.docs.forEach(doc => {
-          const buyerId = doc.data().buyerId;
-          matchedCountsMap.set(buyerId, (matchedCountsMap.get(buyerId) || 0) + 1);
+          const matchData = doc.data();
+          const buyerId = matchData.buyerId;
+          const propertyId = matchData.propertyId;
+
+          // Only count if the property is still active
+          if (activePropertyIds.has(propertyId)) {
+            matchedCountsMap.set(buyerId, (matchedCountsMap.get(buyerId) || 0) + 1);
+          }
         });
       }
     }

@@ -10,59 +10,133 @@ import {
   serverTimestamp
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/lib/auth';
 import { unifiedDb } from '@/lib/unified-db';
+import { ExtendedSession } from '@/types/session';
 import { syncBuyerToGHL } from '@/lib/gohighlevel-api';
-import { logInfo, logWarn } from '@/lib/logger';
-import { requireRole } from '@/lib/auth-helpers';
-import {
-  ErrorResponses,
-  createSuccessResponse,
-  parseRequestBody,
-  logError
-} from '@/lib/api-error-handler';
+import { logInfo, logWarn, logError } from '@/lib/logger';
 
 /**
  * SIMPLIFIED BUYER PROFILE API
- * 
+ *
  * Stores ONLY essential buyer data:
  * - Contact info (from user record)
  * - Search preferences (city, budgets)
- * 
+ *
  * NO realtor matching, NO complex algorithms, NO dependencies.
  */
 
-export async function GET(request: NextRequest) {
-  // Standardized authentication
-  const authResult = await requireRole(request, 'buyer');
-  if ('error' in authResult) return authResult.error;
-  const { session } = authResult;
-
+export async function GET() {
   try {
     if (!db) {
-      return ErrorResponses.serviceUnavailable('Database not available');
+      return NextResponse.json(
+        { error: 'Database not available' },
+        { status: 500 }
+      );
     }
 
-    // Get buyer profile
-    const profilesQuery = query(
+    const session = await // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    getServerSession(authOptions as any) as ExtendedSession | null;
+
+    if (!session?.user || session.user.role !== 'buyer') {
+      console.log('❌ [BUYER PROFILE GET] Unauthorized or not a buyer:', {
+        hasSession: !!session,
+        hasUser: !!session?.user,
+        role: session?.user?.role
+      });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // DEBUG: Log what we're searching for
+    console.log('🔍 [BUYER PROFILE GET] Searching for profile:', {
+      userId: session.user.id,
+      email: session.user.email,
+      role: session.user.role,
+      sessionKeys: Object.keys(session.user)
+    });
+
+    // Get buyer profile - try both userId and email to handle legacy profiles
+    let profilesQuery = query(
       collection(db, 'buyerProfiles'),
       where('userId', '==', session.user.id)
     );
-    const snapshot = await getDocs(profilesQuery);
+    let snapshot = await getDocs(profilesQuery);
 
-    if (snapshot.empty) {
-      return createSuccessResponse({ profile: null });
+    console.log('🔍 [BUYER PROFILE GET] userId query result:', {
+      found: !snapshot.empty,
+      count: snapshot.docs.length
+    });
+
+    // Fallback: try to find by email if userId query fails
+    if (snapshot.empty && session.user.email) {
+      logInfo('Profile not found by userId, trying email', {
+        action: 'buyer_profile_fallback',
+        metadata: { userId: session.user.id, email: session.user.email }
+      });
+
+      profilesQuery = query(
+        collection(db, 'buyerProfiles'),
+        where('email', '==', session.user.email)
+      );
+      snapshot = await getDocs(profilesQuery);
+
+      console.log('🔍 [BUYER PROFILE GET] email query result:', {
+        found: !snapshot.empty,
+        count: snapshot.docs.length
+      });
+
+      // If found by email, update the userId field for future queries
+      if (!snapshot.empty) {
+        const profileId = snapshot.docs[0].id;
+        const profileData = snapshot.docs[0].data();
+
+        console.log('✅ [BUYER PROFILE GET] Found by email, updating userId:', {
+          profileId,
+          oldUserId: profileData.userId,
+          newUserId: session.user.id
+        });
+
+        await updateDoc(doc(db, 'buyerProfiles', profileId), {
+          userId: session.user.id,
+          updatedAt: serverTimestamp()
+        });
+        logInfo('Updated profile with correct userId', {
+          action: 'buyer_profile_userId_fix',
+          metadata: { profileId, userId: session.user.id }
+        });
+      }
     }
 
+    if (snapshot.empty) {
+      console.log('❌ [BUYER PROFILE GET] No profile found at all');
+      logInfo('No buyer profile found', {
+        action: 'buyer_profile_not_found',
+        metadata: { userId: session.user.id, email: session.user.email }
+      });
+      return NextResponse.json({ profile: null });
+    }
+
+    const profileData = snapshot.docs[0].data();
     const profile = {
       id: snapshot.docs[0].id,
-      ...snapshot.docs[0].data()
+      ...profileData
     };
 
-    return createSuccessResponse({ profile });
+    console.log('✅ [BUYER PROFILE GET] Profile found:', {
+      profileId: profile.id,
+      hasCity: !!profileData.city || !!profileData.preferredCity,
+      hasMaxMonthlyPayment: !!profileData.maxMonthlyPayment,
+      hasMaxDownPayment: !!profileData.maxDownPayment,
+      profileComplete: profileData.profileComplete
+    });
+
+    return NextResponse.json({ profile });
 
   } catch (error) {
-    logError('GET /api/buyer/profile', error, { userId: session.user.id });
-    return ErrorResponses.databaseError('Failed to load profile', error);
+    console.error('❌ [BUYER PROFILE GET] Error:', error);
+    logError('GET /api/buyer/profile', error as Error, { userId: 'unknown' });
+    return NextResponse.json({ error: 'Failed to load profile' }, { status: 500 });
   }
 }
 
@@ -77,23 +151,22 @@ interface BuyerProfileUpdate {
 }
 
 export async function POST(request: NextRequest) {
-  // Standardized authentication
-  const authResult = await requireRole(request, 'buyer');
-  if ('error' in authResult) return authResult.error;
-  const { session } = authResult;
-
-  // Standardized body parsing
-  const bodyResult = await parseRequestBody<BuyerProfileUpdate>(request);
-  if (!bodyResult.success) {
-    return (bodyResult as { success: false; response: NextResponse }).response;
-  }
-
-  const body = bodyResult.data;
-
   try {
     if (!db) {
-      return ErrorResponses.serviceUnavailable('Database not available');
+      return NextResponse.json(
+        { error: 'Database not available' },
+        { status: 500 }
+      );
     }
+
+    const session = await // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    getServerSession(authOptions as any) as ExtendedSession | null;
+
+    if (!session?.user || session.user.role !== 'buyer') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const body = await request.json();
 
     const {
       firstName,
@@ -107,9 +180,9 @@ export async function POST(request: NextRequest) {
 
     // Validate required fields
     if (!city || !state || !maxMonthlyPayment || !maxDownPayment) {
-      return ErrorResponses.validationError(
-        'Missing required: city, state, maxMonthlyPayment, maxDownPayment'
-      );
+      return NextResponse.json({
+        error: 'Missing required: city, state, maxMonthlyPayment, maxDownPayment'
+      }, { status: 400 });
     }
 
     // Get user contact info from database if not provided
@@ -224,18 +297,16 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    return createSuccessResponse({
+    return NextResponse.json({
       buyerId,
       message: 'Profile saved successfully'
     });
 
   } catch (error) {
-    logError('POST /api/buyer/profile', error, {
-      userId: session.user.id,
-      city: body.city,
-      state: body.state
-    });
-    return ErrorResponses.databaseError('Failed to save profile', error);
+    console.error('❌ [BUYER PROFILE POST] Error:', error);
+    return NextResponse.json({
+      error: 'Failed to save profile'
+    }, { status: 500 });
   }
 }
 

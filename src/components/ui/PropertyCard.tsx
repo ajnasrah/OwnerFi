@@ -423,11 +423,19 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
                     <div className="grid grid-cols-2 gap-3 text-sm">
                       <div>
                         <div className="text-slate-600 text-xs mb-1">Interest Rate</div>
-                        <div className="font-bold text-slate-900 text-lg">est. {property.interestRate}%</div>
+                        <div className="font-bold text-slate-900 text-lg">
+                          {property.interestRate && property.interestRate > 0
+                            ? `est. ${property.interestRate}%`
+                            : <span className="text-slate-400">Contact seller</span>}
+                        </div>
                       </div>
                       <div>
                         <div className="text-slate-600 text-xs mb-1">Loan Term</div>
-                        <div className="font-bold text-slate-900 text-lg">est. {property.termYears} years</div>
+                        <div className="font-bold text-slate-900 text-lg">
+                          {property.termYears && property.termYears > 0
+                            ? `est. ${property.termYears} years`
+                            : <span className="text-slate-400">Contact seller</span>}
+                        </div>
                       </div>
                     </div>
                   </div>

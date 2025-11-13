@@ -516,8 +516,8 @@ async function checkSubMagicWorkflows() {
           if (!submagicResponse.ok) continue;
 
           const submagicData = await submagicResponse.json();
-          const status = submagicData.data?.status;
-          const downloadUrl = submagicData.data?.download_url;
+          const status = submagicData.status;
+          const downloadUrl = submagicData.media_url || submagicData.video_url || submagicData.downloadUrl || submagicData.download_url;
 
           console.log(`   🎬 ${workflowId}: ${status}`);
 

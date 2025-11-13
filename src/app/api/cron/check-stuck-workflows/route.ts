@@ -277,6 +277,24 @@ async function checkHeyGenWorkflows() {
 
             // Send to SubMagic
             const webhookUrl = `${baseUrl}/api/webhooks/submagic/${brand}`;
+
+            // Get workflow data for title
+            const title = (data.articleTitle || data.title || data.topic || `Video ${workflowId}`)
+              .replace(/&#8217;/g, "'")
+              .replace(/&#8216;/g, "'")
+              .replace(/&#8211;/g, "-")
+              .replace(/&#8212;/g, "-")
+              .replace(/&amp;/g, "&")
+              .replace(/&quot;/g, '"')
+              .replace(/&lt;/g, "<")
+              .replace(/&gt;/g, ">")
+              .replace(/&nbsp;/g, " ")
+              .substring(0, 50);
+
+            // Brand-specific B-roll settings
+            const shouldUseBrolls = brand !== 'property' && brand !== 'podcast';
+            const brollPercentage = shouldUseBrolls ? 75 : 0;
+
             const submagicResponse = await fetch('https://api.submagic.co/v1/projects', {
               method: 'POST',
               headers: {
@@ -284,17 +302,20 @@ async function checkHeyGenWorkflows() {
                 'x-api-key': SUBMAGIC_API_KEY
               },
               body: JSON.stringify({
+                title,
+                language: 'en',
                 videoUrl: publicHeygenUrl,
-                template: 'Hormozi 2',
-                aspectRatio: '9:16',
-                webhookUrl,
-                metadata: { workflowId, brand, source: 'heygen' }
+                templateName: 'Hormozi 2',
+                magicBrolls: shouldUseBrolls,
+                magicBrollsPercentage: brollPercentage,
+                magicZooms: true,
+                webhookUrl
               })
             });
 
             if (submagicResponse.ok) {
               const submagicData = await submagicResponse.json();
-              const projectId = submagicData.data?.project_id;
+              const projectId = submagicData.id || submagicData.project_id || submagicData.projectId;
 
               await updateDoc(doc(db, collectionName, workflowId), {
                 status: 'submagic_processing',

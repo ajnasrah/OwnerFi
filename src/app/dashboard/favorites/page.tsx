@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 
 import { PropertyListing } from '@/lib/property-schema';
+import { LEGAL_DISCLAIMERS, SAFE_UI_LABELS } from '@/lib/legal-disclaimers';
 
 type Property = PropertyListing;
 
@@ -140,19 +141,28 @@ export default function FavoritesPage() {
                 </div>
 
                 {/* Key Financial Info */}
-                <div className="grid grid-cols-2 gap-4 mb-6">
-                  <div className="text-center bg-blue-50 rounded-lg p-4">
-                    <div className="text-sm text-blue-600 font-medium">Monthly Payment (est)</div>
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div className="text-center bg-blue-50 rounded-lg p-4 border border-blue-200">
+                    <div className="text-xs text-blue-600 font-medium mb-1">{SAFE_UI_LABELS.MONTHLY_PAYMENT}</div>
                     <div className="text-2xl font-bold text-blue-700">
                       {formatCurrency(property.monthlyPayment)}
                     </div>
+                    <div className="text-[9px] text-blue-600 mt-1">{LEGAL_DISCLAIMERS.MONTHLY_PAYMENT}</div>
                   </div>
-                  <div className="text-center bg-orange-50 rounded-lg p-4">
-                    <div className="text-sm text-orange-600 font-medium">Down Payment (est)</div>
+                  <div className="text-center bg-orange-50 rounded-lg p-4 border border-orange-200">
+                    <div className="text-xs text-orange-600 font-medium mb-1">Down Payment (est)</div>
                     <div className="text-2xl font-bold text-orange-700">
                       {formatCurrency(property.downPaymentAmount)}
                     </div>
+                    <div className="text-[9px] text-orange-600 mt-1">Agent-reported</div>
                   </div>
+                </div>
+
+                {/* Disclaimer */}
+                <div className="bg-amber-50 border border-amber-300 rounded-lg p-2 mb-4">
+                  <p className="text-[9px] text-amber-900 font-semibold text-center">
+                    {LEGAL_DISCLAIMERS.PERSISTENT_WARNING}
+                  </p>
                 </div>
 
                 {/* Property Details */}
@@ -172,28 +182,35 @@ export default function FavoritesPage() {
                 </div>
 
                 {/* Financing Terms */}
-                <div className="bg-slate-50 rounded-lg p-4 mb-4">
+                <div className="bg-slate-50 rounded-lg p-4 mb-4 border border-slate-200">
+                  <h4 className="text-xs font-semibold text-slate-700 mb-2">{SAFE_UI_LABELS.FINANCING_TERMS}</h4>
                   <div className="grid grid-cols-3 gap-4 text-center text-sm">
                     <div>
                       <div className="font-semibold text-slate-800">{formatCurrency(property.listPrice)}</div>
-                      <div className="text-slate-600">List Price (est)</div>
+                      <div className="text-slate-600 text-xs">List Price (est)</div>
                     </div>
                     <div>
-                      <div className="font-semibold text-slate-800">{property.interestRate}%</div>
-                      <div className="text-slate-600">APR (est)</div>
+                      <div className="font-semibold text-slate-800">~{property.interestRate}%</div>
+                      <div className="text-slate-600 text-xs">APR (est)</div>
                     </div>
                     <div>
-                      <div className="font-semibold text-slate-800">{property.termYears} years</div>
-                      <div className="text-slate-600">Term (est)</div>
+                      <div className="font-semibold text-slate-800">~{property.termYears} years</div>
+                      <div className="text-slate-600 text-xs">Term (est)</div>
                     </div>
                   </div>
+                  <p className="text-[9px] text-slate-500 mt-2 text-center">
+                    {LEGAL_DISCLAIMERS.FINANCING_TERMS}
+                  </p>
                 </div>
 
                 {/* Description */}
                 {property.description && (
-                  <div className="bg-blue-50 rounded-lg p-4">
-                    <h4 className="font-semibold text-slate-800 mb-2">Property Description</h4>
-                    <p className="text-slate-700 leading-relaxed">{property.description}</p>
+                  <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                    <h4 className="font-semibold text-slate-800 mb-1 text-sm">{SAFE_UI_LABELS.PROPERTY_DESCRIPTION}</h4>
+                    <p className="text-[9px] text-slate-500 mb-2 italic">
+                      {LEGAL_DISCLAIMERS.PROPERTY_DESCRIPTION}
+                    </p>
+                    <p className="text-slate-700 leading-relaxed text-sm">{property.description}</p>
                   </div>
                 )}
               </div>
@@ -340,42 +357,57 @@ export default function FavoritesPage() {
                   </div>
                 </div>
 
+                <div className="bg-amber-50 border border-amber-300 rounded-lg p-2 mb-3">
+                  <p className="text-[9px] text-amber-900 font-semibold text-center">
+                    {LEGAL_DISCLAIMERS.PERSISTENT_WARNING}
+                  </p>
+                </div>
+
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="text-center bg-blue-50 rounded-lg p-4">
-                    <div className="text-sm text-blue-600 font-medium">Monthly (est)</div>
+                  <div className="text-center bg-blue-50 rounded-lg p-4 border border-blue-200">
+                    <div className="text-xs text-blue-600 font-medium mb-1">{SAFE_UI_LABELS.MONTHLY_PAYMENT}</div>
                     <div className="text-2xl font-bold text-blue-700">
                       {formatCurrency(selectedProperty.monthlyPayment)}
                     </div>
+                    <div className="text-[9px] text-blue-600 mt-1">{LEGAL_DISCLAIMERS.MONTHLY_PAYMENT}</div>
                   </div>
-                  <div className="text-center bg-orange-50 rounded-lg p-4">
-                    <div className="text-sm text-orange-600 font-medium">Down Payment (est)</div>
+                  <div className="text-center bg-orange-50 rounded-lg p-4 border border-orange-200">
+                    <div className="text-xs text-orange-600 font-medium mb-1">Down Payment (est)</div>
                     <div className="text-2xl font-bold text-orange-700">
                       {formatCurrency(selectedProperty.downPaymentAmount)}
                     </div>
+                    <div className="text-[9px] text-orange-600 mt-1">Agent-reported</div>
                   </div>
                 </div>
 
-                <div className="bg-slate-50 rounded-lg p-4">
+                <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                  <h4 className="text-xs font-semibold text-slate-700 mb-2">{SAFE_UI_LABELS.FINANCING_TERMS}</h4>
                   <div className="grid grid-cols-3 gap-4 text-center text-sm">
                     <div>
                       <div className="font-semibold text-slate-800">{formatCurrency(selectedProperty.listPrice)}</div>
-                      <div className="text-slate-600">List Price (est)</div>
+                      <div className="text-slate-600 text-xs">List Price (est)</div>
                     </div>
                     <div>
-                      <div className="font-semibold text-slate-800">{selectedProperty.interestRate}%</div>
-                      <div className="text-slate-600">APR (est)</div>
+                      <div className="font-semibold text-slate-800">~{selectedProperty.interestRate}%</div>
+                      <div className="text-slate-600 text-xs">APR (est)</div>
                     </div>
                     <div>
-                      <div className="font-semibold text-slate-800">{selectedProperty.termYears} years</div>
-                      <div className="text-slate-600">Term (est)</div>
+                      <div className="font-semibold text-slate-800">~{selectedProperty.termYears} years</div>
+                      <div className="text-slate-600 text-xs">Term (est)</div>
                     </div>
                   </div>
+                  <p className="text-[9px] text-slate-500 mt-2 text-center">
+                    {LEGAL_DISCLAIMERS.FINANCING_TERMS}
+                  </p>
                 </div>
 
                 {selectedProperty.description && (
-                  <div className="bg-blue-50 rounded-lg p-4">
-                    <h4 className="font-semibold text-slate-800 mb-2">Description</h4>
-                    <p className="text-slate-700 leading-relaxed">{selectedProperty.description}</p>
+                  <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                    <h4 className="font-semibold text-slate-800 mb-1 text-sm">{SAFE_UI_LABELS.PROPERTY_DESCRIPTION}</h4>
+                    <p className="text-[9px] text-slate-500 mb-2 italic">
+                      {LEGAL_DISCLAIMERS.PROPERTY_DESCRIPTION}
+                    </p>
+                    <p className="text-slate-700 leading-relaxed text-sm">{selectedProperty.description}</p>
                   </div>
                 )}
               </div>

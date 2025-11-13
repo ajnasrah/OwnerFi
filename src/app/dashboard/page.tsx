@@ -10,6 +10,7 @@ import { PropertySwiper2 } from '@/components/ui/PropertySwiper2';
 
 import { PropertyListing } from '@/lib/property-schema';
 import { BuyerDashboardView } from '@/lib/view-models';
+import { OWNER_FINANCING_FACTS, SAFE_UI_LABELS } from '@/lib/legal-disclaimers';
 
 // Extended Property interface that includes PropertyListing fields
 interface Property extends Partial<PropertyListing> {
@@ -37,24 +38,7 @@ interface Property extends Partial<PropertyListing> {
   isLiked?: boolean;
 }
 
-// Owner Financing Fun Facts
-const OWNER_FINANCING_FACTS = [
-  "💡 Owner financing often requires less paperwork than traditional mortgages - closing can happen in weeks instead of months!",
-  "🏦 Did you know? You don't need perfect credit for owner financing - sellers look at the whole picture, not just your credit score.",
-  "💰 Owner financing typically has lower closing costs - you can save thousands compared to traditional bank loans.",
-  "⚡ Fast closings! Owner-financed deals often close 3-4x faster than traditional bank mortgages.",
-  "🎯 More negotiable terms! Interest rates, down payments, and monthly payments can all be customized to fit your budget.",
-  "📈 Build equity faster! Many owner-financed properties require lower down payments, letting you invest in more properties.",
-  "🏡 Own a home even if you're self-employed or have non-traditional income - owner financing is more flexible!",
-  "💼 Sellers often offer better interest rates than banks to make the deal attractive and close faster.",
-  "🔓 No bank approval needed! The seller is the lender, so approval is based on mutual agreement, not bank policies.",
-  "📊 Owner financing has been around for centuries - it's how many of America's first homes were purchased!",
-  "🌟 Balloon payments give you time to improve your credit and refinance with better terms later.",
-  "🤝 Direct relationship with the seller means more flexibility if you need to modify terms down the road.",
-  "💵 You can often negotiate including repairs or improvements as part of the financing deal.",
-  "🏃 Skip the bank! No waiting for loan underwriters, appraisals delays, or last-minute loan denials.",
-  "📝 Creative terms are possible - some sellers accept trade-ins, sweat equity, or other creative payment arrangements!"
-];
+// Owner Financing Facts are now imported from legal-disclaimers.ts
 
 export default function Dashboard() {
   const { data: session, status } = useSession();
@@ -205,10 +189,10 @@ export default function Dashboard() {
 
             {/* Main Status */}
             <h1 className="text-2xl font-black text-white mb-2">
-              Finding Your Home
+              {SAFE_UI_LABELS.SEARCHING_TEXT}
             </h1>
             <p className="text-slate-400 text-sm mb-4">
-              Searching for owner-financed properties in {profile?.city || 'your area'}...
+              {SAFE_UI_LABELS.LOADING_TEXT} in {profile?.city || 'your area'}...
             </p>
 
             {/* Loading Progress Bar */}
@@ -216,15 +200,18 @@ export default function Dashboard() {
               <div className="h-full bg-gradient-to-r from-emerald-400 to-blue-500 rounded-full animate-pulse w-3/4"></div>
             </div>
 
-            {/* Fun Fact Section - Compact */}
+            {/* Educational Information Section - Compact */}
             {currentFact && (
               <div className="bg-gradient-to-br from-emerald-500/10 to-blue-500/10 border border-emerald-500/30 rounded-xl p-4 max-h-[40vh] overflow-y-auto">
                 <div className="flex items-start gap-3">
                   <div className="text-xl flex-shrink-0">💡</div>
                   <div className="text-left flex-1 min-w-0">
-                    <h3 className="text-emerald-400 font-bold text-sm mb-2">Did You Know?</h3>
+                    <h3 className="text-emerald-400 font-bold text-sm mb-2">General Information</h3>
                     <p className="text-slate-200 text-sm leading-relaxed">
-                      {currentFact.replace(/^[^\s]+\s/, '')}
+                      {currentFact}
+                    </p>
+                    <p className="text-[9px] text-slate-400 mt-2 italic">
+                      General information only. Individual situations vary.
                     </p>
                   </div>
                 </div>

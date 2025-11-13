@@ -12,7 +12,9 @@ export default function TermsOfService() {
       <div className="max-w-4xl mx-auto px-6 py-16">
         <div className="bg-white rounded-xl shadow-light p-8 md:p-12">
           <h1 className="text-4xl font-bold text-primary-text mb-8">Terms of Service</h1>
-          <p className="text-slate-600 mb-8">Last updated: January 7, 2025</p>
+          <p className="text-slate-600 mb-8">Last updated: January 13, 2025</p>
+          <p className="text-slate-600 mb-4">Governing Law: State of Tennessee</p>
+          <p className="text-slate-600 mb-8">Arbitration Venue: Shelby County, Tennessee</p>
 
           {/* Plain English Summary */}
           <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-8">
@@ -663,6 +665,83 @@ export default function TermsOfService() {
             </section>
 
             <section>
+              <h2 className="text-2xl font-semibold text-primary-text mb-4">17A. CREATIVE FINANCE STRUCTURES (Subject-To, Wraps, Lease Options)</h2>
+              <div className="bg-red-50 border border-red-200 rounded-lg p-6 mb-4">
+                <h3 className="font-bold text-red-800 text-xl mb-4">🚨 CRITICAL CREATIVE FINANCE DISCLAIMER</h3>
+
+                <div className="space-y-4 text-red-700">
+                  <div className="bg-red-100 border border-red-300 rounded-lg p-4">
+                    <p className="font-bold text-red-800 mb-2">⚠️ OWNERFI DOES NOT ADVISE ON OR STRUCTURE CREATIVE FINANCE</p>
+                    <p className="text-red-700 text-sm mb-2">
+                      <strong>OwnerFi does NOT:</strong>
+                    </p>
+                    <ul className="list-disc ml-6 space-y-1 text-red-700 text-sm">
+                      <li>Advise on creative finance structures (sub2, wraps, lease options, contract-for-deed)</li>
+                      <li>Structure or facilitate creative finance deals</li>
+                      <li>Draft creative finance documents or agreements</li>
+                      <li>Verify the status of existing mortgages on properties</li>
+                      <li>Confirm the existence or legality of wraparound terms</li>
+                      <li>Determine whether a deal triggers due-on-sale clauses</li>
+                      <li>Provide Dodd-Frank or SAFE Act compliance guidance</li>
+                      <li>Verify compliance with RESPA or state lending laws</li>
+                    </ul>
+                  </div>
+
+                  <div className="bg-orange-100 border border-orange-300 rounded-lg p-4">
+                    <p className="font-bold text-orange-800 mb-2">📋 INFORMATION FROM LISTING AGENTS ONLY</p>
+                    <p className="text-orange-700 text-sm">
+                      <strong>Any reference to seller financing, subject-to, wraparound mortgages, or creative structures originates solely from the listing agent or seller.</strong> OwnerFi simply displays this information as provided. We do not verify, validate, or endorse any creative finance structure.
+                    </p>
+                  </div>
+
+                  <div className="bg-red-200 border-2 border-red-400 rounded-lg p-4">
+                    <p className="font-bold text-red-900 mb-2 text-lg">🚨 BUYER MUST VERIFY ALL CREATIVE FINANCE RISKS</p>
+                    <p className="text-red-900 text-sm mb-2">
+                      <strong>Before entering any creative finance transaction, you MUST independently verify:</strong>
+                    </p>
+                    <ul className="list-disc ml-6 space-y-1 text-red-900 text-sm">
+                      <li><strong>Mortgage status:</strong> Whether existing mortgages exist, payment status, and balances</li>
+                      <li><strong>Due-on-sale exposure:</strong> Whether the transaction triggers acceleration of existing loans</li>
+                      <li><strong>Title and lien position:</strong> Priority of liens and encumbrances</li>
+                      <li><strong>Legal compliance:</strong> State-specific lending laws, usury limits, and licensing requirements</li>
+                      <li><strong>Dodd-Frank/SAFE Act:</strong> Whether seller needs RMLO license or falls under exemptions</li>
+                      <li><strong>Balloon payment risks:</strong> Your ability to refinance or pay balloon when due</li>
+                      <li><strong>Wraparound legality:</strong> Whether wraparound mortgages are legal in your state</li>
+                      <li><strong>Loan servicer requirements:</strong> Who services the loan and how payments are handled</li>
+                      <li><strong>Default consequences:</strong> What happens if you or seller defaults</li>
+                      <li><strong>Insurance requirements:</strong> Whether seller's lender requires notification</li>
+                    </ul>
+                  </div>
+
+                  <div className="bg-purple-100 border border-purple-300 rounded-lg p-4">
+                    <p className="font-bold text-purple-800 mb-2">👔 MANDATORY PROFESSIONAL CONSULTATION</p>
+                    <p className="text-purple-700 text-sm">
+                      <strong>ALL creative finance structures must be reviewed by:</strong>
+                    </p>
+                    <ul className="list-disc ml-6 mt-2 space-y-1 text-purple-700 text-sm">
+                      <li><strong>Licensed real estate attorney</strong> in the property's state</li>
+                      <li><strong>Licensed Residential Mortgage Loan Originator (RMLO)</strong> or mortgage broker</li>
+                      <li><strong>Title company</strong> to verify liens and ownership</li>
+                      <li><strong>CPA or tax professional</strong> for tax implications</li>
+                    </ul>
+                    <p className="text-purple-700 text-sm mt-2 font-bold">
+                      Do NOT proceed with any creative finance structure without professional legal and financial advice.
+                    </p>
+                  </div>
+
+                  <div className="bg-red-200 border-2 border-red-400 rounded-lg p-4 mt-4">
+                    <p className="text-red-900 font-bold text-center text-lg mb-2">
+                      ⛔ OWNERFI BEARS ZERO LIABILITY FOR CREATIVE FINANCE STRUCTURES
+                    </p>
+                    <p className="text-red-800 text-sm text-center">
+                      <strong>You assume ALL risk associated with creative financing. OwnerFi is not responsible for due-on-sale triggers, balloon payment issues, title problems, lender acceleration, Dodd-Frank violations, or any consequences of creative finance transactions.</strong>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section>
               <h2 className="text-2xl font-semibold text-primary-text mb-4">18. Governing Law and Dispute Resolution</h2>
               <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 mb-4">
                 <p className="font-bold text-slate-800">⚖️ BINDING ARBITRATION & CLASS ACTION WAIVER</p>
@@ -670,10 +749,18 @@ export default function TermsOfService() {
                 <ul className="list-disc ml-6 mt-2 space-y-1 text-slate-700">
                   <li><strong>WAIVE YOUR RIGHT TO A JURY TRIAL</strong></li>
                   <li><strong>WAIVE YOUR RIGHT TO PARTICIPATE IN CLASS ACTION LAWSUITS</strong></li>
-                  <li><strong>RESOLVE ALL DISPUTES THROUGH BINDING ARBITRATION</strong></li>
+                  <li><strong>RESOLVE ALL DISPUTES THROUGH BINDING ARBITRATION IN SHELBY COUNTY, TENNESSEE</strong></li>
                 </ul>
               </div>
-              <p>These Terms shall be governed by the laws of the State of Texas. Any disputes arising from these Terms or your use of the service shall be resolved exclusively through binding arbitration in accordance with the rules of the American Arbitration Association.</p>
+              <p className="mb-4">These Terms shall be governed by the laws of the <strong>State of Tennessee</strong>.</p>
+              <p><strong>Any and all disputes</strong> arising from or relating to these Terms, your use of the OwnerFi platform, property information, creative finance structures, lead purchases, or any other matter shall be resolved <strong>exclusively through binding arbitration in Shelby County, Tennessee</strong> in accordance with the rules of the American Arbitration Association.</p>
+              <p className="mt-4"><strong>You expressly waive:</strong></p>
+              <ul className="list-disc ml-6 mt-2 space-y-1">
+                <li>Your right to a jury trial</li>
+                <li>Your right to participate in class action lawsuits</li>
+                <li>Your right to litigate disputes in any court</li>
+              </ul>
+              <p className="mt-4 font-bold">This arbitration clause is binding and enforceable. All users agree to resolve disputes through arbitration only.</p>
             </section>
 
             <section>

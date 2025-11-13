@@ -3,6 +3,7 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import Image from 'next/image';
 import { PropertyListing } from '@/lib/property-schema';
+import { LEGAL_DISCLAIMERS, SAFE_UI_LABELS, LEGAL_COLORS, AGENT_CONTACT_DISCLAIMER } from '@/lib/legal-disclaimers';
 
 interface PropertyCardProps {
   property: PropertyListing;
@@ -114,16 +115,21 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
         <div className="absolute top-0 left-0 right-0 p-3 flex items-start justify-between z-10">
           {/* Left Side Badges - Horizontal */}
           <div className="flex gap-2">
-            {/* Owner Finance Badge */}
-            <div className="bg-emerald-500 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg flex items-center gap-1.5">
-              <span className="text-sm">🏠</span>
-              <span>Owner Finance</span>
+            {/* Owner Finance Badge - Neutral Color */}
+            <div className="bg-slate-600 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg">
+              <div className="flex items-center gap-1.5">
+                <span className="text-sm">🏠</span>
+                <span>{SAFE_UI_LABELS.OWNER_FINANCE_BADGE}</span>
+              </div>
+              <div className="text-[7px] text-white/70 mt-0.5 font-normal">
+                {LEGAL_DISCLAIMERS.OWNER_FINANCE_BADGE}
+              </div>
             </div>
 
-            {/* Negotiable Badge */}
-            <div className="bg-blue-500 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg flex items-center gap-1.5">
+            {/* Terms May Vary Badge */}
+            <div className="bg-slate-500 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg flex items-center gap-1.5">
               <span className="text-sm">💬</span>
-              <span>Negotiable</span>
+              <span>{SAFE_UI_LABELS.NEGOTIABLE_BADGE}</span>
             </div>
           </div>
 
@@ -246,13 +252,21 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
               onMouseMove={(e) => e.stopPropagation()}
               onMouseUp={(e) => e.stopPropagation()}
             >
+              {/* PERSISTENT LEGAL DISCLAIMER - Always Visible */}
+              <div className={`${LEGAL_COLORS.WARNING_BG} border-2 ${LEGAL_COLORS.WARNING_BORDER} rounded-xl p-2 mb-3`}>
+                <p className={`text-[9px] ${LEGAL_COLORS.WARNING_TEXT} font-semibold text-center leading-tight`}>
+                  {LEGAL_DISCLAIMERS.PERSISTENT_WARNING}
+                </p>
+              </div>
+
               {/* Price - Compact */}
               <div className="mb-2">
                 <div className="text-2xl font-black text-slate-900 mb-0">
                   ${property.listPrice?.toLocaleString()}
                 </div>
-                <div className="text-emerald-600 font-bold text-xs">
-                  est. ${monthlyPayment.toLocaleString()}/month
+                <div className="text-slate-500 text-[10px] leading-tight">
+                  <div className="font-bold">{SAFE_UI_LABELS.MONTHLY_PAYMENT} ${monthlyPayment.toLocaleString()}/mo</div>
+                  <div className="text-[9px] text-slate-400">{LEGAL_DISCLAIMERS.MONTHLY_PAYMENT}</div>
                 </div>
               </div>
 
@@ -332,11 +346,14 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
                 <div className="space-y-4 pt-4 border-t border-slate-200">
                   {/* Property Description */}
                   {property.description && (
-                    <div className="bg-gradient-to-br from-slate-50 to-blue-50 rounded-2xl p-4">
-                      <h3 className="font-bold text-slate-900 mb-3 flex items-center gap-2 text-base">
+                    <div className="bg-gradient-to-br from-slate-50 to-blue-50 rounded-2xl p-4 border border-slate-200">
+                      <h3 className="font-bold text-slate-900 mb-1 flex items-center gap-2 text-sm">
                         <span className="text-lg">📝</span>
-                        <span>Property Description</span>
+                        <span>{SAFE_UI_LABELS.PROPERTY_DESCRIPTION}</span>
                       </h3>
+                      <p className="text-[9px] text-slate-500 mb-2 italic leading-tight">
+                        {LEGAL_DISCLAIMERS.PROPERTY_DESCRIPTION}
+                      </p>
                       <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">
                         {property.description}
                       </p>
@@ -346,10 +363,13 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
                   {/* Rental Estimate */}
                   {property.rentZestimate && property.rentZestimate > 0 && (
                     <div className="bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-200 rounded-2xl p-4">
-                      <h3 className="font-bold text-purple-900 mb-2 flex items-center gap-2 text-sm">
+                      <h3 className="font-bold text-purple-900 mb-1 flex items-center gap-2 text-sm">
                         <span>🏘️</span>
-                        <span>Investment Potential</span>
+                        <span>{SAFE_UI_LABELS.INVESTMENT_SECTION}</span>
                       </h3>
+                      <p className="text-[9px] text-purple-700 mb-2 leading-tight">
+                        {LEGAL_DISCLAIMERS.INVESTMENT_INFO}
+                      </p>
                       <div className="space-y-2">
                         <div>
                           <div className="text-xs text-purple-700 mb-1">Est. Monthly Rent (Zillow)</div>
@@ -359,25 +379,31 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
                         </div>
                         {property.monthlyPayment && property.rentZestimate > property.monthlyPayment && (
                           <div className="bg-white/60 rounded-lg p-2 mt-2">
-                            <div className="text-xs text-purple-700 mb-1">Potential Monthly Cash Flow</div>
+                            <div className="text-xs text-purple-700 mb-1">Potential Monthly Cash Flow (Simplified)</div>
                             <div className="text-lg font-bold text-green-600">
                               +${(property.rentZestimate - property.monthlyPayment).toLocaleString()}/mo
                             </div>
                             <p className="text-[10px] text-purple-600 mt-1">
-                              Rent could cover mortgage + generate positive cash flow
+                              Simplified estimate only - does not include vacancy, maintenance, capex, or management costs
                             </p>
                           </div>
                         )}
                       </div>
+                      <p className="text-[10px] text-purple-800 mt-2 font-semibold">
+                        ⚠️ {LEGAL_DISCLAIMERS.INVESTMENT_WARNING}
+                      </p>
                     </div>
                   )}
 
                   {/* Monthly Payment Breakdown */}
-                  <div className="bg-slate-50 rounded-2xl p-4">
-                    <h3 className="font-bold text-slate-900 mb-3 flex items-center gap-2 text-sm">
+                  <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200">
+                    <h3 className="font-bold text-slate-900 mb-1 flex items-center gap-2 text-sm">
                       <span>💰</span>
-                      <span>Est. Monthly Payment Breakdown</span>
+                      <span>{SAFE_UI_LABELS.PAYMENT_BREAKDOWN}</span>
                     </h3>
+                    <p className="text-[9px] text-slate-500 mb-3 leading-tight">
+                      {LEGAL_DISCLAIMERS.PAYMENT_BREAKDOWN}
+                    </p>
                     <div className="space-y-2 text-xs">
                       <div className="flex justify-between">
                         <span className="text-slate-600">Principal & Interest</span>
@@ -399,11 +425,14 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
                   </div>
 
                   {/* Down Payment */}
-                  <div className="bg-blue-50 rounded-2xl p-4">
-                    <h3 className="font-bold text-blue-900 mb-2 flex items-center gap-2 text-sm">
+                  <div className="bg-blue-50 rounded-2xl p-4 border border-blue-200">
+                    <h3 className="font-bold text-blue-900 mb-1 flex items-center gap-2 text-sm">
                       <span>💵</span>
-                      <span>Est. Down Payment Required</span>
+                      <span>{SAFE_UI_LABELS.DOWN_PAYMENT}</span>
                     </h3>
+                    <p className="text-[9px] text-blue-700 mb-2 leading-tight">
+                      {LEGAL_DISCLAIMERS.DOWN_PAYMENT}
+                    </p>
                     <div className="text-xl font-black text-blue-900">
                       est. ${property.downPaymentAmount?.toLocaleString()}
                     </div>
@@ -412,29 +441,35 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
                         ? `Approximately ${Math.round((property.downPaymentAmount / property.listPrice) * 100)}% of purchase price`
                         : ''}
                     </p>
+                    <p className="text-[10px] text-blue-900 mt-2 font-semibold">
+                      ⚠️ This is an illustration only - not a guarantee
+                    </p>
                   </div>
 
                   {/* Financing Terms */}
-                  <div className="bg-slate-50 rounded-2xl p-4">
-                    <h3 className="font-bold text-slate-900 mb-3 flex items-center gap-2">
+                  <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200">
+                    <h3 className="font-bold text-slate-900 mb-1 flex items-center gap-2 text-sm">
                       <span>📋</span>
-                      <span>Financing Terms</span>
+                      <span>{SAFE_UI_LABELS.FINANCING_TERMS}</span>
                     </h3>
+                    <p className="text-[9px] text-slate-500 mb-3 leading-tight">
+                      {LEGAL_DISCLAIMERS.FINANCING_TERMS}
+                    </p>
                     <div className="grid grid-cols-2 gap-3 text-sm">
                       <div>
-                        <div className="text-slate-600 text-xs mb-1">Interest Rate</div>
+                        <div className="text-slate-600 text-xs mb-1">Interest Rate (est.)</div>
                         <div className="font-bold text-slate-900 text-lg">
                           {property.interestRate && property.interestRate > 0
-                            ? `est. ${property.interestRate}%`
-                            : <span className="text-slate-400">Contact seller</span>}
+                            ? `~${property.interestRate}%`
+                            : <span className="text-slate-400">TBD by seller</span>}
                         </div>
                       </div>
                       <div>
-                        <div className="text-slate-600 text-xs mb-1">Loan Term</div>
+                        <div className="text-slate-600 text-xs mb-1">Loan Term (est.)</div>
                         <div className="font-bold text-slate-900 text-lg">
                           {property.termYears && property.termYears > 0
-                            ? `est. ${property.termYears} years`
-                            : <span className="text-slate-400">Contact seller</span>}
+                            ? `~${property.termYears} years`
+                            : <span className="text-slate-400">TBD by seller</span>}
                         </div>
                       </div>
                     </div>
@@ -456,10 +491,10 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
                     </div>
                   )}
 
-                  {/* Disclaimer */}
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-3">
-                    <p className="text-xs text-yellow-800">
-                      💡 Estimates shown are not guaranteed. Monthly payments may or may not include property taxes and insurance. Taxes, insurance, and HOA fees vary by property. Please verify all payment details and what's included with the seller.
+                  {/* Comprehensive Disclaimer */}
+                  <div className={`${LEGAL_COLORS.WARNING_BG} border ${LEGAL_COLORS.WARNING_BORDER} rounded-xl p-3`}>
+                    <p className={`text-xs ${LEGAL_COLORS.WARNING_TEXT} font-medium`}>
+                      💡 {LEGAL_DISCLAIMERS.GENERAL_ESTIMATES}
                     </p>
                   </div>
 
@@ -486,6 +521,7 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
                         window.open(`sms:${phone}&body=${encodeURIComponent(message)}`, '_self');
                       }}
                       className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white py-2.5 px-4 rounded-xl font-bold text-sm shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-95 transition-all"
+                      title={AGENT_CONTACT_DISCLAIMER}
                     >
                       <div className="flex items-center justify-center gap-2">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -494,6 +530,13 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
                         <span>Contact Agent</span>
                       </div>
                     </button>
+                  </div>
+
+                  {/* Agent Relationship Disclaimer */}
+                  <div className="mt-2">
+                    <p className="text-[9px] text-slate-500 text-center italic">
+                      {AGENT_CONTACT_DISCLAIMER}
+                    </p>
                   </div>
                 </div>
               )}

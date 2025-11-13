@@ -1450,6 +1450,24 @@ export default function AdminDashboard() {
                         </td>
                         <td className="px-3 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900">${property.listPrice?.toLocaleString()}</div>
+                          {(property as any).estimatedValue && (property as any).estimatedValue > 0 && (
+                            <>
+                              <div className="text-xs text-gray-500 mt-1">Estimate: ${((property as any).estimatedValue)?.toLocaleString()}</div>
+                              <div className="text-xs font-medium mt-0.5" style={{
+                                color: property.listPrice && (property as any).estimatedValue
+                                  ? (property.listPrice / (property as any).estimatedValue) <= 0.95
+                                    ? '#10b981' // green if price is 95% or less of estimate
+                                    : (property.listPrice / (property as any).estimatedValue) >= 1.05
+                                    ? '#ef4444' // red if price is 105% or more of estimate
+                                    : '#6b7280' // gray if within 5%
+                                  : '#6b7280'
+                              }}>
+                                {property.listPrice && (property as any).estimatedValue
+                                  ? `${((property.listPrice / (property as any).estimatedValue) * 100).toFixed(1)}% of estimate`
+                                  : ''}
+                              </div>
+                            </>
+                          )}
                         </td>
                         <td className="px-3 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900">${property.downPaymentAmount?.toLocaleString()}</div>

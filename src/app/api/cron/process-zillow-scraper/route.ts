@@ -101,7 +101,7 @@ export async function GET(request: NextRequest) {
         // Check if document exists
         const existingDoc = await docRef.get();
 
-        if (existingDoc.exists()) {
+        if (existingDoc.exists) {
           // Update existing property
           firestoreBatch.set(docRef, {
             ...propertyData,
@@ -150,6 +150,8 @@ export async function GET(request: NextRequest) {
       success: true,
       jobId,
       imported,
+      updated,
+      duplicatesRemoved,
     });
 
   } catch (error: any) {

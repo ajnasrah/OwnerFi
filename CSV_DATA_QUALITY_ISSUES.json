@@ -1,0 +1,1990 @@
+[
+  {
+    "opportunityId": "UUNE0aZtAL9dVVGt1UTx",
+    "address": "MISSING",
+    "field": "Property Address",
+    "value": "",
+    "issue": "Missing property address"
+  },
+  {
+    "opportunityId": "UUNE0aZtAL9dVVGt1UTx",
+    "address": "",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "goyZ70BNZIy2ZHhbyuzC",
+    "address": "7348 N 38th Ave, Phoenix, AZ 85051",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "1QVou8K3swjfghkO431y",
+    "address": "9 Apple Tree Cir, Little Rock, AR 72210",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "Mo6OWcDOr4rr0gd6PCSc",
+    "address": "19229 Colonel Glenn Rd, Little Rock, AR 72210",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "VOh6Vq3JvL81sPSuxP55",
+    "address": "9115 Merrivale Dr, Little Rock, AR 72209",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "Aig2XbKrVHyOUgKINgSg",
+    "address": "257 E Raleigh Blvd",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "IIxJPCkQ4YVbGt6pyids",
+    "address": "711 S Pine St",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "xZKcsddAZzIoFLe6Xp4n",
+    "address": "1280 Mohave Dr APT 28, Bullhead City, AZ 86442",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "nWjfLR6pwrm8VZ8yC8gA",
+    "address": "8680 W Bolsa Dr, Golden Valley, AZ 86413",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "GsBtWqH6A8PDUxRwcWPs",
+    "address": "6060 E River Rd, Tucson, AZ 85750",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "2JEJvudipIzVdz5OpPbM",
+    "address": "9938 W Century Dr, Arizona City, AZ 85123",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "NjSSJpomAub96wdvVBnV",
+    "address": "8306 W PINEVETA DR, Arizona City, AZ 85123",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "H3hifAqUDVP0p1pJImMg",
+    "address": "3163 Lindale Mount Holly Rd, Amelia, OH 45102",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "Lx7BAYqT96sc0MCecGCe",
+    "address": "720 Dickinson St SE, Grand Rapids, MI 49507",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "AtrpnKyWbQR8lP3tqeSk",
+    "address": "1958 Louise St, Highland Park, MI 48203",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "pSRVVeNZ1yYlPj2YYwxG",
+    "address": "67-47 136th St #A, Flushing, NY 11367",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "mp8m46ZdF7xuALRBqLl0",
+    "address": "24523 Hayes Ave, Eastpointe, MI 48021",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "n3dcxBU4NULS7DbG7tKZ",
+    "address": "2 Radnor Street, Staten Island, NY 10312",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "gt0BEW2AFVSuAJdBdfKi",
+    "address": "4448 Greenwood Dr, Okemos, MI 48864",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "bbuciRFBH7oTyEOMC3wB",
+    "address": "212 E Tremont Ave #9, Bronx, NY 10457",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "CKsqKyp4UZM0OR2gMfCz",
+    "address": "1416 Bourbon St APT 4, New Orleans, LA 70116",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "vw7FRAILFdMIbmMgpKCS",
+    "address": "2328 Bridle Creek Creek SE Kentwood, MI 49508",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "GB9zxLlXdEAuig90662E",
+    "address": "2786 E 127th St, Cleveland, OH 44120",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "DoOJ44qi1gd3gpdJJhjP",
+    "address": "1742 Taft Ave NE, Canton, OH 44705",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "GXlLvghMOfZKBGhMtqC7",
+    "address": "841 Whitcomb Rd, Cleveland, OH 44110",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "hLKaw3AYUxXCOtWPNv7d",
+    "address": "1207 S Ocean Blvd. #51511, Myrtle Beach, SC 29577",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "afr1BhOaW4fCkTo7vqgd",
+    "address": "1321 S Ocean Blvd. #703, North Myrtle Beach, SC 29582",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "KfIz9ia7tSpNDVCeOQj5",
+    "address": "140 Mimosa Rd LOT 27, Inman, SC 29349",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "lrOJNBPxz87eRLvfTPIA",
+    "address": "3 Meadowlands Way, Greenville, SC 29615",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "IAIIf9iOZWV6lLje0p4L",
+    "address": "793 Apple Valley Rd, Loris, SC 29569",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "A8sAF6t0xWIVhFEBz94b",
+    "address": "2125 Nance St, Newberry, SC 29108",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "ali8UzqnD44BVuhPdHmD",
+    "address": "643 Whitewood Way, North Augusta, SC 29860",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "hqpGPL0yjrKjd2jefLgz",
+    "address": "106 Brickway St, Bluffton, SC 29910",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "GzIWPghnJHMTU7Vd3mvz",
+    "address": "820 Drayton St, Newberry, SC 29108",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "Ganu233xIx4tbtrdli1i",
+    "address": "228 Anita Dr, Spartanburg, SC 29302",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "aa4hDT2nr1pEZwUoJ5BW",
+    "address": "1049 Blythwood Dr, Piedmont, SC 29673",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "CdrgIbq7Qkti1frmYmK5",
+    "address": "280 Kari Dr, Westminster, SC 29693",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "N9mPWvuCw5zUTEUiWU23",
+    "address": "1753 Shealy Rd, Leesville, SC 29070",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "kBLwvVi70gd0WU20oeGS",
+    "address": "3151 Holly Loop, Conway, SC 29527",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "M094QQyouM9aqoT7D1MV",
+    "address": "3350 Club Villas Dr # 1403, Southport, Nc 28461",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "MEwIe5yoNaI381YWDiIg",
+    "address": "52 Baby Jane Ln, Hendersonville, NC 28792",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "3yDbKaPpkixRJZKv9v7j",
+    "address": "216 Cane Road, Boone, NC 28607",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "LYx2X4a5p1FAiEWdUptv",
+    "address": "294 Pipers Gap Rd, Mount Airy, NC 27030",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "gmKJ7Ig38gZSvMnSwDLq",
+    "address": "2000 New River Inlet Road Unit 3302, North Topsail Beach, NC 28460",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "KEjB8mezgm06qGPwVe5S",
+    "address": "790 Mountain Park Rd, State Road, NC 28676",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "BgNxZbgMlOOlKnxYoLq0",
+    "address": "311 S Washington Ave, Reidsville, NC 27320",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "m5m83FNgp7evzlwCcRfU",
+    "address": "702 Kirkeenan Cir, Morrisville, NC 27560",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "CA6F17IxnFG3hRGaknHj",
+    "address": "897 Fording Island Rd APT 506, Bluffton, SC 29910",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "06L9vdVZEh0IFbnlGbtA",
+    "address": "1207 Ocean Blvd. S #50805, Myrtle Beach, SC 29577",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "xwrhghOncVDKdcH0IRAK",
+    "address": "259 River Mountain Rd, Murphy, NC 28906",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "q0rhRqoDCJCp97JykenY",
+    "address": "1100 Clarendon St APT 408, Fayetteville, NC 28305",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "CFlF7uPp6BDVSCSKkDjZ",
+    "address": "252 Trillium Road, Newland, NC 28657",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "fWnDd1h47v4RmBZybPZQ",
+    "address": "136 Waccamaw Shores Road, Lake Waccamaw, NC 28450",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "bNZcAsZqdCBdTo2AtkCy",
+    "address": "2920 Chambers Rd, Anderson, SC 29626",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "NZlGdeAniNpG84ZUHqp7",
+    "address": "200 76th Ave N #307, Myrtle Beach, SC 29572",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "vm5dIionRb24bV1M8Wxl",
+    "address": "1501 S Ocean Blvd. #435, Myrtle Beach, SC 29577",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "WU8NuvpqZ3S9QqjkO0mz",
+    "address": "208 Big Woods Cir, Belton, SC 29627",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "gDCQs5psPrhStV9nOrHG",
+    "address": "1207 S Ocean Blvd UNIT 50901, Myrtle Beach, SC 29577",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "YMglZVDoRPOdn5vVSBvE",
+    "address": "14 Damson St, Spartanburg, SC 29303",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "LdxjFgJmRxY9lCjz1NWn",
+    "address": "350 Dakota St, Spartanburg, SC 29303",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "O9eVny9u549qJbto4IAl",
+    "address": "43 Birdsong Ln, Taylors, SC 29687",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "Bkx4mEYLiFfwMyoFBiG6",
+    "address": "1007 Mustelidae Rd, Beaufort, SC 29902",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "adP8OUdCrxwiDkxctoUy",
+    "address": "1207 S Ocean Blvd. #50401, Myrtle Beach, SC 29577",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "UCSWIBpIfgdBgF8A670Y",
+    "address": "1207 Ocean Blvd. S #50801, Myrtle Beach, SC 29577",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "2jmwP0X3h0Bon6WwQs5K",
+    "address": "224 Regency Cir, Anderson, SC 29625",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "lewKmAKDmVluEWW15w8o",
+    "address": "36 Brookline St, Great Falls, SC 29055",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "rXZUCp0rOCf1zKkspDZQ",
+    "address": "3560 Offshore Ct, Lake Havasu City, AZ 86406",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "SUoV4nEmI5LfMTLywIMw",
+    "address": "276 Lake Havasu Ave S APT B18, Lake Havasu City, AZ 86403",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "CIpp9D4XkE0Pn0fufgPw",
+    "address": "611 W James St, Lillington, NC 27546",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "1T7ylEFYynOoAWnawSlA",
+    "address": "19820 N 13th Ave UNIT 226, Phoenix, AZ 85027",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "TFHYAMwyWjnG4WwusxPZ",
+    "address": "2138 S Scales St, Reidsville, NC 27320",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "y3ddhNgrUCL9wU6AbaDB",
+    "address": "1112 Clapboard Lane, Leland, NC 28451",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "QfgR4YzkgvxUDjfDnPtg",
+    "address": "3062 N 42nd Ave, Phoenix, AZ 85019",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "ouvEBKhLAeSdpixx3R2V",
+    "address": "482 W 3rd Ave, Eagar, AZ 85925",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "zdtlZydQyMuSdOzl5tFs",
+    "address": "3305 Friar Tuck Rd, Raleigh, NC 27610",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "x7Pvy0VPC6VxPnX9F2yW",
+    "address": "10048 W San Lazaro Dr, Arizona City, AZ 85123",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "hUTdXqxnZSvPWk7xm9LV",
+    "address": "2464 Ohara Dr, Raeford, NC 28376",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "E8UYBingTQbqt6Z1BFve",
+    "address": "175 Ketchie Estates Rd, China Grove, NC 28023",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "12fT09ZOb1PDHKO6LZeI",
+    "address": "411 Westside Dr, Lexington, NC 27292",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "IFbJtq19nGDnooyjqc7m",
+    "address": "376 Red Fox Run Drive, Wallace, NC 28466",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "Fgv7ZRP9KIZKJp53QC1k",
+    "address": "1410 W Thomas Street, Rocky Mount, NC 27804",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "6iVrvEmu83MaIPew1iOq",
+    "address": "4242 Kaplan Dr, Raleigh, NC 27606",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "YQjx1jblYuvm8gTo7Yfr",
+    "address": "230 Park Avenue, Rocky Mount, NC 27801",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "wEBf2FBLG8g9A6slxWmT",
+    "address": "105 Grassy Creek Dr, State Road, NC 28676",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "LNqukfQUqGS1i3CZDRQr",
+    "address": "311 N 2nd Street #B, Wilmington, NC 28401",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "XNZGYSe5EWR0DbjHZtnD",
+    "address": "252 Sourwood Court, Cashiers, NC 28774",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "WB5j7QPMeAWz8XSTk3bU",
+    "address": "3541 Holden Acres Dr, Wendell, NC 27591",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "qv56iBdc9ILJTa3Bu60E",
+    "address": "109 E South Street, Kinston, NC 28501",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "G6Y7cPvgDEyYSlOgBliC",
+    "address": "2808 Farmers Union Road, Clarkton, NC 28433",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "LRsCVSQR1fpEt9ig2WaN",
+    "address": "582 Five Mile Road, Richlands, NC 28574",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "ZCvqdq9fO57NiBEuoJT0",
+    "address": "40 Squirrel Ln, Sapphire, NC 28774",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "OiGsX30v3eRSHrxPOeBr",
+    "address": "621 Shepard School Rd, Zebulon, NC 27597",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "9PMboBmqUpFPqXBfl7vl",
+    "address": "924 Louisa Chapel Rd, Franklin, NC 28734",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "s4zUoK9xeBV3n6WX36JQ",
+    "address": "2544 N 52nd Ave, Phoenix, AZ 85035",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "YJKrO9LSwkJAObz1tC5a",
+    "address": "4625 W Thomas Rd UNIT 48, Phoenix, AZ 85031",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "H8dUGVMynoxvpOtmYTGP",
+    "address": "441 Moser Ave APT A6, Bullhead City, AZ 86429",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "dr9k0SIDWvlkqNOBYmJ6",
+    "address": "1800 Clubhouse Dr UNIT 108, Bullhead City, AZ 86442",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "VGVuGfiIwe9UStvAP686",
+    "address": "1720 E Thunderbird Rd UNIT 1094, Phoenix, AZ 85022",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "arhS9KiW0pz4vSGJaDId",
+    "address": "2610 E Bluff Spring Ave, Apache Junction, AZ 85119",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "N7j5dRiTBLPgJRNXhtfE",
+    "address": "4641 Pioneer Ln, Lakeside, AZ 85929",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "dcTzGzBd7oxcVs7csXbk",
+    "address": "2609 Dumbarton Rd, Fayetteville, NC 28306",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "vQUdNv1V1wIY8QmhVlNv",
+    "address": "777 Harrah Way APT 404, Lake Havasu City, AZ 86403",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "RUFebC40k1YCHc8ZZW4G",
+    "address": "231 Geisky Creek Rd, Hayesville, NC 28904",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "qZB6J46wCPjIkjzV35EB",
+    "address": "107 Chesterfield Dr, Elizabeth City, NC 27909",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "gkz9lOElF8OHbem4HRlw",
+    "address": "2556 Vandola Rd, Danville, VA 24541",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "N1pwdRzxUyjhrAwcREWR",
+    "address": "923 Belvedere Street, Rocky Mount, NC 27803",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "0BVxzUS4sDIBGtQGgmWN",
+    "address": "2211 W Pecan Rd, Phoenix, AZ 85041",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "kd5OpCudAWG3zgmxBB9c",
+    "address": "3413 Laurel Ln #3413, Winston Salem, NC 27101",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "F8B359YBuvr7Dwt9VYFa",
+    "address": "8290 S Smoketree Ln, Mohave Valley, AZ 86440",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "DcsvZqzfQ9hi2xeOzQro",
+    "address": "40130 N Thunder Hills Ct, Phoenix, AZ 85086",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "K9ouzxQQRaY9CdSBsF9Q",
+    "address": "1448 E Mobile Ln, Phoenix, AZ 85040",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "yoDs01KPtWhn3Le5BUt5",
+    "address": "2751 Pine View Ct, Overgaard, AZ 85933",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "eHO8DHJkjL62NXXsO00M",
+    "address": "41303 W Hensley Way, Maricopa, AZ 85138",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "zohooHrYhGydrXKxnghE",
+    "address": "49 Norma Way, Ash Fork, AZ 86320",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "UhE3F4znqpQPAg5vKXoR",
+    "address": "15756 W Redfield Rd, Surprise, AZ 85379",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "AmijwoAdmvjeN0eGVWAb",
+    "address": "17040 E De Anza Dr, Fountain Hills, AZ 85268",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "GvDzaXzDY1kezwDnwA3p",
+    "address": "4303 W Vista Ave, Glendale, AZ 85301",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "x3BVp2vimDSyE4NvT642",
+    "address": "1251 W Kiva Ave, Mesa, AZ 85202",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "f8VZjgQQ50GqMJJe4s7a",
+    "address": "6842 N 36th Dr, Phoenix, AZ 85019",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "kfGoWLukC70QZYjceMN3",
+    "address": "18218 N 24th Ave, Phoenix, AZ 85023",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "4txakQKhmabopkGhW8Fj",
+    "address": "7777 E Main St UNIT 227, Scottsdale, AZ 85251",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "nDv7vnQFMpgPkIeTB8hd",
+    "address": "2280 Huntington Dr, Lake Havasu City, AZ 86403",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "QbXEqf3NbEdT7cuV8uNe",
+    "address": "6090 S Bella Vista Dr, Fort Mohave, AZ 86426",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "WcKOcXcMF26a4jfNP535",
+    "address": "19700 N 76th St APT 2057, Scottsdale, AZ 85255",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "yHs71EtRAYdePyAO1yUI",
+    "address": "1810 E Blacklidge Dr APT 726, Tucson, AZ 85719",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "So8hyedKPDc6VLjwzdIF",
+    "address": "13202 W Gemstone Dr, Sun City, AZ 85375",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "3Azc1TGsqQ6sPOf6JIPn",
+    "address": "512 W Brown St, Tempe, AZ 85281",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "8gK82n8MbAObOjd4Ngfd",
+    "address": "5775 S Camino Del Sol #6104, Green Valley, AZ 85614",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "Xk9no3gVslepRM8MC4G5",
+    "address": "6415 S Montezuma St, Phoenix, AZ 85041",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "qX3pMCbbzkbSQ3Imk0OT",
+    "address": "16935 W Central St, Surprise, AZ 85388",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "ZEQMxG94EtNTU7KE9rJ7",
+    "address": "220 E Ocotillo St, Casa Grande, AZ 85122",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "g5cmNgZf749Rd32jbQVK",
+    "address": "1930 E Hayden Ln UNIT 110, Tempe, AZ 85281",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "HoyKRTulk0TBuQ6JH2iI",
+    "address": "4134 W Electra Ln, Glendale, AZ 85310",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "KkOEJ88uJ6ikg8Zy5sdU",
+    "address": "2428 S Coleman St, Bisbee, AZ 85603",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "VQcfZjEaf5sAWQhHNbNG",
+    "address": "15123 W Custer Ln, Surprise, AZ 85379",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "Cc8Kth5H6D6dUnroRynN",
+    "address": "2695 E Big Four Rd, Prescott, AZ 86303",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "R7P5EbwR2lNtEbKs1HJr",
+    "address": "36690 W PIMA Drive Stanfield, AZ 85172",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "81USMN13aGAIGrtCROql",
+    "address": "631 S Canyon Dr E, Prescott, AZ 86303",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "LhTh2MjxYTOnA8E2Plb0",
+    "address": "1119 E 3rd St, Casa Grande, AZ 85122",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "PgmJYUwoZAX7iTKv6Pqr",
+    "address": "500 E Country Club Dr #24, Yuma, AZ 85365",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "dS7m8V1lRQQcHAdASMzk",
+    "address": "2270 E Alpine Ave, Mesa, AZ 85204",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "0lI3gTvogDqL3hnDRPfE",
+    "address": "35 Silver Brook Lane, North Granby, CT 06060",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "YXGSGUhfQpx88rXfelB0",
+    "address": "1827 E 13th St, Tucson, AZ 85719",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "cTgFphCIE7XlpfWxqCu2",
+    "address": "2540 N Stone Hill Rd, Buckeye, AZ 85396",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "bmowbhszFlXExkJDmXX3",
+    "address": "20249 W Woodlands Ave, Buckeye, AZ 85326",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "woPxHqetTYpwI2l1jEO3",
+    "address": "3915 E Greer St, Miami, AZ 85539",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "JDJuQ4Oa39CgRWyQEZxB",
+    "address": "4622 E Flower Ave, Mesa, AZ 85206",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "6fYIhHLXXQmabDKJG6qh",
+    "address": "6000 E River Rd, Tucson, AZ 85750",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "Tsdal5bsF5ZKvXpVsEfW",
+    "address": "383 S Taylors Trl, Sierra Vista, AZ 85635",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "b9CpevhUnP8WcclGkx18",
+    "address": "1038 W Pecos Ave, Mesa, AZ 85210",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "uEyf4hWEaJVzzXvVBSUJ",
+    "address": "177 Via Agua Sarca, Rio Rico, AZ 85648",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "JMe9taPfrkJ6wsGsdkpM",
+    "address": "3016 W Blue Sky Dr, Phoenix, AZ 85083",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "0d8gaFfIqPZH1BAkod3M",
+    "address": "246 W Tabascoe Pl, Oro Valley, AZ 85755",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "OWDgBxFsFdn702p3GGfO",
+    "address": "261 W 21st Ave, Apache Junction, AZ 85120",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "teV2RUA5SbxbM3VhCk0N",
+    "address": "1173 E Cordova Ave, Casa Grande, AZ 85122",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "vKv7gPjN2x3xIUCzhjIx",
+    "address": "34 Circulo Diego Rivera, Tubac, AZ 85646",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "JRjpfz8GOY7PzZIk2xw3",
+    "address": "2837 N 71st Ave, Phoenix, AZ 85035",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "9SKVNz7C85gWI7gutr2g",
+    "address": "461 W Center St, Snowflake, AZ 85937",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "cDTp8lIVz9RQuOqoskKO",
+    "address": "412 S 1st St, Williams, AZ 86046",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "CEV9yZaeSnqyJoeYAOev",
+    "address": "4152 W Crocus Dr, Phoenix, AZ 85053",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "GG8nNehwb6haT4AZgjWr",
+    "address": "13837 E Poelstra St, Vail, AZ 85641",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "QKkXm7VLbma8mR18Pq3p",
+    "address": "10931 W Benito Dr, Arizona City, AZ 85123",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "Z2QZI7FIjXKLl2x7x9sS",
+    "address": "289 N Divot Dr, Eagar, AZ 85925",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "69sUfudUMwr9ZA0b3qoR",
+    "address": "49 Norma Way, Ash Fork, AZ 86320",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "17PPaq1txG8kPJ7jVufJ",
+    "address": "1512 W Fairmont Dr, Tempe, AZ 85282",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "nnb7NjmWyrcUvQSgyjpV",
+    "address": "818 S Westwood APT 233, Mesa, AZ 85210",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "yZWw5pnSjoDLbZ85KfoQ",
+    "address": "1419 N Oak St, Tempe, AZ 85281",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "c8tKQN9HBNTdFCCa7sor",
+    "address": "22660 W Old Hwy 66, Seligman, Az 86337",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "IdjsFw5wFNKFy0zl6yIj",
+    "address": "7214 E Sablewood Dr, Prescott Valley, AZ 86315",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "mXihiUSz1q41QwrbRXsj",
+    "address": "3484 N Tindle Blvd, Flagstaff, AZ 86004",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "EODmJqNNY0Nh9dmD3eHc",
+    "address": "12716 Harvard Ave, Cleveland, OH 44105",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "gI3NZTa4IXpZ96Ccu3qO",
+    "address": "127 Bates St, Jackson, MI 49202",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "g0kZ5b8g8KGEDXiOMHEN",
+    "address": "1838 Shady Ln, Shreveport, LA 71118",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "mjZDwe8fbfQGMxQSlUls",
+    "address": "8921 Sweetbriar Ln, Shreveport, LA 71118",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "tr9bwGJgsxkd8nayOEAZ",
+    "address": "120 Waccamaw Shores Road, Lake Waccamaw, NC 28450",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "yMwdfsXl8SGQeFDDOxjO",
+    "address": "2310 N Ocean Blvd. #303, Myrtle Beach, SC 29577",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "7v3mYEoHAjes3AoC0naQ",
+    "address": "202 E Green St, Anderson, SC 29655",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "WmiX3dxJDfPFCwSKSM8e",
+    "address": "1020 Claire Dr, Slidell, LA 70461",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "CEZXhprUq77JzRSXFdm2",
+    "address": "825 Parkland Rd, Reidsville, NC 27320",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "7HWW4uh6TEglTDHuoTnb",
+    "address": "2928 Blanche Dr, Burlington, NC 27215",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "nrSehMoPYYPfhIJ3USDR",
+    "address": "270 Moulton Dr., Longs, SC 29568",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "1pSmVgFlv2al30S6hXA5",
+    "address": "487 Rifle Range Rd, Warrenton, NC 27589",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "hZSqk1RUAb4i9F89Knxm",
+    "address": "15416 Saranac Rd, Cleveland, OH 44110",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "xIWvWzY87zL6mcPap0xA",
+    "address": "3116 W 30th St, Cleveland, OH 44109",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "iCyUtCnxrjKHxECAx2Xk",
+    "address": "13677 Cedar Rd, University Heights, OH 44118",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "MMSSn6xVgzT382tuEPOy",
+    "address": "4031 E 53rd St, Newburgh Heights, OH 44105",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "LLH4VG4cLgPeFGVoo7y7",
+    "address": "8895 26th Ave APT 4A, Brooklyn, NY 11214",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "ucqSXa5iO4OYnnTs8zjZ",
+    "address": "18-15 215th St #15H, Bayside, NY 11360",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "PayjD0LJsSRMtoe8fdqs",
+    "address": "13613 Bartlett Ave, Cleveland, OH 44120",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "iGUyIs4K5zMgtmrAS4NA",
+    "address": "1015 Summit Avenue #6B, Bronx, NY 10452",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "ZdXn6utDT3hEJsyEUIc6",
+    "address": "83-25 Vietor Avenue #1D, Flushing, NY 11373",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "Pk89ufRlQsSVKh5X9d7U",
+    "address": "31-10 28th Road #1A, Astoria, NY 11102",
+    "field": "source",
+    "value": "Zillow",
+    "issue": "Invalid source URL"
+  },
+  {
+    "opportunityId": "OjgdPknUjhUSIqT87lkN",
+    "address": "1400 s lee circle",
+    "field": "zip code",
+    "value": "Needs about 15-20k in rehab",
+    "issue": "Invalid zip code format"
+  },
+  {
+    "opportunityId": "rRZIdJ1x797ZdIprZ2OA",
+    "address": "16 Monica Dr",
+    "field": "yearBuilt",
+    "value": "5",
+    "issue": "Invalid year (must be between 1800 and current year + 2)"
+  },
+  {
+    "opportunityId": "YOTApG7gzweNqANV72fU",
+    "address": "20810 Trenton Valley Ln",
+    "field": "zip code",
+    "value": "Welcome to this spacious 4-bedroom, 2.5-bath home nestled in a well-established and highly sought-after community. Offering an abundance of space both inside and out, this home is perfect for families, entertaining, or simply spreading out and enjoying comfortable living. The main level features a bright and open layout with generous living and dining areas, a well-appointed kitchen, and a cozy family room—ideal for gatherings or quiet evenings at home. Upstairs, you’ll find four generously sized bedrooms, including a serene primary suite with its own private bath and ample closet space.",
+    "issue": "Invalid zip code format"
+  },
+  {
+    "opportunityId": "up7ri2TB8SRfwTraIN9G",
+    "address": "206 E Gilmer St",
+    "field": "zip code",
+    "value": "OPEN HOUSE 8--4 to 8-10 10AM-2PM, NOW OFFERING SELLER FINANCING! Contact the agent for more details. Experience comfort, style, and ease in this beautifully new 3-bedroom, 2-bath home in the charming town of Rice. Designed for modern living, it features a bright, open floor plan perfect for both relaxing and entertaining. The kitchen boasts sleek countertops and plenty of cabinet space, ideal for everyday cooking or hosting guests. The spacious primary suite includes a private ensuite bathroom and walk-in closet, while two additional bedrooms provide flexibility for a guest room or home office. Built with energy efficiency and low-maintenance living in mind, this home offers all the perks of new construction without the wait. Enjoy the generous backyardperfect for outdoor fun, gardening, or peaceful evenings under the Texas sky. Conveniently located just minutes from I-45, commuting to nearby cities is easy while still enjoying the tranquility of small-town life.",
+    "issue": "Invalid zip code format"
+  },
+  {
+    "opportunityId": "SYZqy1WnFZiuc47Td27u",
+    "address": "2907 Kyle St",
+    "field": "zip code",
+    "value": "Welcome home to this stunning 5-bedroom, 3-bathroom residence built in 2017, situated on an oversized lot with a spacious driveway and no rear neighbors for added privacy! This beautifully updated home features premium vinyl plank flooring throughout the main living areas and a spacious covered patio perfect for entertaining or relaxing outdoors. The primary suite is conveniently located downstairs, offering a luxurious ensuite with a separate shower, soaking tub, walk-in closet and separate linen closet. Upstairs, you'll find four additional bedrooms, each with a spacious walk-in closet, plus a versatile bonus room, ideal for a game room, home office, or media space. Enjoy the benefits of high-speed 5G internet, and rest easy with no MUD or PID taxes. Third Party Seller Financing available!  Buyer's agents are welcome. Buyer's agent to verify schools and dimensions. Don't miss out on this incredible home schedule your tour today.",
+    "issue": "Invalid zip code format"
+  },
+  {
+    "opportunityId": "wPH8SwbEiUrn9pgxqbq8",
+    "address": "14525 Mainstay Way",
+    "field": "zip code",
+    "value": "OWNER FINANCING AVAILABLE. You'll love this warm and inviting Lennar single-story property, nestled in the Sendera Ranch neighborhood. This 2016 home has been meticulously maintained, and has fresh paint and new floors which were just installed.  This home boasts modern curb appeal with a brick façade and a modern entry, and an inviting open-concept layout with lots of natural light and windows.  The eat-in kitchen boasts rich cabinetry, granite countertops, all-stainless-steel appliances, and a comfortable breakfast area. A great floorplan allows you to retreat to the tucked-away bedrooms and the privacy of your primary suite. The master bath features granite countertops, dual sinks, tub, and modern shower.  Outside, the back covered patio overlooks a spacious backyard, perfect for creating your own outdoor oasis. Enjoy neighborhood amenities such as 3 pools, playgrounds, multiple walking trails, and sports facilities!  Come make this beautiful house your home!",
+    "issue": "Invalid zip code format"
+  },
+  {
+    "opportunityId": "O0AR0UdSpPhhfcAdNxGQ",
+    "address": "913 Meadow View Dr",
+    "field": "zip code",
+    "value": "No HOA fees! First, you will Notice the huge living dining area when you enter this clean and solid Mid-Century one-story Ranch style in a very nice, quiet and friendly Richardson, Texas neighborhood. You will Enjoy the park, lighted tennis courts, walking and jogging trails, Sports playing fields and the very popular Community pool! Walking distance to UTD Campus.\n The Community pool membership includes a fee, but well worth it. This move in ready home is Located in the  Highly acclaimed Mohawk Elementary and Pearce High School jurisdiction. All bedrooms have walk-in closets. The Large Master bedroom has a vanity and sitting area adjacent to the ensuite bathroom. The Walk-in closet in hallway could easily be converted to 2nd walk-in closet in Master bedroom. Both Bathrooms and plumbing are updated along with new flooring throughout the home. Recent Granite installed in Kitchen and breakfast bar. New interior paint, new driveway and new patio. New double pain energy efficient windows. New plumbing cleanouts. Hydrostatic test completed and passed. Nice size rear yard with privacy fence. 10x14 Gazebo in rear yard for outside enjoyment. Upgraded Heat and air conditioning. Kitchen range and oven are Electric, but access for gas appliance is an option. Also, you have a choice of an electric or gas dryer in Laundry closet. Your garage has an epoxy flaked floor with plenty of space for 2 cars plus a workbench and work area. Home is partially furnished at time of listing. It is not a divorce sale. Ha. Owner may offer financing with a 35% down payment at market rate.  Please call agent for details. All measurements are approximate. Please verify with your agent. Seller believes square footage is larger than what tax assessor shows.",
+    "issue": "Invalid zip code format"
+  },
+  {
+    "opportunityId": "WFbaLReez5s3fLTAfAy5",
+    "address": "19173 Greenleaf Dr",
+    "field": "zip code",
+    "value": "New Roof July 2025 and new HVAC August 2025 - located just off HWY 69 in a highly sought-after East Texas neighborhood, this 3-bedroom, 2-bathroom home offers the perfect mix of privacy and convenience. Just five minutes from Broadway Avenue, you’ll have quick access to top restaurants, shopping, grocery stores, and more. The interior has been freshly painted with light updates throughout, creating a clean and refreshed feel. Inside, the home features 10-foot ceilings in the spacious living room, a cozy fireplace, and durable tile flooring throughout most of the home. The primary suite includes dual closets for added comfort and functionality. Outside, the large fully fenced backyard with mature trees provides extra space, shade, and privacy, ideal for gatherings, pets, or play. This home combines neighborhood charm with city convenience, and owner financing is available.",
+    "issue": "Invalid zip code format"
+  },
+  {
+    "opportunityId": "VOJHRuB3bDzCx8ZQaaeN",
+    "address": "907 Colorado River Dr",
+    "field": "zip code",
+    "value": "OPEN HOUSE Saturday 08-16-25 from 12:00pm-2:00pm Owner financing available. Motivated Seller. Seller concessions offered with an acceptable offer.\n\nWelcome to your dream home in the heart of rapidly growing Granbury! Built in 2023, this charming and modern residence offers the perfect blend of comfort, style, and convenience.\n\nStep inside to an open floor plan with sleek tile flooring throughout, designed for easy living and low maintenance. The bright, airy kitchen features granite countertops, decorative lighting, and flows beautifully into the dining area. This home comes fully equipped with all appliances, including the refrigerator, washer, and dryer. Making it truly turn-key and move-in ready.\n\nRaised ceilings and stylish ceiling fans in every room create a spacious, breezy atmosphere. Enjoy the elegance of detailed ceiling designs in the bedrooms and a vaulted living room perfect for entertaining. The primary suite offers a large walk-in shower and thoughtful, luxurious finishes.\n\nOutside, you’ll find a fully fenced yard iron wrought in the front and privacy wood fencing in the back. Ideal for pets, gatherings, or relaxing evenings. The inviting front porch is just the spot for your morning coffee or evening wind-down.\n\nThis home also includes a charging port for electric vehicles, and yes the trampoline stays, too!\n\nTucked away in a peaceful setting yet just minutes from Lake Granbury, Hwy 377, and local shops, this home offers the best of both tranquility and accessibility.\n\nDon’t miss your chance to own this beautifully updated gem!",
+    "issue": "Invalid zip code format"
+  },
+  {
+    "opportunityId": "hfZ7c2XBd6PgGLIHhvhm",
+    "address": "1206 Cabernet Dr",
+    "field": "zip code",
+    "value": "Owner Financing is available. NEW TIER 3 ROOF. Beautiful 4 bedroom house with open floor plan and hardwood floors in the family room and hallways. The large family room has a gas burning fireplace and provides ample space for seating and the kitchen presents a great open layout with eat-in kitchen area or if you prefer a formal dining room. Large master bedroom with ensuite bath with his and her sinks, shower, jetted tub and walk in closet. The large bedroom upstairs could be used as a second master bedroom, or a game room with an ensuite bath and walk in closet. Features include a Gas burner cooktop, wall mounted oven and microwave, high ceilings, crown molding, 8 foot wooden fence, covered back patio, sprinkler system, study & bonus room. Recently painted inside and new carpet. Beautiful well-kept Neighborhood. Close to schools, numerous shopping and restaurants nearby, and parks. Celebration Park is within walking distance.\n\nSchedule showing with owner at 469-468-3584 or email cherylkirk@sbcglobal.net\n\nOwner Financing available with No Credit Check.",
+    "issue": "Invalid zip code format"
+  },
+  {
+    "opportunityId": "bSfTtL1nsunc8FSnI4W1",
+    "address": "212 Star Ranch Dr",
+    "field": "zip code",
+    "value": "Have you been looking for a home on a little bit of acreage with some room to roam near all the recreational opportunities on Lake Whitney? You have found it! Welcome to peace & quiet in this beautiful home in a small, gated community in Whitney!! Nestled on 1.36 acres, this home features a wide open living space with wood burning fireplace, and an open kitchen with granite countertops and a light and bright breakfast area. Whether you prefer to relax on your vaulted, covered back patio or drink your coffee on your shady front porch, you'll love the lifestyle this home affords you. Settle into the large living area and enjoy conversations with the kitchen chef over the large kitchen breakfast bar. Step into the isolated, generously-sized primary bedroom suite - an amazing retreat at the end of a long day. On the other side of the home, you'll find two secondary bedrooms, a full bath and the utility room which opens to the two car garage. The large back porch with vaulted cover provides plenty of shade in which to relax. Come check it out today! This property may qualify for Seller Financing.",
+    "issue": "Invalid zip code format"
+  },
+  {
+    "opportunityId": "m5EZSODbSo1t2JYKGZ1V",
+    "address": "2013 Falling Star Dr",
+    "field": "zip code",
+    "value": "Excellent Value!! Interior with lots of natural light-windows. Downstairs has office and primary suite, upstairs has large living area. Backyard has covered patio and pool size yard. Buyer to verify all information including measurements. Please see private remarks for instructions on how to submit an offer for this property.",
+    "issue": "Invalid zip code format"
+  },
+  {
+    "opportunityId": "Wkps3GxBCvoTKrXjxQOz",
+    "address": "1200 N 6th St",
+    "field": "zip code",
+    "value": "Come check out this Totally Remodeled Home with a Huge Double Lot (.49 acre) in the Heart of Princeton, the fastest growing city in the USA. The NEW Kitchen features New Cabinets, Granite Countertops, Stainless Steel Appliances. Both bathrooms totally remodeled with new shower and new tub. The house has new ceramic tile throughout. All New Paint,  Ceiling Fans, Lights, Blinds, Garage Door Opener,  Etc. Too many upgrades to list all. House includes a separate laundry room and  bonus room and closet behind the garage. Check out the Huge back yard. Also Foundation was leveled in 2025 with new French Drains, Foundation warranty and engineers report. Seller will consider owner finance with minimum 20% Down.\nBuyer and buyer's agent to verify all school information and all measurements. \nListing agent has ownership interest in the property.",
+    "issue": "Invalid zip code format"
+  },
+  {
+    "opportunityId": "LU6ST07Zxbm1UMyMif1K",
+    "address": "718 N Union St",
+    "field": "zip code",
+    "value": "**INVESTOR SPECIAL** This property presents an excellent investment opportunity for savvy real estate investors. Featuring 3 bedrooms, 2 bathrooms, and a dedicated office space, this home sits on an oversized lot, offering ample potential for future enhancements or expansion. Some upgrades have already been completed, providing a solid foundation for further value-add improvements.\n\nThe property is being sold **as is**, allowing buyers the flexibility to renovate or customize according to their vision. CASH ONLY OR **Seller financing is available**, making this an accessible option for investors seeking alternative purchasing solutions.\n\nLocated in close proximity to both a popular casino and a scenic lake, this property offers attractive lifestyle and rental appeal. Don’t miss out on this investor special—unlock the potential and maximize your returns in a desirable area!\n\nNo sign in the yard!",
+    "issue": "Invalid zip code format"
+  },
+  {
+    "opportunityId": "lGS4PO4jyoQQcdWdxCFh",
+    "address": "2460 French St",
+    "field": "zip code",
+    "value": "Owner Financing Only – no hidden lender fees or extra approval steps required. Just 20% down, 10% interest, and a 30-year note makes owning this home simple and straightforward! Move-In Ready & Full of Space! Discover this beautifully maintained 2,620 sq ft home in the sought-after Woodcreek community of Fate. Offering 5 bedrooms, 2.5 baths, and two generous living areas, there’s plenty of room for the entire family to spread out and enjoy. This charming brick home features low-maintenance landscaping and a convenient front-facing two-car garage. Step inside to bright, open-concept living, dining, and kitchen spaces—ideal for both everyday living and entertaining. The neutral color palette and thoughtful updates throughout create a warm, modern feel. The kitchen is the heart of the home, complete with a central island, granite countertops, white cabinetry, and abundant storage. A downstairs half bath is perfect for guests, and the spacious primary suite offers a cozy sitting area, walk-in closet, and ensuite bath with a large shower and built-in shelving. Upstairs, a second living area makes a great game room, media space, or kids’ retreat. You’ll also find four additional bedrooms and a shared full bath. Enjoy outdoor living with a covered back patio and a large yard—ideal for a playset or trampoline. Woodcreek residents enjoy access to community amenities including a pool, playgrounds, jogging trails, and more. Plus, you're just minutes from the local elementary school!",
+    "issue": "Invalid zip code format"
+  },
+  {
+    "opportunityId": "RffmqPIMUlTAW8mP4vDV",
+    "address": "1816 Memorable Moment Dr",
+    "field": "zip code",
+    "value": "First Month Free Modern 3-Bed, 2-Bath Home , New Build (2024), Pet-Friendly with Huge Yard! Live in this stunning brand-new 2024-built home! Featuring 3 spacious bedrooms and 2 full bathrooms, this modern residence offers comfort, style, and functionality all in one. Open-concept living with natural light Sleek kitchen with new appliances and plenty of storage Primary suite with en-suite bath and walk-in closet Pet-friendly your furry friends are welcome! Expansive yard perfect for play, pets, or outdoor entertaining Move-in ready Located in a quiet neighborhood with easy access to schools, shopping, and major routes. Only 25 minutes from downtown Dallas",
+    "issue": "Invalid zip code format"
+  },
+  {
+    "opportunityId": "rs0HbMBPyf0UyB2SzfXE",
+    "address": "195 N Frederick St",
+    "field": "zip code",
+    "value": "NO Broker, Realtors, or investors.  We are not interested it is for sale by owner only. NO owner financing.\nThis 3br 2ba 2 car garage sits on over 1/2 acre on a corner lot. Very quiet neighborhood within a mile of T. Dewitt Middle High School & shopping. Within 2 miles of the elementary school. \nNew HVAC 2019\nVinyl fence 2025\nSamsung kitchen appliances 2024\nNew front door w/key pad entry \nNew wireless remote living room fan/light\nNew smart water heater installed 7/2025\nWasher & Dryer\nCovered patio\n\nPlease call or text. If no answer please leave a message. \nWill be shown by appointment only. We still live here so please be courteous.",
+    "issue": "Invalid zip code format"
+  },
+  {
+    "opportunityId": "z7k6115W4B04UqL9YE55",
+    "address": "6406 Bob Head Rd",
+    "field": "zip code",
+    "value": "Enjoy county living near Plant City and get away from the gridlock. This recently remodeled 2,100 sq ft three bedroom, two bathroom home sits on 3.9 acres.  New roof, all new appliances along with a 1,200 sq ft three bay metal garage building. Well and septic. No deed restrictions with plenty of room for horses.  Owner financing available.",
+    "issue": "Invalid zip code format"
+  },
+  {
+    "opportunityId": "rsB4rIxHTY3u6lE6D1dZ",
+    "address": "3053 Birch Rd",
+    "field": "zip code",
+    "value": "Discover your dream home in this stunning 3-bedroom, 2-bath property, complete with two generous living areas, a charming breakfast area, and a formal dining space. The property has undergone significant renovations in 2024, featuring brand-new stainless steel appliances, a new roof, and an upgraded AC unit. Furthermore, the property boasts new vinyl flooring, upgraded  plumbing and electrical fixtures, and a fresh coat of interior and exterior paint. The expansive backyard provides a serene retreat in this peaceful neighborhood. Owner financing options are available.",
+    "issue": "Invalid zip code format"
+  },
+  {
+    "opportunityId": "teXK4RTMSYoaYFUgG124",
+    "address": "200 Olive St",
+    "field": "zip code",
+    "value": "Welcome to your dream home! Large inviting front porch, beautiful trees, & gorgeous landscaping invite you into this newly renovated craftsman style Victorian gem. If you're looking for a private retreat in the country on half an acre lot, this is the place. Spacious driveway wrapped by gorgeous mature trees welcomes you. Come fall in love with this open updated home featuring 5 bedrooms and 2 baths. The interior boasts a fresh coat of neutral grey color paint polished original wooden floors, adding a modern touch will preserving its original charm. Step outside to a covered deck perfect for summer days. Updates include new roof, gutters, insulation, interior and exterior paint, water heater, HVAC, sewer and plumbing, electrical units, cabinets, bathroom remodel, and new driveway & porch. Perfectly situated just minutes from I-30 for an easy commute to Greenville, Rockwall and Dallas. Owner Financing Available!",
+    "issue": "Invalid zip code format"
+  },
+  {
+    "opportunityId": "uL7Xzd0X17JD0Fn2pCvt",
+    "address": "1000 Leaning Oak Dr",
+    "field": "zip code",
+    "value": "Don't miss this incredible opportunity to own a beautifully updated 3 bedroom, 2 full bath home in Tool, TX, just minutes from Cedar Creek Lake. Situated on a spacious, open lot, this home offers peaceful surroundings, modern updates, and the rare benefit of owner financing available! Step inside to find a newly remodeled interior with fresh finishes throughout, including updated flooring, fixtures, paint, and more. The layout is bright and functional, perfect for full-time living, a weekend getaway, or even a long-term rental investment.",
+    "issue": "Invalid zip code format"
+  },
+  {
+    "opportunityId": "pWRgLkuD5sg0JTBxFVYx",
+    "address": "147 Western Lake Dr",
+    "field": "zip code",
+    "value": "Looking to get away? Looking to leave the hustle and bustle of the DFW but be within touching distance to access the metroplex ONLY when you want to? Well, this is the home for you. With access to a nearby lake, this home sits on a corner lot of over 1.3 acres. Recently updated, this cozy home comes with 3 bedrooms, 2 bathrooms, and a utility room. And no, this home is NOT a mobile home or a manufactured home. Improvements include a new septic system. The kitchen showcases quartz countertops with new appliances and new cabinets. Both bathrooms include stand up showers adorned with beautifully tiled walls. This property is priced to sell and is open to creative solutions including buyer concessions to make this home yours.\n\nOWNER FINANCING ONLY! PROPERTY IS ALSO LISTED FOR LEASE. LEASE TO OWN OPPORTUNITY ALSO AVAILABLE. NEW WIRE FENCING TO BE ADDED ON A DECENT OFFER",
+    "issue": "Invalid zip code format"
+  },
+  {
+    "opportunityId": "MtAFWInNZwI0ZmAaeBZ9",
+    "address": "407 N Dallas St",
+    "field": "zip code",
+    "value": "OPEN HOUSE 8--4 to 8-10 10AM-2PM  NOW OFFERING SELLER FINANCING! Contact the agent for more details. Experience comfort, style, and ease in this beautifully new 3-bedroom, 2-bath home in the charming town of Rice. Designed for modern living, it\nfeatures a bright, open floor plan perfect for both relaxing and entertaining. The kitchen boasts sleek countertops and plenty of cabinet space, ideal for everyday cooking or hosting guests. The spacious primary suite includes a private ensuite bathroom and walk-in closet, while two additional bedrooms provide flexibility for a guest room or home office. Built with energy efficiency and low-maintenance living in mind, this home offers all the perks of new construction without the wait. Enjoy the generous backyard—perfect for outdoor fun, gardening, or peaceful evenings under the Texas sky. Conveniently located just minutes from I-45, commuting to nearby cities is easy while still enjoying the tranquility of small-town life.",
+    "issue": "Invalid zip code format"
+  },
+  {
+    "opportunityId": "zL2IkYB4FEA7rqG82cMN",
+    "address": "409 N Dallas St",
+    "field": "zip code",
+    "value": "OPEN HOUSE 8--4 to 8-10 10AM-2PM. NOW OFFERING SELLER FINANCING! Contact the agent for more details. Experience comfort, style, and ease in this beautifully new 3-bedroom, 2-bath home in the charming town of Rice. Designed for modern living, it features a bright, open floor plan perfect for both relaxing and entertaining. The kitchen boasts sleek countertops and plenty of cabinet space, ideal for everyday cooking or hosting guests. The spacious primary suite includes a private ensuite bathroom and walk-in closet, while two additional bedrooms provide flexibility for a guest room or home office. Built with energy efficiency and low-maintenance living in mind, this home offers all the perks of new construction without the wait. Enjoy the generous backyard—perfect for outdoor fun, gardening, or peaceful evenings under the Texas sky. Conveniently located just minutes from I-45, commuting to nearby cities is easy while still enjoying the tranquility of small-town life",
+    "issue": "Invalid zip code format"
+  },
+  {
+    "opportunityId": "Qo882DwvYAxuonMz2PtZ",
+    "address": "112 spring valley",
+    "field": "zip code",
+    "value": "Discover the perfect blend of comfort and country living at 112 Spring Valley in Wilson County. This newly built 3-bedroom, 2-bath home offers over 1,200 square feet of thoughtfully designed living space, situated on a spacious 1.19-acre lot. The open floor plan creates a welcoming atmosphere, ideal for both relaxing and entertaining. Enjoy the peace and quiet of rural living while still being within reach of city conveniences. This property is move-in ready, and owner financing is available-an excellent opportunity to claim your piece of Texas.",
+    "issue": "Invalid zip code format"
+  },
+  {
+    "opportunityId": "dsPYiABnlGlODk9080cw",
+    "address": "808 Heinen Road",
+    "field": "zip code",
+    "value": "Update retaining wall and custom planters have been added to level up the exterior and give the home even more charm. Owner financing available. Just 5 minutes from Old Town Bandera and the river, this brand-new farmhouse-style home is the perfect mix of comfort and style. It's full of natural light thanks to the high ceilings and big windows, and the open layout feels spacious and airy. The covered patio is ideal for coffee, wine, or watching the deer wander by. There's also RV access if you like to hit the road or just want the extra flexibility. You're close to everything in town but still get that quiet, peaceful vibe that makes you feel like you're out in the country. If you're looking for something fresh, easy, and well-located, this might be the one.",
+    "issue": "Invalid zip code format"
+  },
+  {
+    "opportunityId": "mrh8MrMqH1Os1zDZnzcX",
+    "address": "12930 deep eddy",
+    "field": "zip code",
+    "value": "Incredible chance to own your home with flexible Seller financing (Owner Financing) options. 12930 Deep Eddy is a move-in ready 3-bedroom, 2-bath home with a 2-car garage, located in Spring Grove, a gas community. Built in 2023, this modern home sits just outside Loop 1604, minutes from Randolph AFB, about 1.5 hours from Austin, and only 40 minutes to New Braunfels or downtown San Antonio.    Perfect for renters ready to stop paying rent and start building equity. Seller financing means no bank approval, no credit check - just an opportunity you don't want to miss. Homes like this rarely come available. Why wait? Make it yours today!",
+    "issue": "Invalid zip code format"
+  },
+  {
+    "opportunityId": "7WTei4f9tgl0x0UKlkvX",
+    "address": "2335 Zoa Dr",
+    "field": "zip code",
+    "value": "Roof and A/C are less than 2 years old!   Welcome to this beautifully maintained home tucked away in a quiet and friendly Cedar Park neighborhood. Blending comfort, style, and functionality, this home offers everything you need for modern living.  A thoughtfully designed floor plan and an abundance of natural light define the home. The spacious island kitchen is a true showstopper, featuring 42\" cabinets, solid-surface countertops, a walk-in pantry, tile backsplash, tile flooring, and breakfast area complete the space, making it perfect for morning coffee or casual family meals.  Relax in the cozy family room highlighted by a gas log fireplac, ideal for year-round comfort. The primary suite is a private retreat with a large walk-in closet. The primary bathroom offers spa-like features including dual vanity sinks, garden tub, and a separate walk-in shower.  Bedrooms 2 and 3 are generously sized, each with walk-in closets, ceiling fans, and 2” blinds. Bedroom 2 features vinyl plank flooring for a sleek touch, while Bedroom 3 includes soft carpeting for a cozy feel. The second full bath offers a vanity sink and a shower/tub combo.  Upstairs, enjoy a spacious game room complete with its own gas log fireplace, a large storage closet, and French doors that open to a second-story deck—perfect for enjoying sunsets or entertaining guests. The backyard oasis includes a covered patio for shaded lounging, a storage shed, and direct access to a neighborhood walking trail—ideal for morning strolls or evening runs.  Located just minutes from the 1890 Ranch and The Parke shopping centers, you'll enjoy easy access to Whole Foods, Costco, Target, and a wide range of popular restaurants like Blue Corn Harvest, and Dos Salsas. Outdoor lovers will appreciate the close proximity to Brushy Creek Lake Park, w/entertainment options abound at the nearby H-E-B Center, home to concerts, sporting events, and family shows year-round.  Contact Agent RE: Owner Financing",
+    "issue": "Invalid zip code format"
+  },
+  {
+    "opportunityId": "KVM06wgFFjWifzYBAwXW",
+    "address": "1700 Treeline Dr",
+    "field": "zip code",
+    "value": "Discover the possibilities at 1700 Treeline Drive in the highly sought-after Trails at Carriage Hills neighborhood. This expansive 3,209 sq. ft., two-story home offers six spacious bedrooms and 3.5 baths, including a full guest suite on the main level—perfect for visitors, multigenerational living, or a dedicated home office. The main floor boasts an open and airy living area that flows effortlessly into the kitchen and dining spaces, ideal for both daily living and entertaining. Upstairs, you’ll find five more bedrooms and two full baths. Two of these rooms are impressively large, with the primary suite offering ample space for a sitting area, home office, or flex space. A 30-amp RV plug in the garage is ready for guests on the go. Outside, enjoy the convenience of nearby parks, top-rated Leander ISD schools, and quick access to shopping, dining, and commuter routes. This home is brimming with potential and ready for your personal touch. Whether you’re a DIY enthusiast or simply looking for a spacious property in a prime Cedar Park location, this is a rare find. Sold as-is—bring your vision and make it shine! Schedule your showing today.",
+    "issue": "Invalid zip code format"
+  },
+  {
+    "opportunityId": "YCrhT3ZBxlICDu4W1beS",
+    "address": "104 Pink Dahlia Dr",
+    "field": "zip code",
+    "value": "This unfinished 3-bedroom, 2-bath home sits on a generous 0.33-acre lot and is packed with potential! With a solid layout and plenty of space to work with, this is your chance to bring your vision to life and create something special. Property is being sold AS IS. Ideal for investors or anyone ready to roll up their sleeves. Don’t miss this opportunity to transform this space into a standout home!",
+    "issue": "Invalid zip code format"
+  },
+  {
+    "opportunityId": "AjshHfMiZ5LMYRouP0vf",
+    "address": "2321 Green Valley",
+    "field": "zip code",
+    "value": "Rare 5-Acre Property in Cibolo City Limits!    Incredible opportunity to own 5 acres with a massive 4000+ sq ft home in the heart of Cibolo-an extremely rare find at this price point. The home offers substantial space and potential but does need significant foundation repair and full cosmetic rehab. Perfect for investors, flippers, or buyers looking to create a custom estate.    No HOA - bring your RV, boat, or recreational vehicles. Enjoy the freedom of country-style living with city conveniences just minutes away. Property being sold as-is. Schedule your showing today and explore the potential this unique property has to offer! No seller financing or \"subject-to's\".",
+    "issue": "Invalid zip code format"
+  },
+  {
+    "opportunityId": "7gwZJ1fXgrCrsZnN4v3s",
+    "address": "400 Blue Quail",
+    "field": "zip code",
+    "value": "ENJOY PEACEFUL COUNTRY LIVING JUST MINUTES FROM I-35 AND DOWNTOWN LYTLE! THIS CHARMING RANCH STYLE HOME SITS ON 2.64 ACRES IN THE DESIRABLE QUAIL CREEK RANCHES COMMUNITY AND OFFERS 3 BEDROOMS AND 2 FULL BATHROOMS IN A FUNCTIONAL SINGLE STORY LAYOUT. INSIDE, YOU'LL FIND AN OPEN FLOOR PLAN WITH A SPACIOUS LIVING AREA AND LAMINATE FLOORING THROUG THE LIVING ROOM AND KITCHEN. THE LARGE KITCHEN OPENS TO A DINING AREA, PERFECT FOR ENTERTAINING. THE INTERIOR LAUNDRY ROOM PROVIDES EXTRA CONVENIENCE NEXT TO THE KITCHEN. OUTDOOR FEATURES INCLUDE A SPACIOUS FRONT PATIO IDEAL FOR HOSTING GATHERINGS, A MASSIVE BACKYARD WITH PLENTY OF ROOM FOR GARDENING OR OUTDOOR ACTIVITIES,  THE HOMES INCLUDES A CARPOT FOR 2 CARS BUT ALSO  A WIDE DRIVEWAY TO PARK A PLENTY OF CARS. A DETACHED BUILDING IS PERFECT FOR A WORKSHOP, OFFICE, OR STORAGE. ADDITIONALLY, THERE'S A 30X30 OPEN BARN AND A VERSATILE STORAGE UNIT/WORKSHOP WITH A HALF BATHROOM-GREAT FOR HOBBYISTS OR EXTRA STORAGE NEEDS.  HORSES ARE WELCOME, AND THERE'S PLENTY OF SPACE TO BRING YOUR ANIMALS, BUILD ADDITIONAL STRUCTURES, OR CREATE YOUR OWN COUNTRY RETREAT. VERY LOW HOA. DON'T MISS THIS INCREDIBLE OPPORTUNITY TO ENJOY ACREAGE LIVING WITH MODERN COMFORT JUST A SHORT DRIVE FROM SAN ANTONIO! SELLER OPEN TO OWNER FINANCE WITH 20% DOWN!",
+    "issue": "Invalid zip code format"
+  },
+  {
+    "opportunityId": "hLycAo9KQzqFeBIBc6ro",
+    "address": "5000 Meadow Lark Ln",
+    "field": "zip code",
+    "value": "Beautifully Remodeled Large Four Bedroom Single-Story in Bayou Chantilly, only minutes from I-45 making north or south commutes a breeze! This 4 BR, 2.5 BA with large Formal Living/Dining also includes a spacious & inviting 16x18 Sunroom Room, and sits on a 0.20 acre lot with a beautifully shaded backyard, detached garage & gated driveway.  The floor-plan features a raised level 12x18 master bedroom, large enough to accommodate a king-sized bed with an adjoining anteroom/nursery/office/etc. The contemporary yet classic kitchen features an incredible amount of solid wood Glass-Front upper cabinets and lowers topped with Corian, S/S appliances and Vent Hood all open to a huge living area accented by a floor to ceiling bricked fireplace. Wood-look ceramic plank flooring throughout. New roof w/40yr tnf warranty in ‘22; New AC/Furnace ’23-’24; New water heater ’23; New Garage Door ’25.  Gargage is epoxy coated & features organizational Slatwell walls, work bench & 4 overhead light fixtures.",
+    "issue": "Invalid zip code format"
+  },
+  {
+    "opportunityId": "fSrkcstAZqaRSz4xIJ8G",
+    "address": "3406 Mesquite Dr",
+    "field": "zip code",
+    "value": "Two-story brick home with covered front porch, detached two-car garage, and extended driveway with parking for multiple cars or trucks. Interior includes high-ceiling living room, formal dining area, front guest room, and kitchen with center island cooktop, breakfast area, microwave, Samsung dishwasher, and refrigerator with water and ice dispenser. Primary bedroom on first floor features walk-in closet, walk-in shower, soaking tub, and double-door access to porch. Upstairs, the space offers two bedrooms and a game room. Laundry area with washer and dryer included. High-efficiency central HVAC. Public water and sewer. All room sizes are approximate and should be verified by the buyer’s agent. Owner financing available for qualified buyers. #RATED A - SCHOOL DISTRICT",
+    "issue": "Invalid zip code format"
+  },
+  {
+    "opportunityId": "s5RU0VyRr0Htt9IBfTgW",
+    "address": "5834 SW 66th St",
+    "field": "zip code",
+    "value": "Great opportunity to own this 3-Bedroom, 3-Bathroom home, perfectly situated just minutes from the University of Miami. As a lucrative rental opportunity, this property offers the perfect combination of convenience and potential. The property offers ample living space, generously sized bedrooms, modernized bathrooms, a new roof, and accordian shutters. Outside, enjoy a spacious backyard and plenty of parking space—perfect for residents, visitors, or tenants. The home’s prime location near the university offers easy access to campus, local amenities, and vibrant neighborhood attractions. Don’t miss the chance to own or invest in this fantastic property—an excellent opportunity in a sought-after area!",
+    "issue": "Invalid zip code format"
+  },
+  {
+    "opportunityId": "udZ9Uv8nukwSO8GJCOXB",
+    "address": "1150 Orangewood Ave",
+    "field": "zip code",
+    "value": "Charming DeLand, Fl Home with Owner-Financing Potential!  Step into this cute and well-maintained 3-bedroom, 2-bathroom, split-plan home offering 1,369 sq ft of comfortable living. Enjoy a dedicated den/office, a highly functional U-shaped kitchen with bar counter, and a convenient dining room.  A one-car attached garage adds 400 sq ft of valuable space. Best of all, the seller is providing OWNER-FINANCING for qualifying buyers!  Don't miss this opportunity!",
+    "issue": "Invalid zip code format"
+  },
+  {
+    "opportunityId": "cJo0vhxNwE49l9PAaWzp",
+    "address": "3620 Cordgrass Dr",
+    "field": "zip code",
+    "value": "**** Owner Open To Owner Finance / Lease Option ***  Welcome to this stunning 5-bedroom, 4-bathroom pool home located in the gated community of River Hills Country Club. Situated on a quiet street with a serene pond view, this spacious residence      The open floor plan features high ceilings, formal living and dining rooms, and a large family room perfect for entertaining. The gourmet kitchen boasts solid wood cabinetry, stone countertops, stainless steel appliances, and a double convection oven. The primary suite includes a walk-in closet and spa-like en-suite bathroom. Step outside to the screened-in lanai with a heated pool and spa, overlooking the fenced backyard and scenic nature trail. Recent upgrades include a 2022 roof, 10kW solar electric system (2023), and solar water heater (2016). Additional features include a 3-car garage, bonus room, and inside laundry. HOA is approximately \\$216/month and includes 24/7 security, community maintenance, and access to walking trails and playground. Zoned for top-rated schools: Lithia Springs Elementary, Randall Middle, and Newsome High. Don’t miss this incredible opportunity to own in one of Valrico’s most sought-after communities!",
+    "issue": "Invalid zip code format"
+  },
+  {
+    "opportunityId": "IDfhGqlLADY46czenSLg",
+    "address": "4334 SW 9th Place Cpe",
+    "field": "zip code",
+    "value": "LOCATION, LOCATION, GREAT SW CAPE LOCATION - LESS than 1 mile away from CAPE CORAL PKWY and close to SKYLINE  \"2023\" NEW CONSTRUCTION.  Great location in Cape's preferred South West 33914 Zip code.  Modern 4 BEDROOM home with 3 CAR GARAGE.  High ceilings, STAINLESS STEEL APPLIANCES incl. SIDE by SIDE Fridge/Ice. UPGRADED & EXTENDED & screened under truss lanai. GRANITE countertops in kitchen,  GRANITE rectangular sinks in bathrooms. Attractive and UPGRADED tiles in living room, kitchen & bathrooms, laundry. Tile with glass tile accents in baths *** NO ASSESSMENTS *** Split bedroom floor plan. Raised panel cabinets.  Plenty of room for pool. *** Great layout and floor plan, you'll love it *** Lots of closet space *** Very good investment as a rental *** Great location close to schools, a lots of shopping, restaurants, short drive to SWFL Beaches.  Possible lease option - owner finance.",
+    "issue": "Invalid zip code format"
+  },
+  {
+    "opportunityId": "R26GIIlYQ2VFl5vlRjPF",
+    "address": "711 Sara Jane Ln",
+    "field": "zip code",
+    "value": "LOCATED IN BEAUTIFUL SOUTH MERRITT ISLAND!! THIS IS A MUST SEE COMPLETELY REMODELED 3 BEDROOM 2 BATHROOM SINGLE FAMILY HOME SHOWS LIKE NEW!!! PRIVATE CUL DE SAC, CLOSE TO SHOPS.  ALL NEW FLOORING, NEW APPLIANCES, NEW HVAC AND BRAND NEW ROOF, LARGE BACKYARD WITH BRAND NEW SCREENED IN PATIO, OWNER FINANCING AVAILABLE WITH 20% DOWN.",
+    "issue": "Invalid zip code format"
+  },
+  {
+    "opportunityId": "Z6VMvmdOB5PUUsEJKUlU",
+    "address": "680 Griffon Ave",
+    "field": "zip code",
+    "value": "NEW ON THE MARKET! RENT TO OWN AVAILABLE! OWNER/CREATIVE FINANCING AVAILABLE! ONE BEDROOM AND A FULL BATHROOM DOWNSTAIRS. MASTER BEDROOM WITH WALKING CLOSET AND THE OTHER TWO BEDROOMS UPSTAIRS. LIVING ROOM DOWNSTAIRS, HUGE DEN UPSTAIRS. Find everything you need in Lake Alfred! Located just minutes from world class theme parks and attractions, Eden Hills is the perfect community to call home with its beautiful Florida lifestyle. This community boasts stunning home sites with large lots. You'll enjoy the sparkling local lakes practically in your backyard a fishing pier walking paths and the best local restaurants and shopping are just a short drive away. Love the outdoors? Play a round at the many local golf courses or slow down the pace and explore nearby parks and farmers markets. Your home at Eden Hills will be in the center of it all!!",
+    "issue": "Invalid zip code format"
+  },
+  {
+    "opportunityId": "rAqTTG0IEwNd7jigQgN3",
+    "address": "12301 W Highway 15",
+    "field": "zip code",
+    "value": "This beautiful two-story home sits on 10 peaceful acres with mature trees and great curb appeal. Inside, you'll find 3 bedrooms, 2 full baths, 1 three-quarter bath, and 2 half baths. The open-concept main floor features high ceilings, large windows, a granite kitchen with stainless appliances, and an office with built-ins. The isolated primary suite includes a 3/4 bath, his-and-her walk-in closets, and access to a spacious den with a kitchenette and half bath. Upstairs offers a loft and a large room perfect for a theater or game room. Outside features include a 3-car garage, well house, and a large storage building with overhead doors. Enjoy quiet country living just a short drive from town!  SELLER FINANCING AVAILABLE!!",
+    "issue": "Invalid zip code format"
+  },
+  {
+    "opportunityId": "3GUodmeCP9O9XBTk01NR",
+    "address": "4951 John Wesley Pl",
+    "field": "zip code",
+    "value": "**LOCATION, LOCATION, LOCATION** Come with your HIGHEST AND BEST OFFERS! NO owner financing; TURNKEY, REHAB and RENT, or KEEP FOR YOURSELF!  Located on a quiet country road convenient to Tampa, Lakeland, I4, Hwy 60, and CR 39 is this 3/2 SPLIT PLAN home on an ACRE currently being rented month to month (but renters would like to continue renting with new owner if that's an option). The home features both a formal living room and dining area, a spacious pass through kitchen, and a great room with wood burning fireplace.  Plenty of room for entertaining!  The area offers numerous activities/attractions for everyone including Edward Medard Park, Alderman’s Ford Park, Hillsborough State Park, Dinosaur World, Skydive City in Zephyrhills is about 30 min away, and Orlando attractions are about an hour or so away. The following airports are within a short drive:  Lakeland Linder Int’l Airport about 20 min, Zephyrhills Municipal Airport about 40 min, Plant City Municipal Airport about 20 min, and Tampa Int’l Airport about 45 min.  Annual events include the Hillsborough County Fair in neighboring Dover and the Strawberry Festival in Plant City-ALWAYS a good time with great food!!!  With NO HOA or CDD, this property has great potential (a pool perhaps???) as well as plenty of room for your toys!  Home has some roof damage from the 2024 hurricane season.  ***NO SIGHT UNSEEN OFFERS WILL BE CONSIDERED-SHOW UP YOURSELF OR HAVE YOUR REPRESENTATIVE VIEW ON YOUR BEHALF***",
+    "issue": "Invalid zip code format"
+  },
+  {
+    "opportunityId": "mT1a3NbMTl3u6tdGtjtp",
+    "address": "20810 Trenton Valley Ln",
+    "field": "zip code",
+    "value": "Welcome to this spacious 4-bedroom, 2.5-bath home nestled in a well-established and highly sought-after community. Offering an abundance of space both inside and out, this home is perfect for families, entertaining, or simply spreading out and enjoying comfortable living.\nThe main level features a bright and open layout with generous living and dining areas, a well-appointed kitchen, and a cozy family room—ideal for gatherings or quiet evenings at home. Upstairs, you’ll find four generously sized bedrooms, including a serene primary suite with its own private bath and ample closet space.",
+    "issue": "Invalid zip code format"
+  },
+  {
+    "opportunityId": "N3Y76TgvQssZdakPrCVt",
+    "address": "111 Camino Real Rd",
+    "field": "zip code",
+    "value": "Step into luxury living in this beautiful 4-bedroom, 3 full bath beach house located on the south end of Cape San Blas. Live the beach life while enjoying the amenities this coastal community has to offer. Welcome to Villa Del Sol! Sit back and enjoy the amenities. Such as the pool, pickleball courts, access to both the Gulf and the bay. Enjoy the famous emerald waters of the Gulf, pristine sandy white beaches that are dog friendly as well as snorkel or take the boat out in St. Joseph's bay for a great day on the water. Unparallelled sunsets from the beach as well as bay views from your home. This fully furnished, charming home comes expertly decorated and is ready for your enjoyment. Home built in 2022, with all the upgrades. Attached one car garage. Gorgeous tile throughout home, master suite on first floor with large tile shower, open floor plan with spacious kitchen, dining area, living room as well as a kids play area. Two bedrooms on first floor and two bedrooms on second floor (a queen bed & a bunk room that sleeps 4) as well as an office space. This home has a great rental history with 5 star reviews. Make this your beach destination. Schedule your tour today! Conveniently located close to Port St. Joe as well as Apalachicola. Offering owner financing as well as creative financing options.",
+    "issue": "Invalid zip code format"
+  },
+  {
+    "opportunityId": "xOkZuERwzeHrFTANUi6g",
+    "address": "120 Darrell Ct",
+    "field": "zip code",
+    "value": "***OPEN HOUSE AUG 16 11-2 PM***Tucked away in a quiet corner of Choctaw Beach, this private lakeside retreat is a dream come true for nature lovers and avid anglers alike. Welcome to 120 Darrell Court - a peaceful, two-story escape with stunning water views and a lifestyle built around relaxation, recreation, and privacy.The main home offers 3 spacious bedrooms and 3 full bathrooms, designed with both comfort and functionality in mind. Two upstairs bedrooms open directly onto a balcony overlooking the lake--the perfect spot to enjoy your morning coffee or unwind with a sunset view. Downstairs, a screened-in porch lets you take in the serene setting in comfort, while the attached two-car garage provides ample space for vehicles, gear, and storage. Step outside to your personal outdoor haven: a refreshing saltwater pool, perfect for cooling off after a day of fishing or boating. Just steps away, the guest house offers incredible flexibility ideal as an in-law suite, pool house, or private retreat for visiting friends and family.\n\nSoak in the peaceful lake views from your newly built dock, perfect for morning reflections, sunset watching or casting a line. And for even more adventure, you're just minutes from Bay Front Park, featuring a free public boat launch serving as a gateway to the bay and gulf.\n\nWhether you're casting a line in the nearby waters, enjoying the breeze from the back porch or balcony, or relaxing in your own poolside sanctuary, this property captures the best of Florida Panhandle living: peaceful, picturesque, and full of possibility.\n\nDon't miss this rare opportunity to own a slice of secluded paradise.\n\nPartial Owner Financing Available for Qualified Buyer",
+    "issue": "Invalid zip code format"
+  },
+  {
+    "opportunityId": "yPczM6tZinJKXep4oRZp",
+    "address": "5604 Hale Cir",
+    "field": "zip code",
+    "value": "Charming 3aBR / 2aBA Florida Cottage on 1.63 higha'anda'dry acres, with 1,344 sqaft of thoughtful design. The splita'floor plan features spacious bedrooms and a primary suite with dual vanities and hisa'anda'hers closets. The open living room flows to the covered front porch offering peaceful views of farmland.Convenient Location: Just minutes to Interstatea'10 via FLa'71, this property offers rural privacy with quick access to regional travel routes and shopping. Enjoy the convenience of a private access drive, attached 2a'car carport, no HOA, and shorta'term rental permitted. Seller financing potential, higha'speed internet available, and no storm damage history make this turnkey and worrya'free.",
+    "issue": "Invalid zip code format"
+  },
+  {
+    "opportunityId": "WYKyNVsg7MSzSYndPmsR",
+    "address": "304 Highway 98",
+    "field": "zip code",
+    "value": "Seller Financing Available! Step into a piece of history with this beautifully remodeled 1930s home located in the heart of charming Carrabelle, Florida. This thoughtfully updated residence blends classic character with modern comforts. Inside, you'll find a spacious primary suite with a private bath, open concept kitchen perfect for entertaining. The renovation preserves the home's vintage charm while adding stylish, up to date finishes. Schedule your showing with us today.",
+    "issue": "Invalid zip code format"
+  },
+  {
+    "opportunityId": "USYRLt7dZnLG3WjgdXUx",
+    "address": "2983 Point St",
+    "field": "zip code",
+    "value": "Welcome to this beautifully updated three-bedroom, two-bath ranch-style home that perfectly combines modern comfort with timeless charm. The recently remodeled kitchen and bathrooms provide a fresh, contemporary ambiance, and the home is fully equipped with all kitchen appliances—including a refrigerator less than a year old—plus a washer and dryer. Granite countertops add a touch of luxury throughout, and a full laundry room provides added convenience. Elegant tray ceilings bring architectural interest, while a built-in security system offers peace of mind. The roof is less than a year old, giving buyers confidence in long-term durability. Additional highlights include an oversized garage with ample space for parking and storage. An additional rear lot is also available for purchase, offering even more potential to make this property truly your own. Possible owner financing as low as 6. Owner is real agent.",
+    "issue": "Invalid zip code format"
+  },
+  {
+    "opportunityId": "cwIHGyCaU5c9b9aqAQis",
+    "address": "11312 Haskell Dr",
+    "field": "zip code",
+    "value": "POOL HOME! Discover the perfect blend of charm, privacy, and updates with this beautifully maintained 3-bedroom, 2-bath pool home in the heart of Clermont. Nestled in a picturesque neighborhood where majestic oak trees create a canopy of shade and character, this residence offers the ideal Florida lifestyle. Step inside to find a spacious single-story split floor plan with a large living area flowing into an updated kitchen featuring granite countertops, a stone backsplash, pantry with shelving for easy organization, and newer stainless steel appliances. Enjoy casual meals at the eat-in counter or in the cozy dining nook. Bright white freshly painted walls and brand-new carpet flooring create a welcoming, move-in-ready atmosphere. Your private outdoor oasis boasts a screen-enclosed (2011) saltwater pool with cool deck (2011) and a hot tub/spa (2011), powered by 8 solar pool panels (2011) for energy-efficient relaxation. The roof was redone in 2016, and all windows were replaced in 2017, providing both comfort and peace of mind. Additional highlights include an attached 2-car side-facing garage with a spacious driveway, ideal for parking, workshop, and storage needs. The community provides private boat ramp access to the Clermont Chain of Lakes—17 interconnected lakes with over 8,600 acres of water for boating and fishing. Whether you're looking for a personal residence or a savvy investment, this move-in-ready gem delivers comfort, space, and freedom. Seller financing and private financing available. 0% DOWN PAYMENT FINANCING OPTION AVAILABLE. Do NOT wait, it will NOT last long!",
+    "issue": "Invalid zip code format"
+  },
+  {
+    "opportunityId": "h5uh1FFOJxl3tkc2Gipu",
+    "address": "375 Simpson St",
+    "field": "zip code",
+    "value": "MOVE-IN READY IN THE VILLAGES! Welcome to this beautifully maintained south-facing block & stucco Somerset home in the highly sought-after Village of Mallory Square. Nestled on a peaceful cul-de-sac, this property offers enhanced privacy and a quiet street experience. With a BOND PAID, a new roof (2023), and HVAC (2020), this home is ready for you to enjoy worry-free living with maximum Florida sunshine. Step inside to find freshly painted, light neutral interiors, crown molding, and elegant window treatments throughout. The open floor plan flows seamlessly through the living, dining, and kitchen areas, perfect for both everyday comfort and entertaining. The upgraded kitchen features granite countertops, cherry cabinetry, stainless appliances, a tumbled stone backsplash, pendant lighting, pantry, and a second water heater. The primary suite boasts a spacious bedroom with lighted ceiling fan, a walk-in closet, and an ensuite bath with dual vanities, a walk-in shower, separate water closet, and linen storage. Guests will appreciate the privacy of two additional bright and airy bedrooms and a full guest bath. Enjoy Florida living on the south-facing enclosed lanai with stacking sliders, extending to the birdcage and pergola-covered patio, a perfect setting for outdoor dining and relaxation. The landscaped backyard offers both beauty and abundant sunshine. Additional highlights include an indoor laundry room with washer/dryer, cabinets, deep sink, folding counter, and a whole-house vacuum system. The oversized attached garage has an epoxy floor, ample storage, a workbench, golf cart space, extra fans and lighting, and a second deep sink. As a resident of The Villages in Sumter County, enjoy world-class amenities including a clubhouse, community mailbox, dog park, gated community (no guard), golf courses, pools, restaurants, special community restrictions, wheelchair accessibility, a community pool, and lake access. Conveniently located near Mallory Square Community Pool, Coconut Cove Rec Center, Mallory Hill Country Club & Restaurant, and just minutes by golf cart to Lake Sumter Landing for dining, shopping, and nightly entertainment. Seller financing and private financing available. Do not wait, this home will NOT last long!",
+    "issue": "Invalid zip code format"
+  },
+  {
+    "opportunityId": "YgyXflNomI5cNYxoM9G1",
+    "address": "4545 Fairway Oaks Dr",
+    "field": "zip code",
+    "value": "One or more photo(s) has been virtually staged. BRAND NEW HOME!**Stunning Lake View Lot in Fairway Oaks—Move-In Ready!** Discover your dream home in the picturesque Reserves of Fairway Oaks! This beautiful lake view lot offers a serene setting with no backyard neighbors, perfect for family living. Step inside the open-concept design, where you'll be greeted by a grand foyer showcasing stunning tray ceiling views, flowing seamlessly into the living room and master suite. The chef's kitchen is a highlight, featuring 42-inch cabinets with elegant glass uppers and lighting, soft-close drawers, and brand-new stainless steel appliances. Enjoy breathtaking water views from the kitchen, living area, and master bedroom, making every moment at home special. This thoughtfully designed split-bedroom home includes a versatile flex room, ideal for a home office or additional family space, accompanied by a convenient half bath. The owner's suite is a true retreat, boasting two separate walk-in closets and an en-suite bathroom complete with double vanities, a spacious walk-in shower, and beautiful beehive tiles. The luxurious granite finishes add an extra touch of elegance. On the opposite side of the owner's suite, you'll find two additional bedrooms sharing a well-appointed Jack and Jill bathroom. This new construction is nestled in an established gated community, combining modern features with a welcoming atmosphere—perfect whether it’s your first home or a forever retreat. The seller is offering concessions for buyers, and owner financing is available. Don’t miss out on this incredible opportunity—call for more details and make this beautiful home yours today!",
+    "issue": "Invalid zip code format"
+  },
+  {
+    "opportunityId": "BeNtnl24hgRpMM9mxTM8",
+    "address": "208 Weaver Ave",
+    "field": "zip code",
+    "value": "Step into Lake Wales history with this beautifully renovated 100-year-old charmer. Blending timeless character with modern upgrades, this home features a stunning new kitchen with stainless steel appliances, GRANITE countertops, and updated cabinetry. You'll also find newer A/C, energy-efficient windows, water heater, updated flooring, lighting, and fixtures throughout.    Relax by the cozy wood-burning FIREPLACE, with the primary bedroom and oversized laundry room thoughtfully located on the main floor. Outside, enjoy the spacious COVERED FRONT PORCH, fresh landscaping, A BRAND NEW ROOF, and a FENCED backyard complete with a firepit and RV PARKING with full hookups.    CENTRALLY LOCATED— walking distance from Downtown, near dining, shopping, and major highways 27 & 60. USDA and OWNER FINANCING available for qualified buyers.    If you're looking for a home that TELLS A STORY — this is the one !",
+    "issue": "Invalid zip code format"
+  },
+  {
+    "opportunityId": "K1powEjC5nxePtBDhhtR",
+    "address": "4313 County Road 311",
+    "field": "zip code",
+    "value": "Large 4-bedroom, 3.5-bathroom home with an attached guest suite nestled in the woods just south of Henderson in Rusk County, Texas! On the main floor, this home offers a spacious master suite with exterior access to the porch, a combined kitchen and dining area with a walk-in pantry, a large office with built in shelving and wooded views from the built in granite desk, a media closet, half bathroom and a well-lit living area with views of the neighboring pond. Upstairs, there are three full size bedrooms, two full bathrooms and a large storage room with attic access. All windows offer excellent views of the surrounding woods. The guest suite is attached by a large covered carport and is outfitted with a full bathroom and kitchenette. A paved drive leads to the 1.0 acre property and crosses the neighboring pond, with a circle drive in front of the house offering easy access to the front door or the carport. OWNER FINANCING AVAILABLE",
+    "issue": "Invalid zip code format"
+  },
+  {
+    "opportunityId": "wp764wXrtzfKOgqCWUWW",
+    "address": "1599 San Saba Dr",
+    "field": "zip code",
+    "value": "This open concept home has been smartly designed for maximum space utilization without sacrificing storage room. Best thing about new construction? New water heater, New HVAC, New wiring, new plumbing, That's right, less worry. The intelligent design of this home includes garage plug in for your backup generator! Large kitchen pantry, large laundry room. Spacious and fenced backyard.",
+    "issue": "Invalid zip code format"
+  },
+  {
+    "opportunityId": "IbtoEtRmSGix3awrXSSY",
+    "address": "317 OAK SHADOW Place",
+    "field": "zip code",
+    "value": "A move-in ready, 2 story home in Rivertown! Located within this desirable community is a lovely 4 bed/2.5 bath home with a 3 car tandem garage. This home features a separate office w/French doors, formal dining room w/tray ceiling, and a spacious eating-space kitchen...overlooking a living room (w/room-length sliding-glass door(s)). \n\nUpstairs you'll find all bedrooms, 2 full bathrooms, a loft, and a laundry room. The rear yard is spacious and the rear lanai is large, with 3 fan setup. Additional features include a natural gas cooktop, tankless water heater, smart thermostat(s), stainless-steel appliances, granite counters, upgraded lighting & ceiling fans, wall-to-wall carpeting, LVP, tile flooring, and much more. ~ This property may qualify for Seller Financing (Vendee).",
+    "issue": "Invalid zip code format"
+  },
+  {
+    "opportunityId": "5yg2wAH4wx40M1KYA7Ox",
+    "address": "4081 Roderigo Ave",
+    "field": "zip code",
+    "value": "Stunning Custom Home by Masterpiece Custom Homes..  Owner Financing available! This immaculate, beautifully crafted home features a highly desirable split floor plan, offering both style and functionality. Enter to find a spacious Great Room with a built-in media center. complemented by a double tray ceiling and crown molding that adds a touch of elegance throughout.  The chef’s kitchen boasts upgraded wood cabinets and sleek granite countertops. The large neutral tile flooring flows seamlessly throughout the main living areas, while neutral carpeting in the bedrooms provides comfort and warmth. Each bedroom features cozy window seats and ample closet space.    The dining nook features aquarium glass windows that brighten the space with natural light. This home is fully equipped with impact glass windows for added safety and energy efficiency.    Retreat to the master suite, where you’ll find a lighted double tray ceiling, crown molding, and a luxurious master bath with a marble-topped garden tub, separate Roman shower, and cultured marble vanities.  The large enclosed pool area offers both privacy and luxury, featuring plenty of space for lounging, swimming, and entertaining. With ample room for outdoor furniture and dining, this expansive pool deck is perfect for hosting family and friends or simply enjoying the Florida sunshine in peace. Additional features are fenced in yard, beautiful landscaping with stone walls and paver pathways.  **New Roof 2024 and new carpeting in guest bedrooms 2025.  This home is a true masterpiece, offering both comfort and luxury in every detail. Don’t miss your chance to make this exceptional property yours!",
+    "issue": "Invalid zip code format"
+  },
+  {
+    "opportunityId": "rcuP9y5jXJe58nk6I7Vt",
+    "address": "509 N 6th St",
+    "field": "zip code",
+    "value": "Discover this charming 4-bedroom, 2.5-bath farmhouse-style home with a spacious front porch and fully fenced front and back yards, perfect for privacy and outdoor living. Located in a family-friendly neighborhood just minutes from the expressway, it also features a covered backyard area ideal for BBQs and gatherings. Easy financing available — 0% down for qualified buyers OR owner financing with just 15% down, 10% interest, and a 20-year term!",
+    "issue": "Invalid zip code format"
+  },
+  {
+    "opportunityId": "JFNMlwBe3FMaZzlYDYtY",
+    "address": "178 S Oak Bluff St",
+    "field": "zip code",
+    "value": "PLEASE READ WHOLE DESCRIPTION: FOR SALE BY OWNER! NO OWNER FINANCE! I DO NOT NEED REPRESENTATION BY REALTORS! NO RENTAL! NO SPAMMING!  This is a 3 Bedroom 2 bath 2019 Model Manufactured home. \nIt is nestled on 2 very large lots (close to an acre), surrounded by hundreds of different trees, shrubs, plants and bamboo. \nGives you the feeling of being in a tree house. \n You have a Waterview from your front partially covered deck and from the Master Bedroom Bed area.\n Enjoy the serenity of peace and quiet.\n Your very own personal escape. \nSpend a day on the lake boating to the famous goat island, fishing or swimming. \n2 boat launches and fish cleaning stations, picnic area, community center for events or coffee meetings and activities. \nThis is a close nit community offering different activities for kids, retired, disabled or veterans. \nThis would be a great 2nd home for a Lakehouse escape, Investment property, house flippers, for a family that is establishing roots in a small town, or a Sportsmans retreat.\n Retire and enjoy watching nature from the comfort of your own space.\n This property offers Country and Lake living all in one. \nPlease View for yourself so you can experience the peace and cozy feeling. Message me for a tour of this home, no Drive By's since this property is occupied and is located on a dead-end street with no turnaround areas, only private residences. \nWill give a large discount off price for a cash sale. \nThis is for sale by owner not owner financing. I will NOT do any rent to owns, so please don’t call or text and ask! I do not need an agent or a listing service!!! Do not spam me please. Interested buyers only! I do know a local loan officer that can help obtain financing for this home.  2 lots for the price of 1! Most Items are negotiable to stay with the house, just ask and let make a deal. I can send a video of the house as well.  All bedrooms will fit a King size bed. The secondary 2 bedrooms are the exact same size and layout excepted flipped. all walk in closets. Plenty of space in storage trailer for workshop or mancave, she shed ect. For more accurate details and drone pictures please google 178 Oak bluff street Trinity Texas 75862. or 178 south oak bluff street Trinity Texas 75862.\n This is not 65 acres it is 0.65 acres (which is close to an acre) it would not let me put the decimal in. This property does not flood! sits up on a hill, NO FLOOD ZONE. Energy efficient windows, Cheap bills.. Water bill is $59.00/month, Electricity runs me on average around $65.00/ month I can show my bills if need be. Internet is $45.00/ month. ( I have an Internet tower on side of house) No GAS bills Low TAXES!",
+    "issue": "Invalid zip code format"
+  },
+  {
+    "opportunityId": "qzgUvUAiirexS0BEJV3j",
+    "address": "6109 Spinnaker Loop",
+    "field": "zip code",
+    "value": "One or more photo(s) has been virtually staged. Discover the pinnacle of luxurious living in this stunning golf course frontage home nestled within the picturesque community of Harbor Hills, Florida.This beautiful 3 bedroom, 3 full bath and 3 car garage home seamlessly combines elegance, comfort, and an abundance of natural light, making it the perfect sanctuary for those who appreciate the finer things in life. The circular paver drive leads around to your side enterance 3 full size garage or up your beatuflly landscape path to your front door. As you step inside,you are greeted by a bright and airy open floor plan that boasts large picture windows, soaring 12ft ceilings, breathtaking views of the 11th hole tee box, luxurious engineered hardwood floors that add a touch of sophistication, while the beautifully designed wet bar elevates your hosting experience. Adjacent are two versatile rooms perfect for a piano or formal dining room the perfect setting for intimate gatherings and a spacious executive office offers a serene environment to focus and create. The heart of this home is the gourmet kitchen, featuring stainless steel appliances, a central island complete with a breakfast bar, and an impressively large pantry. The 42-inch cherry wood cabinets, solid surface countertops, and ceramic tile flooring effortlessly blend style and practicality, making this kitchen a delight to cook and gather in and seamlessly connects to the family room that boasts plush carpeting and more large picture windows and access to the birdcage. Down the hallway two generously sized guest bedrooms await, each with large walk-in closets. One bedroom features its own private bathroom with a walk in tub while the ther offers a convenient walk-in shower, providing comfort and privacy for your vistors. The laundry room has a refridgerator and plenty of countertop and cabiner space. On the opposite end of the home, retreat to the lavish master suite, where you can unwind in your private sitting area surrounded by large windows letting in natural light. The ensuite bathroom is complete with a beautiful garden tub,a separate walk-in shower, dual vanities, and two oversized walk-in closets with built-ins to keep your wardrobe organized and accessible. The gorgeous exterior features four distinct areas perfect for relaxation and entertainment. The charming front patio welcomes guests with ample seating, while the screened oversized porch invites you to enjoy the serene Florida evenings. At the rear, bask in the beauty of the large screened birdcage ideal for alfresco dining. This connects seamlessly to an expansive paver patio, complete with a private gate, perfect for a cozy fire pit and lively gatherings under the stars. This exceptional home is located in the distinguished Harbor Hills community, which offers a lifestyle like no other. Enjoy access to a wealth of amenities, including scenic lakefront views on Lake Griffin, a championship golf course, tennis courts, an Olympic-sized swimming pool, pickleball courts, and a vibrant clubhouse brimming with activities. For boating enthusiasts there is a private marina. Peace of mind comes standard with this home, as the roof was newly replaced in July 2025 and the AC unit was updated in May 2025, ensuring years of worry-free living.  All with possible owner financing. Don't miss the opportunity to make this enchanting property your own. Call today to schedule your showing and experience the elegance and charm of Harbor Hills living firsthand.",
+    "issue": "Invalid zip code format"
+  },
+  {
+    "opportunityId": "jpohoNbkHkJVXtqXUHgq",
+    "address": "136 Allington Cir",
+    "field": "zip code",
+    "value": "Welcome to this spacious 4-bedroom, 2-bathroom home, nestled in a neighborhood that combines comfort with convenience. The open floor plan allows for effortless flow, ideal for everyday living. Each of the four generously sized bedrooms offers ample closet space, ensuring a sanctuary for every member of your family. The heart of the home is the inviting kitchen, equipped with stainless appliances and abundant cabinetry, perfect for culinary adventures and casual dining. Granite countertops throughout the home. Newly installed carpet and laminate flooring in the living room, kitchen, and front bedroom. Water heater and water softener recently renewed. Strategically located, this home is just minutes away from local schools and shopping centers, providing a balance of peaceful living and urban accessibility. Easy access to I-35 and just a short drive south to Georgetown or north to Salado-Belton. No neighbors behind you. Almost country living! Don't miss the opportunity to make this wonderful property your new home.",
+    "issue": "Invalid zip code format"
+  },
+  {
+    "opportunityId": "jLUSRl4yY8f0tqepS7U4",
+    "address": "3041 FM 3335",
+    "field": "zip code",
+    "value": "**Possible Owner Financing** w/20% Dn,5% Int Rate,30-Yr Amort w/5-yr Balloon,Monthly Payment for P&I $2362 Plus Taxes & Insurance... Horse/Animal Friendly Property in Stockdale Tx on 3.84 Acres (With option to purchase up to 4.5 More Acres)  No Restrictions or City Taxes (Low 1.8% Tax Rate)   ..Approx 445' of Paved Rd Frontage off FM 3335 & 290' Along CR 433....Approx 62'x60' (3720sf) Metal Exterior Pole Barn/Possible Workshop w/Newer Gambrel Metal Roof,15-Stalls,Huge 60x20 Overhead Storage Area/Hay Loft w/Staircase & 2-Drive Thru's PLUS A **Completely Remodeled** Approx 2800sf 4 Or 5-BD w/2 Living Areas & 3 BA Quonset Style Bardonium Type Home w/Corrugated Metal Exterior that has Amazing Strength & Pretty Much Maint Free Exterior (Very Solid Structure) w/Newer Flooring,Appliances,Paint,Fixtures,Dbl Paine Windows,Lots of Recessed Lighting & Ceiling Fans,2-A/C Units,Newer Septic System,Pond w/Water Well & Rural Water Meter from Sunko Water Co, ..DOWNSTAIRS.. is an Approx 20x20 Living Rm,20x14 Island Kit,12x10 Dining Area,17x12 Main Bd Plus 2-Others (13x12 & 12x12) 2-Bathrooms,Utility Rm,Understair Storage Area,Rear Entry/Exit Door that leads out to Approx 20x20 Deck Patio w/Storage Rm,Approx 24x24 Covered Metal Carport Entry  ...UPSTAIRS..Is An Approx 19x16 2nd Living Rm/Bedroom,14x13 Playroom,2-BD's (11x10 & 12x10) 10x7 Bathroom,6x4 Storage Rm & 2-Approx 20x10 Mechanical Rooms/Storage...GVEC Electric Co & Internet Provider...**COUNTRY LIVING W/NO RESTRICTIONS**  Approx 25 Mi East of SA or 15-mi to Seguin...TAKE A LOOK....",
+    "issue": "Invalid zip code format"
+  },
+  {
+    "opportunityId": "ha498J6c99OWg8eqqTuP",
+    "address": "206 Alicante Dr",
+    "field": "Price",
+    "value": "tx",
+    "issue": "Invalid price"
+  },
+  {
+    "opportunityId": "lDgLbTh5mus19oiY61de",
+    "address": "MISSING",
+    "field": "Property Address",
+    "value": "",
+    "issue": "Missing property address"
+  },
+  {
+    "opportunityId": "yC5RWM3zOlQq8fAHa1uy",
+    "address": "4162 Frontier Sun",
+    "field": "Price",
+    "value": "tx",
+    "issue": "Invalid price"
+  },
+  {
+    "opportunityId": "lsAOLsT8G0vaznzQo4r9",
+    "address": "6812 Lakeside Dr",
+    "field": "zip code",
+    "value": "Investor special or DIY dream! Can Owner Finance home short-term for flip or long-term for 30 years. This 3-bedroom, 1-bath home sits on a spacious lot that backs up to open land, offering privacy and plenty of space. While the property needs significant repairs, it has solid potential for the right buyer to bring it back to life. In addition to the main house, there's a small detached apartment in the back—perfect for a guest suite, rental income, or extended family. It needs renovation but could be a great bonus living space with a little work. Whether you're an investor looking for your next project or a homeowner ready to roll up your sleeves and customize your dream space, this property offers great value and opportunity. Owner financing available either short term for a flip or longer term for homestead. Don't miss out on this chance to turn a fixer-upper into something truly special! All major big ticket items need work. Please be careful walking around home!",
+    "issue": "Invalid zip code format"
+  },
+  {
+    "opportunityId": "fcH5UooCLK8HsIiaWpv6",
+    "address": "219 Hillcrest St",
+    "field": "zip code",
+    "value": "Beautiful fully renovated home with a brand New Roof! It features an open floor plan with a great backyard for entertaining. Come check out this rare gem in downtown Sanger. HVAC (2019). Seller Financing is available.",
+    "issue": "Invalid zip code format"
+  },
+  {
+    "opportunityId": "6bFu2hFqZCgCfOsnJix4",
+    "address": "4912 Almena Rd",
+    "field": "zip code",
+    "value": "Charming cottage-style home located at 4912 Almena Rd in the heart of River Oaks! This property offers a great opportunity for investors or first-time buyers. Recently updated with some remodeling already completed, the home is ready for your finishing touches to make it shine. Situated on a spacious lot with mature trees, there’s plenty of potential to expand or personalize. Conveniently located near shopping, dining, and major highways. Seller is open to owner financing—ask for terms! Don’t miss your chance to own in this growing area at an affordable price.",
+    "issue": "Invalid zip code format"
+  },
+  {
+    "opportunityId": "aaNAVMdE1EDkA1viO2HN",
+    "address": "16616 Sumptuous Dr, Manor, TX 78653",
+    "field": "Price",
+    "value": "tx",
+    "issue": "Invalid price"
+  },
+  {
+    "opportunityId": "8G8PSSBT005nLtdgZHQA",
+    "address": "1520 Ben Crenshaw Way APT 120, Austin, TX 78746",
+    "field": "Price",
+    "value": "tx",
+    "issue": "Invalid price"
+  },
+  {
+    "opportunityId": "zOfDoewpihKjfYwwOLE2",
+    "address": "4421 Dovemeadow Dr, Austin, TX 78744",
+    "field": "Price",
+    "value": "tx",
+    "issue": "Invalid price"
+  },
+  {
+    "opportunityId": "AXiPwlDyOI694xMnRwNG",
+    "address": "1111 W 12th St APT 103, Austin, TX 78703",
+    "field": "Price",
+    "value": "tx",
+    "issue": "Invalid price"
+  },
+  {
+    "opportunityId": "muXk9iTQ9kQmgIo8kL0E",
+    "address": "16825 Roselin Dr, Austin, TX 78738",
+    "field": "Price",
+    "value": "tx",
+    "issue": "Invalid price"
+  },
+  {
+    "opportunityId": "e0ba7uRKCykAuFh33MH6",
+    "address": "8800 Dandelion Trl, Austin, TX 78745",
+    "field": "Price",
+    "value": "tx",
+    "issue": "Invalid price"
+  },
+  {
+    "opportunityId": "SkZcKcxyYYaGkm4MukxI",
+    "address": "8512 Remington Ln, Austin, TX 78758",
+    "field": "Price",
+    "value": "tx",
+    "issue": "Invalid price"
+  },
+  {
+    "opportunityId": "ATzdsCLKOiQIl9p5tmYi",
+    "address": "1201 Grove Blvd APT 2403, Austin, TX 78741",
+    "field": "Price",
+    "value": "tx",
+    "issue": "Invalid price"
+  },
+  {
+    "opportunityId": "2aflp1bZl7fDn0a1UItk",
+    "address": "300 Tilbury Ln, Austin, TX 78745",
+    "field": "Price",
+    "value": "tx",
+    "issue": "Invalid price"
+  },
+  {
+    "opportunityId": "3ZYZ0MiSlRCjy2oxSQgs",
+    "address": "11518 James B Connolly Ln, Austin, TX 78748",
+    "field": "Price",
+    "value": "tx",
+    "issue": "Invalid price"
+  },
+  {
+    "opportunityId": "V6jpgpAw5KaKtJ4g9fIJ",
+    "address": "3307 Etheredge Dr, Austin, TX 78725",
+    "field": "Price",
+    "value": "tx",
+    "issue": "Invalid price"
+  },
+  {
+    "opportunityId": "N9Sm1spsMrjVVE3a58P7",
+    "address": "909 Big Thicket St, Georgetown, TX 78633",
+    "field": "Price",
+    "value": "tx",
+    "issue": "Invalid price"
+  },
+  {
+    "opportunityId": "vX8z5jsCaONHHJ5Vv9vJ",
+    "address": "14724 Lake Victor Dr, Austin, TX 78753",
+    "field": "Price",
+    "value": "tx",
+    "issue": "Invalid price"
+  },
+  {
+    "opportunityId": "3xMrbfbz9CHNd4qPaB5D",
+    "address": "364 Ponderosa Loop, Paige, TX 78659",
+    "field": "Price",
+    "value": "tx",
+    "issue": "Invalid price"
+  },
+  {
+    "opportunityId": "7eFEiVWelKj2E6lTXJzw",
+    "address": "1156 Timberlane Dr Canyon, Lake, TX 78133",
+    "field": "Price",
+    "value": "tx",
+    "issue": "Invalid price"
+  },
+  {
+    "opportunityId": "wMSDTtbBRsHi3C619Cxv",
+    "address": "2216 Garden Ct San, Marcos, TX 78666",
+    "field": "Price",
+    "value": "tx",
+    "issue": "Invalid price"
+  },
+  {
+    "opportunityId": "F40PZFCXi0sstCqr3ou6",
+    "address": "360 Nueces St APT 1108, Austin, TX 78701",
+    "field": "Price",
+    "value": "tx",
+    "issue": "Invalid price"
+  },
+  {
+    "opportunityId": "uyOEhhr71hF5WCfAH42T",
+    "address": "10017 Dalliance Ln, Manor, TX 78653",
+    "field": "Price",
+    "value": "tx",
+    "issue": "Invalid price"
+  },
+  {
+    "opportunityId": "YF9u7UPsLvSmmQXVZ3qf",
+    "address": "346 Jim Miller Dr, Kyle, TX 78640",
+    "field": "Price",
+    "value": "tx",
+    "issue": "Invalid price"
+  },
+  {
+    "opportunityId": "NI60OykSQA5MwySyibBU",
+    "address": "522 Jefferson Dr, Niederwald, TX 78640",
+    "field": "Price",
+    "value": "tx",
+    "issue": "Invalid price"
+  },
+  {
+    "opportunityId": "PmvlcRvOOwYTZR1hNhKB",
+    "address": "107 Dedina Dr Georgetown, TX 78626",
+    "field": "Price",
+    "value": "tx",
+    "issue": "Invalid price"
+  },
+  {
+    "opportunityId": "ieHGugB8lZX7oHY3PyED",
+    "address": "209 Crockett Loop Georgetown, TX 78633",
+    "field": "Price",
+    "value": "tx",
+    "issue": "Invalid price"
+  },
+  {
+    "opportunityId": "TftxwVKD9j5S5loCswLU",
+    "address": "MISSING",
+    "field": "Property Address",
+    "value": "",
+    "issue": "Missing property address"
+  },
+  {
+    "opportunityId": "e5n5tocfVB9IbT4bkWL4",
+    "address": "MISSING",
+    "field": "Property Address",
+    "value": "",
+    "issue": "Missing property address"
+  }
+]

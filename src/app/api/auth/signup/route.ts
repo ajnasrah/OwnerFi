@@ -49,7 +49,59 @@ export async function POST(request: NextRequest) {
       role: userType || 'buyer'
     });
 
-    // DON'T create buyer link profile here - wait for setup completion
+    // Auto-create buyer profile skeleton to avoid orphaned users
+    if ((userType || 'buyer') === 'buyer') {
+      const { db } = await import('@/lib/firebase');
+      const { doc, setDoc, serverTimestamp } = await import('firebase/firestore');
+
+      if (db) {
+        const buyerId = `buyer_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        await setDoc(doc(db, 'buyerProfiles', buyerId), {
+          id: buyerId,
+          userId: newUser.id,
+          firstName: firstName || fullName.split(' ')[0] || '',
+          lastName: lastName || fullName.split(' ').slice(1).join(' ') || '',
+          email: email.toLowerCase().trim(),
+          phone: phone?.trim() || '',
+
+          // Empty location fields - to be filled in setup
+          preferredCity: '',
+          preferredState: '',
+          city: '',
+          state: '',
+          searchRadius: 25,
+
+          // Empty budget fields - to be filled in setup
+          maxMonthlyPayment: 0,
+          maxDownPayment: 0,
+
+          // Communication preferences
+          languages: languages || ['English'],
+          emailNotifications: true,
+          smsNotifications: true,
+
+          // System fields
+          profileComplete: false, // Mark incomplete until setup is done
+          isActive: true,
+
+          // Property interaction arrays
+          matchedPropertyIds: [],
+          likedPropertyIds: [],
+          passedPropertyIds: [],
+
+          // Lead selling fields
+          isAvailableForPurchase: false, // Don't sell incomplete profiles
+          leadPrice: 1,
+
+          // Activity tracking
+          lastActiveAt: serverTimestamp(),
+
+          // Metadata
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        });
+      }
+    }
 
     await logInfo('Created new buyer account', {
       action: 'buyer_signup',

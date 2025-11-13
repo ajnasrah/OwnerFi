@@ -458,7 +458,7 @@ Prominently displayed on all property pages and in buyer waiver.
 ## 📞 Support
 
 For questions about implementation:
-- Email: admin@prosway.com
+- Email: abdullah@ownerfi.ai
 - Review: `/src/lib/legal-agreements.ts` for available functions
 - Check: Firestore console for agreement records
 

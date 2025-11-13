@@ -111,7 +111,7 @@ const handleAgentAccept = async (signature: string) => {
 
 - **Governing Law:** State of Tennessee
 - **Arbitration Venue:** Shelby County, Tennessee
-- **Company Address:** 6699 Fletcher Creek Cove, Memphis, TN 38133
+- **Company Address:** 5095 Covington Way, Memphis, TN 38134
 
 ---
 
@@ -119,10 +119,7 @@ const handleAgentAccept = async (signature: string) => {
 
 | Purpose | Email |
 |---------|-------|
-| General | admin@prosway.com |
-| Privacy | privacy@prosway.com |
-| GDPR | gdpr@prosway.com |
-| Legal | legal@prosway.com |
+| All Inquiries | abdullah@ownerfi.ai |
 
 ---
 
@@ -232,7 +229,7 @@ Agent Onboarding → <AgentDataAgreement />
 2. **Review:** `LEGAL_DOCUMENTS_SUMMARY.md` (complete overview)
 3. **Check:** Code comments in components
 4. **Test:** Run through signup/onboarding flows
-5. **Email:** admin@prosway.com
+5. **Email:** abdullah@ownerfi.ai
 
 ---
 

@@ -48,10 +48,10 @@ export function LegalFooter({
             <a href="/terms" className="hover:text-white transition-colors">Terms of Service</a>
             <a href="/privacy" className="hover:text-white transition-colors">Privacy Policy</a>
             <a href="/how-owner-finance-works" className="hover:text-white transition-colors">Legal Disclaimers</a>
-            <a href="mailto:legal@prosway.com" className="hover:text-white transition-colors">Legal Contact</a>
+            <a href="mailto:support@ownerfi.ai" className="hover:text-white transition-colors">Legal Contact</a>
           </div>
           <p className="text-xs text-slate-500">
-            © 2025 OwnerFi (operated by Prosway) - Lead Generation Platform Only - Not Licensed Real Estate Services
+            © 2025 OwnerFi - Lead Generation Platform Only - Not Licensed Real Estate Services
           </p>
         </div>
       </div>

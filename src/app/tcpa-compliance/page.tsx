@@ -82,9 +82,9 @@ export default function TCPACompliance() {
             <h2 className="text-2xl font-bold text-purple-400 mb-4">3. Indemnification</h2>
             <div className="bg-purple-500/10 border border-purple-400/30 rounded-lg p-4">
               <p className="text-slate-200 leading-relaxed">
-                Agent agrees to <strong>indemnify, defend, and hold harmless</strong> OwnerFi, Prosway, and their affiliates, 
-                officers, directors, employees, and contractors from and against any and all claims, damages, fines, penalties, 
-                settlements, costs, or expenses (including reasonable attorneys' fees) arising from or related to Agent's 
+                Agent agrees to <strong>indemnify, defend, and hold harmless</strong> OwnerFi and its affiliates,
+                officers, directors, employees, and contractors from and against any and all claims, damages, fines, penalties,
+                settlements, costs, or expenses (including reasonable attorneys' fees) arising from or related to Agent's
                 communications with leads, including but not limited to TCPA or state telemarketing violations.
               </p>
             </div>
@@ -149,7 +149,7 @@ export default function TCPACompliance() {
       <footer className="bg-slate-800/30 border-t border-slate-700/50 py-6 mt-12">
         <div className="max-w-4xl mx-auto px-6 text-center">
           <p className="text-xs text-slate-500">
-            © 2025 OwnerFi (operated by Prosway) - 6699 Fletcher Creek Cove, Memphis, TN 38133
+            © 2025 OwnerFi - #1076, 1028 Cresthaven Road, Suite 200, Memphis, TN 38119, United States
           </p>
         </div>
       </footer>

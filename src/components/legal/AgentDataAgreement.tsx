@@ -115,7 +115,7 @@ export function AgentDataAgreement({
           <div className="bg-red-50 border-2 border-red-300 rounded-lg p-5">
             <h3 className="text-xl font-bold text-red-900 mb-3">⚖️ Indemnification Clause</h3>
             <p className="text-red-800 text-sm font-semibold mb-3">
-              Agent agrees to <strong>indemnify, defend, and hold harmless</strong> OwnerFi, Prosway, and their affiliates, officers, directors, employees, and contractors from and against any and all claims, damages, losses, liabilities, costs, or expenses (including reasonable attorney's fees) arising from or related to:
+              Agent agrees to <strong>indemnify, defend, and hold harmless</strong> OwnerFi and its affiliates, officers, directors, employees, and contractors from and against any and all claims, damages, losses, liabilities, costs, or expenses (including reasonable attorney's fees) arising from or related to:
             </p>
             <ul className="list-disc ml-6 space-y-1 text-red-700 text-sm">
               <li>Inaccurate, incomplete, outdated, or misleading property information I provided</li>

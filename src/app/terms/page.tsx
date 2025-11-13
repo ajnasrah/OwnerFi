@@ -12,9 +12,10 @@ export default function TermsOfService() {
       <div className="max-w-4xl mx-auto px-6 py-16">
         <div className="bg-white rounded-xl shadow-light p-8 md:p-12">
           <h1 className="text-4xl font-bold text-primary-text mb-8">Terms of Service</h1>
-          <p className="text-slate-600 mb-8">Last updated: January 13, 2025</p>
+          <p className="text-slate-600 mb-8">Effective Date: November 13, 2025</p>
           <p className="text-slate-600 mb-4">Governing Law: State of Tennessee</p>
-          <p className="text-slate-600 mb-8">Arbitration Venue: Shelby County, Tennessee</p>
+          <p className="text-slate-600 mb-4">Arbitration Venue: Shelby County, Tennessee</p>
+          <p className="text-slate-600 mb-8">Contact: support@ownerfi.ai</p>
 
           {/* Plain English Summary */}
           <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-8">
@@ -772,9 +773,9 @@ export default function TermsOfService() {
               <h2 className="text-2xl font-semibold text-primary-text mb-4">20. Contact Information</h2>
               <p>If you have questions about these Terms, please contact us at:</p>
               <div className="mt-2 p-4 bg-slate-50 rounded-lg">
-                <p><strong>OwnerFi (operated by Prosway)</strong></p>
-                <p>Email: admin@prosway.com</p>
-                <p>Address: 6699 Fletcher Creek Cove, Memphis, TN 38133</p>
+                <p><strong>OwnerFi</strong></p>
+                <p>Email: support@ownerfi.ai</p>
+                <p>Address: #1076, 1028 Cresthaven Road, Suite 200<br />Memphis, TN 38119<br />United States</p>
               </div>
             </section>
 

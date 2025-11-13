@@ -165,6 +165,165 @@ export default function HomePageClient() {
     document.querySelectorAll('[data-translate="testimonials.stat4"]').forEach(el => {
       el.textContent = t.testimonials.stat4
     })
+
+    // No-Bank Options Section
+    document.querySelectorAll('[data-translate="noBankOptions.title"]').forEach(el => {
+      el.textContent = t.noBankOptions.title
+    })
+    document.querySelectorAll('[data-translate="noBankOptions.subtitle"]').forEach(el => {
+      el.textContent = t.noBankOptions.subtitle
+    })
+    document.querySelectorAll('[data-translate="noBankOptions.option1Title"]').forEach(el => {
+      el.textContent = t.noBankOptions.option1Title
+    })
+    document.querySelectorAll('[data-translate="noBankOptions.option1Point1"]').forEach(el => {
+      el.textContent = t.noBankOptions.option1Point1
+    })
+    document.querySelectorAll('[data-translate="noBankOptions.option1Point2"]').forEach(el => {
+      el.textContent = t.noBankOptions.option1Point2
+    })
+    document.querySelectorAll('[data-translate="noBankOptions.option1Point3"]').forEach(el => {
+      el.textContent = t.noBankOptions.option1Point3
+    })
+    document.querySelectorAll('[data-translate="noBankOptions.option1Point4"]').forEach(el => {
+      el.textContent = t.noBankOptions.option1Point4
+    })
+    document.querySelectorAll('[data-translate="noBankOptions.option2Title"]').forEach(el => {
+      el.textContent = t.noBankOptions.option2Title
+    })
+    document.querySelectorAll('[data-translate="noBankOptions.option2Point1"]').forEach(el => {
+      el.textContent = t.noBankOptions.option2Point1
+    })
+    document.querySelectorAll('[data-translate="noBankOptions.option2Point2"]').forEach(el => {
+      el.textContent = t.noBankOptions.option2Point2
+    })
+    document.querySelectorAll('[data-translate="noBankOptions.option2Point3"]').forEach(el => {
+      el.textContent = t.noBankOptions.option2Point3
+    })
+    document.querySelectorAll('[data-translate="noBankOptions.option2Point4"]').forEach(el => {
+      el.textContent = t.noBankOptions.option2Point4
+    })
+    document.querySelectorAll('[data-translate="noBankOptions.option3Title"]').forEach(el => {
+      el.textContent = t.noBankOptions.option3Title
+    })
+    document.querySelectorAll('[data-translate="noBankOptions.option3Point1"]').forEach(el => {
+      el.textContent = t.noBankOptions.option3Point1
+    })
+    document.querySelectorAll('[data-translate="noBankOptions.option3Point2"]').forEach(el => {
+      el.textContent = t.noBankOptions.option3Point2
+    })
+    document.querySelectorAll('[data-translate="noBankOptions.option3Point3"]').forEach(el => {
+      el.textContent = t.noBankOptions.option3Point3
+    })
+    document.querySelectorAll('[data-translate="noBankOptions.option3Point4"]').forEach(el => {
+      el.textContent = t.noBankOptions.option3Point4
+    })
+    document.querySelectorAll('[data-translate="noBankOptions.option4Title"]').forEach(el => {
+      el.textContent = t.noBankOptions.option4Title
+    })
+    document.querySelectorAll('[data-translate="noBankOptions.option4Point1"]').forEach(el => {
+      el.textContent = t.noBankOptions.option4Point1
+    })
+    document.querySelectorAll('[data-translate="noBankOptions.option4Point2"]').forEach(el => {
+      el.textContent = t.noBankOptions.option4Point2
+    })
+    document.querySelectorAll('[data-translate="noBankOptions.option4Point3"]').forEach(el => {
+      el.textContent = t.noBankOptions.option4Point3
+    })
+    document.querySelectorAll('[data-translate="noBankOptions.option4Point4"]').forEach(el => {
+      el.textContent = t.noBankOptions.option4Point4
+    })
+    document.querySelectorAll('[data-translate="noBankOptions.specialtyText"]').forEach(el => {
+      el.textContent = t.noBankOptions.specialtyText
+    })
+    document.querySelectorAll('[data-translate="noBankOptions.specialtyDescription"]').forEach(el => {
+      el.textContent = t.noBankOptions.specialtyDescription
+    })
+    document.querySelectorAll('[data-translate="noBankOptions.learnMore"]').forEach(el => {
+      el.textContent = t.noBankOptions.learnMore
+    })
+
+    // Benefits Section
+    document.querySelectorAll('[data-translate="benefits.title"]').forEach(el => {
+      el.textContent = t.benefits.title
+    })
+    document.querySelectorAll('[data-translate="benefits.benefit1Title"]').forEach(el => {
+      el.textContent = t.benefits.benefit1Title
+    })
+    document.querySelectorAll('[data-translate="benefits.benefit1Text"]').forEach(el => {
+      el.textContent = t.benefits.benefit1Text
+    })
+    document.querySelectorAll('[data-translate="benefits.benefit2Title"]').forEach(el => {
+      el.textContent = t.benefits.benefit2Title
+    })
+    document.querySelectorAll('[data-translate="benefits.benefit2Text"]').forEach(el => {
+      el.textContent = t.benefits.benefit2Text
+    })
+    document.querySelectorAll('[data-translate="benefits.benefit3Title"]').forEach(el => {
+      el.textContent = t.benefits.benefit3Title
+    })
+    document.querySelectorAll('[data-translate="benefits.benefit3Text"]').forEach(el => {
+      el.textContent = t.benefits.benefit3Text
+    })
+    document.querySelectorAll('[data-translate="benefits.benefit4Title"]').forEach(el => {
+      el.textContent = t.benefits.benefit4Title
+    })
+    document.querySelectorAll('[data-translate="benefits.benefit4Text"]').forEach(el => {
+      el.textContent = t.benefits.benefit4Text
+    })
+
+    // Locations Section
+    document.querySelectorAll('[data-translate="locations.title"]').forEach(el => {
+      el.textContent = t.locations.title
+    })
+    document.querySelectorAll('[data-translate="locations.texasSubtitle"]').forEach(el => {
+      el.textContent = t.locations.texasSubtitle
+    })
+    document.querySelectorAll('[data-translate="locations.texasProperties"]').forEach(el => {
+      el.textContent = t.locations.texasProperties
+    })
+    document.querySelectorAll('[data-translate="locations.floridaSubtitle"]').forEach(el => {
+      el.textContent = t.locations.floridaSubtitle
+    })
+    document.querySelectorAll('[data-translate="locations.floridaProperties"]').forEach(el => {
+      el.textContent = t.locations.floridaProperties
+    })
+    document.querySelectorAll('[data-translate="locations.georgiaSubtitle"]').forEach(el => {
+      el.textContent = t.locations.georgiaSubtitle
+    })
+    document.querySelectorAll('[data-translate="locations.georgiaProperties"]').forEach(el => {
+      el.textContent = t.locations.georgiaProperties
+    })
+    document.querySelectorAll('[data-translate="locations.nationwideTitle"]').forEach(el => {
+      el.textContent = t.locations.nationwideTitle
+    })
+    document.querySelectorAll('[data-translate="locations.nationwideSubtitle"]').forEach(el => {
+      el.textContent = t.locations.nationwideSubtitle
+    })
+    document.querySelectorAll('[data-translate="locations.viewAllCta"]').forEach(el => {
+      el.textContent = t.locations.viewAllCta
+    })
+    document.querySelectorAll('[data-translate="locations.alternativeTitle"]').forEach(el => {
+      el.textContent = t.locations.alternativeTitle
+    })
+    document.querySelectorAll('[data-translate="locations.rentToOwnTitle"]').forEach(el => {
+      el.textContent = t.locations.rentToOwnTitle
+    })
+    document.querySelectorAll('[data-translate="locations.rentToOwnText"]').forEach(el => {
+      el.textContent = t.locations.rentToOwnText
+    })
+    document.querySelectorAll('[data-translate="locations.badCreditTitle"]').forEach(el => {
+      el.textContent = t.locations.badCreditTitle
+    })
+    document.querySelectorAll('[data-translate="locations.badCreditText"]').forEach(el => {
+      el.textContent = t.locations.badCreditText
+    })
+    document.querySelectorAll('[data-translate="locations.noCreditTitle"]').forEach(el => {
+      el.textContent = t.locations.noCreditTitle
+    })
+    document.querySelectorAll('[data-translate="locations.noCreditText"]').forEach(el => {
+      el.textContent = t.locations.noCreditText
+    })
   }, [language])
 
   return (

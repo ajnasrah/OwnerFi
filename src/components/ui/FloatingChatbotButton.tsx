@@ -82,11 +82,11 @@ export default function FloatingChatbotButton({ onClick }: FloatingChatbotButton
   }, []);
 
   return (
-    <div className="fixed bottom-6 left-6 z-[9999]">
+    <div className="fixed bottom-6 right-6 z-[9999]">
       {/* Natural Chat Bubble */}
       {showQuestion && (
         <div
-          className={`absolute bottom-16 left-0 w-fit min-w-[160px] max-w-[240px] bg-emerald-600 text-white px-4 py-2.5 rounded-xl shadow-lg transform transition-all duration-300 ${
+          className={`absolute bottom-16 right-0 w-fit min-w-[160px] max-w-[240px] bg-emerald-600 text-white px-4 py-2.5 rounded-xl shadow-lg transform transition-all duration-300 ${
             showQuestion ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-2 scale-95'
           }`}
         >
@@ -107,7 +107,7 @@ export default function FloatingChatbotButton({ onClick }: FloatingChatbotButton
           </div>
 
           {/* Tail pointing to button */}
-          <div className="absolute -bottom-1 left-4 w-3 h-3 bg-emerald-600 transform rotate-45"></div>
+          <div className="absolute -bottom-1 right-4 w-3 h-3 bg-emerald-600 transform rotate-45"></div>
         </div>
       )}
 

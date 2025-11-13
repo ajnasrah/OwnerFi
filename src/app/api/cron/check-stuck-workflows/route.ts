@@ -521,9 +521,39 @@ async function checkSubMagicWorkflows() {
 
           console.log(`   🎬 ${workflowId}: ${status}`);
 
-          if ((status === 'completed' || status === 'done' || status === 'ready') && downloadUrl) {
+          if (status === 'completed' || status === 'done' || status === 'ready') {
+            // Check if download URL exists, if not trigger export
+            let finalDownloadUrl = downloadUrl;
+
+            if (!finalDownloadUrl) {
+              console.log(`   ⚠️  Complete but no download URL - triggering export...`);
+
+              try {
+                const exportResponse = await fetch(`https://api.submagic.co/v1/projects/${projectId}/export`, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'x-api-key': SUBMAGIC_API_KEY
+                  }
+                });
+
+                if (exportResponse.ok) {
+                  console.log(`   ✅ Export triggered - video will be ready soon`);
+                  // Don't process yet, will be picked up next cron run
+                  continue;
+                } else {
+                  const exportError = await exportResponse.text();
+                  console.error(`   ❌ Export trigger failed:`, exportError);
+                  continue;
+                }
+              } catch (exportError) {
+                console.error(`   ❌ Error triggering export:`, exportError);
+                continue;
+              }
+            }
+
             // Upload to R2
-            const publicVideoUrl = await uploadSubmagicVideo(downloadUrl);
+            const publicVideoUrl = await uploadSubmagicVideo(finalDownloadUrl);
 
             // Update to posting
             await updateDoc(doc(db, collectionName, workflowId), {

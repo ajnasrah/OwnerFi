@@ -159,18 +159,19 @@ export class PodcastVideoGenerator {
     const videoScenes = [];
 
     for (const qa of script.qa_pairs) {
-      // Host asks question
+      // Host asks question - uses standard talking_photo configuration
       videoScenes.push({
         character: {
-          type: this.hostProfile.avatar_type || 'talking_photo',
+          type: 'talking_photo',
           talking_photo_id: this.hostProfile.avatar_id,
-          scale: this.hostProfile.scale || 1.4
+          scale: this.hostProfile.scale || 1.4,
+          talking_style: 'expressive'
         },
         voice: {
           type: 'text',
           voice_id: this.hostProfile.voice_id,
           input_text: qa.question,
-          speed: 1.0
+          speed: 1.1
         },
         background: {
           type: 'color',
@@ -178,11 +179,11 @@ export class PodcastVideoGenerator {
         }
       });
 
-      // Guest answers
+      // Guest answers - uses standard talking_photo configuration
       const guestVoice: any = {
         type: 'text',
         input_text: qa.answer,
-        speed: 1.0
+        speed: 1.1
       };
 
       if (guest.voice_id) {
@@ -191,11 +192,10 @@ export class PodcastVideoGenerator {
 
       videoScenes.push({
         character: {
-          type: guest.avatar_type || 'avatar',
-          ...(guest.avatar_type === 'avatar'
-            ? { avatar_id: guest.avatar_id }
-            : { talking_photo_id: guest.avatar_id }),
-          scale: guest.scale || 1.0
+          type: 'talking_photo',
+          talking_photo_id: guest.avatar_id,
+          scale: guest.scale || 1.4,
+          talking_style: 'expressive'
         },
         voice: guestVoice,
         background: {
@@ -311,17 +311,16 @@ export class PodcastVideoGenerator {
       video_inputs: [
         {
           character: {
-            type: profile.avatar_type || 'talking_photo',
-            ...(profile.avatar_type === 'avatar'
-              ? { avatar_id: profile.avatar_id }
-              : { talking_photo_id: profile.avatar_id }),
-            scale: profile.scale || 1.4
+            type: 'talking_photo',
+            talking_photo_id: profile.avatar_id,
+            scale: profile.scale || 1.4,
+            talking_style: 'expressive'
           },
           voice: {
             type: 'text',
             voice_id: profile.voice_id,
             input_text: text,
-            speed: 1.0
+            speed: 1.1
           },
           background: {
             type: 'color',

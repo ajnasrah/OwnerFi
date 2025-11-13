@@ -202,7 +202,7 @@ export default function Chatbot({ isOpen, onClose }: ChatbotProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed bottom-6 left-6 z-[9998] w-[90vw] max-w-[360px] animate-in slide-in-from-bottom-4 duration-300">
+    <div className="fixed bottom-6 right-6 z-[9998] w-[90vw] max-w-[360px] animate-in slide-in-from-bottom-4 duration-300">
       <div className="bg-white rounded-xl shadow-2xl flex flex-col overflow-hidden border border-slate-200" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', height: 'min(500px, 70vh)' }}>
 
         {/* Header */}

@@ -143,19 +143,13 @@ export class HeyGenPodcastGenerator {
     const scenes: VideoScene[] = [];
 
     for (const qa of script.qa_pairs) {
-      // Host asks question
+      // Host asks question - uses standard talking_photo configuration
       const hostCharacter: any = {
-        type: this.hostProfile.avatar_type,
-        scale: 1.0  // Host uses scale 1.0 to match other brands (not vassdistro)
+        type: 'talking_photo',
+        talking_photo_id: this.hostProfile.avatar_id,
+        scale: this.hostProfile.scale || 1.4,
+        talking_style: 'expressive'
       };
-
-      if (this.hostProfile.avatar_type === 'avatar') {
-        hostCharacter.avatar_id = this.hostProfile.avatar_id;
-        hostCharacter.avatar_style = 'normal';
-      } else {
-        hostCharacter.talking_photo_id = this.hostProfile.avatar_id;
-        hostCharacter.talking_style = 'expressive';
-      }
 
       scenes.push({
         character: hostCharacter,
@@ -163,15 +157,15 @@ export class HeyGenPodcastGenerator {
           type: 'text',
           voice_id: this.hostProfile.voice_id,
           input_text: qa.question,
-          speed: 1.0
+          speed: 1.1
         }
       });
 
-      // Guest answers
+      // Guest answers - uses standard talking_photo configuration
       const guestVoice: any = {
         type: 'text',
         input_text: qa.answer,
-        speed: guest.voice_speed || 1.15  // Use guest's voice_speed or default to 1.15
+        speed: 1.1
       };
 
       // Only add voice_id if it's provided, otherwise use avatar's default voice
@@ -180,18 +174,11 @@ export class HeyGenPodcastGenerator {
       }
 
       const guestCharacter: any = {
-        type: guest.avatar_type,
-        scale: guest.scale || 1.4  // Use guest's configured scale
+        type: 'talking_photo',
+        talking_photo_id: guest.avatar_id,
+        scale: guest.scale || 1.4,
+        talking_style: 'expressive'
       };
-
-      // Add avatar_id or talking_photo_id based on type
-      if (guest.avatar_type === 'avatar') {
-        guestCharacter.avatar_id = guest.avatar_id;
-        guestCharacter.avatar_style = 'normal';  // Options: normal, closeUp, circle
-      } else {
-        guestCharacter.talking_photo_id = guest.avatar_id;
-        guestCharacter.talking_style = 'expressive';
-      }
 
       scenes.push({
         character: guestCharacter,

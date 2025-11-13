@@ -166,23 +166,31 @@ async function generatePodcastEpisode() {
 
     // Build video inputs
     const videoInputs = script.qa_pairs.flatMap((pair) => {
-      const hostCharacter = hostProfile.avatar_type === 'talking_photo'
-        ? { type: 'talking_photo', talking_photo_id: hostProfile.avatar_id, scale: hostProfile.scale || 1.0 }
-        : { type: 'avatar', avatar_id: hostProfile.avatar_id, scale: hostProfile.scale || 1.0 };
+      // Host uses standard talking_photo configuration
+      const hostCharacter = {
+        type: 'talking_photo',
+        talking_photo_id: hostProfile.avatar_id,
+        scale: hostProfile.scale || 1.4,
+        talking_style: 'expressive'
+      };
 
-      const guestCharacter = guestProfile.avatar_type === 'talking_photo'
-        ? { type: 'talking_photo', talking_photo_id: guestProfile.avatar_id, scale: guestProfile.scale || 2.8 }
-        : { type: 'avatar', avatar_id: guestProfile.avatar_id, scale: guestProfile.scale || 2.8, offset: guestProfile.offset || { x: 0, y: 0.2 } };
+      // Guest uses standard talking_photo configuration
+      const guestCharacter = {
+        type: 'talking_photo',
+        talking_photo_id: guestProfile.avatar_id,
+        scale: guestProfile.scale || 1.4,
+        talking_style: 'expressive'
+      };
 
       return [
         {
           character: hostCharacter,
-          voice: { type: 'text', input_text: pair.question, voice_id: hostProfile.voice_id, speed: 1.0 },
+          voice: { type: 'text', input_text: pair.question, voice_id: hostProfile.voice_id, speed: 1.1 },
           background: { type: 'color', value: hostProfile.background_color || '#ffffff' }
         },
         {
           character: guestCharacter,
-          voice: { type: 'text', input_text: pair.answer, voice_id: guestProfile.voice_id, speed: guestProfile.voice_speed || 1.15 },
+          voice: { type: 'text', input_text: pair.answer, voice_id: guestProfile.voice_id, speed: 1.1 },
           background: { type: 'color', value: guestProfile.background_color || '#f5f5f5' }
         }
       ];

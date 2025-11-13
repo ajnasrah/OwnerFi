@@ -102,7 +102,7 @@ export const CARZ_CONFIG: BrandConfig = {
   platforms: {
     default: ['instagram', 'tiktok', 'facebook', 'linkedin', 'threads'],
     all: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'threads', 'pinterest'],
-    excludeFromDefault: ['twitter', 'bluesky', 'youtube'], // Carz doesn't use Twitter/Bluesky; YouTube temporarily disabled due to quota limits
+    excludeFromDefault: ['twitter', 'bluesky'], // Carz doesn't use Twitter/Bluesky
   },
 
   webhooks: {
@@ -153,7 +153,7 @@ export const OWNERFI_CONFIG: BrandConfig = {
   platforms: {
     default: ['instagram', 'tiktok', 'facebook', 'linkedin', 'threads', 'twitter', 'bluesky'],
     all: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'threads', 'twitter', 'bluesky', 'pinterest', 'reddit'],
-    excludeFromDefault: ['youtube'], // YouTube temporarily disabled due to API quota limits
+    excludeFromDefault: [], // All platforms enabled
   },
 
   webhooks: {
@@ -204,7 +204,7 @@ export const PODCAST_CONFIG: BrandConfig = {
   platforms: {
     default: ['instagram', 'tiktok', 'facebook', 'linkedin', 'threads'],
     all: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'threads', 'twitter', 'bluesky'],
-    excludeFromDefault: ['youtube'], // YouTube temporarily disabled due to API quota limits
+    excludeFromDefault: [], // All platforms enabled
   },
 
   webhooks: {
@@ -254,7 +254,7 @@ export const BENEFIT_CONFIG: BrandConfig = {
   platforms: {
     default: ['instagram', 'tiktok', 'facebook', 'linkedin', 'threads'],
     all: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'threads', 'twitter', 'bluesky', 'pinterest', 'reddit'],
-    excludeFromDefault: ['youtube'], // YouTube temporarily disabled due to API quota limits
+    excludeFromDefault: [], // All platforms enabled
   },
 
   webhooks: {
@@ -304,7 +304,7 @@ export const PROPERTY_CONFIG: BrandConfig = {
   platforms: {
     default: ['instagram', 'tiktok', 'facebook', 'linkedin', 'threads'],
     all: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'threads', 'twitter', 'bluesky', 'pinterest', 'reddit'],
-    excludeFromDefault: ['youtube'], // YouTube disabled - shares OwnerFi's account (quota exhaustion)
+    excludeFromDefault: [], // All platforms enabled
   },
 
   webhooks: {
@@ -355,7 +355,7 @@ export const PROPERTY_SPANISH_CONFIG: BrandConfig = {
   platforms: {
     default: ['instagram', 'tiktok', 'facebook', 'linkedin', 'threads'],
     all: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'threads', 'twitter', 'bluesky', 'pinterest', 'reddit'],
-    excludeFromDefault: ['youtube'], // YouTube disabled - shares OwnerFi's account (quota exhaustion)
+    excludeFromDefault: [], // All platforms enabled
   },
 
   webhooks: {
@@ -405,7 +405,7 @@ export const VASSDISTRO_CONFIG: BrandConfig = {
   platforms: {
     default: ['instagram', 'tiktok', 'facebook', 'linkedin', 'threads'],
     all: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'threads', 'twitter', 'bluesky'],
-    excludeFromDefault: ['youtube'], // YouTube temporarily disabled due to API quota limits
+    excludeFromDefault: [], // All platforms enabled
   },
 
   webhooks: {
@@ -457,7 +457,7 @@ export const ABDULLAH_CONFIG: BrandConfig = {
   platforms: {
     default: ['instagram', 'tiktok', 'facebook', 'linkedin'],
     all: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'threads', 'twitter', 'bluesky'],
-    excludeFromDefault: ['youtube'], // YouTube disabled - shares OwnerFi's account (quota exhaustion)
+    excludeFromDefault: [], // All platforms enabled
   },
 
   webhooks: {

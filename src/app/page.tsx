@@ -243,7 +243,7 @@ export default async function HomePage() {
                       data-event="cta_click"
                       data-location="hero"
                     >
-                      Start Swiping Free
+                      <span data-translate="hero.ctaPrimary">Start Swiping Free</span>
                       <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                       </svg>
@@ -253,13 +253,13 @@ export default async function HomePage() {
                       href="#how-it-works"
                       className="bg-slate-800/50 hover:bg-slate-700/50 border-2 border-slate-600 hover:border-slate-500 text-white px-6 py-3.5 rounded-xl font-semibold text-base transition-all duration-300 hover:scale-[1.02] text-center"
                     >
-                      See How It Works
+                      <span data-translate="hero.ctaSecondary">See How It Works</span>
                     </Link>
                   </div>
 
                   {/* Scroll Indicator */}
                   <div className="text-center lg:text-left mt-8">
-                    <p className="text-slate-400 text-sm mb-2">Scroll to learn more</p>
+                    <p className="text-slate-400 text-sm mb-2" data-translate="hero.scrollText">Scroll to learn more</p>
                     <svg className="w-6 h-6 text-slate-400 animate-bounce mx-auto lg:mx-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
                     </svg>
@@ -304,10 +304,10 @@ export default async function HomePage() {
           <section className="min-h-screen flex items-center justify-center py-16 px-4">
             <div className="max-w-4xl mx-auto">
               <div className="text-center mb-12">
-                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white mb-3">
+                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white mb-3" data-translate="whyChoose.title">
                   Why Choose OwnerFi?
                 </h2>
-                <p className="text-base sm:text-lg text-slate-300 max-w-2xl mx-auto">
+                <p className="text-base sm:text-lg text-slate-300 max-w-2xl mx-auto" data-translate="whyChoose.subtitle">
                   The modern alternative to traditional home buying
                 </p>
               </div>
@@ -319,8 +319,8 @@ export default async function HomePage() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                   </div>
-                  <h3 className="text-base font-bold text-white mb-2">Skip the Banks</h3>
-                  <p className="text-sm text-slate-300">Work directly with sellers for flexible financing</p>
+                  <h3 className="text-base font-bold text-white mb-2" data-translate="whyChoose.benefit1Title">Skip the Banks</h3>
+                  <p className="text-sm text-slate-300" data-translate="whyChoose.benefit1Text">Work directly with sellers for flexible financing</p>
                 </div>
 
                 <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-6 text-center">
@@ -329,8 +329,8 @@ export default async function HomePage() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
-                  <h3 className="text-base font-bold text-white mb-2">Find Homes Fast</h3>
-                  <p className="text-sm text-slate-300">Swipe through properties that match your budget</p>
+                  <h3 className="text-base font-bold text-white mb-2" data-translate="whyChoose.benefit2Title">Find Homes Fast</h3>
+                  <p className="text-sm text-slate-300" data-translate="whyChoose.benefit2Text">Swipe through properties that match your budget</p>
                 </div>
 
                 <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-6 text-center">
@@ -339,15 +339,15 @@ export default async function HomePage() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                     </svg>
                   </div>
-                  <h3 className="text-base font-bold text-white mb-2">Real Properties</h3>
-                  <p className="text-sm text-slate-300">500+ verified owner-financed homes</p>
+                  <h3 className="text-base font-bold text-white mb-2" data-translate="whyChoose.benefit3Title">Real Properties</h3>
+                  <p className="text-sm text-slate-300" data-translate="whyChoose.benefit3Text">500+ verified owner-financed homes</p>
                 </div>
               </div>
 
               {/* Social Media Caption */}
               <div className="p-4 bg-slate-800/30 border border-slate-700/50 rounded-xl text-center">
                 <p className="text-slate-300 text-sm">
-                  Follow{' '}
+                  <span data-translate="whyChoose.socialFollow">Follow</span>{' '}
                   <a
                     href="https://www.tiktok.com/@ownerfi.ai"
                     target="_blank"
@@ -356,7 +356,7 @@ export default async function HomePage() {
                   >
                     @OwnerFi.ai
                   </a>
-                  {' '}for daily property updates
+                  {' '}<span data-translate="whyChoose.socialText">for daily property updates</span>
                 </p>
               </div>
             </div>
@@ -369,10 +369,10 @@ export default async function HomePage() {
           <section id="how-it-works" className="min-h-screen flex items-center justify-center py-16 px-4">
             <div className="max-w-4xl mx-auto w-full">
               <div className="text-center mb-12">
-                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white mb-3">
+                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white mb-3" data-translate="howItWorks.title">
                   How It Works
                 </h2>
-                <p className="text-base sm:text-lg text-slate-300 max-w-2xl mx-auto">
+                <p className="text-base sm:text-lg text-slate-300 max-w-2xl mx-auto" data-translate="howItWorks.subtitle">
                   Three simple steps to find your perfect home
                 </p>
               </div>
@@ -385,8 +385,8 @@ export default async function HomePage() {
                       1
                     </div>
                     <div className="text-4xl mb-4 mt-2">📝</div>
-                    <h3 className="text-base font-bold text-white mb-2">Set Your Budget</h3>
-                    <p className="text-sm text-slate-300">
+                    <h3 className="text-base font-bold text-white mb-2" data-translate="howItWorks.step1Title">Set Your Budget</h3>
+                    <p className="text-sm text-slate-300" data-translate="howItWorks.step1Text">
                       Tell us your max monthly payment and down payment. We'll only show homes you can afford.
                     </p>
                   </div>
@@ -399,8 +399,8 @@ export default async function HomePage() {
                       2
                     </div>
                     <div className="text-4xl mb-4 mt-2">👆</div>
-                    <h3 className="text-base font-bold text-white mb-2">Swipe Through Homes</h3>
-                    <p className="text-sm text-slate-300">
+                    <h3 className="text-base font-bold text-white mb-2" data-translate="howItWorks.step2Title">Swipe Through Homes</h3>
+                    <p className="text-sm text-slate-300" data-translate="howItWorks.step2Text">
                       Swipe right on homes you love, left on ones you don't. Just like your favorite dating app!
                     </p>
                   </div>
@@ -413,8 +413,8 @@ export default async function HomePage() {
                       3
                     </div>
                     <div className="text-4xl mb-4 mt-2">🏡</div>
-                    <h3 className="text-base font-bold text-white mb-2">Connect & Buy</h3>
-                    <p className="text-sm text-slate-300">
+                    <h3 className="text-base font-bold text-white mb-2" data-translate="howItWorks.step3Title">Connect & Buy</h3>
+                    <p className="text-sm text-slate-300" data-translate="howItWorks.step3Text">
                       Found your dream home? We connect you directly with sellers. No bank needed.
                     </p>
                   </div>
@@ -430,10 +430,10 @@ export default async function HomePage() {
           <section className="min-h-screen flex items-center justify-center py-16 px-4">
             <div className="max-w-4xl mx-auto w-full">
               <div className="text-center mb-12">
-                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white mb-3">
+                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white mb-3" data-translate="testimonials.title">
                   Real People, Real Homes
                 </h2>
-                <p className="text-base sm:text-lg text-slate-300 max-w-2xl mx-auto">
+                <p className="text-base sm:text-lg text-slate-300 max-w-2xl mx-auto" data-translate="testimonials.subtitle">
                   Join thousands who found their dream home
                 </p>
               </div>
@@ -448,7 +448,7 @@ export default async function HomePage() {
                       </svg>
                     ))}
                   </div>
-                  <p className="text-slate-200 mb-4 italic">
+                  <p className="text-slate-200 mb-4 italic" data-translate="testimonials.testimonial1">
                     "I was stuck renting for years because of my credit. OwnerFi helped me find a home I could actually buy. Now I'm a homeowner!"
                   </p>
                   <div className="flex items-center gap-3">
@@ -456,8 +456,8 @@ export default async function HomePage() {
                       S
                     </div>
                     <div>
-                      <div className="text-white font-semibold">Sarah M.</div>
-                      <div className="text-slate-400 text-sm">Houston, TX</div>
+                      <div className="text-white font-semibold" data-translate="testimonials.name1">Sarah M.</div>
+                      <div className="text-slate-400 text-sm" data-translate="testimonials.location1">Houston, TX</div>
                     </div>
                   </div>
                 </div>
@@ -471,7 +471,7 @@ export default async function HomePage() {
                       </svg>
                     ))}
                   </div>
-                  <p className="text-slate-200 mb-4 italic">
+                  <p className="text-slate-200 mb-4 italic" data-translate="testimonials.testimonial2">
                     "The app is so easy to use. Swiping through houses felt natural and fun. Found my home in just 2 weeks!"
                   </p>
                   <div className="flex items-center gap-3">
@@ -479,8 +479,8 @@ export default async function HomePage() {
                       M
                     </div>
                     <div>
-                      <div className="text-white font-semibold">Marcus T.</div>
-                      <div className="text-slate-400 text-sm">Atlanta, GA</div>
+                      <div className="text-white font-semibold" data-translate="testimonials.name2">Marcus T.</div>
+                      <div className="text-slate-400 text-sm" data-translate="testimonials.location2">Atlanta, GA</div>
                     </div>
                   </div>
                 </div>
@@ -494,7 +494,7 @@ export default async function HomePage() {
                       </svg>
                     ))}
                   </div>
-                  <p className="text-slate-200 mb-4 italic">
+                  <p className="text-slate-200 mb-4 italic" data-translate="testimonials.testimonial3">
                     "Self-employed and couldn't get bank approval. Owner financing through OwnerFi was the perfect solution."
                   </p>
                   <div className="flex items-center gap-3">
@@ -502,8 +502,8 @@ export default async function HomePage() {
                       J
                     </div>
                     <div>
-                      <div className="text-white font-semibold">Jennifer K.</div>
-                      <div className="text-slate-400 text-sm">Miami, FL</div>
+                      <div className="text-white font-semibold" data-translate="testimonials.name3">Jennifer K.</div>
+                      <div className="text-slate-400 text-sm" data-translate="testimonials.location3">Miami, FL</div>
                     </div>
                   </div>
                 </div>
@@ -513,19 +513,19 @@ export default async function HomePage() {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                 <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-6 text-center">
                   <div className="text-4xl font-black text-emerald-400 mb-2">1,000+</div>
-                  <div className="text-slate-300 text-sm">Happy Homeowners</div>
+                  <div className="text-slate-300 text-sm" data-translate="testimonials.stat1">Happy Homeowners</div>
                 </div>
                 <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-6 text-center">
                   <div className="text-4xl font-black text-blue-400 mb-2">500+</div>
-                  <div className="text-slate-300 text-sm">Active Properties</div>
+                  <div className="text-slate-300 text-sm" data-translate="testimonials.stat2">Active Properties</div>
                 </div>
                 <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-6 text-center">
                   <div className="text-4xl font-black text-purple-400 mb-2">50</div>
-                  <div className="text-slate-300 text-sm">States Covered</div>
+                  <div className="text-slate-300 text-sm" data-translate="testimonials.stat3">States Covered</div>
                 </div>
                 <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-6 text-center">
                   <div className="text-4xl font-black text-yellow-400 mb-2">4.8★</div>
-                  <div className="text-slate-300 text-sm">Average Rating</div>
+                  <div className="text-slate-300 text-sm" data-translate="testimonials.stat4">Average Rating</div>
                 </div>
               </div>
             </div>
@@ -534,58 +534,58 @@ export default async function HomePage() {
           {/* No-Bank Options Section */}
           <section className="bg-gradient-to-b from-slate-800/50 to-slate-900/50 py-16 px-6">
             <div className="max-w-6xl mx-auto">
-              <h2 className="text-3xl font-bold text-white text-center mb-4">
+              <h2 className="text-3xl font-bold text-white text-center mb-4" data-translate="noBankOptions.title">
                 All Types of No-Bank Home Buying Options
               </h2>
-              <p className="text-slate-300 text-center mb-12 max-w-2xl mx-auto">
+              <p className="text-slate-300 text-center mb-12 max-w-2xl mx-auto" data-translate="noBankOptions.subtitle">
                 We specialize in finding creative deals that don't require traditional bank financing.
                 Each option has unique benefits - we'll help you find the right fit.
               </p>
               <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
                 <div className="bg-gradient-to-br from-emerald-900/30 to-emerald-800/30 rounded-xl p-6 border border-emerald-500/30">
-                  <h3 className="text-lg font-bold text-emerald-400 mb-4">🏠 Owner Financing</h3>
+                  <h3 className="text-lg font-bold text-emerald-400 mb-4" data-translate="noBankOptions.option1Title">🏠 Owner Financing</h3>
                   <ul className="space-y-2 text-slate-300 text-sm">
-                    <li>• Immediate ownership</li>
-                    <li>• Get deed at closing</li>
-                    <li>• Build equity now</li>
-                    <li>• Tax benefits</li>
+                    <li data-translate="noBankOptions.option1Point1">• Immediate ownership</li>
+                    <li data-translate="noBankOptions.option1Point2">• Get deed at closing</li>
+                    <li data-translate="noBankOptions.option1Point3">• Build equity now</li>
+                    <li data-translate="noBankOptions.option1Point4">• Tax benefits</li>
                   </ul>
                 </div>
                 <div className="bg-gradient-to-br from-blue-900/30 to-blue-800/30 rounded-xl p-6 border border-blue-500/30">
-                  <h3 className="text-lg font-bold text-blue-400 mb-4">🔑 Rent to Own</h3>
+                  <h3 className="text-lg font-bold text-blue-400 mb-4" data-translate="noBankOptions.option2Title">🔑 Rent to Own</h3>
                   <ul className="space-y-2 text-slate-300 text-sm">
-                    <li>• Try before you buy</li>
-                    <li>• Build down payment</li>
-                    <li>• Lock in price</li>
-                    <li>• Credit repair time</li>
+                    <li data-translate="noBankOptions.option2Point1">• Try before you buy</li>
+                    <li data-translate="noBankOptions.option2Point2">• Build down payment</li>
+                    <li data-translate="noBankOptions.option2Point3">• Lock in price</li>
+                    <li data-translate="noBankOptions.option2Point4">• Credit repair time</li>
                   </ul>
                 </div>
                 <div className="bg-gradient-to-br from-purple-900/30 to-purple-800/30 rounded-xl p-6 border border-purple-500/30">
-                  <h3 className="text-lg font-bold text-purple-400 mb-4">📄 Lease Purchase</h3>
+                  <h3 className="text-lg font-bold text-purple-400 mb-4" data-translate="noBankOptions.option3Title">📄 Lease Purchase</h3>
                   <ul className="space-y-2 text-slate-300 text-sm">
-                    <li>• Obligation to buy</li>
-                    <li>• Agreed future date</li>
-                    <li>• Credit toward price</li>
-                    <li>• Flexible terms</li>
+                    <li data-translate="noBankOptions.option3Point1">• Obligation to buy</li>
+                    <li data-translate="noBankOptions.option3Point2">• Agreed future date</li>
+                    <li data-translate="noBankOptions.option3Point3">• Credit toward price</li>
+                    <li data-translate="noBankOptions.option3Point4">• Flexible terms</li>
                   </ul>
                 </div>
                 <div className="bg-gradient-to-br from-orange-900/30 to-orange-800/30 rounded-xl p-6 border border-orange-500/30">
-                  <h3 className="text-lg font-bold text-orange-400 mb-4">🤝 Subject-To</h3>
+                  <h3 className="text-lg font-bold text-orange-400 mb-4" data-translate="noBankOptions.option4Title">🤝 Subject-To</h3>
                   <ul className="space-y-2 text-slate-300 text-sm">
-                    <li>• Take over payments</li>
-                    <li>• Quick closing</li>
-                    <li>• Low down payment</li>
-                    <li>• Keep existing rate</li>
+                    <li data-translate="noBankOptions.option4Point1">• Take over payments</li>
+                    <li data-translate="noBankOptions.option4Point2">• Quick closing</li>
+                    <li data-translate="noBankOptions.option4Point3">• Low down payment</li>
+                    <li data-translate="noBankOptions.option4Point4">• Keep existing rate</li>
                   </ul>
                 </div>
               </div>
 
               <div className="bg-slate-800/30 rounded-xl p-6 border border-slate-600/30 text-center">
                 <p className="text-slate-300 mb-4">
-                  <strong className="text-white">Our Specialty:</strong> Finding and structuring deals that work without banks.
-                  Whether it's owner financing, rent-to-own, or other creative solutions - we have options for every situation.
+                  <strong className="text-white" data-translate="noBankOptions.specialtyText">Our Specialty:</strong> <span data-translate="noBankOptions.specialtyDescription">Finding and structuring deals that work without banks.
+                  Whether it's owner financing, rent-to-own, or other creative solutions - we have options for every situation.</span>
                 </p>
-                <Link href="/how-owner-finance-works" className="text-emerald-400 hover:text-emerald-300 font-semibold">
+                <Link href="/how-owner-finance-works" className="text-emerald-400 hover:text-emerald-300 font-semibold" data-translate="noBankOptions.learnMore">
                   Learn more about each option →
                 </Link>
               </div>
@@ -595,25 +595,25 @@ export default async function HomePage() {
           {/* Benefits Section for SEO */}
           <section className="py-16 px-6">
             <div className="max-w-4xl mx-auto">
-              <h2 className="text-3xl font-bold text-white text-center mb-12">
+              <h2 className="text-3xl font-bold text-white text-center mb-12" data-translate="benefits.title">
                 Benefits of Owner Financing Over Renting
               </h2>
               <div className="grid md:grid-cols-2 gap-8">
                 <div className="bg-slate-900/50 rounded-xl p-6 border border-slate-700/50">
-                  <h3 className="text-xl font-semibold text-emerald-400 mb-3">No Bank Required</h3>
-                  <p className="text-slate-300">Skip traditional mortgage requirements, credit checks, and lengthy approval processes.</p>
+                  <h3 className="text-xl font-semibold text-emerald-400 mb-3" data-translate="benefits.benefit1Title">No Bank Required</h3>
+                  <p className="text-slate-300" data-translate="benefits.benefit1Text">Skip traditional mortgage requirements, credit checks, and lengthy approval processes.</p>
                 </div>
                 <div className="bg-slate-900/50 rounded-xl p-6 border border-slate-700/50">
-                  <h3 className="text-xl font-semibold text-blue-400 mb-3">Flexible Terms</h3>
-                  <p className="text-slate-300">Negotiate directly with sellers for down payments, interest rates, and payment schedules.</p>
+                  <h3 className="text-xl font-semibold text-blue-400 mb-3" data-translate="benefits.benefit2Title">Flexible Terms</h3>
+                  <p className="text-slate-300" data-translate="benefits.benefit2Text">Negotiate directly with sellers for down payments, interest rates, and payment schedules.</p>
                 </div>
                 <div className="bg-slate-900/50 rounded-xl p-6 border border-slate-700/50">
-                  <h3 className="text-xl font-semibold text-purple-400 mb-3">Fast Closing</h3>
-                  <p className="text-slate-300">Close deals in days, not months. No waiting for bank approvals or appraisals.</p>
+                  <h3 className="text-xl font-semibold text-purple-400 mb-3" data-translate="benefits.benefit3Title">Fast Closing</h3>
+                  <p className="text-slate-300" data-translate="benefits.benefit3Text">Close deals in days, not months. No waiting for bank approvals or appraisals.</p>
                 </div>
                 <div className="bg-slate-900/50 rounded-xl p-6 border border-slate-700/50">
-                  <h3 className="text-xl font-semibold text-yellow-400 mb-3">Bad Credit OK</h3>
-                  <p className="text-slate-300">Many sellers work with buyers who have less-than-perfect credit or are self-employed.</p>
+                  <h3 className="text-xl font-semibold text-yellow-400 mb-3" data-translate="benefits.benefit4Title">Bad Credit OK</h3>
+                  <p className="text-slate-300" data-translate="benefits.benefit4Text">Many sellers work with buyers who have less-than-perfect credit or are self-employed.</p>
                 </div>
               </div>
             </div>
@@ -622,7 +622,7 @@ export default async function HomePage() {
           {/* Location-Based SEO Content */}
           <section className="py-16 px-6">
             <div className="max-w-6xl mx-auto">
-              <h2 className="text-3xl font-bold text-white text-center mb-12">
+              <h2 className="text-3xl font-bold text-white text-center mb-12" data-translate="locations.title">
                 Owner Financed Properties by State
               </h2>
 
@@ -631,57 +631,57 @@ export default async function HomePage() {
                 <Link href="/owner-financing-texas" className="group">
                   <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-8 text-center hover:border-emerald-400/50 transition-all duration-300 hover:scale-[1.02]">
                     <h3 className="text-2xl font-bold text-emerald-400 mb-2 group-hover:text-emerald-300">Texas</h3>
-                    <p className="text-slate-300 mb-4">Houston, Dallas, Austin, San Antonio</p>
-                    <p className="text-sm text-slate-400">200+ Properties Available</p>
+                    <p className="text-slate-300 mb-4" data-translate="locations.texasSubtitle">Houston, Dallas, Austin, San Antonio</p>
+                    <p className="text-sm text-slate-400" data-translate="locations.texasProperties">200+ Properties Available</p>
                   </div>
                 </Link>
                 <Link href="/owner-financing-florida" className="group">
                   <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-8 text-center hover:border-blue-400/50 transition-all duration-300 hover:scale-[1.02]">
                     <h3 className="text-2xl font-bold text-blue-400 mb-2 group-hover:text-blue-300">Florida</h3>
-                    <p className="text-slate-300 mb-4">Miami, Orlando, Tampa, Jacksonville</p>
-                    <p className="text-sm text-slate-400">150+ Properties Available</p>
+                    <p className="text-slate-300 mb-4" data-translate="locations.floridaSubtitle">Miami, Orlando, Tampa, Jacksonville</p>
+                    <p className="text-sm text-slate-400" data-translate="locations.floridaProperties">150+ Properties Available</p>
                   </div>
                 </Link>
                 <Link href="/owner-financing-georgia" className="group">
                   <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-xl p-8 text-center hover:border-purple-400/50 transition-all duration-300 hover:scale-[1.02]">
                     <h3 className="text-2xl font-bold text-purple-400 mb-2 group-hover:text-purple-300">Georgia</h3>
-                    <p className="text-slate-300 mb-4">Atlanta, Augusta, Columbus, Savannah</p>
-                    <p className="text-sm text-slate-400">100+ Properties Available</p>
+                    <p className="text-slate-300 mb-4" data-translate="locations.georgiaSubtitle">Atlanta, Augusta, Columbus, Savannah</p>
+                    <p className="text-sm text-slate-400" data-translate="locations.georgiaProperties">100+ Properties Available</p>
                   </div>
                 </Link>
               </div>
 
               {/* Simplified Coverage */}
               <div className="bg-slate-800/30 rounded-2xl p-8 border border-slate-700/50">
-                <h3 className="text-2xl font-bold text-white text-center mb-6">Available Nationwide</h3>
+                <h3 className="text-2xl font-bold text-white text-center mb-6" data-translate="locations.nationwideTitle">Available Nationwide</h3>
                 <div className="text-center mb-6">
-                  <p className="text-slate-300 mb-4">Properties available in all 50 states</p>
+                  <p className="text-slate-300 mb-4" data-translate="locations.nationwideSubtitle">Properties available in all 50 states</p>
                   <Link href="/signup" className="inline-block bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white py-3 px-8 rounded-xl font-semibold text-lg transition-all duration-300 hover:scale-[1.02] shadow-lg">
-                    View All Properties →
+                    <span data-translate="locations.viewAllCta">View All Properties →</span>
                   </Link>
                 </div>
               </div>
 
               {/* Alternative Financing Options */}
               <div className="mt-12 bg-slate-800/30 rounded-2xl p-8 border border-slate-700/50">
-                <h3 className="text-2xl font-bold text-white text-center mb-8">Alternative Financing Solutions</h3>
+                <h3 className="text-2xl font-bold text-white text-center mb-8" data-translate="locations.alternativeTitle">Alternative Financing Solutions</h3>
                 <div className="grid md:grid-cols-3 gap-6">
                   <Link href="/rent-to-own-homes" className="group">
                     <div className="bg-gradient-to-br from-emerald-900/30 to-emerald-800/30 rounded-xl p-6 border border-emerald-500/30 hover:border-emerald-400/50 transition-all duration-300 hover:scale-[1.02]">
-                      <h4 className="text-xl font-bold text-emerald-400 mb-3 group-hover:text-emerald-300">Rent to Own Homes</h4>
-                      <p className="text-slate-300 text-sm">Better than traditional rent-to-own with immediate ownership options.</p>
+                      <h4 className="text-xl font-bold text-emerald-400 mb-3 group-hover:text-emerald-300" data-translate="locations.rentToOwnTitle">Rent to Own Homes</h4>
+                      <p className="text-slate-300 text-sm" data-translate="locations.rentToOwnText">Better than traditional rent-to-own with immediate ownership options.</p>
                     </div>
                   </Link>
                   <Link href="/bad-credit-home-buying" className="group">
                     <div className="bg-gradient-to-br from-blue-900/30 to-blue-800/30 rounded-xl p-6 border border-blue-500/30 hover:border-blue-400/50 transition-all duration-300 hover:scale-[1.02]">
-                      <h4 className="text-xl font-bold text-blue-400 mb-3 group-hover:text-blue-300">Bad Credit Solutions</h4>
-                      <p className="text-slate-300 text-sm">Buy a home even with poor credit through flexible owner financing.</p>
+                      <h4 className="text-xl font-bold text-blue-400 mb-3 group-hover:text-blue-300" data-translate="locations.badCreditTitle">Bad Credit Solutions</h4>
+                      <p className="text-slate-300 text-sm" data-translate="locations.badCreditText">Buy a home even with poor credit through flexible owner financing.</p>
                     </div>
                   </Link>
                   <Link href="/no-credit-check-homes" className="group">
                     <div className="bg-gradient-to-br from-purple-900/30 to-purple-800/30 rounded-xl p-6 border border-purple-500/30 hover:border-purple-400/50 transition-all duration-300 hover:scale-[1.02]">
-                      <h4 className="text-xl font-bold text-purple-400 mb-3 group-hover:text-purple-300">No Credit Check</h4>
-                      <p className="text-slate-300 text-sm">Find homes that don't require credit checks or bank approval.</p>
+                      <h4 className="text-xl font-bold text-purple-400 mb-3 group-hover:text-purple-300" data-translate="locations.noCreditTitle">No Credit Check</h4>
+                      <p className="text-slate-300 text-sm" data-translate="locations.noCreditText">Find homes that don't require credit checks or bank approval.</p>
                     </div>
                   </Link>
                 </div>

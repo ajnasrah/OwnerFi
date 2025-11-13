@@ -82,11 +82,11 @@ export default function FloatingChatbotButton({ onClick }: FloatingChatbotButton
   }, []);
 
   return (
-    <div className="fixed bottom-6 right-6 z-[9999]">
+    <div className="fixed bottom-6 left-6 z-[9999]">
       {/* Natural Chat Bubble */}
       {showQuestion && (
-        <div 
-          className={`absolute bottom-16 right-20 w-fit min-w-[160px] max-w-[280px] bg-emerald-600 text-white px-4 py-3 rounded-2xl shadow-lg transform transition-all duration-300 ${
+        <div
+          className={`absolute bottom-16 left-0 w-fit min-w-[160px] max-w-[240px] bg-emerald-600 text-white px-4 py-2.5 rounded-xl shadow-lg transform transition-all duration-300 ${
             showQuestion ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-2 scale-95'
           }`}
         >
@@ -95,27 +95,27 @@ export default function FloatingChatbotButton({ onClick }: FloatingChatbotButton
               <div className="w-1 h-1 bg-white rounded-full animate-pulse"></div>
               <span className="text-[9px] font-medium">LIVE</span>
             </div>
-            <button onClick={hideQuestion} className="text-white/80 hover:text-white">
-              <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+            <button onClick={hideQuestion} className="text-white/80 hover:text-white -mr-1">
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           </div>
-          
+
           <div className="text-sm leading-snug font-medium">
             {ATTENTION_QUESTIONS[currentQuestion]}
           </div>
-          
+
           {/* Tail pointing to button */}
-          <div className="absolute bottom-[-3px] right-[-6px] w-3 h-3 bg-emerald-600 transform rotate-45 rounded-sm"></div>
+          <div className="absolute -bottom-1 left-4 w-3 h-3 bg-emerald-600 transform rotate-45"></div>
         </div>
       )}
 
       {/* Floating Chat Button */}
       <button
         onClick={onClick}
-        className={`relative group bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white p-4 rounded-full shadow-2xl transform transition-all duration-300 hover:scale-110 focus:outline-none focus:ring-4 focus:ring-emerald-500/50 ${
-          isAnimating ? 'animate-bounce scale-110' : ''
+        className={`relative group bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white p-4 rounded-full shadow-2xl transform transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-emerald-500/30 ${
+          isAnimating ? 'animate-bounce' : ''
         }`}
       >
         {/* Pulse animation rings */}

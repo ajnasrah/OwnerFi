@@ -346,23 +346,7 @@ async function checkHeyGenWorkflows() {
     }
   }
 
-  // Also check podcast_workflow_queue
-  try {
-    console.log(`\n📂 Checking podcast_workflow_queue...`);
-    const q = query(
-      collection(db, 'podcast_workflow_queue'),
-      where('status', '==', 'heygen_processing'),
-      firestoreLimit(10)
-    );
-    const snapshot = await getDocs(q);
-    console.log(`   Found ${snapshot.size} podcast HeyGen processing`);
-    checked += snapshot.size;
-    // Similar processing logic...
-  } catch (err) {
-    console.error(`   ❌ Error querying podcast:`, err);
-  }
-
-  // Also check property_videos
+  // Also check property_videos (uses different collection name)
   try {
     console.log(`\n📂 Checking property_videos...`);
     const q = query(
@@ -371,9 +355,100 @@ async function checkHeyGenWorkflows() {
       firestoreLimit(10)
     );
     const snapshot = await getDocs(q);
-    console.log(`   Found ${snapshot.size} property HeyGen processing`);
+    console.log(`   Found ${snapshot.size} property video HeyGen processing`);
     checked += snapshot.size;
-    // Similar processing logic...
+
+    for (const workflowDoc of snapshot.docs) {
+      const data = workflowDoc.data();
+      const workflowId = workflowDoc.id;
+      const videoId = data.heygenVideoId;
+
+      if (!videoId) continue;
+
+      try {
+        const heygenResponse = await fetch(
+          `https://api.heygen.com/v1/video_status.get?video_id=${videoId}`,
+          { headers: { 'x-api-key': HEYGEN_API_KEY } }
+        );
+
+        if (!heygenResponse.ok) continue;
+
+        const heygenData = await heygenResponse.json();
+        const status = heygenData.data?.status;
+        const videoUrl = heygenData.data?.video_url;
+
+        console.log(`   📹 ${workflowId}: ${status}`);
+
+        if (status === 'completed' && videoUrl) {
+          // Upload to R2
+          const publicHeygenUrl = await downloadAndUploadToR2(
+            videoUrl,
+            HEYGEN_API_KEY,
+            `heygen-videos/${workflowId}.mp4`
+          );
+
+          // Send to SubMagic
+          const webhookUrl = `${baseUrl}/api/webhooks/submagic/property`;
+
+          const title = (data.propertyAddress || data.title || `Property ${workflowId}`)
+            .replace(/&#8217;/g, "'")
+            .replace(/&#8216;/g, "'")
+            .replace(/&#8211;/g, "-")
+            .replace(/&#8212;/g, "-")
+            .replace(/&amp;/g, "&")
+            .replace(/&quot;/g, '"')
+            .replace(/&lt;/g, "<")
+            .replace(/&gt;/g, ">")
+            .replace(/&nbsp;/g, " ")
+            .substring(0, 50);
+
+          // Property videos: NO brolls (they're real estate videos)
+          const submagicResponse = await fetch('https://api.submagic.co/v1/projects', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-api-key': SUBMAGIC_API_KEY
+            },
+            body: JSON.stringify({
+              title,
+              language: 'en',
+              videoUrl: publicHeygenUrl,
+              templateName: 'Hormozi 2',
+              magicBrolls: false,
+              magicBrollsPercentage: 0,
+              magicZooms: true,
+              webhookUrl
+            })
+          });
+
+          if (submagicResponse.ok) {
+            const submagicData = await submagicResponse.json();
+            const projectId = submagicData.id || submagicData.project_id || submagicData.projectId;
+
+            await updateDoc(doc(db, 'property_videos', workflowId), {
+              status: 'submagic_processing',
+              submagicVideoId: projectId,
+              heygenVideoUrl: publicHeygenUrl,
+              updatedAt: Date.now()
+            });
+
+            console.log(`   ✅ ${workflowId}: Advanced to SubMagic`);
+            advanced++;
+          }
+        } else if (status === 'failed') {
+          await updateDoc(doc(db, 'property_videos', workflowId), {
+            status: 'failed',
+            error: 'HeyGen failed',
+            updatedAt: Date.now()
+          });
+          console.log(`   ❌ ${workflowId}: Failed`);
+          failed++;
+        }
+      } catch (error) {
+        console.error(`   ❌ ${workflowId}:`, error);
+        failed++;
+      }
+    }
   } catch (err) {
     console.error(`   ❌ Error querying property_videos:`, err);
   }

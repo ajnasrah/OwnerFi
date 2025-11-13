@@ -202,30 +202,31 @@ export default function Chatbot({ isOpen, onClose }: ChatbotProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-2 sm:p-4">
-      <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-sm mx-auto max-h-[95vh] sm:max-h-[90vh] flex flex-col overflow-hidden" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', height: 'min(600px, 95vh)' }}>
-        
-        {/* iPhone-style Header */}
-        <div className="bg-slate-50 px-3 py-3 flex items-center justify-between border-b border-slate-100 flex-shrink-0">
-          <div className="flex items-center gap-2">
-            <div className="w-9 h-9 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
-              <span className="text-white text-base">👩</span>
+    <div className="fixed bottom-6 left-6 z-[9998] w-[90vw] max-w-[360px] animate-in slide-in-from-bottom-4 duration-300">
+      <div className="bg-white rounded-xl shadow-2xl flex flex-col overflow-hidden border border-slate-200" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', height: 'min(500px, 70vh)' }}>
+
+        {/* Header */}
+        <div className="bg-gradient-to-r from-emerald-600 to-emerald-500 px-4 py-3 flex items-center justify-between flex-shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center flex-shrink-0">
+              <span className="text-lg">👩</span>
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <h3 className="text-slate-900 font-semibold text-sm">Sarah</h3>
+                <h3 className="text-white font-semibold text-sm">Sarah</h3>
                 <div className="flex items-center gap-1">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                  <span className="text-xs text-green-600 font-medium">LIVE</span>
+                  <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></div>
+                  <span className="text-[10px] text-white/90 font-medium">LIVE</span>
                 </div>
               </div>
+              <p className="text-white/80 text-xs">Typically replies instantly</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="w-7 h-7 bg-slate-200 hover:bg-slate-300 rounded-full flex items-center justify-center transition-colors flex-shrink-0"
+            className="w-6 h-6 text-white/80 hover:text-white hover:bg-white/10 rounded-full flex items-center justify-center transition-colors flex-shrink-0"
           >
-            <svg className="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
@@ -289,28 +290,29 @@ export default function Chatbot({ isOpen, onClose }: ChatbotProps) {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* iPhone-style Input */}
-        <div className="p-3 bg-white border-t border-slate-100 flex-shrink-0">
+        {/* Input Area */}
+        <div className="p-3 bg-white border-t border-slate-200 flex-shrink-0">
           <div className="flex items-center gap-2">
             <div className="flex-1 relative">
-              <div className="flex items-center bg-slate-100 rounded-full px-3 h-9">
+              <div className="flex items-center bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">
                 <input
                   type="text"
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder="Message Sarah..."
-                  className="flex-1 bg-transparent text-sm text-slate-800 placeholder-slate-500 outline-none"
+                  placeholder="Type your message..."
+                  className="flex-1 bg-transparent text-sm text-slate-800 placeholder-slate-400 outline-none"
                   disabled={isLoading}
                 />
                 <button
                   onClick={startListening}
                   disabled={isListening || isLoading}
-                  className={`ml-2 p-2 rounded-full transition-colors ${
+                  className={`ml-1 p-1.5 rounded-md transition-colors ${
                     isListening
-                      ? 'text-red-500 bg-red-100'
-                      : 'text-slate-500 hover:text-blue-600 hover:bg-blue-50'
+                      ? 'text-red-500 bg-red-50'
+                      : 'text-slate-400 hover:text-emerald-600 hover:bg-emerald-50'
                   }`}
+                  title="Voice input"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
@@ -321,18 +323,19 @@ export default function Chatbot({ isOpen, onClose }: ChatbotProps) {
             <button
               onClick={sendMessage}
               disabled={!inputMessage.trim() || isLoading}
-              className="w-9 h-9 bg-blue-500 hover:bg-blue-600 disabled:bg-slate-300 text-white rounded-full flex items-center justify-center transition-colors flex-shrink-0"
+              className="w-9 h-9 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 disabled:from-slate-300 disabled:to-slate-300 text-white rounded-lg flex items-center justify-center transition-all flex-shrink-0 shadow-sm"
+              title="Send message"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
               </svg>
             </button>
           </div>
-          
+
           {isListening && (
             <div className="flex items-center justify-center gap-2 mt-2">
               <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-              <span className="text-xs text-red-500">Listening...</span>
+              <span className="text-xs text-red-500 font-medium">Listening...</span>
             </div>
           )}
         </div>

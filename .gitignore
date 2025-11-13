@@ -76,3 +76,4 @@ heygen-webhook-secrets.json
 apify-output/
 scraper-output/
 .DS_Store
+VERCEL_ENV_VARIABLES.md

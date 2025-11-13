@@ -15,6 +15,7 @@ const getLateCarzProfileId = () => process.env.LATE_CARZ_PROFILE_ID?.trim();
 const getLatePodcastProfileId = () => process.env.LATE_PODCAST_PROFILE_ID?.trim();
 const getLateVassDistroProfileId = () => process.env.LATE_VASSDISTRO_PROFILE_ID?.trim();
 const getLateAbdullahProfileId = () => process.env.LATE_ABDULLAH_PROFILE_ID?.trim();
+const getLatePersonalProfileId = () => process.env.LATE_PERSONAL_PROFILE_ID?.trim();
 
 export interface LatePostRequest {
   videoUrl: string;
@@ -56,7 +57,7 @@ export interface LateProfile {
 /**
  * Get profile ID for a brand
  */
-function getProfileId(brand: 'carz' | 'ownerfi' | 'podcast' | 'property' | 'vassdistro' | 'benefit' | 'abdullah'): string | null {
+function getProfileId(brand: 'carz' | 'ownerfi' | 'podcast' | 'property' | 'vassdistro' | 'benefit' | 'abdullah' | 'personal'): string | null {
   switch (brand) {
     case 'ownerfi':
     case 'property': // Property videos use OwnerFi profile
@@ -70,6 +71,8 @@ function getProfileId(brand: 'carz' | 'ownerfi' | 'podcast' | 'property' | 'vass
       return getLateVassDistroProfileId() || null;
     case 'abdullah':
       return getLateAbdullahProfileId() || null;
+    case 'personal':
+      return getLatePersonalProfileId() || null;
   }
 }
 
@@ -186,7 +189,8 @@ export async function postToLate(request: LatePostRequest): Promise<LatePostResp
       'property': 'Property',
       'vassdistro': 'VassDistro',
       'benefit': 'Benefit',
-      'abdullah': 'Abdullah'
+      'abdullah': 'Abdullah',
+      'personal': 'Personal'
     };
     const brandName = brandNameMap[request.brand] || request.brand;
     console.error(`❌ Profile ID not configured for ${brandName}`);

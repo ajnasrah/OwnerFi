@@ -121,7 +121,29 @@ export async function POST(request: NextRequest) {
       console.log(`📝 Status set to "posting"`);
 
       // Step 4: Get caption and title
-      const { caption, title } = await getCaptionAndTitle(brand, workflow);
+      let caption: string;
+      let title: string;
+
+      // Personal videos use AI caption generation
+      if (brand === 'personal') {
+        console.log(`🤖 Using AI caption generation for personal video...`);
+        const { generateCaptionAndHashtags } = await import('@/lib/ai-caption-generator');
+
+        const aiResult = await generateCaptionAndHashtags(
+          workflow.submagicProjectId,
+          workflow.fileName
+        );
+
+        caption = aiResult.fullCaption; // Includes caption + hashtags
+        title = workflow.fileName?.replace(/\.(mp4|mov|avi|mkv)$/i, '') || 'Personal Video';
+
+        console.log(`✅ AI-generated caption and hashtags`);
+      } else {
+        // Other brands use standard caption generation
+        const result = await getCaptionAndTitle(brand, workflow);
+        caption = result.caption;
+        title = result.title;
+      }
 
       console.log(`📝 Caption: "${caption.substring(0, 100)}..."`);
       console.log(`📝 Title: "${title}"`);
@@ -129,27 +151,62 @@ export async function POST(request: NextRequest) {
       // Step 5: Post to Late API with retry logic
       console.log(`📱 Posting to Late API...`);
 
-      const platforms = getBrandPlatforms(brand, false);
-      console.log(`   Platforms: ${platforms.join(', ')}`);
+      let postResult: any;
 
-      const postResult = await retryOperation(
-        () => postToLate({
-          videoUrl: publicVideoUrl,
-          caption,
-          title,
-          platforms: platforms as any[],
-          brand: brand as any,
-          useQueue: true,
-          timezone: brandConfig.scheduling.timezone
-        }),
-        3, // max retries
-        'Late posting'
-      );
+      // Personal videos use same-day optimal posting (each platform at its best hour)
+      if (brand === 'personal') {
+        console.log(`   Using same-day optimal posting for personal brand...`);
+        const { postVideoSameDayOptimal } = await import('@/lib/same-day-optimal-posting');
+
+        const result = await retryOperation(
+          () => postVideoSameDayOptimal(publicVideoUrl, caption, title, brand as any),
+          3,
+          'Same-day optimal posting'
+        );
+
+        // Convert to postResult format
+        postResult = {
+          success: result.success,
+          postId: result.posts.length > 0 ? result.posts[0].result.postId : undefined,
+          scheduledFor: result.posts.length > 0 ? result.posts[0].scheduledFor : undefined,
+          platforms: result.posts.map(p => p.platform),
+          error: result.errors.length > 0 ? result.errors.join(', ') : undefined
+        };
+
+        console.log(`✅ Scheduled ${result.totalPosts} platform posts at optimal times`);
+        result.posts.forEach(p => {
+          const hour = p.scheduledHour > 12 ? p.scheduledHour - 12 : p.scheduledHour;
+          const ampm = p.scheduledHour >= 12 ? 'PM' : 'AM';
+          console.log(`   ${p.platform}: ${hour} ${ampm} CST`);
+        });
+      } else {
+        // Other brands use standard queue posting
+        const platforms = getBrandPlatforms(brand, false);
+        console.log(`   Platforms: ${platforms.join(', ')}`);
+
+        postResult = await retryOperation(
+          () => postToLate({
+            videoUrl: publicVideoUrl,
+            caption,
+            title,
+            platforms: platforms as any[],
+            brand: brand as any,
+            useQueue: true,
+            timezone: brandConfig.scheduling.timezone
+          }),
+          3, // max retries
+          'Late posting'
+        );
+      }
 
       if (postResult.success) {
         console.log(`✅ Posted to Late queue successfully`);
-        console.log(`   Post ID: ${postResult.postId}`);
-        console.log(`   Scheduled for: ${postResult.scheduledFor}`);
+        if (postResult.postId) {
+          console.log(`   Post ID: ${postResult.postId}`);
+        }
+        if (postResult.scheduledFor) {
+          console.log(`   Scheduled for: ${postResult.scheduledFor}`);
+        }
 
         // Mark as completed
         await updateWorkflowForBrand(brand, workflowId, {
@@ -157,6 +214,19 @@ export async function POST(request: NextRequest) {
           latePostId: postResult.postId,
           completedAt: Date.now(),
         });
+
+        // Delete from Google Drive if this is a personal video (user preference)
+        if (brand === 'personal' && workflow.fileId) {
+          try {
+            console.log(`🗑️  Deleting video from Google Drive...`);
+            const { deleteFile } = await import('@/lib/google-drive-client');
+            await deleteFile(workflow.fileId);
+            console.log(`✅ Video deleted from Google Drive`);
+          } catch (deleteError) {
+            console.warn(`⚠️  Failed to delete from Google Drive:`, deleteError);
+            // Don't fail the workflow if cleanup fails
+          }
+        }
 
         const duration = Date.now() - startTime;
         console.log(`\n⏱️  Processing completed in ${(duration / 1000).toFixed(2)}s`);
@@ -238,7 +308,7 @@ async function retryOperation<T>(
  * Get workflow for specific brand
  */
 async function getWorkflowForBrand(
-  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit' | 'property' | 'vassdistro' | 'abdullah',
+  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit' | 'property' | 'vassdistro' | 'abdullah' | 'personal',
   workflowId: string
 ): Promise<any | null> {
   if (brand === 'podcast') {
@@ -255,6 +325,11 @@ async function getWorkflowForBrand(
     const { doc, getDoc } = await import('firebase/firestore');
     const docSnap = await getDoc(doc(db, 'abdullah_workflow_queue', workflowId));
     return docSnap.exists() ? docSnap.data() : null;
+  } else if (brand === 'personal') {
+    const { db } = await import('@/lib/firebase');
+    const { doc, getDoc } = await import('firebase/firestore');
+    const docSnap = await getDoc(doc(db, 'personal_workflow_queue', workflowId));
+    return docSnap.exists() ? docSnap.data() : null;
   } else {
     const { getWorkflowById } = await import('@/lib/feed-store-firestore');
     const result = await getWorkflowById(workflowId);
@@ -266,7 +341,7 @@ async function getWorkflowForBrand(
  * Update workflow for specific brand
  */
 async function updateWorkflowForBrand(
-  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit' | 'property' | 'vassdistro' | 'abdullah',
+  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit' | 'property' | 'vassdistro' | 'abdullah' | 'personal',
   workflowId: string,
   updates: Record<string, any>
 ): Promise<void> {
@@ -283,6 +358,13 @@ async function updateWorkflowForBrand(
     const { db } = await import('@/lib/firebase');
     const { doc, updateDoc } = await import('firebase/firestore');
     await updateDoc(doc(db, 'abdullah_workflow_queue', workflowId), {
+      ...updates,
+      updatedAt: Date.now()
+    });
+  } else if (brand === 'personal') {
+    const { db } = await import('@/lib/firebase');
+    const { doc, updateDoc } = await import('firebase/firestore');
+    await updateDoc(doc(db, 'personal_workflow_queue', workflowId), {
       ...updates,
       updatedAt: Date.now()
     });

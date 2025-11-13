@@ -42,6 +42,10 @@
       "schedule": "40 9,12,15,18,21 * * *"
     },
     {
+      "path": "/api/cron/check-google-drive",
+      "schedule": "*/10 * * * *"
+    },
+    {
       "path": "/api/cron/check-stuck-heygen",
       "schedule": "*/30 14-23,0-4 * * *"
     },
@@ -92,6 +96,10 @@
     {
       "path": "/api/cron/sync-property-queue",
       "schedule": "0 8-20 * * *"
+    },
+    {
+      "path": "/api/cron/generate-blog",
+      "schedule": "0 11 * * *"
     }
   ],
   "functions": {
@@ -171,6 +179,12 @@
       "maxDuration": 300
     },
     "src/app/api/cron/sync-property-queue/route.ts": {
+      "maxDuration": 300
+    },
+    "src/app/api/cron/check-google-drive/route.ts": {
+      "maxDuration": 300
+    },
+    "src/app/api/cron/generate-blog/route.ts": {
       "maxDuration": 300
     }
   },

@@ -342,6 +342,57 @@ export const PROPERTY_CONFIG: BrandConfig = {
 };
 
 /**
+ * Property Videos Brand Configuration (Spanish)
+ * For automated property showcase videos in Spanish (15-sec format)
+ * Uses same property queue as English version
+ */
+export const PROPERTY_SPANISH_CONFIG: BrandConfig = {
+  id: 'property-spanish',
+  displayName: 'Property Showcase (Spanish)',
+
+  lateProfileId: process.env.LATE_OWNERFI_PROFILE_ID || '', // Uses OwnerFi's Late profile
+
+  platforms: {
+    default: ['instagram', 'tiktok', 'facebook', 'linkedin', 'threads'],
+    all: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'threads', 'twitter', 'bluesky', 'pinterest', 'reddit'],
+    excludeFromDefault: ['youtube'], // YouTube disabled - shares OwnerFi's account (quota exhaustion)
+  },
+
+  webhooks: {
+    heygen: `${BASE_URL}/api/webhooks/heygen/property-spanish`,
+    submagic: `${BASE_URL}/api/webhooks/submagic/property-spanish`,
+  },
+
+  content: {
+    youtubeCategory: 'NEWS_POLITICS',
+    defaultHashtags: ['#FinanciamientoPorElDueño', '#BienesRaices', '#PropiedadEnVenta', '#CasaEnVenta', '#OwnerFi'],
+    captionStyle: 'professional',
+  },
+
+  collections: {
+    workflows: 'property_videos', // Shares same collection as English version
+  },
+
+  rateLimits: {
+    lateAPI: 50,  // 50 posts per hour
+    heygen: 20,   // 20 video generations per hour
+    submagic: 240, // 4 per minute = 240 per hour
+  },
+
+  scheduling: {
+    timezone: 'America/New_York', // Eastern Time
+    postingHours: [10, 13, 16, 19, 22], // Offset by 1 hour from English version
+    maxPostsPerDay: 5, // 1 per cron run × 5 runs = 5 per day
+  },
+
+  features: {
+    autoPosting: true,
+    abTesting: false, // No A/B testing - just 15-sec
+    analytics: true,
+  },
+};
+
+/**
  * Vass Distro Brand Configuration
  * For B2B vape wholesale industry content targeting vape store owners
  */
@@ -444,6 +495,54 @@ export const ABDULLAH_CONFIG: BrandConfig = {
 };
 
 /**
+ * Personal Brand Configuration (Google Drive uploads)
+ */
+export const PERSONAL_CONFIG: BrandConfig = {
+  id: 'personal',
+  displayName: 'Personal Videos',
+
+  lateProfileId: process.env.LATE_PERSONAL_PROFILE_ID || '',
+
+  platforms: {
+    default: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'twitter', 'threads'] as const,
+    all: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'twitter', 'threads', 'pinterest'] as const,
+  },
+
+  webhooks: {
+    heygen: `${BASE_URL}/api/webhooks/heygen/personal`, // Not used (no HeyGen for personal videos)
+    submagic: `${BASE_URL}/api/webhooks/submagic/personal`,
+  },
+
+  content: {
+    youtubeCategory: '22', // People & Blogs
+    defaultHashtags: ['#PersonalBrand', '#ContentCreator', '#Entrepreneur', '#DailyVlog'] as const,
+    captionStyle: 'casual',
+  },
+
+  collections: {
+    workflows: 'personal_workflow_queue',
+  },
+
+  rateLimits: {
+    lateAPI: 30,
+    heygen: 0, // Not used
+    submagic: 20,
+  },
+
+  scheduling: {
+    timezone: 'America/Chicago', // CST
+    postingHours: [11, 14, 19, 20] as const, // 11am, 2pm, 7pm, 8pm CST (optimal times)
+    maxPostsPerDay: 10,
+  },
+
+  features: {
+    autoPosting: true,
+    abTesting: false,
+    analytics: true,
+  },
+};
+
+/**
  * Brand Configuration Map
  * Easy lookup of brand configs by brand ID
  */
@@ -453,8 +552,10 @@ export const BRAND_CONFIGS: Record<Brand, BrandConfig> = {
   podcast: PODCAST_CONFIG,
   benefit: BENEFIT_CONFIG,
   property: PROPERTY_CONFIG,
+  'property-spanish': PROPERTY_SPANISH_CONFIG,
   vassdistro: VASSDISTRO_CONFIG,
   abdullah: ABDULLAH_CONFIG,
+  personal: PERSONAL_CONFIG,
 } as const;
 
 /**
@@ -466,7 +567,7 @@ export const BRAND_CONFIGS: Record<Brand, BrandConfig> = {
 export function getBrandConfig(brand: Brand): BrandConfig {
   const config = BRAND_CONFIGS[brand];
   if (!config) {
-    throw new Error(`Invalid brand: ${brand}. Must be one of: carz, ownerfi, podcast, benefit, property, vassdistro, abdullah`);
+    throw new Error(`Invalid brand: ${brand}. Must be one of: carz, ownerfi, podcast, benefit, property, property-spanish, vassdistro, abdullah, personal`);
   }
   return config;
 }
@@ -564,7 +665,9 @@ export function validateAllBrandConfigs(): Record<Brand, { valid: boolean; error
     podcast: validateBrandConfig('podcast'),
     benefit: validateBrandConfig('benefit'),
     property: validateBrandConfig('property'),
+    'property-spanish': validateBrandConfig('property-spanish'),
     vassdistro: validateBrandConfig('vassdistro'),
     abdullah: validateBrandConfig('abdullah'),
+    personal: validateBrandConfig('personal'),
   };
 }

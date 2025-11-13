@@ -5,7 +5,7 @@
  * Each brand has its own isolated webhook endpoint to prevent failures from affecting other brands.
  *
  * Route: /api/webhooks/submagic/[brand]
- * Brands: carz, ownerfi, podcast, vassdistro, benefit, property, abdullah
+ * Brands: carz, ownerfi, podcast, vassdistro, benefit, property, property-spanish, abdullah, personal
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -255,7 +255,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
  * Get workflow by Submagic project ID for specific brand
  */
 async function getWorkflowBySubmagicId(
-  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit' | 'property' | 'vassdistro' | 'abdullah',
+  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit' | 'property' | 'vassdistro' | 'abdullah' | 'personal',
   submagicProjectId: string
 ): Promise<{ workflowId: string; workflow: any } | null> {
   const { getAdminDb } = await import('@/lib/firebase-admin');
@@ -271,6 +271,8 @@ async function getWorkflowBySubmagicId(
     collectionName = 'property_videos';
   } else if (brand === 'abdullah') {
     collectionName = 'abdullah_workflow_queue';
+  } else if (brand === 'personal') {
+    collectionName = 'personal_workflow_queue';
   } else {
     collectionName = `${brand}_workflow_queue`;
   }
@@ -308,7 +310,7 @@ async function getWorkflowBySubmagicId(
  * Update workflow for specific brand
  */
 async function updateWorkflowForBrand(
-  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit' | 'property' | 'vassdistro' | 'abdullah',
+  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit' | 'property' | 'vassdistro' | 'abdullah' | 'personal',
   workflowId: string,
   updates: Record<string, any>
 ): Promise<void> {
@@ -325,6 +327,13 @@ async function updateWorkflowForBrand(
     const { db } = await import('@/lib/firebase');
     const { doc, updateDoc } = await import('firebase/firestore');
     await updateDoc(doc(db, 'abdullah_workflow_queue', workflowId), {
+      ...updates,
+      updatedAt: Date.now()
+    });
+  } else if (brand === 'personal') {
+    const { getAdminDb } = await import('@/lib/firebase-admin');
+    const adminDb = await getAdminDb();
+    await adminDb.collection('personal_workflow_queue').doc(workflowId).update({
       ...updates,
       updatedAt: Date.now()
     });

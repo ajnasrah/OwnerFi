@@ -34,7 +34,8 @@ export interface PropertyVideoResult {
  */
 export async function generatePropertyVideo(
   propertyId: string,
-  variant: '15' | '30' = '30'
+  variant: '15' | '30' = '30',
+  language: 'en' | 'es' = 'en'
 ): Promise<PropertyVideoResult> {
   try {
     console.log(`🏡 Generating video for property: ${propertyId}`);
@@ -101,8 +102,8 @@ export async function generatePropertyVideo(
     let variant30Script, variant15Script;
 
     if (OPENAI_API_KEY) {
-      console.log(`🤖 Generating dual-mode scripts with OpenAI...`);
-      const dualScripts = await generatePropertyScriptWithAI(property, OPENAI_API_KEY);
+      console.log(`🤖 Generating dual-mode scripts with OpenAI (${language})...`);
+      const dualScripts = await generatePropertyScriptWithAI(property, OPENAI_API_KEY, language);
 
       // Store both variants
       variant30Script = dualScripts.variant_30;
@@ -125,13 +126,15 @@ export async function generatePropertyVideo(
     }
 
     console.log(`   Title: ${title}`);
+    console.log(`   Language: ${language}`);
 
     // Create workflow record
-    const workflowId = `property_${variant}sec_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+    const workflowId = `property_${variant}sec_${language}_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
     const workflowData: any = {
       id: workflowId,
       propertyId: property.id,
       variant: variant === '15' ? '15sec' : '30sec',
+      language, // Add language field
       address: property.address,
       city: property.city,
       state: property.state,

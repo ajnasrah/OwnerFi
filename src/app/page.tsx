@@ -221,18 +221,18 @@ export default async function HomePage() {
                   {/* Trust Badge */}
                   <div className="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/30 rounded-full px-3 py-1.5 mb-4">
                     <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-                    <span className="text-emerald-400 text-xs font-semibold">Trusted by 1,000+ Homebuyers</span>
+                    <span className="text-emerald-400 text-xs font-semibold" data-translate="hero.trustBadge">Trusted by 1,000+ Homebuyers</span>
                   </div>
 
                   <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-black text-white leading-tight mb-4">
-                    Swipe Your Way
-                    <span className="block text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-blue-400 to-purple-400">
+                    <span data-translate="hero.title1">Swipe Your Way</span>
+                    <span className="block text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-blue-400 to-purple-400" data-translate="hero.title2">
                       Into Your Dream Home
                     </span>
                   </h1>
 
                   <p className="text-base sm:text-lg lg:text-xl text-slate-300 leading-relaxed mb-6 max-w-xl mx-auto lg:mx-0">
-                    The modern way to find owner-financed homes. <span className="text-white font-semibold">No bank approval needed.</span> Swipe through real properties you can afford today.
+                    <span data-translate="hero.subtitle">The modern way to find owner-financed homes.</span> <span className="text-white font-semibold" data-translate="hero.subtitleBold">No bank approval needed.</span> <span data-translate="hero.subtitleEnd">Swipe through real properties you can afford today.</span>
                   </p>
 
                   {/* CTA Buttons - Large and Prominent */}

@@ -247,13 +247,15 @@ interface BrandAnalytics {
 export default function SocialMediaDashboard() {
   const { data: session, status: authStatus } = useSession();
   const router = useRouter();
-  const [activeSubTab, setActiveSubTab] = useState<'carz' | 'ownerfi' | 'vassdistro' | 'ownerfi-benefits' | 'ownerfi-properties' | 'abdullah' | 'abdullah-podcast' | 'analytics'>('carz');
+  const [activeSubTab, setActiveSubTab] = useState<'carz' | 'ownerfi' | 'vassdistro' | 'ownerfi-benefits' | 'ownerfi-properties' | 'ownerfi-properties-spanish' | 'abdullah' | 'abdullah-podcast' | 'analytics'>('carz');
   const [status, setStatus] = useState<SchedulerStatus | null>(null);
   const [workflows, setWorkflows] = useState<WorkflowLogs | null>(null);
   const [podcastWorkflows, setPodcastWorkflows] = useState<PodcastWorkflowLogs | null>(null);
   const [benefitWorkflows, setBenefitWorkflows] = useState<BenefitWorkflowLogs | null>(null);
   const [propertyWorkflows, setPropertyWorkflows] = useState<PropertyWorkflowLogs | null>(null);
   const [propertyStats, setPropertyStats] = useState<PropertyQueueStats | null>(null);
+  const [spanishPropertyWorkflows, setSpanishPropertyWorkflows] = useState<PropertyWorkflowLogs | null>(null);
+  const [spanishPropertyStats, setSpanishPropertyStats] = useState<PropertyQueueStats | null>(null);
   const [guestProfiles, setGuestProfiles] = useState<GuestProfile[]>([]);
   const [editingProfile, setEditingProfile] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -261,6 +263,7 @@ export default function SocialMediaDashboard() {
   const [triggeringPodcast, setTriggeringPodcast] = useState(false);
   const [triggeringBenefit, setTriggeringBenefit] = useState(false);
   const [triggeringProperty, setTriggeringProperty] = useState(false);
+  const [triggeringSpanishProperty, setTriggeringSpanishProperty] = useState(false);
   const [triggeringAbdullah, setTriggeringAbdullah] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [deletingWorkflow, setDeletingWorkflow] = useState<string | null>(null);
@@ -302,6 +305,8 @@ export default function SocialMediaDashboard() {
       loadBenefitWorkflows();
       loadPropertyWorkflows();
       loadPropertyStats();
+      loadSpanishPropertyWorkflows();
+      loadSpanishPropertyStats();
       loadGuestProfiles();
       loadAnalytics();
       loadAbdullahQueueStats();
@@ -317,12 +322,14 @@ export default function SocialMediaDashboard() {
         loadPodcastWorkflows();
         loadBenefitWorkflows();
         loadPropertyWorkflows();
+        loadSpanishPropertyWorkflows();
         loadAbdullahQueueStats();
 
         // Status & Stats: every 60s (tick 2, 4, 6, ...)
         if (tickCount % 2 === 0) {
           loadStatus();
           loadPropertyStats();
+          loadSpanishPropertyStats();
         }
 
         // Analytics: every 24 hours (tick 2880)
@@ -400,6 +407,36 @@ export default function SocialMediaDashboard() {
       }
     } catch (error) {
       console.error('Failed to load property stats:', error);
+    }
+  };
+
+  const loadSpanishPropertyWorkflows = async () => {
+    try {
+      const url = showHistory ? '/api/property/workflows/logs-spanish?history=true' : '/api/property/workflows/logs-spanish';
+      const response = await fetch(url);
+      const data = await response.json();
+      setSpanishPropertyWorkflows(data);
+    } catch (error) {
+      console.error('Failed to load Spanish property workflows:', error);
+    }
+  };
+
+  const loadSpanishPropertyStats = async () => {
+    try {
+      const response = await fetch('/api/property/populate-queue-spanish');
+      const data = await response.json();
+      if (data.success && data.stats) {
+        setSpanishPropertyStats({
+          total: data.stats.total || 0,
+          queued: data.stats.queued || 0,
+          processing: data.stats.processing || 0,
+          nextProperty: data.stats.nextProperty,
+          rotationDays: data.rotationDays || 0,
+          videosToday: 0 // This will be calculated from workflows
+        });
+      }
+    } catch (error) {
+      console.error('Failed to load Spanish property stats:', error);
     }
   };
 
@@ -583,6 +620,28 @@ export default function SocialMediaDashboard() {
     }
   };
 
+  const triggerSpanishPropertyCron = async () => {
+    setTriggeringSpanishProperty(true);
+    try {
+      const response = await fetch('/api/property/video-cron-spanish', { method: 'POST' });
+      const data = await response.json();
+      if (data.success) {
+        const message = data.generated > 0
+          ? `Spanish property video cron triggered successfully!\n\nProperty: ${data.property?.address || 'N/A'}\nWorkflow ID: ${data.property?.workflowId || 'N/A'}`
+          : `Spanish property cron ran but no video generated.\n\n${data.message || ''}`;
+        alert(message);
+        loadSpanishPropertyWorkflows();
+        loadSpanishPropertyStats();
+      } else {
+        alert(`Error: ${data.error}`);
+      }
+    } catch (error) {
+      alert('Failed to trigger Spanish property cron');
+    } finally {
+      setTriggeringSpanishProperty(false);
+    }
+  };
+
   const triggerAbdullahWorkflow = async () => {
     setTriggeringAbdullah(true);
     try {
@@ -642,6 +701,8 @@ export default function SocialMediaDashboard() {
           await loadBenefitWorkflows();
         } else if (brand === 'property') {
           await loadPropertyWorkflows();
+        } else if (brand === 'property-spanish') {
+          await loadSpanishPropertyWorkflows();
         } else {
           await loadWorkflows();
         }
@@ -789,6 +850,16 @@ export default function SocialMediaDashboard() {
               }`}
             >
               🏡 Properties
+            </button>
+            <button
+              onClick={() => setActiveSubTab('ownerfi-properties-spanish')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                activeSubTab === 'ownerfi-properties-spanish'
+                  ? 'bg-indigo-100 text-indigo-700'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              🏡 Spanish
             </button>
           </div>
         )}
@@ -1939,6 +2010,183 @@ export default function SocialMediaDashboard() {
                   <div className="bg-slate-50 rounded-lg p-8 text-center border border-slate-200">
                     <div className="text-slate-500 text-sm font-medium">No active workflows</div>
                     <div className="text-xs text-slate-400 mt-1">Property videos will appear here when being generated</div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeSubTab === 'ownerfi-properties-spanish' && (
+          <div className="space-y-6">
+            <div className="bg-white rounded-xl shadow-sm p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-slate-900">Property Showcase Videos (Spanish)</h3>
+                <button
+                  onClick={triggerSpanishPropertyCron}
+                  disabled={triggeringSpanishProperty}
+                  className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:bg-gray-400 transition-colors"
+                >
+                  {triggeringSpanishProperty ? 'Generating...' : 'Generate Spanish Property Video'}
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-slate-50 rounded-lg p-4">
+                  <div className="text-sm text-slate-600">Rotation Queue Size</div>
+                  <div className="text-2xl font-bold text-slate-900 mt-1">
+                    {spanishPropertyStats?.total || 0}
+                  </div>
+                  <div className="text-xs text-slate-500 mt-1">properties</div>
+                </div>
+
+                <div className="bg-slate-50 rounded-lg p-4">
+                  <div className="text-sm text-slate-600">Videos Today</div>
+                  <div className="text-2xl font-bold text-slate-900 mt-1">
+                    {spanishPropertyWorkflows?.workflows.filter(w => {
+                      const today = new Date().setHours(0, 0, 0, 0);
+                      return new Date(w.createdAt).setHours(0, 0, 0, 0) === today;
+                    }).length || 0}
+                  </div>
+                  <div className="text-xs text-slate-500 mt-1">generated</div>
+                </div>
+
+                <div className="bg-slate-50 rounded-lg p-4">
+                  <div className="text-sm text-slate-600">Next Property</div>
+                  <div className="text-sm font-bold text-slate-900 mt-1">
+                    {spanishPropertyStats?.nextProperty ? (
+                      <>{spanishPropertyStats.nextProperty.address.substring(0, 20)}...</>
+                    ) : (
+                      'N/A'
+                    )}
+                  </div>
+                  <div className="text-xs text-slate-500 mt-1">
+                    {spanishPropertyStats?.nextProperty && `${spanishPropertyStats.nextProperty.city}, ${spanishPropertyStats.nextProperty.state}`}
+                  </div>
+                </div>
+
+                <div className="bg-slate-50 rounded-lg p-4">
+                  <div className="text-sm text-slate-600">Rotation Days</div>
+                  <div className="text-2xl font-bold text-slate-900 mt-1">
+                    {spanishPropertyStats?.rotationDays || 0}
+                  </div>
+                  <div className="text-xs text-slate-500 mt-1">days per cycle</div>
+                </div>
+              </div>
+
+              <div className="mt-6 pt-6 border-t border-slate-200">
+                <h4 className="text-sm font-semibold text-slate-900 mb-3">Publishing Platforms</h4>
+                <div className="flex flex-wrap gap-2">
+                  {['Instagram', 'TikTok', 'YouTube', 'Facebook', 'LinkedIn', 'Threads'].map((platform) => (
+                    <span key={platform} className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700">
+                      {platform}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mt-6 pt-6 border-t border-slate-200">
+                <h4 className="text-sm font-semibold text-slate-900 mb-3">Video Format</h4>
+                <div className="bg-slate-50 rounded-lg p-4">
+                  <ul className="text-sm text-slate-700 space-y-2">
+                    <li>• <strong>Property showcase format (Spanish)</strong> - 15-second videos</li>
+                    <li>• Rotating queue of active properties with &lt;$15k down</li>
+                    <li>• Smart rotation (each property shown every {spanishPropertyStats?.rotationDays || 0} days)</li>
+                    <li>• Features: address, city, down payment, monthly payment</li>
+                    <li>• HeyGen avatar + Submagic captions (Spanish language)</li>
+                    <li>• Automatic queue management and analytics tracking</li>
+                  </ul>
+                </div>
+              </div>
+
+              {/* Spanish Property Workflow Logs */}
+              <div className="mt-6 pt-6 border-t border-slate-200">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-sm font-semibold text-slate-900">Workflows</h4>
+                  <button
+                    onClick={() => setShowHistory(!showHistory)}
+                    className="text-xs px-3 py-1 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition-colors"
+                  >
+                    {showHistory ? 'Active Only' : 'Show History'}
+                  </button>
+                </div>
+                {spanishPropertyWorkflows && spanishPropertyWorkflows.workflows && spanishPropertyWorkflows.workflows.length > 0 ? (
+                  <div className="space-y-3">
+                    {spanishPropertyWorkflows.workflows.map((workflow) => (
+                      <div key={workflow.id} className="bg-white border border-slate-200 rounded-lg p-4 hover:border-indigo-300 transition-colors">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700">
+                                {workflow.variant}
+                              </span>
+                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                                ES
+                              </span>
+                              <div className="font-medium text-slate-900 text-sm">{workflow.address}</div>
+                            </div>
+                            <div className="text-xs text-slate-600 mb-1">
+                              {workflow.city}, {workflow.state} • Down: ${workflow.downPayment.toLocaleString()} • Monthly: ${workflow.monthlyPayment.toLocaleString()}
+                            </div>
+                            <div className="text-xs text-slate-500">{formatTimeAgo(workflow.createdAt)}</div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${getPodcastStatusColor(workflow.status)}`}>
+                              {formatStatus(workflow.status)}
+                            </span>
+                            <button
+                              onClick={() => deleteWorkflow(workflow.id, 'property-spanish')}
+                              disabled={deletingWorkflow === workflow.id}
+                              className="text-red-600 hover:text-red-800 hover:bg-red-50 p-2 rounded-lg transition-colors disabled:opacity-50"
+                              title="Delete workflow"
+                            >
+                              {deletingWorkflow === workflow.id ? (
+                                <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24">
+                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
+                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                              ) : (
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                        {(workflow.heygenVideoId || workflow.submagicProjectId || workflow.latePostId) && (
+                          <div className="grid grid-cols-3 gap-2 text-xs">
+                            {workflow.heygenVideoId && (
+                              <div>
+                                <div className="text-slate-500 mb-1">HeyGen</div>
+                                <div className="font-mono text-slate-700 truncate">{workflow.heygenVideoId.substring(0, 12)}...</div>
+                              </div>
+                            )}
+                            {workflow.submagicProjectId && (
+                              <div>
+                                <div className="text-slate-500 mb-1">Submagic</div>
+                                <div className="font-mono text-slate-700 truncate">{workflow.submagicProjectId.substring(0, 12)}...</div>
+                              </div>
+                            )}
+                            {workflow.latePostId && (
+                              <div>
+                                <div className="text-slate-500 mb-1">GetLate</div>
+                                <div className="font-mono text-slate-700 truncate">{workflow.latePostId.substring(0, 12)}...</div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        {workflow.error && (
+                          <div className="mt-3 text-xs text-red-700 bg-red-50 border border-red-200 rounded px-3 py-2">
+                            <span className="font-semibold">Error:</span> {workflow.error}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="bg-slate-50 rounded-lg p-8 text-center border border-slate-200">
+                    <div className="text-slate-500 text-sm font-medium">No active workflows</div>
+                    <div className="text-xs text-slate-400 mt-1">Spanish property videos will appear here when being generated</div>
                   </div>
                 )}
               </div>

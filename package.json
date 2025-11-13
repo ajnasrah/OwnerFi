@@ -9,6 +9,7 @@
     "lint": "eslint",
     "setup-queues": "tsx scripts/setup-late-queues.ts",
     "view-queues": "tsx scripts/setup-late-queues.ts --view",
+    "setup:google-drive": "tsx scripts/setup-google-drive-oauth.ts",
     "scrape-zillow": "tsx scripts/run-zillow-scraper.ts",
     "scrape-zillow-limited": "tsx scripts/zillow-scraper-limited.ts",
     "view-zillow-results": "tsx scripts/view-zillow-results.ts",

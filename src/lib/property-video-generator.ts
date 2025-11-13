@@ -21,7 +21,7 @@ export interface DualPropertyVideoScripts {
  * Generate video script for a property listing using OpenAI
  * Returns both 30-sec and 15-sec variants for A/B testing
  */
-export async function generatePropertyScriptWithAI(property: PropertyListing, openaiApiKey: string): Promise<DualPropertyVideoScripts> {
+export async function generatePropertyScriptWithAI(property: PropertyListing, openaiApiKey: string, language: 'en' | 'es' = 'en'): Promise<DualPropertyVideoScripts> {
   const prompt = buildPropertyPrompt(property);
 
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -35,7 +35,7 @@ export async function generatePropertyScriptWithAI(property: PropertyListing, op
       messages: [
         {
           role: 'system',
-          content: getPropertySystemPrompt()
+          content: getPropertySystemPrompt(language)
         },
         {
           role: 'user',
@@ -374,10 +374,14 @@ export function validatePropertyForVideo(property: PropertyListing): { valid: bo
  * Get system prompt for OpenAI property video generation
  * OWNERFI — PROPERTY SHOWCASE SYSTEM (Updated with Social Media Prompt Library)
  */
-function getPropertySystemPrompt(): string {
+function getPropertySystemPrompt(language: 'en' | 'es' = 'en'): string {
+  const languageInstruction = language === 'es'
+    ? `\n\n🌐 LANGUAGE: SPANISH\n**CRITICAL**: Generate ALL content (SCRIPT, TITLE, CAPTION, hashtags) in natural, conversational SPANISH. Translate all CTAs, disclaimers, and engagement questions to Spanish. Use "Owner-Fy punto A Eye" for the website pronunciation. Maintain Abdullah's friendly, conversational voice in Spanish.\n`
+    : '';
+
   return `SYSTEM ROLE:
 You are the Social Media Director AI for Abdullah's brand network. You run inside an automated CLI (VS Code) environment using the OpenAI GPT model (currently gpt-4o-mini). Your mission is to generate ready-to-post video scripts for OwnerFi property showcases.
-
+${languageInstruction}
 BRAND: OWNERFI — PROPERTY SHOWCASE SYSTEM
 Purpose: Showcase real owner-finance or creative deals.
 Voice: Abdullah — friendly, goofy, confident, conversational truth-teller.

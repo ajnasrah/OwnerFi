@@ -125,15 +125,23 @@ async function fallbackToDirectFetch(payload: TaskPayload): Promise<{ taskName: 
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ||
                   (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
 
-  console.log(`⚠️  Using fallback fetch to: ${baseUrl}/api/process-video`);
+  // CRITICAL FIX: Use correct worker endpoint path
+  const workerUrl = `${baseUrl}/api/workers/process-video`;
+  const secret = process.env.CLOUD_TASKS_SECRET || process.env.CRON_SECRET;
+
+  console.log(`⚠️  Using fallback fetch to: ${workerUrl}`);
 
   // Don't await - fire and forget
-  fetch(`${baseUrl}/api/process-video`, {
+  fetch(workerUrl, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Cloud-Tasks-Worker': secret || '',
+    },
     body: JSON.stringify(payload),
   }).catch((err) => {
     console.error(`❌ Fallback fetch failed:`, err);
+    console.error(`   This workflow will be picked up by the cron failsafe`);
   });
 
   return {

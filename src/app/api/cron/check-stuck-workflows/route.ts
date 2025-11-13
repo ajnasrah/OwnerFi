@@ -324,8 +324,20 @@ async function checkHeyGenWorkflows() {
                 updatedAt: Date.now()
               });
 
-              console.log(`   ✅ ${workflowId}: Advanced to SubMagic`);
+              console.log(`   ✅ ${workflowId}: Advanced to SubMagic (ID: ${projectId})`);
               advanced++;
+            } else {
+              // CRITICAL FIX: Log SubMagic API failures
+              const errorText = await submagicResponse.text().catch(() => 'Unable to read error');
+              console.error(`   ❌ ${workflowId}: SubMagic API failed (${submagicResponse.status}): ${errorText}`);
+
+              await updateDoc(doc(db, collectionName, workflowId), {
+                status: 'failed',
+                error: `SubMagic API error: ${submagicResponse.status} - ${errorText}`,
+                heygenVideoUrl: publicHeygenUrl,
+                updatedAt: Date.now()
+              });
+              failed++;
             }
           } else if (status === 'failed') {
             await updateDoc(doc(db, collectionName, workflowId), {
@@ -432,8 +444,20 @@ async function checkHeyGenWorkflows() {
               updatedAt: Date.now()
             });
 
-            console.log(`   ✅ ${workflowId}: Advanced to SubMagic`);
+            console.log(`   ✅ ${workflowId}: Advanced to SubMagic (ID: ${projectId})`);
             advanced++;
+          } else {
+            // CRITICAL FIX: Log SubMagic API failures for property videos
+            const errorText = await submagicResponse.text().catch(() => 'Unable to read error');
+            console.error(`   ❌ ${workflowId}: SubMagic API failed (${submagicResponse.status}): ${errorText}`);
+
+            await updateDoc(doc(db, 'property_videos', workflowId), {
+              status: 'failed',
+              error: `SubMagic API error: ${submagicResponse.status} - ${errorText}`,
+              heygenVideoUrl: publicHeygenUrl,
+              updatedAt: Date.now()
+            });
+            failed++;
           }
         } else if (status === 'failed') {
           await updateDoc(doc(db, 'property_videos', workflowId), {
@@ -603,6 +627,120 @@ async function checkSubMagicWorkflows() {
     }
   }
 
+  // CRITICAL FIX: Also check property_videos collection (was missing!)
+  try {
+    console.log(`\n📂 Checking property_videos...`);
+    const q = query(
+      collection(db, 'property_videos'),
+      where('status', '==', 'submagic_processing'),
+      firestoreLimit(15)
+    );
+
+    const snapshot = await getDocs(q);
+    console.log(`   Found ${snapshot.size} property video SubMagic processing`);
+    checked += snapshot.size;
+
+    for (const workflowDoc of snapshot.docs) {
+      const data = workflowDoc.data();
+      const workflowId = workflowDoc.id;
+      const projectId = data.submagicVideoId;
+
+      if (!projectId) continue;
+
+      try {
+        const submagicResponse = await fetch(
+          `https://api.submagic.co/v1/projects/${projectId}`,
+          { headers: { 'x-api-key': SUBMAGIC_API_KEY } }
+        );
+
+        if (!submagicResponse.ok) continue;
+
+        const submagicData = await submagicResponse.json();
+        const status = submagicData.status;
+        const downloadUrl = submagicData.media_url || submagicData.video_url || submagicData.downloadUrl || submagicData.download_url;
+
+        console.log(`   🎬 ${workflowId}: ${status}`);
+
+        if (status === 'completed' || status === 'done' || status === 'ready') {
+          // Check if download URL exists, if not trigger export
+          let finalDownloadUrl = downloadUrl;
+
+          if (!finalDownloadUrl) {
+            console.log(`   ⚠️  Complete but no download URL - triggering export...`);
+
+            try {
+              const exportResponse = await fetch(`https://api.submagic.co/v1/projects/${projectId}/export`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'x-api-key': SUBMAGIC_API_KEY
+                }
+              });
+
+              if (exportResponse.ok) {
+                console.log(`   ✅ Export triggered - video will be ready soon`);
+                continue;
+              } else {
+                const exportError = await exportResponse.text();
+                console.error(`   ❌ Export trigger failed:`, exportError);
+                continue;
+              }
+            } catch (exportError) {
+              console.error(`   ❌ Error triggering export:`, exportError);
+              continue;
+            }
+          }
+
+          // Upload to R2
+          const publicVideoUrl = await uploadSubmagicVideo(finalDownloadUrl);
+
+          // Update to posting
+          await updateDoc(doc(db, 'property_videos', workflowId), {
+            status: 'posting',
+            finalVideoUrl: publicVideoUrl,
+            retryCount: (data.retryCount || 0) + 1,
+            updatedAt: Date.now()
+          });
+
+          // Post to Late
+          const postResult = await postToLate({
+            videoUrl: publicVideoUrl,
+            caption: data.caption || 'New owner finance property for sale! 🏡',
+            title: data.title || 'Property For Sale',
+            platforms: data.platforms || ['instagram', 'tiktok', 'youtube'],
+            useQueue: true,
+            brand: 'property' as any
+          });
+
+          if (postResult.success) {
+            await updateDoc(doc(db, 'property_videos', workflowId), {
+              status: 'completed',
+              latePostId: postResult.postId,
+              completedAt: Date.now(),
+              updatedAt: Date.now()
+            });
+
+            console.log(`   ✅ ${workflowId}: Completed`);
+            completed++;
+          }
+        } else if (status === 'failed' || status === 'error') {
+          await updateDoc(doc(db, 'property_videos', workflowId), {
+            status: 'failed',
+            error: 'SubMagic failed',
+            updatedAt: Date.now()
+          });
+          console.log(`   ❌ ${workflowId}: Failed`);
+          failed++;
+        }
+      } catch (error) {
+        console.error(`   ❌ ${workflowId}:`, error);
+        failed++;
+      }
+    }
+  } catch (err) {
+    console.error(`   ❌ Error querying property_videos:`, err);
+  }
+
   return { checked, completed, failed };
 }
 
@@ -670,22 +808,31 @@ async function checkPostingWorkflows() {
 
         try {
           if (data.status === 'video_processing') {
-            // Trigger full reprocessing
+            // CRITICAL FIX: Trigger worker endpoint (not /api/process-video which doesn't exist!)
             const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://ownerfi.ai';
-            const response = await fetch(`${baseUrl}/api/process-video`, {
+            const secret = process.env.CLOUD_TASKS_SECRET || process.env.CRON_SECRET;
+
+            const response = await fetch(`${baseUrl}/api/workers/process-video`, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: {
+                'Content-Type': 'application/json',
+                'X-Cloud-Tasks-Worker': secret || ''
+              },
               body: JSON.stringify({
                 brand,
                 workflowId,
-                videoUrl,
-                submagicProjectId: data.submagicVideoId
+                videoUrl: data.submagicDownloadUrl || videoUrl,
+                submagicProjectId: data.submagicVideoId || data.submagicProjectId
               })
             });
 
             if (response.ok) {
               console.log(`   ✅ ${workflowId}: Reprocessing triggered`);
               retried++;
+            } else {
+              const errorText = await response.text().catch(() => 'Unable to read error');
+              console.error(`   ❌ ${workflowId}: Worker failed (${response.status}): ${errorText}`);
+              failed++;
             }
           } else if (videoUrl) {
             // Retry Late posting

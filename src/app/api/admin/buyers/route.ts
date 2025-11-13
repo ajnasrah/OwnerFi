@@ -105,43 +105,54 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    // OPTIMIZATION: Fetch all matched properties in one query instead of N queries
-    const allBuyerIds = usersSnapshot.docs.map(doc => doc.id);
+    // REAL MATCHING LOGIC: Calculate actual matches the same way the buyer API does
+    // The buyer API doesn't use propertyBuyerMatches - it queries properties directly
     const matchedCountsMap = new Map<string, number>();
 
-    // First, fetch all active property IDs to validate matches
+    // Fetch all active properties once (expensive but accurate)
     const activePropertiesQuery = query(
       collection(db, 'properties'),
       where('isActive', '==', true)
     );
     const activePropertiesSnapshot = await getDocs(activePropertiesQuery);
-    const activePropertyIds = new Set(activePropertiesSnapshot.docs.map(doc => doc.id));
+    const allActiveProperties = activePropertiesSnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
 
-    // Batch fetch matched properties for all buyers at once
-    if (allBuyerIds.length > 0) {
-      // Firestore 'in' operator supports up to 10 values, so we need to batch
-      const batchSize = 10;
-      for (let i = 0; i < allBuyerIds.length; i += batchSize) {
-        const batchIds = allBuyerIds.slice(i, i + batchSize);
-        const matchedQuery = query(
-          collection(db, 'propertyBuyerMatches'),
-          where('buyerId', 'in', batchIds)
-        );
-        const matchedSnapshot = await getDocs(matchedQuery);
+    // Helper function to check if property matches buyer's budget (OR logic)
+    const propertyMatchesBuyer = (property: any, buyer: any) => {
+      const monthlyMatch = property.monthlyPayment <= buyer.maxMonthlyPayment;
+      const downMatch = !property.downPaymentAmount || property.downPaymentAmount <= buyer.maxDownPayment;
 
-        // Count matches per buyer, but ONLY for active properties
-        matchedSnapshot.docs.forEach(doc => {
-          const matchData = doc.data();
-          const buyerId = matchData.buyerId;
-          const propertyId = matchData.propertyId;
+      // Must match at least ONE budget criterion
+      return monthlyMatch || downMatch;
+    };
 
-          // Only count if the property is still active
-          if (activePropertyIds.has(propertyId)) {
-            matchedCountsMap.set(buyerId, (matchedCountsMap.get(buyerId) || 0) + 1);
-          }
-        });
+    // Calculate matches for each buyer profile
+    buyerProfilesMap.forEach((buyerProfile, userId) => {
+      if (!buyerProfile.maxMonthlyPayment || !buyerProfile.maxDownPayment) {
+        matchedCountsMap.set(userId, 0);
+        return;
       }
-    }
+
+      const buyerState = buyerProfile.preferredState || buyerProfile.state;
+      if (!buyerState) {
+        matchedCountsMap.set(userId, 0);
+        return;
+      }
+
+      // Count properties that match this buyer's criteria
+      const matchCount = allActiveProperties.filter((property: any) => {
+        // Must be in buyer's state
+        if (property.state !== buyerState) return false;
+
+        // Must match at least one budget criterion
+        return propertyMatchesBuyer(property, buyerProfile);
+      }).length;
+
+      matchedCountsMap.set(userId, matchCount);
+    });
 
     const buyers: BuyerAdminView[] = [];
     const buyersWithDistance: Array<BuyerAdminView & { distance?: number }> = [];

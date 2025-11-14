@@ -521,6 +521,7 @@ function mapRowToProperty(
   const downPaymentPercent = getNumericValue(row, ['down payment']);
   const interestRate = getNumericValue(row, ['Interest rate']);
   const monthlyPayment = getNumericValue(row, ['Monthly payment']);
+  const termYears = getNumericValue(row, ['Term Years', 'termYears', 'Term', 'Loan Term', 'Amortization']);
   const balloonYears = getNumericValue(row, ['Balloon']);
 
   // Calculate down payment amount from percentage if amount is missing
@@ -528,12 +529,16 @@ function mapRowToProperty(
     downPaymentAmount = Math.round((downPaymentPercent / 100) * price);
   }
 
-  // Calculate monthly payment if missing
+  // Calculate monthly payment ONLY if not provided
+  // If monthly payment is provided, use it as-is (may include taxes/insurance)
   let calculatedMonthlyPayment = monthlyPayment;
-  if (!calculatedMonthlyPayment && interestRate && downPaymentAmount && price) {
+  let finalTermYears = termYears || 20; // Use provided term or default to 20 years
+
+  if (!calculatedMonthlyPayment && interestRate && downPaymentAmount && price && finalTermYears) {
+    // Only calculate if monthly payment was NOT provided
     const loanAmount = price - downPaymentAmount;
     const monthlyRate = interestRate / 100 / 12;
-    const numPayments = 20 * 12; // Default 20 year term
+    const numPayments = finalTermYears * 12;
 
     if (monthlyRate > 0) {
       calculatedMonthlyPayment = Math.round(
@@ -582,7 +587,7 @@ function mapRowToProperty(
       downPaymentAmount,
       downPaymentPercent: downPaymentPercent || (downPaymentAmount && price ? (downPaymentAmount / price) * 100 : 0),
       interestRate,
-      termYears: 20,
+      termYears: finalTermYears,
       balloonYears: balloonYears > 0 ? balloonYears : null,
       balloonPayment: null, // No longer calculated - just store years until refinance
       imageUrl,

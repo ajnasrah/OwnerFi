@@ -255,7 +255,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
  * Get workflow by Submagic project ID for specific brand
  */
 async function getWorkflowBySubmagicId(
-  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit' | 'property' | 'vassdistro' | 'abdullah' | 'personal',
+  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit' | 'property' | 'property-spanish' | 'vassdistro' | 'abdullah' | 'personal',
   submagicProjectId: string
 ): Promise<{ workflowId: string; workflow: any } | null> {
   const { getAdminDb } = await import('@/lib/firebase-admin');
@@ -267,7 +267,7 @@ async function getWorkflowBySubmagicId(
     collectionName = 'podcast_workflow_queue';
   } else if (brand === 'benefit') {
     collectionName = 'benefit_workflow_queue';
-  } else if (brand === 'property') {
+  } else if (brand === 'property' || brand === 'property-spanish') {
     collectionName = 'property_videos';
   } else if (brand === 'abdullah') {
     collectionName = 'abdullah_workflow_queue';
@@ -310,7 +310,7 @@ async function getWorkflowBySubmagicId(
  * Update workflow for specific brand
  */
 async function updateWorkflowForBrand(
-  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit' | 'property' | 'vassdistro' | 'abdullah' | 'personal',
+  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit' | 'property' | 'property-spanish' | 'vassdistro' | 'abdullah' | 'personal',
   workflowId: string,
   updates: Record<string, any>
 ): Promise<void> {
@@ -320,7 +320,7 @@ async function updateWorkflowForBrand(
   } else if (brand === 'benefit') {
     const { updateBenefitWorkflow } = await import('@/lib/feed-store-firestore');
     await updateBenefitWorkflow(workflowId, updates);
-  } else if (brand === 'property') {
+  } else if (brand === 'property' || brand === 'property-spanish') {
     const { updatePropertyVideo } = await import('@/lib/feed-store-firestore');
     await updatePropertyVideo(workflowId, updates);
   } else if (brand === 'abdullah') {

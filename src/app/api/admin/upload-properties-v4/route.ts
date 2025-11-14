@@ -11,6 +11,7 @@ import {
 import { db } from '@/lib/firebase';
 import { logError, logInfo } from '@/lib/logger';
 import { ExtendedSession } from '@/types/session';
+import { validatePropertyFinancials, formatValidationResult, type PropertyFinancialData } from '@/lib/property-validation';
 
 // ==================== DATA NORMALIZATION FUNCTIONS ====================
 
@@ -423,7 +424,7 @@ function mapRowToProperty(
   values: string[],
   headers: string[],
   rowNum: number
-): { property: PropertyData | null; failedRow?: FailedRow } {
+): { property: PropertyData | null; failedRow?: FailedRow; validation?: any } {
   // Create row object by mapping headers to values
   const row: Record<string, string> = {};
 
@@ -566,37 +567,55 @@ function mapRowToProperty(
   else if (homeType.includes('townhouse')) propertyType = 'townhouse';
   else if (homeType.includes('multi')) propertyType = 'multi-family';
 
+  const property = {
+    id: propertyId,
+    opportunityName: opportunityName || address, // Preserve for GoHighLevel sync
+    address: formatStreetAddress(address),
+    city: normalizeCity(city),
+    state: normalizeState(state),
+    zipCode: zipCode.trim(),
+    price,
+    listPrice: price,  // Component expects listPrice, not price!
+    bedrooms,
+    bathrooms,
+    squareFeet,
+    yearBuilt,
+    lotSize: normalizeLotSize(lotSizeStr),
+    propertyType,
+    description: '', // Removed to avoid CSV parsing issues
+    monthlyPayment: calculatedMonthlyPayment,
+    downPaymentAmount,
+    downPaymentPercent: downPaymentPercent || (downPaymentAmount && price ? (downPaymentAmount / price) * 100 : 0),
+    interestRate,
+    termYears: finalTermYears,
+    balloonYears: balloonYears > 0 ? balloonYears : null,
+    balloonPayment: null, // No longer calculated - just store years until refinance
+    imageUrl,
+    source: 'import',
+    status: 'active',
+    isActive: true,
+    featured: false,
+    priority: 1
+  };
+
+  // Validate property financials
+  const validationData: PropertyFinancialData = {
+    listPrice: price,
+    monthlyPayment: calculatedMonthlyPayment,
+    downPaymentAmount,
+    downPaymentPercent: property.downPaymentPercent,
+    interestRate,
+    termYears: finalTermYears,
+    address: property.address,
+    city: property.city,
+    state: property.state
+  };
+
+  const validation = validatePropertyFinancials(validationData);
+
   return {
-    property: {
-      id: propertyId,
-      opportunityName: opportunityName || address, // Preserve for GoHighLevel sync
-      address: formatStreetAddress(address),
-      city: normalizeCity(city),
-      state: normalizeState(state),
-      zipCode: zipCode.trim(),
-      price,
-      listPrice: price,  // Component expects listPrice, not price!
-      bedrooms,
-      bathrooms,
-      squareFeet,
-      yearBuilt,
-      lotSize: normalizeLotSize(lotSizeStr),
-      propertyType,
-      description: '', // Removed to avoid CSV parsing issues
-      monthlyPayment: calculatedMonthlyPayment,
-      downPaymentAmount,
-      downPaymentPercent: downPaymentPercent || (downPaymentAmount && price ? (downPaymentAmount / price) * 100 : 0),
-      interestRate,
-      termYears: finalTermYears,
-      balloonYears: balloonYears > 0 ? balloonYears : null,
-      balloonPayment: null, // No longer calculated - just store years until refinance
-      imageUrl,
-      source: 'import',
-      status: 'active',
-      isActive: true,
-      featured: false,
-      priority: 1
-    }
+    property,
+    validation
   };
 }
 
@@ -753,14 +772,16 @@ export async function POST(request: NextRequest) {
         }
 
         // Map to property data
-        const { property, failedRow } = mapRowToProperty(values, headers, i);
+        const result = mapRowToProperty(values, headers, i);
 
-        if (!property) {
-          if (failedRow) {
-            results.skipped.push(failedRow);
+        if (!result.property) {
+          if (result.failedRow) {
+            results.skipped.push(result.failedRow);
           }
           continue;
         }
+
+        const { property, validation } = result;
 
         // Check for duplicates
         if (existingIds.has(property.id)) {
@@ -772,7 +793,7 @@ export async function POST(request: NextRequest) {
           continue;
         }
 
-        // Final validation
+        // Basic validation
         if (!property.address || !property.city || property.price <= 0) {
           results.errors.push({
             row: i,
@@ -784,6 +805,39 @@ export async function POST(request: NextRequest) {
             attemptedPrice: property.price.toString()
           });
           continue;
+        }
+
+        // Financial validation
+        if (validation.shouldAutoReject) {
+          // Log detailed validation issues
+          console.warn(`Property rejected (row ${i}): ${property.address}`, validation.issues);
+
+          // Store in failed properties with detailed reasons
+          const issueDetails = validation.issues
+            .filter(issue => issue.severity === 'error')
+            .map(issue => `${issue.field}: ${issue.issue}`)
+            .join('; ');
+
+          results.errors.push({
+            row: i,
+            data: values,
+            reason: `Financial validation failed: ${issueDetails}`,
+            attemptedAddress: property.address,
+            attemptedCity: property.city,
+            attemptedState: property.state,
+            attemptedPrice: property.price.toString()
+          });
+          continue;
+        }
+
+        // Mark properties that need review but aren't auto-rejected
+        if (validation.needsReview) {
+          property.needsReview = true;
+          property.reviewReasons = validation.issues.map(issue => ({
+            field: issue.field,
+            issue: issue.issue,
+            severity: issue.severity
+          }));
         }
 
         results.success.push(property);

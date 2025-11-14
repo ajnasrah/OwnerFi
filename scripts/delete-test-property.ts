@@ -1,35 +1,77 @@
-import * as dotenv from 'dotenv';
-import { initializeApp, cert } from 'firebase-admin/app';
-import { getFirestore } from 'firebase-admin/firestore';
+#!/usr/bin/env tsx
+/**
+ * Delete Test Property
+ *
+ * Deletes the test property from the database to verify
+ * the sync cron automatically removes it from the queue
+ */
 
-dotenv.config({ path: '.env.local' });
+import { config } from 'dotenv';
+import { resolve } from 'path';
 
-const serviceAccount = {
-  projectId: process.env.FIREBASE_PROJECT_ID,
-  privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-  clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-};
+config({ path: resolve(process.cwd(), '.env.local') });
 
-const app = initializeApp({ credential: cert(serviceAccount as any) });
-const db = getFirestore(app);
+import { getAdminDb } from '../src/lib/firebase-admin';
 
-async function deleteProperty() {
-  const propertiesRef = db.collection('properties');
-  const snapshot = await propertiesRef.where('address', '==', '789 Rental Investment Blvd').get();
-  
-  if (snapshot.empty) {
-    console.log('Property not found');
+async function deleteTestProperty() {
+  console.log('🗑️  Deleting Test Property\n');
+  console.log('='.repeat(70));
+
+  const db = await getAdminDb();
+  if (!db) {
+    console.error('❌ Failed to initialize Firebase Admin SDK');
     return;
   }
-  
-  console.log('Found properties:', snapshot.size);
-  
-  for (const doc of snapshot.docs) {
-    const data = doc.data();
-    console.log('Deleting:', doc.id, '-', data.address);
-    await doc.ref.delete();
-    console.log('Deleted');
+
+  // Find all test properties
+  const propertiesSnapshot = await db.collection('properties')
+    .where('source', '==', 'test_sync_script')
+    .get();
+
+  console.log(`\n📊 Found ${propertiesSnapshot.size} test properties to delete\n`);
+
+  if (propertiesSnapshot.empty) {
+    console.log('❌ No test properties found!');
+    return;
   }
+
+  for (const propDoc of propertiesSnapshot.docs) {
+    const prop = propDoc.data();
+    const propId = propDoc.id;
+
+    console.log(`Deleting: ${propId}`);
+    console.log(`  Address: ${prop.address}`);
+    console.log(`  City: ${prop.city}, ${prop.state}`);
+
+    // Check if in queue before deleting
+    const queueSnapshot = await db.collection('propertyShowcaseWorkflows')
+      .where('propertyId', '==', propId)
+      .get();
+
+    if (!queueSnapshot.empty) {
+      console.log(`  ⚠️  Property is currently in queue (${queueSnapshot.size} workflows)`);
+      console.log(`     Will be removed by next sync cron`);
+    }
+
+    // Delete from properties
+    await propDoc.ref.delete();
+    console.log(`  ✅ Deleted from properties collection`);
+    console.log('');
+  }
+
+  console.log('='.repeat(70));
+  console.log('✅ Test Properties Deleted!');
+  console.log('='.repeat(70));
+  console.log('\n📋 Next Steps:');
+  console.log('   1. Run sync cron:');
+  console.log('      npx tsx scripts/trigger-sync-cron.ts');
+  console.log('');
+  console.log('   2. Verify property was removed from queue:');
+  console.log('      npx tsx scripts/verify-test-property-removed.ts');
+  console.log('');
 }
 
-deleteProperty().catch(console.error);
+deleteTestProperty().catch(error => {
+  console.error('Fatal error:', error);
+  process.exit(1);
+});

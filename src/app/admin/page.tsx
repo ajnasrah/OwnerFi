@@ -123,6 +123,9 @@ export default function AdminDashboard() {
   const [reviewRequiredProperties, setReviewRequiredProperties] = useState<AdminProperty[]>([]);
   const [loadingReviewRequired, setLoadingReviewRequired] = useState(false);
   const [reviewRequiredCount, setReviewRequiredCount] = useState(0);
+  const [selectedReviewProperties, setSelectedReviewProperties] = useState<Set<string>>(new Set());
+  const [editingProperty, setEditingProperty] = useState<AdminProperty | null>(null);
+  const [approvingProperties, setApprovingProperties] = useState(false);
 
   // Upload state
   const [file, setFile] = useState<File | null>(null);
@@ -176,7 +179,6 @@ export default function AdminDashboard() {
   const [loadingRealtors, setLoadingRealtors] = useState(false);
 
   // Edit modal state
-  const [editingProperty, setEditingProperty] = useState<AdminProperty | null>(null);
   const [editForm, setEditForm] = useState<Partial<AdminProperty>>({});
 
   // Image quality state
@@ -298,6 +300,102 @@ export default function AdminDashboard() {
       setLoadingReviewRequired(false);
     }
   }, []);
+
+  // Toggle checkbox selection
+  const togglePropertySelection = useCallback((propertyId: string) => {
+    setSelectedReviewProperties(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(propertyId)) {
+        newSet.delete(propertyId);
+      } else {
+        newSet.add(propertyId);
+      }
+      return newSet;
+    });
+  }, []);
+
+  // Select all properties
+  const selectAllReviewProperties = useCallback(() => {
+    setSelectedReviewProperties(new Set(reviewRequiredProperties.map(p => p.id)));
+  }, [reviewRequiredProperties]);
+
+  // Deselect all properties
+  const deselectAllReviewProperties = useCallback(() => {
+    setSelectedReviewProperties(new Set());
+  }, []);
+
+  // Approve selected properties
+  const approveSelectedProperties = useCallback(async () => {
+    if (selectedReviewProperties.size === 0) {
+      alert('No properties selected');
+      return;
+    }
+
+    if (!confirm(`Approve ${selectedReviewProperties.size} propert${selectedReviewProperties.size === 1 ? 'y' : 'ies'}?`)) {
+      return;
+    }
+
+    setApprovingProperties(true);
+    try {
+      const { doc, updateDoc } = await import('firebase/firestore');
+      const { db } = await import('@/lib/firebase');
+
+      // Update each selected property
+      const updates = Array.from(selectedReviewProperties).map(async (propertyId) => {
+        const propertyRef = doc(db, 'properties', propertyId);
+        await updateDoc(propertyRef, {
+          needsReview: false,
+          reviewReasons: [],
+          isActive: true,
+          status: 'active',
+          reviewedAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        });
+      });
+
+      await Promise.all(updates);
+
+      alert(`✅ ${selectedReviewProperties.size} propert${selectedReviewProperties.size === 1 ? 'y' : 'ies'} approved!`);
+
+      // Refresh the list
+      await fetchReviewRequiredProperties();
+      setSelectedReviewProperties(new Set());
+    } catch (error) {
+      console.error('Failed to approve properties:', error);
+      alert('Failed to approve properties. Check console for details.');
+    } finally {
+      setApprovingProperties(false);
+    }
+  }, [selectedReviewProperties, fetchReviewRequiredProperties]);
+
+  // Save edited property
+  const saveEditedProperty = useCallback(async () => {
+    if (!editingProperty) return;
+
+    try {
+      const { doc, updateDoc } = await import('firebase/firestore');
+      const { db } = await import('@/lib/firebase');
+
+      const propertyRef = doc(db, 'properties', editingProperty.id);
+
+      // Extract only the fields we want to update
+      const { id, createdAt, ...updateData } = editingProperty;
+
+      await updateDoc(propertyRef, {
+        ...updateData,
+        updatedAt: new Date().toISOString()
+      });
+
+      alert('✅ Property updated successfully!');
+      setEditingProperty(null);
+
+      // Refresh the list
+      await fetchReviewRequiredProperties();
+    } catch (error) {
+      console.error('Failed to update property:', error);
+      alert('Failed to update property. Check console for details.');
+    }
+  }, [editingProperty, fetchReviewRequiredProperties]);
 
   const fetchStreetViewProperties = useCallback(async () => {
     setLoadingStreetView(true);
@@ -1785,9 +1883,36 @@ export default function AdminDashboard() {
           {activeTab === 'review-required' && (
             <div className="space-y-6">
               <div className="bg-white rounded-lg shadow p-6">
-                <h3 className="text-lg font-semibold mb-4">
-                  {loadingReviewRequired ? 'Loading...' : `${reviewRequiredProperties.length} Properties Need Review`}
-                </h3>
+                {/* Header with bulk actions */}
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-semibold">
+                    {loadingReviewRequired ? 'Loading...' : `${reviewRequiredProperties.length} Properties Need Review`}
+                  </h3>
+
+                  {reviewRequiredProperties.length > 0 && (
+                    <div className="flex gap-2">
+                      <button
+                        onClick={selectAllReviewProperties}
+                        className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded"
+                      >
+                        Select All
+                      </button>
+                      <button
+                        onClick={deselectAllReviewProperties}
+                        className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded"
+                      >
+                        Deselect All
+                      </button>
+                      <button
+                        onClick={approveSelectedProperties}
+                        disabled={selectedReviewProperties.size === 0 || approvingProperties}
+                        className="px-4 py-1 text-sm bg-green-600 text-white hover:bg-green-700 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {approvingProperties ? 'Approving...' : `Approve ${selectedReviewProperties.size > 0 ? `(${selectedReviewProperties.size})` : ''}`}
+                      </button>
+                    </div>
+                  )}
+                </div>
 
                 {reviewRequiredProperties.length === 0 && !loadingReviewRequired && (
                   <p className="text-gray-500">No properties need review</p>
@@ -1795,37 +1920,229 @@ export default function AdminDashboard() {
 
                 {reviewRequiredProperties.map((property) => (
                   <div key={property.id} className="border-b pb-4 mb-4 last:border-0">
-                    <div className="flex justify-between items-start">
+                    <div className="flex items-start gap-3">
+                      {/* Checkbox */}
+                      <input
+                        type="checkbox"
+                        checked={selectedReviewProperties.has(property.id)}
+                        onChange={() => togglePropertySelection(property.id)}
+                        className="mt-1 w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+                      />
+
+                      <div className="flex-1">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h4 className="font-semibold">{property.address}, {property.city}, {property.state}</h4>
+                            <p className="text-sm text-gray-600">
+                              Price: ${property.price?.toLocaleString()} | Monthly: ${property.monthlyPayment?.toLocaleString()} | ID: {property.id}
+                            </p>
+                          </div>
+
+                          <button
+                            onClick={() => setEditingProperty(property)}
+                            className="px-3 py-1 text-sm bg-blue-600 text-white hover:bg-blue-700 rounded"
+                          >
+                            Edit
+                          </button>
+                        </div>
+
+                        {property.reviewReasons && property.reviewReasons.length > 0 && (
+                          <div className="mt-3 bg-yellow-50 border border-yellow-200 rounded p-3">
+                            <p className="font-semibold text-sm mb-2">Validation Issues Found:</p>
+                            {property.reviewReasons.map((reason: any, idx: number) => (
+                              <div key={idx} className="text-sm mb-2 last:mb-0">
+                                <span className={`font-semibold ${reason.severity === 'error' ? 'text-red-600' : 'text-yellow-600'}`}>
+                                  [{reason.severity?.toUpperCase()}] {reason.field}:
+                                </span>
+                                <p className="ml-4">{reason.issue}</p>
+                                {reason.suggestion && <p className="ml-4 text-gray-600 italic text-xs mt-1">💡 {reason.suggestion}</p>}
+                                {reason.actualValue !== undefined && (
+                                  <p className="ml-4 text-gray-700 text-xs mt-1">Current value: {reason.actualValue}</p>
+                                )}
+                                {reason.expectedRange && (
+                                  <p className="ml-4 text-gray-700 text-xs">Expected: {reason.expectedRange}</p>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Edit Property Modal */}
+          {editingProperty && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                <div className="p-6">
+                  <h2 className="text-xl font-bold mb-4">Edit Property</h2>
+
+                  <div className="space-y-4">
+                    {/* Address */}
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Address</label>
+                      <input
+                        type="text"
+                        value={editingProperty.address || ''}
+                        onChange={(e) => setEditingProperty({ ...editingProperty, address: e.target.value })}
+                        className="w-full border rounded px-3 py-2"
+                      />
+                    </div>
+
+                    {/* City, State, Zip */}
+                    <div className="grid grid-cols-3 gap-3">
                       <div>
-                        <h4 className="font-semibold">{property.address}, {property.city}, {property.state}</h4>
-                        <p className="text-sm text-gray-600">
-                          Price: ${property.price?.toLocaleString()} | Monthly: ${property.monthlyPayment?.toLocaleString()} | ID: {property.id}
-                        </p>
+                        <label className="block text-sm font-medium mb-1">City</label>
+                        <input
+                          type="text"
+                          value={editingProperty.city || ''}
+                          onChange={(e) => setEditingProperty({ ...editingProperty, city: e.target.value })}
+                          className="w-full border rounded px-3 py-2"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-1">State</label>
+                        <input
+                          type="text"
+                          value={editingProperty.state || ''}
+                          onChange={(e) => setEditingProperty({ ...editingProperty, state: e.target.value })}
+                          className="w-full border rounded px-3 py-2"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Zip Code</label>
+                        <input
+                          type="text"
+                          value={editingProperty.zipCode || ''}
+                          onChange={(e) => setEditingProperty({ ...editingProperty, zipCode: e.target.value })}
+                          className="w-full border rounded px-3 py-2"
+                        />
                       </div>
                     </div>
 
-                    {property.reviewReasons && property.reviewReasons.length > 0 && (
-                      <div className="mt-3 bg-yellow-50 border border-yellow-200 rounded p-3">
-                        <p className="font-semibold text-sm mb-2">Validation Issues Found:</p>
-                        {property.reviewReasons.map((reason: any, idx: number) => (
-                          <div key={idx} className="text-sm mb-2 last:mb-0">
-                            <span className={`font-semibold ${reason.severity === 'error' ? 'text-red-600' : 'text-yellow-600'}`}>
-                              [{reason.severity?.toUpperCase()}] {reason.field}:
-                            </span>
-                            <p className="ml-4">{reason.issue}</p>
-                            {reason.suggestion && <p className="ml-4 text-gray-600 italic text-xs mt-1">💡 {reason.suggestion}</p>}
-                            {reason.actualValue !== undefined && (
-                              <p className="ml-4 text-gray-700 text-xs mt-1">Current value: {reason.actualValue}</p>
-                            )}
-                            {reason.expectedRange && (
-                              <p className="ml-4 text-gray-700 text-xs">Expected: {reason.expectedRange}</p>
-                            )}
-                          </div>
-                        ))}
+                    {/* Financial Fields */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-sm font-medium mb-1">List Price ($)</label>
+                        <input
+                          type="number"
+                          value={editingProperty.listPrice || ''}
+                          onChange={(e) => setEditingProperty({ ...editingProperty, listPrice: parseFloat(e.target.value) })}
+                          className="w-full border rounded px-3 py-2"
+                        />
                       </div>
-                    )}
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Monthly Payment ($)</label>
+                        <input
+                          type="number"
+                          value={editingProperty.monthlyPayment || ''}
+                          onChange={(e) => setEditingProperty({ ...editingProperty, monthlyPayment: parseFloat(e.target.value) })}
+                          className="w-full border rounded px-3 py-2"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Down Payment ($)</label>
+                        <input
+                          type="number"
+                          value={editingProperty.downPaymentAmount || ''}
+                          onChange={(e) => setEditingProperty({ ...editingProperty, downPaymentAmount: parseFloat(e.target.value) })}
+                          className="w-full border rounded px-3 py-2"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Down Payment (%)</label>
+                        <input
+                          type="number"
+                          value={editingProperty.downPaymentPercent || ''}
+                          onChange={(e) => setEditingProperty({ ...editingProperty, downPaymentPercent: parseFloat(e.target.value) })}
+                          className="w-full border rounded px-3 py-2"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Interest Rate (%)</label>
+                        <input
+                          type="number"
+                          step="0.1"
+                          value={editingProperty.interestRate || ''}
+                          onChange={(e) => setEditingProperty({ ...editingProperty, interestRate: parseFloat(e.target.value) })}
+                          className="w-full border rounded px-3 py-2"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Term (years)</label>
+                        <input
+                          type="number"
+                          value={editingProperty.termYears || ''}
+                          onChange={(e) => setEditingProperty({ ...editingProperty, termYears: parseFloat(e.target.value) })}
+                          className="w-full border rounded px-3 py-2"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Property Details */}
+                    <div className="grid grid-cols-3 gap-3">
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Bedrooms</label>
+                        <input
+                          type="number"
+                          value={editingProperty.bedrooms || ''}
+                          onChange={(e) => setEditingProperty({ ...editingProperty, bedrooms: parseInt(e.target.value) })}
+                          className="w-full border rounded px-3 py-2"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Bathrooms</label>
+                        <input
+                          type="number"
+                          step="0.5"
+                          value={editingProperty.bathrooms || ''}
+                          onChange={(e) => setEditingProperty({ ...editingProperty, bathrooms: parseFloat(e.target.value) })}
+                          className="w-full border rounded px-3 py-2"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Sq Ft</label>
+                        <input
+                          type="number"
+                          value={editingProperty.squareFeet || ''}
+                          onChange={(e) => setEditingProperty({ ...editingProperty, squareFeet: parseInt(e.target.value) })}
+                          className="w-full border rounded px-3 py-2"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Description */}
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Description</label>
+                      <textarea
+                        value={editingProperty.description || ''}
+                        onChange={(e) => setEditingProperty({ ...editingProperty, description: e.target.value })}
+                        rows={3}
+                        className="w-full border rounded px-3 py-2"
+                      />
+                    </div>
                   </div>
-                ))}
+
+                  {/* Action Buttons */}
+                  <div className="flex justify-end gap-3 mt-6">
+                    <button
+                      onClick={() => setEditingProperty(null)}
+                      className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={saveEditedProperty}
+                      className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded"
+                    >
+                      Save Changes
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           )}

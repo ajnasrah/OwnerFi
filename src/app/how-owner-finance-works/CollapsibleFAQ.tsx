@@ -580,14 +580,14 @@ export default function CollapsibleFAQ() {
           <div>
             <h4 className="font-bold mb-2">🛡️ Limitation of Liability</h4>
             <p>
-              OwnerFi and Prosway are not liable for losses, damages, or expenses from: inaccurate information, failed transactions, third-party actions, or your real estate/investment decisions.
+              OwnerFi is not liable for losses, damages, or expenses from: inaccurate information, failed transactions, third-party actions, or your real estate/investment decisions.
             </p>
           </div>
 
           <div>
             <h4 className="font-bold mb-2">🔒 Indemnification</h4>
             <p>
-              You agree to indemnify and hold harmless OwnerFi and Prosway from claims arising from your use of the platform or participation in any transaction.
+              You agree to indemnify and hold harmless OwnerFi from claims arising from your use of the platform or participation in any transaction.
             </p>
           </div>
         </div>

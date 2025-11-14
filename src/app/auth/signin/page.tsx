@@ -35,7 +35,7 @@ export default function SignIn() {
             router.push('/dashboard');
           } else if (extSession.user.role === 'realtor') {
             router.push('/realtor-dashboard');
-          } else if (extSession.user.role === 'admin' && extSession.user.email === 'admin@prosway.com') {
+          } else if (extSession.user.role === 'admin' && extSession.user.email === 'support@ownerfi.ai') {
             router.push('/admin');
           } else {
             router.push('/dashboard');

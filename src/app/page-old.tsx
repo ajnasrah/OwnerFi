@@ -473,7 +473,7 @@ export default function HomePage() {
       <footer className="bg-slate-800/30 border-t border-slate-700/50 py-6">
         <div className="max-w-6xl mx-auto px-6 lg:px-12">
           <div className="flex justify-center gap-6 text-sm">
-            <a href="mailto:support@prosway.com" className="text-slate-400 hover:text-emerald-400 transition-colors">
+            <a href="mailto:support@ownerfi.ai" className="text-slate-400 hover:text-emerald-400 transition-colors">
               Contact
             </a>
             <a href="/terms" className="text-slate-400 hover:text-emerald-400 transition-colors">

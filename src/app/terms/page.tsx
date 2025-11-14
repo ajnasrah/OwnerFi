@@ -623,7 +623,7 @@ export default function TermsOfService() {
               <h2 className="text-2xl font-semibold text-primary-text mb-4">15. Indemnification</h2>
               <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
                 <p className="text-purple-700">
-                  You agree to <strong>indemnify, defend, and hold harmless</strong> OwnerFi, Prosway, and their affiliates, officers, directors, employees, contractors, and agents from and against any and all claims, damages, losses, liabilities, costs, or expenses (including reasonable attorney's fees) arising from:
+                  You agree to <strong>indemnify, defend, and hold harmless</strong> OwnerFi and its affiliates, officers, directors, employees, contractors, and agents from and against any and all claims, damages, losses, liabilities, costs, or expenses (including reasonable attorney's fees) arising from:
                 </p>
                 <ul className="list-disc ml-6 mt-2 space-y-1 text-purple-700">
                   <li>Your use of the OwnerFi platform or database</li>

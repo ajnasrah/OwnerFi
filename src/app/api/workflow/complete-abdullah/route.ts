@@ -97,11 +97,12 @@ export async function POST(request: NextRequest) {
         const workflowId = queueItem.id;
         console.log(`   📋 Workflow ID: ${workflowId}`);
 
-        // Update with caption and title for webhooks
+        // CRITICAL FIX: Update with caption and title but DON'T set status yet
+        // Will set status AFTER we get video ID
         await updateWorkflowStatus(workflowId, 'abdullah', {
           caption: video.caption,
-          title: video.title,
-          status: 'heygen_processing'
+          title: video.title
+          // DON'T set status here!
         } as any);
 
         // Generate HeyGen video
@@ -117,9 +118,10 @@ export async function POST(request: NextRequest) {
 
         console.log(`   ✅ HeyGen video ID: ${videoResult.video_id}`);
 
-        // Update workflow with HeyGen video ID
+        // CRITICAL FIX: Update workflow with HeyGen video ID AND status atomically
         await updateWorkflowStatus(workflowId, 'abdullah', {
-          heygenVideoId: videoResult.video_id
+          heygenVideoId: videoResult.video_id,
+          status: 'heygen_processing'  // ✅ Set status HERE after getting video ID
         } as any);
 
         // Calculate staggered post time if needed

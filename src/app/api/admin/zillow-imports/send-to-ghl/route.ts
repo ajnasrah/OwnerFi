@@ -5,6 +5,7 @@ import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { ExtendedSession } from '@/types/session';
 import { sanitizeDescription } from '@/lib/description-sanitizer';
+import { filterPropertiesForOwnerFinancing, getFilterExplanation } from '@/lib/owner-financing-filter';
 
 // Initialize Firebase Admin (if not already initialized)
 if (!getApps().length) {
@@ -57,14 +58,28 @@ export async function POST(request: NextRequest) {
       .get();
 
     // Filter for properties with agent OR broker phone
-    const allProperties = snapshot.docs
+    const propertiesWithContact = snapshot.docs
       .map(doc => ({
         id: doc.id,
         ...doc.data(),
       }))
       .filter((property: any) => property.agentPhoneNumber || property.brokerPhoneNumber);
 
-    console.log(`📊 Found ${allProperties.length} properties with contact info (from ${snapshot.size} total)`);
+    console.log(`📊 Found ${propertiesWithContact.length} properties with contact info (from ${snapshot.size} total)`);
+
+    // OWNER FINANCING FILTER
+    // Only send properties that mention owner financing in their description
+    const { filtered: allProperties, stats: filterStats } = filterPropertiesForOwnerFinancing(
+      propertiesWithContact
+    );
+
+    console.log(`\n🏦 OWNER FINANCING FILTER:`);
+    console.log(`   Before: ${filterStats.total} properties`);
+    console.log(`   ✅ With owner financing: ${filterStats.withOwnerFinancing}`);
+    console.log(`   ❌ Without owner financing: ${filterStats.withoutOwnerFinancing}`);
+    console.log(`   📝 No description: ${filterStats.noDescription}`);
+    console.log(`   🚫 Explicitly rejected: ${filterStats.explicitlyRejected}`);
+    console.log(`   After: ${allProperties.length} properties\n`);
 
     // DEDUPLICATION LOGIC
     // 1. Deduplicate by ZPID (same property)
@@ -225,7 +240,14 @@ export async function POST(request: NextRequest) {
       success: true,
       message: `Sent ${successCount} properties to GHL webhook`,
       stats: {
-        fetched: allProperties.length,
+        totalWithContact: filterStats.total,
+        ownerFinancingFilter: {
+          withFinancing: filterStats.withOwnerFinancing,
+          withoutFinancing: filterStats.withoutOwnerFinancing,
+          noDescription: filterStats.noDescription,
+          explicitlyRejected: filterStats.explicitlyRejected,
+          successRate: `${((filterStats.withOwnerFinancing / filterStats.total) * 100).toFixed(1)}%`,
+        },
         afterZPIDDedup: zpidMap.size,
         uniqueContacts: contactsProcessed,
         propertiesSkipped: propertiesSkipped,

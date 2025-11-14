@@ -145,12 +145,13 @@ async function generatePodcastEpisode() {
       throw new Error('Script generation failed: no Q&A pairs');
     }
 
-    // Update workflow
+    // CRITICAL FIX: Save script data but DON'T change status yet
+    // Only change to heygen_processing AFTER we get the video ID
     await updatePodcastWorkflow(workflow.id, {
       episodeTitle: script.episode_title,
       guestName: script.guest_name,
       topic: script.topic,
-      status: 'heygen_processing'
+      // DON'T set status here - will set after HeyGen API success
     });
 
     // Generate HeyGen video
@@ -226,8 +227,12 @@ async function generatePodcastEpisode() {
 
     console.log(`   ✅ HeyGen video ID: ${videoId}`);
 
-    // Update workflow
-    await updatePodcastWorkflow(workflow.id, { heygenVideoId: videoId });
+    // CRITICAL FIX: Update workflow with BOTH videoId AND status atomically
+    // This ensures we never have heygen_processing status without a videoId
+    await updatePodcastWorkflow(workflow.id, {
+      heygenVideoId: videoId,
+      status: 'heygen_processing'
+    });
 
     // Record episode
     const recordedEpisodeNumber = await scheduler.recordEpisode(script.guest_id, videoId);

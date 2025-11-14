@@ -114,9 +114,10 @@ export async function GET(request: NextRequest) {
       // Generate video
       const videoId = await generator.generateVideo(benefit, workflow.id);
 
-      // Update workflow
+      // CRITICAL FIX: Update workflow with video ID AND status atomically
       await updateBenefitWorkflow(workflow.id, {
         heygenVideoId: videoId,
+        status: 'heygen_processing',  // ✅ Set status HERE after getting video ID
         caption: generateBenefitCaption(benefit),
         title: generateBenefitTitle(benefit)
       });

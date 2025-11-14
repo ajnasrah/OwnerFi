@@ -40,11 +40,16 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const brand = validateBrand(context.params.brand);
     const brandConfig = getBrandConfig(brand);
 
-    console.log(`🔔 [${brandConfig.displayName}] HeyGen webhook received`);
+    console.log('\n' + '='.repeat(70));
+    console.log(`🔔 [${brandConfig.displayName}] HeyGen webhook received at ${new Date().toISOString()}`);
+    console.log('='.repeat(70));
 
     // Get raw body for signature verification
     rawBody = await request.text();
     const body = JSON.parse(rawBody);
+
+    console.log(`📦 [${brandConfig.displayName}] Raw payload received (${rawBody.length} bytes)`);
+    console.log(`📋 [${brandConfig.displayName}] Parsed payload:`, JSON.stringify(body, null, 2));
 
     // Verify webhook signature (if configured)
     const { verifyHeyGenWebhook, shouldEnforceWebhookVerification } = await import('@/lib/webhook-verification');
@@ -107,11 +112,16 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     workflowId = event_data.callback_id;
 
+    console.log(`🔍 [${brandConfig.displayName}] Looking for workflow: ${workflowId}`);
+    console.log(`🔍 [${brandConfig.displayName}] Event type: ${event_type}`);
+    console.log(`🔍 [${brandConfig.displayName}] Video ID: ${videoId}`);
+
     // Find workflow in brand-specific collection (NO sequential lookups!)
     const workflow = await getWorkflowForBrand(brand, workflowId);
 
     if (!workflow) {
-      console.warn(`⚠️ [${brandConfig.displayName}] No workflow found for callback_id: ${workflowId}`);
+      console.error(`❌ [${brandConfig.displayName}] CRITICAL: No workflow found for callback_id: ${workflowId}`);
+      console.error(`❌ [${brandConfig.displayName}] Brand: ${brand}, Collection: ${brand === 'property' || brand === 'property-spanish' ? 'propertyShowcaseWorkflows' : `${brand}_workflow_queue`}`);
       return NextResponse.json({
         success: false,
         brand,
@@ -128,20 +138,28 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
       // CRITICAL FIX: Save HeyGen video URL IMMEDIATELY before doing anything else
       // This ensures we can recover even if Submagic trigger fails
+      console.log(`💾 [${brandConfig.displayName}] STEP 1: Saving HeyGen video URL to database...`);
+      console.log(`   Workflow ID: ${workflowId}`);
+      console.log(`   Video URL: ${event_data.url}`);
+      console.log(`   Current workflow status: ${workflow?.status}`);
+
       try {
         await updateWorkflowForBrand(brand, workflowId, {
           heygenVideoUrl: event_data.url,
           heygenCompletedAt: Date.now()
         });
-        console.log(`💾 [${brandConfig.displayName}] HeyGen video URL saved to workflow (enables recovery if Submagic fails)`);
+        console.log(`✅ [${brandConfig.displayName}] HeyGen video URL saved successfully`);
       } catch (saveError) {
         console.error(`❌ [${brandConfig.displayName}] CRITICAL: Failed to save HeyGen URL:`, saveError);
+        console.error(`   Error details:`, saveError instanceof Error ? saveError.stack : saveError);
         // Don't fail the webhook - try to continue anyway
       }
 
       // Trigger Submagic processing with timeout protection
       // Wait up to 25 seconds for Submagic API call to complete
       // This ensures we catch immediate failures but don't timeout the webhook
+      console.log(`🚀 [${brandConfig.displayName}] STEP 2: Triggering Submagic processing...`);
+
       try {
         await Promise.race([
           triggerSubmagicProcessing(
@@ -161,15 +179,18 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
         // CRITICAL: Mark workflow as failed so it doesn't stay stuck forever
         // NOTE: heygenVideoUrl was already saved above, so recovery is possible via scripts
+        console.log(`⚠️  [${brandConfig.displayName}] Submagic failed - marking workflow as failed`);
+
         try {
           await updateWorkflowForBrand(brand, workflowId, {
             status: 'failed',
             error: `Submagic trigger failed: ${err instanceof Error ? err.message : 'Unknown error'}`,
             failedAt: Date.now()
           });
-          console.log(`✅ Marked workflow ${workflowId} as failed due to Submagic error (recoverable - HeyGen URL saved)`);
+          console.log(`✅ [${brandConfig.displayName}] Marked workflow ${workflowId} as failed due to Submagic error (recoverable - HeyGen URL saved)`);
         } catch (updateErr) {
-          console.error(`❌ Failed to update workflow status:`, updateErr);
+          console.error(`❌ [${brandConfig.displayName}] CRITICAL: Failed to update workflow status to failed:`, updateErr);
+          console.error(`   Error details:`, updateErr instanceof Error ? updateErr.stack : updateErr);
         }
 
         // Return error response

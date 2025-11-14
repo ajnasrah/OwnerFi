@@ -358,6 +358,89 @@ async function checkHeyGenWorkflows() {
     }
   }
 
+  // CRITICAL FIX: Also check video_processing_failed workflows that have heygenVideoUrl
+  // These can be recovered by advancing them to Submagic!
+  console.log('\n🔥 CHECKING video_processing_failed WORKFLOWS WITH HEYGEN URL (RECOVERY)...');
+  for (const brand of brands) {
+    try {
+      const collectionName = `${brand}_workflow_queue`;
+      const q = query(
+        collection(db, collectionName),
+        where('status', '==', 'video_processing_failed'),
+        firestoreLimit(20)
+      );
+
+      const snapshot = await getDocs(q);
+      console.log(`📂 ${collectionName}: ${snapshot.size} failed workflows`);
+
+      for (const workflowDoc of snapshot.docs) {
+        const data = workflowDoc.data();
+        const workflowId = workflowDoc.id;
+
+        // Check if it has heygenVideoUrl - if yes, we can recover it!
+        if (data.heygenVideoUrl) {
+          console.log(`   🔥 RECOVERY: ${workflowId} has videoUrl, advancing to Submagic...`);
+
+          // Send to SubMagic
+          const webhookUrl = `${baseUrl}/api/webhooks/submagic/${brand}`;
+          const title = (data.articleTitle || data.title || data.topic || `Video ${workflowId}`)
+            .replace(/&#8217;/g, "'")
+            .replace(/&#8216;/g, "'")
+            .replace(/&#8211;/g, "-")
+            .replace(/&#8212;/g, "-")
+            .replace(/&amp;/g, "&")
+            .replace(/&quot;/g, '"')
+            .replace(/&lt;/g, "<")
+            .replace(/&gt;/g, ">")
+            .replace(/&nbsp;/g, " ")
+            .substring(0, 50);
+
+          const shouldUseBrolls = brand !== 'property' && brand !== 'podcast';
+          const brollPercentage = shouldUseBrolls ? 75 : 0;
+
+          const submagicResponse = await fetch('https://api.submagic.co/v1/projects', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-api-key': SUBMAGIC_API_KEY
+            },
+            body: JSON.stringify({
+              title,
+              language: 'en',
+              videoUrl: data.heygenVideoUrl,
+              templateName: 'Hormozi 2',
+              magicBrolls: shouldUseBrolls,
+              magicBrollsPercentage: brollPercentage,
+              magicZooms: true,
+              webhookUrl
+            })
+          });
+
+          if (submagicResponse.ok) {
+            const submagicData = await submagicResponse.json();
+            const projectId = submagicData.id || submagicData.project_id || submagicData.projectId;
+
+            await updateDoc(doc(db, collectionName, workflowId), {
+              status: 'submagic_processing',
+              submagicVideoId: projectId,
+              recoveredAt: Date.now(),
+              updatedAt: Date.now()
+            });
+
+            console.log(`   ✅ RECOVERED ${workflowId}: Advanced to SubMagic (ID: ${projectId})`);
+            advanced++;
+          } else {
+            const errorText = await submagicResponse.text().catch(() => 'Unable to read error');
+            console.error(`   ❌ ${workflowId}: SubMagic API failed (${submagicResponse.status}): ${errorText}`);
+            failed++;
+          }
+        }
+      }
+    } catch (err) {
+      console.error(`   ❌ Error recovering ${brand}:`, err);
+    }
+  }
+
   // Also check propertyShowcaseWorkflows (new unified collection)
   try {
     console.log(`\n📂 Checking propertyShowcaseWorkflows...`);

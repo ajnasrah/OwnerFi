@@ -144,13 +144,9 @@ export async function POST(request: NextRequest) {
     // Step 3: Generate HeyGen video
     console.log('🎥 Step 3: Creating HeyGen video...');
 
-    // Update workflow status to 'heygen_processing'
-    if (workflowId) {
-      const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
-      await updateWorkflowStatus(workflowId, brand as 'carz' | 'ownerfi' | 'vassdistro', {
-        status: 'heygen_processing'
-      });
-    }
+    // CRITICAL FIX: DON'T set status to heygen_processing yet
+    // Will set it AFTER we get the video ID from HeyGen API
+    // This prevents workflows from being stuck in heygen_processing without a video ID
 
     // NOTE: Avatar and voice configuration by brand:
     // - Carz & OwnerFi: Default "me" avatar (31c6b2b6306b47a2ba3572a23be09dbc)
@@ -230,11 +226,13 @@ export async function POST(request: NextRequest) {
     console.log(`✅ HeyGen video ID: ${videoResult.video_id}`);
     console.log(`📋 Workflow ID: ${workflowId}`);
 
-    // Update workflow with HeyGen video ID and store caption/title for webhooks
+    // CRITICAL FIX: Update workflow with HeyGen video ID AND status atomically
+    // This ensures we never have heygen_processing without a video ID
     if (workflowId) {
       const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
       await updateWorkflowStatus(workflowId, brand as 'carz' | 'ownerfi', {
         heygenVideoId: videoResult.video_id,
+        status: 'heygen_processing',  // ✅ Set status HERE after getting video ID
         caption: content.caption,
         title: content.title
       } as any); // Store caption/title so webhooks can use them

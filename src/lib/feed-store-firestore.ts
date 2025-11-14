@@ -1037,12 +1037,14 @@ export async function addBenefitWorkflow(
 ): Promise<BenefitWorkflowItem> {
   if (!db) throw new Error('Firebase not initialized');
 
+  // CRITICAL FIX: Create workflow with 'pending' status initially
+  // Status will be changed to 'heygen_processing' AFTER we get video ID
   const queueItem: BenefitWorkflowItem = {
     id: `benefit_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
     benefitId,
     audience,
     benefitTitle,
-    status: 'heygen_processing',
+    status: 'pending',  // ✅ Start with pending, not heygen_processing
     createdAt: Date.now(),
     updatedAt: Date.now()
   };

@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Zillow to OwnerFi Queue",
-  "version": "2.0",
-  "description": "Save Zillow properties directly to OwnerFi scraper queue",
+  "version": "2.1",
+  "description": "Save Zillow properties to OwnerFi queue or cash deals queue",
   "permissions": [
     "activeTab",
     "storage"

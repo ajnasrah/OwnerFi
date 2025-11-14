@@ -93,7 +93,7 @@ interface Stats {
 export default function AdminDashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'overview' | 'properties' | 'failed-properties' | 'review-required' | 'upload' | 'disputes' | 'contacts' | 'buyers' | 'realtors' | 'logs' | 'social' | 'articles' | 'image-quality' | 'buyer-preview'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'properties' | 'failed-properties' | 'review-required' | 'upload' | 'disputes' | 'contacts' | 'buyers' | 'realtors' | 'logs' | 'social' | 'articles' | 'image-quality' | 'buyer-preview' | 'cash-houses'>('overview');
 
   // Stats
   const [stats, setStats] = useState<Stats>({
@@ -191,6 +191,40 @@ export default function AdminDashboard() {
   const [previewCurrentIndex, setPreviewCurrentIndex] = useState(0);
   const [loadingPreview, setLoadingPreview] = useState(false);
   const [newImageUrl, setNewImageUrl] = useState('');
+
+  // Cash Houses state
+  const [cashHouses, setCashHouses] = useState<any[]>([]);
+  const [loadingCashHouses, setLoadingCashHouses] = useState(false);
+
+  // Fetch cash houses when tab becomes active
+  useEffect(() => {
+    if (activeTab === 'cash-houses' && cashHouses.length === 0) {
+      fetchCashHouses();
+    }
+  }, [activeTab]);
+
+  const fetchCashHouses = async () => {
+    setLoadingCashHouses(true);
+    try {
+      const { collection, getDocs, orderBy, query, limit } = await import('firebase/firestore');
+      const { db } = await import('@/lib/firebase');
+
+      const cashHousesRef = collection(db, 'cash_houses');
+      const q = query(cashHousesRef, orderBy('importedAt', 'desc'), limit(100));
+      const snapshot = await getDocs(q);
+
+      const houses = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+
+      setCashHouses(houses);
+    } catch (error) {
+      console.error('Failed to fetch cash houses:', error);
+    } finally {
+      setLoadingCashHouses(false);
+    }
+  };
 
   // Auth check
   useEffect(() => {
@@ -1035,6 +1069,7 @@ export default function AdminDashboard() {
             { key: 'review-required', label: 'Review Required', icon: '🔍', count: reviewRequiredCount || null },
             { key: 'image-quality', label: 'Image Quality', icon: '📸', count: null },
             { key: 'upload', label: 'Upload', icon: '📤', count: null },
+            { key: 'cash-houses', label: 'Cash Houses', icon: '💰', count: cashHouses.length || null },
             { key: 'buyers', label: 'Buyers', icon: '👤', count: stats.totalBuyers },
             { key: 'realtors', label: 'Realtors', icon: '🏢', count: stats.totalRealtors },
             { key: 'disputes', label: 'Disputes', icon: '⚖️', count: stats.pendingDisputes },
@@ -1127,6 +1162,7 @@ export default function AdminDashboard() {
                 {activeTab === 'review-required' && 'Review Required'}
                 {activeTab === 'image-quality' && 'Image Quality Review'}
                 {activeTab === 'upload' && 'Upload Properties'}
+                {activeTab === 'cash-houses' && 'Cash Houses (80% ARV Deals)'}
                 {activeTab === 'buyers' && 'Buyer Management'}
                 {activeTab === 'realtors' && 'Realtor Management'}
                 {activeTab === 'disputes' && 'Dispute Resolution'}
@@ -3465,6 +3501,126 @@ export default function AdminDashboard() {
                 className="w-full h-[calc(100vh-200px)] border-0 rounded-lg shadow-lg bg-white"
                 title="Articles Queue Dashboard"
               />
+            </div>
+          )}
+
+          {/* Cash Houses Tab */}
+          {activeTab === 'cash-houses' && (
+            <div className="bg-white shadow rounded-lg">
+              <div className="px-4 py-5 sm:p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h3 className="text-lg leading-6 font-medium text-gray-900">Cash Houses - Properties Under 80% ARV</h3>
+                    <p className="mt-1 text-sm text-gray-500">Properties priced below 80% of their Zestimate value</p>
+                  </div>
+                  <button
+                    onClick={fetchCashHouses}
+                    disabled={loadingCashHouses}
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-gray-400"
+                  >
+                    {loadingCashHouses ? 'Loading...' : 'Refresh'}
+                  </button>
+                </div>
+
+                {loadingCashHouses ? (
+                  <div className="flex items-center justify-center h-64">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+                  </div>
+                ) : cashHouses.length === 0 ? (
+                  <div className="bg-gray-50 rounded-lg p-8 text-center">
+                    <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                    </svg>
+                    <h3 className="mt-2 text-sm font-medium text-gray-900">No Cash Houses Yet</h3>
+                    <p className="mt-1 text-sm text-gray-500">Use the Chrome extension to add properties to the cash deals queue</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Property</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Zestimate</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Discount</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Details</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {cashHouses.map((house) => (
+                          <tr key={house.id} className="hover:bg-gray-50">
+                            <td className="px-6 py-4">
+                              <div className="flex items-center">
+                                {house.firstPropertyImage && (
+                                  <div className="flex-shrink-0 h-16 w-16 mr-3">
+                                    <img
+                                      src={house.firstPropertyImage}
+                                      alt={house.fullAddress}
+                                      className="h-16 w-16 rounded object-cover"
+                                    />
+                                  </div>
+                                )}
+                                <div>
+                                  <div className="text-sm font-medium text-gray-900">{house.streetAddress}</div>
+                                  <div className="text-sm text-gray-500">{house.city}, {house.state} {house.zipCode}</div>
+                                  <div className="text-xs text-gray-400">ZPID: {house.zpid}</div>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm font-semibold text-green-600">
+                                ${house.price?.toLocaleString() || 'N/A'}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm text-gray-900">
+                                ${house.estimate?.toLocaleString() || 'N/A'}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                80% = ${house.eightyPercentOfZestimate?.toLocaleString() || 'N/A'}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                {house.discountPercentage?.toFixed(1) || '0'}% off
+                              </span>
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="text-sm text-gray-900">
+                                {house.bedrooms} bed | {house.bathrooms} bath
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                {house.squareFoot?.toLocaleString() || 'N/A'} sqft
+                              </div>
+                              {house.agentPhoneNumber && (
+                                <div className="text-xs text-indigo-600 mt-1">
+                                  📞 {house.agentPhoneNumber}
+                                </div>
+                              )}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm">
+                              <a
+                                href={house.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-indigo-600 hover:text-indigo-900 font-medium"
+                              >
+                                View on Zillow →
+                              </a>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                      <p className="text-sm text-gray-600">
+                        Showing {cashHouses.length} cash house{cashHouses.length !== 1 ? 's' : ''} (most recent 100)
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 

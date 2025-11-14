@@ -691,7 +691,7 @@ export async function POST(request: NextRequest) {
 
     const validation = validatePropertyFinancials(validationData);
 
-    // Mark properties that need review
+    // Mark properties that need review OR clear flag if validation passes
     if (validation.needsReview) {
       propertyData.needsReview = true;
       propertyData.reviewReasons = validation.issues.map(issue => {
@@ -717,6 +717,20 @@ export async function POST(request: NextRequest) {
           shouldAutoReject: validation.shouldAutoReject
         }
       });
+    } else {
+      // Validation passed - clear review flags if this is an update
+      propertyData.needsReview = false;
+      propertyData.reviewReasons = [];
+
+      if (isUpdate) {
+        logInfo(`Property validation passed, clearing review flags (GHL webhook): ${formattedAddress}`, {
+          action: 'ghl_validation_passed',
+          metadata: {
+            opportunityId: payload.opportunityId,
+            address: formattedAddress
+          }
+        });
+      }
     }
 
     // Auto-reject if validation fails critically

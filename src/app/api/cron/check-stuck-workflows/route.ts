@@ -8,7 +8,7 @@
  * 4. check-stuck-posting (posting + video_processing status)
  *
  * Checks ALL 8 brands: carz, ownerfi, vassdistro, benefit, abdullah, personal, property, property-spanish
- * Plus: podcast_workflow_queue, property_videos
+ * Plus: podcast_workflow_queue, propertyShowcaseWorkflows
  *
  * Schedule: every 30 minutes during active hours (14-23, 0-4 CST)
  * Previously: 4 crons × 34 runs/day = 136 invocations/day
@@ -124,8 +124,8 @@ async function checkPendingWorkflows() {
     stuckMinutes: number;
   }> = [];
 
-  // Check all 8 brands
-  const brands = getAllBrandIds();
+  // Check all 8 brands + podcast
+  const brands = [...getAllBrandIds(), 'podcast'];
 
   for (const brand of brands) {
     try {
@@ -228,8 +228,8 @@ async function checkHeyGenWorkflows() {
   let advanced = 0;
   let failed = 0;
 
-  // Check all brands
-  const brands = getAllBrandIds();
+  // Check all brands + podcast
+  const brands = [...getAllBrandIds(), 'podcast'];
 
   for (const brand of brands) {
     try {
@@ -358,11 +358,11 @@ async function checkHeyGenWorkflows() {
     }
   }
 
-  // Also check property_videos (uses different collection name)
+  // Also check propertyShowcaseWorkflows (new unified collection)
   try {
-    console.log(`\n📂 Checking property_videos...`);
+    console.log(`\n📂 Checking propertyShowcaseWorkflows...`);
     const q = query(
-      collection(db, 'property_videos'),
+      collection(db, 'propertyShowcaseWorkflows'),
       where('status', '==', 'heygen_processing'),
       firestoreLimit(10)
     );
@@ -437,7 +437,7 @@ async function checkHeyGenWorkflows() {
             const submagicData = await submagicResponse.json();
             const projectId = submagicData.id || submagicData.project_id || submagicData.projectId;
 
-            await updateDoc(doc(db, 'property_videos', workflowId), {
+            await updateDoc(doc(db, 'propertyShowcaseWorkflows', workflowId), {
               status: 'submagic_processing',
               submagicVideoId: projectId,
               heygenVideoUrl: publicHeygenUrl,
@@ -451,7 +451,7 @@ async function checkHeyGenWorkflows() {
             const errorText = await submagicResponse.text().catch(() => 'Unable to read error');
             console.error(`   ❌ ${workflowId}: SubMagic API failed (${submagicResponse.status}): ${errorText}`);
 
-            await updateDoc(doc(db, 'property_videos', workflowId), {
+            await updateDoc(doc(db, 'propertyShowcaseWorkflows', workflowId), {
               status: 'failed',
               error: `SubMagic API error: ${submagicResponse.status} - ${errorText}`,
               heygenVideoUrl: publicHeygenUrl,
@@ -460,7 +460,7 @@ async function checkHeyGenWorkflows() {
             failed++;
           }
         } else if (status === 'failed') {
-          await updateDoc(doc(db, 'property_videos', workflowId), {
+          await updateDoc(doc(db, 'propertyShowcaseWorkflows', workflowId), {
             status: 'failed',
             error: 'HeyGen failed',
             updatedAt: Date.now()
@@ -474,7 +474,7 @@ async function checkHeyGenWorkflows() {
       }
     }
   } catch (err) {
-    console.error(`   ❌ Error querying property_videos:`, err);
+    console.error(`   ❌ Error querying propertyShowcaseWorkflows:`, err);
   }
 
   return { checked, advanced, failed };
@@ -506,8 +506,8 @@ async function checkSubMagicWorkflows() {
   let completed = 0;
   let failed = 0;
 
-  // Check all brands
-  const brands = getAllBrandIds();
+  // Check all brands + podcast
+  const brands = [...getAllBrandIds(), 'podcast'];
 
   for (const brand of brands) {
     try {
@@ -627,11 +627,11 @@ async function checkSubMagicWorkflows() {
     }
   }
 
-  // CRITICAL FIX: Also check property_videos collection (was missing!)
+  // CRITICAL FIX: Also check propertyShowcaseWorkflows collection
   try {
-    console.log(`\n📂 Checking property_videos...`);
+    console.log(`\n📂 Checking propertyShowcaseWorkflows...`);
     const q = query(
-      collection(db, 'property_videos'),
+      collection(db, 'propertyShowcaseWorkflows'),
       where('status', '==', 'submagic_processing'),
       firestoreLimit(15)
     );
@@ -695,7 +695,7 @@ async function checkSubMagicWorkflows() {
           const publicVideoUrl = await uploadSubmagicVideo(finalDownloadUrl);
 
           // Update to posting
-          await updateDoc(doc(db, 'property_videos', workflowId), {
+          await updateDoc(doc(db, 'propertyShowcaseWorkflows', workflowId), {
             status: 'posting',
             finalVideoUrl: publicVideoUrl,
             retryCount: (data.retryCount || 0) + 1,
@@ -713,7 +713,7 @@ async function checkSubMagicWorkflows() {
           });
 
           if (postResult.success) {
-            await updateDoc(doc(db, 'property_videos', workflowId), {
+            await updateDoc(doc(db, 'propertyShowcaseWorkflows', workflowId), {
               status: 'completed',
               latePostId: postResult.postId,
               completedAt: Date.now(),
@@ -724,7 +724,7 @@ async function checkSubMagicWorkflows() {
             completed++;
           }
         } else if (status === 'failed' || status === 'error') {
-          await updateDoc(doc(db, 'property_videos', workflowId), {
+          await updateDoc(doc(db, 'propertyShowcaseWorkflows', workflowId), {
             status: 'failed',
             error: 'SubMagic failed',
             updatedAt: Date.now()
@@ -738,7 +738,7 @@ async function checkSubMagicWorkflows() {
       }
     }
   } catch (err) {
-    console.error(`   ❌ Error querying property_videos:`, err);
+    console.error(`   ❌ Error querying propertyShowcaseWorkflows:`, err);
   }
 
   return { checked, completed, failed };
@@ -763,8 +763,8 @@ async function checkPostingWorkflows() {
   let retried = 0;
   let failed = 0;
 
-  // Check all brands
-  const brands = getAllBrandIds();
+  // Check all brands + podcast
+  const brands = [...getAllBrandIds(), 'podcast'];
 
   for (const brand of brands) {
     try {

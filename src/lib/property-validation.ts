@@ -97,16 +97,7 @@ function validatePriceRange(property: PropertyFinancialData): ValidationIssue[] 
     });
   }
 
-  if (listPrice > 10000000) {
-    issues.push({
-      field: 'listPrice',
-      issue: 'Price unusually high for owner financing',
-      severity: 'warning',
-      expectedRange: '$10,000 - $10,000,000',
-      actualValue: listPrice,
-      suggestion: 'Verify this is an actual owner-financed property'
-    });
-  }
+  // Removed arbitrary price ceiling - focus on mathematical consistency instead
 
   return issues;
 }
@@ -149,8 +140,17 @@ function validateDownPayment(property: PropertyFinancialData): ValidationIssue[]
     });
   }
 
-  // Unusual percentages
-  if (downPaymentPercent < 5) {
+  // Unusual percentages - Very low down payment (likely data entry error)
+  if (downPaymentPercent < 1) {
+    issues.push({
+      field: 'downPaymentPercent',
+      issue: 'Down payment extremely low - likely data entry error',
+      severity: 'error',
+      expectedRange: '5% - 50%',
+      actualValue: `${downPaymentPercent}%`,
+      suggestion: 'Down payment below 1% suggests wrong value entered (e.g., entered dollars instead of percentage)'
+    });
+  } else if (downPaymentPercent < 5) {
     issues.push({
       field: 'downPaymentPercent',
       issue: 'Down payment very low for owner financing',

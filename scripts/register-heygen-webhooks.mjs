@@ -17,7 +17,7 @@ if (!HEYGEN_API_KEY) {
   process.exit(1);
 }
 
-const BRANDS = ['carz', 'ownerfi', 'podcast'];
+const BRANDS = ['carz', 'ownerfi', 'podcast', 'vassdistro', 'benefit', 'property', 'property-spanish', 'abdullah'];
 
 // Events to subscribe to
 const EVENTS = [

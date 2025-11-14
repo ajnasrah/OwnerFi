@@ -406,13 +406,19 @@ STRUCTURE: Hook 🏡 → Deal 💰 → Insight 💬 → CTA 🎯 + Question ❓
 Length: 70–80 words
 
 0–3 sec – Hook 🔥 (Pattern Interrupt)
-Use bold, emotional openings like:
-"If your rent's over $1,200, you need to see this."
-"This home might be cheaper than your rent — and no bank's involved."
-"They said you can't buy without credit — wrong."
-"Wait till you see this deal in [City]."
-"No bank, no hassle — real ownership."
-"This is how people are buying homes in 2025."
+Use bold, emotional openings that DON'T all start with "Stop scrolling" — variety is CRITICAL:
+"Your rent just went up again — but what if I told you this costs LESS?"
+"If your credit's not perfect, you need to see this."
+"They don't want you to know about deals like this."
+"Wait till you see what {DOWN} can get you in [City]."
+"This home costs less per month than most apartments."
+"Most people will never see this opportunity."
+"Your landlord doesn't want you watching this."
+"Rent's {MONTHLY} a month? This might actually be cheaper."
+"No bank approval? No problem with this one."
+"This is how real people are buying homes in 2025."
+"Banks said no? The seller said yes to this deal."
+"Three bedrooms for less than your rent — I'm not kidding."
 
 3–15 sec – Deal 💰 (Property Summary)
 Summarize the property naturally:
@@ -445,10 +451,13 @@ Engagement Questions (rotate):
 STRUCTURE: Hook 🏡 → Deal 💰 → CTA 🎯
 Length: 45–55 words
 
-0–3 sec – Hook 🔥
-"Stop scrolling — this home might be cheaper than rent."
+0–3 sec – Hook 🔥 (MUST vary — don't repeat "Stop scrolling")
+"This costs less than your current rent."
 "No bank. Real home. Real deal."
-"Wait till you see this deal."
+"Your credit score doesn't matter for this one."
+"They don't advertise these deals — but they exist."
+"Wait till you hear the monthly payment on this."
+"What if I told you {DOWN} gets you a real home?"
 
 3–10 sec – Deal 💰 (Quick Value)
 "3-bed in Austin around $240K, seller's open to financing."
@@ -465,6 +474,7 @@ Add CTA from pool above + engagement question.
 - Avoid corporate words and jargon
 - Sound spontaneous, not scripted
 - Human, engaging, emoji-rich in captions (not script)
+- CRITICAL: Vary your hooks — NEVER start multiple videos with "Stop scrolling"
 
 🚫 BANNED PHRASES (FAIL CONDITIONS)
 ❌ "Guaranteed approval"
@@ -472,6 +482,7 @@ Add CTA from pool above + engagement question.
 ❌ "Investment advice"
 ❌ "Will go up in value"
 ❌ Giving advice or guarantees
+❌ "Stop scrolling" used repetitively (vary your hooks!)
 
 ✅ MANDATORY RULES (FAIL CONDITIONS)
 ✅ Always pronounce "OwnerFi.ai" clearly as "Owner-Fy dot A Eye"
@@ -497,11 +508,11 @@ Disclaimer: "This content is for education only — not financial advice. Prices
 💡 EXAMPLE OUTPUT
 
 TITLE_30: 🏡 No Bank? Real Deal in Texas!
-SCRIPT_30: If your rent's over 1,200 dollars, you need to see this. This 3-bed home near Dallas is around 250K, and the seller's open to owner financing — no bank, no credit drama. Try finding anything close to this monthly — you can't. Visit Owner-Fy dot A Eye to see more homes near you — all free with agent contact info. Prices and terms may change anytime. Follow Abdullah for daily homeownership hacks. Would you take this deal or keep renting?
+SCRIPT_30: Your rent just went up again — but what if I told you this costs LESS? This 3-bed home near Dallas is around 250K, and the seller's open to owner financing — no bank, no credit drama. Try finding anything close to this monthly — you can't. Visit Owner-Fy dot A Eye to see more homes near you — all free with agent contact info. Prices and terms may change anytime. Follow Abdullah for daily homeownership hacks. Would you take this deal or keep renting?
 CAPTION_30: 🏡 Homes like this are out there — seller finance, flexible terms, real ownership without banks 💰 Visit OwnerFi.ai to find homes near you for free 🎯 Prices and terms may change anytime ⚠️ This content is for education only — not financial advice. #OwnerFi #Homeownership #NoBanks #TexasHomes #RealEstate
 
 TITLE_15: 💥 No Bank Homes Under $250K?!
-SCRIPT_15: Stop scrolling — this 3-bed near Dallas might actually cost less than rent. It's around 250K and the seller's open to owner financing. See more free listings near you at Owner-Fy dot A Eye — prices and terms can change anytime. Follow Abdullah for real estate game. Would you live here if it meant no bank loan?
+SCRIPT_15: Your credit score doesn't matter for this one — this 3-bed near Dallas might actually cost less than rent. It's around 250K and the seller's open to owner financing. See more free listings near you at Owner-Fy dot A Eye — prices and terms can change anytime. Follow Abdullah for real estate game. Would you live here if it meant no bank loan?
 CAPTION_15: 💰 Browse real owner-finance homes for free on OwnerFi.ai 🏠 No banks, no catch ✨ Prices and terms may change anytime. This content is for education only. #OwnerFi #RealEstate #Homeownership #NoBankLoan #TexasDeals`;
 }
 
@@ -568,7 +579,17 @@ function generateShortScript(property: PropertyListing): string {
   const city = property.city;
   const beds = property.bedrooms;
 
-  return `Stop scrolling — this ${beds}-bed near ${city} might cost less than rent. It's around ${price} and the seller's open to owner financing. See more free listings near you at OwnerFi.ai — prices and terms can change anytime.`;
+  const hooks = [
+    `This costs less than your current rent —`,
+    `Your credit score doesn't matter for this one —`,
+    `They don't advertise these deals —`,
+    `No bank approval needed for this —`,
+    `Wait till you hear the monthly payment —`
+  ];
+
+  const hook = hooks[Math.floor(Math.random() * hooks.length)];
+
+  return `${hook} this ${beds}-bed near ${city} might cost less than rent. It's around ${price} and the seller's open to owner financing. See more free listings near you at OwnerFi.ai — prices and terms can change anytime.`;
 }
 
 /**

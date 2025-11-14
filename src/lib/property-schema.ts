@@ -118,6 +118,17 @@ export interface PropertyListing {
   imageEnhanced?: boolean;             // True if image URLs have been upgraded to high-res
   imageEnhancedAt?: string;            // ISO timestamp when enhancement was applied
 
+  // Financial Validation
+  needsReview?: boolean;               // True if property has validation warnings
+  reviewReasons?: Array<{
+    field: string;                     // Which field has an issue (e.g., 'downPaymentPercent', 'monthlyPayment')
+    issue: string;                     // Description of the issue
+    severity: 'error' | 'warning' | 'info'; // Severity level
+    expectedRange?: string;            // What values are expected
+    actualValue?: string | number;    // What value was provided
+    suggestion?: string;               // How to fix it
+  }>;
+
   // Integration Data
   source: 'manual' | 'import' | 'scraper';
   sourceId?: string;                   // Original ID from source system

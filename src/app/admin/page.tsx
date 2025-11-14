@@ -93,7 +93,7 @@ interface Stats {
 export default function AdminDashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'overview' | 'properties' | 'failed-properties' | 'upload' | 'disputes' | 'contacts' | 'buyers' | 'realtors' | 'logs' | 'social' | 'articles' | 'image-quality' | 'buyer-preview'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'properties' | 'failed-properties' | 'review-required' | 'upload' | 'disputes' | 'contacts' | 'buyers' | 'realtors' | 'logs' | 'social' | 'articles' | 'image-quality' | 'buyer-preview'>('overview');
 
   // Stats
   const [stats, setStats] = useState<Stats>({
@@ -118,6 +118,11 @@ export default function AdminDashboard() {
   const [loadingFailedProperties, setLoadingFailedProperties] = useState(false);
   const [failedPropertiesFilter, setFailedPropertiesFilter] = useState<'all' | 'validation' | 'withdrawn' | 'missing-data'>('all');
   const [failedPropertySummary, setFailedPropertySummary] = useState({ total: 0, withdrawn: 0, missingData: 0, validation: 0 });
+
+  // Review Required Properties state
+  const [reviewRequiredProperties, setReviewRequiredProperties] = useState<AdminProperty[]>([]);
+  const [loadingReviewRequired, setLoadingReviewRequired] = useState(false);
+  const [reviewRequiredCount, setReviewRequiredCount] = useState(0);
 
   // Upload state
   const [file, setFile] = useState<File | null>(null);
@@ -269,6 +274,30 @@ export default function AdminDashboard() {
       setLoadingFailedProperties(false);
     }
   }, [failedPropertiesFilter]);
+
+  const fetchReviewRequiredProperties = useCallback(async () => {
+    setLoadingReviewRequired(true);
+    try {
+      const { collection, query, where, getDocs } = await import('firebase/firestore');
+      const { db } = await import('@/lib/firebase');
+
+      const propertiesRef = collection(db, 'properties');
+      const q = query(propertiesRef, where('needsReview', '==', true));
+      const snapshot = await getDocs(q);
+
+      const props = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as AdminProperty[];
+
+      setReviewRequiredProperties(props);
+      setReviewRequiredCount(props.length);
+    } catch (error) {
+      console.error('Failed to fetch review required properties:', error);
+    } finally {
+      setLoadingReviewRequired(false);
+    }
+  }, []);
 
   const fetchStreetViewProperties = useCallback(async () => {
     setLoadingStreetView(true);
@@ -453,6 +482,8 @@ export default function AdminDashboard() {
       fetchProperties();
     } else if (activeTab === 'failed-properties') {
       fetchNewProperties(); // Fetch failed GHL properties
+    } else if (activeTab === 'review-required') {
+      fetchReviewRequiredProperties(); // Fetch properties needing review
     } else if (activeTab === 'image-quality') {
       fetchStreetViewProperties();
     } else if (activeTab === 'disputes') {
@@ -903,6 +934,7 @@ export default function AdminDashboard() {
             { key: 'properties', label: 'Properties', icon: '🏠', count: stats.totalProperties },
             { key: 'buyer-preview', label: 'Buyer Preview', icon: '👁️', count: null },
             { key: 'failed-properties', label: 'Failed Properties', icon: '⚠️', count: failedPropertySummary.total || null },
+            { key: 'review-required', label: 'Review Required', icon: '🔍', count: reviewRequiredCount || null },
             { key: 'image-quality', label: 'Image Quality', icon: '📸', count: null },
             { key: 'upload', label: 'Upload', icon: '📤', count: null },
             { key: 'buyers', label: 'Buyers', icon: '👤', count: stats.totalBuyers },
@@ -994,6 +1026,7 @@ export default function AdminDashboard() {
                 {activeTab === 'overview' && 'Dashboard Overview'}
                 {activeTab === 'properties' && 'Property Management'}
                 {activeTab === 'failed-properties' && 'Failed Properties'}
+                {activeTab === 'review-required' && 'Review Required'}
                 {activeTab === 'image-quality' && 'Image Quality Review'}
                 {activeTab === 'upload' && 'Upload Properties'}
                 {activeTab === 'buyers' && 'Buyer Management'}
@@ -1744,6 +1777,55 @@ export default function AdminDashboard() {
                     </tbody>
                   </table>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* Review Required Tab */}
+          {activeTab === 'review-required' && (
+            <div className="space-y-6">
+              <div className="bg-white rounded-lg shadow p-6">
+                <h3 className="text-lg font-semibold mb-4">
+                  {loadingReviewRequired ? 'Loading...' : `${reviewRequiredProperties.length} Properties Need Review`}
+                </h3>
+
+                {reviewRequiredProperties.length === 0 && !loadingReviewRequired && (
+                  <p className="text-gray-500">No properties need review</p>
+                )}
+
+                {reviewRequiredProperties.map((property) => (
+                  <div key={property.id} className="border-b pb-4 mb-4 last:border-0">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h4 className="font-semibold">{property.address}, {property.city}, {property.state}</h4>
+                        <p className="text-sm text-gray-600">
+                          Price: ${property.price?.toLocaleString()} | Monthly: ${property.monthlyPayment?.toLocaleString()} | ID: {property.id}
+                        </p>
+                      </div>
+                    </div>
+
+                    {property.reviewReasons && property.reviewReasons.length > 0 && (
+                      <div className="mt-3 bg-yellow-50 border border-yellow-200 rounded p-3">
+                        <p className="font-semibold text-sm mb-2">Validation Issues Found:</p>
+                        {property.reviewReasons.map((reason: any, idx: number) => (
+                          <div key={idx} className="text-sm mb-2 last:mb-0">
+                            <span className={`font-semibold ${reason.severity === 'error' ? 'text-red-600' : 'text-yellow-600'}`}>
+                              [{reason.severity?.toUpperCase()}] {reason.field}:
+                            </span>
+                            <p className="ml-4">{reason.issue}</p>
+                            {reason.suggestion && <p className="ml-4 text-gray-600 italic text-xs mt-1">💡 {reason.suggestion}</p>}
+                            {reason.actualValue !== undefined && (
+                              <p className="ml-4 text-gray-700 text-xs mt-1">Current value: {reason.actualValue}</p>
+                            )}
+                            {reason.expectedRange && (
+                              <p className="ml-4 text-gray-700 text-xs">Expected: {reason.expectedRange}</p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
             </div>
           )}

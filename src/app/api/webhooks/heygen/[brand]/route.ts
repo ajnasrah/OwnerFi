@@ -263,8 +263,8 @@ async function getWorkflowForBrand(
     const docSnap = await adminDb.collection('benefit_workflow_queue').doc(workflowId).get();
     return docSnap.exists ? docSnap.data() : null;
   } else if (brand === 'property' || brand === 'property-spanish') {
-    // Both property and property-spanish use the same collection
-    const docSnap = await adminDb.collection('property_videos').doc(workflowId).get();
+    // Both property and property-spanish use the same collection (NEW: propertyShowcaseWorkflows)
+    const docSnap = await adminDb.collection('propertyShowcaseWorkflows').doc(workflowId).get();
     return docSnap.exists ? docSnap.data() : null;
   } else if (brand === 'abdullah') {
     const docSnap = await adminDb.collection('abdullah_workflow_queue').doc(workflowId).get();
@@ -289,7 +289,7 @@ async function updateWorkflowForBrand(
   const adminDb = await getAdminDb();
 
   const collectionName = (brand === 'property' || brand === 'property-spanish')
-    ? 'property_videos'
+    ? 'propertyShowcaseWorkflows'
     : `${brand}_workflow_queue`;
 
   await adminDb.collection(collectionName).doc(workflowId).update({

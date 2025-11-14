@@ -17,26 +17,28 @@ import { getBrandPlatforms, getBrandStoragePath, validateBrand } from '@/lib/bra
 // Maximum duration for video processing (5 minutes on Vercel, more on Cloud Run)
 export const maxDuration = 300;
 
-// Secret for authenticating Cloud Tasks requests
-const CLOUD_TASKS_SECRET = process.env.CLOUD_TASKS_SECRET || process.env.CRON_SECRET;
+// Secrets for authenticating worker requests
+// Accept both CLOUD_TASKS_SECRET and CRON_SECRET (fallback/legacy)
+const CLOUD_TASKS_SECRET = process.env.CLOUD_TASKS_SECRET;
+const CRON_SECRET = process.env.CRON_SECRET;
+const VALID_SECRETS = [CLOUD_TASKS_SECRET, CRON_SECRET].filter(Boolean);
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
 
   try {
-    // Verify authorization - accept either Cloud Tasks auth OR internal server calls
+    // Verify authorization - check against all valid secrets
     const authHeader = request.headers.get('X-Cloud-Tasks-Worker') ||
                        request.headers.get('Authorization')?.replace('Bearer ', '');
-    const forwardedFor = request.headers.get('x-forwarded-for');
-    const isInternalCall = !forwardedFor || forwardedFor === '127.0.0.1'; // Server-to-server has no forwarded IP
 
-    // Allow if: valid auth token OR internal server call
-    if (authHeader !== CLOUD_TASKS_SECRET && !isInternalCall) {
+    // Allow if auth header matches any valid secret
+    const isAuthorized = authHeader && VALID_SECRETS.includes(authHeader);
+
+    if (!isAuthorized) {
       console.warn('❌ Unauthorized worker request', {
-        authHeader: !!authHeader,
-        forwardedFor,
-        isInternal: isInternalCall,
-        CLOUD_TASKS_SECRET: !!CLOUD_TASKS_SECRET
+        hasAuthHeader: !!authHeader,
+        validSecretsCount: VALID_SECRETS.length,
+        authMatches: authHeader ? VALID_SECRETS.some(s => s === authHeader) : false
       });
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

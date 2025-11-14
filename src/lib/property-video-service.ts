@@ -172,8 +172,10 @@ export async function generatePropertyVideo(
     const heygenRequest = buildPropertyVideoRequest(property, script);
 
     // Add webhook URL using brand-utils for consistency
+    // Use property-spanish brand for Spanish videos, property for English
     const { getBrandWebhookUrl } = await import('@/lib/brand-utils');
-    const webhookUrl = getBrandWebhookUrl('property', 'heygen');
+    const brand = language === 'es' ? 'property-spanish' : 'property';
+    const webhookUrl = getBrandWebhookUrl(brand, 'heygen');
 
     const requestBody = {
       ...heygenRequest,

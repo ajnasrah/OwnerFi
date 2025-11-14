@@ -264,14 +264,18 @@ export function PropertyListingSwiper({ properties, onLike, onPass, favorites, p
                   <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl p-4 border-2 border-emerald-200">
                     <div className="text-[10px] font-semibold text-emerald-700 uppercase tracking-wide mb-1">{SAFE_UI_LABELS.MONTHLY_PAYMENT}</div>
                     <div className="text-xl font-bold text-emerald-900">
-                      ${currentPropertyListing.monthlyPayment?.toLocaleString()}/mo
+                      {currentPropertyListing.monthlyPayment && currentPropertyListing.monthlyPayment > 0
+                        ? `$${currentPropertyListing.monthlyPayment.toLocaleString()}/mo`
+                        : 'Contact Seller'}
                     </div>
                     <div className="text-[8px] text-emerald-700 mt-1">{LEGAL_DISCLAIMERS.MONTHLY_PAYMENT}</div>
                   </div>
                   <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 border-2 border-blue-200">
                     <div className="text-[10px] font-semibold text-blue-700 uppercase tracking-wide mb-1">Down (est)</div>
                     <div className="text-xl font-bold text-blue-900">
-                      ${currentPropertyListing.downPaymentAmount?.toLocaleString()}
+                      {currentPropertyListing.downPaymentAmount && currentPropertyListing.downPaymentAmount > 0
+                        ? `$${currentPropertyListing.downPaymentAmount.toLocaleString()}`
+                        : 'Contact Seller'}
                     </div>
                     <div className="text-[8px] text-blue-700 mt-1">Agent-reported</div>
                   </div>

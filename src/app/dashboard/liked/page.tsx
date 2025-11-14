@@ -206,11 +206,19 @@ export default function LikedProperties() {
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-slate-400 font-semibold">Monthly Payment:</span>
-                        <span className="font-bold text-emerald-400 text-lg">${Math.ceil(property.monthlyPayment || 0).toLocaleString()} est</span>
+                        <span className="font-bold text-emerald-400 text-lg">
+                          {property.monthlyPayment && property.monthlyPayment > 0
+                            ? `$${Math.ceil(property.monthlyPayment).toLocaleString()} est`
+                            : 'Contact Seller'}
+                        </span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-slate-400 font-semibold">Down Payment:</span>
-                        <span className="font-bold text-blue-400 text-lg">${Math.ceil(property.downPaymentAmount || 0).toLocaleString()} est</span>
+                        <span className="font-bold text-blue-400 text-lg">
+                          {property.downPaymentAmount && property.downPaymentAmount > 0
+                            ? `$${Math.ceil(property.downPaymentAmount).toLocaleString()} est`
+                            : 'Contact Seller'}
+                        </span>
                       </div>
                       {property.interestRate !== undefined && property.interestRate !== null && (
                         <div className="flex justify-between items-center">

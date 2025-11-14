@@ -37,7 +37,7 @@ export default function RealtorSignup() {
     }
 
     if (!tcpaCompliance) {
-      setError('You must agree to TCPA Compliance requirements');
+      setError('You must agree to the Terms, Privacy Policy, and consent to receive text messages');
       return;
     }
     
@@ -217,7 +217,7 @@ export default function RealtorSignup() {
               </div>
             </div>
 
-            {/* TCPA Compliance Checkbox */}
+            {/* Terms, Privacy Policy, and SMS Consent Checkbox */}
             <div className="bg-slate-700/30 border border-slate-600/30 rounded-lg p-3 mt-4">
               <div className="flex items-start space-x-2">
                 <input
@@ -225,14 +225,19 @@ export default function RealtorSignup() {
                   id="tcpa-compliance"
                   checked={tcpaCompliance}
                   onChange={(e) => setTcpaCompliance(e.target.checked)}
-                  className="mt-0.5 w-4 h-4 text-emerald-500 bg-slate-700 border-slate-600 rounded focus:ring-emerald-400 focus:ring-2"
+                  className="mt-0.5 w-4 h-4 text-emerald-500 bg-slate-700 border-slate-600 rounded focus:ring-emerald-400 focus:ring-2 cursor-pointer"
+                  required
                 />
-                <label htmlFor="tcpa-compliance" className="text-xs text-slate-300 leading-relaxed">
+                <label htmlFor="tcpa-compliance" className="text-xs text-slate-300 leading-relaxed cursor-pointer">
                   I agree to the{' '}
-                  <Link href="/terms" className="text-emerald-400 underline" target="_blank">Terms of Service</Link>
-                  {', '}
-                  <Link href="/privacy" className="text-emerald-400 underline" target="_blank">Privacy Policy</Link>
-                  {', and TCPA compliance requirements. I consent to receive calls and texts at the phone number provided, including by automated means. Consent is not a condition of purchase.'}
+                  <Link href="/terms" className="text-emerald-400 hover:text-emerald-300 font-semibold underline" target="_blank">
+                    Terms and Conditions
+                  </Link>
+                  {' '}and{' '}
+                  <Link href="/privacy" className="text-emerald-400 hover:text-emerald-300 font-semibold underline" target="_blank">
+                    Privacy Policy
+                  </Link>
+                  {', and I consent to receive text messages and calls from OwnerFi and potential home buyers at the phone number provided, including by automated means. Consent is not required to purchase services. Message and data rates may apply.'}
                 </label>
               </div>
             </div>

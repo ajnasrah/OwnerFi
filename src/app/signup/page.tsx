@@ -19,12 +19,20 @@ export default function SignUp() {
     phone: '',
   });
 
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
     // Validation
+    if (!agreedToTerms) {
+      setError('You must agree to the Terms, Privacy Policy, and consent to receive text messages');
+      setLoading(false);
+      return;
+    }
+
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
       setLoading(false);
@@ -208,6 +216,34 @@ export default function SignUp() {
               />
             </div>
 
+            {/* Terms, Privacy Policy, and SMS Consent Checkbox */}
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+              <div className="flex items-start gap-3">
+                <input
+                  type="checkbox"
+                  id="terms-consent"
+                  checked={agreedToTerms}
+                  onChange={(e) => {
+                    setAgreedToTerms(e.target.checked);
+                    setError('');
+                  }}
+                  className="mt-0.5 w-5 h-5 text-emerald-600 bg-white border-slate-300 rounded focus:ring-2 focus:ring-emerald-500 cursor-pointer"
+                  required
+                />
+                <label htmlFor="terms-consent" className="text-sm text-slate-700 leading-relaxed cursor-pointer">
+                  I agree to the{' '}
+                  <Link href="/terms" className="text-emerald-600 hover:text-emerald-700 font-semibold underline" target="_blank">
+                    Terms and Conditions
+                  </Link>
+                  {' '}and{' '}
+                  <Link href="/privacy" className="text-emerald-600 hover:text-emerald-700 font-semibold underline" target="_blank">
+                    Privacy Policy
+                  </Link>
+                  {', and I consent to receive text messages and calls from OwnerFi and its partner real estate agents at the phone number provided, including by automated means. Consent is not required to purchase services. Message and data rates may apply.'}
+                </label>
+              </div>
+            </div>
+
             <button
               type="submit"
               disabled={loading}
@@ -225,14 +261,6 @@ export default function SignUp() {
                 'Create account'
               )}
             </button>
-
-            {/* Consent Notice - Minimal */}
-            <p className="text-xs text-slate-500 text-center leading-relaxed pt-2">
-              By creating an account, you agree to our{' '}
-              <Link href="/terms" className="text-emerald-600 hover:underline" target="_blank">Terms</Link>
-              {' '}and{' '}
-              <Link href="/privacy" className="text-emerald-600 hover:underline" target="_blank">Privacy Policy</Link>.
-            </p>
           </form>
         </div>
 

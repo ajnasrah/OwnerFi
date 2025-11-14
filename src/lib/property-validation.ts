@@ -33,6 +33,80 @@ export interface PropertyFinancialData {
 }
 
 /**
+ * Calculate missing financial fields based on available data
+ * ONLY calculates when down payment amount OR monthly payment is missing
+ * Uses amortization formula to fill in the missing value
+ */
+export function calculateMissingFinancials(data: {
+  listPrice: number;
+  monthlyPayment: number;
+  downPaymentAmount: number;
+  downPaymentPercent: number;
+  interestRate: number;
+  termYears: number;
+}): {
+  listPrice: number;
+  monthlyPayment: number;
+  downPaymentAmount: number;
+  downPaymentPercent: number;
+  interestRate: number;
+  termYears: number;
+  calculationApplied?: string;
+} {
+  const result = { ...data };
+
+  // STEP 1: If we have down payment percent but not amount, calculate amount
+  if (data.listPrice > 0 && data.downPaymentPercent > 0 && data.downPaymentAmount === 0) {
+    result.downPaymentAmount = data.listPrice * (data.downPaymentPercent / 100);
+    result.calculationApplied = 'Calculated down payment amount from percentage';
+  }
+
+  // STEP 2: If we have down payment amount but not percent, calculate percent
+  if (data.listPrice > 0 && data.downPaymentAmount > 0 && data.downPaymentPercent === 0) {
+    result.downPaymentPercent = (data.downPaymentAmount / data.listPrice) * 100;
+    result.calculationApplied = 'Calculated down payment percentage from amount';
+  }
+
+  // STEP 3: Calculate MONTHLY PAYMENT if missing (most common case)
+  // Only if we have all required fields: price, down payment, interest rate, term
+  if (result.monthlyPayment === 0 &&
+      result.listPrice > 0 &&
+      result.downPaymentAmount > 0 &&
+      result.interestRate > 0 &&
+      result.termYears > 0) {
+
+    const loanAmount = result.listPrice - result.downPaymentAmount;
+    const monthlyRate = result.interestRate / 100 / 12;
+    const numPayments = result.termYears * 12;
+
+    if (loanAmount > 0) {
+      if (monthlyRate > 0) {
+        result.monthlyPayment = loanAmount * (monthlyRate * Math.pow(1 + monthlyRate, numPayments)) /
+                               (Math.pow(1 + monthlyRate, numPayments) - 1);
+      } else {
+        result.monthlyPayment = loanAmount / numPayments;
+      }
+      result.calculationApplied = 'Calculated monthly payment using amortization formula';
+    }
+  }
+
+  // STEP 4: Calculate DOWN PAYMENT if missing (less common)
+  // Only if we have monthly payment and down payment percent
+  // DO NOT make assumptions - only calculate if we have the percent
+  if (result.downPaymentAmount === 0 &&
+      result.listPrice > 0 &&
+      result.downPaymentPercent > 0) {
+
+    result.downPaymentAmount = result.listPrice * (result.downPaymentPercent / 100);
+    if (!result.calculationApplied) {
+      result.calculationApplied = `Calculated down payment amount from ${result.downPaymentPercent}% down`;
+    }
+  }
+
+  return result;
+}
+
+/**
  * Main validation function - catches all outliers and unusual data
  */
 export function validatePropertyFinancials(property: PropertyFinancialData): ValidationResult {

@@ -27,7 +27,7 @@ export function PropertySchema({ property, url }: PropertySchemaProps) {
     '@type': 'RealEstateListing',
     '@id': url,
     name: property.address,
-    description: property.description || `Owner financed property at ${property.address}, ${property.city}, ${property.state}. ${property.bedrooms} bedrooms, ${property.bathrooms} bathrooms. Monthly payment starting at $${property.monthlyPayment}`,
+    description: property.description || `Owner financed property at ${property.address}, ${property.city}, ${property.state}. ${property.bedrooms} bedrooms, ${property.bathrooms} bathrooms.${property.monthlyPayment && property.monthlyPayment > 0 ? ` Monthly payment starting at $${property.monthlyPayment}` : ''}`,
     url: url,
     image: property.imageUrls?.[0] || 'https://ownerfi.ai/placeholder-house.svg',
     address: {
@@ -53,13 +53,15 @@ export function PropertySchema({ property, url }: PropertySchemaProps) {
         name: 'OwnerFi',
         url: 'https://ownerfi.ai',
       },
-      priceSpecification: {
-        '@type': 'PriceSpecification',
-        price: property.monthlyPayment,
-        priceCurrency: 'USD',
-        unitText: 'MONTH',
-        name: 'Monthly Payment',
-      },
+      ...(property.monthlyPayment && property.monthlyPayment > 0 ? {
+        priceSpecification: {
+          '@type': 'PriceSpecification',
+          price: property.monthlyPayment,
+          priceCurrency: 'USD',
+          unitText: 'MONTH',
+          name: 'Monthly Payment',
+        },
+      } : {}),
     },
     numberOfRooms: property.bedrooms,
     numberOfBathroomsTotal: property.bathrooms,
@@ -74,16 +76,16 @@ export function PropertySchema({ property, url }: PropertySchemaProps) {
         name: 'Financing Type',
         value: 'Owner Financing Available',
       },
-      {
+      ...(property.downPaymentAmount && property.downPaymentAmount > 0 ? [{
         '@type': 'PropertyValue',
         name: 'Down Payment',
-        value: `$${property.downPaymentAmount?.toLocaleString() || '0'}`,
-      },
-      {
+        value: `$${property.downPaymentAmount.toLocaleString()}`,
+      }] : []),
+      ...(property.monthlyPayment && property.monthlyPayment > 0 ? [{
         '@type': 'PropertyValue',
         name: 'Monthly Payment',
-        value: `$${property.monthlyPayment?.toLocaleString() || '0'}`,
-      },
+        value: `$${property.monthlyPayment.toLocaleString()}`,
+      }] : []),
     ],
   }
 

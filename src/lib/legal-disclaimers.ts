@@ -10,9 +10,8 @@ export const LEGAL_DISCLAIMERS = {
   PERSISTENT_WARNING: '⚠️ All estimates agent-reported only • Not verified • Seller determines actual terms',
 
   // Financial estimate disclaimers
-  MONTHLY_PAYMENT: 'Agent-reported • Not verified',
+  MONTHLY_PAYMENT: 'Agent-reported • Not verified • Payments do not include taxes, insurance, or other costs • Your responsibility to verify',
   DOWN_PAYMENT: 'Based on agent-reported terms. Actual down payment determined by seller. Verify before planning.',
-  PAYMENT_BREAKDOWN: 'Based on generic area averages. Actual taxes/insurance vary significantly by property, location, and provider. Not verified. Seller determines actual terms.',
   FINANCING_TERMS: 'Agent-reported estimates • Subject to change • Seller determines final terms',
 
   // Property information disclaimers
@@ -23,7 +22,7 @@ export const LEGAL_DISCLAIMERS = {
   OWNER_FINANCE_BADGE: 'Agent-reported • Subject to verification',
 
   // General disclaimer
-  GENERAL_ESTIMATES: 'Estimates exclude taxes, insurance & HOA fees. Not guaranteed - verify with seller.',
+  GENERAL_ESTIMATES: 'Payments do not include taxes, insurance, or other costs. Not guaranteed - verify with seller.',
 
   // Investment section
   INVESTMENT_WARNING: 'For reference only - not a guarantee of rental income or returns',
@@ -31,9 +30,8 @@ export const LEGAL_DISCLAIMERS = {
 
 export const SAFE_UI_LABELS = {
   // Replace authoritative language with softer, safer alternatives
-  MONTHLY_PAYMENT: 'Illustrative Est.',
+  MONTHLY_PAYMENT: 'Est. Monthly',
   DOWN_PAYMENT: 'Illustrative Down Payment Example',
-  PAYMENT_BREAKDOWN: 'Illustrative Monthly Estimate Only',
   FINANCING_TERMS: 'Indicative Financing Terms',
   INVESTMENT_SECTION: 'Rental Market Reference (Informational Only)',
   OWNER_FINANCE_BADGE: 'Owner Finance Option',

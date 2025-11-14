@@ -36,16 +36,8 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
     [images, imageIndex, imageError]
   );
 
-  const { monthlyPayment, estimatedTaxes, estimatedInsurance, totalMonthly } = useMemo(() => {
-    const monthly = property.monthlyPayment || 0;
-    const taxes = Math.round(monthly * 0.15);
-    const insurance = Math.round(monthly * 0.1);
-    return {
-      monthlyPayment: monthly,
-      estimatedTaxes: taxes,
-      estimatedInsurance: insurance,
-      totalMonthly: monthly + taxes + insurance
-    };
+  const monthlyPayment = useMemo(() => {
+    return property.monthlyPayment || 0;
   }, [property.monthlyPayment]);
 
   // Memoized event handlers
@@ -265,7 +257,9 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
                   ${property.listPrice?.toLocaleString()}
                 </div>
                 <div className="text-slate-500 text-[10px] leading-tight">
-                  <div className="font-bold">{SAFE_UI_LABELS.MONTHLY_PAYMENT} ${monthlyPayment.toLocaleString()}/mo</div>
+                  <div className="font-bold">
+                    {SAFE_UI_LABELS.MONTHLY_PAYMENT} {monthlyPayment > 0 ? `$${monthlyPayment.toLocaleString()}/mo` : 'Contact Seller'}
+                  </div>
                   <div className="text-[9px] text-slate-400">{LEGAL_DISCLAIMERS.MONTHLY_PAYMENT}</div>
                 </div>
               </div>
@@ -395,35 +389,6 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
                     </div>
                   )}
 
-                  {/* Monthly Payment Breakdown */}
-                  <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200">
-                    <h3 className="font-bold text-slate-900 mb-1 flex items-center gap-2 text-sm">
-                      <span>💰</span>
-                      <span>{SAFE_UI_LABELS.PAYMENT_BREAKDOWN}</span>
-                    </h3>
-                    <p className="text-[9px] text-slate-500 mb-3 leading-tight">
-                      {LEGAL_DISCLAIMERS.PAYMENT_BREAKDOWN}
-                    </p>
-                    <div className="space-y-2 text-xs">
-                      <div className="flex justify-between">
-                        <span className="text-slate-600">Principal & Interest</span>
-                        <span className="font-bold text-slate-900">est. ${monthlyPayment.toLocaleString()}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-slate-600">Property Tax</span>
-                        <span className="font-bold text-slate-900">est. ${estimatedTaxes.toLocaleString()}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-slate-600">Insurance</span>
-                        <span className="font-bold text-slate-900">est. ${estimatedInsurance.toLocaleString()}</span>
-                      </div>
-                      <div className="flex justify-between pt-2 border-t border-slate-300">
-                        <span className="font-bold text-slate-900">Total Monthly</span>
-                        <span className="font-black text-emerald-600 text-sm">est. ${totalMonthly.toLocaleString()}</span>
-                      </div>
-                    </div>
-                  </div>
-
                   {/* Down Payment */}
                   <div className="bg-blue-50 rounded-2xl p-4 border border-blue-200">
                     <h3 className="font-bold text-blue-900 mb-1 flex items-center gap-2 text-sm">
@@ -434,10 +399,12 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
                       {LEGAL_DISCLAIMERS.DOWN_PAYMENT}
                     </p>
                     <div className="text-xl font-black text-blue-900">
-                      est. ${property.downPaymentAmount?.toLocaleString()}
+                      {property.downPaymentAmount && property.downPaymentAmount > 0
+                        ? `est. $${property.downPaymentAmount.toLocaleString()}`
+                        : 'Contact Seller'}
                     </div>
                     <p className="text-xs text-blue-700 mt-1">
-                      {property.downPaymentAmount && property.listPrice
+                      {property.downPaymentAmount && property.downPaymentAmount > 0 && property.listPrice
                         ? `Approximately ${Math.round((property.downPaymentAmount / property.listPrice) * 100)}% of purchase price`
                         : ''}
                     </p>

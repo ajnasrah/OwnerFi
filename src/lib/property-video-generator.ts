@@ -72,8 +72,8 @@ export function generatePropertyScript(property: PropertyListing): PropertyVideo
   });
 
   // Format numbers (no decimals, rounded)
-  const downPayment = formatCurrencyRounded(financials.downPaymentAmount);
-  const monthlyPayment = formatCurrencyRounded(financials.monthlyPayment);
+  const downPayment = financials.downPaymentAmount > 0 ? formatCurrencyRounded(financials.downPaymentAmount) : 'contact seller';
+  const monthlyPayment = financials.monthlyPayment > 0 ? formatCurrencyRounded(financials.monthlyPayment) : 'contact seller';
   const listPrice = formatCurrencyRounded(property.listPrice);
   const sqft = property.squareFeet ? formatNumber(property.squareFeet) : null;
 
@@ -87,7 +87,7 @@ ${property.address} in ${property.city}, ${property.state}
 
 ${property.bedrooms} bed, ${property.bathrooms} bath${sqft ? `, ${sqft} square feet` : ''}
 
-The down payment is estimated to be around ${downPayment}. Monthly payment estimated before taxes and insurance is around ${monthlyPayment}.
+The down payment is estimated to be around ${downPayment}. Monthly payment is estimated to be around ${monthlyPayment}.
 
 ${highlight}
 
@@ -114,8 +114,8 @@ Visit OwnerFi.ai to see more homes near you — all free with agent contact info
  * Generate social media caption
  */
 function generateCaption(property: PropertyListing): string {
-  const downPayment = formatCurrencyRounded(property.downPaymentAmount);
-  const monthlyPayment = formatCurrencyRounded(property.monthlyPayment);
+  const downPayment = property.downPaymentAmount > 0 ? formatCurrencyRounded(property.downPaymentAmount) : 'contact seller';
+  const monthlyPayment = property.monthlyPayment > 0 ? formatCurrencyRounded(property.monthlyPayment) : 'contact seller';
   const highlight = selectBestHighlight(property);
 
   return `🏡 New Owner Finance Deal in ${property.city}, ${property.state}!
@@ -123,7 +123,7 @@ function generateCaption(property: PropertyListing): string {
 📍 ${property.address}
 💰 Est. ${downPayment} down
 🏠 ${property.bedrooms}BD | ${property.bathrooms}BA${property.squareFeet ? ` | ${formatNumber(property.squareFeet)} sq ft` : ''}
-💵 Est. ${monthlyPayment}/mo (before taxes/insurance)
+💵 Est. ${monthlyPayment}/mo
 
 ${highlight}
 
@@ -521,8 +521,8 @@ CAPTION_15: 💰 Browse real owner-finance homes for free on OwnerFi.ai 🏠 No 
  */
 function buildPropertyPrompt(property: PropertyListing): string {
   const price = formatCurrencyRounded(property.listPrice);
-  const monthly = formatCurrencyRounded(property.monthlyPayment);
-  const down = formatCurrencyRounded(property.downPaymentAmount);
+  const monthly = property.monthlyPayment > 0 ? formatCurrencyRounded(property.monthlyPayment) : 'contact seller';
+  const down = property.downPaymentAmount > 0 ? formatCurrencyRounded(property.downPaymentAmount) : 'contact seller';
   const highlight = selectBestHighlight(property);
 
   return `Generate both 30-second and 15-second video scripts for this property:
@@ -533,7 +533,7 @@ PROPERTY DATA:
 - Bedrooms: ${property.bedrooms}
 - Bathrooms: ${property.bathrooms}
 - Square Feet: ${property.squareFeet || 'Not specified'}
-- Monthly Payment: ${monthly} (estimated before taxes/insurance)
+- Monthly Payment: ${monthly} (estimated)
 - Down Payment: ${down} (estimated)
 - Highlight: ${highlight}
 

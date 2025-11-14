@@ -1975,7 +1975,10 @@ export default function AdminDashboard() {
                           </div>
 
                           <button
-                            onClick={() => setEditingProperty(property)}
+                            onClick={() => {
+                              console.log('Editing property:', property);
+                              setEditingProperty(property);
+                            }}
                             className="px-3 py-1 text-sm bg-blue-600 text-white hover:bg-blue-700 rounded"
                           >
                             Edit
@@ -2016,6 +2019,13 @@ export default function AdminDashboard() {
               <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                 <div className="p-6">
                   <h2 className="text-xl font-bold mb-4">Edit Property</h2>
+
+                  {/* Debug info */}
+                  <div className="mb-4 p-3 bg-gray-100 rounded text-xs">
+                    <p>Property ID: {editingProperty.id || 'Missing'}</p>
+                    <p>Address: {editingProperty.address || 'Missing'}</p>
+                    <p>Has all data: {Object.keys(editingProperty).length} fields</p>
+                  </div>
 
                   <div className="space-y-4">
                     {/* Address */}

@@ -70,7 +70,7 @@
       "schedule": "0 9,12,15,18,21 * * *"
     },
     {
-      "path": "/api/cron/sync-property-queue",
+      "path": "/api/cron/sync-property-queue-new",
       "schedule": "0 */6 * * *"
     },
     {
@@ -136,7 +136,7 @@
     "src/app/api/cron/abdullah/route.ts": {
       "maxDuration": 60
     },
-    "src/app/api/cron/sync-property-queue/route.ts": {
+    "src/app/api/cron/sync-property-queue-new/route.ts": {
       "maxDuration": 300
     },
     "src/app/api/cron/check-google-drive/route.ts": {

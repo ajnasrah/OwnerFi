@@ -10,6 +10,7 @@ import { logError, logInfo, logWarn } from '@/lib/logger';
 import { queueNearbyCitiesForProperty } from '@/lib/property-enhancement';
 import { autoCleanPropertyData } from '@/lib/property-auto-cleanup';
 import { sanitizeDescription } from '@/lib/description-sanitizer';
+import { validatePropertyFinancials, type PropertyFinancialData } from '@/lib/property-validation';
 import crypto from 'crypto';
 
 const GHL_WEBHOOK_SECRET = process.env.GHL_WEBHOOK_SECRET || '';
@@ -673,6 +674,75 @@ export async function POST(request: NextRequest) {
         createdAt: serverTimestamp(),
         dateAdded: new Date().toISOString()
       });
+    }
+
+    // Validate financial data
+    const validationData: PropertyFinancialData = {
+      listPrice: price,
+      monthlyPayment: calculatedMonthlyPayment,
+      downPaymentAmount,
+      downPaymentPercent,
+      interestRate: calculatedInterestRate,
+      termYears,
+      address: formattedAddress,
+      city: normalizedCity,
+      state: normalizedState
+    };
+
+    const validation = validatePropertyFinancials(validationData);
+
+    // Mark properties that need review
+    if (validation.needsReview) {
+      propertyData.needsReview = true;
+      propertyData.reviewReasons = validation.issues.map(issue => {
+        const reason: any = {
+          field: issue.field,
+          issue: issue.issue,
+          severity: issue.severity,
+          actualValue: issue.actualValue
+        };
+        // Only add optional fields if they have values (Firestore doesn't allow undefined)
+        if (issue.expectedRange) reason.expectedRange = issue.expectedRange;
+        if (issue.suggestion) reason.suggestion = issue.suggestion;
+        return reason;
+      });
+
+      // Log validation warnings
+      logWarn(`Property has validation issues (GHL webhook): ${formattedAddress}`, {
+        action: 'ghl_validation_warning',
+        metadata: {
+          opportunityId: payload.opportunityId,
+          address: formattedAddress,
+          issues: validation.issues,
+          shouldAutoReject: validation.shouldAutoReject
+        }
+      });
+    }
+
+    // Auto-reject if validation fails critically
+    if (validation.shouldAutoReject) {
+      const issueDetails = validation.issues
+        .map(i => `${i.field}: ${i.issue}`)
+        .join('; ');
+
+      logError('Property auto-rejected due to validation (GHL webhook)', {
+        action: 'ghl_validation_rejected',
+        metadata: {
+          opportunityId: payload.opportunityId,
+          address: formattedAddress,
+          reason: issueDetails,
+          issues: validation.issues
+        }
+      });
+
+      return NextResponse.json(
+        {
+          error: 'Property validation failed',
+          details: validation.issues,
+          message: 'Property has critical financial validation errors and was rejected'
+        },
+        { status: 400 }
+      );
     }
 
     // Auto-cleanup: Clean address and upgrade image URLs

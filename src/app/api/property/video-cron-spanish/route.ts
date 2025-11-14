@@ -1,13 +1,10 @@
-// Property Video Cron Job (Spanish)
-// Automatically finds eligible properties and generates Spanish videos
-// Runs 5x daily: 12 PM, 3 PM, 6 PM, 9 PM, 12 AM EST (offset 1 hour from English)
+// Property Video Cron Job - Spanish (NEW SYSTEM)
+// Automatically finds eligible properties and generates Spanish videos using propertyShowcaseWorkflows
+// Runs 5x daily: 10:00 AM, 1:00 PM, 4:00 PM, 7:00 PM, 10:00 PM CST (offset 20min from English)
 
 import { NextRequest, NextResponse } from 'next/server';
-import { isEligibleForVideo } from '@/lib/property-video-generator';
-import type { PropertyListing } from '@/lib/property-schema';
 
 const CRON_SECRET = process.env.CRON_SECRET;
-const MAX_VIDEOS_PER_RUN = 1; // 1 per run × 5 runs = 5 per day
 
 export const maxDuration = 60;
 
@@ -29,31 +26,32 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    console.log('🏡 Property video cron job triggered (SPANISH)');
-    console.log(`📊 Using rotating property queue system`);
+    console.log('🏡 Property video cron job triggered (Spanish)');
+    console.log(`📊 Using NEW propertyShowcaseWorkflows system`);
 
-    // Import rotation queue functions
+    // Import NEW system functions
     const {
-      getNextPropertyFromRotation,
-      markPropertyCompleted,
+      getNextPropertyFromQueue,
+      completePropertyWorkflow,
+      failAndRequeuePropertyWorkflow,
+      failPropertyWorkflow,
       resetPropertyQueueCycle,
-      getPropertyRotationStats,
-      addToPropertyRotationQueue
-    } = await import('@/lib/feed-store-firestore');
+      getPropertyQueueStats
+    } = await import('@/lib/property-workflow');
 
     // Get queue stats
-    const stats = await getPropertyRotationStats();
-    console.log(`📋 Queue stats: ${stats.queued} queued, ${stats.processing} processing, ${stats.total} total`);
+    const stats = await getPropertyQueueStats();
+    console.log(`📋 Queue stats: ${stats.queued} queued, ${stats.processing} processing, ${stats.completed} completed`);
 
     if (stats.nextProperty) {
-      console.log(`   Next property: ${stats.nextProperty.address} (cycle ${stats.nextProperty.currentCycleCount + 1})`);
+      console.log(`   Next property: ${stats.nextProperty.address} (videos generated: ${stats.nextProperty.totalVideosGenerated})`);
     }
 
-    // Get next property from rotation queue
-    let queueItem = await getNextPropertyFromRotation();
+    // Get next property from queue
+    let workflow = await getNextPropertyFromQueue();
 
     // If queue empty, reset cycle and try again
-    if (!queueItem) {
+    if (!workflow) {
       console.log('⚠️  All properties completed this cycle!');
       console.log('🔄 Resetting queue for fresh cycle...');
 
@@ -62,145 +60,18 @@ export async function GET(request: NextRequest) {
       if (resetCount > 0) {
         console.log(`✅ Queue reset - ${resetCount} properties ready for new cycle`);
         // Try again after reset
-        queueItem = await getNextPropertyFromRotation();
+        workflow = await getNextPropertyFromQueue();
       } else {
-        // Queue is truly empty - auto-populate with active properties
-        console.log('⚠️  Queue is empty! Auto-populating with active properties...');
-
-        try {
-          const { db } = await import('@/lib/firebase');
-          const { collection, query, where, getDocs } = await import('firebase/firestore');
-
-          if (!db) {
-            console.error('❌ Firebase not initialized');
-            return NextResponse.json({
-              success: false,
-              error: 'Firebase not initialized',
-              generated: 0
-            }, { status: 500 });
-          }
-
-          // Get all active properties with images
-          const propertiesQuery = query(
-            collection(db, 'properties'),
-            where('status', '==', 'active'),
-            where('isActive', '==', true)
-          );
-
-          const snapshot = await getDocs(propertiesQuery);
-          console.log(`   Found ${snapshot.size} active properties`);
-
-          // Filter to properties with images only
-          const eligibleProperties = snapshot.docs.filter(doc => {
-            const property = doc.data();
-            return property.imageUrls && property.imageUrls.length > 0;
-          });
-
-          console.log(`   ${eligibleProperties.length} have images`);
-
-          // Add to rotation queue
-          let added = 0;
-          for (const docSnap of eligibleProperties) {
-            try {
-              await addToPropertyRotationQueue(docSnap.id);
-              added++;
-            } catch (error) {
-              // Skip if already in queue (shouldn't happen since queue was empty)
-              if (!(error instanceof Error && error.message.includes('already in rotation queue'))) {
-                console.error(`   Error adding ${docSnap.data().address}:`, error);
-              }
-            }
-          }
-
-          console.log(`✅ Auto-populated queue with ${added} properties`);
-
-          if (added > 0) {
-            // Try to get next property after population
-            queueItem = await getNextPropertyFromRotation();
-          } else {
-            return NextResponse.json({
-              success: false,
-              error: 'No eligible properties found to populate queue',
-              generated: 0
-            });
-          }
-
-        } catch (error) {
-          console.error('❌ Error auto-populating queue:', error);
-          return NextResponse.json({
-            success: false,
-            error: error instanceof Error ? error.message : 'Failed to auto-populate queue',
-            generated: 0
-          }, { status: 500 });
-        }
+        console.log('⚠️  Queue is truly empty - no properties to process');
+        return NextResponse.json({
+          success: true,
+          message: 'No properties available in queue',
+          generated: 0
+        });
       }
     }
 
-    // Sync queue with properties database (add new, remove deleted)
-    console.log('🔄 Syncing queue with properties database...');
-    try {
-      const { db: adminDb } = await import('@/lib/firebase-admin');
-      if (adminDb) {
-          // Get all property IDs in queue
-          const queueSnapshot = await adminDb.collection('property_rotation_queue').get();
-          const queuePropertyIds = new Set(queueSnapshot.docs.map(doc => doc.data().propertyId));
-
-          // Get all active property IDs from properties collection
-          const propertiesSnapshot = await adminDb.collection('properties')
-            .where('isActive', '==', true)
-            .where('status', '==', 'active')
-            .get();
-
-          const activePropertyIds = new Set<string>();
-          const newProperties: any[] = [];
-
-          propertiesSnapshot.docs.forEach(doc => {
-            const data = doc.data();
-            if (data.imageUrls && data.imageUrls.length > 0) {
-              activePropertyIds.add(doc.id);
-              if (!queuePropertyIds.has(doc.id)) {
-                newProperties.push(doc.id);
-              }
-            }
-          });
-
-          // Add new properties to queue
-          let addedCount = 0;
-          for (const propId of newProperties) {
-            try {
-              await addToPropertyRotationQueue(propId);
-              addedCount++;
-            } catch (err) {
-              // Skip if already exists
-            }
-          }
-
-          // Remove deleted/inactive properties from queue
-          let removedCount = 0;
-          const batch = adminDb.batch();
-          queueSnapshot.docs.forEach(doc => {
-            const queueDocId = doc.id;
-            if (!activePropertyIds.has(queueDocId)) {
-              batch.delete(doc.ref);
-              removedCount++;
-            }
-          });
-
-          if (removedCount > 0) {
-            await batch.commit();
-          }
-
-          if (addedCount > 0 || removedCount > 0) {
-            console.log(`   ✅ Queue synced: +${addedCount} new, -${removedCount} deleted`);
-          } else {
-            console.log(`   ✅ Queue already in sync`);
-          }
-      }
-    } catch (error) {
-      console.error('   ⚠️  Queue sync failed (non-critical):', error);
-    }
-
-    if (!queueItem) {
+    if (!workflow) {
       return NextResponse.json({
         success: true,
         message: 'No properties available after reset',
@@ -208,33 +79,35 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    console.log(`\n🎥 Generating SPANISH video for: ${queueItem.address}`);
-    console.log(`   City: ${queueItem.city}, ${queueItem.state}`);
-    console.log(`   Down payment: $${queueItem.downPayment.toLocaleString()}`);
-    console.log(`   Times shown: ${queueItem.videoCount}`);
-    console.log(`   Queue position: ${queueItem.position}`);
+    console.log(`\n🎥 Generating Spanish video for: ${workflow.address}`);
+    console.log(`   City: ${workflow.city}, ${workflow.state}`);
+    console.log(`   Down payment: $${workflow.downPayment.toLocaleString()}`);
+    console.log(`   Monthly payment: $${workflow.monthlyPayment.toLocaleString()}`);
+    console.log(`   Total videos generated: ${workflow.totalVideosGenerated}`);
+    console.log(`   Current cycle count: ${workflow.currentCycleCount}`);
 
     const results = [];
 
     try {
-      // Generate 15-second SPANISH video using shared service
+      // Generate 15-second Spanish video
       const { generatePropertyVideo } = await import('@/lib/property-video-service');
-      const result = await generatePropertyVideo(queueItem.propertyId, '15', 'es'); // SPANISH
+      const result = await generatePropertyVideo(workflow.propertyId, '15', 'es');
 
       if (result.success) {
-        console.log(`✅ Spanish video generation started for ${queueItem.address}`);
+        console.log(`✅ Spanish video generation started for ${workflow.address}`);
 
-        // Mark property as completed for this cycle
-        await markPropertyCompleted(queueItem.propertyId);
+        // Mark workflow as completed for this cycle
+        await completePropertyWorkflow(workflow.id);
 
         results.push({
-          propertyId: queueItem.propertyId,
-          address: queueItem.address,
+          propertyId: workflow.propertyId,
+          workflowId: workflow.id,
+          address: workflow.address,
           variant: '15sec',
           language: 'es',
           success: true,
-          workflowId: result.workflowId,
-          timesShown: queueItem.videoCount + 1,
+          heygenVideoId: result.workflowId,
+          totalVideosGenerated: workflow.totalVideosGenerated + 1,
           cycleComplete: true
         });
       } else {
@@ -246,17 +119,20 @@ export async function GET(request: NextRequest) {
           console.error(`   Details: ${result.message}`);
         }
 
-        if (!isValidationError) {
-          await markPropertyCompleted(queueItem.propertyId);
+        // For validation errors, requeue for manual fix
+        // For system errors, permanently fail
+        if (isValidationError) {
+          console.warn(`⚠️  Property ${workflow.propertyId} requeued due to validation errors`);
+          await failAndRequeuePropertyWorkflow(workflow.id, errorDetails);
         } else {
-          console.warn(`⚠️  Property ${queueItem.propertyId} skipped due to validation errors`);
-          const { resetPropertyToQueued } = await import('@/lib/feed-store-firestore');
-          await resetPropertyToQueued(queueItem.propertyId);
+          console.error(`❌ Property ${workflow.propertyId} permanently failed due to system error`);
+          await failPropertyWorkflow(workflow.id, errorDetails);
         }
 
         results.push({
-          propertyId: queueItem.propertyId,
-          address: queueItem.address,
+          propertyId: workflow.propertyId,
+          workflowId: workflow.id,
+          address: workflow.address,
           variant: '15sec',
           language: 'es',
           success: false,
@@ -267,23 +143,28 @@ export async function GET(request: NextRequest) {
       }
 
     } catch (error) {
-      console.error(`❌ Error for ${queueItem.address}:`, error);
+      console.error(`❌ Error for ${workflow.address}:`, error);
 
-      await markPropertyCompleted(queueItem.propertyId);
+      // System error - permanently fail
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      await failPropertyWorkflow(workflow.id, errorMessage);
 
       results.push({
-        propertyId: queueItem.propertyId,
-        address: queueItem.address,
+        propertyId: workflow.propertyId,
+        workflowId: workflow.id,
+        address: workflow.address,
         variant: '15sec',
         language: 'es',
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: errorMessage
       });
     }
 
     const successCount = results.filter(r => r.success).length;
-    const updatedStats = await getPropertyRotationStats();
     const skippedCount = results.filter((r: any) => r.skipped).length;
+
+    // Get updated stats after processing
+    const updatedStats = await getPropertyQueueStats();
 
     console.log(`\n📊 Spanish property video cron summary:`);
     console.log(`   Queue total: ${stats.total} properties`);
@@ -292,6 +173,7 @@ export async function GET(request: NextRequest) {
     if (skippedCount > 0) {
       console.log(`   ⚠️  Skipped due to validation: ${skippedCount} (fix property data)`);
     }
+    console.log(`   Property status: ${successCount > 0 ? 'Completed' : skippedCount > 0 ? 'Requeued' : 'Failed'}`);
 
     const errorMessage = skippedCount > 0
       ? `Property skipped due to validation errors: ${results[0].errorDetails || results[0].error}`
@@ -306,7 +188,7 @@ export async function GET(request: NextRequest) {
       property: results[0],
       queueStats: updatedStats,
       cycleProgress: {
-        completed: stats.total - updatedStats.queued,
+        completed: updatedStats.completed,
         remaining: updatedStats.queued,
         total: stats.total
       },

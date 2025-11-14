@@ -261,14 +261,19 @@ async function getWorkflowBySubmagicId(
   const { getAdminDb } = await import('@/lib/firebase-admin');
   const adminDb = await getAdminDb();
 
-  // Determine collection name
+  // Property brands use NEW propertyShowcaseWorkflows collection
+  if (brand === 'property' || brand === 'property-spanish') {
+    const { getPropertyWorkflowBySubmagicId } = await import('@/lib/property-workflow');
+    const result = await getPropertyWorkflowBySubmagicId(submagicProjectId);
+    return result;
+  }
+
+  // Other brands use their respective collections
   let collectionName: string;
   if (brand === 'podcast') {
     collectionName = 'podcast_workflow_queue';
   } else if (brand === 'benefit') {
     collectionName = 'benefit_workflow_queue';
-  } else if (brand === 'property' || brand === 'property-spanish') {
-    collectionName = 'property_videos';
   } else if (brand === 'abdullah') {
     collectionName = 'abdullah_workflow_queue';
   } else if (brand === 'personal') {
@@ -314,15 +319,16 @@ async function updateWorkflowForBrand(
   workflowId: string,
   updates: Record<string, any>
 ): Promise<void> {
-  if (brand === 'podcast') {
+  if (brand === 'property' || brand === 'property-spanish') {
+    // Use NEW propertyShowcaseWorkflows collection
+    const { updatePropertyWorkflow } = await import('@/lib/property-workflow');
+    await updatePropertyWorkflow(workflowId, updates);
+  } else if (brand === 'podcast') {
     const { updatePodcastWorkflow } = await import('@/lib/feed-store-firestore');
     await updatePodcastWorkflow(workflowId, updates);
   } else if (brand === 'benefit') {
     const { updateBenefitWorkflow } = await import('@/lib/feed-store-firestore');
     await updateBenefitWorkflow(workflowId, updates);
-  } else if (brand === 'property' || brand === 'property-spanish') {
-    const { updatePropertyVideo } = await import('@/lib/feed-store-firestore');
-    await updatePropertyVideo(workflowId, updates);
   } else if (brand === 'abdullah') {
     const { db } = await import('@/lib/firebase');
     const { doc, updateDoc } = await import('firebase/firestore');

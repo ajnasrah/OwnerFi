@@ -346,6 +346,60 @@ export async function getPropertyWorkflow(workflowId: string): Promise<PropertyS
 }
 
 /**
+ * Get workflow by Submagic project ID
+ */
+export async function getPropertyWorkflowBySubmagicId(submagicProjectId: string): Promise<{ workflowId: string; workflow: PropertyShowcaseWorkflow } | null> {
+  if (!db) return null;
+
+  const q = query(
+    collection(db, COLLECTION),
+    where('submagicVideoId', '==', submagicProjectId),
+    firestoreLimit(1)
+  );
+
+  const snapshot = await getDocs(q);
+  if (snapshot.empty) return null;
+
+  return {
+    workflowId: snapshot.docs[0].id,
+    workflow: snapshot.docs[0].data() as PropertyShowcaseWorkflow
+  };
+}
+
+/**
+ * Delete workflow for a specific property
+ */
+export async function deletePropertyWorkflow(propertyId: string): Promise<boolean> {
+  if (!db) return false;
+
+  try {
+    // Find all workflows for this property
+    const q = query(
+      collection(db, COLLECTION),
+      where('propertyId', '==', propertyId)
+    );
+
+    const snapshot = await getDocs(q);
+
+    if (snapshot.empty) {
+      console.log(`No workflows found for property ${propertyId}`);
+      return false;
+    }
+
+    // Delete all workflows for this property
+    for (const docSnap of snapshot.docs) {
+      await docSnap.ref.delete();
+      console.log(`🗑️  Deleted workflow ${docSnap.id} for property ${propertyId}`);
+    }
+
+    return true;
+  } catch (error) {
+    console.error(`Error deleting workflows for property ${propertyId}:`, error);
+    return false;
+  }
+}
+
+/**
  * Sync queue with properties database
  * Adds new active properties, removes deleted/inactive ones
  */

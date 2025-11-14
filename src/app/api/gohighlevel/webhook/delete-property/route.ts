@@ -151,18 +151,18 @@ export async function POST(request: NextRequest) {
           await deleteDoc(propertyRef);
           deletedProperties.push(propertyId);
 
-          // Also remove from rotation queue
+          // Also remove from queue (NEW system)
           try {
-            const queueDoc = await getDoc(doc(db, 'property_rotation_queue', propertyId));
-            if (queueDoc.exists()) {
-              await deleteDoc(doc(db, 'property_rotation_queue', propertyId));
-              logInfo(`Removed deleted property from rotation queue: ${propertyId}`, {
+            const { deletePropertyWorkflow } = await import('@/lib/property-workflow');
+            const deleted = await deletePropertyWorkflow(propertyId);
+            if (deleted) {
+              logInfo(`Removed deleted property from queue: ${propertyId}`, {
                 action: 'queue_cleanup',
                 metadata: { propertyId }
               });
             }
           } catch (queueError) {
-            logWarn(`Could not remove from rotation queue: ${propertyId}`, {
+            logWarn(`Could not remove from queue: ${propertyId}`, {
               action: 'queue_cleanup_error',
               metadata: { propertyId, error: (queueError as Error).message }
             });
@@ -209,21 +209,19 @@ export async function POST(request: NextRequest) {
         await batch.commit();
         logInfo(`Batch deleted ${deletedProperties.length} properties`);
 
-        // Clean up rotation queue for batch deleted properties
+        // Clean up queue for batch deleted properties (NEW system)
+        const { deletePropertyWorkflow } = await import('@/lib/property-workflow');
         for (const id of queueCleanupIds) {
           try {
-            const queueDoc = await getDoc(doc(db, 'property_rotation_queue', id));
-            if (queueDoc.exists()) {
-              await deleteDoc(doc(db, 'property_rotation_queue', id));
-            }
+            await deletePropertyWorkflow(id);
           } catch (queueError) {
-            logWarn(`Could not remove ${id} from rotation queue`, {
+            logWarn(`Could not remove ${id} from queue`, {
               action: 'queue_cleanup_error',
               metadata: { propertyId: id }
             });
           }
         }
-        logInfo(`Cleaned up ${queueCleanupIds.length} entries from rotation queue`);
+        logInfo(`Cleaned up ${queueCleanupIds.length} entries from queue`);
       }
     }
 
@@ -267,12 +265,10 @@ export async function POST(request: NextRequest) {
           // Clean up rotation queue for deleted properties
           for (const id of deleteByCleanupIds) {
             try {
-              const queueDoc = await getDoc(doc(db, 'property_rotation_queue', id));
-              if (queueDoc.exists()) {
-                await deleteDoc(doc(db, 'property_rotation_queue', id));
-              }
+              const { deletePropertyWorkflow } = await import('@/lib/property-workflow');
+              await deletePropertyWorkflow(id);
             } catch (queueError) {
-              logWarn(`Could not remove ${id} from rotation queue`, {
+              logWarn(`Could not remove ${id} from queue`, {
                 action: 'queue_cleanup_error',
                 metadata: { propertyId: id }
               });

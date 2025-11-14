@@ -119,13 +119,13 @@ export async function PUT(
     const propertyDoc = await getDoc(doc(db, 'properties', resolvedParams.id));
     const propertyData = propertyDoc.data();
 
-    // Remove from rotation queue if property becomes inactive or ineligible
+    // Remove from queue if property becomes inactive or ineligible (NEW system)
     if (updates.isActive === false || updates.status !== 'active') {
       try {
-        const queueDoc = await getDoc(doc(db, 'property_rotation_queue', resolvedParams.id));
-        if (queueDoc.exists()) {
-          await deleteDoc(doc(db, 'property_rotation_queue', resolvedParams.id));
-          console.log(`✅ Removed inactive property from rotation queue: ${resolvedParams.id}`);
+        const { deletePropertyWorkflow } = await import('@/lib/property-workflow');
+        const deleted = await deletePropertyWorkflow(resolvedParams.id);
+        if (deleted) {
+          console.log(`✅ Removed inactive property from queue: ${resolvedParams.id}`);
         }
       } catch (error) {
         console.warn('⚠️  Could not remove from queue:', error);
@@ -208,15 +208,15 @@ export async function DELETE(
     // Delete the property
     await deleteDoc(doc(db, 'properties', resolvedParams.id));
 
-    // Also remove from rotation queue
+    // Also remove from queue (NEW system)
     try {
-      const queueDoc = await getDoc(doc(db, 'property_rotation_queue', resolvedParams.id));
-      if (queueDoc.exists()) {
-        await deleteDoc(doc(db, 'property_rotation_queue', resolvedParams.id));
-        console.log(`✅ Removed deleted property from rotation queue: ${resolvedParams.id}`);
+      const { deletePropertyWorkflow } = await import('@/lib/property-workflow');
+      const deleted = await deletePropertyWorkflow(resolvedParams.id);
+      if (deleted) {
+        console.log(`✅ Removed deleted property from queue: ${resolvedParams.id}`);
       }
     } catch (error) {
-      console.warn('⚠️  Could not remove from rotation queue:', error);
+      console.warn('⚠️  Could not remove from queue:', error);
       // Don't fail the delete if queue removal fails
     }
 

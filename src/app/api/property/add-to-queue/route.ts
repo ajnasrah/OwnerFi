@@ -3,7 +3,7 @@
 // Can be triggered via webhook or direct API call
 
 import { NextRequest, NextResponse } from 'next/server';
-import { addToPropertyRotationQueue, getPropertyRotationStats } from '@/lib/feed-store-firestore';
+import { addPropertyToShowcaseQueue, getPropertyQueueStats } from '@/lib/property-workflow';
 import { db } from '@/lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 
@@ -82,8 +82,14 @@ export async function POST(request: NextRequest) {
           continue;
         }
 
-        // Add to queue
-        await addToPropertyRotationQueue(id);
+        // Add to queue (NEW system)
+        await addPropertyToShowcaseQueue(id, {
+          address: property.address,
+          city: property.city,
+          state: property.state,
+          downPayment: property.downPaymentAmount,
+          monthlyPayment: property.monthlyPayment
+        });
 
         console.log(`✅ Added to queue: ${property.address}`);
         results.added++;
@@ -95,7 +101,7 @@ export async function POST(request: NextRequest) {
         });
 
       } catch (error: any) {
-        if (error.message?.includes('already in rotation queue')) {
+        if (error.message?.includes('already in queue')) {
           console.log(`⏭️  Property ${id} already in queue`);
           results.skipped++;
         } else {
@@ -105,8 +111,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Get updated stats
-    const stats = await getPropertyRotationStats();
+    // Get updated stats (NEW system)
+    const stats = await getPropertyQueueStats();
 
     console.log(`\n📊 Auto-add complete:`);
     console.log(`   Added: ${results.added}`);

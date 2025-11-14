@@ -53,10 +53,11 @@ export async function POST(request: NextRequest) {
     if ((userType || 'buyer') === 'buyer') {
       const { db } = await import('@/lib/firebase');
       const { doc, setDoc, serverTimestamp } = await import('firebase/firestore');
+      const { syncBuyerToGHL } = await import('@/lib/gohighlevel-api');
 
       if (db) {
         const buyerId = `buyer_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        await setDoc(doc(db, 'buyerProfiles', buyerId), {
+        const buyerData = {
           id: buyerId,
           userId: newUser.id,
           firstName: firstName || fullName.split(' ')[0] || '',
@@ -99,6 +100,41 @@ export async function POST(request: NextRequest) {
           // Metadata
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp()
+        };
+
+        await setDoc(doc(db, 'buyerProfiles', buyerId), buyerData);
+
+        // Send new buyer to GHL webhook immediately
+        syncBuyerToGHL({
+          id: buyerId,
+          userId: newUser.id,
+          firstName: buyerData.firstName,
+          lastName: buyerData.lastName,
+          email: buyerData.email,
+          phone: buyerData.phone,
+          city: buyerData.city,
+          state: buyerData.state,
+          maxMonthlyPayment: buyerData.maxMonthlyPayment,
+          maxDownPayment: buyerData.maxDownPayment,
+          searchRadius: buyerData.searchRadius,
+          languages: buyerData.languages
+        }).then(result => {
+          if (result.success) {
+            logInfo('New buyer synced to GoHighLevel on signup', {
+              action: 'buyer_signup_ghl_sync',
+              metadata: { buyerId, email: buyerData.email }
+            });
+          } else {
+            logError('Failed to sync new buyer to GoHighLevel', {
+              action: 'buyer_signup_ghl_sync_failed',
+              metadata: { buyerId, error: result.error }
+            });
+          }
+        }).catch(error => {
+          logError('Error syncing new buyer to GoHighLevel', {
+            action: 'buyer_signup_ghl_sync_error',
+            metadata: { buyerId }
+          }, error);
         });
       }
     }

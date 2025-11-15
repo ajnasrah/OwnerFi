@@ -195,7 +195,9 @@ export default function AdminDashboard() {
   // Cash Houses state
   const [cashHouses, setCashHouses] = useState<any[]>([]);
   const [loadingCashHouses, setLoadingCashHouses] = useState(false);
-  const [cashHousesFilter, setCashHousesFilter] = useState<'all' | 'discount' | 'needs_work'>('all');
+  const [cashHousesFilter, setCashHousesFilter] = useState<'all' | 'discount' | 'needs_work' | 'owner_finance'>('all');
+  const [selectedCashHouses, setSelectedCashHouses] = useState<Set<string>>(new Set());
+  const [cashHousesSortBy, setCashHousesSortBy] = useState<'newest' | 'discount_asc' | 'discount_desc'>('newest');
 
   // Fetch cash houses when tab becomes active
   useEffect(() => {
@@ -211,7 +213,7 @@ export default function AdminDashboard() {
       const { db } = await import('@/lib/firebase');
 
       const cashHousesRef = collection(db, 'cash_houses');
-      const q = query(cashHousesRef, orderBy('importedAt', 'desc'), limit(100));
+      const q = query(cashHousesRef, orderBy('importedAt', 'desc'), limit(200));
       const snapshot = await getDocs(q);
 
       const houses = snapshot.docs.map(doc => ({
@@ -224,6 +226,33 @@ export default function AdminDashboard() {
       console.error('Failed to fetch cash houses:', error);
     } finally {
       setLoadingCashHouses(false);
+    }
+  };
+
+  const deleteCashHouses = async (ids: string[]) => {
+    if (ids.length === 0) return;
+
+    if (!confirm(`Delete ${ids.length} propert${ids.length === 1 ? 'y' : 'ies'}? This cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const { doc, deleteDoc } = await import('firebase/firestore');
+      const { db } = await import('@/lib/firebase');
+
+      // Delete in batches
+      for (const id of ids) {
+        await deleteDoc(doc(db, 'cash_houses', id));
+      }
+
+      // Update UI
+      setCashHouses(prev => prev.filter(h => !ids.includes(h.id)));
+      setSelectedCashHouses(new Set());
+
+      alert(`Deleted ${ids.length} propert${ids.length === 1 ? 'y' : 'ies'} successfully!`);
+    } catch (error) {
+      console.error('Failed to delete cash houses:', error);
+      alert('Failed to delete properties');
     }
   };
 
@@ -3538,8 +3567,9 @@ export default function AdminDashboard() {
                   <nav className="-mb-px flex space-x-8" aria-label="Tabs">
                     {[
                       { key: 'all', label: 'All Properties', icon: '🏘️' },
-                      { key: 'discount', label: 'Discount Deals (<80% ARV)', icon: '💰' },
-                      { key: 'needs_work', label: 'Needs Work / Owner Finance', icon: '🔨' },
+                      { key: 'discount', label: 'Discount (<80% ARV)', icon: '💰' },
+                      { key: 'needs_work', label: 'Needs Work (Cash)', icon: '🔨' },
+                      { key: 'owner_finance', label: 'Owner Finance (Zillow)', icon: '🏠' },
                     ].map((filter) => (
                       <button
                         key={filter.key}
@@ -3557,21 +3587,68 @@ export default function AdminDashboard() {
                   </nav>
                 </div>
 
+                {/* Sort and Bulk Actions */}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-4">
+                    <label className="text-sm font-medium text-gray-700">
+                      Sort by:
+                      <select
+                        value={cashHousesSortBy}
+                        onChange={(e) => setCashHousesSortBy(e.target.value as any)}
+                        className="ml-2 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+                      >
+                        <option value="newest">Newest First</option>
+                        <option value="discount_desc">Highest Discount %</option>
+                        <option value="discount_asc">Lowest Discount %</option>
+                      </select>
+                    </label>
+                  </div>
+                  {selectedCashHouses.size > 0 && (
+                    <button
+                      onClick={() => deleteCashHouses(Array.from(selectedCashHouses))}
+                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                    >
+                      Delete Selected ({selectedCashHouses.size})
+                    </button>
+                  )}
+                </div>
+
                 {loadingCashHouses ? (
                   <div className="flex items-center justify-center h-64">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
                   </div>
                 ) : (() => {
                   // Filter cash houses based on selected filter
-                  const filteredHouses = cashHouses.filter(house => {
+                  let filteredHouses = cashHouses.filter(house => {
                     if (cashHousesFilter === 'all') return true;
-                    if (cashHousesFilter === 'discount') return house.dealType === 'discount';
+                    // Discount: ONLY from cash deals scraper under 80% ARV
+                    if (cashHousesFilter === 'discount') {
+                      return house.dealType === 'discount' && house.source === 'cash_deals_scraper';
+                    }
+                    // Needs Work: ALL properties with keywords from cash deals scraper (any price)
                     if (cashHousesFilter === 'needs_work') {
-                      // Show properties with keywords from BOTH scrapers
-                      return house.dealType === 'needs_work' || house.dealType === 'owner_finance';
+                      return house.source === 'cash_deals_scraper' && house.needsWork === true;
+                    }
+                    // Owner Finance: ONLY from Zillow scraper with keywords
+                    if (cashHousesFilter === 'owner_finance') {
+                      return house.dealType === 'owner_finance' && house.source === 'zillow_scraper';
                     }
                     return true;
                   });
+
+                  // Sort houses
+                  if (cashHousesSortBy === 'discount_desc') {
+                    filteredHouses = [...filteredHouses].sort((a, b) =>
+                      (b.discountPercentage || 0) - (a.discountPercentage || 0)
+                    );
+                  } else if (cashHousesSortBy === 'discount_asc') {
+                    filteredHouses = [...filteredHouses].sort((a, b) =>
+                      (a.discountPercentage || 0) - (b.discountPercentage || 0)
+                    );
+                  }
+                  // 'newest' is already sorted by importedAt from Firestore query
+
+                  const allSelected = filteredHouses.length > 0 && filteredHouses.every(h => selectedCashHouses.has(h.id));
 
                   return filteredHouses.length === 0 ? (
                     <div className="bg-gray-50 rounded-lg p-8 text-center">
@@ -3582,7 +3659,8 @@ export default function AdminDashboard() {
                       <p className="mt-1 text-sm text-gray-500">
                         {cashHousesFilter === 'all' && 'Use the Chrome extension to add properties to the cash deals queue'}
                         {cashHousesFilter === 'discount' && 'No discount deals found (properties under 80% ARV)'}
-                        {cashHousesFilter === 'needs_work' && 'No properties with keywords found from either scraper'}
+                        {cashHousesFilter === 'needs_work' && 'No properties with keywords from cash scraper found (any price)'}
+                        {cashHousesFilter === 'owner_finance' && 'No owner finance opportunities from Zillow scraper found'}
                       </p>
                     </div>
                   ) : (
@@ -3590,18 +3668,52 @@ export default function AdminDashboard() {
                       <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                           <tr>
+                            <th className="px-3 py-3 text-left">
+                              <input
+                                type="checkbox"
+                                checked={allSelected}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setSelectedCashHouses(new Set(filteredHouses.map(h => h.id)));
+                                  } else {
+                                    setSelectedCashHouses(new Set());
+                                  }
+                                }}
+                                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                              />
+                            </th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Property</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Zestimate</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Discount</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Zestimate / 80%</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Discount %</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Details</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                           </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
-                          {filteredHouses.map((house) => (
-                          <tr key={house.id} className="hover:bg-gray-50">
+                          {filteredHouses.map((house) => {
+                            const isSelected = selectedCashHouses.has(house.id);
+                            const discountPct = house.discountPercentage || 0;
+                            const isDiscount = discountPct > 0;
+                            return (
+                          <tr key={house.id} className={`hover:bg-gray-50 ${isSelected ? 'bg-indigo-50' : ''}`}>
+                            <td className="px-3 py-4">
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={(e) => {
+                                  const newSelected = new Set(selectedCashHouses);
+                                  if (e.target.checked) {
+                                    newSelected.add(house.id);
+                                  } else {
+                                    newSelected.delete(house.id);
+                                  }
+                                  setSelectedCashHouses(newSelected);
+                                }}
+                                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                              />
+                            </td>
                             <td className="px-6 py-4">
                               <div className="flex items-center">
                                 {house.firstPropertyImage && (
@@ -3634,9 +3746,15 @@ export default function AdminDashboard() {
                               </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
-                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                {house.discountPercentage?.toFixed(1) || '0'}% off
-                              </span>
+                              {isDiscount ? (
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                  ✅ {discountPct.toFixed(1)}% DISCOUNT
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                  ⚠️ {Math.abs(discountPct).toFixed(1)}% PREMIUM
+                                </span>
+                              )}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
                               <div className="space-y-1">
@@ -3693,7 +3811,8 @@ export default function AdminDashboard() {
                               </a>
                             </td>
                           </tr>
-                        ))}
+                            );
+                          })}
                         </tbody>
                       </table>
                       <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
@@ -3702,7 +3821,8 @@ export default function AdminDashboard() {
                           {cashHousesFilter !== 'all' && (
                             <span className="ml-2 text-indigo-600 font-medium">
                               ({cashHousesFilter === 'discount' && 'Discount Deals'}
-                              {cashHousesFilter === 'needs_work' && 'Needs Work / Owner Finance'})
+                              {cashHousesFilter === 'needs_work' && 'Needs Work'}
+                              {cashHousesFilter === 'owner_finance' && 'Owner Finance'})
                             </span>
                           )}
                         </p>

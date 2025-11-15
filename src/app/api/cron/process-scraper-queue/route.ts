@@ -157,14 +157,42 @@ export async function GET(request: NextRequest) {
     metrics.apifyItemsReturned = items.length;
     console.log(`📦 [APIFY] Received ${items.length} items`);
 
-    // Check for existing zpids to avoid duplicates
+    // Check for existing zpids to avoid duplicates (batched for Firestore 'in' limit of 10)
     const zpids = items.map((item: any) => item.zpid).filter(Boolean);
-    const existingPropertiesSnap = await db
-      .collection('zillow_imports')
-      .where('zpid', 'in', zpids.slice(0, 10)) // Firestore 'in' limited to 10 items
-      .get();
+    const existingZillowZpids = new Set<number>();
+    const existingCashHousesZpids = new Set<number>();
 
-    const existingZpids = new Set(existingPropertiesSnap.docs.map(doc => doc.data().zpid));
+    // Batch duplicate checks in groups of 10 (Firestore limit)
+    for (let i = 0; i < zpids.length; i += 10) {
+      const batchZpids = zpids.slice(i, i + 10);
+      if (batchZpids.length > 0) {
+        // Check zillow_imports for duplicates
+        const zillowSnap = await db
+          .collection('zillow_imports')
+          .where('zpid', 'in', batchZpids)
+          .get();
+
+        zillowSnap.docs.forEach(doc => {
+          const zpid = doc.data().zpid;
+          if (zpid) existingZillowZpids.add(zpid);
+        });
+
+        // Check cash_houses for cross-scraper duplicates
+        const cashHousesSnap = await db
+          .collection('cash_houses')
+          .where('zpid', 'in', batchZpids)
+          .get();
+
+        cashHousesSnap.docs.forEach(doc => {
+          const zpid = doc.data().zpid;
+          if (zpid) existingCashHousesZpids.add(zpid);
+        });
+      }
+    }
+
+    console.log(`🔍 [DEDUPLICATION] Checked ${zpids.length} zpids:`);
+    console.log(`   - Found ${existingZillowZpids.size} in zillow_imports`);
+    console.log(`   - Found ${existingCashHousesZpids.size} in cash_houses (cross-scraper check)`);
 
     // Transform and save to Firebase with error handling and batching
     const savedProperties: Array<{ docRef: any, data: any }> = [];
@@ -192,10 +220,10 @@ export async function GET(request: NextRequest) {
           continue;
         }
 
-        // Check for duplicates
-        if (existingZpids.has(propertyData.zpid)) {
+        // Check for duplicates in zillow_imports
+        if (existingZillowZpids.has(propertyData.zpid)) {
           metrics.duplicatesSkipped++;
-          console.log(`⏭️ Skipping duplicate ZPID ${propertyData.zpid}`);
+          console.log(`⏭️ Skipping duplicate ZPID ${propertyData.zpid} (already in zillow_imports)`);
           continue;
         }
 
@@ -207,24 +235,38 @@ export async function GET(request: NextRequest) {
         // Check if property needs work (for owner finance investor deals)
         const needsWork = detectNeedsWork(propertyData.description);
         if (needsWork) {
-          const matchingKeywords = getMatchingKeywords(propertyData.description);
-          console.log(`🏠 OWNER FINANCE OPPORTUNITY: ${propertyData.fullAddress} - Keywords: ${matchingKeywords.join(', ')}`);
+          // Check for cross-scraper duplicate in cash_houses
+          if (existingCashHousesZpids.has(propertyData.zpid)) {
+            console.log(`⏭️ ZPID ${propertyData.zpid} already exists in cash_houses (from cash scraper) - skipping duplicate`);
+          } else {
+            const matchingKeywords = getMatchingKeywords(propertyData.description);
+            console.log(`🏠 OWNER FINANCE OPPORTUNITY: ${propertyData.fullAddress} - Keywords: ${matchingKeywords.join(', ')}`);
 
-          // Save to cash_houses collection with owner_finance tag
-          const cashHouseRef = db.collection('cash_houses').doc();
-          const cashHouseData = {
-            ...propertyData,
-            needsWork: true,
-            needsWorkKeywords: matchingKeywords,
-            source: 'zillow_scraper',
-            dealType: 'owner_finance',
-            discountPercentage: propertyData.estimate && propertyData.price
-              ? parseFloat(((propertyData.estimate - propertyData.price) / propertyData.estimate * 100).toFixed(2))
-              : 0,
-            eightyPercentOfZestimate: propertyData.estimate ? Math.round(propertyData.estimate * 0.8) : 0,
-          };
-          currentBatch.set(cashHouseRef, cashHouseData);
-          metrics.needsWorkOwnerFinance++;
+            // Save to cash_houses collection with owner_finance tag (no cross-scraper duplicate)
+            const cashHouseRef = db.collection('cash_houses').doc();
+
+            // Calculate discount percentage (validate to prevent divide-by-zero)
+            let discountPercentage = 0;
+            let eightyPercentOfZestimate = 0;
+            if (propertyData.estimate && propertyData.estimate > 0) {
+              eightyPercentOfZestimate = Math.round(propertyData.estimate * 0.8);
+              if (propertyData.price && propertyData.price > 0) {
+                discountPercentage = parseFloat(((propertyData.estimate - propertyData.price) / propertyData.estimate * 100).toFixed(2));
+              }
+            }
+
+            const cashHouseData = {
+              ...propertyData,
+              needsWork: true,
+              needsWorkKeywords: matchingKeywords,
+              source: 'zillow_scraper',
+              dealType: 'owner_finance',
+              discountPercentage,
+              eightyPercentOfZestimate,
+            };
+            currentBatch.set(cashHouseRef, cashHouseData);
+            metrics.needsWorkOwnerFinance++;
+          }
         }
 
         // Add to batch (always save to zillow_imports)

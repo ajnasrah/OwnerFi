@@ -157,14 +157,27 @@ export async function GET(request: NextRequest) {
     metrics.apifyItemsReturned = items.length;
     console.log(`📦 [APIFY] Received ${items.length} items`);
 
-    // Check for existing zpids to avoid duplicates
+    // Check for existing zpids to avoid duplicates (batched for Firestore 'in' limit of 10)
     const zpids = items.map((item: any) => item.zpid).filter(Boolean);
-    const existingPropertiesSnap = await db
-      .collection('cash_houses')
-      .where('zpid', 'in', zpids.slice(0, 10)) // Firestore 'in' limited to 10 items
-      .get();
+    const existingZpids = new Set<number>();
 
-    const existingZpids = new Set(existingPropertiesSnap.docs.map(doc => doc.data().zpid));
+    // Batch duplicate checks in groups of 10 (Firestore limit)
+    for (let i = 0; i < zpids.length; i += 10) {
+      const batchZpids = zpids.slice(i, i + 10);
+      if (batchZpids.length > 0) {
+        const existingPropertiesSnap = await db
+          .collection('cash_houses')
+          .where('zpid', 'in', batchZpids)
+          .get();
+
+        existingPropertiesSnap.docs.forEach(doc => {
+          const zpid = doc.data().zpid;
+          if (zpid) existingZpids.add(zpid);
+        });
+      }
+    }
+
+    console.log(`🔍 [DEDUPLICATION] Checked ${zpids.length} zpids, found ${existingZpids.size} existing properties (cross-scraper check)`);
 
     // Filter and save to Firebase - ONLY properties with price < 80% of Zestimate
     const savedProperties: Array<{ docRef: any, data: any }> = [];
@@ -199,16 +212,16 @@ export async function GET(request: NextRequest) {
           continue;
         }
 
-        // Check if we have both price and zestimate
-        if (!propertyData.price || !propertyData.estimate) {
+        // Validate price and estimate (must exist and be > 0)
+        if (!propertyData.price || propertyData.price <= 0 || !propertyData.estimate || propertyData.estimate <= 0) {
           metrics.missingPriceOrZestimate++;
           metrics.errors.push({
             zpid: propertyData.zpid,
             address: propertyData.fullAddress,
-            error: 'Missing price or zestimate',
-            stage: 'filter',
+            error: `Invalid price (${propertyData.price}) or estimate (${propertyData.estimate}) - must be > 0`,
+            stage: 'validation',
           });
-          console.log(`⚠️ Missing price or zestimate for ZPID ${propertyData.zpid} - filtering out`);
+          console.log(`⚠️ Invalid price or estimate for ZPID ${propertyData.zpid} (price: ${propertyData.price}, estimate: ${propertyData.estimate}) - filtering out`);
           continue;
         }
 

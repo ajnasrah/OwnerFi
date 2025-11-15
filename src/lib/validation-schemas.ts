@@ -22,6 +22,7 @@ export type PostType = z.infer<typeof PostTypeSchema>;
 // ============================================================================
 
 export const CompleteWorkflowRequestSchema = z.object({
+  workflowId: z.string().optional(),  // Optional: if provided, resume existing workflow instead of creating new one
   brand: BrandSchema,
   platforms: z.array(PlatformSchema).optional().default(['instagram', 'tiktok', 'youtube']),
   schedule: z.enum(['immediate', '1hour', '2hours', '4hours', 'optimal']).optional().default('immediate'),

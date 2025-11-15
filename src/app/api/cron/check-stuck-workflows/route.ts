@@ -228,6 +228,7 @@ async function checkPendingWorkflows() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          workflowId: workflow.workflowId,  // Pass workflowId to resume existing workflow
           brand: workflow.brand,
           platforms: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'threads'],
           schedule: 'optimal'

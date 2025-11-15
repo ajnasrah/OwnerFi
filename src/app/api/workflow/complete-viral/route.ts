@@ -40,25 +40,71 @@ export async function POST(request: NextRequest) {
     brand = body.brand;
     const platforms = body.platforms;
     const schedule = body.schedule;
+    const resumeWorkflowId = body.workflowId;  // Optional: resume existing workflow
 
     console.log('🚀 Starting COMPLETE VIRAL VIDEO WORKFLOW');
     console.log(`   Brand: ${brand}`);
     console.log(`   Platforms: ${platforms.join(', ')}`);
     console.log(`   Schedule: ${schedule}`);
-
-    // Step 1: Get and lock best article from feed (prevents race conditions)
-    console.log('📰 Step 1: Fetching and locking best article from RSS...');
-    const { getAndLockArticle } = await import('@/lib/feed-store-firestore');
-    const article = await getAndLockArticle(brand as 'carz' | 'ownerfi' | 'vassdistro');
-
-    if (!article) {
-      return NextResponse.json(
-        { success: false, error: 'No articles available' },
-        { status: 404 }
-      );
+    if (resumeWorkflowId) {
+      console.log(`   Resuming workflow: ${resumeWorkflowId}`);
     }
 
-    console.log(`✅ Got and locked article: ${article.title.substring(0, 50)}...`);
+    // Step 1: Get article (either from existing workflow or from RSS feed)
+    let article: any;
+
+    if (resumeWorkflowId) {
+      // RESUME MODE: Get article from existing workflow
+      console.log('📰 Step 1: Fetching article from existing workflow...');
+      const { getWorkflowById, getArticle } = await import('@/lib/feed-store-firestore');
+
+      const workflowData = await getWorkflowById(resumeWorkflowId);
+      if (!workflowData) {
+        return NextResponse.json(
+          { success: false, error: `Workflow not found: ${resumeWorkflowId}` },
+          { status: 404 }
+        );
+      }
+
+      // Override brand from workflow (workflow knows the correct brand)
+      brand = workflowData.brand;
+
+      // Get the article from the workflow's articleId
+      const articleId = (workflowData.workflow as any).articleId;
+      if (!articleId) {
+        return NextResponse.json(
+          { success: false, error: 'Workflow has no articleId' },
+          { status: 400 }
+        );
+      }
+
+      article = await getArticle(articleId, brand);
+      if (!article) {
+        return NextResponse.json(
+          { success: false, error: `Article not found: ${articleId}` },
+          { status: 404 }
+        );
+      }
+
+      // Use the existing workflowId
+      workflowId = resumeWorkflowId;
+
+      console.log(`✅ Resuming workflow with article: ${article.title.substring(0, 50)}...`);
+    } else {
+      // NEW WORKFLOW MODE: Get and lock best article from feed
+      console.log('📰 Step 1: Fetching and locking best article from RSS...');
+      const { getAndLockArticle } = await import('@/lib/feed-store-firestore');
+      article = await getAndLockArticle(brand as 'carz' | 'ownerfi' | 'vassdistro');
+
+      if (!article) {
+        return NextResponse.json(
+          { success: false, error: 'No articles available' },
+          { status: 404 }
+        );
+      }
+
+      console.log(`✅ Got and locked article: ${article.title.substring(0, 50)}...`);
+    }
 
     // Validate article content exists and has sufficient length
     const contentLength = article.content?.trim().length || 0;
@@ -93,8 +139,8 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Add to workflow queue with 'pending' status
-    if (article.id) {
+    // Add to workflow queue with 'pending' status (only if creating new workflow)
+    if (article.id && !resumeWorkflowId) {
       const { addWorkflowToQueue } = await import('@/lib/feed-store-firestore');
 
       const queueItem = await addWorkflowToQueue(
@@ -105,6 +151,7 @@ export async function POST(request: NextRequest) {
       workflowId = queueItem.id;
       console.log(`📋 Added to workflow queue: ${workflowId}`);
     }
+    // If resuming, workflowId was already set in Step 1
 
     // Step 2: Generate viral script with OpenAI
     console.log('🤖 Step 2: Generating viral script...');

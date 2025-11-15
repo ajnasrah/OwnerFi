@@ -44,14 +44,22 @@ export async function GET(request: NextRequest) {
     // Use cron lock to prevent concurrent runs
     return withCronLock('check-stuck-workflows', async () => {
       const results = {
+        scriptGeneration: { checked: 0, deleted: 0, failed: 0 },
         pending: { checked: 0, started: 0, failed: 0 },
         heygen: { checked: 0, advanced: 0, failed: 0 },
         submagic: { checked: 0, completed: 0, failed: 0 },
         posting: { checked: 0, retried: 0, failed: 0 }
       };
 
-      // 1. Check pending workflows (fastest ~10-30s)
+      // 0. Check script_generation workflows (podcast only, ~5-10s)
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('0️⃣  CHECKING SCRIPT GENERATION (PODCAST)');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+      const scriptResults = await checkScriptGenerationWorkflows();
+      results.scriptGeneration = scriptResults;
+
+      // 1. Check pending workflows (fastest ~10-30s)
+      console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       console.log('1️⃣  CHECKING PENDING WORKFLOWS');
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
       const pendingResults = await checkPendingWorkflows();
@@ -82,6 +90,7 @@ export async function GET(request: NextRequest) {
       console.log('✅ [STUCK-WORKFLOWS] Complete');
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       console.log(`📊 Summary:`);
+      console.log(`   Script Generation: ${results.scriptGeneration.deleted}/${results.scriptGeneration.checked} deleted`);
       console.log(`   Pending: ${results.pending.started}/${results.pending.checked} started`);
       console.log(`   HeyGen: ${results.heygen.advanced}/${results.heygen.checked} advanced`);
       console.log(`   SubMagic: ${results.submagic.completed}/${results.submagic.checked} completed`);
@@ -138,6 +147,71 @@ async function withBrandTimeout<T>(
     console.error(`❌ ${brand}: Error during processing:`, error);
     return null;
   }
+}
+
+// ============================================================================
+// 0. CHECK SCRIPT GENERATION WORKFLOWS (PODCAST ONLY)
+// ============================================================================
+
+/**
+ * Checks for podcast workflows stuck in script_generation status
+ * These workflows have a generated script but failed when calling HeyGen API
+ * Solution: Delete them - system will regenerate new episodes automatically
+ */
+async function checkScriptGenerationWorkflows() {
+  const { db } = await import('@/lib/firebase');
+  const { collection, getDocs, query, where, limit: firestoreLimit, deleteDoc, doc } = await import('firebase/firestore');
+
+  if (!db) {
+    console.error('❌ Firebase not initialized');
+    return { checked: 0, deleted: 0, failed: 0 };
+  }
+
+  let checked = 0;
+  let deleted = 0;
+  let failed = 0;
+
+  try {
+    console.log(`📂 Checking podcast_workflow_queue...`);
+
+    const q = query(
+      collection(db, 'podcast_workflow_queue'),
+      where('status', '==', 'script_generation'),
+      firestoreLimit(10)
+    );
+
+    const snapshot = await getDocs(q);
+    console.log(`   Found ${snapshot.size} in script_generation`);
+    checked = snapshot.size;
+
+    for (const workflowDoc of snapshot.docs) {
+      const data = workflowDoc.data();
+      const workflowId = workflowDoc.id;
+      const ageMinutes = Math.round((Date.now() - (data.createdAt || 0)) / 60000);
+
+      // Only delete if stuck > 30 minutes (HeyGen call should complete quickly)
+      if (ageMinutes > 30) {
+        console.log(`   📄 ${workflowId}: Episode #${data.episodeNumber} - stuck ${ageMinutes}min`);
+        console.log(`      Guest: ${data.guestName || 'Unknown'}`);
+        console.log(`      Deleting (will be regenerated)...`);
+
+        try {
+          await deleteDoc(doc(db, 'podcast_workflow_queue', workflowId));
+          console.log(`      ✅ Deleted`);
+          deleted++;
+        } catch (error) {
+          console.error(`      ❌ Error deleting:`, error);
+          failed++;
+        }
+      } else {
+        console.log(`   ⏭️  ${workflowId}: Only ${ageMinutes}min old - skipping`);
+      }
+    }
+  } catch (err) {
+    console.error(`   ❌ Error querying podcast:`, err);
+  }
+
+  return { checked, deleted, failed };
 }
 
 // ============================================================================

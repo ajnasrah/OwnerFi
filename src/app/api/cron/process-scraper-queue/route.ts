@@ -236,7 +236,8 @@ export async function GET(request: NextRequest) {
           ghlSendStatus: null,
           ghlSendError: null,
         });
-        savedProperties.push({ docRef, data: propertyData });
+        // Track needsWork flag for GHL filtering
+        savedProperties.push({ docRef, data: propertyData, needsWork });
         batchOperations++;
 
         // Commit batch if we hit the limit
@@ -269,13 +270,16 @@ export async function GET(request: NextRequest) {
 
     console.log(`✅ [FIREBASE] Total saved: ${metrics.propertiesSaved} properties${metrics.needsWorkOwnerFinance > 0 ? ` (+ ${metrics.needsWorkOwnerFinance} to cash_houses as owner finance)` : ''}`);
 
-    // Send properties with contact info to GHL webhook immediately
+    // Send ONLY properties with "needs work" keywords AND contact info to GHL webhook
     const GHL_WEBHOOK_URL = 'https://services.leadconnectorhq.com/hooks/U2B5lSlWrVBgVxHNq5AH/webhook-trigger/2be65188-9b2e-43f1-a9d8-33d9907b375c';
 
     const propertiesWithContact = savedProperties
-      .filter((prop: any) => prop.data.agentPhoneNumber || prop.data.brokerPhoneNumber);
+      .filter((prop: any) =>
+        prop.needsWork && // ONLY owner finance opportunities (with keywords)
+        (prop.data.agentPhoneNumber || prop.data.brokerPhoneNumber) // AND has contact info
+      );
 
-    console.log(`\n📤 [GHL WEBHOOK] Sending ${propertiesWithContact.length} properties with contact info`);
+    console.log(`\n📤 [GHL WEBHOOK] Sending ${propertiesWithContact.length} owner finance properties with contact info to GHL`);
 
     for (const property of propertiesWithContact) {
       const propertyData = property.data;

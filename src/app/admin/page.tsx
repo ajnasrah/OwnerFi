@@ -195,7 +195,7 @@ export default function AdminDashboard() {
   // Cash Houses state
   const [cashHouses, setCashHouses] = useState<any[]>([]);
   const [loadingCashHouses, setLoadingCashHouses] = useState(false);
-  const [cashHousesFilter, setCashHousesFilter] = useState<'all' | 'discount' | 'needs_work' | 'owner_finance'>('all');
+  const [cashHousesFilter, setCashHousesFilter] = useState<'all' | 'discount' | 'needs_work'>('all');
 
   // Fetch cash houses when tab becomes active
   useEffect(() => {
@@ -3539,8 +3539,7 @@ export default function AdminDashboard() {
                     {[
                       { key: 'all', label: 'All Properties', icon: '🏘️' },
                       { key: 'discount', label: 'Discount Deals (<80% ARV)', icon: '💰' },
-                      { key: 'needs_work', label: 'Needs Work (Cash Scraper)', icon: '🔨' },
-                      { key: 'owner_finance', label: 'Owner Finance (Zillow)', icon: '🏠' },
+                      { key: 'needs_work', label: 'Needs Work / Owner Finance', icon: '🔨' },
                     ].map((filter) => (
                       <button
                         key={filter.key}
@@ -3567,8 +3566,10 @@ export default function AdminDashboard() {
                   const filteredHouses = cashHouses.filter(house => {
                     if (cashHousesFilter === 'all') return true;
                     if (cashHousesFilter === 'discount') return house.dealType === 'discount';
-                    if (cashHousesFilter === 'needs_work') return house.dealType === 'needs_work';
-                    if (cashHousesFilter === 'owner_finance') return house.dealType === 'owner_finance';
+                    if (cashHousesFilter === 'needs_work') {
+                      // Show properties with keywords from BOTH scrapers
+                      return house.dealType === 'needs_work' || house.dealType === 'owner_finance';
+                    }
                     return true;
                   });
 
@@ -3580,9 +3581,8 @@ export default function AdminDashboard() {
                       <h3 className="mt-2 text-sm font-medium text-gray-900">No Properties Found</h3>
                       <p className="mt-1 text-sm text-gray-500">
                         {cashHousesFilter === 'all' && 'Use the Chrome extension to add properties to the cash deals queue'}
-                        {cashHousesFilter === 'discount' && 'No discount deals found in this category'}
-                        {cashHousesFilter === 'needs_work' && 'No "needs work" properties from cash scraper found'}
-                        {cashHousesFilter === 'owner_finance' && 'No owner finance opportunities from Zillow scraper found'}
+                        {cashHousesFilter === 'discount' && 'No discount deals found (properties under 80% ARV)'}
+                        {cashHousesFilter === 'needs_work' && 'No properties with keywords found from either scraper'}
                       </p>
                     </div>
                   ) : (
@@ -3702,8 +3702,7 @@ export default function AdminDashboard() {
                           {cashHousesFilter !== 'all' && (
                             <span className="ml-2 text-indigo-600 font-medium">
                               ({cashHousesFilter === 'discount' && 'Discount Deals'}
-                              {cashHousesFilter === 'needs_work' && 'Needs Work'}
-                              {cashHousesFilter === 'owner_finance' && 'Owner Finance'})
+                              {cashHousesFilter === 'needs_work' && 'Needs Work / Owner Finance'})
                             </span>
                           )}
                         </p>

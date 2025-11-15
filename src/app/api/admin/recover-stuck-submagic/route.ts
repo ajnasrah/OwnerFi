@@ -28,7 +28,8 @@ export async function GET(request: NextRequest) {
 
     const collections: Record<string, string> = {
       benefit: 'benefit_workflow_queue',
-      property: 'property_videos',
+      property: 'propertyShowcaseWorkflows',
+      'property-spanish': 'propertyShowcaseWorkflows',
       carz: 'carz_workflow_queue',
       ownerfi: 'ownerfi_workflow_queue',
       podcast: 'podcast_workflow_queue',

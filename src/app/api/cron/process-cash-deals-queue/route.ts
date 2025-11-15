@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ApifyClient } from 'apify-client';
 import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
-import { sanitizeDescription } from '@/lib/description-sanitizer';
+import { transformApifyProperty, validatePropertyData } from '@/lib/property-transform';
 
 // Initialize Firebase Admin
 if (!getApps().length) {
@@ -19,6 +19,24 @@ const db = getFirestore();
 
 export async function GET(request: NextRequest) {
   console.log('💰 [CASH DEALS CRON] Starting queue processor');
+
+  const startTime = Date.now();
+
+  // Tracking metrics
+  const metrics = {
+    queueItemsProcessed: 0,
+    apifyItemsReturned: 0,
+    transformSucceeded: 0,
+    transformFailed: 0,
+    validationFailed: 0,
+    duplicatesSkipped: 0,
+    missingPriceOrZestimate: 0,
+    filteredOut80Percent: 0,
+    cashDealsSaved: 0,
+    queueItemsCompleted: 0,
+    queueItemsFailed: 0,
+    errors: [] as Array<{ zpid?: number; address?: string; error: string; stage: string }>,
+  };
 
   try {
     // Reset stuck processing items (older than 10 minutes)
@@ -65,7 +83,8 @@ export async function GET(request: NextRequest) {
     }
 
     const urls = pendingItems.docs.map(doc => doc.data().url);
-    const docIds = pendingItems.docs.map(doc => doc.id);
+    const queueDocRefs = pendingItems.docs.map(doc => doc.ref);
+    metrics.queueItemsProcessed = urls.length;
 
     console.log(`📋 [CASH DEALS] Processing ${urls.length} URLs from queue`);
 
@@ -97,216 +116,251 @@ export async function GET(request: NextRequest) {
 
     console.log(`✓ [APIFY] Run completed: ${finishedRun.id} (status: ${finishedRun.status})`);
 
+    // Validate Apify run status
+    if (finishedRun.status !== 'SUCCEEDED') {
+      const errorMsg = `Apify run failed with status: ${finishedRun.status}`;
+      console.error(`❌ [APIFY] ${errorMsg}`);
+      metrics.errors.push({ error: errorMsg, stage: 'apify' });
+
+      // Mark all queue items as failed so they can be retried
+      const failBatch = db.batch();
+      queueDocRefs.forEach(docRef => {
+        failBatch.update(docRef, {
+          status: 'failed',
+          failedAt: new Date(),
+          failureReason: errorMsg,
+          retryCount: getFirestore.FieldValue.increment(1),
+        });
+      });
+      await failBatch.commit();
+      metrics.queueItemsFailed = urls.length;
+
+      throw new Error(errorMsg);
+    }
+
+    // Validate defaultDatasetId exists
+    if (!finishedRun.defaultDatasetId) {
+      const errorMsg = 'Apify run succeeded but defaultDatasetId is missing';
+      console.error(`❌ [APIFY] ${errorMsg}`);
+      metrics.errors.push({ error: errorMsg, stage: 'apify' });
+      throw new Error(errorMsg);
+    }
+
     // Get results (no fields filter to get ALL data)
     const { items } = await client.dataset(finishedRun.defaultDatasetId).listItems({
       clean: false,
       limit: 1000,
     });
 
+    metrics.apifyItemsReturned = items.length;
     console.log(`📦 [APIFY] Received ${items.length} items`);
 
+    // Check for existing zpids to avoid duplicates
+    const zpids = items.map((item: any) => item.zpid).filter(Boolean);
+    const existingPropertiesSnap = await db
+      .collection('cash_houses')
+      .where('zpid', 'in', zpids.slice(0, 10)) // Firestore 'in' limited to 10 items
+      .get();
+
+    const existingZpids = new Set(existingPropertiesSnap.docs.map(doc => doc.data().zpid));
+
     // Filter and save to Firebase - ONLY properties with price < 80% of Zestimate
-    const firestoreBatch = db.batch();
-    let savedCount = 0;
-    let filteredOutCount = 0;
-    let missingZestimateCount = 0;
     const savedProperties: Array<{ docRef: any, data: any }> = [];
+    let currentBatch = db.batch();
+    let batchOperations = 0;
+    const BATCH_LIMIT = 500;
 
-    items.forEach((item: any) => {
-      const propertyData = transformProperty(item);
+    for (const item of items) {
+      try {
+        // Transform property
+        const propertyData = transformApifyProperty(item, 'apify-zillow-cash-deals');
+        metrics.transformSucceeded++;
 
-      // Check if we have both price and zestimate
-      if (!propertyData.price || !propertyData.estimate) {
-        console.log(`⚠️ Missing price or zestimate for ${propertyData.zpid} - filtering out`);
-        missingZestimateCount++;
-        return;
+        // Validate property data
+        const validation = validatePropertyData(propertyData);
+        if (!validation.valid) {
+          metrics.validationFailed++;
+          metrics.errors.push({
+            zpid: propertyData.zpid,
+            address: propertyData.fullAddress,
+            error: validation.reason || 'Validation failed',
+            stage: 'validation',
+          });
+          console.log(`⚠️ Validation failed for ZPID ${propertyData.zpid}: ${validation.reason}`);
+          continue;
+        }
+
+        // Check for duplicates
+        if (existingZpids.has(propertyData.zpid)) {
+          metrics.duplicatesSkipped++;
+          console.log(`⏭️ Skipping duplicate ZPID ${propertyData.zpid}`);
+          continue;
+        }
+
+        // Check if we have both price and zestimate
+        if (!propertyData.price || !propertyData.estimate) {
+          metrics.missingPriceOrZestimate++;
+          metrics.errors.push({
+            zpid: propertyData.zpid,
+            address: propertyData.fullAddress,
+            error: 'Missing price or zestimate',
+            stage: 'filter',
+          });
+          console.log(`⚠️ Missing price or zestimate for ZPID ${propertyData.zpid} - filtering out`);
+          continue;
+        }
+
+        // Calculate 80% of Zestimate
+        const eightyPercentOfZestimate = propertyData.estimate * 0.8;
+
+        // Only save if price is less than 80% of Zestimate
+        if (propertyData.price < eightyPercentOfZestimate) {
+          const discountPercentage = ((propertyData.estimate - propertyData.price) / propertyData.estimate * 100).toFixed(2);
+          console.log(`✅ CASH DEAL: ${propertyData.fullAddress} - Price: $${propertyData.price.toLocaleString()}, Zestimate: $${propertyData.estimate.toLocaleString()} (${discountPercentage}% discount)`);
+
+          // Add discount percentage to the data
+          propertyData.discountPercentage = parseFloat(discountPercentage);
+          propertyData.eightyPercentOfZestimate = Math.round(eightyPercentOfZestimate);
+
+          // Add to batch
+          const docRef = db.collection('cash_houses').doc();
+          currentBatch.set(docRef, propertyData);
+          savedProperties.push({ docRef, data: propertyData });
+          batchOperations++;
+
+          // Commit batch if we hit the limit
+          if (batchOperations >= BATCH_LIMIT) {
+            await currentBatch.commit();
+            console.log(`✅ [FIREBASE] Committed batch of ${batchOperations} cash deals`);
+            metrics.cashDealsSaved += batchOperations;
+            currentBatch = db.batch();
+            batchOperations = 0;
+          }
+        } else {
+          metrics.filteredOut80Percent++;
+          const discountPercentage = ((propertyData.estimate - propertyData.price) / propertyData.estimate * 100).toFixed(2);
+          console.log(`❌ FILTERED OUT: ${propertyData.fullAddress} - Price: $${propertyData.price.toLocaleString()}, Zestimate: $${propertyData.estimate.toLocaleString()} (only ${discountPercentage}% discount)`);
+        }
+
+      } catch (error: any) {
+        metrics.transformFailed++;
+        metrics.errors.push({
+          zpid: item.zpid,
+          error: error.message,
+          stage: 'transform',
+        });
+        console.error(`❌ Failed to transform ZPID ${item.zpid}: ${error.message}`);
+        // Continue processing other items
       }
+    }
 
-      // Calculate 80% of Zestimate
-      const eightyPercentOfZestimate = propertyData.estimate * 0.8;
+    // Commit remaining batch
+    if (batchOperations > 0) {
+      await currentBatch.commit();
+      console.log(`✅ [FIREBASE] Committed final batch of ${batchOperations} cash deals`);
+      metrics.cashDealsSaved += batchOperations;
+    }
 
-      // Only save if price is less than 80% of Zestimate
-      if (propertyData.price < eightyPercentOfZestimate) {
-        const discountPercentage = ((propertyData.estimate - propertyData.price) / propertyData.estimate * 100).toFixed(2);
-        console.log(`✅ CASH DEAL: ${propertyData.fullAddress} - Price: $${propertyData.price.toLocaleString()}, Zestimate: $${propertyData.estimate.toLocaleString()} (${discountPercentage}% discount)`);
+    console.log(`✅ [FIREBASE] Total saved: ${metrics.cashDealsSaved} cash deals`);
 
-        // Add discount percentage to the data
-        propertyData.discountPercentage = parseFloat(discountPercentage);
-        propertyData.eightyPercentOfZestimate = Math.round(eightyPercentOfZestimate);
-
-        const docRef = db.collection('cash_houses').doc();
-        firestoreBatch.set(docRef, propertyData);
-        savedProperties.push({ docRef, data: propertyData });
-        savedCount++;
-      } else {
-        const discountPercentage = ((propertyData.estimate - propertyData.price) / propertyData.estimate * 100).toFixed(2);
-        console.log(`❌ FILTERED OUT: ${propertyData.fullAddress} - Price: $${propertyData.price.toLocaleString()}, Zestimate: $${propertyData.estimate.toLocaleString()} (only ${discountPercentage}% discount)`);
-        filteredOutCount++;
-      }
-    });
-
-    await firestoreBatch.commit();
-
-    console.log(`\n📊 [CASH DEALS SUMMARY]`);
-    console.log(`✅ Saved: ${savedCount} properties (price < 80% of Zestimate)`);
-    console.log(`❌ Filtered out: ${filteredOutCount} properties (price >= 80% of Zestimate)`);
-    console.log(`⚠️ Missing data: ${missingZestimateCount} properties (no price or zestimate)`);
-
-    // Mark queue items as completed
-    const completeBatch = db.batch();
-    pendingItems.docs.forEach(doc => {
-      completeBatch.update(doc.ref, {
-        status: 'completed',
-        completedAt: new Date(),
+    // Mark queue items as completed (only if we saved at least 1 property OR if it was a valid run)
+    // For cash deals, it's OK if nothing meets the 80% filter, so we complete if transform succeeded
+    if (metrics.transformSucceeded > 0) {
+      const completeBatch = db.batch();
+      queueDocRefs.forEach(docRef => {
+        completeBatch.update(docRef, {
+          status: 'completed',
+          completedAt: new Date(),
+        });
       });
-    });
-    await completeBatch.commit();
+      await completeBatch.commit();
+      metrics.queueItemsCompleted = urls.length;
+      console.log(`✅ [CASH DEALS] Marked ${urls.length} queue items as completed`);
+    } else {
+      // Mark as failed if no properties could be transformed
+      const failBatch = db.batch();
+      queueDocRefs.forEach(docRef => {
+        failBatch.update(docRef, {
+          status: 'failed',
+          failedAt: new Date(),
+          failureReason: 'No properties could be transformed',
+          retryCount: getFirestore.FieldValue.increment(1),
+        });
+      });
+      await failBatch.commit();
+      metrics.queueItemsFailed = urls.length;
+      console.log(`⚠️ [CASH DEALS] Marked ${urls.length} queue items as failed (no properties transformed)`);
+    }
 
-    console.log(`✅ [CASH DEALS] Completed processing ${urls.length} URLs`);
+    const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+
+    // Final metrics summary
+    console.log(`\n📊 ============ CASH DEALS METRICS ============`);
+    console.log(`⏱️  Duration: ${duration}s`);
+    console.log(`📋 Queue Items Processed: ${metrics.queueItemsProcessed}`);
+    console.log(`📦 Apify Items Returned: ${metrics.apifyItemsReturned}`);
+    console.log(`✅ Transform Succeeded: ${metrics.transformSucceeded}`);
+    console.log(`❌ Transform Failed: ${metrics.transformFailed}`);
+    console.log(`⚠️  Validation Failed: ${metrics.validationFailed}`);
+    console.log(`⏭️  Duplicates Skipped: ${metrics.duplicatesSkipped}`);
+    console.log(`⚠️  Missing Price/Zestimate: ${metrics.missingPriceOrZestimate}`);
+    console.log(`❌ Filtered Out (< 80%): ${metrics.filteredOut80Percent}`);
+    console.log(`💰 Cash Deals Saved: ${metrics.cashDealsSaved}`);
+    console.log(`✅ Queue Items Completed: ${metrics.queueItemsCompleted}`);
+    console.log(`❌ Queue Items Failed: ${metrics.queueItemsFailed}`);
+    console.log(`🚨 Total Errors: ${metrics.errors.length}`);
+
+    // Calculate success rate
+    const totalProcessed = metrics.transformSucceeded + metrics.transformFailed;
+    const successRate = totalProcessed > 0 ? ((metrics.transformSucceeded / totalProcessed) * 100).toFixed(1) : '0';
+    const cashDealRate = metrics.transformSucceeded > 0 ? ((metrics.cashDealsSaved / metrics.transformSucceeded) * 100).toFixed(1) : '0';
+    console.log(`\n📈 Transform Success Rate: ${successRate}%`);
+    console.log(`📈 Cash Deal Conversion Rate: ${cashDealRate}% (of successfully transformed)`);
+
+    if (metrics.errors.length > 0) {
+      console.log(`\n📋 Error Breakdown by Stage:`);
+      const errorsByStage = metrics.errors.reduce((acc: any, err) => {
+        acc[err.stage] = (acc[err.stage] || 0) + 1;
+        return acc;
+      }, {});
+      Object.entries(errorsByStage).forEach(([stage, count]) => {
+        console.log(`   ${stage}: ${count}`);
+      });
+    }
+    console.log(`========================================\n`);
 
     return NextResponse.json({
       success: true,
-      processed: urls.length,
-      saved: savedCount,
-      filteredOut: filteredOutCount,
-      missingData: missingZestimateCount,
-      properties: savedProperties.map(p => ({
-        zpid: p.data.zpid,
-        address: p.data.fullAddress,
-        price: p.data.price,
-        zestimate: p.data.estimate,
-        discountPercentage: p.data.discountPercentage,
-      })),
+      duration: `${duration}s`,
+      metrics,
+      conversionRates: {
+        transformSuccessRate: `${successRate}%`,
+        cashDealConversionRate: `${cashDealRate}%`,
+      },
     });
 
   } catch (error: any) {
-    console.error('❌ [CASH DEALS CRON] Error:', error);
+    console.error('❌ [CASH DEALS CRON] Critical Error:', error);
+
+    // Log final metrics even on error
+    const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+    console.log(`\n📊 ============ CASH DEALS METRICS (ERROR) ============`);
+    console.log(`⏱️  Duration: ${duration}s`);
+    console.log(`📋 Queue Items Processed: ${metrics.queueItemsProcessed}`);
+    console.log(`📦 Apify Items Returned: ${metrics.apifyItemsReturned}`);
+    console.log(`✅ Transform Succeeded: ${metrics.transformSucceeded}`);
+    console.log(`❌ Transform Failed: ${metrics.transformFailed}`);
+    console.log(`⚠️  Validation Failed: ${metrics.validationFailed}`);
+    console.log(`💰 Cash Deals Saved: ${metrics.cashDealsSaved}`);
+    console.log(`🚨 Total Errors: ${metrics.errors.length}`);
+    console.log(`========================================\n`);
+
     return NextResponse.json(
-      { error: error.message },
+      {
+        error: error.message,
+        metrics,
+      },
       { status: 500 }
     );
   }
-}
-
-function transformProperty(apifyData: any) {
-  const timestamp = new Date();
-  const addressObj = apifyData.address || {};
-  const streetAddress = addressObj.streetAddress || apifyData.streetAddress || '';
-  const city = addressObj.city || apifyData.city || '';
-  const state = addressObj.state || apifyData.state || '';
-  const zipCode = addressObj.zipcode || apifyData.zipcode || addressObj.zip || '';
-  const fullAddress = `${streetAddress}, ${city}, ${state} ${zipCode}`.trim();
-
-  // Construct full URL
-  let fullUrl = apifyData.url || '';
-  if (!fullUrl || !fullUrl.startsWith('http')) {
-    if (apifyData.hdpUrl) {
-      fullUrl = `https://www.zillow.com${apifyData.hdpUrl}`;
-    } else if (apifyData.zpid) {
-      fullUrl = `https://www.zillow.com/homedetails/${apifyData.zpid}_zpid/`;
-    }
-  }
-
-  // Extract agent/broker info
-  let agentPhone = apifyData.attributionInfo?.agentPhoneNumber
-    || apifyData.agentPhoneNumber
-    || apifyData.agentPhone
-    || '';
-
-  if (!agentPhone && apifyData.contactFormRenderData?.data?.agent_module?.phone) {
-    const phoneObj = apifyData.contactFormRenderData.data.agent_module.phone;
-    if (phoneObj.areacode && phoneObj.prefix && phoneObj.number) {
-      agentPhone = `${phoneObj.areacode}-${phoneObj.prefix}-${phoneObj.number}`;
-    }
-  }
-
-  const brokerPhone = apifyData.attributionInfo?.brokerPhoneNumber
-    || apifyData.brokerPhoneNumber
-    || apifyData.brokerPhone
-    || '';
-
-  const finalAgentPhone = agentPhone || brokerPhone;
-
-  const agentName = apifyData.attributionInfo?.agentName
-    || apifyData.agentName
-    || apifyData.listingAgent
-    || (Array.isArray(apifyData.attributionInfo?.listingAgents) && apifyData.attributionInfo.listingAgents[0]?.memberFullName)
-    || apifyData.contactFormRenderData?.data?.agent_module?.display_name
-    || '';
-
-  const brokerName = apifyData.attributionInfo?.brokerName
-    || apifyData.brokerName
-    || apifyData.brokerageName
-    || (Array.isArray(apifyData.attributionInfo?.listingOffices) && apifyData.attributionInfo.listingOffices[0]?.officeName)
-    || '';
-
-  // Extract images
-  const propertyImages = Array.isArray(apifyData.responsivePhotos)
-    ? apifyData.responsivePhotos.map((p: any) => p.url).filter(Boolean)
-    : Array.isArray(apifyData.photos)
-    ? apifyData.photos.map((p: any) => typeof p === 'string' ? p : p.url || p.href).filter(Boolean)
-    : Array.isArray(apifyData.images)
-    ? apifyData.images
-    : [];
-
-  const firstPropertyImage = apifyData.desktopWebHdpImageLink
-    || apifyData.hiResImageLink
-    || apifyData.mediumImageLink
-    || (propertyImages.length > 0 ? propertyImages[0] : '')
-    || '';
-
-  return {
-    url: fullUrl,
-    hdpUrl: apifyData.hdpUrl || '',
-    virtualTourUrl: apifyData.virtualTourUrl || apifyData.thirdPartyVirtualTour?.externalUrl || '',
-    fullAddress,
-    streetAddress,
-    city,
-    state,
-    zipCode,
-    county: apifyData.county || '',
-    subdivision: addressObj.subdivision || '',
-    neighborhood: addressObj.neighborhood || '',
-    zpid: apifyData.zpid || 0,
-    parcelId: apifyData.parcelId || apifyData.resoFacts?.parcelNumber || '',
-    mlsId: apifyData.attributionInfo?.mlsId || apifyData.mlsid || '',
-    bedrooms: apifyData.bedrooms || apifyData.beds || 0,
-    bathrooms: apifyData.bathrooms || apifyData.baths || 0,
-    squareFoot: apifyData.livingArea || apifyData.livingAreaValue || apifyData.squareFoot || 0,
-    buildingType: apifyData.propertyTypeDimension || apifyData.buildingType || apifyData.homeType || '',
-    homeType: apifyData.homeType || '',
-    homeStatus: apifyData.homeStatus || '',
-    yearBuilt: apifyData.yearBuilt || 0,
-    lotSquareFoot: apifyData.lotSize || apifyData.lotAreaValue || apifyData.resoFacts?.lotSize || 0,
-    latitude: apifyData.latitude || 0,
-    longitude: apifyData.longitude || 0,
-    price: apifyData.price || apifyData.listPrice || 0,
-    estimate: apifyData.zestimate || apifyData.homeValue || apifyData.estimate || 0,
-    rentEstimate: apifyData.rentZestimate || 0,
-    hoa: apifyData.monthlyHoaFee || apifyData.hoa || 0,
-    annualTaxAmount: (Array.isArray(apifyData.taxHistory) && apifyData.taxHistory.find((t: any) => t.taxPaid)?.taxPaid) || 0,
-    recentPropertyTaxes: (Array.isArray(apifyData.taxHistory) && apifyData.taxHistory[0]?.value) || 0,
-    propertyTaxRate: apifyData.propertyTaxRate || 0,
-    annualHomeownersInsurance: apifyData.annualHomeownersInsurance || 0,
-    daysOnZillow: apifyData.daysOnZillow || 0,
-    datePostedString: apifyData.datePostedString || '',
-    listingDataSource: apifyData.listingDataSource || '',
-    description: sanitizeDescription(apifyData.description),
-
-    agentName,
-    agentPhoneNumber: finalAgentPhone,
-    agentEmail: apifyData.attributionInfo?.agentEmail || apifyData.agentEmail || '',
-    agentLicenseNumber: apifyData.attributionInfo?.agentLicenseNumber
-      || (Array.isArray(apifyData.attributionInfo?.listingAgents) && apifyData.attributionInfo.listingAgents[0]?.memberStateLicense)
-      || '',
-    brokerName,
-    brokerPhoneNumber: brokerPhone,
-
-    propertyImages,
-    firstPropertyImage,
-    photoCount: apifyData.photoCount || propertyImages.length || 0,
-    source: 'apify-zillow-cash-deals',
-    importedAt: timestamp,
-    scrapedAt: timestamp,
-  };
 }

@@ -93,16 +93,18 @@ export async function addPropertyToShowcaseQueue(
 ): Promise<string> {
   if (!db) throw new Error('Firebase not initialized');
 
-  // Check if property already in queue (any queueStatus)
+  // Check if property already in queue with same variant and language
   const existingQuery = query(
     collection(db, COLLECTION),
     where('propertyId', '==', propertyId),
+    where('variant', '==', variant),
+    where('language', '==', language),
     where('queueStatus', 'in', ['queued', 'processing'])
   );
   const existing = await getDocs(existingQuery);
 
   if (!existing.empty) {
-    throw new Error(`Property ${propertyId} already in queue`);
+    throw new Error(`Property ${propertyId} already in queue for ${language} ${variant}`);
   }
 
   // Get current max position
@@ -147,12 +149,13 @@ export async function addPropertyToShowcaseQueue(
 /**
  * Get next property from queue
  */
-export async function getNextPropertyFromQueue(): Promise<PropertyShowcaseWorkflow | null> {
+export async function getNextPropertyFromQueue(language: 'en' | 'es' = 'en'): Promise<PropertyShowcaseWorkflow | null> {
   if (!db) return null;
 
   const q = query(
     collection(db, COLLECTION),
     where('queueStatus', '==', 'queued'),
+    where('language', '==', language),
     orderBy('queuePosition', 'asc'),
     firestoreLimit(1)
   );
@@ -439,20 +442,33 @@ export async function syncPropertyQueue(): Promise<{ added: number; removed: num
     }
   });
 
-  // Add new properties
+  // Add new properties (both English and Spanish)
   let added = 0;
   for (const prop of newProperties) {
+    const propertyData = {
+      address: prop.data.address,
+      city: prop.data.city,
+      state: prop.data.state,
+      downPayment: prop.data.downPaymentAmount,
+      monthlyPayment: prop.data.monthlyPayment
+    };
+
+    // Add English workflow
     try {
-      await addPropertyToShowcaseQueue(prop.id, {
-        address: prop.data.address,
-        city: prop.data.city,
-        state: prop.data.state,
-        downPayment: prop.data.downPaymentAmount,
-        monthlyPayment: prop.data.monthlyPayment
-      });
+      await addPropertyToShowcaseQueue(prop.id, propertyData, '15sec', 'en');
       added++;
+      console.log(`   ✅ Added English workflow for ${prop.data.address}`);
     } catch (err) {
-      console.warn(`⚠️  Could not add property ${prop.id}:`, err);
+      console.warn(`   ⚠️  Could not add English workflow for ${prop.id}:`, err);
+    }
+
+    // Add Spanish workflow
+    try {
+      await addPropertyToShowcaseQueue(prop.id, propertyData, '15sec', 'es');
+      added++;
+      console.log(`   ✅ Added Spanish workflow for ${prop.data.address}`);
+    } catch (err) {
+      console.warn(`   ⚠️  Could not add Spanish workflow for ${prop.id}:`, err);
     }
   }
 

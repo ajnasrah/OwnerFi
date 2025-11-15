@@ -19,20 +19,19 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const propertyVideosRef = (adminDb as any).collection('property_videos');
+    // Use NEW propertyShowcaseWorkflows collection
+    const propertyWorkflowsRef = (adminDb as any).collection('propertyShowcaseWorkflows');
 
-    // Get recent workflows and filter for Spanish language
-    const query = propertyVideosRef
+    // Get recent Spanish workflows
+    const query = propertyWorkflowsRef
+      .where('language', '==', 'es')
       .orderBy('createdAt', 'desc')
       .limit(showHistory ? 50 : 100);
 
     const snapshot = await query.get();
 
-    // Filter for Spanish language workflows
-    let docs = snapshot.docs.filter(doc => {
-      const data = doc.data();
-      return data.language === 'es'; // Only Spanish videos
-    });
+    // Get all Spanish workflows
+    let docs = snapshot.docs;
 
     // Further filter if showing active only
     if (!showHistory) {

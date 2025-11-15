@@ -13,7 +13,8 @@ import { getAdminDb } from '@/lib/firebase-admin';
 
 function getWorkflowCollection(brand: string) {
   if (brand === 'podcast') return 'podcast_workflows';
-  if (brand === 'property' || brand === 'benefit') return 'property_videos';
+  if (brand === 'property' || brand === 'property-spanish') return 'propertyShowcaseWorkflows';
+  if (brand === 'benefit') return 'benefit_workflow_queue';
   return 'workflows';
 }
 

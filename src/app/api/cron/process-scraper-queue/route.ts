@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ApifyClient } from 'apify-client';
 import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
-import { sanitizeDescription } from '@/lib/description-sanitizer';
+import { transformApifyProperty, validatePropertyData } from '@/lib/property-transform';
 
 // Initialize Firebase Admin
 if (!getApps().length) {
@@ -19,6 +19,24 @@ const db = getFirestore();
 
 export async function GET(request: NextRequest) {
   console.log('🔄 [QUEUE CRON] Starting queue processor');
+
+  const startTime = Date.now();
+
+  // Tracking metrics
+  const metrics = {
+    queueItemsProcessed: 0,
+    apifyItemsReturned: 0,
+    transformSucceeded: 0,
+    transformFailed: 0,
+    validationFailed: 0,
+    duplicatesSkipped: 0,
+    propertiesSaved: 0,
+    ghlWebhookSuccess: 0,
+    ghlWebhookFailed: 0,
+    queueItemsCompleted: 0,
+    queueItemsFailed: 0,
+    errors: [] as Array<{ zpid?: number; address?: string; error: string; stage: string }>,
+  };
 
   try {
     // Reset stuck processing items (older than 10 minutes)
@@ -65,7 +83,8 @@ export async function GET(request: NextRequest) {
     }
 
     const urls = pendingItems.docs.map(doc => doc.data().url);
-    const docIds = pendingItems.docs.map(doc => doc.id);
+    const queueDocRefs = pendingItems.docs.map(doc => doc.ref);
+    metrics.queueItemsProcessed = urls.length;
 
     console.log(`📋 [QUEUE CRON] Processing ${urls.length} URLs from queue`);
 
@@ -97,36 +116,133 @@ export async function GET(request: NextRequest) {
 
     console.log(`✓ [APIFY] Run completed: ${finishedRun.id} (status: ${finishedRun.status})`);
 
+    // Validate Apify run status
+    if (finishedRun.status !== 'SUCCEEDED') {
+      const errorMsg = `Apify run failed with status: ${finishedRun.status}`;
+      console.error(`❌ [APIFY] ${errorMsg}`);
+      metrics.errors.push({ error: errorMsg, stage: 'apify' });
+
+      // Mark all queue items as failed so they can be retried
+      const failBatch = db.batch();
+      queueDocRefs.forEach(docRef => {
+        failBatch.update(docRef, {
+          status: 'failed',
+          failedAt: new Date(),
+          failureReason: errorMsg,
+          retryCount: getFirestore.FieldValue.increment(1),
+        });
+      });
+      await failBatch.commit();
+      metrics.queueItemsFailed = urls.length;
+
+      throw new Error(errorMsg);
+    }
+
+    // Validate defaultDatasetId exists
+    if (!finishedRun.defaultDatasetId) {
+      const errorMsg = 'Apify run succeeded but defaultDatasetId is missing';
+      console.error(`❌ [APIFY] ${errorMsg}`);
+      metrics.errors.push({ error: errorMsg, stage: 'apify' });
+      throw new Error(errorMsg);
+    }
+
     // Get results (no fields filter to get ALL data)
     const { items } = await client.dataset(finishedRun.defaultDatasetId).listItems({
       clean: false,
       limit: 1000,
     });
 
+    metrics.apifyItemsReturned = items.length;
     console.log(`📦 [APIFY] Received ${items.length} items`);
 
-    // Transform and save to Firebase
-    const firestoreBatch = db.batch();
-    let savedCount = 0;
+    // Check for existing zpids to avoid duplicates
+    const zpids = items.map((item: any) => item.zpid).filter(Boolean);
+    const existingPropertiesSnap = await db
+      .collection('zillow_imports')
+      .where('zpid', 'in', zpids.slice(0, 10)) // Firestore 'in' limited to 10 items
+      .get();
+
+    const existingZpids = new Set(existingPropertiesSnap.docs.map(doc => doc.data().zpid));
+
+    // Transform and save to Firebase with error handling and batching
     const savedProperties: Array<{ docRef: any, data: any }> = [];
+    let currentBatch = db.batch();
+    let batchOperations = 0;
+    const BATCH_LIMIT = 500;
 
-    items.forEach((item: any) => {
-      const propertyData = transformProperty(item);
+    for (const item of items) {
+      try {
+        // Transform property
+        const propertyData = transformApifyProperty(item, 'apify-zillow');
+        metrics.transformSucceeded++;
 
-      // Log contact info status for debugging
-      if (!propertyData.agentPhoneNumber && !propertyData.brokerPhoneNumber) {
-        console.log(`⚠️ No contact info for ZPID ${propertyData.zpid} - saving anyway`);
+        // Validate property data
+        const validation = validatePropertyData(propertyData);
+        if (!validation.valid) {
+          metrics.validationFailed++;
+          metrics.errors.push({
+            zpid: propertyData.zpid,
+            address: propertyData.fullAddress,
+            error: validation.reason || 'Validation failed',
+            stage: 'validation',
+          });
+          console.log(`⚠️ Validation failed for ZPID ${propertyData.zpid}: ${validation.reason}`);
+          continue;
+        }
+
+        // Check for duplicates
+        if (existingZpids.has(propertyData.zpid)) {
+          metrics.duplicatesSkipped++;
+          console.log(`⏭️ Skipping duplicate ZPID ${propertyData.zpid}`);
+          continue;
+        }
+
+        // Log contact info status
+        if (!propertyData.agentPhoneNumber && !propertyData.brokerPhoneNumber) {
+          console.log(`⚠️ No contact info for ZPID ${propertyData.zpid} - saving anyway`);
+        }
+
+        // Add to batch
+        const docRef = db.collection('zillow_imports').doc();
+        currentBatch.set(docRef, {
+          ...propertyData,
+          sentToGHL: false,
+          ghlSentAt: null,
+          ghlSendStatus: null,
+          ghlSendError: null,
+        });
+        savedProperties.push({ docRef, data: propertyData });
+        batchOperations++;
+
+        // Commit batch if we hit the limit
+        if (batchOperations >= BATCH_LIMIT) {
+          await currentBatch.commit();
+          console.log(`✅ [FIREBASE] Committed batch of ${batchOperations} properties`);
+          metrics.propertiesSaved += batchOperations;
+          currentBatch = db.batch();
+          batchOperations = 0;
+        }
+
+      } catch (error: any) {
+        metrics.transformFailed++;
+        metrics.errors.push({
+          zpid: item.zpid,
+          error: error.message,
+          stage: 'transform',
+        });
+        console.error(`❌ Failed to transform ZPID ${item.zpid}: ${error.message}`);
+        // Continue processing other items
       }
+    }
 
-      const docRef = db.collection('zillow_imports').doc();
-      firestoreBatch.set(docRef, propertyData);
-      savedProperties.push({ docRef, data: propertyData });
-      savedCount++;
-    });
+    // Commit remaining batch
+    if (batchOperations > 0) {
+      await currentBatch.commit();
+      console.log(`✅ [FIREBASE] Committed final batch of ${batchOperations} properties`);
+      metrics.propertiesSaved += batchOperations;
+    }
 
-    await firestoreBatch.commit();
-
-    console.log(`✅ [FIREBASE] Saved ${savedCount} properties`);
+    console.log(`✅ [FIREBASE] Total saved: ${metrics.propertiesSaved} properties`);
 
     // Send properties with contact info to GHL webhook immediately
     const GHL_WEBHOOK_URL = 'https://services.leadconnectorhq.com/hooks/U2B5lSlWrVBgVxHNq5AH/webhook-trigger/2be65188-9b2e-43f1-a9d8-33d9907b375c';
@@ -135,10 +251,6 @@ export async function GET(request: NextRequest) {
       .filter((prop: any) => prop.data.agentPhoneNumber || prop.data.brokerPhoneNumber);
 
     console.log(`\n📤 [GHL WEBHOOK] Sending ${propertiesWithContact.length} properties with contact info`);
-
-    let webhookSuccess = 0;
-    let webhookFailed = 0;
-    const webhookResults: any[] = [];
 
     for (const property of propertiesWithContact) {
       const propertyData = property.data;
@@ -183,12 +295,7 @@ export async function GET(request: NextRequest) {
           throw new Error(`${response.status}: ${await response.text()}`);
         }
 
-        webhookSuccess++;
-        webhookResults.push({
-          zpid: propertyData.zpid,
-          address: propertyData.fullAddress,
-          status: 'success',
-        });
+        metrics.ghlWebhookSuccess++;
 
         // Update Firebase with GHL send status
         await property.docRef.update({
@@ -203,12 +310,12 @@ export async function GET(request: NextRequest) {
         await new Promise(resolve => setTimeout(resolve, 100));
 
       } catch (error: any) {
-        webhookFailed++;
-        webhookResults.push({
+        metrics.ghlWebhookFailed++;
+        metrics.errors.push({
           zpid: propertyData.zpid,
           address: propertyData.fullAddress,
-          status: 'failed',
           error: error.message,
+          stage: 'ghl_webhook',
         });
 
         // Update Firebase with failure status
@@ -222,170 +329,94 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    console.log(`\n📊 [GHL WEBHOOK] Success: ${webhookSuccess}, Failed: ${webhookFailed}`);
+    console.log(`\n📊 [GHL WEBHOOK] Success: ${metrics.ghlWebhookSuccess}, Failed: ${metrics.ghlWebhookFailed}`);
 
-    // Mark queue items as completed
-    const completeBatch = db.batch();
-    pendingItems.docs.forEach(doc => {
-      completeBatch.update(doc.ref, {
-        status: 'completed',
-        completedAt: new Date(),
+    // Mark queue items as completed (only if we saved at least 1 property)
+    if (metrics.propertiesSaved > 0) {
+      const completeBatch = db.batch();
+      queueDocRefs.forEach(docRef => {
+        completeBatch.update(docRef, {
+          status: 'completed',
+          completedAt: new Date(),
+        });
       });
-    });
-    await completeBatch.commit();
+      await completeBatch.commit();
+      metrics.queueItemsCompleted = urls.length;
+      console.log(`✅ [QUEUE CRON] Marked ${urls.length} queue items as completed`);
+    } else {
+      // Mark as failed if no properties were saved
+      const failBatch = db.batch();
+      queueDocRefs.forEach(docRef => {
+        failBatch.update(docRef, {
+          status: 'failed',
+          failedAt: new Date(),
+          failureReason: 'No properties were successfully saved',
+          retryCount: getFirestore.FieldValue.increment(1),
+        });
+      });
+      await failBatch.commit();
+      metrics.queueItemsFailed = urls.length;
+      console.log(`⚠️ [QUEUE CRON] Marked ${urls.length} queue items as failed (no properties saved)`);
+    }
 
-    console.log(`✅ [QUEUE CRON] Completed processing ${urls.length} URLs`);
+    const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+
+    // Final metrics summary
+    console.log(`\n📊 ============ SCRAPER METRICS ============`);
+    console.log(`⏱️  Duration: ${duration}s`);
+    console.log(`📋 Queue Items Processed: ${metrics.queueItemsProcessed}`);
+    console.log(`📦 Apify Items Returned: ${metrics.apifyItemsReturned}`);
+    console.log(`✅ Transform Succeeded: ${metrics.transformSucceeded}`);
+    console.log(`❌ Transform Failed: ${metrics.transformFailed}`);
+    console.log(`⚠️  Validation Failed: ${metrics.validationFailed}`);
+    console.log(`⏭️  Duplicates Skipped: ${metrics.duplicatesSkipped}`);
+    console.log(`💾 Properties Saved: ${metrics.propertiesSaved}`);
+    console.log(`📤 GHL Webhook Success: ${metrics.ghlWebhookSuccess}`);
+    console.log(`❌ GHL Webhook Failed: ${metrics.ghlWebhookFailed}`);
+    console.log(`✅ Queue Items Completed: ${metrics.queueItemsCompleted}`);
+    console.log(`❌ Queue Items Failed: ${metrics.queueItemsFailed}`);
+    console.log(`🚨 Total Errors: ${metrics.errors.length}`);
+
+    if (metrics.errors.length > 0) {
+      console.log(`\n📋 Error Breakdown by Stage:`);
+      const errorsByStage = metrics.errors.reduce((acc: any, err) => {
+        acc[err.stage] = (acc[err.stage] || 0) + 1;
+        return acc;
+      }, {});
+      Object.entries(errorsByStage).forEach(([stage, count]) => {
+        console.log(`   ${stage}: ${count}`);
+      });
+    }
+    console.log(`========================================\n`);
 
     return NextResponse.json({
       success: true,
-      processed: urls.length,
-      saved: savedCount,
-      webhookSent: webhookSuccess,
-      webhookFailed: webhookFailed,
-      webhookResults,
+      duration: `${duration}s`,
+      metrics,
     });
 
   } catch (error: any) {
-    console.error('❌ [QUEUE CRON] Error:', error);
+    console.error('❌ [QUEUE CRON] Critical Error:', error);
+
+    // Log final metrics even on error
+    const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+    console.log(`\n📊 ============ SCRAPER METRICS (ERROR) ============`);
+    console.log(`⏱️  Duration: ${duration}s`);
+    console.log(`📋 Queue Items Processed: ${metrics.queueItemsProcessed}`);
+    console.log(`📦 Apify Items Returned: ${metrics.apifyItemsReturned}`);
+    console.log(`✅ Transform Succeeded: ${metrics.transformSucceeded}`);
+    console.log(`❌ Transform Failed: ${metrics.transformFailed}`);
+    console.log(`⚠️  Validation Failed: ${metrics.validationFailed}`);
+    console.log(`💾 Properties Saved: ${metrics.propertiesSaved}`);
+    console.log(`🚨 Total Errors: ${metrics.errors.length}`);
+    console.log(`========================================\n`);
+
     return NextResponse.json(
-      { error: error.message },
+      {
+        error: error.message,
+        metrics,
+      },
       { status: 500 }
     );
   }
-}
-
-function transformProperty(apifyData: any) {
-  const timestamp = new Date();
-  const addressObj = apifyData.address || {};
-  const streetAddress = addressObj.streetAddress || apifyData.streetAddress || '';
-  const city = addressObj.city || apifyData.city || '';
-  const state = addressObj.state || apifyData.state || '';
-  const zipCode = addressObj.zipcode || apifyData.zipcode || addressObj.zip || '';
-  const fullAddress = `${streetAddress}, ${city}, ${state} ${zipCode}`.trim();
-
-  // ===== CONSTRUCT FULL URL =====
-  let fullUrl = apifyData.url || '';
-  if (!fullUrl || !fullUrl.startsWith('http')) {
-    // If url is missing or relative, construct from hdpUrl or zpid
-    if (apifyData.hdpUrl) {
-      fullUrl = `https://www.zillow.com${apifyData.hdpUrl}`;
-    } else if (apifyData.zpid) {
-      fullUrl = `https://www.zillow.com/homedetails/${apifyData.zpid}_zpid/`;
-    }
-  }
-
-  // ===== ENHANCED AGENT/BROKER EXTRACTION =====
-  // Try attributionInfo first
-  let agentPhone = apifyData.attributionInfo?.agentPhoneNumber
-    || apifyData.agentPhoneNumber
-    || apifyData.agentPhone
-    || '';
-
-  // If not found, try contactFormRenderData (nested structure)
-  if (!agentPhone && apifyData.contactFormRenderData?.data?.agent_module?.phone) {
-    const phoneObj = apifyData.contactFormRenderData.data.agent_module.phone;
-    if (phoneObj.areacode && phoneObj.prefix && phoneObj.number) {
-      agentPhone = `${phoneObj.areacode}-${phoneObj.prefix}-${phoneObj.number}`;
-    }
-  }
-
-  const brokerPhone = apifyData.attributionInfo?.brokerPhoneNumber
-    || apifyData.brokerPhoneNumber
-    || apifyData.brokerPhone
-    || '';
-
-  const finalAgentPhone = agentPhone || brokerPhone;
-
-  const agentName = apifyData.attributionInfo?.agentName
-    || apifyData.agentName
-    || apifyData.listingAgent
-    || (Array.isArray(apifyData.attributionInfo?.listingAgents) && apifyData.attributionInfo.listingAgents[0]?.memberFullName)
-    || apifyData.contactFormRenderData?.data?.agent_module?.display_name
-    || '';
-
-  const brokerName = apifyData.attributionInfo?.brokerName
-    || apifyData.brokerName
-    || apifyData.brokerageName
-    || (Array.isArray(apifyData.attributionInfo?.listingOffices) && apifyData.attributionInfo.listingOffices[0]?.officeName)
-    || '';
-
-  // Log extraction
-  console.log(`✓ [TRANSFORM] ZPID ${apifyData.zpid}: ${agentName || 'No agent'} | ${finalAgentPhone || 'No phone'}`);
-
-  // Extract images
-  const propertyImages = Array.isArray(apifyData.responsivePhotos)
-    ? apifyData.responsivePhotos.map((p: any) => p.url).filter(Boolean)
-    : Array.isArray(apifyData.photos)
-    ? apifyData.photos.map((p: any) => typeof p === 'string' ? p : p.url || p.href).filter(Boolean)
-    : Array.isArray(apifyData.images)
-    ? apifyData.images
-    : [];
-
-  const firstPropertyImage = apifyData.desktopWebHdpImageLink
-    || apifyData.hiResImageLink
-    || apifyData.mediumImageLink
-    || (propertyImages.length > 0 ? propertyImages[0] : '')
-    || '';
-
-  return {
-    url: fullUrl,
-    hdpUrl: apifyData.hdpUrl || '',
-    virtualTourUrl: apifyData.virtualTourUrl || apifyData.thirdPartyVirtualTour?.externalUrl || '',
-    fullAddress,
-    streetAddress,
-    city,
-    state,
-    zipCode,
-    county: apifyData.county || '',
-    subdivision: addressObj.subdivision || '',
-    neighborhood: addressObj.neighborhood || '',
-    zpid: apifyData.zpid || 0,
-    parcelId: apifyData.parcelId || apifyData.resoFacts?.parcelNumber || '',
-    mlsId: apifyData.attributionInfo?.mlsId || apifyData.mlsid || '',
-    bedrooms: apifyData.bedrooms || apifyData.beds || 0,
-    bathrooms: apifyData.bathrooms || apifyData.baths || 0,
-    squareFoot: apifyData.livingArea || apifyData.livingAreaValue || apifyData.squareFoot || 0,
-    buildingType: apifyData.propertyTypeDimension || apifyData.buildingType || apifyData.homeType || '',
-    homeType: apifyData.homeType || '',
-    homeStatus: apifyData.homeStatus || '',
-    yearBuilt: apifyData.yearBuilt || 0,
-    lotSquareFoot: apifyData.lotSize || apifyData.lotAreaValue || apifyData.resoFacts?.lotSize || 0,
-    latitude: apifyData.latitude || 0,
-    longitude: apifyData.longitude || 0,
-    price: apifyData.price || apifyData.listPrice || 0,
-    estimate: apifyData.zestimate || apifyData.homeValue || apifyData.estimate || 0,
-    rentEstimate: apifyData.rentZestimate || 0,
-    hoa: apifyData.monthlyHoaFee || apifyData.hoa || 0,
-    annualTaxAmount: (Array.isArray(apifyData.taxHistory) && apifyData.taxHistory.find((t: any) => t.taxPaid)?.taxPaid) || 0,
-    recentPropertyTaxes: (Array.isArray(apifyData.taxHistory) && apifyData.taxHistory[0]?.value) || 0,
-    propertyTaxRate: apifyData.propertyTaxRate || 0,
-    annualHomeownersInsurance: apifyData.annualHomeownersInsurance || 0,
-    daysOnZillow: apifyData.daysOnZillow || 0,
-    datePostedString: apifyData.datePostedString || '',
-    listingDataSource: apifyData.listingDataSource || '',
-    description: sanitizeDescription(apifyData.description), // Clean description at source
-
-    // ===== CRITICAL CONTACT INFORMATION =====
-    agentName,
-    agentPhoneNumber: finalAgentPhone,
-    agentEmail: apifyData.attributionInfo?.agentEmail || apifyData.agentEmail || '',
-    agentLicenseNumber: apifyData.attributionInfo?.agentLicenseNumber
-      || (Array.isArray(apifyData.attributionInfo?.listingAgents) && apifyData.attributionInfo.listingAgents[0]?.memberStateLicense)
-      || '',
-    brokerName,
-    brokerPhoneNumber: brokerPhone,
-
-    propertyImages,
-    firstPropertyImage,
-    photoCount: apifyData.photoCount || propertyImages.length || 0,
-    source: 'apify-zillow',
-    importedAt: timestamp,
-    scrapedAt: timestamp,
-
-    // GHL webhook tracking
-    sentToGHL: false,
-    ghlSentAt: null,
-    ghlSendStatus: null,
-    ghlSendError: null,
-  };
 }

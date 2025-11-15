@@ -319,7 +319,7 @@ export const PROPERTY_CONFIG: BrandConfig = {
   },
 
   collections: {
-    workflows: 'property_videos',
+    workflows: 'propertyShowcaseWorkflows', // NEW unified system
   },
 
   rateLimits: {
@@ -370,7 +370,7 @@ export const PROPERTY_SPANISH_CONFIG: BrandConfig = {
   },
 
   collections: {
-    workflows: 'property_videos', // Shares same collection as English version
+    workflows: 'propertyShowcaseWorkflows', // NEW unified system (shared with English)
   },
 
   rateLimits: {

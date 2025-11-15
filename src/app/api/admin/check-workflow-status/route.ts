@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
 
     for (const b of brands) {
       const collectionName = b === 'podcast' ? 'podcast_workflow_queue' :
-                            b === 'property' ? 'property_videos' :
+                            b === 'property' || b === 'property-spanish' ? 'propertyShowcaseWorkflows' :
                             `${b}_workflow_queue`;
 
       let query = adminDb.collection(collectionName);

@@ -498,7 +498,8 @@ function getWorkflowCollection(brand: string): string {
     'ownerfi': 'ownerfi_workflow_queue',
     'podcast': 'podcast_workflow_queue',
     'benefit': 'benefit_workflow_queue',
-    'property': 'property_videos',
+    'property': 'propertyShowcaseWorkflows',
+    'property-spanish': 'propertyShowcaseWorkflows',
     'vassdistro': 'vassdistro_workflow_queue',
     'abdullah': 'abdullah_workflow_queue',
   };

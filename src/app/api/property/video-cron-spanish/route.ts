@@ -47,8 +47,8 @@ export async function GET(request: NextRequest) {
       console.log(`   Next property: ${stats.nextProperty.address} (videos generated: ${stats.nextProperty.totalVideosGenerated})`);
     }
 
-    // Get next property from queue
-    let workflow = await getNextPropertyFromQueue();
+    // Get next Spanish property from queue
+    let workflow = await getNextPropertyFromQueue('es');
 
     // If queue empty, reset cycle and try again
     if (!workflow) {
@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
       if (resetCount > 0) {
         console.log(`✅ Queue reset - ${resetCount} properties ready for new cycle`);
         // Try again after reset
-        workflow = await getNextPropertyFromQueue();
+        workflow = await getNextPropertyFromQueue('es');
       } else {
         console.log('⚠️  Queue is truly empty - no properties to process');
         return NextResponse.json({
@@ -89,9 +89,9 @@ export async function GET(request: NextRequest) {
     const results = [];
 
     try {
-      // Generate 15-second Spanish video
-      const { generatePropertyVideo } = await import('@/lib/property-video-service');
-      const result = await generatePropertyVideo(workflow.propertyId, '15', 'es');
+      // Generate 15-second Spanish video using NEW service
+      const { generatePropertyVideoNew } = await import('@/lib/property-video-service-new');
+      const result = await generatePropertyVideoNew(workflow.id);
 
       if (result.success) {
         console.log(`✅ Spanish video generation started for ${workflow.address}`);

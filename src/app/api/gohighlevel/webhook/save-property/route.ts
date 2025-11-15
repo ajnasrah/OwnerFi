@@ -513,7 +513,7 @@ export async function POST(request: NextRequest) {
     const providedTermYears = parseNumberField(payload.termYears || payload.amortizationSchedule);
     const balloonYears = parseNumberField(payload.balloon);
 
-    // Dynamic amortization based on price (fallback)
+    // Dynamic amortization based on price (for internal calculations only, not displayed if not provided)
     const getDefaultTermYears = (listPrice: number): number => {
       if (listPrice < 150000) return 15;
       if (listPrice < 300000) return 20;
@@ -527,30 +527,34 @@ export async function POST(request: NextRequest) {
     // PRIORITY CALCULATION LOGIC
     let calculatedMonthlyPayment = 0;
     let calculatedInterestRate = providedInterestRate; // Track calculated vs provided
-    let termYears = 0;
+    let termYears = 0; // What we store in DB (0 if not provided by seller)
+    let termYearsForCalculation = 0; // What we use internally for calculations
 
     if (providedMonthlyPayment > 0) {
       // PRIORITY 1: Monthly payment provided - use it directly
       calculatedMonthlyPayment = providedMonthlyPayment;
 
       if (providedInterestRate > 0 && loanAmount > 0) {
-        // If we have interest rate, calculate term from monthly payment
+        // If we have interest rate, calculate term from monthly payment (internal use only)
         calculatedInterestRate = providedInterestRate;
-        const { calculateTermYears } = await import('@/lib/property-calculations');
-        termYears = calculateTermYears(providedMonthlyPayment, loanAmount, providedInterestRate);
+        const { calculateTermYears: calcTermYears } = await import('@/lib/property-calculations');
+        termYearsForCalculation = calcTermYears(providedMonthlyPayment, loanAmount, providedInterestRate);
+        // Only store/show term if it was explicitly provided by seller
+        termYears = providedTermYears > 0 ? providedTermYears : 0;
       } else {
-        // No interest rate provided - leave as 0 (will show as N/A in UI)
+        // No interest rate provided - leave as 0 (will show "Contact seller" in UI)
         calculatedInterestRate = 0;
-        termYears = providedTermYears > 0 ? providedTermYears : getDefaultTermYears(price);
+        termYears = providedTermYears > 0 ? providedTermYears : 0;
       }
 
     } else if (providedInterestRate > 0 && providedTermYears > 0) {
       // PRIORITY 2: Interest rate + term years provided - calculate monthly payment
       calculatedInterestRate = providedInterestRate;
       termYears = providedTermYears;
+      termYearsForCalculation = providedTermYears;
       if (loanAmount > 0) {
         const monthlyRate = calculatedInterestRate / 100 / 12;
-        const numPayments = termYears * 12;
+        const numPayments = termYearsForCalculation * 12;
         if (monthlyRate > 0) {
           calculatedMonthlyPayment = Math.round(
             loanAmount * (monthlyRate * Math.pow(1 + monthlyRate, numPayments)) /
@@ -560,12 +564,13 @@ export async function POST(request: NextRequest) {
       }
 
     } else if (providedInterestRate > 0) {
-      // PRIORITY 3: Only interest rate provided - use price-based term
+      // PRIORITY 3: Only interest rate provided - use default term for calculation only
       calculatedInterestRate = providedInterestRate;
-      termYears = getDefaultTermYears(price);
+      termYearsForCalculation = providedTermYears > 0 ? providedTermYears : getDefaultTermYears(price);
+      termYears = providedTermYears > 0 ? providedTermYears : 0; // Store 0 if not provided (shows "Contact seller")
       if (loanAmount > 0) {
         const monthlyRate = calculatedInterestRate / 100 / 12;
-        const numPayments = termYears * 12;
+        const numPayments = termYearsForCalculation * 12;
         if (monthlyRate > 0) {
           calculatedMonthlyPayment = Math.round(
             loanAmount * (monthlyRate * Math.pow(1 + monthlyRate, numPayments)) /
@@ -575,9 +580,10 @@ export async function POST(request: NextRequest) {
       }
 
     } else {
-      // PRIORITY 4: Nothing provided - no defaults
-      calculatedInterestRate = 0; // Leave as 0 (will show as N/A in UI)
-      termYears = providedTermYears > 0 ? providedTermYears : getDefaultTermYears(price);
+      // PRIORITY 4: Nothing provided - use defaults for calculation only
+      calculatedInterestRate = 0; // Leave as 0 (will show "Contact seller" in UI)
+      termYearsForCalculation = providedTermYears > 0 ? providedTermYears : getDefaultTermYears(price);
+      termYears = providedTermYears > 0 ? providedTermYears : 0; // Store 0 if not provided (shows "Contact seller")
       // No calculation without provided data
     }
 

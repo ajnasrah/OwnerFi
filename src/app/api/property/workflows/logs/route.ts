@@ -19,10 +19,12 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const propertyVideosRef = (adminDb as any).collection('property_videos');
+    // Use NEW propertyShowcaseWorkflows collection
+    const propertyWorkflowsRef = (adminDb as any).collection('propertyShowcaseWorkflows');
 
-    // Get recent workflows and filter in memory to avoid index requirements
-    const query = propertyVideosRef
+    // Get recent workflows and filter by language (English only)
+    const query = propertyWorkflowsRef
+      .where('language', '==', 'en')
       .orderBy('createdAt', 'desc')
       .limit(showHistory ? 50 : 100); // Get more if filtering for active only
 

@@ -695,6 +695,60 @@
       ]
     },
     {
+      "collectionGroup": "propertyShowcaseWorkflows",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "queueStatus",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "language",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "queuePosition",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "propertyShowcaseWorkflows",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "language",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "propertyShowcaseWorkflows",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "propertyId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "variant",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "language",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "queueStatus",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
       "collectionGroup": "cash_deals_queue",
       "queryScope": "COLLECTION",
       "fields": [

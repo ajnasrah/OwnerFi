@@ -25,11 +25,8 @@ export interface PartialPropertyData {
 }
 
 /**
- * Calculate missing financial fields based on provided data
- * Can handle various combinations of provided/missing fields
- */
-/**
  * Calculate default amortization period based on property price
+ * Used internally for calculations, but not displayed if not explicitly provided
  * <150k: 15 years
  * 150k-300k: 20 years
  * 300k-600k: 25 years
@@ -42,6 +39,10 @@ function getDefaultTermYears(listPrice: number): number {
   return 30;
 }
 
+/**
+ * Calculate missing financial fields based on provided data
+ * Can handle various combinations of provided/missing fields
+ */
 export function calculatePropertyFinancials(data: PartialPropertyData): PropertyFinancials {
   const listPrice = data.listPrice || 0;
   let downPaymentAmount = data.downPaymentAmount || 0;
@@ -72,53 +73,68 @@ export function calculatePropertyFinancials(data: PartialPropertyData): Property
   let monthlyPayment = 0;
   let termYears = 0;
   let interestRate = 0;
+  let termYearsForCalculation = 0; // Internal use for calculations
+  let interestRateForCalculation = 0; // Internal use for calculations
+  const wasTermYearsProvided = !!(providedTermYears && providedTermYears > 0);
+  const wasInterestRateProvided = !!(providedInterestRate && providedInterestRate > 0);
 
   if (providedMonthlyPayment > 0) {
     // PRIORITY 1: Monthly payment provided - use it directly
     monthlyPayment = providedMonthlyPayment;
-    interestRate = providedInterestRate || 7.0; // Default if not provided
+    interestRateForCalculation = providedInterestRate || 7.0; // Default for internal calculations
+    interestRate = providedInterestRate || 0; // Only show if provided by seller
 
     if (providedInterestRate && providedInterestRate > 0 && loanAmount > 0) {
-      // Calculate term from monthly payment + interest rate
-      termYears = calculateTermYears(providedMonthlyPayment, loanAmount, providedInterestRate);
+      // Calculate term from monthly payment + interest rate (internal use only)
+      termYearsForCalculation = calculateTermYears(providedMonthlyPayment, loanAmount, providedInterestRate);
+      // Only show term in UI if it was explicitly provided by seller
+      termYears = providedTermYears || 0;
     } else {
-      // Use provided term or price-based default
-      termYears = providedTermYears || getDefaultTermYears(listPrice);
+      // Use provided term or default for calculation, but return 0 if not provided
+      termYearsForCalculation = providedTermYears || getDefaultTermYears(listPrice);
+      termYears = providedTermYears || 0;
     }
 
   } else if (providedInterestRate && providedInterestRate > 0 && providedTermYears && providedTermYears > 0) {
     // PRIORITY 2: Interest rate + term years provided - calculate monthly payment
     interestRate = providedInterestRate;
+    interestRateForCalculation = providedInterestRate;
     termYears = providedTermYears;
+    termYearsForCalculation = providedTermYears;
     if (loanAmount > 0) {
-      monthlyPayment = calculateMonthlyPayment(loanAmount, interestRate, termYears);
+      monthlyPayment = calculateMonthlyPayment(loanAmount, interestRateForCalculation, termYearsForCalculation);
     }
 
   } else if (providedInterestRate && providedInterestRate > 0) {
-    // PRIORITY 3: Only interest rate provided - use price-based term
+    // PRIORITY 3: Only interest rate provided - use default term for calculation
     interestRate = providedInterestRate;
-    termYears = getDefaultTermYears(listPrice);
+    interestRateForCalculation = providedInterestRate;
+    termYearsForCalculation = providedTermYears || getDefaultTermYears(listPrice);
+    termYears = providedTermYears || 0; // Return 0 if not provided (shows "Contact seller")
     if (loanAmount > 0) {
-      monthlyPayment = calculateMonthlyPayment(loanAmount, interestRate, termYears);
+      monthlyPayment = calculateMonthlyPayment(loanAmount, interestRateForCalculation, termYearsForCalculation);
     }
 
   } else {
-    // PRIORITY 4: Nothing provided - use defaults
-    interestRate = providedInterestRate || 7.0;
-    termYears = providedTermYears || getDefaultTermYears(listPrice);
-    if (loanAmount > 0 && interestRate > 0) {
-      monthlyPayment = calculateMonthlyPayment(loanAmount, interestRate, termYears);
+    // PRIORITY 4: Nothing provided - use defaults for calculation only
+    interestRateForCalculation = providedInterestRate || 7.0;
+    interestRate = providedInterestRate || 0; // Only show if provided by seller
+    termYearsForCalculation = providedTermYears || getDefaultTermYears(listPrice);
+    termYears = providedTermYears || 0; // Return 0 if not provided (shows "Contact seller")
+    if (loanAmount > 0 && interestRateForCalculation > 0) {
+      monthlyPayment = calculateMonthlyPayment(loanAmount, interestRateForCalculation, termYearsForCalculation);
     }
   }
 
   // Validate and ensure reasonable values
+  // NOTE: termYears can be 0 to show "Contact seller" in UI
   return {
     listPrice: Math.max(0, listPrice),
     downPaymentAmount: Math.max(0, downPaymentAmount),
     downPaymentPercent: Math.max(0, Math.min(100, downPaymentPercent)), // Cap at 100%
     monthlyPayment: Math.max(0, monthlyPayment),
     interestRate: Math.max(0, Math.min(50, interestRate)), // Cap at 50%
-    termYears: Math.max(1, Math.min(50, termYears)), // 1-50 years
+    termYears: termYears > 0 ? Math.max(1, Math.min(50, termYears)) : 0, // 1-50 years or 0 for "Contact seller"
     loanAmount: Math.max(0, loanAmount),
     balloonPayment: data.balloonPayment,
     balloonYears: data.balloonYears

@@ -3,21 +3,7 @@
  * This script sends all buyer profiles to GHL that haven't been synced yet
  */
 
-import { initializeApp, getApps, cert } from 'firebase-admin/app';
-import { getFirestore } from 'firebase-admin/firestore';
-
-// Initialize Firebase Admin
-if (getApps().length === 0) {
-  initializeApp({
-    credential: cert({
-      projectId: process.env.FIREBASE_PROJECT_ID,
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n')
-    })
-  });
-}
-
-const db = getFirestore();
+import { getAdminDb } from '../src/lib/firebase-admin.js';
 
 interface BuyerProfile {
   id: string;
@@ -89,6 +75,14 @@ async function main() {
   console.log('🚀 Starting buyer sync to GoHighLevel...\n');
 
   try {
+    // Initialize Firebase Admin
+    const db = await getAdminDb();
+
+    if (!db) {
+      console.error('❌ Failed to initialize Firebase Admin');
+      process.exit(1);
+    }
+
     // Fetch all buyer profiles
     const buyerProfilesSnapshot = await db.collection('buyerProfiles').get();
     const totalBuyers = buyerProfilesSnapshot.size;

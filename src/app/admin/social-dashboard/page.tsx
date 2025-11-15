@@ -385,9 +385,17 @@ export default function SocialMediaDashboard() {
       const url = showHistory ? '/api/property/workflows/logs?history=true' : '/api/property/workflows/logs';
       const response = await fetch(url);
       const data = await response.json();
-      setPropertyWorkflows(data);
+
+      // Only set workflows if the response was successful and has workflows array
+      if (data.success && Array.isArray(data.workflows)) {
+        setPropertyWorkflows(data);
+      } else {
+        console.error('Property workflows API error:', data.error || 'Unknown error');
+        setPropertyWorkflows({ success: false, workflows: [], timestamp: new Date().toISOString() });
+      }
     } catch (error) {
       console.error('Failed to load property workflows:', error);
+      setPropertyWorkflows({ success: false, workflows: [], timestamp: new Date().toISOString() });
     }
   };
 
@@ -415,9 +423,17 @@ export default function SocialMediaDashboard() {
       const url = showHistory ? '/api/property/workflows/logs-spanish?history=true' : '/api/property/workflows/logs-spanish';
       const response = await fetch(url);
       const data = await response.json();
-      setSpanishPropertyWorkflows(data);
+
+      // Only set workflows if the response was successful and has workflows array
+      if (data.success && Array.isArray(data.workflows)) {
+        setSpanishPropertyWorkflows(data);
+      } else {
+        console.error('Spanish property workflows API error:', data.error || 'Unknown error');
+        setSpanishPropertyWorkflows({ success: false, workflows: [], timestamp: new Date().toISOString() });
+      }
     } catch (error) {
       console.error('Failed to load Spanish property workflows:', error);
+      setSpanishPropertyWorkflows({ success: false, workflows: [], timestamp: new Date().toISOString() });
     }
   };
 

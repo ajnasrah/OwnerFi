@@ -13,6 +13,7 @@ export async function GET(request: NextRequest) {
 
     const adminDb = await getAdminDb();
     if (!adminDb) {
+      console.error('Firebase Admin not initialized');
       return NextResponse.json(
         { success: false, error: 'Firebase Admin not initialized' },
         { status: 500 }
@@ -22,13 +23,25 @@ export async function GET(request: NextRequest) {
     // Use NEW propertyShowcaseWorkflows collection
     const propertyWorkflowsRef = (adminDb as any).collection('propertyShowcaseWorkflows');
 
-    // Get recent Spanish workflows
-    const query = propertyWorkflowsRef
-      .where('language', '==', 'es')
-      .orderBy('createdAt', 'desc')
-      .limit(showHistory ? 50 : 100);
+    let snapshot;
+    try {
+      // Get recent Spanish workflows
+      const query = propertyWorkflowsRef
+        .where('language', '==', 'es')
+        .orderBy('createdAt', 'desc')
+        .limit(showHistory ? 50 : 100);
 
-    const snapshot = await query.get();
+      snapshot = await query.get();
+    } catch (queryError) {
+      console.error('Firestore query error:', queryError);
+      // If query fails (e.g., missing index), return empty result instead of 500
+      return NextResponse.json({
+        success: true,
+        workflows: [],
+        timestamp: new Date().toISOString(),
+        warning: 'Query failed - possibly missing Firestore index. Please check Firebase console.'
+      });
+    }
 
     // Get all Spanish workflows
     let docs = snapshot.docs;

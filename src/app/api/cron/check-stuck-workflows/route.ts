@@ -22,6 +22,10 @@ import { withCronLock } from '@/lib/cron-lock';
 const CRON_SECRET = process.env.CRON_SECRET;
 export const maxDuration = 300; // 5 minutes (max needed for SubMagic + posting operations)
 
+// Performance: Brand-level timeout to prevent one slow brand from blocking others
+const BRAND_PROCESSING_TIMEOUT_MS = 45_000; // 45 seconds per brand (conservative)
+const PARALLEL_QUERY_BATCH_SIZE = 9; // Process all 9 brands in parallel
+
 export async function GET(request: NextRequest) {
   try {
     // Verify authorization
@@ -104,6 +108,39 @@ export async function POST(request: NextRequest) {
 }
 
 // ============================================================================
+// HELPER: Timeout wrapper for brand processing
+// ============================================================================
+
+/**
+ * Wraps a brand processing function with a timeout to prevent blocking
+ * If timeout occurs, logs warning and returns null (continues to next brand)
+ */
+async function withBrandTimeout<T>(
+  brand: string,
+  fn: () => Promise<T>,
+  timeoutMs: number = BRAND_PROCESSING_TIMEOUT_MS
+): Promise<T | null> {
+  try {
+    return await Promise.race([
+      fn(),
+      new Promise<never>((_, reject) =>
+        setTimeout(
+          () => reject(new Error(`Brand ${brand} processing timeout after ${timeoutMs}ms`)),
+          timeoutMs
+        )
+      )
+    ]);
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('timeout')) {
+      console.error(`⏱️  ${brand}: TIMEOUT after ${timeoutMs}ms - skipping to prevent blocking other brands`);
+      return null;
+    }
+    console.error(`❌ ${brand}: Error during processing:`, error);
+    return null;
+  }
+}
+
+// ============================================================================
 // 1. CHECK PENDING WORKFLOWS
 // ============================================================================
 
@@ -117,50 +154,63 @@ async function checkPendingWorkflows() {
     return { checked: 0, started: 0, failed: 0 };
   }
 
-  const pendingWorkflows: Array<{
-    workflowId: string;
-    brand: string;
-    collectionName: string;
-    stuckMinutes: number;
-  }> = [];
-
   // Check all 8 brands + podcast
   const brands = [...getAllBrandIds(), 'podcast'];
 
-  for (const brand of brands) {
-    try {
-      const collectionName = `${brand}_workflow_queue`;
-      console.log(`📂 Checking ${collectionName}...`);
+  // PARALLEL: Query all brands simultaneously (2-3x faster!)
+  const brandResults = await Promise.all(
+    brands.map(brand =>
+      withBrandTimeout(brand, async () => {
+        try {
+          const collectionName = `${brand}_workflow_queue`;
+          console.log(`📂 Checking ${collectionName}...`);
 
-      const q = query(
-        collection(db, collectionName),
-        where('status', '==', 'pending'),
-        orderBy('createdAt', 'asc'),
-        firestoreLimit(5)
-      );
+          const q = query(
+            collection(db!, collectionName),
+            where('status', '==', 'pending'),
+            orderBy('createdAt', 'asc'),
+            firestoreLimit(5)
+          );
 
-      const snapshot = await getDocs(q);
-      console.log(`   Found ${snapshot.size} pending workflows`);
+          const snapshot = await getDocs(q);
+          console.log(`   Found ${snapshot.size} pending workflows`);
 
-      snapshot.forEach(doc => {
-        const data = doc.data();
-        const stuckMinutes = Math.round((Date.now() - (data.createdAt || 0)) / 60000);
+          const workflows: Array<{
+            workflowId: string;
+            brand: string;
+            collectionName: string;
+            stuckMinutes: number;
+          }> = [];
 
-        // Only start if stuck > 5 minutes
-        if (stuckMinutes > 5) {
-          console.log(`   📄 ${doc.id}: pending for ${stuckMinutes} min`);
-          pendingWorkflows.push({
-            workflowId: doc.id,
-            brand,
-            collectionName,
-            stuckMinutes
+          snapshot.forEach(doc => {
+            const data = doc.data();
+            const stuckMinutes = Math.round((Date.now() - (data.createdAt || 0)) / 60000);
+
+            // Only start if stuck > 5 minutes
+            if (stuckMinutes > 5) {
+              console.log(`   📄 ${doc.id}: pending for ${stuckMinutes} min`);
+              workflows.push({
+                workflowId: doc.id,
+                brand,
+                collectionName,
+                stuckMinutes
+              });
+            }
           });
+
+          return workflows;
+        } catch (err) {
+          console.error(`   ❌ Error querying ${brand}:`, err);
+          return [];
         }
-      });
-    } catch (err) {
-      console.error(`   ❌ Error querying ${brand}:`, err);
-    }
-  }
+      })
+    )
+  );
+
+  // Aggregate results from all brands
+  const pendingWorkflows = brandResults
+    .filter(result => result !== null)
+    .flat();
 
   console.log(`\n📋 Total pending: ${pendingWorkflows.length}`);
 

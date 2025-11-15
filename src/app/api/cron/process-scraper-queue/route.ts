@@ -3,6 +3,7 @@ import { ApifyClient } from 'apify-client';
 import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { transformApifyProperty, validatePropertyData } from '@/lib/property-transform';
+import { detectNeedsWork, getMatchingKeywords } from '@/lib/property-needs-work-detector';
 
 // Initialize Firebase Admin
 if (!getApps().length) {
@@ -31,6 +32,7 @@ export async function GET(request: NextRequest) {
     validationFailed: 0,
     duplicatesSkipped: 0,
     propertiesSaved: 0,
+    needsWorkOwnerFinance: 0,
     ghlWebhookSuccess: 0,
     ghlWebhookFailed: 0,
     queueItemsCompleted: 0,
@@ -202,7 +204,30 @@ export async function GET(request: NextRequest) {
           console.log(`⚠️ No contact info for ZPID ${propertyData.zpid} - saving anyway`);
         }
 
-        // Add to batch
+        // Check if property needs work (for owner finance investor deals)
+        const needsWork = detectNeedsWork(propertyData.description);
+        if (needsWork) {
+          const matchingKeywords = getMatchingKeywords(propertyData.description);
+          console.log(`🏠 OWNER FINANCE OPPORTUNITY: ${propertyData.fullAddress} - Keywords: ${matchingKeywords.join(', ')}`);
+
+          // Save to cash_houses collection with owner_finance tag
+          const cashHouseRef = db.collection('cash_houses').doc();
+          const cashHouseData = {
+            ...propertyData,
+            needsWork: true,
+            needsWorkKeywords: matchingKeywords,
+            source: 'zillow_scraper',
+            dealType: 'owner_finance',
+            discountPercentage: propertyData.estimate && propertyData.price
+              ? parseFloat(((propertyData.estimate - propertyData.price) / propertyData.estimate * 100).toFixed(2))
+              : 0,
+            eightyPercentOfZestimate: propertyData.estimate ? Math.round(propertyData.estimate * 0.8) : 0,
+          };
+          currentBatch.set(cashHouseRef, cashHouseData);
+          metrics.needsWorkOwnerFinance++;
+        }
+
+        // Add to batch (always save to zillow_imports)
         const docRef = db.collection('zillow_imports').doc();
         currentBatch.set(docRef, {
           ...propertyData,
@@ -242,7 +267,7 @@ export async function GET(request: NextRequest) {
       metrics.propertiesSaved += batchOperations;
     }
 
-    console.log(`✅ [FIREBASE] Total saved: ${metrics.propertiesSaved} properties`);
+    console.log(`✅ [FIREBASE] Total saved: ${metrics.propertiesSaved} properties${metrics.needsWorkOwnerFinance > 0 ? ` (+ ${metrics.needsWorkOwnerFinance} to cash_houses as owner finance)` : ''}`);
 
     // Send properties with contact info to GHL webhook immediately
     const GHL_WEBHOOK_URL = 'https://services.leadconnectorhq.com/hooks/U2B5lSlWrVBgVxHNq5AH/webhook-trigger/2be65188-9b2e-43f1-a9d8-33d9907b375c';
@@ -371,6 +396,7 @@ export async function GET(request: NextRequest) {
     console.log(`⚠️  Validation Failed: ${metrics.validationFailed}`);
     console.log(`⏭️  Duplicates Skipped: ${metrics.duplicatesSkipped}`);
     console.log(`💾 Properties Saved: ${metrics.propertiesSaved}`);
+    console.log(`🏠 Owner Finance (Needs Work): ${metrics.needsWorkOwnerFinance}`);
     console.log(`📤 GHL Webhook Success: ${metrics.ghlWebhookSuccess}`);
     console.log(`❌ GHL Webhook Failed: ${metrics.ghlWebhookFailed}`);
     console.log(`✅ Queue Items Completed: ${metrics.queueItemsCompleted}`);
@@ -408,6 +434,7 @@ export async function GET(request: NextRequest) {
     console.log(`❌ Transform Failed: ${metrics.transformFailed}`);
     console.log(`⚠️  Validation Failed: ${metrics.validationFailed}`);
     console.log(`💾 Properties Saved: ${metrics.propertiesSaved}`);
+    console.log(`🏠 Owner Finance (Needs Work): ${metrics.needsWorkOwnerFinance}`);
     console.log(`🚨 Total Errors: ${metrics.errors.length}`);
     console.log(`========================================\n`);
 

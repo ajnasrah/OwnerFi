@@ -195,6 +195,7 @@ export default function AdminDashboard() {
   // Cash Houses state
   const [cashHouses, setCashHouses] = useState<any[]>([]);
   const [loadingCashHouses, setLoadingCashHouses] = useState(false);
+  const [cashHousesFilter, setCashHousesFilter] = useState<'all' | 'discount' | 'needs_work' | 'owner_finance'>('all');
 
   // Fetch cash houses when tab becomes active
   useEffect(() => {
@@ -3520,8 +3521,8 @@ export default function AdminDashboard() {
               <div className="px-4 py-5 sm:p-6">
                 <div className="flex items-center justify-between mb-6">
                   <div>
-                    <h3 className="text-lg leading-6 font-medium text-gray-900">Cash Houses - Properties Under 80% ARV</h3>
-                    <p className="mt-1 text-sm text-gray-500">Properties priced below 80% of their Zestimate value</p>
+                    <h3 className="text-lg leading-6 font-medium text-gray-900">Cash Houses - Investor Opportunities</h3>
+                    <p className="mt-1 text-sm text-gray-500">Properties for investors: discounted deals, owner finance, and fixer-uppers</p>
                   </div>
                   <button
                     onClick={fetchCashHouses}
@@ -3532,33 +3533,74 @@ export default function AdminDashboard() {
                   </button>
                 </div>
 
+                {/* Filter Tabs */}
+                <div className="border-b border-gray-200 mb-6">
+                  <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+                    {[
+                      { key: 'all', label: 'All Properties', icon: '🏘️' },
+                      { key: 'discount', label: 'Discount Deals (<80% ARV)', icon: '💰' },
+                      { key: 'needs_work', label: 'Needs Work (Cash Scraper)', icon: '🔨' },
+                      { key: 'owner_finance', label: 'Owner Finance (Zillow)', icon: '🏠' },
+                    ].map((filter) => (
+                      <button
+                        key={filter.key}
+                        onClick={() => setCashHousesFilter(filter.key as any)}
+                        className={`${
+                          cashHousesFilter === filter.key
+                            ? 'border-indigo-500 text-indigo-600'
+                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                        } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2`}
+                      >
+                        <span>{filter.icon}</span>
+                        <span>{filter.label}</span>
+                      </button>
+                    ))}
+                  </nav>
+                </div>
+
                 {loadingCashHouses ? (
                   <div className="flex items-center justify-center h-64">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
                   </div>
-                ) : cashHouses.length === 0 ? (
-                  <div className="bg-gray-50 rounded-lg p-8 text-center">
-                    <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                    </svg>
-                    <h3 className="mt-2 text-sm font-medium text-gray-900">No Cash Houses Yet</h3>
-                    <p className="mt-1 text-sm text-gray-500">Use the Chrome extension to add properties to the cash deals queue</p>
-                  </div>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Property</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Zestimate</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Discount</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Details</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {cashHouses.map((house) => (
+                ) : (() => {
+                  // Filter cash houses based on selected filter
+                  const filteredHouses = cashHouses.filter(house => {
+                    if (cashHousesFilter === 'all') return true;
+                    if (cashHousesFilter === 'discount') return house.dealType === 'discount';
+                    if (cashHousesFilter === 'needs_work') return house.dealType === 'needs_work';
+                    if (cashHousesFilter === 'owner_finance') return house.dealType === 'owner_finance';
+                    return true;
+                  });
+
+                  return filteredHouses.length === 0 ? (
+                    <div className="bg-gray-50 rounded-lg p-8 text-center">
+                      <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                      </svg>
+                      <h3 className="mt-2 text-sm font-medium text-gray-900">No Properties Found</h3>
+                      <p className="mt-1 text-sm text-gray-500">
+                        {cashHousesFilter === 'all' && 'Use the Chrome extension to add properties to the cash deals queue'}
+                        {cashHousesFilter === 'discount' && 'No discount deals found in this category'}
+                        {cashHousesFilter === 'needs_work' && 'No "needs work" properties from cash scraper found'}
+                        {cashHousesFilter === 'owner_finance' && 'No owner finance opportunities from Zillow scraper found'}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Property</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Zestimate</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Discount</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Details</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {filteredHouses.map((house) => (
                           <tr key={house.id} className="hover:bg-gray-50">
                             <td className="px-6 py-4">
                               <div className="flex items-center">
@@ -3596,6 +3638,37 @@ export default function AdminDashboard() {
                                 {house.discountPercentage?.toFixed(1) || '0'}% off
                               </span>
                             </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="space-y-1">
+                                {house.dealType === 'discount' && (
+                                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                    💰 Discount
+                                  </span>
+                                )}
+                                {house.dealType === 'needs_work' && (
+                                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                                    🔨 Needs Work
+                                  </span>
+                                )}
+                                {house.dealType === 'owner_finance' && (
+                                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                    🏠 Owner Finance
+                                  </span>
+                                )}
+                                {house.needsWork && house.needsWorkKeywords && house.needsWorkKeywords.length > 0 && (
+                                  <div className="text-xs text-gray-500 mt-1">
+                                    {house.needsWorkKeywords.slice(0, 3).join(', ')}
+                                    {house.needsWorkKeywords.length > 3 && '...'}
+                                  </div>
+                                )}
+                                {house.source && (
+                                  <div className="text-xs text-gray-400">
+                                    {house.source === 'zillow_scraper' && 'Zillow'}
+                                    {house.source === 'cash_deals_scraper' && 'Cash'}
+                                  </div>
+                                )}
+                              </div>
+                            </td>
                             <td className="px-6 py-4">
                               <div className="text-sm text-gray-900">
                                 {house.bedrooms} bed | {house.bathrooms} bath
@@ -3621,15 +3694,23 @@ export default function AdminDashboard() {
                             </td>
                           </tr>
                         ))}
-                      </tbody>
-                    </table>
-                    <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
-                      <p className="text-sm text-gray-600">
-                        Showing {cashHouses.length} cash house{cashHouses.length !== 1 ? 's' : ''} (most recent 100)
-                      </p>
+                        </tbody>
+                      </table>
+                      <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                        <p className="text-sm text-gray-600">
+                          Showing {filteredHouses.length} of {cashHouses.length} total properties
+                          {cashHousesFilter !== 'all' && (
+                            <span className="ml-2 text-indigo-600 font-medium">
+                              ({cashHousesFilter === 'discount' && 'Discount Deals'}
+                              {cashHousesFilter === 'needs_work' && 'Needs Work'}
+                              {cashHousesFilter === 'owner_finance' && 'Owner Finance'})
+                            </span>
+                          )}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  );
+                })()}
               </div>
             </div>
           )}

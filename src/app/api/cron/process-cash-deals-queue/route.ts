@@ -3,6 +3,7 @@ import { ApifyClient } from 'apify-client';
 import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { transformApifyProperty, validatePropertyData } from '@/lib/property-transform';
+import { detectNeedsWork, getMatchingKeywords } from '@/lib/property-needs-work-detector';
 
 // Initialize Firebase Admin
 if (!getApps().length) {
@@ -33,6 +34,7 @@ export async function GET(request: NextRequest) {
     missingPriceOrZestimate: 0,
     filteredOut80Percent: 0,
     cashDealsSaved: 0,
+    needsWorkPropertiesSaved: 0,
     queueItemsCompleted: 0,
     queueItemsFailed: 0,
     errors: [] as Array<{ zpid?: number; address?: string; error: string; stage: string }>,
@@ -210,17 +212,35 @@ export async function GET(request: NextRequest) {
           continue;
         }
 
+        // Check if property needs work based on description keywords
+        const needsWork = detectNeedsWork(propertyData.description);
+        const matchingKeywords = needsWork ? getMatchingKeywords(propertyData.description) : [];
+
         // Calculate 80% of Zestimate
         const eightyPercentOfZestimate = propertyData.estimate * 0.8;
 
-        // Only save if price is less than 80% of Zestimate
-        if (propertyData.price < eightyPercentOfZestimate) {
-          const discountPercentage = ((propertyData.estimate - propertyData.price) / propertyData.estimate * 100).toFixed(2);
-          console.log(`✅ CASH DEAL: ${propertyData.fullAddress} - Price: $${propertyData.price.toLocaleString()}, Zestimate: $${propertyData.estimate.toLocaleString()} (${discountPercentage}% discount)`);
+        // Save if: (1) price < 80% of Zestimate OR (2) needs work (investor opportunity)
+        const meetsDiscountCriteria = propertyData.price < eightyPercentOfZestimate;
+        const meetsNeedsWorkCriteria = needsWork;
 
-          // Add discount percentage to the data
+        if (meetsDiscountCriteria || meetsNeedsWorkCriteria) {
+          const discountPercentage = ((propertyData.estimate - propertyData.price) / propertyData.estimate * 100).toFixed(2);
+
+          // Add tags and metadata
           propertyData.discountPercentage = parseFloat(discountPercentage);
           propertyData.eightyPercentOfZestimate = Math.round(eightyPercentOfZestimate);
+          propertyData.needsWork = needsWork;
+          propertyData.needsWorkKeywords = matchingKeywords;
+          propertyData.source = 'cash_deals_scraper';
+          propertyData.dealType = meetsDiscountCriteria ? 'discount' : 'needs_work';
+
+          if (meetsNeedsWorkCriteria && !meetsDiscountCriteria) {
+            console.log(`🔨 NEEDS WORK: ${propertyData.fullAddress} - Keywords: ${matchingKeywords.join(', ')}`);
+            metrics.needsWorkPropertiesSaved++;
+          } else if (meetsDiscountCriteria) {
+            console.log(`✅ CASH DEAL: ${propertyData.fullAddress} - Price: $${propertyData.price.toLocaleString()}, Zestimate: $${propertyData.estimate.toLocaleString()} (${discountPercentage}% discount)${needsWork ? ' + NEEDS WORK' : ''}`);
+            metrics.cashDealsSaved++;
+          }
 
           // Add to batch
           const docRef = db.collection('cash_houses').doc();
@@ -231,15 +251,14 @@ export async function GET(request: NextRequest) {
           // Commit batch if we hit the limit
           if (batchOperations >= BATCH_LIMIT) {
             await currentBatch.commit();
-            console.log(`✅ [FIREBASE] Committed batch of ${batchOperations} cash deals`);
-            metrics.cashDealsSaved += batchOperations;
+            console.log(`✅ [FIREBASE] Committed batch of ${batchOperations} properties`);
             currentBatch = db.batch();
             batchOperations = 0;
           }
         } else {
           metrics.filteredOut80Percent++;
           const discountPercentage = ((propertyData.estimate - propertyData.price) / propertyData.estimate * 100).toFixed(2);
-          console.log(`❌ FILTERED OUT: ${propertyData.fullAddress} - Price: $${propertyData.price.toLocaleString()}, Zestimate: $${propertyData.estimate.toLocaleString()} (only ${discountPercentage}% discount)`);
+          console.log(`❌ FILTERED OUT: ${propertyData.fullAddress} - Price: $${propertyData.price.toLocaleString()}, Zestimate: $${propertyData.estimate.toLocaleString()} (only ${discountPercentage}% discount, no needs work keywords)`);
         }
 
       } catch (error: any) {
@@ -257,11 +276,11 @@ export async function GET(request: NextRequest) {
     // Commit remaining batch
     if (batchOperations > 0) {
       await currentBatch.commit();
-      console.log(`✅ [FIREBASE] Committed final batch of ${batchOperations} cash deals`);
-      metrics.cashDealsSaved += batchOperations;
+      console.log(`✅ [FIREBASE] Committed final batch of ${batchOperations} properties`);
     }
 
-    console.log(`✅ [FIREBASE] Total saved: ${metrics.cashDealsSaved} cash deals`);
+    const totalSaved = metrics.cashDealsSaved + metrics.needsWorkPropertiesSaved;
+    console.log(`✅ [FIREBASE] Total saved: ${totalSaved} properties (${metrics.cashDealsSaved} discount deals + ${metrics.needsWorkPropertiesSaved} needs work)`);
 
     // Mark queue items as completed (only if we saved at least 1 property OR if it was a valid run)
     // For cash deals, it's OK if nothing meets the 80% filter, so we complete if transform succeeded
@@ -305,7 +324,8 @@ export async function GET(request: NextRequest) {
     console.log(`⏭️  Duplicates Skipped: ${metrics.duplicatesSkipped}`);
     console.log(`⚠️  Missing Price/Zestimate: ${metrics.missingPriceOrZestimate}`);
     console.log(`❌ Filtered Out (< 80%): ${metrics.filteredOut80Percent}`);
-    console.log(`💰 Cash Deals Saved: ${metrics.cashDealsSaved}`);
+    console.log(`💰 Cash Deals Saved (Discount): ${metrics.cashDealsSaved}`);
+    console.log(`🔨 Needs Work Properties Saved: ${metrics.needsWorkPropertiesSaved}`);
     console.log(`✅ Queue Items Completed: ${metrics.queueItemsCompleted}`);
     console.log(`❌ Queue Items Failed: ${metrics.queueItemsFailed}`);
     console.log(`🚨 Total Errors: ${metrics.errors.length}`);
@@ -351,7 +371,8 @@ export async function GET(request: NextRequest) {
     console.log(`✅ Transform Succeeded: ${metrics.transformSucceeded}`);
     console.log(`❌ Transform Failed: ${metrics.transformFailed}`);
     console.log(`⚠️  Validation Failed: ${metrics.validationFailed}`);
-    console.log(`💰 Cash Deals Saved: ${metrics.cashDealsSaved}`);
+    console.log(`💰 Cash Deals Saved (Discount): ${metrics.cashDealsSaved}`);
+    console.log(`🔨 Needs Work Properties Saved: ${metrics.needsWorkPropertiesSaved}`);
     console.log(`🚨 Total Errors: ${metrics.errors.length}`);
     console.log(`========================================\n`);
 

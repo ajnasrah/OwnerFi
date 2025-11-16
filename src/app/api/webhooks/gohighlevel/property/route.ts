@@ -13,96 +13,99 @@ import { sanitizeDescription } from '@/lib/description-sanitizer';
 import { validatePropertyFinancials, type PropertyFinancialData } from '@/lib/property-validation';
 import crypto from 'crypto';
 
-const GHL_WEBHOOK_SECRET = process.env.GHL_WEBHOOK_SECRET || '';
-const SKIP_SIGNATURE_CHECK = process.env.NODE_ENV === 'development' ||
-                              process.env.SKIP_GHL_SIGNATURE === 'true' ||
-                              process.env.GHL_BYPASS_SIGNATURE === 'true'; // Same as delete webhook
+// SECURITY: Webhook secret is REQUIRED - no bypass allowed
+const GHL_WEBHOOK_SECRET = process.env.GHL_WEBHOOK_SECRET;
 
-function verifyWebhookSignature(
-  payload: string,
-  signature: string | null
-): boolean {
-  // Skip signature check in development or if explicitly disabled
-  if (SKIP_SIGNATURE_CHECK) {
-    logInfo('Skipping webhook signature verification (development mode or explicitly disabled)');
+// Simple in-memory rate limiter
+const rateLimiter = new Map<string, { count: number; resetTime: number }>();
+const RATE_LIMIT = 100; // requests
+const RATE_WINDOW = 60 * 1000; // per minute
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const record = rateLimiter.get(ip);
+
+  if (!record || now > record.resetTime) {
+    rateLimiter.set(ip, { count: 1, resetTime: now + RATE_WINDOW });
     return true;
   }
 
-  if (!signature || !GHL_WEBHOOK_SECRET) {
-    logWarn('Missing webhook signature or secret', {
-      action: 'signature_check',
-      metadata: {
-        hasSignature: !!signature,
-        hasSecret: !!GHL_WEBHOOK_SECRET,
-        secretLength: GHL_WEBHOOK_SECRET.length
-      }
-    });
+  if (record.count >= RATE_LIMIT) {
     return false;
   }
 
-  try {
-    // Check if GoHighLevel is sending the raw secret as the signature
-    if (signature === GHL_WEBHOOK_SECRET) {
-      logInfo('GoHighLevel sent raw secret as signature');
-      return true;
-    }
+  record.count++;
+  return true;
+}
 
+/**
+ * Verify webhook signature using HMAC SHA-256
+ * SECURITY: This function does NOT allow bypassing signature verification
+ */
+function verifyWebhookSignature(
+  payload: string,
+  signature: string | null
+): { valid: boolean; reason?: string } {
+  // CRITICAL: Secret is required - no production bypass
+  if (!GHL_WEBHOOK_SECRET) {
+    return {
+      valid: false,
+      reason: 'Server configuration error: GHL_WEBHOOK_SECRET not set'
+    };
+  }
+
+  if (!signature) {
+    return {
+      valid: false,
+      reason: 'Missing webhook signature header'
+    };
+  }
+
+  try {
     // GoHighLevel might send signature in different formats
-    // Try HMAC signature verification
     const expectedSignature = crypto
       .createHmac('sha256', GHL_WEBHOOK_SECRET)
       .update(payload)
       .digest('hex');
 
-    // Check if signature matches directly
-    if (signature === expectedSignature) {
-      return true;
+    // Try multiple signature formats
+    const validFormats = [
+      signature === expectedSignature,
+      signature === `sha256=${expectedSignature}`,
+      signature.replace(/^sha256=/, '') === expectedSignature,
+      signature === GHL_WEBHOOK_SECRET // Raw secret (some systems do this)
+    ];
+
+    if (validFormats.some(valid => valid)) {
+      return { valid: true };
     }
 
-    // Try with sha256= prefix (GitHub style)
-    if (signature === `sha256=${expectedSignature}`) {
-      return true;
-    }
-
-    // Try if GoHighLevel sends with sha256= prefix and we need to remove it
-    const signatureWithoutPrefix = signature.replace(/^sha256=/, '');
-    if (signatureWithoutPrefix === expectedSignature) {
-      return true;
-    }
-
-    logWarn('Signature mismatch', {
-      action: 'signature_verification',
-      metadata: {
-        receivedSignatureLength: signature.length,
-        expectedSignatureLength: expectedSignature.length,
-        receivedPrefix: signature.substring(0, 10),
-        expectedPrefix: expectedSignature.substring(0, 10)
-      }
-    });
-
-    return false;
+    return {
+      valid: false,
+      reason: 'Signature mismatch - invalid authentication'
+    };
   } catch (error) {
     logError('Error verifying webhook signature', undefined, error as Error);
-    return false;
+    return {
+      valid: false,
+      reason: 'Signature verification error'
+    };
   }
 }
 
-// Normalize lot size to square feet (copied from upload-properties-v4)
+// Helper functions from original webhook
 function normalizeLotSize(lotSizeStr: string): number {
   if (!lotSizeStr) return 0;
-
   const str = lotSizeStr.toLowerCase().trim();
 
-  // Check for acres
   if (str.includes('acre')) {
     const acreMatch = str.match(/(\d+\.?\d*)\s*acre/);
     if (acreMatch) {
       const acres = parseFloat(acreMatch[1]);
-      return Math.round(acres * 43560); // Convert acres to sq ft
+      return Math.round(acres * 43560);
     }
   }
 
-  // Check for square feet
   if (str.includes('sq') || str.includes('sf')) {
     const sqftMatch = str.match(/(\d+)/);
     if (sqftMatch) {
@@ -110,7 +113,6 @@ function normalizeLotSize(lotSizeStr: string): number {
     }
   }
 
-  // Assume raw number is square feet
   const rawNumber = parseFloat(str.replace(/[,$]/g, ''));
   if (!isNaN(rawNumber)) {
     return Math.round(rawNumber);
@@ -119,7 +121,6 @@ function normalizeLotSize(lotSizeStr: string): number {
   return 0;
 }
 
-// Normalize state codes to 2-letter uppercase
 function normalizeState(state: string): string {
   if (!state) return '';
 
@@ -137,17 +138,13 @@ function normalizeState(state: string): string {
   };
 
   const normalized = state.toLowerCase().trim();
-
-  // Check if it's already a 2-letter code
   if (normalized.length === 2) {
     return normalized.toUpperCase();
   }
 
-  // Check if it's a full state name
   return stateMap[normalized] || normalized.substring(0, 2).toUpperCase();
 }
 
-// Clean and normalize city names
 function normalizeCity(city: string): string {
   if (!city) return '';
 
@@ -170,10 +167,8 @@ function normalizeCity(city: string): string {
     return cityFixes[lower];
   }
 
-  // Capitalize first letter of each word
   return cleaned.split(' ')
     .map(word => {
-      // Handle special cases like "McAllen" or "O'Neill"
       if (word.toLowerCase().startsWith('mc')) {
         return 'Mc' + word.charAt(2).toUpperCase() + word.slice(3).toLowerCase();
       }
@@ -186,14 +181,11 @@ function normalizeCity(city: string): string {
     .join(' ');
 }
 
-// Format street address with proper capitalization
 function formatStreetAddress(address: string): string {
   if (!address) return '';
 
-  // Common abbreviations that should stay uppercase
   const keepUppercase = new Set(['NE', 'NW', 'SE', 'SW', 'N', 'S', 'E', 'W', 'APT', 'STE', 'UNIT']);
 
-  // Common street suffixes and their proper format
   const streetSuffixes: Record<string, string> = {
     'street': 'St', 'st': 'St',
     'avenue': 'Ave', 'ave': 'Ave',
@@ -208,49 +200,40 @@ function formatStreetAddress(address: string): string {
     'highway': 'Hwy', 'hwy': 'Hwy'
   };
 
-  // Split address into parts
   const parts = address.trim().split(/\s+/);
 
   return parts.map((part, index) => {
     const lower = part.toLowerCase();
 
-    // Keep numbers as-is
     if (/^\d+/.test(part)) {
       return part;
     }
 
-    // Check for unit/apartment indicators
     if (index > 0 && (lower === 'apt' || lower === 'ste' || lower === 'unit')) {
       return part.charAt(0).toUpperCase() + part.slice(1).toLowerCase();
     }
 
-    // Check for unit numbers (like "2B", "3A")
     if (/^\d+[A-Za-z]+$/.test(part)) {
       return part.toUpperCase();
     }
 
-    // Check for directional abbreviations
     if (keepUppercase.has(part.toUpperCase())) {
       return part.toUpperCase();
     }
 
-    // Check for street suffixes
     if (streetSuffixes[lower]) {
       return streetSuffixes[lower];
     }
 
-    // Check for possessives or contractions
     if (part.includes("'")) {
       const subParts = part.split("'");
       return subParts.map(p => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase()).join("'");
     }
 
-    // Default: capitalize first letter
     return part.charAt(0).toUpperCase() + part.slice(1).toLowerCase();
   }).join(' ');
 }
 
-// GoHighLevel webhook payload interface
 interface GHLPropertyPayload {
   opportunityId: string;
   opportunityName?: string;
@@ -258,7 +241,7 @@ interface GHLPropertyPayload {
   propertyCity: string;
   state: string;
   zipCode?: string;
-  price: number | string; // Accept both number and string
+  price: number | string;
   bedrooms?: number | string;
   bathrooms?: number | string;
   livingArea?: number | string;
@@ -268,85 +251,125 @@ interface GHLPropertyPayload {
   imageLink?: string;
   description?: string;
   downPaymentAmount?: number | string;
-  downPayment?: number | string; // Percentage
+  downPayment?: number | string;
   interestRate?: number | string;
   monthlyPayment?: number | string;
-  termYears?: number | string; // Amortization schedule term in years
-  amortizationSchedule?: number | string; // Alternative field name for term years
-  balloon?: number | string; // Years
-  zestimate?: number | string; // Zillow home value estimate
-  rentZestimate?: number | string; // Zillow rental estimate
+  termYears?: number | string;
+  amortizationSchedule?: number | string;
+  balloon?: number | string;
+  zestimate?: number | string;
+  rentZestimate?: number | string;
 }
 
-// Helper function to safely parse numbers
 function parseNumberField(value: number | string | undefined): number {
   if (value === undefined || value === null || value === '') return 0;
   if (typeof value === 'number') return value;
 
-  // Remove common formatting characters
   const cleaned = String(value).replace(/[$,]/g, '').trim();
   const parsed = parseFloat(cleaned);
   return isNaN(parsed) ? 0 : parsed;
 }
 
 export async function POST(request: NextRequest) {
+  const requestStartTime = Date.now();
+
   try {
-    // Check database availability
-    if (!db) {
-      logError('Database not available');
+    // 1. SECURITY: Get client IP for rate limiting and logging
+    const clientIp = request.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
+                     request.headers.get('x-real-ip') ||
+                     'unknown';
+
+    const userAgent = request.headers.get('user-agent') || 'unknown';
+
+    // 2. SECURITY: Rate limiting
+    if (!checkRateLimit(clientIp)) {
+      await logWarn('Rate limit exceeded for webhook', {
+        action: 'webhook_rate_limit_exceeded',
+        metadata: { ip: clientIp, userAgent }
+      });
+
       return NextResponse.json(
-        { error: 'Database not available' },
-        { status: 500 }
+        { error: 'Rate limit exceeded. Please try again later.' },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': '60',
+            'X-RateLimit-Limit': RATE_LIMIT.toString(),
+            'X-RateLimit-Window': (RATE_WINDOW / 1000).toString()
+          }
+        }
       );
     }
 
-    // Parse request body
+    // 3. SECURITY: Check database availability
+    if (!db) {
+      logError('Database not available', {
+        action: 'webhook_db_unavailable',
+        metadata: { ip: clientIp }
+      });
+
+      return NextResponse.json(
+        { error: 'Service temporarily unavailable' },
+        { status: 503 }
+      );
+    }
+
+    // 4. Parse request body
     const body = await request.text();
 
-    // Check multiple possible header names for signature
+    // 5. SECURITY: Verify webhook signature (REQUIRED - NO BYPASS)
     const signature = request.headers.get('x-ghl-signature') ||
                      request.headers.get('X-GHL-Signature') ||
                      request.headers.get('x-webhook-signature') ||
                      request.headers.get('X-Webhook-Signature');
 
-    // Log incoming webhook for debugging
-    logInfo('Webhook received', {
-      action: 'webhook_received_raw',
-      metadata: {
-        bodyLength: body.length,
-        hasSignature: !!signature,
-        headers: Object.fromEntries(request.headers.entries())
-      }
-    });
+    const verification = verifyWebhookSignature(body, signature);
 
-    // Verify webhook signature for security (can be skipped in development)
-    if (!verifyWebhookSignature(body, signature)) {
-      logError('Invalid GoHighLevel webhook signature', {
-        action: 'webhook_verification_failed',
+    if (!verification.valid) {
+      await logError('Webhook signature verification failed', {
+        action: 'webhook_auth_failed',
         metadata: {
+          ip: clientIp,
+          userAgent,
+          reason: verification.reason,
           hasSignature: !!signature,
           hasSecret: !!GHL_WEBHOOK_SECRET,
-          environment: process.env.NODE_ENV
+          timestamp: new Date().toISOString()
         }
       });
 
-      // Only reject in production
-      if (!SKIP_SIGNATURE_CHECK) {
-        return NextResponse.json(
-          { error: 'Invalid webhook signature' },
-          { status: 401 }
-        );
-      }
+      return NextResponse.json(
+        {
+          error: 'Unauthorized',
+          message: 'Invalid or missing webhook signature',
+          detail: verification.reason
+        },
+        {
+          status: 401,
+          headers: {
+            'WWW-Authenticate': 'Signature realm="GoHighLevel Webhook"'
+          }
+        }
+      );
     }
 
-    // Parse the payload
-    // GoHighLevel sends opportunityId in body (custom data) and property fields in headers
+    // 6. Log successful authentication
+    await logInfo('Authenticated webhook request received', {
+      action: 'webhook_authenticated',
+      metadata: {
+        ip: clientIp,
+        userAgent,
+        bodyLength: body.length
+      }
+    });
+
+    // 7. Parse the payload
     let bodyData: any = {};
     try {
       bodyData = JSON.parse(body);
     } catch (parseError) {
-      logWarn('Failed to parse body as JSON, will use headers only', {
-        action: 'webhook_body_parse_warning',
+      await logWarn('Failed to parse webhook body as JSON', {
+        action: 'webhook_parse_error',
         metadata: {
           error: (parseError as Error).message,
           bodyPreview: body.substring(0, 200)
@@ -354,8 +377,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Read opportunityId from body first, fallback to header
-    // GoHighLevel sends it as 'id', 'opportunityId', or in custom data
+    // 8. Extract opportunityId
     const opportunityId = bodyData.opportunityId ||
                          bodyData.id ||
                          bodyData.customData?.opportunityId ||
@@ -363,23 +385,21 @@ export async function POST(request: NextRequest) {
                          request.headers.get('opportunityId');
 
     if (!opportunityId) {
-      logError('No opportunityId found in body or headers', {
-        action: 'missing_opportunity_id',
+      await logError('No opportunityId in webhook payload', {
+        action: 'webhook_missing_id',
         metadata: {
           bodyKeys: Object.keys(bodyData),
-          bodyIdField: bodyData.id,
-          bodyOpportunityIdField: bodyData.opportunityId,
-          headerKeys: Array.from(request.headers.keys()).slice(0, 20)
+          ip: clientIp
         }
       });
+
       return NextResponse.json(
-        { error: 'opportunityId is required (send as id, opportunityId, or customData.opportunityId)' },
+        { error: 'opportunityId is required' },
         { status: 400 }
       );
     }
 
-    // Read all property data from HEADERS (where GoHighLevel sends it)
-    // BUT ALSO check body for fields that might be there instead (like description)
+    // 9. Build payload from headers and body
     const payload: GHLPropertyPayload = {
       opportunityId: opportunityId,
       opportunityName: request.headers.get('opportunityname') || request.headers.get('opportunityName') || bodyData.opportunityName || '',
@@ -407,113 +427,80 @@ export async function POST(request: NextRequest) {
       rentZestimate: request.headers.get('rentzestimate') || request.headers.get('rentZestimate') || request.headers.get('propertyRentZestimate') || bodyData.rentZestimate || bodyData.rent_estimate || ''
     };
 
-    logInfo('GoHighLevel save property webhook parsed', {
+    await logInfo('Webhook payload parsed', {
       action: 'webhook_parsed',
       metadata: {
         opportunityId: payload.opportunityId,
         address: payload.propertyAddress,
         city: payload.propertyCity,
-        price: payload.price,
-        hasDescription: !!payload.description,
-        descriptionLength: payload.description?.length || 0,
-        descriptionSource: payload.description ?
-          (request.headers.get('description') ? 'header:description' :
-           request.headers.get('propertyDescription') ? 'header:propertyDescription' :
-           request.headers.get('propertydescription') ? 'header:propertydescription' :
-           bodyData.description ? 'body:description' :
-           bodyData.propertyDescription ? 'body:propertyDescription' :
-           bodyData.notes ? 'body:notes' : 'unknown') : 'MISSING'
+        price: payload.price
       }
     });
 
-    // Parse numeric fields
+    // 10. Validate required fields
     const price = parseNumberField(payload.price);
-
-    // Validate required fields
     const validationErrors: string[] = [];
 
-    if (!payload.opportunityId) {
-      validationErrors.push('opportunityId is required');
-    }
-    if (!payload.propertyAddress || payload.propertyAddress.trim().length === 0) {
-      validationErrors.push('propertyAddress is required');
-    }
-    if (!payload.propertyCity || payload.propertyCity.trim().length === 0) {
-      validationErrors.push('propertyCity is required');
-    }
-    if (!payload.state) {
-      validationErrors.push('state is required');
-    }
-    if (!price || price <= 0) {
-      validationErrors.push('price must be greater than 0');
-    }
+    if (!payload.opportunityId) validationErrors.push('opportunityId is required');
+    if (!payload.propertyAddress || payload.propertyAddress.trim().length === 0) validationErrors.push('propertyAddress is required');
+    if (!payload.propertyCity || payload.propertyCity.trim().length === 0) validationErrors.push('propertyCity is required');
+    if (!payload.state) validationErrors.push('state is required');
+    if (!price || price <= 0) validationErrors.push('price must be greater than 0');
 
     if (validationErrors.length > 0) {
-      logWarn('Webhook validation failed', {
+      await logWarn('Webhook validation failed', {
         action: 'webhook_validation_error',
         metadata: {
           errors: validationErrors,
           opportunityId: payload.opportunityId,
-          receivedData: {
-            opportunityId: payload.opportunityId,
-            address: payload.propertyAddress,
-            city: payload.propertyCity,
-            state: payload.state,
-            price: payload.price
-          }
+          ip: clientIp
         }
       });
+
       return NextResponse.json(
-        {
-          error: 'Validation failed',
-          details: validationErrors
-        },
+        { error: 'Validation failed', details: validationErrors },
         { status: 400 }
       );
     }
 
-    // Use opportunity ID as the property ID to maintain consistency
+    // 11. Process property (rest of the logic from original webhook)
     const propertyId = payload.opportunityId;
 
-    // Check if property already exists
+    // Check if property exists
     let isUpdate = false;
     try {
       const existingDoc = await getDoc(doc(db, 'properties', propertyId));
       if (existingDoc.exists()) {
         isUpdate = true;
-        logInfo(`Property with opportunity ID ${propertyId} already exists, updating`, {
-          action: 'property_update',
+        await logInfo(`Property ${propertyId} already exists, updating`, {
+          action: 'property_update_detected',
           metadata: { propertyId }
         });
       }
     } catch (checkError) {
-      logError('Error checking existing property', {
+      await logError('Error checking existing property', {
         action: 'property_check_error',
         metadata: { propertyId, error: (checkError as Error).message }
       }, checkError as Error);
     }
 
-    // Process financial calculations with priority logic
+    // Process financials
     let downPaymentAmount = parseNumberField(payload.downPaymentAmount);
     let downPaymentPercent = parseNumberField(payload.downPayment);
 
-    // Calculate down payment amount from percentage if percentage is provided
     if (!downPaymentAmount && downPaymentPercent && price) {
       downPaymentAmount = Math.round((downPaymentPercent / 100) * price);
     }
 
-    // Calculate down payment percentage if we have amount but not percentage
     if (downPaymentAmount && !downPaymentPercent && price) {
       downPaymentPercent = (downPaymentAmount / price) * 100;
     }
 
-    // Parse financial fields
     const providedMonthlyPayment = parseNumberField(payload.monthlyPayment);
     const providedInterestRate = parseNumberField(payload.interestRate);
     const providedTermYears = parseNumberField(payload.termYears || payload.amortizationSchedule);
     const balloonYears = parseNumberField(payload.balloon);
 
-    // Dynamic amortization based on price (for internal calculations only, not displayed if not provided)
     const getDefaultTermYears = (listPrice: number): number => {
       if (listPrice < 150000) return 15;
       if (listPrice < 300000) return 20;
@@ -521,34 +508,24 @@ export async function POST(request: NextRequest) {
       return 30;
     };
 
-    // Calculate loan amount
     const loanAmount = price - downPaymentAmount;
-
-    // PRIORITY CALCULATION LOGIC
     let calculatedMonthlyPayment = 0;
-    let calculatedInterestRate = providedInterestRate; // Track calculated vs provided
-    let termYears = 0; // What we store in DB (0 if not provided by seller)
-    let termYearsForCalculation = 0; // What we use internally for calculations
+    let calculatedInterestRate = providedInterestRate;
+    let termYears = 0;
+    let termYearsForCalculation = 0;
 
     if (providedMonthlyPayment > 0) {
-      // PRIORITY 1: Monthly payment provided - use it directly
       calculatedMonthlyPayment = providedMonthlyPayment;
-
       if (providedInterestRate > 0 && loanAmount > 0) {
-        // If we have interest rate, calculate term from monthly payment (internal use only)
         calculatedInterestRate = providedInterestRate;
         const { calculateTermYears: calcTermYears } = await import('@/lib/property-calculations');
         termYearsForCalculation = calcTermYears(providedMonthlyPayment, loanAmount, providedInterestRate);
-        // Only store/show term if it was explicitly provided by seller
         termYears = providedTermYears > 0 ? providedTermYears : 0;
       } else {
-        // No interest rate provided - leave as 0 (will show "Contact seller" in UI)
         calculatedInterestRate = 0;
         termYears = providedTermYears > 0 ? providedTermYears : 0;
       }
-
     } else if (providedInterestRate > 0 && providedTermYears > 0) {
-      // PRIORITY 2: Interest rate + term years provided - calculate monthly payment
       calculatedInterestRate = providedInterestRate;
       termYears = providedTermYears;
       termYearsForCalculation = providedTermYears;
@@ -562,12 +539,10 @@ export async function POST(request: NextRequest) {
           );
         }
       }
-
     } else if (providedInterestRate > 0) {
-      // PRIORITY 3: Only interest rate provided - use default term for calculation only
       calculatedInterestRate = providedInterestRate;
       termYearsForCalculation = providedTermYears > 0 ? providedTermYears : getDefaultTermYears(price);
-      termYears = providedTermYears > 0 ? providedTermYears : 0; // Store 0 if not provided (shows "Contact seller")
+      termYears = providedTermYears > 0 ? providedTermYears : 0;
       if (loanAmount > 0) {
         const monthlyRate = calculatedInterestRate / 100 / 12;
         const numPayments = termYearsForCalculation * 12;
@@ -578,16 +553,13 @@ export async function POST(request: NextRequest) {
           );
         }
       }
-
     } else {
-      // PRIORITY 4: Nothing provided - use defaults for calculation only
-      calculatedInterestRate = 0; // Leave as 0 (will show "Contact seller" in UI)
+      calculatedInterestRate = 0;
       termYearsForCalculation = providedTermYears > 0 ? providedTermYears : getDefaultTermYears(price);
-      termYears = providedTermYears > 0 ? providedTermYears : 0; // Store 0 if not provided (shows "Contact seller")
-      // No calculation without provided data
+      termYears = providedTermYears > 0 ? providedTermYears : 0;
     }
 
-    // Generate image URL if not provided
+    // Generate image URL if needed
     let imageUrl = payload.imageLink || '';
     if (!imageUrl || !imageUrl.startsWith('http')) {
       const fullAddress = `${payload.propertyAddress}, ${payload.propertyCity}, ${payload.state}`;
@@ -609,7 +581,7 @@ export async function POST(request: NextRequest) {
     const normalizedState = normalizeState(payload.state);
     const formattedAddress = formatStreetAddress(payload.propertyAddress);
 
-    // Parse other numeric fields
+    // Parse other fields
     const bedrooms = Math.max(0, parseNumberField(payload.bedrooms));
     const bathrooms = Math.max(0, parseNumberField(payload.bathrooms));
     const squareFeet = Math.max(0, parseNumberField(payload.livingArea));
@@ -617,64 +589,46 @@ export async function POST(request: NextRequest) {
     const zestimate = parseNumberField(payload.zestimate);
     const rentZestimate = parseNumberField(payload.rentZestimate);
 
-    // Prepare property data for database
+    // Prepare property data
     const propertyData: any = {
-      // IDs and Names
       id: propertyId,
       opportunityId: payload.opportunityId,
       opportunityName: payload.opportunityName || formattedAddress,
-
-      // Location - all required fields
       address: formattedAddress,
       city: normalizedCity,
       state: normalizedState,
       zipCode: payload.zipCode?.trim() || '',
-
-      // Pricing - required
       price: price,
-      listPrice: price, // Components expect listPrice
-
-      // Property Details - with defaults
+      listPrice: price,
       bedrooms: bedrooms,
-      beds: bedrooms, // Some components use 'beds'
+      beds: bedrooms,
       bathrooms: bathrooms,
-      baths: bathrooms, // Some components use 'baths'
+      baths: bathrooms,
       squareFeet: squareFeet,
       yearBuilt: yearBuilt || 0,
       lotSize: normalizeLotSize(payload.lotSizes || ''),
       propertyType,
-      description: sanitizeDescription(payload.description), // Sanitize description for safety
-
-      // Market Data
+      description: sanitizeDescription(payload.description),
       estimatedValue: zestimate > 0 ? zestimate : undefined,
       rentZestimate: rentZestimate > 0 ? rentZestimate : undefined,
-
-      // Financial Details - all calculated
       monthlyPayment: calculatedMonthlyPayment,
       downPaymentAmount,
       downPaymentPercent,
-      interestRate: calculatedInterestRate, // Use calculated value
+      interestRate: calculatedInterestRate,
       termYears,
       balloonYears: balloonYears > 0 ? balloonYears : null,
-      balloonPayment: null, // No longer calculated - just store years until refinance
-
-      // Images
+      balloonPayment: null,
       imageUrls: imageUrl ? [imageUrl] : [],
-
-      // Meta - required fields
       source: 'gohighlevel',
       status: 'active',
       isActive: true,
       featured: false,
       priority: 1,
       nearbyCities: [],
-
-      // Timestamps
       updatedAt: serverTimestamp(),
       lastUpdated: new Date().toISOString()
     };
 
-    // Add createdAt only for new properties
     if (!isUpdate) {
       Object.assign(propertyData, {
         createdAt: serverTimestamp(),
@@ -682,7 +636,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Validate financial data
+    // Validate financials
     const validationData: PropertyFinancialData = {
       listPrice: price,
       monthlyPayment: calculatedMonthlyPayment,
@@ -697,7 +651,6 @@ export async function POST(request: NextRequest) {
 
     const validation = validatePropertyFinancials(validationData);
 
-    // Mark properties that need review OR clear flag if validation passes
     if (validation.needsReview) {
       propertyData.needsReview = true;
       propertyData.reviewReasons = validation.issues.map(issue => {
@@ -707,46 +660,31 @@ export async function POST(request: NextRequest) {
           severity: issue.severity,
           actualValue: issue.actualValue
         };
-        // Only add optional fields if they have values (Firestore doesn't allow undefined)
         if (issue.expectedRange) reason.expectedRange = issue.expectedRange;
         if (issue.suggestion) reason.suggestion = issue.suggestion;
         return reason;
       });
 
-      // Log validation warnings
-      logWarn(`Property has validation issues (GHL webhook): ${formattedAddress}`, {
-        action: 'ghl_validation_warning',
+      await logWarn(`Property has validation issues: ${formattedAddress}`, {
+        action: 'property_validation_warning',
         metadata: {
           opportunityId: payload.opportunityId,
           address: formattedAddress,
-          issues: validation.issues,
-          shouldAutoReject: validation.shouldAutoReject
+          issues: validation.issues
         }
       });
     } else {
-      // Validation passed - clear review flags if this is an update
       propertyData.needsReview = false;
       propertyData.reviewReasons = [];
-
-      if (isUpdate) {
-        logInfo(`Property validation passed, clearing review flags (GHL webhook): ${formattedAddress}`, {
-          action: 'ghl_validation_passed',
-          metadata: {
-            opportunityId: payload.opportunityId,
-            address: formattedAddress
-          }
-        });
-      }
     }
 
-    // Auto-reject if validation fails critically
     if (validation.shouldAutoReject) {
       const issueDetails = validation.issues
         .map(i => `${i.field}: ${i.issue}`)
         .join('; ');
 
-      logError('Property auto-rejected due to validation (GHL webhook)', {
-        action: 'ghl_validation_rejected',
+      await logError('Property auto-rejected due to validation', {
+        action: 'property_validation_rejected',
         metadata: {
           opportunityId: payload.opportunityId,
           address: formattedAddress,
@@ -765,7 +703,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Auto-cleanup: Clean address and upgrade image URLs
+    // Auto-cleanup
     const cleanedData = autoCleanPropertyData({
       address: propertyData.address,
       city: propertyData.city,
@@ -774,14 +712,12 @@ export async function POST(request: NextRequest) {
       imageUrls: propertyData.imageUrls
     });
 
-    // Apply cleaned data
     if (cleanedData.address) {
       propertyData.address = cleanedData.address;
     }
     if (cleanedData.imageUrls && cleanedData.imageUrls.length > 0) {
       propertyData.imageUrls = cleanedData.imageUrls;
     }
-    // Mark images as enhanced (set by auto-cleanup)
     if (cleanedData.imageEnhanced !== undefined) {
       propertyData.imageEnhanced = cleanedData.imageEnhanced;
     }
@@ -789,7 +725,7 @@ export async function POST(request: NextRequest) {
       propertyData.imageEnhancedAt = cleanedData.imageEnhancedAt;
     }
 
-    // Strip undefined values to prevent Firestore errors
+    // Strip undefined values
     const cleanPropertyData = Object.fromEntries(
       Object.entries(propertyData).filter(([_, value]) => value !== undefined)
     );
@@ -799,21 +735,19 @@ export async function POST(request: NextRequest) {
       await setDoc(
         doc(db, 'properties', propertyId),
         cleanPropertyData,
-        { merge: isUpdate } // Merge for updates, overwrite for new
+        { merge: isUpdate }
       );
 
-      // Queue nearby cities calculation with full property data
+      // Queue nearby cities calculation
       try {
         queueNearbyCitiesForProperty(propertyId, {
           address: propertyData.address,
           city: propertyData.city,
           state: propertyData.state,
           zipCode: propertyData.zipCode || undefined
-          // Note: latitude/longitude not available from GHL webhook - will be geocoded if needed
         });
       } catch (queueError) {
-        // Don't fail the webhook if queueing fails
-        logWarn('Failed to queue nearby cities calculation', {
+        await logWarn('Failed to queue nearby cities calculation', {
           action: 'nearby_cities_queue_error',
           metadata: {
             propertyId,
@@ -822,53 +756,39 @@ export async function POST(request: NextRequest) {
         });
       }
 
-      logInfo(`Property ${isUpdate ? 'updated' : 'created'} successfully`, {
+      await logInfo(`Property ${isUpdate ? 'updated' : 'created'} successfully`, {
         action: isUpdate ? 'property_updated' : 'property_created',
         metadata: {
           propertyId,
           address: formattedAddress,
           city: normalizedCity,
           state: normalizedState,
-          price: price
+          price: price,
+          processingTimeMs: Date.now() - requestStartTime
         }
       });
 
-      // Auto-add to property rotation queue (non-blocking)
-      // Only if property is active and has images
+      // Auto-add to rotation queue
       if (propertyData.status === 'active' && propertyData.isActive && propertyData.imageUrls && propertyData.imageUrls.length > 0) {
         try {
-          // Import the function directly instead of making HTTP call
           const { addToPropertyRotationQueue } = await import('@/lib/feed-store-firestore');
-
-          console.log(`🎥 Auto-adding property ${propertyId} to video queue`);
-
-          // Add to queue directly (non-blocking - don't await)
           addToPropertyRotationQueue(propertyId)
             .then(() => {
-              console.log(`   ✅ Successfully added ${propertyId} to rotation queue`);
+              console.log(`✅ Added ${propertyId} to rotation queue`);
             })
             .catch(err => {
-              console.error(`   ❌ Failed to auto-add property to queue:`, err);
+              console.error(`❌ Failed to add property to queue:`, err);
             });
         } catch (error) {
           console.error('Error triggering auto-add to queue:', error);
-          // Don't fail property creation if queue add fails
         }
-      } else {
-        console.log(`   ⏭️  Skipping queue add for ${propertyId}: status=${propertyData.status}, isActive=${propertyData.isActive}, hasImages=${!!(propertyData.imageUrls && propertyData.imageUrls.length > 0)}`);
       }
 
-      // Trigger buyer matching and notifications
-      // This will find all buyers that match this property and send SMS notifications
-      // IMPORTANT: We MUST await this in serverless to ensure it completes before function terminates
+      // Trigger buyer matching
       if (propertyData.status === 'active' && propertyData.isActive) {
         try {
-          console.log(`🔔 Triggering buyer matching for ${isUpdate ? 'updated' : 'new'} property ${propertyId}`);
-
-          // Import and call the matching logic directly
           const { collection: firestoreCollection, query: firestoreQuery, where: firestoreWhere, getDocs: firestoreGetDocs, updateDoc, doc: firestoreDoc, arrayUnion, serverTimestamp: firestoreServerTimestamp } = await import('firebase/firestore');
 
-          // Get relevant buyers in the same state
           const relevantBuyersQuery = firestoreQuery(
             firestoreCollection(db, 'buyerProfiles'),
             firestoreWhere('preferredState', '==', cleanPropertyData.state),
@@ -876,24 +796,19 @@ export async function POST(request: NextRequest) {
           );
 
           const buyerDocs = await firestoreGetDocs(relevantBuyersQuery);
-          console.log(`   Found ${buyerDocs.size} buyers in ${cleanPropertyData.state}`);
-
           const matchedBuyers: any[] = [];
 
-          // Check each buyer for match
           for (const buyerDoc of buyerDocs.docs) {
             const buyerData = buyerDoc.data();
             const criteria = buyerData.searchCriteria || {};
             const buyerCities = criteria.cities || [buyerData.preferredCity];
 
-            // Check location match
             const locationMatch = buyerCities.some((cityName: string) =>
               cleanPropertyData.city.toLowerCase() === cityName.toLowerCase()
             );
 
             if (!locationMatch) continue;
 
-            // Check budget match (OR logic)
             const maxMonthly = criteria.maxMonthlyPayment || buyerData.maxMonthlyPayment || 0;
             const maxDown = criteria.maxDownPayment || buyerData.maxDownPayment || 0;
             const monthlyMatch = cleanPropertyData.monthlyPayment <= maxMonthly;
@@ -902,14 +817,12 @@ export async function POST(request: NextRequest) {
 
             if (!budgetMatch) continue;
 
-            // Check requirements
             const requirementsMatch =
               (!buyerData.minBedrooms || cleanPropertyData.bedrooms >= buyerData.minBedrooms) &&
               (!buyerData.minBathrooms || cleanPropertyData.bathrooms >= buyerData.minBathrooms);
 
             if (!requirementsMatch) continue;
 
-            // This buyer matches! Add property to their matches
             const buyerRef = firestoreDoc(db, 'buyerProfiles', buyerDoc.id);
             await updateDoc(buyerRef, {
               matchedPropertyIds: arrayUnion(propertyId),
@@ -920,22 +833,10 @@ export async function POST(request: NextRequest) {
             matchedBuyers.push({ ...buyerData, id: buyerDoc.id });
           }
 
-          console.log(`   ✅ Matched ${matchedBuyers.length} buyers`);
-
-          // Send notifications if we have matches
           if (matchedBuyers.length > 0) {
-            console.log(`   📱 Sending SMS notifications to ${matchedBuyers.length} buyers...`);
-
-            // Get GoHighLevel webhook URL
             const ghlWebhookUrl = process.env.GOHIGHLEVEL_WEBHOOK_URL;
 
-            if (!ghlWebhookUrl) {
-              console.warn('   ⚠️  GOHIGHLEVEL_WEBHOOK_URL not configured - skipping notifications');
-            } else {
-              // Send directly to GoHighLevel (no internal API call)
-              let sent = 0;
-              let failed = 0;
-
+            if (ghlWebhookUrl) {
               for (const buyer of matchedBuyers) {
                 try {
                   const smsMessage = `🏠 New Property Match!
@@ -951,7 +852,7 @@ View it now: https://ownerfi.ai/dashboard
 
 Reply STOP to unsubscribe`;
 
-                  const response = await fetch(ghlWebhookUrl, {
+                  await fetch(ghlWebhookUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -964,29 +865,15 @@ Reply STOP to unsubscribe`;
                       trigger: isUpdate ? 'buyer_criteria_changed' : 'new_property_added',
                     }),
                   });
-
-                  if (response.ok) {
-                    sent++;
-                  } else {
-                    failed++;
-                    console.warn(`   ⚠️  Failed to send to ${buyer.phone}: ${response.status}`);
-                  }
                 } catch (err) {
-                  failed++;
-                  console.error(`   ❌ Error sending to ${buyer.phone}:`, err);
+                  console.error(`❌ Error sending notification to ${buyer.phone}:`, err);
                 }
               }
-
-              console.log(`   ✅ Notifications: ${sent} sent, ${failed} failed`);
             }
           }
-
         } catch (error) {
           console.error('Error in buyer matching:', error);
-          // Don't fail property creation if matching fails
         }
-      } else {
-        console.log(`   ⏭️  Skipping buyer matching for ${propertyId}: status=${propertyData.status}, isActive=${propertyData.isActive}`);
       }
 
       return NextResponse.json({
@@ -997,12 +884,18 @@ Reply STOP to unsubscribe`;
           city: normalizedCity,
           state: normalizedState,
           price: price,
-          message: isUpdate ? 'Property updated successfully' : 'Property created successfully'
+          message: isUpdate ? 'Property updated successfully' : 'Property created successfully',
+          processingTimeMs: Date.now() - requestStartTime
+        }
+      }, {
+        headers: {
+          'X-Processing-Time': `${Date.now() - requestStartTime}ms`,
+          'X-Property-Id': propertyId
         }
       });
 
     } catch (dbError) {
-      logError('Failed to save property to database', {
+      await logError('Failed to save property to database', {
         action: 'property_save_error',
         metadata: {
           propertyId,
@@ -1021,7 +914,7 @@ Reply STOP to unsubscribe`;
     }
 
   } catch (error) {
-    logError('Unexpected error in GoHighLevel save property webhook', {
+    await logError('Unexpected error in webhook', {
       action: 'webhook_unexpected_error',
       metadata: {
         error: (error as Error).message,
@@ -1038,4 +931,33 @@ Reply STOP to unsubscribe`;
       { status: 500 }
     );
   }
+}
+
+// Block all other HTTP methods
+export async function GET() {
+  return NextResponse.json(
+    { error: 'Method not allowed. Use POST.' },
+    { status: 405, headers: { 'Allow': 'POST' } }
+  );
+}
+
+export async function PUT() {
+  return NextResponse.json(
+    { error: 'Method not allowed. Use POST.' },
+    { status: 405, headers: { 'Allow': 'POST' } }
+  );
+}
+
+export async function DELETE() {
+  return NextResponse.json(
+    { error: 'Method not allowed. Use POST.' },
+    { status: 405, headers: { 'Allow': 'POST' } }
+  );
+}
+
+export async function PATCH() {
+  return NextResponse.json(
+    { error: 'Method not allowed. Use POST.' },
+    { status: 405, headers: { 'Allow': 'POST' } }
+  );
 }

@@ -47,32 +47,14 @@ export function PropertyListingSwiper({ properties, onLike, onPass, favorites, p
     setImageError(false);
   }, [currentIndex]);
 
-  // Get current image URL
+  // Get current image URL - ONLY first image (no gallery)
   const getCurrentImage = (): string => {
     const images = currentPropertyListing?.imageUrls || [];
     if (images.length === 0 || imageError) {
       return '/placeholder-house.jpg';
     }
-    return images[imageIndex] || images[0] || '/placeholder-house.jpg';
-  };
-
-  // Navigate through images
-  const nextImage = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    const images = currentPropertyListing?.imageUrls || [];
-    if (images.length > 1) {
-      setImageIndex((prev) => (prev + 1) % images.length);
-      setImageLoading(true);
-    }
-  };
-
-  const prevImage = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    const images = currentPropertyListing?.imageUrls || [];
-    if (images.length > 1) {
-      setImageIndex((prev) => (prev - 1 + images.length) % images.length);
-      setImageLoading(true);
-    }
+    // Always use first image only - swipe navigates properties, not images
+    return images[0] || '/placeholder-house.jpg';
   };
 
   // Loading state
@@ -158,49 +140,7 @@ export function PropertyListingSwiper({ properties, onLike, onPass, favorites, p
               priority
             />
 
-            {/* Image Navigation Arrows */}
-            {currentPropertyListing?.imageUrls && currentPropertyListing.imageUrls.length > 1 && (
-              <>
-                <button
-                  onClick={prevImage}
-                  className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/50 hover:bg-black/70 text-white rounded-full flex items-center justify-center transition-all backdrop-blur-sm z-10"
-                  aria-label="Previous image"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 19l-7-7 7-7" />
-                  </svg>
-                </button>
-                <button
-                  onClick={nextImage}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/50 hover:bg-black/70 text-white rounded-full flex items-center justify-center transition-all backdrop-blur-sm z-10"
-                  aria-label="Next image"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
-
-                {/* Image Dots Indicator */}
-                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
-                  {currentPropertyListing.imageUrls.map((_, idx) => (
-                    <button
-                      key={idx}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setImageIndex(idx);
-                        setImageLoading(true);
-                      }}
-                      className={`w-2 h-2 rounded-full transition-all ${
-                        idx === imageIndex
-                          ? 'bg-white w-6'
-                          : 'bg-white/50 hover:bg-white/75'
-                      }`}
-                      aria-label={`Go to image ${idx + 1}`}
-                    />
-                  ))}
-                </div>
-              </>
-            )}
+            {/* Image gallery removed - swipe to browse properties instead */}
 
             {/* Property Counter Badge */}
             <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-md text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg">

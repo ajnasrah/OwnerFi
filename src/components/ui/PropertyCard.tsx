@@ -14,49 +14,27 @@ interface PropertyCardProps {
 }
 
 export const PropertyCard = React.memo(function PropertyCard({ property, onLike, onPass, isFavorited, style }: PropertyCardProps) {
-  const [imageIndex, setImageIndex] = useState(0);
   const [imageLoading, setImageLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
 
-  // Memoize expensive calculations
-  // BUGFIX: Prioritize legacy imageUrl field (Zillow images) before imageUrls array (Street View)
-  // This ensures we show real property photos instead of Google Street View when available
-  const images = useMemo(() => {
+  // ONLY use first image - no gallery
+  const currentImage = useMemo(() => {
     const legacyImageUrl = (property as any).imageUrl;
-    if (legacyImageUrl) {
-      // If we have a legacy imageUrl, use it as the first image
-      return [legacyImageUrl, ...(property.imageUrls || [])];
-    }
-    return property.imageUrls || [];
-  }, [property]);
+    const firstImage = legacyImageUrl || property.imageUrls?.[0];
 
-  const currentImage = useMemo(() =>
-    images.length > 0 && !imageError ? images[imageIndex] : '/placeholder-house.jpg',
-    [images, imageIndex, imageError]
-  );
+    // Validate image URL - prevent empty strings
+    if (!firstImage || firstImage.trim() === '' || imageError) {
+      return '/placeholder-house.jpg';
+    }
+    return firstImage;
+  }, [property, imageError]);
 
   const monthlyPayment = useMemo(() => {
     return property.monthlyPayment || 0;
   }, [property.monthlyPayment]);
 
   // Memoized event handlers
-  const nextImage = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (images.length > 1) {
-      setImageIndex((prev) => (prev + 1) % images.length);
-      setImageLoading(true);
-    }
-  }, [images.length]);
-
-  const prevImage = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (images.length > 1) {
-      setImageIndex((prev) => (prev - 1 + images.length) % images.length);
-      setImageLoading(true);
-    }
-  }, [images.length]);
-
   const toggleDetails = useCallback(() => {
     setShowDetails(prev => !prev);
   }, []);
@@ -94,8 +72,8 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
               }}
               sizes="(max-width: 768px) 100vw, 50vw"
               quality={75}
-              priority={imageIndex === 0}
-              loading={imageIndex === 0 ? "eager" : "lazy"}
+              priority={true}
+              loading="eager"
             />
           </div>
 
@@ -133,53 +111,7 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
           )}
         </div>
 
-        {/* Image Navigation - Tap Zones */}
-        {images.length > 1 && (
-          <>
-            <button
-              onClick={prevImage}
-              className="absolute left-0 top-1/4 bottom-1/4 w-1/4 z-10 group"
-              aria-label="Previous image"
-            >
-              <div className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-black/40 group-hover:bg-black/60 backdrop-blur-sm text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 19l-7-7 7-7" />
-                </svg>
-              </div>
-            </button>
-            <button
-              onClick={nextImage}
-              className="absolute right-0 top-1/4 bottom-1/4 w-1/4 z-10 group"
-              aria-label="Next image"
-            >
-              <div className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-black/40 group-hover:bg-black/60 backdrop-blur-sm text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" />
-                </svg>
-              </div>
-            </button>
-
-            {/* Image Dots */}
-            <div className="absolute top-20 left-0 right-0 flex justify-center gap-1.5 z-10">
-              {images.map((_, idx) => (
-                <button
-                  key={idx}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setImageIndex(idx);
-                    setImageLoading(true);
-                  }}
-                  className={`h-1 rounded-full transition-all ${
-                    idx === imageIndex
-                      ? 'bg-white w-8'
-                      : 'bg-white/40 w-1'
-                  }`}
-                  aria-label={`View image ${idx + 1}`}
-                />
-              ))}
-            </div>
-          </>
-        )}
+        {/* Image gallery removed - showing first image only */}
 
         {/* Swipe Instructions - Above drawer, always visible */}
         {!showDetails && (
@@ -196,7 +128,7 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
           <div
             className="absolute bottom-0 left-0 right-0 bg-white/98 backdrop-blur-sm rounded-t-3xl pointer-events-auto shadow-2xl transition-transform duration-300 ease-out"
             style={{
-              transform: showDetails ? 'translateY(0)' : 'translateY(calc(100% - 240px))',
+              transform: showDetails ? 'translateY(0)' : 'translateY(calc(100% - 270px))',
               height: '100%',
             }}
             onTouchStart={(e) => { if (showDetails) e.stopPropagation(); }}
@@ -269,7 +201,7 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
                 <div className="flex items-start gap-2">
                   <div className="flex-1">
                     <h2 className="text-sm font-bold text-slate-900 leading-tight">
-                      {property.address}
+                      {(property as any).streetAddress || property.address}
                     </h2>
                     <p className="text-slate-600 text-xs">
                       {property.city}, {property.state} {property.zipCode}

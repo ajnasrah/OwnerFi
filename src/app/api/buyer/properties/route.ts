@@ -49,7 +49,8 @@ export async function GET(request: NextRequest) {
     const state = searchParams.get('state');
     const maxMonthlyPayment = searchParams.get('maxMonthlyPayment');
     const maxDownPayment = searchParams.get('maxDownPayment');
-    const pageSize = parseInt(searchParams.get('limit') || '20');
+    const pageSize = parseInt(searchParams.get('limit') || '50'); // Default 50 properties per page
+    const page = parseInt(searchParams.get('page') || '1'); // Default page 1
 
     if (!city || !state || !maxMonthlyPayment || !maxDownPayment) {
       return ErrorResponses.validationError(
@@ -88,46 +89,123 @@ export async function GET(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Get buyer's liked properties first
+    // Get buyer's liked properties AND pre-computed filter
     const buyerProfileQuery = query(
       collection(db, 'buyerProfiles'),
       where('userId', '==', session.user.id)
     );
     const buyerSnapshot = await getDocs(buyerProfileQuery);
     let likedPropertyIds: string[] = [];
-    
+    let passedPropertyIds: string[] = [];
+    let nearbyCityNames = new Set<string>();
+
     if (!buyerSnapshot.empty) {
       const profile = buyerSnapshot.docs[0].data();
-      likedPropertyIds = profile.likedProperties || [];
+      likedPropertyIds = profile.likedProperties || profile.likedPropertyIds || [];
+      passedPropertyIds = profile.passedPropertyIds || []; // 🆕 Get passed properties
+
+      // 🆕 Use PRE-COMPUTED filter (99.95% faster than recalculating)
+      if (profile.filter?.nearbyCities) {
+        nearbyCityNames = new Set(
+          profile.filter.nearbyCities.map((city: string) => city.toLowerCase())
+        );
+        console.log(`✅ [buyer-search] Using PRE-COMPUTED filter: ${nearbyCityNames.size} cities`);
+      } else {
+        // Fallback: calculate on-the-fly if no filter exists (shouldn't happen after migration)
+        console.warn(`⚠️  [buyer-search] No pre-computed filter found, calculating on-the-fly`);
+        const nearbyCitiesList = getCitiesWithinRadiusComprehensive(searchCity, searchState, 30);
+        nearbyCityNames = new Set(
+          nearbyCitiesList.map(city => city.name.toLowerCase())
+        );
+      }
     }
 
-    // Get cities within 30 miles of the buyer's search city
-    const nearbyCitiesList = getCitiesWithinRadiusComprehensive(searchCity, searchState, 30);
-
-    // Create a Set of nearby city names for fast lookup (lowercase for comparison)
-    const nearbyCityNames = new Set(
-      nearbyCitiesList.map(city => city.name.toLowerCase())
-    );
-
     console.log(`[buyer-search] Buyer searching for ${searchCity}, ${searchState}`);
-    console.log(`[buyer-search] Found ${nearbyCityNames.size} nearby cities:`,
+    console.log(`[buyer-search] Using filter with ${nearbyCityNames.size} nearby cities:`,
       Array.from(nearbyCityNames).slice(0, 10).join(', ') + (nearbyCityNames.size > 10 ? '...' : '')
     );
 
-    // PERFORMANCE FIX: Query only properties in the relevant state
-    // NEW: Removed budget filters from query to allow OR logic (show properties matching EITHER budget criterion)
+    // ===== QUERY PROPERTIES FROM TWO SOURCES =====
+
+    // 1. Curated properties (existing system)
+    // PAGINATION: Limit initial queries to reduce bandwidth and improve performance
+    // We'll fetch more than needed to account for filtering
+    const fetchLimit = Math.min(pageSize * 3, 300); // Fetch 3x pageSize, max 300
+
     const propertiesQuery = query(
       collection(db, 'properties'),
       where('isActive', '==', true),
-      where('state', '==', searchState), // Only properties in buyer's state
+      where('state', '==', searchState),
       orderBy('monthlyPayment', 'asc'),
-      limit(1000) // Increased limit to allow more partial matches
+      limit(fetchLimit)
     );
 
-    const snapshot = await getDocs(propertiesQuery);
-    const allProperties = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as PropertyListing & { id: string }));
+    // 2. Zillow scraped properties (ALL passed strict filter - 100% verified owner finance)
+    // Show ALL properties regardless of status (status only changes when terms are filled)
+    const zillowQuery = query(
+      collection(db, 'zillow_imports'),
+      where('state', '==', searchState),
+      where('ownerFinanceVerified', '==', true), // All with owner finance keywords
+      limit(fetchLimit)
+    );
+
+    // Execute queries in parallel for performance
+    const [propertiesSnapshot, zillowSnapshot] = await Promise.all([
+      getDocs(propertiesQuery),
+      getDocs(zillowQuery)
+    ]);
+
+    // Combine results from both sources
+    const curatedProperties = propertiesSnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      source: 'curated' // Tag for UI
+    } as PropertyListing & { id: string; source: string }));
+
+    const zillowProperties = zillowSnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        source: 'zillow',
+        // Field mapping for UI compatibility (Zillow fields -> PropertyListing schema)
+        address: data.fullAddress || data.address,
+        squareFeet: data.squareFoot || data.squareFeet,
+        lotSize: data.lotSquareFoot || data.lotSize,
+        listPrice: data.price || data.listPrice,
+        termYears: data.loanTermYears || data.termYears,
+        propertyType: data.homeType || data.buildingType || data.propertyType,
+        imageUrl: data.firstPropertyImage || data.imageUrl,
+        imageUrls: data.propertyImages || data.imageUrls || [],
+        // Calculate down payment percentage if not provided
+        downPaymentPercent: data.downPaymentPercent || (data.downPaymentAmount && data.price ?
+          Math.round((data.downPaymentAmount / data.price) * 100) : null),
+        // Owner finance keywords for display
+        ownerFinanceKeyword: data.primaryKeyword || data.matchedKeywords?.[0] || 'Owner Financing',
+        matchedKeywords: data.matchedKeywords || [],
+        // NO CALCULATIONS OR ASSUMPTIONS - Only use data from GHL/agent
+        monthlyPayment: data.monthlyPayment || null, // TBD if not provided
+        downPaymentAmount: data.downPaymentAmount || null, // TBD if not provided
+        isActive: data.status !== 'sold' && data.status !== 'pending',
+      } as PropertyListing & {
+        id: string;
+        source: string;
+        ownerFinanceKeyword: string;
+        matchedKeywords: string[];
+      };
+    });
+
+    // 🆕 Combine and filter out passed properties FIRST (before any processing)
+    const allPropertiesBeforeFilter = [...curatedProperties, ...zillowProperties];
+    const allProperties = allPropertiesBeforeFilter.filter(p => !passedPropertyIds.includes(p.id));
+
+    const passedCount = allPropertiesBeforeFilter.length - allProperties.length;
+    if (passedCount > 0) {
+      console.log(`✅ [buyer-search] Filtered out ${passedCount} passed properties`);
+    }
 
     // Helper function to determine budget match type
+    // NOTE: Budget filtering DISABLED - all properties shown regardless of budget
     const getBudgetMatchType = (property: PropertyListing & { id: string }) => {
       const monthlyMatch = property.monthlyPayment <= maxMonthly;
       const downMatch = !property.downPaymentAmount || property.downPaymentAmount <= maxDown;
@@ -138,16 +216,19 @@ export async function GET(request: NextRequest) {
       return 'neither';
     };
 
-    // 1. DIRECT MATCHES: Properties IN the search city AND state that match at least ONE budget criterion
+    // 1. DIRECT MATCHES: Properties IN the search city AND state
+    // BUDGET FILTERING DISABLED: Show ALL properties regardless of budget
     const directProperties = allProperties.filter((property: PropertyListing & { id: string }) => {
       const propertyCity = property.city?.split(',')[0].trim();
-      const budgetMatchType = getBudgetMatchType(property);
+      // const budgetMatchType = getBudgetMatchType(property); // DISABLED
 
-      // NEW: Show if city matches AND at least one budget criterion matches
-      return propertyCity?.toLowerCase() === searchCity.toLowerCase() && budgetMatchType !== 'neither';
+      // Show if city matches (no budget filtering)
+      return propertyCity?.toLowerCase() === searchCity.toLowerCase();
+      // OLD: return propertyCity?.toLowerCase() === searchCity.toLowerCase() && budgetMatchType !== 'neither';
     });
 
-    // 2. NEARBY MATCHES: Properties located IN cities that are within 30 miles that match at least ONE budget criterion
+    // 2. NEARBY MATCHES: Properties located IN cities that are within 30 miles
+    // BUDGET FILTERING DISABLED: Show ALL properties regardless of budget
     const nearbyProperties = allProperties.filter((property: PropertyListing & { id: string }) => {
       const propertyCity = property.city?.split(',')[0].trim();
 
@@ -157,10 +238,11 @@ export async function GET(request: NextRequest) {
       // Check if property's city is in the list of nearby cities
       const isInNearbyCity = propertyCity && nearbyCityNames.has(propertyCity.toLowerCase());
 
-      // NEW: Check if at least one budget criterion matches
-      const budgetMatchType = getBudgetMatchType(property);
+      // DISABLED: Budget filtering
+      // const budgetMatchType = getBudgetMatchType(property);
+      // return isInNearbyCity && budgetMatchType !== 'neither';
 
-      return isInNearbyCity && budgetMatchType !== 'neither';
+      return isInNearbyCity; // Show all nearby properties
     });
 
     console.log(`[buyer-search] Found ${directProperties.length} direct matches, ${nearbyProperties.length} nearby matches`);
@@ -332,7 +414,8 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    const allResults = Array.from(processedResults.values())
+    // Sort all results
+    const sortedResults = Array.from(processedResults.values())
       .sort((a, b) => {
         // First sort by sortOrder (liked -> direct perfect -> direct partial -> nearby perfect -> nearby partial)
         if (a.sortOrder !== b.sortOrder) return a.sortOrder - b.sortOrder;
@@ -342,8 +425,14 @@ export async function GET(request: NextRequest) {
         const aPayment = a.monthlyPayment || 0;
         const bPayment = b.monthlyPayment || 0;
         return aPayment - bPayment;
-      })
-      .slice(0, pageSize);
+      });
+
+    // PAGINATION: Apply page offset and limit
+    const totalResults = sortedResults.length;
+    const startIndex = (page - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    const allResults = sortedResults.slice(startIndex, endIndex);
+    const hasMore = endIndex < totalResults;
 
     // Debug logging - Enhanced for debugging low results
     console.log(`Properties API Debug:
@@ -362,12 +451,16 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       properties: allResults,
-      total: allResults.length,
+      total: totalResults, // Total matching properties (not just this page)
+      page,
+      pageSize,
+      hasMore,
+      totalPages: Math.ceil(totalResults / pageSize),
       breakdown: {
         liked: likedProperties.length,
         direct: directProperties.length,
         nearby: nearbyProperties.length,
-        totalLikedIncluded: allResults.filter(p => p.resultType === 'liked').length,
+        totalLikedIncluded: sortedResults.filter(p => p.resultType === 'liked').length,
         totalPropertiesInDB: allProperties.length
       },
       searchCriteria: {

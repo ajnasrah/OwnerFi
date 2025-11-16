@@ -391,10 +391,20 @@
         {
           "fieldPath": "pubDate",
           "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "vassdistro_articles",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "processed",
+          "order": "ASCENDING"
         },
         {
-          "fieldPath": "__name__",
-          "order": "ASCENDING"
+          "fieldPath": "pubDate",
+          "order": "DESCENDING"
         }
       ]
     },
@@ -491,16 +501,6 @@
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "lastUpdated",
-          "order": "ASCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "platform_analytics",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
           "fieldPath": "brand",
           "order": "ASCENDING"
         },
@@ -511,16 +511,6 @@
         {
           "fieldPath": "views",
           "order": "DESCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "properties",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "imageEnhanced",
-          "order": "ASCENDING"
         }
       ]
     },
@@ -563,36 +553,6 @@
         {
           "fieldPath": "createdAt",
           "order": "DESCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "carz_workflow_queue",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "createdAt",
-          "order": "ASCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "ownerfi_workflow_queue",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "createdAt",
-          "order": "ASCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "vassdistro_workflow_queue",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "createdAt",
-          "order": "ASCENDING"
         }
       ]
     },
@@ -759,6 +719,52 @@
         {
           "fieldPath": "addedAt",
           "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "zillow_imports",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "state",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "ownerFinanceVerified",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "zillow_imports",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "ownerFinanceVerified",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "foundAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "zillow_imports",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "ownerFinanceVerified",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "foundAt",
+          "order": "DESCENDING"
         }
       ]
     }

@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const limit = parseInt(searchParams.get('limit') || '1000'); // Show up to 1000 properties
+    const limit = parseInt(searchParams.get('limit') || '2000'); // Show up to 2000 properties
     const status = searchParams.get('status') || 'all';
     
     // Build query to show zillow_imports (owner-financed properties)
@@ -101,8 +101,8 @@ export async function GET(request: NextRequest) {
       collection(db, 'zillow_imports'),
       where('ownerFinanceVerified', '==', true)
     );
-    const totalSnapshot = await getDocs(query(totalQuery, firestoreLimit(1000))); // Cap at 1000 for count
-    const estimatedTotal = totalSnapshot.size >= 1000 ? '1000+' : totalSnapshot.size;
+    const totalSnapshot = await getDocs(query(totalQuery, firestoreLimit(2000))); // Cap at 2000 for count
+    const estimatedTotal = totalSnapshot.size >= 2000 ? '2000+' : totalSnapshot.size;
     
     return NextResponse.json({ 
       properties,

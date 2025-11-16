@@ -269,17 +269,58 @@ export async function GET(request: NextRequest) {
           }
         }
 
-        // Add to batch (always save to zillow_imports)
+        // ===== STRICT FILTER - ONLY SAVE IF PASSES =====
+        const { hasStrictOwnerFinancing } = await import('@/lib/owner-financing-filter-strict');
+        const filterResult = hasStrictOwnerFinancing(propertyData.description);
+
+        // SKIP property if it doesn't pass strict filter
+        if (!filterResult.passes) {
+          console.log(`⏭️  FILTERED OUT: ${propertyData.fullAddress} - No owner financing keywords found`);
+          metrics.validationFailed++; // Count as filtered
+          continue; // Don't save, move to next property
+        }
+
+        // Property passed! Log the matched keywords
+        console.log(`✅ OWNER FINANCE FOUND: ${propertyData.fullAddress}`);
+        console.log(`   Keywords: ${filterResult.matchedKeywords.join(', ')}`);
+
+        // Save to zillow_imports (ONLY properties that passed strict filter)
         const docRef = db.collection('zillow_imports').doc();
         currentBatch.set(docRef, {
           ...propertyData,
+          // Owner Financing Detection
+          ownerFinanceVerified: true,                  // Passed strict filter
+          matchedKeywords: filterResult.matchedKeywords, // ALL keywords found
+          primaryKeyword: filterResult.primaryKeyword,   // Main keyword (for display)
+
+          // Status tracking - starts null, auto-updates when all fields filled
+          status: null,                     // Changes to 'verified' when terms are filled
+          foundAt: new Date(),
+          verifiedAt: null,                 // Set when terms received
+          soldAt: null,
+
+          // GHL tracking
           sentToGHL: false,
           ghlSentAt: null,
           ghlSendStatus: null,
           ghlSendError: null,
+
+          // Financing terms (initially null - "Seller to Decide")
+          downPaymentAmount: null,
+          downPaymentPercent: null,
+          monthlyPayment: null,
+          interestRate: null,
+          loanTermYears: null,
+          balloonPaymentYears: null,
         });
-        // Track needsWork flag for GHL filtering
-        savedProperties.push({ docRef, data: propertyData, needsWork });
+
+        // Track for GHL sending
+        savedProperties.push({
+          docRef,
+          data: propertyData,
+          needsWork,
+          matchedKeywords: filterResult.matchedKeywords,
+        });
         batchOperations++;
 
         // Commit batch if we hit the limit
@@ -312,16 +353,19 @@ export async function GET(request: NextRequest) {
 
     console.log(`✅ [FIREBASE] Total saved: ${metrics.propertiesSaved} properties${metrics.needsWorkOwnerFinance > 0 ? ` (+ ${metrics.needsWorkOwnerFinance} to cash_houses as owner finance)` : ''}`);
 
-    // Send ONLY properties with "needs work" keywords AND contact info to GHL webhook
+    // ===== SEND TO GHL WEBHOOK =====
+    // Send ALL saved properties (all passed strict filter + have contact info)
     const GHL_WEBHOOK_URL = 'https://services.leadconnectorhq.com/hooks/U2B5lSlWrVBgVxHNq5AH/webhook-trigger/2be65188-9b2e-43f1-a9d8-33d9907b375c';
 
     const propertiesWithContact = savedProperties
       .filter((prop: any) =>
-        prop.needsWork && // ONLY owner finance opportunities (with keywords)
-        (prop.data.agentPhoneNumber || prop.data.brokerPhoneNumber) // AND has contact info
+        (prop.data.agentPhoneNumber || prop.data.brokerPhoneNumber) // Has contact info
       );
 
-    console.log(`\n📤 [GHL WEBHOOK] Sending ${propertiesWithContact.length} owner finance properties with contact info to GHL`);
+    console.log(`\n📤 [GHL WEBHOOK] Sending ${propertiesWithContact.length} verified owner finance properties to GHL`);
+    if (propertiesWithContact.length > 0) {
+      console.log(`   Sample keywords: ${propertiesWithContact[0].matchedKeywords?.join(', ') || 'N/A'}`);
+    }
 
     for (const property of propertiesWithContact) {
       const propertyData = property.data;

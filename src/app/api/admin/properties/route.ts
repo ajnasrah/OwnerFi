@@ -42,35 +42,65 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '1000'); // Show up to 1000 properties
     const status = searchParams.get('status') || 'all';
     
-    // Build query with consistent ordering
+    // Build query to show zillow_imports (owner-financed properties)
+    // Changed from 'properties' collection to 'zillow_imports'
     let propertiesQuery = query(
-      collection(db, 'properties'),
-      orderBy('createdAt', 'asc') // Order by creation time to match upload order
+      collection(db, 'zillow_imports'),
+      where('ownerFinanceVerified', '==', true),
+      orderBy('foundAt', 'desc') // Show newest first
     );
 
     // Filter by status if specified
     if (status !== 'all') {
-      propertiesQuery = query(
-        collection(db, 'properties'),
-        where('status', '==', status),
-        orderBy('createdAt', 'asc')
-      );
+      if (status === 'null') {
+        // Filter for properties awaiting financing terms
+        propertiesQuery = query(
+          collection(db, 'zillow_imports'),
+          where('ownerFinanceVerified', '==', true),
+          where('status', '==', null),
+          orderBy('foundAt', 'desc')
+        );
+      } else {
+        // Filter for specific status
+        propertiesQuery = query(
+          collection(db, 'zillow_imports'),
+          where('ownerFinanceVerified', '==', true),
+          where('status', '==', status),
+          orderBy('foundAt', 'desc')
+        );
+      }
     }
 
     // Add limit
     propertiesQuery = query(propertiesQuery, firestoreLimit(limit));
     
     const propertiesSnapshot = await getDocs(propertiesQuery);
-    const properties = propertiesSnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      // Convert Firestore timestamps
-      createdAt: doc.data().createdAt?.toDate?.()?.toISOString() || doc.data().createdAt,
-      updatedAt: doc.data().updatedAt?.toDate?.()?.toISOString() || doc.data().updatedAt
-    }));
+    const properties = propertiesSnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        // Map Zillow field names to admin panel expected names
+        address: data.fullAddress || data.address,
+        squareFeet: data.squareFoot || data.squareFeet, // Map squareFoot → squareFeet
+        imageUrl: data.firstPropertyImage || data.imageUrl, // Map firstPropertyImage → imageUrl
+        imageUrls: data.propertyImages || data.imageUrls || [], // Map propertyImages → imageUrls
+        zillowImageUrl: data.firstPropertyImage || data.zillowImageUrl,
+        listPrice: data.price || data.listPrice,
+        // Convert Firestore timestamps
+        createdAt: data.createdAt?.toDate?.()?.toISOString() || data.createdAt,
+        updatedAt: data.updatedAt?.toDate?.()?.toISOString() || data.updatedAt,
+        foundAt: data.foundAt?.toDate?.()?.toISOString() || data.foundAt,
+        importedAt: data.importedAt?.toDate?.()?.toISOString() || data.importedAt,
+        scrapedAt: data.scrapedAt?.toDate?.()?.toISOString() || data.scrapedAt,
+      };
+    });
 
     // Get total count efficiently without fetching all docs
-    const totalQuery = query(collection(db, 'properties'));
+    const totalQuery = query(
+      collection(db, 'zillow_imports'),
+      where('ownerFinanceVerified', '==', true)
+    );
     const totalSnapshot = await getDocs(query(totalQuery, firestoreLimit(1000))); // Cap at 1000 for count
     const estimatedTotal = totalSnapshot.size >= 1000 ? '1000+' : totalSnapshot.size;
     
@@ -141,8 +171,8 @@ export async function PUT(request: NextRequest) {
       if (cleanedData.zillowImageUrl) updates.zillowImageUrl = cleanedData.zillowImageUrl;
     }
 
-    // Update property in Firebase
-    await updateDoc(doc(db, 'properties', propertyId), {
+    // Update property in Firebase (zillow_imports collection)
+    await updateDoc(doc(db, 'zillow_imports', propertyId), {
       ...updates,
       updatedAt: new Date()
     });
@@ -202,8 +232,8 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Completely delete the property from Firebase
-    await deleteDoc(doc(db, 'properties', propertyId));
+    // Completely delete the property from Firebase (zillow_imports collection)
+    await deleteDoc(doc(db, 'zillow_imports', propertyId));
 
     await logInfo('Property deleted by admin', {
       action: 'admin_property_delete',

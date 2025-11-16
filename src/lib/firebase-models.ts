@@ -72,7 +72,27 @@ export interface BuyerProfile {
   matchedPropertyIds: string[];         // Cached property matches
   likedPropertyIds: string[];           // Liked properties (unified from both systems)
   passedPropertyIds: string[];          // Passed properties
-  
+  viewedPropertyIds?: string[];         // Viewed properties (for analytics)
+
+  // 🆕 PRE-COMPUTED FILTER (Generated at signup for 100K user scale)
+  filter?: {
+    nearbyCities: string[];             // Pre-computed list of nearby city names
+    nearbyCitiesCount: number;          // Number of cities in radius
+    radiusMiles: number;                // Search radius used
+    lastCityUpdate: Timestamp;          // When filter was last updated
+
+    // Geographic bounds for efficient DB queries
+    boundingBox?: {
+      minLat: number;
+      maxLat: number;
+      minLng: number;
+      maxLng: number;
+    };
+
+    // Geohash prefix for future optimization (3-char = ~150km precision)
+    geohashPrefix?: string;             // e.g., "9v6" for Houston area
+  };
+
   // Lead selling fields (NEW - from buyerLinks)
   isAvailableForPurchase: boolean;      // Can be purchased by realtors
   purchasedBy?: string;                 // Realtor userId who purchased this lead
@@ -197,6 +217,43 @@ export interface RealtorSubscription {
   currentPeriodEnd: Timestamp;
   createdAt: Timestamp;
   updatedAt: Timestamp;
+}
+
+// 🆕 PROPERTY INTERACTION TRACKING (For ML and algorithm improvements)
+// Stored in subcollection: propertyInteractions/{buyerId}/liked|passed|viewed/{interactionId}
+export interface PropertyInteraction {
+  propertyId: string;
+  timestamp: Timestamp;
+
+  // Property context at time of interaction (for ML training)
+  context?: {
+    // Property details
+    monthlyPayment: number;
+    downPayment: number;
+    bedrooms: number;
+    bathrooms: number;
+    squareFeet?: number;
+    city: string;
+    distanceFromUser?: number;        // Miles from user's preferred city
+
+    // User's budget at time of interaction
+    userMaxMonthly: number;
+    userMaxDown: number;
+
+    // Match quality metrics
+    budgetMatchType?: 'both' | 'monthly_only' | 'down_only' | 'neither';
+    withinRadius?: boolean;
+
+    // Property source (for A/B testing)
+    source?: 'curated' | 'zillow' | 'manual';
+  };
+
+  // Why user passed (for ML training on preferences)
+  passReason?: 'too_expensive' | 'wrong_location' | 'too_small' | 'needs_work' | 'other' | null;
+
+  // Analytics metadata
+  deviceType?: 'mobile' | 'desktop';
+  sessionId?: string;
 }
 
 // Transaction history entry

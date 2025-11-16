@@ -155,7 +155,7 @@ export default function BuyerSettings() {
               <span className="text-sm">❤️</span>
             </Link>
             <button
-              onClick={() => signOut({ callbackUrl: '/' })}
+              onClick={() => signOut({ callbackUrl: '/auth/signout' })}
               className="w-8 h-8 bg-slate-800 hover:bg-red-900/30 rounded-lg flex items-center justify-center transition-colors"
             >
               <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

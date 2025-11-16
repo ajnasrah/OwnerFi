@@ -143,7 +143,7 @@ export default function LikedProperties() {
             </div>
             
             <button
-              onClick={() => signOut({ callbackUrl: '/' })}
+              onClick={() => signOut({ callbackUrl: '/auth/signout' })}
               className="flex flex-col items-center group"
             >
               <div className="w-12 h-12 bg-slate-700/50 hover:bg-red-600/30 rounded-xl flex items-center justify-center transition-all group-hover:scale-110 duration-300">

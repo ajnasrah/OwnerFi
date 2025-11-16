@@ -5,6 +5,8 @@ import {
   where,
   getDocs,
   updateDoc,
+  setDoc,
+  doc,
   arrayUnion,
   arrayRemove,
   serverTimestamp
@@ -17,10 +19,22 @@ import {
   parseRequestBody,
   logError
 } from '@/lib/api-error-handler';
+import { PropertyInteraction } from '@/lib/firebase-models';
 
 interface LikePropertyRequest {
   propertyId: string;
   action: 'like' | 'unlike';
+
+  // 🆕 Optional: Property context at time of like (for ML training)
+  propertyContext?: {
+    monthlyPayment: number;
+    downPayment: number;
+    bedrooms: number;
+    bathrooms: number;
+    squareFeet?: number;
+    city: string;
+    source?: 'curated' | 'zillow';
+  };
 }
 
 export async function POST(request: NextRequest) {
@@ -35,7 +49,7 @@ export async function POST(request: NextRequest) {
     return (bodyResult as { success: false; response: NextResponse }).response;
   }
 
-  const { propertyId, action } = bodyResult.data;
+  const { propertyId, action, propertyContext } = bodyResult.data;
 
   // Validation
   if (!propertyId || !action) {
@@ -62,21 +76,66 @@ export async function POST(request: NextRequest) {
       return ErrorResponses.notFound('Buyer profile');
     }
 
+    const buyerId = snapshot.docs[0].id;
     const profileDoc = snapshot.docs[0];
+    const profile = snapshot.docs[0].data();
 
     // Update liked properties array (using likedPropertyIds to match the schema)
     if (action === 'like') {
+      // 1. Add to quick lookup array
       await updateDoc(profileDoc.ref, {
         likedPropertyIds: arrayUnion(propertyId),
         likedProperties: arrayUnion(propertyId), // Keep legacy field for backward compat
         updatedAt: serverTimestamp()
       });
+
+      // 🆕 2. Store detailed interaction in subcollection (for ML and algorithm improvements)
+      const interactionId = `${propertyId}_${Date.now()}`;
+      const interaction: PropertyInteraction = {
+        propertyId,
+        timestamp: serverTimestamp() as any,
+        context: propertyContext ? {
+          // Property details
+          monthlyPayment: propertyContext.monthlyPayment,
+          downPayment: propertyContext.downPayment,
+          bedrooms: propertyContext.bedrooms,
+          bathrooms: propertyContext.bathrooms,
+          squareFeet: propertyContext.squareFeet,
+          city: propertyContext.city,
+
+          // User's budget at time of interaction
+          userMaxMonthly: profile.maxMonthlyPayment || 0,
+          userMaxDown: profile.maxDownPayment || 0,
+
+          // Calculate budget match type
+          budgetMatchType:
+            propertyContext.monthlyPayment <= (profile.maxMonthlyPayment || 0) &&
+            propertyContext.downPayment <= (profile.maxDownPayment || 0)
+              ? 'both'
+              : propertyContext.monthlyPayment <= (profile.maxMonthlyPayment || 0)
+              ? 'monthly_only'
+              : propertyContext.downPayment <= (profile.maxDownPayment || 0)
+              ? 'down_only'
+              : 'neither',
+
+          source: propertyContext.source || 'curated',
+        } : undefined,
+      };
+
+      await setDoc(
+        doc(db, 'propertyInteractions', buyerId, 'liked', interactionId),
+        interaction
+      );
+
+      console.log(`✅ [LIKE] User ${buyerId} liked property ${propertyId}`);
     } else {
       await updateDoc(profileDoc.ref, {
         likedPropertyIds: arrayRemove(propertyId),
         likedProperties: arrayRemove(propertyId), // Keep legacy field for backward compat
         updatedAt: serverTimestamp()
       });
+
+      console.log(`✅ [UNLIKE] User ${buyerId} unliked property ${propertyId}`);
     }
 
     return createSuccessResponse({

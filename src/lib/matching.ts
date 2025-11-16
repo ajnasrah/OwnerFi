@@ -74,10 +74,10 @@ export function isPropertyMatch(property: PropertyForMatching, buyer: BuyerForMa
     score++;
   }
 
-  // NEW: OR logic - property matches if it meets at least ONE budget criterion
-  const budgetMatch = monthlyPaymentMatch || downPaymentMatch;
+  // BUDGET FILTERING DISABLED - Always allow properties regardless of budget
+  // const budgetMatch = monthlyPaymentMatch || downPaymentMatch;
 
-  // Determine budget match type for UI display
+  // Determine budget match type for UI display (still calculated for display purposes)
   let budgetMatchType: 'both' | 'monthly_only' | 'down_only' | 'neither';
   if (monthlyPaymentMatch && downPaymentMatch) {
     budgetMatchType = 'both';
@@ -89,10 +89,10 @@ export function isPropertyMatch(property: PropertyForMatching, buyer: BuyerForMa
     budgetMatchType = 'neither';
   }
 
-  // If neither budget criterion matches, reject immediately
-  if (!budgetMatch) {
-    return { matches: false, score: 0, budgetMatchType: 'neither', matchedOn };
-  }
+  // DISABLED: Budget filtering - all properties shown regardless of budget
+  // if (!budgetMatch) {
+  //   return { matches: false, score: 0, budgetMatchType: 'neither', matchedOn };
+  // }
 
   // 3. Location Check (CRITICAL) - Within buyer's search radius
   totalCriteria++;

@@ -145,15 +145,26 @@ export default function Dashboard() {
     }
   };
 
-  const toggleLike = async (propertyId: string) => {
+  const toggleLike = async (propertyId: string, property?: Property) => {
     try {
       const isLiked = likedProperties.includes(propertyId);
       const action = isLiked ? 'unlike' : 'like';
 
+      // 🆕 Include property context for ML training
+      const propertyContext = property ? {
+        monthlyPayment: property.monthlyPayment || 0,
+        downPayment: property.downPaymentAmount || 0,
+        bedrooms: property.bedrooms,
+        bathrooms: property.bathrooms,
+        squareFeet: property.squareFeet,
+        city: property.city,
+        source: (property as any).source || 'curated',
+      } : undefined;
+
       const response = await fetch('/api/buyer/like-property', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ propertyId, action })
+        body: JSON.stringify({ propertyId, action, propertyContext })
       });
 
       if (response.ok) {
@@ -276,14 +287,55 @@ export default function Dashboard() {
     };
   };
 
-  // Handler for liking a property (converted to PropertyListing format)
+  // 🆕 Handler for liking a property (with full context tracking)
   const handleLikeProperty = async (property: PropertyListing) => {
-    await toggleLike(property.id);
+    await toggleLike(property.id, property as Property);
   };
 
-  // Handler for passing a property (no action needed for buyer dashboard)
-  const handlePassProperty = (property: PropertyListing) => {
-    // Just move to next property - no server call needed
+  // 🆕 Handler for passing a property (NOW TRACKS PASSES!)
+  const handlePassProperty = async (property: PropertyListing) => {
+    try {
+      // Optimistic update: remove from UI immediately for smooth transition
+      setProperties(prev => prev.filter(p => p.id !== property.id));
+
+      // Include property context for ML training
+      const propertyContext = {
+        monthlyPayment: property.monthlyPayment || 0,
+        downPayment: property.downPaymentAmount || 0,
+        bedrooms: property.bedrooms,
+        bathrooms: property.bathrooms,
+        squareFeet: property.squareFeet,
+        city: property.city,
+        source: (property as any).source || 'curated',
+      };
+
+      const response = await fetch('/api/buyer/pass-property', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          propertyId: property.id,
+          action: 'pass',
+          propertyContext,
+          // Future: Could add UI for pass reason selection
+          // passReason: 'too_expensive' | 'wrong_location' | 'too_small' | 'needs_work'
+        })
+      });
+
+      if (!response.ok) {
+        // Revert if API call failed
+        throw new Error('Failed to pass property');
+      }
+
+      console.log(`✅ Passed property ${property.id}`);
+    } catch (error) {
+      console.error('❌ Failed to pass property:', error);
+
+      // Revert the optimistic update
+      setProperties(prev => [...prev, property as Property]);
+
+      // Show error to user
+      alert('Failed to skip property. Please try again.');
+    }
   };
 
   return (

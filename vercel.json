@@ -80,6 +80,18 @@
     {
       "path": "/api/cron/refresh-zillow-status",
       "schedule": "0 2 * * 0"
+    },
+    {
+      "path": "/api/cron/slow-zillow-crawler",
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/run-search-scraper",
+      "schedule": "0 9 * * 1,4"
+    },
+    {
+      "path": "/api/cron/process-zillow-scraper",
+      "schedule": "0 6 * * 0,3"
     }
   ],
   "functions": {
@@ -150,6 +162,15 @@
       "maxDuration": 300
     },
     "src/app/api/cron/refresh-zillow-status/route.ts": {
+      "maxDuration": 300
+    },
+    "src/app/api/cron/slow-zillow-crawler/route.ts": {
+      "maxDuration": 300
+    },
+    "src/app/api/cron/run-search-scraper/route.ts": {
+      "maxDuration": 300
+    },
+    "src/app/api/cron/process-zillow-scraper/route.ts": {
       "maxDuration": 300
     }
   },

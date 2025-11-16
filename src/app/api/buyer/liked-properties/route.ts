@@ -51,24 +51,33 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Get property details for liked properties
+    // Get property details for liked properties from BOTH collections
     const allProperties = [];
 
     // Batch fetch in groups of 10 (Firestore limit)
     for (let i = 0; i < likedPropertyIds.length; i += 10) {
       const batch = likedPropertyIds.slice(i, i + 10);
 
-      const batchQuery = query(
-        collection(db, 'properties'),
-        where(documentId(), 'in', batch)
-      );
+      // Query both properties and zillow_imports collections
+      const [propertiesSnapshot, zillowSnapshot] = await Promise.all([
+        getDocs(query(collection(db, 'properties'), where(documentId(), 'in', batch))),
+        getDocs(query(collection(db, 'zillow_imports'), where(documentId(), 'in', batch)))
+      ]);
 
-      const batchSnapshot = await getDocs(batchQuery);
-      const batchProperties = batchSnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        isLiked: true
-      }));
+      const batchProperties = [
+        ...propertiesSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          isLiked: true,
+          source: 'curated'
+        })),
+        ...zillowSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          isLiked: true,
+          source: 'zillow'
+        }))
+      ];
 
       allProperties.push(...batchProperties);
     }

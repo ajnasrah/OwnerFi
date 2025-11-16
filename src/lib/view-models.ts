@@ -105,6 +105,8 @@ export function firestoreToBuyerProfile(docId: string, data: any): BuyerProfile 
     matchedPropertyIds: data.matchedPropertyIds || [],
     likedPropertyIds: data.likedPropertyIds || data.likedProperties || [],
     passedPropertyIds: data.passedPropertyIds || [],
+    viewedPropertyIds: data.viewedPropertyIds || [],
+    filter: data.filter, // 🆕 Pre-computed filter
     isAvailableForPurchase: data.isAvailableForPurchase !== false,
     purchasedBy: data.purchasedBy,
     purchasedAt: data.purchasedAt,

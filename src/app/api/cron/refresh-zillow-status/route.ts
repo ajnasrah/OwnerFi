@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ApifyClient } from 'apify-client';
 import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
+import { sanitizeDescription } from '@/lib/description-sanitizer';
+import { hasStrictOwnerFinancing } from '@/lib/owner-financing-filter-strict';
 
 // Initialize Firebase Admin
 if (!getApps().length) {
@@ -174,7 +176,16 @@ export async function GET(request: NextRequest) {
           }
 
           // Check if property is inactive
-          const inactiveStatuses = ['PENDING', 'SOLD', 'RECENTLY_SOLD', 'OFF_MARKET', 'FOR_RENT'];
+          const inactiveStatuses = [
+            'PENDING',                    // Under contract
+            'SOLD',                       // Already sold
+            'RECENTLY_SOLD',              // Recently sold
+            'OFF_MARKET',                 // No longer listed
+            'FOR_RENT',                   // Changed to rental
+            'CONTINGENT',                 // Contingent offer accepted
+            'ACCEPTING_BACKUP_OFFERS',    // Under contract, accepting backups
+            'BACKUP_OFFERS',              // Backup offers status
+          ];
           const isInactive = inactiveStatuses.includes(newStatus);
 
           if (isInactive && DELETE_INACTIVE) {
@@ -188,15 +199,31 @@ export async function GET(request: NextRequest) {
             });
             console.log(`   🗑️  Deleting: ${originalProp?.address} (${newStatus})`);
           } else {
-            // Update only status-related fields
-            firestoreBatch.update(docRef, {
-              homeStatus: newStatus,
-              price: item.price || item.listPrice || 0,
-              daysOnZillow: item.daysOnZillow || 0,
-              lastStatusCheck: new Date(),
-              lastScrapedAt: new Date(),
-            });
-            updated++;
+            // Property is still active (FOR_SALE) - check if it still mentions owner financing
+            const ownerFinanceCheck = hasStrictOwnerFinancing(item.description);
+
+            if (!ownerFinanceCheck.passes && DELETE_INACTIVE) {
+              // Delete properties that no longer mention owner financing
+              firestoreBatch.delete(docRef);
+              deleted++;
+              deletedProperties.push({
+                address: originalProp?.address || item.address?.streetAddress || 'Unknown',
+                status: newStatus,
+                reason: 'No longer offers owner financing (seller changed mind)',
+              });
+              console.log(`   🗑️  Deleting: ${originalProp?.address} (No owner financing keywords)`);
+            } else {
+              // Update status, price, and description
+              firestoreBatch.update(docRef, {
+                homeStatus: newStatus,
+                price: item.price || item.listPrice || 0,
+                daysOnZillow: item.daysOnZillow || 0,
+                description: sanitizeDescription(item.description),
+                lastStatusCheck: new Date(),
+                lastScrapedAt: new Date(),
+              });
+              updated++;
+            }
           }
         }
 

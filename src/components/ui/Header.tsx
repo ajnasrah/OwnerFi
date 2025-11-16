@@ -44,10 +44,10 @@ export function Header({ className = '' }: HeaderProps) {
                 >
                   DASHBOARD
                 </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => signOut({ callbackUrl: '/' })}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => signOut({ callbackUrl: '/auth/signout' })}
                   className="font-bold text-slate-300 hover:text-white px-4 py-2 rounded-xl hover:bg-slate-700/50 transition-all duration-300"
                 >
                   SIGN OUT

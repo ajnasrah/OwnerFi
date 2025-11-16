@@ -91,6 +91,11 @@ const nextConfig = {
 
   // Webpack optimization
   webpack: (config, { dev, isServer }) => {
+    // Externalize puppeteer packages for server-side only
+    if (isServer) {
+      config.externals.push('puppeteer', 'puppeteer-core', 'puppeteer-extra', 'puppeteer-extra-plugin-stealth', '@sparticuz/chromium');
+    }
+
     // Production optimizations
     if (!dev && !isServer) {
       config.optimization.splitChunks = {

@@ -240,7 +240,8 @@ export default function AdminBuyers() {
                   <th className="p-3 text-left">Location</th>
                   <th className="p-3 text-left">Monthly Payment</th>
                   <th className="p-3 text-left">Down Payment</th>
-                  <th className="p-3 text-left">Matched Properties</th>
+                  <th className="p-3 text-center">Matched</th>
+                  <th className="p-3 text-center">Liked</th>
                   <th className="p-3 text-left">Joined</th>
                   <th className="p-3 text-left">Actions</th>
                 </tr>
@@ -279,8 +280,13 @@ export default function AdminBuyers() {
                         : '$0'}
                     </td>
                     <td className="p-3 text-center">
-                      <span className="inline-flex items-center justify-center bg-emerald-500/20 text-emerald-400 px-3 py-1 rounded-full font-semibold text-sm">
+                      <span className="inline-flex items-center justify-center bg-blue-500/20 text-blue-400 px-3 py-1 rounded-full font-semibold text-sm">
                         {buyer.matchedPropertiesCount || 0}
+                      </span>
+                    </td>
+                    <td className="p-3 text-center">
+                      <span className="inline-flex items-center justify-center bg-pink-500/20 text-pink-400 px-3 py-1 rounded-full font-semibold text-sm">
+                        ❤️ {buyer.likedPropertiesCount || 0}
                       </span>
                     </td>
                     <td className="p-3 text-slate-300">

@@ -240,7 +240,7 @@ export default function RealtorDashboard() {
               ⚙️
             </Link>
             <button
-              onClick={() => signOut({ callbackUrl: '/' })}
+              onClick={() => signOut({ callbackUrl: '/auth/signout' })}
               className="text-slate-400 hover:text-red-400 transition-colors p-1.5"
               title="Logout"
             >

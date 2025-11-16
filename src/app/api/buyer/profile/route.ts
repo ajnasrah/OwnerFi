@@ -16,6 +16,7 @@ import { unifiedDb } from '@/lib/unified-db';
 import { ExtendedSession } from '@/types/session';
 import { syncBuyerToGHL } from '@/lib/gohighlevel-api';
 import { logInfo, logWarn, logError } from '@/lib/logger';
+import { generateBuyerFilter, shouldUpdateFilter } from '@/lib/buyer-filter-service';
 
 /**
  * SIMPLIFIED BUYER PROFILE API
@@ -187,7 +188,26 @@ export async function POST(request: NextRequest) {
 
     // Get user contact info from database if not provided
     const userRecord = await unifiedDb.users.findById(session.user.id);
-    
+
+    // 🆕 Check if we need to update existing profile or create new one
+    const existingQuery = query(
+      collection(db, 'buyerProfiles'),
+      where('userId', '==', session.user.id)
+    );
+    const existing = await getDocs(existingQuery);
+    const existingProfile = existing.empty ? null : existing.docs[0].data();
+
+    // 🆕 Generate or update pre-computed filter (only if needed)
+    let filter;
+    if (shouldUpdateFilter(city, state, existingProfile?.filter)) {
+      console.log(`🔧 [PROFILE] Generating new filter for ${city}, ${state}`);
+      filter = await generateBuyerFilter(city, state, 30);
+      console.log(`✅ [PROFILE] Filter generated: ${filter.nearbyCitiesCount} nearby cities`);
+    } else {
+      console.log('✅ [PROFILE] Using existing valid filter');
+      filter = existingProfile?.filter;
+    }
+
     // Consolidated profile structure - includes lead selling fields
     const profileData = {
       userId: session.user.id,
@@ -197,52 +217,50 @@ export async function POST(request: NextRequest) {
       lastName: lastName || userRecord?.name?.split(' ').slice(1).join(' ') || '',
       email: session.user.email!,
       phone: phone || userRecord?.phone || '',
-      
+
       // Location (both formats for compatibility)
       preferredCity: city,
       preferredState: state,
       city: city,                    // API compatibility
       state: state,                  // API compatibility
       searchRadius: 25,
-      
+
       // Budget constraints
       maxMonthlyPayment: Number(maxMonthlyPayment),
       maxDownPayment: Number(maxDownPayment),
-      
+
       // Communication preferences
       languages: ['English'],
       emailNotifications: true,
       smsNotifications: true,
-      
+
       // System fields
       profileComplete: true,
       isActive: true,
-      
+
       // Property interaction arrays
       matchedPropertyIds: [],
-      likedPropertyIds: [],
-      passedPropertyIds: [],
-      
+      likedPropertyIds: existingProfile?.likedPropertyIds || [],
+      passedPropertyIds: existingProfile?.passedPropertyIds || [],
+      viewedPropertyIds: existingProfile?.viewedPropertyIds || [],
+
+      // 🆕 Pre-computed filter (for 100K user scale)
+      filter,
+
       // Lead selling fields
       isAvailableForPurchase: true,
       leadPrice: 1,
-      
+
       // Activity tracking
       lastActiveAt: serverTimestamp(),
-      
+
       // Metadata
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     };
 
 
-    // Find existing profile or create new one
-    const existingQuery = query(
-      collection(db, 'buyerProfiles'),
-      where('userId', '==', session.user.id)
-    );
-    const existing = await getDocs(existingQuery);
-
+    // Save profile (already queried above for filter check)
     let buyerId: string;
 
     if (existing.empty) {
@@ -252,10 +270,12 @@ export async function POST(request: NextRequest) {
         ...profileData,
         id: buyerId
       });
+      console.log(`✅ [PROFILE] Created new buyer profile: ${buyerId}`);
     } else {
       // Update existing profile
       buyerId = existing.docs[0].id;
       await updateDoc(doc(db, 'buyerProfiles', buyerId), profileData);
+      console.log(`✅ [PROFILE] Updated existing buyer profile: ${buyerId}`);
     }
 
     // Lead selling fields are now part of the main profile - no separate buyerLinks needed

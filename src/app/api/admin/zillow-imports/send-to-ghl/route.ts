@@ -57,15 +57,19 @@ export async function POST(request: NextRequest) {
       .limit(limit * 3) // Get extra to account for filtering
       .get();
 
-    // Filter for properties with agent OR broker phone
+    // Filter for properties with agent OR broker phone AND active status
     const propertiesWithContact = snapshot.docs
       .map(doc => ({
         id: doc.id,
         ...doc.data(),
       }))
-      .filter((property: any) => property.agentPhoneNumber || property.brokerPhoneNumber);
+      .filter((property: any) => {
+        const hasContact = property.agentPhoneNumber || property.brokerPhoneNumber;
+        const isActive = property.homeStatus === 'FOR_SALE';
+        return hasContact && isActive;
+      });
 
-    console.log(`📊 Found ${propertiesWithContact.length} properties with contact info (from ${snapshot.size} total)`);
+    console.log(`📊 Found ${propertiesWithContact.length} FOR_SALE properties with contact info (from ${snapshot.size} total)`);
 
     // OWNER FINANCING FILTER
     // Only send properties that mention owner financing in their description

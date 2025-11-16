@@ -76,6 +76,10 @@
     {
       "path": "/api/cron/generate-blog",
       "schedule": "0 11 * * *"
+    },
+    {
+      "path": "/api/cron/refresh-zillow-status",
+      "schedule": "0 2 * * 0"
     }
   ],
   "functions": {
@@ -143,6 +147,9 @@
       "maxDuration": 300
     },
     "src/app/api/cron/generate-blog/route.ts": {
+      "maxDuration": 300
+    },
+    "src/app/api/cron/refresh-zillow-status/route.ts": {
       "maxDuration": 300
     }
   },

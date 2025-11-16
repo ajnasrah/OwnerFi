@@ -41,16 +41,48 @@ function parseValue(value: string | undefined | null): string | number | null {
   return value.trim();
 }
 
+// Helper function to generate Google Street View image URL
+function getStreetViewImageByAddress(address: string): string {
+  const apiKey = process.env.GOOGLE_MAPS_API_KEY;
+
+  if (!apiKey) {
+    console.warn('⚠️  GOOGLE_MAPS_API_KEY not configured - cannot generate Street View images');
+    return '';
+  }
+
+  const encodedAddress = encodeURIComponent(address);
+
+  // High quality settings: 800x500, 90 degree FOV, slight pitch for better view
+  return `https://maps.googleapis.com/maps/api/streetview?` +
+    `size=800x500&` +
+    `location=${encodedAddress}&` +
+    `heading=0&` +
+    `fov=90&` +
+    `pitch=10&` +
+    `key=${apiKey}`;
+}
+
+// Helper function to parse street address (remove city/state/zip)
+function parseStreetAddress(fullAddr: string): string {
+  if (!fullAddr) return '';
+
+  // Take everything before the first comma (street only)
+  const parts = fullAddr.split(',');
+  return parts[0].trim();
+}
+
 // Helper function to build property document from CSV row
 function buildPropertyFromCSV(record: any): any {
-  const address = record['Property Address']?.trim() || '';
+  const csvAddress = record['Property Address']?.trim() || '';
   const city = record['Property city']?.trim() || '';
   const state = record['State ']?.trim() || '';
   const zip = record['zip code ']?.trim() || '';
 
-  // Build full address
-  const fullAddress = address;
-  const streetAddress = address.split(',')[0]?.trim() || address;
+  // Extract street address (just the street, no city/state/zip)
+  const streetAddress = parseStreetAddress(csvAddress);
+
+  // Build full address from components (ensures consistency)
+  const fullAddress = `${streetAddress}, ${city}, ${state} ${zip}`.trim();
 
   // Parse numeric values
   const price = parseValue(record['Price ']);
@@ -74,10 +106,9 @@ function buildPropertyFromCSV(record: any): any {
   const now = new Date();
 
   return {
-    // Address fields
+    // Address fields (street address is JUST the street, fullAddress includes city/state/zip)
     fullAddress,
     streetAddress,
-    address: fullAddress,
     city,
     state,
     zipCode: zip,
@@ -114,11 +145,16 @@ function buildPropertyFromCSV(record: any): any {
     rentalEstimate: rentalEstimate || null,
     daysOnZillow: daysOnZillow || null,
 
-    // Images
-    firstPropertyImage: record['Image link']?.trim() || null,
-    imageUrl: record['Image link']?.trim() || null,
-    propertyImages: record['Image link']?.trim() ? [record['Image link'].trim()] : [],
-    imageUrls: record['Image link']?.trim() ? [record['Image link'].trim()] : [],
+    // Images - with fail-safe to Google Street View if missing
+    firstPropertyImage: record['Image link']?.trim() || getStreetViewImageByAddress(fullAddress),
+    imageUrl: record['Image link']?.trim() || getStreetViewImageByAddress(fullAddress),
+    propertyImages: record['Image link']?.trim()
+      ? [record['Image link'].trim()]
+      : [getStreetViewImageByAddress(fullAddress)].filter(Boolean),
+    imageUrls: record['Image link']?.trim()
+      ? [record['Image link'].trim()]
+      : [getStreetViewImageByAddress(fullAddress)].filter(Boolean),
+    imageSource: record['Image link']?.trim() ? 'CSV' : 'Google Street View',
 
     // Metadata
     source: 'CSV Import',

@@ -1,16 +1,43 @@
 import { sanitizeDescription } from './description-sanitizer';
 
 /**
+ * Helper function to parse street address from full address
+ * Extracts just the street portion, removing city/state/zip
+ */
+function parseStreetAddress(fullAddr: string, city?: string): string {
+  if (!fullAddr) return '';
+
+  // If we have city, use it to split
+  if (city && fullAddr.toLowerCase().includes(city.toLowerCase())) {
+    const parts = fullAddr.split(',');
+    return parts[0].trim();
+  }
+
+  // Otherwise, take everything before the first comma
+  const parts = fullAddr.split(',');
+  return parts[0].trim();
+}
+
+/**
  * Transforms raw Apify property data into our standardized property format.
  * Used by both regular scraper and cash deals scraper.
  */
 export function transformApifyProperty(apifyData: any, source: string = 'apify-zillow') {
   const timestamp = new Date();
   const addressObj = apifyData.address || {};
-  const streetAddress = addressObj.streetAddress || apifyData.streetAddress || '';
+
+  // Extract address components
   const city = addressObj.city || apifyData.city || '';
   const state = addressObj.state || apifyData.state || '';
   const zipCode = addressObj.zipcode || apifyData.zipcode || addressObj.zip || '';
+
+  // Extract street address - ensure it doesn't contain city/state/zip
+  let rawStreetAddress = addressObj.streetAddress || apifyData.streetAddress || '';
+
+  // Clean the street address to remove any city/state/zip that might be included
+  const streetAddress = parseStreetAddress(rawStreetAddress, city);
+
+  // Construct full address from components (ensures consistency)
   const fullAddress = `${streetAddress}, ${city}, ${state} ${zipCode}`.trim();
 
   // ===== CONSTRUCT FULL URL =====
@@ -68,11 +95,31 @@ export function transformApifyProperty(apifyData: any, source: string = 'apify-z
     ? apifyData.images
     : [];
 
+  // Generate Street View image as fail-safe if no images available
+  const getStreetViewImageByAddress = (address: string): string => {
+    const apiKey = process.env.GOOGLE_MAPS_API_KEY;
+    if (!apiKey || !address) return '';
+
+    const encodedAddress = encodeURIComponent(address);
+    return `https://maps.googleapis.com/maps/api/streetview?` +
+      `size=800x500&` +
+      `location=${encodedAddress}&` +
+      `heading=0&` +
+      `fov=90&` +
+      `pitch=10&` +
+      `key=${apiKey}`;
+  };
+
   const firstPropertyImage = apifyData.desktopWebHdpImageLink
     || apifyData.hiResImageLink
     || apifyData.mediumImageLink
     || (propertyImages.length > 0 ? propertyImages[0] : '')
-    || '';
+    || getStreetViewImageByAddress(fullAddress);
+
+  // Ensure propertyImages always has at least one image (Street View if nothing else)
+  const finalPropertyImages = propertyImages.length > 0
+    ? propertyImages
+    : (firstPropertyImage ? [firstPropertyImage] : []);
 
   return {
     url: fullUrl,
@@ -122,9 +169,12 @@ export function transformApifyProperty(apifyData: any, source: string = 'apify-z
     brokerName,
     brokerPhoneNumber: brokerPhone,
 
-    propertyImages,
+    propertyImages: finalPropertyImages,
     firstPropertyImage,
-    photoCount: apifyData.photoCount || propertyImages.length || 0,
+    imageUrl: firstPropertyImage,
+    imageUrls: finalPropertyImages,
+    imageSource: (propertyImages.length > 0) ? 'Zillow' : 'Google Street View',
+    photoCount: apifyData.photoCount || finalPropertyImages.length || 0,
     source,
     importedAt: timestamp,
     scrapedAt: timestamp,

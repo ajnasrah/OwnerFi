@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { LeadDispute } from '@/lib/firebase-models';
@@ -706,55 +706,16 @@ export default function AdminDashboard() {
   }, [activeTab, uploadMode]);
 
   // Property management functions
+  // ✅ PERFORMANCE FIX: Removed duplicate sorting logic - now handled by useMemo
   const handleSort = (field: 'address' | 'city' | 'state' | 'listPrice' | 'bedrooms' | 'downPaymentAmount' | 'monthlyPayment') => {
     const newDirection = sortField === field && sortDirection === 'asc' ? 'desc' : 'asc';
     setSortField(field);
     setSortDirection(newDirection);
-
-    const sortedProperties = [...properties].sort((a, b) => {
-      let aValue: string | number = '';
-      let bValue: string | number = '';
-
-      switch (field) {
-        case 'address':
-          aValue = a.address?.toLowerCase() || '';
-          bValue = b.address?.toLowerCase() || '';
-          break;
-        case 'city':
-          aValue = a.city?.toLowerCase() || '';
-          bValue = b.city?.toLowerCase() || '';
-          break;
-        case 'state':
-          aValue = a.state?.toLowerCase() || '';
-          bValue = b.state?.toLowerCase() || '';
-          break;
-        case 'listPrice':
-          aValue = a.listPrice || 0;
-          bValue = b.listPrice || 0;
-          break;
-        case 'bedrooms':
-          aValue = a.bedrooms ?? 0;
-          bValue = b.bedrooms ?? 0;
-          break;
-        case 'downPaymentAmount':
-          aValue = a.downPaymentAmount ?? 0;
-          bValue = b.downPaymentAmount ?? 0;
-          break;
-        case 'monthlyPayment':
-          aValue = a.monthlyPayment ?? 0;
-          bValue = b.monthlyPayment ?? 0;
-          break;
-      }
-
-      if (aValue < bValue) return newDirection === 'asc' ? -1 : 1;
-      if (aValue > bValue) return newDirection === 'asc' ? 1 : -1;
-      return 0;
-    });
-
-    setProperties(sortedProperties);
+    // Sorting now handled automatically by filteredProperties useMemo
   };
 
-  const getFilteredProperties = () => {
+  // ✅ PERFORMANCE FIX: Memoize filtering to prevent recalculation on every render
+  const filteredProperties = useMemo(() => {
     let filteredProps = properties;
 
     // Apply search filter - search by address or city
@@ -816,16 +777,19 @@ export default function AdminDashboard() {
     }
 
     return filteredProps;
-  };
+  }, [properties, addressSearch, sortField, sortDirection]);
 
-  const getPaginatedProperties = () => {
-    const filtered = getFilteredProperties();
+  // ✅ PERFORMANCE FIX: Memoize pagination to prevent recalculation on every render
+  const paginatedProperties = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
-    return filtered.slice(start, start + itemsPerPage);
-  };
+    return filteredProperties.slice(start, start + itemsPerPage);
+  }, [filteredProperties, currentPage, itemsPerPage]);
 
-  const filteredProperties = getFilteredProperties();
-  const totalPages = Math.ceil(filteredProperties.length / itemsPerPage);
+  // ✅ PERFORMANCE FIX: Memoize total pages calculation
+  const totalPages = useMemo(() =>
+    Math.ceil(filteredProperties.length / itemsPerPage),
+    [filteredProperties.length, itemsPerPage]
+  );
 
   // Helper function to recalculate financials when price or related fields change
   const handlePriceChange = (newPrice: number) => {
@@ -1520,10 +1484,10 @@ export default function AdminDashboard() {
                       <th scope="col" className="relative px-3 py-3">
                         <input
                           type="checkbox"
-                          checked={getPaginatedProperties().length > 0 && getPaginatedProperties().every(p => selectedProperties.includes(p.id))}
+                          checked={paginatedProperties.length > 0 && paginatedProperties.every(p => selectedProperties.includes(p.id))}
                           onChange={() => {
-                            const pageIds = getPaginatedProperties().map(p => p.id);
-                            if (getPaginatedProperties().every(p => selectedProperties.includes(p.id))) {
+                            const pageIds = paginatedProperties.map(p => p.id);
+                            if (paginatedProperties.every(p => selectedProperties.includes(p.id))) {
                               setSelectedProperties(prev => prev.filter(id => !pageIds.includes(id)));
                             } else {
                               setSelectedProperties(prev => [...new Set([...prev, ...pageIds])]);
@@ -1553,7 +1517,7 @@ export default function AdminDashboard() {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {getPaginatedProperties().map((property) => (
+                    {paginatedProperties.map((property) => (
                       <tr key={property.id} className="hover:bg-gray-50">
                         <td className="relative px-3 py-4">
                           <input
@@ -1619,6 +1583,10 @@ export default function AdminDashboard() {
                                 width={112}
                                 height={80}
                                 className="h-20 w-28 rounded-lg object-cover"
+                                loading="lazy"
+                                quality={40}
+                                sizes="112px"
+                                priority={false}
                               />
                             </div>
                             <div className="ml-2">

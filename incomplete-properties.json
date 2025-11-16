@@ -1,0 +1,11 @@
+[
+  {
+    "id": "T3kQERDUs6fnkQ2wased",
+    "address": "701 N Gaillard St, Baytown, TX 77520",
+    "city": "Baytown",
+    "state": "TX",
+    "price": 0,
+    "source": "apify-zillow",
+    "issues": "Missing price"
+  }
+]

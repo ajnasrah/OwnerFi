@@ -84,9 +84,58 @@ export async function GET(request: NextRequest) {
     const pageSize = parseInt(searchParams.get('limit') || '100'); // Default 100 per page
     const status = searchParams.get('status') || 'all';
     const lastDocId = searchParams.get('lastDocId'); // For pagination cursor
+    const searchQuery = searchParams.get('search')?.toLowerCase().trim(); // Search query
 
     // Build base query
     const baseCollection = collection(db, 'zillow_imports');
+
+    // SEARCH MODE: If search query provided, search entire database (ignore pagination)
+    if (searchQuery) {
+      // Fetch ALL properties and search in-memory (Firestore doesn't support full-text search)
+      let searchConstraints: any[] = [
+        where('ownerFinanceVerified', '==', true)
+      ];
+
+      // Filter by status if specified
+      if (status !== 'all') {
+        if (status === 'null') {
+          searchConstraints.push(where('status', '==', null));
+        } else {
+          searchConstraints.push(where('status', '==', status));
+        }
+      }
+
+      const searchQueryRef = query(baseCollection, ...searchConstraints);
+      const allPropertiesSnapshot = await getDocs(searchQueryRef);
+
+      // Filter in-memory by search query
+      const properties = allPropertiesSnapshot.docs
+        .map(mapPropertyFields)
+        .filter(property => {
+          const searchFields = [
+            property.fullAddress,
+            property.streetAddress,
+            property.city,
+            property.state,
+            property.zipCode,
+            property.id
+          ].filter(Boolean).map(f => f.toString().toLowerCase());
+
+          return searchFields.some(field => field.includes(searchQuery));
+        });
+
+      return NextResponse.json({
+        properties,
+        count: properties.length,
+        total: properties.length,
+        hasMore: false,
+        nextCursor: null,
+        showing: `Found ${properties.length} properties matching "${searchQuery}"`,
+        searchMode: true
+      });
+    }
+
+    // NORMAL MODE: Pagination
     let constraints: any[] = [
       where('ownerFinanceVerified', '==', true),
       orderBy('foundAt', 'desc')

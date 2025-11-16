@@ -10,12 +10,54 @@ import {
   deleteDoc,
   where,
   orderBy,
-  limit as firestoreLimit
+  limit as firestoreLimit,
+  startAfter,
+  getCountFromServer,
+  getAggregateFromServer,
+  count
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { logError, logInfo } from '@/lib/logger';
 import { ExtendedSession } from '@/types/session';
 import { autoCleanPropertyData } from '@/lib/property-auto-cleanup';
+
+// Simple in-memory cache for total count (5 min TTL)
+let cachedCount: { value: number; timestamp: number } | null = null;
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+// Fast field mapper - only essential fields
+function mapPropertyFields(doc: any) {
+  const data = doc.data();
+  return {
+    id: doc.id,
+    // Core fields only
+    fullAddress: data.fullAddress,
+    streetAddress: data.streetAddress,
+    city: data.city,
+    state: data.state,
+    zipCode: data.zipCode,
+    price: data.price,
+    squareFoot: data.squareFoot,
+    bedrooms: data.bedrooms,
+    bathrooms: data.bathrooms,
+    lotSquareFoot: data.lotSquareFoot,
+    homeType: data.homeType,
+    ownerFinanceVerified: data.ownerFinanceVerified,
+    status: data.status,
+    // Images
+    firstPropertyImage: data.firstPropertyImage,
+    propertyImages: data.propertyImages,
+    // Timestamps - simplified
+    foundAt: data.foundAt?.toDate?.()?.toISOString() || data.foundAt,
+    // Admin panel compatibility
+    address: data.fullAddress || data.address,
+    squareFeet: data.squareFoot || data.squareFeet,
+    imageUrl: data.firstPropertyImage || data.imageUrl,
+    imageUrls: data.propertyImages || data.imageUrls || [],
+    zillowImageUrl: data.firstPropertyImage || data.zillowImageUrl,
+    listPrice: data.price || data.listPrice,
+  };
+}
 
 // Get all properties for admin management
 export async function GET(request: NextRequest) {
@@ -30,7 +72,7 @@ export async function GET(request: NextRequest) {
     // Admin access control
     const session = await // eslint-disable-next-line @typescript-eslint/no-explicit-any
     getServerSession(authOptions as any) as ExtendedSession | null;
-    
+
     if (!session?.user || (session as ExtendedSession).user.role !== 'admin') {
       return NextResponse.json(
         { error: 'Access denied. Admin access required.' },
@@ -39,76 +81,82 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const limit = parseInt(searchParams.get('limit') || '2000'); // Show up to 2000 properties
+    const pageSize = parseInt(searchParams.get('limit') || '100'); // Default 100 per page
     const status = searchParams.get('status') || 'all';
-    
-    // Build query to show zillow_imports (owner-financed properties)
-    // Changed from 'properties' collection to 'zillow_imports'
-    let propertiesQuery = query(
-      collection(db, 'zillow_imports'),
+    const lastDocId = searchParams.get('lastDocId'); // For pagination cursor
+
+    // Build base query
+    const baseCollection = collection(db, 'zillow_imports');
+    let constraints: any[] = [
       where('ownerFinanceVerified', '==', true),
-      orderBy('foundAt', 'desc') // Show newest first
-    );
+      orderBy('foundAt', 'desc')
+    ];
 
     // Filter by status if specified
     if (status !== 'all') {
       if (status === 'null') {
-        // Filter for properties awaiting financing terms
-        propertiesQuery = query(
-          collection(db, 'zillow_imports'),
-          where('ownerFinanceVerified', '==', true),
-          where('status', '==', null),
-          orderBy('foundAt', 'desc')
-        );
+        constraints.push(where('status', '==', null));
       } else {
-        // Filter for specific status
-        propertiesQuery = query(
-          collection(db, 'zillow_imports'),
-          where('ownerFinanceVerified', '==', true),
-          where('status', '==', status),
-          orderBy('foundAt', 'desc')
-        );
+        constraints.push(where('status', '==', status));
+      }
+    }
+
+    // Add pagination cursor if provided
+    if (lastDocId) {
+      const lastDocRef = doc(db, 'zillow_imports', lastDocId);
+      const lastDocSnap = await getDocs(query(collection(db, 'zillow_imports'), where('__name__', '==', lastDocId)));
+      if (!lastDocSnap.empty) {
+        constraints.push(startAfter(lastDocSnap.docs[0]));
       }
     }
 
     // Add limit
-    propertiesQuery = query(propertiesQuery, firestoreLimit(limit));
-    
-    const propertiesSnapshot = await getDocs(propertiesQuery);
-    const properties = propertiesSnapshot.docs.map(doc => {
-      const data = doc.data();
-      return {
-        id: doc.id,
-        ...data,
-        // Map Zillow field names to admin panel expected names
-        address: data.fullAddress || data.address,
-        squareFeet: data.squareFoot || data.squareFeet, // Map squareFoot → squareFeet
-        imageUrl: data.firstPropertyImage || data.imageUrl, // Map firstPropertyImage → imageUrl
-        imageUrls: data.propertyImages || data.imageUrls || [], // Map propertyImages → imageUrls
-        zillowImageUrl: data.firstPropertyImage || data.zillowImageUrl,
-        listPrice: data.price || data.listPrice,
-        // Convert Firestore timestamps
-        createdAt: data.createdAt?.toDate?.()?.toISOString() || data.createdAt,
-        updatedAt: data.updatedAt?.toDate?.()?.toISOString() || data.updatedAt,
-        foundAt: data.foundAt?.toDate?.()?.toISOString() || data.foundAt,
-        importedAt: data.importedAt?.toDate?.()?.toISOString() || data.importedAt,
-        scrapedAt: data.scrapedAt?.toDate?.()?.toISOString() || data.scrapedAt,
-      };
-    });
+    constraints.push(firestoreLimit(pageSize));
 
-    // Get total count efficiently without fetching all docs
-    const totalQuery = query(
-      collection(db, 'zillow_imports'),
-      where('ownerFinanceVerified', '==', true)
-    );
-    const totalSnapshot = await getDocs(query(totalQuery, firestoreLimit(2000))); // Cap at 2000 for count
-    const estimatedTotal = totalSnapshot.size >= 2000 ? '2000+' : totalSnapshot.size;
-    
-    return NextResponse.json({ 
+    // Execute main query
+    const propertiesQuery = query(baseCollection, ...constraints);
+    const propertiesSnapshot = await getDocs(propertiesQuery);
+
+    // Fast field mapping
+    const properties = propertiesSnapshot.docs.map(mapPropertyFields);
+
+    // Get total count with caching
+    let totalCount = 0;
+    const now = Date.now();
+
+    if (cachedCount && (now - cachedCount.timestamp) < CACHE_TTL) {
+      // Use cached count
+      totalCount = cachedCount.value;
+    } else {
+      // Fetch count using aggregation (no document reads!)
+      try {
+        const countQuery = query(
+          baseCollection,
+          where('ownerFinanceVerified', '==', true)
+        );
+        const countSnapshot = await getCountFromServer(countQuery);
+        totalCount = countSnapshot.data().count;
+
+        // Cache the result
+        cachedCount = { value: totalCount, timestamp: now };
+      } catch (error) {
+        // Fallback to estimated count
+        console.warn('Count aggregation failed, using estimate:', error);
+        totalCount = properties.length >= pageSize ? pageSize * 20 : properties.length;
+      }
+    }
+
+    const hasMore = properties.length === pageSize;
+    const lastDoc = properties.length > 0 ? properties[properties.length - 1].id : null;
+
+    return NextResponse.json({
       properties,
       count: properties.length,
-      total: estimatedTotal,
-      showing: `${properties.length} of ${estimatedTotal} properties`
+      total: totalCount,
+      hasMore,
+      nextCursor: hasMore ? lastDoc : null,
+      showing: `${properties.length} of ${totalCount} properties`,
+      cached: cachedCount ? (now - cachedCount.timestamp < CACHE_TTL) : false
     });
 
   } catch (error) {

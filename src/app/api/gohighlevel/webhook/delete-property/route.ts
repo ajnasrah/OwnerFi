@@ -1,313 +1,65 @@
 import { NextRequest, NextResponse } from 'next/server';
-import {
-  doc,
-  getDoc,
-  deleteDoc,
-  collection,
-  query,
-  where,
-  getDocs,
-  writeBatch
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import { logError, logInfo, logWarn } from '@/lib/logger';
-import crypto from 'crypto';
+import { logWarn } from '@/lib/logger';
 
-const GHL_WEBHOOK_SECRET = process.env.GHL_WEBHOOK_SECRET || '';
-const BYPASS_SIGNATURE_CHECK = process.env.GHL_BYPASS_SIGNATURE === 'true'; // For testing only
+/**
+ * DELETE PROPERTY WEBHOOK - PERMANENTLY DISABLED
+ *
+ * This endpoint has been permanently disabled for security reasons.
+ * Property deletions should be performed through the admin panel only.
+ *
+ * Date Disabled: November 15, 2025
+ * Reason: Security - prevents unauthorized mass deletions
+ */
 
-function verifyWebhookSignature(
-  payload: string,
-  signature: string | null
-): boolean {
-  // TESTING ONLY: Bypass signature check if env var is set
-  if (BYPASS_SIGNATURE_CHECK) {
-    logWarn('⚠️ WARNING: Signature verification bypassed for testing');
-    return true;
-  }
+export async function POST(request: NextRequest) {
+  // Log the blocked attempt
+  const ip = request.headers.get('x-forwarded-for') ||
+             request.headers.get('x-real-ip') ||
+             'unknown';
 
-  if (!signature || !GHL_WEBHOOK_SECRET) {
-    return false;
-  }
+  const userAgent = request.headers.get('user-agent') || 'unknown';
 
-  const expectedSignature = crypto
-    .createHmac('sha256', GHL_WEBHOOK_SECRET)
-    .update(payload)
-    .digest('hex');
+  await logWarn('Blocked access attempt to disabled delete-property webhook', {
+    action: 'webhook_blocked',
+    metadata: {
+      ip,
+      userAgent,
+      timestamp: new Date().toISOString(),
+      reason: 'Endpoint permanently disabled for security'
+    }
+  });
 
-  return crypto.timingSafeEqual(
-    Buffer.from(signature),
-    Buffer.from(expectedSignature)
+  return NextResponse.json(
+    {
+      error: 'This endpoint has been permanently disabled',
+      message: 'Property deletions must be performed through the admin panel',
+      status: 'disabled',
+      disabled_date: '2025-11-15',
+      contact: 'Please contact system administrator if you need to delete properties'
+    },
+    {
+      status: 410, // 410 Gone - Resource permanently removed
+      headers: {
+        'X-Endpoint-Status': 'Permanently Disabled',
+        'X-Disabled-Date': '2025-11-15'
+      }
+    }
   );
 }
 
-interface GHLDeletePayload {
-  contactId?: string;
-  locationId?: string;
-  propertyId?: string;
-  opportunityId?: string; // GHL sends this
-  id?: string; // GHL might also send this
-  propertyIds?: string[];
-  deleteBy?: {
-    field: string;
-    value: string | number;
-  };
-  deleteAll?: boolean;
+// Block all other HTTP methods
+export async function GET(request: NextRequest) {
+  return POST(request);
 }
 
-export async function POST(request: NextRequest) {
-  try {
-    if (!db) {
-      return NextResponse.json(
-        { error: 'Database not available' },
-        { status: 500 }
-      );
-    }
+export async function PUT(request: NextRequest) {
+  return POST(request);
+}
 
-    const body = await request.text();
-    const signature = request.headers.get('x-ghl-signature');
+export async function DELETE(request: NextRequest) {
+  return POST(request);
+}
 
-    // Debug logging
-    logInfo('GoHighLevel delete webhook request received', {
-      action: 'webhook_request',
-      metadata: {
-        hasSignature: !!signature,
-        signatureValue: signature,
-        bodyLength: body.length,
-        bodyPreview: body.substring(0, 200),
-        hasSecret: !!GHL_WEBHOOK_SECRET,
-        allHeaders: Object.fromEntries(request.headers.entries())
-      }
-    });
-
-    if (!verifyWebhookSignature(body, signature)) {
-      logError('Invalid GoHighLevel webhook signature', {
-        action: 'signature_verification_failed',
-        metadata: {
-          providedSignature: signature,
-          hasSecret: !!GHL_WEBHOOK_SECRET,
-          bodyLength: body.length
-        }
-      });
-      return NextResponse.json(
-        { error: 'Invalid webhook signature' },
-        { status: 401 }
-      );
-    }
-
-    const payload: GHLDeletePayload = JSON.parse(body);
-
-    // GHL sends property ID in HEADERS (like save-property webhook), not in body
-    // Check both headers and body for property ID
-    const propertyIdFromHeaders = request.headers.get('propertyid') ||
-                                   request.headers.get('propertyId') ||
-                                   request.headers.get('opportunityid') ||
-                                   request.headers.get('opportunityId');
-
-    // GHL can send opportunityId, id, or propertyId - normalize to propertyId
-    const propertyId = propertyIdFromHeaders || payload.propertyId || payload.opportunityId || payload.id;
-
-    logInfo('GoHighLevel delete property webhook received', {
-      action: 'webhook_received',
-      metadata: {
-        hasPropertyId: !!payload.propertyId,
-        hasOpportunityId: !!payload.opportunityId,
-        hasId: !!payload.id,
-        normalizedPropertyId: propertyId,
-        hasPropertyIds: !!payload.propertyIds,
-        hasDeleteBy: !!payload.deleteBy,
-        deleteAll: payload.deleteAll,
-        fullPayload: payload
-      }
-    });
-
-    const deletedProperties: string[] = [];
-    const errors: string[] = [];
-
-    if (payload.deleteAll === true) {
-      logWarn('Delete all properties requested - this action requires additional confirmation');
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Delete all properties requires additional confirmation',
-          requiresConfirmation: true
-        },
-        { status: 400 }
-      );
-    }
-
-    if (propertyId) {
-      try {
-        const propertyRef = doc(db, 'properties', propertyId);
-        const propertyDoc = await getDoc(propertyRef);
-
-        if (!propertyDoc.exists()) {
-          errors.push(`Property ${propertyId} not found`);
-          logWarn(`Property ${propertyId} not found in database`, {
-            action: 'property_not_found',
-            metadata: { propertyId }
-          });
-        } else {
-          await deleteDoc(propertyRef);
-          deletedProperties.push(propertyId);
-
-          // Also remove from queue (NEW system)
-          try {
-            const { deletePropertyWorkflow } = await import('@/lib/property-workflow');
-            const deleted = await deletePropertyWorkflow(propertyId);
-            if (deleted) {
-              logInfo(`Removed deleted property from queue: ${propertyId}`, {
-                action: 'queue_cleanup',
-                metadata: { propertyId }
-              });
-            }
-          } catch (queueError) {
-            logWarn(`Could not remove from queue: ${propertyId}`, {
-              action: 'queue_cleanup_error',
-              metadata: { propertyId, error: (queueError as Error).message }
-            });
-            // Don't fail the delete if queue removal fails
-          }
-
-          logInfo(`Successfully deleted property ${propertyId}`, {
-            action: 'property_deleted',
-            metadata: { propertyId }
-          });
-        }
-      } catch (error) {
-        errors.push(`Failed to delete property ${propertyId}: ${error}`);
-        logError(`Error deleting property ${propertyId}:`, {
-          action: 'delete_error',
-          metadata: { propertyId }
-        }, error as Error);
-      }
-    }
-
-    if (payload.propertyIds && Array.isArray(payload.propertyIds)) {
-      const batch = writeBatch(db);
-      const queueCleanupIds: string[] = [];
-
-      for (const id of payload.propertyIds) {
-        try {
-          const propertyRef = doc(db, 'properties', id);
-          const propertyDoc = await getDoc(propertyRef);
-
-          if (!propertyDoc.exists()) {
-            errors.push(`Property ${id} not found`);
-          } else {
-            batch.delete(propertyRef);
-            deletedProperties.push(id);
-            queueCleanupIds.push(id);
-          }
-        } catch (error) {
-          errors.push(`Failed to process property ${id}: ${error}`);
-          logError(`Error processing property ${id}:`, error);
-        }
-      }
-
-      if (deletedProperties.length > 0) {
-        await batch.commit();
-        logInfo(`Batch deleted ${deletedProperties.length} properties`);
-
-        // Clean up queue for batch deleted properties (NEW system)
-        const { deletePropertyWorkflow } = await import('@/lib/property-workflow');
-        for (const id of queueCleanupIds) {
-          try {
-            await deletePropertyWorkflow(id);
-          } catch (queueError) {
-            logWarn(`Could not remove ${id} from queue`, {
-              action: 'queue_cleanup_error',
-              metadata: { propertyId: id }
-            });
-          }
-        }
-        logInfo(`Cleaned up ${queueCleanupIds.length} entries from queue`);
-      }
-    }
-
-    if (payload.deleteBy) {
-      const { field, value } = payload.deleteBy;
-
-      const allowedFields = ['address', 'city', 'state', 'zipCode', 'status'];
-      if (!allowedFields.includes(field)) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: `Invalid field for deletion: ${field}. Allowed fields: ${allowedFields.join(', ')}`
-          },
-          { status: 400 }
-        );
-      }
-
-      try {
-        const q = query(
-          collection(db, 'properties'),
-          where(field, '==', value)
-        );
-
-        const snapshot = await getDocs(q);
-
-        if (snapshot.empty) {
-          errors.push(`No properties found with ${field} = ${value}`);
-        } else {
-          const batch = writeBatch(db);
-          const deleteByCleanupIds: string[] = [];
-
-          snapshot.forEach((doc) => {
-            batch.delete(doc.ref);
-            deletedProperties.push(doc.id);
-            deleteByCleanupIds.push(doc.id);
-          });
-
-          await batch.commit();
-          logInfo(`Deleted ${deletedProperties.length} properties where ${field} = ${value}`);
-
-          // Clean up rotation queue for deleted properties
-          for (const id of deleteByCleanupIds) {
-            try {
-              const { deletePropertyWorkflow } = await import('@/lib/property-workflow');
-              await deletePropertyWorkflow(id);
-            } catch (queueError) {
-              logWarn(`Could not remove ${id} from queue`, {
-                action: 'queue_cleanup_error',
-                metadata: { propertyId: id }
-              });
-            }
-          }
-          logInfo(`Cleaned up ${deleteByCleanupIds.length} entries from rotation queue`);
-        }
-      } catch (error) {
-        errors.push(`Failed to delete properties by ${field}: ${error}`);
-        logError(`Error deleting properties by ${field}:`, error);
-      }
-    }
-
-    const response = {
-      success: deletedProperties.length > 0,
-      data: {
-        deletedProperties,
-        deletedCount: deletedProperties.length,
-        errors: errors.length > 0 ? errors : undefined,
-        contactId: payload.contactId,
-        locationId: payload.locationId
-      }
-    };
-
-    if (deletedProperties.length === 0 && errors.length > 0) {
-      return NextResponse.json(response, { status: 400 });
-    }
-
-    return NextResponse.json(response);
-
-  } catch (error) {
-    logError('Error in GoHighLevel delete property webhook:', error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: 'Failed to delete properties',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      },
-      { status: 500 }
-    );
-  }
+export async function PATCH(request: NextRequest) {
+  return POST(request);
 }

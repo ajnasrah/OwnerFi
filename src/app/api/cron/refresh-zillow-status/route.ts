@@ -197,7 +197,10 @@ export async function GET(request: NextRequest) {
               status: newStatus,
               reason: 'Property no longer FOR_SALE',
             });
-            console.log(`   🗑️  Deleting: ${originalProp?.address} (${newStatus})`);
+            console.log(`   🗑️  DELETING PROPERTY (Status: ${newStatus})`);
+            console.log(`      Address: ${originalProp?.address}`);
+            console.log(`      ZPID: ${originalProp?.zpid}`);
+            console.log(`      ℹ️  If relisted later, this ZPID can be imported again with new agent info`);
           } else {
             // Property is still active (FOR_SALE) - check if it still mentions owner financing
             const ownerFinanceCheck = hasStrictOwnerFinancing(item.description);
@@ -211,7 +214,11 @@ export async function GET(request: NextRequest) {
                 status: newStatus,
                 reason: 'No longer offers owner financing (seller changed mind)',
               });
-              console.log(`   🗑️  Deleting: ${originalProp?.address} (No owner financing keywords)`);
+              console.log(`   🗑️  DELETING PROPERTY (No owner financing keywords)`);
+              console.log(`      Address: ${originalProp?.address}`);
+              console.log(`      ZPID: ${originalProp?.zpid}`);
+              console.log(`      Status: ${newStatus} (active, but keywords removed)`);
+              console.log(`      ℹ️  If owner financing is added back later, can be imported again`);
             } else {
               // Update status, price, and description
               firestoreBatch.update(docRef, {

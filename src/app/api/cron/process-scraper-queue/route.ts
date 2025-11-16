@@ -223,9 +223,16 @@ export async function GET(request: NextRequest) {
         // Check for duplicates in zillow_imports
         if (existingZillowZpids.has(propertyData.zpid)) {
           metrics.duplicatesSkipped++;
-          console.log(`⏭️ Skipping duplicate ZPID ${propertyData.zpid} (already in zillow_imports)`);
+          console.log(`⏭️ DUPLICATE FOUND - Skipping ZPID ${propertyData.zpid} (already in zillow_imports)`);
+          console.log(`   Address: ${propertyData.fullAddress}`);
           continue;
         }
+
+        // ZPID not found - this is either NEW or RELISTED after deletion
+        console.log(`✅ ZPID ${propertyData.zpid} NOT in database - importing fresh!`);
+        console.log(`   Address: ${propertyData.fullAddress}`);
+        console.log(`   Agent: ${propertyData.agentName || 'N/A'} (${propertyData.agentPhoneNumber || 'N/A'})`);
+        console.log(`   Status: This could be a NEW property or RELISTED after being SOLD/PENDING`);
 
         // Log contact info status
         if (!propertyData.agentPhoneNumber && !propertyData.brokerPhoneNumber) {

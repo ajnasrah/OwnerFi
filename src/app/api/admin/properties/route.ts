@@ -49,6 +49,13 @@ function mapPropertyFields(doc: any) {
     propertyImages: data.propertyImages,
     // Timestamps - simplified
     foundAt: data.foundAt?.toDate?.()?.toISOString() || data.foundAt,
+    // Financial fields - CRITICAL for buyer-facing display
+    monthlyPayment: data.monthlyPayment,
+    downPaymentAmount: data.downPaymentAmount,
+    downPaymentPercent: data.downPaymentPercent,
+    interestRate: data.interestRate,
+    termYears: data.termYears,
+    balloonYears: data.balloonYears,
     // Admin panel compatibility - use streetAddress (just the street, not full address with city/state/zip)
     address: data.streetAddress || data.fullAddress || data.address,
     squareFeet: data.squareFoot || data.squareFeet,

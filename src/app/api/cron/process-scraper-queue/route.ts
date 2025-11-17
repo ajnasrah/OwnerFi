@@ -257,7 +257,7 @@ export async function GET(request: NextRequest) {
           verifiedAt: null,                 // Set when terms received
           soldAt: null,
 
-          // GHL tracking
+          // GHL webhook tracking
           sentToGHL: false,
           ghlSentAt: null,
           ghlSendStatus: null,
@@ -272,7 +272,7 @@ export async function GET(request: NextRequest) {
           balloonPaymentYears: null,
         });
 
-        // Track for GHL sending
+        // Track for GHL webhook sending
         savedProperties.push({
           docRef,
           data: propertyData,
@@ -311,7 +311,7 @@ export async function GET(request: NextRequest) {
 
     console.log(`✅ [FIREBASE] Total saved: ${metrics.propertiesSaved} properties to zillow_imports`);
 
-    // ===== SEND TO GHL WEBHOOK =====
+    // ===== SEND TO GHL CRM WEBHOOK =====
     // Send ALL saved properties (all passed strict filter + have contact info)
     const GHL_WEBHOOK_URL = 'https://services.leadconnectorhq.com/hooks/U2B5lSlWrVBgVxHNq5AH/webhook-trigger/2be65188-9b2e-43f1-a9d8-33d9907b375c';
 
@@ -320,7 +320,7 @@ export async function GET(request: NextRequest) {
         (prop.data.agentPhoneNumber || prop.data.brokerPhoneNumber) // Has contact info
       );
 
-    console.log(`\n📤 [GHL WEBHOOK] Sending ${propertiesWithContact.length} verified owner finance properties to GHL`);
+    console.log(`\n📤 [GHL WEBHOOK] Sending ${propertiesWithContact.length} verified owner finance properties to GHL CRM`);
     if (propertiesWithContact.length > 0) {
       console.log(`   Sample keywords: ${propertiesWithContact[0].matchedKeywords?.join(', ') || 'N/A'}`);
     }
@@ -356,28 +356,39 @@ export async function GET(request: NextRequest) {
           property_image: propertyData.firstPropertyImage || '',
           broker_name: propertyData.brokerName || '',
           broker_phone: propertyData.brokerPhoneNumber || '',
+          // Financial terms fields - initially null, needs to be filled
+          down_payment_amount: null,
+          down_payment_percent: null,
+          monthly_payment: null,
+          interest_rate: null,
+          loan_term_years: null,
+          balloon_payment_years: null,
+          // Status tracking
+          status: 'needs_terms', // Indicate this property needs financial terms
+          matched_keywords: property.matchedKeywords?.join(', ') || '',
         };
 
-        const response = await fetch(GHL_WEBHOOK_URL, {
+        // Send to GHL webhook
+        const ghlResponse = await fetch(GHL_WEBHOOK_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(webhookData),
         });
 
-        if (!response.ok) {
-          throw new Error(`${response.status}: ${await response.text()}`);
+        if (!ghlResponse.ok) {
+          throw new Error(`${ghlResponse.status}: ${await ghlResponse.text()}`);
         }
 
         metrics.ghlWebhookSuccess++;
 
-        // Update Firebase with GHL send status
+        // Update Firebase with webhook send status
         await property.docRef.update({
           sentToGHL: true,
           ghlSentAt: new Date(),
           ghlSendStatus: 'success',
         });
 
-        console.log(`✅ Sent: ${propertyData.fullAddress} (${propertyData.agentPhoneNumber}) [${firebaseId}]`);
+        console.log(`✅ GHL Sent: ${propertyData.fullAddress} (${propertyData.agentPhoneNumber}) [${firebaseId}]`);
 
         // Small delay to avoid overwhelming webhook
         await new Promise(resolve => setTimeout(resolve, 100));

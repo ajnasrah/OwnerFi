@@ -516,14 +516,22 @@ function mapRowToProperty(
   // const description = getColumnValue(row, ['description', 'Description', 'notes']);
   // zipCode already declared above after address parsing
 
-  // Financial fields
-  // Financial fields - no trailing spaces after you fix headers
-  let downPaymentAmount = getNumericValue(row, ['down payment amount']);
-  const downPaymentPercent = getNumericValue(row, ['down payment']);
-  const interestRate = getNumericValue(row, ['Interest rate']);
-  const monthlyPayment = getNumericValue(row, ['Monthly payment']);
-  const termYears = getNumericValue(row, ['Term Years', 'termYears', 'Term', 'Loan Term', 'Amortization']);
-  const balloonYears = getNumericValue(row, ['Balloon']);
+  // Financial fields - handle CSV columns with trailing spaces and various names
+  let downPaymentAmount = getNumericValue(row, ['down payment amount ', 'down payment amount', 'downPaymentAmount', 'Down Payment Amount']);
+  const downPaymentPercent = getNumericValue(row, ['down payment %', 'down payment', 'downPayment%', 'Down Payment %', 'Down Payment Percent']);
+  const interestRate = getNumericValue(row, ['Interest rate ', 'Interest rate', 'interest rate', 'interestRate', 'Interest Rate']);
+  const monthlyPayment = getNumericValue(row, ['Monthly payment', 'Monthly payment ', 'monthly payment', 'monthlyPayment', 'Monthly Payment']);
+
+  // Handle amortization - could be in months or years
+  let termYears = getNumericValue(row, ['Term Years', 'termYears', 'Term', 'Loan Term', 'Loan Term Years']);
+  const amortizationMonths = getNumericValue(row, ['Amortization schedule months ', 'Amortization schedule months']);
+
+  // Convert months to years if amortization is in months
+  if (amortizationMonths > 0 && termYears === 0) {
+    termYears = Math.round(amortizationMonths / 12);
+  }
+
+  const balloonYears = getNumericValue(row, ['Balloon ', 'Balloon', 'balloon', 'Balloon Payment Years', 'balloonYears']);
 
   // Calculate down payment amount from percentage if amount is missing
   if (!downPaymentAmount && downPaymentPercent && price) {

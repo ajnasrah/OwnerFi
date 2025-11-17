@@ -1,15 +1,16 @@
 /**
  * CONSOLIDATED Daily Maintenance Cron
  *
- * Consolidates 3 separate daily maintenance cron jobs into ONE:
+ * Consolidates 4 separate daily maintenance cron jobs into ONE:
  * 1. cleanup-videos (3am daily - deletes expired videos from R2)
  * 2. enhance-property-images (4am daily - upgrades low-res images)
  * 3. cleanup-stale-properties (2am Sunday - deletes properties older than 60 days)
+ * 4. cleanup-queue-items (3am daily - deletes completed queue items older than 24 hours)
  *
  * Schedule: 0 3 * * * (3am daily CST)
- * Previously: 3 separate crons = 3 invocations/day (daily) + 1 extra/week (Sunday) = ~23/week
+ * Previously: 4 separate crons = 4 invocations/day (daily) + 1 extra/week (Sunday) = ~29/week
  * Now: 1 cron = 7 invocations/week
- * SAVINGS: ~16 fewer cron invocations per week (70% reduction)
+ * SAVINGS: ~22 fewer cron invocations per week (76% reduction)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -41,7 +42,8 @@ export async function GET(request: NextRequest) {
       const results = {
         videoCleanup: null as any,
         imageEnhancement: null as any,
-        propertyCleanup: null as any
+        propertyCleanup: null as any,
+        queueCleanup: null as any
       };
 
       // 1. Clean up expired videos
@@ -71,6 +73,13 @@ export async function GET(request: NextRequest) {
         results.propertyCleanup = { skipped: true, day: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][today] };
       }
 
+      // 4. Clean up completed queue items (daily)
+      console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('4️⃣  QUEUE CLEANUP');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+      const queueResult = await cleanupQueueItems();
+      results.queueCleanup = queueResult;
+
       const duration = Date.now() - startTime;
 
       console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
@@ -80,6 +89,7 @@ export async function GET(request: NextRequest) {
       console.log(`   Videos deleted: ${results.videoCleanup?.deleted || 0}`);
       console.log(`   Images enhanced: ${results.imageEnhancement?.upgraded || 0}`);
       console.log(`   Properties cleaned: ${results.propertyCleanup?.deleted || (results.propertyCleanup?.skipped ? 'N/A' : 0)}`);
+      console.log(`   Queue items deleted: ${results.queueCleanup?.ownerFinance?.deleted || 0} owner finance, ${results.queueCleanup?.cashDeals?.deleted || 0} cash deals`);
       console.log(`   Duration: ${duration}ms`);
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
@@ -323,6 +333,142 @@ async function enhancePropertyImages() {
 // ============================================================================
 // 3. CLEANUP STALE PROPERTIES (Sundays only)
 // ============================================================================
+
+async function cleanupQueueItems() {
+  try {
+    console.log('🗑️  Deleting completed queue items (older than 24 hours)...');
+
+    const { getAdminDb } = await import('@/lib/firebase-admin');
+    const db = await getAdminDb();
+
+    if (!db) {
+      throw new Error('Firebase not initialized');
+    }
+
+    const twentyFourHoursAgo = new Date();
+    twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
+
+    console.log(`   📅 Cutoff: ${twentyFourHoursAgo.toLocaleString()}`);
+
+    // Clean up owner finance queue (scraper_queue)
+    console.log('\n   🔍 Cleaning owner finance queue (scraper_queue)...');
+    const ownerFinanceSnapshot = await db
+      .collection('scraper_queue')
+      .where('status', '==', 'completed')
+      .get();
+
+    console.log(`   📊 Found ${ownerFinanceSnapshot.size} completed items`);
+
+    const ownerFinanceToDelete = ownerFinanceSnapshot.docs.filter(doc => {
+      const data = doc.data();
+      const completedAt = data.completedAt;
+      if (!completedAt) return true; // Delete if no timestamp (shouldn't happen but cleanup anyway)
+
+      const completedDate = completedAt.toDate ? completedAt.toDate() : new Date(completedAt);
+      return completedDate < twentyFourHoursAgo;
+    });
+
+    console.log(`   📊 ${ownerFinanceToDelete.length} items older than 24 hours`);
+
+    let ownerFinanceDeleted = 0;
+    let ownerFinanceErrors = 0;
+
+    for (const doc of ownerFinanceToDelete) {
+      try {
+        await doc.ref.delete();
+        ownerFinanceDeleted++;
+      } catch (error) {
+        ownerFinanceErrors++;
+      }
+    }
+
+    console.log(`   ✅ Deleted: ${ownerFinanceDeleted} owner finance queue items`);
+    if (ownerFinanceErrors > 0) {
+      console.log(`   ❌ Errors: ${ownerFinanceErrors} items`);
+    }
+
+    // Clean up cash deals queue (cash_deals_queue)
+    console.log('\n   🔍 Cleaning cash deals queue (cash_deals_queue)...');
+    const cashDealsSnapshot = await db
+      .collection('cash_deals_queue')
+      .where('status', '==', 'completed')
+      .get();
+
+    console.log(`   📊 Found ${cashDealsSnapshot.size} completed items`);
+
+    const cashDealsToDelete = cashDealsSnapshot.docs.filter(doc => {
+      const data = doc.data();
+      const completedAt = data.completedAt;
+      if (!completedAt) return true;
+
+      const completedDate = completedAt.toDate ? completedAt.toDate() : new Date(completedAt);
+      return completedDate < twentyFourHoursAgo;
+    });
+
+    console.log(`   📊 ${cashDealsToDelete.length} items older than 24 hours`);
+
+    let cashDealsDeleted = 0;
+    let cashDealsErrors = 0;
+
+    for (const doc of cashDealsToDelete) {
+      try {
+        await doc.ref.delete();
+        cashDealsDeleted++;
+      } catch (error) {
+        cashDealsErrors++;
+      }
+    }
+
+    console.log(`   ✅ Deleted: ${cashDealsDeleted} cash deals queue items`);
+    if (cashDealsErrors > 0) {
+      console.log(`   ❌ Errors: ${cashDealsErrors} items`);
+    }
+
+    const totalDeleted = ownerFinanceDeleted + cashDealsDeleted;
+    const totalErrors = ownerFinanceErrors + cashDealsErrors;
+
+    console.log(`\n   📊 Total: ${totalDeleted} queue items deleted`);
+
+    if (totalErrors > 5) {
+      const { alertSystemError } = await import('@/lib/error-monitoring');
+      await alertSystemError(
+        'Queue Cleanup',
+        `High error rate: ${totalErrors} items failed to delete`,
+        { deleted: totalDeleted, errors: totalErrors }
+      ).catch(() => {});
+    }
+
+    return {
+      success: true,
+      ownerFinance: {
+        total: ownerFinanceSnapshot.size,
+        deleted: ownerFinanceDeleted,
+        errors: ownerFinanceErrors
+      },
+      cashDeals: {
+        total: cashDealsSnapshot.size,
+        deleted: cashDealsDeleted,
+        errors: cashDealsErrors
+      },
+      totalDeleted,
+      totalErrors
+    };
+
+  } catch (error) {
+    console.error('   ❌ Queue cleanup error:', error);
+    const { alertSystemError } = await import('@/lib/error-monitoring');
+    await alertSystemError(
+      'Queue Cleanup',
+      error instanceof Error ? error.message : 'Unknown error',
+      { error: String(error) }
+    ).catch(() => {});
+
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
+  }
+}
 
 async function cleanupStaleProperties() {
   try {

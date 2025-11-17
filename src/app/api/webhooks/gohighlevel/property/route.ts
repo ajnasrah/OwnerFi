@@ -377,15 +377,24 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // 8. Extract opportunityId
+    // 8. Extract firebase_id (priority) or opportunityId (fallback)
+    const firebaseId = bodyData.firebase_id ||
+                       bodyData.firebaseId ||
+                       bodyData.customData?.firebase_id ||
+                       request.headers.get('firebase_id') ||
+                       request.headers.get('firebaseId');
+
     const opportunityId = bodyData.opportunityId ||
                          bodyData.id ||
                          bodyData.customData?.opportunityId ||
                          request.headers.get('opportunityid') ||
                          request.headers.get('opportunityId');
 
-    if (!opportunityId) {
-      await logError('No opportunityId in webhook payload', {
+    // Prefer firebase_id, fall back to opportunityId
+    const propertyId = firebaseId || opportunityId;
+
+    if (!propertyId) {
+      await logError('No firebase_id or opportunityId in webhook payload', {
         action: 'webhook_missing_id',
         metadata: {
           bodyKeys: Object.keys(bodyData),
@@ -394,10 +403,20 @@ export async function POST(request: NextRequest) {
       });
 
       return NextResponse.json(
-        { error: 'opportunityId is required' },
+        { error: 'firebase_id or opportunityId is required' },
         { status: 400 }
       );
     }
+
+    await logInfo('Property ID extracted from webhook', {
+      action: 'property_id_extracted',
+      metadata: {
+        propertyId,
+        hasFirebaseId: !!firebaseId,
+        hasOpportunityId: !!opportunityId,
+        usingFirebaseId: !!firebaseId
+      }
+    });
 
     // 9. Build payload from headers and body
     const payload: GHLPropertyPayload = {
@@ -463,24 +482,45 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 11. Process property (rest of the logic from original webhook)
-    const propertyId = payload.opportunityId;
+    // 11. Process property - check correct collection based on ID type
+    // If we have firebase_id, update zillow_imports collection
+    // Otherwise, use legacy properties collection
+    const targetCollection = firebaseId ? 'zillow_imports' : 'properties';
 
     // Check if property exists
     let isUpdate = false;
+    let existingPropertyData: any = null;
     try {
-      const existingDoc = await getDoc(doc(db, 'properties', propertyId));
+      const existingDoc = await getDoc(doc(db, targetCollection, propertyId));
       if (existingDoc.exists()) {
         isUpdate = true;
-        await logInfo(`Property ${propertyId} already exists, updating`, {
+        existingPropertyData = existingDoc.data();
+        await logInfo(`Property ${propertyId} found in ${targetCollection}, updating`, {
           action: 'property_update_detected',
-          metadata: { propertyId }
+          metadata: {
+            propertyId,
+            collection: targetCollection,
+            hasFirebaseId: !!firebaseId
+          }
+        });
+      } else {
+        await logInfo(`Property ${propertyId} not found in ${targetCollection}, will create new`, {
+          action: 'property_not_found',
+          metadata: {
+            propertyId,
+            collection: targetCollection,
+            hasFirebaseId: !!firebaseId
+          }
         });
       }
     } catch (checkError) {
       await logError('Error checking existing property', {
         action: 'property_check_error',
-        metadata: { propertyId, error: (checkError as Error).message }
+        metadata: {
+          propertyId,
+          collection: targetCollection,
+          error: (checkError as Error).message
+        }
       }, checkError as Error);
     }
 
@@ -730,13 +770,23 @@ export async function POST(request: NextRequest) {
       Object.entries(propertyData).filter(([_, value]) => value !== undefined)
     );
 
-    // Save to database
+    // Save to database (zillow_imports if firebase_id, otherwise properties)
     try {
       await setDoc(
-        doc(db, 'properties', propertyId),
+        doc(db, targetCollection, propertyId),
         cleanPropertyData,
         { merge: isUpdate }
       );
+
+      await logInfo(`Property saved to ${targetCollection}`, {
+        action: 'property_saved',
+        metadata: {
+          propertyId,
+          collection: targetCollection,
+          isUpdate,
+          hasFirebaseId: !!firebaseId
+        }
+      });
 
       // Queue nearby cities calculation
       try {

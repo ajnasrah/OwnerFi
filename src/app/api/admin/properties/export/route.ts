@@ -225,12 +225,16 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
+    console.error('[EXPORT] Error during export:', error);
     await logError('Failed to export properties to Excel', {
       action: 'admin_properties_export_error'
     }, error as Error);
 
     return NextResponse.json(
-      { error: 'Failed to export properties' },
+      {
+        error: 'Failed to export properties',
+        details: error instanceof Error ? error.message : String(error)
+      },
       { status: 500 }
     );
   }

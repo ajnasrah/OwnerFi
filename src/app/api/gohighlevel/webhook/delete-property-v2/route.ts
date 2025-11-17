@@ -103,8 +103,12 @@ interface GHLDeletePayload {
   locationId?: string;
   propertyId?: string;
   opportunityId?: string;
+  firebase_id?: string;
+  firebaseId?: string;
   id?: string;
   propertyIds?: string[];
+  firebase_ids?: string[];
+  firebaseIds?: string[];
   deleteBy?: {
     field: string;
     value: string | number;
@@ -175,12 +179,33 @@ export async function POST(request: NextRequest) {
       }
     });
 
+    // Extract firebase_id (priority) or opportunityId (fallback)
+    const firebaseIdFromHeaders = request.headers.get('firebase_id') ||
+                                   request.headers.get('firebaseId');
+
     const propertyIdFromHeaders = request.headers.get('propertyid') ||
                                    request.headers.get('propertyId') ||
                                    request.headers.get('opportunityid') ||
                                    request.headers.get('opportunityId');
 
-    const propertyId = propertyIdFromHeaders || payload.propertyId || payload.opportunityId || payload.id;
+    const firebaseId = firebaseIdFromHeaders || payload.firebase_id || payload.firebaseId;
+    const opportunityId = propertyIdFromHeaders || payload.propertyId || payload.opportunityId || payload.id;
+
+    // Prefer firebase_id, fall back to opportunityId
+    const propertyId = firebaseId || opportunityId;
+
+    // Determine which collection to use
+    const targetCollection = firebaseId ? 'zillow_imports' : 'properties';
+
+    logInfo('Delete request extracted IDs', {
+      action: 'delete_ids_extracted',
+      metadata: {
+        hasFirebaseId: !!firebaseId,
+        hasOpportunityId: !!opportunityId,
+        targetCollection,
+        ip
+      }
+    });
 
     const deletedProperties: string[] = [];
     const errors: string[] = [];
@@ -202,28 +227,30 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Single property deletion
+    // Single property deletion (from correct collection)
     if (propertyId) {
       try {
-        const propertyRef = doc(db, 'properties', propertyId);
+        const propertyRef = doc(db, targetCollection, propertyId);
         const propertyDoc = await getDoc(propertyRef);
 
         if (!propertyDoc.exists()) {
-          errors.push(`Property ${propertyId} not found`);
-          logWarn(`Property ${propertyId} not found in database`, {
+          errors.push(`Property ${propertyId} not found in ${targetCollection}`);
+          logWarn(`Property ${propertyId} not found in ${targetCollection}`, {
             action: 'property_not_found',
-            metadata: { propertyId, ip }
+            metadata: { propertyId, collection: targetCollection, ip }
           });
         } else {
           // Log before deletion
           const propertyData = propertyDoc.data();
-          logInfo(`Deleting property ${propertyId}`, {
+          logInfo(`Deleting property ${propertyId} from ${targetCollection}`, {
             action: 'property_deletion_started',
             metadata: {
               propertyId,
-              address: propertyData?.address,
+              collection: targetCollection,
+              address: propertyData?.address || propertyData?.fullAddress,
               city: propertyData?.city,
               state: propertyData?.state,
+              hasFirebaseId: !!firebaseId,
               ip
             }
           });
@@ -248,9 +275,15 @@ export async function POST(request: NextRequest) {
             });
           }
 
-          logInfo(`Successfully deleted property ${propertyId}`, {
+          logInfo(`Successfully deleted property ${propertyId} from ${targetCollection}`, {
             action: 'property_deleted',
-            metadata: { propertyId, ip, deletionTime: Date.now() - startTime }
+            metadata: {
+              propertyId,
+              collection: targetCollection,
+              hasFirebaseId: !!firebaseId,
+              ip,
+              deletionTime: Date.now() - startTime
+            }
           });
         }
       } catch (error) {
@@ -263,25 +296,30 @@ export async function POST(request: NextRequest) {
     }
 
     // Batch deletion with limit
-    if (payload.propertyIds && Array.isArray(payload.propertyIds)) {
+    // Support both firebase_ids and propertyIds
+    const batchIds = payload.firebase_ids || payload.firebaseIds || payload.propertyIds;
+    const batchCollection = (payload.firebase_ids || payload.firebaseIds) ? 'zillow_imports' : 'properties';
+
+    if (batchIds && Array.isArray(batchIds)) {
       // Limit batch size
       const MAX_BATCH_SIZE = 50;
-      if (payload.propertyIds.length > MAX_BATCH_SIZE) {
+      if (batchIds.length > MAX_BATCH_SIZE) {
         return NextResponse.json(
           {
             success: false,
             error: `Batch size exceeds limit`,
-            message: `Maximum ${MAX_BATCH_SIZE} properties per request. Received: ${payload.propertyIds.length}`,
+            message: `Maximum ${MAX_BATCH_SIZE} properties per request. Received: ${batchIds.length}`,
             limit: MAX_BATCH_SIZE
           },
           { status: 400 }
         );
       }
 
-      logInfo(`Batch deletion started for ${payload.propertyIds.length} properties`, {
+      logInfo(`Batch deletion started for ${batchIds.length} properties from ${batchCollection}`, {
         action: 'batch_deletion_started',
         metadata: {
-          count: payload.propertyIds.length,
+          count: batchIds.length,
+          collection: batchCollection,
           ip
         }
       });
@@ -289,13 +327,13 @@ export async function POST(request: NextRequest) {
       const batch = writeBatch(db);
       const queueCleanupIds: string[] = [];
 
-      for (const id of payload.propertyIds) {
+      for (const id of batchIds) {
         try {
-          const propertyRef = doc(db, 'properties', id);
+          const propertyRef = doc(db, batchCollection, id);
           const propertyDoc = await getDoc(propertyRef);
 
           if (!propertyDoc.exists()) {
-            errors.push(`Property ${id} not found`);
+            errors.push(`Property ${id} not found in ${batchCollection}`);
           } else {
             batch.delete(propertyRef);
             deletedProperties.push(id);
@@ -309,10 +347,11 @@ export async function POST(request: NextRequest) {
 
       if (deletedProperties.length > 0) {
         await batch.commit();
-        logInfo(`Batch deleted ${deletedProperties.length} properties`, {
+        logInfo(`Batch deleted ${deletedProperties.length} properties from ${batchCollection}`, {
           action: 'batch_deletion_completed',
           metadata: {
             count: deletedProperties.length,
+            collection: batchCollection,
             ip,
             deletionTime: Date.now() - startTime
           }
@@ -356,10 +395,17 @@ export async function POST(request: NextRequest) {
       });
 
       try {
+        // Use zillow_imports by default for query-based deletions
+        const queryCollection = 'zillow_imports';
         const q = query(
-          collection(db, 'properties'),
+          collection(db, queryCollection),
           where(field, '==', value)
         );
+
+        logInfo(`Querying ${queryCollection} for ${field} = ${value}`, {
+          action: 'query_deletion_query',
+          metadata: { field, value, collection: queryCollection }
+        });
 
         const snapshot = await getDocs(q);
 

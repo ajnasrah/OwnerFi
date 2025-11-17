@@ -40,28 +40,39 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 100); // Cap at 100 for performance
-    
-    // Fetch properties from Firebase
+
+    // Fetch properties from zillow_imports collection (where all owner finance properties are stored)
     // Note: Removed orderBy to avoid requiring composite index
     // Properties will be sorted client-side if needed
     const propertiesQuery = query(
-      collection(db, 'properties'),
-      where('isActive', '==', true),
+      collection(db, 'zillow_imports'),
+      where('ownerFinanceVerified', '==', true),
       firestoreLimit(limit)
     );
-    
+
     const propertiesSnapshot = await getDocs(propertiesQuery);
-    const properties = propertiesSnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      // Convert Firestore timestamps to readable format
-      createdAt: doc.data().createdAt?.toDate?.()?.toISOString() || doc.data().createdAt,
-      updatedAt: doc.data().updatedAt?.toDate?.()?.toISOString() || doc.data().updatedAt
-    }))
-    // Sort by createdAt client-side (newest first)
+    const properties = propertiesSnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        // Convert Firestore timestamps to readable format
+        foundAt: data.foundAt?.toDate?.()?.toISOString() || data.foundAt,
+        createdAt: data.foundAt?.toDate?.()?.toISOString() || data.foundAt,
+        updatedAt: data.foundAt?.toDate?.()?.toISOString() || data.foundAt,
+        // Ensure image fields are mapped correctly for PropertyCard
+        imageUrl: data.firstPropertyImage || data.imageUrl,
+        imageUrls: data.propertyImages || data.imageUrls || [],
+        // Map field names for compatibility
+        address: data.streetAddress || data.fullAddress,
+        squareFeet: data.squareFoot || data.squareFeet,
+        listPrice: data.price || data.listPrice,
+      };
+    })
+    // Sort by foundAt client-side (newest first)
     .sort((a: any, b: any) => {
-      const dateA = new Date(a.createdAt || 0).getTime();
-      const dateB = new Date(b.createdAt || 0).getTime();
+      const dateA = new Date(a.foundAt || 0).getTime();
+      const dateB = new Date(b.foundAt || 0).getTime();
       return dateB - dateA;
     });
 

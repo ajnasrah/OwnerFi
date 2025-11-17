@@ -81,61 +81,11 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const pageSize = parseInt(searchParams.get('limit') || '2000'); // Default 2000 per page
     const status = searchParams.get('status') || 'all';
-    const lastDocId = searchParams.get('lastDocId'); // For pagination cursor
-    const searchQuery = searchParams.get('search')?.toLowerCase().trim(); // Search query
 
-    // Build base query
+    // Build base query - ALWAYS fetch ALL properties (no pagination limit)
     const baseCollection = collection(db, 'zillow_imports');
 
-    // SEARCH MODE: If search query provided, search entire database (ignore pagination)
-    if (searchQuery) {
-      // Fetch ALL properties and search in-memory (Firestore doesn't support full-text search)
-      let searchConstraints: any[] = [
-        where('ownerFinanceVerified', '==', true)
-      ];
-
-      // Filter by status if specified
-      if (status !== 'all') {
-        if (status === 'null') {
-          searchConstraints.push(where('status', '==', null));
-        } else {
-          searchConstraints.push(where('status', '==', status));
-        }
-      }
-
-      const searchQueryRef = query(baseCollection, ...searchConstraints);
-      const allPropertiesSnapshot = await getDocs(searchQueryRef);
-
-      // Filter in-memory by search query
-      const properties = allPropertiesSnapshot.docs
-        .map(mapPropertyFields)
-        .filter(property => {
-          const searchFields = [
-            property.fullAddress,
-            property.streetAddress,
-            property.city,
-            property.state,
-            property.zipCode,
-            property.id
-          ].filter(Boolean).map(f => f.toString().toLowerCase());
-
-          return searchFields.some(field => field.includes(searchQuery));
-        });
-
-      return NextResponse.json({
-        properties,
-        count: properties.length,
-        total: properties.length,
-        hasMore: false,
-        nextCursor: null,
-        showing: `Found ${properties.length} properties matching "${searchQuery}"`,
-        searchMode: true
-      });
-    }
-
-    // NORMAL MODE: Pagination
     let constraints: any[] = [
       where('ownerFinanceVerified', '==', true),
       orderBy('foundAt', 'desc')
@@ -150,62 +100,21 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Add pagination cursor if provided
-    if (lastDocId) {
-      const lastDocRef = doc(db, 'zillow_imports', lastDocId);
-      const lastDocSnap = await getDocs(query(collection(db, 'zillow_imports'), where('__name__', '==', lastDocId)));
-      if (!lastDocSnap.empty) {
-        constraints.push(startAfter(lastDocSnap.docs[0]));
-      }
-    }
-
-    // Add limit
-    constraints.push(firestoreLimit(pageSize));
-
-    // Execute main query
+    // Execute query - fetch ALL properties (no limit)
     const propertiesQuery = query(baseCollection, ...constraints);
     const propertiesSnapshot = await getDocs(propertiesQuery);
 
     // Fast field mapping
     const properties = propertiesSnapshot.docs.map(mapPropertyFields);
 
-    // Get total count with caching
-    let totalCount = 0;
-    const now = Date.now();
-
-    if (cachedCount && (now - cachedCount.timestamp) < CACHE_TTL) {
-      // Use cached count
-      totalCount = cachedCount.value;
-    } else {
-      // Fetch count using aggregation (no document reads!)
-      try {
-        const countQuery = query(
-          baseCollection,
-          where('ownerFinanceVerified', '==', true)
-        );
-        const countSnapshot = await getCountFromServer(countQuery);
-        totalCount = countSnapshot.data().count;
-
-        // Cache the result
-        cachedCount = { value: totalCount, timestamp: now };
-      } catch (error) {
-        // Fallback to estimated count
-        console.warn('Count aggregation failed, using estimate:', error);
-        totalCount = properties.length >= pageSize ? pageSize * 20 : properties.length;
-      }
-    }
-
-    const hasMore = properties.length === pageSize;
-    const lastDoc = properties.length > 0 ? properties[properties.length - 1].id : null;
-
+    // Return all properties
     return NextResponse.json({
       properties,
       count: properties.length,
-      total: totalCount,
-      hasMore,
-      nextCursor: hasMore ? lastDoc : null,
-      showing: `${properties.length} of ${totalCount} properties`,
-      cached: cachedCount ? (now - cachedCount.timestamp < CACHE_TTL) : false
+      total: properties.length,
+      hasMore: false,
+      nextCursor: null,
+      showing: `Showing all ${properties.length} properties`
     });
 
   } catch (error) {

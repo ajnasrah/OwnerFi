@@ -23,13 +23,11 @@
    └─> Applies STRICT owner financing filter
    └─> Saves to zillow_imports (only if passes filter)
    └─> Sends to GHL webhook (only properties with contact info)
-   └─> Also saves "needs work" properties to cash_houses
 ```
 
 **Collections**:
 - `scraper_queue` - Temporary queue (pending → processing → completed)
 - `zillow_imports` - Verified owner finance properties
-- `cash_houses` - Properties needing work (dual purpose)
 
 **Scheduled Crons**:
 - `/api/cron/run-search-scraper` - Mon/Thu 9am
@@ -58,7 +56,7 @@
 
 **Collections**:
 - `cash_deals_queue` - Temporary queue
-- `cash_houses` - Cash deal properties (shared with System 1)
+- `cash_houses` - Cash deal properties (ADMIN-ONLY, not shown to buyers)
 
 **Scheduled Crons**:
 - None (triggered on-demand via bookmarklet)
@@ -104,9 +102,9 @@
 | Collection | System 1 (Owner Finance) | System 2 (Cash Deals) | Old System | Purpose |
 |------------|-------------------------|----------------------|------------|---------|
 | `scraper_queue` | ✅ Active | ❌ | ❌ | Main queue for owner finance |
-| `zillow_imports` | ✅ Active | ❌ | ✅ Old | Verified owner finance properties |
+| `zillow_imports` | ✅ Active | ❌ | ✅ Old | Verified owner finance properties (buyer-facing) |
 | `cash_deals_queue` | ❌ | ✅ Active | ❌ | Temporary queue for cash deals |
-| `cash_houses` | ✅ Active (needs work) | ✅ Active (80% deals) | ❌ | Dual purpose collection |
+| `cash_houses` | ❌ | ✅ Active (80% deals) | ❌ | Cash deals ONLY (admin research) |
 | `scraper_jobs` | ❌ | ❌ | ✅ Old | OLD - Job-based system |
 
 ---
@@ -184,14 +182,15 @@ Remove from functions config:
 
 ### Two Clean Systems:
 
-**Owner Finance Pipeline**:
-URL Sources → scraper_queue → Apify Detail Scraper → Strict Filter → zillow_imports → GHL
+**Owner Finance Pipeline** (Buyer-Facing):
+URL Sources → scraper_queue → Apify Detail Scraper → Strict Filter → zillow_imports → GHL → Buyers
 
-**Cash Deals Pipeline**:
-Chrome Extension → cash_deals_queue → Apify Detail Scraper → 80% Filter → cash_houses
+**Cash Deals Pipeline** (Admin Research):
+Chrome Extension → cash_deals_queue → Apify Detail Scraper → 80% Filter → cash_houses → Admin Only
 
-**Key Difference**:
-- Owner Finance = Keyword filtering + GHL webhook
-- Cash Deals = Price filtering + No GHL
+**Key Differences**:
+- Owner Finance = Keyword filtering + GHL webhook + buyer-facing
+- Cash Deals = Price filtering + No GHL + admin-only research
+- NO cross-contamination between collections
 
 Both use same Apify scraper, different filters and destinations.

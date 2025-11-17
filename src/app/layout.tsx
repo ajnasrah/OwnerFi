@@ -80,10 +80,11 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1.0,
-  maximumScale: 5.0,
-  userScalable: true,
+  maximumScale: 1.0, // Prevent zoom for fixed layout
+  userScalable: false, // Prevent user zoom for app-like experience
   themeColor: '#2563EB',
-  viewportFit: 'cover'
+  viewportFit: 'cover',
+  interactiveWidget: 'resizes-content' // Handle mobile keyboards properly
 };
 
 export default function RootLayout({
@@ -92,7 +93,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" data-scroll-behavior="smooth">
+    <html lang="en" className="overflow-hidden h-full" data-scroll-behavior="smooth">
       <head>
         {/* Performance: Preconnect to external domains */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -102,7 +103,7 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://maps.googleapis.com" />
       </head>
       <body
-        className={`${inter.variable} antialiased bg-slate-900`}
+        className={`${inter.variable} antialiased bg-slate-900 overflow-hidden h-full`}
       >
         <AnalyticsScripts />
         <Providers>

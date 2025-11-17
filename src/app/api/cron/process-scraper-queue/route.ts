@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ApifyClient } from 'apify-client';
 import { initializeApp, cert, getApps } from 'firebase-admin/app';
-import { getFirestore } from 'firebase-admin/firestore';
+import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { transformApifyProperty, validatePropertyData } from '@/lib/property-transform';
 
 // Initialize Firebase Admin
@@ -129,7 +129,7 @@ export async function GET(request: NextRequest) {
           status: 'failed',
           failedAt: new Date(),
           failureReason: errorMsg,
-          retryCount: getFirestore.FieldValue.increment(1),
+          retryCount: FieldValue.increment(1),
         });
       });
       await failBatch.commit();
@@ -158,7 +158,6 @@ export async function GET(request: NextRequest) {
     // Check for existing zpids to avoid duplicates (batched for Firestore 'in' limit of 10)
     const zpids = items.map((item: any) => item.zpid).filter(Boolean);
     const existingZillowZpids = new Set<number>();
-    const existingCashHousesZpids = new Set<number>();
 
     // Batch duplicate checks in groups of 10 (Firestore limit)
     for (let i = 0; i < zpids.length; i += 10) {
@@ -174,26 +173,13 @@ export async function GET(request: NextRequest) {
           const zpid = doc.data().zpid;
           if (zpid) existingZillowZpids.add(zpid);
         });
-
-        // Check cash_houses for cross-scraper duplicates
-        const cashHousesSnap = await db
-          .collection('cash_houses')
-          .where('zpid', 'in', batchZpids)
-          .get();
-
-        cashHousesSnap.docs.forEach(doc => {
-          const zpid = doc.data().zpid;
-          if (zpid) existingCashHousesZpids.add(zpid);
-        });
       }
     }
 
-    console.log(`🔍 [DEDUPLICATION] Checked ${zpids.length} zpids:`);
-    console.log(`   - Found ${existingZillowZpids.size} in zillow_imports`);
-    console.log(`   - Found ${existingCashHousesZpids.size} in cash_houses (cross-scraper check)`);
+    console.log(`🔍 [DEDUPLICATION] Checked ${zpids.length} zpids, found ${existingZillowZpids.size} existing in zillow_imports`);
 
     // Transform and save to Firebase with error handling and batching
-    const savedProperties: Array<{ docRef: any, data: any }> = [];
+    const savedProperties: Array<{ docRef: any, data: any, matchedKeywords: string[] }> = [];
     let currentBatch = db.batch();
     let batchOperations = 0;
     const BATCH_LIMIT = 500;
@@ -290,7 +276,6 @@ export async function GET(request: NextRequest) {
         savedProperties.push({
           docRef,
           data: propertyData,
-          needsWork,
           matchedKeywords: filterResult.matchedKeywords,
         });
         batchOperations++;
@@ -306,12 +291,13 @@ export async function GET(request: NextRequest) {
 
       } catch (error: any) {
         metrics.transformFailed++;
+        const errorMessage = error instanceof Error ? error.message : String(error);
         metrics.errors.push({
-          zpid: item.zpid,
-          error: error.message,
+          zpid: typeof item.zpid === 'number' ? item.zpid : undefined,
+          error: errorMessage,
           stage: 'transform',
         });
-        console.error(`❌ Failed to transform ZPID ${item.zpid}: ${error.message}`);
+        console.error(`❌ Failed to transform ZPID ${item.zpid}: ${errorMessage}`);
         // Continue processing other items
       }
     }
@@ -438,7 +424,7 @@ export async function GET(request: NextRequest) {
           status: 'failed',
           failedAt: new Date(),
           failureReason: 'No properties were successfully saved',
-          retryCount: getFirestore.FieldValue.increment(1),
+          retryCount: FieldValue.increment(1),
         });
       });
       await failBatch.commit();

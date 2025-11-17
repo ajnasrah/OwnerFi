@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
-import { collection, query, getDocs, orderBy } from 'firebase/firestore';
+import { collection, query, getDocs, orderBy, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { logError, logInfo } from '@/lib/logger';
 import { ExtendedSession } from '@/types/session';
@@ -28,116 +28,112 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Fetch all properties
+    // Fetch ALL properties from zillow_imports where ownerFinanceVerified = true
+    console.log('[EXPORT] Starting property export...');
+
     const propertiesQuery = query(
-      collection(db, 'properties'),
-      orderBy('createdAt', 'asc')
+      collection(db, 'zillow_imports'),
+      where('ownerFinanceVerified', '==', true),
+      orderBy('foundAt', 'desc')
     );
 
+    console.log('[EXPORT] Querying zillow_imports collection...');
     const propertiesSnapshot = await getDocs(propertiesQuery);
+    console.log(`[EXPORT] Found ${propertiesSnapshot.docs.length} properties`);
+
+    if (propertiesSnapshot.empty) {
+      console.log('[EXPORT] No properties found in zillow_imports');
+      return NextResponse.json(
+        { error: 'No properties found to export' },
+        { status: 404 }
+      );
+    }
+
     const properties = propertiesSnapshot.docs.map(doc => {
       const data = doc.data();
       return {
         id: doc.id,
         ...data,
         // Convert Firestore timestamps
-        createdAt: data.createdAt?.toDate?.()?.toISOString() || data.createdAt,
-        updatedAt: data.updatedAt?.toDate?.()?.toISOString() || data.updatedAt
+        foundAt: data.foundAt?.toDate?.()?.toISOString() || data.foundAt,
+        verifiedAt: data.verifiedAt?.toDate?.()?.toISOString() || data.verifiedAt,
+        soldAt: data.soldAt?.toDate?.()?.toISOString() || data.soldAt,
+        importedAt: data.importedAt?.toDate?.()?.toISOString() || data.importedAt,
+        ghlSentAt: data.ghlSentAt?.toDate?.()?.toISOString() || data.ghlSentAt,
       };
     });
 
-    // Format data for Excel
+    console.log(`[EXPORT] Formatted ${properties.length} properties for Excel`);
+
+    // Format data for Excel - using zillow_imports schema
     const excelData = properties.map(property => {
       const prop = property as any;
       return {
-      // Core Identification
-      'Property ID': prop.id,
-      'MLS Number': prop.mlsNumber || '',
+        // Core Identification
+        'Property ID': prop.id || '',
+        'ZPID': prop.zpid || '',
+        'Status': prop.status || 'pending',
 
-      // Address & Location
-      'Address': prop.address,
-      'City': prop.city,
-      'State': prop.state,
-      'ZIP Code': prop.zipCode,
-      'County': prop.county || '',
-      'Neighborhood': prop.neighborhood || '',
-      'Latitude': prop.latitude || '',
-      'Longitude': prop.longitude || '',
+        // Address & Location
+        'Full Address': prop.fullAddress || '',
+        'Street Address': prop.streetAddress || '',
+        'City': prop.city || '',
+        'State': prop.state || '',
+        'ZIP Code': prop.zipCode || '',
 
-      // Property Details
-      'Property Type': prop.propertyType,
-      'Bedrooms': prop.bedrooms,
-      'Bathrooms': prop.bathrooms,
-      'Square Feet': prop.squareFeet || '',
-      'Lot Size': prop.lotSize || '',
-      'Year Built': prop.yearBuilt || '',
-      'Stories': prop.stories || '',
-      'Garage': prop.garage || '',
+        // Property Details
+        'Home Type': prop.homeType || '',
+        'Home Status': prop.homeStatus || '',
+        'Bedrooms': prop.bedrooms || '',
+        'Bathrooms': prop.bathrooms || '',
+        'Square Feet': prop.squareFoot || '',
+        'Lot Square Feet': prop.lotSquareFoot || '',
+        'Year Built': prop.yearBuilt || '',
 
-      // Financial Information
-      'List Price': prop.listPrice,
-      'Down Payment Amount': prop.downPaymentAmount,
-      'Down Payment Percent': prop.downPaymentPercent,
-      'Monthly Payment': prop.monthlyPayment,
-      'Interest Rate': prop.interestRate,
-      'Term (Years)': prop.termYears,
-      'Balloon Payment': prop.balloonPayment || '',
-      'Balloon Years': prop.balloonYears || '',
+        // Financial Information
+        'Price': prop.price || '',
+        'Estimate (Zestimate)': prop.estimate || '',
+        'Rent Estimate': prop.rentEstimate || '',
+        'HOA': prop.hoa || '',
+        'Annual Tax Amount': prop.annualTaxAmount || '',
 
-      // Property Features
-      'Features': Array.isArray(prop.features) ? prop.features.join(', ') : '',
-      'Appliances': Array.isArray(prop.appliances) ? prop.appliances.join(', ') : '',
-      'Heating': prop.heating || '',
-      'Cooling': prop.cooling || '',
-      'Parking': prop.parking || '',
+        // Owner Financing Terms
+        'Down Payment Amount': prop.downPaymentAmount || 'TBD',
+        'Down Payment Percent': prop.downPaymentPercent || 'TBD',
+        'Monthly Payment': prop.monthlyPayment || 'TBD',
+        'Interest Rate': prop.interestRate || 'TBD',
+        'Loan Term Years': prop.loanTermYears || 'TBD',
+        'Balloon Payment Years': prop.balloonPaymentYears || 'TBD',
 
-      // Media
-      'Image URLs': Array.isArray(prop.imageUrls) ? prop.imageUrls.join(', ') : '',
-      'Virtual Tour URL': prop.virtualTourUrl || '',
-      'Floor Plan URL': prop.floorPlanUrl || '',
+        // Agent/Broker Contact
+        'Agent Name': prop.agentName || '',
+        'Agent Phone': prop.agentPhoneNumber || '',
+        'Broker Name': prop.brokerName || '',
+        'Broker Phone': prop.brokerPhoneNumber || '',
 
-      // Description
-      'Title': prop.title || '',
-      'Description': prop.description || '',
-      'Highlights': Array.isArray(prop.highlights) ? prop.highlights.join(', ') : '',
+        // Owner Finance Keywords
+        'Owner Finance Verified': prop.ownerFinanceVerified ? 'Yes' : 'No',
+        'Primary Keyword': prop.primaryKeyword || '',
+        'All Matched Keywords': Array.isArray(prop.matchedKeywords) ? prop.matchedKeywords.join(', ') : '',
 
-      // Owner/Contact Information
-      'Owner Name': prop.ownerName || '',
-      'Owner Phone': prop.ownerPhone || '',
-      'Owner Email': prop.ownerEmail || '',
-      'Agent Name': prop.agentName || '',
-      'Agent Phone': prop.agentPhone || '',
-      'Agent Email': prop.agentEmail || '',
+        // Description
+        'Description': (prop.description || '').substring(0, 500), // Limit to 500 chars for Excel
 
-      // Listing Management
-      'Status': prop.status,
-      'Is Active': prop.isActive ? 'Yes' : 'No',
-      'Date Added': prop.dateAdded || '',
-      'Last Updated': prop.lastUpdated || '',
-      'Expiration Date': prop.expirationDate || '',
-      'Priority': prop.priority || '',
-      'Featured': prop.featured ? 'Yes' : 'No',
+        // Media
+        'Zillow URL': prop.url || '',
+        'First Property Image': prop.firstPropertyImage || '',
+        'All Property Images': Array.isArray(prop.propertyImages) ? prop.propertyImages.join(' | ') : '',
 
-      // Market Data
-      'Estimated Value': prop.estimatedValue || '',
-      'Price Per Sq Ft': prop.pricePerSqFt || '',
-      'Days On Market': prop.daysOnMarket || '',
-      'View Count': prop.viewCount || '',
-      'Favorite Count': prop.favoriteCount || '',
+        // GHL Integration Status
+        'Sent to GHL': prop.sentToGHL ? 'Yes' : 'No',
+        'GHL Sent At': prop.ghlSentAt || '',
+        'GHL Send Status': prop.ghlSendStatus || '',
 
-      // HOA & Taxes
-      'Has HOA': prop.hoa?.hasHOA ? 'Yes' : 'No',
-      'HOA Monthly Fee': prop.hoa?.monthlyFee || '',
-      'Annual Taxes': prop.taxes?.annualAmount || '',
-      'Assessed Value': prop.taxes?.assessedValue || '',
-
-      // Source
-      'Source': prop.source || '',
-      'Source ID': prop.sourceId || '',
-
-      // Timestamps
-      'Created At': prop.createdAt || '',
-      'Updated At': prop.updatedAt || ''
+        // Timestamps
+        'Found At': prop.foundAt || '',
+        'Verified At': prop.verifiedAt || '',
+        'Sold At': prop.soldAt || '',
+        'Imported At': prop.importedAt || '',
       };
     });
 
@@ -147,69 +143,50 @@ export async function GET(request: NextRequest) {
 
     // Set column widths for better readability
     const colWidths = [
-      { wch: 15 }, // Property ID
-      { wch: 15 }, // MLS Number
-      { wch: 30 }, // Address
+      { wch: 25 }, // Property ID
+      { wch: 15 }, // ZPID
+      { wch: 15 }, // Status
+      { wch: 50 }, // Full Address
+      { wch: 35 }, // Street Address
       { wch: 20 }, // City
       { wch: 10 }, // State
-      { wch: 10 }, // ZIP Code
-      { wch: 15 }, // County
-      { wch: 20 }, // Neighborhood
-      { wch: 12 }, // Latitude
-      { wch: 12 }, // Longitude
-      { wch: 15 }, // Property Type
-      { wch: 10 }, // Bedrooms
-      { wch: 10 }, // Bathrooms
-      { wch: 12 }, // Square Feet
-      { wch: 12 }, // Lot Size
-      { wch: 10 }, // Year Built
-      { wch: 10 }, // Stories
-      { wch: 10 }, // Garage
-      { wch: 12 }, // List Price
-      { wch: 15 }, // Down Payment Amount
-      { wch: 15 }, // Down Payment Percent
-      { wch: 15 }, // Monthly Payment
-      { wch: 12 }, // Interest Rate
-      { wch: 10 }, // Term (Years)
-      { wch: 15 }, // Balloon Payment
-      { wch: 12 }, // Balloon Years
-      { wch: 40 }, // Features
-      { wch: 30 }, // Appliances
-      { wch: 15 }, // Heating
-      { wch: 15 }, // Cooling
-      { wch: 15 }, // Parking
-      { wch: 50 }, // Image URLs
-      { wch: 30 }, // Virtual Tour URL
-      { wch: 30 }, // Floor Plan URL
-      { wch: 30 }, // Title
-      { wch: 50 }, // Description
-      { wch: 40 }, // Highlights
-      { wch: 20 }, // Owner Name
-      { wch: 15 }, // Owner Phone
-      { wch: 25 }, // Owner Email
-      { wch: 20 }, // Agent Name
-      { wch: 15 }, // Agent Phone
-      { wch: 25 }, // Agent Email
-      { wch: 12 }, // Status
-      { wch: 10 }, // Is Active
-      { wch: 20 }, // Date Added
-      { wch: 20 }, // Last Updated
-      { wch: 20 }, // Expiration Date
-      { wch: 10 }, // Priority
-      { wch: 10 }, // Featured
-      { wch: 15 }, // Estimated Value
-      { wch: 15 }, // Price Per Sq Ft
-      { wch: 12 }, // Days On Market
-      { wch: 12 }, // View Count
-      { wch: 12 }, // Favorite Count
-      { wch: 10 }, // Has HOA
-      { wch: 15 }, // HOA Monthly Fee
-      { wch: 15 }, // Annual Taxes
-      { wch: 15 }, // Assessed Value
-      { wch: 12 }, // Source
-      { wch: 15 }, // Source ID
-      { wch: 20 }, // Created At
-      { wch: 20 }  // Updated At
+      { wch: 12 }, // ZIP Code
+      { wch: 18 }, // Home Type
+      { wch: 15 }, // Home Status
+      { wch: 12 }, // Bedrooms
+      { wch: 12 }, // Bathrooms
+      { wch: 15 }, // Square Feet
+      { wch: 18 }, // Lot Square Feet
+      { wch: 15 }, // Year Built
+      { wch: 15 }, // Price
+      { wch: 18 }, // Estimate (Zestimate)
+      { wch: 18 }, // Rent Estimate
+      { wch: 12 }, // HOA
+      { wch: 20 }, // Annual Tax Amount
+      { wch: 20 }, // Down Payment Amount
+      { wch: 22 }, // Down Payment Percent
+      { wch: 18 }, // Monthly Payment
+      { wch: 15 }, // Interest Rate
+      { wch: 18 }, // Loan Term Years
+      { wch: 22 }, // Balloon Payment Years
+      { wch: 25 }, // Agent Name
+      { wch: 18 }, // Agent Phone
+      { wch: 25 }, // Broker Name
+      { wch: 18 }, // Broker Phone
+      { wch: 20 }, // Owner Finance Verified
+      { wch: 25 }, // Primary Keyword
+      { wch: 50 }, // All Matched Keywords
+      { wch: 60 }, // Description
+      { wch: 60 }, // Zillow URL
+      { wch: 60 }, // First Property Image
+      { wch: 80 }, // All Property Images
+      { wch: 15 }, // Sent to GHL
+      { wch: 20 }, // GHL Sent At
+      { wch: 20 }, // GHL Send Status
+      { wch: 20 }, // Found At
+      { wch: 20 }, // Verified At
+      { wch: 20 }, // Sold At
+      { wch: 20 }, // Imported At
     ];
     ws['!cols'] = colWidths;
 
@@ -217,27 +194,33 @@ export async function GET(request: NextRequest) {
     XLSX.utils.book_append_sheet(wb, ws, 'Properties');
 
     // Generate buffer
+    console.log('[EXPORT] Generating Excel buffer...');
     const excelBuffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+    console.log(`[EXPORT] Excel buffer generated: ${excelBuffer.length} bytes`);
 
     // Log export action
     await logInfo('Properties exported to Excel', {
       action: 'admin_properties_export',
       metadata: {
         count: properties.length,
+        columns: Object.keys(excelData[0] || {}).length,
         exportedBy: session.user.email
       }
     });
 
     // Create filename with timestamp
     const timestamp = new Date().toISOString().split('T')[0];
-    const filename = `properties_export_${timestamp}.xlsx`;
+    const filename = `owner_finance_properties_${timestamp}.xlsx`;
+
+    console.log(`[EXPORT] Sending file: ${filename} (${properties.length} properties, ${excelBuffer.length} bytes)`);
 
     // Return Excel file
     return new NextResponse(excelBuffer, {
       status: 200,
       headers: {
         'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'Content-Disposition': `attachment; filename="${filename}"`
+        'Content-Disposition': `attachment; filename="${filename}"`,
+        'Content-Length': excelBuffer.length.toString(),
       }
     });
 

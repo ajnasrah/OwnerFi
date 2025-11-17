@@ -235,15 +235,15 @@ export default function Dashboard() {
 
   if (!properties.length) {
     return (
-      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4">
+      <div className="h-screen overflow-hidden bg-slate-900 flex flex-col items-center justify-center p-4">
         <div className="text-center">
           <div className="text-4xl mb-4">🏠</div>
           <h2 className="text-xl font-bold text-white mb-4">NO HOMES FOUND</h2>
           <p className="text-slate-300 mb-6 text-base">
             No properties in <span className="text-emerald-400">{profile?.city}</span> match your criteria.
           </p>
-          <Link 
-            href="/dashboard/settings" 
+          <Link
+            href="/dashboard/settings"
             className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg font-semibold"
           >
             ADJUST SEARCH
@@ -339,7 +339,7 @@ export default function Dashboard() {
   };
 
   return (
-    <>
+    <div className="h-screen overflow-hidden">
       {/* Tutorial Overlay */}
       <Tutorial
         isVisible={showTutorial}
@@ -408,6 +408,6 @@ export default function Dashboard() {
         passedIds={[]}
         isLoading={loading}
       />
-    </>
+    </div>
   );
 }

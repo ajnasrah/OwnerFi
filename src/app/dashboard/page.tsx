@@ -66,17 +66,6 @@ export default function Dashboard() {
     }
   }, [status, session, router]);
 
-  // Cleanup body styles when component unmounts
-  useEffect(() => {
-    return () => {
-      // Reset body styles when leaving dashboard
-      document.body.style.overflow = '';
-      document.body.style.position = '';
-      document.body.style.width = '';
-      document.body.style.height = '';
-    };
-  }, []);
-
   // Load data
   useEffect(() => {
     if (status === 'authenticated' && isExtendedSession(session as unknown as ExtendedSession) && (session as unknown as ExtendedSession)?.user?.role === 'buyer') {
@@ -181,7 +170,7 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="h-screen bg-slate-900 flex items-center justify-center p-6 overflow-hidden fixed inset-0">
+      <div className="fixed inset-0 bg-slate-900 flex items-center justify-center p-6 overflow-hidden">
           <div className="text-center max-w-sm w-full flex flex-col justify-center min-h-0">
             {/* Animated Logo/Icon */}
             <div className="mb-6">

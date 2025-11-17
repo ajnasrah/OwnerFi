@@ -78,7 +78,7 @@ export default function LikedProperties() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+      <div className="h-screen overflow-hidden bg-slate-900 flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-emerald-400 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
           <div className="text-2xl font-bold text-white mb-2">LOADING SAVED HOMES</div>
@@ -89,7 +89,7 @@ export default function LikedProperties() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900">
+    <div className="h-screen overflow-y-auto bg-slate-900">
       {/* Header with Navigation */}
       <header className="relative z-20 bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50 px-6 py-4">
         <div className="flex items-center justify-between">

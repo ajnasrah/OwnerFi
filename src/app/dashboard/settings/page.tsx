@@ -129,7 +129,7 @@ export default function BuyerSettings() {
 
   if (status === 'loading' || loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+      <div className="h-screen overflow-hidden bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-700 font-medium">Loading settings...</p>
@@ -139,7 +139,7 @@ export default function BuyerSettings() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900">
+    <div className="h-screen overflow-y-auto bg-slate-900">
       {/* Minimal Header */}
       <header className="sticky top-0 z-20 bg-slate-900/95 backdrop-blur-sm border-b border-slate-800">
         <div className="px-3 py-2 flex items-center justify-between">

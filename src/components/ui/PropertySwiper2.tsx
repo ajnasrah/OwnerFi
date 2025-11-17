@@ -256,7 +256,7 @@ export function PropertySwiper2({
       <div className="absolute inset-2 sm:inset-4 flex items-center justify-center" style={{ maxWidth: '100%' }}>
         {/* Next Card (Behind) */}
         {nextProperty && (
-          <div className="absolute w-[calc(100%-1rem)] sm:w-full max-w-[min(28rem,calc(100vw-2rem))] h-full max-h-[calc(100vh-12rem)]">
+          <div className="absolute w-[calc(100%-1rem)] sm:w-full max-w-[min(28rem,calc(100vw-2rem))] h-full max-h-[calc(100dvh-12rem)]">
             <PropertyCard
               property={nextProperty}
               onLike={() => {}}
@@ -268,7 +268,7 @@ export function PropertySwiper2({
         )}
 
         {/* Current Card */}
-        <div className="absolute w-[calc(100%-1rem)] sm:w-full max-w-[min(28rem,calc(100vw-2rem))] h-full max-h-[calc(100vh-12rem)]">
+        <div className="absolute w-[calc(100%-1rem)] sm:w-full max-w-[min(28rem,calc(100vw-2rem))] h-full max-h-[calc(100dvh-12rem)]">
           <PropertyCard
             property={currentProperty}
             onLike={handleLikeButton}

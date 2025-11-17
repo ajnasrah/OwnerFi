@@ -31,7 +31,7 @@ export default function BuyerSetup() {
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-900">
+      <div className="h-screen overflow-hidden flex items-center justify-center bg-slate-900">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-400"></div>
       </div>
     );
@@ -102,7 +102,7 @@ export default function BuyerSetup() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 overflow-hidden flex flex-col">
+    <div className="h-screen bg-slate-900 overflow-y-auto flex flex-col">
       <style jsx global>{`
         .pac-container {
           z-index: 1051 !important;

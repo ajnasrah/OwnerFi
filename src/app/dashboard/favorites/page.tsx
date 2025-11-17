@@ -83,14 +83,14 @@ export default function FavoritesPage() {
 
   if (status === 'loading' || loading) {
     return (
-      <div className="min-h-screen bg-primary-bg flex items-center justify-center">
+      <div className="h-screen overflow-hidden bg-primary-bg flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-primary"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-primary-bg">
+    <div className="h-screen overflow-y-auto bg-primary-bg">
       <header className="bg-white px-6 py-4 border-b border-slate-100">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">

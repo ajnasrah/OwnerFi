@@ -107,7 +107,7 @@ export async function GET(request: NextRequest) {
 
 async function cleanupVideos() {
   try {
-    console.log('🗑️  Deleting expired videos (older than 72 hours)...');
+    console.log('🗑️  Deleting expired videos (older than 7 days)...');
 
     const { deleteExpiredVideos } = await import('@/lib/video-storage');
     const result = await deleteExpiredVideos();

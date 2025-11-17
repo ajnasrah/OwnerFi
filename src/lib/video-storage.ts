@@ -87,14 +87,14 @@ export async function downloadAndUploadVideo(
   const bucket = storage.bucket();
   const file = bucket.file(fileName);
 
-  // Calculate deletion date (72 hours from now)
+  // Calculate deletion date (7 days from now)
   const deletionDate = new Date();
-  deletionDate.setHours(deletionDate.getHours() + 72);
+  deletionDate.setDate(deletionDate.getDate() + 7);
 
   await file.save(buffer, {
     contentType: 'video/mp4',
     metadata: {
-      cacheControl: 'public, max-age=259200', // Cache for 72 hours (3 days)
+      cacheControl: 'public, max-age=604800', // Cache for 7 days
       customMetadata: {
         autoDeleteAfter: deletionDate.toISOString(),
         createdAt: new Date().toISOString()
@@ -102,11 +102,11 @@ export async function downloadAndUploadVideo(
     }
   });
 
-  // Generate a signed URL (valid for 72 hours) instead of making file public
+  // Generate a signed URL (valid for 7 days) instead of making file public
   // This works with uniform bucket-level access enabled
   const [signedUrl] = await file.getSignedUrl({
     action: 'read',
-    expires: Date.now() + 72 * 60 * 60 * 1000, // 72 hours (3 days)
+    expires: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
   });
 
   console.log(`✅ Uploaded to Firebase Storage with signed URL`);
@@ -198,7 +198,7 @@ export async function downloadAndUploadToR2(
     Metadata: {
       'uploaded-at': new Date().toISOString(),
       'source': 'heygen',
-      'auto-delete-after': new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString(), // 72 hours
+      'auto-delete-after': new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days
     },
   }));
 
@@ -386,7 +386,7 @@ export async function uploadSubmagicVideo(
         Metadata: {
           'uploaded-at': new Date().toISOString(),
           'source': 'submagic',
-          'auto-delete-after': new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString(), // 72 hours
+          'auto-delete-after': new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days
         },
       }));
 
@@ -532,7 +532,7 @@ export async function uploadVideoToR2(
 }
 
 /**
- * Delete expired videos (older than 72 hours)
+ * Delete expired videos (older than 7 days)
  * Called daily at 3 AM by cleanup-videos cron
  */
 export async function deleteExpiredVideos(): Promise<{
@@ -546,7 +546,7 @@ export async function deleteExpiredVideos(): Promise<{
   let errors = 0;
   let totalSize = 0;
   const now = Date.now();
-  const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
+  const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 
   // ===== CLOUDFLARE R2 CLEANUP =====
   console.log('☁️  Cleaning up R2...');
@@ -588,7 +588,7 @@ export async function deleteExpiredVideos(): Promise<{
 
           const ageMs = now - obj.LastModified.getTime();
 
-          if (ageMs > THREE_DAYS_MS) {
+          if (ageMs > SEVEN_DAYS_MS) {
             console.log(`  Deleting R2: ${obj.Key} (${((obj.Size || 0) / 1024 / 1024).toFixed(2)} MB, ${(ageMs / 1000 / 60 / 60).toFixed(1)}h old)`);
             await r2Client.send(new DeleteObjectCommand({ Bucket: bucketName, Key: obj.Key }));
             deleted++;

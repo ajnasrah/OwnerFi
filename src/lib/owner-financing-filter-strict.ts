@@ -8,7 +8,12 @@
  * - 0% false positive rate (100% accuracy)
  * - Captures ~1,420 true owner financing properties
  * - Safe for customer-facing applications
+ *
+ * IMPORTANT: Also filters OUT properties with negative keywords
+ * (e.g., "no owner financing", "cash only", etc.)
  */
+
+import { hasNegativeKeywords } from './negative-keywords';
 
 export interface StrictFilterResult {
   passes: boolean;
@@ -60,7 +65,17 @@ export function hasStrictOwnerFinancing(description: string | null | undefined):
     };
   }
 
-  // Find ALL matching patterns
+  // FIRST: Check for negative keywords (explicit rejections)
+  const { hasNegative } = hasNegativeKeywords(description);
+  if (hasNegative) {
+    return {
+      passes: false,
+      matchedKeywords: [],
+      confidence: 'high',
+    };
+  }
+
+  // THEN: Find ALL matching positive patterns
   const matchedKeywords: string[] = [];
 
   for (const { pattern, name } of STRICT_PATTERNS) {

@@ -5,6 +5,8 @@
  * Used to prevent sending irrelevant properties to GoHighLevel.
  */
 
+import { NEGATIVE_PATTERNS as COMPREHENSIVE_NEGATIVE_PATTERNS } from './negative-keywords';
+
 export interface FilterResult {
   shouldSend: boolean;
   reason: string;
@@ -24,7 +26,9 @@ const POSITIVE_PATTERNS = [
   /owner\s*financ/i,
   /seller\s*financ/i,
   /owner\s*carry/i,
+  /owner\s*will\s*carry/i,
   /seller\s*carry/i,
+  /seller\s*will\s*carry/i,
   /owner\s*will\s*finance/i,
   /seller\s*will\s*finance/i,
   /owner\s*terms/i,
@@ -81,17 +85,9 @@ const POSITIVE_PATTERNS = [
 
 /**
  * Patterns that indicate owner financing is NOT available or explicitly rejected
+ * Uses comprehensive negative keyword list (94 patterns) to prevent false positives
  */
-const NEGATIVE_PATTERNS = [
-  /no\s*owner\s*financ/i,
-  /not\s*owner\s*financ/i,
-  /owner\s*financ.*not\s*available/i,
-  /seller\s*financ.*not\s*available/i,
-  /no\s*seller\s*financ/i,
-  /not\s*seller\s*financ/i,
-  /cash\s*only/i,
-  /conventional\s*financ.*only/i,
-];
+const NEGATIVE_PATTERNS = COMPREHENSIVE_NEGATIVE_PATTERNS;
 
 /**
  * Check if a property description mentions owner financing

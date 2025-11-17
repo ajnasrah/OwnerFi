@@ -49,8 +49,8 @@ function mapPropertyFields(doc: any) {
     propertyImages: data.propertyImages,
     // Timestamps - simplified
     foundAt: data.foundAt?.toDate?.()?.toISOString() || data.foundAt,
-    // Admin panel compatibility
-    address: data.fullAddress || data.address,
+    // Admin panel compatibility - use streetAddress (just the street, not full address with city/state/zip)
+    address: data.streetAddress || data.fullAddress || data.address,
     squareFeet: data.squareFoot || data.squareFeet,
     imageUrl: data.firstPropertyImage || data.imageUrl,
     imageUrls: data.propertyImages || data.imageUrls || [],
@@ -81,7 +81,7 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const pageSize = parseInt(searchParams.get('limit') || '100'); // Default 100 per page
+    const pageSize = parseInt(searchParams.get('limit') || '2000'); // Default 2000 per page
     const status = searchParams.get('status') || 'all';
     const lastDocId = searchParams.get('lastDocId'); // For pagination cursor
     const searchQuery = searchParams.get('search')?.toLowerCase().trim(); // Search query

@@ -3,7 +3,6 @@ import { ApifyClient } from 'apify-client';
 import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { transformApifyProperty, validatePropertyData } from '@/lib/property-transform';
-import { detectNeedsWork, getMatchingKeywords } from '@/lib/property-needs-work-detector';
 
 // Initialize Firebase Admin
 if (!getApps().length) {
@@ -32,7 +31,6 @@ export async function GET(request: NextRequest) {
     validationFailed: 0,
     duplicatesSkipped: 0,
     propertiesSaved: 0,
-    needsWorkOwnerFinance: 0,
     ghlWebhookSuccess: 0,
     ghlWebhookFailed: 0,
     queueItemsCompleted: 0,
@@ -239,42 +237,9 @@ export async function GET(request: NextRequest) {
           console.log(`⚠️ No contact info for ZPID ${propertyData.zpid} - saving anyway`);
         }
 
-        // Check if property needs work (for owner finance investor deals)
-        const needsWork = detectNeedsWork(propertyData.description);
-        if (needsWork) {
-          // Check for cross-scraper duplicate in cash_houses
-          if (existingCashHousesZpids.has(propertyData.zpid)) {
-            console.log(`⏭️ ZPID ${propertyData.zpid} already exists in cash_houses (from cash scraper) - skipping duplicate`);
-          } else {
-            const matchingKeywords = getMatchingKeywords(propertyData.description);
-            console.log(`🏠 OWNER FINANCE OPPORTUNITY: ${propertyData.fullAddress} - Keywords: ${matchingKeywords.join(', ')}`);
-
-            // Save to cash_houses collection with owner_finance tag (no cross-scraper duplicate)
-            const cashHouseRef = db.collection('cash_houses').doc();
-
-            // Calculate discount percentage (validate to prevent divide-by-zero)
-            let discountPercentage = 0;
-            let eightyPercentOfZestimate = 0;
-            if (propertyData.estimate && propertyData.estimate > 0) {
-              eightyPercentOfZestimate = Math.round(propertyData.estimate * 0.8);
-              if (propertyData.price && propertyData.price > 0) {
-                discountPercentage = parseFloat(((propertyData.estimate - propertyData.price) / propertyData.estimate * 100).toFixed(2));
-              }
-            }
-
-            const cashHouseData = {
-              ...propertyData,
-              needsWork: true,
-              needsWorkKeywords: matchingKeywords,
-              source: 'zillow_scraper',
-              dealType: 'owner_finance',
-              discountPercentage,
-              eightyPercentOfZestimate,
-            };
-            currentBatch.set(cashHouseRef, cashHouseData);
-            metrics.needsWorkOwnerFinance++;
-          }
-        }
+        // REMOVED: Cross-save to cash_houses for "needs work" properties
+        // Owner finance properties should ONLY be in zillow_imports
+        // Cash deals are for admin research only, saved via /api/cron/process-cash-deals-queue
 
         // ===== STRICT FILTER - ONLY SAVE IF PASSES =====
         const { hasStrictOwnerFinancing } = await import('@/lib/owner-financing-filter-strict');
@@ -358,7 +323,7 @@ export async function GET(request: NextRequest) {
       metrics.propertiesSaved += batchOperations;
     }
 
-    console.log(`✅ [FIREBASE] Total saved: ${metrics.propertiesSaved} properties${metrics.needsWorkOwnerFinance > 0 ? ` (+ ${metrics.needsWorkOwnerFinance} to cash_houses as owner finance)` : ''}`);
+    console.log(`✅ [FIREBASE] Total saved: ${metrics.propertiesSaved} properties to zillow_imports`);
 
     // ===== SEND TO GHL WEBHOOK =====
     // Send ALL saved properties (all passed strict filter + have contact info)
@@ -493,7 +458,6 @@ export async function GET(request: NextRequest) {
     console.log(`⚠️  Validation Failed: ${metrics.validationFailed}`);
     console.log(`⏭️  Duplicates Skipped: ${metrics.duplicatesSkipped}`);
     console.log(`💾 Properties Saved: ${metrics.propertiesSaved}`);
-    console.log(`🏠 Owner Finance (Needs Work): ${metrics.needsWorkOwnerFinance}`);
     console.log(`📤 GHL Webhook Success: ${metrics.ghlWebhookSuccess}`);
     console.log(`❌ GHL Webhook Failed: ${metrics.ghlWebhookFailed}`);
     console.log(`✅ Queue Items Completed: ${metrics.queueItemsCompleted}`);
@@ -531,7 +495,6 @@ export async function GET(request: NextRequest) {
     console.log(`❌ Transform Failed: ${metrics.transformFailed}`);
     console.log(`⚠️  Validation Failed: ${metrics.validationFailed}`);
     console.log(`💾 Properties Saved: ${metrics.propertiesSaved}`);
-    console.log(`🏠 Owner Finance (Needs Work): ${metrics.needsWorkOwnerFinance}`);
     console.log(`🚨 Total Errors: ${metrics.errors.length}`);
     console.log(`========================================\n`);
 

@@ -231,7 +231,9 @@ export default function PropertiesTab({ setEditingProperty, setEditForm }: Prope
                     </div>
                     <div className="ml-2">
                       <div className="flex items-center gap-1">
-                        <div className="text-sm font-medium text-gray-900">{property.address}</div>
+                        <div className="text-sm font-medium text-gray-900">
+                          {property.address.replace(new RegExp(`,?\\s*${property.city},?\\s*${property.state}\\s*${property.zipCode}.*$`, 'i'), '')}
+                        </div>
                         <button
                           onClick={() => {
                             const fullAddress = `${property.address}, ${property.city}, ${property.state} ${property.zipCode}`;

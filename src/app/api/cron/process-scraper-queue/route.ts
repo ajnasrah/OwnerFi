@@ -31,8 +31,6 @@ export async function GET(request: NextRequest) {
     validationFailed: 0,
     duplicatesSkipped: 0,
     propertiesSaved: 0,
-    ghlWebhookSuccess: 0,
-    ghlWebhookFailed: 0,
     queueItemsCompleted: 0,
     queueItemsFailed: 0,
     errors: [] as Array<{ zpid?: number; address?: string; error: string; stage: string }>,
@@ -257,12 +255,6 @@ export async function GET(request: NextRequest) {
           verifiedAt: null,                 // Set when terms received
           soldAt: null,
 
-          // GHL webhook tracking
-          sentToGHL: false,
-          ghlSentAt: null,
-          ghlSendStatus: null,
-          ghlSendError: null,
-
           // Financing terms (initially null - "Seller to Decide")
           downPaymentAmount: null,
           downPaymentPercent: null,
@@ -272,7 +264,7 @@ export async function GET(request: NextRequest) {
           balloonPaymentYears: null,
         });
 
-        // Track for GHL webhook sending
+        // Track saved properties for metrics
         savedProperties.push({
           docRef,
           data: propertyData,
@@ -310,110 +302,6 @@ export async function GET(request: NextRequest) {
     }
 
     console.log(`✅ [FIREBASE] Total saved: ${metrics.propertiesSaved} properties to zillow_imports`);
-
-    // ===== SEND TO GHL CRM WEBHOOK =====
-    // Send ALL saved properties (all passed strict filter + have contact info)
-    const GHL_WEBHOOK_URL = 'https://services.leadconnectorhq.com/hooks/U2B5lSlWrVBgVxHNq5AH/webhook-trigger/2be65188-9b2e-43f1-a9d8-33d9907b375c';
-
-    const propertiesWithContact = savedProperties
-      .filter((prop: any) =>
-        (prop.data.agentPhoneNumber || prop.data.brokerPhoneNumber) // Has contact info
-      );
-
-    console.log(`\n📤 [GHL WEBHOOK] Sending ${propertiesWithContact.length} verified owner finance properties to GHL CRM`);
-    if (propertiesWithContact.length > 0) {
-      console.log(`   Sample keywords: ${propertiesWithContact[0].matchedKeywords?.join(', ') || 'N/A'}`);
-    }
-
-    for (const property of propertiesWithContact) {
-      const propertyData = property.data;
-      const firebaseId = property.docRef.id;
-
-      try {
-
-        const webhookData = {
-          firebase_id: firebaseId,
-          property_id: propertyData.zpid || '',
-          full_address: propertyData.fullAddress || '',
-          street_address: propertyData.streetAddress || '',
-          city: propertyData.city || '',
-          state: propertyData.state || '',
-          zip: propertyData.zipCode || '',
-          bedrooms: propertyData.bedrooms || 0,
-          bathrooms: propertyData.bathrooms || 0,
-          square_foot: propertyData.squareFoot || 0,
-          building_type: propertyData.buildingType || propertyData.homeType || '',
-          year_built: propertyData.yearBuilt || 0,
-          lot_square_foot: propertyData.lotSquareFoot || 0,
-          estimate: propertyData.estimate || 0,
-          hoa: propertyData.hoa || 0,
-          description: propertyData.description || '',
-          agent_name: propertyData.agentName || '',
-          agent_phone_number: propertyData.agentPhoneNumber || propertyData.brokerPhoneNumber || '',
-          annual_tax_amount: propertyData.annualTaxAmount || 0,
-          price: propertyData.price || 0,
-          zillow_url: propertyData.url || '',
-          property_image: propertyData.firstPropertyImage || '',
-          broker_name: propertyData.brokerName || '',
-          broker_phone: propertyData.brokerPhoneNumber || '',
-          // Financial terms fields - initially null, needs to be filled
-          down_payment_amount: null,
-          down_payment_percent: null,
-          monthly_payment: null,
-          interest_rate: null,
-          loan_term_years: null,
-          balloon_payment_years: null,
-          // Status tracking
-          status: 'needs_terms', // Indicate this property needs financial terms
-          matched_keywords: property.matchedKeywords?.join(', ') || '',
-        };
-
-        // Send to GHL webhook
-        const ghlResponse = await fetch(GHL_WEBHOOK_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(webhookData),
-        });
-
-        if (!ghlResponse.ok) {
-          throw new Error(`${ghlResponse.status}: ${await ghlResponse.text()}`);
-        }
-
-        metrics.ghlWebhookSuccess++;
-
-        // Update Firebase with webhook send status
-        await property.docRef.update({
-          sentToGHL: true,
-          ghlSentAt: new Date(),
-          ghlSendStatus: 'success',
-        });
-
-        console.log(`✅ GHL Sent: ${propertyData.fullAddress} (${propertyData.agentPhoneNumber}) [${firebaseId}]`);
-
-        // Small delay to avoid overwhelming webhook
-        await new Promise(resolve => setTimeout(resolve, 100));
-
-      } catch (error: any) {
-        metrics.ghlWebhookFailed++;
-        metrics.errors.push({
-          zpid: propertyData.zpid,
-          address: propertyData.fullAddress,
-          error: error.message,
-          stage: 'ghl_webhook',
-        });
-
-        // Update Firebase with failure status
-        await property.docRef.update({
-          sentToGHL: false,
-          ghlSendStatus: 'failed',
-          ghlSendError: error.message,
-        });
-
-        console.error(`❌ Failed: ${propertyData.fullAddress} - ${error.message}`);
-      }
-    }
-
-    console.log(`\n📊 [GHL WEBHOOK] Success: ${metrics.ghlWebhookSuccess}, Failed: ${metrics.ghlWebhookFailed}`);
 
     // Mark queue items as completed (only if we saved at least 1 property)
     if (metrics.propertiesSaved > 0) {
@@ -455,8 +343,6 @@ export async function GET(request: NextRequest) {
     console.log(`⚠️  Validation Failed: ${metrics.validationFailed}`);
     console.log(`⏭️  Duplicates Skipped: ${metrics.duplicatesSkipped}`);
     console.log(`💾 Properties Saved: ${metrics.propertiesSaved}`);
-    console.log(`📤 GHL Webhook Success: ${metrics.ghlWebhookSuccess}`);
-    console.log(`❌ GHL Webhook Failed: ${metrics.ghlWebhookFailed}`);
     console.log(`✅ Queue Items Completed: ${metrics.queueItemsCompleted}`);
     console.log(`❌ Queue Items Failed: ${metrics.queueItemsFailed}`);
     console.log(`🚨 Total Errors: ${metrics.errors.length}`);

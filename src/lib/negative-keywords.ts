@@ -111,6 +111,16 @@ export const NEGATIVE_KEYWORDS = [
   'no owner financing or subject to',
   'no owner financing or creative',
   'no owner financing or wholesale',
+  'no creative or owner financed offers',
+  'no creative or owner financing offers',
+  'no creative or owner financed',
+  'no owner financed offers',
+  'no wholesalers or owner financing',
+  'no assignments or owner financing',
+  'no contract sales or seller financing',
+  'no contract or seller financing',
+  'no contract sales or owner financing',
+  'no contract or owner financing',
 
   // ===== ADDITIONAL VARIATIONS =====
   'no terms',

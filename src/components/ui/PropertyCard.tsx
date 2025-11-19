@@ -56,7 +56,7 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
           <div
             className="absolute inset-x-0 overflow-hidden"
             style={{
-              top: '10%',
+              top: '6%',
               height: '40%'
             }}
           >
@@ -128,7 +128,7 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
           <div
             className="absolute bottom-0 left-0 right-0 bg-white/98 backdrop-blur-sm rounded-t-3xl pointer-events-auto shadow-2xl transition-transform duration-300 ease-out"
             style={{
-              transform: showDetails ? 'translateY(0)' : 'translateY(calc(100% - 240px))',
+              transform: showDetails ? 'translateY(0)' : 'translateY(calc(100% - 200px))',
               height: '100%',
             }}
             onTouchStart={(e) => { if (showDetails) e.stopPropagation(); }}

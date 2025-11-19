@@ -11,15 +11,18 @@
  */
 
 /**
- * Convert keyword strings to regex patterns
+ * Convert keyword strings to regex patterns with word boundaries
+ * to prevent matching partial words (e.g., "no" in "NOW" or "negotiable")
  */
 export function keywordsToPatterns(keywords: string[]): RegExp[] {
   return keywords.map(keyword => {
     // Escape special regex characters
     const escaped = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    // Replace spaces with flexible whitespace matcher
-    const flexible = escaped.replace(/\s+/g, '\\s*');
-    return new RegExp(flexible, 'i');
+    // Replace spaces with flexible whitespace matcher (allowing multiple spaces/newlines)
+    const flexible = escaped.replace(/\s+/g, '\\s+');
+    // Add word boundaries at start and end to prevent partial matches
+    // \b ensures we match whole words only
+    return new RegExp(`\\b${flexible}\\b`, 'i');
   });
 }
 

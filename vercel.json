@@ -79,7 +79,7 @@
     },
     {
       "path": "/api/cron/refresh-zillow-status",
-      "schedule": "0 2 * * 0"
+      "schedule": "0 2 * * *"
     },
     {
       "path": "/api/cron/run-search-scraper",
@@ -92,9 +92,6 @@
     },
     "src/app/api/admin/upload-properties-v4/route.ts": {
       "maxDuration": 300
-    },
-    "src/app/api/**/*.ts": {
-      "maxDuration": 30
     },
     "src/app/api/process-video/route.ts": {
       "maxDuration": 300
@@ -155,6 +152,9 @@
     },
     "src/app/api/cron/run-search-scraper/route.ts": {
       "maxDuration": 300
+    },
+    "src/app/api/**/*.ts": {
+      "maxDuration": 30
     }
   },
   "headers": [

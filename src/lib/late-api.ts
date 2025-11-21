@@ -202,21 +202,15 @@ export async function postToLate(request: LatePostRequest): Promise<LatePostResp
   }
 
   try {
-    // If useQueue is true, get the next available queue slot
-    let scheduleTime = request.scheduleTime;
+    // If useQueue is true, we'll use Late.so's built-in queue (no explicit scheduleTime)
+    // Otherwise, use the provided scheduleTime
+    let scheduleTime = request.useQueue ? undefined : request.scheduleTime;
     let timezone = request.timezone;
 
     if (request.useQueue) {
-      console.log(`📅 Using queue for ${request.brand}...`);
-      const queueSlot = await getNextQueueSlot(request.brand);
-
-      if (queueSlot) {
-        scheduleTime = queueSlot.nextSlot;
-        timezone = queueSlot.timezone;
-        console.log(`   Next queue slot: ${scheduleTime} (${timezone})`);
-      } else {
-        console.warn('⚠️  Failed to get queue slot, falling back to immediate posting');
-      }
+      console.log(`📅 Using Late.so's built-in queue for ${request.brand} (no explicit schedule time)`);
+      // Don't calculate a scheduleTime - let Late.so's queue handle it
+      // We'll just set queuedFromProfile later
     }
 
     // First, get the accounts for this profile to get accountIds
@@ -359,18 +353,20 @@ export async function postToLate(request: LatePostRequest): Promise<LatePostResp
             requestBody.firstComment = request.firstComment;
           }
 
-          // Add scheduling
-          if (scheduleTime) {
+          // Add scheduling or queue
+          if (request.useQueue) {
+            // Use Late.so's built-in queue - just set queuedFromProfile
+            requestBody.queuedFromProfile = profileId;
+            console.log(`   Adding to Late.so queue for profile: ${profileId}`);
+          } else if (scheduleTime) {
+            // Explicit schedule time provided
             requestBody.scheduledFor = scheduleTime;
-            requestBody.timezone = timezone || 'America/New_York'; // Use queue timezone or default to Eastern
-
-            // If this was queued, mark it with queuedFromProfile
-            if (request.useQueue) {
-              requestBody.queuedFromProfile = profileId;
-            }
+            requestBody.timezone = timezone || 'America/New_York';
+            console.log(`   Scheduling for: ${scheduleTime} (${timezone})`);
           } else {
             // Immediate posting
             requestBody.publishNow = true;
+            console.log(`   Publishing immediately`);
           }
 
           console.log('🔍 Late API Request Body:', JSON.stringify(requestBody, null, 2));

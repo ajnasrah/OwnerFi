@@ -51,6 +51,7 @@ export async function GET(request: NextRequest) {
     const maxDownPayment = searchParams.get('maxDownPayment');
     const pageSize = parseInt(searchParams.get('limit') || '50'); // Default 50 properties per page
     const page = parseInt(searchParams.get('page') || '1'); // Default page 1
+    const includePassed = searchParams.get('includePassed') === 'true'; // Show passed properties
 
     if (!city || !state || !maxMonthlyPayment || !maxDownPayment) {
       return ErrorResponses.validationError(
@@ -196,11 +197,16 @@ export async function GET(request: NextRequest) {
     });
 
     // 🆕 Combine and filter out passed properties FIRST (before any processing)
+    // UNLESS includePassed=true is specified
     const allPropertiesBeforeFilter = [...curatedProperties, ...zillowProperties];
-    const allProperties = allPropertiesBeforeFilter.filter(p => !passedPropertyIds.includes(p.id));
+    const allProperties = includePassed
+      ? allPropertiesBeforeFilter // Show all properties including passed ones
+      : allPropertiesBeforeFilter.filter(p => !passedPropertyIds.includes(p.id)); // Filter out passed
 
     const passedCount = allPropertiesBeforeFilter.length - allProperties.length;
-    if (passedCount > 0) {
+    if (includePassed) {
+      console.log(`ℹ️  [buyer-search] includePassed=true - showing all ${allPropertiesBeforeFilter.length} properties (including ${passedPropertyIds.length} passed)`);
+    } else if (passedCount > 0) {
       console.log(`✅ [buyer-search] Filtered out ${passedCount} passed properties`);
     }
 

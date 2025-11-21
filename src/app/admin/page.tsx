@@ -1015,7 +1015,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex max-w-full overflow-x-hidden">
+    <div className="h-screen bg-slate-50 flex max-w-full overflow-hidden">
       {/* Left Sidebar */}
       <div className="w-64 lg:w-72 bg-white shadow-xl border-r border-slate-200 flex-shrink-0 relative flex flex-col h-screen">
         {/* Logo Section */}
@@ -1121,7 +1121,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col min-h-screen w-full overflow-x-hidden">
+      <div className="flex-1 flex flex-col w-full">
         {/* Top Header */}
         {activeTab !== 'buyer-preview' && (
         <header className="bg-white shadow-sm border-b border-slate-200 px-4 md:px-6 lg:px-8 py-4 md:py-6">

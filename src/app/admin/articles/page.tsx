@@ -219,8 +219,9 @@ export default function ArticlesPage() {
   const displayArticles = activeView === 'queue' ? queueArticles : unprocessedArticles;
 
   return (
-    <div className="min-h-screen bg-slate-50 p-8">
-      <div className="max-w-7xl mx-auto">
+    <div className="h-screen overflow-hidden bg-slate-50 flex flex-col">
+      <div className="flex-1 overflow-y-auto p-8">
+        <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-slate-900">Article Management</h1>
@@ -430,6 +431,7 @@ export default function ArticlesPage() {
             </div>
             <div className="text-xs text-slate-500 mt-1">In database</div>
           </div>
+        </div>
         </div>
       </div>
     </div>

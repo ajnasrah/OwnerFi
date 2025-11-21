@@ -70,8 +70,9 @@ export default function BlogAdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white p-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="h-screen overflow-hidden bg-slate-900 text-white flex flex-col">
+      <div className="flex-1 overflow-y-auto p-6">
+        <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
@@ -201,6 +202,7 @@ export default function BlogAdminPage() {
             </table>
           </div>
         )}
+        </div>
       </div>
     </div>
   );

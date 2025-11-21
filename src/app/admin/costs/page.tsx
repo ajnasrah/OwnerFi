@@ -12,8 +12,9 @@ export const metadata = {
 
 export default function CostDashboardPage() {
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
-      <div className="container mx-auto px-4 py-8">
+    <div className="h-screen overflow-hidden bg-gray-900 text-white flex flex-col">
+      <div className="flex-1 overflow-y-auto">
+        <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">💰 Cost Dashboard</h1>
@@ -33,6 +34,7 @@ export default function CostDashboardPage() {
           >
             ← Back to Admin Dashboard
           </a>
+        </div>
         </div>
       </div>
     </div>

@@ -131,8 +131,9 @@ export default function LateFailuresPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-7xl mx-auto">
+    <div className="h-screen overflow-hidden bg-gray-50 flex flex-col">
+      <div className="flex-1 overflow-y-auto p-8">
+        <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Late Posting Failures</h1>
@@ -357,6 +358,7 @@ export default function LateFailuresPage() {
               );
             })
           )}
+        </div>
         </div>
       </div>
     </div>

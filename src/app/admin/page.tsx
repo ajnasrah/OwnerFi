@@ -151,6 +151,8 @@ export default function AdminDashboard() {
   const [filteredBuyers, setFilteredBuyers] = useState<BuyerStats[]>([]);
   const [loadingBuyers, setLoadingBuyers] = useState(false);
   const [selectedBuyers, setSelectedBuyers] = useState<string[]>([]);
+  const [buyerSortField, setBuyerSortField] = useState<'name' | 'matched' | 'liked' | 'budget' | 'downpay'>('name');
+  const [buyerSortDirection, setBuyerSortDirection] = useState<'asc' | 'desc'>('asc');
   const [cityFilter, setCityFilter] = useState('');
   const [stateFilter, setStateFilter] = useState('');
   const [realtors, setRealtors] = useState<RealtorStats[]>([]);
@@ -2881,69 +2883,193 @@ export default function AdminDashboard() {
                   </div>
                 </div>
 
-                <div className="overflow-hidden bg-white shadow sm:rounded-md">
-                  <ul className="divide-y divide-gray-200">
-                    {filteredBuyers.map((buyer) => (
-                      <li key={buyer.id}>
-                        <div className="px-4 py-4 sm:px-6">
-                          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                            {/* Buyer Info */}
-                            <div className="flex items-center flex-1 min-w-0">
-                              <input
-                                type="checkbox"
-                                checked={selectedBuyers.includes(buyer.userId)}
-                                onChange={() => {
-                                  if (selectedBuyers.includes(buyer.userId)) {
-                                    setSelectedBuyers(prev => prev.filter(id => id !== buyer.userId));
-                                  } else {
-                                    setSelectedBuyers(prev => [...prev, buyer.userId]);
-                                  }
-                                }}
-                                className="h-4 w-4 mr-3 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                              />
-                              <div className="flex-shrink-0">
+                <div className="overflow-x-auto bg-white shadow sm:rounded-lg">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    {/* Table Header */}
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12">
+                          {/* Checkbox column */}
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                          onClick={() => {
+                            if (buyerSortField === 'name') {
+                              setBuyerSortDirection(buyerSortDirection === 'asc' ? 'desc' : 'asc');
+                            } else {
+                              setBuyerSortField('name');
+                              setBuyerSortDirection('asc');
+                            }
+                          }}
+                        >
+                          <div className="flex items-center gap-1">
+                            Name
+                            {buyerSortField === 'name' && (
+                              <span>{buyerSortDirection === 'asc' ? '↑' : '↓'}</span>
+                            )}
+                          </div>
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 w-24"
+                          onClick={() => {
+                            if (buyerSortField === 'matched') {
+                              setBuyerSortDirection(buyerSortDirection === 'asc' ? 'desc' : 'asc');
+                            } else {
+                              setBuyerSortField('matched');
+                              setBuyerSortDirection('desc');
+                            }
+                          }}
+                        >
+                          <div className="flex items-center justify-center gap-1">
+                            Matched
+                            {buyerSortField === 'matched' && (
+                              <span>{buyerSortDirection === 'asc' ? '↑' : '↓'}</span>
+                            )}
+                          </div>
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 w-24"
+                          onClick={() => {
+                            if (buyerSortField === 'liked') {
+                              setBuyerSortDirection(buyerSortDirection === 'asc' ? 'desc' : 'asc');
+                            } else {
+                              setBuyerSortField('liked');
+                              setBuyerSortDirection('desc');
+                            }
+                          }}
+                        >
+                          <div className="flex items-center justify-center gap-1">
+                            Liked
+                            {buyerSortField === 'liked' && (
+                              <span>{buyerSortDirection === 'asc' ? '↑' : '↓'}</span>
+                            )}
+                          </div>
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 w-32"
+                          onClick={() => {
+                            if (buyerSortField === 'budget') {
+                              setBuyerSortDirection(buyerSortDirection === 'asc' ? 'desc' : 'asc');
+                            } else {
+                              setBuyerSortField('budget');
+                              setBuyerSortDirection('desc');
+                            }
+                          }}
+                        >
+                          <div className="flex items-center justify-center gap-1">
+                            Budget/mo
+                            {buyerSortField === 'budget' && (
+                              <span>{buyerSortDirection === 'asc' ? '↑' : '↓'}</span>
+                            )}
+                          </div>
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 w-32"
+                          onClick={() => {
+                            if (buyerSortField === 'downpay') {
+                              setBuyerSortDirection(buyerSortDirection === 'asc' ? 'desc' : 'asc');
+                            } else {
+                              setBuyerSortField('downpay');
+                              setBuyerSortDirection('desc');
+                            }
+                          }}
+                        >
+                          <div className="flex items-center justify-center gap-1">
+                            Down Pay
+                            {buyerSortField === 'downpay' && (
+                              <span>{buyerSortDirection === 'asc' ? '↑' : '↓'}</span>
+                            )}
+                          </div>
+                        </th>
+                      </tr>
+                    </thead>
+                    {/* Table Body */}
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {[...filteredBuyers].sort((a, b) => {
+                        let aVal: any, bVal: any;
+                        switch (buyerSortField) {
+                          case 'name':
+                            aVal = (a.firstName && a.lastName ? `${a.firstName} ${a.lastName}` : a.email).toLowerCase();
+                            bVal = (b.firstName && b.lastName ? `${b.firstName} ${b.lastName}` : b.email).toLowerCase();
+                            break;
+                          case 'matched':
+                            aVal = a.matchedPropertiesCount || 0;
+                            bVal = b.matchedPropertiesCount || 0;
+                            break;
+                          case 'liked':
+                            aVal = a.likedPropertiesCount || 0;
+                            bVal = b.likedPropertiesCount || 0;
+                            break;
+                          case 'budget':
+                            aVal = a.maxMonthlyPayment || a.monthlyBudget || 0;
+                            bVal = b.maxMonthlyPayment || b.monthlyBudget || 0;
+                            break;
+                          case 'downpay':
+                            aVal = a.maxDownPayment || a.downPayment || 0;
+                            bVal = b.maxDownPayment || b.downPayment || 0;
+                            break;
+                        }
+                        if (aVal < bVal) return buyerSortDirection === 'asc' ? -1 : 1;
+                        if (aVal > bVal) return buyerSortDirection === 'asc' ? 1 : -1;
+                        return 0;
+                      }).map((buyer) => (
+                        <tr key={buyer.id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <input
+                              type="checkbox"
+                              checked={selectedBuyers.includes(buyer.userId)}
+                              onChange={() => {
+                                if (selectedBuyers.includes(buyer.userId)) {
+                                  setSelectedBuyers(prev => prev.filter(id => id !== buyer.userId));
+                                } else {
+                                  setSelectedBuyers(prev => [...prev, buyer.userId]);
+                                }
+                              }}
+                              className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                            />
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              <div className="flex-shrink-0 h-10 w-10">
                                 <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
                                   <span className="text-sm font-medium text-gray-700">
                                     {buyer.firstName?.charAt(0).toUpperCase() || buyer.email.charAt(0).toUpperCase()}
                                   </span>
                                 </div>
                               </div>
-                              <div className="ml-4 min-w-0 flex-1">
+                              <div className="ml-4">
                                 <div className="text-sm font-medium text-gray-900">
                                   {buyer.firstName && buyer.lastName ? `${buyer.firstName} ${buyer.lastName}` : buyer.email}
                                 </div>
-                                <div className="text-sm text-gray-500 break-all">{buyer.email}</div>
+                                <div className="text-sm text-gray-500">{buyer.email}</div>
                                 {buyer.phone && <div className="text-sm text-gray-500">{buyer.phone}</div>}
                                 {(buyer.city || buyer.primaryCity) && (buyer.state || buyer.primaryState) && (
                                   <div className="text-sm text-gray-500">📍 {buyer.city || buyer.primaryCity}, {buyer.state || buyer.primaryState}</div>
                                 )}
                               </div>
                             </div>
-
-                            {/* Stats Grid */}
-                            <div className="grid grid-cols-4 gap-3 sm:gap-6 flex-shrink-0">
-                              <div className="text-center">
-                                <div className="text-base sm:text-lg font-semibold text-gray-900">{buyer.matchedPropertiesCount || 0}</div>
-                                <div className="text-xs text-gray-500">Matched</div>
-                              </div>
-                              <div className="text-center">
-                                <div className="text-base sm:text-lg font-semibold text-gray-900">{buyer.likedPropertiesCount || 0}</div>
-                                <div className="text-xs text-gray-500">Liked</div>
-                              </div>
-                              <div className="text-center">
-                                <div className="text-base sm:text-lg font-semibold text-gray-900">${(buyer.maxMonthlyPayment || buyer.monthlyBudget || 0).toLocaleString()}</div>
-                                <div className="text-xs text-gray-500">Budget/mo</div>
-                              </div>
-                              <div className="text-center">
-                                <div className="text-base sm:text-lg font-semibold text-gray-900">${(buyer.maxDownPayment || buyer.downPayment || 0).toLocaleString()}</div>
-                                <div className="text-xs text-gray-500">Down Pay</div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-center">
+                            <div className="text-sm font-semibold text-gray-900">{buyer.matchedPropertiesCount || 0}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-center">
+                            <div className="text-sm font-semibold text-gray-900">{buyer.likedPropertiesCount || 0}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-center">
+                            <div className="text-sm font-semibold text-gray-900">${(buyer.maxMonthlyPayment || buyer.monthlyBudget || 0).toLocaleString()}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-center">
+                            <div className="text-sm font-semibold text-gray-900">${(buyer.maxDownPayment || buyer.downPayment || 0).toLocaleString()}</div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                   {filteredBuyers.length === 0 && (
                     <div className="p-8 text-center text-gray-500">
                       {cityFilter || stateFilter ? 'No buyers found matching your filters' : 'No buyers found'}

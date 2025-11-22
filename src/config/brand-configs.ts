@@ -129,7 +129,7 @@ export const CARZ_CONFIG: BrandConfig = {
   },
 
   scheduling: {
-    timezone: 'America/New_York',
+    timezone: 'America/Chicago', // Memphis, TN is in Central Time
     postingHours: [9, 12, 15, 18, 21],
     maxPostsPerDay: 5,
   },

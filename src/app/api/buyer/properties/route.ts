@@ -105,20 +105,13 @@ export async function GET(request: NextRequest) {
       likedPropertyIds = profile.likedProperties || profile.likedPropertyIds || [];
       passedPropertyIds = profile.passedPropertyIds || []; // 🆕 Get passed properties
 
-      // 🆕 Use PRE-COMPUTED filter (99.95% faster than recalculating)
-      if (profile.filter?.nearbyCities) {
-        nearbyCityNames = new Set(
-          profile.filter.nearbyCities.map((city: string) => city.toLowerCase())
-        );
-        console.log(`✅ [buyer-search] Using PRE-COMPUTED filter: ${nearbyCityNames.size} cities`);
-      } else {
-        // Fallback: calculate on-the-fly if no filter exists (shouldn't happen after migration)
-        console.warn(`⚠️  [buyer-search] No pre-computed filter found, calculating on-the-fly`);
-        const nearbyCitiesList = getCitiesWithinRadiusComprehensive(searchCity, searchState, 30);
-        nearbyCityNames = new Set(
-          nearbyCitiesList.map(city => city.name.toLowerCase())
-        );
-      }
+      // ALWAYS calculate nearby cities on-the-fly for accuracy
+      // This ensures Memphis buyers always see Collierville (bordering city)
+      const nearbyCitiesList = getCitiesWithinRadiusComprehensive(searchCity, searchState, 30);
+      nearbyCityNames = new Set(
+        nearbyCitiesList.map(city => city.name.toLowerCase())
+      );
+      console.log(`✅ [buyer-search] Calculated nearby cities: ${nearbyCityNames.size} cities`);
     }
 
     console.log(`[buyer-search] Buyer searching for ${searchCity}, ${searchState}`);

@@ -190,23 +190,40 @@ export async function POST(request: NextRequest) {
           console.log(`   ${p.platform}: ${hour} ${ampm} CST`);
         });
       } else {
-        // Other brands use standard queue posting
+        // Other brands use unified posting (YouTube direct + Late.dev for others)
         const platforms = getBrandPlatforms(brand, false);
         console.log(`   Platforms: ${platforms.join(', ')}`);
 
-        postResult = await retryOperation(
-          () => postToLate({
+        // Use unified posting to bypass Late.dev quota for YouTube
+        const { postToAllPlatforms, getYouTubeCategoryForBrand } = await import('@/lib/unified-posting');
+
+        const unifiedResult = await retryOperation(
+          () => postToAllPlatforms({
             videoUrl: publicVideoUrl,
             caption,
             title,
             platforms: platforms as any[],
             brand: brand as any,
             useQueue: true,
-            timezone: brandConfig.scheduling.timezone
+            timezone: brandConfig.scheduling.timezone,
+            youtubeCategory: getYouTubeCategoryForBrand(brand),
+            youtubePrivacy: 'public',
+            youtubeMadeForKids: false,
           }),
           3, // max retries
-          'Late posting'
+          'Unified posting'
         );
+
+        // Convert unified result to standard postResult format
+        postResult = {
+          success: unifiedResult.success,
+          postId: unifiedResult.otherPlatforms?.postId || unifiedResult.youtube?.videoId,
+          platforms: [
+            ...(unifiedResult.otherPlatforms?.platforms || []),
+            ...(unifiedResult.youtube?.success ? ['youtube'] : [])
+          ],
+          error: unifiedResult.errors.length > 0 ? unifiedResult.errors.join(', ') : undefined,
+        };
       }
 
       if (postResult.success) {

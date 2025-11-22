@@ -93,7 +93,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="overflow-hidden h-full" data-scroll-behavior="smooth">
+    <html lang="en" className="h-full" data-scroll-behavior="smooth">
       <head>
         {/* Performance: Preconnect to external domains */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -103,7 +103,7 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://maps.googleapis.com" />
       </head>
       <body
-        className={`${inter.variable} antialiased bg-slate-900 overflow-hidden h-full`}
+        className={`${inter.variable} antialiased bg-slate-900 h-full`}
       >
         <AnalyticsScripts />
         <Providers>

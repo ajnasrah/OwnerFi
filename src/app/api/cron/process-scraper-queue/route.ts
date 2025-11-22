@@ -303,6 +303,41 @@ export async function GET(request: NextRequest) {
 
     console.log(`✅ [FIREBASE] Total saved: ${metrics.propertiesSaved} properties to zillow_imports`);
 
+    // 🎯 AUTO-MATCH: Trigger matching for newly saved properties (non-blocking)
+    if (savedProperties.length > 0) {
+      console.log(`🎯 [AUTO-MATCH] Triggering matching for ${savedProperties.length} new properties`);
+
+      // Process each property for matching (fire & forget)
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://ownerfi.ai';
+
+      savedProperties.forEach(({ docRef, data }) => {
+        fetch(`${baseUrl}/api/properties/sync-matches`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'add',
+            propertyId: docRef.id,
+            propertyData: {
+              id: docRef.id,
+              address: data.streetAddress || data.fullAddress,
+              city: data.city,
+              state: data.state,
+              zipCode: data.zipCode,
+              listPrice: data.price,
+              bedrooms: data.bedrooms,
+              bathrooms: data.bathrooms,
+              squareFeet: data.squareFoot,
+              monthlyPayment: data.monthlyPayment || 0,
+              downPaymentAmount: data.downPaymentAmount || 0,
+              imageUrls: data.propertyImages || [],
+            }
+          })
+        }).catch(err => {
+          console.error(`Failed to trigger matching for ${docRef.id}:`, err);
+        });
+      });
+    }
+
     // Mark queue items as completed (only if we saved at least 1 property)
     if (metrics.propertiesSaved > 0) {
       const completeBatch = db.batch();

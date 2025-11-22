@@ -274,7 +274,7 @@ export async function GET(request: NextRequest) {
 
     // Implement pagination
     const page = parseInt(searchParams.get('page') || '1');
-    const pageSize = 50;
+    const pageSize = 100; // Increased from 50 to show more buyers per page
     const startIndex = (page - 1) * pageSize;
     const endIndex = startIndex + pageSize;
     const paginatedBuyers = filteredBuyers.slice(startIndex, endIndex);

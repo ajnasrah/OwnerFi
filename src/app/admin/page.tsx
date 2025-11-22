@@ -275,7 +275,7 @@ export default function AdminDashboard() {
 
       setStats({
         totalProperties: propData.total || 0,
-        totalBuyers: buyersData.buyers?.length || 0,
+        totalBuyers: buyersData.total || 0, // Use actual total count, not array length
         totalRealtors: realtorsData.realtors?.length || 0,
         pendingDisputes: disputesData.pendingDisputes?.length || 0
       });
@@ -559,7 +559,7 @@ export default function AdminDashboard() {
       const data = await response.json();
       setBuyers(data.buyers || []);
       setFilteredBuyers(data.buyers || []);
-      setStats(prev => ({ ...prev, totalBuyers: data.buyers?.length || 0 }));
+      setStats(prev => ({ ...prev, totalBuyers: data.total || 0 })); // Use total count from API
     } catch (error) {
       console.error('Failed to fetch buyers:', error);
     } finally {

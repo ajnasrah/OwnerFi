@@ -44,6 +44,15 @@ export async function sendPropertyMatchNotification(
       };
     }
 
+    // Check if buyer was already notified about this property (deduplication)
+    if (buyer.notifiedPropertyIds?.includes(property.id)) {
+      console.log(`[GoHighLevel] Buyer ${buyer.id} already notified about property ${property.id}`);
+      return {
+        success: false,
+        error: 'Buyer already notified about this property',
+      };
+    }
+
     // Prepare webhook payload
     const payload = {
       // Buyer Information
@@ -92,6 +101,23 @@ export async function sendPropertyMatchNotification(
     }
 
     console.log(`[GoHighLevel] Notification sent successfully. Log ID: ${result.logId}`);
+
+    // Track notification in buyer profile (deduplication)
+    try {
+      const { doc, updateDoc, arrayUnion, increment } = await import('firebase/firestore');
+      const { db } = await import('@/lib/firebase');
+
+      await updateDoc(doc(db, 'buyerProfiles', buyer.id), {
+        notifiedPropertyIds: arrayUnion(property.id),
+        lastNotifiedAt: new Date(),
+        notificationCount: increment(1)
+      });
+
+      console.log(`[GoHighLevel] Tracked notification for buyer ${buyer.id}`);
+    } catch (err) {
+      console.warn('[GoHighLevel] Failed to track notification in buyer profile:', err);
+      // Don't fail the notification if tracking fails
+    }
 
     return {
       success: true,

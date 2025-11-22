@@ -121,10 +121,12 @@ async function addPropertyToMatchingBuyers(property: PropertyListing & { id: str
 
     // OPTIMIZATION: Only check buyers in the same state
     // NEW: Removed maxMonthlyPayment filter to allow OR logic (property might match on down payment only)
+    // FIXED: Query by preferredState (most common) since OR queries need composite indexes
+    // Then we'll check all state fields in the matching logic
     const { limit: firestoreLimit } = await import('firebase/firestore');
     const relevantBuyersQuery = query(
       collection(db!, 'buyerProfiles'),
-      where('searchCriteria.state', '==', property.state),
+      where('preferredState', '==', property.state),
       firestoreLimit(500) // Increased limit since we can't pre-filter by monthly payment anymore
     );
     const buyerDocs = await getDocs(relevantBuyersQuery);
@@ -181,13 +183,20 @@ async function addPropertyToMatchingBuyers(property: PropertyListing & { id: str
 // NEW: Uses OR logic - property matches if it meets at least ONE budget criterion
 async function checkPropertyMatchesBuyer(property: PropertyListing & { id: string }, buyerData: BuyerProfile): Promise<boolean> {
   try {
-    // Location match - use buyer's stored cities from searchCriteria
+    // Location match - use 30-mile radius (same as buyer search)
     const criteria = buyerData.searchCriteria || {};
-    const buyerCities = criteria.cities || [buyerData.preferredCity]; // fallback to flat field
-    const locationMatch = buyerCities.some((cityName: string) =>
-      property.city.toLowerCase() === cityName.toLowerCase() &&
-      property.state === (criteria.state || buyerData.preferredState)
-    );
+    const buyerCity = criteria.city || buyerData.preferredCity;
+    const buyerState = criteria.state || buyerData.preferredState;
+
+    // Get cities within 30 miles of buyer's search city
+    const { getCitiesWithinRadiusComprehensive } = await import('@/lib/comprehensive-cities');
+    const nearbyCities = getCitiesWithinRadiusComprehensive(buyerCity, buyerState, 30);
+    const nearbyCityNames = new Set(nearbyCities.map(c => c.name.toLowerCase()));
+
+    // Property matches if in ANY nearby city
+    const locationMatch =
+      nearbyCityNames.has(property.city.toLowerCase()) &&
+      property.state === buyerState;
 
     if (!locationMatch) return false;
 

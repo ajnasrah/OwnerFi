@@ -699,6 +699,34 @@ export async function POST(request: NextRequest) {
         }
       }
 
+      // 🎯 AUTO-MATCH: Trigger matching for new properties (non-blocking)
+      if (!isUpdate && propertyData.status === 'active' && propertyData.isActive) {
+        try {
+          console.log(`🎯 Auto-triggering matching for new property ${propertyId}`);
+
+          const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://ownerfi.ai';
+
+          // Call sync-matches endpoint (fire & forget)
+          fetch(`${baseUrl}/api/properties/sync-matches`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'add',
+              propertyId,
+              propertyData: {
+                id: propertyId,
+                ...propertyData
+              }
+            })
+          }).catch(err => {
+            console.error('Failed to trigger auto-matching:', err);
+          });
+        } catch (error) {
+          console.error('Error triggering auto-match:', error);
+          // Don't fail property creation if matching fails
+        }
+      }
+
       return NextResponse.json({
         success: true,
         data: {

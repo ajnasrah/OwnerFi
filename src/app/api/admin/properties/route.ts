@@ -90,38 +90,53 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status') || 'all';
 
-    // Build base query - ALWAYS fetch ALL properties (no pagination limit)
-    const baseCollection = collection(db, 'zillow_imports');
+    // Fetch from BOTH collections - zillow_imports AND properties
+    const zillowCollection = collection(db, 'zillow_imports');
+    const propertiesCollection = collection(db, 'properties');
 
-    let constraints: any[] = [
+    let zillowConstraints: any[] = [
       where('ownerFinanceVerified', '==', true),
       orderBy('foundAt', 'desc')
     ];
 
-    // Filter by status if specified
+    let propertiesConstraints: any[] = [
+      where('isActive', '==', true),
+      orderBy('updatedAt', 'desc')
+    ];
+
+    // Filter by status if specified (only for zillow_imports)
     if (status !== 'all') {
       if (status === 'null') {
-        constraints.push(where('status', '==', null));
+        zillowConstraints.push(where('status', '==', null));
       } else {
-        constraints.push(where('status', '==', status));
+        zillowConstraints.push(where('status', '==', status));
       }
     }
 
-    // Execute query - fetch ALL properties (no limit)
-    const propertiesQuery = query(baseCollection, ...constraints);
-    const propertiesSnapshot = await getDocs(propertiesQuery);
+    // Execute BOTH queries in parallel
+    const [zillowSnapshot, propertiesSnapshot] = await Promise.all([
+      getDocs(query(zillowCollection, ...zillowConstraints)),
+      getDocs(query(propertiesCollection, ...propertiesConstraints))
+    ]);
 
-    // Fast field mapping
-    const properties = propertiesSnapshot.docs.map(mapPropertyFields);
+    // Map both collections
+    const zillowProperties = zillowSnapshot.docs.map(mapPropertyFields);
+    const ghlProperties = propertiesSnapshot.docs.map(mapPropertyFields);
+
+    // Combine and deduplicate (in case same property exists in both)
+    const allProperties = [...zillowProperties, ...ghlProperties];
+    const uniqueProperties = Array.from(
+      new Map(allProperties.map(p => [p.id, p])).values()
+    );
 
     // Return all properties
     return NextResponse.json({
-      properties,
-      count: properties.length,
-      total: properties.length,
+      properties: uniqueProperties,
+      count: uniqueProperties.length,
+      total: uniqueProperties.length,
       hasMore: false,
       nextCursor: null,
-      showing: `Showing all ${properties.length} properties`
+      showing: `Showing all ${uniqueProperties.length} properties (${zillowProperties.length} from Zillow, ${ghlProperties.length} from GHL)`
     });
 
   } catch (error) {

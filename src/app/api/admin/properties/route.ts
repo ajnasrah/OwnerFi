@@ -99,9 +99,9 @@ export async function GET(request: NextRequest) {
       orderBy('foundAt', 'desc')
     ];
 
+    // Note: Removed orderBy to avoid requiring composite index (only 5-10 properties typically)
     let propertiesConstraints: any[] = [
-      where('isActive', '==', true),
-      orderBy('updatedAt', 'desc')
+      where('isActive', '==', true)
     ];
 
     // Filter by status if specified (only for zillow_imports)

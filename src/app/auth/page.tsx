@@ -189,6 +189,9 @@ export default function AuthPage() {
                 </label>
                 <input
                   type="tel"
+                  name="tel"
+                  autoComplete="tel"
+                  inputMode="tel"
                   value={formatPhoneDisplay(phone)}
                   onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
                   placeholder="(555) 123-4567"
@@ -230,6 +233,9 @@ export default function AuthPage() {
                 </p>
                 <input
                   type="text"
+                  name="one-time-code"
+                  autoComplete="one-time-code"
+                  inputMode="numeric"
                   value={code}
                   onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                   placeholder="000000"

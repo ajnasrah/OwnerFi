@@ -4,6 +4,8 @@
 
 import { PropertyListing } from './property-schema';
 import { calculatePropertyFinancials } from './property-calculations';
+import { validateAndFixScript, ComplianceCheckResult } from './compliance-checker';
+import { Brand } from '@/config/brand-configs';
 
 export interface PropertyVideoScript {
   script: string;
@@ -15,46 +17,138 @@ export interface PropertyVideoScript {
 export interface DualPropertyVideoScripts {
   variant_30: PropertyVideoScript;
   variant_15: PropertyVideoScript;
+  compliance?: {
+    variant_30: ComplianceCheckResult;
+    variant_15: ComplianceCheckResult;
+    retryCount: number;
+  };
 }
 
 /**
  * Generate video script for a property listing using OpenAI
  * Returns both 30-sec and 15-sec variants for A/B testing
+ * NOW WITH COMPLIANCE CHECKING - validates marketing laws before video creation
  */
-export async function generatePropertyScriptWithAI(property: PropertyListing, openaiApiKey: string, language: 'en' | 'es' = 'en'): Promise<DualPropertyVideoScripts> {
+export async function generatePropertyScriptWithAI(
+  property: PropertyListing,
+  openaiApiKey: string,
+  brand: Brand = 'property',
+  language: 'en' | 'es' = 'en'
+): Promise<DualPropertyVideoScripts> {
   const prompt = buildPropertyPrompt(property);
+  let retryCount = 0;
+  const maxRetries = 3;
 
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${openaiApiKey}`
-    },
-    body: JSON.stringify({
-      model: 'gpt-4o-mini',
-      messages: [
-        {
-          role: 'system',
-          content: getPropertySystemPrompt(language)
+  while (retryCount < maxRetries) {
+    // Generate scripts with OpenAI
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${openaiApiKey}`
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          {
+            role: 'system',
+            content: getPropertySystemPrompt(language, retryCount > 0)
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        temperature: 0.85,
+        max_tokens: 1000
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`OpenAI API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const content = data.choices[0]?.message?.content || '';
+
+    // Parse initial response
+    const scripts = parsePropertyResponse(content, property);
+
+    // ==================== COMPLIANCE CHECK ====================
+    console.log(`[Compliance] Checking property scripts for brand: ${brand} (attempt ${retryCount + 1}/${maxRetries})`);
+
+    // Check 30-second variant
+    const compliance30 = await validateAndFixScript(
+      scripts.variant_30.script,
+      scripts.variant_30.caption,
+      scripts.variant_30.title,
+      brand,
+      1 // Single check, we'll handle retries at this level
+    );
+
+    // Check 15-second variant
+    const compliance15 = await validateAndFixScript(
+      scripts.variant_15.script,
+      scripts.variant_15.caption,
+      scripts.variant_15.title,
+      brand,
+      1
+    );
+
+    // If BOTH variants passed compliance
+    if (compliance30.success && compliance15.success) {
+      console.log(`[Compliance] ✅ Both variants passed compliance checks`);
+
+      return {
+        variant_30: {
+          script: compliance30.finalScript,
+          caption: compliance30.finalCaption, // Already has disclaimers appended
+          title: compliance30.finalTitle,
+          hashtags: scripts.variant_30.hashtags
         },
-        {
-          role: 'user',
-          content: prompt
+        variant_15: {
+          script: compliance15.finalScript,
+          caption: compliance15.finalCaption,
+          title: compliance15.finalTitle,
+          hashtags: scripts.variant_15.hashtags
+        },
+        compliance: {
+          variant_30: compliance30.complianceResult,
+          variant_15: compliance15.complianceResult,
+          retryCount
         }
-      ],
-      temperature: 0.85,
-      max_tokens: 1000
-    })
-  });
+      };
+    }
 
-  if (!response.ok) {
-    throw new Error(`OpenAI API error: ${response.status}`);
+    // If failed, log violations and retry
+    retryCount++;
+
+    const violations30 = compliance30.complianceResult.violations.map(v => v.phrase).join(', ');
+    const violations15 = compliance15.complianceResult.violations.map(v => v.phrase).join(', ');
+
+    console.log(`[Compliance] ❌ Attempt ${retryCount}/${maxRetries} failed`);
+    if (!compliance30.success) {
+      console.log(`[Compliance] 30-sec violations: ${violations30}`);
+    }
+    if (!compliance15.success) {
+      console.log(`[Compliance] 15-sec violations: ${violations15}`);
+    }
+
+    if (retryCount >= maxRetries) {
+      // Max retries reached - throw error to fail workflow
+      throw new Error(
+        `Compliance check failed after ${maxRetries} attempts. ` +
+        `30-sec violations: ${violations30 || 'none'}. ` +
+        `15-sec violations: ${violations15 || 'none'}. ` +
+        `Property: ${property.address}, ${property.city}`
+      );
+    }
+
+    // Loop will retry with compliance-focused prompt
   }
 
-  const data = await response.json();
-  const content = data.choices[0]?.message?.content || '';
-
-  return parsePropertyResponse(content, property);
+  // Should never reach here
+  throw new Error('Unexpected compliance check loop exit');
 }
 
 /**
@@ -374,14 +468,18 @@ export function validatePropertyForVideo(property: PropertyListing): { valid: bo
  * Get system prompt for OpenAI property video generation
  * OWNERFI — PROPERTY SHOWCASE SYSTEM (Updated with Social Media Prompt Library)
  */
-function getPropertySystemPrompt(language: 'en' | 'es' = 'en'): string {
+function getPropertySystemPrompt(language: 'en' | 'es' = 'en', complianceRetry: boolean = false): string {
   const languageInstruction = language === 'es'
     ? `\n\n🌐 LANGUAGE: SPANISH\n**CRITICAL**: Generate ALL content (SCRIPT, TITLE, CAPTION, hashtags) in natural, conversational SPANISH. Translate all CTAs, disclaimers, and engagement questions to Spanish. Use "Owner-Fy punto A Eye" for the website pronunciation. Maintain Abdullah's friendly, conversational voice in Spanish.\n`
     : '';
 
+  const complianceWarning = complianceRetry
+    ? `\n\n🚨 COMPLIANCE RETRY - PREVIOUS ATTEMPT FAILED\nYour last script violated marketing compliance laws. Focus on:\n- Remove ALL directive language (should/must/need to) - use "could/might/consider" instead\n- Remove ALL guarantees and superlatives (best/guaranteed/perfect) - use factual statements only\n- Remove ALL urgency tactics (act now/limited time) - focus on education\n- Remove ALL legal/financial advice language - this is educational content only\n- Keep tone soft, consultative, and factual - not pushy or salesy\n**CRITICAL**: If this retry fails compliance, the workflow will be TERMINATED.\n`
+    : '';
+
   return `SYSTEM ROLE:
 You are the Social Media Director AI for Abdullah's brand network. You run inside an automated CLI (VS Code) environment using the OpenAI GPT model (currently gpt-4o-mini). Your mission is to generate ready-to-post video scripts for OwnerFi property showcases.
-${languageInstruction}
+${languageInstruction}${complianceWarning}
 BRAND: OWNERFI — PROPERTY SHOWCASE SYSTEM
 Purpose: Showcase real owner-finance or creative deals.
 Voice: Abdullah — friendly, goofy, confident, conversational truth-teller.

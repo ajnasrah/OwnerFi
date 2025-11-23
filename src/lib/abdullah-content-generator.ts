@@ -1,7 +1,10 @@
 /**
  * Abdullah Personal Brand Content Generator
  * Generates daily personal brand videos (Mindset, Business, Money, Freedom, Story)
+ * NOW WITH COMPLIANCE CHECKING - validates marketing laws before video creation
  */
+
+import { validateAndFixScript } from './compliance-checker';
 
 export interface AbdullahVideo {
   theme: string;
@@ -114,51 +117,98 @@ Return ONLY a JSON object with this EXACT format:
 
 Make it unique, valuable, and optimized for short-form video virality.`;
 
-  console.log(`🤖 Calling OpenAI for ${theme} script...`);
+  const maxRetries = 3;
+  let retryCount = 0;
 
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      model: 'gpt-4-turbo-preview',
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt }
-      ],
-      temperature: 0.9,
-      response_format: { type: 'json_object' }
-    })
-  });
+  while (retryCount < maxRetries) {
+    // Add compliance warning on retries
+    const complianceWarning = retryCount > 0
+      ? `\n\n🚨 COMPLIANCE RETRY ${retryCount}/${maxRetries} - PREVIOUS ATTEMPT VIOLATED MARKETING LAWS\nYour last script violated compliance. CRITICAL FIXES NEEDED:\n- NO directive language (should/must/need to) - use "might/could/consider"\n- NO financial guarantees (guaranteed returns/easy money) - use "possible/may/requires work"\n- NO get-rich-quick language (overnight success/passive income while you sleep)\n- NO investment advice - educational/motivational content only\n- Soft, consultative tone focused on work/effort - not pushy promises\n**If this retry fails, workflow will TERMINATE.**\n`
+      : '';
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
+    console.log(`🤖 Calling OpenAI for ${theme} script (attempt ${retryCount + 1}/${maxRetries})...`);
+
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'gpt-4-turbo-preview',
+        messages: [
+          { role: 'system', content: systemPrompt + complianceWarning },
+          { role: 'user', content: userPrompt }
+        ],
+        temperature: 0.9,
+        response_format: { type: 'json_object' }
+      })
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
+    }
+
+    const data = await response.json();
+    const content = data.choices[0].message.content;
+
+    console.log(`✅ OpenAI response received`);
+
+    // Parse JSON response
+    let parsed;
+    try {
+      parsed = JSON.parse(content);
+    } catch (e) {
+      console.error('Failed to parse OpenAI response:', content);
+      throw new Error('OpenAI returned invalid JSON');
+    }
+
+    // ==================== COMPLIANCE CHECK ====================
+    console.log(`[Compliance] Checking Abdullah ${theme} script (attempt ${retryCount + 1}/${maxRetries})`);
+
+    const complianceResult = await validateAndFixScript(
+      parsed.script,
+      parsed.caption,
+      parsed.title,
+      'abdullah',
+      1 // Single check, we handle retries here
+    );
+
+    // If passed compliance
+    if (complianceResult.success) {
+      console.log(`[Compliance] ✅ Abdullah ${theme} script passed compliance`);
+
+      return {
+        theme,
+        script: complianceResult.finalScript,
+        title: complianceResult.finalTitle,
+        caption: complianceResult.finalCaption, // Already has disclaimers appended
+        hook: parsed.hook || complianceResult.finalScript.split('.')[0]
+      };
+    }
+
+    // Failed compliance - retry
+    retryCount++;
+
+    const violations = complianceResult.complianceResult.violations
+      .map(v => `${v.phrase} (${v.type})`)
+      .join(', ');
+
+    console.log(`[Compliance] ❌ Attempt ${retryCount}/${maxRetries} failed: ${violations}`);
+
+    if (retryCount >= maxRetries) {
+      throw new Error(
+        `Compliance check failed after ${maxRetries} attempts for Abdullah ${theme} content. ` +
+        `Violations: ${violations}`
+      );
+    }
+
+    // Loop will retry with compliance warning added to system prompt
   }
 
-  const data = await response.json();
-  const content = data.choices[0].message.content;
-
-  console.log(`✅ OpenAI response received`);
-
-  // Parse JSON response
-  let parsed;
-  try {
-    parsed = JSON.parse(content);
-  } catch (e) {
-    console.error('Failed to parse OpenAI response:', content);
-    throw new Error('OpenAI returned invalid JSON');
-  }
-
-  return {
-    theme,
-    script: parsed.script,
-    title: parsed.title,
-    caption: parsed.caption,
-    hook: parsed.hook || parsed.script.split('.')[0]
-  };
+  // Should never reach here
+  throw new Error('Unexpected script generation loop exit');
 }
 
 /**

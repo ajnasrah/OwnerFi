@@ -1,5 +1,6 @@
 // Complete Viral Video Workflow: RSS → Script → Video → Captions → Social Post
 // This is the ONE endpoint to trigger the entire A-Z process
+// NOW WITH COMPLIANCE CHECKING - validates marketing laws before video creation
 
 import { NextRequest, NextResponse } from 'next/server';
 import { scheduleVideoPost } from '@/lib/late-api'; // Switched from Metricool to Late
@@ -7,6 +8,8 @@ import { circuitBreakers, fetchWithTimeout, TIMEOUTS } from '@/lib/api-utils';
 import { CompleteWorkflowRequestSchema, safeParse } from '@/lib/validation-schemas';
 import { ERROR_MESSAGES } from '@/config/constants';
 import { generateCaptionAndComment } from '@/lib/caption-intelligence';
+import { validateAndFixScript } from '@/lib/compliance-checker';
+import { Brand } from '@/config/brand-configs';
 
 const HEYGEN_API_KEY = process.env.HEYGEN_API_KEY;
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
@@ -734,6 +737,7 @@ TOPIC: Main topic (2-3 words)`
 }
 
 // Helper: Generate viral content with OpenAI
+// NOW WITH COMPLIANCE CHECKING - validates marketing laws before returning script
 async function generateViralContent(content: string, brand: string): Promise<{ script: string; title: string; caption: string }> {
   if (!OPENAI_API_KEY) {
     return {
@@ -746,15 +750,24 @@ async function generateViralContent(content: string, brand: string): Promise<{ s
   // Sanitize content to prevent prompt injection
   const sanitizedContent = sanitizeContent(content);
 
-  // Get brand-specific prompt
-  let systemPrompt: string;
-  if (brand === 'vassdistro') {
-    systemPrompt = getVassDistroPrompt();
-  } else if (brand === 'carz') {
-    systemPrompt = getCarzPrompt();
-  } else {
-    systemPrompt = getOwnerFiPrompt();
-  }
+  const maxRetries = 3;
+  let retryCount = 0;
+
+  while (retryCount < maxRetries) {
+    // Add compliance warning on retries
+    const complianceWarning = retryCount > 0
+      ? `\n\n🚨 COMPLIANCE RETRY ${retryCount}/${maxRetries} - PREVIOUS ATTEMPT VIOLATED MARKETING LAWS\nYour last script violated compliance. CRITICAL FIXES NEEDED:\n- NO directive language (should/must/need to) - use "might/could/consider"\n- NO false claims (guaranteed/best/perfect) - use factual statements only\n- NO urgency tactics (act now/limited time) - focus on education\n- NO legal/financial advice - educational content only\n- Soft, consultative tone - not pushy or aggressive\n**If this retry fails, workflow will TERMINATE.**\n`
+      : '';
+
+    // Get brand-specific prompt
+    let systemPrompt: string;
+    if (brand === 'vassdistro') {
+      systemPrompt = getVassDistroPrompt() + complianceWarning;
+    } else if (brand === 'carz') {
+      systemPrompt = getCarzPrompt() + complianceWarning;
+    } else {
+      systemPrompt = getOwnerFiPrompt() + complianceWarning;
+    }
 
   const response = await circuitBreakers.openai.execute(async () => {
     return await fetchWithTimeout(
@@ -877,11 +890,61 @@ async function generateViralContent(content: string, brand: string): Promise<{ s
     caption = `Dreaming of owning your first home but not sure where to start? You don't need perfect credit — you just need the right strategy. Owner financing can open the door to your future! #Homeownership #OwnerFi #RealEstate`;
   }
 
-  return {
-    script,
-    title,
-    caption
-  };
+    // ==================== COMPLIANCE CHECK ====================
+    console.log(`[Compliance] Checking article script for brand: ${brand} (attempt ${retryCount + 1}/${maxRetries})`);
+
+    try {
+      const complianceResult = await validateAndFixScript(
+        script,
+        caption,
+        title,
+        brand as Brand,
+        1 // Single check, we handle retries here
+      );
+
+      // If passed compliance
+      if (complianceResult.success) {
+        console.log(`[Compliance] ✅ Article script passed compliance check`);
+
+        return {
+          script: complianceResult.finalScript,
+          title: complianceResult.finalTitle,
+          caption: complianceResult.finalCaption // Already has disclaimers appended
+        };
+      }
+
+      // Failed compliance - retry
+      retryCount++;
+
+      const violations = complianceResult.complianceResult.violations
+        .map(v => `${v.phrase} (${v.type})`)
+        .join(', ');
+
+      console.log(`[Compliance] ❌ Attempt ${retryCount}/${maxRetries} failed: ${violations}`);
+
+      if (retryCount >= maxRetries) {
+        throw new Error(
+          `Compliance check failed after ${maxRetries} attempts for ${brand} article video. ` +
+          `Violations: ${violations}`
+        );
+      }
+
+      // Loop will retry with compliance warning added to system prompt
+
+    } catch (complianceError) {
+      // If compliance check itself failed (not just violations detected)
+      if (retryCount >= maxRetries - 1) {
+        console.error('[Compliance] Compliance check error after max retries:', complianceError);
+        throw complianceError;
+      }
+
+      retryCount++;
+      console.error(`[Compliance] Error on attempt ${retryCount}/${maxRetries}, retrying:`, complianceError);
+    }
+  }
+
+  // Should never reach here
+  throw new Error('Unexpected script generation loop exit');
 }
 
 // Helper: Generate HeyGen video

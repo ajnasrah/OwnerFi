@@ -1,11 +1,14 @@
 /**
  * Benefit Video Generator - BUYER-ONLY
  * Generates HeyGen avatar videos for owner financing buyer benefits
+ * NOW WITH COMPLIANCE CHECKING - validates marketing laws before video creation
  */
 
 import { BenefitPoint } from '@/lib/benefit-content';
 import { circuitBreakers, fetchWithTimeout, TIMEOUTS } from '@/lib/api-utils';
 import { getBrandWebhookUrl } from '@/lib/brand-utils';
+import { checkScriptCompliance, appendDisclaimers, ComplianceCheckResult } from './compliance-checker';
+import { Brand } from '@/config/brand-configs';
 
 const HEYGEN_API_URL = 'https://api.heygen.com/v2/video/generate';
 
@@ -61,8 +64,9 @@ export class BenefitVideoGenerator {
 
   /**
    * Generate AI video script using OpenAI
+   * NOW WITH COMPLIANCE CHECKING - validates marketing laws before returning script
    */
-  private async generateScript(benefit: BenefitPoint): Promise<string> {
+  private async generateScript(benefit: BenefitPoint, brand: Brand = 'benefit'): Promise<string> {
     const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
     if (!OPENAI_API_KEY) {
@@ -71,6 +75,9 @@ export class BenefitVideoGenerator {
       const fallback = `Think you can't buy a home? ${benefit.shortDescription} See what's possible at OwnerFi.ai`;
       return fallback;
     }
+
+    const maxRetries = 3;
+    let retryCount = 0;
 
     // Daily themes with emotion pairing for variety
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -202,67 +209,112 @@ Think you need perfect credit to buy a home? That's the biggest myth out there. 
 Hashtags (for captions): #OwnerFi #CreditMyths #BuyWithoutBanks #RealEstate
 Disclaimer: "Educational only. No financing guarantees."`;
 
-    try {
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${OPENAI_API_KEY}`
-        },
-        body: JSON.stringify({
-          model: 'gpt-4o-mini',
-          messages: [
-            {
-              role: 'system',
-              content: 'You are the Social Media Director AI for Abdullah\'s brand network. You run inside an automated CLI (VS Code) environment using the OpenAI GPT model. Your mission is to generate ready-to-post video scripts for OwnerFi benefit education videos. Voice: Abdullah — relatable, kind, motivating, friendly, goofy, confident truth-teller. Never promise, guarantee, or imply financing approval — keep it hopeful and factual. Always pronounce OwnerFi.ai as "Owner-Fy dot A Eye".'
-            },
-            {
-              role: 'user',
-              content: prompt
-            }
-          ],
-          temperature: 0.85,
-          max_tokens: 300
-        })
-      });
+    while (retryCount < maxRetries) {
+      try {
+        // Add compliance warning on retries
+        const complianceWarning = retryCount > 0
+          ? `\n\n🚨 COMPLIANCE RETRY ${retryCount}/${maxRetries} - PREVIOUS ATTEMPT VIOLATED MARKETING LAWS\nYour last script violated compliance. CRITICAL FIXES NEEDED:\n- NO directive language (should/must/need to) - use "might/could/consider"\n- NO guarantees (guaranteed/promise/ensure) - use "possible/may/could"\n- NO urgency tactics (act now/limited time) - focus on education\n- NO legal/financial advice - educational content only\n- Soft, consultative tone - not pushy or aggressive\n**If this retry fails, workflow will TERMINATE.**\n`
+          : '';
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ OpenAI API error:', errorText);
-        throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${OPENAI_API_KEY}`
+          },
+          body: JSON.stringify({
+            model: 'gpt-4o-mini',
+            messages: [
+              {
+                role: 'system',
+                content: 'You are the Social Media Director AI for Abdullah\'s brand network. You run inside an automated CLI (VS Code) environment using the OpenAI GPT model. Your mission is to generate ready-to-post video scripts for OwnerFi benefit education videos. Voice: Abdullah — relatable, kind, motivating, friendly, goofy, confident truth-teller. Never promise, guarantee, or imply financing approval — keep it hopeful and factual. Always pronounce OwnerFi.ai as "Owner-Fy dot A Eye".' + complianceWarning
+              },
+              {
+                role: 'user',
+                content: prompt
+              }
+            ],
+            temperature: 0.85,
+            max_tokens: 300
+          })
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('❌ OpenAI API error:', errorText);
+          throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
+        }
+
+        const data = await response.json();
+        const script = data.choices[0]?.message?.content?.trim();
+
+        if (!script) {
+          throw new Error('OpenAI returned empty script');
+        }
+
+        // Validate the generated script
+        const validation = this.validateScript(script);
+        if (!validation.valid) {
+          throw new Error(`Invalid script: ${validation.reason}`);
+        }
+
+        // ==================== COMPLIANCE CHECK ====================
+        console.log(`[Compliance] Checking benefit script for brand: ${brand} (attempt ${retryCount + 1}/${maxRetries})`);
+
+        const caption = `Educational content about ${benefit.title}. #OwnerFi #Homeownership #RealEstate`;
+        const title = benefit.title;
+
+        const complianceResult = await checkScriptCompliance(script, caption, title, brand);
+
+        // If passed compliance
+        if (complianceResult.passed) {
+          console.log(`[Compliance] ✅ Script passed compliance check`);
+          console.log(`✅ Generated script (${today} - ${todayTheme.theme}):`);
+          console.log(`   🎭 Emotion: ${todayTheme.emotion}`);
+          console.log(`   📝 Script: ${script.substring(0, 100)}...`);
+          console.log(`   📊 Word count: ${script.split(/\s+/).length} words`);
+          return script;
+        }
+
+        // Failed compliance - retry
+        retryCount++;
+
+        const violations = complianceResult.violations.map(v => `${v.phrase} (${v.type})`).join(', ');
+        console.log(`[Compliance] ❌ Attempt ${retryCount}/${maxRetries} failed: ${violations}`);
+
+        if (retryCount >= maxRetries) {
+          throw new Error(
+            `Compliance check failed after ${maxRetries} attempts. ` +
+            `Violations: ${violations}. ` +
+            `Benefit: ${benefit.title}`
+          );
+        }
+
+        // Loop will retry with compliance warning added to system prompt
+
+      } catch (error) {
+        // If this was the last retry, re-throw
+        if (retryCount >= maxRetries - 1) {
+          console.error('⚠️  OpenAI script generation failed after all retries:', error);
+          const fallback = `Think you can't buy a home? ${benefit.shortDescription} See what's possible at OwnerFi.ai`;
+
+          // Validate fallback too
+          const validation = this.validateScript(fallback);
+          if (!validation.valid) {
+            throw new Error(`Even fallback script is invalid: ${validation.reason}`);
+          }
+
+          return fallback;
+        }
+
+        // Otherwise, increment retry and continue loop
+        retryCount++;
+        console.error(`⚠️  Attempt ${retryCount}/${maxRetries} failed, retrying:`, error);
       }
-
-      const data = await response.json();
-      const script = data.choices[0]?.message?.content?.trim();
-
-      if (!script) {
-        throw new Error('OpenAI returned empty script');
-      }
-
-      // Validate the generated script
-      const validation = this.validateScript(script);
-      if (!validation.valid) {
-        throw new Error(`Invalid script: ${validation.reason}`);
-      }
-
-      console.log(`✅ Generated script (${today} - ${todayTheme.theme}):`);
-      console.log(`   🎭 Emotion: ${todayTheme.emotion}`);
-      console.log(`   📝 Script: ${script.substring(0, 100)}...`);
-      console.log(`   📊 Word count: ${script.split(/\s+/).length} words`);
-      return script;
-
-    } catch (error) {
-      console.error('⚠️  OpenAI script generation failed, using fallback:', error);
-      const fallback = `Think you can't buy a home? ${benefit.shortDescription} See what's possible at OwnerFi.ai`;
-
-      // Validate fallback too
-      const validation = this.validateScript(fallback);
-      if (!validation.valid) {
-        throw new Error(`Even fallback script is invalid: ${validation.reason}`);
-      }
-
-      return fallback;
     }
+
+    // Should never reach here
+    throw new Error('Unexpected script generation loop exit');
   }
 
   /**

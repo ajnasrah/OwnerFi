@@ -1,5 +1,7 @@
 // GPT-4 Script Generator for Podcast Episodes
+// NOW WITH COMPLIANCE CHECKING - validates marketing laws before returning script
 import OpenAI from 'openai';
+import { checkScriptCompliance } from '../../src/lib/compliance-checker';
 
 interface GuestProfile {
   id: string;
@@ -278,6 +280,37 @@ Disclaimer: "For entertainment and reflection only."`
       return sum + pair.question.split(' ').length + pair.answer.split(' ').length;
     }, 0);
     const estimatedDuration = Math.ceil((totalWords / 150) * 60);
+
+    // ==================== COMPLIANCE CHECK ====================
+    console.log('[Compliance] Checking podcast script...');
+
+    // Check the full dialogue for compliance
+    const complianceResult = await checkScriptCompliance(
+      fullDialogue,
+      `Podcast episode about ${topic}. #Podcast #RealTalk #AbdullahPodcast`,
+      `${guest.name} on ${this.formatTopic(topic)}`,
+      'podcast'
+    );
+
+    // Log compliance results
+    if (complianceResult.passed) {
+      console.log('[Compliance] ✅ Podcast script passed compliance check');
+    } else {
+      console.warn('[Compliance] ⚠️  Podcast script has compliance warnings:');
+      complianceResult.violations.forEach(v => {
+        console.warn(`   - ${v.severity.toUpperCase()}: ${v.phrase} (${v.type})`);
+        console.warn(`     ${v.explanation}`);
+      });
+
+      // For podcasts, we'll allow warnings but block critical violations
+      const criticalViolations = complianceResult.violations.filter(v => v.severity === 'critical');
+      if (criticalViolations.length > 0) {
+        const violations = criticalViolations.map(v => `${v.phrase} (${v.type})`).join(', ');
+        throw new Error(
+          `Podcast script has critical compliance violations that must be fixed: ${violations}`
+        );
+      }
+    }
 
     const script: PodcastScript = {
       episode_title: `${guest.name} on ${this.formatTopic(topic)}`,

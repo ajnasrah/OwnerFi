@@ -37,7 +37,7 @@ export default function LogoutSuccess() {
           <Button variant="primary" size="lg" href="/" className="w-full">
             Return to Home
           </Button>
-          <Button variant="outline" size="lg" href="/auth/signin" className="w-full">
+          <Button variant="outline" size="lg" href="/auth" className="w-full">
             Sign In Again
           </Button>
         </div>

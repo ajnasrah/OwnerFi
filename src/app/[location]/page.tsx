@@ -295,7 +295,7 @@ export default async function LocationPage({ params }: { params: Promise<{ locat
             <nav className="flex items-center gap-4">
               <Link href="/" className="text-slate-300 hover:text-white text-sm">Home</Link>
               <Link href="/how-owner-finance-works" className="text-slate-300 hover:text-white text-sm">How It Works</Link>
-              <Link href="/signup" className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium">
+              <Link href="/auth" className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium">
                 Browse Properties
               </Link>
             </nav>
@@ -325,7 +325,7 @@ export default async function LocationPage({ params }: { params: Promise<{ locat
               {/* CTA Buttons */}
               <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
                 <Link
-                  href="/signup"
+                  href="/auth"
                   className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all"
                 >
                   Browse {locationData.displayName} Properties
@@ -483,7 +483,7 @@ export default async function LocationPage({ params }: { params: Promise<{ locat
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link
-                  href="/signup"
+                  href="/auth"
                   className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all"
                 >
                   Browse {locationData.displayName} Properties

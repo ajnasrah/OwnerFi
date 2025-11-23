@@ -75,7 +75,7 @@ export default function SignOutPage() {
               <p className="text-sm text-slate-400">
                 Need to sign back in?{' '}
                 <Link
-                  href="/auth/signin"
+                  href="/auth"
                   className="text-emerald-400 hover:text-emerald-300 font-bold underline decoration-2 underline-offset-2 transition-colors"
                 >
                   Click here

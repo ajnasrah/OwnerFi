@@ -60,7 +60,7 @@ export default function SignIn() {
             <p className="text-sm text-white font-normal mb-3">Sign in to access your property matches</p>
             <p className="text-xs text-white">
               Don&apos;t have an account?{' '}
-              <Link href="/signup" className="text-emerald-400 hover:text-emerald-300 font-semibold transition-colors">
+              <Link href="/auth" className="text-emerald-400 hover:text-emerald-300 font-semibold transition-colors">
                 Sign Up
               </Link>
             </p>

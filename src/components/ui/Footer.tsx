@@ -29,7 +29,7 @@ export function Footer({ className = '' }: FooterProps) {
         <Link href="/terms" className="text-accent-light hover:text-surface-bg transition-colors text-base">
           Terms
         </Link>
-        <Link href="/signup" className="text-accent-light hover:text-surface-bg transition-colors text-base">
+        <Link href="/auth" className="text-accent-light hover:text-surface-bg transition-colors text-base">
           Get Started
         </Link>
       </div>

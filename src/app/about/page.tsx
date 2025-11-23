@@ -210,14 +210,14 @@ export default function AboutPage() {
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Link
-              href="/signup"
+              href="/auth"
               className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white py-4 px-8 rounded-xl font-semibold text-lg transition-all duration-300 hover:scale-[1.02] shadow-lg"
             >
               Find Your Dream Home
             </Link>
             
             <Link
-              href="/realtor-signup"
+              href="/auth"
               className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 text-white py-4 px-8 rounded-xl font-semibold text-lg transition-all duration-300 hover:scale-[1.02] shadow-lg"
             >
               Start Getting Leads

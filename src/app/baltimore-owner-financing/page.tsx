@@ -163,7 +163,7 @@ export default async function OwnerFinancingBaltimore() {
               </div>
             </div>
 
-            <Link href="/signup">
+            <Link href="/auth">
               <button className="bg-gradient-to-r from-orange-600 to-amber-600 text-white px-8 py-4 rounded-xl font-semibold text-lg hover:from-orange-700 hover:to-amber-700 transition-all transform hover:scale-105 shadow-lg">
                 Browse Baltimore Properties →
               </button>
@@ -181,12 +181,12 @@ export default async function OwnerFinancingBaltimore() {
                 No banks needed, flexible terms available.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link href="/signup">
+                <Link href="/auth">
                   <button className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-500 hover:to-orange-400 text-white py-4 px-8 rounded-xl font-semibold text-lg transition-all duration-300 hover:scale-[1.02] shadow-lg hover:shadow-xl">
                     🏠 Browse Baltimore Properties
                   </button>
                 </Link>
-                <Link href="/signup">
+                <Link href="/auth">
                   <button className="bg-white/10 backdrop-blur-sm border-2 border-white/30 hover:bg-white/20 text-white py-4 px-8 rounded-xl font-semibold text-lg transition-all duration-300 hover:scale-[1.02]">
                     Get Pre-Qualified Today
                   </button>
@@ -381,7 +381,7 @@ export default async function OwnerFinancingBaltimore() {
               Better than rent to own - get immediate ownership with owner financing
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/signup">
+              <Link href="/auth">
                 <button className="bg-white text-orange-600 px-8 py-4 rounded-xl font-semibold hover:bg-orange-50 transition-all">
                   Search Baltimore Properties
                 </button>

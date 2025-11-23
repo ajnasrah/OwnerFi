@@ -123,13 +123,13 @@ export default function RealtorSignup() {
             <div className="space-y-1 text-sm">
               <p className="text-white">
                 Already have an account?{' '}
-                <Link href="/auth/signin" className="text-emerald-400 hover:text-emerald-300 font-semibold transition-colors">
+                <Link href="/auth" className="text-emerald-400 hover:text-emerald-300 font-semibold transition-colors">
                   Sign In
                 </Link>
               </p>
               <p className="text-xs text-white">
                 Looking for a home instead?{' '}
-                <Link href="/signup" className="text-blue-400 hover:text-blue-300 font-semibold transition-colors">
+                <Link href="/auth" className="text-blue-400 hover:text-blue-300 font-semibold transition-colors">
                   Find Your Home
                 </Link>
               </p>

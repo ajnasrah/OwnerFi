@@ -164,7 +164,7 @@ export default async function OwnerFinancingSanAntonio() {
               </div>
             </div>
 
-            <Link href="/signup">
+            <Link href="/auth">
               <button className="bg-gradient-to-r from-red-600 to-orange-600 text-white px-8 py-4 rounded-xl font-semibold text-lg hover:from-red-700 hover:to-orange-700 transition-all transform hover:scale-105 shadow-lg">
                 Browse San Antonio Properties →
               </button>
@@ -458,7 +458,7 @@ export default async function OwnerFinancingSanAntonio() {
               Better than rent to own - get immediate ownership with owner financing
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/signup">
+              <Link href="/auth">
                 <button className="bg-white text-red-600 px-8 py-4 rounded-xl font-semibold hover:bg-red-50 transition-all">
                   Search San Antonio Properties
                 </button>

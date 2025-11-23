@@ -101,7 +101,7 @@ function ResetPasswordContent() {
           <p className="text-gray-600 mb-6">
             Your password has been successfully reset. You will be redirected to the sign-in page.
           </p>
-          <Button variant="primary" href="/auth/signin" className="w-full">
+          <Button variant="primary" href="/auth" className="w-full">
             Sign In Now
           </Button>
         </div>
@@ -166,7 +166,7 @@ function ResetPasswordContent() {
           </Button>
 
           <div className="text-center">
-            <Link href="/auth/signin" className="text-blue-600 hover:text-blue-700 text-sm">
+            <Link href="/auth" className="text-blue-600 hover:text-blue-700 text-sm">
               ← Back to Sign In
             </Link>
           </div>

@@ -248,7 +248,7 @@ export default function AuthSetup() {
                   <Link href="/privacy" className="text-emerald-400 hover:text-emerald-300 font-semibold underline" target="_blank">
                     Privacy Policy
                   </Link>
-                  {', and I consent to receive text messages and calls from OwnerFi. Message rates may apply.'}
+                  {', and I consent to receive text messages and calls from OwnerFi and connected realtors. Message rates may apply.'}
                 </label>
               </div>
             </div>

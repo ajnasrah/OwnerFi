@@ -20,6 +20,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    console.log('🔍 [CHECK-PHONE] Searching for phone:', phone);
+
     // Check if user exists with this phone number
     const usersQuery = query(
       collection(db, 'users'),
@@ -27,13 +29,17 @@ export async function POST(request: NextRequest) {
     );
     const userDocs = await getDocs(usersQuery);
 
+    console.log('🔍 [CHECK-PHONE] Found', userDocs.size, 'users with phone:', phone);
+
     if (userDocs.empty) {
+      console.log('❌ [CHECK-PHONE] No user found with phone:', phone);
       return NextResponse.json({
         exists: false
       });
     }
 
     const userData = userDocs.docs[0].data();
+    console.log('✅ [CHECK-PHONE] User exists:', { userId: userDocs.docs[0].id, role: userData.role });
 
     return NextResponse.json({
       exists: true,
@@ -42,7 +48,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error checking phone:', error);
+    console.error('❌ [CHECK-PHONE] Error:', error);
     return NextResponse.json(
       { error: 'Failed to check phone number' },
       { status: 500 }

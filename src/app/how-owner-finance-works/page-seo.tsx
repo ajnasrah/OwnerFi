@@ -203,7 +203,7 @@ export default function HowOwnerFinanceWorks() {
           <div className="mt-12 p-6 bg-slate-800/50 rounded-xl">
             <h2 className="text-xl font-bold text-white mb-4">Related Resources</h2>
             <div className="grid md:grid-cols-2 gap-4">
-              <Link href="/signup" className="text-blue-400 hover:text-blue-300">
+              <Link href="/auth" className="text-blue-400 hover:text-blue-300">
                 → Browse Owner Financed Properties
               </Link>
               <Link href="/about" className="text-blue-400 hover:text-blue-300">
@@ -228,13 +228,13 @@ export default function HowOwnerFinanceWorks() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
-                href="/signup"
+                href="/auth"
                 className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white py-3 px-8 rounded-xl font-semibold transition-all duration-300 hover:scale-105 shadow-lg"
               >
                 Browse Properties
               </Link>
               <Link
-                href="/realtor-signup"
+                href="/auth"
                 className="bg-transparent border-2 border-blue-400 hover:bg-blue-400/10 text-blue-400 py-3 px-8 rounded-xl font-semibold transition-all duration-300 hover:scale-105"
               >
                 I'm a Real Estate Agent

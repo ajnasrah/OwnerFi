@@ -128,7 +128,7 @@ export default function SignUp() {
           <p className="text-slate-600 text-lg mb-4">Skip the bank. Buy direct.</p>
           <p className="text-sm text-slate-500">
             Already have an account?{' '}
-            <Link href="/auth/signin" className="text-emerald-600 hover:text-emerald-700 font-semibold transition-colors">
+            <Link href="/auth" className="text-emerald-600 hover:text-emerald-700 font-semibold transition-colors">
               Sign in
             </Link>
           </p>
@@ -268,7 +268,7 @@ export default function SignUp() {
         <div className="mt-6 text-center">
           <p className="text-sm text-slate-600">
             Real estate professional?{' '}
-            <Link href="/realtor-signup" className="text-emerald-600 hover:text-emerald-700 font-semibold transition-colors">
+            <Link href="/auth" className="text-emerald-600 hover:text-emerald-700 font-semibold transition-colors">
               Join as a Realtor
             </Link>
           </p>

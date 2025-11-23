@@ -142,7 +142,7 @@ export default function RentToOwnHomes() {
             </Link>
             <nav className="flex items-center gap-4">
               <Link href="/how-owner-finance-works" className="text-slate-300 hover:text-white text-sm">How It Works</Link>
-              <Link href="/signup" className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium">
+              <Link href="/auth" className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium">
                 Get Started
               </Link>
             </nav>
@@ -170,7 +170,7 @@ export default function RentToOwnHomes() {
                       placeholder="Enter city or state..."
                       className="flex-1 bg-slate-800 text-white px-6 py-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400"
                     />
-                    <Link href="/signup" className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-4 rounded-xl font-semibold transition-all">
+                    <Link href="/auth" className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-4 rounded-xl font-semibold transition-all">
                       Search Properties
                     </Link>
                   </div>
@@ -399,7 +399,7 @@ export default function RentToOwnHomes() {
                 Browse thousands of owner financed and rent-to-own properties. No bank needed, bad credit OK.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link href="/signup" className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all">
+                <Link href="/auth" className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all">
                   Browse All Properties
                 </Link>
                 <Link href="/how-owner-finance-works" className="bg-slate-700 hover:bg-slate-600 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all">

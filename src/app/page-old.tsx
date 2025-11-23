@@ -54,7 +54,7 @@ export default function HomePage() {
             </Link>
           ) : (
             <Link
-              href="/auth/signin"
+              href="/auth"
               className="text-slate-300 hover:text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
             >
               Sign In
@@ -77,14 +77,14 @@ export default function HomePage() {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '2rem' }}>
               <Link
-                href="/signup"
+                href="/auth"
                 className="w-full block bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-300 hover:scale-[1.02] shadow-lg hover:shadow-xl"
               >
                 Find Your Dream Home
               </Link>
 
               <Link
-                href="/realtor-signup"
+                href="/auth"
                 className="w-full block bg-transparent border-2 border-slate-500 hover:border-slate-400 hover:bg-slate-700/30 text-white py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-300 hover:scale-[1.02]"
               >
                 I&apos;m a Real Estate Agent
@@ -287,7 +287,7 @@ export default function HomePage() {
               
               <div className="text-center">
                 <Link
-                  href="/signup"
+                  href="/auth"
                   className="inline-block bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white py-3 px-6 rounded-xl font-semibold transition-all duration-300 hover:scale-[1.05] shadow-lg"
                 >
                   Find My Dream Home
@@ -339,7 +339,7 @@ export default function HomePage() {
               
               <div className="text-center">
                 <Link
-                  href="/realtor-signup"
+                  href="/auth"
                   className="inline-block bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 text-white py-3 px-6 rounded-xl font-semibold transition-all duration-300 hover:scale-[1.05] shadow-lg"
                 >
                   Start Getting Leads

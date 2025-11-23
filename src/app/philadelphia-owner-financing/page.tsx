@@ -164,7 +164,7 @@ export default async function OwnerFinancingPhiladelphia() {
               </div>
             </div>
 
-            <Link href="/signup">
+            <Link href="/auth">
               <button className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-4 rounded-xl font-semibold text-lg hover:from-blue-700 hover:to-indigo-700 transition-all transform hover:scale-105 shadow-lg">
                 Browse Philadelphia Properties →
               </button>
@@ -458,7 +458,7 @@ export default async function OwnerFinancingPhiladelphia() {
               Better than rent to own - get immediate ownership with owner financing
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/signup">
+              <Link href="/auth">
                 <button className="bg-white text-blue-600 px-8 py-4 rounded-xl font-semibold hover:bg-blue-50 transition-all">
                   Search Philadelphia Properties
                 </button>

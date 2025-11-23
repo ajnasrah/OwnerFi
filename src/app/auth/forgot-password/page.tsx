@@ -51,7 +51,7 @@ export default function ForgotPassword() {
             </p>
             <div className="space-y-4">
               <a 
-                href="/auth/signin"
+                href="/auth"
                 className="w-full bg-blue-600 text-white py-4 px-4 rounded-2xl hover:bg-blue-700 transition-colors font-semibold text-lg shadow-lg transform active:scale-95 flex items-center justify-center"
               >
                 Return to Sign In
@@ -119,7 +119,7 @@ export default function ForgotPassword() {
           </button>
 
           <div className="text-center">
-            <Link href="/auth/signin" className="text-blue-600 hover:text-blue-700 font-medium text-sm">
+            <Link href="/auth" className="text-blue-600 hover:text-blue-700 font-medium text-sm">
               ← Back to Sign In
             </Link>
           </div>

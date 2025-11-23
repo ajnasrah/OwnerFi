@@ -46,7 +46,7 @@ export function HomePageContent({ hasSession }: HomePageContentProps) {
                 </Link>
               ) : (
                 <Link
-                  href="/auth/signin"
+                  href="/auth"
                   className="text-slate-300 hover:text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
                 >
                   {t.nav.signIn}
@@ -84,7 +84,7 @@ export function HomePageContent({ hasSession }: HomePageContentProps) {
                 {/* CTA Buttons - Large and Prominent */}
                 <div className="flex flex-col gap-3 mb-6 max-w-md mx-auto lg:mx-0">
                   <Link
-                    href="/signup"
+                    href="/auth"
                     className="group bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white px-6 py-3.5 rounded-xl font-bold text-base transition-all duration-300 hover:scale-[1.02] shadow-xl hover:shadow-2xl text-center flex items-center justify-center gap-2"
                     data-event="cta_click"
                     data-location="hero"

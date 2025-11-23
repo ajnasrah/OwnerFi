@@ -176,7 +176,7 @@ export default async function BadCreditHomeBuying() {
               </p>
             </div>
 
-            <Link href="/signup">
+            <Link href="/auth">
               <button className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-8 py-4 rounded-xl font-semibold text-lg hover:from-indigo-700 hover:to-purple-700 transition-all transform hover:scale-105 shadow-lg">
                 Find Credit-Flexible Properties →
               </button>
@@ -536,7 +536,7 @@ export default async function BadCreditHomeBuying() {
               Join thousands who've achieved homeownership despite credit challenges
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/signup">
+              <Link href="/auth">
                 <button className="bg-white text-indigo-600 px-8 py-4 rounded-xl font-semibold hover:bg-indigo-50 transition-all">
                   Find Credit-Flexible Homes
                 </button>

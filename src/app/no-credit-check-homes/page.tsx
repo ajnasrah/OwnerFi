@@ -87,7 +87,7 @@ export default function NoCreditCheckHomes() {
             </Link>
             <nav className="flex items-center gap-4">
               <Link href="/how-owner-finance-works" className="text-slate-300 hover:text-white text-sm">How It Works</Link>
-              <Link href="/signup" className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium">
+              <Link href="/auth" className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium">
                 Browse Properties
               </Link>
             </nav>
@@ -117,7 +117,7 @@ export default function NoCreditCheckHomes() {
 
               {/* CTA Buttons */}
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link href="/signup" className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-4 rounded-xl font-semibold text-lg">
+                <Link href="/auth" className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-4 rounded-xl font-semibold text-lg">
                   Browse All Properties
                 </Link>
                 <Link href="/how-owner-finance-works" className="bg-slate-700 hover:bg-slate-600 text-white px-8 py-4 rounded-xl font-semibold text-lg">
@@ -359,7 +359,7 @@ export default function NoCreditCheckHomes() {
                 Browse properties with varying credit requirements. From no-credit-check to flexible terms, find sellers who work with your situation.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link href="/signup" className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-4 rounded-xl font-semibold text-lg">
+                <Link href="/auth" className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-4 rounded-xl font-semibold text-lg">
                   Browse All Properties
                 </Link>
                 <Link href="/bad-credit-home-buying" className="bg-slate-700 hover:bg-slate-600 text-white px-8 py-4 rounded-xl font-semibold text-lg">

@@ -117,7 +117,7 @@ export default function OwnerFinancingFlorida() {
             <nav className="flex items-center gap-4">
               <Link href="/" className="text-slate-300 hover:text-white text-sm">Home</Link>
               <Link href="/how-owner-finance-works" className="text-slate-300 hover:text-white text-sm">How It Works</Link>
-              <Link href="/signup" className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium">
+              <Link href="/auth" className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium">
                 Browse Properties
               </Link>
             </nav>
@@ -142,7 +142,7 @@ export default function OwnerFinancingFlorida() {
 
               {/* CTA Buttons */}
               <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-                <Link href="/signup" className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all">
+                <Link href="/auth" className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all">
                   Browse Florida Properties
                 </Link>
                 <Link href="/rent-to-own-homes" className="bg-slate-700 hover:bg-slate-600 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all">
@@ -183,12 +183,12 @@ export default function OwnerFinancingFlorida() {
                 No banks needed, flexible terms available.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link href="/signup">
+                <Link href="/auth">
                   <button className="bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white py-4 px-8 rounded-xl font-semibold text-lg transition-all duration-300 hover:scale-[1.02] shadow-lg hover:shadow-xl">
                     🏠 Browse Florida Properties
                   </button>
                 </Link>
-                <Link href="/signup">
+                <Link href="/auth">
                   <button className="bg-white/10 backdrop-blur-sm border-2 border-white/30 hover:bg-white/20 text-white py-4 px-8 rounded-xl font-semibold text-lg transition-all duration-300 hover:scale-[1.02]">
                     Get Pre-Qualified Today
                   </button>
@@ -422,7 +422,7 @@ export default function OwnerFinancingFlorida() {
                 No banks, no delays, just direct deals with sellers.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link href="/signup" className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all">
+                <Link href="/auth" className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all">
                   Browse Florida Properties Now
                 </Link>
                 <Link href="/owner-financing-georgia" className="bg-slate-700 hover:bg-slate-600 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all">

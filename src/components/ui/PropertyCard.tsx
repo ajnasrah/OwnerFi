@@ -20,14 +20,40 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
 
   // ONLY use first image - no gallery
   const currentImage = useMemo(() => {
-    const legacyImageUrl = (property as any).imageUrl;
-    const firstImage = legacyImageUrl || property.imageUrls?.[0];
+    // Check all possible image field locations
+    const propertyAny = property as any;
+
+    // Try all possible image fields in order of preference
+    const imageUrl =
+      propertyAny.imageUrl ||                    // Legacy field
+      propertyAny.firstPropertyImage ||          // Zillow field
+      property.imageUrls?.[0] ||                 // Standard array
+      propertyAny.propertyImages?.[0] ||         // Zillow array
+      propertyAny.zillowImageUrl ||              // Zillow specific
+      propertyAny.images?.[0];                   // Generic images field
+
+    // Log if no image found (for debugging)
+    if (!imageUrl && !imageError) {
+      console.warn('No image found for property:', {
+        id: property.id,
+        address: property.address,
+        availableFields: {
+          imageUrl: !!propertyAny.imageUrl,
+          firstPropertyImage: !!propertyAny.firstPropertyImage,
+          imageUrls: Array.isArray(property.imageUrls) ? property.imageUrls.length : 'not array',
+          propertyImages: propertyAny.propertyImages?.length || 0,
+          zillowImageUrl: !!propertyAny.zillowImageUrl,
+          images: propertyAny.images?.length || 0
+        }
+      });
+    }
 
     // Validate image URL - prevent empty strings
-    if (!firstImage || firstImage.trim() === '' || imageError) {
+    if (!imageUrl || typeof imageUrl !== 'string' || imageUrl.trim() === '' || imageError) {
       return '/placeholder-house.jpg';
     }
-    return firstImage;
+
+    return imageUrl;
   }, [property, imageError]);
 
   const monthlyPayment = useMemo(() => {

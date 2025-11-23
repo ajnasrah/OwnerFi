@@ -7,6 +7,7 @@ import HomePageClient from './HomePageClient'
 import { LegalFooter } from '@/components/ui/LegalFooter'
 import Image from 'next/image'
 import HeroVideo from '@/components/ui/HeroVideo'
+import { SmartCTAButton } from '@/components/ui/SmartCTAButton'
 
 // Force dynamic rendering to prevent static generation errors with headers()
 export const dynamic = 'force-dynamic'
@@ -200,10 +201,10 @@ export default async function HomePage() {
                   </Link>
                 ) : (
                   <Link
-                    href="/auth/signin"
+                    href="/auth"
                     className="text-slate-300 hover:text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
                   >
-                    Sign In
+                    Get Started
                   </Link>
                 )}
               </div>
@@ -237,17 +238,14 @@ export default async function HomePage() {
 
                   {/* CTA Buttons - Large and Prominent */}
                   <div className="flex flex-col gap-3 mb-6 max-w-md mx-auto lg:mx-0">
-                    <Link
-                      href="/signup"
+                    <SmartCTAButton
                       className="group bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white px-6 py-3.5 rounded-xl font-bold text-base transition-all duration-300 hover:scale-[1.02] shadow-xl hover:shadow-2xl text-center flex items-center justify-center gap-2"
-                      data-event="cta_click"
-                      data-location="hero"
                     >
                       <span data-translate="hero.ctaPrimary">Start Swiping Free</span>
                       <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                       </svg>
-                    </Link>
+                    </SmartCTAButton>
 
                     <Link
                       href="#how-it-works"
@@ -656,9 +654,9 @@ export default async function HomePage() {
                 <h3 className="text-2xl font-bold text-white text-center mb-6" data-translate="locations.nationwideTitle">Available Nationwide</h3>
                 <div className="text-center mb-6">
                   <p className="text-slate-300 mb-4" data-translate="locations.nationwideSubtitle">Properties available in all 50 states</p>
-                  <Link href="/signup" className="inline-block bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white py-3 px-8 rounded-xl font-semibold text-lg transition-all duration-300 hover:scale-[1.02] shadow-lg">
+                  <SmartCTAButton className="inline-block bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white py-3 px-8 rounded-xl font-semibold text-lg transition-all duration-300 hover:scale-[1.02] shadow-lg">
                     <span data-translate="locations.viewAllCta">View All Properties →</span>
-                  </Link>
+                  </SmartCTAButton>
                 </div>
               </div>
 
@@ -733,15 +731,12 @@ export default async function HomePage() {
                   <li><Link href="/about" className="text-slate-400 hover:text-white transition-colors">About Us</Link></li>
                   <li><Link href="/contact" className="text-slate-400 hover:text-white transition-colors">Contact</Link></li>
                   <li><Link href="/realtor" className="text-slate-400 hover:text-white transition-colors">For Realtors</Link></li>
-                  <li><Link href="/signup" className="text-slate-400 hover:text-white transition-colors">Sign Up</Link></li>
+                  <li><SmartCTAButton className="text-slate-400 hover:text-white transition-colors text-left">Get Started</SmartCTAButton></li>
                 </ul>
               </div>
               <div>
                 <h3 className="text-white font-semibold mb-4">Account</h3>
                 <ul className="space-y-2">
-                  <li><Link href="/auth/signin" className="text-slate-400 hover:text-white transition-colors">Sign In</Link></li>
-                  <li><Link href="/auth/signup" className="text-slate-400 hover:text-white transition-colors">Create Account</Link></li>
-                  <li><Link href="/realtor-signup" className="text-slate-400 hover:text-white transition-colors">Agent Sign Up</Link></li>
                   <li><Link href="/dashboard" className="text-slate-400 hover:text-white transition-colors">Dashboard</Link></li>
                 </ul>
               </div>

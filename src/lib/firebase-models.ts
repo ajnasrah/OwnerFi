@@ -53,10 +53,13 @@ export interface BuyerProfile {
   
   // Property requirements
   minBedrooms?: number;
+  maxBedrooms?: number;
   minBathrooms?: number;
+  maxBathrooms?: number;
   minSquareFeet?: number;
-  minPrice?: number;         // Minimum property price
-  maxPrice?: number;         // Maximum property price
+  maxSquareFeet?: number;
+  minPrice?: number;         // Minimum asking price
+  maxPrice?: number;         // Maximum asking price
   
   // Communication preferences
   languages: string[];       // ['English', 'Spanish']

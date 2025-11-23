@@ -147,8 +147,17 @@ interface BuyerProfileUpdate {
   phone?: string;
   city: string;
   state: string;
-  maxMonthlyPayment: number;
-  maxDownPayment: number;
+  maxMonthlyPayment?: number;
+  maxDownPayment?: number;
+  // Optional property filters
+  minBedrooms?: number;
+  maxBedrooms?: number;
+  minBathrooms?: number;
+  maxBathrooms?: number;
+  minSquareFeet?: number;
+  maxSquareFeet?: number;
+  minPrice?: number;
+  maxPrice?: number;
 }
 
 export async function POST(request: NextRequest) {
@@ -176,13 +185,22 @@ export async function POST(request: NextRequest) {
       city,
       state,
       maxMonthlyPayment,
-      maxDownPayment
+      maxDownPayment,
+      // Optional property filters
+      minBedrooms,
+      maxBedrooms,
+      minBathrooms,
+      maxBathrooms,
+      minSquareFeet,
+      maxSquareFeet,
+      minPrice,
+      maxPrice
     } = body;
 
     // Validate required fields
-    if (!city || !state || !maxMonthlyPayment || !maxDownPayment) {
+    if (!city || !state) {
       return NextResponse.json({
-        error: 'Missing required: city, state, maxMonthlyPayment, maxDownPayment'
+        error: 'Missing required: city, state'
       }, { status: 400 });
     }
 
@@ -225,9 +243,19 @@ export async function POST(request: NextRequest) {
       state: state,                  // API compatibility
       searchRadius: 25,
 
-      // Budget constraints
-      maxMonthlyPayment: Number(maxMonthlyPayment),
-      maxDownPayment: Number(maxDownPayment),
+      // Budget constraints (optional - kept for backward compatibility)
+      ...(maxMonthlyPayment !== undefined && { maxMonthlyPayment: Number(maxMonthlyPayment) }),
+      ...(maxDownPayment !== undefined && { maxDownPayment: Number(maxDownPayment) }),
+
+      // Property requirements (optional filters)
+      ...(minBedrooms !== undefined && { minBedrooms: Number(minBedrooms) }),
+      ...(maxBedrooms !== undefined && { maxBedrooms: Number(maxBedrooms) }),
+      ...(minBathrooms !== undefined && { minBathrooms: Number(minBathrooms) }),
+      ...(maxBathrooms !== undefined && { maxBathrooms: Number(maxBathrooms) }),
+      ...(minSquareFeet !== undefined && { minSquareFeet: Number(minSquareFeet) }),
+      ...(maxSquareFeet !== undefined && { maxSquareFeet: Number(maxSquareFeet) }),
+      ...(minPrice !== undefined && { minPrice: Number(minPrice) }),
+      ...(maxPrice !== undefined && { maxPrice: Number(maxPrice) }),
 
       // Communication preferences
       languages: ['English'],

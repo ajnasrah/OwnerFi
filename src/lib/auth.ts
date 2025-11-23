@@ -19,53 +19,80 @@ export const authOptions = {
       credentials: {
         email: { label: 'Email', type: 'email' },
         password: { label: 'Password', type: 'password' },
+        phone: { label: 'Phone', type: 'tel' },
         firstName: { label: 'First Name', type: 'text' },
         lastName: { label: 'Last Name', type: 'text' },
         isSignUp: { label: 'Is Sign Up', type: 'text' }
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          return null;
-        }
-
-        const email = credentials.email as string;
-        const password = credentials.password as string;
-
-        // Sign in logic - look up user in Firebase
         if (!db) {
           return null;
         }
-        
-        const usersQuery = query(
-          collection(db, 'users'),
-          where('email', '==', email)
-        );
-        const userDocs = await getDocs(usersQuery);
-        
-        if (userDocs.empty) {
-          return null;
+
+        // Phone-based authentication (no password)
+        if (credentials?.phone && !credentials?.password) {
+          const phone = credentials.phone as string;
+
+          const usersQuery = query(
+            collection(db, 'users'),
+            where('phone', '==', phone)
+          );
+          const userDocs = await getDocs(usersQuery);
+
+          if (userDocs.empty) {
+            return null;
+          }
+
+          const userDoc = userDocs.docs[0];
+          const userData = userDoc.data();
+
+          return {
+            id: userDoc.id,
+            email: userData.email,
+            name: userData.name,
+            phone: userData.phone,
+            role: userData.role,
+          };
         }
 
-        const userDoc = userDocs.docs[0];
-        const userData = userDoc.data();
-        
-        if (!userData.password) {
-          return null;
+        // Email/password authentication (legacy support)
+        if (credentials?.email && credentials?.password) {
+          const email = credentials.email as string;
+          const password = credentials.password as string;
+
+          const usersQuery = query(
+            collection(db, 'users'),
+            where('email', '==', email)
+          );
+          const userDocs = await getDocs(usersQuery);
+
+          if (userDocs.empty) {
+            return null;
+          }
+
+          const userDoc = userDocs.docs[0];
+          const userData = userDoc.data();
+
+          if (!userData.password) {
+            return null;
+          }
+
+          const isPasswordValid = await compare(password, userData.password);
+
+          if (!isPasswordValid) {
+            return null;
+          }
+
+          return {
+            id: userDoc.id,
+            email: userData.email,
+            name: userData.name,
+            phone: userData.phone,
+            role: userData.role,
+          };
         }
 
-        const isPasswordValid = await compare(password, userData.password);
-        
-        if (!isPasswordValid) {
-          return null;
-        }
-
-        return {
-          id: userDoc.id,
-          email: userData.email,
-          name: userData.name,
-          phone: userData.phone,
-          role: userData.role,
-        };
+        return null;
       },
     }),
   ],
@@ -90,7 +117,7 @@ export const authOptions = {
     },
   },
   pages: {
-    signIn: '/auth/signin',
+    signIn: '/auth',
   },
   session: {
     strategy: 'jwt' as const,

@@ -7,6 +7,8 @@ import Link from 'next/link';
 import { ExtendedSession, isExtendedSession } from '@/types/session';
 import Tutorial from '@/components/dashboard/Tutorial';
 import { PropertySwiper2 } from '@/components/ui/PropertySwiper2';
+import { FilterUpgradeModal } from '@/components/FilterUpgradeModal';
+import { useFilterUpgradePrompt } from '@/hooks/useFilterUpgradePrompt';
 
 import { PropertyListing } from '@/lib/property-schema';
 import { BuyerDashboardView } from '@/lib/view-models';
@@ -50,6 +52,9 @@ export default function Dashboard() {
   const [likedProperties, setLikedProperties] = useState<string[]>([]);
   const [showTutorial, setShowTutorial] = useState(false);
   const [currentFact, setCurrentFact] = useState('');
+
+  // Filter upgrade prompt for old users
+  const { shouldShow: shouldShowFilterUpgrade, dismissPrompt: dismissFilterUpgrade } = useFilterUpgradePrompt(profile);
 
   // Select random fact on mount
   useEffect(() => {
@@ -397,6 +402,14 @@ export default function Dashboard() {
         passedIds={[]}
         isLoading={loading}
       />
+
+      {/* Filter Upgrade Modal - One-time prompt for old users */}
+      {shouldShowFilterUpgrade && (
+        <FilterUpgradeModal
+          onClose={dismissFilterUpgrade}
+          onUpgrade={dismissFilterUpgrade}
+        />
+      )}
     </div>
   );
 }

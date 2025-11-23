@@ -53,7 +53,16 @@ export const unifiedDb = {
       const userDocs = await getDocs(usersQuery);
       return userDocs.empty ? null : { id: userDocs.docs[0].id, ...userDocs.docs[0].data() } as User & { id: string };
     },
-    
+
+    async findByPhone(phone: string): Promise<(User & { id: string }) | null> {
+      if (!firebaseDb) {
+        throw new Error('Firebase not initialized - missing environment variables');
+      }
+      const usersQuery = query(collection(firebaseDb, 'users'), where('phone', '==', phone));
+      const userDocs = await getDocs(usersQuery);
+      return userDocs.empty ? null : { id: userDocs.docs[0].id, ...userDocs.docs[0].data() } as User & { id: string };
+    },
+
     async findById(id: string): Promise<(User & { id: string }) | null> {
       if (!firebaseDb) {
         throw new Error('Firebase not initialized - missing environment variables');

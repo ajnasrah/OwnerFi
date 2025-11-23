@@ -8,290 +8,240 @@ export default function PrivacyPolicy() {
   return (
     <div className="min-h-screen bg-primary-bg">
       <Header />
-      
+
       <div className="max-w-4xl mx-auto px-6 py-16">
         <div className="bg-white rounded-xl shadow-light p-8 md:p-12">
           <h1 className="text-4xl font-bold text-primary-text mb-8">Privacy Policy</h1>
-          <p className="text-slate-600 mb-4">Effective Date: November 13, 2025</p>
-          <p className="text-slate-600 mb-8">Contact: support@ownerfi.ai</p>
-          
-          {/* Summary at Top */}
+          <p className="text-slate-600 mb-4">Last Updated: January 2025</p>
+          <p className="text-slate-600 mb-8">Contact: <a href="mailto:support@ownerfi.com" className="text-primary hover:underline">support@ownerfi.com</a></p>
+
+          {/* Plain English Summary */}
           <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-8">
             <h2 className="text-2xl font-semibold text-blue-800 mb-4">📋 Privacy Summary (Key Points)</h2>
             <ul className="space-y-2 text-blue-700">
-              <li>• <strong>We collect your personal information and property preferences</strong></li>
-              <li>• <strong>We sell buyer leads to real estate agents and brokers</strong></li>
-              <li>• <strong>You may be contacted by multiple real estate professionals</strong></li>
-              <li>• <strong>We use cookies and tracking technologies</strong></li>
-              <li>• <strong>We implement security measures but cannot guarantee absolute security</strong></li>
-              <li>• <strong>You have certain rights regarding your information</strong></li>
-              <li>• <strong>Once sold to agents, we cannot control how they use your data</strong></li>
+              <li>• <strong>We collect your name, phone, email, budget, and preferences</strong></li>
+              <li>• <strong>We share this information with licensed real estate agents</strong> who will contact you</li>
+              <li>• <strong>Agents may call, text, or email you</strong> to offer help with properties</li>
+              <li>• <strong>You can decline representation</strong> by telling the agent directly</li>
+              <li>• <strong>We use cookies and tracking technologies</strong> to improve our platform</li>
+              <li>• <strong>We implement security measures</strong> but cannot guarantee absolute security</li>
+              <li>• <strong>You have rights to access, correct, or delete your data</strong> (with limitations)</li>
+              <li>• <strong>Once shared with agents, we cannot control their use of your data</strong></li>
             </ul>
           </div>
 
           <div className="space-y-8 text-lg leading-relaxed text-slate-700">
-            
+
             <section>
-              <h2 className="text-2xl font-semibold text-primary-text mb-4">1. Who We Are</h2>
-              <p><strong>OwnerFi</strong> is headquartered at #1076, 1028 Cresthaven Road, Suite 200, Memphis, TN 38119, United States.</p>
-              <p className="mt-4">This Privacy Policy describes how we collect, use, share, and protect your personal information when you use our website and services.</p>
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
-                <p className="font-medium text-blue-800">Key Point:</p>
-                <p className="text-blue-700 mt-2">Our business model includes selling buyer lead information to real estate professionals. By using our service, you consent to this practice as described below.</p>
-              </div>
+              <h2 className="text-2xl font-semibold text-primary-text mb-4">1. Information We Collect</h2>
+
+              <h3 className="text-xl font-medium text-primary-text mb-3">A. Information You Provide</h3>
+              <ul className="list-disc ml-6 space-y-1 mb-4">
+                <li>Name</li>
+                <li>Phone number</li>
+                <li>Email address</li>
+                <li>City/area of interest</li>
+                <li>Budget or preferences</li>
+                <li>Property selections or interactions</li>
+              </ul>
+
+              <h3 className="text-xl font-medium text-primary-text mb-3">B. Automatically Collected Information</h3>
+              <ul className="list-disc ml-6 space-y-1 mb-4">
+                <li>IP address</li>
+                <li>Device information</li>
+                <li>Browser type</li>
+                <li>Analytics and behavioral data</li>
+                <li>Search history</li>
+                <li>Favorite properties</li>
+                <li>Pages visited</li>
+              </ul>
+
+              <h3 className="text-xl font-medium text-primary-text mb-3">C. Cookies & Tracking</h3>
+              <p>We use:</p>
+              <ul className="list-disc ml-6 mt-2 space-y-1">
+                <li>cookies</li>
+                <li>analytics tools</li>
+                <li>session logs</li>
+                <li>tracking pixels</li>
+              </ul>
+              <p className="mt-3">to improve platform performance and personalize your experience.</p>
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-primary-text mb-4">2. Information We Collect</h2>
-              
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-                <p className="font-bold text-red-800">⚠️ DO NOT SUBMIT SENSITIVE DATA</p>
-                <p className="text-red-700 mt-2">Do not submit sensitive personal information such as Social Security numbers, financial account numbers, or health information. We do not request or process such data and disclaim responsibility for any submitted.</p>
-              </div>
-              
-              <h3 className="text-xl font-medium text-primary-text mb-3">Personal Information</h3>
-              <p>We collect personal information you voluntarily provide, including:</p>
-              <ul className="list-disc ml-6 mt-2 space-y-1">
-                <li>Name, email address, and phone number</li>
-                <li>Property preferences and search criteria</li>
-                <li>Budget information and financing preferences</li>
-                <li>Location and geographic preferences</li>
-                <li>Real estate license information (for agents)</li>
-                <li>Payment and billing information</li>
-              </ul>
+              <h2 className="text-2xl font-semibold text-primary-text mb-4">2. How We Use Your Information</h2>
 
-              <h3 className="text-xl font-medium text-primary-text mb-3 mt-6">Automatically Collected Information</h3>
-              <ul className="list-disc ml-6 mt-2 space-y-1">
-                <li>IP address, browser type, and device information</li>
-                <li>Website usage patterns and analytics data</li>
-                <li>Cookies and similar tracking technologies</li>
-                <li>Geolocation data (if permitted)</li>
-              </ul>
-
-              <h3 className="text-xl font-medium text-primary-text mb-3 mt-6">International Data Transfers</h3>
-              <p>If you access our services from outside the United States, your information will be processed and stored in the U.S.</p>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-semibold text-primary-text mb-4">3. How We Use Your Information</h2>
-              
-              <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4">
-                <h3 className="font-semibold text-orange-800 mb-2">PRIMARY BUSINESS USE - LEAD SALES</h3>
-                <p className="text-orange-700">We sell buyer contact information and preferences to licensed real estate agents and brokers. This is our primary revenue source and a core part of our business model.</p>
-              </div>
-
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
-                <p className="font-bold text-yellow-800">📞 TCPA CONSENT & TERMS CROSS-REFERENCE</p>
-                <p className="text-yellow-700 mt-2">By providing your phone number, you consent to receive calls and texts (including via automated systems) as described in our <Link href="/terms" className="underline hover:text-yellow-800">Terms of Service</Link>.</p>
-              </div>
-              
-              <p>We use your information to:</p>
-              <ul className="list-disc ml-6 mt-2 space-y-2">
-                <li><strong>Sell leads to real estate professionals:</strong> Your contact information and property preferences may be sold to licensed agents and brokers in your area</li>
-                <li><strong>Match you with properties:</strong> Connect you with suitable owner-financed properties</li>
-                <li><strong>Provide our services:</strong> Operate and maintain our platform</li>
-                <li><strong>Communicate with you:</strong> Send property updates, marketing communications, and service notifications</li>
-                <li><strong>Process payments:</strong> Handle subscription fees and lead purchases</li>
-                <li><strong>Improve our service:</strong> Analyze usage patterns and optimize our platform</li>
-                <li><strong>Comply with legal obligations:</strong> Meet regulatory and legal requirements</li>
-              </ul>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-semibold text-primary-text mb-4">4. Information Sharing and Disclosure</h2>
-              
-              <h3 className="text-xl font-medium text-primary-text mb-3">Lead Sales to Real Estate Professionals</h3>
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-                <p className="font-medium text-red-800">IMPORTANT:</p>
-                <p className="text-red-700 mt-2">When you register as a buyer, we may sell your information to multiple real estate agents and brokers. You may receive contact from several professionals regarding properties and services.</p>
-              </div>
-              
-              <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 mb-4">
-                <p className="font-bold text-slate-800">🛡️ AGENT LIABILITY FIREWALL</p>
-                <p className="text-slate-700 mt-2"><strong>Licensed real estate professionals who purchase leads from us are independent third parties.</strong> OwnerFi is not responsible for their actions, privacy practices, or how they use your information once sold.</p>
-              </div>
-              
-              <p>Information shared in lead sales includes:</p>
-              <ul className="list-disc ml-6 mt-2 space-y-1">
-                <li>Your name, email, and phone number</li>
-                <li>Property preferences (location, price range, size)</li>
-                <li>Budget and financing information</li>
-                <li>Timeline and urgency indicators</li>
-              </ul>
-              
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mt-4">
-                <p className="font-bold text-yellow-800">📊 CREDIT CHECK DISCLOSURE</p>
-                <p className="text-yellow-700 mt-2">
-                  <strong>Sellers and their agents have the right to perform credit checks, request credit reports, and require income verification.</strong> 
-                  When you express interest in a property, the seller may request authorization to check your credit and financial qualifications. 
-                  This is separate from our lead generation service.
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                <p className="font-bold text-blue-800 mb-2">🎯 Primary Purpose: Connecting You With Agents</p>
+                <p className="text-blue-700">
+                  We use your information primarily to <strong>connect you with licensed real estate agents</strong> who can help you view properties, make offers, and navigate the purchase process.
                 </p>
               </div>
 
-              <h3 className="text-xl font-medium text-primary-text mb-3 mt-6">Other Sharing</h3>
-              <p>We may also share your information with:</p>
-              <ul className="list-disc ml-6 mt-2 space-y-2">
-                <li><strong>Service providers:</strong> Third-party vendors who help operate our business</li>
-                <li><strong>Payment processors:</strong> Companies that process financial transactions</li>
-                <li><strong>Legal compliance:</strong> When required by law or to protect our rights</li>
-                <li><strong>Business transfers:</strong> In case of merger, acquisition, or asset sale</li>
-                <li><strong>Marketing partners:</strong> Trusted partners who may offer relevant services</li>
+              <p className="mb-3">We use your information to:</p>
+              <ul className="list-disc ml-6 space-y-1">
+                <li>connect you with licensed real estate agents</li>
+                <li>allow agents to contact you</li>
+                <li>send property matches</li>
+                <li>provide account services</li>
+                <li>improve the Service</li>
+                <li>maintain security and fraud detection</li>
+                <li>comply with legal requirements</li>
               </ul>
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-primary-text mb-4">5. Cookies and Tracking Technologies</h2>
-              <p>We use cookies, web beacons, and similar technologies to:</p>
-              <ul className="list-disc ml-6 mt-2 space-y-1">
-                <li>Remember your preferences and login information</li>
-                <li>Analyze website traffic and user behavior</li>
-                <li>Deliver targeted advertising and marketing</li>
-                <li>Improve website functionality and user experience</li>
+              <h2 className="text-2xl font-semibold text-primary-text mb-4">3. How We Share Your Information</h2>
+
+              <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4">
+                <p className="font-bold text-orange-800 mb-2">📞 A. Licensed Real Estate Agents</p>
+                <p className="text-orange-700 mb-3">
+                  <strong>This is the primary purpose of collecting your information.</strong>
+                </p>
+                <p className="text-orange-700 mb-2">We share:</p>
+                <ul className="list-disc ml-6 space-y-1 text-orange-700">
+                  <li>your name</li>
+                  <li>phone number</li>
+                  <li>email</li>
+                  <li>the property you are interested in</li>
+                  <li>your general market area</li>
+                  <li>your buying preferences</li>
+                </ul>
+                <p className="text-orange-700 mt-3 font-bold">
+                  Agents use this information to contact you and offer representation, assistance, or appointments.
+                </p>
+              </div>
+
+              <h3 className="text-xl font-medium text-primary-text mb-3">B. Service Providers</h3>
+              <p className="mb-2">We may share data with:</p>
+              <ul className="list-disc ml-6 space-y-1 mb-4">
+                <li>hosting providers</li>
+                <li>analytics platforms</li>
+                <li>marketing tools</li>
+                <li>customer support tools</li>
               </ul>
-              <p className="mt-4">You can control cookies through your browser settings, but this may limit some website functionality.</p>
+
+              <h3 className="text-xl font-medium text-primary-text mb-3">C. Legal Requirements</h3>
+              <p>We may share information to comply with legal obligations.</p>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold text-primary-text mb-4">4. User Choice: Declining Representation</h2>
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <p className="font-bold text-green-800 mb-2">✅ You Have Control</p>
+                <p className="text-green-700 mb-2">If you do not wish to be represented:</p>
+                <ul className="list-disc ml-6 space-y-1 text-green-700">
+                  <li>Inform any contacting agent: <strong>"I do not want representation."</strong></li>
+                  <li>Agents are legally obligated to stop contacting you.</li>
+                  <li>OwnerFi is <strong>not responsible</strong> for their failure to do so.</li>
+                </ul>
+              </div>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold text-primary-text mb-4">5. Data Retention</h2>
+              <p className="mb-3">We retain user data for as long as needed to:</p>
+              <ul className="list-disc ml-6 space-y-1 mb-4">
+                <li>operate the platform</li>
+                <li>provide services</li>
+                <li>meet legal requirements</li>
+                <li>maintain security</li>
+              </ul>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p className="text-blue-700">
+                  You may request deletion at any time by contacting <a href="mailto:support@ownerfi.com" className="underline hover:text-blue-800">support@ownerfi.com</a>.
+                </p>
+              </div>
             </section>
 
             <section>
               <h2 className="text-2xl font-semibold text-primary-text mb-4">6. Data Security</h2>
-              <p>We implement reasonable security measures to protect your personal information, including:</p>
-              <ul className="list-disc ml-6 mt-2 space-y-1">
+              <p className="mb-3">
+                We use industry-standard security to protect your data, including:
+              </p>
+              <ul className="list-disc ml-6 space-y-1 mb-4">
                 <li>Encryption of sensitive data during transmission</li>
                 <li>Secure data storage practices</li>
-                <li>Regular security audits and updates</li>
                 <li>Access controls and authentication measures</li>
               </ul>
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mt-4">
-                <p className="text-yellow-800"><strong>Disclaimer:</strong> While we strive to protect your information, no method of transmission or storage is 100% secure. We cannot guarantee absolute security of your data.</p>
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <p className="text-yellow-700">
+                  <strong>Disclaimer:</strong> We cannot guarantee absolute security.
+                </p>
               </div>
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-primary-text mb-4">7. Your Rights and Choices</h2>
-              
-              <h3 className="text-xl font-medium text-primary-text mb-3">Communication Preferences</h3>
-              <p>You may:</p>
-              <ul className="list-disc ml-6 mt-2 space-y-1">
-                <li>Unsubscribe from marketing emails using the unsubscribe link</li>
-                <li>Update your communication preferences in your account settings</li>
-                <li>Contact us to modify or delete your account information</li>
+              <h2 className="text-2xl font-semibold text-primary-text mb-4">7. Your Rights</h2>
+              <p className="mb-3">Depending on your state, you may have rights to:</p>
+              <ul className="list-disc ml-6 space-y-1 mb-4">
+                <li>access your data</li>
+                <li>correct your data</li>
+                <li>delete your data</li>
+                <li>opt out of sharing</li>
+                <li>request a copy of your data</li>
               </ul>
-
-              <h3 className="text-xl font-medium text-primary-text mb-3 mt-4">Important Limitation</h3>
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                <p className="text-red-700"><strong>Please Note:</strong> If we have already sold your information to real estate professionals, we cannot control how they use or retain that data. You will need to contact them directly regarding their use of your information.</p>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p className="text-blue-700">
+                  To submit a request, contact: <a href="mailto:support@ownerfi.com" className="underline hover:text-blue-800 font-bold">support@ownerfi.com</a>
+                </p>
               </div>
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-primary-text mb-4">8. Data Retention</h2>
-              <p>We retain your personal information:</p>
-              <ul className="list-disc ml-6 mt-2 space-y-1">
-                <li>For as long as your account is active</li>
-                <li>As needed to provide our services</li>
-                <li>To comply with legal obligations</li>
-                <li>To resolve disputes and enforce agreements</li>
-              </ul>
-              <p className="mt-4">Even if you delete your account, information previously sold to real estate professionals will remain with those third parties.</p>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-semibold text-primary-text mb-4">9. CALIFORNIA PRIVACY RIGHTS (CCPA/CPRA)</h2>
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                <p className="font-bold text-blue-800">🏛️ CALIFORNIA RESIDENTS RIGHTS</p>
-                <p className="text-blue-700 mt-2">Under the California Consumer Privacy Act (CCPA), California residents have specific rights regarding their personal information:</p>
-                <ul className="list-disc ml-6 mt-2 space-y-1 text-blue-700">
-                  <li><strong>Right to Know:</strong> Request disclosure of personal information we collect, use, or sell</li>
+              <h2 className="text-2xl font-semibold text-primary-text mb-4">8. California Privacy Rights (CCPA)</h2>
+              <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-4">
+                <p className="font-bold text-purple-800 mb-2">🏛️ California Residents</p>
+                <p className="text-purple-700 mb-2">Under the California Consumer Privacy Act (CCPA), you have:</p>
+                <ul className="list-disc ml-6 space-y-1 text-purple-700">
+                  <li><strong>Right to Know:</strong> Request disclosure of personal information we collect, use, or share</li>
                   <li><strong>Right to Delete:</strong> Request deletion of personal information (with exceptions)</li>
-                  <li><strong>Right to Opt-Out:</strong> Opt out of the sale of personal information</li>
+                  <li><strong>Right to Opt-Out:</strong> Opt out of the sharing of personal information</li>
                   <li><strong>Right to Non-Discrimination:</strong> Equal service regardless of privacy choices</li>
                 </ul>
-              </div>
-              
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-                <p className="font-bold text-red-800">⚠️ IMPORTANT LIMITATION</p>
-                <p className="text-red-700 mt-2">
-                  <strong>Once we sell your information to real estate agents, we cannot retrieve or delete it from their systems.</strong> 
-                  We can stop future sales and delete our copy, but agents who already purchased your information will retain it 
-                  according to their own privacy policies.
-                </p>
-              </div>
-              
-              <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4">
-                <p className="font-bold text-orange-800">📞 "DO NOT SELL MY INFO" REQUEST</p>
-                <p className="text-orange-700 mt-2">
-                  To opt out of information sales, email us at <strong>support@ownerfi.ai</strong> with "DO NOT SELL" in the subject line.
-                  Include your name, email, and phone number. We will process your request within 15 business days for future sales,
-                  but cannot retrieve information already sold to agents.
+                <p className="text-purple-700 mt-3">
+                  To exercise your rights, email <strong>support@ownerfi.com</strong> with "CCPA REQUEST" in the subject line.
                 </p>
               </div>
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-primary-text mb-4">10. GDPR COMPLIANCE (EU RESIDENTS)</h2>
-              <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-4">
-                <p className="font-bold text-purple-800">🇪🇺 EUROPEAN UNION RESIDENTS</p>
-                <p className="text-purple-700 mt-2">If you are in the European Union, you have additional rights under GDPR:</p>
-                <ul className="list-disc ml-6 mt-2 space-y-1 text-purple-700">
-                  <li><strong>Right of Access:</strong> Request copies of your personal data</li>
-                  <li><strong>Right to Rectification:</strong> Request correction of inaccurate data</li>
-                  <li><strong>Right to Erasure:</strong> Request deletion of your data</li>
-                  <li><strong>Right to Restrict Processing:</strong> Limit how we use your data</li>
-                  <li><strong>Right to Data Portability:</strong> Request transfer of your data</li>
-                  <li><strong>Right to Object:</strong> Object to processing for marketing purposes</li>
-                </ul>
-                <p className="text-purple-700 mt-2">
-                  <strong>Legal Basis for Processing:</strong> Legitimate interest (lead generation business) and consent (marketing communications).
-                  Contact <strong>support@ownerfi.ai</strong> for any GDPR requests.
+              <h2 className="text-2xl font-semibold text-primary-text mb-4">9. Children</h2>
+              <p>
+                OwnerFi is not intended for users under 18.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold text-primary-text mb-4">10. Updates to This Policy</h2>
+              <p>
+                We may update this Privacy Policy. Continued use constitutes acceptance.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold text-primary-text mb-4">11. Contact</h2>
+              <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
+                <p className="font-bold">OwnerFi</p>
+                <p className="text-slate-700 mt-1">
+                  Email: <a href="mailto:support@ownerfi.com" className="text-primary hover:underline">support@ownerfi.com</a>
                 </p>
-              </div>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-semibold text-primary-text mb-4">11. Children's Privacy</h2>
-              <p>Our services are not intended for individuals under 18 years of age. We do not knowingly collect personal information from children under 18. If we become aware of such collection, we will take steps to delete the information promptly.</p>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-semibold text-primary-text mb-4">10. Third-Party Websites</h2>
-              <p>Our website may contain links to third-party websites. We are not responsible for the privacy practices of these external sites. We encourage you to review their privacy policies before providing any personal information.</p>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-semibold text-primary-text mb-4">11. State-Specific Rights</h2>
-              
-              <h3 className="text-xl font-medium text-primary-text mb-3">State Privacy Rights</h3>
-              <p><strong>If you are a resident of California, Colorado, Virginia, Connecticut, or Utah</strong>, you may have additional rights under applicable privacy laws, including:</p>
-              <ul className="list-disc ml-6 mt-2 space-y-1">
-                <li><strong>California (CCPA):</strong> Right to know, delete, and opt-out of sale of personal information</li>
-                <li><strong>Other States:</strong> Similar rights may apply under state privacy laws</li>
-              </ul>
-              <p className="mt-4"><strong>Important:</strong> Opting out of sales may limit your ability to use our matching services. Contact us for more information about your specific rights.</p>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-semibold text-primary-text mb-4">12. Changes to This Privacy Policy</h2>
-              <p>We may update this Privacy Policy periodically. We will notify you of material changes by posting the updated policy on our website and updating the "Last updated" date. Your continued use of our services after any changes constitutes acceptance of the updated policy.</p>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-semibold text-primary-text mb-4">13. Contact Information</h2>
-              <p>If you have questions about this Privacy Policy or our privacy practices, please contact us:</p>
-              <div className="mt-4 p-4 bg-slate-50 rounded-lg">
-                <p><strong>OwnerFi</strong></p>
-                <p><strong>Email:</strong> support@ownerfi.ai</p>
-                <p><strong>Address:</strong> #1076, 1028 Cresthaven Road, Suite 200<br />Memphis, TN 38119<br />United States</p>
               </div>
             </section>
 
             <div className="border-t pt-8 mt-8">
-              <p className="text-sm text-slate-500">
-                By using OwnerFi, you acknowledge that you have read, understood, and agree to this Privacy Policy and our <Link href="/terms" className="underline hover:text-slate-700">Terms of Service</Link>.
-              </p>
+              <div className="bg-blue-100 border-2 border-blue-300 rounded-lg p-6">
+                <p className="text-blue-900 font-bold text-center text-lg mb-3">
+                  ✅ By Using OwnerFi, You Agree
+                </p>
+                <p className="text-blue-800 text-sm text-center">
+                  By using OwnerFi, you acknowledge that you have read and agree to this Privacy Policy. You consent to the collection and sharing of your information with licensed real estate agents as described above. You understand that agents may contact you and that you can decline representation at any time.
+                </p>
+              </div>
             </div>
           </div>
         </div>
       </div>
-      
+
       <Footer />
     </div>
   );

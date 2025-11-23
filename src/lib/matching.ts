@@ -4,38 +4,39 @@ import { BuyerProfile } from './firebase-models';
 // Simplified property interface for matching algorithm
 interface PropertyForMatching {
   id: string;
-  monthlyPayment: number;
-  downPaymentAmount: number;
-  latitude?: number;
-  longitude?: number;
   city: string;
   state: string;
   bedrooms: number;
   bathrooms: number;
+  squareFeet?: number;
+  listPrice?: number;
+  latitude?: number;
+  longitude?: number;
 }
 
 // Simplified buyer interface for matching algorithm
 // Extracted from BuyerProfile (firebase-models.ts)
 interface BuyerForMatching {
   id: string;
-  maxMonthlyPayment: number;
-  maxDownPayment: number;
   preferredCity: string;
   preferredState: string;
   searchRadius: number;
   latitude?: number;
   longitude?: number;
   minBedrooms?: number;
+  maxBedrooms?: number;
   minBathrooms?: number;
+  maxBathrooms?: number;
+  minSquareFeet?: number;
+  maxSquareFeet?: number;
+  minPrice?: number;
+  maxPrice?: number;
 }
 
 interface MatchResult {
   matches: boolean;
   score: number;
-  budgetMatchType: 'both' | 'monthly_only' | 'down_only' | 'neither';
   matchedOn: {
-    monthly_payment: boolean;
-    down_payment: boolean;
     location: boolean;
     bedrooms: boolean;
     bathrooms: boolean;
@@ -45,11 +46,9 @@ interface MatchResult {
 
 
 // Check if a property matches a buyer's criteria
-// NEW: Uses OR logic for budget criteria - property matches if it meets ONE OR BOTH budget requirements
+// Location-based matching only (NO budget filtering)
 export function isPropertyMatch(property: PropertyForMatching, buyer: BuyerForMatching): MatchResult {
   const matchedOn = {
-    monthly_payment: false,
-    down_payment: false,
     location: false,
     bedrooms: false,
     bathrooms: false
@@ -58,78 +57,75 @@ export function isPropertyMatch(property: PropertyForMatching, buyer: BuyerForMa
   let score = 0;
   let totalCriteria = 0;
 
-  // 1. Monthly Payment Check
+  // 1. Location Check (CRITICAL) - Must match buyer's preferred city/state
   totalCriteria++;
-  const monthlyPaymentMatch = property.monthlyPayment <= buyer.maxMonthlyPayment;
-  if (monthlyPaymentMatch) {
-    matchedOn.monthly_payment = true;
-    score++;
-  }
-
-  // 2. Down Payment Check
-  totalCriteria++;
-  const downPaymentMatch = property.downPaymentAmount <= buyer.maxDownPayment;
-  if (downPaymentMatch) {
-    matchedOn.down_payment = true;
-    score++;
-  }
-
-  // BUDGET FILTERING DISABLED - Always allow properties regardless of budget
-  // const budgetMatch = monthlyPaymentMatch || downPaymentMatch;
-
-  // Determine budget match type for UI display (still calculated for display purposes)
-  let budgetMatchType: 'both' | 'monthly_only' | 'down_only' | 'neither';
-  if (monthlyPaymentMatch && downPaymentMatch) {
-    budgetMatchType = 'both';
-  } else if (monthlyPaymentMatch) {
-    budgetMatchType = 'monthly_only';
-  } else if (downPaymentMatch) {
-    budgetMatchType = 'down_only';
-  } else {
-    budgetMatchType = 'neither';
-  }
-
-  // DISABLED: Budget filtering - all properties shown regardless of budget
-  // if (!budgetMatch) {
-  //   return { matches: false, score: 0, budgetMatchType: 'neither', matchedOn };
-  // }
-
-  // 3. Location Check (CRITICAL) - Within buyer's search radius
-  totalCriteria++;
-  // For now, check if property city/state matches buyer's preferred city/state
-  // TODO: Add proper geographic distance calculation
   if (property.city === buyer.preferredCity && property.state === buyer.preferredState) {
     matchedOn.location = true;
     score++;
   } else {
     // If location doesn't match, it's not a valid match
-    return { matches: false, score: 0, budgetMatchType: 'neither', matchedOn };
+    return { matches: false, score: 0, matchedOn };
   }
 
-  // 4. Bedrooms (Optional - if buyer specified)
-  if (buyer.minBedrooms) {
+  // 2. Bedrooms (Optional - if buyer specified)
+  if (buyer.minBedrooms !== undefined || buyer.maxBedrooms !== undefined) {
     totalCriteria++;
-    if (property.bedrooms >= buyer.minBedrooms) {
+    const meetsMin = buyer.minBedrooms === undefined || property.bedrooms >= buyer.minBedrooms;
+    const meetsMax = buyer.maxBedrooms === undefined || property.bedrooms <= buyer.maxBedrooms;
+    if (meetsMin && meetsMax) {
       matchedOn.bedrooms = true;
       score++;
+    } else {
+      // If bedrooms don't match criteria, it's not a valid match
+      return { matches: false, score: 0, matchedOn };
     }
   }
 
-  // 5. Bathrooms (Optional - if buyer specified)
-  if (buyer.minBathrooms) {
+  // 3. Bathrooms (Optional - if buyer specified)
+  if (buyer.minBathrooms !== undefined || buyer.maxBathrooms !== undefined) {
     totalCriteria++;
-    if (property.bathrooms >= buyer.minBathrooms) {
+    const meetsMin = buyer.minBathrooms === undefined || property.bathrooms >= buyer.minBathrooms;
+    const meetsMax = buyer.maxBathrooms === undefined || property.bathrooms <= buyer.maxBathrooms;
+    if (meetsMin && meetsMax) {
       matchedOn.bathrooms = true;
       score++;
+    } else {
+      // If bathrooms don't match criteria, it's not a valid match
+      return { matches: false, score: 0, matchedOn };
+    }
+  }
+
+  // 4. Square Feet (Optional - if buyer specified and property has sqft data)
+  if ((buyer.minSquareFeet !== undefined || buyer.maxSquareFeet !== undefined) && property.squareFeet) {
+    totalCriteria++;
+    const meetsMin = buyer.minSquareFeet === undefined || property.squareFeet >= buyer.minSquareFeet;
+    const meetsMax = buyer.maxSquareFeet === undefined || property.squareFeet <= buyer.maxSquareFeet;
+    if (meetsMin && meetsMax) {
+      score++;
+    } else {
+      // If square feet don't match criteria, it's not a valid match
+      return { matches: false, score: 0, matchedOn };
+    }
+  }
+
+  // 5. Asking Price (Optional - if buyer specified and property has price)
+  if ((buyer.minPrice !== undefined || buyer.maxPrice !== undefined) && property.listPrice) {
+    totalCriteria++;
+    const meetsMin = buyer.minPrice === undefined || property.listPrice >= buyer.minPrice;
+    const meetsMax = buyer.maxPrice === undefined || property.listPrice <= buyer.maxPrice;
+    if (meetsMin && meetsMax) {
+      score++;
+    } else {
+      // If price doesn't match criteria, it's not a valid match
+      return { matches: false, score: 0, matchedOn };
     }
   }
 
   const finalScore = score / totalCriteria;
 
   return {
-    matches: true, // All critical criteria passed (location + at least one budget criterion)
+    matches: true, // Location matched + optional criteria
     score: finalScore,
-    budgetMatchType,
     matchedOn
   };
 }
@@ -157,7 +153,6 @@ export async function matchBuyerToProperties(buyerId: string) {
           matchScore: matchResult.score,
           isActive: true,
           matchedAt: new Date().toISOString(),
-          withinBudget: true,
           withinRadius: true,
           meetsRequirements: true
         });
@@ -198,7 +193,6 @@ export async function matchPropertyToBuyers(propertyId: string) {
           matchScore: matchResult.score,
           isActive: true,
           matchedAt: new Date().toISOString(),
-          withinBudget: true,
           withinRadius: true,
           meetsRequirements: true
         });

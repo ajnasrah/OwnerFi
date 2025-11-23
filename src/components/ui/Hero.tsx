@@ -38,18 +38,18 @@ export function Hero({
           {/* Mobile-optimized buttons */}
           {showUserTypeButtons ? (
             <div className="space-y-4">
-              <Button 
-                variant="primary" 
+              <Button
+                variant="primary"
                 size="lg"
-                href="/signup"
+                href="/auth"
                 className="w-full text-lg py-5 font-semibold min-h-[56px] shadow-medium"
               >
                 🏠 I Need a Home (Start Here)
               </Button>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 size="lg"
-                href="/signup"
+                href="/auth"
                 className="w-full text-lg py-5 font-semibold min-h-[56px]"
               >
                 💼 I Help Families Find Homes

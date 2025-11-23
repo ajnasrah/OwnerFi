@@ -55,18 +55,10 @@ export function Header({ className = '' }: HeaderProps) {
               </>
             ) : (
               <>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  href="/auth/signin" 
-                  className="hidden sm:inline-flex font-bold text-slate-300 hover:text-white px-4 py-2 rounded-xl hover:bg-slate-700/50 transition-all duration-300"
-                >
-                  SIGN IN
-                </Button>
-                <Button 
-                  variant="primary" 
-                  size="sm" 
-                  href="/signup" 
+                <Button
+                  variant="primary"
+                  size="sm"
+                  href="/auth"
                   className="font-bold bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 px-6 py-2 rounded-xl transition-all duration-300 hover:scale-105 shadow-xl shadow-emerald-500/25"
                 >
                   GET STARTED

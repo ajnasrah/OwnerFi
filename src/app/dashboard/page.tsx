@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ExtendedSession, isExtendedSession } from '@/types/session';
@@ -380,11 +380,12 @@ export default function Dashboard() {
                 <span className="text-sm">❓</span>
               </button>
               <button
-                onClick={() => router.push('/')}
-                className="w-8 h-8 bg-white/10 backdrop-blur-xl hover:bg-white/20 rounded-full flex items-center justify-center transition-all border border-white/20"
+                onClick={() => signOut({ callbackUrl: '/auth/logout' })}
+                className="w-8 h-8 bg-red-500/20 backdrop-blur-xl hover:bg-red-500/30 rounded-full flex items-center justify-center transition-all border border-red-500/40"
+                title="Logout"
               >
                 <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                 </svg>
               </button>
             </div>

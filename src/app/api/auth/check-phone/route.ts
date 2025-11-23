@@ -67,9 +67,23 @@ export async function POST(request: NextRequest) {
       userId: userDocs.docs[0].id,
       role: userData.role,
       foundFormat: foundFormat,
-      totalMatches: userDocs.size
+      totalMatches: userDocs.size,
+      hasPassword: !!userData.password
     });
 
+    // 🚫 BLOCK OLD USERS: If user has a password, they're an old email/password account
+    // They MUST use email/password login, NOT phone auth
+    if (userData.password && userData.password.length > 0) {
+      console.log('🚫 [CHECK-PHONE] BLOCKED: Old user account with password - must use email/password login');
+      return NextResponse.json({
+        exists: false, // Pretend they don't exist so phone auth won't proceed
+        isOldAccount: true,
+        error: 'This phone number is associated with an existing account. Please sign in using your email and password instead.',
+        message: 'Use email/password login for existing accounts'
+      }, { status: 403 });
+    }
+
+    // ✅ ALLOW: User exists but has NO password (phone-only account)
     return NextResponse.json({
       exists: true,
       role: userData.role || 'buyer',

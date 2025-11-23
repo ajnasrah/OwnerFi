@@ -7,7 +7,10 @@ import {
   doc,
   setDoc,
   updateDoc,
-  serverTimestamp
+  serverTimestamp,
+  Query,
+  QuerySnapshot,
+  DocumentData
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { getServerSession } from 'next-auth/next';
@@ -54,27 +57,68 @@ export async function GET() {
     console.log('🔍 [BUYER PROFILE GET] Searching for profile:', {
       userId: session.user.id,
       email: session.user.email,
+      phone: session.user.phone,
       role: session.user.role,
       sessionKeys: Object.keys(session.user)
     });
 
-    // Get buyer profile - try both userId and email to handle legacy profiles
-    let profilesQuery = query(
-      collection(db, 'buyerProfiles'),
-      where('userId', '==', session.user.id)
-    );
-    let snapshot = await getDocs(profilesQuery);
+    // Get buyer profile - try PHONE FIRST (primary for phone-auth users), then userId, then email
+    let profilesQuery: Query<DocumentData> | undefined;
+    let snapshot: QuerySnapshot<DocumentData> | undefined;
+    let foundBy = '';
 
-    console.log('🔍 [BUYER PROFILE GET] userId query result:', {
-      found: !snapshot.empty,
-      count: snapshot.docs.length
-    });
+    // 1. Try by PHONE (most reliable for phone-auth users)
+    if (session.user.phone) {
+      // Normalize phone number - strip all non-digits and get last 10
+      const cleaned = session.user.phone.replace(/\D/g, '');
+      const last10Digits = cleaned.slice(-10);
 
-    // Fallback: try to find by email if userId query fails
+      // Try multiple phone formats
+      const phoneFormats = [
+        session.user.phone,                                                    // Original format
+        last10Digits,                                                          // Just digits
+        `+1${last10Digits}`,                                                  // E.164 format
+        `(${last10Digits.slice(0,3)}) ${last10Digits.slice(3,6)}-${last10Digits.slice(6)}`, // Formatted
+      ];
+
+      console.log('🔍 [BUYER PROFILE GET] Trying phone formats:', phoneFormats);
+
+      for (const phoneFormat of phoneFormats) {
+        profilesQuery = query(
+          collection(db, 'buyerProfiles'),
+          where('phone', '==', phoneFormat)
+        );
+        snapshot = await getDocs(profilesQuery);
+
+        if (!snapshot.empty) {
+          foundBy = `phone:${phoneFormat}`;
+          console.log('✅ [BUYER PROFILE GET] Found by phone:', phoneFormat);
+          break;
+        }
+      }
+    }
+
+    // 2. Fallback to userId if phone lookup failed
+    if (!snapshot || snapshot.empty) {
+      console.log('🔍 [BUYER PROFILE GET] Phone lookup failed, trying userId');
+      profilesQuery = query(
+        collection(db, 'buyerProfiles'),
+        where('userId', '==', session.user.id)
+      );
+      snapshot = await getDocs(profilesQuery);
+
+      if (!snapshot.empty) {
+        foundBy = 'userId';
+        console.log('✅ [BUYER PROFILE GET] Found by userId');
+      }
+    }
+
+    // 3. Final fallback to email
     if (snapshot.empty && session.user.email) {
-      logInfo('Profile not found by userId, trying email', {
+      console.log('🔍 [BUYER PROFILE GET] userId lookup failed, trying email');
+      logInfo('Profile not found by phone or userId, trying email', {
         action: 'buyer_profile_fallback',
-        metadata: { userId: session.user.id, email: session.user.email }
+        metadata: { userId: session.user.id, email: session.user.email, phone: session.user.phone }
       });
 
       profilesQuery = query(
@@ -83,31 +127,31 @@ export async function GET() {
       );
       snapshot = await getDocs(profilesQuery);
 
-      console.log('🔍 [BUYER PROFILE GET] email query result:', {
-        found: !snapshot.empty,
-        count: snapshot.docs.length
+      if (!snapshot.empty) {
+        foundBy = 'email';
+        console.log('✅ [BUYER PROFILE GET] Found by email');
+      }
+    }
+
+    // If found by email or phone (not userId), update the userId field for future queries
+    if (!snapshot.empty && foundBy !== 'userId') {
+      const profileId = snapshot.docs[0].id;
+      const profileData = snapshot.docs[0].data();
+
+      console.log(`✅ [BUYER PROFILE GET] Found by ${foundBy}, updating userId:`, {
+        profileId,
+        oldUserId: profileData.userId,
+        newUserId: session.user.id
       });
 
-      // If found by email, update the userId field for future queries
-      if (!snapshot.empty) {
-        const profileId = snapshot.docs[0].id;
-        const profileData = snapshot.docs[0].data();
-
-        console.log('✅ [BUYER PROFILE GET] Found by email, updating userId:', {
-          profileId,
-          oldUserId: profileData.userId,
-          newUserId: session.user.id
-        });
-
-        await updateDoc(doc(db, 'buyerProfiles', profileId), {
-          userId: session.user.id,
-          updatedAt: serverTimestamp()
-        });
-        logInfo('Updated profile with correct userId', {
-          action: 'buyer_profile_userId_fix',
-          metadata: { profileId, userId: session.user.id }
-        });
-      }
+      await updateDoc(doc(db, 'buyerProfiles', profileId), {
+        userId: session.user.id,
+        updatedAt: serverTimestamp()
+      });
+      logInfo('Updated profile with correct userId', {
+        action: 'buyer_profile_userId_fix',
+        metadata: { profileId, userId: session.user.id, foundBy }
+      });
     }
 
     if (snapshot.empty) {
@@ -137,29 +181,30 @@ export async function GET() {
 
   } catch (error) {
     console.error('❌ [BUYER PROFILE GET] Error:', error);
-    logError('GET /api/buyer/profile', error as Error, { userId: 'unknown' });
+    await logError('GET /api/buyer/profile error', { action: 'buyer_profile_get_error' }, error as Error);
     return NextResponse.json({ error: 'Failed to load profile' }, { status: 500 });
   }
 }
 
-interface BuyerProfileUpdate {
-  firstName?: string;
-  lastName?: string;
-  phone?: string;
-  city: string;
-  state: string;
-  maxMonthlyPayment?: number;
-  maxDownPayment?: number;
-  // Optional property filters
-  minBedrooms?: number;
-  maxBedrooms?: number;
-  minBathrooms?: number;
-  maxBathrooms?: number;
-  minSquareFeet?: number;
-  maxSquareFeet?: number;
-  minPrice?: number;
-  maxPrice?: number;
-}
+// Buyer profile update interface (for documentation)
+// interface BuyerProfileUpdate {
+//   firstName?: string;
+//   lastName?: string;
+//   phone?: string;
+//   city: string;
+//   state: string;
+//   maxMonthlyPayment?: number;
+//   maxDownPayment?: number;
+//   // Optional property filters
+//   minBedrooms?: number;
+//   maxBedrooms?: number;
+//   minBathrooms?: number;
+//   maxBathrooms?: number;
+//   minSquareFeet?: number;
+//   maxSquareFeet?: number;
+//   minPrice?: number;
+//   maxPrice?: number;
+// }
 
 export async function POST(request: NextRequest) {
   try {
@@ -218,7 +263,7 @@ export async function POST(request: NextRequest) {
     const existingProfile = existing.empty ? null : existing.docs[0].data();
 
     // 🆕 Generate or update pre-computed filter (only if needed)
-    let filter;
+    let filter: any; // eslint-disable-line @typescript-eslint/no-explicit-any
     if (shouldUpdateFilter(city, state, existingProfile?.filter)) {
       console.log(`🔧 [PROFILE] Generating new filter for ${city}, ${state}`);
       filter = await generateBuyerFilter(city, state, 30);

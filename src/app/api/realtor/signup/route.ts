@@ -4,14 +4,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { hash } from 'bcryptjs';
 import { FirebaseDB } from '@/lib/firebase-db';
-import { 
-  RealtorRegistrationRequest, 
+import {
+  RealtorRegistrationRequest,
   RealtorRegistrationResponse,
   RealtorDataHelper,
   isValidEmail,
-  isValidPhone,
-  formatPhone
+  isValidPhone
 } from '@/lib/realtor-models';
+import { formatPhoneNumber } from '@/lib/firebase-phone-auth'; // ✅ Use E.164 format
 import { Timestamp } from 'firebase/firestore';
 import { logInfo, logError } from '@/lib/logger';
 
@@ -101,11 +101,14 @@ export async function POST(request: NextRequest) {
     // Hash password
     const hashedPassword = await hash(password, 12);
 
+    // ✅ Normalize phone to E.164 format (+1XXXXXXXXXX)
+    const normalizedPhone = formatPhoneNumber(phone);
+
     // Create realtor data structure
     const realtorData = RealtorDataHelper.createRealtorData(
       firstName,
       lastName,
-      formatPhone(phone),
+      normalizedPhone, // ✅ Use E.164 format for consistency
       email,
       serviceArea,
       company,
@@ -122,7 +125,7 @@ export async function POST(request: NextRequest) {
 
     // Update user document with phone and embedded realtor data
     await FirebaseDB.updateDocument('users', user.id, {
-      phone: formatPhone(phone),
+      phone: normalizedPhone, // ✅ Use E.164 format for consistency
       realtorData,
       updatedAt: Timestamp.now()
     });

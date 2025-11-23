@@ -244,7 +244,7 @@ export async function POST(request: NextRequest) {
       const realtorData = RealtorDataHelper.createRealtorData(
         firstName,
         lastName,
-        formatPhone(phone),
+        normalizedPhone, // ✅ Use E.164 format for consistency
         email,
         serviceArea,
         company || '',
@@ -253,7 +253,7 @@ export async function POST(request: NextRequest) {
 
       // Update user document with realtor data
       await FirebaseDB.updateDocument('users', newUser.id, {
-        phone: formatPhone(phone),
+        phone: normalizedPhone, // ✅ Use E.164 format for consistency
         realtorData,
         updatedAt: Timestamp.now()
       });

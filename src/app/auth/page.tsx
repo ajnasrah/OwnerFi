@@ -122,9 +122,8 @@ export default function AuthPage() {
         });
 
         if (signInResult?.ok) {
-          // Redirect based on role (will be handled by the API)
-          const redirectTo = searchParams?.get('callbackUrl') ||
-                            (checkData.role === 'realtor' ? '/realtor-dashboard' : '/dashboard');
+          // All users (buyers AND realtors) go to same dashboard
+          const redirectTo = searchParams?.get('callbackUrl') || '/dashboard';
           router.push(redirectTo);
         } else {
           setError('Failed to sign in. Please try again.');

@@ -92,14 +92,11 @@ export default function AuthSetup() {
         // Clear session storage
         sessionStorage.removeItem('verified_phone');
 
-        if (formData.isRealtor) {
-          router.push('/realtor-dashboard/settings');
-        } else {
-          // Set flag for tutorial
-          localStorage.setItem('isNewBuyerAccount', 'true');
-          // Redirect to settings to complete setup
-          router.push('/dashboard/settings');
-        }
+        // All users (buyers AND realtors) go to same dashboard settings
+        // Set flag for tutorial
+        localStorage.setItem('isNewBuyerAccount', 'true');
+        // Redirect to settings to complete setup
+        router.push('/dashboard/settings');
       } else {
         setError('Account created but failed to sign in. Please try signing in manually.');
         setLoading(false);

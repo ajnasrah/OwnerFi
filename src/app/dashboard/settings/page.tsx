@@ -34,22 +34,21 @@ export default function BuyerSettings() {
       router.push('/auth');
     }
 
-    // Strict role checking - buyers only
-    if (status === 'authenticated' && (session as unknown as ExtendedSession)?.user?.role !== 'buyer') {
-      if ((session as unknown as ExtendedSession)?.user?.role === 'realtor') {
-        router.push('/realtor/dashboard');
-      } else {
+    // Allow both buyers and realtors
+    if (status === 'authenticated') {
+      const userRole = (session as unknown as ExtendedSession)?.user?.role;
+      if (userRole !== 'buyer' && userRole !== 'realtor') {
         router.push('/auth');
       }
     }
   }, [status, router, session]);
 
-  // Load existing buyer profile data
+  // Load existing profile data (works for both buyers and realtors)
   useEffect(() => {
-    if (status === 'authenticated' && (session as unknown as ExtendedSession)?.user?.role === 'buyer') {
+    if (status === 'authenticated') {
       loadProfile();
     }
-  }, [status, session]);
+  }, [status]);
 
   const loadProfile = async () => {
     try {

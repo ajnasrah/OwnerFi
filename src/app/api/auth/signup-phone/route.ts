@@ -180,7 +180,14 @@ export async function POST(request: NextRequest) {
       });
 
     } else if (role === 'realtor') {
-      // Realtor signup
+      // Realtor signup - Create BOTH realtor data AND buyer profile
+      if (!db) {
+        return NextResponse.json(
+          { error: 'Database not initialized' },
+          { status: 500 }
+        );
+      }
+
       const { FirebaseDB } = await import('@/lib/firebase-db');
       const { RealtorDataHelper, formatPhone } = await import('@/lib/realtor-models');
 
@@ -218,10 +225,59 @@ export async function POST(request: NextRequest) {
         updatedAt: Timestamp.now()
       });
 
-      await logInfo('Created new realtor account via phone auth', {
+      // 🆕 ALSO CREATE BUYER PROFILE - Realtors use buyer dashboard
+      const buyerId = `buyer_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const buyerData = {
+        id: buyerId,
+        userId: newUser.id,
+        firstName,
+        lastName,
+        email: email.toLowerCase().trim(),
+        phone: phone.trim(),
+
+        // Location - empty until user fills settings
+        preferredCity: '',
+        preferredState: '',
+        city: '',
+        state: '',
+        searchRadius: 25,
+
+        // Budget - zero until user fills settings
+        maxMonthlyPayment: 0,
+        maxDownPayment: 0,
+
+        // Communication preferences
+        languages: ['English'],
+        emailNotifications: true,
+        smsNotifications: true,
+
+        // System fields - profile NOT complete yet
+        profileComplete: false,
+        isActive: true,
+
+        // Property interaction arrays
+        matchedPropertyIds: [],
+        likedPropertyIds: [],
+        passedPropertyIds: [],
+
+        // Lead selling fields
+        isAvailableForPurchase: false,
+        leadPrice: 1,
+
+        // Activity tracking
+        lastActiveAt: serverTimestamp(),
+
+        // Metadata
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      };
+
+      await setDoc(doc(db, 'buyerProfiles', buyerId), buyerData);
+
+      await logInfo('Created new realtor account via phone auth (with buyer profile)', {
         action: 'realtor_phone_signup',
         userId: newUser.id,
-        metadata: { phone: phone.trim(), licenseNumber: licenseNumber || 'not provided' }
+        metadata: { phone: phone.trim(), licenseNumber: licenseNumber || 'not provided', buyerId }
       });
 
       return NextResponse.json({

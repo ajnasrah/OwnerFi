@@ -153,7 +153,7 @@ export async function POST(request: NextRequest) {
       success: true,
       message: 'Account created successfully',
       userId: newUser.id,
-      redirectTo: (userType || 'buyer') === 'buyer' ? '/dashboard/setup' : '/realtor-dashboard'
+      redirectTo: (userType || 'buyer') === 'buyer' ? '/auth/setup' : '/realtor-dashboard'
     });
 
   } catch (error) {

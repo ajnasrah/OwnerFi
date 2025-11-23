@@ -190,7 +190,7 @@ export function PropertySwiper2({
   // Loading state
   if (isLoading) {
     return (
-      <div className="fixed inset-0 bg-slate-900 flex items-center justify-center p-6 z-50">
+      <div className="fixed top-14 left-0 right-0 bottom-0 bg-slate-900 flex items-center justify-center p-6 z-50">
         <div className="text-center max-w-sm">
           <div className="mb-6">
             <div className="w-20 h-20 mx-auto mb-4 relative">
@@ -217,7 +217,7 @@ export function PropertySwiper2({
   // No properties state
   if (!currentProperty || visibleProperties.length === 0) {
     return (
-      <div className="fixed inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-6 z-50">
+      <div className="fixed top-14 left-0 right-0 bottom-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-6 z-50">
         <div className="text-center max-w-md">
           <div className="text-7xl mb-6 animate-bounce">🔍</div>
           <h2 className="text-3xl font-black text-white mb-4">
@@ -242,7 +242,7 @@ export function PropertySwiper2({
   return (
     <div
       ref={containerRef}
-      className="fixed inset-0 bg-gradient-to-br from-indigo-950 via-slate-900 to-emerald-950 overflow-hidden z-40"
+      className="fixed top-14 left-0 right-0 bottom-0 bg-gradient-to-br from-indigo-950 via-slate-900 to-emerald-950 overflow-hidden z-40"
       onTouchStart={handleStart}
       onTouchMove={handleMove}
       onTouchEnd={handleEnd}

@@ -3,6 +3,7 @@ import { doc, setDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { unifiedDb } from '@/lib/unified-db';
 import { logInfo, logError } from '@/lib/logger';
+import { formatPhoneNumber } from '@/lib/firebase-phone-auth';
 
 export async function POST(request: NextRequest) {
   try {
@@ -39,11 +40,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // 🔧 Normalize phone to E.164 format (+1XXXXXXXXXX)
+    const normalizedPhone = formatPhoneNumber(phone);
+    console.log(`📱 [SIGNUP-PHONE] Phone normalized: ${phone} → ${normalizedPhone}`);
+
     // 🔄 EMAIL CONFLICT HANDLING: Check if email exists on old account
     let oldAccountToDelete: string | null = null;
     const existingEmailUser = await unifiedDb.users.findByEmail(email.toLowerCase());
 
+    console.log(`🔍 [SIGNUP-PHONE] Checking email: ${email.toLowerCase()}`);
+
     if (existingEmailUser) {
+      console.log(`📧 [SIGNUP-PHONE] Email found in database:`, {
+        id: existingEmailUser.id,
+        email: existingEmailUser.email,
+        phone: existingEmailUser.phone,
+        role: existingEmailUser.role,
+        hasPassword: !!(existingEmailUser.password && existingEmailUser.password.length > 0)
+      });
+
       // If existing user has a password, it's an old email/password account
       if (existingEmailUser.password && existingEmailUser.password.length > 0) {
         console.log('🔄 [SIGNUP-PHONE] Email exists on old email/password account - will delete after signup:', existingEmailUser.id);
@@ -52,16 +67,19 @@ export async function POST(request: NextRequest) {
         // Continue with signup - we'll delete the old account later
       } else {
         // Email exists on a phone-only account (shouldn't happen, but handle it)
+        console.log('❌ [SIGNUP-PHONE] Email exists on phone-only account (no password) - blocking signup');
         return NextResponse.json(
           { error: 'An account with this email already exists. Please sign in instead.' },
           { status: 400 }
         );
       }
+    } else {
+      console.log('✅ [SIGNUP-PHONE] Email not found in database - new user');
     }
 
     // 🔄 PHONE CONFLICT HANDLING: If phone exists on old account, clear it
     // This allows old users to create new phone-only accounts
-    const existingPhoneUser = await unifiedDb.users.findByPhone(phone.trim());
+    const existingPhoneUser = await unifiedDb.users.findByPhone(normalizedPhone);
     if (existingPhoneUser && existingPhoneUser.password && existingPhoneUser.password.length > 0) {
       console.log('🔄 [SIGNUP-PHONE] Phone exists on old account - clearing phone from old account:', existingPhoneUser.id);
 
@@ -84,7 +102,7 @@ export async function POST(request: NextRequest) {
     const newUser = await unifiedDb.users.create({
       name: `${firstName} ${lastName}`.trim(),
       email: email.toLowerCase().trim(),
-      phone: phone.trim(),
+      phone: normalizedPhone,
       role,
       password: '' // Empty password for phone-auth users
     });
@@ -105,7 +123,7 @@ export async function POST(request: NextRequest) {
         firstName,
         lastName,
         email: email.toLowerCase().trim(),
-        phone: phone.trim(),
+        phone: normalizedPhone,
 
         // Location - empty until user fills settings
         preferredCity: '',
@@ -183,7 +201,7 @@ export async function POST(request: NextRequest) {
       await logInfo('Created new buyer account via phone auth', {
         action: 'buyer_phone_signup',
         userId: newUser.id,
-        metadata: { phone: phone.trim() }
+        metadata: { phone: normalizedPhone }
       });
 
       return NextResponse.json({
@@ -248,7 +266,7 @@ export async function POST(request: NextRequest) {
         firstName,
         lastName,
         email: email.toLowerCase().trim(),
-        phone: phone.trim(),
+        phone: normalizedPhone,
 
         // Location - empty until user fills settings
         preferredCity: '',
@@ -292,7 +310,7 @@ export async function POST(request: NextRequest) {
       await logInfo('Created new realtor account via phone auth (with buyer profile)', {
         action: 'realtor_phone_signup',
         userId: newUser.id,
-        metadata: { phone: phone.trim(), licenseNumber: licenseNumber || 'not provided', buyerId }
+        metadata: { phone: normalizedPhone, licenseNumber: licenseNumber || 'not provided', buyerId }
       });
 
       return NextResponse.json({

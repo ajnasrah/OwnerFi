@@ -62,21 +62,20 @@ export default function Dashboard() {
     setCurrentFact(randomFact);
   }, []);
 
-  // Auth check
+  // Auth check - allow both buyers and realtors to access
   useEffect(() => {
     if (status === 'unauthenticated') {
-      router.push('/');
-    } else if (status === 'authenticated' && isExtendedSession(session as unknown as ExtendedSession) && (session as unknown as ExtendedSession)?.user?.role !== 'buyer') {
-      router.push('/');
+      router.push('/auth');
     }
-  }, [status, session, router]);
+    // Realtors can now access buyer dashboard to search properties
+  }, [status, router]);
 
-  // Load data
+  // Load data - works for both buyers and realtors
   useEffect(() => {
-    if (status === 'authenticated' && isExtendedSession(session as unknown as ExtendedSession) && (session as unknown as ExtendedSession)?.user?.role === 'buyer') {
+    if (status === 'authenticated') {
       loadData();
     }
-  }, [status, session]);
+  }, [status]);
 
   const loadData = async () => {
     try {

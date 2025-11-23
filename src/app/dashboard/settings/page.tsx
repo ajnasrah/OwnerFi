@@ -31,7 +31,7 @@ export default function BuyerSettings() {
 
   useEffect(() => {
     if (status === 'unauthenticated') {
-      router.push('/auth/signin');
+      router.push('/auth');
     }
 
     // Strict role checking - buyers only
@@ -39,7 +39,7 @@ export default function BuyerSettings() {
       if ((session as unknown as ExtendedSession)?.user?.role === 'realtor') {
         router.push('/realtor/dashboard');
       } else {
-        router.push('/auth/signin');
+        router.push('/auth');
       }
     }
   }, [status, router, session]);

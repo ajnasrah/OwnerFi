@@ -275,7 +275,7 @@ export default function SocialMediaDashboard() {
   // Auth check
   useEffect(() => {
     if (authStatus === 'unauthenticated') {
-      router.push('/auth/signin');
+      router.push('/auth');
     }
 
     if (authStatus === 'authenticated') {
@@ -286,7 +286,7 @@ export default function SocialMediaDashboard() {
         } else if (userRole === 'realtor') {
           router.push('/realtor/dashboard');
         } else {
-          router.push('/auth/signin');
+          router.push('/auth');
         }
       }
     }

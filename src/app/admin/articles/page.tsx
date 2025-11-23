@@ -41,7 +41,7 @@ export default function ArticlesPage() {
   // Auth check
   useEffect(() => {
     if (authStatus === 'unauthenticated') {
-      router.push('/auth/signin');
+      router.push('/auth');
     }
 
     if (authStatus === 'authenticated') {

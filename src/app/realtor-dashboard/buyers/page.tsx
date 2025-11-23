@@ -79,7 +79,7 @@ export default function RealtorDashboard() {
   // Auth check
   useEffect(() => {
     if (status === 'unauthenticated') {
-      router.push('/auth/signin');
+      router.push('/auth');
     } else if (status === 'authenticated' && (session as unknown as ExtendedSession)?.user?.role !== 'realtor') {
       router.push('/');
     }

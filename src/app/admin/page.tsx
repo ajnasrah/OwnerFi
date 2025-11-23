@@ -239,7 +239,7 @@ export default function AdminDashboard() {
   // Auth check
   useEffect(() => {
     if (status === 'unauthenticated') {
-      router.push('/auth/signin');
+      router.push('/auth');
     }
 
     if (status === 'authenticated') {
@@ -250,7 +250,7 @@ export default function AdminDashboard() {
         } else if (userRole === 'realtor') {
           router.push('/realtor/dashboard');
         } else {
-          router.push('/auth/signin');
+          router.push('/auth');
         }
       }
     }

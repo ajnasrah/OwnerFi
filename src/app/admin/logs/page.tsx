@@ -31,7 +31,7 @@ export default function AdminLogsPage() {
 
   useEffect(() => {
     if (status === 'unauthenticated') {
-      router.push('/auth/signin');
+      router.push('/auth');
     }
 
     if (status === 'authenticated') {

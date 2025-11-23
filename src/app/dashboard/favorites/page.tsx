@@ -33,7 +33,7 @@ export default function FavoritesPage() {
 
   useEffect(() => {
     if (status === 'unauthenticated') {
-      router.push('/auth/signin');
+      router.push('/auth');
     } else if (status === 'authenticated') {
       // Load actual property details from database
       fetchFavoriteProperties();

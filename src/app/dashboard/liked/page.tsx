@@ -26,9 +26,9 @@ export default function LikedProperties() {
   // Auth check
   useEffect(() => {
     if (status === 'unauthenticated') {
-      router.push('/auth/signin');
+      router.push('/auth');
     } else if (status === 'authenticated' && isExtendedSession(session as unknown as ExtendedSession) && (session as unknown as ExtendedSession)?.user?.role !== 'buyer') {
-      router.push('/auth/signin');
+      router.push('/auth');
     }
   }, [status, session, router]);
 

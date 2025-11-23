@@ -64,7 +64,7 @@ export default function GoHighLevelLogsPage() {
   // Auth check
   useEffect(() => {
     if (status === 'unauthenticated') {
-      router.push('/auth/signin');
+      router.push('/auth');
     } else if (
       status === 'authenticated' &&
       isExtendedSession(session as unknown as ExtendedSession) &&

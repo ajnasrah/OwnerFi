@@ -20,14 +20,13 @@ export default function BuyerSetup() {
     maxDownPayment: ''
   });
 
-  // Auth check
+  // Auth check - allow all authenticated users
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/auth');
-    } else if (status === 'authenticated' && (session as unknown as ExtendedSession)?.user?.role !== 'buyer') {
-      router.push('/realtor-signup');
     }
-  }, [status, session, router]);
+    // Both buyers and realtors can set up buyer preferences
+  }, [status, router]);
 
   if (status === 'loading') {
     return (

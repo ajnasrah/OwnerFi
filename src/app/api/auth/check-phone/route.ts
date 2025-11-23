@@ -71,21 +71,14 @@ export async function POST(request: NextRequest) {
       hasPassword: !!userData.password
     });
 
-    // 🔄 OLD ACCOUNTS: If user has a password, they're an old email/password account
-    // Let them create a NEW phone-only account (they'll have 2 accounts)
-    if (userData.password && userData.password.length > 0) {
-      console.log('🔄 [CHECK-PHONE] Old account found - allowing NEW phone account creation');
-      return NextResponse.json({
-        exists: false, // Pretend they don't exist so they can create new account
-        oldAccountDetected: true // Flag for potential cleanup later
-      });
-    }
-
-    // ✅ PHONE-ONLY ACCOUNT: User exists and has NO password (already using phone auth)
+    // ✅ USER EXISTS: Return true regardless of whether they have password or not
+    // The auth flow will handle signing them in
+    console.log('✅ [CHECK-PHONE] User found, allowing sign in');
     return NextResponse.json({
       exists: true,
       role: userData.role || 'buyer',
-      userId: userDocs.docs[0].id
+      userId: userDocs.docs[0].id,
+      hasPassword: !!userData.password // Let client know if this is an old account
     });
 
   } catch (error) {

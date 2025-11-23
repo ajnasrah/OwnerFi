@@ -43,8 +43,8 @@ export async function GET() {
     const session = await // eslint-disable-next-line @typescript-eslint/no-explicit-any
     getServerSession(authOptions as any) as ExtendedSession | null;
 
-    // Allow both buyers and realtors to access (realtors can use buyer dashboard to search)
-    if (!session?.user || (session.user.role !== 'buyer' && session.user.role !== 'realtor')) {
+    // Allow buyers, realtors, and admins to access
+    if (!session?.user || (session.user.role !== 'buyer' && session.user.role !== 'realtor' && session.user.role !== 'admin')) {
       console.log('❌ [BUYER PROFILE GET] Unauthorized:', {
         hasSession: !!session,
         hasUser: !!session?.user,
@@ -218,8 +218,8 @@ export async function POST(request: NextRequest) {
     const session = await // eslint-disable-next-line @typescript-eslint/no-explicit-any
     getServerSession(authOptions as any) as ExtendedSession | null;
 
-    // Allow both buyers and realtors to access (realtors can use buyer dashboard to search)
-    if (!session?.user || (session.user.role !== 'buyer' && session.user.role !== 'realtor')) {
+    // Allow buyers, realtors, and admins to access
+    if (!session?.user || (session.user.role !== 'buyer' && session.user.role !== 'realtor' && session.user.role !== 'admin')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

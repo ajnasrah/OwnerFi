@@ -99,7 +99,7 @@ export default function RealtorDashboardHub() {
 
           {/* View Properties */}
           <Link
-            href="/realtor-dashboard/properties"
+            href="/dashboard"
             className="group bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-8 hover:border-blue-500/50 transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/10 hover:scale-[1.02]"
           >
             <div className="text-center">

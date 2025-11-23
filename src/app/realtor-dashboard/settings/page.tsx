@@ -21,15 +21,15 @@ export default function RealtorSettings() {
   const [currentSavedCities, setCurrentSavedCities] = useState<string[]>([]);
   const [loadingCurrentCities, setLoadingCurrentCities] = useState(true);
 
-  // Auth check with session-safe handling  
+  // Auth check with session-safe handling
   useEffect(() => {
     // Don't redirect during Google Maps interactions
     if (sessionCheckPaused) return;
-    
+
     if (status === 'unauthenticated') {
-      router.push('/realtor-signup');
+      router.push('/auth');
     } else if (status === 'authenticated' && (session as unknown as ExtendedSession)?.user?.role !== 'realtor') {
-      router.push('/signup');
+      router.push('/auth');
     }
   }, [status, session, router, sessionCheckPaused]);
 

@@ -23,7 +23,7 @@ export default function BuyerSetup() {
   // Auth check
   useEffect(() => {
     if (status === 'unauthenticated') {
-      router.push('/signup');
+      router.push('/auth');
     } else if (status === 'authenticated' && (session as unknown as ExtendedSession)?.user?.role !== 'buyer') {
       router.push('/realtor-signup');
     }

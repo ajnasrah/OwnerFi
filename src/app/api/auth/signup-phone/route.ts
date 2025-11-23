@@ -39,13 +39,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if user already exists with this phone
+    // Check if user already exists with this email
     const existingUser = await unifiedDb.users.findByEmail(email.toLowerCase());
     if (existingUser) {
       return NextResponse.json(
         { error: 'An account with this email already exists' },
         { status: 400 }
       );
+    }
+
+    // 🔄 PHONE CONFLICT HANDLING: If phone exists on old account, clear it
+    // This allows old users to create new phone-only accounts
+    const existingPhoneUser = await unifiedDb.users.findByPhone(phone.trim());
+    if (existingPhoneUser && existingPhoneUser.password && existingPhoneUser.password.length > 0) {
+      console.log('🔄 [SIGNUP-PHONE] Phone exists on old account - clearing phone from old account:', existingPhoneUser.id);
+
+      // Clear phone from old account so new account can use it
+      const { FirebaseDB } = await import('@/lib/firebase-db');
+      await FirebaseDB.updateDocument('users', existingPhoneUser.id, {
+        phone: '', // Clear phone number
+        phoneCleared: true, // Flag for records
+        phoneClearedAt: Timestamp.now(),
+        phoneClearedReason: 'User created new phone-auth account'
+      });
+
+      console.log('✅ [SIGNUP-PHONE] Cleared phone from old account, proceeding with new account creation');
     }
 
     // Create user account (no password needed for phone auth)

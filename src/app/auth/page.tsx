@@ -114,14 +114,6 @@ export default function AuthPage() {
 
       const checkData = await checkResponse.json();
 
-      // Check if this is an old account that must use email/password
-      if (checkData.isOldAccount || checkResponse.status === 403) {
-        setError(checkData.error || 'This phone number is associated with an existing account. Please use email/password login instead.');
-        setStep('phone'); // Go back to phone step
-        setLoading(false);
-        return;
-      }
-
       if (checkData.exists) {
         // Existing user - sign them in
         const signInResult = await signIn('credentials', {

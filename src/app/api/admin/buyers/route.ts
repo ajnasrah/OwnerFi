@@ -394,6 +394,15 @@ export async function DELETE(request: NextRequest) {
     const BATCH_SIZE = 500;
     const batches = [];
 
+    console.log(`🗑️  DELETING ${buyerIds.length} buyers with ${docsToDelete.length} total documents`);
+    console.log(`📋 Buyer IDs to delete:`, buyerIds);
+    console.log(`📋 Documents breakdown:`, {
+      users: buyerIds.length,
+      profiles: allProfiles.reduce((sum, docs) => sum + docs.size, 0),
+      liked: allLiked.reduce((sum, docs) => sum + docs.size, 0),
+      matched: allMatched.reduce((sum, docs) => sum + docs.size, 0)
+    });
+
     for (let i = 0; i < docsToDelete.length; i += BATCH_SIZE) {
       const chunk = docsToDelete.slice(i, i + BATCH_SIZE);
       const batch = writeBatch(db);
@@ -408,9 +417,10 @@ export async function DELETE(request: NextRequest) {
     try {
       await Promise.all(batches);
       deletedCount = buyerIds.length;
-      console.log(`✅ Deleted ${deletedCount} buyers and ${docsToDelete.length} related documents in ${batches.length} batch(es)`);
+      console.log(`✅ PERMANENT DELETION COMPLETE: Deleted ${deletedCount} buyers and ${docsToDelete.length} related documents in ${batches.length} batch(es)`);
+      console.log(`✅ Collections cleaned: users, buyerProfiles, likedProperties, propertyBuyerMatches`);
     } catch (error) {
-      console.error('Failed to delete buyers:', error);
+      console.error('❌ Failed to delete buyers:', error);
       errors.push(...buyerIds); // Mark all as failed if batch deletion fails
     }
 

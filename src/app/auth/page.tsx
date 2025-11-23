@@ -122,8 +122,18 @@ export default function AuthPage() {
         });
 
         if (signInResult?.ok) {
-          // All users (buyers AND realtors) go to same dashboard
-          const redirectTo = searchParams?.get('callbackUrl') || '/dashboard';
+          // Redirect based on role
+          let redirectTo = searchParams?.get('callbackUrl') || '/dashboard';
+
+          // Check role from the check-phone response
+          if (checkData.role === 'admin') {
+            redirectTo = '/admin';
+          } else if (checkData.role === 'realtor') {
+            redirectTo = '/dashboard'; // Realtors use buyer dashboard
+          }
+
+          // Small delay to ensure session is established
+          await new Promise(resolve => setTimeout(resolve, 500));
           router.push(redirectTo);
         } else {
           setError('Failed to sign in. Please try again.');

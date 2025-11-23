@@ -39,13 +39,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if user already exists with this email
-    const existingUser = await unifiedDb.users.findByEmail(email.toLowerCase());
-    if (existingUser) {
-      return NextResponse.json(
-        { error: 'An account with this email already exists' },
-        { status: 400 }
-      );
+    // 🔄 EMAIL CONFLICT HANDLING: Check if email exists on old account
+    let oldAccountToDelete: string | null = null;
+    const existingEmailUser = await unifiedDb.users.findByEmail(email.toLowerCase());
+
+    if (existingEmailUser) {
+      // If existing user has a password, it's an old email/password account
+      if (existingEmailUser.password && existingEmailUser.password.length > 0) {
+        console.log('🔄 [SIGNUP-PHONE] Email exists on old email/password account - will delete after signup:', existingEmailUser.id);
+        oldAccountToDelete = existingEmailUser.id;
+
+        // Continue with signup - we'll delete the old account later
+      } else {
+        // Email exists on a phone-only account (shouldn't happen, but handle it)
+        return NextResponse.json(
+          { error: 'An account with this email already exists. Please sign in instead.' },
+          { status: 400 }
+        );
+      }
     }
 
     // 🔄 PHONE CONFLICT HANDLING: If phone exists on old account, clear it
@@ -54,16 +65,19 @@ export async function POST(request: NextRequest) {
     if (existingPhoneUser && existingPhoneUser.password && existingPhoneUser.password.length > 0) {
       console.log('🔄 [SIGNUP-PHONE] Phone exists on old account - clearing phone from old account:', existingPhoneUser.id);
 
-      // Clear phone from old account so new account can use it
-      const { FirebaseDB } = await import('@/lib/firebase-db');
-      await FirebaseDB.updateDocument('users', existingPhoneUser.id, {
-        phone: '', // Clear phone number
-        phoneCleared: true, // Flag for records
-        phoneClearedAt: Timestamp.now(),
-        phoneClearedReason: 'User created new phone-auth account'
-      });
+      // If this is the same account we're already planning to delete, no need to update it
+      if (!oldAccountToDelete || oldAccountToDelete !== existingPhoneUser.id) {
+        // Clear phone from old account so new account can use it
+        const { FirebaseDB } = await import('@/lib/firebase-db');
+        await FirebaseDB.updateDocument('users', existingPhoneUser.id, {
+          phone: '', // Clear phone number
+          phoneCleared: true, // Flag for records
+          phoneClearedAt: Timestamp.now(),
+          phoneClearedReason: 'User created new phone-auth account'
+        });
 
-      console.log('✅ [SIGNUP-PHONE] Cleared phone from old account, proceeding with new account creation');
+        console.log('✅ [SIGNUP-PHONE] Cleared phone from old account, proceeding with new account creation');
+      }
     }
 
     // Create user account (no password needed for phone auth)
@@ -84,7 +98,7 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      const buyerId = `buyer_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const buyerId = `buyer_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
       const buyerData = {
         id: buyerId,
         userId: newUser.id,
@@ -176,7 +190,8 @@ export async function POST(request: NextRequest) {
         success: true,
         message: 'Buyer account created successfully',
         userId: newUser.id,
-        role: 'buyer'
+        role: 'buyer',
+        oldAccountToDelete: oldAccountToDelete // Pass to client for cleanup
       });
 
     } else if (role === 'realtor') {
@@ -226,7 +241,7 @@ export async function POST(request: NextRequest) {
       });
 
       // 🆕 ALSO CREATE BUYER PROFILE - Realtors use buyer dashboard
-      const buyerId = `buyer_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const buyerId = `buyer_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
       const buyerData = {
         id: buyerId,
         userId: newUser.id,
@@ -284,7 +299,8 @@ export async function POST(request: NextRequest) {
         success: true,
         message: 'Realtor account created successfully',
         userId: newUser.id,
-        role: 'realtor'
+        role: 'realtor',
+        oldAccountToDelete: oldAccountToDelete // Pass to client for cleanup
       });
     }
 

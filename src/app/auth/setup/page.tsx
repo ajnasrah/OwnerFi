@@ -89,6 +89,31 @@ export default function AuthSetup() {
       });
 
       if (signInResult?.ok) {
+        // 🗑️ Clean up old email/password account if it exists
+        if (data.oldAccountToDelete) {
+          console.log('🗑️ [SETUP] Cleaning up old account:', data.oldAccountToDelete);
+
+          try {
+            const cleanupResponse = await fetch('/api/auth/cleanup-old-account', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                oldAccountId: data.oldAccountToDelete,
+                newAccountId: data.userId
+              })
+            });
+
+            if (cleanupResponse.ok) {
+              console.log('✅ [SETUP] Old account cleaned up successfully');
+            } else {
+              console.warn('⚠️ [SETUP] Failed to cleanup old account, but continuing anyway');
+            }
+          } catch (cleanupError) {
+            console.error('❌ [SETUP] Error during old account cleanup:', cleanupError);
+            // Don't block user flow if cleanup fails
+          }
+        }
+
         // Clear session storage
         sessionStorage.removeItem('verified_phone');
 

@@ -301,7 +301,7 @@ export function PropertySwiper2({
       </div>
 
       {/* Bottom Action Buttons - Compact Layout */}
-      <div className="absolute bottom-6 left-0 right-0 z-[100] px-3">
+      <div className="absolute bottom-6 left-0 right-0 z-overlay px-3">
         <div className="max-w-md mx-auto flex items-center justify-center gap-4">
           {/* Pass Button */}
           <button

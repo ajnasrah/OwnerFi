@@ -102,13 +102,6 @@ export default function BuyerSetup() {
 
   return (
     <div className="h-screen bg-slate-900 overflow-y-auto flex flex-col">
-      <style jsx global>{`
-        .pac-container {
-          z-index: 1051 !important;
-          transform: scale(1) !important;
-          transform-origin: top left !important;
-        }
-      `}</style>
       {/* Compact Header */}
       <header className="bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50 px-3 py-2 sm:px-4 sm:py-3 flex-shrink-0">
         <div className="flex items-center justify-between max-w-sm mx-auto">

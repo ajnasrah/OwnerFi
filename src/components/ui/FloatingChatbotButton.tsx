@@ -82,7 +82,7 @@ export default function FloatingChatbotButton({ onClick }: FloatingChatbotButton
   }, []);
 
   return (
-    <div className="fixed bottom-6 right-6 z-[9999]">
+    <div className="fixed bottom-6 right-6 z-floating-button">
       {/* Natural Chat Bubble */}
       {showQuestion && (
         <div

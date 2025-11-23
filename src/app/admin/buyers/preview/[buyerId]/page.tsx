@@ -261,7 +261,7 @@ export default function BuyerPreview() {
   return (
     <>
       {/* Admin Preview Banner */}
-      <div className="fixed top-0 left-0 right-0 z-[70] bg-yellow-500 text-black px-4 py-2 text-center font-bold">
+      <div className="fixed top-0 left-0 right-0 z-warning bg-yellow-500 text-black px-4 py-2 text-center font-bold">
         👁️ ADMIN PREVIEW MODE - Viewing as: {profile?.firstName} {profile?.lastName} ({profile?.city}, {profile?.state})
         <Link href="/admin/buyers" className="ml-4 underline">Back to Admin</Link>
       </div>
@@ -273,7 +273,7 @@ export default function BuyerPreview() {
       />
 
       {/* Top Navigation - Compact Design (offset for admin banner) */}
-      <div className="fixed top-12 left-0 right-0 z-[60] bg-gradient-to-b from-slate-900/90 to-transparent backdrop-blur-sm">
+      <div className="fixed top-12 left-0 right-0 z-header bg-gradient-to-b from-slate-900/90 to-transparent backdrop-blur-sm">
         <div className="max-w-md mx-auto px-3 py-2">
           {/* Single Row Layout */}
           <div className="flex items-center justify-between gap-2">

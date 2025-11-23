@@ -197,7 +197,7 @@ export default function Chatbot({ isOpen, onClose }: ChatbotProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed bottom-20 right-4 z-[9998] w-[360px] h-[480px]">
+    <div className="fixed bottom-20 right-4 z-chatbot w-[360px] h-[480px]">
       <div className="bg-white border border-slate-200 rounded-2xl shadow-2xl w-full h-full flex flex-col overflow-hidden">
         {/* Phone-style Header */}
         <div className="bg-slate-50 px-4 py-3 border-b border-slate-200">

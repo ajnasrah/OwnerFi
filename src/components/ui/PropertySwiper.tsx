@@ -332,7 +332,7 @@ export function PropertyListingSwiper({ properties, onLike, onPass, favorites, p
 
       {/* Toast Notification */}
       {showToast.show && (
-        <div className={`fixed top-8 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-full text-white font-bold shadow-2xl z-[100] transition-all animate-bounce ${
+        <div className={`fixed top-8 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-full text-white font-bold shadow-2xl z-overlay transition-all animate-bounce ${
           showToast.type === 'saved'
             ? 'bg-gradient-to-r from-green-500 to-emerald-600'
             : 'bg-gradient-to-r from-red-500 to-red-600'

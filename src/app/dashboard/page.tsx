@@ -340,7 +340,7 @@ export default function Dashboard() {
       />
 
       {/* Top Navigation - Compact Design */}
-      <div className="fixed top-0 left-0 right-0 z-[60] bg-gradient-to-b from-slate-900/90 to-transparent backdrop-blur-sm">
+      <div className="fixed top-0 left-0 right-0 z-header bg-gradient-to-b from-slate-900/90 to-transparent backdrop-blur-sm">
         <div className="max-w-md mx-auto px-3 py-2">
           {/* Single Row Layout */}
           <div className="flex items-center justify-between gap-2">

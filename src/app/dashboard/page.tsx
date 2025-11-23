@@ -94,7 +94,7 @@ export default function Dashboard() {
 
       if (!profileData.profile) {
         console.log('🔄 [DASHBOARD] No profile found, redirecting to setup');
-        router.push('/dashboard/setup');
+        router.push('/auth/setup');
         return;
       }
 

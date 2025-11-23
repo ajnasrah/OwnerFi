@@ -33,13 +33,35 @@ export const authOptions = {
         if (credentials?.phone && !credentials?.password) {
           const phone = credentials.phone as string;
 
-          const usersQuery = query(
-            collection(db, 'users'),
-            where('phone', '==', phone)
-          );
-          const userDocs = await getDocs(usersQuery);
+          // Normalize phone number - strip all non-digits
+          const cleaned = phone.replace(/\D/g, '');
+          const last10Digits = cleaned.slice(-10);
 
-          if (userDocs.empty) {
+          // Try multiple phone formats
+          const phoneFormats = [
+            phone,
+            last10Digits,
+            `+1${last10Digits}`,
+            `(${last10Digits.slice(0,3)}) ${last10Digits.slice(3,6)}-${last10Digits.slice(6)}`,
+          ];
+
+          let userDocs: any = null;
+
+          // Try each format until we find a match
+          for (const format of phoneFormats) {
+            const usersQuery = query(
+              collection(db, 'users'),
+              where('phone', '==', format)
+            );
+            const docs = await getDocs(usersQuery);
+
+            if (!docs.empty) {
+              userDocs = docs;
+              break;
+            }
+          }
+
+          if (!userDocs || userDocs.empty) {
             return null;
           }
 

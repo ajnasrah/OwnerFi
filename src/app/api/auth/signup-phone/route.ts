@@ -44,68 +44,60 @@ export async function POST(request: NextRequest) {
     const normalizedPhone = formatPhoneNumber(phone);
     console.log(`📱 [SIGNUP-PHONE] Phone normalized: ${phone} → ${normalizedPhone}`);
 
-    // 🔄 EMAIL CONFLICT HANDLING: Check if email exists on old account
-    let oldAccountToDelete: string | null = null;
+    // 🔄 CHECK FOR EXISTING USER: Don't create duplicates!
     const existingEmailUser = await unifiedDb.users.findByEmail(email.toLowerCase());
+    const existingPhoneUser = await unifiedDb.users.findByPhone(normalizedPhone);
 
-    console.log(`🔍 [SIGNUP-PHONE] Checking email: ${email.toLowerCase()}`);
+    console.log(`🔍 [SIGNUP-PHONE] Checking for existing user:`, {
+      email: email.toLowerCase(),
+      phone: normalizedPhone,
+      foundByEmail: !!existingEmailUser,
+      foundByPhone: !!existingPhoneUser
+    });
 
-    if (existingEmailUser) {
-      console.log(`📧 [SIGNUP-PHONE] Email found in database:`, {
-        id: existingEmailUser.id,
-        email: existingEmailUser.email,
-        phone: existingEmailUser.phone,
-        role: existingEmailUser.role,
-        hasPassword: !!(existingEmailUser.password && existingEmailUser.password.length > 0)
+    let newUser: { id: string };
+
+    // If user exists by email OR phone, UPDATE them instead of creating new account
+    if (existingEmailUser || existingPhoneUser) {
+      // Use whichever account we found (prefer email match)
+      const existingUser = existingEmailUser || existingPhoneUser!;
+
+      console.log(`🔄 [SIGNUP-PHONE] User already exists - UPDATING existing account:`, {
+        userId: existingUser.id,
+        email: existingUser.email,
+        phone: existingUser.phone,
+        hasPassword: !!existingUser.password
       });
 
-      // If existing user has a password, it's an old email/password account
-      if (existingEmailUser.password && existingEmailUser.password.length > 0) {
-        console.log('🔄 [SIGNUP-PHONE] Email exists on old email/password account - will delete after signup:', existingEmailUser.id);
-        oldAccountToDelete = existingEmailUser.id;
+      // Update existing user to add phone and migrate to phone-auth
+      const { FirebaseDB } = await import('@/lib/firebase-db');
+      await FirebaseDB.updateDocument('users', existingUser.id, {
+        name: `${firstName} ${lastName}`.trim(),
+        email: email.toLowerCase().trim(),
+        phone: normalizedPhone,
+        role, // Update role if needed
+        // Keep password if they have one (allows dual auth)
+        updatedAt: Timestamp.now(),
+        migratedToPhoneAuth: true,
+        migratedAt: Timestamp.now()
+      });
 
-        // Continue with signup - we'll delete the old account later
-      } else {
-        // Email exists on a phone-only account (shouldn't happen, but handle it)
-        console.log('❌ [SIGNUP-PHONE] Email exists on phone-only account (no password) - blocking signup');
-        return NextResponse.json(
-          { error: 'An account with this email already exists. Please sign in instead.' },
-          { status: 400 }
-        );
-      }
+      newUser = { id: existingUser.id };
+      console.log('✅ [SIGNUP-PHONE] Updated existing user account');
     } else {
-      console.log('✅ [SIGNUP-PHONE] Email not found in database - new user');
+      // No existing user - create new one
+      console.log('✅ [SIGNUP-PHONE] No existing user - creating new account');
+
+      newUser = await unifiedDb.users.create({
+        name: `${firstName} ${lastName}`.trim(),
+        email: email.toLowerCase().trim(),
+        phone: normalizedPhone,
+        role,
+        password: '' // Empty password for phone-auth users
+      });
+
+      console.log('✅ [SIGNUP-PHONE] Created new user account:', newUser.id);
     }
-
-    // 🔄 PHONE CONFLICT HANDLING: If phone exists on old account, clear it
-    // This allows old users to create new phone-only accounts
-    const existingPhoneUser = await unifiedDb.users.findByPhone(normalizedPhone);
-    if (existingPhoneUser && existingPhoneUser.password && existingPhoneUser.password.length > 0) {
-      console.log('🔄 [SIGNUP-PHONE] Phone exists on old account - clearing phone from old account:', existingPhoneUser.id);
-
-      // If this is the same account we're already planning to delete, no need to update it
-      if (!oldAccountToDelete || oldAccountToDelete !== existingPhoneUser.id) {
-        // Clear phone from old account so new account can use it
-        const { FirebaseDB } = await import('@/lib/firebase-db');
-        await FirebaseDB.updateDocument('users', existingPhoneUser.id, {
-          phone: '', // Clear phone number
-          phoneCleared: true, // Flag for records
-          phoneClearedAt: Timestamp.now(),
-          phoneClearedReason: 'User created new phone-auth account'
-        });
-
-        console.log('✅ [SIGNUP-PHONE] Cleared phone from old account, proceeding with new account creation');
-      }
-    }
-
-    // Create user account (no password needed for phone auth)
-    const newUser = await unifiedDb.users.create({
-      name: `${firstName} ${lastName}`.trim(),
-      email: email.toLowerCase().trim(),
-      phone: normalizedPhone,
-      role,
-      password: '' // Empty password for phone-auth users
-    });
 
     // Create role-specific profile
     if (role === 'buyer') {
@@ -208,8 +200,7 @@ export async function POST(request: NextRequest) {
         success: true,
         message: 'Buyer account created successfully',
         userId: newUser.id,
-        role: 'buyer',
-        oldAccountToDelete: oldAccountToDelete // Pass to client for cleanup
+        role: 'buyer'
       });
 
     } else if (role === 'realtor') {
@@ -317,8 +308,7 @@ export async function POST(request: NextRequest) {
         success: true,
         message: 'Realtor account created successfully',
         userId: newUser.id,
-        role: 'realtor',
-        oldAccountToDelete: oldAccountToDelete // Pass to client for cleanup
+        role: 'realtor'
       });
     }
 

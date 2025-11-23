@@ -15,9 +15,12 @@ import {
 export default function AuthPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [mode, setMode] = useState<'phone' | 'email'>('phone');
   const [step, setStep] = useState<'phone' | 'code'>('phone');
   const [phone, setPhone] = useState('');
   const [code, setCode] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
@@ -147,6 +150,38 @@ export default function AuthPage() {
     setConfirmationResult(null);
   };
 
+  const handleEmailSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    if (!email || !password) {
+      setError('Please enter both email and password');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const signInResult = await signIn('credentials', {
+        email,
+        password,
+        redirect: false,
+      });
+
+      if (signInResult?.ok) {
+        const redirectTo = searchParams?.get('callbackUrl') || '/dashboard';
+        router.push(redirectTo);
+      } else {
+        setError('Invalid email or password');
+      }
+    } catch (err: any) {
+      console.error('Email sign-in error:', err);
+      setError(err.message || 'Failed to sign in');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const formatPhoneDisplay = (value: string) => {
     const cleaned = value.replace(/\D/g, '');
     const match = cleaned.match(/^(\d{0,3})(\d{0,3})(\d{0,4})$/);
@@ -181,7 +216,67 @@ export default function AuthPage() {
             </div>
           )}
 
-          {step === 'phone' ? (
+          {mode === 'email' ? (
+            <form onSubmit={handleEmailSubmit} className="space-y-6">
+              <div>
+                <label className="block text-sm font-semibold text-slate-200 mb-3">
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  required
+                  className="w-full px-4 py-4 bg-slate-900/50 border border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-white text-lg placeholder-slate-500 transition-all"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-slate-200 mb-3">
+                  Password
+                </label>
+                <input
+                  type="password"
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your password"
+                  required
+                  className="w-full px-4 py-4 bg-slate-900/50 border border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-white text-lg placeholder-slate-500 transition-all"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading || !email || !password}
+                className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white py-4 px-6 rounded-xl font-bold text-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              >
+                {loading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Signing in...
+                  </span>
+                ) : (
+                  'Sign In'
+                )}
+              </button>
+
+              <div className="mt-4 text-center">
+                <button
+                  type="button"
+                  onClick={() => setMode('phone')}
+                  className="text-slate-400 hover:text-slate-200 text-sm transition-colors"
+                >
+                  Back to phone
+                </button>
+              </div>
+            </form>
+          ) : step === 'phone' ? (
             <form onSubmit={handlePhoneSubmit} className="space-y-6">
               <div>
                 <label className="block text-sm font-semibold text-slate-200 mb-3">
@@ -221,6 +316,16 @@ export default function AuthPage() {
                   'Send Verification Code'
                 )}
               </button>
+
+              <div className="mt-4 text-center">
+                <button
+                  type="button"
+                  onClick={() => setMode('email')}
+                  className="text-slate-400 hover:text-slate-200 text-sm transition-colors"
+                >
+                  Continue with email
+                </button>
+              </div>
             </form>
           ) : (
             <form onSubmit={handleCodeSubmit} className="space-y-6">

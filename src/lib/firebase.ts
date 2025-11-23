@@ -2,6 +2,7 @@ import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
 import { getFirestore, Firestore } from 'firebase/firestore';
 import { getAuth, Auth } from 'firebase/auth';
 import { getStorage, FirebaseStorage } from 'firebase/storage';
+import { initializeAppCheck, ReCaptchaV3Provider } from 'firebase/app-check';
 
 
 // Check if we have the minimum required environment variables
@@ -31,6 +32,19 @@ if (hasFirebaseConfig) {
     db = getFirestore(app);
     auth = getAuth(app);
     storage = getStorage(app);
+
+    // Initialize App Check with reCAPTCHA v3
+    if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY) {
+      try {
+        initializeAppCheck(app, {
+          provider: new ReCaptchaV3Provider(process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY),
+          isTokenAutoRefreshEnabled: true
+        });
+        console.log('✅ App Check initialized with reCAPTCHA v3');
+      } catch (error) {
+        console.warn('⚠️ App Check initialization failed:', error);
+      }
+    }
   } catch {
     // Reset to null on failure
     app = null;

@@ -369,17 +369,6 @@ export default function RealtorDashboard() {
                           Owned
                         </span>
                       </div>
-                      
-                      <div className="grid grid-cols-2 gap-3 mb-4">
-                        <div className="bg-slate-700/50 rounded-lg p-3 text-center">
-                          <div className="text-slate-400 text-xs">Budget Down</div>
-                          <div className="text-white font-bold">${buyer.maxDownPayment.toLocaleString()}</div>
-                        </div>
-                        <div className="bg-slate-700/50 rounded-lg p-3 text-center">
-                          <div className="text-slate-400 text-xs">Budget Payment</div>
-                          <div className="text-white font-bold">${buyer.maxMonthlyPayment.toLocaleString()}</div>
-                        </div>
-                      </div>
 
                       <div className="space-y-2">
                         <div className="flex gap-2">

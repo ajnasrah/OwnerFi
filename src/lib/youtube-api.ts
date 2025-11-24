@@ -41,26 +41,38 @@ interface YouTubeUploadResult {
 function getYouTubeCredentials(brand: string): YouTubeCredentials | null {
   const brandUpper = brand.toUpperCase();
 
+  console.log(`🔍 [YouTube] Getting credentials for ${brand}...`);
+
   // Try shared credentials first (recommended setup)
   let clientId = process.env.YOUTUBE_CLIENT_ID;
   let clientSecret = process.env.YOUTUBE_CLIENT_SECRET;
+
+  console.log(`🔍 [YouTube] Shared CLIENT_ID: ${clientId ? 'SET' : 'MISSING'}`);
+  console.log(`🔍 [YouTube] Shared CLIENT_SECRET: ${clientSecret ? 'SET' : 'MISSING'}`);
 
   // Fall back to brand-specific credentials if shared ones don't exist
   if (!clientId || !clientSecret) {
     clientId = process.env[`YOUTUBE_${brandUpper}_CLIENT_ID`];
     clientSecret = process.env[`YOUTUBE_${brandUpper}_CLIENT_SECRET`];
+    console.log(`🔍 [YouTube] Brand-specific CLIENT_ID: ${clientId ? 'SET' : 'MISSING'}`);
+    console.log(`🔍 [YouTube] Brand-specific CLIENT_SECRET: ${clientSecret ? 'SET' : 'MISSING'}`);
   }
 
   // Refresh token is always brand-specific (one per YouTube channel)
   const refreshToken = process.env[`YOUTUBE_${brandUpper}_REFRESH_TOKEN`];
+  console.log(`🔍 [YouTube] ${brandUpper} REFRESH_TOKEN: ${refreshToken ? 'SET (first 20 chars: ' + refreshToken.substring(0, 20) + '...)' : 'MISSING'}`);
 
   if (!clientId || !clientSecret || !refreshToken) {
-    console.error(`❌ Missing YouTube credentials for ${brand}`);
+    console.error(`❌ [YouTube] Missing credentials for ${brand}`);
+    console.error(`   Shared CLIENT_ID: ${!!process.env.YOUTUBE_CLIENT_ID}`);
+    console.error(`   Shared CLIENT_SECRET: ${!!process.env.YOUTUBE_CLIENT_SECRET}`);
+    console.error(`   Brand REFRESH_TOKEN (YOUTUBE_${brandUpper}_REFRESH_TOKEN): ${!!refreshToken}`);
     console.error(`   Option 1 (Recommended - Shared): Set YOUTUBE_CLIENT_ID, YOUTUBE_CLIENT_SECRET, YOUTUBE_${brandUpper}_REFRESH_TOKEN`);
     console.error(`   Option 2 (Per-brand): Set YOUTUBE_${brandUpper}_CLIENT_ID, YOUTUBE_${brandUpper}_CLIENT_SECRET, YOUTUBE_${brandUpper}_REFRESH_TOKEN`);
     return null;
   }
 
+  console.log(`✅ [YouTube] Credentials found for ${brand}`);
   return { clientId, clientSecret, refreshToken };
 }
 

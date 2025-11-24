@@ -54,12 +54,17 @@ export async function postToAllPlatforms(options: UnifiedPostOptions): Promise<U
     errors: [],
   };
 
-  console.log(`\n📤 Unified posting for ${options.brand}...`);
+  console.log(`\n📤 [UNIFIED] Posting for ${options.brand}...`);
   console.log(`   Platforms requested: ${options.platforms.join(', ')}`);
+  console.log(`   Video URL: ${options.videoUrl.substring(0, 80)}...`);
+  console.log(`   Title: ${options.title}`);
 
   // Separate YouTube from other platforms
   const hasYouTube = options.platforms.includes('youtube');
   const otherPlatforms = options.platforms.filter(p => p !== 'youtube') as any[];
+
+  console.log(`   Has YouTube: ${hasYouTube ? 'YES' : 'NO'}`);
+  console.log(`   Other platforms: ${otherPlatforms.join(', ')}`);
 
   // Step 1: Upload to YouTube directly (if requested)
   if (hasYouTube) {

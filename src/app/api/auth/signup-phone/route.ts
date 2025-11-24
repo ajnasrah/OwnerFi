@@ -314,9 +314,9 @@ export async function POST(request: NextRequest) {
         likedPropertyIds: [],
         passedPropertyIds: [],
 
-        // Lead selling fields - make buyers available for realtors immediately
-        isAvailableForPurchase: true,
-        leadPrice: 1,
+        // Lead selling fields - REALTORS should NEVER be available for purchase
+        isAvailableForPurchase: false,
+        leadPrice: 0,
 
         // Activity tracking
         lastActiveAt: serverTimestamp(),

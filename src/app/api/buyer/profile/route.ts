@@ -20,6 +20,7 @@ import { ExtendedSession } from '@/types/session';
 import { syncBuyerToGHL } from '@/lib/gohighlevel-api';
 import { logInfo, logWarn, logError } from '@/lib/logger';
 import { generateBuyerFilter, shouldUpdateFilter } from '@/lib/buyer-filter-service';
+import { getAllPhoneFormats, normalizePhone } from '@/lib/phone-utils';
 
 /**
  * SIMPLIFIED BUYER PROFILE API
@@ -69,17 +70,8 @@ export async function GET() {
 
     // 1. Try by PHONE (most reliable for phone-auth users)
     if (session.user.phone) {
-      // Normalize phone number - strip all non-digits and get last 10
-      const cleaned = session.user.phone.replace(/\D/g, '');
-      const last10Digits = cleaned.slice(-10);
-
-      // Try multiple phone formats
-      const phoneFormats = [
-        session.user.phone,                                                    // Original format
-        last10Digits,                                                          // Just digits
-        `+1${last10Digits}`,                                                  // E.164 format
-        `(${last10Digits.slice(0,3)}) ${last10Digits.slice(3,6)}-${last10Digits.slice(6)}`, // Formatted
-      ];
+      // Use unified phone utils to get all possible formats
+      const phoneFormats = getAllPhoneFormats(session.user.phone);
 
       console.log('🔍 [BUYER PROFILE GET] Trying phone formats:', phoneFormats);
 

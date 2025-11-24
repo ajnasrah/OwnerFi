@@ -48,22 +48,26 @@ export class ConsolidatedLeadSystem {
   /**
    * Find available buyer leads for a realtor based on location and language matching
    */
-  static async findAvailableLeads(realtorProfile: RealtorMatchProfile): Promise<LeadMatch[]> {
+  static async findAvailableLeads(realtorProfile: RealtorMatchProfile, limit = 50): Promise<LeadMatch[]> {
     try {
 
-      // Get ALL available buyer profiles (don't filter by state first)
-      // We'll filter by city match in the application logic
+      // 🚀 PERFORMANCE: Limit query to most recent buyers (last 100)
+      // Filter by state at database level to reduce processing
       const availableBuyers = await FirebaseDB.queryDocuments<BuyerProfile>('buyerProfiles', [
         { field: 'isAvailableForPurchase', operator: '==', value: true },
         { field: 'isActive', operator: '==', value: true },
-        { field: 'profileComplete', operator: '==', value: true }
-      ]);
-      
-      
+        { field: 'profileComplete', operator: '==', value: true },
+        { field: 'preferredState', operator: '==', value: realtorProfile.state }
+      ], 100); // Limit to 100 most recent leads
+
+
       // Score and filter matches
       const matches: LeadMatch[] = [];
-      
+
       for (const buyer of availableBuyers) {
+        // Early exit once we have enough matches
+        if (matches.length >= limit) break;
+
         const matchResult = this.calculateMatch(buyer, realtorProfile);
         if (matchResult.isMatch) {
           matches.push({
@@ -86,11 +90,12 @@ export class ConsolidatedLeadSystem {
           });
         }
       }
-      
+
       // Sort by match score (highest first)
       matches.sort((a, b) => b.matchScore - a.matchScore);
-      
-      return matches;
+
+      // Return top matches only
+      return matches.slice(0, limit);
       
     } catch {
       return [];

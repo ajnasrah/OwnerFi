@@ -70,7 +70,7 @@ export async function GET() {
   try {
     // Enforce realtor role only
     const session = await getSessionWithRole('realtor');
-    
+
     if (!session?.user?.email || !session.user.id) {
       return NextResponse.json(
         { error: 'Not authenticated' },
@@ -82,38 +82,67 @@ export async function GET() {
     const userData = await FirebaseDB.getDocument('users', session.user.id);
     const user = userData as {
       role: string;
-      realtorData: {
+      realtorData?: {
         firstName: string;
         lastName: string;
         credits: number;
         isOnTrial: boolean;
-        serviceArea: {
+        serviceArea?: {
           primaryCity: { name: string; state: string };
           totalCitiesServed: number;
         };
       };
     };
-    
-    if (!user || user.role !== 'realtor' || !user.realtorData) {
+
+    if (!user || user.role !== 'realtor') {
       return NextResponse.json(
         { error: 'Realtor profile not found. Please complete your registration.' },
         { status: 400 }
       );
     }
 
-    const { realtorData } = user;
+    // Get buyer profile to determine service area (realtors fill this out in settings)
+    // Query by userId since buyer profiles have their own IDs (buyer_timestamp_...)
+    const buyerProfiles = await FirebaseDB.queryDocuments('buyerProfiles', [
+      { field: 'userId', operator: '==', value: session.user.id }
+    ]);
 
-    // Get available buyer leads using new matching module
+    const profile = buyerProfiles.length > 0 ? buyerProfiles[0] as {
+      preferredCity?: string;
+      preferredState?: string;
+      firstName?: string;
+      lastName?: string;
+    } : null;
+
+    // Use buyer profile city as service area
+    const serviceCity = profile?.preferredCity || 'Not set';
+    const serviceState = profile?.preferredState || 'Not set';
+
+    // Create simplified realtor data structure
+    const realtorData = {
+      firstName: user.realtorData?.firstName || profile?.firstName || 'Realtor',
+      lastName: user.realtorData?.lastName || profile?.lastName || '',
+      credits: user.realtorData?.credits || 0,
+      isOnTrial: user.realtorData?.isOnTrial || false,
+      serviceArea: {
+        primaryCity: { name: serviceCity, state: serviceState },
+        nearbyCities: [] // Can be extended later
+      }
+    };
+
+    // Get available buyer leads using buyer profile city
     const availableLeads = await getMatchedBuyerLeads(realtorData);
-    
+
     // Get owned buyers (purchased by this realtor)
     const ownedBuyers = await getOwnedBuyers(session.user.id);
-    
+
     // Get transaction history
     const transactions = await getTransactionHistory(session.user.id);
 
     // Calculate trial days remaining
-    const trialDaysRemaining = RealtorDataHelper.getTrialDaysRemaining(realtorData);
+    const trialDaysRemaining = user.realtorData
+      ? RealtorDataHelper.getTrialDaysRemaining(user.realtorData)
+      : 14; // Default trial period
 
     const dashboardData: DashboardData = {
       availableLeads,
@@ -126,8 +155,8 @@ export async function GET() {
         isOnTrial: realtorData.isOnTrial,
         trialDaysRemaining,
         serviceArea: {
-          primaryCity: realtorData.serviceArea.primaryCity.name,
-          totalCitiesServed: realtorData.serviceArea.totalCitiesServed
+          primaryCity: serviceCity,
+          totalCitiesServed: 1 // Just using buyer profile city for now
         }
       }
     };
@@ -139,7 +168,9 @@ export async function GET() {
         availableLeadsCount: availableLeads.length,
         ownedBuyersCount: ownedBuyers.length,
         transactionCount: transactions.length,
-        credits: realtorData.credits
+        credits: realtorData.credits,
+        serviceCity,
+        serviceState
       }
     });
 

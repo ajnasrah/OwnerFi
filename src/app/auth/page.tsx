@@ -4,13 +4,13 @@ import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 import { ConfirmationResult } from 'firebase/auth';
+import Link from 'next/link';
 import {
-  formatPhoneNumber,
-  isValidPhoneNumber,
   setupRecaptcha,
   sendVerificationCode,
   verifyCode
 } from '@/lib/firebase-phone-auth';
+import { isValidPhone } from '@/lib/phone-utils';
 
 export default function AuthPage() {
   const router = useRouter();
@@ -38,7 +38,7 @@ export default function AuthPage() {
     setLoading(true);
     setError('');
 
-    if (!isValidPhoneNumber(phone)) {
+    if (!isValidPhone(phone)) {
       setError('Please enter a valid 10-digit phone number');
       setLoading(false);
       return;
@@ -129,7 +129,7 @@ export default function AuthPage() {
           if (checkData.role === 'admin') {
             redirectTo = '/admin';
           } else if (checkData.role === 'realtor') {
-            redirectTo = '/dashboard'; // Realtors use buyer dashboard
+            redirectTo = '/realtor-dashboard';
           }
 
           // Small delay to ensure session is established
@@ -208,11 +208,15 @@ export default function AuthPage() {
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-3xl mb-6 shadow-2xl">
+          <Link
+            href="/"
+            className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-3xl mb-6 shadow-2xl hover:shadow-emerald-500/50 transition-all duration-300 hover:scale-105 active:scale-95"
+            title="Back to Home"
+          >
             <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
             </svg>
-          </div>
+          </Link>
           <h1 className="text-4xl font-bold text-white mb-3">Welcome to OwnerFi</h1>
           <p className="text-slate-300 text-lg">Skip the bank. Buy direct.</p>
         </div>
@@ -404,6 +408,30 @@ export default function AuthPage() {
               </p>
             </div>
           </div>
+        </div>
+
+        {/* Terms & Privacy */}
+        <div className="mt-4 text-center">
+          <p className="text-xs text-slate-400">
+            By signing in, you agree to our{' '}
+            <a
+              href="/terms"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-emerald-400 hover:text-emerald-300 underline transition-colors"
+            >
+              Terms of Service
+            </a>
+            {' '}and{' '}
+            <a
+              href="/privacy"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-emerald-400 hover:text-emerald-300 underline transition-colors"
+            >
+              Privacy Policy
+            </a>
+          </p>
         </div>
       </div>
     </div>

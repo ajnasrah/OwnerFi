@@ -42,13 +42,6 @@ export default function RealtorDashboardHub() {
           </Link>
 
           <div className="flex items-center gap-2">
-            <Link
-              href="/realtor-dashboard/settings"
-              className="text-slate-400 hover:text-white transition-colors p-1.5"
-              title="Settings"
-            >
-              ⚙️
-            </Link>
             <button
               onClick={() => signOut({ callbackUrl: '/auth/signout' })}
               className="text-slate-400 hover:text-red-400 transition-colors p-1.5"
@@ -110,7 +103,7 @@ export default function RealtorDashboardHub() {
                 Properties
               </h2>
               <p className="text-slate-300 mb-4">
-                Browse owner-financed properties in your area to show to your buyers
+                Browse owner-financed properties to show to your buyers
               </p>
               <div className="inline-flex items-center gap-2 text-blue-400 font-semibold">
                 <span>View Properties</span>
@@ -123,19 +116,13 @@ export default function RealtorDashboardHub() {
 
         {/* Quick Actions */}
         <div className="mt-12 text-center">
-          <p className="text-slate-400 text-sm mb-4">Quick Actions</p>
-          <div className="flex justify-center gap-4">
+          <p className="text-slate-400 text-sm mb-4">Need more leads?</p>
+          <div className="flex justify-center">
             <Link
               href="/buy-credits"
-              className="bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 text-white px-6 py-3 rounded-xl font-medium transition-all"
+              className="bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/30 text-emerald-400 px-8 py-3 rounded-xl font-semibold transition-all hover:scale-105"
             >
               💳 Buy Credits
-            </Link>
-            <Link
-              href="/realtor-dashboard/settings"
-              className="bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 text-white px-6 py-3 rounded-xl font-medium transition-all"
-            >
-              ⚙️ Settings
             </Link>
           </div>
         </div>

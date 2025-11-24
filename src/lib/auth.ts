@@ -1,15 +1,17 @@
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { compare } from 'bcryptjs';
-import { 
-  collection, 
-  query, 
-  where, 
+import {
+  collection,
+  query,
+  where,
   getDocs
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { ExtendedUser } from '@/types/session';
 import type { Session } from 'next-auth';
 import type { JWT } from 'next-auth/jwt';
+import { unifiedDb } from './unified-db';
+import { normalizePhone } from './phone-utils';
 // NextAuthOptions type doesn't exist in newer versions, use a generic type
 
 export const authOptions = {
@@ -33,47 +35,32 @@ export const authOptions = {
         if (credentials?.phone && !credentials?.password) {
           const phone = credentials.phone as string;
 
-          // Normalize phone number - strip all non-digits
-          const cleaned = phone.replace(/\D/g, '');
-          const last10Digits = cleaned.slice(-10);
+          console.log('🔐 [AUTH] Phone login attempt:', phone);
 
-          // Try multiple phone formats
-          const phoneFormats = [
-            phone,
-            last10Digits,
-            `+1${last10Digits}`,
-            `(${last10Digits.slice(0,3)}) ${last10Digits.slice(3,6)}-${last10Digits.slice(6)}`,
-          ];
+          // Normalize phone to E.164 format
+          const normalizedPhone = normalizePhone(phone);
+          console.log('🔐 [AUTH] Normalized phone:', normalizedPhone);
 
-          let userDocs: any = null;
+          // Use unified DB method - it tries all formats automatically
+          const user = await unifiedDb.users.findByPhone(normalizedPhone);
 
-          // Try each format until we find a match
-          for (const format of phoneFormats) {
-            const usersQuery = query(
-              collection(db, 'users'),
-              where('phone', '==', format)
-            );
-            const docs = await getDocs(usersQuery);
-
-            if (!docs.empty) {
-              userDocs = docs;
-              break;
-            }
-          }
-
-          if (!userDocs || userDocs.empty) {
+          if (!user) {
+            console.log('❌ [AUTH] User not found for phone:', normalizedPhone);
             return null;
           }
 
-          const userDoc = userDocs.docs[0];
-          const userData = userDoc.data();
+          console.log('✅ [AUTH] User found:', {
+            id: user.id,
+            role: user.role,
+            email: user.email
+          });
 
           return {
-            id: userDoc.id,
-            email: userData.email,
-            name: userData.name,
-            phone: userData.phone,
-            role: userData.role,
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            phone: user.phone,
+            role: user.role,
           };
         }
 

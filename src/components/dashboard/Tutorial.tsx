@@ -57,7 +57,9 @@ export default function Tutorial({ onComplete, isVisible }: TutorialProps) {
   };
 
   const handleComplete = () => {
+    // Store completion with timestamp and reset login counter
     localStorage.setItem('buyerTutorialCompleted', 'true');
+    localStorage.setItem('tutorialLoginCount', '0');
     onComplete();
   };
 

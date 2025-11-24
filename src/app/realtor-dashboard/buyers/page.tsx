@@ -218,12 +218,17 @@ export default function RealtorDashboard() {
       <header className="bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50">
         {/* Top Row - Logo and Actions */}
         <div className="px-4 py-3 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">O</span>
-            </div>
-            <span className="text-lg font-bold text-white">OwnerFi</span>
-          </Link>
+          <div className="flex items-center gap-4">
+            <Link href="/realtor-dashboard" className="text-slate-400 hover:text-white transition-colors">
+              ← Back to Hub
+            </Link>
+            <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+              <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-sm">O</span>
+              </div>
+              <span className="text-lg font-bold text-white">OwnerFi</span>
+            </Link>
+          </div>
           
           <div className="flex items-center gap-2">
             <Link
@@ -233,7 +238,7 @@ export default function RealtorDashboard() {
               {dashboardData.realtorData.credits} Credits
             </Link>
             <Link
-              href="/realtor-dashboard/settings"
+              href="/dashboard/settings"
               className="text-slate-400 hover:text-white transition-colors p-1.5"
               title="Settings"
             >
@@ -322,17 +327,6 @@ export default function RealtorDashboard() {
                         </span>
                       </div>
                       
-                      <div className="grid grid-cols-2 gap-3 mb-4">
-                        <div className="bg-slate-700/50 rounded-lg p-3 text-center">
-                          <div className="text-slate-400 text-xs">Budget Down</div>
-                          <div className="text-white font-bold">${lead.maxDownPayment.toLocaleString()}</div>
-                        </div>
-                        <div className="bg-slate-700/50 rounded-lg p-3 text-center">
-                          <div className="text-slate-400 text-xs">Budget Payment</div>
-                          <div className="text-white font-bold">${lead.maxMonthlyPayment.toLocaleString()}</div>
-                        </div>
-                      </div>
-
                       <div className="flex gap-2">
                         <button
                           onClick={() => purchaseLead(lead.id)}

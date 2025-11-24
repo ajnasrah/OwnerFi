@@ -148,6 +148,15 @@ export default async function HomePage() {
     console.error('Session error:', error)
   }
 
+  // Determine dashboard URL based on user role
+  const getDashboardUrl = () => {
+    if (!session?.user) return '/dashboard'
+    const userRole = (session.user as any).role
+    if (userRole === 'admin') return '/admin'
+    if (userRole === 'realtor') return '/realtor-dashboard'
+    return '/dashboard'
+  }
+
   return (
     <>
       {/* Schema Markup */}
@@ -194,7 +203,7 @@ export default async function HomePage() {
                 </Link>
                 {session ? (
                   <Link
-                    href="/dashboard"
+                    href={getDashboardUrl()}
                     className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white px-4 py-2 rounded-xl font-semibold text-sm transition-all duration-300 hover:scale-105 shadow-lg shadow-emerald-500/25"
                   >
                     Go to Dashboard
@@ -737,7 +746,7 @@ export default async function HomePage() {
               <div>
                 <h3 className="text-white font-semibold mb-4">Account</h3>
                 <ul className="space-y-2">
-                  <li><Link href="/dashboard" className="text-slate-400 hover:text-white transition-colors">Dashboard</Link></li>
+                  <li><Link href={getDashboardUrl()} className="text-slate-400 hover:text-white transition-colors">Dashboard</Link></li>
                 </ul>
               </div>
             </div>

@@ -135,10 +135,8 @@ export default function BuyerSettings() {
       } else {
         setSuccess('Preferences updated successfully!');
 
-        // Redirect back to dashboard
-        setTimeout(() => {
-          router.push('/dashboard');
-        }, 1500);
+        // Redirect back to dashboard immediately
+        router.push('/dashboard');
       }
     } catch {
       setError('Failed to save preferences');
@@ -185,6 +183,19 @@ export default function BuyerSettings() {
 
             {/* Action Buttons */}
             <div className="flex items-center gap-2">
+              {/* Realtor Dashboard Button - Only show for realtors */}
+              {(session as unknown as ExtendedSession)?.user?.role === 'realtor' && (
+                <Link
+                  href="/realtor-dashboard"
+                  className="px-3 py-1.5 bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/30 rounded-lg flex items-center gap-1.5 transition-all duration-200 hover:scale-105 group"
+                  title="Realtor Dashboard"
+                >
+                  <span className="text-emerald-400 text-xs font-semibold">Realtor Hub</span>
+                  <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </Link>
+              )}
               <Link
                 href="/dashboard/liked"
                 className="w-9 h-9 bg-slate-800/50 hover:bg-slate-700/50 rounded-xl flex items-center justify-center transition-all duration-200 hover:scale-105"

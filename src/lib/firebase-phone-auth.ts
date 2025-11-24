@@ -6,36 +6,11 @@ import {
   signInWithCredential
 } from 'firebase/auth';
 import { auth } from './firebase';
+import { normalizePhone as normalizePhoneUtil, isValidPhone as isValidPhoneUtil } from './phone-utils';
 
-// Format phone number to E.164 format (+1XXXXXXXXXX)
-export function formatPhoneNumber(phone: string): string {
-  // Remove all non-numeric characters
-  const cleaned = phone.replace(/\D/g, '');
-
-  // If it starts with 1 and is 11 digits, add +
-  if (cleaned.length === 11 && cleaned.startsWith('1')) {
-    return `+${cleaned}`;
-  }
-
-  // If it's 10 digits, add +1
-  if (cleaned.length === 10) {
-    return `+1${cleaned}`;
-  }
-
-  // If it already starts with +, return as is
-  if (phone.startsWith('+')) {
-    return phone;
-  }
-
-  // Default: add +1
-  return `+1${cleaned}`;
-}
-
-// Validate phone number format
-export function isValidPhoneNumber(phone: string): boolean {
-  const cleaned = phone.replace(/\D/g, '');
-  return cleaned.length === 10 || cleaned.length === 11;
-}
+// Re-export from phone-utils for backward compatibility
+export const formatPhoneNumber = normalizePhoneUtil;
+export const isValidPhoneNumber = isValidPhoneUtil;
 
 // Initialize reCAPTCHA verifier
 export function setupRecaptcha(containerId: string): RecaptchaVerifier | null {
@@ -73,8 +48,9 @@ export async function sendVerificationCode(
   }
 
   try {
-    const formattedPhone = formatPhoneNumber(phoneNumber);
-    const confirmationResult = await signInWithPhoneNumber(auth, formattedPhone, recaptchaVerifier);
+    const normalizedPhone = normalizePhoneUtil(phoneNumber);
+    console.log('📱 [FIREBASE-PHONE-AUTH] Sending SMS to:', normalizedPhone);
+    const confirmationResult = await signInWithPhoneNumber(auth, normalizedPhone, recaptchaVerifier);
 
     return {
       success: true,

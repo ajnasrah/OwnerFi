@@ -3,7 +3,7 @@ import { doc, setDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { unifiedDb } from '@/lib/unified-db';
 import { logInfo, logError } from '@/lib/logger';
-import { formatPhoneNumber } from '@/lib/firebase-phone-auth';
+import { normalizePhone, isValidPhone } from '@/lib/phone-utils';
 
 export async function POST(request: NextRequest) {
   try {
@@ -40,8 +40,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate phone format
+    if (!isValidPhone(phone)) {
+      console.log(`❌ [SIGNUP-PHONE] Invalid phone format: ${phone}`);
+      return NextResponse.json(
+        { error: 'Invalid phone number format' },
+        { status: 400 }
+      );
+    }
+
     // 🔧 Normalize phone to E.164 format (+1XXXXXXXXXX)
-    const normalizedPhone = formatPhoneNumber(phone);
+    const normalizedPhone = normalizePhone(phone);
     console.log(`📱 [SIGNUP-PHONE] Phone normalized: ${phone} → ${normalizedPhone}`);
 
     // 🔄 CHECK FOR EXISTING USER: Don't create duplicates!
@@ -117,24 +126,24 @@ export async function POST(request: NextRequest) {
         email: email.toLowerCase().trim(),
         phone: normalizedPhone,
 
-        // Location - empty until user fills settings
-        preferredCity: '',
-        preferredState: '',
-        city: '',
-        state: '',
+        // Location - filled from signup form
+        preferredCity: city || '',
+        preferredState: state || '',
+        city: city || '',
+        state: state || '',
         searchRadius: 25,
 
-        // Budget - zero until user fills settings
-        maxMonthlyPayment: 0,
-        maxDownPayment: 0,
+        // Budget - use provided values or default to zero
+        maxMonthlyPayment: maxMonthlyPayment || 0,
+        maxDownPayment: maxDownPayment || 0,
 
         // Communication preferences
         languages: ['English'],
         emailNotifications: true,
         smsNotifications: true,
 
-        // System fields - profile NOT complete yet
-        profileComplete: false,
+        // System fields - mark complete if city/state provided
+        profileComplete: !!(city && state),
         isActive: true,
 
         // Property interaction arrays
@@ -156,7 +165,28 @@ export async function POST(request: NextRequest) {
 
       await setDoc(doc(db, 'buyerProfiles', buyerId), buyerData);
 
-      // Sync to GHL
+      // 🚀 Generate nearby cities filter and sync to GHL in background (non-blocking)
+      if (city && state) {
+        // Don't await - run in background
+        (async () => {
+          try {
+            const { generateBuyerFilter } = await import('@/lib/buyer-filter-service');
+            const filter = await generateBuyerFilter(city, state, 30);
+
+            // Update buyer profile with nearby cities filter
+            const { FirebaseDB } = await import('@/lib/firebase-db');
+            await FirebaseDB.updateDocument('buyerProfiles', buyerId, {
+              filter: filter
+            });
+
+            console.log(`✅ [SIGNUP-PHONE] Generated filter with ${filter.nearbyCitiesCount} nearby cities for ${city}, ${state}`);
+          } catch (error) {
+            console.error('⚠️ [SIGNUP-PHONE] Failed to generate nearby cities filter:', error);
+          }
+        })();
+      }
+
+      // Sync to GHL in background (non-blocking)
       const { syncBuyerToGHL } = await import('@/lib/gohighlevel-api');
       syncBuyerToGHL({
         id: buyerId,
@@ -215,15 +245,15 @@ export async function POST(request: NextRequest) {
       const { FirebaseDB } = await import('@/lib/firebase-db');
       const { RealtorDataHelper, formatPhone } = await import('@/lib/realtor-models');
 
-      // Create service area (placeholder for now - they can update later)
+      // Create service area using the city from the form
       const serviceArea = {
         primaryCity: {
-          name: primaryCity === 'Setup Required' ? 'Setup Required' : primaryCity,
-          state: 'Setup Required',
-          stateCode: 'XX',
+          name: city || 'Not set',
+          state: state || 'Not set',
+          stateCode: state || 'XX',
           placeId: 'setup-required',
           coordinates: { lat: 0, lng: 0 },
-          formattedAddress: 'Setup Required'
+          formattedAddress: city && state ? `${city}, ${state}` : 'Not set'
         },
         nearbyCities: [],
         radiusMiles: 30,
@@ -259,14 +289,14 @@ export async function POST(request: NextRequest) {
         email: email.toLowerCase().trim(),
         phone: normalizedPhone,
 
-        // Location - empty until user fills settings
-        preferredCity: '',
-        preferredState: '',
-        city: '',
-        state: '',
+        // Location - filled from signup form (realtor's service area)
+        preferredCity: city || '',
+        preferredState: state || '',
+        city: city || '',
+        state: state || '',
         searchRadius: 25,
 
-        // Budget - zero until user fills settings
+        // Budget - realtors don't need budget
         maxMonthlyPayment: 0,
         maxDownPayment: 0,
 
@@ -275,8 +305,8 @@ export async function POST(request: NextRequest) {
         emailNotifications: true,
         smsNotifications: true,
 
-        // System fields - profile NOT complete yet
-        profileComplete: false,
+        // System fields - mark complete if city/state provided
+        profileComplete: !!(city && state),
         isActive: true,
 
         // Property interaction arrays
@@ -297,6 +327,26 @@ export async function POST(request: NextRequest) {
       };
 
       await setDoc(doc(db, 'buyerProfiles', buyerId), buyerData);
+
+      // 🚀 Generate nearby cities filter in background (non-blocking)
+      if (city && state) {
+        // Don't await - run in background
+        (async () => {
+          try {
+            const { generateBuyerFilter } = await import('@/lib/buyer-filter-service');
+            const filter = await generateBuyerFilter(city, state, 30);
+
+            // Update buyer profile with nearby cities filter
+            await FirebaseDB.updateDocument('buyerProfiles', buyerId, {
+              filter: filter
+            });
+
+            console.log(`✅ [SIGNUP-PHONE] Generated filter with ${filter.nearbyCitiesCount} nearby cities for realtor in ${city}, ${state}`);
+          } catch (error) {
+            console.error('⚠️ [SIGNUP-PHONE] Failed to generate nearby cities filter for realtor:', error);
+          }
+        })();
+      }
 
       await logInfo('Created new realtor account via phone auth (with buyer profile)', {
         action: 'realtor_phone_signup',

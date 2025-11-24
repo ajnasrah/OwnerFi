@@ -17,6 +17,7 @@ import { db as firebaseDb } from './firebase';
 import { RealtorProfile, BuyerProfile, PropertyMatch, RealtorSubscription, User } from './firebase-models';
 import { PropertyListing } from './property-schema';
 import { queueNearbyCitiesForProperty } from './property-enhancement';
+import { getAllPhoneFormats, normalizePhone } from './phone-utils';
 
 
 // Replace the old db import with this unified Firebase-only implementation
@@ -58,9 +59,26 @@ export const unifiedDb = {
       if (!firebaseDb) {
         throw new Error('Firebase not initialized - missing environment variables');
       }
-      const usersQuery = query(collection(firebaseDb, 'users'), where('phone', '==', phone));
-      const userDocs = await getDocs(usersQuery);
-      return userDocs.empty ? null : { id: userDocs.docs[0].id, ...userDocs.docs[0].data() } as User & { id: string };
+
+      // 🔧 FIX: Try all possible phone number formats
+      // This handles cases where DB has phone in different format than input
+      const phoneFormats = getAllPhoneFormats(phone);
+
+      console.log('🔍 [UNIFIED-DB] findByPhone searching formats:', phoneFormats);
+
+      // Try each format until we find a match
+      for (const format of phoneFormats) {
+        const usersQuery = query(collection(firebaseDb, 'users'), where('phone', '==', format));
+        const userDocs = await getDocs(usersQuery);
+
+        if (!userDocs.empty) {
+          console.log('✅ [UNIFIED-DB] Found user with phone format:', format);
+          return { id: userDocs.docs[0].id, ...userDocs.docs[0].data() } as User & { id: string };
+        }
+      }
+
+      console.log('❌ [UNIFIED-DB] No user found with any phone format');
+      return null;
     },
 
     async findById(id: string): Promise<(User & { id: string }) | null> {

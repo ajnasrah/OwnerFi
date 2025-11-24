@@ -111,20 +111,34 @@ export async function GET(request: NextRequest) {
         maxPrice: profile.maxPrice,
       };
 
-      // ALWAYS calculate nearby cities on-the-fly for accuracy
-      // This ensures Memphis buyers always see Collierville (bordering city)
-      const nearbyCitiesList = getCitiesWithinRadiusComprehensive(searchCity, searchState, 30);
-      nearbyCityNames = new Set(
-        nearbyCitiesList.map(city => city.name.toLowerCase())
-      );
-      console.log(`✅ [buyer-search] Calculated nearby cities: ${nearbyCityNames.size} cities`);
+      // 🆕 USE PRE-COMPUTED FILTER (stored at signup/settings update)
+      // This ensures consistent city names and prevents recalculation overhead
+      if (profile.filter?.nearbyCities && profile.filter.nearbyCities.length > 0) {
+        // Use the pre-computed nearby cities from the stored filter
+        nearbyCityNames = new Set(
+          profile.filter.nearbyCities.map((city: string) => city.toLowerCase())
+        );
+        console.log(`✅ [buyer-search] Using stored filter: ${nearbyCityNames.size} nearby cities`);
+      } else {
+        // Fallback: Calculate on-the-fly if no filter exists (shouldn't happen after settings)
+        console.log(`⚠️  [buyer-search] No stored filter found, calculating on-the-fly`);
+        const nearbyCitiesList = getCitiesWithinRadiusComprehensive(searchCity, searchState, 30);
+        nearbyCityNames = new Set(
+          nearbyCitiesList.map(city => city.name.toLowerCase())
+        );
+        console.log(`✅ [buyer-search] Calculated ${nearbyCityNames.size} nearby cities as fallback`);
+      }
+
       console.log(`✅ [buyer-search] Buyer filters:`, buyerFilters);
     }
 
-    console.log(`[buyer-search] Buyer searching for ${searchCity}, ${searchState}`);
-    console.log(`[buyer-search] Using filter with ${nearbyCityNames.size} nearby cities:`,
-      Array.from(nearbyCityNames).slice(0, 10).join(', ') + (nearbyCityNames.size > 10 ? '...' : '')
-    );
+    console.log(`\n🔍 [BUYER SEARCH] ===== Search Request =====`);
+    console.log(`   Search city: ${searchCity}, ${searchState}`);
+    console.log(`   Nearby cities in filter: ${nearbyCityNames.size}`);
+    console.log(`   First 10 cities: ${Array.from(nearbyCityNames).slice(0, 10).join(', ')}`);
+    if (nearbyCityNames.size === 0) {
+      console.error(`❌ [BUYER SEARCH] WARNING: No nearby cities found! Properties will only show from exact city match.`);
+    }
 
     // ===== QUERY PROPERTIES FROM TWO SOURCES =====
 
@@ -269,11 +283,21 @@ export async function GET(request: NextRequest) {
       return locationMatch && matchesPropertyFilters(property);
     });
 
-    console.log(`[buyer-search] Found ${directProperties.length} direct matches, ${nearbyProperties.length} nearby matches`);
-
     // 3. LIKED PROPERTIES: Always include liked properties regardless of search criteria
     // Need separate query since liked properties might not be in buyer's state
     let likedProperties: Array<PropertyListing & { id: string }> = [];
+
+    console.log(`\n📊 [BUYER SEARCH] ===== Match Results =====`);
+    console.log(`   Direct matches (in ${searchCity}): ${directProperties.length}`);
+    console.log(`   Nearby matches: ${nearbyProperties.length}`);
+
+    // Show which nearby cities had matches
+    if (nearbyProperties.length > 0) {
+      const nearbyCitiesWithMatches = [...new Set(nearbyProperties.map(p => p.city?.split(',')[0].trim()))];
+      console.log(`   ✅ Nearby cities with properties: ${nearbyCitiesWithMatches.slice(0, 5).join(', ')}${nearbyCitiesWithMatches.length > 5 ? ` (+${nearbyCitiesWithMatches.length - 5} more)` : ''}`);
+    } else {
+      console.warn(`   ⚠️  No nearby city matches found. Check if properties exist in nearby cities.`);
+    }
     if (likedPropertyIds.length > 0) {
       // First check if any liked properties are in our already-fetched results
       const likedInResults = allProperties.filter(property =>
@@ -309,6 +333,10 @@ export async function GET(request: NextRequest) {
 
       likedProperties = likedInResults;
     }
+
+    // Log liked properties count and total results
+    console.log(`   Liked properties: ${likedProperties.length}`);
+    console.log(`   Total unique results: ${new Set([...directProperties, ...nearbyProperties, ...likedProperties].map(p => p.id)).size}`);
 
     // 4. COMBINE AND FORMAT FOR BUYER DASHBOARD (NO BUDGET TAGS)
     const processedResults = new Map();

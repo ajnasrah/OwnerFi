@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 import Link from 'next/link';
+import { GooglePlacesAutocomplete } from '@/components/ui/GooglePlacesAutocomplete';
 
 export default function AuthSetup() {
   const router = useRouter();
@@ -18,7 +19,9 @@ export default function AuthSetup() {
     email: '',
     isRealtor: false,
     licenseNumber: '',
-    company: ''
+    company: '',
+    // Location field (combined city, state from Google autocomplete)
+    city: '' // Will be "Dallas, TX" format from Google
   });
 
   const [agreedToTerms, setAgreedToTerms] = useState(false);
@@ -45,6 +48,24 @@ export default function AuthSetup() {
       return;
     }
 
+    // Validate city (should be in "City, ST" format from Google autocomplete)
+    if (!formData.city.trim()) {
+      setError('Please select your city using the autocomplete');
+      setLoading(false);
+      return;
+    }
+
+    // Parse city and state from Google autocomplete format "Dallas, TX"
+    const cityParts = formData.city.split(',');
+    const city = cityParts[0]?.trim();
+    const state = cityParts[1]?.trim();
+
+    if (!city || !state) {
+      setError('Please select a complete city from the dropdown (City, State)');
+      setLoading(false);
+      return;
+    }
+
     // Validate realtor-specific fields if they selected realtor
     if (formData.isRealtor && !formData.licenseNumber.trim()) {
       setError('License number is required for realtors');
@@ -54,6 +75,11 @@ export default function AuthSetup() {
 
     try {
       const role = formData.isRealtor ? 'realtor' : 'buyer';
+
+      // Parse city and state from validated Google autocomplete selection
+      const cityParts = formData.city.split(',');
+      const city = cityParts[0]?.trim();
+      const state = cityParts[1]?.trim();
 
       // Create account
       const response = await fetch('/api/auth/signup-phone', {
@@ -65,11 +91,13 @@ export default function AuthSetup() {
           lastName: formData.lastName,
           email: formData.email,
           role,
+          // Location fields (required for all users) - parsed from Google autocomplete
+          city,
+          state,
           // Realtor-specific fields
           ...(formData.isRealtor && {
             company: formData.company,
-            licenseNumber: formData.licenseNumber,
-            primaryCity: 'Setup Required'
+            licenseNumber: formData.licenseNumber
           })
         })
       });
@@ -88,17 +116,24 @@ export default function AuthSetup() {
         redirect: false,
       });
 
+      console.log('🔐 [SETUP] Sign in result:', signInResult);
+
       if (signInResult?.ok) {
         // Clear session storage
         sessionStorage.removeItem('verified_phone');
 
-        // All users (buyers AND realtors) go to same dashboard settings
-        // Set flag for tutorial
-        localStorage.setItem('isNewBuyerAccount', 'true');
-        // Redirect to settings to complete setup
-        router.push('/dashboard/settings');
+        // 🔧 Small delay to ensure session is established
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        // Redirect based on role - both go straight to their main dashboard now
+        if (formData.isRealtor) {
+          router.push('/realtor-dashboard');
+        } else {
+          router.push('/dashboard');
+        }
       } else {
-        setError('Account created but failed to sign in. Please try signing in manually.');
+        console.error('❌ [SETUP] Sign in failed:', signInResult);
+        setError(signInResult?.error || 'Account created but failed to sign in. Please try signing in manually.');
         setLoading(false);
       }
     } catch (err) {
@@ -168,6 +203,21 @@ export default function AuthSetup() {
                 placeholder="john@example.com"
               />
               <p className="text-xs text-slate-400 mt-1">We'll use this to send you updates</p>
+            </div>
+
+            {/* Location field - Google Autocomplete */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-200 mb-2">
+                What is your primary location?
+              </label>
+              <GooglePlacesAutocomplete
+                value={formData.city}
+                onChange={(city) => setFormData(prev => ({ ...prev, city }))}
+                placeholder="Dallas, TX"
+              />
+              <p className="text-xs text-slate-400 mt-1">
+                Start typing and select your city from the dropdown
+              </p>
             </div>
 
             {/* Are you a realtor? */}
@@ -255,13 +305,8 @@ export default function AuthSetup() {
               disabled={loading}
               className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white py-3 px-4 rounded-lg font-bold transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Creating Account...' : 'Continue →'}
+              {loading ? 'Creating Account...' : 'Create Account & Start Browsing →'}
             </button>
-            {!formData.isRealtor && (
-              <p className="text-xs text-center text-slate-400 mt-2">
-                Next: Set your search preferences
-              </p>
-            )}
           </form>
         </div>
       </div>

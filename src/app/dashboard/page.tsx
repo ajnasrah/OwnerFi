@@ -124,12 +124,25 @@ export default function Dashboard() {
       // Check if tutorial should be shown
       const tutorialCompleted = localStorage.getItem('buyerTutorialCompleted');
       const isNewAccount = localStorage.getItem('isNewBuyerAccount');
+      const loginCount = parseInt(localStorage.getItem('tutorialLoginCount') || '0');
 
-      // Show tutorial for new accounts or if never completed
-      if ((isNewAccount === 'true' || !tutorialCompleted) && propertiesData.properties?.length > 0) {
-        setShowTutorial(true);
-        // Clear the new account flag once tutorial is shown
-        localStorage.removeItem('isNewBuyerAccount');
+      // Show tutorial for new accounts or every 3 logins if they skipped it
+      if (propertiesData.properties?.length > 0) {
+        if (isNewAccount === 'true' || !tutorialCompleted) {
+          // First time user or never completed tutorial
+          setShowTutorial(true);
+          localStorage.removeItem('isNewBuyerAccount');
+        } else if (tutorialCompleted === 'true') {
+          // User has completed/skipped tutorial before - increment login counter
+          const newLoginCount = loginCount + 1;
+          localStorage.setItem('tutorialLoginCount', newLoginCount.toString());
+
+          // Show tutorial every 3 logins
+          if (newLoginCount >= 3) {
+            setShowTutorial(true);
+            localStorage.setItem('tutorialLoginCount', '0'); // Reset counter
+          }
+        }
       }
     } catch {
       // Error loading properties
@@ -355,6 +368,19 @@ export default function Dashboard() {
 
             {/* Right: Action Buttons */}
             <div className="flex items-center gap-1.5">
+              {/* Realtor Dashboard Button - Only show for realtors */}
+              {session && isExtendedSession(session) && session.user.role === 'realtor' && (
+                <Link
+                  href="/realtor-dashboard"
+                  className="px-2.5 py-1 bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/30 rounded-lg flex items-center gap-1 transition-all border-white/20"
+                  title="Realtor Dashboard"
+                >
+                  <span className="text-emerald-400 text-[10px] font-bold">HUB</span>
+                  <svg className="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                  </svg>
+                </Link>
+              )}
               <Link
                 href="/dashboard/liked"
                 className="relative w-8 h-8 bg-white/10 backdrop-blur-xl hover:bg-white/20 rounded-full flex items-center justify-center transition-all border border-white/20"

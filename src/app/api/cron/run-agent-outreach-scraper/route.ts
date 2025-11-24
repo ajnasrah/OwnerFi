@@ -3,6 +3,7 @@ import { ApifyClient } from 'apify-client';
 import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { hasStrictOwnerFinancing } from '@/lib/owner-financing-filter-strict';
+import { hasNegativeKeywords } from '@/lib/negative-keywords';
 
 // Initialize Firebase Admin
 if (!getApps().length) {
@@ -79,6 +80,7 @@ export async function GET(request: NextRequest) {
     // Process results and add to queue
     let addedToQueue = 0;
     let skippedOwnerFinance = 0;
+    let skippedNegativeKeywords = 0;
     let alreadyInQueue = 0;
     let alreadyInImports = 0;
     let alreadyInCashDeals = 0;
@@ -113,6 +115,15 @@ export async function GET(request: NextRequest) {
       if (ownerFinanceCheck.passes) {
         skippedOwnerFinance++;
         console.log(`   ⏭️  Skipping ${property.address} - already has owner financing keywords`);
+        continue;
+      }
+
+      // CRITICAL: Skip if description has negative keywords (explicitly says "NO owner finance")
+      const negativeCheck = hasNegativeKeywords(description);
+
+      if (negativeCheck.hasNegative) {
+        skippedNegativeKeywords++;
+        console.log(`   ⏭️  Skipping ${property.address} - negative keywords found: ${negativeCheck.matches.slice(0, 3).join(', ')}`);
         continue;
       }
 
@@ -273,6 +284,7 @@ export async function GET(request: NextRequest) {
     console.log(`      💰 Cash deals: ${stats.cashDeals}`);
     console.log(`      🏡 Potential owner finance: ${stats.potentialOwnerFinance}`);
     console.log(`   ⏭️  Skipped (has owner finance keywords): ${skippedOwnerFinance}`);
+    console.log(`   ⏭️  Skipped (negative keywords - explicitly NO): ${skippedNegativeKeywords}`);
     console.log(`   ⏭️  Already in queue: ${alreadyInQueue}`);
     console.log(`   ⏭️  Already in zillow_imports: ${alreadyInImports}`);
     console.log(`   ⏭️  Already in cash_deals: ${alreadyInCashDeals}`);
@@ -291,6 +303,7 @@ export async function GET(request: NextRequest) {
       stats,
       skipped: {
         ownerFinance: skippedOwnerFinance,
+        negativeKeywords: skippedNegativeKeywords,
         alreadyInQueue,
         alreadyInImports,
         alreadyInCashDeals,

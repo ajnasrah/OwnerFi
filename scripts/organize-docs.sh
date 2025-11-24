@@ -42,67 +42,80 @@ echo ""
 
 # GUIDES - How-to and usage documentation
 echo "📖 Moving GUIDES..."
-for file in *GUIDE*.md *HOW_TO*.md *TUTORIAL*.md 2>/dev/null; do
+shopt -s nullglob
+for file in *GUIDE*.md *HOW_TO*.md *TUTORIAL*.md; do
   if [ -f "$file" ] && [ "$file" != "README.md" ]; then
     echo "  → docs/guides/$file"
     mv "$file" docs/guides/
     moved=$((moved + 1))
   fi
 done
+shopt -u nullglob
 
 # ARCHITECTURE - System design and structure
 echo "🏗️  Moving ARCHITECTURE..."
-for file in *SYSTEM*.md *ARCHITECTURE*.md *DESIGN*.md *STRUCTURE*.md 2>/dev/null; do
+shopt -s nullglob
+for file in *SYSTEM*.md *ARCHITECTURE*.md *DESIGN*.md *STRUCTURE*.md; do
   if [ -f "$file" ] && [ "$file" != "README.md" ]; then
     echo "  → docs/architecture/$file"
     mv "$file" docs/architecture/
     moved=$((moved + 1))
   fi
 done
+shopt -u nullglob
 
 # INCIDENTS - Bug fixes, errors, and critical fixes
 echo "🔧 Moving INCIDENTS..."
-for file in *FIX*.md *BUG*.md *ERROR*.md *CRITICAL*.md *ISSUE*.md *PROBLEM*.md 2>/dev/null; do
+shopt -s nullglob
+for file in *FIX*.md *BUG*.md *ERROR*.md *CRITICAL*.md *ISSUE*.md *PROBLEM*.md; do
   if [ -f "$file" ] && [ "$file" != "README.md" ]; then
     echo "  → docs/incidents/$file"
     mv "$file" docs/incidents/
     moved=$((moved + 1))
   fi
 done
+shopt -u nullglob
 
 # MIGRATIONS - Database and code migrations
 echo "🔄 Moving MIGRATIONS..."
-for file in *MIGRATION*.md *MIGRATE*.md *UPGRADE*.md *CONSOLIDATION*.md 2>/dev/null; do
+shopt -s nullglob
+for file in *MIGRATION*.md *MIGRATE*.md *UPGRADE*.md *CONSOLIDATION*.md; do
   if [ -f "$file" ] && [ "$file" != "README.md" ]; then
     echo "  → docs/migrations/$file"
     mv "$file" docs/migrations/
     moved=$((moved + 1))
   fi
 done
+shopt -u nullglob
 
 # TESTING - Test results and verification
 echo "🧪 Moving TESTING..."
-for file in TEST*.md *TEST*.md *VERIFICATION*.md *VALIDATION*.md 2>/dev/null; do
+shopt -s nullglob
+for file in TEST*.md *TEST*.md *VERIFICATION*.md *VALIDATION*.md; do
   if [ -f "$file" ] && [ "$file" != "README.md" ]; then
     echo "  → docs/testing/$file"
     mv "$file" docs/testing/
     moved=$((moved + 1))
   fi
 done
+shopt -u nullglob
 
 # OPERATIONS - Deployment, monitoring, performance
 echo "⚙️  Moving OPERATIONS..."
-for file in *DEPLOYMENT*.md *DEPLOY*.md *MONITOR*.md *PERFORMANCE*.md *CRON*.md *OPTIMIZATION*.md 2>/dev/null; do
+shopt -s nullglob
+for file in *DEPLOYMENT*.md *DEPLOY*.md *MONITOR*.md *PERFORMANCE*.md *CRON*.md *OPTIMIZATION*.md; do
   if [ -f "$file" ] && [ "$file" != "README.md" ]; then
     echo "  → docs/operations/$file"
     mv "$file" docs/operations/
     moved=$((moved + 1))
   fi
 done
+shopt -u nullglob
 
 # SUMMARIES - Move summaries to appropriate category or archive
 echo "📊 Moving SUMMARIES..."
-for file in *SUMMARY*.md *REPORT*.md *ANALYSIS*.md *COMPLETE*.md *CLEANUP*.md 2>/dev/null; do
+shopt -s nullglob
+for file in *SUMMARY*.md *REPORT*.md *ANALYSIS*.md *COMPLETE*.md *CLEANUP*.md; do
   if [ -f "$file" ] && [ "$file" != "README.md" ] && [ "$file" != "CLEANUP_ANALYSIS_2025-11-23.md" ]; then
     # Check if it's migration-related
     if echo "$file" | grep -qiE "migration|migrate|consolidation"; then
@@ -120,6 +133,7 @@ for file in *SUMMARY*.md *REPORT*.md *ANALYSIS*.md *COMPLETE*.md *CLEANUP*.md 2>
     moved=$((moved + 1))
   fi
 done
+shopt -u nullglob
 
 # Everything else goes to archive
 echo "📦 Moving remaining docs to archive..."

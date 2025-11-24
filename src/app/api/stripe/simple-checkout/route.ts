@@ -61,8 +61,8 @@ export async function POST(request: NextRequest) {
           quantity: 1,
         },
       ],
-      success_url: `${process.env.NEXTAUTH_URL}/realtor-dashboard?payment=success&credits=${package_.credits}`,
-      cancel_url: `${process.env.NEXTAUTH_URL}/buy-credits?payment=cancelled`,
+      success_url: `${process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXTAUTH_URL}/realtor-dashboard?payment=success&credits=${package_.credits}`,
+      cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXTAUTH_URL}/buy-credits?payment=cancelled`,
     });
 
     return NextResponse.json({

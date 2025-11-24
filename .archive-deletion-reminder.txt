@@ -1,0 +1,27 @@
+═══════════════════════════════════════════════════════════
+ARCHIVE DELETION REMINDER
+═══════════════════════════════════════════════════════════
+
+📁 Archive: .archive/
+📊 Size: 4.0 MB (423 files)
+📅 Archived: 2025-11-10
+🗓️  Safe to delete after: 2025-12-10
+
+Current Status (as of 2025-11-24):
+  • Days since archive: 14
+  • Days until safe deletion: 16
+
+To delete the archive after 2025-12-10, run:
+  rm -rf .archive
+
+Or run this script again:
+  ./scripts/schedule-archive-deletion.sh
+
+Files in archive:
+  • 241 old scripts
+  • 64 old docs
+  • 27 root tests
+  • 15 old API routes
+  • 13 misc files
+
+═══════════════════════════════════════════════════════════

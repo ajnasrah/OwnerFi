@@ -107,8 +107,8 @@ export async function POST(request: NextRequest) {
         amount: '300',
         customerId: stripeCustomerId || 'unknown'
       },
-      success_url: `${process.env.NEXTAUTH_URL}/realtor/settings?success=credit&credits=1`,
-      cancel_url: `${process.env.NEXTAUTH_URL}/realtor/settings?canceled=true`,
+      success_url: `${process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXTAUTH_URL}/realtor/settings?success=credit&credits=1`,
+      cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXTAUTH_URL}/realtor/settings?canceled=true`,
     });
 
     await logInfo('Single credit checkout created', {

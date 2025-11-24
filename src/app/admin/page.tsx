@@ -1017,9 +1017,51 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="h-screen bg-slate-50 flex max-w-full overflow-hidden">
-      {/* Left Sidebar */}
-      <div className="w-64 lg:w-72 bg-white shadow-xl border-r border-slate-200 flex-shrink-0 relative flex flex-col h-screen">
+    <div className="h-screen bg-slate-50 flex flex-col md:flex-row max-w-full overflow-hidden">
+      {/* Mobile Dropdown Navigation */}
+      <div className="md:hidden bg-white border-b border-slate-200 p-4">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center space-x-2">
+            <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-lg flex items-center justify-center">
+              <div className="w-4 h-4 bg-white rounded-sm"></div>
+            </div>
+            <h1 className="text-lg font-bold text-slate-900">OwnerFi Admin</h1>
+          </div>
+          <button
+            onClick={() => signOut({ callbackUrl: '/auth/signout' })}
+            className="text-slate-600 hover:text-red-600"
+            title="Sign Out"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+          </button>
+        </div>
+        <select
+          value={activeTab}
+          onChange={(e) => setActiveTab(e.target.value as any)}
+          className="w-full px-4 py-2 border border-slate-300 rounded-lg bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        >
+          <option value="overview">📊 Overview</option>
+          <option value="properties">🏠 Properties {stats.totalProperties > 0 ? `(${stats.totalProperties})` : ''}</option>
+          <option value="buyer-preview">👁️ Buyer Preview</option>
+          <option value="failed-properties">⚠️ Failed Properties {failedPropertySummary.total > 0 ? `(${failedPropertySummary.total})` : ''}</option>
+          <option value="review-required">🔍 Review Required {reviewRequiredCount > 0 ? `(${reviewRequiredCount})` : ''}</option>
+          <option value="image-quality">📸 Image Quality</option>
+          <option value="upload">📤 Upload</option>
+          <option value="cash-houses">💰 Cash Houses {cashHouses.length > 0 ? `(${cashHouses.length})` : ''}</option>
+          <option value="buyers">👤 Buyers {stats.totalBuyers > 0 ? `(${stats.totalBuyers})` : ''}</option>
+          <option value="realtors">🏢 Realtors {stats.totalRealtors > 0 ? `(${stats.totalRealtors})` : ''}</option>
+          <option value="disputes">⚖️ Disputes {stats.pendingDisputes > 0 ? `(${stats.pendingDisputes})` : ''}</option>
+          <option value="contacts">📧 Contacts</option>
+          <option value="social">📱 Social Media</option>
+          <option value="articles">📰 Articles</option>
+          <option value="logs">📋 Logs</option>
+        </select>
+      </div>
+
+      {/* Desktop Sidebar */}
+      <div className="hidden md:flex w-64 lg:w-72 bg-white shadow-xl border-r border-slate-200 flex-shrink-0 relative flex-col h-screen">
         {/* Logo Section */}
         <div className="p-6 border-b border-slate-200 flex-shrink-0">
           <div className="flex items-center space-x-3">

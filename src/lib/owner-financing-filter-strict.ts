@@ -11,9 +11,11 @@
  *
  * IMPORTANT: Also filters OUT properties with negative keywords
  * (e.g., "no owner financing", "cash only", etc.)
+ *
+ * UPDATED: Now uses context-aware negative financing detector for better accuracy
  */
 
-import { hasNegativeKeywords } from './negative-keywords';
+import { hasNegativeFinancing } from './negative-financing-detector';
 
 export interface StrictFilterResult {
   passes: boolean;
@@ -65,9 +67,8 @@ export function hasStrictOwnerFinancing(description: string | null | undefined):
     };
   }
 
-  // FIRST: Check for negative keywords (explicit rejections)
-  const { hasNegative } = hasNegativeKeywords(description);
-  if (hasNegative) {
+  // FIRST: Check for negative financing indicators (explicit rejections)
+  if (hasNegativeFinancing(description)) {
     return {
       passes: false,
       matchedKeywords: [],

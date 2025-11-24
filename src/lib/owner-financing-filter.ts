@@ -3,9 +3,11 @@
  *
  * Filters properties based on whether they mention owner financing in their description.
  * Used to prevent sending irrelevant properties to GoHighLevel.
+ *
+ * UPDATED: Now uses context-aware negative financing detector for better accuracy
  */
 
-import { NEGATIVE_PATTERNS as COMPREHENSIVE_NEGATIVE_PATTERNS } from './negative-keywords';
+import { hasNegativeFinancing } from './negative-financing-detector';
 
 export interface FilterResult {
   shouldSend: boolean;
@@ -83,11 +85,7 @@ const POSITIVE_PATTERNS = [
   // - "rental income" (10.4% FP)
 ];
 
-/**
- * Patterns that indicate owner financing is NOT available or explicitly rejected
- * Uses comprehensive negative keyword list (94 patterns) to prevent false positives
- */
-const NEGATIVE_PATTERNS = COMPREHENSIVE_NEGATIVE_PATTERNS;
+// Negative patterns now handled by negative-financing-detector.ts
 
 /**
  * Check if a property description mentions owner financing
@@ -105,17 +103,14 @@ export function hasOwnerFinancing(description: string | null | undefined): Filte
     };
   }
 
-  const descLower = description.toLowerCase();
-
   // Check for explicit negative mentions first (highest priority)
-  for (const pattern of NEGATIVE_PATTERNS) {
-    if (pattern.test(description)) {
-      return {
-        shouldSend: false,
-        reason: 'Explicitly states NO owner financing',
-        confidence: 'high',
-      };
-    }
+  // Uses context-aware detector for better accuracy
+  if (hasNegativeFinancing(description)) {
+    return {
+      shouldSend: false,
+      reason: 'Explicitly states NO owner financing',
+      confidence: 'high',
+    };
   }
 
   // Check for positive mentions
@@ -197,15 +192,6 @@ export function getFilterExplanation(description: string | null | undefined): st
   }
 
   if (!result.shouldSend) {
-    if (result.reason === 'Explicitly states NO owner financing') {
-      // Find which pattern matched
-      for (const pattern of NEGATIVE_PATTERNS) {
-        const match = description.match(pattern);
-        if (match) {
-          return `❌ FILTERED: Found explicit rejection - "${match[0]}"`;
-        }
-      }
-    }
     return `❌ FILTERED: ${result.reason}`;
   }
 

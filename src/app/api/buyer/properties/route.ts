@@ -192,6 +192,7 @@ export async function GET(request: NextRequest) {
         propertyType: data.homeType || data.buildingType || data.propertyType,
         imageUrl: data.firstPropertyImage || data.imageUrl,
         imageUrls: data.propertyImages || data.imageUrls || [],
+        description: data.description || '', // Explicitly include description
         // Calculate down payment percentage if not provided
         downPaymentPercent: data.downPaymentPercent || (data.downPaymentAmount && data.price ?
           Math.round((data.downPaymentAmount / data.price) * 100) : null),

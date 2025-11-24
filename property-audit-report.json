@@ -1,0 +1,1234 @@
+{
+  "timestamp": "2025-11-24T19:12:48.258Z",
+  "totalScanned": 1272,
+  "totalPassed": 1192,
+  "totalIssues": 85,
+  "issues": {
+    "noDescription": [],
+    "emptyDescription": [],
+    "hasNegativeKeywords": [
+      {
+        "id": "IEkJ0xU7XKDkAubepVRo",
+        "address": "1580 Elmore Ave, Idaho Falls, ID 83402",
+        "zpid": 76905428,
+        "negativeKeywords": [
+          "no owner-carry"
+        ],
+        "description": "Nice duplex. Each unit has three bedrooms and a full bath. Separate meters. In Idaho Falls, tenants pay water/sewer/trash with electrical bill. Basement had a flood a few months ago. Water main was re"
+      },
+      {
+        "id": "S9gVOzfGWDzrR2y6jfuz",
+        "address": "1414 Greendale Ave, Memphis, TN 38127",
+        "zpid": 42220462,
+        "negativeKeywords": [
+          "no wholesalers or seller financing"
+        ],
+        "description": "JUST LIKE NEW! This property is renovated and ready to go! Perfect for a 1031 Exchange, Investor or First Time Buyer! What's not to love about this traditional brick home with all new flooring and til"
+      },
+      {
+        "id": "jEXDiHo8D3dkup4bakss",
+        "address": "1380 Gill Ave, Memphis, TN 38106",
+        "zpid": 42173211,
+        "negativeKeywords": [
+          "no wholesalers or seller financing"
+        ],
+        "description": "Perfect for Investors and First Time Buyers! This home is located minutes from expressway, Stax Museum, LeMoyne Owen College, Graceland , Midtown and Downtown! This home is also walking distance to Ha"
+      },
+      {
+        "id": "oXtrHmD6b82YdDWVtBWX",
+        "address": "3230 Yale Ave, Memphis, TN 38112",
+        "zpid": 42162462,
+        "negativeKeywords": [
+          "no seller-financing",
+          "no seller-financing offered"
+        ],
+        "description": "Here is a chance for an awesome value-add fixer in a burgeoning, up-and-coming neighborhood! Binghampton is seeing great growth year over year, with flippers and turnkey companies coming in and changi"
+      },
+      {
+        "id": "ounsULsNmvCvPNf1k5S4",
+        "address": "637-639 E 102nd St, Cleveland, OH 44108",
+        "zpid": 458449038,
+        "negativeKeywords": [
+          "no wholesalers or owner-financing"
+        ],
+        "description": "Exceptional and affordable, this rare 6-bedroom, 2-full-bath side-by-side duplex is an opportunity that will not last! Attention investors and owner-occupant buyers this vacant property is easy to sho"
+      }
+    ],
+    "shouldNotPass": [
+      {
+        "id": "0fgy6NYQGG2PtKl2WWSr",
+        "address": "520 Munson, Tow, TX 78672",
+        "zpid": 87421892,
+        "reason": "Does not pass strict filter",
+        "description": "Not many homes Offering Seller Financing. Featuring 3 bedrooms and 2 baths with approx. 2,394 sq. ft. of living space. The back porch has been enclosed and would be perfect for a game room or home gym"
+      },
+      {
+        "id": "1c7x5wF7EqXoN2bNQp3F",
+        "address": "507 Jorgette Dr, Harker Heights, TX 76548",
+        "zpid": 79914446,
+        "reason": "Does not pass strict filter",
+        "description": "NO BANKS NEEDED - OFFERING SELLER FINANCING Very well maintained, 4-side brick home nestled in a quiet, established neighborhood. This charming property features a spacious yard with plenty of room to"
+      },
+      {
+        "id": "3GP1clmEt0Ty3gDlGzLx",
+        "address": "4910 38th Way S APT 111, saint petersburg, FL 33711",
+        "reason": "Does not pass strict filter",
+        "description": "DATE: 2025-11-10\nASKING PRICE: N/A\nDOWN PAYMENT: 10%\nINTEREST RATE: 6.5-7.5% plus .5-1 point\nAMORTIZATION: N/A\nBALLOON: N/A\nMONTHLY PAYMENT: $3,150\nNOTES: Monthly payment includes taxes, insurance, an"
+      },
+      {
+        "id": "3k4X1xitOOzMWhyKavos",
+        "address": "205 W Washington St, Boston, GA 31626",
+        "zpid": 452774689,
+        "reason": "Does not pass strict filter",
+        "description": "Charming Country-Style Home Near Downtown Boston\nThis beautifully updated 2-bedroom, 2-bath home blends timeless country charm with modern upgrades. Enjoy a freshly painted interior and exterior, bran"
+      },
+      {
+        "id": "43JlzaVQWHtCJkL27LIA",
+        "address": "3409 Catalan Aly, decatur, GA 30032",
+        "reason": "Does not pass strict filter",
+        "description": "PROPERTY: 3409 Catalan Aly, Decatur, GA 30032\nAGENT: Isaac Jordan\nDATE: 2025-11-11\nDOWN PAYMENT: 10-20%\nAPR: 8.5%\nAMORTIZATION: 30 yrs\nBALLOON: 3 yrs\nTERM: 3 years\nMONTHLY PAYMENT: ~$2,600\nNOTES: Ball"
+      },
+      {
+        "id": "5anY0KAIekABDLTm6Hvl",
+        "address": "6926 College Ave, Kansas City, MO 64132",
+        "zpid": 2410081,
+        "reason": "Does not pass strict filter",
+        "description": "Don't miss this three bedroom, one full bath ranch style home located in the heart of Kansas City. Whether looking for sweat equity while living in the home, or adding a new property to your investmen"
+      },
+      {
+        "id": "5uEI2tLkzKhaUUfZbFSE",
+        "address": "1719 Fields Rd, Memphis, TN 38109",
+        "zpid": 42269611,
+        "reason": "Does not pass strict filter",
+        "description": "Investor Special! This 3 Bedroom 1 Bathroom Home would be Great to add to your portfolio! With over 2.5 Acres, the possibilities are endless. Selling AS-IS. NO Wholesale, Assignments or Seller Finance"
+      },
+      {
+        "id": "7tPcW5uZnbvGcJSORamu",
+        "address": "903 N Miller St, Decatur, TX 76234",
+        "zpid": 78942063,
+        "reason": "Does not pass strict filter",
+        "description": "Howdy! Down at least 20k. The rest of the terms are flexible. Payments around 1900$ 7% interest preferred with a balloon after a few years. No credit check. She wants to be as flexible as possible.\n"
+      },
+      {
+        "id": "9gudgXqXb0w54B1Phc5h",
+        "address": "147 Western Lake Dr, weatherford, TX 76087",
+        "reason": "Does not pass strict filter",
+        "description": "I got the purchase price wrong (price is based on appraisal)\n\nPurchase price: $280,000.00\nDown payment: 10% ($28,000)\nInterest rate: 9%\nMonthly payment (P&I): $2027.65\nInsurance: $1936.00\nTaxes: $3467"
+      },
+      {
+        "id": "9uo8igdUajycVmJIqPqP",
+        "address": "704 Falmouth St, Birmingham, AL 35224",
+        "zpid": 926444,
+        "reason": "Does not pass strict filter",
+        "description": "Investment opportunity! Leased until 9/30/26 Great rental income for investors at $890/mo. This property is 1 of 3 offered in a portfolio of other properties. Seller willing to sell individually or al"
+      },
+      {
+        "id": "ADgWUDsdBYqi0j9LyhVy",
+        "address": "2417 Greenlawn St, lake charles, LA 70607",
+        "zpid": 91784007,
+        "reason": "Does not pass strict filter",
+        "description": "Charming Home on Spacious Lot in South Lake Charles - Owner Financing Available Welcome to this beautifully maintained property situated on a peaceful street in desirable South Lake Charles. Perfect a"
+      },
+      {
+        "id": "CITJlkMRs4jzymZa4D4B",
+        "address": "1935 Nomas St, Dallas, TX 75212",
+        "zpid": 162327110,
+        "reason": "Does not pass strict filter",
+        "description": "A beautifully updated and fully furnished home perfect for first-time buyers or savvy investors. Nestled in a rapidly developing neighborhood just 10 minutes from Downtown Dallas, this cozy property h"
+      },
+      {
+        "id": "DR7WJt6F2fbUFj8UMmEt",
+        "address": "602 ray rd, Jacksonville, AR 72076",
+        "reason": "Does not pass strict filter",
+        "description": "You have an offer coming? Seller does finance by owner with minimum 10k down, his rate is 9.75 payments at 20 years\n"
+      },
+      {
+        "id": "EEJNzSJcUhQcacdNm7z2",
+        "address": "2513 Rochelle St, durham, NC 27703",
+        "reason": "Does not pass strict filter",
+        "description": "10% over asking price @ 8% interest rate 25-30% down. 30year AM. ballon 3 yr with renew option for 1yr up to 2years depending on payment history\n"
+      },
+      {
+        "id": "FtZmSl4jhrXJB4d3dtdZ",
+        "address": "6394 Roadstead Ct, apollo beach, FL 33572",
+        "reason": "Does not pass strict filter",
+        "description": "MODERN LUXURY WITH OWNER FINANCING BUY LIKE RENT! No Banks Needed! Bad Credit, NO Credit, OK! BRING ALL OFFERS MOTIVATED SELLER What if you could skip the stress of the bank... and still step into the"
+      },
+      {
+        "id": "HNz1wxaXdFgoy60VxbnG",
+        "address": "30417 N 42nd Pl, Cave Creek, AZ 85331",
+        "reason": "Does not pass strict filter",
+        "description": "All they have shared with me is that they would carry for a three year period at 5% so those payments would be amortized over 30 years obviously with a balloon after three years as far as down payment"
+      },
+      {
+        "id": "HS2AtqzYIGXXx7uyIAXD",
+        "address": "329 Wheeler Ln, Jamestown, TN 38556",
+        "zpid": 41267125,
+        "reason": "Does not pass strict filter",
+        "description": "Totally remodeled historic, old school house built in 1920. Has been an established restaurant for the past 30 plus years with extensive remodeling done in 2021. This restaurant is ready to go and jus"
+      },
+      {
+        "id": "IEkJ0xU7XKDkAubepVRo",
+        "address": "1580 Elmore Ave, Idaho Falls, ID 83402",
+        "zpid": 76905428,
+        "reason": "Does not pass strict filter",
+        "description": "Nice duplex. Each unit has three bedrooms and a full bath. Separate meters. In Idaho Falls, tenants pay water/sewer/trash with electrical bill. Basement had a flood a few months ago. Water main was re"
+      },
+      {
+        "id": "JIE1QbhWXjg1cj5JQD6i",
+        "address": "6380 Bellavia Lane, Panama City, FL 32404",
+        "zpid": 2058479150,
+        "reason": "Does not pass strict filter",
+        "description": "NO BANK NEEDED SELLER FINANCING AVAILABLE FINANCIAMIENTO DISPONIBLE Move In Special: $28,200 Down and $2,451.26 monthly Bright New-Home in Liberty-- Modern 4-Bed / 2-Bath Gem! Move into your dream hom"
+      },
+      {
+        "id": "KqsmbKL5xJf9ucA7pZgg",
+        "address": "294 Eagle Dr, big bear lake, CA 92315",
+        "reason": "Does not pass strict filter",
+        "description": "Welcome to 294 Eagle Dr in the Eagle Point neighborhood of Big Bear Lake, CA! Incredible opportunity to move in, landlord, or AirB&B this upgraded & turnkey, 2 bedroom, 1 bathroom mountain cabin - wit"
+      },
+      {
+        "id": "Mu7BZ0687nsgjte5hLnn",
+        "address": "2102 29th St, lubbock, TX 79411",
+        "zpid": 54084075,
+        "reason": "Does not pass strict filter",
+        "description": "Welcome to 2102 29th Street in Lubbock, Texas - a newly updated home with a unique opportunity you won't want to miss. This property not only offers charm and convenience but also comes with special o"
+      },
+      {
+        "id": "OS7Wa92vrUnv9WBWWC6U",
+        "address": "100 White Hall Ave, White Hall, AR 71602",
+        "zpid": 90708268,
+        "reason": "Does not pass strict filter",
+        "description": "No Banks Needed, Owner Financing Available Welcome to this inviting 3-bedroom, 2-bath home located in White Hall. Perfect for a starter home or to add to an investment portfolio! This home offers a co"
+      },
+      {
+        "id": "OwoATl9xnUUbA6XLhE3T",
+        "address": "4145 S Madison Ave, South Ogden, UT 84403",
+        "zpid": 145124430,
+        "reason": "Does not pass strict filter",
+        "description": "SALE NEEDS TO SATISFY A BALANCE ON A REVERSE MORTGAGE, THEREFORE SELLER IS NOT INTERESTED IN ANY SELLER FINANCING, OR \"CREATIVE FINANCE\" OFFERS. 1/3 acre lot with tons of garage space to fit 5 cars, a"
+      },
+      {
+        "id": "OybOLF08EIEVESUnpMmm",
+        "address": "827 Maggie Walker Ave, Richmond, VA 23222",
+        "zpid": 12535569,
+        "reason": "Does not pass strict filter",
+        "description": "Make this your home sweet home.\nPlease leave message with name and contact to let us know what time to expect you.\nHardwood floor, UPGRADED to HVAC (Heat pump) central heat and air, close to schools ("
+      },
+      {
+        "id": "QBYle4PH4andEO0S3e7k",
+        "address": "7346 Tradinghouse, san antonio, TX 78252",
+        "zpid": 2062392016,
+        "reason": "Does not pass strict filter",
+        "description": "Payments should be 2,600\n01:45 PM\nMG\nIf the buyer will put down $63,000 that will pay the commission that will pay off the solar panels then the buyer will only be doing the wraparound on the $283,000"
+      },
+      {
+        "id": "RJjRAg8FJ3K138twmI6q",
+        "address": "19118 Lanbury Ave, Warrensville Heights, OH 44122",
+        "zpid": 52692278,
+        "reason": "Does not pass strict filter",
+        "description": "Opportunity knocks and this is the one that buyers and investors have been waiting for! This 2-story home is in need of a light remodel to bring it back to life. There is a lot of potential with this "
+      },
+      {
+        "id": "RWAaRivpushX9VHP9gee",
+        "address": "1439 Caballero, san antonio, TX 78224",
+        "zpid": 26340354,
+        "reason": "Does not pass strict filter",
+        "description": "Hello AJ. I did not see your message. Not sure. Anyways. Thank you for your text sir. Seller is needing 50k down payment. He's like 8% interest and 5 to 10 years. The only thing that is not negotiable"
+      },
+      {
+        "id": "Rc4BjlJ3OqESayWLW4nF",
+        "address": "117 Windward Passage St, Slidell, LA 70458",
+        "zpid": 2065913203,
+        "reason": "Does not pass strict filter",
+        "description": "Waterfront Living with an Incredible 2.9% Assumable Loan!\nWelcome to your cozy retreat in Eden Isles waterfront community! This single-story, 3-bed, 2-bath home with a spacious open floor plan offers "
+      },
+      {
+        "id": "RmBccLSXdg6nwwLNfsfo",
+        "address": "1356 E 120th St, Cleveland, OH 44106",
+        "zpid": 33408030,
+        "reason": "Does not pass strict filter",
+        "description": "Duplex/Triplex for sale. Can be delivered vacant. Was rented by the room bringing in almost $3,800 per month. Can be converted back into original layout easily.\nNo wholesalers, joint venture or seller"
+      },
+      {
+        "id": "S9gVOzfGWDzrR2y6jfuz",
+        "address": "1414 Greendale Ave, Memphis, TN 38127",
+        "zpid": 42220462,
+        "reason": "Does not pass strict filter",
+        "description": "JUST LIKE NEW! This property is renovated and ready to go! Perfect for a 1031 Exchange, Investor or First Time Buyer! What's not to love about this traditional brick home with all new flooring and til"
+      },
+      {
+        "id": "T34lDdqvHJll3MGAe7s3",
+        "address": "3801 La Paloma Dr, san juan, TX 78589",
+        "zpid": 446023629,
+        "reason": "Does not pass strict filter",
+        "description": "Paloma - 10% interest rate, 5 yr balloon, 30 yr amortization. He has not determined the down payment as it is negotiable but does need to surpass covering commissions and closing costs. They are going"
+      },
+      {
+        "id": "TqIN4dJdqmBwWs32PCmS",
+        "address": "130 Scranton Street, Fort Walton Beach, FL 32547",
+        "zpid": 45979244,
+        "reason": "Does not pass strict filter",
+        "description": "NO BANK NEEDED SELLER FINANCING AVAILABLE FINANCIAMIENTO DISPONIBLE Move In Special: $28,200 Down and $3,137.26 monthly Spacious & Upgraded Home Near the Coast! This is a beautifully maintained, move-"
+      },
+      {
+        "id": "TvaDGdcqH3lPG35ZZ2Lk",
+        "address": "91 County Road 4237, Salem, MO 65560",
+        "zpid": 194553969,
+        "reason": "Does not pass strict filter",
+        "description": "3 bedroom 2 bath house w/full walkout basement and 5 acres. Newly remodeld house, almost every thing is brand new. I tems that have been replaced:\nRoof, siding, widows, sliding door and all other door"
+      },
+      {
+        "id": "VOAcTP35SofgcptfNoH5",
+        "address": "3232 Springview Ave, Dallas, TX 75216",
+        "zpid": 26784122,
+        "reason": "Does not pass strict filter",
+        "description": "Charming South Oak Cliff Home! Perfect for an owner occupant looking to add value over time! This 3 bedroom, 1 bath home sits in a neighborhood on the rise with renovations and new builds popping up o"
+      },
+      {
+        "id": "VXQMMV6mqH8oPOS5PyMi",
+        "address": "321 Michel St, Hot Springs, MT 59845",
+        "zpid": 78191049,
+        "reason": "Does not pass strict filter",
+        "description": "Down 20,000. Interest rate 6%    5 year balloon   monthly payment is negotiable\n"
+      },
+      {
+        "id": "VmjbWE2YmRv4OOhDgDIb",
+        "address": "26736 Rue Saint Anne Ct, cleveland, OH 44128",
+        "zpid": 457289232,
+        "reason": "Does not pass strict filter",
+        "description": "Seller financing available! Purchase subject to the existing $200k mortgage @ 4.5% interest with 25 years remaining. Welcome to your new home in the beautiful and luxurious Chateau of Emery Woods deve"
+      },
+      {
+        "id": "W3dW1WAUJ2sfJxw2Nu3q",
+        "address": "4870 Highway 67, hasse, TX 76442",
+        "reason": "Does not pass strict filter",
+        "description": "NT: [Name not provided] ([Phone number not provided])\nDATE: 2025-11-10\nASKING PRICE: $261,000\nDOWN PAYMENT: 10%\nINTEREST RATE: 6%\nAMORTIZATION: 30 yrs\nBALLOON: 12 months\nMONTHLY PAYMENT: $2,275\nNOTES:"
+      },
+      {
+        "id": "WA9Jih04sq151q8ZuiRr",
+        "address": "22637 N Hermosillo Dr, sun city west, AZ 85375",
+        "zpid": 8123810,
+        "reason": "Does not pass strict filter",
+        "description": "AGENT: Scott Marlow (eXp Realty)\nDATE: 2025-11-09  \nASKING PRICE: $579,000\nDOWN PAYMENT: 20% ($115,000)\nINTEREST RATE: 5%\nAMORTIZATION: N/A\nBALLOON: 7 years\nMONTHLY PAYMENT: $2,469  \n"
+      },
+      {
+        "id": "XfaTiNZ8KrGJ5qkKhylK",
+        "address": "2333 N 14th St, Terre Haute, IN 47804",
+        "zpid": 2069793319,
+        "reason": "Does not pass strict filter",
+        "description": "Turnkey 6-Unit Apartment Building Recently Renovated\nInvestment opportunity in Terre Haute s thriving 12 Points neighborhood! This 6-unit apartment building delivers immediate cash flow, with major re"
+      },
+      {
+        "id": "XofeAPW9J0HrbhLj2gZg",
+        "address": "861 Pershing St, East Saint Louis, IL 62203",
+        "zpid": 5232278,
+        "reason": "Does not pass strict filter",
+        "description": "ABSOLUTELY no contract for deed or Owner financing available.\nPLEASE DO NOT BOTHER THE PEOPLE LIVING THERE\nMAKE AN APPOINTMENT TO SEE THIS HOUSE WITH THE OWNER!!!!\nNO SOLICITING FOR ANY SERVICES PLEAS"
+      },
+      {
+        "id": "Z3IEHQ4xHh0wzqcbRZGe",
+        "address": "2764 S 117th East Ave, tulsa, OK 74129",
+        "zpid": 434221455,
+        "reason": "Does not pass strict filter",
+        "description": "\nList Price: $235,000\nDown Payment $23,500\nInterest: 9.99%\nTerm: 30yr amortized, 5yr option to ballon\n Principal & Interest: $1,854.50\nTaxes 2025: $2,026\nInsurance: Get there own or ours is $957/yr\n"
+      },
+      {
+        "id": "ZZUTnOjtSmKsuBZHaFXC",
+        "address": "3330 Calle Bolivia, brownsville, TX 78526",
+        "zpid": 123725217,
+        "reason": "Does not pass strict filter",
+        "description": "PROPERTY: 3330 Calle Bolivia\nAGENT: [Name not provided] ([Phone number not provided])\nDATE: 2025-11-09\nASKING PRICE: [Not provided]\nDOWN PAYMENT: 20%\nINTEREST RATE: 10%\nAMORTIZATION: N/A\nBALLOON: 3 ye"
+      },
+      {
+        "id": "abH3AwZ9raEdhouWRQc1",
+        "address": "520 Munson, Tow, TX 78672",
+        "zpid": 87421892,
+        "reason": "Does not pass strict filter",
+        "description": "Not many homes Offering Seller Financing. Featuring 3 bedrooms and 2 baths with approx. 2,394 sq. ft. of living space. The back porch has been enclosed and would be perfect for a game room or home gym"
+      },
+      {
+        "id": "bDncLkISKkNACN2rzuSs",
+        "address": "778 F St, san antonio, TX 78245",
+        "reason": "Does not pass strict filter",
+        "description": "Beautifully remodeled home in the heart of San Antonio! This 3-bedroom, 2-bath home features an open floor plan with stylish upgrades throughout. Enjoy cooking and entertaining in a modern kitchen com"
+      },
+      {
+        "id": "bcLBL6JqbBJyTXzhtRgo",
+        "address": "6710 Blanco St, edinburg, TX 78542",
+        "zpid": 443407533,
+        "reason": "Does not pass strict filter",
+        "description": "Thank you for the details. I’ve noted 25% down, 9% interest, 15–20 years, and a flexible monthly payment between $4,000–$5,000; terms are negotiable.\n"
+      },
+      {
+        "id": "dMMevyBfMfQLjfhiXC7l",
+        "address": "431 Affinity St, hoxie, AR 72433",
+        "zpid": 90858227,
+        "reason": "Does not pass strict filter",
+        "description": "Hi! $15K down, $1360/mo which includes taxes and insurance, option to refi after 2 years, 20 year note. Proof on income 2.5x the payment, so $3400\n"
+      },
+      {
+        "id": "eb5rR8uXd1ZGecDJwstS",
+        "address": "220 Collier Ln, Rock Island, TN 38581",
+        "zpid": 70534539,
+        "reason": "Does not pass strict filter",
+        "description": "3 Bedroom, 2 Bath Country Plantation home. Country living at its best. 1acre secluded lot in the middle of pastures and farmland. 2 Story farmhouse with garage, with loft for extra storage and carport"
+      },
+      {
+        "id": "ebbpoFzzU404Ji4BGq1D",
+        "address": "17 Green View Cir, Richardson, TX 75081",
+        "zpid": 27164100,
+        "reason": "Does not pass strict filter",
+        "description": "Please see the terms below from the owner.\n\nSell price => 410K Down Payment Minm => 200K Rest 210K payable in 4 years in equal installments.\n"
+      },
+      {
+        "id": "hYJyQYUtTfnjnWwwvoGL",
+        "address": "1994 S Sierra Dr, Dewey, AZ 86327",
+        "zpid": 8764207,
+        "reason": "Does not pass strict filter",
+        "description": "Welcome home to this beautifully remodeled 1,360 sq ft, 2-bedroom, 2-bath property with an additional 200 sq ft bonus room perfect for a third bedroom, office, or den. Sitting on approximately 2.68 pr"
+      },
+      {
+        "id": "iJbwMdedTXquCz98bZzJ",
+        "address": "416 W Us Highway 30, Bliss, ID 83314",
+        "zpid": 456522701,
+        "reason": "Does not pass strict filter",
+        "description": "ank you for confirming. Here’s a summary for AJ:\nPROPERTY: 416 W Us Highway 30\nAGENT: Aj with Exp\nDATE: 2025-11-13\nASKING PRICE (List): Not provided\nSELLER-FINANCE PRICE: Not provided\nDOWN PAYMENT: mi"
+      },
+      {
+        "id": "ilA0GHr8AS6Y6KDJ3L7P",
+        "address": "405 Monroe St, garfield, GA 30425",
+        "zpid": 105249576,
+        "reason": "Does not pass strict filter",
+        "description": "\n$25,000 down payment \n$244,000 loan amount\n20 yr term \n5 yr balloon\n8%\n$2,040.91 per month\n"
+      },
+      {
+        "id": "jEXDiHo8D3dkup4bakss",
+        "address": "1380 Gill Ave, Memphis, TN 38106",
+        "zpid": 42173211,
+        "reason": "Does not pass strict filter",
+        "description": "Perfect for Investors and First Time Buyers! This home is located minutes from expressway, Stax Museum, LeMoyne Owen College, Graceland , Midtown and Downtown! This home is also walking distance to Ha"
+      },
+      {
+        "id": "kDxYmBgFjzD04MXofdLo",
+        "address": "276 Lake Havasu Ave S APT B18, lake havasu city, AZ 86403",
+        "reason": "Does not pass strict filter",
+        "description": "PROPERTY: 276 Lake Havasu Ave #B-18, Zanadu Condos\nAGENT: [Name not provided]\nDATE: 2025-11-09\nASKING PRICE: $215,000\nDOWN PAYMENT: $32,500\nINTEREST RATE: 6.0%\nAMORTIZATION: N/A\nBALLOON: 2 yrs\nMONTHLY"
+      },
+      {
+        "id": "lI0yQQQe2nWgHFLH3KbV",
+        "address": "2709 9th St NE, Birmingham, AL 35215",
+        "zpid": 887236,
+        "reason": "Does not pass strict filter",
+        "description": "New 40 gallon Rheem water heater. Updated at $1250/mo. This property is 1 of 3 offered in a portfolio of other properties. Seller willing to sell individually or all 3 together. Other properties in po"
+      },
+      {
+        "id": "lNNFkI3ecapzAzxzt2zt",
+        "address": "2512 Kenner Ave, Memphis, TN 38114",
+        "zpid": 42200584,
+        "reason": "Does not pass strict filter",
+        "description": "GREAT INVESTMENT OPPORTUNITY! This 3 bedroom, 1 bathroom brick home is rented for $1,000/month, to a stable long-term tenant who has occupied the house for 5 years. Lease is good until 5/31/2026. Home"
+      },
+      {
+        "id": "lrtIXsXg3VxucDn5U6VL",
+        "address": "7941 FM 1346 lot 7, san antonio, TX 78245",
+        "reason": "Does not pass strict filter",
+        "description": "**Owner Financing available with $65,000 down. (NEGOTIABLE ) Looking for a Country Living Feel ? Then this is the perfect piece of Land with 4 bedroom 2 bath home that is situated in almost 1/4 of an "
+      },
+      {
+        "id": "nbwMOfCg08AGnswHrVNj",
+        "address": "3482 Bandera Rd, fort worth, TX 76112",
+        "reason": "Does not pass strict filter",
+        "description": "Owner-Finance available with downpayment. Contact Listing agent for more info. Seller to pay closing costs to include Seller paid title policy and lender paid appraisal fee with preferred partners and"
+      },
+      {
+        "id": "noyfmwZCX7Wz8fls9ySF",
+        "address": "406 S Martin St, Ligonier, IN 46767",
+        "zpid": 85628725,
+        "reason": "Does not pass strict filter",
+        "description": "(REDUCED PRICE)\nNO BANKS NEEDED, SELLER FINANCING AVAILABLE.\n$20k up front, $1,138/month, and interest rate is 3.375%\nLarge historical home located in the heart of Ligonier. This house is perfect for "
+      },
+      {
+        "id": "oXtrHmD6b82YdDWVtBWX",
+        "address": "3230 Yale Ave, Memphis, TN 38112",
+        "zpid": 42162462,
+        "reason": "Does not pass strict filter",
+        "description": "Here is a chance for an awesome value-add fixer in a burgeoning, up-and-coming neighborhood! Binghampton is seeing great growth year over year, with flippers and turnkey companies coming in and changi"
+      },
+      {
+        "id": "oZidd3nfsDN6Ja1KZPVo",
+        "address": "1709 Navidad St, victoria, TX 77901",
+        "zpid": 216842083,
+        "reason": "Does not pass strict filter",
+        "description": "down payment is $13,000 down. $1027 monthly Principal and interest payment. \n30 year term. \nNo prepayment penalty \nRequire an application to verify identity, income"
+      },
+      {
+        "id": "ounsULsNmvCvPNf1k5S4",
+        "address": "637-639 E 102nd St, Cleveland, OH 44108",
+        "zpid": 458449038,
+        "reason": "Does not pass strict filter",
+        "description": "Exceptional and affordable, this rare 6-bedroom, 2-full-bath side-by-side duplex is an opportunity that will not last! Attention investors and owner-occupant buyers this vacant property is easy to sho"
+      },
+      {
+        "id": "p7wSN92vEUzASaIELOia",
+        "address": "9323 Bee Balm Ave, odessa, TX 79765",
+        "zpid": 125172978,
+        "reason": "Does not pass strict filter",
+        "description": "LT\nLiked “PROPERTY: 9323 Bee Balm Ave\nAGENT: [Name not provided] ([Phone number not provided])\nDATE: 2025-11-09\nASKING PRICE: $345,000\nDOWN PAYMENT: 10%\nINTEREST RATE: 8% (7-9% APR depending on credit"
+      },
+      {
+        "id": "prswlthUVbsQkjlnJDOJ",
+        "address": "3716 Fir Ave SW, Birmingham, AL 35221",
+        "zpid": 1010482,
+        "reason": "Does not pass strict filter",
+        "description": "Great investment opportunity! New HVAC system including duct work, vents, registers, and thermostat. Current tenant pays $980/mo. This property is 1 of 3 offered in a portfolio of other properties. Se"
+      },
+      {
+        "id": "q4PJ1tClBDSwwkLyuY7y",
+        "address": "3730 E Davis Rd, edinburg, TX 78542",
+        "zpid": 108848986,
+        "reason": "Does not pass strict filter",
+        "description": "AGENT: Gustavo Sanchez UR Home Texas Group\nDATE: 2025-11-09  \nASKING PRICE: $470,000 minimum\nDOWN PAYMENT: $50,000 (minimum)\nINTEREST RATE: 10%\nAMORTIZATION: 30 yrs\nBALLOON: Negotiable\nMONTHLY PAYMENT"
+      },
+      {
+        "id": "qCn2x9woHoPEEwOLxDtK",
+        "address": "10125 Crown Point Dr, Saint Louis, MO 63136",
+        "zpid": 2652197,
+        "reason": "Does not pass strict filter",
+        "description": "Thank you for inquiring. \nThe seller is open but an example could include: $80k PP, $20k down payment if possible, $500 monthly payment.\n"
+      },
+      {
+        "id": "qc0NsFJ3wXxj2PVgqTfO",
+        "address": "324 Privett Store Rd, Colquitt, GA 39837",
+        "zpid": 126375538,
+        "reason": "Does not pass strict filter",
+        "description": "Just outside the quiet charm of little Colquitt, Georgia, this spacious six-bedroom, three-bathroom home sits on a little over three acres, offering room to stretch out both inside and out. From the m"
+      },
+      {
+        "id": "rVXYUQbHQUCKk2SBTcSO",
+        "address": "252 Trillium Road, newland, NC 28657",
+        "reason": "Does not pass strict filter",
+        "description": "ASKING PRICE: $159,000\nDOWN PAYMENT: $30,000–$35,000\nINTEREST RATE: 7% (1/4 pt above bank avg)\nAMORTIZATION: 30 yrs\nBALLOON: 5–6 yrs\nMONTHLY PAYMENT: $1,190 (includes HOA and taxes)\nNOTES: Standard co"
+      },
+      {
+        "id": "rxxdx9N9O6lpBeWszi6K",
+        "address": "486 W Waterloo Rd, Akron, OH 44314",
+        "zpid": 35438242,
+        "reason": "Does not pass strict filter",
+        "description": "This is the opportunity that buyers and investors wait for! This 2-story home is in need of a light remodel to bring it back to all that it can be. There is a lot of character throughout such as built"
+      },
+      {
+        "id": "srtgRwS4JBbY8YlPnb0k",
+        "address": "1612 Lynn Haven Ave, dallas, TX 75216",
+        "reason": "Does not pass strict filter",
+        "description": "\nLoan Type: 30-Year Fixed.\n\nDown Payment: 20%.\nInterest Rate: 10%.\n\nMonthly Payment: $2,603.95.\n\nBuyer’s Agent Commission: 2%.\n\nAdditional Requirement:\nBuyer must maintain full property insurance cove"
+      },
+      {
+        "id": "tOHRvIEI49AWq960ewT4",
+        "address": "2535 Tandy Dr, gulfport, MS 39503",
+        "reason": "Does not pass strict filter",
+        "description": "I'm thinking seller will go for $20K down, 30yr amortization, 5yr balloon, 10% interest, but I'll have to run the monthly payment (to include taxes and"
+      },
+      {
+        "id": "tm7oZhUdTiEHml5UbbZi",
+        "address": "5104 Springfield Ave NW, roanoke, VA 24017",
+        "zpid": 49671864,
+        "reason": "Does not pass strict filter",
+        "description": "We are offering 6 percent based on 25 years. No down payment but buyer pays closing costs. Loan balloons at five years.\n"
+      },
+      {
+        "id": "usMOIFmhz5KnHMBIl7pZ",
+        "address": "2114 Paris St, alexandria, LA 71301",
+        "zpid": 209918328,
+        "reason": "Does not pass strict filter",
+        "description": "The home needs work and is not move in ready. I'm out and don't have the terms directly in front of me but it is 1500 down and less than 500/month as is. I know it was rented out about 3-4 months ago."
+      },
+      {
+        "id": "vO3hEezUUffPW4uFZs27",
+        "address": "929 Brooks Dr, cedar hill, TX 75104",
+        "zpid": 67952573,
+        "reason": "Does not pass strict filter",
+        "description": "10% interest, 10% down payment.\n"
+      },
+      {
+        "id": "vYzEOsBZCqavnofrBKRg",
+        "address": "3214 Quiet Water Ln, gulf breeze, FL 32563",
+        "reason": "Does not pass strict filter",
+        "description": "''OWNERS FINANCING AVAILABLE!'' Nestled in the picturesque Gulf Breeze, Midway/Tiger Bay area of Florida, this dream home offers a perfect blend of luxury and convenience. This exquisite 3-bedroom, 2."
+      },
+      {
+        "id": "vrGqxKZYdEuWG2EWf4Kr",
+        "address": "855 SYCAMORE Way, Orange Park, FL 32073",
+        "zpid": 306141199,
+        "reason": "Does not pass strict filter",
+        "description": "RENT TO OWN\nLEASE PURCHASE\nNO CREDIT NEEDED\nNO BANK QUALIFYING NEEDED\nSELLER FINANCING AVAILABLE\nDon't miss this beautiful 4BR/2BA rent to own home with 2-car garage in Wilford Preserve! Built in 2020"
+      },
+      {
+        "id": "wifunk6CV8yFvyibFPZX",
+        "address": "1336 N College St, Decatur, IL 62526",
+        "zpid": 84807245,
+        "reason": "Does not pass strict filter",
+        "description": "reat. We are looking for 20% down, 6% interest paid over 5 years. Would work out to be $4999.80 as the 20% down payment with $386.66 a month for 60 months. We are happy to pay a $1500 cash commission "
+      },
+      {
+        "id": "xOQc4BFun5PgsvRyP589",
+        "address": "11685 Pagoda St, odessa, TX 79761",
+        "zpid": 206038754,
+        "reason": "Does not pass strict filter",
+        "description": "10% down very good credit 750+ 8.0% interest w/option to refinance anytime. \n\nWill consider lower credit score but may require higher down payment and interest rate"
+      },
+      {
+        "id": "yeNIsBs1pTA8He4tKegD",
+        "address": "927 Tower Loop, Mountain View, AR 72560",
+        "zpid": 109128979,
+        "reason": "Does not pass strict filter",
+        "description": "Charming 4-Bedroom Home with Guest Cottage Near the White River – Seller Financing Available!Beautifully 4-bedroom, 2-bath home with a spacious primary suite set apart from the other bedrooms for priv"
+      },
+      {
+        "id": "zhTFCVXJ4u5QTgjfh6Ra",
+        "address": "3330 NW 101st St, miami, FL 33147",
+        "reason": "Does not pass strict filter",
+        "description": "Excellent investment opportunity in a growing Miami neighborhood. The main structure suffered fire damage and will require a full remodel or possible tear-down. Property includes two additional storag"
+      },
+      {
+        "id": "zlQVfmmXJPnktMsENV3F",
+        "address": "5744 Indiana Ave, Kansas City, MO 64130",
+        "zpid": 2361574,
+        "reason": "Does not pass strict filter",
+        "description": "Investor special with solid potential in a rapidly developing area! This 2-bed, 1-bath property offers a functional layout with great bones, ready for your creative touch. The spacious living area, fo"
+      }
+    ],
+    "noMatchedKeywords": [
+      {
+        "id": "0V0HLvGitdK3480Rv1tW",
+        "address": "12001 Vista Parke Dr #1002, austin, TX 78726",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "0YOxcCc1GF5OlXByOFPm",
+        "address": "2303 SW 43rd Ter, cape coral, FL 33914",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "0aCrPF4RJQMa5BC6GZNJ",
+        "address": "2837 NW 2nd Ter, cape coral, FL 33993",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "0bVDBTewlZuvtP7CWhKN",
+        "address": "4611 E 4th Pl, tulsa, OK 74112",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "16bPno9ScZA6U8Sy1N5x",
+        "address": "110 Moses Hughes, blanco, TX 78606",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "2qGVy8PsXbugQhe3pUDa",
+        "address": "375 Simpson St, the villages, FL 32162",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "3GP1clmEt0Ty3gDlGzLx",
+        "address": "4910 38th Way S APT 111, saint petersburg, FL 33711",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "3bJbMw6Gg0dTPtXyNnaS",
+        "address": "1296 Monasco Rd, millington, TN 38053",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "3bu7mc7i0Xq8OM8jpQsC",
+        "address": "308 E Date Ave, casa grande, AZ 85122",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "3gU1HjmtLz2OWgkAJFVG",
+        "address": "1110 Andean Emerald, san antonio, TX 78245",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "43JlzaVQWHtCJkL27LIA",
+        "address": "3409 Catalan Aly, decatur, GA 30032",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "5DZTFdoBzdbGitaMLJ1C",
+        "address": "11312 Haskell Dr, clermont, FL 34711",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "5L0cNvljHMmXCX79j5IX",
+        "address": "1469 Twin Cv, kyle, TX 78640",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "5UJLCGGYqF6HdLqAW2iU",
+        "address": "916 swallows, seguin, TX 78155",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "6QrDlFdm6tBQNhmRgIKa",
+        "address": "1228 Kennie Dr, commerce, TX 75428",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "6jsNz7Qf8e3JEhOYYgg7",
+        "address": "444 BEVERLY DR, san antonio, TX 78245",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "6oqSLDEuhlm8dE6xhvJV",
+        "address": "206 E Gilmer St, rice, TX 75155",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "71KJXO4ClaKzwl8cVAHA",
+        "address": "10251 Crystal View, universal city, TX 78148",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "7ad9wUHu40jo4ydUOtGN",
+        "address": "13996 Godbold Rd, tallahassee, FL 32303",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "7vzQHJl31RzKv2qfF8eZ",
+        "address": "6541 SW 111th Loop, ocala, FL 34476",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "8Qxt5hfMxYp0xSmxzPmc",
+        "address": "3302 High Plateau Dr, garland, TX 75043",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "8fLY01CmR2HOFYtyDh3z",
+        "address": "14745 Babcock Rd #204, san antonio, TX 78249",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "8tFUw4tcJoK4OJaEwunw",
+        "address": "1421 Chisholm Ridge Ct, saint cloud, FL 34771",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "9GJwwylp4IDTfJXVRbPD",
+        "address": "7305 Ridgeview Dr, rowlett, TX 75089",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "9gudgXqXb0w54B1Phc5h",
+        "address": "147 Western Lake Dr, weatherford, TX 76087",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "9tKfZXYV4BVtCZ7bg86u",
+        "address": "105 Glen Ct #105, wendell, NC 27591",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "9tlSHuObS5WLGYaUcDdb",
+        "address": "437 Middle Green, floresville, TX 78114",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "AFy75DWNMcKwsVipZMih",
+        "address": "435 Gould, san antonio, TX 78245",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "B1vJdFx1vhB4K2gN573I",
+        "address": "1003 Fauntleroy Trail, austin, TX 78758",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "C5RpxLuOzvloa7IotNCf",
+        "address": "6240 Tributary St, pensacola, FL 32504",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "CGD8qQron4kNHvUi4BE8",
+        "address": "407 N Dallas St, rice, TX 75155",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "DR7WJt6F2fbUFj8UMmEt",
+        "address": "602 ray rd, Jacksonville, AR 72076",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "EC0uTJNmwJ6bwmOOTCxc",
+        "address": "4911 Dare Ln, san antonio, TX 78245",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "EEJNzSJcUhQcacdNm7z2",
+        "address": "2513 Rochelle St, durham, NC 27703",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "EK8LB5K1sPI80hAMeLgP",
+        "address": "8815 SEBEC CIR, san antonio, TX 78245",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "EQsIKw35noAHr3QzKwLM",
+        "address": "1219 14th St, corpus christi, TX 78411",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "EXAJl6Dis80R3WmcOCnz",
+        "address": "1013 El Dorado Blvd N, cape coral, FL 33914",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "FAZPjbVZZix5cvN8ZngZ",
+        "address": "138 DUNNING AVE, san antonio, TX 78245",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "FFYikVslQrYoin4Ghf2r",
+        "address": "515 Mitchell Ave, seguin, TX 78155",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "FtZmSl4jhrXJB4d3dtdZ",
+        "address": "6394 Roadstead Ct, apollo beach, FL 33572",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "GaCdRqCf2x3a4w5kOslP",
+        "address": "3406 Mesquite Dr, sugar land, TX 77479",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "HNz1wxaXdFgoy60VxbnG",
+        "address": "30417 N 42nd Pl, Cave Creek, AZ 85331",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "IJ1kmDZ9K8JOnYNEpUYQ",
+        "address": "913 Meadow View Dr, richardson, TX 75080",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "IaR6yyaVinpwwTkeCRD3",
+        "address": "1221 Simpson Dr, hurst, TX 76053",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "IolSSNNZ1fSTCoqPChsA",
+        "address": "1422 Benjamin St, nashville, TN 37206",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "JFFccNR9YiiZeVREOcJ4",
+        "address": "3405 Sirius Ave, el paso, TX 79938",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "KqsmbKL5xJf9ucA7pZgg",
+        "address": "294 Eagle Dr, big bear lake, CA 92315",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "L8hjLqzrjUQCtrBF0hQz",
+        "address": "36690 W PIMA Drive Stanfield, stanfield, AZ 85172",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "LPmHAFdjXD1p04aV09zT",
+        "address": "1207 Ocean Blvd. S #50805, myrtle beach, SC 29577",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "MIgsFKxiaWzrem5oBSg9",
+        "address": "52 Baby Jane Ln, hendersonville, NC 28792",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "Mc1vZwayCii8BqAOMJL1",
+        "address": "200 Olive St, lone oak, TX 75453",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "MtrTbr0waGJnZMsF4eAS",
+        "address": "4313 County Road 311, henderson, TX 75654",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "MwekdKOaOAEivKclENHg",
+        "address": "208 Weaver Ave, lake wales, FL 33853",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "NgJUiQ82kP0jdxDLVXau",
+        "address": "3130 Springfield Ave, lancaster, TX 75134",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "OIqwkWC7zRtml32bp5nS",
+        "address": "917 Nolan, san antonio, TX 78245",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "OJ0oU8Z1id1J28sXZctR",
+        "address": "611 W James St, lillington, NC 27546",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "OXlPgTTTYe72eMYhEMYx",
+        "address": "2715 N Dellwood Dr, eustis, FL 32726",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "Oco2umVPfN4XThxn3fvG",
+        "address": "278 DORIE ST, san antonio, TX 78220",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "PUPPbJioB0qmqXya85m3",
+        "address": "582 Five Mile Road, richlands, NC 28540",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "QvxRXNEIL9jPSb6LwCse",
+        "address": "9323 Chattanooga, san antonio, TX 78245",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "Rr77kBtqV1nrGqpnJKKU",
+        "address": "2460 French St, fate, TX 75189",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "SE5HUi29QRCDAcYDeMl3",
+        "address": "540 N Timberlea St, liberty, NC 27298",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "TrP0JDVO0vDf2iinO2ET",
+        "address": "112 spring valley, adkins, TX 78101",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "U7H8KCpI3ae8aYdW7fFl",
+        "address": "4545 Fairway Oaks Dr, mulberry, FL 75155",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "UPR9hML8oYHrVF8j899q",
+        "address": "280 Kari Dr, westminster, SC 29693",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "Uj1fY12fW6OyRomjyaWq",
+        "address": "6033 S 4520 W, salt lake city, UT 84118",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "VHDrgwP9nM2SG7REaLhT",
+        "address": "801 Quebec Dr, garland, TX 75043",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "VLICfIi0Ba21WEJPrFIY",
+        "address": "4047 Wiggins Dr, new port richey, FL 34652",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "VydxPL1HPMLymgXtQBWf",
+        "address": "409 N Dallas St, rice, TX 75189",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "W3dW1WAUJ2sfJxw2Nu3q",
+        "address": "4870 Highway 67, hasse, TX 76442",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "WUl0yoPF9CPMymWvdsHq",
+        "address": "2842 Kingswood Dr, garland, TX 75040",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "XaqJCgOeRjCLfzWgV9vW",
+        "address": "164 Clinger Cove Rd, ocoee, FL 34761",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "Xn1KdfWrBF9lz567EsZ5",
+        "address": "607 Colwyn Pass, san antonio, TX 78245",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "Xopsy4wFwsnwX4NsZN24",
+        "address": "6601 Mediterranean Dr UNIT 6402, mckinney, TX 75069",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "XtvCrMAJ0mk4PLwwiiXf",
+        "address": "509 N 6th St, donna, TX 78537",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "YWumLgMZjlmb6sZAhAGH",
+        "address": "221 1st St, davenport, FL 33896",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "YaGC1QGEcAGWgS4TV0uX",
+        "address": "8605 Puerto Viejo, laredo, TX 78046",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "ZM3jWQOcGDF6VTneOXHG",
+        "address": "8680 W Bolsa Dr, golden valley, AZ 86413",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "ZO6HcD51lLNYwDNX7Q12",
+        "address": "3925 Moulton St, greenville, TX 75401",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "aG6vONSBYBHjNNDF4ley",
+        "address": "33582 Sky Blossom Cir, leesburg, FL 34748",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "aS7zqF2M9F6FSJvS6KuN",
+        "address": "1959 Gruene, new braunfels, TX 78132",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "aZKrYcrowmkkDCotxhWZ",
+        "address": "315 Murcia, laredo, TX 78046",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "ahZCEYP65SkdDlI7f49q",
+        "address": "6554 Lindyann Ln, houston, TX 77008",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "anyirDIS4wCPqPpL4zqe",
+        "address": "1216 Forest St, georgetown, TX 78633",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "b1NCpq1W5h3cNOTUF00u",
+        "address": "7923 Santa Catalina, san antonio, TX 78245",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "bCQ5B1CAkbUAWTw4YSID",
+        "address": "611 KIRK PL, san antonio, TX 78245",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "bDncLkISKkNACN2rzuSs",
+        "address": "778 F St, san antonio, TX 78245",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "bkSdokk1rV2apzobQFtJ",
+        "address": "4675 River Oak Cir #4675, brownsville, TX 78526",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "bozZd5TxTNMejJdoaK9W",
+        "address": "140 Great Oaks Blvd, la vernia, TX 78121",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "bwCJtSTUJVZzCG488uBE",
+        "address": "9237 Swiss Road, spring hill, FL 34607",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "c43nM7pbj7kR42rnvnOE",
+        "address": "821 S Roy Reynolds Dr, harker heights, TX 76548",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "eqt7DZQaadzISEOdGU0H",
+        "address": "6723 S Marion Ave, tulsa, OK 74136",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "garUxzvwBQxFxHvG5o8N",
+        "address": "12105 Rosita Ct, austin, TX 78748",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "hWctHvA93aSqxOlVdvPL",
+        "address": "910 Lohaina Ct, kemp, TX 75143",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "jQMC8qGdZQU9efE3IuyV",
+        "address": "507 W 13th St, casa grande, AZ 85122",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "jYJYtIzvrRyHHl0bKZhK",
+        "address": "240 Shadow Oak Dr, bastrop, TX 78602",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "kDxYmBgFjzD04MXofdLo",
+        "address": "276 Lake Havasu Ave S APT B18, lake havasu city, AZ 86403",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "kjZxsQNhfLkiC6OjOryG",
+        "address": "4714 Larcade Dr, corpus christi, TX 78415",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "l3uz340Ym7K2AsPUC59E",
+        "address": "5064 Cambry Ln, lakeland, FL 33805",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "lTFXezGdN40Je2FQhLRY",
+        "address": "534 Mary, san antonio, TX 78245",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "lohmgWNeqSLOD3c8XOqM",
+        "address": "5455 Dabney, san antonio, TX 78245",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "lrtIXsXg3VxucDn5U6VL",
+        "address": "7941 FM 1346 lot 7, san antonio, TX 78245",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "mHb1h1xKaJTYddYRwLd2",
+        "address": "417 W Andrew Dr, mabank, TX 75156",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "nSNqcid82C7cckSDOeBt",
+        "address": "5723 Soothing Water, san antonio, TX 78245",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "nbwMOfCg08AGnswHrVNj",
+        "address": "3482 Bandera Rd, fort worth, TX 76112",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "njuh5N74AoT3InWuG3pz",
+        "address": "2299 Athens St, brownsville, TX 78526",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "qRKEbG81hH6N9o4ZwO7N",
+        "address": "3228 Millmar Dr, dallas, TX 75211",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "rVXYUQbHQUCKk2SBTcSO",
+        "address": "252 Trillium Road, newland, NC 28657",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "sqwuJFIa8S0XdWNGuVLK",
+        "address": "4055 Victor Blvd, kemp, TX 75143",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "srtgRwS4JBbY8YlPnb0k",
+        "address": "1612 Lynn Haven Ave, dallas, TX 75216",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "tOHRvIEI49AWq960ewT4",
+        "address": "2535 Tandy Dr, gulfport, MS 39503",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "uaBThsgPJ3XwRgs8RVTb",
+        "address": "2138 S Scales St, reidsville, NC 27320",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "vYzEOsBZCqavnofrBKRg",
+        "address": "3214 Quiet Water Ln, gulf breeze, FL 32563",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "w5gZfciRnaicnm9lXqHQ",
+        "address": "9115 Everton, san antonio, TX 78245",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "wXOA1hCljttMue7rAINs",
+        "address": "304 Highway 98, carrabelle, FL 32322",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "whC2FHKLW26qDfAIHi0e",
+        "address": "237 W Brooklyn Ave, dallas, TX 75211",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "wwtBGTcWnOIBNGmpLMaO",
+        "address": "19173 Greenleaf Dr, flint, TX 75762",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "wx7mEOcVnuMFIIUodPoA",
+        "address": "532 Northwyck Way, socorro, TX 79928",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "x0ZtpLR8ocaJOd5v57Bw",
+        "address": "11807 Gaston Pkwy, dallas, TX 75211",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "x3nPJkHuWXb6F8mb84bv",
+        "address": "2438 Scotch Moss Dr, corpus christi, TX 78411",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "yX0XQEV5w0ukqWLBzv10",
+        "address": "7319 Holiday Dr, spring hill, FL 34607",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "zG8fTsYcbC1zA0DjNeb3",
+        "address": "2012 Indian Creek Rd, austin, TX 78734",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "zJO8HRwfgpVbIWXwqNfZ",
+        "address": "219 Hillcrest St, sanger, TX 76266",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "zhTFCVXJ4u5QTgjfh6Ra",
+        "address": "3330 NW 101st St, miami, FL 33147",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "zsRGzpc8reRJyveA3oB4",
+        "address": "2033 Pleasant Dr, dallas, TX 75211",
+        "ownerFinanceVerified": true
+      },
+      {
+        "id": "zuBpjkLRAuPGnwNxm0eb",
+        "address": "804 Tyler St, midland, TX 79707",
+        "ownerFinanceVerified": true
+      }
+    ]
+  }
+}

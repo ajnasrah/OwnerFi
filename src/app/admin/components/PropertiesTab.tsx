@@ -142,16 +142,16 @@ export default function PropertiesTab({ setEditingProperty, setEditForm }: Prope
               <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Property
               </th>
-              <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700" onClick={() => handleSort('city')}>
+              <th scope="col" className="hidden md:table-cell px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700" onClick={() => handleSort('city')}>
                 Location {sortField === 'city' && (sortDirection === 'asc' ? '↑' : '↓')}
               </th>
-              <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700" onClick={() => handleSort('listPrice')}>
+              <th scope="col" className="hidden lg:table-cell px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700" onClick={() => handleSort('listPrice')}>
                 Price {sortField === 'listPrice' && (sortDirection === 'asc' ? '↑' : '↓')}
               </th>
-              <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700" onClick={() => handleSort('downPaymentAmount')}>
+              <th scope="col" className="hidden lg:table-cell px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700" onClick={() => handleSort('downPaymentAmount')}>
                 Down Payment {sortField === 'downPaymentAmount' && (sortDirection === 'asc' ? '↑' : '↓')}
               </th>
-              <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700" onClick={() => handleSort('monthlyPayment')}>
+              <th scope="col" className="hidden xl:table-cell px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700" onClick={() => handleSort('monthlyPayment')}>
                 Monthly Payment {sortField === 'monthlyPayment' && (sortDirection === 'asc' ? '↑' : '↓')}
               </th>
             </tr>
@@ -173,8 +173,8 @@ export default function PropertiesTab({ setEditingProperty, setEditForm }: Prope
                     className="absolute left-4 top-1/2 -mt-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                   />
                 </td>
-                <td className="px-3 py-4 whitespace-nowrap text-sm font-medium">
-                  <div className="flex items-center space-x-2">
+                <td className="px-2 md:px-3 py-4 whitespace-nowrap text-xs md:text-sm font-medium">
+                  <div className="flex flex-col md:flex-row items-start md:items-center space-y-1 md:space-y-0 md:space-x-2">
                     <button
                       onClick={() => {
                         setEditingProperty(property);
@@ -210,50 +210,52 @@ export default function PropertiesTab({ setEditingProperty, setEditForm }: Prope
                       }}
                       className="text-red-600 hover:text-red-900"
                     >
-                      Delete
+                      Del
                     </button>
                   </div>
                 </td>
                 <td className="px-3 py-4 whitespace-nowrap">
                   <div className="flex items-center">
-                    <div className="flex-shrink-0 h-20 w-28">
+                    <div className="flex-shrink-0 h-16 w-20 md:h-20 md:w-28">
                       <Image
                         src={convertToDirectImageUrl(property.imageUrl || (property as any).imageUrls?.[0]) || '/placeholder-house.svg'}
                         alt={property.address}
                         width={112}
                         height={80}
-                        className="h-20 w-28 rounded-lg object-cover"
+                        className="h-16 w-20 md:h-20 md:w-28 rounded-lg object-cover"
                         loading="lazy"
                         quality={40}
-                        sizes="112px"
+                        sizes="(max-width: 768px) 80px, 112px"
                         priority={false}
                       />
                     </div>
                     <div className="ml-2">
                       <div className="flex items-center gap-1">
-                        <div className="text-sm font-medium text-gray-900">{property.address}</div>
+                        <div className="text-xs md:text-sm font-medium text-gray-900 truncate max-w-[200px] md:max-w-none">{property.address}</div>
                         <button
                           onClick={() => {
                             const fullAddress = property.fullAddress || `${property.address}, ${property.city}, ${property.state} ${property.zipCode}`;
                             navigator.clipboard.writeText(fullAddress);
                           }}
-                          className="text-gray-400 hover:text-gray-600 transition-colors"
+                          className="text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0"
                           title="Copy full address"
                         >
-                          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="h-3 w-3 md:h-4 md:w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                           </svg>
                         </button>
                       </div>
-                      <div className="text-xs text-gray-500">{property.bedrooms} bed • {property.bathrooms} bath • {property.squareFeet?.toLocaleString()} sqft</div>
+                      <div className="text-xs text-gray-500">{property.bedrooms} bed • {property.bathrooms} bath</div>
+                      <div className="md:hidden text-xs text-gray-600 mt-1">{property.city}, {property.state}</div>
+                      <div className="md:hidden text-xs font-medium text-gray-900 mt-0.5">${property.listPrice?.toLocaleString()}</div>
                     </div>
                   </div>
                 </td>
-                <td className="px-3 py-4 whitespace-nowrap">
+                <td className="hidden md:table-cell px-3 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-900">{property.city}, {property.state}</div>
                   <div className="text-sm text-gray-500">{property.zipCode}</div>
                 </td>
-                <td className="px-3 py-4 whitespace-nowrap">
+                <td className="hidden lg:table-cell px-3 py-4 whitespace-nowrap">
                   <div className="text-sm font-medium text-gray-900">${property.listPrice?.toLocaleString()}</div>
                   {(property as any).estimatedValue && (property as any).estimatedValue > 0 && (
                     <>
@@ -274,11 +276,11 @@ export default function PropertiesTab({ setEditingProperty, setEditForm }: Prope
                     </>
                   )}
                 </td>
-                <td className="px-3 py-4 whitespace-nowrap">
+                <td className="hidden lg:table-cell px-3 py-4 whitespace-nowrap">
                   <div className="text-sm font-medium text-gray-900">${property.downPaymentAmount?.toLocaleString()}</div>
                   <div className="text-xs text-gray-500">{property.downPaymentPercent ? `${Math.round(property.downPaymentPercent)}%` : ''}</div>
                 </td>
-                <td className="px-3 py-4 whitespace-nowrap">
+                <td className="hidden xl:table-cell px-3 py-4 whitespace-nowrap">
                   <div className="text-sm font-medium text-gray-900">${property.monthlyPayment?.toLocaleString()}/mo</div>
                 </td>
               </tr>

@@ -264,7 +264,9 @@ async function generatePodcastEpisode() {
 // ============================================================================
 
 async function generateArticleVideos() {
-  const { getUnprocessedArticles } = await import('@/lib/feed-store-firestore');
+  const { db } = await import('@/lib/firebase');
+  const { collection, query, where, getDocs, limit: firestoreLimit } = await import('firebase/firestore');
+  const { getCollectionName } = await import('@/lib/feed-store-firestore');
   const { POST: startWorkflow } = await import('@/app/api/workflow/complete-viral/route');
 
   // Brands with RSS feed-based article generation
@@ -277,24 +279,51 @@ async function generateArticleVideos() {
     console.log(`\n📂 Checking ${brand} articles...`);
 
     try {
-      const articles = await getUnprocessedArticles(brand, 5);
-      console.log(`   Found ${articles.length} unprocessed articles`);
+      // CRITICAL FIX: Check for quality articles (qualityScore >= 50) before triggering workflow
+      // This prevents wasting API calls on brands with no quality content
+      const collectionName = getCollectionName('ARTICLES', brand);
 
-      if (articles.length === 0) {
-        console.log(`   ⏭️  No articles available`);
+      if (!db) {
+        console.log(`   ⚠️  Firebase not initialized`);
         results.push({
           brand,
           success: false,
-          skipped: true,
-          message: 'No unprocessed articles'
+          error: 'Firebase not initialized'
         });
         continue;
       }
 
-      // Show top articles
-      if (articles.length > 0) {
-        console.log(`   📰 Top article: ${articles[0].title.substring(0, 60)}...`);
+      // Get unprocessed articles with quality score >= 50 (in-memory filter)
+      const q = query(
+        collection(db, collectionName),
+        where('processed', '==', false),
+        firestoreLimit(20)
+      );
+
+      const snapshot = await getDocs(q);
+      const articles = snapshot.docs.map(doc => doc.data());
+
+      // Filter for quality articles (score >= 50)
+      const qualityArticles = articles.filter((a: any) =>
+        typeof a.qualityScore === 'number' && a.qualityScore >= 50
+      );
+
+      console.log(`   Found ${articles.length} unprocessed, ${qualityArticles.length} quality (score >= 50)`);
+
+      if (qualityArticles.length === 0) {
+        console.log(`   ⏭️  No quality articles available - skipping`);
+        results.push({
+          brand,
+          success: false,
+          skipped: true,
+          message: 'No quality articles available (need score >= 50)'
+        });
+        continue;
       }
+
+      // Show top quality article info
+      const topArticle = qualityArticles.sort((a: any, b: any) => (b.qualityScore || 0) - (a.qualityScore || 0))[0];
+      console.log(`   ✅ Top article: "${topArticle.title?.substring(0, 50)}..." (score: ${topArticle.qualityScore})`);
 
       // Trigger workflow
       console.log(`   🎬 Triggering video workflow...`);
@@ -317,7 +346,8 @@ async function generateArticleVideos() {
           brand,
           success: true,
           workflowId: data.workflow_id,
-          article: articles[0].title.substring(0, 60)
+          article: topArticle.title?.substring(0, 60) || 'Unknown',
+          qualityScore: topArticle.qualityScore
         });
       } else {
         console.error(`   ❌ Workflow failed: ${data.error || 'Unknown error'}`);

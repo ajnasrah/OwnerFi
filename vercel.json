@@ -84,6 +84,14 @@
     {
       "path": "/api/cron/run-search-scraper",
       "schedule": "0 9 * * 1,4"
+    },
+    {
+      "path": "/api/cron/run-agent-outreach-scraper",
+      "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/process-agent-outreach-queue",
+      "schedule": "0 */4 * * *"
     }
   ],
   "functions": {
@@ -151,6 +159,12 @@
       "maxDuration": 300
     },
     "src/app/api/cron/run-search-scraper/route.ts": {
+      "maxDuration": 300
+    },
+    "src/app/api/cron/run-agent-outreach-scraper/route.ts": {
+      "maxDuration": 300
+    },
+    "src/app/api/cron/process-agent-outreach-queue/route.ts": {
       "maxDuration": 300
     },
     "src/app/api/**/*.ts": {

@@ -152,6 +152,40 @@ export async function GET(request: NextRequest) {
         continue;
       }
 
+      // Extract agent info early for duplicate checking
+      const agentPhone = property.attributionInfo?.agentPhoneNumber ||
+                        property.attributionInfo?.brokerPhoneNumber;
+
+      if (!agentPhone) {
+        noAgent++;
+        continue;
+      }
+
+      // Normalize address and phone for duplicate checking
+      const addressNormalized = (property.address || '')
+        .toLowerCase()
+        .trim()
+        .replace(/[#,\.]/g, '')
+        .replace(/\s+/g, ' ')
+        .replace(/\b(street|st|avenue|ave|road|rd|drive|dr|lane|ln|court|ct|circle|cir)\b/g, '')
+        .trim();
+
+      const phoneNormalized = agentPhone.replace(/\D/g, '');
+
+      // Check if we've already contacted this agent about this property
+      // Same address + same phone = already contacted, skip
+      const alreadyContacted = await db
+        .collection('contacted_agents')
+        .where('addressNormalized', '==', addressNormalized)
+        .where('phoneNormalized', '==', phoneNormalized)
+        .limit(1)
+        .get();
+
+      if (!alreadyContacted.empty) {
+        console.log(`   ⏭️  Skipping ${property.address} - already contacted this agent`);
+        continue;
+      }
+
       // Classify deal type based on price vs zestimate
       const price = property.price || 0;
       const zestimate = property.zestimate || 0;
@@ -173,12 +207,10 @@ export async function GET(request: NextRequest) {
         stats.potentialOwnerFinance++;
       }
 
-      // Extract agent info
+      // Extract remaining agent info
       const agentName = property.attributionInfo?.agentName ||
                        property.attributionInfo?.brokerName ||
                        'Agent';
-      const agentPhone = property.attributionInfo?.agentPhoneNumber ||
-                        property.attributionInfo?.brokerPhoneNumber;
       const agentEmail = property.attributionInfo?.agentEmail || null;
 
       // Add to agent_outreach_queue
@@ -206,6 +238,10 @@ export async function GET(request: NextRequest) {
         agentName: agentName,
         agentPhone: agentPhone,
         agentEmail: agentEmail,
+
+        // Normalized for deduplication
+        addressNormalized: addressNormalized,
+        phoneNormalized: phoneNormalized,
 
         // Classification
         dealType: dealType,

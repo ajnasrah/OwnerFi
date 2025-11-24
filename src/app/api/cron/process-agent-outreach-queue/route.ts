@@ -179,6 +179,29 @@ export async function GET(request: NextRequest) {
           updatedAt: new Date(),
         });
 
+        // Mark as contacted in contacted_agents collection
+        // This prevents future duplicate outreach to same agent about same property
+        await db.collection('contacted_agents').add({
+          propertyAddress: property.address,
+          contactName: property.agentName,
+          contactPhone: property.agentPhone,
+          contactEmail: property.agentEmail || '',
+          stage: 'sent',
+          status: 'awaiting_response',
+          createdOn: new Date().toISOString(),
+          firebase_id: doc.id,
+          opportunityId: ghlResponse.opportunityId || '',
+
+          // Normalized for fast deduplication
+          addressNormalized: property.addressNormalized,
+          phoneNormalized: property.phoneNormalized,
+
+          // Metadata
+          importedAt: new Date(),
+          source: 'agent_outreach_system',
+          dealType: property.dealType,
+        });
+
         sent++;
         console.log(`   ✅ Sent: ${property.address}`);
 

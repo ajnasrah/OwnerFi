@@ -60,11 +60,21 @@ export class ConsolidatedLeadSystem {
         { field: 'preferredState', operator: '==', value: realtorProfile.state }
       ], 100); // Limit to 100 most recent leads
 
+      // Get all user IDs with realtor role to filter them out
+      const realtorUsers = await FirebaseDB.queryDocuments('users', [
+        { field: 'role', operator: '==', value: 'realtor' }
+      ]);
+      const realtorUserIds = new Set(realtorUsers.map((u: any) => u.id));
 
       // Score and filter matches
       const matches: LeadMatch[] = [];
 
       for (const buyer of availableBuyers) {
+        // Skip if this buyer profile belongs to a realtor
+        if (buyer.userId && realtorUserIds.has(buyer.userId)) {
+          continue;
+        }
+
         // Early exit once we have enough matches
         if (matches.length >= limit) break;
 

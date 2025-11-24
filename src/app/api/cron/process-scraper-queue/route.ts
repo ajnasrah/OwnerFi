@@ -236,6 +236,17 @@ export async function GET(request: NextRequest) {
           continue; // Don't save, move to next property
         }
 
+        // ===== NEGATIVE KEYWORD CHECK - PREVENT LEAKAGE =====
+        const { hasNegativeKeywords } = await import('@/lib/negative-keywords');
+        const negativeCheck = hasNegativeKeywords(propertyData.description);
+
+        // SKIP property if it has negative keywords (explicitly says "NO owner finance")
+        if (negativeCheck.hasNegative) {
+          console.log(`⏭️  FILTERED OUT: ${propertyData.fullAddress} - Negative keywords found: ${negativeCheck.matches.slice(0, 3).join(', ')}`);
+          metrics.validationFailed++; // Count as filtered
+          continue; // Don't save, move to next property
+        }
+
         // Property passed! Log the matched keywords
         console.log(`✅ OWNER FINANCE FOUND: ${propertyData.fullAddress}`);
         console.log(`   Keywords: ${filterResult.matchedKeywords.join(', ')}`);

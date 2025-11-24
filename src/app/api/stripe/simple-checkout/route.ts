@@ -10,12 +10,12 @@ function getStripe() {
   });
 }
 
-// Simple credit packages - no complex pricing tiers
+// Simple credit packages - prices in cents for Stripe
 const CREDIT_PACKAGES = {
-  '1_credit': { credits: 1, price: 300, name: '1 Lead Credit', recurring: false },
-  '4_credits': { credits: 4, price: 500, name: '4 Lead Credits (Monthly)', recurring: true },
-  '10_credits': { credits: 10, price: 1000, name: '10 Lead Credits (Monthly)', recurring: true },
-  '60_credits': { credits: 60, price: 3000, name: '60 Lead Credits', recurring: false },
+  '1_credit': { credits: 1, price: 300, name: '1 Lead Credit', recurring: false }, // $3.00
+  '4_credits': { credits: 4, price: 500, name: '4 Lead Credits (Monthly)', recurring: true }, // $5.00/mo
+  '10_credits': { credits: 10, price: 1000, name: '10 Lead Credits (Monthly)', recurring: true }, // $10.00/mo
+  '60_credits': { credits: 60, price: 3000, name: '60 Lead Credits', recurring: false }, // $30.00
 };
 
 export async function POST(request: NextRequest) {
@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
               name: package_.name,
               description: `${package_.credits} buyer lead credits${package_.recurring ? ' (renews monthly)' : ''}`,
             },
-            unit_amount: package_.price * 100, // Convert to cents
+            unit_amount: package_.price, // Already in cents
           },
           quantity: 1,
         },

@@ -71,7 +71,7 @@ interface Stats {
 export default function AdminDashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'overview' | 'properties' | 'failed-properties' | 'review-required' | 'upload' | 'disputes' | 'contacts' | 'buyers' | 'realtors' | 'logs' | 'social' | 'articles' | 'image-quality' | 'buyer-preview' | 'cash-houses'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'properties' | 'upload' | 'disputes' | 'contacts' | 'buyers' | 'realtors' | 'social' | 'buyer-preview' | 'cash-houses'>('overview');
 
   // Stats
   const [stats, setStats] = useState<Stats>({
@@ -91,19 +91,7 @@ export default function AdminDashboard() {
   const [sortField, setSortField] = useState<'address' | 'city' | 'state' | 'listPrice' | 'bedrooms' | 'downPaymentAmount' | 'monthlyPayment' | null>('address');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
-  // Failed Properties state
-  const [failedProperties, setFailedProperties] = useState<AdminProperty[]>([]);
-  const [loadingFailedProperties, setLoadingFailedProperties] = useState(false);
-  const [failedPropertiesFilter, setFailedPropertiesFilter] = useState<'all' | 'validation' | 'withdrawn' | 'missing-data'>('all');
-  const [failedPropertySummary, setFailedPropertySummary] = useState({ total: 0, withdrawn: 0, missingData: 0, validation: 0 });
-
-  // Review Required Properties state
-  const [reviewRequiredProperties, setReviewRequiredProperties] = useState<AdminProperty[]>([]);
-  const [loadingReviewRequired, setLoadingReviewRequired] = useState(false);
-  const [reviewRequiredCount, setReviewRequiredCount] = useState(0);
-  const [selectedReviewProperties, setSelectedReviewProperties] = useState<Set<string>>(new Set());
   const [editingProperty, setEditingProperty] = useState<AdminProperty | null>(null);
-  const [approvingProperties, setApprovingProperties] = useState(false);
 
   // Upload state
   const [file, setFile] = useState<File | null>(null);
@@ -160,11 +148,6 @@ export default function AdminDashboard() {
 
   // Edit modal state
   const [editForm, setEditForm] = useState<Partial<AdminProperty>>({});
-
-  // Image quality state
-  const [streetViewProperties, setStreetViewProperties] = useState<AdminProperty[]>([]);
-  const [loadingStreetView, setLoadingStreetView] = useState(false);
-  const [editingImageUrl, setEditingImageUrl] = useState<string | null>(null);
 
   // Buyer Preview state
   const [previewProperties, setPreviewProperties] = useState<AdminProperty[]>([]);
@@ -305,156 +288,6 @@ export default function AdminDashboard() {
     }
   }, []);
 
-  const fetchFailedProperties = useCallback(async () => {
-    setLoadingFailedProperties(true);
-    try {
-      const response = await fetch(`/api/admin/failed-properties?filter=${failedPropertiesFilter}`);
-      const data = await response.json();
-      if (data.properties) {
-        setFailedProperties(data.properties);
-        setFailedPropertySummary(data.summary);
-      }
-    } catch (error) {
-      console.error('Failed to fetch failed properties:', error);
-    } finally {
-      setLoadingFailedProperties(false);
-    }
-  }, [failedPropertiesFilter]);
-
-  const fetchReviewRequiredProperties = useCallback(async () => {
-    setLoadingReviewRequired(true);
-    try {
-      const { collection, query, where, getDocs } = await import('firebase/firestore');
-      const { db } = await import('@/lib/firebase');
-
-      const propertiesRef = collection(db, 'properties');
-      const q = query(propertiesRef, where('needsReview', '==', true));
-      const snapshot = await getDocs(q);
-
-      const props = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as AdminProperty[];
-
-      setReviewRequiredProperties(props);
-      setReviewRequiredCount(props.length);
-    } catch (error) {
-      console.error('Failed to fetch review required properties:', error);
-    } finally {
-      setLoadingReviewRequired(false);
-    }
-  }, []);
-
-  // Toggle checkbox selection
-  const togglePropertySelection = useCallback((propertyId: string) => {
-    setSelectedReviewProperties(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(propertyId)) {
-        newSet.delete(propertyId);
-      } else {
-        newSet.add(propertyId);
-      }
-      return newSet;
-    });
-  }, []);
-
-  // Select all properties
-  const selectAllReviewProperties = useCallback(() => {
-    setSelectedReviewProperties(new Set(reviewRequiredProperties.map(p => p.id)));
-  }, [reviewRequiredProperties]);
-
-  // Deselect all properties
-  const deselectAllReviewProperties = useCallback(() => {
-    setSelectedReviewProperties(new Set());
-  }, []);
-
-  // Approve selected properties
-  const approveSelectedProperties = useCallback(async () => {
-    if (selectedReviewProperties.size === 0) {
-      alert('No properties selected');
-      return;
-    }
-
-    if (!confirm(`Approve ${selectedReviewProperties.size} propert${selectedReviewProperties.size === 1 ? 'y' : 'ies'}?`)) {
-      return;
-    }
-
-    setApprovingProperties(true);
-    try {
-      const { doc, updateDoc } = await import('firebase/firestore');
-      const { db } = await import('@/lib/firebase');
-
-      // Update each selected property
-      const updates = Array.from(selectedReviewProperties).map(async (propertyId) => {
-        const propertyRef = doc(db, 'properties', propertyId);
-        await updateDoc(propertyRef, {
-          needsReview: false,
-          reviewReasons: [],
-          isActive: true,
-          status: 'active',
-          reviewedAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        });
-      });
-
-      await Promise.all(updates);
-
-      alert(`✅ ${selectedReviewProperties.size} propert${selectedReviewProperties.size === 1 ? 'y' : 'ies'} approved!`);
-
-      // Refresh the list
-      await fetchReviewRequiredProperties();
-      setSelectedReviewProperties(new Set());
-    } catch (error) {
-      console.error('Failed to approve properties:', error);
-      alert('Failed to approve properties. Check console for details.');
-    } finally {
-      setApprovingProperties(false);
-    }
-  }, [selectedReviewProperties, fetchReviewRequiredProperties]);
-
-  // Save edited property
-  const saveEditedProperty = useCallback(async () => {
-    if (!editingProperty) return;
-
-    try {
-      const { doc, updateDoc } = await import('firebase/firestore');
-      const { db } = await import('@/lib/firebase');
-
-      const propertyRef = doc(db, 'properties', editingProperty.id);
-
-      // Extract only the fields we want to update
-      const { id, createdAt, ...updateData } = editingProperty;
-
-      await updateDoc(propertyRef, {
-        ...updateData,
-        updatedAt: new Date().toISOString()
-      });
-
-      alert('✅ Property updated successfully!');
-      setEditingProperty(null);
-
-      // Refresh the list
-      await fetchReviewRequiredProperties();
-    } catch (error) {
-      console.error('Failed to update property:', error);
-      alert('Failed to update property. Check console for details.');
-    }
-  }, [editingProperty, fetchReviewRequiredProperties]);
-
-  const fetchStreetViewProperties = useCallback(async () => {
-    setLoadingStreetView(true);
-    try {
-      const response = await fetch('/api/admin/street-view-properties');
-      const data = await response.json();
-      if (data.properties) {
-        setStreetViewProperties(data.properties);
-      }
-    } catch (error) {
-      console.error('Failed to fetch Street View properties:', error);
-    } finally {
-      setLoadingStreetView(false);
-    }
-  }, []);
 
   const fetchNewProperties = useCallback(async () => {
     setLoadingNewProperties(true);
@@ -622,12 +455,6 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (activeTab === 'properties') {
       fetchProperties();
-    } else if (activeTab === 'failed-properties') {
-      fetchNewProperties(); // Fetch failed GHL properties
-    } else if (activeTab === 'review-required') {
-      fetchReviewRequiredProperties(); // Fetch properties needing review
-    } else if (activeTab === 'image-quality') {
-      fetchStreetViewProperties();
     } else if (activeTab === 'disputes') {
       fetchDisputes();
     } else if (activeTab === 'contacts') {

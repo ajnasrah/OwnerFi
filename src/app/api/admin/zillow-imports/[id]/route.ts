@@ -24,9 +24,10 @@ const db = getFirestore();
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions as any) as ExtendedSession | null;
 
     if (!session?.user || (session as ExtendedSession).user.role !== 'admin') {
@@ -36,7 +37,7 @@ export async function GET(
       );
     }
 
-    const doc = await db.collection('zillow_imports').doc(params.id).get();
+    const doc = await db.collection('zillow_imports').doc(id).get();
 
     if (!doc.exists) {
       return NextResponse.json(
@@ -75,9 +76,10 @@ export async function GET(
  */
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions as any) as ExtendedSession | null;
 
     if (!session?.user || (session as ExtendedSession).user.role !== 'admin') {
@@ -88,7 +90,7 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const propertyRef = db.collection('zillow_imports').doc(params.id);
+    const propertyRef = db.collection('zillow_imports').doc(id);
     const propertyDoc = await propertyRef.get();
 
     if (!propertyDoc.exists) {
@@ -183,9 +185,10 @@ export async function PATCH(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions as any) as ExtendedSession | null;
 
     if (!session?.user || (session as ExtendedSession).user.role !== 'admin') {
@@ -195,7 +198,7 @@ export async function DELETE(
       );
     }
 
-    const propertyRef = db.collection('zillow_imports').doc(params.id);
+    const propertyRef = db.collection('zillow_imports').doc(id);
     const propertyDoc = await propertyRef.get();
 
     if (!propertyDoc.exists) {

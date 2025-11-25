@@ -19,7 +19,11 @@ export interface AdminProperty {
   lotSquareFoot?: number;
   homeType?: string;
   downPaymentAmount?: number;
+  downPaymentPercent?: number;
   monthlyPayment?: number;
+  interestRate?: number;
+  termYears?: number;
+  balloonYears?: number;
   imageUrl?: string;
   imageUrls?: string[];
   firstPropertyImage?: string;
@@ -27,6 +31,7 @@ export interface AdminProperty {
   status?: string | null;
   ownerFinanceVerified?: boolean;
   estimatedValue?: number;
+  description?: string;
 }
 
 export function useProperties() {

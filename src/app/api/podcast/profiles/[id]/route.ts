@@ -6,10 +6,10 @@ import { updateGuestProfile, getGuestProfile } from '@/lib/feed-store-firestore'
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const guestId = params.id;
+    const { id: guestId } = await params;
     const updates = await request.json();
 
     // Verify guest exists

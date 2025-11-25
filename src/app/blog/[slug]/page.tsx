@@ -12,10 +12,10 @@ import { getBrandConfig } from '@/config/brand-configs';
 import { notFound } from 'next/navigation';
 
 interface BlogPostPageProps {
-  params: {
+  params: Promise<{
     brand: Brand;
     slug: string;
-  };
+  }>;
 }
 
 async function getPost(brand: Brand, slug: string) {
@@ -40,7 +40,7 @@ async function getPost(brand: Brand, slug: string) {
 }
 
 export async function generateMetadata({ params }: BlogPostPageProps): Promise<Metadata> {
-  const { brand, slug } = params;
+  const { brand, slug } = await params;
   const post = await getPost(brand, slug);
 
   if (!post) {
@@ -72,7 +72,7 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
 }
 
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
-  const { brand, slug } = params;
+  const { brand, slug } = await params;
   const post = await getPost(brand, slug);
 
   if (!post) {

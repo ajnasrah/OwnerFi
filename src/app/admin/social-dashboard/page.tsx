@@ -345,6 +345,7 @@ export default function SocialMediaDashboard() {
         clearInterval(coordinatedInterval);
       };
     }
+    return undefined;
   }, [showHistory, authStatus, session]);
 
   const loadWorkflows = async () => {
@@ -697,7 +698,7 @@ export default function SocialMediaDashboard() {
     }
   };
 
-  const deleteWorkflow = async (workflowId: string, brand: 'carz' | 'ownerfi' | 'vassdistro' | 'podcast' | 'benefit' | 'property' | 'abdullah') => {
+  const deleteWorkflow = async (workflowId: string, brand: 'carz' | 'ownerfi' | 'vassdistro' | 'podcast' | 'benefit' | 'property' | 'property-spanish' | 'abdullah') => {
     if (!confirm('Are you sure you want to delete this workflow? This action cannot be undone.')) {
       return;
     }
@@ -757,7 +758,31 @@ export default function SocialMediaDashboard() {
     }
   };
 
-  const formatStatus = (status: WorkflowLog['status'] | PodcastWorkflowLog['status']) => {
+  const getBenefitStatusColor = (status: BenefitWorkflowLog['status']) => {
+    switch (status) {
+      case 'heygen_processing': return 'bg-blue-100 text-blue-700';
+      case 'submagic_processing': return 'bg-purple-100 text-purple-700';
+      case 'video_processing': return 'bg-indigo-100 text-indigo-700';
+      case 'posting': return 'bg-yellow-100 text-yellow-700';
+      case 'completed': return 'bg-green-100 text-green-700';
+      case 'failed': return 'bg-red-100 text-red-700';
+      default: return 'bg-gray-100 text-gray-700';
+    }
+  };
+
+  const getPropertyStatusColor = (status: PropertyWorkflowLog['status']) => {
+    switch (status) {
+      case 'heygen_processing': return 'bg-blue-100 text-blue-700';
+      case 'submagic_processing': return 'bg-purple-100 text-purple-700';
+      case 'queued': return 'bg-gray-100 text-gray-700';
+      case 'posting': return 'bg-yellow-100 text-yellow-700';
+      case 'completed': return 'bg-green-100 text-green-700';
+      case 'failed': return 'bg-red-100 text-red-700';
+      default: return 'bg-gray-100 text-gray-700';
+    }
+  };
+
+  const formatStatus = (status: WorkflowLog['status'] | PodcastWorkflowLog['status'] | BenefitWorkflowLog['status'] | PropertyWorkflowLog['status']) => {
     return status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
 
@@ -797,6 +822,11 @@ export default function SocialMediaDashboard() {
   return (
     <div className="min-h-screen bg-slate-50 p-8">
       <div className="max-w-7xl mx-auto">
+        {/* Back to Hub */}
+        <a href="/admin" className="text-indigo-600 hover:text-indigo-800 mb-4 inline-flex items-center gap-1">
+          ← Back to Admin Hub
+        </a>
+
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">
           <div>
@@ -1809,7 +1839,7 @@ export default function SocialMediaDashboard() {
                             <div className="text-xs text-slate-500">{formatTimeAgo(workflow.createdAt)}</div>
                           </div>
                           <div className="flex items-center gap-2">
-                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${getPodcastStatusColor(workflow.status)}`}>
+                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${getBenefitStatusColor(workflow.status)}`}>
                               {formatStatus(workflow.status)}
                             </span>
                             <button
@@ -1983,7 +2013,7 @@ export default function SocialMediaDashboard() {
                             <div className="text-xs text-slate-500">{formatTimeAgo(workflow.createdAt)}</div>
                           </div>
                           <div className="flex items-center gap-2">
-                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${getPodcastStatusColor(workflow.status)}`}>
+                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${getPropertyStatusColor(workflow.status)}`}>
                               {formatStatus(workflow.status)}
                             </span>
                             <button
@@ -2160,7 +2190,7 @@ export default function SocialMediaDashboard() {
                             <div className="text-xs text-slate-500">{formatTimeAgo(workflow.createdAt)}</div>
                           </div>
                           <div className="flex items-center gap-2">
-                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${getPodcastStatusColor(workflow.status)}`}>
+                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${getPropertyStatusColor(workflow.status)}`}>
                               {formatStatus(workflow.status)}
                             </span>
                             <button

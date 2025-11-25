@@ -22,9 +22,9 @@ import { getBrandConfig } from '@/config/brand-configs';
 import { postToMultiplePlatformGroups, getScheduleDescription } from '@/lib/platform-scheduling';
 
 interface RouteContext {
-  params: {
+  params: Promise<{
     brand: string;
-  };
+  }>;
 }
 
 export async function POST(request: NextRequest, context: RouteContext) {
@@ -34,7 +34,8 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
   try {
     // Validate brand from URL path
-    const brand = validateBrand(context.params.brand);
+    const { brand: brandParam } = await context.params;
+    const brand = validateBrand(brandParam);
     const brandConfig = getBrandConfig(brand);
 
     console.log(`🔔 [${brandConfig.displayName}] Submagic webhook received`);

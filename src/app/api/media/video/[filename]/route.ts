@@ -21,10 +21,10 @@ function getFirebaseAdmin() {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { filename: string } }
+  { params }: { params: Promise<{ filename: string }> }
 ) {
   try {
-    const filename = params.filename;
+    const { filename } = await params;
 
     // Get file from Firebase
     const storage = getFirebaseAdmin();
@@ -76,10 +76,10 @@ export async function GET(
 // Support HEAD requests for URL validation
 export async function HEAD(
   request: NextRequest,
-  { params }: { params: { filename: string } }
+  { params }: { params: Promise<{ filename: string }> }
 ) {
   try {
-    const filename = params.filename;
+    const { filename } = await params;
     const storage = getFirebaseAdmin();
     const bucket = storage.bucket();
     const file = bucket.file(`podcast-videos/${filename}`);

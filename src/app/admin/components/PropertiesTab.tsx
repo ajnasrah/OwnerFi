@@ -1,11 +1,12 @@
 'use client';
 
 import Image from 'next/image';
+import { Dispatch, SetStateAction } from 'react';
 import { useProperties, AdminProperty } from '../hooks/useProperties';
 import { convertToDirectImageUrl } from '../lib/image-utils';
 
 interface PropertiesTabProps {
-  setEditingProperty: (property: AdminProperty | null) => void;
+  setEditingProperty: Dispatch<SetStateAction<AdminProperty | null>>;
   setEditForm: (form: Partial<AdminProperty>) => void;
 }
 
@@ -191,10 +192,10 @@ export default function PropertiesTab({ setEditingProperty, setEditForm }: Prope
                           downPaymentAmount: property.downPaymentAmount,
                           interestRate: property.interestRate,
                           downPaymentPercent: property.downPaymentPercent,
-                          termYears: (property as any).termYears,
-                          balloonYears: (property as any).balloonYears,
-                          imageUrl: property.imageUrl || (property as any).imageUrls?.[0] || '',
-                          imageUrls: (property as any).imageUrls || (property.imageUrl ? [property.imageUrl] : [])
+                          termYears: property.termYears,
+                          balloonYears: property.balloonYears,
+                          imageUrl: property.imageUrl || property.imageUrls?.[0] || '',
+                          imageUrls: property.imageUrls || (property.imageUrl ? [property.imageUrl] : [])
                         });
                       }}
                       className="text-indigo-600 hover:text-indigo-900"

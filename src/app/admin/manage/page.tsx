@@ -9,10 +9,10 @@ import Image from 'next/image';
 import { calculatePropertyFinancials } from '@/lib/property-calculations';
 import { useDropzone } from 'react-dropzone';
 import { PropertySwiper2 } from '@/components/ui/PropertySwiper2';
-import { convertToDirectImageUrl } from './lib/image-utils';
+import { convertToDirectImageUrl } from '../lib/image-utils';
 
 // Lazy load tab components
-const PropertiesTab = lazy(() => import('./components/PropertiesTab'));
+const PropertiesTab = lazy(() => import('../components/PropertiesTab'));
 
 // Extended Property interface for admin with legacy imageUrl field
 interface AdminProperty extends PropertyListing {
@@ -115,6 +115,7 @@ export default function AdminDashboard() {
     duplicatesInFile?: number;
     alreadyInDatabase?: number;
     newProperties?: number;
+    totalFiles?: number;
   }>({
     status: 'idle',
     message: 'Upload an Excel or CSV file to begin',
@@ -489,7 +490,7 @@ export default function AdminDashboard() {
 
   // Handle arrow keys for navigation in buyer preview
   useEffect(() => {
-    if (activeTab !== 'buyer-preview' || previewProperties.length === 0) return;
+    if (activeTab !== 'buyer-preview' || previewProperties.length === 0) return undefined;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'ArrowLeft') {
@@ -847,6 +848,9 @@ export default function AdminDashboard() {
     <div className="h-screen bg-slate-50 flex flex-col md:flex-row max-w-full overflow-hidden">
       {/* Mobile Dropdown Navigation */}
       <div className="md:hidden bg-white border-b border-slate-200 p-4">
+        <a href="/admin" className="text-indigo-600 hover:text-indigo-800 text-sm mb-2 inline-flex items-center gap-1">
+          ← Back to Hub
+        </a>
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center space-x-2">
             <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-lg flex items-center justify-center">
@@ -886,6 +890,9 @@ export default function AdminDashboard() {
       <div className="hidden md:flex w-64 lg:w-72 bg-white shadow-xl border-r border-slate-200 flex-shrink-0 relative flex-col h-screen">
         {/* Logo Section */}
         <div className="p-6 border-b border-slate-200 flex-shrink-0">
+          <a href="/admin" className="text-indigo-600 hover:text-indigo-800 text-sm mb-2 inline-flex items-center gap-1">
+            ← Back to Hub
+          </a>
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
               <div className="w-5 h-5 bg-white rounded-md"></div>
@@ -1233,254 +1240,1258 @@ export default function AdminDashboard() {
           {activeTab === 'properties' && (
             <Suspense fallback={<div className="flex items-center justify-center py-12"><div className="text-gray-500">Loading properties...</div></div>}>
               <PropertiesTab
-                setEditingProperty={setEditingProperty}
+                setEditingProperty={setEditingProperty as any}
                 setEditForm={setEditForm as any}
               />
             </Suspense>
           )}
 
-                                  </ul>
-                                )}
-                                {property.missingFields && property.missingFields.length > 0 && (
-                                  <div className="flex flex-wrap gap-1">
-                                    {property.missingFields.map((field: string, idx: number) => (
-                                      <span key={idx} className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded">
-                                        Missing: {field}
-                                      </span>
-                                    ))}
-                                  </div>
-                                )}
-                                {property.failureType === 'withdrawn' && (
-                                  <span className="text-gray-600">Status: {property.status}</span>
-                                )}
-                              </div>
-                            </td>
-                            <td className="px-6 py-4">
-                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                property.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                              }`}>
-                                {property.isActive ? 'Active' : 'Inactive'}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 text-sm">
-                              <div className="flex space-x-2">
-                                <button
-                                  onClick={() => {
-                                    setEditingProperty(property.id);
-                                    setEditForm(property);
-                                  }}
-                                  className="text-indigo-600 hover:text-indigo-900 font-medium"
-                                >
-                                  Edit
-                                </button>
-                                <button
-                                  onClick={async () => {
-                                    if (confirm(`Delete property: ${property.address}?`)) {
-                                      try {
-                                        await fetch(`/api/admin/properties/${property.id}`, { method: 'DELETE' });
-                                        fetchFailedProperties();
-                                        alert('Property deleted successfully');
-                                      } catch (error) {
-                                        alert('Failed to delete property');
-                                        console.error('Delete error:', error);
-                                      }
-                                    }
-                                  }}
-                                  className="text-red-600 hover:text-red-900 font-medium"
-                                >
-                                  Delete
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
+          {/* Upload Tab */}
+          {activeTab === 'upload' && (
+            <div className="max-w-4xl mx-auto">
+              {/* Mode Toggle */}
+              <div className="bg-white shadow rounded-lg p-4 mb-6">
+                <div className="flex space-x-3">
+                  <button
+                    onClick={() => { setUploadMode('csv'); setUploadResult(null); }}
+                    className={`px-6 py-3 rounded-lg font-medium transition-colors ${
+                      uploadMode === 'csv'
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                    }`}
+                  >
+                    📄 CSV Upload
+                  </button>
+                  <button
+                    onClick={() => { setUploadMode('scraper'); setUploadResult(null); }}
+                    className={`px-6 py-3 rounded-lg font-medium transition-colors ${
+                      uploadMode === 'scraper'
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                    }`}
+                  >
+                    🤖 Zillow Scraper
+                  </button>
+                  <button
+                    onClick={() => { setUploadMode('new-properties'); setUploadResult(null); }}
+                    className={`px-6 py-3 rounded-lg font-medium transition-colors ${
+                      uploadMode === 'new-properties'
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                    }`}
+                  >
+                    ✨ New Properties
+                  </button>
+                  <button
+                    onClick={() => { setUploadMode('manual'); setUploadResult(null); }}
+                    className={`px-6 py-3 rounded-lg font-medium transition-colors ${
+                      uploadMode === 'manual'
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                    }`}
+                  >
+                    ✏️ Manual Entry
+                  </button>
                 </div>
               </div>
+
+              {/* CSV Upload Mode */}
+              {uploadMode === 'csv' && (
+                <div className="bg-white shadow rounded-lg">
+                  <div className="px-4 py-5 sm:p-6">
+                    <h3 className="text-lg leading-6 font-medium text-gray-900 mb-6">Upload Property CSV File</h3>
+
+                    <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                      <div className="space-y-1 text-center">
+                        <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                          <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                        <div className="flex text-sm text-gray-600">
+                          <label htmlFor="file-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500">
+                            <span>{file ? file.name : 'Upload a file'}</span>
+                            <input
+                              id="file-upload"
+                              name="file-upload"
+                              type="file"
+                              accept=".csv"
+                              onChange={handleFileChange}
+                              className="sr-only"
+                            />
+                          </label>
+                          <p className="pl-1">or drag and drop</p>
+                        </div>
+                        <p className="text-xs text-gray-500">CSV files only</p>
+                      </div>
+                    </div>
+
+                    {file && (
+                      <div className="mt-6">
+                        <button
+                          onClick={handleUpload}
+                          disabled={uploading}
+                          className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-gray-400"
+                        >
+                          {uploading ? 'Uploading...' : 'Upload Properties'}
+                        </button>
+                      </div>
+                    )}
+
+                    {uploadResult && (
+                      <div className={`mt-6 rounded-md p-4 ${uploadResult.error ? 'bg-red-50' : 'bg-green-50'}`}>
+                        <div className="flex">
+                          <div className="flex-shrink-0">
+                            {uploadResult.error ? (
+                              <svg className="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                              </svg>
+                            ) : (
+                              <svg className="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                              </svg>
+                            )}
+                          </div>
+                          <div className="ml-3">
+                            <h3 className={`text-sm font-medium ${uploadResult.error ? 'text-red-800' : 'text-green-800'}`}>
+                              {uploadResult.error ? 'Upload Failed' : 'Upload Successful'}
+                            </h3>
+                            <div className={`mt-2 text-sm ${uploadResult.error ? 'text-red-700' : 'text-green-700'}`}>
+                              {uploadResult.error ? (
+                                <p>{uploadResult.error}</p>
+                              ) : (
+                                <p>Successfully uploaded {uploadResult.summary?.successfulInserts} of {uploadResult.summary?.totalRows} properties</p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Zillow Scraper Mode */}
+              {uploadMode === 'scraper' && (
+                <div className="space-y-6">
+                  {/* Dropzone */}
+                  <div
+                    {...getRootProps()}
+                    className={`border-2 border-dashed rounded-lg p-12 text-center cursor-pointer transition-colors bg-white shadow ${
+                      isDragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-gray-400'
+                    } ${
+                      scraperProgress.status === 'uploading' || scraperProgress.status === 'scraping' ? 'opacity-50 pointer-events-none' : ''
+                    }`}
+                  >
+                    <input {...getInputProps()} />
+
+                    <div className="mb-4">
+                      <svg
+                        className="mx-auto h-12 w-12 text-gray-400"
+                        stroke="currentColor"
+                        fill="none"
+                        viewBox="0 0 48 48"
+                      >
+                        <path
+                          d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                          strokeWidth={2}
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </div>
+
+                    {isDragActive ? (
+                      <p className="text-lg text-blue-600">Drop the files here...</p>
+                    ) : (
+                      <div>
+                        <p className="text-lg mb-2">Drag & drop Excel or CSV files here</p>
+                        <p className="text-sm text-gray-500">or click to select files (multiple files supported)</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Progress */}
+                  {scraperProgress.status !== 'idle' && (
+                    <div
+                      className={`p-6 rounded-lg border-2 bg-white shadow ${
+                        scraperProgress.status === 'error'
+                          ? 'bg-red-50 border-red-200'
+                          : scraperProgress.status === 'complete'
+                          ? 'bg-green-50 border-green-200'
+                          : 'bg-blue-50 border-blue-200'
+                      }`}
+                    >
+                      <div className="flex items-start">
+                        {scraperProgress.status === 'uploading' || scraperProgress.status === 'scraping' ? (
+                          <div className="mr-3">
+                            <div className="animate-spin h-6 w-6 border-2 border-blue-500 border-t-transparent rounded-full"></div>
+                          </div>
+                        ) : scraperProgress.status === 'complete' ? (
+                          <svg
+                            className="h-6 w-6 text-green-600 mr-3"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M5 13l4 4L19 7"
+                            />
+                          </svg>
+                        ) : scraperProgress.status === 'error' ? (
+                          <svg
+                            className="h-6 w-6 text-red-600 mr-3"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M6 18L18 6M6 6l12 12"
+                            />
+                          </svg>
+                        ) : null}
+
+                        <div className="flex-1">
+                          <p className="font-semibold text-lg mb-1">{scraperProgress.message}</p>
+
+                          <div className="mt-3 space-y-1">
+                            {scraperProgress.urlsFound !== undefined && (
+                              <p className="text-sm text-gray-700">
+                                <span className="font-medium">URLs in file:</span> {scraperProgress.urlsFound}
+                              </p>
+                            )}
+
+                            {scraperProgress.duplicatesInFile !== undefined && scraperProgress.duplicatesInFile > 0 && (
+                              <p className="text-sm text-orange-700">
+                                <span className="font-medium">Duplicates in file:</span> {scraperProgress.duplicatesInFile}
+                              </p>
+                            )}
+
+                            {scraperProgress.alreadyInDatabase !== undefined && scraperProgress.alreadyInDatabase > 0 && (
+                              <p className="text-sm text-orange-700">
+                                <span className="font-medium">Already in database:</span> {scraperProgress.alreadyInDatabase}
+                              </p>
+                            )}
+
+                            {scraperProgress.newProperties !== undefined && (
+                              <p className="text-sm text-green-700 font-medium">
+                                <span>New properties:</span> {scraperProgress.newProperties}
+                              </p>
+                            )}
+
+                            {scraperProgress.propertiesScraped !== undefined && (
+                              <p className="text-sm text-gray-700 mt-2">
+                                <span className="font-medium">Properties imported:</span> {scraperProgress.propertiesScraped}
+                                {scraperProgress.total && ` / ${scraperProgress.total}`}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Instructions */}
+                  <div className="bg-gray-50 p-6 rounded-lg shadow">
+                    <h2 className="text-lg font-semibold mb-3">How it works</h2>
+                    <ol className="list-decimal list-inside space-y-2 text-gray-700">
+                      <li>Upload one or multiple CSV/Excel files containing Zillow property URLs</li>
+                      <li>The system combines all files and automatically removes duplicates</li>
+                      <li>Checks against existing properties in the database</li>
+                      <li>Only new properties are sent to Apify for scraping</li>
+                      <li>All data is saved to the <code className="bg-gray-200 px-2 py-1 rounded">zillow_imports</code> collection</li>
+                      <li>Review imported properties in Firebase before moving to production</li>
+                    </ol>
+
+                    <div className="mt-4 p-4 bg-purple-100 rounded">
+                      <p className="text-sm font-medium text-purple-900 mb-1">🔄 Batch Upload Support</p>
+                      <p className="text-sm text-purple-800">
+                        You can upload multiple files at once (up to 20+ files). The system will process all files together, combining URLs and removing duplicates across all files.
+                      </p>
+                    </div>
+
+                    <div className="mt-4 p-4 bg-green-100 rounded">
+                      <p className="text-sm font-medium text-green-900 mb-1">✓ Duplicate Protection</p>
+                      <p className="text-sm text-green-800">
+                        The scraper automatically prevents importing duplicate properties. It checks both within your files and against existing database records.
+                      </p>
+                    </div>
+
+                    <div className="mt-4 p-4 bg-blue-100 rounded">
+                      <p className="text-sm font-medium text-blue-900 mb-1">Expected File Format</p>
+                      <p className="text-sm text-blue-800">
+                        Your file should have a column named <strong>URL</strong>, <strong>url</strong>, or{' '}
+                        <strong>link</strong> containing Zillow property URLs
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* New Properties Mode */}
+              {uploadMode === 'new-properties' && (
+                <div className="space-y-6">
+                  {/* Header with Retry Button */}
+                  <div className="bg-white shadow rounded-lg p-6">
+                    <div className="flex justify-between items-center mb-4">
+                      <div>
+                        <h3 className="text-lg leading-6 font-medium text-gray-900">⚠️ Failed GHL Webhook Sends</h3>
+                        <p className="mt-1 text-sm text-gray-500">
+                          Properties that failed to send to GoHighLevel - {newPropertiesData.length} total
+                        </p>
+                      </div>
+                      <div className="flex gap-3">
+                        <button
+                          onClick={handleSendToGHL}
+                          disabled={sendingToGHL || newPropertiesData.length === 0}
+                          className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                        >
+                          {sendingToGHL ? 'Retrying...' : '🔄 Retry Send to GHL'}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Loading State */}
+                    {loadingNewProperties && (
+                      <div className="text-center py-12">
+                        <div className="animate-spin inline-block h-8 w-8 border-4 border-indigo-600 border-t-transparent rounded-full"></div>
+                        <p className="mt-4 text-gray-600">Loading failed properties...</p>
+                      </div>
+                    )}
+
+                    {/* Empty State */}
+                    {!loadingNewProperties && newPropertiesData.length === 0 && (
+                      <div className="text-center py-12">
+                        <p className="text-green-600 font-medium">✅ No failed sends!</p>
+                        <p className="text-sm text-gray-400 mt-2">All properties with contact info have been successfully sent to GHL.</p>
+                      </div>
+                    )}
+
+                    {/* Properties Table */}
+                    {!loadingNewProperties && newPropertiesData.length > 0 && (
+                      <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-gray-200">
+                          <thead className="bg-gray-50">
+                            <tr>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Address
+                              </th>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                City
+                              </th>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                State
+                              </th>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Price
+                              </th>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Beds
+                              </th>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Baths
+                              </th>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Sq Ft
+                              </th>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Type
+                              </th>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Imported
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody className="bg-white divide-y divide-gray-200">
+                            {newPropertiesData.map((property) => (
+                              <tr key={property.id} className="hover:bg-gray-50">
+                                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                                  <a
+                                    href={property.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-indigo-600 hover:text-indigo-900 hover:underline"
+                                  >
+                                    {property.streetAddress || property.fullAddress || 'N/A'}
+                                  </a>
+                                </td>
+                                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                                  {property.city || 'N/A'}
+                                </td>
+                                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                                  {property.state || 'N/A'}
+                                </td>
+                                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
+                                  ${property.price?.toLocaleString() || 'N/A'}
+                                </td>
+                                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                                  {property.bedrooms || 'N/A'}
+                                </td>
+                                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                                  {property.bathrooms || 'N/A'}
+                                </td>
+                                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                                  {property.squareFoot?.toLocaleString() || 'N/A'}
+                                </td>
+                                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                                  {property.buildingType || 'N/A'}
+                                </td>
+                                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                                  {property.importedAt ? new Date(property.importedAt).toLocaleDateString() : 'N/A'}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Info Box */}
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <h4 className="font-semibold text-blue-900 mb-2">ℹ️ GHL Export Format</h4>
+                    <p className="text-sm text-blue-800">
+                      Click "Export to GHL Format" to download an Excel file formatted for GoHighLevel import.
+                      The export includes all required custom fields: property_id, property_address, property_city,
+                      property_state, property_zip, property_price, property_bedrooms, property_bathrooms,
+                      property_sqft, and property_image_url.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Manual Entry Mode */}
+              {uploadMode === 'manual' && (
+                <div className="bg-white shadow rounded-lg">
+                  <div className="px-4 py-5 sm:p-6">
+                    <h3 className="text-lg leading-6 font-medium text-gray-900 mb-6">Add Property Manually</h3>
+
+                    <form onSubmit={async (e) => {
+                      e.preventDefault();
+                      setUploading(true);
+                      setUploadResult(null);
+
+                      try {
+                        const response = await fetch('/api/admin/properties/create', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify(manualPropertyData)
+                        });
+
+                        const data = await response.json();
+
+                        if (response.ok) {
+                          setUploadResult({ success: true, propertyId: data.propertyId });
+                          setManualPropertyData({
+                            propertyType: 'single-family',
+                            status: 'active',
+                            isActive: true,
+                            priority: 5
+                          });
+                          fetchProperties();
+                        } else {
+                          setUploadResult({ error: data.error });
+                        }
+                      } catch (error) {
+                        setUploadResult({ error: 'Failed to create property' });
+                      } finally {
+                        setUploading(false);
+                      }
+                    }} className="space-y-6">
+                      {/* Address Section */}
+                      <div className="border-b border-gray-200 pb-6">
+                        <h4 className="text-md font-semibold text-gray-900 mb-4">Address & Location</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="md:col-span-2">
+                            <label className="block text-sm font-medium text-gray-700">Street Address *</label>
+                            <input
+                              type="text"
+                              required
+                              value={manualPropertyData.address || ''}
+                              onChange={(e) => setManualPropertyData({ ...manualPropertyData, address: e.target.value })}
+                              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">City *</label>
+                            <input
+                              type="text"
+                              required
+                              value={manualPropertyData.city || ''}
+                              onChange={(e) => setManualPropertyData({ ...manualPropertyData, city: e.target.value })}
+                              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">State *</label>
+                            <input
+                              type="text"
+                              required
+                              maxLength={2}
+                              value={manualPropertyData.state || ''}
+                              onChange={(e) => setManualPropertyData({ ...manualPropertyData, state: e.target.value.toUpperCase() })}
+                              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">ZIP Code *</label>
+                            <input
+                              type="text"
+                              required
+                              value={manualPropertyData.zipCode || ''}
+                              onChange={(e) => setManualPropertyData({ ...manualPropertyData, zipCode: e.target.value })}
+                              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Property Details */}
+                      <div className="border-b border-gray-200 pb-6">
+                        <h4 className="text-md font-semibold text-gray-900 mb-4">Property Details</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">Property Type *</label>
+                            <select
+                              required
+                              value={manualPropertyData.propertyType || 'single-family'}
+                              onChange={(e) => setManualPropertyData({ ...manualPropertyData, propertyType: e.target.value })}
+                              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                            >
+                              <option value="single-family">Single Family</option>
+                              <option value="condo">Condo</option>
+                              <option value="townhouse">Townhouse</option>
+                              <option value="mobile-home">Mobile Home</option>
+                              <option value="multi-family">Multi-Family</option>
+                              <option value="land">Land</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">Bedrooms *</label>
+                            <input
+                              type="number"
+                              required
+                              min="0"
+                              value={manualPropertyData.bedrooms || ''}
+                              onChange={(e) => setManualPropertyData({ ...manualPropertyData, bedrooms: e.target.value })}
+                              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">Bathrooms *</label>
+                            <input
+                              type="number"
+                              required
+                              min="0"
+                              step="0.5"
+                              value={manualPropertyData.bathrooms || ''}
+                              onChange={(e) => setManualPropertyData({ ...manualPropertyData, bathrooms: e.target.value })}
+                              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">Square Feet</label>
+                            <input
+                              type="number"
+                              min="0"
+                              value={manualPropertyData.squareFeet || ''}
+                              onChange={(e) => setManualPropertyData({ ...manualPropertyData, squareFeet: e.target.value })}
+                              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">Year Built</label>
+                            <input
+                              type="number"
+                              min="1800"
+                              max={new Date().getFullYear() + 1}
+                              value={manualPropertyData.yearBuilt || ''}
+                              onChange={(e) => setManualPropertyData({ ...manualPropertyData, yearBuilt: e.target.value })}
+                              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Financial Information */}
+                      <div className="border-b border-gray-200 pb-6">
+                        <h4 className="text-md font-semibold text-gray-900 mb-4">Financial Information</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">List Price * ($)</label>
+                            <input
+                              type="number"
+                              required
+                              min="0"
+                              value={manualPropertyData.listPrice || ''}
+                              onChange={(e) => setManualPropertyData({ ...manualPropertyData, listPrice: e.target.value })}
+                              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">Down Payment * ($)</label>
+                            <input
+                              type="number"
+                              required
+                              min="0"
+                              value={manualPropertyData.downPaymentAmount || ''}
+                              onChange={(e) => setManualPropertyData({ ...manualPropertyData, downPaymentAmount: e.target.value })}
+                              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">Down Payment * (%)</label>
+                            <input
+                              type="number"
+                              required
+                              min="0"
+                              max="100"
+                              step="0.1"
+                              value={manualPropertyData.downPaymentPercent || ''}
+                              onChange={(e) => setManualPropertyData({ ...manualPropertyData, downPaymentPercent: e.target.value })}
+                              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">Monthly Payment * ($)</label>
+                            <input
+                              type="number"
+                              required
+                              min="0"
+                              value={manualPropertyData.monthlyPayment || ''}
+                              onChange={(e) => setManualPropertyData({ ...manualPropertyData, monthlyPayment: e.target.value })}
+                              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">Interest Rate * (%)</label>
+                            <input
+                              type="number"
+                              required
+                              min="0"
+                              max="100"
+                              step="0.01"
+                              value={manualPropertyData.interestRate || ''}
+                              onChange={(e) => setManualPropertyData({ ...manualPropertyData, interestRate: e.target.value })}
+                              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">Term * (Years)</label>
+                            <input
+                              type="number"
+                              required
+                              min="1"
+                              max="50"
+                              value={manualPropertyData.termYears || ''}
+                              onChange={(e) => setManualPropertyData({ ...manualPropertyData, termYears: e.target.value })}
+                              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Description & Images */}
+                      <div className="border-b border-gray-200 pb-6">
+                        <h4 className="text-md font-semibold text-gray-900 mb-4">Description & Media</h4>
+                        <div className="space-y-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">Description</label>
+                            <textarea
+                              rows={4}
+                              value={manualPropertyData.description || ''}
+                              onChange={(e) => setManualPropertyData({ ...manualPropertyData, description: e.target.value })}
+                              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                              placeholder="Property description..."
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">Image URLs (comma-separated)</label>
+                            <textarea
+                              rows={2}
+                              value={manualPropertyData.imageUrls || ''}
+                              onChange={(e) => setManualPropertyData({ ...manualPropertyData, imageUrls: e.target.value })}
+                              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                              placeholder="https://example.com/image1.jpg, https://example.com/image2.jpg"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Submit Button */}
+                      <div className="flex items-center justify-end space-x-4">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setManualPropertyData({
+                              propertyType: 'single-family',
+                              status: 'active',
+                              isActive: true,
+                              priority: 5
+                            });
+                          }}
+                          className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                        >
+                          Reset Form
+                        </button>
+                        <button
+                          type="submit"
+                          disabled={uploading}
+                          className="px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-gray-400"
+                        >
+                          {uploading ? 'Creating...' : 'Create Property'}
+                        </button>
+                      </div>
+                    </form>
+
+                    {/* Result Message */}
+                    {uploadResult && (
+                      <div className={`mt-6 rounded-md p-4 ${uploadResult.error ? 'bg-red-50' : 'bg-green-50'}`}>
+                        <div className="flex">
+                          <div className="flex-shrink-0">
+                            {uploadResult.error ? (
+                              <svg className="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                              </svg>
+                            ) : (
+                              <svg className="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                              </svg>
+                            )}
+                          </div>
+                          <div className="ml-3">
+                            <h3 className={`text-sm font-medium ${uploadResult.error ? 'text-red-800' : 'text-green-800'}`}>
+                              {uploadResult.error ? 'Creation Failed' : 'Property Created Successfully'}
+                            </h3>
+                            <div className={`mt-2 text-sm ${uploadResult.error ? 'text-red-700' : 'text-green-700'}`}>
+                              {uploadResult.error ? (
+                                <p>{uploadResult.error}</p>
+                              ) : (
+                                <p>Property ID: {uploadResult.propertyId}</p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
-          {editingProperty && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-              <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                <div className="p-6">
-                  <h2 className="text-xl font-bold mb-4">Edit Property</h2>
-
-                  {/* Debug info */}
-                  <div className="mb-4 p-3 bg-gray-100 rounded text-xs">
-                    <p>Property ID: {editingProperty.id || 'Missing'}</p>
-                    <p>Address: {editingProperty.address || 'Missing'}</p>
-                    <p>Has all data: {Object.keys(editingProperty).length} fields</p>
-                  </div>
-
-                  <div className="space-y-4">
-                    {/* Address */}
+          {/* Buyers Tab */}
+          {activeTab === 'buyers' && (
+            <div className="bg-white shadow rounded-lg">
+              <div className="px-4 py-5 sm:p-6">
+                {/* Filter Section */}
+                <div className="mb-6 bg-gray-50 p-4 rounded-lg">
+                  <h4 className="text-sm font-medium text-gray-900 mb-3">🔍 Filter Buyers</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium mb-1">Address</label>
+                      <label className="block text-xs text-gray-600 mb-1">City</label>
                       <input
                         type="text"
-                        value={editingProperty.address || ''}
-                        onChange={(e) => setEditingProperty({ ...editingProperty, address: e.target.value })}
-                        className="w-full border rounded px-3 py-2"
+                        value={cityFilter}
+                        onChange={(e) => setCityFilter(e.target.value)}
+                        placeholder="Enter city name (e.g., Memphis, Dallas...)"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
                       />
                     </div>
-
-                    {/* City, State, Zip */}
-                    <div className="grid grid-cols-3 gap-3">
-                      <div>
-                        <label className="block text-sm font-medium mb-1">City</label>
-                        <input
-                          type="text"
-                          value={editingProperty.city || ''}
-                          onChange={(e) => setEditingProperty({ ...editingProperty, city: e.target.value })}
-                          className="w-full border rounded px-3 py-2"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium mb-1">State</label>
-                        <input
-                          type="text"
-                          value={editingProperty.state || ''}
-                          onChange={(e) => setEditingProperty({ ...editingProperty, state: e.target.value })}
-                          className="w-full border rounded px-3 py-2"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium mb-1">Zip Code</label>
-                        <input
-                          type="text"
-                          value={editingProperty.zipCode || ''}
-                          onChange={(e) => setEditingProperty({ ...editingProperty, zipCode: e.target.value })}
-                          className="w-full border rounded px-3 py-2"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Financial Fields */}
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-sm font-medium mb-1">List Price ($)</label>
-                        <input
-                          type="number"
-                          value={editingProperty.listPrice || ''}
-                          onChange={(e) => setEditingProperty({ ...editingProperty, listPrice: parseFloat(e.target.value) })}
-                          className="w-full border rounded px-3 py-2"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium mb-1">Monthly Payment ($)</label>
-                        <input
-                          type="number"
-                          value={editingProperty.monthlyPayment || ''}
-                          onChange={(e) => setEditingProperty({ ...editingProperty, monthlyPayment: parseFloat(e.target.value) })}
-                          className="w-full border rounded px-3 py-2"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium mb-1">Down Payment ($)</label>
-                        <input
-                          type="number"
-                          value={editingProperty.downPaymentAmount || ''}
-                          onChange={(e) => setEditingProperty({ ...editingProperty, downPaymentAmount: parseFloat(e.target.value) })}
-                          className="w-full border rounded px-3 py-2"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium mb-1">Down Payment (%)</label>
-                        <input
-                          type="number"
-                          value={editingProperty.downPaymentPercent || ''}
-                          onChange={(e) => setEditingProperty({ ...editingProperty, downPaymentPercent: parseFloat(e.target.value) })}
-                          className="w-full border rounded px-3 py-2"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium mb-1">Interest Rate (%)</label>
-                        <input
-                          type="number"
-                          step="0.1"
-                          value={editingProperty.interestRate || ''}
-                          onChange={(e) => setEditingProperty({ ...editingProperty, interestRate: parseFloat(e.target.value) })}
-                          className="w-full border rounded px-3 py-2"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium mb-1">Term (years)</label>
-                        <input
-                          type="number"
-                          value={editingProperty.termYears || ''}
-                          onChange={(e) => setEditingProperty({ ...editingProperty, termYears: parseFloat(e.target.value) })}
-                          className="w-full border rounded px-3 py-2"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Property Details */}
-                    <div className="grid grid-cols-3 gap-3">
-                      <div>
-                        <label className="block text-sm font-medium mb-1">Bedrooms</label>
-                        <input
-                          type="number"
-                          value={editingProperty.bedrooms || ''}
-                          onChange={(e) => setEditingProperty({ ...editingProperty, bedrooms: parseInt(e.target.value) })}
-                          className="w-full border rounded px-3 py-2"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium mb-1">Bathrooms</label>
-                        <input
-                          type="number"
-                          step="0.5"
-                          value={editingProperty.bathrooms || ''}
-                          onChange={(e) => setEditingProperty({ ...editingProperty, bathrooms: parseFloat(e.target.value) })}
-                          className="w-full border rounded px-3 py-2"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium mb-1">Sq Ft</label>
-                        <input
-                          type="number"
-                          value={editingProperty.squareFeet || ''}
-                          onChange={(e) => setEditingProperty({ ...editingProperty, squareFeet: parseInt(e.target.value) })}
-                          className="w-full border rounded px-3 py-2"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Description */}
                     <div>
-                      <label className="block text-sm font-medium mb-1">Description</label>
-                      <textarea
-                        value={editingProperty.description || ''}
-                        onChange={(e) => setEditingProperty({ ...editingProperty, description: e.target.value })}
-                        rows={3}
-                        className="w-full border rounded px-3 py-2"
+                      <label className="block text-xs text-gray-600 mb-1">State</label>
+                      <input
+                        type="text"
+                        value={stateFilter}
+                        onChange={(e) => setStateFilter(e.target.value)}
+                        placeholder="Enter state (e.g., TX, TN, CA...)"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
+                        maxLength={2}
                       />
                     </div>
                   </div>
+                  {(cityFilter || stateFilter) && (
+                    <div className="mt-3 flex items-center justify-between">
+                      <span className="text-sm text-gray-600">
+                        Showing {filteredBuyers.length} of {buyers.length} buyers
+                      </span>
+                      <button
+                        onClick={() => {
+                          setCityFilter('');
+                          setStateFilter('');
+                        }}
+                        className="text-sm text-indigo-600 hover:text-indigo-700"
+                      >
+                        ✕ Clear filters
+                      </button>
+                    </div>
+                  )}
+                </div>
 
-                  {/* Action Buttons */}
-                  <div className="flex justify-end gap-3 mt-6">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-4">
+                    <h3 className="text-lg leading-6 font-medium text-gray-900">Registered Buyers</h3>
+                    <label className="flex items-center gap-2 text-sm text-gray-600">
+                      <input
+                        type="checkbox"
+                        checked={filteredBuyers.length > 0 && selectedBuyers.length === filteredBuyers.length}
+                        onChange={() => {
+                          if (selectedBuyers.length === filteredBuyers.length) {
+                            setSelectedBuyers([]);
+                          } else {
+                            setSelectedBuyers(filteredBuyers.map(b => b.userId));
+                          }
+                        }}
+                        className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                      />
+                      Select All
+                    </label>
+                    {selectedBuyers.length > 0 && (
+                      <span className="text-sm text-gray-500">
+                        {selectedBuyers.length} selected
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {selectedBuyers.length > 0 && (
+                      <button
+                        onClick={async () => {
+                          if (confirm(`Delete ${selectedBuyers.length} selected buyers? This action cannot be undone.`)) {
+                            try {
+                              const response = await fetch('/api/admin/buyers', {
+                                method: 'DELETE',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ buyerIds: selectedBuyers })
+                              });
+                              if (response.ok) {
+                                const result = await response.json();
+                                alert(`Successfully deleted ${result.deletedCount} buyer(s)`);
+                                setSelectedBuyers([]);
+                                fetchBuyers();
+                              } else {
+                                const error = await response.json();
+                                alert(`Error: ${error.error}`);
+                              }
+                            } catch (error) {
+                              alert('Failed to delete buyers');
+                              console.error('Delete error:', error);
+                            }
+                          }
+                        }}
+                        className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                      >
+                        Delete {selectedBuyers.length} Selected
+                      </button>
+                    )}
                     <button
-                      onClick={() => setEditingProperty(null)}
-                      className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded"
+                      onClick={fetchBuyers}
+                      disabled={loadingBuyers}
+                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-gray-400"
                     >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={saveEditedProperty}
-                      className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded"
-                    >
-                      Save Changes
+                      {loadingBuyers ? 'Loading...' : 'Refresh'}
                     </button>
                   </div>
+                </div>
+
+                <div className="overflow-x-auto bg-white shadow sm:rounded-lg">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    {/* Table Header */}
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12">
+                          {/* Checkbox column */}
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                          onClick={() => {
+                            if (buyerSortField === 'name') {
+                              setBuyerSortDirection(buyerSortDirection === 'asc' ? 'desc' : 'asc');
+                            } else {
+                              setBuyerSortField('name');
+                              setBuyerSortDirection('asc');
+                            }
+                          }}
+                        >
+                          <div className="flex items-center gap-1">
+                            Name
+                            {buyerSortField === 'name' && (
+                              <span>{buyerSortDirection === 'asc' ? '↑' : '↓'}</span>
+                            )}
+                          </div>
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 w-24"
+                          onClick={() => {
+                            if (buyerSortField === 'matched') {
+                              setBuyerSortDirection(buyerSortDirection === 'asc' ? 'desc' : 'asc');
+                            } else {
+                              setBuyerSortField('matched');
+                              setBuyerSortDirection('desc');
+                            }
+                          }}
+                        >
+                          <div className="flex items-center justify-center gap-1">
+                            Matched
+                            {buyerSortField === 'matched' && (
+                              <span>{buyerSortDirection === 'asc' ? '↑' : '↓'}</span>
+                            )}
+                          </div>
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 w-24"
+                          onClick={() => {
+                            if (buyerSortField === 'liked') {
+                              setBuyerSortDirection(buyerSortDirection === 'asc' ? 'desc' : 'asc');
+                            } else {
+                              setBuyerSortField('liked');
+                              setBuyerSortDirection('desc');
+                            }
+                          }}
+                        >
+                          <div className="flex items-center justify-center gap-1">
+                            Liked
+                            {buyerSortField === 'liked' && (
+                              <span>{buyerSortDirection === 'asc' ? '↑' : '↓'}</span>
+                            )}
+                          </div>
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 w-32"
+                          onClick={() => {
+                            if (buyerSortField === 'budget') {
+                              setBuyerSortDirection(buyerSortDirection === 'asc' ? 'desc' : 'asc');
+                            } else {
+                              setBuyerSortField('budget');
+                              setBuyerSortDirection('desc');
+                            }
+                          }}
+                        >
+                          <div className="flex items-center justify-center gap-1">
+                            Budget/mo
+                            {buyerSortField === 'budget' && (
+                              <span>{buyerSortDirection === 'asc' ? '↑' : '↓'}</span>
+                            )}
+                          </div>
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 w-32"
+                          onClick={() => {
+                            if (buyerSortField === 'downpay') {
+                              setBuyerSortDirection(buyerSortDirection === 'asc' ? 'desc' : 'asc');
+                            } else {
+                              setBuyerSortField('downpay');
+                              setBuyerSortDirection('desc');
+                            }
+                          }}
+                        >
+                          <div className="flex items-center justify-center gap-1">
+                            Down Pay
+                            {buyerSortField === 'downpay' && (
+                              <span>{buyerSortDirection === 'asc' ? '↑' : '↓'}</span>
+                            )}
+                          </div>
+                        </th>
+                      </tr>
+                    </thead>
+                    {/* Table Body */}
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {[...filteredBuyers].sort((a, b) => {
+                        let aVal: any, bVal: any;
+                        switch (buyerSortField) {
+                          case 'name':
+                            aVal = (a.firstName && a.lastName ? `${a.firstName} ${a.lastName}` : a.email).toLowerCase();
+                            bVal = (b.firstName && b.lastName ? `${b.firstName} ${b.lastName}` : b.email).toLowerCase();
+                            break;
+                          case 'matched':
+                            aVal = a.matchedPropertiesCount || 0;
+                            bVal = b.matchedPropertiesCount || 0;
+                            break;
+                          case 'liked':
+                            aVal = a.likedPropertiesCount || 0;
+                            bVal = b.likedPropertiesCount || 0;
+                            break;
+                          case 'budget':
+                            aVal = a.maxMonthlyPayment || a.monthlyBudget || 0;
+                            bVal = b.maxMonthlyPayment || b.monthlyBudget || 0;
+                            break;
+                          case 'downpay':
+                            aVal = a.maxDownPayment || a.downPayment || 0;
+                            bVal = b.maxDownPayment || b.downPayment || 0;
+                            break;
+                        }
+                        if (aVal < bVal) return buyerSortDirection === 'asc' ? -1 : 1;
+                        if (aVal > bVal) return buyerSortDirection === 'asc' ? 1 : -1;
+                        return 0;
+                      }).map((buyer) => (
+                        <tr key={buyer.id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <input
+                              type="checkbox"
+                              checked={selectedBuyers.includes(buyer.userId)}
+                              onChange={() => {
+                                if (selectedBuyers.includes(buyer.userId)) {
+                                  setSelectedBuyers(prev => prev.filter(id => id !== buyer.userId));
+                                } else {
+                                  setSelectedBuyers(prev => [...prev, buyer.userId]);
+                                }
+                              }}
+                              className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                            />
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              <div className="flex-shrink-0 h-10 w-10">
+                                <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
+                                  <span className="text-sm font-medium text-gray-700">
+                                    {buyer.firstName?.charAt(0).toUpperCase() || buyer.email.charAt(0).toUpperCase()}
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="ml-4">
+                                <div className="text-sm font-medium text-gray-900">
+                                  {buyer.firstName && buyer.lastName ? `${buyer.firstName} ${buyer.lastName}` : buyer.email}
+                                </div>
+                                <div className="text-sm text-gray-500">{buyer.email}</div>
+                                {buyer.phone && <div className="text-sm text-gray-500">{buyer.phone}</div>}
+                                {(buyer.city || buyer.primaryCity) && (buyer.state || buyer.primaryState) && (
+                                  <div className="text-sm text-gray-500">📍 {buyer.city || buyer.primaryCity}, {buyer.state || buyer.primaryState}</div>
+                                )}
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-center">
+                            <div className="text-sm font-semibold text-gray-900">{buyer.matchedPropertiesCount || 0}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-center">
+                            <div className="text-sm font-semibold text-gray-900">{buyer.likedPropertiesCount || 0}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-center">
+                            <div className="text-sm font-semibold text-gray-900">${(buyer.maxMonthlyPayment || buyer.monthlyBudget || 0).toLocaleString()}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-center">
+                            <div className="text-sm font-semibold text-gray-900">${(buyer.maxDownPayment || buyer.downPayment || 0).toLocaleString()}</div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {filteredBuyers.length === 0 && (
+                    <div className="p-8 text-center text-gray-500">
+                      {cityFilter || stateFilter ? 'No buyers found matching your filters' : 'No buyers found'}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
           )}
 
+          {/* Realtors Tab */}
+          {activeTab === 'realtors' && (
+            <div className="bg-white shadow rounded-lg">
+              <div className="px-4 py-5 sm:p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-lg leading-6 font-medium text-gray-900">Registered Realtors</h3>
+                  <button
+                    onClick={fetchRealtors}
+                    disabled={loadingRealtors}
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-gray-400"
+                  >
+                    {loadingRealtors ? 'Loading...' : 'Refresh'}
+                  </button>
+                </div>
+
+                <div className="overflow-hidden bg-white shadow sm:rounded-md">
+                  <ul className="divide-y divide-gray-200">
+                    {realtors.map((realtor) => (
+                      <li key={realtor.id}>
+                        <div className="px-4 py-4 sm:px-6">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center">
+                              <div className="flex-shrink-0">
+                                <div className="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center">
+                                  <span className="text-sm font-medium text-indigo-700">
+                                    {realtor.name.charAt(0).toUpperCase()}
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="ml-4">
+                                <div className="text-sm font-medium text-gray-900">{realtor.name}</div>
+                                <div className="text-sm text-gray-500">{realtor.email}</div>
+                                {realtor.brokerage && <div className="text-sm text-gray-500">{realtor.brokerage}</div>}
+                                {realtor.city && realtor.state && (
+                                  <div className="text-sm text-gray-500">📍 {realtor.city}, {realtor.state}</div>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex items-center space-x-8">
+                              <div className="text-center">
+                                <div className="text-lg font-semibold text-gray-900">{realtor.credits}</div>
+                                <div className="text-xs text-gray-500">Credits</div>
+                              </div>
+                              <div className="text-center">
+                                <div className="text-lg font-semibold text-gray-900">{realtor.availableBuyersCount}</div>
+                                <div className="text-xs text-gray-500">Leads</div>
+                              </div>
+                              <div className="text-center">
+                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                  realtor.subscriptionStatus === 'active'
+                                    ? 'bg-green-100 text-green-800'
+                                    : realtor.subscriptionStatus === 'cancelled'
+                                    ? 'bg-red-100 text-red-800'
+                                    : 'bg-gray-100 text-gray-800'
+                                }`}>
+                                  {realtor.subscriptionStatus === 'active' ? 'Active' :
+                                   realtor.subscriptionStatus === 'cancelled' ? 'Cancelled' :
+                                   'Free'}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Disputes Tab */}
+          {activeTab === 'disputes' && (
+            <div className="space-y-6">
+              {disputes.map((dispute) => (
+                <div key={dispute.id} className="bg-white shadow rounded-lg">
+                  <div className="px-4 py-5 sm:p-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <div>
+                        <h3 className="text-lg font-medium text-gray-900">
+                          Dispute #{dispute.id.substring(0, 8)}
+                        </h3>
+                        <p className="text-sm text-gray-500 mt-1">
+                          Submitted: {new Date(dispute.submittedAt?.toDate?.() || '').toLocaleDateString()}
+                        </p>
+                      </div>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        dispute.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                        dispute.status === 'approved' ? 'bg-green-100 text-green-800' :
+                        'bg-red-100 text-red-800'
+                      }`}>
+                        {dispute.status}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-900 mb-2">Realtor Information</h4>
+                        <div className="bg-gray-50 rounded-md p-3">
+                          <div className="text-sm text-gray-900 font-medium">{dispute.realtorName}</div>
+                          <div className="text-sm text-gray-600">{dispute.realtorEmail}</div>
+                        </div>
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-900 mb-2">Buyer Information</h4>
+                        <div className="bg-gray-50 rounded-md p-3">
+                          <div className="text-sm text-gray-900 font-medium">{dispute.buyerName}</div>
+                          <div className="text-sm text-gray-600">{dispute.buyerPhone}</div>
+                          <div className="text-sm text-gray-600">{dispute.buyerCity}, {dispute.buyerState}</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mb-6">
+                      <h4 className="text-sm font-medium text-gray-900 mb-2">Dispute Reason</h4>
+                      <div className="bg-gray-50 rounded-md p-3">
+                        <p className="text-sm text-gray-900 font-medium">
+                          {dispute.reason === 'no_response' ? 'No Response from Buyer' :
+                           dispute.reason === 'wrong_info' ? 'Wrong/Invalid Information' :
+                           dispute.reason === 'not_interested' ? 'Buyer Not Interested' :
+                           dispute.reason}
+                        </p>
+                        {dispute.explanation && (
+                          <p className="text-sm text-gray-600 mt-2">{dispute.explanation}</p>
+                        )}
+                      </div>
+                    </div>
+
+                    {dispute.status === 'pending' && (
+                      <div className="border-t border-gray-200 pt-4">
+                        <div className="flex items-center space-x-4">
+                          <select className="block w-40 pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                            <option value="1">Refund 1 Credit</option>
+                            <option value="2">Refund 2 Credits</option>
+                            <option value="3">Refund 3 Credits</option>
+                          </select>
+                          <button
+                            onClick={() => resolveDispute(dispute.id, 'approve', 1)}
+                            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                          >
+                            Approve Dispute
+                          </button>
+                          <button
+                            onClick={() => resolveDispute(dispute.id, 'deny', 0)}
+                            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                          >
+                            Deny Dispute
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Contacts Tab */}
+          {activeTab === 'contacts' && (
+            <div className="bg-white shadow rounded-lg">
+              <div className="px-4 py-5 sm:p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-lg leading-6 font-medium text-gray-900">Contact Form Submissions</h3>
+                  <button
+                    onClick={fetchContacts}
+                    disabled={loadingContacts}
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-gray-400"
+                  >
+                    {loadingContacts ? 'Loading...' : 'Refresh'}
+                  </button>
+                </div>
+
+                <div className="space-y-6">
+                  {contacts.map((contact) => (
+                    <div key={contact.id} className="border border-gray-200 rounded-lg p-4">
+                      <div className="flex items-start justify-between mb-3">
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-900">{contact.name}</h4>
+                          <div className="text-sm text-gray-600">
+                            <div>{contact.email}</div>
+                            {contact.phone && <div>{contact.phone}</div>}
+                          </div>
+                        </div>
+                        <span className="text-xs text-gray-500">
+                          {new Date(contact.createdAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <div className="bg-gray-50 rounded-md p-3">
+                        <p className="text-sm text-gray-700">{contact.message}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Social Media & Articles Tab */}
           {activeTab === 'social' && (
             <div className="space-y-6">
               {/* Social Media Dashboard Component */}
@@ -1501,87 +2512,6 @@ export default function AdminDashboard() {
                   className="w-full h-[calc(50vh-150px)] border-0 rounded-lg shadow-lg bg-white"
                   title="Articles Queue Dashboard"
                 />
-              </div>
-            </div>
-          )}
-
-          {/* Contacts Tab */}
-          {activeTab === 'contacts' && (
-            <div className="bg-white shadow rounded-lg">
-              <div className="px-4 py-5 sm:p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <div>
-                    <h3 className="text-lg leading-6 font-medium text-gray-900">Contact Form Submissions</h3>
-                    <p className="mt-1 text-sm text-gray-500">Messages from the contact page</p>
-                  </div>
-                  <button
-                    onClick={fetchContacts}
-                    disabled={loadingContacts}
-                    className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors disabled:bg-gray-400"
-                  >
-                    {loadingContacts ? 'Loading...' : 'Refresh'}
-                  </button>
-                </div>
-
-                {loadingContacts ? (
-                  <div className="flex justify-center py-12">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-                  </div>
-                ) : contacts.length === 0 ? (
-                  <div className="text-center py-12">
-                    <div className="text-4xl mb-4">📭</div>
-                    <p className="text-gray-500">No contact submissions yet</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {contacts.map((contact) => (
-                      <div key={contact.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-2">
-                              <span className="font-semibold text-gray-900">{contact.name}</span>
-                              <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${
-                                contact.status === 'new' ? 'bg-blue-100 text-blue-800' :
-                                contact.status === 'read' ? 'bg-gray-100 text-gray-800' :
-                                contact.status === 'responded' ? 'bg-green-100 text-green-800' :
-                                'bg-gray-100 text-gray-600'
-                              }`}>
-                                {contact.status || 'new'}
-                              </span>
-                              <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-purple-100 text-purple-800">
-                                {contact.subject}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-4 text-sm text-gray-500 mb-2">
-                              <a href={`mailto:${contact.email}`} className="hover:text-indigo-600">{contact.email}</a>
-                              {contact.phone && (
-                                <a href={`tel:${contact.phone}`} className="hover:text-indigo-600">{contact.phone}</a>
-                              )}
-                              <span>{contact.createdAt ? new Date(contact.createdAt).toLocaleDateString() : 'Unknown date'}</span>
-                            </div>
-                            <p className="text-gray-700 whitespace-pre-wrap">{contact.message}</p>
-                          </div>
-                          <button
-                            onClick={async () => {
-                              if (confirm('Delete this contact submission?')) {
-                                const response = await fetch(`/api/admin/contacts?id=${contact.id}`, { method: 'DELETE' });
-                                if (response.ok) {
-                                  fetchContacts();
-                                }
-                              }
-                            }}
-                            className="text-red-500 hover:text-red-700 p-2"
-                            title="Delete"
-                          >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
               </div>
             </div>
           )}

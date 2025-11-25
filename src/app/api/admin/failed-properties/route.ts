@@ -52,13 +52,16 @@ export async function GET(request: NextRequest) {
     );
 
     const propertiesSnapshot = await getDocs(propertiesQuery);
-    const allProperties = propertiesSnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      // Convert Firestore timestamps
-      dateAdded: doc.data().dateAdded?.toDate?.()?.toISOString() || doc.data().dateAdded,
-      lastUpdated: doc.data().lastUpdated?.toDate?.()?.toISOString() || doc.data().lastUpdated
-    }));
+    const allProperties = propertiesSnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        // Convert Firestore timestamps
+        dateAdded: data.dateAdded?.toDate?.()?.toISOString() || data.dateAdded,
+        lastUpdated: data.lastUpdated?.toDate?.()?.toISOString() || data.lastUpdated
+      } as any;
+    });
 
     // Filter properties based on failure type
     let failedProperties = [];

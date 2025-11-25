@@ -12,12 +12,12 @@ import { generateSocialImagesFromBlog, generateOGImageUrl } from '@/lib/blog-og-
 // GET single blog post
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { searchParams } = new URL(request.url);
     const brand = searchParams.get('brand');
-    const { id } = params;
+    const { id } = await params;
 
     if (!brand || !id) {
       return NextResponse.json(
@@ -66,10 +66,10 @@ export async function GET(
 // PUT update blog post
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const body = await request.json();
     const { brand, title, subtitle, sections, pillar, tags, status } = body;
 
@@ -172,12 +172,12 @@ export async function PUT(
 // DELETE blog post
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { searchParams } = new URL(request.url);
     const brand = searchParams.get('brand');
-    const { id } = params;
+    const { id } = await params;
 
     if (!brand || !id) {
       return NextResponse.json(

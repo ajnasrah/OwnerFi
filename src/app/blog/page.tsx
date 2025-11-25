@@ -10,13 +10,13 @@ import { Brand } from '@/config/constants';
 import { getBrandConfig } from '@/config/brand-configs';
 
 interface BlogListPageProps {
-  params: {
+  params: Promise<{
     brand: Brand;
-  };
+  }>;
 }
 
 export async function generateMetadata({ params }: BlogListPageProps): Promise<Metadata> {
-  const { brand } = params;
+  const { brand } = await params;
   const config = getBrandConfig(brand);
 
   const titles: Record<Brand, string> = {
@@ -53,7 +53,7 @@ export async function generateMetadata({ params }: BlogListPageProps): Promise<M
 }
 
 export default async function BlogListPage({ params }: BlogListPageProps) {
-  const { brand } = params;
+  const { brand } = await params;
   const config = getBrandConfig(brand);
 
   // Fetch blog posts

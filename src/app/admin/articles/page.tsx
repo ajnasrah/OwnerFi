@@ -58,6 +58,7 @@ export default function ArticlesPage() {
       const interval = setInterval(loadArticles, 60000); // Refresh every 60 seconds (reduced from 30s for better performance)
       return () => clearInterval(interval);
     }
+    return undefined;
   }, [authStatus, session]);
 
   const loadArticles = async () => {
@@ -88,7 +89,7 @@ export default function ArticlesPage() {
     return txt.value;
   };
 
-  const deleteArticle = async (articleId: string, brand: 'carz' | 'ownerfi') => {
+  const deleteArticle = async (articleId: string, brand: 'carz' | 'ownerfi' | 'vassdistro') => {
     if (!confirm('Are you sure you want to delete this article? This action cannot be undone.')) {
       return;
     }

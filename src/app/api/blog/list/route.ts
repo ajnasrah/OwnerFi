@@ -25,7 +25,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const db = getFirestore();
+    const db = await getFirestore();
+    if (!db) {
+      return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
+    }
     const collection = getBlogCollection(brand);
 
     // Build query

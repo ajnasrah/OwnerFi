@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, memo, useCallback } from 'react';
 import { Button } from './Button';
 import Image from 'next/image';
 
@@ -16,7 +16,8 @@ interface PropertyListingSwiperProps {
   isLoading?: boolean;
 }
 
-export function PropertyListingSwiper({ properties, onLike, onPass, favorites, passedIds = [], isLoading = false }: PropertyListingSwiperProps) {
+// Wrapped in React.memo to prevent unnecessary re-renders when parent state changes
+export const PropertyListingSwiper = memo(function PropertyListingSwiper({ properties, onLike, onPass, favorites, passedIds = [], isLoading = false }: PropertyListingSwiperProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showToast, setShowToast] = useState<{ type: 'saved' | 'deleted'; show: boolean }>({ type: 'saved', show: false });
   const [buttonPressed, setButtonPressed] = useState<'like' | 'pass' | null>(null);
@@ -342,4 +343,7 @@ export function PropertyListingSwiper({ properties, onLike, onPass, favorites, p
       )}
     </div>
   );
-}
+});
+
+// Display name for React DevTools debugging
+PropertyListingSwiper.displayName = 'PropertyListingSwiper';

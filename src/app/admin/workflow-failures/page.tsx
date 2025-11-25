@@ -218,7 +218,14 @@ export default function WorkflowFailuresPage() {
                                  'ℹ️ Info'}
                               </span>
                               <span className="text-sm text-gray-500">
-                                {new Date(failure.timestamp).toLocaleString()}
+                                {(() => {
+                                  const ts = failure.timestamp as any;
+                                  if (!ts) return 'N/A';
+                                  if (typeof ts === 'object' && typeof ts._seconds === 'number') return new Date(ts._seconds * 1000).toLocaleString();
+                                  if (typeof ts === 'object' && typeof ts.seconds === 'number') return new Date(ts.seconds * 1000).toLocaleString();
+                                  const date = new Date(ts);
+                                  return isNaN(date.getTime()) ? 'N/A' : date.toLocaleString();
+                                })()}
                               </span>
                             </div>
 

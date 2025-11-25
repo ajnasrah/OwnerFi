@@ -289,7 +289,13 @@ export default function ABTestsPage() {
                     <div>
                       <div className="text-sm text-slate-500">Started</div>
                       <div className="font-medium text-slate-900">
-                        {new Date(selectedTest.startDate).toLocaleDateString()}
+                        {(() => {
+                          const ts = selectedTest.startDate as any;
+                          if (!ts) return 'N/A';
+                          if (typeof ts === 'object' && typeof ts._seconds === 'number') return new Date(ts._seconds * 1000).toLocaleDateString();
+                          const date = new Date(ts);
+                          return isNaN(date.getTime()) ? 'N/A' : date.toLocaleDateString();
+                        })()}
                       </div>
                     </div>
                   </div>

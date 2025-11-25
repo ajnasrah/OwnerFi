@@ -4,8 +4,7 @@
  * Logs all administrative actions and sensitive operations for security and compliance.
  */
 
-import { getFirestore } from 'firebase-admin/firestore';
-import { getAdminDb } from './firebase-admin-init';
+import { getDb as getAdminDb } from './firebase-admin-init';
 
 export enum AuditAction {
   // User Management

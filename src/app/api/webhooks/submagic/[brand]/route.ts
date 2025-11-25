@@ -5,7 +5,7 @@
  * Each brand has its own isolated webhook endpoint to prevent failures from affecting other brands.
  *
  * Route: /api/webhooks/submagic/[brand]
- * Brands: carz, ownerfi, podcast, vassdistro, benefit, property, property-spanish, abdullah, personal
+ * Brands: carz, ownerfi, vassdistro, property, property-spanish, abdullah, personal
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -256,7 +256,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
  * Get workflow by Submagic project ID for specific brand
  */
 async function getWorkflowBySubmagicId(
-  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit' | 'property' | 'property-spanish' | 'vassdistro' | 'abdullah' | 'personal',
+  brand: 'carz' | 'ownerfi' | 'property' | 'property-spanish' | 'vassdistro' | 'abdullah' | 'personal',
   submagicProjectId: string
 ): Promise<{ workflowId: string; workflow: any } | null> {
   const { getAdminDb } = await import('@/lib/firebase-admin');
@@ -271,11 +271,7 @@ async function getWorkflowBySubmagicId(
 
   // Other brands use their respective collections
   let collectionName: string;
-  if (brand === 'podcast') {
-    collectionName = 'podcast_workflow_queue';
-  } else if (brand === 'benefit') {
-    collectionName = 'benefit_workflow_queue';
-  } else if (brand === 'abdullah') {
+  if (brand === 'abdullah') {
     collectionName = 'abdullah_workflow_queue';
   } else if (brand === 'personal') {
     collectionName = 'personal_workflow_queue';
@@ -316,7 +312,7 @@ async function getWorkflowBySubmagicId(
  * Update workflow for specific brand
  */
 async function updateWorkflowForBrand(
-  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit' | 'property' | 'property-spanish' | 'vassdistro' | 'abdullah' | 'personal',
+  brand: 'carz' | 'ownerfi' | 'property' | 'property-spanish' | 'vassdistro' | 'abdullah' | 'personal',
   workflowId: string,
   updates: Record<string, any>
 ): Promise<void> {
@@ -324,12 +320,6 @@ async function updateWorkflowForBrand(
     // Use NEW propertyShowcaseWorkflows collection
     const { updatePropertyWorkflow } = await import('@/lib/property-workflow');
     await updatePropertyWorkflow(workflowId, updates);
-  } else if (brand === 'podcast') {
-    const { updatePodcastWorkflow } = await import('@/lib/feed-store-firestore');
-    await updatePodcastWorkflow(workflowId, updates);
-  } else if (brand === 'benefit') {
-    const { updateBenefitWorkflow } = await import('@/lib/feed-store-firestore');
-    await updateBenefitWorkflow(workflowId, updates);
   } else if (brand === 'abdullah') {
     const { db } = await import('@/lib/firebase');
     const { doc, updateDoc } = await import('firebase/firestore');
@@ -388,7 +378,7 @@ async function fetchVideoUrlFromSubmagic(submagicProjectId: string): Promise<str
  * Process video upload to R2 and post to Late
  */
 async function processVideoAndPost(
-  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit' | 'property' | 'vassdistro' | 'abdullah',
+  brand: 'carz' | 'ownerfi' | 'property' | 'vassdistro' | 'abdullah',
   workflowId: string,
   workflow: any,
   videoUrl: string
@@ -407,43 +397,21 @@ async function processVideoAndPost(
     console.log(`✅ [${brandConfig.displayName}] Video uploaded to R2: ${publicVideoUrl}`);
 
     // ⚠️ CRITICAL: Change status to "posting" AND save video URL NOW
-    // This ensures:
-    // 1. Status only changes after R2 upload succeeds (no timeouts leave it stuck)
-    // 2. Video URL is saved before Late posting (failsafe can retry if posting fails)
     await updateWorkflowForBrand(brand, workflowId, {
-      status: 'posting', // Use 'posting' for all brands including podcast
+      status: 'posting',
       finalVideoUrl: publicVideoUrl,
     });
 
     console.log(`💾 [${brandConfig.displayName}] Status set to "posting" with video URL saved`);
 
     // Get brand-specific platforms from config
-    const platforms = getBrandPlatforms(brand, false); // Use default platforms
+    const platforms = getBrandPlatforms(brand, false);
 
     // Prepare caption and title
     let caption: string;
     let title: string;
 
-    if (brand === 'podcast') {
-      caption = workflow.episodeTitle || 'New Podcast Episode';
-      title = `Episode #${workflow.episodeNumber}: ${workflow.episodeTitle || 'New Episode'}`;
-    } else if (brand === 'benefit') {
-      // Generate caption from benefit data if missing
-      if (!workflow.caption || !workflow.title) {
-        const benefitId = workflow.benefitId;
-        if (benefitId) {
-          const { getBenefitById, generateBenefitCaption, generateBenefitTitle } = await import('@/lib/benefit-content');
-          const benefit = getBenefitById(benefitId);
-          if (benefit) {
-            caption = workflow.caption || generateBenefitCaption(benefit);
-            title = workflow.title || generateBenefitTitle(benefit);
-          }
-        }
-      }
-      // Final fallbacks
-      caption = caption || workflow.caption || 'Learn about owner financing! 🏡';
-      title = title || workflow.title || 'Owner Finance Benefits';
-    } else if (brand === 'property') {
+    if (brand === 'property') {
       caption = workflow.caption || 'New owner finance property for sale! 🏡';
       title = workflow.title || 'Property For Sale';
     } else if (brand === 'ownerfi') {
@@ -456,21 +424,20 @@ async function processVideoAndPost(
       caption = workflow.caption || workflow.articleTitle || 'Check out this vape industry update! 🔥';
       title = workflow.title || workflow.articleTitle || 'Vape Industry News';
     } else {
-      caption = workflow.caption || workflow.articleTitle || workflow.episodeTitle || 'Check out this video! 🔥';
-      title = workflow.title || workflow.articleTitle || workflow.episodeTitle || 'Viral Video';
+      caption = workflow.caption || workflow.articleTitle || 'Check out this video! 🔥';
+      title = workflow.title || workflow.articleTitle || 'Viral Video';
     }
 
     console.log(`📱 [${brandConfig.displayName}] Posting to GetLate's scheduling queue`);
-    console.log(`   GetLate will automatically schedule at optimal times`);
 
-    // Use GetLate's queue system - it handles optimal scheduling automatically
+    // Use GetLate's queue system
     const postResult = await postToLate({
       videoUrl: publicVideoUrl,
       caption,
       title,
       platforms: platforms as any[],
       brand: brand as any,
-      useQueue: true, // Use GetLate's queue system for optimal scheduling
+      useQueue: true,
       timezone: brandConfig.scheduling.timezone
     });
 
@@ -480,7 +447,6 @@ async function processVideoAndPost(
       console.log(`   Scheduled for: ${postResult.scheduledFor || 'Next available queue slot'}`);
       console.log(`   Platforms: ${postResult.platforms?.join(', ') || platforms.join(', ')}`);
 
-      // Mark workflow as completed (video URL already saved above)
       await updateWorkflowForBrand(brand, workflowId, {
         status: 'completed',
         latePostId: postResult.postId,
@@ -516,13 +482,13 @@ async function processVideoAndPost(
  * Send failure alert for brand
  */
 async function sendFailureAlert(
-  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit' | 'property' | 'vassdistro',
+  brand: 'carz' | 'ownerfi' | 'property' | 'vassdistro',
   workflowId: string,
   workflow: any,
   reason: string
 ): Promise<void> {
   try {
-    if (brand !== 'podcast' && brand !== 'benefit' && brand !== 'property') {
+    if (brand !== 'property') {
       const { alertWorkflowFailure } = await import('@/lib/error-monitoring');
       await alertWorkflowFailure(
         brand,
@@ -533,7 +499,6 @@ async function sendFailureAlert(
     }
   } catch (error) {
     console.error('Failed to send alert:', error);
-    // Don't throw - alerting failure shouldn't block webhook processing
   }
 }
 

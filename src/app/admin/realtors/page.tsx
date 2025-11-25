@@ -199,7 +199,17 @@ export default function AdminRealtors() {
                     <td className="p-3 text-slate-300">{realtor.licenseNumber || 'N/A'}</td>
                     <td className="p-3 text-slate-300">{realtor.state || 'N/A'}</td>
                     <td className="p-3 text-slate-300">
-                      {new Date(realtor.createdAt).toLocaleDateString()}
+                      {(() => {
+                        if (!realtor.createdAt) return 'N/A';
+                        const ts = realtor.createdAt as any;
+                        // Handle serialized Firestore timestamp { _seconds, _nanoseconds }
+                        if (typeof ts === 'object' && typeof ts._seconds === 'number') {
+                          return new Date(ts._seconds * 1000).toLocaleDateString();
+                        }
+                        // Handle ISO string or other date formats
+                        const date = new Date(ts);
+                        return isNaN(date.getTime()) ? 'N/A' : date.toLocaleDateString();
+                      })()}
                     </td>
                   </tr>
                 ))}

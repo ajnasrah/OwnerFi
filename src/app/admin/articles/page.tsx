@@ -73,8 +73,15 @@ export default function ArticlesPage() {
     }
   };
 
-  const formatDate = (timestamp: number) => {
-    return new Date(timestamp).toLocaleDateString('en-US', {
+  const formatDate = (timestamp: any) => {
+    if (!timestamp) return 'N/A';
+    // Handle Firestore timestamp with _seconds
+    if (typeof timestamp === 'object' && typeof timestamp._seconds === 'number') {
+      timestamp = timestamp._seconds * 1000;
+    }
+    const date = new Date(timestamp);
+    if (isNaN(date.getTime())) return 'N/A';
+    return date.toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
       year: 'numeric',

@@ -317,11 +317,21 @@ export default function AdminBuyers() {
                     </td>
                     <td className="p-4">
                       <div className="text-slate-300 text-sm">
-                        {buyer.createdAt && typeof buyer.createdAt === 'object' && 'toDate' in buyer.createdAt
-                          ? new Date((buyer.createdAt as any).toDate()).toLocaleDateString()
-                          : buyer.createdAt
-                          ? new Date(buyer.createdAt as any).toLocaleDateString()
-                          : 'N/A'}
+                        {(() => {
+                          if (!buyer.createdAt) return 'N/A';
+                          const ts = buyer.createdAt as any;
+                          // Handle Firestore Timestamp with toDate() method
+                          if (typeof ts === 'object' && typeof ts.toDate === 'function') {
+                            return new Date(ts.toDate()).toLocaleDateString();
+                          }
+                          // Handle serialized Firestore timestamp { _seconds, _nanoseconds }
+                          if (typeof ts === 'object' && typeof ts._seconds === 'number') {
+                            return new Date(ts._seconds * 1000).toLocaleDateString();
+                          }
+                          // Handle ISO string or other date formats
+                          const date = new Date(ts);
+                          return isNaN(date.getTime()) ? 'N/A' : date.toLocaleDateString();
+                        })()}
                       </div>
                     </td>
                     <td className="p-4">

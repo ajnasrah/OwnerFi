@@ -67,3 +67,6 @@ export { adminDb, adminAuth };
 // Alias export for common usage pattern
 export const db = adminDb;
 export const admin = { db: adminDb, auth: adminAuth };
+
+// Alias for code that expects getFirestore
+export const getFirestore = getAdminDb;

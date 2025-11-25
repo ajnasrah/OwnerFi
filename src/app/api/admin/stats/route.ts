@@ -1,9 +1,13 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { collection, query, where, getCountFromServer } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { ExtendedSession } from '@/types/session';
+
+// Simple in-memory cache for stats (5 minute TTL)
+const statsCache: { data: object | null; timestamp: number } = { data: null, timestamp: 0 };
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
 export async function GET() {
   try {
@@ -23,20 +27,32 @@ export async function GET() {
       );
     }
 
-    // Get counts in parallel
-    const [propertiesSnapshot, buyersSnapshot, realtorsSnapshot, disputesSnapshot] = await Promise.all([
-      getDocs(collection(db, 'properties')),
-      getDocs(collection(db, 'buyers')),
-      getDocs(collection(db, 'realtors')),
-      getDocs(query(collection(db, 'disputes'), where('status', '==', 'pending')))
+    // Check cache first
+    if (statsCache.data && (Date.now() - statsCache.timestamp) < CACHE_TTL_MS) {
+      return NextResponse.json({ ...statsCache.data, cached: true });
+    }
+
+    // Use getCountFromServer - much more efficient than loading all docs
+    // This only counts documents, doesn't load them into memory
+    const [propertiesCount, buyersCount, realtorsCount, disputesCount] = await Promise.all([
+      getCountFromServer(collection(db, 'properties')),
+      getCountFromServer(collection(db, 'buyers')),
+      getCountFromServer(collection(db, 'realtors')),
+      getCountFromServer(query(collection(db, 'disputes'), where('status', '==', 'pending')))
     ]);
 
-    return NextResponse.json({
-      totalProperties: propertiesSnapshot.size,
-      totalBuyers: buyersSnapshot.size,
-      totalRealtors: realtorsSnapshot.size,
-      pendingDisputes: disputesSnapshot.size
-    });
+    const stats = {
+      totalProperties: propertiesCount.data().count,
+      totalBuyers: buyersCount.data().count,
+      totalRealtors: realtorsCount.data().count,
+      pendingDisputes: disputesCount.data().count
+    };
+
+    // Update cache
+    statsCache.data = stats;
+    statsCache.timestamp = Date.now();
+
+    return NextResponse.json(stats);
 
   } catch (error) {
     console.error('Failed to fetch admin stats:', error);

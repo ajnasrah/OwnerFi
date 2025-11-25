@@ -26,7 +26,10 @@ export async function GET(
       );
     }
 
-    const db = getFirestore();
+    const db = await getFirestore();
+    if (!db) {
+      return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
+    }
     const collection = getBlogCollection(brand as any);
     const doc = await db.collection(collection).doc(id).get();
 
@@ -80,7 +83,10 @@ export async function PUT(
       );
     }
 
-    const db = getFirestore();
+    const db = await getFirestore();
+    if (!db) {
+      return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
+    }
     const collection = getBlogCollection(brand);
 
     // Get existing post
@@ -186,7 +192,10 @@ export async function DELETE(
       );
     }
 
-    const db = getFirestore();
+    const db = await getFirestore();
+    if (!db) {
+      return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
+    }
     const collection = getBlogCollection(brand as any);
 
     await db.collection(collection).doc(id).delete();

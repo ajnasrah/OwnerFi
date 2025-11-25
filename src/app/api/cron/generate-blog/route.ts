@@ -105,7 +105,10 @@ async function processBrandBlog(brand: Brand): Promise<{
     });
 
     // Create blog post in Firestore
-    const db = getFirestore();
+    const db = await getFirestore();
+    if (!db) {
+      throw new Error('Database not initialized');
+    }
     const collection = getBlogCollection(brand);
     const slug = generateSlug(generated.title);
 

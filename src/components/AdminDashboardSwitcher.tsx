@@ -25,7 +25,7 @@ export default function AdminDashboardSwitcher() {
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex gap-1">
           <Link
-            href="/admin"
+            href="/admin/manage"
             className={`px-6 py-3 font-semibold text-sm transition-colors ${
               isAdminDashboard
                 ? 'bg-slate-900 text-emerald-400 border-b-2 border-emerald-400'

@@ -1641,7 +1641,13 @@ export default function AdminDashboard() {
                                   {property.buildingType || 'N/A'}
                                 </td>
                                 <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                                  {property.importedAt ? new Date(property.importedAt).toLocaleDateString() : 'N/A'}
+                                  {(() => {
+                                    const ts = property.importedAt as any;
+                                    if (!ts) return 'N/A';
+                                    if (typeof ts === 'object' && typeof ts._seconds === 'number') return new Date(ts._seconds * 1000).toLocaleDateString();
+                                    const date = new Date(ts);
+                                    return isNaN(date.getTime()) ? 'N/A' : date.toLocaleDateString();
+                                  })()}
                                 </td>
                               </tr>
                             ))}
@@ -2377,7 +2383,14 @@ export default function AdminDashboard() {
                           Dispute #{dispute.id.substring(0, 8)}
                         </h3>
                         <p className="text-sm text-gray-500 mt-1">
-                          Submitted: {new Date(dispute.submittedAt?.toDate?.() || '').toLocaleDateString()}
+                          Submitted: {(() => {
+                            const ts = dispute.submittedAt as any;
+                            if (!ts) return 'N/A';
+                            if (typeof ts?.toDate === 'function') return new Date(ts.toDate()).toLocaleDateString();
+                            if (typeof ts === 'object' && typeof ts._seconds === 'number') return new Date(ts._seconds * 1000).toLocaleDateString();
+                            const date = new Date(ts);
+                            return isNaN(date.getTime()) ? 'N/A' : date.toLocaleDateString();
+                          })()}
                         </p>
                       </div>
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
@@ -2478,7 +2491,13 @@ export default function AdminDashboard() {
                           </div>
                         </div>
                         <span className="text-xs text-gray-500">
-                          {new Date(contact.createdAt).toLocaleDateString()}
+                          {(() => {
+                            const ts = contact.createdAt as any;
+                            if (!ts) return 'N/A';
+                            if (typeof ts === 'object' && typeof ts._seconds === 'number') return new Date(ts._seconds * 1000).toLocaleDateString();
+                            const date = new Date(ts);
+                            return isNaN(date.getTime()) ? 'N/A' : date.toLocaleDateString();
+                          })()}
                         </span>
                       </div>
                       <div className="bg-gray-50 rounded-md p-3">

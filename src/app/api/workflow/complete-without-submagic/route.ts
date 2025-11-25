@@ -47,21 +47,9 @@ export async function POST(request: NextRequest) {
 
     console.log(`📹 Using HeyGen video as final: ${finalVideoUrl}`);
 
-    // Prepare caption - generate from benefit data if missing
-    let caption = workflow.caption;
-    if (!caption && validatedBrand === 'benefit') {
-      const benefitId = workflow.benefitId;
-      if (benefitId) {
-        const { getBenefitById, generateBenefitCaption } = await import('@/lib/benefit-content');
-        const benefit = getBenefitById(benefitId);
-        if (benefit) {
-          caption = generateBenefitCaption(benefit);
-        }
-      }
-    }
-    // Final fallback
-    caption = caption || workflow.articleTitle || workflow.episodeTitle || 'Check out this video!';
-    const title = workflow.title || workflow.articleTitle || workflow.episodeTitle || 'Video';
+    // Prepare caption - use workflow caption or fallback
+    const caption = workflow.caption || workflow.articleTitle || 'Check out this video!';
+    const title = workflow.title || workflow.articleTitle || 'Video';
 
     // Get brand platforms
     const platforms = getBrandPlatforms(validatedBrand, false);

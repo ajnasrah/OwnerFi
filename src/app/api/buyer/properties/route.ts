@@ -171,11 +171,15 @@ export async function GET(request: NextRequest) {
     ]);
 
     // Combine results from both sources
-    const curatedProperties = propertiesSnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      source: 'curated' // Tag for UI
-    } as PropertyListing & { id: string; source: string }));
+    const curatedProperties = propertiesSnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        description: data.description || '', // Explicitly include description
+        source: 'curated' // Tag for UI
+      } as PropertyListing & { id: string; source: string };
+    });
 
     const zillowProperties = zillowSnapshot.docs.map(doc => {
       const data = doc.data();
@@ -323,10 +327,14 @@ export async function GET(request: NextRequest) {
           );
 
           const likedSnapshot = await getDocs(likedQuery);
-          const likedBatch = likedSnapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-          } as PropertyListing & { id: string }));
+          const likedBatch = likedSnapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+              id: doc.id,
+              ...data,
+              description: data.description || '' // Explicitly include description
+            } as PropertyListing & { id: string };
+          });
 
           likedInResults.push(...likedBatch);
         }

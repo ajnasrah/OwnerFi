@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ApifyClient } from 'apify-client';
 import { initializeApp, cert, getApps } from 'firebase-admin/app';
-import { getFirestore } from 'firebase-admin/firestore';
+import { getFirestore, FieldPath } from 'firebase-admin/firestore';
+import { withCronLock } from '@/lib/cron-lock';
 
 // Initialize Firebase Admin
 if (!getApps().length) {
@@ -21,6 +22,9 @@ const db = getFirestore();
  *
  * Runs on Monday and Thursday at 9 AM
  * Extracts property URLs from Zillow search and adds to queue
+ *
+ * OPTIMIZED: Uses batched duplicate checking to reduce Firestore queries
+ * from O(n*2) to O(n/10*2) - 10x improvement
  */
 
 const SEARCH_CONFIG = {
@@ -29,120 +33,159 @@ const SEARCH_CONFIG = {
   maxResults: 500,
 };
 
+/**
+ * Batch check for existing URLs in a collection
+ * Uses Firestore 'in' operator (max 10 items per query) to reduce query count
+ */
+async function batchCheckExistingUrls(
+  collectionName: string,
+  urls: string[]
+): Promise<Set<string>> {
+  const existingUrls = new Set<string>();
+
+  // Process in batches of 10 (Firestore 'in' operator limit)
+  for (let i = 0; i < urls.length; i += 10) {
+    const batch = urls.slice(i, i + 10);
+    const snapshot = await db
+      .collection(collectionName)
+      .where('url', 'in', batch)
+      .select() // Only fetch document refs, not full data
+      .get();
+
+    snapshot.docs.forEach(doc => {
+      const data = doc.data();
+      if (data.url) existingUrls.add(data.url);
+    });
+  }
+
+  return existingUrls;
+}
+
 export async function GET(request: NextRequest) {
-  const startTime = Date.now();
+  // Use cron lock to prevent concurrent executions
+  const result = await withCronLock('run-search-scraper', async () => {
+    const startTime = Date.now();
 
-  console.log('🏡 [SEARCH CRON] Starting search scraper...');
+    try {
+      console.log('🏡 [SEARCH CRON] Starting search scraper...');
 
-  try {
-    const apiKey = process.env.APIFY_API_KEY;
-    if (!apiKey) {
-      throw new Error('APIFY_API_KEY not found');
-    }
-
-    const client = new ApifyClient({ token: apiKey });
-
-    // Run search scraper
-    const input = {
-      searchUrls: [{ url: SEARCH_CONFIG.searchUrl }],
-      maxResults: SEARCH_CONFIG.maxResults,
-      mode: SEARCH_CONFIG.mode,
-    };
-
-    console.log(`🚀 [SEARCH CRON] Running Apify search scraper (mode: ${SEARCH_CONFIG.mode}, max: ${SEARCH_CONFIG.maxResults})`);
-
-    const run = await client.actor('maxcopell/zillow-scraper').call(input);
-    const { items } = await client.dataset(run.defaultDatasetId).listItems();
-
-    console.log(`📦 [SEARCH CRON] Found ${items.length} properties`);
-
-    // Add URLs to queue
-    let addedToQueue = 0;
-    let alreadyInQueue = 0;
-    let alreadyScraped = 0;
-    let noUrl = 0;
-
-    for (const item of items) {
-      const property = item as any;
-      const detailUrl = property.detailUrl;
-
-      if (!detailUrl) {
-        noUrl++;
-        continue;
+      const apiKey = process.env.APIFY_API_KEY;
+      if (!apiKey) {
+        throw new Error('APIFY_API_KEY not found');
       }
 
-      // Check if already in queue
-      const existingInQueue = await db
-        .collection('scraper_queue')
-        .where('url', '==', detailUrl)
-        .limit(1)
-        .get();
+      const client = new ApifyClient({ token: apiKey });
 
-      if (!existingInQueue.empty) {
-        alreadyInQueue++;
-        continue;
-      }
+      // Run search scraper
+      const input = {
+        searchUrls: [{ url: SEARCH_CONFIG.searchUrl }],
+        maxResults: SEARCH_CONFIG.maxResults,
+        mode: SEARCH_CONFIG.mode,
+      };
 
-      // Check if already scraped
-      const existingInImports = await db
-        .collection('zillow_imports')
-        .where('url', '==', detailUrl)
-        .limit(1)
-        .get();
+      console.log(`🚀 [SEARCH CRON] Running Apify search scraper (mode: ${SEARCH_CONFIG.mode}, max: ${SEARCH_CONFIG.maxResults})`);
 
-      if (!existingInImports.empty) {
-        alreadyScraped++;
-        continue;
-      }
+      const run = await client.actor('maxcopell/zillow-scraper').call(input);
+      const { items } = await client.dataset(run.defaultDatasetId).listItems();
 
-      // Add to queue
-      await db.collection('scraper_queue').add({
-        url: detailUrl,
-        address: property.address || '',
-        price: property.price || '',
-        zpid: property.zpid || null,
-        status: 'pending',
-        addedAt: new Date(),
-        source: 'search_cron',
+      console.log(`📦 [SEARCH CRON] Found ${items.length} properties`);
+
+      // Extract all URLs first (filter out items without URLs)
+      const itemsWithUrls = items
+        .map(item => item as { detailUrl?: string; address?: string; price?: string; zpid?: string })
+        .filter(item => item.detailUrl);
+
+      const allUrls = itemsWithUrls.map(item => item.detailUrl!);
+      const noUrl = items.length - itemsWithUrls.length;
+
+      console.log(`🔍 [SEARCH CRON] Checking ${allUrls.length} URLs for duplicates (batched)...`);
+
+      // Batch check both collections in parallel - 10x faster than individual queries
+      const [urlsInQueue, urlsInImports] = await Promise.all([
+        batchCheckExistingUrls('scraper_queue', allUrls),
+        batchCheckExistingUrls('zillow_imports', allUrls),
+      ]);
+
+      console.log(`📊 [SEARCH CRON] Found ${urlsInQueue.size} in queue, ${urlsInImports.size} already scraped`);
+
+      // Filter to only new URLs
+      const newItems = itemsWithUrls.filter(item => {
+        const url = item.detailUrl!;
+        return !urlsInQueue.has(url) && !urlsInImports.has(url);
       });
 
-      addedToQueue++;
+      // Track counts
+      const alreadyInQueue = urlsInQueue.size;
+      const alreadyScraped = urlsInImports.size;
+      let addedToQueue = 0;
 
-      // Log progress every 100 items
-      if (addedToQueue % 100 === 0) {
-        console.log(`   Added ${addedToQueue} URLs to queue...`);
+      // Use batch writes for efficiency (max 500 per batch)
+      const BATCH_SIZE = 500;
+      for (let i = 0; i < newItems.length; i += BATCH_SIZE) {
+        const batchItems = newItems.slice(i, i + BATCH_SIZE);
+        const batch = db.batch();
+
+        for (const property of batchItems) {
+          const docRef = db.collection('scraper_queue').doc();
+          batch.set(docRef, {
+            url: property.detailUrl,
+            address: property.address || '',
+            price: property.price || '',
+            zpid: property.zpid || null,
+            status: 'pending',
+            addedAt: new Date(),
+            source: 'search_cron',
+          });
+          addedToQueue++;
+        }
+
+        await batch.commit();
+        console.log(`   Committed batch: ${Math.min(i + BATCH_SIZE, newItems.length)}/${newItems.length} items`);
       }
-    }
 
-    const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+      const duration = ((Date.now() - startTime) / 1000).toFixed(2);
 
-    console.log(`\n✅ [SEARCH CRON] Complete in ${duration}s:`);
-    console.log(`   ✅ Added to queue: ${addedToQueue}`);
-    console.log(`   ⏭️  Already in queue: ${alreadyInQueue}`);
-    console.log(`   ⏭️  Already scraped: ${alreadyScraped}`);
-    if (noUrl > 0) {
-      console.log(`   ⚠️  No URL: ${noUrl}`);
-    }
+      console.log(`\n✅ [SEARCH CRON] Complete in ${duration}s:`);
+      console.log(`   ✅ Added to queue: ${addedToQueue}`);
+      console.log(`   ⏭️  Already in queue: ${alreadyInQueue}`);
+      console.log(`   ⏭️  Already scraped: ${alreadyScraped}`);
+      if (noUrl > 0) {
+        console.log(`   ⚠️  No URL: ${noUrl}`);
+      }
 
-    return NextResponse.json({
-      success: true,
-      duration: `${duration}s`,
-      propertiesFound: items.length,
-      addedToQueue,
-      alreadyInQueue,
-      alreadyScraped,
-      message: `Added ${addedToQueue} new properties to queue. Queue processor will handle filtering.`,
-    });
-
-  } catch (error: any) {
-    console.error('❌ [SEARCH CRON] Error:', error);
-
-    return NextResponse.json(
-      {
-        error: error.message,
+      return {
+        success: true,
+        duration: `${duration}s`,
+        propertiesFound: items.length,
+        addedToQueue,
+        alreadyInQueue,
+        alreadyScraped,
+        message: `Added ${addedToQueue} new properties to queue. Queue processor will handle filtering.`,
+      };
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('❌ [SEARCH CRON] Error:', error);
+      return {
+        success: false,
+        error: errorMessage,
         duration: `${((Date.now() - startTime) / 1000).toFixed(2)}s`,
-      },
-      { status: 500 }
-    );
+      };
+    }
+  });
+
+  // If lock was not acquired (another instance is running)
+  if (result === null) {
+    return NextResponse.json({
+      success: false,
+      skipped: true,
+      message: 'Another instance of this cron is currently running',
+    });
   }
+
+  // Return the result from the locked execution
+  if ('error' in result) {
+    return NextResponse.json(result, { status: 500 });
+  }
+
+  return NextResponse.json(result);
 }

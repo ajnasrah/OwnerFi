@@ -171,7 +171,13 @@ export default function BlogAdminPage() {
                       {post.views || 0}
                     </td>
                     <td className="px-6 py-4 text-sm text-slate-400">
-                      {new Date(post.publishedAt || post.createdAt).toLocaleDateString()}
+                      {(() => {
+                        const ts = (post.publishedAt || post.createdAt) as any;
+                        if (!ts) return 'N/A';
+                        if (typeof ts === 'object' && typeof ts._seconds === 'number') return new Date(ts._seconds * 1000).toLocaleDateString();
+                        const date = new Date(ts);
+                        return isNaN(date.getTime()) ? 'N/A' : date.toLocaleDateString();
+                      })()}
                     </td>
                     <td className="px-6 py-4 text-right text-sm font-medium">
                       <div className="flex items-center justify-end gap-2">

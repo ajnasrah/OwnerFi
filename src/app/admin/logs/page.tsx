@@ -176,7 +176,15 @@ export default function AdminLogsPage() {
                           {log.level.toUpperCase()}
                         </span>
                         <span className="ml-2 text-sm text-slate-500">
-                          {log.createdAt?.toDate?.()?.toLocaleString() || 'Unknown time'}
+                          {(() => {
+                            const ts = log.createdAt as any;
+                            if (!ts) return 'Unknown time';
+                            if (typeof ts?.toDate === 'function') return ts.toDate().toLocaleString();
+                            if (typeof ts === 'object' && typeof ts._seconds === 'number') return new Date(ts._seconds * 1000).toLocaleString();
+                            if (typeof ts === 'object' && typeof ts.seconds === 'number') return new Date(ts.seconds * 1000).toLocaleString();
+                            const date = new Date(ts);
+                            return isNaN(date.getTime()) ? 'Unknown time' : date.toLocaleString();
+                          })()}
                         </span>
                       </div>
                     </div>
@@ -228,7 +236,15 @@ export default function AdminLogsPage() {
                         </p>
                       </div>
                       <span className="text-xs text-red-600">
-                        {log.createdAt?.toDate?.()?.toLocaleString() || 'Unknown time'}
+                        {(() => {
+                          const ts = log.createdAt as any;
+                          if (!ts) return 'Unknown time';
+                          if (typeof ts?.toDate === 'function') return ts.toDate().toLocaleString();
+                          if (typeof ts === 'object' && typeof ts._seconds === 'number') return new Date(ts._seconds * 1000).toLocaleString();
+                          if (typeof ts === 'object' && typeof ts.seconds === 'number') return new Date(ts.seconds * 1000).toLocaleString();
+                          const date = new Date(ts);
+                          return isNaN(date.getTime()) ? 'Unknown time' : date.toLocaleString();
+                        })()}
                       </span>
                     </div>
                     <div className="mb-2">
@@ -296,7 +312,15 @@ export default function AdminLogsPage() {
                           )}
                         </div>
                         <span className="text-xs text-slate-500">
-                          {log.createdAt?.toDate?.()?.toLocaleString() || 'Unknown time'}
+                          {(() => {
+                            const ts = log.createdAt as any;
+                            if (!ts) return 'Unknown time';
+                            if (typeof ts?.toDate === 'function') return ts.toDate().toLocaleString();
+                            if (typeof ts === 'object' && typeof ts._seconds === 'number') return new Date(ts._seconds * 1000).toLocaleString();
+                            if (typeof ts === 'object' && typeof ts.seconds === 'number') return new Date(ts.seconds * 1000).toLocaleString();
+                            const date = new Date(ts);
+                            return isNaN(date.getTime()) ? 'Unknown time' : date.toLocaleString();
+                          })()}
                         </span>
                       </div>
                       <p className="text-slate-900 mb-2">{log.message}</p>

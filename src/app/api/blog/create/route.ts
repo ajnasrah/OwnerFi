@@ -48,7 +48,10 @@ export async function POST(request: NextRequest) {
     const slug = generateSlug(title);
 
     // Check if slug already exists
-    const db = getFirestore();
+    const db = await getFirestore();
+    if (!db) {
+      return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
+    }
     const collection = getBlogCollection(brand);
     const existingDocs = await db.collection(collection).where('slug', '==', slug).limit(1).get();
 

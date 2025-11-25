@@ -5,6 +5,61 @@ import { getFirestore } from 'firebase-admin/firestore';
 import { sanitizeDescription } from '@/lib/description-sanitizer';
 import { hasStrictOwnerFinancing } from '@/lib/owner-financing-filter-strict';
 
+// Type for Apify Zillow scraper response
+interface ZillowApifyItem {
+  zpid?: string | number;
+  id?: string | number;
+  homeStatus?: string;
+  price?: number;
+  listPrice?: number;
+  daysOnZillow?: number;
+  description?: string;
+  bedrooms?: number;
+  bathrooms?: number;
+  livingArea?: number;
+  livingAreaValue?: number;
+  squareFoot?: number;
+  lotAreaValue?: number;
+  lotSize?: number;
+  lotSquareFoot?: number;
+  yearBuilt?: number;
+  homeType?: string;
+  propertyType?: string;
+  buildingType?: string;
+  latitude?: number;
+  longitude?: number;
+  zestimate?: number;
+  estimate?: number;
+  rentZestimate?: number;
+  rentEstimate?: number;
+  monthlyHoaFee?: number;
+  hoaFee?: number;
+  hoa?: number;
+  annualTaxAmount?: number;
+  propertyTaxRate?: number;
+  annualHomeownersInsurance?: number;
+  hiResImageLink?: string;
+  responsivePhotos?: Array<{
+    mixedSources?: {
+      jpeg?: Array<{ url: string }>;
+    };
+  }>;
+  propertyImages?: string[];
+  attributionInfo?: {
+    agentName?: string;
+    agentPhoneNumber?: string;
+    agentEmail?: string;
+    brokerName?: string;
+    brokerPhoneNumber?: string;
+  };
+  agentName?: string;
+  agentPhoneNumber?: string;
+  brokerName?: string;
+  address?: {
+    streetAddress?: string;
+  };
+}
+
 // Initialize Firebase Admin
 if (!getApps().length) {
   initializeApp({
@@ -41,11 +96,12 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const MAX_PROPERTIES_PER_RUN = 250; // Process 250 per week (full cycle every ~7 weeks)
-    const BATCH_SIZE = 10; // Small batches to look more human
-    const MIN_DELAY = 5000; // 5 seconds minimum between batches
-    const MAX_DELAY = 8000; // 8 seconds maximum between batches
-    const DELETE_INACTIVE = true; // Set to false to keep inactive properties
+    // Runs every 2 hours (12x/day) × 125 = 1500 properties/day
+    const MAX_PROPERTIES_PER_RUN = 125;
+    const BATCH_SIZE = 25; // Larger batches = fewer API calls
+    const MIN_DELAY = 1500; // 1.5 seconds (Apify handles rate limiting)
+    const MAX_DELAY = 2500; // 2.5 seconds max
+    const DELETE_INACTIVE = true; // Delete sold/pending properties
 
     // Get all properties, then filter/sort in memory
     // This avoids Firestore index issues on first run
@@ -60,18 +116,19 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Sort by lastStatusCheck (null values first, then oldest)
+    // Filter to only properties WITH URLs first, then sort by lastStatusCheck
     const allProperties = allSnapshot.docs
+      .filter(doc => doc.data().url) // FILTER FIRST - only properties with URLs
       .map(doc => ({
         doc,
         lastCheck: doc.data().lastStatusCheck?.toDate?.()?.getTime() || 0,
       }))
       .sort((a, b) => a.lastCheck - b.lastCheck);
 
+    console.log(`📊 [CRON] ${allProperties.length} properties with URLs (${allSnapshot.size - allProperties.length} without URLs skipped)`);
+
     // Take top N for this run
     const selectedDocs = allProperties.slice(0, MAX_PROPERTIES_PER_RUN).map(p => p.doc);
-
-    console.log(`📊 [CRON] Selected ${selectedDocs.length} properties to refresh (oldest first)`);
 
     if (selectedDocs.length === 0) {
       return NextResponse.json({
@@ -95,9 +152,9 @@ export async function GET(request: NextRequest) {
         currentStatus: doc.data().homeStatus,
         lastCheck: doc.data().lastStatusCheck?.toDate?.() || null,
       };
-    }).filter(p => p.url); // Only properties with URLs
+    });
 
-    console.log(`📋 [CRON] ${properties.length} properties with URLs`);
+    console.log(`📋 [CRON] Processing ${properties.length} properties`);
 
     const client = new ApifyClient({ token: process.env.APIFY_API_KEY! });
     const actorId = 'maxcopell/zillow-detail-scraper';
@@ -140,12 +197,15 @@ export async function GET(request: NextRequest) {
           limit: 1000,
         });
 
-        console.log(`   ✓ Got ${items.length} results`);
+        // Cast to typed items
+        const typedItems = items as ZillowApifyItem[];
+
+        console.log(`   ✓ Got ${typedItems.length} results`);
 
         // Update Firestore with new status
         const firestoreBatch = db.batch();
 
-        for (const item of items) {
+        for (const item of typedItems) {
           const zpid = String(item.zpid || item.id || '');
           if (!zpid) continue;
 
@@ -220,22 +280,80 @@ export async function GET(request: NextRequest) {
               console.log(`      Status: ${newStatus} (active, but keywords removed)`);
               console.log(`      ℹ️  If owner financing is added back later, can be imported again`);
             } else {
-              // Update status, price, and description
-              firestoreBatch.update(docRef, {
+              // Update ALL fields from Apify response (full refresh)
+              const updateData: Record<string, unknown> = {
+                // Core status fields
                 homeStatus: newStatus,
                 price: item.price || item.listPrice || 0,
+                listPrice: item.listPrice || item.price || 0,
                 daysOnZillow: item.daysOnZillow || 0,
                 description: sanitizeDescription(item.description),
                 lastStatusCheck: new Date(),
                 lastScrapedAt: new Date(),
-              });
+
+                // Property details
+                bedrooms: item.bedrooms ?? null,
+                bathrooms: item.bathrooms ?? null,
+                squareFoot: item.livingArea || item.livingAreaValue || item.squareFoot || null,
+                lotSquareFoot: item.lotAreaValue || item.lotSize || item.lotSquareFoot || null,
+                yearBuilt: item.yearBuilt ?? null,
+                homeType: item.homeType || item.propertyType || null,
+                buildingType: item.buildingType || item.homeType || null,
+
+                // Location data
+                latitude: item.latitude ?? null,
+                longitude: item.longitude ?? null,
+
+                // Estimates
+                estimate: item.zestimate || item.estimate || null,
+                rentEstimate: item.rentZestimate || item.rentEstimate || null,
+
+                // Costs
+                hoa: item.monthlyHoaFee || item.hoaFee || item.hoa || 0,
+                annualTaxAmount: item.propertyTaxRate ? (item.price * item.propertyTaxRate / 100) : (item.annualTaxAmount || null),
+                propertyTaxRate: item.propertyTaxRate ?? null,
+                annualHomeownersInsurance: item.annualHomeownersInsurance ?? null,
+
+                // Agent info (only update if present in response)
+                ...(item.attributionInfo?.agentName && { agentName: item.attributionInfo.agentName }),
+                ...(item.attributionInfo?.agentPhoneNumber && { agentPhoneNumber: item.attributionInfo.agentPhoneNumber }),
+                ...(item.attributionInfo?.agentEmail && { agentEmail: item.attributionInfo.agentEmail }),
+                ...(item.attributionInfo?.brokerName && { brokerName: item.attributionInfo.brokerName }),
+                ...(item.attributionInfo?.brokerPhoneNumber && { brokerPhoneNumber: item.attributionInfo.brokerPhoneNumber }),
+                // Also check direct fields (different Apify output formats)
+                ...(item.agentName && { agentName: item.agentName }),
+                ...(item.agentPhoneNumber && { agentPhoneNumber: item.agentPhoneNumber }),
+                ...(item.brokerName && { brokerName: item.brokerName }),
+
+                // Images (only update if we have new ones)
+                ...(item.hiResImageLink && { firstPropertyImage: item.hiResImageLink }),
+                ...(item.responsivePhotos?.length && {
+                  propertyImages: item.responsivePhotos.map((p: { mixedSources?: { jpeg?: Array<{ url: string }> } }) =>
+                    p.mixedSources?.jpeg?.[0]?.url
+                  ).filter(Boolean),
+                  photoCount: item.responsivePhotos.length,
+                }),
+                // Also check direct propertyImages field
+                ...(item.propertyImages?.length && {
+                  propertyImages: item.propertyImages,
+                  photoCount: item.propertyImages.length,
+                  firstPropertyImage: item.propertyImages[0],
+                }),
+              };
+
+              // Remove null/undefined values to avoid overwriting good data
+              const cleanedData = Object.fromEntries(
+                Object.entries(updateData).filter(([_, v]) => v !== null && v !== undefined)
+              );
+
+              firestoreBatch.update(docRef, cleanedData);
               updated++;
             }
           }
         }
 
         await firestoreBatch.commit();
-        console.log(`   ✅ Batch complete: ${items.length} processed (${updated} updated, ${deleted} deleted)`);
+        console.log(`   ✅ Batch complete: ${typedItems.length} processed (${updated} updated, ${deleted} deleted)`);
 
         // Random delay between batches to look more human
         if (i + BATCH_SIZE < properties.length) {

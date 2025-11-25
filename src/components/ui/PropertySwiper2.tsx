@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, memo, useCallback } from 'react';
 import { PropertyListing } from '@/lib/property-schema';
 import { PropertyCard } from './PropertyCard';
 
@@ -13,7 +13,8 @@ interface PropertySwiper2Props {
   isLoading?: boolean;
 }
 
-export function PropertySwiper2({
+// Wrapped in React.memo to prevent unnecessary re-renders when parent state changes
+export const PropertySwiper2 = memo(function PropertySwiper2({
   properties,
   onLike,
   onPass,
@@ -342,4 +343,7 @@ export function PropertySwiper2({
 
     </div>
   );
-}
+});
+
+// Display name for React DevTools debugging
+PropertySwiper2.displayName = 'PropertySwiper2';

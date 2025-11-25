@@ -335,16 +335,10 @@ async function retryOperation<T>(
  * Get workflow for specific brand
  */
 async function getWorkflowForBrand(
-  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit' | 'property' | 'vassdistro' | 'abdullah' | 'personal',
+  brand: 'carz' | 'ownerfi' | 'property' | 'vassdistro' | 'abdullah' | 'personal',
   workflowId: string
 ): Promise<any | null> {
-  if (brand === 'podcast') {
-    const { getPodcastWorkflowById } = await import('@/lib/feed-store-firestore');
-    return await getPodcastWorkflowById(workflowId);
-  } else if (brand === 'benefit') {
-    const { getBenefitWorkflowById } = await import('@/lib/feed-store-firestore');
-    return await getBenefitWorkflowById(workflowId);
-  } else if (brand === 'property') {
+  if (brand === 'property') {
     const { getPropertyVideoById } = await import('@/lib/feed-store-firestore');
     return await getPropertyVideoById(workflowId);
   } else if (brand === 'abdullah') {
@@ -368,17 +362,11 @@ async function getWorkflowForBrand(
  * Update workflow for specific brand
  */
 async function updateWorkflowForBrand(
-  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit' | 'property' | 'vassdistro' | 'abdullah' | 'personal',
+  brand: 'carz' | 'ownerfi' | 'property' | 'vassdistro' | 'abdullah' | 'personal',
   workflowId: string,
   updates: Record<string, any>
 ): Promise<void> {
-  if (brand === 'podcast') {
-    const { updatePodcastWorkflow } = await import('@/lib/feed-store-firestore');
-    await updatePodcastWorkflow(workflowId, updates);
-  } else if (brand === 'benefit') {
-    const { updateBenefitWorkflow } = await import('@/lib/feed-store-firestore');
-    await updateBenefitWorkflow(workflowId, updates);
-  } else if (brand === 'property') {
+  if (brand === 'property') {
     const { updatePropertyVideo } = await import('@/lib/feed-store-firestore');
     await updatePropertyVideo(workflowId, updates);
   } else if (brand === 'abdullah') {
@@ -448,24 +436,7 @@ async function getCaptionAndTitle(
   let caption: string;
   let title: string;
 
-  if (brand === 'podcast') {
-    caption = workflow.episodeTitle || 'New Podcast Episode';
-    title = `Episode #${workflow.episodeNumber}: ${workflow.episodeTitle || 'New Episode'}`;
-  } else if (brand === 'benefit') {
-    if (!workflow.caption || !workflow.title) {
-      const benefitId = workflow.benefitId;
-      if (benefitId) {
-        const { getBenefitById, generateBenefitCaption, generateBenefitTitle } = await import('@/lib/benefit-content');
-        const benefit = getBenefitById(benefitId);
-        if (benefit) {
-          caption = workflow.caption || generateBenefitCaption(benefit);
-          title = workflow.title || generateBenefitTitle(benefit);
-        }
-      }
-    }
-    caption = caption! || workflow.caption || 'Learn about owner financing! 🏡';
-    title = title! || workflow.title || 'Owner Finance Benefits';
-  } else if (brand === 'property') {
+  if (brand === 'property') {
     caption = workflow.caption || 'New owner finance property for sale! 🏡';
     title = workflow.title || 'Property For Sale';
   } else if (brand === 'ownerfi') {
@@ -478,8 +449,8 @@ async function getCaptionAndTitle(
     caption = workflow.caption || workflow.articleTitle || 'Check out this vape industry update! 🔥';
     title = workflow.title || workflow.articleTitle || 'Industry Update';
   } else {
-    caption = workflow.caption || workflow.articleTitle || workflow.episodeTitle || 'Check out this video! 🔥';
-    title = workflow.title || workflow.articleTitle || workflow.episodeTitle || 'Viral Video';
+    caption = workflow.caption || workflow.articleTitle || 'Check out this video! 🔥';
+    title = workflow.title || workflow.articleTitle || 'Viral Video';
   }
 
   return { caption, title };

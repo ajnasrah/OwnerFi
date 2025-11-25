@@ -144,9 +144,12 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       creditPackageId: creditPackId,
       createdAt: new Date()
     });
-    
+
   } catch (error) {
-    // Log error but don't fail the webhook
+    // CRITICAL: Re-throw to signal Stripe to retry the webhook
+    // Silent failures here mean customers pay but don't get credits!
+    console.error('❌ [STRIPE] Failed to process checkout:', error);
+    throw error;
   }
 }
 
@@ -182,8 +185,8 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
       updatedAt: new Date()
     });
   } catch (error) {
-    // Error:('Error in handleSubscriptionUpdated:', error);
-    // Error occurred
+    console.error('❌ [STRIPE] Error in handleSubscriptionUpdated:', error);
+    throw error; // Re-throw so Stripe retries
   }
 }
 
@@ -215,8 +218,8 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
       updatedAt: new Date()
     });
   } catch (error) {
-    // Error:('Error in handleSubscriptionDeleted:', error);
-    // Error occurred
+    console.error('❌ [STRIPE] Error in handleSubscriptionDeleted:', error);
+    throw error; // Re-throw so Stripe retries
   }
 }
 
@@ -279,8 +282,9 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
       createdAt: new Date()
     });
   } catch (error) {
-    // Error:('Error in handlePaymentSucceeded:', error);
-    // Error occurred
+    // CRITICAL: Payment succeeded but credits weren't added - must retry!
+    console.error('❌ [STRIPE] Error in handlePaymentSucceeded:', error);
+    throw error; // Re-throw so Stripe retries
   }
 }
 
@@ -327,8 +331,8 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
       createdAt: new Date()
     });
   } catch (error) {
-    // Error:('Error in handlePaymentFailed:', error);
-    // Error occurred
+    console.error('❌ [STRIPE] Error in handlePaymentFailed:', error);
+    throw error; // Re-throw so Stripe retries
   }
 }
 

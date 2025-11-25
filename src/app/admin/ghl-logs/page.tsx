@@ -332,7 +332,14 @@ export default function GoHighLevelLogsPage() {
                         <span className="text-slate-400">{log.payload.trigger.replace(/_/g, ' ')}</span>
                       </td>
                       <td className="px-4 py-3 text-sm text-slate-400">
-                        {new Date(log.createdAt.seconds * 1000).toLocaleString()}
+                        {(() => {
+                          const ts = log.createdAt as any;
+                          if (!ts) return 'N/A';
+                          if (typeof ts === 'object' && typeof ts._seconds === 'number') return new Date(ts._seconds * 1000).toLocaleString();
+                          if (typeof ts === 'object' && typeof ts.seconds === 'number') return new Date(ts.seconds * 1000).toLocaleString();
+                          const date = new Date(ts);
+                          return isNaN(date.getTime()) ? 'N/A' : date.toLocaleString();
+                        })()}
                       </td>
                       <td className="px-4 py-3 text-sm text-slate-400">
                         {log.processingTimeMs ? `${log.processingTimeMs}ms` : '-'}

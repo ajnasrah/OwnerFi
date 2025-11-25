@@ -279,12 +279,22 @@ export async function GET(request: NextRequest) {
     // Location + property filters (bedrooms, bathrooms, sqft, asking price)
     const nearbyProperties = allProperties.filter((property: PropertyListing & { id: string }) => {
       const propertyCity = property.city?.split(',')[0].trim();
+      const propCityLower = propertyCity?.toLowerCase();
 
       // Must be different city (state already filtered in query)
-      if (propertyCity?.toLowerCase() === searchCity.toLowerCase()) return false;
+      if (propCityLower === searchCity.toLowerCase()) return false;
 
-      // Check if property's city is in the list of nearby cities
-      const locationMatch = propertyCity && nearbyCityNames.has(propertyCity.toLowerCase());
+      // Check if property's city is in the list of nearby cities (exact or partial match)
+      // Partial match handles cases like "Iowa" matching "Iowa Park"
+      const locationMatch = propCityLower && (
+        nearbyCityNames.has(propCityLower) ||
+        Array.from(nearbyCityNames).some(buyerCity =>
+          propCityLower.startsWith(buyerCity + ' ') ||
+          propCityLower.includes(' ' + buyerCity) ||
+          buyerCity.startsWith(propCityLower + ' ') ||
+          buyerCity.includes(' ' + propCityLower)
+        )
+      );
       return locationMatch && matchesPropertyFilters(property);
     });
 

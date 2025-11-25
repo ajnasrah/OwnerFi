@@ -14,6 +14,58 @@ import { logError } from '@/lib/logger';
 import { ExtendedSession } from '@/types/session';
 import { BuyerAdminView, firestoreToBuyerProfile, toBuyerAdminView } from '@/lib/view-models';
 import { convertTimestampToDate } from '@/lib/firebase-models';
+import { getCitiesWithinRadiusComprehensive } from '@/lib/comprehensive-cities';
+
+// Property filter interface matching buyer profile fields
+interface BuyerFilters {
+  minBedrooms?: number;
+  maxBedrooms?: number;
+  minBathrooms?: number;
+  maxBathrooms?: number;
+  minSquareFeet?: number;
+  maxSquareFeet?: number;
+  minPrice?: number;
+  maxPrice?: number;
+}
+
+// Helper function to check if property matches buyer's filters
+// Matches the logic in /api/buyer/properties/route.ts
+function matchesPropertyFilters(property: any, filters: BuyerFilters): boolean {
+  // Bedrooms filter
+  if (filters.minBedrooms !== undefined && property.bedrooms < filters.minBedrooms) {
+    return false;
+  }
+  if (filters.maxBedrooms !== undefined && property.bedrooms > filters.maxBedrooms) {
+    return false;
+  }
+
+  // Bathrooms filter
+  if (filters.minBathrooms !== undefined && property.bathrooms < filters.minBathrooms) {
+    return false;
+  }
+  if (filters.maxBathrooms !== undefined && property.bathrooms > filters.maxBathrooms) {
+    return false;
+  }
+
+  // Square feet filter
+  if (filters.minSquareFeet !== undefined && property.squareFeet && property.squareFeet < filters.minSquareFeet) {
+    return false;
+  }
+  if (filters.maxSquareFeet !== undefined && property.squareFeet && property.squareFeet > filters.maxSquareFeet) {
+    return false;
+  }
+
+  // Asking price filter
+  const askingPrice = property.listPrice || property.price;
+  if (filters.minPrice !== undefined && askingPrice && askingPrice < filters.minPrice) {
+    return false;
+  }
+  if (filters.maxPrice !== undefined && askingPrice && askingPrice > filters.maxPrice) {
+    return false;
+  }
+
+  return true;
+}
 
 // Helper function to calculate distance between two coordinates (Haversine formula)
 function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
@@ -80,7 +132,6 @@ export async function GET(request: NextRequest) {
 
     // Add pagination support and radius filtering
     const { searchParams } = new URL(request.url);
-    const limit = parseInt(searchParams.get('limit') || '100');
     const searchLat = searchParams.get('lat');
     const searchLng = searchParams.get('lng');
     const searchRadius = searchParams.get('radius');
@@ -111,10 +162,11 @@ export async function GET(request: NextRequest) {
     const likedCountsMap = new Map<string, number>();
 
     // Group buyers by state to batch property queries
+    // No budget requirement - count properties based on whatever filters buyer has set
     const buyersByState = new Map<string, any[]>();
     buyerProfilesMap.forEach((buyerProfile, userId) => {
       const state = buyerProfile.preferredState || buyerProfile.state;
-      if (!state || !buyerProfile.maxMonthlyPayment || !buyerProfile.maxDownPayment) {
+      if (!state) {
         matchedCountsMap.set(userId, 0);
         return;
       }
@@ -157,7 +209,11 @@ export async function GET(request: NextRequest) {
       statePropertiesResults.map(r => [r.state, r.properties])
     );
 
-    // Calculate matches for each buyer using their pre-computed filter
+    // Cache for city radius calculations (avoid recalculating for buyers in same city)
+    const cityRadiusCache = new Map<string, Set<string>>();
+
+    // Calculate matches for each buyer using their filters
+    // Matches the logic in /api/buyer/properties/route.ts
     buyerProfilesMap.forEach((buyerProfile, userId) => {
       const state = buyerProfile.preferredState || buyerProfile.state;
       if (!state) {
@@ -171,36 +227,83 @@ export async function GET(request: NextRequest) {
         return;
       }
 
-      // Use pre-computed nearby cities filter (🚀 99.95% faster)
-      const nearbyCityNames = new Set(
-        (buyerProfile.filter?.nearbyCities || []).map((c: string) => c.toLowerCase())
-      );
+      // Get nearby cities - use pre-computed filter or calculate on-the-fly as fallback
+      let nearbyCityNames: Set<string>;
+      if (buyerProfile.filter?.nearbyCities && buyerProfile.filter.nearbyCities.length > 0) {
+        // Use pre-computed nearby cities (fast path)
+        nearbyCityNames = new Set(
+          buyerProfile.filter.nearbyCities.map((c: string) => c.toLowerCase())
+        );
+      } else {
+        // Fallback: Calculate on-the-fly if no filter exists (with caching)
+        const searchCity = buyerProfile.preferredCity || buyerProfile.city;
+        if (searchCity) {
+          const cacheKey = `${searchCity.toLowerCase()}_${state}`;
+          if (cityRadiusCache.has(cacheKey)) {
+            // Use cached result
+            nearbyCityNames = cityRadiusCache.get(cacheKey)!;
+          } else {
+            // Calculate and cache
+            const nearbyCitiesList = getCitiesWithinRadiusComprehensive(searchCity, state, 30);
+            nearbyCityNames = new Set(
+              nearbyCitiesList.map(city => city.name.toLowerCase())
+            );
+            cityRadiusCache.set(cacheKey, nearbyCityNames);
+          }
+        } else {
+          // No city specified - show all properties in state
+          nearbyCityNames = new Set();
+        }
+      }
 
-      // Count matching properties
+      // Extract buyer's property filters (whatever they've set)
+      const buyerFilters: BuyerFilters = {
+        minBedrooms: buyerProfile.minBedrooms,
+        maxBedrooms: buyerProfile.maxBedrooms,
+        minBathrooms: buyerProfile.minBathrooms,
+        maxBathrooms: buyerProfile.maxBathrooms,
+        minSquareFeet: buyerProfile.minSquareFeet,
+        maxSquareFeet: buyerProfile.maxSquareFeet,
+        minPrice: buyerProfile.minPrice,
+        maxPrice: buyerProfile.maxPrice,
+      };
+
+      // Count matching properties (same logic as buyer properties API)
       const matchCount = stateProperties.filter((property: any) => {
         const propCity = property.city?.split(',')[0].trim().toLowerCase();
 
-        // Must be in buyer's search area (using pre-computed filter)
-        if (propCity && nearbyCityNames.size > 0) {
-          if (!nearbyCityNames.has(propCity)) {
+        // Location filter: Must be in buyer's search area
+        if (nearbyCityNames.size > 0 && propCity) {
+          // Check for exact match OR partial match (e.g., "Iowa" matches "Iowa Park")
+          const hasMatch = nearbyCityNames.has(propCity) ||
+            Array.from(nearbyCityNames).some(buyerCity =>
+              propCity.startsWith(buyerCity + ' ') || // "iowa park" starts with "iowa "
+              propCity.includes(' ' + buyerCity) ||   // contains " iowa"
+              buyerCity.startsWith(propCity + ' ') || // buyer's "iowa park" matches property "iowa"
+              buyerCity.includes(' ' + propCity)
+            );
+          if (!hasMatch) {
             return false; // Property not in buyer's radius
           }
         }
 
-        // Budget filtering disabled - show all properties in radius
-        // (Matches the buyer properties API logic at line 208-216)
+        // Apply property filters (beds, baths, sqft, price)
+        if (!matchesPropertyFilters(property, buyerFilters)) {
+          return false;
+        }
+
         return true;
       }).length;
 
       matchedCountsMap.set(userId, matchCount);
     });
 
-    // 🆕 Get liked counts from BOTH sources:
+    // Get liked counts from BOTH sources:
     // 1. likedPropertyIds array in buyerProfiles (current system)
     // 2. likedProperties collection (legacy system - some buyers may have data here)
     const allUserIds = Array.from(buyerProfilesMap.keys());
 
-    // Query legacy likedProperties collection AND propertyBuyerMatches for all buyers in parallel
+    // Query legacy likedProperties collection for all buyers in parallel
     const likedPropertiesPromises = allUserIds.map(async (userId) => {
       const likedQuery = query(
         collection(db, 'likedProperties'),
@@ -210,36 +313,15 @@ export async function GET(request: NextRequest) {
       return { userId, count: snapshot.size };
     });
 
-    const matchedPropertiesPromises = allUserIds.map(async (userId) => {
-      const matchedQuery = query(
-        collection(db, 'propertyBuyerMatches'),
-        where('buyerId', '==', userId)
-      );
-      const snapshot = await getDocs(matchedQuery);
-      return { userId, count: snapshot.size };
-    });
-
-    const [legacyLikedResults, storedMatchedResults] = await Promise.all([
-      Promise.all(likedPropertiesPromises),
-      Promise.all(matchedPropertiesPromises)
-    ]);
-
+    const legacyLikedResults = await Promise.all(likedPropertiesPromises);
     const legacyLikedMap = new Map(legacyLikedResults.map(r => [r.userId, r.count]));
-    const storedMatchedMap = new Map(storedMatchedResults.map(r => [r.userId, r.count]));
 
     // Calculate liked counts combining both sources (deduplicated by taking max)
     buyerProfilesMap.forEach((buyerProfile, userId) => {
       const arrayCount = buyerProfile.likedPropertyIds?.length || 0;
       const legacyCount = legacyLikedMap.get(userId) || 0;
       // Use the higher count since they may have different data
-      // In practice, arrayCount should be authoritative, but legacy might have unmigrated data
       likedCountsMap.set(userId, Math.max(arrayCount, legacyCount));
-
-      // Also update matched count to combine on-the-fly calculation with stored matches
-      const calculatedMatchCount = matchedCountsMap.get(userId) || 0;
-      const storedMatchCount = storedMatchedMap.get(userId) || 0;
-      // Use the higher count - stored matches might have historical data
-      matchedCountsMap.set(userId, Math.max(calculatedMatchCount, storedMatchCount));
     });
 
     const buyers: BuyerAdminView[] = [];

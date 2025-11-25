@@ -40,7 +40,7 @@ const FINANCING_PATTERN = /\b(owner|seller|creative)[\s\-/_]*(financing?|finance
 /**
  * Negation indicators
  */
-const NEGATION_WORDS = ['no', 'not', 'never', 'none', 'without'];
+const NEGATION_WORDS = ['no', 'not', 'never', 'none', 'without', 'cannot', "can't", 'cant'];
 
 /**
  * Rejection phrases (when appearing near financing terms)
@@ -55,6 +55,12 @@ const REJECTION_PHRASES = [
   'not offered',
   'not offering',
   'not interested',
+  // NEW: Missing phrases that caused false positives
+  'is not an option',
+  'not an option',
+  'is unavailable',
+  'will not consider',
+  'will not entertain',
 ];
 
 /**
@@ -73,6 +79,36 @@ const CASH_ONLY_PATTERNS = [
   /\bconventional\s+financing\s+only\b/i,
   /\bconventional\s+loan\s+only\b/i,
   /\bcash\s+and\s+conventional\s+only\b/i,
+];
+
+/**
+ * Lender financing indicators - when "flexible financing" is actually from a LENDER, not owner
+ * These patterns indicate the financing is from a mortgage company, not owner/seller
+ */
+const LENDER_FINANCING_PATTERNS = [
+  /\bpreferred\s+lender\b/i,
+  /\bour\s+lender\b/i,
+  /\bwith\s+lender\b/i,
+  /\bthrough\s+lender\b/i,
+  /\bmortgage\s+company\b/i,
+  /\block\s+in\s+a\s+rate\b/i,       // Lender language
+  /\brate\s+as\s+low\s+as\b/i,       // Lender rate advertisement
+  /\bqualified\s+buyers?\s+.*lender\b/i,
+  /\bspecial\s+financing\s+w\/.*lender\b/i,
+];
+
+/**
+ * Historical reference patterns - mentions of past seller financing, not current offer
+ */
+const HISTORICAL_PATTERNS = [
+  /\bseller\s*financ\w*\s+foreclosure\b/i,    // "seller financed foreclosure"
+  /\bowner\s*financ\w*\s+foreclosure\b/i,     // "owner financed foreclosure"
+  /\bafter\s+a\s+seller\s*financ/i,           // "after a seller financed..."
+  /\bafter\s+a\s+owner\s*financ/i,            // "after a owner financed..."
+  /\bprevious\s+seller\s*financ/i,            // "previous seller financing"
+  /\bprevious\s+owner\s*financ/i,             // "previous owner financing"
+  /\bformer\s+seller\s*financ/i,              // "former seller financing"
+  /\bformer\s+owner\s*financ/i,               // "former owner financing"
 ];
 
 export interface NegativeDetectionResult {
@@ -213,6 +249,66 @@ function detectCashOnly(text: string): NegativeDetectionResult | null {
 }
 
 /**
+ * STRATEGY 5: Detect lender financing disguised as owner financing
+ * If description mentions "flexible financing" + "preferred lender", it's NOT owner finance
+ *
+ * EXCEPTION: If description ALSO mentions explicit owner/seller financing, allow it
+ * (some properties offer BOTH lender and owner financing options)
+ */
+function detectLenderFinancing(text: string): NegativeDetectionResult | null {
+  // Check if the text mentions both financing terms AND lender indicators
+  const hasFlexibleTerms = /\b(flexible|creative|special)\s*(financing|terms)\b/i.test(text);
+
+  if (!hasFlexibleTerms) {
+    return null;
+  }
+
+  // EXCEPTION: If there's ALSO explicit owner/seller financing mentioned, don't reject
+  // This handles properties that offer BOTH options
+  const hasExplicitOwnerFinancing = /\b(owner|seller)\s*(financ|carry|terms)/i.test(text) ||
+                                    /\b(rent.?to.?own|lease.?option|lease.?purchase)\b/i.test(text);
+
+  if (hasExplicitOwnerFinancing) {
+    return null; // Don't reject - it has real owner financing
+  }
+
+  // If it has flexible terms but no explicit owner financing, check for lender indicators
+  for (const pattern of LENDER_FINANCING_PATTERNS) {
+    const match = text.match(pattern);
+    if (match) {
+      return {
+        isNegative: true,
+        confidence: 'high',
+        reason: 'Flexible financing from LENDER, not owner/seller',
+        matchedPattern: match[0],
+      };
+    }
+  }
+
+  return null;
+}
+
+/**
+ * STRATEGY 6: Detect historical references to owner financing
+ * "seller financed foreclosure" = PAST, not current offer
+ */
+function detectHistoricalReference(text: string): NegativeDetectionResult | null {
+  for (const pattern of HISTORICAL_PATTERNS) {
+    const match = text.match(pattern);
+    if (match) {
+      return {
+        isNegative: true,
+        confidence: 'high',
+        reason: 'Historical reference to owner financing, not current offer',
+        matchedPattern: match[0],
+      };
+    }
+  }
+
+  return null;
+}
+
+/**
  * Main detection function - runs all strategies
  *
  * @param description - Property description text
@@ -232,7 +328,7 @@ export function detectNegativeFinancing(
   // Run all detection strategies in order of confidence
   // Stop at first match for performance
 
-  // Strategy 1: Direct negation (e.g., "no owner financing")
+  // Strategy 1: Direct negation (e.g., "no owner financing", "cannot do owner financing")
   const directNegation = detectDirectNegation(description);
   if (directNegation) return directNegation;
 
@@ -240,13 +336,21 @@ export function detectNegativeFinancing(
   const listNegation = detectListStructureNegation(description);
   if (listNegation) return listNegation;
 
-  // Strategy 3: Rejection phrases (e.g., "seller financing not accepted")
+  // Strategy 3: Rejection phrases (e.g., "seller financing not accepted", "is not an option")
   const rejectionPhrase = detectRejectionPhrase(description);
   if (rejectionPhrase) return rejectionPhrase;
 
   // Strategy 4: Cash only requirements
   const cashOnly = detectCashOnly(description);
   if (cashOnly) return cashOnly;
+
+  // Strategy 5: Lender financing (e.g., "flexible financing with preferred lender")
+  const lenderFinancing = detectLenderFinancing(description);
+  if (lenderFinancing) return lenderFinancing;
+
+  // Strategy 6: Historical references (e.g., "seller financed foreclosure")
+  const historicalRef = detectHistoricalReference(description);
+  if (historicalRef) return historicalRef;
 
   // No negative indicators found
   return {

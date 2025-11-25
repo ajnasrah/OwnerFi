@@ -92,6 +92,10 @@
     {
       "path": "/api/cron/process-agent-outreach-queue",
       "schedule": "0 */4 * * *"
+    },
+    {
+      "path": "/api/cron/sync-youtube-analytics",
+      "schedule": "0 6 * * *"
     }
   ],
   "functions": {
@@ -166,6 +170,9 @@
     },
     "src/app/api/cron/process-agent-outreach-queue/route.ts": {
       "maxDuration": 300
+    },
+    "src/app/api/cron/sync-youtube-analytics/route.ts": {
+      "maxDuration": 120
     },
     "src/app/api/**/*.ts": {
       "maxDuration": 30

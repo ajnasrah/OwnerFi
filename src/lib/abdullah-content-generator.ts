@@ -39,83 +39,97 @@ export async function generateSingleAbdullahScript(
     throw new Error('OpenAI API key not configured');
   }
 
+  // OPTIMIZED BASED ON YOUTUBE ANALYTICS - "Deal Mastery" video (1,374 views, 10x avg)
+  // Best performing times: 8PM (358 avg), 3PM (340 avg), 12PM (325 avg)
+  // Top content: Business/Deals, Financial wisdom, Entrepreneurship
   const themePrompts = {
     mindset: {
       description: 'morning motivation',
-      postTime: '9:00 AM',
-      focus: 'Morning energy, positive thinking, setting intentions, overcoming self-doubt',
-      target: 'People starting their day who need motivation'
+      postTime: '12:00 PM', // Moved to 12PM (3rd best slot)
+      focus: 'Morning energy, crushing self-doubt, taking action TODAY, winning mentality',
+      target: 'Entrepreneurs ready to take action'
     },
     business: {
-      description: 'entrepreneurship insights',
-      postTime: '12:00 PM',
-      focus: 'Deals, sales, entrepreneurship, hustle, business strategy, client acquisition',
-      target: 'Entrepreneurs during lunch break consuming content'
+      description: 'deal mastery & entrepreneurship', // HIGHEST PERFORMING THEME
+      postTime: '8:00 PM', // BEST PERFORMING TIME SLOT
+      focus: 'Closing deals, landing big clients, showcasing value, negotiation tactics, deal-making secrets',
+      target: 'Ambitious entrepreneurs seeking to level up their deal-making skills'
     },
     money: {
       description: 'financial wisdom',
-      postTime: '3:00 PM',
-      focus: 'Wealth building, financial mindset, breaking poverty thinking, investments',
-      target: 'People thinking about wealth during afternoon'
+      postTime: '3:00 PM', // 2nd best slot
+      focus: 'Building wealth, smart money moves, breaking limiting beliefs about money, investment mindset',
+      target: 'People looking to transform their financial future'
     },
     freedom: {
       description: 'lifestyle freedom',
-      postTime: '6:00 PM',
-      focus: 'Time freedom, location independence, living on your terms, breaking the 9-5',
-      target: 'People ending work day dreaming of freedom'
+      postTime: '8:00 PM', // Moved to best slot
+      focus: 'Escaping the 9-5, building income streams, living on your terms, time freedom',
+      target: 'People dreaming of escaping the rat race'
     },
     story: {
-      description: 'personal reflection',
-      postTime: '9:00 PM',
-      focus: 'Personal experience, lesson learned, vulnerability, wins and losses',
-      target: 'People winding down seeking inspiration'
+      description: 'deal stories & lessons learned',
+      postTime: '8:00 PM', // Moved to best slot
+      focus: 'Real deal experiences, lessons from wins and losses, behind-the-scenes of big deals',
+      target: 'People seeking real entrepreneurship stories'
     }
   };
 
   const config = themePrompts[theme];
 
-  const systemPrompt = `You are a personal brand content creator for Abdullah, a successful entrepreneur who shares daily motivation and business wisdom on social media.
+  // OPTIMIZED PROMPT based on viral "Deal Mastery" video (1,374 views, 10x average)
+  const systemPrompt = `You are a personal brand content creator for Abdullah, a successful entrepreneur who shares deal-making secrets and business wisdom on social media.
 
 ABDULLAH'S VOICE:
-- Real talk, no BS
-- Vulnerable but confident
-- Shares both wins and losses
-- Focuses on action over theory
-- Hustler mentality but values freedom
+- Real talk, no BS - speaks like a friend giving advice
+- Confident deal-maker who closes big deals
+- Shares real tactics, not generic motivation
+- Action-focused: "Here's exactly what to do..."
 - Money-focused but purpose-driven
+- Speaks to ambitious entrepreneurs who want MORE
 
-SCRIPT REQUIREMENTS:
-- Length: 40-60 words (reads in 30-45 seconds)
+SCRIPT REQUIREMENTS (CRITICAL FOR VIRALITY):
+- Length: 35-50 words (reads in 20-30 seconds) - concise but complete thought
 - First-person perspective (speak as Abdullah)
-- Start with a STRONG hook (first 3 seconds crucial)
-- Include call-to-action or question at end
-- Authentic, conversational tone
+- Start with a CURIOSITY HOOK (first 2-3 seconds crucial)
+- End with a thought-provoking question OR clear takeaway
+- Conversational, punchy sentences - NOT motivational fluff
 - NO hashtags or emojis in script (those go in caption)
-- Must be valuable, not just motivational fluff
+- Must deliver ONE specific valuable insight or tactic
 
-HOOK FORMULAS:
-- Shocking: "I made $50k this month doing absolutely nothing..."
-- Contrarian: "Everyone tells you to save money. That's terrible advice."
-- Story: "Five years ago I was broke. Today I..."
-- Question: "Want to know the #1 mistake keeping you poor?"
-- Pattern interrupt: "Stop trading time for money. Here's why..."`;
+TOP PERFORMING HOOK FORMULAS (USE THESE):
+- Curiosity: "Unlock the secrets to landing big deals..."
+- Deal Mastery: "Here's how I close deals others can't..."
+- Value Reveal: "The #1 thing separating 6-figure deals from small ones..."
+- Contrarian: "Everyone's chasing clients. I let them come to me..."
+- Story Tease: "This one deal changed everything..."
+- Question: "How do you showcase YOUR business's value?"
+
+CONTENT THEMES THAT PERFORM BEST:
+- Deal-making and closing tactics
+- Showcasing value to clients
+- Business growth strategies
+- Entrepreneurship insights
+- Financial wisdom and wealth building`;
 
   const userPrompt = `Generate ONE video script for Abdullah's ${config.description} content.
 
 Theme: ${theme.toUpperCase()}
-Posting Time: ${config.postTime}
 Target Audience: ${config.target}
 Content Focus: ${config.focus}
 
 Return ONLY a JSON object with this EXACT format:
 {
-  "script": "40-60 word script here",
-  "title": "3-5 word catchy title",
-  "caption": "Instagram/TikTok caption with 2-3 emojis and engagement question at end",
-  "hook": "First sentence of the script"
+  "script": "35-50 word script - deliver ONE valuable insight with a punchy hook and strong ending",
+  "title": "2-3 word punchy title (like 'Deal Mastery' or 'Close More')",
+  "caption": "Curiosity-driven caption (like 'Unlock the secrets to...') with 2 emojis, engagement question at end, then these hashtags: #Entrepreneurship #BusinessGrowth #DealMaking #Success",
+  "hook": "First sentence of the script (this is the MOST important part)"
 }
 
-Make it unique, valuable, and optimized for short-form video virality.`;
+EXAMPLES OF WINNING TITLES: "Deal Mastery", "Close More", "Value First", "Money Moves"
+EXAMPLE CAPTION FORMAT: "Unlock the secrets to landing big deals 📈💼 How do you showcase your business's value? #Entrepreneurship #BusinessGrowth"
+
+Make it punchy, valuable, and between 35-50 words. Deliver ONE clear insight.`;
 
   const maxRetries = 3;
   let retryCount = 0;
@@ -246,12 +260,14 @@ export async function generateAbdullahDailyContent(
 export function validateAbdullahScript(video: AbdullahVideo): { valid: boolean; errors: string[] } {
   const errors: string[] = [];
 
-  if (!video.script || video.script.length < 40) {
-    errors.push('Script too short (min 40 characters)');
+  // Updated: Shorter scripts (30-40 words = ~150-250 chars) perform better
+  if (!video.script || video.script.length < 100) {
+    errors.push('Script too short (min 100 characters)');
   }
 
-  if (video.script && video.script.length > 500) {
-    errors.push('Script too long (max 500 characters)');
+  // Shorter is better for retention - max 300 chars (~45 words)
+  if (video.script && video.script.length > 300) {
+    errors.push('Script too long (max 300 characters for better retention)');
   }
 
   return {

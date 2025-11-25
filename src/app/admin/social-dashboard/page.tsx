@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import WorkflowRecoveryButtons from '@/components/WorkflowRecoveryButtons';
 import AnalyticsDashboard from '@/components/AnalyticsDashboard';
+import YouTubeAnalyticsDashboard from '@/components/YouTubeAnalyticsDashboard';
 
 interface SchedulerStatus {
   timestamp: string;
@@ -247,7 +248,7 @@ interface BrandAnalytics {
 export default function SocialMediaDashboard() {
   const { data: session, status: authStatus } = useSession();
   const router = useRouter();
-  const [activeSubTab, setActiveSubTab] = useState<'carz' | 'ownerfi' | 'vassdistro' | 'ownerfi-benefits' | 'ownerfi-properties' | 'ownerfi-properties-spanish' | 'abdullah' | 'abdullah-podcast' | 'analytics'>('carz');
+  const [activeSubTab, setActiveSubTab] = useState<'carz' | 'ownerfi' | 'vassdistro' | 'ownerfi-benefits' | 'ownerfi-properties' | 'ownerfi-properties-spanish' | 'abdullah' | 'abdullah-podcast' | 'analytics' | 'youtube-analytics'>('carz');
   const [status, setStatus] = useState<SchedulerStatus | null>(null);
   const [workflows, setWorkflows] = useState<WorkflowLogs | null>(null);
   const [podcastWorkflows, setPodcastWorkflows] = useState<PodcastWorkflowLogs | null>(null);
@@ -271,6 +272,18 @@ export default function SocialMediaDashboard() {
   const [copiedRecId, setCopiedRecId] = useState<string | null>(null);
   const [refreshingAnalytics, setRefreshingAnalytics] = useState(false);
   const [abdullahQueueStats, setAbdullahQueueStats] = useState<any>(null);
+  const [recentScripts, setRecentScripts] = useState<Array<{
+    id: string;
+    title: string;
+    script: string;
+    caption: string;
+    theme: string;
+    hook: string;
+    status: string;
+    createdAt: number;
+    finalVideoUrl?: string;
+  }>>([]);
+  const [copiedScriptId, setCopiedScriptId] = useState<string | null>(null);
 
   // Auth check
   useEffect(() => {
@@ -310,6 +323,7 @@ export default function SocialMediaDashboard() {
       loadGuestProfiles();
       loadAnalytics();
       loadAbdullahQueueStats();
+      loadRecentScripts();
 
       let tickCount = 0;
 
@@ -330,6 +344,7 @@ export default function SocialMediaDashboard() {
           loadStatus();
           loadPropertyStats();
           loadSpanishPropertyStats();
+          loadRecentScripts();
         }
 
         // Analytics: every 24 hours (tick 2880)
@@ -501,6 +516,38 @@ export default function SocialMediaDashboard() {
       }
     } catch (error) {
       console.error('Failed to load Abdullah queue stats:', error);
+    }
+  };
+
+  const loadRecentScripts = async () => {
+    try {
+      const response = await fetch('/api/admin/recent-scripts?limit=10');
+      const data = await response.json();
+      if (data.success) {
+        setRecentScripts(data.scripts);
+      }
+    } catch (error) {
+      console.error('Failed to load recent scripts:', error);
+    }
+  };
+
+  const copyScriptToClipboard = async (script: typeof recentScripts[0]) => {
+    const text = `TITLE: ${script.title}
+THEME: ${script.theme}
+HOOK: ${script.hook}
+
+SCRIPT:
+${script.script}
+
+CAPTION:
+${script.caption}`;
+
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedScriptId(script.id);
+      setTimeout(() => setCopiedScriptId(null), 2000);
+    } catch (error) {
+      console.error('Failed to copy script:', error);
     }
   };
 
@@ -849,7 +896,8 @@ export default function SocialMediaDashboard() {
             { key: 'ownerfi', label: 'OwnerFi', icon: '🏠', hasSubtabs: true },
             { key: 'vassdistro', label: 'Vass Distro', icon: '💨' },
             { key: 'abdullah', label: 'Abdullah', icon: '👤', hasSubtabs: true },
-            { key: 'analytics', label: 'Analytics', icon: '📊' }
+            { key: 'analytics', label: 'Analytics', icon: '📊' },
+            { key: 'youtube-analytics', label: 'YouTube', icon: '📺' }
           ].map((tab) => (
             <button
               key={tab.key}
@@ -2471,12 +2519,125 @@ export default function SocialMediaDashboard() {
                   </div>
                 )}
               </div>
+
+              {/* Recent ChatGPT Scripts - For Prompt Improvement */}
+              <div className="mt-6 pt-6 border-t border-slate-200">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-sm font-semibold text-slate-900">Recent ChatGPT Scripts</h4>
+                  <span className="text-xs text-slate-500">Copy to improve prompts</span>
+                </div>
+                {recentScripts.length > 0 ? (
+                  <div className="space-y-3 max-h-[600px] overflow-y-auto">
+                    {recentScripts.map((script) => (
+                      <div key={script.id} className="bg-gradient-to-r from-slate-50 to-purple-50 border border-slate-200 rounded-lg p-4 hover:border-purple-300 transition-colors">
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="font-semibold text-slate-900 text-sm">{script.title}</span>
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700 capitalize">
+                                {script.theme}
+                              </span>
+                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                                script.status === 'completed' ? 'bg-green-100 text-green-700' :
+                                script.status === 'failed' ? 'bg-red-100 text-red-700' :
+                                'bg-yellow-100 text-yellow-700'
+                              }`}>
+                                {script.status}
+                              </span>
+                            </div>
+                            <div className="text-xs text-slate-500">
+                              {script.createdAt ? new Date(script.createdAt).toLocaleString() : 'N/A'}
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => copyScriptToClipboard(script)}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                              copiedScriptId === script.id
+                                ? 'bg-green-100 text-green-700'
+                                : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+                            }`}
+                          >
+                            {copiedScriptId === script.id ? (
+                              <>
+                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                                Copied!
+                              </>
+                            ) : (
+                              <>
+                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                </svg>
+                                Copy
+                              </>
+                            )}
+                          </button>
+                        </div>
+
+                        {/* Hook */}
+                        {script.hook && (
+                          <div className="mb-2">
+                            <div className="text-xs font-medium text-purple-600 mb-1">Hook:</div>
+                            <div className="text-xs text-slate-700 bg-purple-50 rounded px-2 py-1 italic">
+                              "{script.hook}"
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Script */}
+                        <div className="mb-2">
+                          <div className="text-xs font-medium text-slate-600 mb-1">Script:</div>
+                          <div className="text-xs text-slate-700 bg-white rounded px-2 py-1.5 border border-slate-200 max-h-20 overflow-y-auto">
+                            {script.script}
+                          </div>
+                        </div>
+
+                        {/* Caption */}
+                        <div>
+                          <div className="text-xs font-medium text-slate-600 mb-1">Caption:</div>
+                          <div className="text-xs text-slate-600 bg-slate-100 rounded px-2 py-1.5 max-h-16 overflow-y-auto">
+                            {script.caption}
+                          </div>
+                        </div>
+
+                        {/* Video Link */}
+                        {script.finalVideoUrl && (
+                          <div className="mt-2 pt-2 border-t border-slate-200">
+                            <a
+                              href={script.finalVideoUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-purple-600 hover:text-purple-800 flex items-center gap-1"
+                            >
+                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                              Watch Video
+                            </a>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="bg-slate-50 rounded-lg p-8 text-center border border-slate-200">
+                    <div className="text-slate-500 text-sm font-medium">No scripts available yet</div>
+                    <div className="text-xs text-slate-400 mt-1">Scripts will appear here after the next video generation</div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}
 
         {activeSubTab === 'analytics' && (
           <AnalyticsDashboard />
+        )}
+
+        {activeSubTab === 'youtube-analytics' && (
+          <YouTubeAnalyticsDashboard />
         )}
 
         {activeSubTab === 'old_analytics_backup' && (

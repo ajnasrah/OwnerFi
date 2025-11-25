@@ -97,11 +97,15 @@ export async function POST(request: NextRequest) {
         const workflowId = queueItem.id;
         console.log(`   📋 Workflow ID: ${workflowId}`);
 
-        // CRITICAL FIX: Update with caption and title but DON'T set status yet
+        // CRITICAL FIX: Update with caption, title, and script but DON'T set status yet
         // Will set status AFTER we get video ID
+        // Script is saved for prompt improvement/review in admin dashboard
         await updateWorkflowStatus(workflowId, 'abdullah', {
           caption: video.caption,
-          title: video.title
+          title: video.title,
+          script: video.script,
+          theme: video.theme,
+          hook: video.hook
           // DON'T set status here!
         } as any);
 

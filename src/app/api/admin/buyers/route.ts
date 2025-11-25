@@ -108,6 +108,7 @@ export async function GET(request: NextRequest) {
     // 🆕 EFFICIENT MATCHING LOGIC: Use pre-computed filters + optimized queries
     // Instead of loading ALL properties, we query by state and use pre-computed nearby cities
     const matchedCountsMap = new Map<string, number>();
+    const likedCountsMap = new Map<string, number>();
 
     // Group buyers by state to batch property queries
     const buyersByState = new Map<string, any[]>();
@@ -194,6 +195,53 @@ export async function GET(request: NextRequest) {
       matchedCountsMap.set(userId, matchCount);
     });
 
+    // 🆕 Get liked counts from BOTH sources:
+    // 1. likedPropertyIds array in buyerProfiles (current system)
+    // 2. likedProperties collection (legacy system - some buyers may have data here)
+    const allUserIds = Array.from(buyerProfilesMap.keys());
+
+    // Query legacy likedProperties collection AND propertyBuyerMatches for all buyers in parallel
+    const likedPropertiesPromises = allUserIds.map(async (userId) => {
+      const likedQuery = query(
+        collection(db, 'likedProperties'),
+        where('buyerId', '==', userId)
+      );
+      const snapshot = await getDocs(likedQuery);
+      return { userId, count: snapshot.size };
+    });
+
+    const matchedPropertiesPromises = allUserIds.map(async (userId) => {
+      const matchedQuery = query(
+        collection(db, 'propertyBuyerMatches'),
+        where('buyerId', '==', userId)
+      );
+      const snapshot = await getDocs(matchedQuery);
+      return { userId, count: snapshot.size };
+    });
+
+    const [legacyLikedResults, storedMatchedResults] = await Promise.all([
+      Promise.all(likedPropertiesPromises),
+      Promise.all(matchedPropertiesPromises)
+    ]);
+
+    const legacyLikedMap = new Map(legacyLikedResults.map(r => [r.userId, r.count]));
+    const storedMatchedMap = new Map(storedMatchedResults.map(r => [r.userId, r.count]));
+
+    // Calculate liked counts combining both sources (deduplicated by taking max)
+    buyerProfilesMap.forEach((buyerProfile, userId) => {
+      const arrayCount = buyerProfile.likedPropertyIds?.length || 0;
+      const legacyCount = legacyLikedMap.get(userId) || 0;
+      // Use the higher count since they may have different data
+      // In practice, arrayCount should be authoritative, but legacy might have unmigrated data
+      likedCountsMap.set(userId, Math.max(arrayCount, legacyCount));
+
+      // Also update matched count to combine on-the-fly calculation with stored matches
+      const calculatedMatchCount = matchedCountsMap.get(userId) || 0;
+      const storedMatchCount = storedMatchedMap.get(userId) || 0;
+      // Use the higher count - stored matches might have historical data
+      matchedCountsMap.set(userId, Math.max(calculatedMatchCount, storedMatchCount));
+    });
+
     const buyers: BuyerAdminView[] = [];
     const buyersWithDistance: Array<BuyerAdminView & { distance?: number }> = [];
 
@@ -213,8 +261,8 @@ export async function GET(request: NextRequest) {
       // Get matched properties count from pre-computed map (no query here!)
       const matchedPropertiesCount = matchedCountsMap.get(userDoc.id) || 0;
 
-      // Get liked properties count from likedPropertyIds
-      const likedPropertiesCount = buyerProfile.likedPropertyIds?.length || 0;
+      // Get liked properties count from pre-computed map (combines both collections)
+      const likedPropertiesCount = likedCountsMap.get(userDoc.id) || 0;
 
       const buyer = toBuyerAdminView(buyerProfile, {
         matchedPropertiesCount,

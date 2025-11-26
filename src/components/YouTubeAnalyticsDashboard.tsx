@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 
 interface YouTubeVideo {
   videoId: string;
@@ -47,65 +47,79 @@ interface BrandAnalytics {
   fetchedAt: number;
 }
 
+interface AIAnalysisResult {
+  uniquePatterns: {
+    hooks: string[];
+    topics: string[];
+    emotionalTriggers: string[];
+    structuralElements: string[];
+  };
+  keyDifferentiators: string[];
+  recommendations: string[];
+  promptTemplate: string;
+  confidence: 'high' | 'medium' | 'low';
+}
+
 interface AnalysisResult {
   selectedCount: number;
   avgViews: number;
   avgEngagement: number;
-  commonPatterns: {
-    titlePatterns: string[];
-    bestHours: number[];
-    avgDuration: number;
-  };
-  recommendations: string[];
-  promptSuggestions: string;
+  avgDuration: number;
+  performanceMultiplier: number | null;
+  aiAnalysis: AIAnalysisResult;
 }
 
 export default function YouTubeAnalyticsDashboard() {
   const [brands, setBrands] = useState<Record<string, BrandAnalytics>>({});
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [analyzing, setAnalyzing] = useState(false);
   const [selectedBrand, setSelectedBrand] = useState<string>('abdullah');
   const [selectedVideos, setSelectedVideos] = useState<Set<string>>(new Set());
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const [copied, setCopied] = useState(false);
+  const [sortBy, setSortBy] = useState<'recent' | 'views' | 'likes' | 'engagement'>('recent');
 
   const BRANDS = ['abdullah', 'ownerfi', 'carz'];
 
+  // Load only the selected brand (lazy loading for performance)
   useEffect(() => {
-    loadAnalytics();
-  }, []);
+    loadBrandAnalytics(selectedBrand);
+  }, [selectedBrand]);
 
-  const loadAnalytics = async (refresh = false) => {
+  const loadBrandAnalytics = useCallback(async (brand: string, refresh = false) => {
+    // Skip if already loaded and not refreshing
+    if (!refresh && brands[brand]) {
+      return;
+    }
+
     if (refresh) setRefreshing(true);
-    else setLoading(true);
+    else if (!brands[brand]) setLoading(true);
 
     try {
-      const results: Record<string, BrandAnalytics> = {};
+      const response = await fetch(`/api/analytics/youtube?brand=${brand}${refresh ? '&refresh=true' : ''}`);
+      const data = await response.json();
 
-      for (const brand of BRANDS) {
-        const response = await fetch(`/api/analytics/youtube?brand=${brand}${refresh ? '&refresh=true' : ''}`);
-        const data = await response.json();
-
-        if (data.success) {
-          results[brand] = {
+      if (data.success) {
+        setBrands(prev => ({
+          ...prev,
+          [brand]: {
             channel: data.channel,
             performance: data.performance,
             topPerformers: data.topPerformers,
             patterns: data.patterns,
             recentVideos: data.recentVideos || [],
             fetchedAt: data.fetchedAt,
-          };
-        }
+          },
+        }));
       }
-
-      setBrands(results);
     } catch (error) {
-      console.error('Error loading YouTube analytics:', error);
+      console.error(`Error loading YouTube analytics for ${brand}:`, error);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, [brands]);
 
   const toggleVideoSelection = (videoId: string) => {
     const newSelection = new Set(selectedVideos);
@@ -132,92 +146,50 @@ export default function YouTubeAnalyticsDashboard() {
     setAnalysisResult(null);
   };
 
-  const analyzeSelectedVideos = () => {
+  const analyzeSelectedVideos = async () => {
     const currentBrandData = brands[selectedBrand];
     if (!currentBrandData || selectedVideos.size === 0) return;
 
-    const selectedVideosList = currentBrandData.recentVideos.filter(v =>
-      selectedVideos.has(v.videoId)
-    );
+    setAnalyzing(true);
+    setAnalysisResult(null);
 
-    // Calculate averages
-    const totalViews = selectedVideosList.reduce((sum, v) => sum + v.views, 0);
-    const totalEngagement = selectedVideosList.reduce((sum, v) => sum + v.engagement, 0);
-    const totalDuration = selectedVideosList.reduce((sum, v) => sum + v.duration, 0);
+    try {
+      const selectedVideosList = currentBrandData.recentVideos.filter(v =>
+        selectedVideos.has(v.videoId)
+      );
 
-    const avgViews = totalViews / selectedVideosList.length;
-    const avgEngagement = totalEngagement / selectedVideosList.length;
-    const avgDuration = totalDuration / selectedVideosList.length;
+      // Call AI analysis API
+      const response = await fetch('/api/analytics/youtube/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          selectedVideos: selectedVideosList,
+          allVideos: currentBrandData.recentVideos,
+          brandAvgViews: currentBrandData.performance.avgViewsPerVideo,
+          brandAvgEngagement: currentBrandData.performance.avgEngagementRate,
+        }),
+      });
 
-    // Extract title patterns (first few words)
-    const titlePatterns = selectedVideosList
-      .map(v => v.title.replace('#Shorts ', '').substring(0, 30))
-      .slice(0, 5);
+      const data = await response.json();
 
-    // Extract posting hours
-    const hours = selectedVideosList.map(v => new Date(v.publishedAt).getHours());
-    const hourCounts = hours.reduce((acc, h) => {
-      acc[h] = (acc[h] || 0) + 1;
-      return acc;
-    }, {} as Record<number, number>);
-    const bestHours = Object.entries(hourCounts)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 3)
-      .map(([h]) => parseInt(h));
+      if (!data.success) {
+        console.error('Analysis failed:', data.error);
+        return;
+      }
 
-    // Generate recommendations
-    const recommendations: string[] = [];
-
-    if (avgViews > currentBrandData.performance.avgViewsPerVideo * 1.5) {
-      recommendations.push(`These videos perform ${((avgViews / currentBrandData.performance.avgViewsPerVideo - 1) * 100).toFixed(0)}% better than your average!`);
+      setAnalysisResult({
+        selectedCount: data.stats.selectedCount,
+        avgViews: data.stats.selectedAvgViews,
+        avgEngagement: data.stats.selectedAvgEngagement,
+        avgDuration: data.stats.selectedAvgDuration,
+        performanceMultiplier: data.stats.performanceMultiplier,
+        aiAnalysis: data.analysis,
+      });
+    } catch (error) {
+      console.error('Error analyzing videos:', error);
+    } finally {
+      setAnalyzing(false);
     }
-
-    if (avgDuration < 30) {
-      recommendations.push(`Keep videos short (avg ${avgDuration.toFixed(0)}s works well)`);
-    }
-
-    if (bestHours.length > 0) {
-      recommendations.push(`Post at ${bestHours.map(h => `${h}:00`).join(', ')} for best results`);
-    }
-
-    // Generate prompt suggestions
-    const promptSuggestions = `
-## Prompt Optimization Based on Top Performers
-
-### Title Patterns That Work:
-${titlePatterns.map((t, i) => `${i + 1}. "${t}..."`).join('\n')}
-
-### Optimal Settings:
-- Script Length: ${avgDuration < 30 ? '30-40 words (20-25 seconds)' : '40-60 words (30-45 seconds)'}
-- Best Posting Times: ${bestHours.map(h => `${h}:00`).join(', ')}
-- Avg Engagement: ${avgEngagement.toFixed(2)}%
-
-### Hook Formulas (from top performers):
-${titlePatterns.slice(0, 3).map((t, i) => `- "${t}..."`).join('\n')}
-
-### Recommended Prompt Updates:
-\`\`\`
-TOP PERFORMING HOOK FORMULAS:
-${titlePatterns.slice(0, 5).map(t => `- "${t}..."`).join('\n')}
-
-SCRIPT REQUIREMENTS:
-- Length: ${avgDuration < 30 ? '30-40' : '40-50'} words
-- Post at: ${bestHours.map(h => `${h}:00`).join(', ')}
-\`\`\`
-    `.trim();
-
-    setAnalysisResult({
-      selectedCount: selectedVideosList.length,
-      avgViews,
-      avgEngagement,
-      commonPatterns: {
-        titlePatterns,
-        bestHours,
-        avgDuration,
-      },
-      recommendations,
-      promptSuggestions,
-    });
   };
 
   const copyToClipboard = async (text: string) => {
@@ -230,6 +202,25 @@ SCRIPT REQUIREMENTS:
     }
   };
 
+  const currentBrandData = brands[selectedBrand];
+
+  // Memoized sorted videos - only recompute when videos or sortBy changes
+  const sortedVideos = useMemo(() => {
+    const videos = currentBrandData?.recentVideos || [];
+    const sorted = [...videos];
+    switch (sortBy) {
+      case 'views':
+        return sorted.sort((a, b) => b.views - a.views);
+      case 'likes':
+        return sorted.sort((a, b) => b.likes - a.likes);
+      case 'engagement':
+        return sorted.sort((a, b) => b.engagement - a.engagement);
+      case 'recent':
+      default:
+        return sorted.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
+    }
+  }, [currentBrandData?.recentVideos, sortBy]);
+
   if (loading) {
     return (
       <div className="p-8 text-center">
@@ -239,8 +230,6 @@ SCRIPT REQUIREMENTS:
     );
   }
 
-  const currentBrandData = brands[selectedBrand];
-
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
@@ -249,7 +238,7 @@ SCRIPT REQUIREMENTS:
           <h1 className="text-2xl font-bold text-gray-900">📺 YouTube Analytics Dashboard</h1>
           <div className="flex gap-2">
             <button
-              onClick={() => loadAnalytics(true)}
+              onClick={() => loadBrandAnalytics(selectedBrand, true)}
               disabled={refreshing}
               className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
             >
@@ -328,23 +317,40 @@ SCRIPT REQUIREMENTS:
           </div>
           <button
             onClick={analyzeSelectedVideos}
-            disabled={selectedVideos.size === 0}
-            className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+            disabled={selectedVideos.size === 0 || analyzing}
+            className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center gap-2"
           >
-            🔍 Analyze Selected ({selectedVideos.size})
+            {analyzing ? (
+              <>
+                <span className="inline-block animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
+                Analyzing with AI...
+              </>
+            ) : (
+              <>🔍 Analyze Selected ({selectedVideos.size})</>
+            )}
           </button>
         </div>
       </div>
 
       {/* Analysis Results */}
       {analysisResult && (
-        <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg shadow p-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">📊 Analysis of {analysisResult.selectedCount} Selected Videos</h2>
+        <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg shadow p-6 space-y-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-bold text-gray-900">🧠 AI Analysis of {analysisResult.selectedCount} Selected Videos</h2>
+            <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+              analysisResult.aiAnalysis.confidence === 'high' ? 'bg-green-100 text-green-800' :
+              analysisResult.aiAnalysis.confidence === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+              'bg-red-100 text-red-800'
+            }`}>
+              {analysisResult.aiAnalysis.confidence.toUpperCase()} confidence
+            </span>
+          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          {/* Stats Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="bg-white rounded-lg p-4">
               <p className="text-sm text-gray-500">Avg Views</p>
-              <p className="text-2xl font-bold text-blue-600">{analysisResult.avgViews.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
+              <p className="text-2xl font-bold text-blue-600">{analysisResult.avgViews.toLocaleString()}</p>
             </div>
             <div className="bg-white rounded-lg p-4">
               <p className="text-sm text-gray-500">Avg Engagement</p>
@@ -352,37 +358,116 @@ SCRIPT REQUIREMENTS:
             </div>
             <div className="bg-white rounded-lg p-4">
               <p className="text-sm text-gray-500">Avg Duration</p>
-              <p className="text-2xl font-bold text-purple-600">{analysisResult.commonPatterns.avgDuration.toFixed(0)}s</p>
+              <p className="text-2xl font-bold text-purple-600">{analysisResult.avgDuration}s</p>
             </div>
+            {analysisResult.performanceMultiplier && (
+              <div className="bg-white rounded-lg p-4">
+                <p className="text-sm text-gray-500">vs Other Videos</p>
+                <p className="text-2xl font-bold text-orange-600">{analysisResult.performanceMultiplier}x better</p>
+              </div>
+            )}
           </div>
 
-          {/* Recommendations */}
-          <div className="mb-6">
-            <h3 className="font-semibold text-gray-900 mb-2">Key Insights:</h3>
-            <ul className="list-disc list-inside space-y-1">
-              {analysisResult.recommendations.map((rec, i) => (
-                <li key={i} className="text-gray-700">{rec}</li>
+          {/* Key Differentiators */}
+          <div className="bg-white rounded-lg p-4">
+            <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+              <span className="text-lg">🎯</span> What Makes These Videos Different
+            </h3>
+            <ul className="space-y-2">
+              {analysisResult.aiAnalysis.keyDifferentiators.map((diff, i) => (
+                <li key={i} className="flex items-start gap-2">
+                  <span className="text-green-500 mt-1">✓</span>
+                  <span className="text-gray-700">{diff}</span>
+                </li>
               ))}
             </ul>
           </div>
 
-          {/* Prompt Suggestions */}
-          <div className="bg-gray-900 rounded-lg p-4 relative">
-            <div className="flex justify-between items-center mb-2">
-              <h3 className="font-semibold text-white">Prompt Recommendations (Copy & Use):</h3>
+          {/* Patterns Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Hooks */}
+            <div className="bg-white rounded-lg p-4">
+              <h3 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                <span className="text-lg">🪝</span> Hook Patterns
+              </h3>
+              <ul className="space-y-1">
+                {analysisResult.aiAnalysis.uniquePatterns.hooks.map((hook, i) => (
+                  <li key={i} className="text-gray-700 text-sm">• {hook}</li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Topics */}
+            <div className="bg-white rounded-lg p-4">
+              <h3 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                <span className="text-lg">📌</span> Topics That Work
+              </h3>
+              <ul className="space-y-1">
+                {analysisResult.aiAnalysis.uniquePatterns.topics.map((topic, i) => (
+                  <li key={i} className="text-gray-700 text-sm">• {topic}</li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Emotional Triggers */}
+            <div className="bg-white rounded-lg p-4">
+              <h3 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                <span className="text-lg">💡</span> Emotional Triggers
+              </h3>
+              <ul className="space-y-1">
+                {analysisResult.aiAnalysis.uniquePatterns.emotionalTriggers.map((trigger, i) => (
+                  <li key={i} className="text-gray-700 text-sm">• {trigger}</li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Structural Elements */}
+            <div className="bg-white rounded-lg p-4">
+              <h3 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                <span className="text-lg">🏗️</span> Structural Elements
+              </h3>
+              <ul className="space-y-1">
+                {analysisResult.aiAnalysis.uniquePatterns.structuralElements.map((elem, i) => (
+                  <li key={i} className="text-gray-700 text-sm">• {elem}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          {/* Recommendations */}
+          <div className="bg-white rounded-lg p-4">
+            <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+              <span className="text-lg">📋</span> Actionable Recommendations
+            </h3>
+            <ul className="space-y-2">
+              {analysisResult.aiAnalysis.recommendations.map((rec, i) => (
+                <li key={i} className="flex items-start gap-2">
+                  <span className="bg-blue-100 text-blue-800 rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium flex-shrink-0">{i + 1}</span>
+                  <span className="text-gray-700">{rec}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Prompt Template */}
+          <div className="bg-gray-900 rounded-lg p-4">
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="font-semibold text-white flex items-center gap-2">
+                <span className="text-lg">🚀</span> AI-Generated Prompt Template
+              </h3>
               <button
-                onClick={() => copyToClipboard(analysisResult.promptSuggestions)}
-                className={`px-3 py-1 rounded text-sm font-medium ${
+                onClick={() => copyToClipboard(analysisResult.aiAnalysis.promptTemplate)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   copied
                     ? 'bg-green-600 text-white'
                     : 'bg-blue-600 text-white hover:bg-blue-700'
                 }`}
               >
-                {copied ? '✓ Copied!' : '📋 Copy'}
+                {copied ? '✓ Copied!' : '📋 Copy Template'}
               </button>
             </div>
-            <pre className="text-green-400 text-sm overflow-x-auto whitespace-pre-wrap">
-              {analysisResult.promptSuggestions}
+            <pre className="text-green-400 text-sm overflow-x-auto whitespace-pre-wrap bg-gray-800 rounded-lg p-4">
+              {analysisResult.aiAnalysis.promptTemplate}
             </pre>
           </div>
         </div>
@@ -392,12 +477,33 @@ SCRIPT REQUIREMENTS:
       {currentBrandData && (
         <div className="bg-white rounded-lg shadow">
           <div className="p-4 border-b">
-            <h2 className="text-lg font-bold text-gray-900">Recent Videos ({currentBrandData.recentVideos.length})</h2>
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="text-lg font-bold text-gray-900">Videos ({currentBrandData.recentVideos.length})</h2>
+              {/* Sort Controls */}
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-500">Sort by:</span>
+                {(['recent', 'views', 'likes', 'engagement'] as const).map(option => (
+                  <button
+                    key={option}
+                    onClick={() => setSortBy(option)}
+                    className={`px-3 py-1 text-sm rounded-lg font-medium transition-colors ${
+                      sortBy === option
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {option === 'recent' ? '📅 Recent' :
+                     option === 'views' ? '👁️ Views' :
+                     option === 'likes' ? '❤️ Likes' : '📊 Engagement'}
+                  </button>
+                ))}
+              </div>
+            </div>
             <p className="text-sm text-gray-500">Select videos to analyze patterns and generate prompt recommendations</p>
           </div>
 
           <div className="divide-y max-h-[600px] overflow-y-auto">
-            {currentBrandData.recentVideos.map(video => (
+            {sortedVideos.map(video => (
               <div
                 key={video.videoId}
                 className={`p-4 flex items-center gap-4 hover:bg-gray-50 cursor-pointer ${

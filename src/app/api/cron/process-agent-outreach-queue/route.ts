@@ -28,7 +28,7 @@ const db = getFirestore();
  * Schedule: Every 4 hours (6 times per day)
  */
 
-const BATCH_SIZE = 25;
+const BATCH_SIZE = 50; // Increased to handle nationwide volume (~300 properties/day)
 const GHL_WEBHOOK_URL = process.env.GHL_AGENT_OUTREACH_WEBHOOK_URL ||
   'https://services.leadconnectorhq.com/hooks/YOUR_WEBHOOK_HERE';
 
@@ -201,6 +201,56 @@ export async function GET(request: NextRequest) {
           source: 'agent_outreach_system',
           dealType: property.dealType,
         });
+
+        // Save cash deals to cash_houses collection for admin dashboard
+        if (property.dealType === 'cash_deal') {
+          // Check if already exists in cash_houses
+          const existingCashHouse = await db
+            .collection('cash_houses')
+            .where('zpid', '==', property.zpid)
+            .limit(1)
+            .get();
+
+          if (existingCashHouse.empty) {
+            await db.collection('cash_houses').add({
+              // Property info
+              zpid: property.zpid,
+              url: property.url,
+              fullAddress: property.address,
+              streetAddress: property.address,
+              city: property.city,
+              state: property.state,
+              zipCode: property.zipCode,
+
+              // Pricing
+              price: property.price,
+              estimate: property.zestimate,
+              priceToZestimateRatio: property.priceToZestimateRatio,
+              discountPercentage: discountPercent,
+
+              // Property details
+              bedrooms: property.beds,
+              bathrooms: property.baths,
+              squareFoot: property.squareFeet,
+              homeType: property.propertyType,
+
+              // Agent info
+              agentName: property.agentName,
+              agentPhoneNumber: property.agentPhone,
+              agentEmail: property.agentEmail || null,
+
+              // Tracking
+              source: 'agent_outreach_system',
+              dealType: 'cash_deal',
+              importedAt: new Date(),
+              ghlOpportunityId: ghlResponse.opportunityId || null,
+
+              // Status
+              homeStatus: 'FOR_SALE',
+            });
+            console.log(`   💰 Saved to cash_houses: ${property.address} (${discountPercent}% discount)`);
+          }
+        }
 
         sent++;
         console.log(`   ✅ Sent: ${property.address}`);

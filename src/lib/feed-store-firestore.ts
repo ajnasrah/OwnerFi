@@ -551,15 +551,17 @@ export async function cleanupLowQualityArticles(keepTopN: number = 10): Promise<
   for (const cat of ['carz', 'ownerfi'] as const) {
     const collectionName = getCollectionName('ARTICLES', cat);
 
-    // Get all unprocessed articles ordered by pubDate
+    // Get all unprocessed articles (no orderBy to avoid index requirement)
     const q = query(
       collection(db, collectionName),
-      where('processed', '==', false),
-      orderBy('pubDate', 'desc')
+      where('processed', '==', false)
     );
 
     const snapshot = await getDocs(q);
-    const articles = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Article));
+    // Sort in memory by pubDate descending
+    const articles = snapshot.docs
+      .map(doc => ({ id: doc.id, ...doc.data() } as Article))
+      .sort((a, b) => (b.pubDate || 0) - (a.pubDate || 0));
 
     if (articles.length <= keepTopN) {
       console.log(`✅ ${cat}: ${articles.length} articles (within limit)`);
@@ -594,18 +596,24 @@ export async function cleanupProcessedArticles(olderThanDays: number = 7): Promi
   for (const cat of ['carz', 'ownerfi'] as const) {
     const collectionName = getCollectionName('ARTICLES', cat);
 
-    // Get processed articles older than cutoff
+    // Get all processed articles (filter by date in memory to avoid index requirement)
     const q = query(
       collection(db, collectionName),
-      where('processed', '==', true),
-      where('processedAt', '<', cutoffTime)
+      where('processed', '==', true)
     );
 
     const snapshot = await getDocs(q);
 
-    console.log(`🧹 ${cat}: Deleting ${snapshot.size} processed articles older than ${olderThanDays} days`);
+    // Filter in memory by processedAt
+    const oldArticles = snapshot.docs.filter(docSnap => {
+      const data = docSnap.data();
+      const processedAt = data.processedAt || 0;
+      return processedAt < cutoffTime;
+    });
 
-    for (const docSnap of snapshot.docs) {
+    console.log(`🧹 ${cat}: Deleting ${oldArticles.length} processed articles older than ${olderThanDays} days`);
+
+    for (const docSnap of oldArticles) {
       await deleteDoc(doc(db, collectionName, docSnap.id));
       deleted[cat]++;
     }

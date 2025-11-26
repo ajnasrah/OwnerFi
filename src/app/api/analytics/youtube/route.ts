@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
         if (cached.exists) {
           const data = cached.data();
           const age = Date.now() - (data.fetchedAt || 0);
-          const maxAge = 60 * 60 * 1000; // 1 hour cache
+          const maxAge = 24 * 60 * 60 * 1000; // 24 hour cache - fresh daily
 
           if (age < maxAge) {
             console.log(`   Using cached data (${Math.round(age / 1000 / 60)} minutes old)`);

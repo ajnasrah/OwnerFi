@@ -1,14 +1,15 @@
 /**
  * CONSOLIDATED Daily Maintenance Cron
  *
- * Consolidates 6 separate maintenance cron jobs into ONE:
+ * Consolidates maintenance tasks into ONE cron:
  * 1. cleanup-videos (daily - deletes expired videos from R2)
  * 2. enhance-property-images (daily - upgrades low-res images)
- * 3. cleanup-stale-properties (Sunday only - deletes properties older than 60 days)
- * 4. cleanup-queue-items (daily - deletes completed queue items older than 24 hours)
- * 5. cleanup-articles (Mon/Wed/Fri - keeps top 20 articles per brand)
- * 6. cleanup-workflows (Mon/Wed/Fri - deletes old completed workflows)
- * 7. sync-youtube-analytics (daily - syncs YT stats for all brands)
+ * 3. cleanup-queue-items (daily - deletes completed queue items older than 24 hours)
+ * 4. cleanup-articles (Mon/Wed/Fri - keeps top 20 articles per brand)
+ * 5. cleanup-workflows (Mon/Wed/Fri - deletes old completed workflows)
+ * 6. sync-youtube-analytics (daily - syncs YT stats for all brands)
+ *
+ * Note: Property status is managed by refresh-zillow-status cron
  *
  * Schedule: 0 3 * * * (3am daily CST)
  */
@@ -42,7 +43,6 @@ export async function GET(request: NextRequest) {
       const results = {
         videoCleanup: null as any,
         imageEnhancement: null as any,
-        propertyCleanup: null as any,
         queueCleanup: null as any,
         articleCleanup: null as any,
         workflowCleanup: null as any,
@@ -63,39 +63,26 @@ export async function GET(request: NextRequest) {
       const imageResult = await enhancePropertyImages();
       results.imageEnhancement = imageResult;
 
-      // 3. Clean up stale properties (only on Sundays)
-      const today = new Date().getDay(); // 0 = Sunday
-      if (today === 0) {
-        console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        console.log('3️⃣  STALE PROPERTY CLEANUP (Sunday only)');
-        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
-        const propertyResult = await cleanupStaleProperties();
-        results.propertyCleanup = propertyResult;
-      } else {
-        console.log('\n⏭️  Skipping stale property cleanup (only runs on Sundays)');
-        results.propertyCleanup = { skipped: true, day: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][today] };
-      }
-
-      // 4. Clean up completed queue items (daily)
+      // 3. Clean up completed queue items (daily)
       console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log('4️⃣  QUEUE CLEANUP');
+      console.log('3️⃣  QUEUE CLEANUP');
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
       const queueResult = await cleanupQueueItems();
       results.queueCleanup = queueResult;
 
-      // 5 & 6. Article + Workflow cleanup (Mon/Wed/Fri only)
+      // 4 & 5. Article + Workflow cleanup (Mon/Wed/Fri only)
       const dayOfWeek = new Date().getDay(); // 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
       const isCleanupDay = [1, 3, 5].includes(dayOfWeek); // Mon, Wed, Fri
 
       if (isCleanupDay) {
         console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        console.log('5️⃣  ARTICLE CLEANUP (Mon/Wed/Fri)');
+        console.log('4️⃣  ARTICLE CLEANUP (Mon/Wed/Fri)');
         console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
         const articleResult = await cleanupArticles();
         results.articleCleanup = articleResult;
 
         console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        console.log('6️⃣  WORKFLOW CLEANUP (Mon/Wed/Fri)');
+        console.log('5️⃣  WORKFLOW CLEANUP (Mon/Wed/Fri)');
         console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
         const workflowResult = await cleanupWorkflows();
         results.workflowCleanup = workflowResult;
@@ -105,9 +92,9 @@ export async function GET(request: NextRequest) {
         results.workflowCleanup = { skipped: true, day: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][dayOfWeek] };
       }
 
-      // 7. YouTube Analytics Sync (daily)
+      // 6. YouTube Analytics Sync (daily)
       console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log('7️⃣  YOUTUBE ANALYTICS SYNC');
+      console.log('6️⃣  YOUTUBE ANALYTICS SYNC');
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
       const youtubeResult = await syncYouTubeAnalytics();
       results.youtubeSync = youtubeResult;
@@ -120,7 +107,6 @@ export async function GET(request: NextRequest) {
       console.log(`📊 Summary:`);
       console.log(`   Videos deleted: ${results.videoCleanup?.deleted || 0}`);
       console.log(`   Images enhanced: ${results.imageEnhancement?.upgraded || 0}`);
-      console.log(`   Properties cleaned: ${results.propertyCleanup?.deleted || (results.propertyCleanup?.skipped ? 'N/A' : 0)}`);
       console.log(`   Queue items deleted: ${results.queueCleanup?.ownerFinance?.deleted || 0} owner finance, ${results.queueCleanup?.cashDeals?.deleted || 0} cash deals`);
       console.log(`   Articles cleaned: ${results.articleCleanup?.skipped ? 'N/A' : (results.articleCleanup?.totalDeleted || 0)}`);
       console.log(`   Workflows cleaned: ${results.workflowCleanup?.skipped ? 'N/A' : (results.workflowCleanup?.deleted || 0)}`);
@@ -366,7 +352,7 @@ async function enhancePropertyImages() {
 }
 
 // ============================================================================
-// 3. CLEANUP STALE PROPERTIES (Sundays only)
+// 3. CLEANUP QUEUE ITEMS
 // ============================================================================
 
 async function cleanupQueueItems() {
@@ -494,109 +480,6 @@ async function cleanupQueueItems() {
     const { alertSystemError } = await import('@/lib/error-monitoring');
     await alertSystemError(
       'Queue Cleanup',
-      error instanceof Error ? error.message : 'Unknown error',
-      { error: String(error) }
-    ).catch(() => {});
-
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error'
-    };
-  }
-}
-
-async function cleanupStaleProperties() {
-  try {
-    console.log('🗑️  Deleting properties older than 60 days...');
-
-    const { getAdminDb } = await import('@/lib/firebase-admin');
-    const db = await getAdminDb();
-
-    if (!db) {
-      throw new Error('Firebase not initialized');
-    }
-
-    const sixtyDaysAgo = new Date();
-    sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
-
-    console.log(`   📅 Cutoff: ${sixtyDaysAgo.toLocaleDateString()}`);
-
-    const propertiesSnapshot = await db.collection('properties').get();
-    const staleProperties: Array<{ id: string; address: string; updatedAt: Date; source: string }> = [];
-
-    propertiesSnapshot.docs.forEach(doc => {
-      const data = doc.data();
-      const updatedAt = data.updatedAt || data.createdAt;
-
-      if (!updatedAt) {
-        staleProperties.push({
-          id: doc.id,
-          address: `${data.address}, ${data.city}, ${data.state}`,
-          updatedAt: new Date(0),
-          source: data.source || 'unknown'
-        });
-        return;
-      }
-
-      const lastUpdate = updatedAt.toDate ? updatedAt.toDate() : new Date(updatedAt);
-      if (lastUpdate < sixtyDaysAgo) {
-        staleProperties.push({
-          id: doc.id,
-          address: `${data.address}, ${data.city}, ${data.state}`,
-          updatedAt: lastUpdate,
-          source: data.source || 'unknown'
-        });
-      }
-    });
-
-    console.log(`   📊 Found ${staleProperties.length} stale properties (out of ${propertiesSnapshot.size})`);
-
-    if (staleProperties.length === 0) {
-      console.log('   ✅ No stale properties!');
-      return {
-        success: true,
-        deleted: 0,
-        totalProperties: propertiesSnapshot.size
-      };
-    }
-
-    // Delete stale properties
-    let deletedCount = 0;
-    let errorCount = 0;
-
-    for (const property of staleProperties) {
-      try {
-        await db.collection('properties').doc(property.id).delete();
-        deletedCount++;
-      } catch (error) {
-        errorCount++;
-      }
-    }
-
-    console.log(`   ✅ Deleted: ${deletedCount} properties`);
-    console.log(`   ❌ Errors: ${errorCount} properties`);
-
-    if (errorCount > 0) {
-      const { alertSystemError } = await import('@/lib/error-monitoring');
-      await alertSystemError(
-        'Stale Property Cleanup',
-        `${errorCount} properties failed to delete`,
-        { deleted: deletedCount, errors: errorCount }
-      ).catch(() => {});
-    }
-
-    return {
-      success: true,
-      deleted: deletedCount,
-      errors: errorCount,
-      totalProperties: propertiesSnapshot.size
-    };
-
-  } catch (error) {
-    console.error('   ❌ Property cleanup error:', error);
-    const { alertSystemError } = await import('@/lib/error-monitoring');
-    await alertSystemError(
-      'Stale Property Cleanup',
       error instanceof Error ? error.message : 'Unknown error',
       { error: String(error) }
     ).catch(() => {});

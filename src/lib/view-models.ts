@@ -27,8 +27,6 @@ export interface BuyerDashboardView {
   phone: string;
   city: string;
   state: string;
-  maxMonthlyPayment: number;
-  maxDownPayment: number;
   likedProperties?: string[];
 }
 
@@ -66,8 +64,6 @@ export function toBuyerDashboardView(profile: BuyerProfile): BuyerDashboardView 
     phone: profile.phone,
     city: profile.preferredCity || profile.city || '',
     state: profile.preferredState || profile.state || '',
-    maxMonthlyPayment: profile.maxMonthlyPayment,
-    maxDownPayment: profile.maxDownPayment,
     likedProperties: profile.likedPropertyIds,
   };
 }
@@ -89,8 +85,6 @@ export function firestoreToBuyerProfile(docId: string, data: any): BuyerProfile 
     city: data.city || data.preferredCity,
     state: data.state || data.preferredState,
     searchRadius: data.searchRadius || 25,
-    maxMonthlyPayment: data.maxMonthlyPayment || 0,
-    maxDownPayment: data.maxDownPayment || 0,
     minBedrooms: data.minBedrooms,
     minBathrooms: data.minBathrooms,
     minSquareFeet: data.minSquareFeet,

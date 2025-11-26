@@ -180,10 +180,8 @@ export async function uploadToYouTube(options: YouTubeUploadOptions): Promise<Yo
       selfDeclaredMadeForKids: options.madeForKids || false,
     };
 
-    // Add Shorts designation if applicable
-    if (options.isShort) {
-      snippet.title = '#Shorts ' + snippet.title.substring(0, 92); // Leave room for #Shorts
-    }
+    // NOTE: YouTube automatically categorizes vertical videos <60s as Shorts
+    // No need to add #Shorts to title - it's redundant and wastes characters
 
     console.log(`   Title: ${snippet.title}`);
     console.log(`   Category: ${options.category || 'People & Blogs'}`);

@@ -15,9 +15,44 @@
  * - Result: 99.95% CPU reduction
  */
 
-import { getCitiesWithinRadiusComprehensive, getCityCoordinatesComprehensive } from './comprehensive-cities';
+import { getCitiesWithinRadiusComprehensive, getCityCoordinatesComprehensive, getCitiesWithinRadiusByCoordinates } from './comprehensive-cities';
 import { Timestamp } from 'firebase/firestore';
 import { BuyerProfile } from './firebase-models';
+
+/**
+ * Geocode a city using Google Maps API when local database doesn't recognize it
+ * Used as fallback for small/unincorporated communities
+ */
+async function geocodeCityWithGoogle(
+  city: string,
+  state: string
+): Promise<{ lat: number; lng: number } | null> {
+  const apiKey = process.env.GOOGLE_MAPS_API_KEY;
+  if (!apiKey) {
+    console.warn('⚠️  [FILTER] GOOGLE_MAPS_API_KEY not configured for geocoding fallback');
+    return null;
+  }
+
+  try {
+    const address = `${city}, ${state}, USA`;
+    const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${apiKey}`;
+
+    const response = await fetch(url);
+    const data = await response.json();
+
+    if (data.status === 'OK' && data.results?.[0]?.geometry?.location) {
+      const { lat, lng } = data.results[0].geometry.location;
+      console.log(`✅ [FILTER] Google geocoded "${city}, ${state}" to (${lat}, ${lng})`);
+      return { lat, lng };
+    }
+
+    console.warn(`⚠️  [FILTER] Google could not geocode "${city}, ${state}": ${data.status}`);
+    return null;
+  } catch (error) {
+    console.error(`❌ [FILTER] Google geocoding error for "${city}, ${state}":`, error);
+    return null;
+  }
+}
 
 /**
  * Generate pre-computed filter for a buyer at signup
@@ -44,8 +79,46 @@ export async function generateBuyerFilter(
   );
 
   if (nearbyCitiesData.length === 0) {
-    console.warn(`⚠️  [FILTER] No cities found for ${city}, ${state}. Using fallback.`);
-    // Fallback: just use the search city itself
+    console.warn(`⚠️  [FILTER] City "${city}" not in local database. Trying Google geocoding fallback...`);
+
+    // FALLBACK: Use Google Maps to geocode the city and find nearby cities by coordinates
+    const coords = await geocodeCityWithGoogle(city, state);
+
+    if (coords) {
+      // Found coordinates - now find nearby cities using those coordinates
+      const nearbyByCoords = getCitiesWithinRadiusByCoordinates(
+        coords.lat,
+        coords.lng,
+        state,
+        radiusMiles
+      );
+
+      if (nearbyByCoords.length > 0) {
+        console.log(`✅ [FILTER] Google fallback found ${nearbyByCoords.length} nearby cities for "${city}, ${state}"`);
+
+        const nearbyCities = [city, ...nearbyByCoords.map(c => c.name)]; // Include original city + nearby
+        const lats = nearbyByCoords.map(c => c.lat);
+        const lngs = nearbyByCoords.map(c => c.lng);
+
+        return {
+          nearbyCities,
+          nearbyCitiesCount: nearbyCities.length,
+          radiusMiles,
+          lastCityUpdate: Timestamp.now(),
+          boundingBox: {
+            minLat: Math.min(coords.lat, ...lats),
+            maxLat: Math.max(coords.lat, ...lats),
+            minLng: Math.min(coords.lng, ...lngs),
+            maxLng: Math.max(coords.lng, ...lngs),
+          },
+          geohashPrefix: generateGeohash(coords.lat, coords.lng, 3),
+          geocodedFromGoogle: true, // Flag for debugging
+        };
+      }
+    }
+
+    // Ultimate fallback: just use the search city itself (no properties will match)
+    console.warn(`❌ [FILTER] Could not find any nearby cities for "${city}, ${state}". User may need to update their city.`);
     return {
       nearbyCities: [city],
       nearbyCitiesCount: 1,

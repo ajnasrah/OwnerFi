@@ -103,21 +103,6 @@ export async function POST(request: NextRequest) {
           squareFeet: propertyContext.squareFeet,
           city: propertyContext.city,
 
-          // User's budget at time of interaction
-          userMaxMonthly: profile.maxMonthlyPayment || 0,
-          userMaxDown: profile.maxDownPayment || 0,
-
-          // Calculate budget match type
-          budgetMatchType:
-            propertyContext.monthlyPayment <= (profile.maxMonthlyPayment || 0) &&
-            propertyContext.downPayment <= (profile.maxDownPayment || 0)
-              ? 'both'
-              : propertyContext.monthlyPayment <= (profile.maxMonthlyPayment || 0)
-              ? 'monthly_only'
-              : propertyContext.downPayment <= (profile.maxDownPayment || 0)
-              ? 'down_only'
-              : 'neither',
-
           source: propertyContext.source || 'curated',
         } : undefined,
       };

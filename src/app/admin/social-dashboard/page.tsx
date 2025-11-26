@@ -889,8 +889,8 @@ ${script.caption}`;
           </a>
         </div>
 
-        {/* Sub-navigation Tabs */}
-        <div className="flex space-x-2 mb-6">
+        {/* Sub-navigation Tabs - Scrollable on mobile */}
+        <div className="flex space-x-2 mb-6 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 scrollbar-hide">
           {[
             { key: 'carz', label: 'Carz Inc', icon: '🚗' },
             { key: 'ownerfi', label: 'OwnerFi', icon: '🏠', hasSubtabs: true },
@@ -911,7 +911,7 @@ ${script.caption}`;
                   setActiveSubTab(tab.key as any);
                 }
               }}
-              className={`flex items-center space-x-2 px-6 py-3 rounded-xl font-medium transition-all ${
+              className={`flex items-center space-x-2 px-6 py-3 rounded-xl font-medium transition-all whitespace-nowrap flex-shrink-0 ${
                 (activeSubTab === tab.key ||
                  (tab.key === 'ownerfi' && activeSubTab.startsWith('ownerfi')) ||
                  (tab.key === 'abdullah' && (activeSubTab === 'abdullah' || activeSubTab === 'abdullah-podcast')))
@@ -927,10 +927,10 @@ ${script.caption}`;
 
         {/* Sub-tabs for OwnerFi */}
         {(activeSubTab.startsWith('ownerfi')) && (
-          <div className="flex space-x-2 mb-6 ml-4">
+          <div className="flex space-x-2 mb-6 ml-0 md:ml-4 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 scrollbar-hide">
             <button
               onClick={() => setActiveSubTab('ownerfi')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap flex-shrink-0 ${
                 activeSubTab === 'ownerfi'
                   ? 'bg-indigo-100 text-indigo-700'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
@@ -940,7 +940,7 @@ ${script.caption}`;
             </button>
             <button
               onClick={() => setActiveSubTab('ownerfi-benefits')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap flex-shrink-0 ${
                 activeSubTab === 'ownerfi-benefits'
                   ? 'bg-indigo-100 text-indigo-700'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
@@ -950,7 +950,7 @@ ${script.caption}`;
             </button>
             <button
               onClick={() => setActiveSubTab('ownerfi-properties')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap flex-shrink-0 ${
                 activeSubTab === 'ownerfi-properties'
                   ? 'bg-indigo-100 text-indigo-700'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
@@ -960,7 +960,7 @@ ${script.caption}`;
             </button>
             <button
               onClick={() => setActiveSubTab('ownerfi-properties-spanish')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap flex-shrink-0 ${
                 activeSubTab === 'ownerfi-properties-spanish'
                   ? 'bg-indigo-100 text-indigo-700'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
@@ -973,10 +973,10 @@ ${script.caption}`;
 
         {/* Sub-tabs for Abdullah */}
         {(activeSubTab === 'abdullah' || activeSubTab === 'abdullah-podcast') && (
-          <div className="flex space-x-2 mb-6 ml-4">
+          <div className="flex space-x-2 mb-6 ml-0 md:ml-4 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 scrollbar-hide">
             <button
               onClick={() => setActiveSubTab('abdullah')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap flex-shrink-0 ${
                 activeSubTab === 'abdullah'
                   ? 'bg-indigo-100 text-indigo-700'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
@@ -986,7 +986,7 @@ ${script.caption}`;
             </button>
             <button
               onClick={() => setActiveSubTab('abdullah-podcast')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap flex-shrink-0 ${
                 activeSubTab === 'abdullah-podcast'
                   ? 'bg-indigo-100 text-indigo-700'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'

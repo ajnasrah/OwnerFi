@@ -20,7 +20,6 @@ import { ErrorResponses, createSuccessResponse, logError } from '@/lib/api-error
  * Shows properties that match buyer's simple criteria:
  * 1. DIRECT: Properties in the exact search city
  * 2. NEARBY: Properties IN nearby cities (within 30 miles of buyer's search city)
- * 3. Budget filters: Monthly payment <= budget, Down payment <= budget
  *
  * LOGIC: When buyer searches "Houston", we:
  * - Get list of cities within 30 miles of Houston (Pearland, Sugarland, etc.)

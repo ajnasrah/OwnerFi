@@ -22,8 +22,6 @@ export interface User {
 export interface BuyerSearchCriteria {
   cities?: string[];
   state?: string;
-  maxMonthlyPayment?: number;
-  maxDownPayment?: number;
   minBedrooms?: number;
   minBathrooms?: number;
   minPrice?: number;
@@ -46,11 +44,7 @@ export interface BuyerProfile {
   city?: string;            // For API compatibility (maps to preferredCity)
   state?: string;           // For API compatibility (maps to preferredState)
   searchRadius: number;     // Miles
-  
-  // Budget constraints
-  maxMonthlyPayment: number; // Dollars
-  maxDownPayment: number;    // Dollars
-  
+
   // Property requirements
   minBedrooms?: number;
   maxBedrooms?: number;
@@ -174,8 +168,6 @@ export interface LeadDispute {
   buyerEmail?: string;
   buyerCity?: string;
   buyerState?: string;
-  maxMonthlyPayment?: number;
-  maxDownPayment?: number;
   purchaseDate: string;
   reason: 'no_response' | 'invalid_contact' | 'not_qualified' | 'already_working' | 'false_information' | 'duplicate' | 'wrong_info' | 'not_interested' | 'other';
   explanation: string;
@@ -239,12 +231,7 @@ export interface PropertyInteraction {
     city: string;
     distanceFromUser?: number;        // Miles from user's preferred city
 
-    // User's budget at time of interaction
-    userMaxMonthly: number;
-    userMaxDown: number;
-
     // Match quality metrics
-    budgetMatchType?: 'both' | 'monthly_only' | 'down_only' | 'neither';
     withinRadius?: boolean;
 
     // Property source (for A/B testing)
@@ -316,15 +303,13 @@ export function isValidUser(data: unknown): data is User {
 
 export function isValidBuyerProfile(data: unknown): data is BuyerProfile {
   const obj = data as Record<string, unknown>;
-  return data !== null && typeof data === 'object' && 
+  return data !== null && typeof data === 'object' &&
     typeof obj.userId === 'string' &&
     typeof obj.firstName === 'string' &&
     typeof obj.lastName === 'string' &&
     typeof obj.email === 'string' &&
     typeof obj.preferredCity === 'string' &&
     typeof obj.preferredState === 'string' &&
-    typeof obj.maxMonthlyPayment === 'number' &&
-    typeof obj.maxDownPayment === 'number' &&
     Array.isArray(obj.languages) &&
     typeof obj.profileComplete === 'boolean';
 }

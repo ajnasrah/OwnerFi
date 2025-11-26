@@ -87,9 +87,7 @@ export default function Dashboard() {
       console.log('📊 [DASHBOARD] Profile API response:', {
         hasProfile: !!profileData.profile,
         profileId: profileData.profile?.id,
-        hasCity: !!profileData.profile?.city || !!profileData.profile?.preferredCity,
-        hasMaxMonthlyPayment: !!profileData.profile?.maxMonthlyPayment,
-        hasMaxDownPayment: !!profileData.profile?.maxDownPayment
+        hasCity: !!profileData.profile?.city || !!profileData.profile?.preferredCity
       });
 
       if (!profileData.profile) {
@@ -106,8 +104,6 @@ export default function Dashboard() {
         phone: profileData.profile.phone,
         city: profileData.profile.preferredCity || profileData.profile.city,
         state: profileData.profile.preferredState || profileData.profile.state || 'TX',
-        maxMonthlyPayment: profileData.profile.maxMonthlyPayment,
-        maxDownPayment: profileData.profile.maxDownPayment,
         likedProperties: profileData.profile.likedPropertyIds || profileData.profile.likedProperties || [],
       };
 
@@ -115,7 +111,7 @@ export default function Dashboard() {
       setLikedProperties(dashboardProfile.likedProperties || []);
 
       const propertiesRes = await fetch(
-        `/api/buyer/properties?city=${encodeURIComponent(dashboardProfile.city)}&state=${encodeURIComponent(dashboardProfile.state)}&maxMonthlyPayment=${dashboardProfile.maxMonthlyPayment}&maxDownPayment=${dashboardProfile.maxDownPayment}`
+        `/api/buyer/properties?city=${encodeURIComponent(dashboardProfile.city)}&state=${encodeURIComponent(dashboardProfile.state)}`
       );
       const propertiesData = await propertiesRes.json();
 

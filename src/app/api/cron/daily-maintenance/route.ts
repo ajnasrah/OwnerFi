@@ -1,16 +1,16 @@
 /**
  * CONSOLIDATED Daily Maintenance Cron
  *
- * Consolidates 4 separate daily maintenance cron jobs into ONE:
- * 1. cleanup-videos (3am daily - deletes expired videos from R2)
- * 2. enhance-property-images (4am daily - upgrades low-res images)
- * 3. cleanup-stale-properties (2am Sunday - deletes properties older than 60 days)
- * 4. cleanup-queue-items (3am daily - deletes completed queue items older than 24 hours)
+ * Consolidates 6 separate maintenance cron jobs into ONE:
+ * 1. cleanup-videos (daily - deletes expired videos from R2)
+ * 2. enhance-property-images (daily - upgrades low-res images)
+ * 3. cleanup-stale-properties (Sunday only - deletes properties older than 60 days)
+ * 4. cleanup-queue-items (daily - deletes completed queue items older than 24 hours)
+ * 5. cleanup-articles (Mon/Wed/Fri - keeps top 20 articles per brand)
+ * 6. cleanup-workflows (Mon/Wed/Fri - deletes old completed workflows)
+ * 7. sync-youtube-analytics (daily - syncs YT stats for all brands)
  *
  * Schedule: 0 3 * * * (3am daily CST)
- * Previously: 4 separate crons = 4 invocations/day (daily) + 1 extra/week (Sunday) = ~29/week
- * Now: 1 cron = 7 invocations/week
- * SAVINGS: ~22 fewer cron invocations per week (76% reduction)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -43,7 +43,10 @@ export async function GET(request: NextRequest) {
         videoCleanup: null as any,
         imageEnhancement: null as any,
         propertyCleanup: null as any,
-        queueCleanup: null as any
+        queueCleanup: null as any,
+        articleCleanup: null as any,
+        workflowCleanup: null as any,
+        youtubeSync: null as any
       };
 
       // 1. Clean up expired videos
@@ -80,6 +83,35 @@ export async function GET(request: NextRequest) {
       const queueResult = await cleanupQueueItems();
       results.queueCleanup = queueResult;
 
+      // 5 & 6. Article + Workflow cleanup (Mon/Wed/Fri only)
+      const dayOfWeek = new Date().getDay(); // 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
+      const isCleanupDay = [1, 3, 5].includes(dayOfWeek); // Mon, Wed, Fri
+
+      if (isCleanupDay) {
+        console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.log('5️⃣  ARTICLE CLEANUP (Mon/Wed/Fri)');
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+        const articleResult = await cleanupArticles();
+        results.articleCleanup = articleResult;
+
+        console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.log('6️⃣  WORKFLOW CLEANUP (Mon/Wed/Fri)');
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+        const workflowResult = await cleanupWorkflows();
+        results.workflowCleanup = workflowResult;
+      } else {
+        console.log('\n⏭️  Skipping article/workflow cleanup (only runs Mon/Wed/Fri)');
+        results.articleCleanup = { skipped: true, day: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][dayOfWeek] };
+        results.workflowCleanup = { skipped: true, day: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][dayOfWeek] };
+      }
+
+      // 7. YouTube Analytics Sync (daily)
+      console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('7️⃣  YOUTUBE ANALYTICS SYNC');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+      const youtubeResult = await syncYouTubeAnalytics();
+      results.youtubeSync = youtubeResult;
+
       const duration = Date.now() - startTime;
 
       console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
@@ -90,6 +122,9 @@ export async function GET(request: NextRequest) {
       console.log(`   Images enhanced: ${results.imageEnhancement?.upgraded || 0}`);
       console.log(`   Properties cleaned: ${results.propertyCleanup?.deleted || (results.propertyCleanup?.skipped ? 'N/A' : 0)}`);
       console.log(`   Queue items deleted: ${results.queueCleanup?.ownerFinance?.deleted || 0} owner finance, ${results.queueCleanup?.cashDeals?.deleted || 0} cash deals`);
+      console.log(`   Articles cleaned: ${results.articleCleanup?.skipped ? 'N/A' : (results.articleCleanup?.totalDeleted || 0)}`);
+      console.log(`   Workflows cleaned: ${results.workflowCleanup?.skipped ? 'N/A' : (results.workflowCleanup?.deleted || 0)}`);
+      console.log(`   YouTube brands synced: ${results.youtubeSync?.brandsSynced || 0}`);
       console.log(`   Duration: ${duration}ms`);
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
@@ -611,4 +646,158 @@ function fixGoogleDriveUrl(url: string): string {
   }
 
   return url;
+}
+
+// ============================================================================
+// 5. CLEANUP ARTICLES (Mon/Wed/Fri - from weekly-maintenance)
+// ============================================================================
+
+async function cleanupArticles() {
+  try {
+    console.log('📰 Cleaning up articles - keeping top 20 per brand...');
+
+    const {
+      cleanupLowQualityArticles,
+      cleanupProcessedArticles
+    } = await import('@/lib/feed-store-firestore');
+
+    // Step 1: Keep only top 20 unprocessed articles per brand (by recency)
+    const articleCleanup = await cleanupLowQualityArticles(20);
+
+    console.log(`   Carz: ${articleCleanup.carz} articles deleted`);
+    console.log(`   OwnerFi: ${articleCleanup.ownerfi} articles deleted`);
+
+    // Step 2: Delete processed articles older than 30 days
+    console.log('\n   🧹 Cleaning up old processed articles (>30 days)...');
+    const processedCleanup = await cleanupProcessedArticles(30);
+
+    console.log(`   Carz: ${processedCleanup.carz} processed articles deleted`);
+    console.log(`   OwnerFi: ${processedCleanup.ownerfi} processed articles deleted`);
+
+    const totalDeleted =
+      (articleCleanup.carz || 0) +
+      (articleCleanup.ownerfi || 0) +
+      (processedCleanup.carz || 0) +
+      (processedCleanup.ownerfi || 0);
+
+    return {
+      success: true,
+      articlesDeleted: articleCleanup,
+      processedDeleted: processedCleanup,
+      totalDeleted
+    };
+
+  } catch (error) {
+    console.error('   ❌ Article cleanup error:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
+  }
+}
+
+// ============================================================================
+// 6. CLEANUP WORKFLOWS (Mon/Wed/Fri - from weekly-maintenance)
+// ============================================================================
+
+async function cleanupWorkflows() {
+  try {
+    console.log('🔄 Cleaning up completed workflows (>7 days)...');
+
+    const { cleanupCompletedWorkflows } = await import('@/lib/feed-store-firestore');
+
+    // Delete completed workflows older than 7 days
+    const deleted = await cleanupCompletedWorkflows(24 * 7); // 7 days in hours
+
+    console.log(`   ✅ ${deleted} completed workflows deleted`);
+
+    return {
+      success: true,
+      deleted
+    };
+
+  } catch (error) {
+    console.error('   ❌ Workflow cleanup error:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
+  }
+}
+
+// ============================================================================
+// 7. SYNC YOUTUBE ANALYTICS (daily - from sync-youtube-analytics)
+// ============================================================================
+
+async function syncYouTubeAnalytics() {
+  const YOUTUBE_BRANDS = ['abdullah', 'ownerfi', 'carz'];
+
+  try {
+    console.log('📺 Syncing YouTube analytics for all brands...');
+
+    const {
+      syncYouTubeAnalytics: syncAnalytics,
+      analyzeContentPatterns
+    } = await import('@/lib/youtube-analytics');
+    const { getAdminDb } = await import('@/lib/firebase-admin');
+
+    const adminDb = await getAdminDb();
+    let brandsSynced = 0;
+    const results: Record<string, any> = {};
+
+    for (const brand of YOUTUBE_BRANDS) {
+      try {
+        const summary = await syncAnalytics(brand);
+
+        if (summary) {
+          const patterns = analyzeContentPatterns(summary.recentVideos);
+
+          results[brand] = {
+            success: true,
+            subscribers: summary.totalSubscribers,
+            totalViews: summary.totalViews,
+            videosAnalyzed: summary.recentVideos.length,
+            avgViewsPerVideo: Math.round(summary.avgViewsPerVideo)
+          };
+
+          // Save to Firestore
+          if (adminDb) {
+            await (adminDb as any).collection('youtube_analytics_summary').doc(brand).set({
+              ...results[brand],
+              patterns,
+              lastSyncedAt: Date.now()
+            }, { merge: true });
+          }
+
+          brandsSynced++;
+          console.log(`   ✅ ${brand}: ${summary.recentVideos.length} videos, ${summary.avgViewsPerVideo.toFixed(0)} avg views`);
+        } else {
+          results[brand] = { success: false, error: 'Failed to fetch' };
+          console.log(`   ❌ ${brand}: Failed to fetch`);
+        }
+      } catch (error) {
+        results[brand] = {
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error'
+        };
+        console.error(`   ❌ ${brand}:`, error instanceof Error ? error.message : error);
+      }
+    }
+
+    console.log(`\n   📊 Synced ${brandsSynced}/${YOUTUBE_BRANDS.length} brands`);
+
+    return {
+      success: true,
+      brandsSynced,
+      totalBrands: YOUTUBE_BRANDS.length,
+      results
+    };
+
+  } catch (error) {
+    console.error('   ❌ YouTube sync error:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
+  }
 }

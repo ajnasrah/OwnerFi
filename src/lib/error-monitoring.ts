@@ -94,8 +94,64 @@ export function logInfo(
   console.log(`ℹ️  [${context}] ${message}`, metadata || '');
 }
 
+/**
+ * Alert system-wide error via Slack (for cron jobs, maintenance, etc.)
+ */
+export async function alertSystemError(
+  context: string,
+  message: string,
+  metadata?: Record<string, any>
+): Promise<void> {
+  if (!monitoring.slackWebhook) {
+    console.warn('⚠️  Slack webhook not configured, skipping alert');
+    return;
+  }
+
+  try {
+    const slackMessage = {
+      text: `⚠️ System Alert: ${context}`,
+      blocks: [
+        {
+          type: 'header',
+          text: {
+            type: 'plain_text',
+            text: `⚠️ System Alert: ${context}`,
+          },
+        },
+        {
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: `*Message:*\n${message}`,
+          },
+        },
+        ...(metadata ? [{
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: `*Details:*\n\`\`\`${JSON.stringify(metadata, null, 2)}\`\`\``,
+          },
+        }] : []),
+      ],
+    };
+
+    const response = await fetch(monitoring.slackWebhook, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(slackMessage),
+    });
+
+    if (!response.ok) {
+      console.error('Failed to send Slack alert:', await response.text());
+    }
+  } catch (error) {
+    console.error('❌ Error sending system alert:', error);
+  }
+}
+
 export default {
   alertWorkflowFailure,
+  alertSystemError,
   logError,
   logInfo,
 };

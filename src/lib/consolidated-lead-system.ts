@@ -13,8 +13,6 @@ export interface LeadMatch {
   phone: string;
   city: string;
   state: string;
-  maxMonthlyPayment: number;
-  maxDownPayment: number;
   languages: string[];
   matchScore: number;
   matchReasons: string[];
@@ -39,8 +37,6 @@ export interface BuyerDetails {
   phone: string;
   city: string;         // Maps to preferredCity from BuyerProfile
   state: string;        // Maps to preferredState from BuyerProfile
-  maxMonthlyPayment: number;
-  maxDownPayment: number;
 }
 
 export class ConsolidatedLeadSystem {
@@ -88,8 +84,6 @@ export class ConsolidatedLeadSystem {
             phone: buyer.phone,
             city: buyer.preferredCity,
             state: buyer.preferredState,
-            maxMonthlyPayment: buyer.maxMonthlyPayment,
-            maxDownPayment: buyer.maxDownPayment,
             languages: buyer.languages,
             matchScore: matchResult.score,
             matchReasons: matchResult.reasons,
@@ -171,12 +165,6 @@ export class ConsolidatedLeadSystem {
       }
     }
     
-    // Budget reasonableness bonus (buyers with realistic budgets)
-    if (buyer.maxMonthlyPayment >= 800 && buyer.maxDownPayment >= 5000) {
-      score += 10;
-      reasons.push('Realistic budget');
-    }
-    
     return {
       isMatch: true,
       score: Math.min(score, 100), // Cap at 100
@@ -221,9 +209,7 @@ export class ConsolidatedLeadSystem {
           email: buyer.email,
           phone: buyer.phone,
           city: buyer.preferredCity,
-          state: buyer.preferredState,
-          maxMonthlyPayment: buyer.maxMonthlyPayment,
-          maxDownPayment: buyer.maxDownPayment
+          state: buyer.preferredState
         }
       };
       
@@ -280,8 +266,6 @@ export class ConsolidatedLeadSystem {
     email: string;
     phone: string;
     city: string;
-    maxMonthlyPayment: number;
-    maxDownPayment: number;
     languages?: string[];
   }): Promise<string> {
     try {
@@ -304,11 +288,7 @@ export class ConsolidatedLeadSystem {
         city: city,                    // API compatibility
         state: state,                  // API compatibility
         searchRadius: 25,
-        
-        // Budget
-        maxMonthlyPayment: data.maxMonthlyPayment,
-        maxDownPayment: data.maxDownPayment,
-        
+
         // Defaults
         languages: data.languages || ['English'],
         emailNotifications: true,

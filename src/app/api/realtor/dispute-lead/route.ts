@@ -100,9 +100,7 @@ export async function POST(request: NextRequest) {
       buyerEmail: (buyerProfile as BuyerProfile).email,
       buyerCity: (buyerProfile as BuyerProfile).city,
       buyerState: (buyerProfile as BuyerProfile).state,
-      maxMonthlyPayment: (buyerProfile as BuyerProfile).maxMonthlyPayment,
-      maxDownPayment: (buyerProfile as BuyerProfile).maxDownPayment,
-      
+
       // Realtor information
       realtorName: realtor ? `${(realtor as RealtorProfile).firstName} ${(realtor as RealtorProfile).lastName}` : session.user.email || 'Unknown Realtor',
       realtorEmail: session.user.email,

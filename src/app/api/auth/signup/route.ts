@@ -72,10 +72,6 @@ export async function POST(request: NextRequest) {
           state: '',
           searchRadius: 25,
 
-          // Empty budget fields - to be filled in setup
-          maxMonthlyPayment: 0,
-          maxDownPayment: 0,
-
           // Communication preferences
           languages: languages || ['English'],
           emailNotifications: true,
@@ -114,8 +110,6 @@ export async function POST(request: NextRequest) {
           phone: buyerData.phone,
           city: buyerData.city,
           state: buyerData.state,
-          maxMonthlyPayment: buyerData.maxMonthlyPayment,
-          maxDownPayment: buyerData.maxDownPayment,
           searchRadius: buyerData.searchRadius,
           languages: buyerData.languages
         }).then(result => {

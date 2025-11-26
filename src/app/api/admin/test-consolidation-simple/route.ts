@@ -81,13 +81,11 @@ async function createDallasMemphisTest() {
       email: 'john.smith.dallas@ownerfi.test',
       phone: '214-555-1234',
       city: 'Dallas, TX',
-      maxMonthlyPayment: 2500,
-      maxDownPayment: 60000,
       languages: ['English']
     });
-    
+
     results.dallasBuyer = { id: dallasBuyerId, name: 'John Smith', city: 'Dallas, TX' };
-    
+
     // Create Memphis buyer
     const memphisBuyerId = await ConsolidatedLeadSystem.createBuyerProfile({
       userId: `memphis_buyer_${Date.now()}`,
@@ -96,8 +94,6 @@ async function createDallasMemphisTest() {
       email: 'maria.garcia.memphis@ownerfi.test',
       phone: '901-555-5678',
       city: 'Memphis, TN',
-      maxMonthlyPayment: 2000,
-      maxDownPayment: 45000,
       languages: ['English']
     });
     

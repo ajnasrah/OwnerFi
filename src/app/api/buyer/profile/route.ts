@@ -164,8 +164,6 @@ export async function GET() {
     console.log('✅ [BUYER PROFILE GET] Profile found:', {
       profileId: profile.id,
       hasCity: !!profileData.city || !!profileData.preferredCity,
-      hasMaxMonthlyPayment: !!profileData.maxMonthlyPayment,
-      hasMaxDownPayment: !!profileData.maxDownPayment,
       profileComplete: profileData.profileComplete
     });
 
@@ -223,8 +221,6 @@ export async function POST(request: NextRequest) {
       phone,
       city,
       state,
-      maxMonthlyPayment,
-      maxDownPayment,
       // Optional property filters
       minBedrooms,
       maxBedrooms,
@@ -281,10 +277,6 @@ export async function POST(request: NextRequest) {
       city: city,                    // API compatibility
       state: state,                  // API compatibility
       searchRadius: 25,
-
-      // Budget constraints (optional - kept for backward compatibility)
-      ...(maxMonthlyPayment !== undefined && { maxMonthlyPayment: Number(maxMonthlyPayment) }),
-      ...(maxDownPayment !== undefined && { maxDownPayment: Number(maxDownPayment) }),
 
       // Property requirements (optional filters)
       ...(minBedrooms !== undefined && { minBedrooms: Number(minBedrooms) }),
@@ -360,8 +352,6 @@ export async function POST(request: NextRequest) {
         phone: profileData.phone,
         city: profileData.city,
         state: profileData.state,
-        maxMonthlyPayment: profileData.maxMonthlyPayment,
-        maxDownPayment: profileData.maxDownPayment,
         searchRadius: profileData.searchRadius,
         languages: profileData.languages
       }).then(result => {

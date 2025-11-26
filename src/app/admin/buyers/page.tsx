@@ -252,8 +252,6 @@ export default function AdminBuyers() {
                   <th className="p-4 text-left font-semibold uppercase text-xs tracking-wider">Email</th>
                   <th className="p-4 text-left font-semibold uppercase text-xs tracking-wider">Phone</th>
                   <th className="p-4 text-left font-semibold uppercase text-xs tracking-wider">Location</th>
-                  <th className="p-4 text-left font-semibold uppercase text-xs tracking-wider">Monthly</th>
-                  <th className="p-4 text-left font-semibold uppercase text-xs tracking-wider">Down Pay</th>
                   <th className="p-4 text-center font-semibold uppercase text-xs tracking-wider">Matched</th>
                   <th className="p-4 text-center font-semibold uppercase text-xs tracking-wider">Liked</th>
                   <th className="p-4 text-left font-semibold uppercase text-xs tracking-wider">Joined</th>
@@ -289,20 +287,6 @@ export default function AdminBuyers() {
                         {(buyer.preferredCity || buyer.city) && (buyer.preferredState || buyer.state)
                           ? `${buyer.preferredCity || buyer.city}, ${buyer.preferredState || buyer.state}`
                           : 'N/A'}
-                      </div>
-                    </td>
-                    <td className="p-4">
-                      <div className="text-slate-300 text-sm font-medium">
-                        {buyer.maxMonthlyPayment
-                          ? `$${buyer.maxMonthlyPayment.toLocaleString()}/mo`
-                          : 'N/A'}
-                      </div>
-                    </td>
-                    <td className="p-4">
-                      <div className="text-emerald-400 font-semibold">
-                        {buyer.maxDownPayment
-                          ? `$${buyer.maxDownPayment.toLocaleString()}`
-                          : '$0'}
                       </div>
                     </td>
                     <td className="p-4 text-center">

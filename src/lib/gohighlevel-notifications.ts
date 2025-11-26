@@ -64,8 +64,6 @@ export async function sendPropertyMatchNotification(
       buyerEmail: buyer.email,
       buyerCity: buyer.preferredCity || buyer.city || '',
       buyerState: buyer.preferredState || buyer.state || '',
-      buyerMaxMonthlyPayment: buyer.maxMonthlyPayment,
-      buyerMaxDownPayment: buyer.maxDownPayment,
 
       // Property Information
       propertyId: property.id,
@@ -243,21 +241,6 @@ export function shouldNotifyBuyer(
     return {
       shouldNotify: false,
       reason: 'Buyer already passed on this property',
-    };
-  }
-
-  // Check basic matching criteria
-  if (property.monthlyPayment > buyer.maxMonthlyPayment) {
-    return {
-      shouldNotify: false,
-      reason: 'Monthly payment exceeds budget',
-    };
-  }
-
-  if (property.downPaymentAmount > buyer.maxDownPayment) {
-    return {
-      shouldNotify: false,
-      reason: 'Down payment exceeds budget',
     };
   }
 

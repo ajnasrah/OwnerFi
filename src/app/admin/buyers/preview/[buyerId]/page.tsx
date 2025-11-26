@@ -111,8 +111,6 @@ export default function BuyerPreview() {
         phone: profileData.profile.phone,
         city: profileData.profile.preferredCity || profileData.profile.city,
         state: profileData.profile.preferredState || profileData.profile.state || 'TX',
-        maxMonthlyPayment: profileData.profile.maxMonthlyPayment,
-        maxDownPayment: profileData.profile.maxDownPayment,
         likedProperties: profileData.profile.likedPropertyIds || [],
       };
 
@@ -121,7 +119,7 @@ export default function BuyerPreview() {
 
       // Fetch properties using same API as buyer dashboard
       const propertiesRes = await fetch(
-        `/api/buyer/properties?city=${encodeURIComponent(dashboardProfile.city)}&state=${encodeURIComponent(dashboardProfile.state)}&maxMonthlyPayment=${dashboardProfile.maxMonthlyPayment}&maxDownPayment=${dashboardProfile.maxDownPayment}`
+        `/api/buyer/properties?city=${encodeURIComponent(dashboardProfile.city)}&state=${encodeURIComponent(dashboardProfile.state)}`
       );
       const propertiesData = await propertiesRes.json();
 

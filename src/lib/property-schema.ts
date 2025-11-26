@@ -140,13 +140,11 @@ export interface PropertySearchCriteria {
   centerCity: string;
   centerState: string;
   searchRadius: number;                // Miles
-  
-  // Budget constraints
-  maxMonthlyPayment: number;
-  maxDownPayment: number;
+
+  // Price constraints
   minPrice?: number;
   maxPrice?: number;
-  
+
   // Property requirements
   minBedrooms?: number;
   minBathrooms?: number;

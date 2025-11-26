@@ -26,10 +26,6 @@
       "schedule": "0 13 * * *"
     },
     {
-      "path": "/api/benefit/cron",
-      "schedule": "20 9,12,15,18,21 * * *"
-    },
-    {
       "path": "/api/property/video-cron",
       "schedule": "40 9,12,15,18,21 * * *"
     },
@@ -46,10 +42,6 @@
       "schedule": "*/30 14-23,0-4 * * *"
     },
     {
-      "path": "/api/cron/weekly-maintenance",
-      "schedule": "0 11 * * 1"
-    },
-    {
       "path": "/api/cron/daily-maintenance",
       "schedule": "0 3 * * *"
     },
@@ -60,10 +52,6 @@
     {
       "path": "/api/cron/process-scraper-queue",
       "schedule": "0 10,12,14,16,18,20,22 * * *"
-    },
-    {
-      "path": "/api/benefit/workflow/auto-retry",
-      "schedule": "0 */2 * * *"
     },
     {
       "path": "/api/cron/abdullah",
@@ -92,10 +80,6 @@
     {
       "path": "/api/cron/process-agent-outreach-queue",
       "schedule": "0 */4 * * *"
-    },
-    {
-      "path": "/api/cron/sync-youtube-analytics",
-      "schedule": "0 6 * * *"
     }
   ],
   "functions": {
@@ -123,14 +107,8 @@
     "src/app/api/cron/check-stuck-workflows/route.ts": {
       "maxDuration": 300
     },
-    "src/app/api/cron/weekly-maintenance/route.ts": {
-      "maxDuration": 60
-    },
     "src/app/api/cron/daily-maintenance/route.ts": {
       "maxDuration": 300
-    },
-    "src/app/api/benefit/cron/route.ts": {
-      "maxDuration": 60
     },
     "src/app/api/property/video-cron/route.ts": {
       "maxDuration": 60
@@ -139,9 +117,6 @@
       "maxDuration": 60
     },
     "src/app/api/property/generate-video/route.ts": {
-      "maxDuration": 60
-    },
-    "src/app/api/benefit/workflow/auto-retry/route.ts": {
       "maxDuration": 60
     },
     "src/app/api/benefit/workflow/retry/route.ts": {
@@ -170,9 +145,6 @@
     },
     "src/app/api/cron/process-agent-outreach-queue/route.ts": {
       "maxDuration": 300
-    },
-    "src/app/api/cron/sync-youtube-analytics/route.ts": {
-      "maxDuration": 120
     },
     "src/app/api/**/*.ts": {
       "maxDuration": 30

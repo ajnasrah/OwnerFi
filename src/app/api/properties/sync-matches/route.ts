@@ -200,17 +200,6 @@ async function checkPropertyMatchesBuyer(property: PropertyListing & { id: strin
 
     if (!locationMatch) return false;
 
-    // NEW: Budget match with OR logic - matches if EITHER criterion is met
-    const maxMonthly = criteria.maxMonthlyPayment || buyerData.maxMonthlyPayment || 0;
-    const maxDown = criteria.maxDownPayment || buyerData.maxDownPayment || 0;
-
-    const monthlyPaymentMatch = property.monthlyPayment <= maxMonthly;
-    const downPaymentMatch = property.downPaymentAmount <= maxDown;
-
-    const budgetMatch = monthlyPaymentMatch || downPaymentMatch;
-
-    if (!budgetMatch) return false;
-
     // Requirements match
     const requirementsMatch =
       (!buyerData.minBedrooms || property.bedrooms >= buyerData.minBedrooms) &&
@@ -314,8 +303,6 @@ export async function GET(request: NextRequest) {
 
           const buyerForMatching = {
             id: buyerData.id,
-            maxMonthlyPayment: criteria.maxMonthlyPayment || buyerData.maxMonthlyPayment || 0,
-            maxDownPayment: criteria.maxDownPayment || buyerData.maxDownPayment || 0,
             preferredCity: buyerData.preferredCity || '',
             preferredState: buyerData.preferredState || '',
             searchRadius: criteria.searchRadius || buyerData.searchRadius || 25,

@@ -17,8 +17,6 @@ export async function POST(request: NextRequest) {
       // Buyer specific
       city,
       state,
-      maxMonthlyPayment,
-      maxDownPayment,
       // Realtor specific
       company,
       licenseNumber,
@@ -133,10 +131,6 @@ export async function POST(request: NextRequest) {
         state: state || '',
         searchRadius: 25,
 
-        // Budget - use provided values or default to zero
-        maxMonthlyPayment: maxMonthlyPayment || 0,
-        maxDownPayment: maxDownPayment || 0,
-
         // Communication preferences
         languages: ['English'],
         emailNotifications: true,
@@ -197,8 +191,6 @@ export async function POST(request: NextRequest) {
         phone: buyerData.phone,
         city: buyerData.city,
         state: buyerData.state,
-        maxMonthlyPayment: buyerData.maxMonthlyPayment,
-        maxDownPayment: buyerData.maxDownPayment,
         searchRadius: buyerData.searchRadius,
         languages: buyerData.languages
       }).then(result => {
@@ -295,10 +287,6 @@ export async function POST(request: NextRequest) {
         city: city || '',
         state: state || '',
         searchRadius: 25,
-
-        // Budget - realtors don't need budget
-        maxMonthlyPayment: 0,
-        maxDownPayment: 0,
 
         // Communication preferences
         languages: ['English'],

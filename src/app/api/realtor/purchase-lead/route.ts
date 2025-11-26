@@ -20,8 +20,6 @@ interface PurchaseLeadResponse {
     phone: string;
     city: string;
     state: string;
-    maxMonthlyPayment: number;
-    maxDownPayment: number;
   };
   creditsRemaining?: number;
 }
@@ -84,8 +82,6 @@ export async function POST(request: NextRequest) {
       city?: string;
       preferredState?: string;
       state?: string;
-      maxMonthlyPayment: number;
-      maxDownPayment: number;
       isAvailableForPurchase?: boolean;
     };
     
@@ -198,9 +194,7 @@ export async function POST(request: NextRequest) {
         email: buyer.email,
         phone: buyer.phone,
         city: buyer.preferredCity || buyer.city,      // Compatibility
-        state: buyer.preferredState || buyer.state,   // Compatibility
-        maxMonthlyPayment: buyer.maxMonthlyPayment,
-        maxDownPayment: buyer.maxDownPayment
+        state: buyer.preferredState || buyer.state   // Compatibility
       },
       creditsRemaining: newCredits
     };

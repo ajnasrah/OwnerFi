@@ -3,8 +3,6 @@
 import { useState, useEffect } from 'react';
 
 interface BuyerProfile {
-  maxMonthlyPayment?: number;
-  maxDownPayment?: number;
   minBedrooms?: number;
   maxBedrooms?: number;
   minBathrooms?: number;
@@ -31,10 +29,8 @@ export function useFilterUpgradePrompt(profile: BuyerProfile | null) {
     }
 
     // Check if this is an "old user" who needs the upgrade
+    // Show prompt if missing ALL filter fields
     const isOldUser =
-      // Has old budget fields
-      (profile.maxMonthlyPayment !== undefined || profile.maxDownPayment !== undefined) &&
-      // But missing ALL new filter fields
       profile.minBedrooms === undefined &&
       profile.maxBedrooms === undefined &&
       profile.minBathrooms === undefined &&

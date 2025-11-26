@@ -15,8 +15,6 @@ interface LeadData {
   phone: string;
   city: string;
   state: string;
-  maxMonthlyPayment: number;
-  maxDownPayment: number;
   languages: string[];
   matchScore: number;
   matchReasons: string[];
@@ -33,8 +31,6 @@ interface OwnedBuyer {
   phone: string;
   city: string;
   state: string;
-  maxMonthlyPayment: number;
-  maxDownPayment: number;
   purchasedAt: string;
   status: string;
 }
@@ -248,8 +244,6 @@ async function getAvailableLeads(userId: string, realtorData: Record<string, unk
         phone: buyer.phone,
         city: buyer.preferredCity,
         state: buyer.preferredState,
-        maxMonthlyPayment: buyer.maxMonthlyPayment,
-        maxDownPayment: buyer.maxDownPayment,
         minBedrooms: buyer.minBedrooms,
         minBathrooms: buyer.minBathrooms,
         languages: buyer.languages || ['English'],
@@ -293,11 +287,9 @@ async function getOwnedBuyers(userId: string): Promise<OwnedBuyer[]> {
         phone: string;
         preferredCity: string;
         preferredState: string;
-        maxMonthlyPayment: number;
-        maxDownPayment: number;
         [key: string]: unknown;
       };
-      
+
       if (buyer) {
         const ownedBuyer = {
           id: buyer.id,
@@ -307,8 +299,6 @@ async function getOwnedBuyers(userId: string): Promise<OwnedBuyer[]> {
           phone: buyer.phone,
           city: buyer.preferredCity,
           state: buyer.preferredState,
-          maxMonthlyPayment: buyer.maxMonthlyPayment,
-          maxDownPayment: buyer.maxDownPayment,
           purchasedAt: (purchase as { purchasedAt?: { toDate: () => Date }; [key: string]: unknown }).purchasedAt?.toDate ? (purchase as { purchasedAt: { toDate: () => Date }; [key: string]: unknown }).purchasedAt.toDate().toISOString() : new Date().toISOString(),
           status: (purchase as { status?: string; [key: string]: unknown }).status || 'purchased'
         };
@@ -385,8 +375,6 @@ async function getMatchedBuyerLeads(realtorData: {
   phone: string;
   city: string;
   state: string;
-  maxMonthlyPayment: number;
-  maxDownPayment: number;
   languages: string[];
   matchScore: number;
   matchReasons: string[];
@@ -438,8 +426,6 @@ async function getMatchedBuyerLeads(realtorData: {
       phone: string;
       city: string;
       state: string;
-      maxMonthlyPayment: number;
-      maxDownPayment: number;
       languages: string[];
       matchScore: number;
       matchReasons: string[];

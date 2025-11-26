@@ -40,8 +40,6 @@ interface BuyerData {
   phone: string;
   city: string;
   state: string;
-  maxMonthlyPayment: number;
-  maxDownPayment: number;
   searchRadius?: number;
   languages?: string[];
   createdAt?: any;
@@ -247,8 +245,6 @@ export async function syncBuyerToGHL(buyer: BuyerData): Promise<{ success: boole
       phone: buyer.phone || '',
       city: buyer.city || '',
       state: buyer.state || '',
-      max_monthly_payment: buyer.maxMonthlyPayment || 0,
-      max_down_payment: buyer.maxDownPayment || 0,
       search_radius: buyer.searchRadius || 25,
       languages: buyer.languages?.join(', ') || 'English',
       source: 'ownerfi_platform',

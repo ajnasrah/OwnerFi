@@ -14,8 +14,6 @@ interface BuyerLead {
   phone: string;
   city: string;
   state: string;
-  maxMonthlyPayment: number;
-  maxDownPayment: number;
   matchPercentage?: number;
   createdAt: string;
 }
@@ -28,8 +26,6 @@ interface OwnedBuyer {
   phone: string;
   city: string;
   state: string;
-  maxMonthlyPayment: number;
-  maxDownPayment: number;
   purchaseDate: string;
 }
 

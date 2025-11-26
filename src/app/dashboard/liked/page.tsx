@@ -18,7 +18,7 @@ type Property = PropertyListing & {
 export default function LikedProperties() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  
+
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -50,8 +50,6 @@ export default function LikedProperties() {
         setError(data.error);
       } else {
         setProperties(data.likedProperties || []);
-        // setProfile(data.profile); // TODO: Define setProfile function
-        
       }
 
     } catch {
@@ -74,6 +72,28 @@ export default function LikedProperties() {
       }
     } catch {
     }
+  };
+
+  // Format property type for display
+  const formatPropertyType = (type: string) => {
+    const types: Record<string, string> = {
+      'single-family': 'Single Family',
+      'condo': 'Condo',
+      'townhouse': 'Townhouse',
+      'mobile-home': 'Mobile Home',
+      'multi-family': 'Multi-Family',
+      'land': 'Land'
+    };
+    return types[type] || type;
+  };
+
+  // Format lot size
+  const formatLotSize = (lotSize?: number) => {
+    if (!lotSize) return null;
+    if (lotSize >= 43560) {
+      return `${(lotSize / 43560).toFixed(2)} acres`;
+    }
+    return `${lotSize.toLocaleString()} sq ft`;
   };
 
   if (loading) {
@@ -117,7 +137,7 @@ export default function LikedProperties() {
               <span>Learn</span>
             </Link>
           </div>
-          
+
           <div className="hidden md:flex items-center space-x-6">
             <div className="flex space-x-4">
               <Link href="/dashboard" className="flex flex-col items-center group">
@@ -126,14 +146,14 @@ export default function LikedProperties() {
                 </div>
                 <span className="text-xs font-bold text-slate-400 mt-1">BROWSE</span>
               </Link>
-              
+
               <Link href="/dashboard/liked" className="flex flex-col items-center group">
                 <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
                   <span className="text-white text-xl">♥</span>
                 </div>
                 <span className="text-xs font-bold text-emerald-400 mt-1">SAVED</span>
               </Link>
-              
+
               <Link href="/dashboard/settings" className="flex flex-col items-center group">
                 <div className="w-12 h-12 bg-slate-700/50 hover:bg-slate-600/50 rounded-xl flex items-center justify-center transition-colors group-hover:scale-110">
                   <span className="text-slate-300 text-xl">⚙</span>
@@ -141,7 +161,7 @@ export default function LikedProperties() {
                 <span className="text-xs font-bold text-slate-400 mt-1">SETTINGS</span>
               </Link>
             </div>
-            
+
             <button
               onClick={() => signOut({ callbackUrl: '/auth/signout' })}
               className="flex flex-col items-center group"
@@ -154,7 +174,7 @@ export default function LikedProperties() {
           </div>
         </div>
       </header>
-      
+
       <main className="px-4 pb-8 pt-6">
         <div className="max-w-7xl mx-auto">
           {/* Error State */}
@@ -186,100 +206,159 @@ export default function LikedProperties() {
                       }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"></div>
+
+                    {/* Badges */}
+                    <div className="absolute top-3 left-3 flex gap-2">
+                      <div className="bg-blue-600 text-white px-2 py-1 rounded-lg text-xs font-bold">
+                        {formatPropertyType(property.propertyType)}
+                      </div>
+                      <div className="bg-emerald-600 text-white px-2 py-1 rounded-lg text-xs font-bold">
+                        Owner Finance
+                      </div>
+                    </div>
                     <div className="absolute top-3 right-3 bg-gradient-to-r from-red-500 to-red-600 text-white px-3 py-2 rounded-xl text-sm font-bold shadow-xl border border-red-400/30">
                       ❤️ SAVED
                     </div>
                   </div>
-                  
+
                   <div className="p-6">
-                    <h3 className="text-lg font-bold text-white mb-2">
+                    {/* Price */}
+                    <div className="mb-2">
+                      <div className="text-2xl font-black text-white">
+                        ${property.listPrice?.toLocaleString()}
+                      </div>
+                      {property.pricePerSqFt && (
+                        <div className="text-slate-400 text-xs">
+                          ${property.pricePerSqFt.toLocaleString()}/sq ft
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Address */}
+                    <h3 className="text-lg font-bold text-white mb-1">
                       {property.address.toUpperCase()}
                     </h3>
                     <p className="text-slate-300 mb-4 font-semibold">
-                      {property.city}, {property.state}
+                      {property.city}, {property.state} {property.zipCode}
                     </p>
-                    
-                    <div className="space-y-3 mb-4">
-                      <div className="flex justify-between items-center">
-                        <span className="text-slate-400 font-semibold">List Price:</span>
-                        <span className="font-bold text-white text-lg">${property.listPrice?.toLocaleString()}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-slate-400 font-semibold">Monthly Payment:</span>
-                        <span className="font-bold text-emerald-400 text-lg">
-                          {property.monthlyPayment && property.monthlyPayment > 0
-                            ? `$${Math.ceil(property.monthlyPayment).toLocaleString()} est`
-                            : 'Contact Seller'}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-slate-400 font-semibold">Down Payment:</span>
-                        <span className="font-bold text-blue-400 text-lg">
-                          {property.downPaymentAmount && property.downPaymentAmount > 0
-                            ? `$${Math.ceil(property.downPaymentAmount).toLocaleString()} est`
-                            : 'Contact Seller'}
-                        </span>
-                      </div>
-                      {property.interestRate !== undefined && property.interestRate !== null && (
-                        <div className="flex justify-between items-center">
-                          <span className="text-slate-400 font-semibold">Interest Rate:</span>
-                          <span className="font-bold text-yellow-400 text-lg">{property.interestRate}%</span>
-                        </div>
-                      )}
-                      {property.downPaymentPercent !== undefined && property.downPaymentPercent !== null && (
-                        <div className="flex justify-between items-center">
-                          <span className="text-slate-400 font-semibold">Down Payment %:</span>
-                          <span className="font-bold text-purple-400 text-lg">{property.downPaymentPercent}%</span>
-                        </div>
-                      )}
 
-                      {/* Payment Disclaimer */}
-                      <div className="text-center bg-slate-700/30 rounded p-2">
-                        <p className="text-slate-300 text-xs">
-                          * Estimates only. Excludes taxes, insurance, HOA fees
-                        </p>
+                    {/* Quick Stats */}
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      <div className="flex items-center gap-1 bg-slate-700/50 rounded-lg px-2 py-1">
+                        <span className="text-xs">🛏️</span>
+                        <span className="text-sm font-bold text-white">{property.bedrooms}</span>
+                        <span className="text-[10px] text-slate-400">beds</span>
                       </div>
-                      
-                      {/* Balloon Payment Info */}
-                      {property.balloonYears ? (
-                        <div className="bg-yellow-500/20 border border-yellow-400/30 rounded-lg p-3 mt-3">
-                          <div className="flex items-center gap-2 mb-2">
-                            <span className="text-yellow-400 text-sm">🎈</span>
-                            <span className="text-yellow-300 font-semibold text-sm">Balloon Term</span>
-                          </div>
-                          <div className="flex justify-between items-center mb-2">
-                            <span className="text-yellow-200 text-xs">Balloon Due In:</span>
-                            <span className="font-bold text-yellow-300">{property.balloonYears} year{property.balloonYears > 1 ? 's' : ''}</span>
-                          </div>
-                          <p className="text-yellow-200 text-xs leading-relaxed">
-                            This property has a balloon payment due in {property.balloonYears} year{property.balloonYears > 1 ? 's' : ''}. Plan to refinance or pay off the balance.
-                          </p>
-                          <div className="mt-2">
-                            <Link
-                              href="/how-owner-finance-works#balloon-payments"
-                              className="text-yellow-300 underline text-xs hover:text-yellow-200"
-                            >
-                              Learn about balloon payments →
-                            </Link>
-                          </div>
+                      <div className="flex items-center gap-1 bg-slate-700/50 rounded-lg px-2 py-1">
+                        <span className="text-xs">🚿</span>
+                        <span className="text-sm font-bold text-white">{property.bathrooms}</span>
+                        <span className="text-[10px] text-slate-400">baths</span>
+                      </div>
+                      <div className="flex items-center gap-1 bg-slate-700/50 rounded-lg px-2 py-1">
+                        <span className="text-xs">📏</span>
+                        <span className="text-sm font-bold text-white">{property.squareFeet?.toLocaleString() || 'N/A'}</span>
+                        <span className="text-[10px] text-slate-400">sq ft</span>
+                      </div>
+                      {property.yearBuilt && (
+                        <div className="flex items-center gap-1 bg-slate-700/50 rounded-lg px-2 py-1">
+                          <span className="text-xs">📅</span>
+                          <span className="text-sm font-bold text-white">{property.yearBuilt}</span>
+                          <span className="text-[10px] text-slate-400">built</span>
                         </div>
-                      ) : null}
+                      )}
                     </div>
 
-                    <div className="flex justify-between text-sm text-slate-400 mb-4 font-semibold">
-                      <span>{property.bedrooms} BED</span>
-                      <span>{property.bathrooms} BATH</span>
-                      <span>{property.squareFeet?.toLocaleString()} SQ FT</span>
+                    {/* Property Details */}
+                    <div className="space-y-2 mb-4">
+                      {formatLotSize(property.lotSize) && (
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-slate-400">Lot Size:</span>
+                          <span className="font-semibold text-white">{formatLotSize(property.lotSize)}</span>
+                        </div>
+                      )}
+                      {property.garage && property.garage > 0 && (
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-slate-400">Garage:</span>
+                          <span className="font-semibold text-white">{property.garage} car</span>
+                        </div>
+                      )}
+                      {property.stories && (
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-slate-400">Stories:</span>
+                          <span className="font-semibold text-white">{property.stories}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Third-Party Estimates */}
+                    {(property.estimatedValue || property.rentZestimate) && (
+                      <div className="bg-purple-900/30 border border-purple-500/30 rounded-lg p-3 mb-4">
+                        <div className="text-[9px] text-purple-300 mb-2">
+                          Third-party estimates • No guarantee • Verify independently
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          {property.estimatedValue && property.estimatedValue > 0 && (
+                            <div>
+                              <div className="text-[10px] text-purple-300">Est. Home Value</div>
+                              <div className="text-sm font-bold text-purple-200">
+                                ${property.estimatedValue.toLocaleString()}
+                              </div>
+                            </div>
+                          )}
+                          {property.rentZestimate && property.rentZestimate > 0 && (
+                            <div>
+                              <div className="text-[10px] text-purple-300">Est. Monthly Rent</div>
+                              <div className="text-sm font-bold text-purple-200">
+                                ${property.rentZestimate.toLocaleString()}/mo
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* HOA & Taxes */}
+                    {(property.hoa?.hasHOA || property.taxes?.annualAmount) && (
+                      <div className="bg-amber-900/30 border border-amber-500/30 rounded-lg p-3 mb-4">
+                        <div className="text-[9px] text-amber-300 mb-2">
+                          Third-party source • No estimate guarantee
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          {property.hoa?.hasHOA && (
+                            <div>
+                              <div className="text-[10px] text-amber-300">HOA Fee</div>
+                              <div className="text-sm font-bold text-amber-200">
+                                {property.hoa.monthlyFee ? `$${property.hoa.monthlyFee}/mo` : 'Yes'}
+                              </div>
+                            </div>
+                          )}
+                          {property.taxes?.annualAmount && (
+                            <div>
+                              <div className="text-[10px] text-amber-300">Annual Taxes</div>
+                              <div className="text-sm font-bold text-amber-200">
+                                ${property.taxes.annualAmount.toLocaleString()}/yr
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Disclaimer */}
+                    <div className="text-center bg-slate-700/30 rounded p-2 mb-4">
+                      <p className="text-slate-400 text-[10px]">
+                        Property info from listing agent • OwnerFi does not verify • Conduct your own due diligence
+                      </p>
                     </div>
 
                     <div className="grid grid-cols-3 gap-2">
-                      <button 
+                      <button
                         onClick={() => removeLike(property.id)}
                         className="bg-red-600/20 hover:bg-red-600/30 text-red-400 py-2 px-3 rounded-lg transition-all hover:scale-105 font-bold border border-red-500/30 text-sm"
                       >
                         REMOVE
                       </button>
-                      
+
                       <button
                         onClick={() => {
                           const message = `I'm interested in the property at ${property.address}, ${property.city}, ${property.state}. Found through OwnerFi.`;
@@ -313,7 +392,7 @@ export default function LikedProperties() {
               <p className="text-slate-300 mb-8 font-medium text-lg">
                 Start browsing and save properties you like to see them here.
               </p>
-              <Link 
+              <Link
                 href="/dashboard"
                 className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 rounded-xl font-bold text-lg transition-all duration-300 hover:scale-105 shadow-2xl shadow-emerald-500/25"
               >

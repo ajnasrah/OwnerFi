@@ -149,11 +149,11 @@ export default function PropertiesTab({ setEditingProperty, setEditForm }: Prope
               <th scope="col" className="hidden lg:table-cell px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700" onClick={() => handleSort('listPrice')}>
                 Price {sortField === 'listPrice' && (sortDirection === 'asc' ? '↑' : '↓')}
               </th>
-              <th scope="col" className="hidden lg:table-cell px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700" onClick={() => handleSort('downPaymentAmount')}>
-                Down Payment {sortField === 'downPaymentAmount' && (sortDirection === 'asc' ? '↑' : '↓')}
+              <th scope="col" className="hidden lg:table-cell px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Details
               </th>
-              <th scope="col" className="hidden xl:table-cell px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700" onClick={() => handleSort('monthlyPayment')}>
-                Monthly Payment {sortField === 'monthlyPayment' && (sortDirection === 'asc' ? '↑' : '↓')}
+              <th scope="col" className="hidden xl:table-cell px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Estimates
               </th>
             </tr>
           </thead>
@@ -188,12 +188,6 @@ export default function PropertiesTab({ setEditingProperty, setEditForm }: Prope
                           bathrooms: property.bathrooms,
                           squareFeet: property.squareFeet,
                           listPrice: property.listPrice,
-                          monthlyPayment: property.monthlyPayment,
-                          downPaymentAmount: property.downPaymentAmount,
-                          interestRate: property.interestRate,
-                          downPaymentPercent: property.downPaymentPercent,
-                          termYears: property.termYears,
-                          balloonYears: property.balloonYears,
                           imageUrl: property.imageUrl || property.imageUrls?.[0] || '',
                           imageUrls: property.imageUrls || (property.imageUrl ? [property.imageUrl] : [])
                         });
@@ -278,11 +272,21 @@ export default function PropertiesTab({ setEditingProperty, setEditForm }: Prope
                   )}
                 </td>
                 <td className="hidden lg:table-cell px-3 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-gray-900">${property.downPaymentAmount?.toLocaleString()}</div>
-                  <div className="text-xs text-gray-500">{property.downPaymentPercent ? `${Math.round(property.downPaymentPercent)}%` : ''}</div>
+                  <div className="text-sm text-gray-900">{property.bedrooms} bed • {property.bathrooms} bath</div>
+                  <div className="text-xs text-gray-500">
+                    {property.squareFeet?.toLocaleString() || 'N/A'} sqft
+                    {(property as any).yearBuilt && ` • ${(property as any).yearBuilt}`}
+                  </div>
                 </td>
                 <td className="hidden xl:table-cell px-3 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-gray-900">${property.monthlyPayment?.toLocaleString()}/mo</div>
+                  {(property as any).estimatedValue && (property as any).estimatedValue > 0 ? (
+                    <div>
+                      <div className="text-sm text-gray-900">${((property as any).estimatedValue)?.toLocaleString()}</div>
+                      <div className="text-xs text-gray-500">Est. Value</div>
+                    </div>
+                  ) : (
+                    <span className="text-xs text-gray-400">No estimate</span>
+                  )}
                 </td>
               </tr>
             ))}

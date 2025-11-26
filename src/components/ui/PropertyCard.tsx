@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import Image from 'next/image';
 import { PropertyListing } from '@/lib/property-schema';
-import { LEGAL_DISCLAIMERS, SAFE_UI_LABELS, LEGAL_COLORS, AGENT_CONTACT_DISCLAIMER } from '@/lib/legal-disclaimers';
+import { LEGAL_DISCLAIMERS, LEGAL_COLORS, AGENT_CONTACT_DISCLAIMER } from '@/lib/legal-disclaimers';
 
 interface PropertyCardProps {
   property: PropertyListing;
@@ -20,50 +20,46 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
 
   // ONLY use first image - no gallery
   const currentImage = useMemo(() => {
-    // Check all possible image field locations
     const propertyAny = property as any;
-
-    // Try all possible image fields in order of preference
     const imageUrl =
-      propertyAny.imageUrl ||                    // Legacy field
-      propertyAny.firstPropertyImage ||          // Zillow field
-      property.imageUrls?.[0] ||                 // Standard array
-      propertyAny.propertyImages?.[0] ||         // Zillow array
-      propertyAny.zillowImageUrl ||              // Zillow specific
-      propertyAny.images?.[0];                   // Generic images field
+      propertyAny.imageUrl ||
+      propertyAny.firstPropertyImage ||
+      property.imageUrls?.[0] ||
+      propertyAny.propertyImages?.[0] ||
+      propertyAny.zillowImageUrl ||
+      propertyAny.images?.[0];
 
-    // Log if no image found (for debugging)
-    if (!imageUrl && !imageError) {
-      console.warn('No image found for property:', {
-        id: property.id,
-        address: property.address,
-        availableFields: {
-          imageUrl: !!propertyAny.imageUrl,
-          firstPropertyImage: !!propertyAny.firstPropertyImage,
-          imageUrls: Array.isArray(property.imageUrls) ? property.imageUrls.length : 'not array',
-          propertyImages: propertyAny.propertyImages?.length || 0,
-          zillowImageUrl: !!propertyAny.zillowImageUrl,
-          images: propertyAny.images?.length || 0
-        }
-      });
-    }
-
-    // Validate image URL - prevent empty strings
     if (!imageUrl || typeof imageUrl !== 'string' || imageUrl.trim() === '' || imageError) {
       return '/placeholder-house.jpg';
     }
-
     return imageUrl;
   }, [property, imageError]);
 
-  const monthlyPayment = useMemo(() => {
-    return property.monthlyPayment || 0;
-  }, [property.monthlyPayment]);
-
-  // Memoized event handlers
   const toggleDetails = useCallback(() => {
     setShowDetails(prev => !prev);
   }, []);
+
+  // Format property type for display
+  const propertyTypeDisplay = useMemo(() => {
+    const types: Record<string, string> = {
+      'single-family': 'Single Family',
+      'condo': 'Condo',
+      'townhouse': 'Townhouse',
+      'mobile-home': 'Mobile Home',
+      'multi-family': 'Multi-Family',
+      'land': 'Land'
+    };
+    return types[property.propertyType] || property.propertyType;
+  }, [property.propertyType]);
+
+  // Format lot size
+  const lotSizeDisplay = useMemo(() => {
+    if (!property.lotSize) return null;
+    if (property.lotSize >= 43560) {
+      return `${(property.lotSize / 43560).toFixed(2)} acres`;
+    }
+    return `${property.lotSize.toLocaleString()} sq ft`;
+  }, [property.lotSize]);
 
   return (
     <div
@@ -82,8 +78,8 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
           <div
             className="absolute inset-x-0 overflow-hidden"
             style={{
-              top: '6%',
-              height: '40%'
+              top: '2%',
+              height: '44%'
             }}
           >
             <Image
@@ -109,23 +105,18 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
 
         {/* Top Info Bar */}
         <div className="absolute top-0 left-0 right-0 p-3 flex items-start justify-between z-10">
-          {/* Left Side Badges - Horizontal */}
-          <div className="flex gap-2">
-            {/* Owner Finance Badge - Neutral Color */}
-            <div className="bg-slate-600 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg">
-              <div className="flex items-center gap-1.5">
-                <span className="text-sm">🏠</span>
-                <span>{SAFE_UI_LABELS.OWNER_FINANCE_BADGE}</span>
-              </div>
-              <div className="text-[7px] text-white/70 mt-0.5 font-normal">
-                {LEGAL_DISCLAIMERS.OWNER_FINANCE_BADGE}
-              </div>
+          {/* Left Side Badges */}
+          <div className="flex gap-2 flex-wrap">
+            {/* Property Type Badge */}
+            <div className="bg-blue-600 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg flex items-center gap-1.5">
+              <span className="text-sm">🏠</span>
+              <span>{propertyTypeDisplay}</span>
             </div>
 
-            {/* Terms May Vary Badge */}
-            <div className="bg-slate-500 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg flex items-center gap-1.5">
-              <span className="text-sm">💬</span>
-              <span>{SAFE_UI_LABELS.NEGOTIABLE_BADGE}</span>
+            {/* Owner Finance Badge */}
+            <div className="bg-emerald-600 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg flex items-center gap-1.5">
+              <span className="text-sm">💰</span>
+              <span>Owner Finance</span>
             </div>
           </div>
 
@@ -137,9 +128,7 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
           )}
         </div>
 
-        {/* Image gallery removed - showing first image only */}
-
-        {/* Swipe Instructions - Above drawer, always visible */}
+        {/* Swipe Instructions - Above drawer */}
         {!showDetails && (
           <div className="absolute left-0 right-0 z-20 flex justify-center items-center pointer-events-none" style={{ top: '52%' }}>
             <div className="inline-flex items-center gap-1.5 bg-white/95 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg border border-slate-200">
@@ -148,9 +137,8 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
           </div>
         )}
 
-        {/* Bottom Info Panel - Can expand over card */}
+        {/* Bottom Info Panel */}
         <div className="absolute bottom-0 left-0 right-0 z-10 h-[50vh] pointer-events-none">
-          {/* Expandable Details Panel */}
           <div
             className="absolute bottom-0 left-0 right-0 bg-white/98 backdrop-blur-sm rounded-t-3xl pointer-events-auto shadow-2xl transition-transform duration-300 ease-out"
             style={{
@@ -164,7 +152,7 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
             onMouseMove={(e) => { if (showDetails) e.stopPropagation(); }}
             onMouseUp={(e) => { if (showDetails) e.stopPropagation(); }}
           >
-            {/* Handle Bar - Click to expand/collapse */}
+            {/* Handle Bar */}
             <button
               onClick={toggleDetails}
               className="w-full py-4 flex flex-col items-center gap-3 cursor-pointer hover:bg-slate-50/50 transition-colors"
@@ -192,9 +180,7 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
 
             <div
               className="px-6 pb-6 overflow-y-auto"
-              style={{
-                height: 'calc(100% - 5rem)',
-              }}
+              style={{ height: 'calc(100% - 5rem)' }}
               onTouchStart={(e) => e.stopPropagation()}
               onTouchMove={(e) => e.stopPropagation()}
               onTouchEnd={(e) => e.stopPropagation()}
@@ -202,28 +188,20 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
               onMouseMove={(e) => e.stopPropagation()}
               onMouseUp={(e) => e.stopPropagation()}
             >
-              {/* PERSISTENT LEGAL DISCLAIMER - Always Visible */}
-              <div className={`${LEGAL_COLORS.WARNING_BG} border-2 ${LEGAL_COLORS.WARNING_BORDER} rounded-xl p-2 mb-3`}>
-                <p className={`text-[9px] ${LEGAL_COLORS.WARNING_TEXT} font-semibold text-center leading-tight`}>
-                  {LEGAL_DISCLAIMERS.PERSISTENT_WARNING}
-                </p>
-              </div>
-
-              {/* Price - Compact */}
+              {/* Price */}
               <div className="mb-2">
-                <div className="text-2xl font-black text-slate-900 mb-0">
+                <div className="text-3xl font-black text-slate-900">
                   ${property.listPrice?.toLocaleString()}
                 </div>
-                <div className="text-slate-500 text-[10px] leading-tight">
-                  <div className="font-bold">
-                    {SAFE_UI_LABELS.MONTHLY_PAYMENT} {monthlyPayment > 0 ? `$${monthlyPayment.toLocaleString()}/mo` : 'Contact Seller'}
+                {property.pricePerSqFt && (
+                  <div className="text-slate-500 text-xs">
+                    ${property.pricePerSqFt.toLocaleString()}/sq ft
                   </div>
-                  <div className="text-[9px] text-slate-400">{LEGAL_DISCLAIMERS.MONTHLY_PAYMENT}</div>
-                </div>
+                )}
               </div>
 
               {/* Address */}
-              <div className="mb-2">
+              <div className="mb-3">
                 <div className="flex items-start gap-2">
                   <div className="flex-1">
                     <h2 className="text-sm font-bold text-slate-900 leading-tight">
@@ -239,13 +217,10 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
                       const fullAddress = `${property.address}, ${property.city}, ${property.state} ${property.zipCode}`;
                       try {
                         await navigator.clipboard.writeText(fullAddress);
-                        // Show brief checkmark feedback
                         const btn = e.currentTarget;
                         const originalHTML = btn.innerHTML;
                         btn.innerHTML = '<svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" /></svg>';
-                        setTimeout(() => {
-                          btn.innerHTML = originalHTML;
-                        }, 1500);
+                        setTimeout(() => { btn.innerHTML = originalHTML; }, 1500);
                       } catch (err) {
                         console.error('Failed to copy address:', err);
                       }
@@ -260,48 +235,230 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
                 </div>
               </div>
 
-              {/* Quick Stats */}
-              <div className="flex gap-2 mb-2">
-                <div className="flex items-center gap-1">
-                  <div className="w-7 h-7 bg-slate-100 rounded-full flex items-center justify-center">
-                    <span className="text-xs">🛏️</span>
-                  </div>
-                  <div>
-                    <div className="text-sm font-bold text-slate-900">{property.bedrooms}</div>
-                    <div className="text-[9px] text-slate-600">beds</div>
-                  </div>
+              {/* Quick Stats Row */}
+              <div className="flex gap-3 mb-3 flex-wrap">
+                <div className="flex items-center gap-1.5 bg-slate-100 rounded-lg px-2 py-1">
+                  <span className="text-xs">🛏️</span>
+                  <span className="text-sm font-bold text-slate-900">{property.bedrooms}</span>
+                  <span className="text-[10px] text-slate-600">beds</span>
                 </div>
-                <div className="flex items-center gap-1">
-                  <div className="w-7 h-7 bg-slate-100 rounded-full flex items-center justify-center">
-                    <span className="text-xs">🚿</span>
-                  </div>
-                  <div>
-                    <div className="text-sm font-bold text-slate-900">{property.bathrooms}</div>
-                    <div className="text-[9px] text-slate-600">baths</div>
-                  </div>
+                <div className="flex items-center gap-1.5 bg-slate-100 rounded-lg px-2 py-1">
+                  <span className="text-xs">🚿</span>
+                  <span className="text-sm font-bold text-slate-900">{property.bathrooms}</span>
+                  <span className="text-[10px] text-slate-600">baths</span>
                 </div>
-                <div className="flex items-center gap-1">
-                  <div className="w-7 h-7 bg-slate-100 rounded-full flex items-center justify-center">
-                    <span className="text-xs">📏</span>
-                  </div>
-                  <div>
-                    <div className="text-sm font-bold text-slate-900">
-                      {property.squareFeet?.toLocaleString() || 'N/A'}
-                    </div>
-                    <div className="text-[9px] text-slate-600">sq ft</div>
-                  </div>
+                <div className="flex items-center gap-1.5 bg-slate-100 rounded-lg px-2 py-1">
+                  <span className="text-xs">📏</span>
+                  <span className="text-sm font-bold text-slate-900">{property.squareFeet?.toLocaleString() || 'N/A'}</span>
+                  <span className="text-[10px] text-slate-600">sq ft</span>
                 </div>
+                {property.yearBuilt && (
+                  <div className="flex items-center gap-1.5 bg-slate-100 rounded-lg px-2 py-1">
+                    <span className="text-xs">📅</span>
+                    <span className="text-sm font-bold text-slate-900">{property.yearBuilt}</span>
+                    <span className="text-[10px] text-slate-600">built</span>
+                  </div>
+                )}
               </div>
 
               {/* Expanded Details */}
               {showDetails && (
-                <div className="space-y-4 pt-4 border-t border-slate-200">
+                <div className="space-y-4 pt-2 border-t border-slate-200">
+
+                  {/* Third-Party Value Estimates */}
+                  {(property.estimatedValue || property.rentZestimate) && (
+                    <div className="bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200 rounded-2xl p-4">
+                      <h3 className="font-bold text-purple-900 mb-1 flex items-center gap-2 text-sm">
+                        <span>📊</span>
+                        <span>Market Estimates</span>
+                      </h3>
+                      <p className="text-[9px] text-purple-700 mb-3 leading-tight bg-purple-100 rounded-lg p-2">
+                        ⚠️ These estimates are provided by third-party data sources (Zillow). OwnerFi does not calculate or verify these values. Use for reference only.
+                      </p>
+                      <div className="grid grid-cols-2 gap-3">
+                        {property.estimatedValue && property.estimatedValue > 0 && (
+                          <div className="bg-white/60 rounded-xl p-3">
+                            <div className="text-xs text-purple-700 mb-1">Est. Home Value</div>
+                            <div className="text-xl font-black text-purple-900">
+                              ${property.estimatedValue.toLocaleString()}
+                            </div>
+                            <div className="text-[9px] text-purple-600">Third-party estimate</div>
+                          </div>
+                        )}
+                        {property.rentZestimate && property.rentZestimate > 0 && (
+                          <div className="bg-white/60 rounded-xl p-3">
+                            <div className="text-xs text-purple-700 mb-1">Est. Monthly Rent</div>
+                            <div className="text-xl font-black text-purple-900">
+                              ${property.rentZestimate.toLocaleString()}/mo
+                            </div>
+                            <div className="text-[9px] text-purple-600">Third-party estimate</div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Property Details Grid */}
+                  <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200">
+                    <h3 className="font-bold text-slate-900 mb-3 flex items-center gap-2 text-sm">
+                      <span>🏠</span>
+                      <span>Property Details</span>
+                    </h3>
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      {lotSizeDisplay && (
+                        <div>
+                          <div className="text-slate-500 text-xs">Lot Size</div>
+                          <div className="font-bold text-slate-900">{lotSizeDisplay}</div>
+                        </div>
+                      )}
+                      {property.stories && (
+                        <div>
+                          <div className="text-slate-500 text-xs">Stories</div>
+                          <div className="font-bold text-slate-900">{property.stories}</div>
+                        </div>
+                      )}
+                      {property.garage !== undefined && property.garage > 0 && (
+                        <div>
+                          <div className="text-slate-500 text-xs">Garage</div>
+                          <div className="font-bold text-slate-900">{property.garage} car</div>
+                        </div>
+                      )}
+                      {property.parking && (
+                        <div>
+                          <div className="text-slate-500 text-xs">Parking</div>
+                          <div className="font-bold text-slate-900">{property.parking}</div>
+                        </div>
+                      )}
+                      {property.heating && (
+                        <div>
+                          <div className="text-slate-500 text-xs">Heating</div>
+                          <div className="font-bold text-slate-900">{property.heating}</div>
+                        </div>
+                      )}
+                      {property.cooling && (
+                        <div>
+                          <div className="text-slate-500 text-xs">Cooling</div>
+                          <div className="font-bold text-slate-900">{property.cooling}</div>
+                        </div>
+                      )}
+                      {property.daysOnMarket !== undefined && (
+                        <div>
+                          <div className="text-slate-500 text-xs">Days on Market</div>
+                          <div className="font-bold text-slate-900">{property.daysOnMarket}</div>
+                        </div>
+                      )}
+                      {property.neighborhood && (
+                        <div className="col-span-2">
+                          <div className="text-slate-500 text-xs">Neighborhood</div>
+                          <div className="font-bold text-slate-900">{property.neighborhood}</div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* HOA & Taxes */}
+                  {(property.hoa?.hasHOA || property.taxes?.annualAmount) && (
+                    <div className="bg-amber-50 rounded-2xl p-4 border border-amber-200">
+                      <h3 className="font-bold text-amber-900 mb-1 flex items-center gap-2 text-sm">
+                        <span>💵</span>
+                        <span>Additional Costs</span>
+                      </h3>
+                      <p className="text-[9px] text-amber-700 mb-3 leading-tight">
+                        Third-party source • No estimate guarantee • Verify independently
+                      </p>
+                      <div className="grid grid-cols-2 gap-3 text-sm">
+                        {property.hoa?.hasHOA && (
+                          <div>
+                            <div className="text-amber-700 text-xs">HOA Fee</div>
+                            <div className="font-bold text-amber-900">
+                              {property.hoa.monthlyFee ? `$${property.hoa.monthlyFee}/mo` : 'Yes (amount TBD)'}
+                            </div>
+                          </div>
+                        )}
+                        {property.taxes?.annualAmount && (
+                          <div>
+                            <div className="text-amber-700 text-xs">Annual Taxes</div>
+                            <div className="font-bold text-amber-900">
+                              ${property.taxes.annualAmount.toLocaleString()}/yr
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Location Scores */}
+                  {(property.walkScore || property.schoolRating) && (
+                    <div className="bg-blue-50 rounded-2xl p-4 border border-blue-200">
+                      <h3 className="font-bold text-blue-900 mb-1 flex items-center gap-2 text-sm">
+                        <span>📍</span>
+                        <span>Location Scores</span>
+                      </h3>
+                      <p className="text-[9px] text-blue-700 mb-3 leading-tight">
+                        Third-party source • No guarantee • Verify independently
+                      </p>
+                      <div className="grid grid-cols-2 gap-3 text-sm">
+                        {property.walkScore && (
+                          <div>
+                            <div className="text-blue-700 text-xs">Walk Score</div>
+                            <div className="font-bold text-blue-900">{property.walkScore}/100</div>
+                          </div>
+                        )}
+                        {property.schoolRating && (
+                          <div>
+                            <div className="text-blue-700 text-xs">School Rating</div>
+                            <div className="font-bold text-blue-900">{property.schoolRating}/10</div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Features */}
+                  {property.features && property.features.length > 0 && (
+                    <div className="bg-emerald-50 rounded-2xl p-4 border border-emerald-200">
+                      <h3 className="font-bold text-emerald-900 mb-3 flex items-center gap-2 text-sm">
+                        <span>✨</span>
+                        <span>Features</span>
+                      </h3>
+                      <div className="flex flex-wrap gap-2">
+                        {property.features.slice(0, 12).map((feature, idx) => (
+                          <span key={idx} className="bg-emerald-100 text-emerald-800 px-2 py-1 rounded-lg text-xs font-medium">
+                            {feature}
+                          </span>
+                        ))}
+                        {property.features.length > 12 && (
+                          <span className="text-emerald-600 text-xs px-2 py-1">
+                            +{property.features.length - 12} more
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Appliances */}
+                  {property.appliances && property.appliances.length > 0 && (
+                    <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200">
+                      <h3 className="font-bold text-slate-900 mb-3 flex items-center gap-2 text-sm">
+                        <span>🔌</span>
+                        <span>Included Appliances</span>
+                      </h3>
+                      <div className="flex flex-wrap gap-2">
+                        {property.appliances.map((appliance, idx) => (
+                          <span key={idx} className="bg-slate-100 text-slate-700 px-2 py-1 rounded-lg text-xs font-medium">
+                            {appliance}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Property Description */}
                   {property.description && (
                     <div className="bg-gradient-to-br from-slate-50 to-blue-50 rounded-2xl p-4 border border-slate-200">
                       <h3 className="font-bold text-slate-900 mb-1 flex items-center gap-2 text-sm">
                         <span className="text-lg">📝</span>
-                        <span>{SAFE_UI_LABELS.PROPERTY_DESCRIPTION}</span>
+                        <span>Description</span>
                       </h3>
                       <p className="text-[9px] text-slate-500 mb-2 italic leading-tight">
                         {LEGAL_DISCLAIMERS.PROPERTY_DESCRIPTION}
@@ -312,118 +469,14 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
                     </div>
                   )}
 
-                  {/* Rental Estimate */}
-                  {property.rentZestimate && property.rentZestimate > 0 && (
-                    <div className="bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-200 rounded-2xl p-4">
-                      <h3 className="font-bold text-purple-900 mb-1 flex items-center gap-2 text-sm">
-                        <span>🏘️</span>
-                        <span>{SAFE_UI_LABELS.INVESTMENT_SECTION}</span>
-                      </h3>
-                      <p className="text-[9px] text-purple-700 mb-2 leading-tight">
-                        {LEGAL_DISCLAIMERS.INVESTMENT_INFO}
-                      </p>
-                      <div className="space-y-2">
-                        <div>
-                          <div className="text-xs text-purple-700 mb-1">Est. Monthly Rent (Zillow)</div>
-                          <div className="text-2xl font-black text-purple-900">
-                            ${property.rentZestimate.toLocaleString()}/mo
-                          </div>
-                        </div>
-                        {property.monthlyPayment && property.rentZestimate > property.monthlyPayment && (
-                          <div className="bg-white/60 rounded-lg p-2 mt-2">
-                            <div className="text-xs text-purple-700 mb-1">Potential Monthly Cash Flow (Simplified)</div>
-                            <div className="text-lg font-bold text-green-600">
-                              +${(property.rentZestimate - property.monthlyPayment).toLocaleString()}/mo
-                            </div>
-                            <p className="text-[10px] text-purple-600 mt-1">
-                              Simplified estimate only - does not include vacancy, maintenance, capex, or management costs
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                      <p className="text-[10px] text-purple-800 mt-2 font-semibold">
-                        ⚠️ {LEGAL_DISCLAIMERS.INVESTMENT_WARNING}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Down Payment */}
-                  <div className="bg-blue-50 rounded-2xl p-4 border border-blue-200">
-                    <h3 className="font-bold text-blue-900 mb-1 flex items-center gap-2 text-sm">
-                      <span>💵</span>
-                      <span>{SAFE_UI_LABELS.DOWN_PAYMENT}</span>
-                    </h3>
-                    <p className="text-[9px] text-blue-700 mb-2 leading-tight">
-                      {LEGAL_DISCLAIMERS.DOWN_PAYMENT}
-                    </p>
-                    <div className="text-xl font-black text-blue-900">
-                      {property.downPaymentAmount && property.downPaymentAmount > 0
-                        ? `est. $${property.downPaymentAmount.toLocaleString()}`
-                        : 'Contact Seller'}
-                    </div>
-                    <p className="text-xs text-blue-700 mt-1">
-                      {property.downPaymentAmount && property.downPaymentAmount > 0 && property.listPrice
-                        ? `Approximately ${Math.round((property.downPaymentAmount / property.listPrice) * 100)}% of purchase price`
-                        : ''}
-                    </p>
-                    <p className="text-[10px] text-blue-900 mt-2 font-semibold">
-                      ⚠️ This is an illustration only - not a guarantee
-                    </p>
-                  </div>
-
-                  {/* Financing Terms */}
-                  <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200">
-                    <h3 className="font-bold text-slate-900 mb-1 flex items-center gap-2 text-sm">
-                      <span>📋</span>
-                      <span>{SAFE_UI_LABELS.FINANCING_TERMS}</span>
-                    </h3>
-                    <p className="text-[9px] text-slate-500 mb-3 leading-tight">
-                      {LEGAL_DISCLAIMERS.FINANCING_TERMS}
-                    </p>
-                    <div className="grid grid-cols-2 gap-3 text-sm">
-                      <div>
-                        <div className="text-slate-600 text-xs mb-1">Interest Rate (est.)</div>
-                        <div className="font-bold text-slate-900 text-lg">
-                          {property.interestRate && property.interestRate > 0
-                            ? `~${property.interestRate}%`
-                            : <span className="text-slate-400">Contact seller</span>}
-                        </div>
-                      </div>
-                      <div>
-                        <div className="text-slate-600 text-xs mb-1">Loan Term (est.)</div>
-                        <div className="font-bold text-slate-900 text-lg">
-                          {property.termYears && property.termYears > 0
-                            ? `~${property.termYears} years`
-                            : <span className="text-slate-400">Contact seller</span>}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Refinance Timeline */}
-                  {property.balloonYears && property.balloonYears > 0 && (
-                    <div className="bg-blue-50 border-2 border-blue-200 rounded-2xl p-4">
-                      <h3 className="font-bold text-blue-900 mb-2 flex items-center gap-2">
-                        <span>📅</span>
-                        <span>Refinance Timeline</span>
-                      </h3>
-                      <p className="text-sm text-blue-800 mb-2">
-                        Plan to refinance after <strong>{property.balloonYears} {property.balloonYears === 1 ? 'year' : 'years'}</strong>
-                      </p>
-                      <p className="text-xs text-blue-700 bg-blue-100 rounded-lg p-2">
-                        💡 <strong>Note:</strong> You'll need to refinance with a traditional mortgage or negotiate new terms with the seller after {property.balloonYears} {property.balloonYears === 1 ? 'year' : 'years'}. This gives you time to improve your credit and build equity.
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Comprehensive Disclaimer */}
+                  {/* General Disclaimer */}
                   <div className={`${LEGAL_COLORS.WARNING_BG} border ${LEGAL_COLORS.WARNING_BORDER} rounded-xl p-3`}>
                     <p className={`text-xs ${LEGAL_COLORS.WARNING_TEXT} font-medium`}>
-                      💡 {LEGAL_DISCLAIMERS.GENERAL_ESTIMATES}
+                      ⚠️ Property information provided by listing agent. OwnerFi does not verify accuracy. Always conduct your own due diligence before making any decisions.
                     </p>
                   </div>
 
-                  {/* Action Buttons - Compact */}
+                  {/* Action Buttons */}
                   <div className="grid grid-cols-2 gap-3 pt-2">
                     <a
                       href={`https://www.google.com/search?q=${encodeURIComponent(`${property.address} ${property.city}, ${property.state} ${property.zipCode}`)}`}
@@ -442,7 +495,7 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
                     <button
                       onClick={() => {
                         const message = `I'm interested in the property at ${property.address}, ${property.city}, ${property.state}. Found through OwnerFi.`;
-                        const phone = property.agentPhone || property.phone || '+1234567890';
+                        const phone = property.agentPhone || (property as any).phone || '+1234567890';
                         window.open(`sms:${phone}&body=${encodeURIComponent(message)}`, '_self');
                       }}
                       className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white py-2.5 px-4 rounded-xl font-bold text-sm shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-95 transition-all"

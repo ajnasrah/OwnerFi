@@ -63,6 +63,11 @@ function mapPropertyFields(doc: any) {
     imageUrls: data.propertyImages || data.imageUrls || [],
     zillowImageUrl: data.firstPropertyImage || data.zillowImageUrl,
     listPrice: data.price || data.listPrice,
+    // Description - important for owner finance details
+    description: data.description || '',
+    // Owner finance keywords
+    primaryKeyword: data.primaryKeyword || null,
+    matchedKeywords: data.matchedKeywords || [],
   };
 }
 

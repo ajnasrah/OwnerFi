@@ -91,9 +91,18 @@ export async function POST(request: NextRequest) {
     // Transform property data
     const propertyData = transformApifyProperty(apifyData, 'manual-upload');
 
+    // Detect financing type from description
+    const { detectFinancingType } = await import('@/lib/financing-type-detector');
+    const financingTypeResult = detectFinancingType(propertyData.description);
+
     // Add manual verification flags
     const enhancedPropertyData = {
       ...propertyData,
+
+      // Financing Type Status (based on keyword detection)
+      financingType: financingTypeResult.financingType || 'Owner Finance', // Default to Owner Finance for manual uploads
+      allFinancingTypes: financingTypeResult.allTypes.length > 0 ? financingTypeResult.allTypes : ['Owner Finance'],
+      financingTypeLabel: financingTypeResult.displayLabel || 'Owner Finance',
 
       // Manual verification metadata
       manuallyVerified: true,

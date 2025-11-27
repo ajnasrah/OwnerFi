@@ -162,6 +162,11 @@ export async function POST(request: NextRequest) {
         // Add to zillow_imports for display on website
         console.log('   → Routing to zillow_imports (owner finance)');
 
+        // Detect financing type from description (or default to Owner Finance since agent confirmed)
+        const { detectFinancingType } = await import('@/lib/financing-type-detector');
+        const descriptionText = sanitizeDescription(property.rawData?.description || '');
+        const financingTypeResult = detectFinancingType(descriptionText);
+
         await db.collection('zillow_imports').add({
           // Core identifiers
           zpid: property.zpid,
@@ -193,7 +198,12 @@ export async function POST(request: NextRequest) {
           agentEmail: property.agentEmail || null,
 
           // Description
-          description: sanitizeDescription(property.rawData?.description || ''),
+          description: descriptionText,
+
+          // Financing Type Status (agent confirmed = default to Owner Finance if no keywords detected)
+          financingType: financingTypeResult.financingType || 'Owner Finance',
+          allFinancingTypes: financingTypeResult.allTypes.length > 0 ? financingTypeResult.allTypes : ['Owner Finance'],
+          financingTypeLabel: financingTypeResult.displayLabel || 'Owner Finance',
 
           // Source tracking
           source: 'agent_outreach',

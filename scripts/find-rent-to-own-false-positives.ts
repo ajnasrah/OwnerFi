@@ -1,6 +1,7 @@
 import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import * as dotenv from 'dotenv';
+import { hasStrictOwnerFinancing } from '../src/lib/owner-financing-filter-strict';
 
 dotenv.config({ path: '.env.local' });
 
@@ -16,71 +17,67 @@ if (!getApps().length) {
 
 const db = getFirestore();
 
-// The FIXED strict regex
-const STRICT_RENT_TO_OWN = /rent[\s-]+to[\s-]+own/i;
-
-// The OLD loose regex that caused false positives
-const OLD_LOOSE_REGEX = /rent.*to.*own/i;
-
 async function findFalsePositives() {
-  console.log('=== FINDING "RENT TO OWN" FALSE POSITIVES ===\n');
+  console.log('=== FINDING PROPERTIES THAT NO LONGER PASS STRICT FILTER ===\n');
   console.log('Looking for properties that:');
-  console.log('  - Matched OLD loose regex: /rent.*to.*own/');
-  console.log('  - But DON\'T match NEW strict regex: /rent[\\s-]+to[\\s-]+own/\n');
+  console.log('  - Were imported before the fix');
+  console.log('  - But DON\'T pass the UPDATED strict filter\n');
 
   // Get all properties from zillow_imports
   const allImports = await db.collection('zillow_imports').get();
   console.log(`Total properties in zillow_imports: ${allImports.size}\n`);
 
-  const falsePositives: { url: string; address?: string; description: string; snippet: string }[] = [];
+  const falsePositives: { docId: string; url: string; address?: string; description: string }[] = [];
 
   for (const doc of allImports.docs) {
     const data = doc.data();
     const desc = data.description || '';
 
-    // Check if OLD regex matches but NEW regex doesn't
-    if (OLD_LOOSE_REGEX.test(desc) && !STRICT_RENT_TO_OWN.test(desc)) {
-      // This is a false positive
-      const lowerDesc = desc.toLowerCase();
+    // Check if property still passes the UPDATED strict filter
+    const result = hasStrictOwnerFinancing(desc);
 
-      // Find where "rent" appears
-      const rentIdx = lowerDesc.indexOf('rent');
-      if (rentIdx !== -1) {
-        const start = Math.max(0, rentIdx - 30);
-        const end = Math.min(desc.length, rentIdx + 100);
-        const snippet = desc.substring(start, end);
-
-        falsePositives.push({
-          url: data.url,
-          address: data.address,
-          description: desc.substring(0, 300),
-          snippet: snippet,
-        });
-      }
+    if (!result.passes) {
+      // This property no longer passes - it's a false positive that slipped through
+      falsePositives.push({
+        docId: doc.id,
+        url: data.url,
+        address: data.address,
+        description: desc.substring(0, 200),
+      });
     }
   }
 
-  console.log(`Found ${falsePositives.length} potential false positives:\n`);
+  console.log(`Found ${falsePositives.length} false positives that no longer pass filter:\n`);
 
-  for (const fp of falsePositives) {
+  // Show first 20
+  for (const fp of falsePositives.slice(0, 20)) {
     console.log(`Address: ${fp.address || 'Unknown'}`);
-    console.log(`URL: ${fp.url}`);
-    console.log(`Snippet: "...${fp.snippet}..."`);
+    console.log(`URL: ${fp.url || 'undefined'}`);
+    console.log(`Description: "${fp.description}..."`);
     console.log('---\n');
+  }
+
+  if (falsePositives.length > 20) {
+    console.log(`... and ${falsePositives.length - 20} more\n`);
   }
 
   if (falsePositives.length > 0) {
     console.log('\n=== DELETING FALSE POSITIVES ===\n');
 
+    let deleted = 0;
     for (const fp of falsePositives) {
-      const snap = await db.collection('zillow_imports').where('url', '==', fp.url).get();
-      if (!snap.empty) {
-        await snap.docs[0].ref.delete();
-        console.log(`Deleted: ${fp.address || fp.url}`);
+      try {
+        await db.collection('zillow_imports').doc(fp.docId).delete();
+        deleted++;
+        if (deleted % 50 === 0) {
+          console.log(`Deleted ${deleted}/${falsePositives.length}...`);
+        }
+      } catch (e) {
+        console.log(`Error deleting ${fp.docId}: ${e}`);
       }
     }
 
-    console.log(`\n✅ Deleted ${falsePositives.length} false positives`);
+    console.log(`\n✅ Deleted ${deleted} false positives`);
   } else {
     console.log('No false positives found!');
   }

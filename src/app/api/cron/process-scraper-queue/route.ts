@@ -251,6 +251,11 @@ export async function GET(request: NextRequest) {
         console.log(`✅ OWNER FINANCE FOUND: ${propertyData.fullAddress}`);
         console.log(`   Keywords: ${filterResult.matchedKeywords.join(', ')}`);
 
+        // Detect financing type for status field
+        const { detectFinancingType } = await import('@/lib/financing-type-detector');
+        const financingTypeResult = detectFinancingType(propertyData.description);
+        console.log(`   Financing Type: ${financingTypeResult.financingType || 'Unknown'}`);
+
         // Save to zillow_imports (ONLY properties that passed strict filter)
         const docRef = db.collection('zillow_imports').doc();
         currentBatch.set(docRef, {
@@ -259,6 +264,11 @@ export async function GET(request: NextRequest) {
           ownerFinanceVerified: true,                  // Passed strict filter
           matchedKeywords: filterResult.matchedKeywords, // ALL keywords found
           primaryKeyword: filterResult.primaryKeyword,   // Main keyword (for display)
+
+          // Financing Type Status (based on keyword detection)
+          financingType: financingTypeResult.financingType,         // e.g., "Owner Finance", "Rent to Own"
+          allFinancingTypes: financingTypeResult.allTypes,          // All types found (if multiple)
+          financingTypeLabel: financingTypeResult.displayLabel,     // Human-readable label
 
           // Status tracking - starts null, auto-updates when all fields filled
           status: null,                     // Changes to 'verified' when terms are filled

@@ -254,10 +254,10 @@ export const PropertySwiper2 = memo(function PropertySwiper2({
       style={{ width: '100vw', maxWidth: '100vw', overflowX: 'hidden' }}
     >
       {/* Cards Stack */}
-      <div className="absolute inset-2 sm:inset-4 flex items-center justify-center" style={{ maxWidth: '100%' }}>
+      <div className="absolute inset-1 sm:inset-2 flex items-center justify-center" style={{ maxWidth: '100%' }}>
         {/* Next Card (Behind) - lazy load image */}
         {nextProperty && (
-          <div className="absolute w-[calc(100%-1rem)] sm:w-full max-w-[min(28rem,calc(100vw-2rem))] h-full max-h-[calc(100dvh-12rem)]">
+          <div className="absolute w-[calc(100%-1rem)] sm:w-full max-w-[min(28rem,calc(100vw-2rem))] h-full max-h-[calc(100dvh-10rem)]">
             <PropertyCard
               property={nextProperty}
               onLike={() => {}}
@@ -270,7 +270,7 @@ export const PropertySwiper2 = memo(function PropertySwiper2({
         )}
 
         {/* Current Card - priority load image */}
-        <div className="absolute w-[calc(100%-1rem)] sm:w-full max-w-[min(28rem,calc(100vw-2rem))] h-full max-h-[calc(100dvh-12rem)]">
+        <div className="absolute w-[calc(100%-1rem)] sm:w-full max-w-[min(28rem,calc(100vw-2rem))] h-full max-h-[calc(100dvh-10rem)]">
           <PropertyCard
             property={currentProperty}
             onLike={handleLikeButton}
@@ -281,30 +281,10 @@ export const PropertySwiper2 = memo(function PropertySwiper2({
           />
         </div>
 
-        {/* Action Indicators */}
-        {showAction && (
-          <div
-            className={`absolute top-20 ${
-              showAction === 'like' ? 'right-8' : 'left-8'
-            } transform transition-opacity ${
-              Math.abs(dragOffset.x) > 50 ? 'opacity-100' : 'opacity-0'
-            }`}
-          >
-            <div
-              className={`px-6 py-3 rounded-2xl font-black text-2xl border-4 transform rotate-12 shadow-2xl ${
-                showAction === 'like'
-                  ? 'bg-emerald-500 text-white border-emerald-300'
-                  : 'bg-red-500 text-white border-red-300'
-              }`}
-            >
-              {showAction === 'like' ? 'LIKE!' : 'PASS!'}
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Bottom Action Buttons - Compact Layout */}
-      <div className="absolute bottom-6 left-0 right-0 z-overlay px-3">
+      <div className="absolute bottom-4 left-0 right-0 z-overlay px-3">
         <div className="max-w-md mx-auto flex items-center justify-center gap-4">
           {/* Pass Button */}
           <button

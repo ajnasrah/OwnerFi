@@ -67,8 +67,8 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
           <div
             className="absolute inset-x-0 overflow-hidden"
             style={{
-              top: '2%',
-              height: '44%'
+              top: '0%',
+              height: '48%'
             }}
           >
             <Image
@@ -127,9 +127,11 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
 
         {/* Swipe Instructions - Above drawer */}
         {!showDetails && (
-          <div className="absolute left-0 right-0 z-20 flex justify-center items-center pointer-events-none" style={{ top: '52%' }}>
-            <div className="inline-flex items-center gap-1.5 bg-white/95 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg border border-slate-200">
-              <span className="text-slate-700 font-bold text-xs">👆 Swipe to browse • Tap buttons to save</span>
+          <div className="absolute left-0 right-0 z-20 flex justify-center items-center pointer-events-none" style={{ top: '46%' }}>
+            <div className="inline-flex items-center gap-3 bg-white/95 backdrop-blur-sm px-5 py-2.5 rounded-full shadow-lg border border-slate-200">
+              <span className="text-slate-400 text-lg">←</span>
+              <span className="text-slate-700 font-bold text-sm">Swipe to browse</span>
+              <span className="text-slate-400 text-lg">→</span>
             </div>
           </div>
         )}
@@ -139,7 +141,7 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
           <div
             className="absolute bottom-0 left-0 right-0 bg-white/98 backdrop-blur-sm rounded-t-3xl pointer-events-auto shadow-2xl transition-transform duration-300 ease-out"
             style={{
-              transform: showDetails ? 'translateY(0)' : 'translateY(calc(100% - 200px))',
+              transform: showDetails ? 'translateY(0)' : 'translateY(calc(100% - 195px))',
               height: '100%',
             }}
             onTouchStart={(e) => { if (showDetails) e.stopPropagation(); }}

@@ -27,10 +27,14 @@ const db = getFirestore();
  * from O(n*2) to O(n/10*2) - 10x improvement
  */
 
+// CRITICAL: Use 'map' mode - 'pagination' mode IGNORES maxResults and scrapes ALL pages
+// This caused $90 in charges by scraping 36k properties instead of 500
+// SAFETY: Hard limit of 1500 properties - fail if exceeded to prevent runaway costs
 const SEARCH_CONFIG = {
   searchUrl: 'https://www.zillow.com/homes/for_sale/?searchQueryState=%7B%22pagination%22%3A%7B%7D%2C%22isMapVisible%22%3Atrue%2C%22mapBounds%22%3A%7B%22west%22%3A-123.82329050572206%2C%22east%22%3A-55.795946755722056%2C%22south%22%3A-18.62001504632672%2C%22north%22%3A61.02913536475284%7D%2C%22mapZoom%22%3A4%2C%22usersSearchTerm%22%3A%22%22%2C%22customRegionId%22%3A%227737068f7fX1-CR1vsn1vnm6xxbg_1d5w1n%22%2C%22filterState%22%3A%7B%22sort%22%3A%7B%22value%22%3A%22globalrelevanceex%22%7D%2C%22auc%22%3A%7B%22value%22%3Afalse%7D%2C%22fore%22%3A%7B%22value%22%3Afalse%7D%2C%22price%22%3A%7B%22min%22%3A50000%2C%22max%22%3A750000%7D%2C%22mp%22%3A%7B%22min%22%3Anull%2C%22max%22%3A3750%7D%2C%22beds%22%3A%7B%22min%22%3A1%2C%22max%22%3Anull%7D%2C%22baths%22%3A%7B%22min%22%3A1%2C%22max%22%3Anull%7D%2C%22apa%22%3A%7B%22value%22%3Afalse%7D%2C%22manu%22%3A%7B%22value%22%3Afalse%7D%2C%22lot%22%3A%7B%22min%22%3Anull%7D%2C%2255plus%22%3A%7B%22value%22%3A%22e%22%7D%2C%22doz%22%3A%7B%22value%22%3A%227%22%7D%2C%22att%22%3A%7B%22value%22%3A%22%5C%22owner%20financing%5C%22%20%2C%20%5C%22seller%20financing%5C%22%20%2C%20%5C%22owner%20carry%5C%22%20%2C%20%5C%22seller%20carry%5C%22%20%2C%20%5C%22financing%20available%2Foffered%5C%22%20%2C%20%5C%22creative%20financing%5C%22%20%2C%20%5C%22flexible%20financing%5C%22%2C%20%5C%22terms%20available%5C%22%2C%20%5C%22owner%20terms%5C%22%22%7D%7D%2C%22isListVisible%22%3Atrue%7D',
-  mode: 'pagination' as 'map' | 'pagination' | 'deep',
-  maxResults: 500,
+  mode: 'map' as 'map' | 'pagination' | 'deep',  // MAP mode respects maxResults limit!
+  maxResults: 500,  // Hard cap - costs ~$1 per run instead of $27
+  hardLimit: 1500, // SAFETY: Abort if more than this many results returned
 };
 
 /**
@@ -89,6 +93,20 @@ export async function GET(request: NextRequest) {
       const { items } = await client.dataset(run.defaultDatasetId).listItems();
 
       console.log(`📦 [SEARCH CRON] Found ${items.length} properties`);
+
+      // SAFETY CHECK: Abort if too many results (prevents runaway costs)
+      if (items.length > SEARCH_CONFIG.hardLimit) {
+        console.error(`🚨 [SEARCH CRON] ABORTING: ${items.length} results exceeds hard limit of ${SEARCH_CONFIG.hardLimit}`);
+        console.error(`   This likely means the search URL changed or mode is wrong.`);
+        console.error(`   Current mode: ${SEARCH_CONFIG.mode} (should be 'map')`);
+        return {
+          success: false,
+          error: `Safety limit exceeded: ${items.length} results > ${SEARCH_CONFIG.hardLimit} limit`,
+          message: 'Scraper aborted to prevent runaway costs. Check search URL and mode.',
+          propertiesFound: items.length,
+          hardLimit: SEARCH_CONFIG.hardLimit,
+        };
+      }
 
       // Extract all URLs first (filter out items without URLs)
       const itemsWithUrls = items

@@ -33,13 +33,16 @@ const db = getFirestore();
  * Schedule: Daily at 6 AM
  */
 
+// CRITICAL: Use 'map' mode - 'pagination' mode IGNORES maxResults and scrapes ALL pages
+// SAFETY: Hard limit of 1500 properties - fail if exceeded to prevent runaway costs
 const SEARCH_CONFIG = {
   // Search URL: Memphis TN area, listed in last 7 days, $50k-$500k
   // NO owner financing keywords - we're looking for properties to ASK agents about OF
   // Filters: No multi-family, land, apartments, manufactured, foreclosures, auctions, new construction
   searchUrl: 'https://www.zillow.com/homes/for_sale/?category=SEMANTIC&searchQueryState=%7B%22isMapVisible%22%3Atrue%2C%22mapBounds%22%3A%7B%22west%22%3A-92.64805231635005%2C%22east%22%3A-88.4759942108813%2C%22south%22%3A34.04448627074044%2C%22north%22%3A36.477417577203184%7D%2C%22filterState%22%3A%7B%22sort%22%3A%7B%22value%22%3A%22globalrelevanceex%22%7D%2C%22price%22%3A%7B%22max%22%3A500000%2C%22min%22%3A50000%7D%2C%22mf%22%3A%7B%22value%22%3Afalse%7D%2C%22land%22%3A%7B%22value%22%3Afalse%7D%2C%22apa%22%3A%7B%22value%22%3Afalse%7D%2C%22manu%22%3A%7B%22value%22%3Afalse%7D%2C%22fore%22%3A%7B%22value%22%3Afalse%7D%2C%22nc%22%3A%7B%22value%22%3Afalse%7D%2C%22auc%22%3A%7B%22value%22%3Afalse%7D%2C%2255plus%22%3A%7B%22value%22%3A%22e%22%7D%2C%22doz%22%3A%7B%22value%22%3A%227%22%7D%7D%2C%22isListVisible%22%3Atrue%2C%22mapZoom%22%3A9%2C%22customRegionId%22%3A%225f8096924aX1-CR1i1r231i2qe0e_1276cg%22%2C%22pagination%22%3A%7B%7D%2C%22usersSearchTerm%22%3A%22%22%7D',
-  mode: 'pagination' as 'map' | 'pagination' | 'deep',
-  maxResults: 300, // Get properties from Memphis area
+  mode: 'map' as 'map' | 'pagination' | 'deep',  // MAP mode respects maxResults!
+  maxResults: 300, // Get properties from Memphis area - costs ~$0.60 per run
+  hardLimit: 1500, // SAFETY: Abort if more than this many results returned
 };
 
 export async function GET(request: NextRequest) {
@@ -77,6 +80,19 @@ export async function GET(request: NextRequest) {
     const { items } = await client.dataset(run.defaultDatasetId).listItems();
 
     console.log(`📦 [AGENT OUTREACH SCRAPER] Found ${items.length} properties`);
+
+    // SAFETY CHECK: Abort if too many results (prevents runaway costs)
+    if (items.length > SEARCH_CONFIG.hardLimit) {
+      console.error(`🚨 [AGENT OUTREACH SCRAPER] ABORTING: ${items.length} results exceeds hard limit of ${SEARCH_CONFIG.hardLimit}`);
+      console.error(`   This likely means the search URL changed or mode is wrong.`);
+      console.error(`   Current mode: ${SEARCH_CONFIG.mode} (should be 'map')`);
+      return NextResponse.json({
+        error: `Safety limit exceeded: ${items.length} results > ${SEARCH_CONFIG.hardLimit} limit`,
+        message: 'Scraper aborted to prevent runaway costs. Check search URL and mode.',
+        propertiesFound: items.length,
+        hardLimit: SEARCH_CONFIG.hardLimit,
+      }, { status: 400 });
+    }
 
     // Process results and add to queue
     let addedToQueue = 0;

@@ -20,6 +20,32 @@ if (!getApps().length) {
 const db = getFirestore();
 
 /**
+ * Batch check for existing URLs in a collection
+ * Uses Firestore 'in' operator (max 10 items per query) - 10x faster than individual queries
+ */
+async function batchCheckExistingUrls(
+  collectionName: string,
+  urls: string[]
+): Promise<Set<string>> {
+  const existingUrls = new Set<string>();
+
+  for (let i = 0; i < urls.length; i += 10) {
+    const batch = urls.slice(i, i + 10);
+    const snapshot = await db
+      .collection(collectionName)
+      .where('url', 'in', batch)
+      .get();
+
+    snapshot.docs.forEach(doc => {
+      const url = doc.data().url;
+      if (url) existingUrls.add(url);
+    });
+  }
+
+  return existingUrls;
+}
+
+/**
  * 🏡 Apify Zillow Search Scraper - WITH STRICT FILTERING
  *
  * Uses maxcopell/zillow-scraper to extract property URLs from your search
@@ -28,19 +54,24 @@ const db = getFirestore();
  * This ensures ALL properties go through the strict filter before being listed!
  */
 
+// CRITICAL: Use 'map' mode - 'pagination' mode IGNORES maxResults and scrapes ALL pages!
+// This caused $90 in charges by scraping 36k properties instead of 500
+// SAFETY: Hard limit of 1500 properties - fail if exceeded to prevent runaway costs
 const SCRAPER_CONFIG = {
   // Your Zillow search URL (with owner financing keywords in filters)
-  // 7-day search for biweekly runs
   searchUrl: 'https://www.zillow.com/homes/for_sale/?searchQueryState=%7B%22pagination%22%3A%7B%7D%2C%22isMapVisible%22%3Atrue%2C%22mapBounds%22%3A%7B%22west%22%3A-123.82329050572206%2C%22east%22%3A-55.795946755722056%2C%22south%22%3A-18.62001504632672%2C%22north%22%3A61.02913536475284%7D%2C%22mapZoom%22%3A4%2C%22usersSearchTerm%22%3A%22%22%2C%22customRegionId%22%3A%227737068f7fX1-CR1vsn1vnm6xxbg_1d5w1n%22%2C%22filterState%22%3A%7B%22sort%22%3A%7B%22value%22%3A%22globalrelevanceex%22%7D%2C%22auc%22%3A%7B%22value%22%3Afalse%7D%2C%22fore%22%3A%7B%22value%22%3Afalse%7D%2C%22price%22%3A%7B%22min%22%3A50000%2C%22max%22%3A750000%7D%2C%22mp%22%3A%7B%22min%22%3Anull%2C%22max%22%3A3750%7D%2C%22beds%22%3A%7B%22min%22%3A1%2C%22max%22%3Anull%7D%2C%22baths%22%3A%7B%22min%22%3A1%2C%22max%22%3Anull%7D%2C%22apa%22%3A%7B%22value%22%3Afalse%7D%2C%22manu%22%3A%7B%22value%22%3Afalse%7D%2C%22lot%22%3A%7B%22min%22%3Anull%7D%2C%2255plus%22%3A%7B%22value%22%3A%22e%22%7D%2C%22doz%22%3A%7B%22value%22%3A%227%22%7D%2C%22att%22%3A%7B%22value%22%3A%22%5C%22owner%20financing%5C%22%20%2C%20%5C%22seller%20financing%5C%22%20%2C%20%5C%22owner%20carry%5C%22%20%2C%20%5C%22seller%20carry%5C%22%20%2C%20%5C%22financing%20available%2Foffered%5C%22%20%2C%20%5C%22creative%20financing%5C%22%20%2C%20%5C%22flexible%20financing%5C%22%2C%20%5C%22terms%20available%5C%22%2C%20%5C%22owner%20terms%5C%22%22%7D%7D%2C%22isListVisible%22%3Atrue%7D',
 
-  // Scraper mode
-  // 'map' = Fast, limited results (free-tier friendly)
-  // 'pagination' = Up to 820 results per search (recommended)
-  // 'deep' = Unlimited results (most expensive)
-  mode: 'pagination' as 'map' | 'pagination' | 'deep',
+  // Scraper mode - ALWAYS USE 'map' to respect maxResults!
+  // 'map' = Respects maxResults limit (~$1 per 500 results)
+  // 'pagination' = IGNORES maxResults, scrapes ALL pages (~$27 for 13k results) - DO NOT USE!
+  // 'deep' = Unlimited results (most expensive) - DO NOT USE!
+  mode: 'map' as 'map' | 'pagination' | 'deep',
 
-  // Max results to extract
-  maxResults: 500, // Adjust based on your needs
+  // Max results to extract - only works with 'map' mode!
+  maxResults: 500,
+
+  // SAFETY: Abort if more than this many results returned
+  hardLimit: 1500,
 
   // Add to scraper queue for detail scraping + filtering
   addToQueue: true,
@@ -88,6 +119,15 @@ async function main() {
     return;
   }
 
+  // SAFETY CHECK: Abort if too many results (prevents runaway costs)
+  if (items.length > SCRAPER_CONFIG.hardLimit) {
+    console.error(`\n🚨 ABORTING: ${items.length} results exceeds hard limit of ${SCRAPER_CONFIG.hardLimit}`);
+    console.error(`   This likely means the search URL changed or mode is wrong.`);
+    console.error(`   Current mode: ${SCRAPER_CONFIG.mode} (should be 'map')`);
+    console.error(`   NOT adding any URLs to queue to prevent runaway costs.`);
+    process.exit(1);
+  }
+
   // Show sample property
   console.log(`\n📋 Sample Property:`);
   const sample = items[0] as any;
@@ -100,63 +140,56 @@ async function main() {
   if (SCRAPER_CONFIG.addToQueue) {
     console.log(`\n📋 Adding URLs to scraper queue for detail scraping + strict filter...\n`);
 
+    // Extract all URLs first
+    const itemsWithUrls = items
+      .map(item => item as { detailUrl?: string; address?: string; price?: string; zpid?: string })
+      .filter(item => item.detailUrl);
+
+    const allUrls = itemsWithUrls.map(item => item.detailUrl!);
+    const noUrl = items.length - itemsWithUrls.length;
+
+    console.log(`   Checking ${allUrls.length} URLs for duplicates (batched)...`);
+
+    // Batch check both collections in parallel - 10x faster than individual queries
+    const [urlsInQueue, urlsInImports] = await Promise.all([
+      batchCheckExistingUrls('scraper_queue', allUrls),
+      batchCheckExistingUrls('zillow_imports', allUrls),
+    ]);
+
+    console.log(`   Found ${urlsInQueue.size} in queue, ${urlsInImports.size} already scraped`);
+
+    // Filter to only new URLs
+    const newItems = itemsWithUrls.filter(item => {
+      const url = item.detailUrl!;
+      return !urlsInQueue.has(url) && !urlsInImports.has(url);
+    });
+
+    const alreadyInQueue = urlsInQueue.size;
+    const alreadyScraped = urlsInImports.size;
     let addedToQueue = 0;
-    let alreadyInQueue = 0;
-    let alreadyScraped = 0;
-    let noUrl = 0;
 
-    for (const item of items) {
-      const property = item as any;
+    // Use batch writes for efficiency (max 500 per batch)
+    const BATCH_SIZE = 500;
+    for (let i = 0; i < newItems.length; i += BATCH_SIZE) {
+      const batchItems = newItems.slice(i, i + BATCH_SIZE);
+      const batch = db.batch();
 
-      // Extract detail URL (this is the link to the full property page)
-      const detailUrl = property.detailUrl;
-
-      if (!detailUrl) {
-        noUrl++;
-        continue;
+      for (const property of batchItems) {
+        const docRef = db.collection('scraper_queue').doc();
+        batch.set(docRef, {
+          url: property.detailUrl,
+          address: property.address || '',
+          price: property.price || '',
+          zpid: property.zpid || null,
+          status: 'pending',
+          addedAt: new Date(),
+          source: 'apify_search_scraper',
+        });
+        addedToQueue++;
       }
 
-      // Check if already in queue
-      const existingInQueue = await db
-        .collection('scraper_queue')
-        .where('url', '==', detailUrl)
-        .limit(1)
-        .get();
-
-      if (!existingInQueue.empty) {
-        alreadyInQueue++;
-        continue;
-      }
-
-      // Check if already scraped and in zillow_imports
-      const existingInImports = await db
-        .collection('zillow_imports')
-        .where('url', '==', detailUrl)
-        .limit(1)
-        .get();
-
-      if (!existingInImports.empty) {
-        alreadyScraped++;
-        continue;
-      }
-
-      // Add to queue
-      await db.collection('scraper_queue').add({
-        url: detailUrl,
-        address: property.address || '',
-        price: property.price || '',
-        zpid: property.zpid || null,
-        status: 'pending',
-        addedAt: new Date(),
-        source: 'apify_search_scraper',
-      });
-
-      addedToQueue++;
-
-      // Log progress every 50 items
-      if (addedToQueue % 50 === 0) {
-        console.log(`   Added ${addedToQueue} URLs to queue...`);
-      }
+      await batch.commit();
+      console.log(`   Committed batch: ${Math.min(i + BATCH_SIZE, newItems.length)}/${newItems.length} items`);
     }
 
     console.log(`\n✅ Queue Summary:`);

@@ -67,12 +67,12 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Find pending items in queue (limit to 25 for optimal processing)
+    // Find pending items in queue (limit to 50 for faster processing)
     const pendingItems = await db
       .collection('scraper_queue')
       .where('status', '==', 'pending')
       .orderBy('addedAt', 'asc')
-      .limit(25)
+      .limit(50)
       .get();
 
     if (pendingItems.empty) {

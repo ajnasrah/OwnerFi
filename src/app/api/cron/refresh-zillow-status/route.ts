@@ -163,6 +163,7 @@ export async function GET(request: NextRequest) {
     let statusChanged = 0;
     let deleted = 0;
     let errors = 0;
+    let noResultCount = 0; // Properties with no Apify result (URL removed, etc.)
     const statusChanges: Array<{
       address: string;
       oldStatus: string;
@@ -291,6 +292,8 @@ export async function GET(request: NextRequest) {
                 description: sanitizeDescription(item.description),
                 lastStatusCheck: new Date(),
                 lastScrapedAt: new Date(),
+                consecutiveNoResults: 0, // Reset failure counter on success
+                lastStatusCheckNote: null, // Clear any failure notes
 
                 // Property details
                 bedrooms: item.bedrooms ?? null,
@@ -353,23 +356,45 @@ export async function GET(request: NextRequest) {
           }
         }
 
-        // Update lastStatusCheck for properties that didn't get Apify results
-        // This ensures they rotate out and don't keep getting re-checked
-        let noResultCount = 0;
+        // Handle properties that didn't get Apify results
+        // Track consecutive failures and delete after 3
+        const MAX_CONSECUTIVE_NO_RESULTS = 3;
+        let batchNoResult = 0;
         for (const prop of batch) {
           const propZpid = String(prop.zpid || '');
           if (propZpid && !processedZpids.has(propZpid)) {
             const docRef = db.collection('zillow_imports').doc(prop.id);
-            firestoreBatch.update(docRef, {
-              lastStatusCheck: new Date(),
-              lastStatusCheckNote: 'No Apify result - URL may be invalid or property removed',
-            });
+
+            // Get current failure count from the property data
+            const propDoc = await docRef.get();
+            const currentFailures = propDoc.data()?.consecutiveNoResults || 0;
+            const newFailures = currentFailures + 1;
+
+            if (newFailures >= MAX_CONSECUTIVE_NO_RESULTS) {
+              // Delete after 3 consecutive failures
+              firestoreBatch.delete(docRef);
+              deleted++;
+              deletedProperties.push({
+                address: prop.address || 'Unknown',
+                status: 'NO_RESULT',
+                reason: `${newFailures} consecutive Apify failures - URL likely invalid`,
+              });
+              console.log(`   🗑️  DELETING (${newFailures} consecutive failures): ${prop.address}`);
+            } else {
+              // Track the failure, will try again next rotation
+              firestoreBatch.update(docRef, {
+                lastStatusCheck: new Date(),
+                lastStatusCheckNote: `No Apify result (failure ${newFailures}/${MAX_CONSECUTIVE_NO_RESULTS})`,
+                consecutiveNoResults: newFailures,
+              });
+              console.log(`   ⚠️  No result (${newFailures}/${MAX_CONSECUTIVE_NO_RESULTS}): ${prop.address}`);
+            }
+            batchNoResult++;
             noResultCount++;
-            console.log(`   ⚠️  No result for: ${prop.address} (ZPID: ${propZpid})`);
           }
         }
-        if (noResultCount > 0) {
-          console.log(`   📝 Updated lastStatusCheck for ${noResultCount} properties with no Apify result`);
+        if (batchNoResult > 0) {
+          console.log(`   📝 Processed ${batchNoResult} properties with no Apify result`);
         }
 
         await firestoreBatch.commit();
@@ -405,10 +430,12 @@ export async function GET(request: NextRequest) {
     console.log('✅ [CRON] Status refresh complete');
     console.log('='.repeat(60));
     console.log(`Total properties checked: ${properties.length}`);
-    console.log(`Updated: ${updated}`);
+    console.log(`Updated with fresh data: ${updated}`);
+    console.log(`No Apify result (URL invalid/removed): ${noResultCount}`);
     console.log(`Status changes: ${statusChanged}`);
     console.log(`Deleted (inactive): ${deleted}`);
     console.log(`Errors: ${errors}`);
+    console.log(`✓ All ${updated + noResultCount + deleted} properties got lastStatusCheck updated`);
 
     if (statusChanges.length > 0) {
       console.log('\n📊 Status Changes:');
@@ -431,9 +458,11 @@ export async function GET(request: NextRequest) {
       stats: {
         totalProperties: properties.length,
         updated,
+        noResult: noResultCount, // Properties with no Apify result (URL invalid/removed)
         statusChanged,
         deleted,
         errors,
+        allProcessed: updated + noResultCount + deleted, // Should equal totalProperties
         statusChanges: statusChanges.length > 0 ? statusChanges : undefined,
         deletedProperties: deletedProperties.length > 0 ? deletedProperties : undefined,
       },

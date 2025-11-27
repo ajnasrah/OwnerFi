@@ -1,8 +1,13 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/firebase-admin';
+import { getAdminDb } from '@/lib/firebase-admin';
 
 export async function GET(request: Request) {
   try {
+    const db = await getAdminDb();
+    if (!db) {
+      return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
+    }
+
     const { searchParams } = new URL(request.url);
     const city = searchParams.get('city')?.toLowerCase();
     const state = searchParams.get('state')?.toUpperCase();

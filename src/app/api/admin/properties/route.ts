@@ -94,22 +94,35 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status') || 'all';
-    const pageSize = parseInt(searchParams.get('limit') || '100'); // Default 100 properties
+    const countOnly = searchParams.get('countOnly') === 'true';
 
     // Fetch from BOTH collections - zillow_imports AND properties
     const zillowCollection = collection(db, 'zillow_imports');
     const propertiesCollection = collection(db, 'properties');
 
+    // FAST PATH: Count-only mode for stats
+    if (countOnly) {
+      const [zillowCount, propertiesCount] = await Promise.all([
+        getCountFromServer(query(zillowCollection, where('ownerFinanceVerified', '==', true))),
+        getCountFromServer(query(propertiesCollection, where('isActive', '==', true)))
+      ]);
+      const total = zillowCount.data().count + propertiesCount.data().count;
+      return NextResponse.json({
+        properties: [],
+        count: 0,
+        total: total,
+        hasMore: false
+      });
+    }
+
     let zillowConstraints: any[] = [
       where('ownerFinanceVerified', '==', true),
-      orderBy('foundAt', 'desc'),
-      firestoreLimit(pageSize) // Add limit for performance
+      orderBy('foundAt', 'desc')
     ];
 
     // Note: Removed orderBy to avoid requiring composite index (only 5-10 properties typically)
     let propertiesConstraints: any[] = [
-      where('isActive', '==', true),
-      firestoreLimit(50) // Limit curated properties
+      where('isActive', '==', true)
     ];
 
     // Filter by status if specified (only for zillow_imports)
@@ -118,15 +131,13 @@ export async function GET(request: NextRequest) {
         zillowConstraints = [
           where('ownerFinanceVerified', '==', true),
           where('status', '==', null),
-          orderBy('foundAt', 'desc'),
-          firestoreLimit(pageSize)
+          orderBy('foundAt', 'desc')
         ];
       } else {
         zillowConstraints = [
           where('ownerFinanceVerified', '==', true),
           where('status', '==', status),
-          orderBy('foundAt', 'desc'),
-          firestoreLimit(pageSize)
+          orderBy('foundAt', 'desc')
         ];
       }
     }

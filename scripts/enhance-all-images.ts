@@ -20,9 +20,9 @@ function upgradeZillowImageUrl(url: string): string {
   if (!url || !url.includes('zillowstatic.com')) return url;
 
   const lowResSizes = [
-    'p_c.jpg', 'p_e.jpg', 'p_f.jpg', 'p_g.jpg', 'p_h.jpg',
-    'cc_ft_192.webp', 'cc_ft_384.webp', 'cc_ft_576.webp', 'cc_ft_768.webp',
-    'cc_ft_192.jpg', 'cc_ft_384.jpg', 'cc_ft_576.jpg', 'cc_ft_768.jpg'
+    'p_a.jpg', 'p_b.jpg', 'p_c.jpg', 'p_d.jpg', 'p_e.jpg', 'p_f.jpg', 'p_g.jpg', 'p_h.jpg',
+    'cc_ft_192.webp', 'cc_ft_384.webp', 'cc_ft_576.webp', 'cc_ft_768.webp', 'cc_ft_960.webp', 'cc_ft_1344.webp', 'cc_ft_1536.webp',
+    'cc_ft_192.jpg', 'cc_ft_384.jpg', 'cc_ft_576.jpg', 'cc_ft_768.jpg', 'cc_ft_960.jpg', 'cc_ft_1344.jpg', 'cc_ft_1536.jpg'
   ];
 
   for (const size of lowResSizes) {

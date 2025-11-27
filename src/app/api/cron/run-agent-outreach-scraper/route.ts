@@ -67,19 +67,37 @@ export async function GET(request: NextRequest) {
 
     const client = new ApifyClient({ token: apiKey });
 
-    // Run search scraper
-    const input = {
+    // STEP 1: Run search scraper to find property URLs
+    const searchInput = {
       searchUrls: [{ url: SEARCH_CONFIG.searchUrl }],
       maxResults: SEARCH_CONFIG.maxResults,
       mode: SEARCH_CONFIG.mode,
     };
 
-    console.log(`🚀 [AGENT OUTREACH SCRAPER] Running Apify search (mode: ${SEARCH_CONFIG.mode}, max: ${SEARCH_CONFIG.maxResults})`);
+    console.log(`🚀 [AGENT OUTREACH SCRAPER] Step 1: Running search scraper (mode: ${SEARCH_CONFIG.mode}, max: ${SEARCH_CONFIG.maxResults})`);
 
-    const run = await client.actor('maxcopell/zillow-scraper').call(input);
-    const { items } = await client.dataset(run.defaultDatasetId).listItems();
+    const searchRun = await client.actor('maxcopell/zillow-scraper').call(searchInput);
+    const { items: searchItems } = await client.dataset(searchRun.defaultDatasetId).listItems();
 
-    console.log(`📦 [AGENT OUTREACH SCRAPER] Found ${items.length} properties`);
+    console.log(`📦 [AGENT OUTREACH SCRAPER] Search found ${searchItems.length} properties`);
+
+    // Get URLs from search results (limit to 50 for detail scraping to control costs)
+    const detailUrls = searchItems
+      .slice(0, 50)
+      .map((item: any) => item.detailUrl)
+      .filter((url: string) => url && url.includes('zillow.com'));
+
+    console.log(`🔍 [AGENT OUTREACH SCRAPER] Step 2: Running detail scraper on ${detailUrls.length} URLs for agent info`);
+
+    // STEP 2: Run detail scraper to get agent contact info
+    const detailInput = {
+      startUrls: detailUrls.map((url: string) => ({ url })),
+    };
+
+    const detailRun = await client.actor('maxcopell/zillow-detail-scraper').call(detailInput);
+    const { items } = await client.dataset(detailRun.defaultDatasetId).listItems();
+
+    console.log(`📦 [AGENT OUTREACH SCRAPER] Detail scraper returned ${items.length} properties with full data`);
 
     // SAFETY CHECK: Abort if too many results (prevents runaway costs)
     if (items.length > SEARCH_CONFIG.hardLimit) {
@@ -111,7 +129,8 @@ export async function GET(request: NextRequest) {
 
     for (const item of items) {
       const property = item as any;
-      const detailUrl = property.detailUrl;
+      // Detail scraper uses 'url' field, search scraper uses 'detailUrl'
+      const detailUrl = property.url || property.detailUrl;
       const zpid = String(property.zpid || '');
 
       if (!detailUrl || !zpid) {
@@ -119,8 +138,14 @@ export async function GET(request: NextRequest) {
         continue;
       }
 
-      // Skip if no agent contact info
-      if (!property.attributionInfo?.agentPhoneNumber && !property.attributionInfo?.brokerPhoneNumber) {
+      // Skip if no agent contact info (check both nested and top-level fields from detail scraper)
+      const agentPhone = property.attributionInfo?.agentPhoneNumber
+        || property.agentPhoneNumber
+        || property.contactRecipients?.[0]?.phoneNumber;
+      const brokerPhone = property.attributionInfo?.brokerPhoneNumber
+        || property.brokerPhoneNumber;
+
+      if (!agentPhone && !brokerPhone) {
         noAgent++;
         continue;
       }

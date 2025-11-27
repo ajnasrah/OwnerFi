@@ -250,9 +250,9 @@ export default function AdminDashboard() {
   const loadStats = async () => {
     try {
       // Load all stats in parallel for better performance
-      // Use countOnly=true for buyers to skip expensive calculations
+      // Use countOnly=true for fast count queries
       const [propData, buyersData, realtorsData, disputesData] = await Promise.all([
-        fetch('/api/admin/properties?limit=1').then(r => r.json()),
+        fetch('/api/admin/properties?countOnly=true').then(r => r.json()),
         fetch('/api/admin/buyers?countOnly=true').then(r => r.json()),
         fetch('/api/admin/realtors?countOnly=true').then(r => r.json()),
         fetch('/api/admin/disputes').then(r => r.json())
@@ -260,9 +260,9 @@ export default function AdminDashboard() {
 
       setStats({
         totalProperties: propData.total || 0,
-        totalBuyers: buyersData.total || 0, // Use actual total count, not array length
-        totalRealtors: realtorsData.total || realtorsData.realtors?.length || 0,
-        pendingDisputes: disputesData.pendingDisputes?.length || 0
+        totalBuyers: buyersData.total || 0,
+        totalRealtors: realtorsData.total || 0,
+        pendingDisputes: disputesData.stats?.pending || disputesData.pendingDisputes?.length || 0
       });
     } catch (error) {
       console.error('Failed to load stats:', error);

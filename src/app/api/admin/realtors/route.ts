@@ -50,6 +50,21 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit') || '100');
+    const countOnly = searchParams.get('countOnly') === 'true';
+
+    // FAST PATH: Count-only mode for stats
+    if (countOnly) {
+      const { getCountFromServer } = await import('firebase/firestore');
+      const usersCountQuery = query(
+        collection(db, 'users'),
+        where('role', '==', 'realtor')
+      );
+      const countSnapshot = await getCountFromServer(usersCountQuery);
+      return NextResponse.json({
+        realtors: [],
+        total: countSnapshot.data().count
+      });
+    }
 
     // Get all users with role 'realtor'
     // Temporarily removed orderBy to avoid issues with missing createdAt fields

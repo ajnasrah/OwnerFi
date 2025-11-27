@@ -210,8 +210,12 @@ async function enhancePropertyImages() {
       const collRef = db.collection(collectionName);
       const allDocs = await collRef.get();
 
-      // Filter to unprocessed docs (imageEnhanced !== true)
-      const unprocessed = allDocs.docs.filter(doc => doc.data().imageEnhanced !== true);
+      // Filter to unprocessed docs (imageEnhanced !== true OR missing high-res imgSrc)
+      const unprocessed = allDocs.docs.filter(doc => {
+        const data = doc.data();
+        const hasHighResImage = data.imgSrc && data.imgSrc.includes('uncropped_scaled_within');
+        return data.imageEnhanced !== true || !hasHighResImage;
+      });
       const toProcess = unprocessed.slice(0, BATCH_SIZE);
 
       console.log(`   📊 ${collectionName}: ${toProcess.length} to process (${unprocessed.length} total unprocessed)`);
@@ -257,6 +261,24 @@ async function enhancePropertyImages() {
                 updateData[field] = upgradedUrls;
                 wasUpgraded = true;
               }
+            }
+          }
+
+          // If imgSrc is missing but propertyImages exists, set imgSrc from first image
+          if (!data.imgSrc && data.propertyImages && Array.isArray(data.propertyImages) && data.propertyImages.length > 0) {
+            const firstImage = data.propertyImages[0];
+            if (typeof firstImage === 'string') {
+              updateData.imgSrc = upgradeZillowImageUrl(firstImage);
+              wasUpgraded = true;
+            }
+          }
+
+          // Same for imageUrls array
+          if (!data.imgSrc && !updateData.imgSrc && data.imageUrls && Array.isArray(data.imageUrls) && data.imageUrls.length > 0) {
+            const firstImage = data.imageUrls[0];
+            if (typeof firstImage === 'string') {
+              updateData.imgSrc = upgradeZillowImageUrl(firstImage);
+              wasUpgraded = true;
             }
           }
 
@@ -480,7 +502,8 @@ function upgradeZillowImageUrl(url: string): string {
 
   const lowResSizes = [
     'p_c.jpg', 'p_e.jpg', 'p_f.jpg', 'p_g.jpg', 'p_h.jpg',
-    'cc_ft_192.webp', 'cc_ft_384.webp', 'cc_ft_576.webp', 'cc_ft_768.webp'
+    'cc_ft_192.webp', 'cc_ft_384.webp', 'cc_ft_576.webp', 'cc_ft_768.webp',
+    'cc_ft_192.jpg', 'cc_ft_384.jpg', 'cc_ft_576.jpg', 'cc_ft_768.jpg'
   ];
 
   for (const size of lowResSizes) {

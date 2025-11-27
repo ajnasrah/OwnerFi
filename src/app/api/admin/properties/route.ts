@@ -94,6 +94,7 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status') || 'all';
+    const pageSize = parseInt(searchParams.get('limit') || '100'); // Default 100 properties
 
     // Fetch from BOTH collections - zillow_imports AND properties
     const zillowCollection = collection(db, 'zillow_imports');
@@ -101,20 +102,32 @@ export async function GET(request: NextRequest) {
 
     let zillowConstraints: any[] = [
       where('ownerFinanceVerified', '==', true),
-      orderBy('foundAt', 'desc')
+      orderBy('foundAt', 'desc'),
+      firestoreLimit(pageSize) // Add limit for performance
     ];
 
     // Note: Removed orderBy to avoid requiring composite index (only 5-10 properties typically)
     let propertiesConstraints: any[] = [
-      where('isActive', '==', true)
+      where('isActive', '==', true),
+      firestoreLimit(50) // Limit curated properties
     ];
 
     // Filter by status if specified (only for zillow_imports)
     if (status !== 'all') {
       if (status === 'null') {
-        zillowConstraints.push(where('status', '==', null));
+        zillowConstraints = [
+          where('ownerFinanceVerified', '==', true),
+          where('status', '==', null),
+          orderBy('foundAt', 'desc'),
+          firestoreLimit(pageSize)
+        ];
       } else {
-        zillowConstraints.push(where('status', '==', status));
+        zillowConstraints = [
+          where('ownerFinanceVerified', '==', true),
+          where('status', '==', status),
+          orderBy('foundAt', 'desc'),
+          firestoreLimit(pageSize)
+        ];
       }
     }
 

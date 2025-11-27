@@ -11,9 +11,10 @@ interface PropertyCardProps {
   onPass: () => void;
   isFavorited: boolean;
   style?: React.CSSProperties;
+  isPriority?: boolean; // Only true for the currently visible card
 }
 
-export const PropertyCard = React.memo(function PropertyCard({ property, onLike, onPass, isFavorited, style }: PropertyCardProps) {
+export const PropertyCard = React.memo(function PropertyCard({ property, onLike, onPass, isFavorited, style, isPriority = false }: PropertyCardProps) {
   const [imageLoading, setImageLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
@@ -39,18 +40,6 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
     setShowDetails(prev => !prev);
   }, []);
 
-  // Format property type for display
-  const propertyTypeDisplay = useMemo(() => {
-    const types: Record<string, string> = {
-      'single-family': 'Single Family',
-      'condo': 'Condo',
-      'townhouse': 'Townhouse',
-      'mobile-home': 'Mobile Home',
-      'multi-family': 'Multi-Family',
-      'land': 'Land'
-    };
-    return types[property.propertyType] || property.propertyType;
-  }, [property.propertyType]);
 
   // Format lot size
   const lotSizeDisplay = useMemo(() => {
@@ -93,9 +82,9 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
                 setImageLoading(false);
               }}
               sizes="(max-width: 768px) 100vw, 50vw"
-              quality={75}
-              priority={true}
-              loading="eager"
+              quality={70}
+              priority={isPriority}
+              loading={isPriority ? "eager" : "lazy"}
             />
           </div>
 
@@ -107,17 +96,25 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
         <div className="absolute top-0 left-0 right-0 p-3 flex items-start justify-between z-10">
           {/* Left Side Badges */}
           <div className="flex gap-2 flex-wrap">
-            {/* Property Type Badge */}
-            <div className="bg-blue-600 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg flex items-center gap-1.5">
-              <span className="text-sm">🏠</span>
-              <span>{propertyTypeDisplay}</span>
-            </div>
-
-            {/* Owner Finance Badge */}
-            <div className="bg-emerald-600 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg flex items-center gap-1.5">
-              <span className="text-sm">💰</span>
-              <span>Owner Finance</span>
-            </div>
+            {/* Financing Type Badge - Dynamic based on detected keywords */}
+            {(() => {
+              const financingType = (property as any).financingType || (property as any).financingTypeLabel || 'Owner Finance';
+              const badgeConfig: Record<string, { bg: string; icon: string }> = {
+                'Owner Finance': { bg: 'bg-emerald-600', icon: '💰' },
+                'Seller Finance': { bg: 'bg-blue-600', icon: '🤝' },
+                'Rent to Own': { bg: 'bg-purple-600', icon: '🏠' },
+                'Contract for Deed': { bg: 'bg-orange-600', icon: '📜' },
+                'Assumable Loan': { bg: 'bg-teal-600', icon: '🔄' },
+                'Creative Financing': { bg: 'bg-yellow-600', icon: '💡' },
+              };
+              const config = badgeConfig[financingType] || badgeConfig['Owner Finance'];
+              return (
+                <div className={`${config.bg} backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg flex items-center gap-1.5`}>
+                  <span className="text-sm">{config.icon}</span>
+                  <span>{financingType}</span>
+                </div>
+              );
+            })()}
           </div>
 
           {/* Favorite Badge */}
@@ -252,13 +249,6 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
                   <span className="text-sm font-bold text-slate-900">{property.squareFeet?.toLocaleString() || 'N/A'}</span>
                   <span className="text-[10px] text-slate-600">sq ft</span>
                 </div>
-                {property.yearBuilt && (
-                  <div className="flex items-center gap-1.5 bg-slate-100 rounded-lg px-2 py-1">
-                    <span className="text-xs">📅</span>
-                    <span className="text-sm font-bold text-slate-900">{property.yearBuilt}</span>
-                    <span className="text-[10px] text-slate-600">built</span>
-                  </div>
-                )}
               </div>
 
               {/* Expanded Details */}
@@ -305,6 +295,37 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
                       <span>Property Details</span>
                     </h3>
                     <div className="grid grid-cols-2 gap-3 text-sm">
+                      {/* Always show Property Type */}
+                      <div>
+                        <div className="text-slate-500 text-xs">Property Type</div>
+                        <div className="font-bold text-slate-900">
+                          {(() => {
+                            const homeType = (property as any).homeType || property.propertyType || 'Single Family';
+                            const types: Record<string, string> = {
+                              'SINGLE_FAMILY': 'Single Family',
+                              'single-family': 'Single Family',
+                              'CONDO': 'Condo',
+                              'condo': 'Condo',
+                              'TOWNHOUSE': 'Townhouse',
+                              'townhouse': 'Townhouse',
+                              'MOBILE': 'Mobile Home',
+                              'mobile-home': 'Mobile Home',
+                              'MULTI_FAMILY': 'Multi-Family',
+                              'multi-family': 'Multi-Family',
+                              'LAND': 'Land',
+                              'land': 'Land',
+                            };
+                            return types[homeType] || homeType;
+                          })()}
+                        </div>
+                      </div>
+                      {/* Always show Year Built if available */}
+                      {property.yearBuilt && (
+                        <div>
+                          <div className="text-slate-500 text-xs">Year Built</div>
+                          <div className="font-bold text-slate-900">{property.yearBuilt}</div>
+                        </div>
+                      )}
                       {lotSizeDisplay && (
                         <div>
                           <div className="text-slate-500 text-xs">Lot Size</div>

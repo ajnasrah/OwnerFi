@@ -143,8 +143,8 @@ export async function GET(request: NextRequest) {
 
     // 1. Curated properties (existing system)
     // PAGINATION: Limit initial queries to reduce bandwidth and improve performance
-    // We'll fetch more than needed to account for filtering
-    const fetchLimit = Math.min(pageSize * 3, 300); // Fetch 3x pageSize, max 300
+    // Reduced from 300 to 100 max for faster initial load
+    const fetchLimit = Math.min(pageSize * 2, 100); // Fetch 2x pageSize, max 100
 
     const propertiesQuery = query(
       collection(db, 'properties'),

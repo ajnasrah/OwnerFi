@@ -21,7 +21,8 @@ function upgradeZillowImageUrl(url: string): string {
 
   const lowResSizes = [
     'p_c.jpg', 'p_e.jpg', 'p_f.jpg', 'p_g.jpg', 'p_h.jpg',
-    'cc_ft_192.webp', 'cc_ft_384.webp', 'cc_ft_576.webp', 'cc_ft_768.webp'
+    'cc_ft_192.webp', 'cc_ft_384.webp', 'cc_ft_576.webp', 'cc_ft_768.webp',
+    'cc_ft_192.jpg', 'cc_ft_384.jpg', 'cc_ft_576.jpg', 'cc_ft_768.jpg'
   ];
 
   for (const size of lowResSizes) {
@@ -66,8 +67,9 @@ async function enhanceCollection(collectionName: string) {
   for (const doc of snap.docs) {
     const data = doc.data();
 
-    // Skip if already enhanced
-    if (data.imageEnhanced === true) {
+    // Skip if already enhanced AND has high-res imgSrc
+    const hasHighResImage = data.imgSrc && data.imgSrc.includes('uncropped_scaled_within');
+    if (data.imageEnhanced === true && hasHighResImage) {
       skipped++;
       continue;
     }
@@ -120,6 +122,24 @@ async function enhanceCollection(collectionName: string) {
       );
       if (JSON.stringify(upgradedUrls) !== JSON.stringify(data.images)) {
         updateData.images = upgradedUrls;
+        wasUpgraded = true;
+      }
+    }
+
+    // If imgSrc is missing but propertyImages exists, set imgSrc from first image
+    if (!data.imgSrc && data.propertyImages && Array.isArray(data.propertyImages) && data.propertyImages.length > 0) {
+      const firstImage = data.propertyImages[0];
+      if (typeof firstImage === 'string') {
+        updateData.imgSrc = upgradeZillowImageUrl(firstImage);
+        wasUpgraded = true;
+      }
+    }
+
+    // Same for imageUrls array
+    if (!data.imgSrc && !updateData.imgSrc && data.imageUrls && Array.isArray(data.imageUrls) && data.imageUrls.length > 0) {
+      const firstImage = data.imageUrls[0];
+      if (typeof firstImage === 'string') {
+        updateData.imgSrc = upgradeZillowImageUrl(firstImage);
         wasUpgraded = true;
       }
     }

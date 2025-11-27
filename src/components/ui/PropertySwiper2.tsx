@@ -255,7 +255,7 @@ export const PropertySwiper2 = memo(function PropertySwiper2({
     >
       {/* Cards Stack */}
       <div className="absolute inset-2 sm:inset-4 flex items-center justify-center" style={{ maxWidth: '100%' }}>
-        {/* Next Card (Behind) */}
+        {/* Next Card (Behind) - lazy load image */}
         {nextProperty && (
           <div className="absolute w-[calc(100%-1rem)] sm:w-full max-w-[min(28rem,calc(100vw-2rem))] h-full max-h-[calc(100dvh-12rem)]">
             <PropertyCard
@@ -264,11 +264,12 @@ export const PropertySwiper2 = memo(function PropertySwiper2({
               onPass={() => {}}
               isFavorited={favorites.includes(nextProperty.id)}
               style={getCardStyle(false)}
+              isPriority={false}
             />
           </div>
         )}
 
-        {/* Current Card */}
+        {/* Current Card - priority load image */}
         <div className="absolute w-[calc(100%-1rem)] sm:w-full max-w-[min(28rem,calc(100vw-2rem))] h-full max-h-[calc(100dvh-12rem)]">
           <PropertyCard
             property={currentProperty}
@@ -276,6 +277,7 @@ export const PropertySwiper2 = memo(function PropertySwiper2({
             onPass={handlePassButton}
             isFavorited={isFavorited}
             style={getCardStyle(true)}
+            isPriority={true}
           />
         </div>
 

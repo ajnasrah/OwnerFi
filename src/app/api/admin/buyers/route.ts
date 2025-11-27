@@ -135,6 +135,24 @@ export async function GET(request: NextRequest) {
     const searchLat = searchParams.get('lat');
     const searchLng = searchParams.get('lng');
     const searchRadius = searchParams.get('radius');
+    const countOnly = searchParams.get('countOnly') === 'true';
+
+    // FAST PATH: Count-only mode for stats (skip expensive calculations)
+    if (countOnly) {
+      const { getCountFromServer } = await import('firebase/firestore');
+      const usersCountQuery = query(
+        collection(db, 'users'),
+        where('role', '==', 'buyer')
+      );
+      const countSnapshot = await getCountFromServer(usersCountQuery);
+      return NextResponse.json({
+        buyers: [],
+        total: countSnapshot.data().count,
+        totalPages: 0,
+        currentPage: 1,
+        pageSize: 0
+      });
+    }
 
     // Get all users with role 'buyer' with pagination
     const usersQuery = query(

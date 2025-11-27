@@ -50,9 +50,10 @@ const STRICT_PATTERNS = [
   { pattern: /seller\s*terms/i, name: 'seller terms' },
 
   // Tier 2: Alternative financing methods (low FP rate)
-  { pattern: /rent.*to.*own/i, name: 'rent to own' },       // 5.7% FP
-  { pattern: /lease.*option/i, name: 'lease option' },      // 3.8% FP
-  { pattern: /lease.*purchase/i, name: 'lease purchase' },  // 7.9% FP
+  // FIXED: Use \s+ or \s*-\s* instead of .* to prevent matching across sentences
+  { pattern: /rent[\s-]+to[\s-]+own/i, name: 'rent to own' },       // Was 5.7% FP, now stricter
+  { pattern: /lease[\s-]*option/i, name: 'lease option' },          // 3.8% FP
+  { pattern: /lease[\s-]*purchase/i, name: 'lease purchase' },      // 7.9% FP
 
   // Tier 3: Other explicit terms
   { pattern: /contract\s*for\s*deed/i, name: 'contract for deed' },

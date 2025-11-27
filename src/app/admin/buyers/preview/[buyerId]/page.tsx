@@ -212,9 +212,12 @@ export default function BuyerPreview() {
     );
   }
 
-  // Convert Property to PropertyListing format
+  // Convert Property to PropertyListing format - spread all fields to preserve details
   const toPropertyListing = (property: Property): PropertyListing => {
     return {
+      // Spread all existing property fields first (includes estimatedValue, rentZestimate, etc.)
+      ...property,
+      // Then ensure required fields have defaults
       id: property.id,
       address: property.address,
       city: property.city,

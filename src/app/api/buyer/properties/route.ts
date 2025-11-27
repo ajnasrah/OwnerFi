@@ -188,6 +188,7 @@ export async function GET(request: NextRequest) {
         source: 'zillow',
         // Field mapping for UI compatibility (Zillow fields -> PropertyListing schema)
         address: data.fullAddress || data.address,
+        streetAddress: data.streetAddress || data.address,
         squareFeet: data.squareFoot || data.squareFeet,
         lotSize: data.lotSquareFoot || data.lotSize,
         listPrice: data.price || data.listPrice,
@@ -196,6 +197,31 @@ export async function GET(request: NextRequest) {
         imageUrl: data.firstPropertyImage || data.imageUrl,
         imageUrls: data.propertyImages || data.imageUrls || [],
         description: data.description || '', // Explicitly include description
+        // Property details mapping
+        bedrooms: data.bedrooms || 0,
+        bathrooms: data.bathrooms || 0,
+        yearBuilt: data.yearBuilt || null,
+        stories: data.stories || null,
+        garage: data.garage || null,
+        parking: data.parking || null,
+        heating: data.heating || null,
+        cooling: data.cooling || null,
+        features: data.features || [],
+        appliances: data.appliances || [],
+        neighborhood: data.neighborhood || data.subdivision || null,
+        daysOnMarket: data.daysOnZillow || null,
+        // Contact info mapping
+        agentPhone: data.agentPhoneNumber || data.brokerPhoneNumber || null,
+        agentName: data.agentName || data.brokerName || null,
+        agentEmail: data.agentEmail || null,
+        // Market estimates mapping (zillow field names -> PropertyListing schema)
+        estimatedValue: data.estimate || data.zestimate || null,
+        rentZestimate: data.rentEstimate || data.rentZestimate || null,
+        pricePerSqFt: data.price && data.squareFoot ? Math.round(data.price / data.squareFoot) : null,
+        // HOA mapping (convert number to object structure)
+        hoa: data.hoa ? { hasHOA: true, monthlyFee: data.hoa } : null,
+        // Taxes mapping (convert number to object structure)
+        taxes: data.annualTaxAmount ? { annualAmount: data.annualTaxAmount } : null,
         // Calculate down payment percentage if not provided
         downPaymentPercent: data.downPaymentPercent || (data.downPaymentAmount && data.price ?
           Math.round((data.downPaymentAmount / data.price) * 100) : null),

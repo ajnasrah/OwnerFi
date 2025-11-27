@@ -41,6 +41,7 @@ export function useProperties() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(75);
   const [addressSearch, setAddressSearch] = useState('');
+  const [cityFilter, setCityFilter] = useState('');
   const [sortField, setSortField] = useState<'address' | 'city' | 'state' | 'listPrice' | 'bedrooms' | 'downPaymentAmount' | 'monthlyPayment' | null>('address');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
@@ -81,12 +82,19 @@ export function useProperties() {
   const filteredProperties = useMemo(() => {
     let filteredProps = properties;
 
-    // Apply search filter
+    // Apply address search filter
     if (addressSearch.trim()) {
       const searchTerm = addressSearch.toLowerCase();
       filteredProps = filteredProps.filter(property =>
-        property.address?.toLowerCase().includes(searchTerm) ||
-        property.city?.toLowerCase().includes(searchTerm)
+        property.address?.toLowerCase().includes(searchTerm)
+      );
+    }
+
+    // Apply city filter
+    if (cityFilter.trim()) {
+      const cityTerm = cityFilter.toLowerCase();
+      filteredProps = filteredProps.filter(property =>
+        property.city?.toLowerCase().includes(cityTerm)
       );
     }
 
@@ -140,7 +148,7 @@ export function useProperties() {
     }
 
     return filteredProps;
-  }, [properties, addressSearch, sortField, sortDirection]);
+  }, [properties, addressSearch, cityFilter, sortField, sortDirection]);
 
   // Memoized paginated properties
   const paginatedProperties = useMemo(() => {
@@ -181,6 +189,7 @@ export function useProperties() {
     currentPage,
     itemsPerPage,
     addressSearch,
+    cityFilter,
     sortField,
     sortDirection,
 
@@ -192,6 +201,7 @@ export function useProperties() {
     // Actions
     fetchProperties,
     setAddressSearch,
+    setCityFilter,
     setCurrentPage,
     handleSort,
     togglePropertySelection,

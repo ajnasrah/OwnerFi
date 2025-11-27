@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { Dispatch, SetStateAction } from 'react';
+import { Dispatch, SetStateAction, useState } from 'react';
 import { useProperties, AdminProperty } from '../hooks/useProperties';
 import { convertToDirectImageUrl } from '../lib/image-utils';
 
@@ -27,7 +27,41 @@ export default function PropertiesTab({ setEditingProperty, setEditForm }: Prope
     setSelectedProperties,
     handleSort,
     fetchProperties,
+    cityFilter,
+    setCityFilter,
   } = useProperties();
+
+  const [sendingToGHL, setSendingToGHL] = useState(false);
+
+  // Send selected properties to GHL
+  const handleSendToGHL = async () => {
+    if (selectedProperties.length === 0) return;
+
+    if (!confirm(`Send ${selectedProperties.length} properties to GHL?`)) return;
+
+    setSendingToGHL(true);
+    try {
+      const response = await fetch('/api/admin/properties/send-to-ghl', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ propertyIds: selectedProperties }),
+      });
+
+      const result = await response.json();
+
+      if (result.error) {
+        alert(`Error: ${result.error}`);
+      } else {
+        alert(`Successfully sent ${result.sent} properties to GHL${result.failed > 0 ? `. ${result.failed} failed.` : ''}`);
+        setSelectedProperties([]);
+      }
+    } catch (error) {
+      alert('Failed to send properties to GHL');
+      console.error('Send to GHL error:', error);
+    } finally {
+      setSendingToGHL(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -42,8 +76,8 @@ export default function PropertiesTab({ setEditingProperty, setEditForm }: Prope
       {/* Search and Filter */}
       <div className="px-4 py-5 sm:p-6 border-b border-gray-200">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
-          <div className="flex-1 max-w-lg">
-            <div className="relative">
+          <div className="flex-1 flex items-center space-x-3">
+            <div className="relative flex-1 max-w-xs">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -51,10 +85,19 @@ export default function PropertiesTab({ setEditingProperty, setEditForm }: Prope
               </div>
               <input
                 type="text"
-                placeholder="Search by address or city..."
+                placeholder="Search address..."
                 value={addressSearch}
                 onChange={(e) => setAddressSearch(e.target.value)}
                 className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+              />
+            </div>
+            <div className="relative max-w-xs">
+              <input
+                type="text"
+                placeholder="Filter by city..."
+                value={cityFilter}
+                onChange={(e) => setCityFilter(e.target.value)}
+                className="block w-full px-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
               />
             </div>
           </div>
@@ -91,27 +134,46 @@ export default function PropertiesTab({ setEditingProperty, setEditForm }: Prope
               Export to Excel
             </button>
             {selectedProperties.length > 0 && (
-              <button
-                onClick={async () => {
-                  if (confirm(`Delete ${selectedProperties.length} selected properties?`)) {
-                    try {
-                      // Delete each selected property
-                      for (const propertyId of selectedProperties) {
-                        await fetch(`/api/admin/properties/${propertyId}`, { method: 'DELETE' });
+              <>
+                <button
+                  onClick={handleSendToGHL}
+                  disabled={sendingToGHL}
+                  className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
+                >
+                  {sendingToGHL ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Sending...
+                    </>
+                  ) : (
+                    <>Send {selectedProperties.length} to GHL</>
+                  )}
+                </button>
+                <button
+                  onClick={async () => {
+                    if (confirm(`Delete ${selectedProperties.length} selected properties?`)) {
+                      try {
+                        // Delete each selected property
+                        for (const propertyId of selectedProperties) {
+                          await fetch(`/api/admin/properties/${propertyId}`, { method: 'DELETE' });
+                        }
+                        setSelectedProperties([]);
+                        fetchProperties(undefined, false);
+                        alert(`Successfully deleted ${selectedProperties.length} properties`);
+                      } catch (error) {
+                        alert('Failed to delete some properties');
+                        console.error('Delete error:', error);
                       }
-                      setSelectedProperties([]);
-                      fetchProperties(undefined, false);
-                      alert(`Successfully deleted ${selectedProperties.length} properties`);
-                    } catch (error) {
-                      alert('Failed to delete some properties');
-                      console.error('Delete error:', error);
                     }
-                  }
-                }}
-                className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-              >
-                Delete {selectedProperties.length} Selected
-              </button>
+                  }}
+                  className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                >
+                  Delete {selectedProperties.length}
+                </button>
+              </>
             )}
           </div>
         </div>

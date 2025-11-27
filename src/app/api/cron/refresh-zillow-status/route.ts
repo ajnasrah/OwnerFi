@@ -204,6 +204,7 @@ export async function GET(request: NextRequest) {
 
         // Update Firestore with new status
         const firestoreBatch = db.batch();
+        const processedZpids = new Set<string>(); // Track which properties got results
 
         for (const item of typedItems) {
           const zpid = String(item.zpid || item.id || '');
@@ -216,6 +217,7 @@ export async function GET(request: NextRequest) {
             continue;
           }
 
+          processedZpids.add(zpid); // Mark as processed
           const docRef = db.collection('zillow_imports').doc(actualDocId);
 
           // Find the original property
@@ -243,8 +245,7 @@ export async function GET(request: NextRequest) {
             'OFF_MARKET',                 // No longer listed
             'FOR_RENT',                   // Changed to rental
             'CONTINGENT',                 // Contingent offer accepted
-            'ACCEPTING_BACKUP_OFFERS',    // Under contract, accepting backups
-            'BACKUP_OFFERS',              // Backup offers status
+            // Note: ACCEPTING_BACKUP_OFFERS kept active - still a valid opportunity
           ];
           const isInactive = inactiveStatuses.includes(newStatus);
 
@@ -350,6 +351,25 @@ export async function GET(request: NextRequest) {
               updated++;
             }
           }
+        }
+
+        // Update lastStatusCheck for properties that didn't get Apify results
+        // This ensures they rotate out and don't keep getting re-checked
+        let noResultCount = 0;
+        for (const prop of batch) {
+          const propZpid = String(prop.zpid || '');
+          if (propZpid && !processedZpids.has(propZpid)) {
+            const docRef = db.collection('zillow_imports').doc(prop.id);
+            firestoreBatch.update(docRef, {
+              lastStatusCheck: new Date(),
+              lastStatusCheckNote: 'No Apify result - URL may be invalid or property removed',
+            });
+            noResultCount++;
+            console.log(`   ⚠️  No result for: ${prop.address} (ZPID: ${propZpid})`);
+          }
+        }
+        if (noResultCount > 0) {
+          console.log(`   📝 Updated lastStatusCheck for ${noResultCount} properties with no Apify result`);
         }
 
         await firestoreBatch.commit();

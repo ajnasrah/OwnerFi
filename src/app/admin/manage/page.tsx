@@ -161,7 +161,8 @@ export default function AdminDashboard() {
   const [loadingCashHouses, setLoadingCashHouses] = useState(false);
   const [cashHousesFilter, setCashHousesFilter] = useState<'all' | 'discount' | 'needs_work' | 'owner_finance'>('all');
   const [selectedCashHouses, setSelectedCashHouses] = useState<Set<string>>(new Set());
-  const [cashHousesSortBy, setCashHousesSortBy] = useState<'newest' | 'discount_asc' | 'discount_desc'>('newest');
+  const [cashHousesSortBy, setCashHousesSortBy] = useState<'newest' | 'discount_asc' | 'discount_desc' | 'arv_pct_asc' | 'arv_pct_desc'>('arv_pct_asc');
+  const [cashHousesCitySearch, setCashHousesCitySearch] = useState('');
 
   // Fetch cash houses when tab becomes active
   useEffect(() => {
@@ -173,17 +174,34 @@ export default function AdminDashboard() {
   const fetchCashHouses = async () => {
     setLoadingCashHouses(true);
     try {
-      const { collection, getDocs, orderBy, query, limit } = await import('firebase/firestore');
-      const { db } = await import('@/lib/firebase');
+      const res = await fetch('/api/admin/cash-deals?limit=200');
+      const data = await res.json();
 
-      const cashHousesRef = collection(db, 'cash_houses');
-      const q = query(cashHousesRef, orderBy('importedAt', 'desc'), limit(200));
-      const snapshot = await getDocs(q);
+      if (data.error) {
+        console.error('API error:', data.error);
+        return;
+      }
 
-      const houses = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
+      const houses = (data.deals || []).map((deal: any) => {
+        // Parse street address from full address (remove city, state, zip)
+        const fullAddr = deal.address || '';
+        const streetAddress = fullAddr.split(',')[0] || deal.streetAddress || fullAddr;
+
+        return {
+          ...deal,
+          // Map fields from API format to UI format
+          streetAddress,
+          fullAddress: fullAddr || deal.fullAddress,
+          zipCode: deal.zipcode || deal.zipCode,
+          firstPropertyImage: deal.imgSrc || deal.firstPropertyImage,
+          estimate: deal.arv || deal.estimate,
+          eightyPercentOfZestimate: deal.arv ? Math.round(deal.arv * 0.8) : deal.eightyPercentOfZestimate,
+          discountPercentage: deal.discount || deal.discountPercentage,
+          bedrooms: deal.beds || deal.bedrooms,
+          bathrooms: deal.baths || deal.bathrooms,
+          squareFoot: deal.sqft || deal.squareFoot,
+        };
+      });
 
       setCashHouses(houses);
     } catch (error) {
@@ -2559,9 +2577,9 @@ export default function AdminDashboard() {
                   <nav className="-mb-px flex space-x-8" aria-label="Tabs">
                     {[
                       { key: 'all', label: 'All Properties', icon: '🏘️' },
-                      { key: 'discount', label: 'Discount (<80% ARV)', icon: '💰' },
-                      { key: 'needs_work', label: 'Needs Work (Cash)', icon: '🔨' },
-                      { key: 'owner_finance', label: 'Owner Finance (Zillow)', icon: '🏠' },
+                      { key: 'discount', label: 'Discount Deals', icon: '💰' },
+                      { key: 'owner_finance', label: 'Owner Finance', icon: '🏠' },
+                      { key: 'needs_work', label: 'Best Deals (<50%)', icon: '🔥' },
                     ].map((filter) => (
                       <button
                         key={filter.key}
@@ -2579,9 +2597,28 @@ export default function AdminDashboard() {
                   </nav>
                 </div>
 
-                {/* Sort and Bulk Actions */}
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-4">
+                {/* Search, Sort and Bulk Actions */}
+                <div className="flex items-center justify-between mb-4 flex-wrap gap-4">
+                  <div className="flex items-center gap-4 flex-wrap">
+                    {/* City Search */}
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        placeholder="Search city..."
+                        value={cashHousesCitySearch}
+                        onChange={(e) => setCashHousesCitySearch(e.target.value)}
+                        className="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm px-3 py-1.5 w-40"
+                      />
+                      {cashHousesCitySearch && (
+                        <button
+                          onClick={() => setCashHousesCitySearch('')}
+                          className="text-gray-400 hover:text-gray-600 text-sm"
+                        >
+                          Clear
+                        </button>
+                      )}
+                    </div>
+                    {/* Sort */}
                     <label className="text-sm font-medium text-gray-700">
                       Sort by:
                       <select
@@ -2589,9 +2626,11 @@ export default function AdminDashboard() {
                         onChange={(e) => setCashHousesSortBy(e.target.value as any)}
                         className="ml-2 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
                       >
-                        <option value="newest">Newest First</option>
+                        <option value="arv_pct_asc">Lowest % of ARV</option>
+                        <option value="arv_pct_desc">Highest % of ARV</option>
                         <option value="discount_desc">Highest Discount %</option>
                         <option value="discount_asc">Lowest Discount %</option>
+                        <option value="newest">Newest First</option>
                       </select>
                     </label>
                   </div>
@@ -2610,26 +2649,50 @@ export default function AdminDashboard() {
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
                   </div>
                 ) : (() => {
-                  // Filter cash houses based on selected filter
+                  // Filter cash houses based on selected filter and city search
                   let filteredHouses = cashHouses.filter(house => {
+                    // City search filter (case-insensitive, partial match)
+                    if (cashHousesCitySearch) {
+                      const searchLower = cashHousesCitySearch.toLowerCase();
+                      const cityMatch = house.city?.toLowerCase().includes(searchLower);
+                      const stateMatch = house.state?.toLowerCase().includes(searchLower);
+                      if (!cityMatch && !stateMatch) return false;
+                    }
+
                     if (cashHousesFilter === 'all') return true;
-                    // Discount: ONLY from cash deals scraper under 80% ARV
+                    const pctOfArv = house.percentOfArv || (house.estimate ? (house.price / house.estimate) * 100 : 100);
+                    const isOwnerFinance = house.ownerFinanceVerified || house.source?.includes('zillow');
+                    // Discount Deals: From cash scraper (not owner finance)
                     if (cashHousesFilter === 'discount') {
-                      return house.dealType === 'discount' && house.source === 'cash_deals_scraper';
+                      return !isOwnerFinance && pctOfArv < 80;
                     }
-                    // Needs Work: ALL properties with keywords from cash deals scraper (any price)
-                    if (cashHousesFilter === 'needs_work') {
-                      return house.source === 'cash_deals_scraper' && house.needsWork === true;
-                    }
-                    // Owner Finance: ONLY from Zillow scraper with keywords
+                    // Owner Finance: Verified owner finance properties
                     if (cashHousesFilter === 'owner_finance') {
-                      return house.dealType === 'owner_finance' && house.source === 'zillow_scraper';
+                      return isOwnerFinance;
+                    }
+                    // Best Deals: Under 50% of ARV (any source)
+                    if (cashHousesFilter === 'needs_work') {
+                      return pctOfArv < 50 && pctOfArv > 0;
                     }
                     return true;
                   });
 
                   // Sort houses
-                  if (cashHousesSortBy === 'discount_desc') {
+                  if (cashHousesSortBy === 'arv_pct_asc') {
+                    // Lowest % of ARV first (best deals)
+                    filteredHouses = [...filteredHouses].sort((a, b) => {
+                      const aPercent = a.percentOfArv || (a.estimate ? (a.price / a.estimate) * 100 : 100);
+                      const bPercent = b.percentOfArv || (b.estimate ? (b.price / b.estimate) * 100 : 100);
+                      return aPercent - bPercent;
+                    });
+                  } else if (cashHousesSortBy === 'arv_pct_desc') {
+                    // Highest % of ARV first
+                    filteredHouses = [...filteredHouses].sort((a, b) => {
+                      const aPercent = a.percentOfArv || (a.estimate ? (a.price / a.estimate) * 100 : 100);
+                      const bPercent = b.percentOfArv || (b.estimate ? (b.price / b.estimate) * 100 : 100);
+                      return bPercent - aPercent;
+                    });
+                  } else if (cashHousesSortBy === 'discount_desc') {
                     filteredHouses = [...filteredHouses].sort((a, b) =>
                       (b.discountPercentage || 0) - (a.discountPercentage || 0)
                     );
@@ -2638,7 +2701,7 @@ export default function AdminDashboard() {
                       (a.discountPercentage || 0) - (b.discountPercentage || 0)
                     );
                   }
-                  // 'newest' is already sorted by importedAt from Firestore query
+                  // 'newest' keeps original order from API
 
                   const allSelected = filteredHouses.length > 0 && filteredHouses.every(h => selectedCashHouses.has(h.id));
 
@@ -2649,10 +2712,11 @@ export default function AdminDashboard() {
                       </svg>
                       <h3 className="mt-2 text-sm font-medium text-gray-900">No Properties Found</h3>
                       <p className="mt-1 text-sm text-gray-500">
-                        {cashHousesFilter === 'all' && 'Use the Chrome extension to add properties to the cash deals queue'}
-                        {cashHousesFilter === 'discount' && 'No discount deals found (properties under 80% ARV)'}
-                        {cashHousesFilter === 'needs_work' && 'No properties with keywords from cash scraper found (any price)'}
-                        {cashHousesFilter === 'owner_finance' && 'No owner finance opportunities from Zillow scraper found'}
+                        {cashHousesCitySearch && `No properties found in "${cashHousesCitySearch}"`}
+                        {!cashHousesCitySearch && cashHousesFilter === 'all' && 'No properties in queue. Run the scraper to add deals.'}
+                        {!cashHousesCitySearch && cashHousesFilter === 'discount' && 'No discount deals found (under 80% ARV, non-owner finance)'}
+                        {!cashHousesCitySearch && cashHousesFilter === 'owner_finance' && 'No owner finance properties found'}
+                        {!cashHousesCitySearch && cashHousesFilter === 'needs_work' && 'No best deals found (under 50% of ARV)'}
                       </p>
                     </div>
                   ) : (

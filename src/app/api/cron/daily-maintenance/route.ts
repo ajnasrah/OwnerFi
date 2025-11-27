@@ -195,132 +195,102 @@ async function enhancePropertyImages() {
       throw new Error('Firebase not initialized');
     }
 
-    const BATCH_SIZE = 500;
+    const BATCH_SIZE = 1000; // Process more per run
     const stats = {
       cashHouses: { total: 0, upgraded: 0 },
       zillowImports: { total: 0, upgraded: 0 }
     };
     let totalErrors = 0;
 
+    // Helper to process a collection
+    async function processCollection(
+      collectionName: string,
+      imageFields: string[]
+    ): Promise<{ total: number; upgraded: number; errors: number }> {
+      const collRef = db.collection(collectionName);
+      const allDocs = await collRef.get();
+
+      // Filter to unprocessed docs (imageEnhanced !== true)
+      const unprocessed = allDocs.docs.filter(doc => doc.data().imageEnhanced !== true);
+      const toProcess = unprocessed.slice(0, BATCH_SIZE);
+
+      console.log(`   📊 ${collectionName}: ${toProcess.length} to process (${unprocessed.length} total unprocessed)`);
+
+      let upgraded = 0;
+      let errors = 0;
+
+      // Process in batches of 500 for Firestore limits
+      const WRITE_BATCH_SIZE = 500;
+      for (let i = 0; i < toProcess.length; i += WRITE_BATCH_SIZE) {
+        const batch = db.batch();
+        const chunk = toProcess.slice(i, i + WRITE_BATCH_SIZE);
+
+        for (const doc of chunk) {
+          const data = doc.data();
+          const updateData: Record<string, any> = {
+            imageEnhanced: true,
+            imageEnhancedAt: new Date().toISOString()
+          };
+          let wasUpgraded = false;
+
+          // Process single image fields
+          for (const field of imageFields) {
+            if (data[field] && typeof data[field] === 'string' && data[field].includes('zillowstatic.com')) {
+              const newUrl = upgradeZillowImageUrl(data[field]);
+              if (newUrl !== data[field]) {
+                updateData[field] = newUrl;
+                wasUpgraded = true;
+              }
+            }
+          }
+
+          // Process array fields
+          const arrayFields = ['imageUrls', 'propertyImages', 'images'];
+          for (const field of arrayFields) {
+            if (data[field] && Array.isArray(data[field])) {
+              const upgradedUrls = data[field].map((url: string) =>
+                typeof url === 'string' && url.includes('zillowstatic.com')
+                  ? upgradeZillowImageUrl(url)
+                  : url
+              );
+              if (JSON.stringify(upgradedUrls) !== JSON.stringify(data[field])) {
+                updateData[field] = upgradedUrls;
+                wasUpgraded = true;
+              }
+            }
+          }
+
+          batch.update(doc.ref, updateData);
+          if (wasUpgraded) upgraded++;
+        }
+
+        try {
+          await batch.commit();
+        } catch (e) {
+          errors += chunk.length;
+        }
+      }
+
+      return { total: toProcess.length, upgraded, errors };
+    }
+
     // ============================================
-    // 1. Process cash_houses collection (imgSrc field)
+    // 1. Process cash_houses collection
     // ============================================
     console.log('\n   🏠 Processing cash_houses...');
-    const cashHousesRef = db.collection('cash_houses');
-
-    // Get unprocessed cash_houses
-    let cashSnapshot = await cashHousesRef
-      .where('imageEnhanced', '!=', true)
-      .limit(BATCH_SIZE)
-      .get();
-
-    // Fallback: if no results with !=, check for missing field
-    if (cashSnapshot.size === 0) {
-      const allCash = await cashHousesRef.limit(BATCH_SIZE).get();
-      const unprocessed = allCash.docs.filter(doc => doc.data().imageEnhanced !== true);
-      cashSnapshot = { size: unprocessed.length, docs: unprocessed, empty: unprocessed.length === 0 } as any;
-    }
-
-    stats.cashHouses.total = cashSnapshot.size;
-    console.log(`   📊 Found ${cashSnapshot.size} cash_houses to process`);
-
-    for (const doc of cashSnapshot.docs) {
-      const data = doc.data();
-      const imgSrc = data.imgSrc;
-
-      if (imgSrc && imgSrc.includes('zillowstatic.com')) {
-        const upgraded = upgradeZillowImageUrl(imgSrc);
-        if (upgraded !== imgSrc) {
-          try {
-            await doc.ref.update({
-              imgSrc: upgraded,
-              imageEnhanced: true,
-              imageEnhancedAt: new Date().toISOString()
-            });
-            stats.cashHouses.upgraded++;
-          } catch {
-            totalErrors++;
-          }
-        } else {
-          // Already high-res, just mark as enhanced
-          await doc.ref.update({ imageEnhanced: true, imageEnhancedAt: new Date().toISOString() }).catch(() => {});
-        }
-      } else {
-        // No Zillow image, mark as enhanced to skip in future
-        await doc.ref.update({ imageEnhanced: true, imageEnhancedAt: new Date().toISOString() }).catch(() => {});
-      }
-    }
-
-    console.log(`   ✅ cash_houses upgraded: ${stats.cashHouses.upgraded}/${stats.cashHouses.total}`);
+    const cashResult = await processCollection('cash_houses', ['imgSrc', 'imageUrl', 'image', 'thumbnail']);
+    stats.cashHouses = { total: cashResult.total, upgraded: cashResult.upgraded };
+    totalErrors += cashResult.errors;
+    console.log(`   ✅ cash_houses: ${cashResult.upgraded}/${cashResult.total} upgraded`);
 
     // ============================================
-    // 2. Process zillow_imports collection (imageUrl, firstPropertyImage fields)
+    // 2. Process zillow_imports collection
     // ============================================
     console.log('\n   📋 Processing zillow_imports...');
-    const zillowRef = db.collection('zillow_imports');
-
-    // Get unprocessed zillow_imports
-    let zillowSnapshot = await zillowRef
-      .where('imageEnhanced', '!=', true)
-      .limit(BATCH_SIZE)
-      .get();
-
-    // Fallback: check for missing field
-    if (zillowSnapshot.size === 0) {
-      const allZillow = await zillowRef.limit(BATCH_SIZE).get();
-      const unprocessed = allZillow.docs.filter(doc => doc.data().imageEnhanced !== true);
-      zillowSnapshot = { size: unprocessed.length, docs: unprocessed, empty: unprocessed.length === 0 } as any;
-    }
-
-    stats.zillowImports.total = zillowSnapshot.size;
-    console.log(`   📊 Found ${zillowSnapshot.size} zillow_imports to process`);
-
-    for (const doc of zillowSnapshot.docs) {
-      const data = doc.data();
-      const updateData: Record<string, any> = {
-        imageEnhanced: true,
-        imageEnhancedAt: new Date().toISOString()
-      };
-      let wasUpgraded = false;
-
-      // Upgrade imageUrl
-      if (data.imageUrl && data.imageUrl.includes('zillowstatic.com')) {
-        const upgraded = upgradeZillowImageUrl(data.imageUrl);
-        if (upgraded !== data.imageUrl) {
-          updateData.imageUrl = upgraded;
-          wasUpgraded = true;
-        }
-      }
-
-      // Upgrade firstPropertyImage
-      if (data.firstPropertyImage && data.firstPropertyImage.includes('zillowstatic.com')) {
-        const upgraded = upgradeZillowImageUrl(data.firstPropertyImage);
-        if (upgraded !== data.firstPropertyImage) {
-          updateData.firstPropertyImage = upgraded;
-          wasUpgraded = true;
-        }
-      }
-
-      // Upgrade imageUrls array
-      if (data.imageUrls && Array.isArray(data.imageUrls)) {
-        const upgradedUrls = data.imageUrls.map((url: string) =>
-          url.includes('zillowstatic.com') ? upgradeZillowImageUrl(url) : url
-        );
-        if (JSON.stringify(upgradedUrls) !== JSON.stringify(data.imageUrls)) {
-          updateData.imageUrls = upgradedUrls;
-          wasUpgraded = true;
-        }
-      }
-
-      try {
-        await doc.ref.update(updateData);
-        if (wasUpgraded) stats.zillowImports.upgraded++;
-      } catch {
-        totalErrors++;
-      }
-    }
-
-    console.log(`   ✅ zillow_imports upgraded: ${stats.zillowImports.upgraded}/${stats.zillowImports.total}`);
+    const zillowResult = await processCollection('zillow_imports', ['imgSrc', 'imageUrl', 'firstPropertyImage', 'image', 'thumbnail']);
+    stats.zillowImports = { total: zillowResult.total, upgraded: zillowResult.upgraded };
+    totalErrors += zillowResult.errors;
+    console.log(`   ✅ zillow_imports: ${zillowResult.upgraded}/${zillowResult.total} upgraded`);
 
     // Summary
     const totalUpgraded = stats.cashHouses.upgraded + stats.zillowImports.upgraded;

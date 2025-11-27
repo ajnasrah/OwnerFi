@@ -28,6 +28,7 @@ export default function CashDealsPage() {
   const [loading, setLoading] = useState(true);
   const [states, setStates] = useState<string[]>([]);
   const [total, setTotal] = useState(0);
+  const [error, setError] = useState<string | null>(null);
 
   // Filters
   const [citySearch, setCitySearch] = useState('');
@@ -37,6 +38,7 @@ export default function CashDealsPage() {
 
   const fetchDeals = async () => {
     setLoading(true);
+    setError(null);
     try {
       const params = new URLSearchParams();
       if (citySearch) params.set('city', citySearch);
@@ -45,14 +47,22 @@ export default function CashDealsPage() {
       params.set('sortOrder', sortOrder);
       params.set('limit', '200');
 
+      console.log('Fetching cash deals...');
       const res = await fetch(`/api/admin/cash-deals?${params}`);
       const data = await res.json();
+      console.log('Cash deals response:', data);
 
-      setDeals(data.deals || []);
-      setTotal(data.total || 0);
-      if (data.states) setStates(data.states);
-    } catch (error) {
-      console.error('Error fetching deals:', error);
+      if (data.error) {
+        setError(data.error);
+        setDeals([]);
+      } else {
+        setDeals(data.deals || []);
+        setTotal(data.total || 0);
+        if (data.states) setStates(data.states);
+      }
+    } catch (err: any) {
+      console.error('Error fetching deals:', err);
+      setError(err.message || 'Failed to fetch deals');
     }
     setLoading(false);
   };
@@ -163,6 +173,17 @@ export default function CashDealsPage() {
         <div className="text-center py-12">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading deals...</p>
+        </div>
+      ) : error ? (
+        <div className="text-center py-12 bg-red-50 rounded-lg shadow border border-red-200">
+          <p className="text-red-600 font-medium">Error loading deals</p>
+          <p className="text-red-500 text-sm mt-2">{error}</p>
+          <button
+            onClick={fetchDeals}
+            className="mt-4 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+          >
+            Retry
+          </button>
         </div>
       ) : deals.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-lg shadow">

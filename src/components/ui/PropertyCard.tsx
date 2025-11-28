@@ -20,6 +20,7 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
   const [imageError, setImageError] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showCopiedToast, setShowCopiedToast] = useState(false);
 
   // ONLY use first image - no gallery
   const currentImage = useMemo(() => {
@@ -223,10 +224,8 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
                       const fullAddress = `${property.address}, ${property.city}, ${property.state} ${property.zipCode}`;
                       try {
                         await navigator.clipboard.writeText(fullAddress);
-                        const btn = e.currentTarget;
-                        const originalHTML = btn.innerHTML;
-                        btn.innerHTML = '<svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" /></svg>';
-                        setTimeout(() => { btn.innerHTML = originalHTML; }, 1500);
+                        setShowCopiedToast(true);
+                        setTimeout(() => setShowCopiedToast(false), 2000);
                       } catch (err) {
                         console.error('Failed to copy address:', err);
                       }
@@ -576,6 +575,27 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
         isOpen={showShareModal}
         onClose={() => setShowShareModal(false)}
       />
+
+      {/* Copied Toast Notification */}
+      {showCopiedToast && (
+        <div
+          className="fixed top-20 left-1/2 -translate-x-1/2 z-[100]"
+          style={{ animation: 'fadeInDown 0.3s ease-out' }}
+        >
+          <div className="bg-slate-900 text-white px-4 py-2.5 rounded-full shadow-2xl flex items-center gap-2 border border-slate-700">
+            <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+            </svg>
+            <span className="text-sm font-semibold">Address copied!</span>
+          </div>
+          <style>{`
+            @keyframes fadeInDown {
+              from { opacity: 0; transform: translate(-50%, -10px); }
+              to { opacity: 1; transform: translate(-50%, 0); }
+            }
+          `}</style>
+        </div>
+      )}
     </div>
   );
 });

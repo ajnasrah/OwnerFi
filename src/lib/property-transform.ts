@@ -1,4 +1,5 @@
 import { sanitizeDescription } from './description-sanitizer';
+import { calculateCashFlow } from './cash-flow';
 
 /**
  * Helper function to parse street address from full address
@@ -178,6 +179,14 @@ export function transformApifyProperty(apifyData: any, source: string = 'apify-z
     source,
     importedAt: timestamp,
     scrapedAt: timestamp,
+
+    // Calculate and store cashFlow at import time
+    cashFlow: calculateCashFlow(
+      apifyData.price || apifyData.listPrice || 0,
+      apifyData.rentZestimate || 0,
+      (Array.isArray(apifyData.taxHistory) && apifyData.taxHistory.find((t: any) => t.taxPaid)?.taxPaid) || 0,
+      apifyData.monthlyHoaFee || apifyData.hoa || 0
+    ),
   };
 }
 

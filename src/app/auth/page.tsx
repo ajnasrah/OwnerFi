@@ -126,7 +126,17 @@ export default function AuthPage() {
           const sharedPropertyId = sessionStorage.getItem('shared_property_id');
           sessionStorage.removeItem('shared_property_id');
 
-          // Redirect based on role
+          // Small delay to ensure session is established
+          await new Promise(resolve => setTimeout(resolve, 500));
+
+          // If there's a shared property, redirect to dashboard with the property to like
+          // This works for all roles (buyer, admin, realtor)
+          if (sharedPropertyId) {
+            router.push(`/dashboard?likeProperty=${sharedPropertyId}`);
+            return;
+          }
+
+          // Otherwise redirect based on role
           let redirectTo = searchParams?.get('callbackUrl') || '/dashboard';
 
           // Check role from the check-phone response
@@ -134,13 +144,8 @@ export default function AuthPage() {
             redirectTo = '/admin';
           } else if (checkData.role === 'realtor') {
             redirectTo = '/realtor-dashboard';
-          } else if (sharedPropertyId && checkData.role === 'buyer') {
-            // Buyer with shared property - add to redirect
-            redirectTo = `/dashboard?likeProperty=${sharedPropertyId}`;
           }
 
-          // Small delay to ensure session is established
-          await new Promise(resolve => setTimeout(resolve, 500));
           router.push(redirectTo);
         } else {
           setError('Failed to sign in. Please try again.');

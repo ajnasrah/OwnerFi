@@ -23,33 +23,35 @@ export default function LikedProperties() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // Auth check
+  // Auth check - allow all authenticated users (buyer, admin, realtor)
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/auth');
-    } else if (status === 'authenticated' && isExtendedSession(session as unknown as ExtendedSession) && (session as unknown as ExtendedSession)?.user?.role !== 'buyer') {
-      router.push('/auth');
     }
-  }, [status, session, router]);
+  }, [status, router]);
 
-  // Load liked properties
+  // Load liked properties - works for all authenticated users
   useEffect(() => {
-    if (status === 'authenticated' && isExtendedSession(session as unknown as ExtendedSession) && (session as unknown as ExtendedSession)?.user?.role === 'buyer') {
+    if (status === 'authenticated') {
       loadLikedProperties();
     }
-  }, [status, session]);
+  }, [status]);
 
   const loadLikedProperties = async () => {
     try {
       setLoading(true);
 
       const response = await fetch('/api/buyer/liked-properties');
-      const data = await response.json();
+      const result = await response.json();
 
-      if (data.error) {
-        setError(data.error);
+      if (result.error) {
+        setError(result.error);
+      } else if (result.success && result.data) {
+        // API returns { success: true, data: { likedProperties: [...] } }
+        setProperties(result.data.likedProperties || []);
       } else {
-        setProperties(data.likedProperties || []);
+        // Fallback for legacy format
+        setProperties(result.likedProperties || []);
       }
 
     } catch {

@@ -37,18 +37,30 @@ export async function GET(request: NextRequest) {
     for (let i = 0; i < propertyIds.length; i += 10) {
       const batch = propertyIds.slice(i, i + 10);
       
+      // Query from zillow_imports collection (where all owner finance properties are stored)
       const batchQuery = query(
-        collection(db, 'properties'),
+        collection(db, 'zillow_imports'),
         where(documentId(), 'in', batch)
       );
-      
+
       const snapshot = await getDocs(batchQuery);
-      const batchProperties = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate?.()?.toISOString() || doc.data().createdAt,
-        updatedAt: doc.data().updatedAt?.toDate?.()?.toISOString() || doc.data().updatedAt
-      }));
+      const batchProperties = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          // Convert timestamps and map fields for compatibility
+          foundAt: data.foundAt?.toDate?.()?.toISOString() || data.foundAt,
+          createdAt: data.foundAt?.toDate?.()?.toISOString() || data.foundAt,
+          updatedAt: data.foundAt?.toDate?.()?.toISOString() || data.foundAt,
+          // Map field names for compatibility
+          imageUrl: data.firstPropertyImage || data.imageUrl,
+          imageUrls: data.propertyImages || data.imageUrls || [],
+          address: data.streetAddress || data.fullAddress || data.address,
+          squareFeet: data.squareFoot || data.squareFeet,
+          listPrice: data.price || data.listPrice,
+        };
+      });
       
       properties.push(...batchProperties);
     }

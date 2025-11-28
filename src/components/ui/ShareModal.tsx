@@ -29,15 +29,11 @@ export function ShareModal({ property, isOpen, onClose }: ShareModalProps) {
     const price = property.listPrice?.toLocaleString();
     const beds = property.bedrooms;
     const baths = property.bathrooms;
-    const monthly = property.monthlyPayment?.toLocaleString();
 
     let text = `Check out this owner-financed property!\n\n`;
     text += `${address}, ${city}, ${state}\n`;
-    text += `$${price}`;
-    if (monthly) {
-      text += ` (Est. $${monthly}/mo)`;
-    }
-    text += `\n${beds} bed, ${baths} bath\n\n`;
+    text += `$${price}\n`;
+    text += `${beds} bed, ${baths} bath\n\n`;
     text += `${shareUrl}`;
 
     return text;

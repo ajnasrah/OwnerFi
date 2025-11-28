@@ -9,7 +9,10 @@ import {
   doc,
   arrayUnion,
   arrayRemove,
-  serverTimestamp
+  serverTimestamp,
+  Query,
+  QuerySnapshot,
+  DocumentData
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { requireRole } from '@/lib/auth-helpers';
@@ -20,6 +23,7 @@ import {
   logError
 } from '@/lib/api-error-handler';
 import { PropertyInteraction } from '@/lib/firebase-models';
+import { getAllPhoneFormats } from '@/lib/phone-utils';
 
 interface LikePropertyRequest {
   propertyId: string;
@@ -38,8 +42,8 @@ interface LikePropertyRequest {
 }
 
 export async function POST(request: NextRequest) {
-  // Standardized authentication
-  const authResult = await requireRole(request, 'buyer');
+  // Standardized authentication - allow buyers, admins, and realtors to like properties
+  const authResult = await requireRole(request, ['buyer', 'admin', 'realtor']);
   if ('error' in authResult) return authResult.error;
   const { session } = authResult;
 
@@ -65,14 +69,33 @@ export async function POST(request: NextRequest) {
       return ErrorResponses.serviceUnavailable('Database not available');
     }
 
-    // Get buyer profile
-    const profilesQuery = query(
-      collection(db, 'buyerProfiles'),
-      where('userId', '==', session.user.id)
-    );
-    const snapshot = await getDocs(profilesQuery);
+    // Get buyer profile - try PHONE FIRST, then userId
+    let profilesQuery: Query<DocumentData> | undefined;
+    let snapshot: QuerySnapshot<DocumentData> | undefined;
 
-    if (snapshot.empty) {
+    // 1. Try by PHONE (most reliable for phone-auth users)
+    if (session.user.phone) {
+      const phoneFormats = getAllPhoneFormats(session.user.phone);
+      for (const phoneFormat of phoneFormats) {
+        profilesQuery = query(
+          collection(db, 'buyerProfiles'),
+          where('phone', '==', phoneFormat)
+        );
+        snapshot = await getDocs(profilesQuery);
+        if (!snapshot.empty) break;
+      }
+    }
+
+    // 2. Fallback to userId if phone lookup failed
+    if (!snapshot || snapshot.empty) {
+      profilesQuery = query(
+        collection(db, 'buyerProfiles'),
+        where('userId', '==', session.user.id)
+      );
+      snapshot = await getDocs(profilesQuery);
+    }
+
+    if (!snapshot || snapshot.empty) {
       return ErrorResponses.notFound('Buyer profile');
     }
 
@@ -91,21 +114,23 @@ export async function POST(request: NextRequest) {
 
       // 🆕 2. Store detailed interaction in subcollection (for ML and algorithm improvements)
       const interactionId = `${propertyId}_${Date.now()}`;
-      const interaction: PropertyInteraction = {
+      const interaction: Partial<PropertyInteraction> = {
         propertyId,
         timestamp: serverTimestamp() as any,
-        context: propertyContext ? {
-          // Property details
+      };
+
+      // Only add context if provided (Firestore doesn't allow undefined values)
+      if (propertyContext) {
+        interaction.context = {
           monthlyPayment: propertyContext.monthlyPayment,
           downPayment: propertyContext.downPayment,
           bedrooms: propertyContext.bedrooms,
           bathrooms: propertyContext.bathrooms,
           squareFeet: propertyContext.squareFeet,
           city: propertyContext.city,
-
           source: propertyContext.source || 'curated',
-        } : undefined,
-      };
+        };
+      }
 
       await setDoc(
         doc(db, 'propertyInteractions', buyerId, 'liked', interactionId),

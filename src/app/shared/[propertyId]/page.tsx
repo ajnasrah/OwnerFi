@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { PropertyListing } from '@/lib/property-schema';
@@ -9,12 +10,14 @@ import { PropertyListing } from '@/lib/property-schema';
 export default function SharedPropertyPage() {
   const params = useParams();
   const router = useRouter();
+  const { data: session, status } = useSession();
   const propertyId = params?.propertyId as string;
 
   const [property, setProperty] = useState<PropertyListing | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [imageError, setImageError] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!propertyId) return;
@@ -40,11 +43,45 @@ export default function SharedPropertyPage() {
     fetchProperty();
   }, [propertyId]);
 
-  const handleSignUp = () => {
-    // Store property ID in session storage for auto-like after signup
-    sessionStorage.setItem('shared_property_id', propertyId);
-    router.push('/auth');
+  const handleSaveProperty = async () => {
+    // Wait for session to load
+    if (status === 'loading') {
+      return;
+    }
+
+    if (status === 'authenticated') {
+      // User is logged in - directly like the property
+      setSaving(true);
+      try {
+        const response = await fetch('/api/buyer/like-property', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ propertyId, action: 'like' })
+        });
+
+        if (response.ok) {
+          // Redirect to liked properties to show the saved property
+          router.push('/dashboard/liked');
+        } else {
+          // API error - show message and stay on page
+          setSaving(false);
+          alert('Failed to save property. Please try again.');
+        }
+      } catch (err) {
+        console.error('Failed to like property:', err);
+        setSaving(false);
+        alert('Failed to save property. Please try again.');
+      }
+    } else {
+      // User not logged in - store property ID and go to auth
+      sessionStorage.setItem('shared_property_id', propertyId);
+      router.push('/auth');
+    }
   };
+
+  // Determine if user is logged in (for button text)
+  const isLoggedIn = status === 'authenticated';
+  const isCheckingAuth = status === 'loading';
 
   // Get property image
   const getPropertyImage = () => {
@@ -107,10 +144,11 @@ export default function SharedPropertyPage() {
             <span className="font-bold text-white">OwnerFi</span>
           </Link>
           <button
-            onClick={handleSignUp}
-            className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg font-semibold text-sm transition-colors"
+            onClick={handleSaveProperty}
+            disabled={saving || isCheckingAuth}
+            className="bg-emerald-500 hover:bg-emerald-600 disabled:bg-emerald-700 text-white px-4 py-2 rounded-lg font-semibold text-sm transition-colors"
           >
-            Sign Up Free
+            {isCheckingAuth ? '...' : saving ? 'Saving...' : isLoggedIn ? 'Save Property' : 'Sign Up Free'}
           </button>
         </div>
       </header>
@@ -145,11 +183,6 @@ export default function SharedPropertyPage() {
               <div className="text-3xl font-black text-white">
                 ${property.listPrice?.toLocaleString()}
               </div>
-              {property.monthlyPayment && (
-                <div className="text-emerald-400 font-semibold">
-                  Est. ${property.monthlyPayment.toLocaleString()}/mo
-                </div>
-              )}
             </div>
 
             {/* Address */}
@@ -182,47 +215,6 @@ export default function SharedPropertyPage() {
                 </div>
               )}
             </div>
-
-            {/* Financing Details */}
-            {(property.downPaymentAmount || property.interestRate || property.termYears) && (
-              <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4 mb-6">
-                <h3 className="font-bold text-emerald-400 mb-3 flex items-center gap-2">
-                  <span>💰</span>
-                  <span>Owner Financing Terms</span>
-                </h3>
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  {property.downPaymentAmount && (
-                    <div>
-                      <div className="text-slate-400 text-xs">Down Payment</div>
-                      <div className="font-bold text-white">
-                        ${property.downPaymentAmount.toLocaleString()}
-                        {property.downPaymentPercent && (
-                          <span className="text-emerald-400 ml-1">({property.downPaymentPercent}%)</span>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                  {property.interestRate && (
-                    <div>
-                      <div className="text-slate-400 text-xs">Interest Rate</div>
-                      <div className="font-bold text-white">{property.interestRate}%</div>
-                    </div>
-                  )}
-                  {property.termYears && (
-                    <div>
-                      <div className="text-slate-400 text-xs">Term</div>
-                      <div className="font-bold text-white">{property.termYears} years</div>
-                    </div>
-                  )}
-                  {property.monthlyPayment && (
-                    <div>
-                      <div className="text-slate-400 text-xs">Monthly Payment</div>
-                      <div className="font-bold text-white">${property.monthlyPayment.toLocaleString()}</div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
 
             {/* Description Preview */}
             {property.description && (
@@ -262,13 +254,14 @@ export default function SharedPropertyPage() {
       <div className="fixed bottom-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-lg border-t border-slate-700/50 p-4">
         <div className="max-w-lg mx-auto">
           <button
-            onClick={handleSignUp}
-            className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white py-4 px-6 rounded-xl font-bold text-lg shadow-xl hover:shadow-2xl transform hover:scale-[1.02] active:scale-[0.98] transition-all"
+            onClick={handleSaveProperty}
+            disabled={saving || isCheckingAuth}
+            className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 disabled:from-emerald-700 disabled:to-emerald-800 text-white py-4 px-6 rounded-xl font-bold text-lg shadow-xl hover:shadow-2xl transform hover:scale-[1.02] active:scale-[0.98] transition-all disabled:transform-none"
           >
-            Sign Up to Save This Property
+            {isCheckingAuth ? 'Checking...' : saving ? 'Saving Property...' : isLoggedIn ? 'Save This Property' : 'Sign Up to Save This Property'}
           </button>
           <p className="text-center text-slate-400 text-xs mt-2">
-            Free account - No credit card required
+            {isLoggedIn ? 'Property will be added to your favorites' : 'Free account - No credit card required'}
           </p>
         </div>
       </div>

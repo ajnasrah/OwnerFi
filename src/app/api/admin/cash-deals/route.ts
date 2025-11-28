@@ -104,10 +104,10 @@ function normalizeProperty(doc: FirebaseFirestore.DocumentSnapshot, source: stri
   if (!rentEstimate) missingFields.push('rent');
   if (!annualTax) missingFields.push('tax');
 
-  // Calculate cash flow if we have price and rent
-  // Use estimated tax (1.2% of price) when actual tax is missing
-  let cashFlowData = null;
-  if (price > 0 && rentEstimate > 0) {
+  // Use stored cashFlow if available (from backfill), otherwise calculate on-the-fly
+  let cashFlowData = data.cashFlow || null;
+  if (!cashFlowData && price > 0 && rentEstimate > 0) {
+    // Fallback: calculate if not stored
     const useEstimatedTax = !annualTax;
     cashFlowData = calculateCashFlow(price, rentEstimate, annualTax, monthlyHoa, useEstimatedTax);
   }

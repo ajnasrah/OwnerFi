@@ -101,6 +101,13 @@ export function CashDeals({ city, state }: CashDealsProps) {
 
   return (
     <div className="p-4 pb-24">
+      {/* Disclaimer */}
+      <div className="bg-yellow-900/20 border border-yellow-600/30 rounded-lg p-3 mb-4">
+        <p className="text-yellow-200/80 text-xs leading-relaxed">
+          <span className="font-semibold">Disclaimer:</span> All ARV and property values shown are third-party estimates. We are not appraisers and do not know the actual value of these properties. Always conduct your own due diligence.
+        </p>
+      </div>
+
       {/* Header */}
       <div className="mb-4">
         <p className="text-slate-400 text-sm">

@@ -330,6 +330,62 @@ export default function CashDealsPage() {
             </div>
           </div>
 
+          {/* Location Search Bar */}
+          <div className="bg-slate-800 rounded-lg border border-slate-700 p-3 mb-4">
+            <div className="flex flex-wrap items-end gap-3">
+              <div className="flex-1 min-w-[150px]">
+                <label className="block text-xs font-medium text-slate-400 mb-1">City</label>
+                <input
+                  type="text"
+                  value={citySearch}
+                  onChange={(e) => setCitySearch(e.target.value)}
+                  placeholder="Enter city name..."
+                  className="bg-slate-700 border border-slate-600 rounded px-3 py-2 w-full text-sm text-white placeholder-slate-500 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                />
+              </div>
+              <div className="w-[100px]">
+                <label className="block text-xs font-medium text-slate-400 mb-1">State</label>
+                <select
+                  value={stateFilter}
+                  onChange={(e) => setStateFilter(e.target.value)}
+                  className="bg-slate-700 border border-slate-600 rounded px-2 py-2 w-full text-sm text-white focus:border-emerald-500"
+                >
+                  <option value="">All</option>
+                  {states.map(state => (
+                    <option key={state} value={state}>{state}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="w-[120px]">
+                <label className="block text-xs font-medium text-slate-400 mb-1">Radius (miles)</label>
+                <select
+                  value={radius}
+                  onChange={(e) => setRadius(parseInt(e.target.value))}
+                  className="bg-slate-700 border border-slate-600 rounded px-2 py-2 w-full text-sm text-white focus:border-emerald-500"
+                >
+                  <option value="0">Exact city</option>
+                  <option value="10">10 miles</option>
+                  <option value="25">25 miles</option>
+                  <option value="50">50 miles</option>
+                  <option value="100">100 miles</option>
+                </select>
+              </div>
+              {(citySearch || stateFilter || radius > 0) && (
+                <button
+                  onClick={() => { setCitySearch(''); setStateFilter(''); setRadius(0); }}
+                  className="px-3 py-2 text-sm text-slate-400 hover:text-white"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+            {citySearch && radius > 0 && (
+              <p className="text-xs text-slate-400 mt-2">
+                Searching within {radius} miles of "{citySearch}"
+              </p>
+            )}
+          </div>
+
           {/* Quick Filters */}
           <div className="flex flex-wrap gap-2 mb-4">
             {Object.entries(QUICK_FILTERS).map(([key, filter]) => (
@@ -382,32 +438,7 @@ export default function CashDealsPage() {
           {/* Advanced Filters Panel */}
           {showAdvanced && (
             <div className="bg-slate-800 rounded-lg border border-slate-700 p-4 mb-4">
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
-                {/* Location */}
-                <div>
-                  <label className="block text-xs font-medium text-slate-400 mb-1">City</label>
-                  <input
-                    type="text"
-                    value={citySearch}
-                    onChange={(e) => setCitySearch(e.target.value)}
-                    placeholder="Any city"
-                    className="bg-slate-700 border border-slate-600 rounded px-2 py-1.5 w-full text-sm text-white placeholder-slate-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-slate-400 mb-1">State</label>
-                  <select
-                    value={stateFilter}
-                    onChange={(e) => setStateFilter(e.target.value)}
-                    className="bg-slate-700 border border-slate-600 rounded px-2 py-1.5 w-full text-sm text-white"
-                  >
-                    <option value="">All</option>
-                    {states.map(state => (
-                      <option key={state} value={state}>{state}</option>
-                    ))}
-                  </select>
-                </div>
-
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
                 {/* Price Range */}
                 <div>
                   <label className="block text-xs font-medium text-slate-400 mb-1">Min Price</label>

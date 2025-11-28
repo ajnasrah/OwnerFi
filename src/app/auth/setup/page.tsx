@@ -18,6 +18,7 @@ export default function AuthSetup() {
     lastName: '',
     email: '',
     isRealtor: false,
+    isInvestor: false,
     licenseNumber: '',
     company: '',
     // Location field (combined city, state from Google autocomplete)
@@ -91,6 +92,7 @@ export default function AuthSetup() {
           lastName: formData.lastName,
           email: formData.email,
           role,
+          isInvestor: formData.isInvestor,
           // Location fields (required for all users) - parsed from Google autocomplete
           city,
           state,
@@ -254,6 +256,34 @@ export default function AuthSetup() {
                   <span className="ml-2 text-slate-200">No</span>
                 </label>
               </div>
+            </div>
+
+            {/* Are you an investor? */}
+            <div>
+              <label className="block text-sm font-semibold text-slate-200 mb-3">Are you a real estate investor?</label>
+              <div className="flex gap-4">
+                <label className="flex items-center cursor-pointer">
+                  <input
+                    type="radio"
+                    name="isInvestor"
+                    checked={formData.isInvestor === true}
+                    onChange={() => setFormData(prev => ({ ...prev, isInvestor: true }))}
+                    className="w-4 h-4 text-emerald-500 bg-slate-700 border-slate-600 focus:ring-emerald-400"
+                  />
+                  <span className="ml-2 text-slate-200">Yes</span>
+                </label>
+                <label className="flex items-center cursor-pointer">
+                  <input
+                    type="radio"
+                    name="isInvestor"
+                    checked={formData.isInvestor === false}
+                    onChange={() => setFormData(prev => ({ ...prev, isInvestor: false }))}
+                    className="w-4 h-4 text-emerald-500 bg-slate-700 border-slate-600 focus:ring-emerald-400"
+                  />
+                  <span className="ml-2 text-slate-200">No</span>
+                </label>
+              </div>
+              <p className="text-xs text-slate-400 mt-1">Looking to buy properties for investment purposes</p>
             </div>
 
             {/* Realtor-specific fields - only show if they selected Yes */}

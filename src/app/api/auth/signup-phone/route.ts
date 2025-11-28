@@ -14,6 +14,7 @@ export async function POST(request: NextRequest) {
       lastName,
       email,
       role,
+      isInvestor = false,
       // Buyer specific
       city,
       state,
@@ -130,6 +131,9 @@ export async function POST(request: NextRequest) {
         city: city || '',
         state: state || '',
         searchRadius: 25,
+
+        // User type flags
+        isInvestor: isInvestor || false,
 
         // Communication preferences
         languages: ['English'],
@@ -287,6 +291,10 @@ export async function POST(request: NextRequest) {
         city: city || '',
         state: state || '',
         searchRadius: 25,
+
+        // User type flags
+        isInvestor: isInvestor || false,
+        isRealtor: true,
 
         // Communication preferences
         languages: ['English'],

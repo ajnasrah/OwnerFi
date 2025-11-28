@@ -137,14 +137,31 @@ export async function GET(request: NextRequest) {
     const searchRadius = searchParams.get('radius');
     const countOnly = searchParams.get('countOnly') === 'true';
 
-    // FAST PATH: Count-only mode for stats (skip expensive calculations)
-    // FIXED: Count buyerProfiles instead of users, since we only show buyers WITH profiles
+    // FAST PATH: Count-only mode for stats
+    // We need to count buyers that have BOTH a user record AND a buyerProfile
+    // This matches what the full fetch displays
     if (countOnly) {
-      const { getCountFromServer } = await import('firebase/firestore');
-      const profilesCountSnapshot = await getCountFromServer(collection(db, 'buyerProfiles'));
+      // Get all users with role='buyer'
+      const usersQuery = query(
+        collection(db, 'users'),
+        where('role', '==', 'buyer')
+      );
+      const usersSnapshot = await getDocs(usersQuery);
+      const buyerUserIds = new Set(usersSnapshot.docs.map(doc => doc.id));
+
+      // Get all buyerProfiles and count those with matching users
+      const profilesSnapshot = await getDocs(collection(db, 'buyerProfiles'));
+      let matchingCount = 0;
+      profilesSnapshot.docs.forEach(doc => {
+        const data = doc.data();
+        if (data.userId && buyerUserIds.has(data.userId)) {
+          matchingCount++;
+        }
+      });
+
       return NextResponse.json({
         buyers: [],
-        total: profilesCountSnapshot.data().count,
+        total: matchingCount,
         totalPages: 0,
         currentPage: 1,
         pageSize: 0

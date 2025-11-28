@@ -24,6 +24,8 @@ export async function POST(request: NextRequest) {
       primaryCity
     } = body;
 
+    console.log('📝 [SIGNUP-PHONE] Received isInvestor:', isInvestor);
+
     // Validation
     if (!phone || !firstName || !lastName || !email || !role) {
       return NextResponse.json(
@@ -133,7 +135,7 @@ export async function POST(request: NextRequest) {
         searchRadius: 25,
 
         // User type flags
-        isInvestor: isInvestor || false,
+        isInvestor: isInvestor === true,
 
         // Communication preferences
         languages: ['English'],
@@ -293,7 +295,7 @@ export async function POST(request: NextRequest) {
         searchRadius: 25,
 
         // User type flags
-        isInvestor: isInvestor || false,
+        isInvestor: isInvestor === true,
         isRealtor: true,
 
         // Communication preferences

@@ -115,8 +115,10 @@ export default function Dashboard() {
       setLikedProperties(dashboardProfile.likedProperties || []);
 
       // Check if user is an investor
+      console.log('🔍 [DASHBOARD] Profile isInvestor:', profileData.profile.isInvestor);
       if (profileData.profile.isInvestor) {
         setIsInvestor(true);
+        console.log('✅ [DASHBOARD] User is an investor - showing tabs');
       }
 
       const propertiesRes = await fetch(

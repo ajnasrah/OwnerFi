@@ -119,9 +119,12 @@ export default function ScraperPage() {
   });
 
   return (
-    <div className="container mx-auto p-8">
-      <h1 className="text-3xl font-bold mb-2">Zillow Property Scraper</h1>
-      <p className="text-gray-600 mb-8">
+    <div className="h-screen overflow-hidden bg-slate-900 flex flex-col">
+      <div className="flex-1 overflow-y-auto p-6">
+        <div className="max-w-4xl mx-auto">
+      <a href="/admin" className="text-emerald-400 hover:text-emerald-300 text-sm mb-4 inline-block">← Back to Admin</a>
+      <h1 className="text-3xl font-bold mb-2 text-white">Zillow Property Scraper</h1>
+      <p className="text-slate-400 mb-8">
         Upload CSV or Excel files with Zillow property URLs to automatically scrape and import
       </p>
 
@@ -129,7 +132,7 @@ export default function ScraperPage() {
       <div
         {...getRootProps()}
         className={`border-2 border-dashed rounded-lg p-12 text-center cursor-pointer transition-colors
-          ${isDragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-gray-400'}
+          ${isDragActive ? 'border-emerald-500 bg-emerald-900/20' : 'border-slate-600 hover:border-slate-500'}
           ${progress.status === 'uploading' || progress.status === 'scraping' ? 'opacity-50 pointer-events-none' : ''}
         `}
       >
@@ -137,7 +140,7 @@ export default function ScraperPage() {
 
         <div className="mb-4">
           <svg
-            className="mx-auto h-12 w-12 text-gray-400"
+            className="mx-auto h-12 w-12 text-slate-500"
             stroke="currentColor"
             fill="none"
             viewBox="0 0 48 48"
@@ -152,11 +155,11 @@ export default function ScraperPage() {
         </div>
 
         {isDragActive ? (
-          <p className="text-lg text-blue-600">Drop the file here...</p>
+          <p className="text-lg text-emerald-400">Drop the file here...</p>
         ) : (
           <div>
-            <p className="text-lg mb-2">Drag & drop an Excel or CSV file here</p>
-            <p className="text-sm text-gray-500">or click to select a file</p>
+            <p className="text-lg mb-2 text-white">Drag & drop an Excel or CSV file here</p>
+            <p className="text-sm text-slate-400">or click to select a file</p>
           </div>
         )}
       </div>
@@ -165,22 +168,22 @@ export default function ScraperPage() {
       {progress.status !== 'idle' && (
         <div className="mt-8">
           <div
-            className={`p-6 rounded-lg border-2 ${
+            className={`p-6 rounded-lg border ${
               progress.status === 'error'
-                ? 'bg-red-50 border-red-200'
+                ? 'bg-red-900/30 border-red-700'
                 : progress.status === 'complete'
-                ? 'bg-green-50 border-green-200'
-                : 'bg-blue-50 border-blue-200'
+                ? 'bg-emerald-900/30 border-emerald-700'
+                : 'bg-blue-900/30 border-blue-700'
             }`}
           >
             <div className="flex items-start">
               {progress.status === 'uploading' || progress.status === 'scraping' ? (
                 <div className="mr-3">
-                  <div className="animate-spin h-6 w-6 border-2 border-blue-500 border-t-transparent rounded-full"></div>
+                  <div className="animate-spin h-6 w-6 border-2 border-emerald-400 border-t-transparent rounded-full"></div>
                 </div>
               ) : progress.status === 'complete' ? (
                 <svg
-                  className="h-6 w-6 text-green-600 mr-3"
+                  className="h-6 w-6 text-emerald-400 mr-3"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -194,7 +197,7 @@ export default function ScraperPage() {
                 </svg>
               ) : progress.status === 'error' ? (
                 <svg
-                  className="h-6 w-6 text-red-600 mr-3"
+                  className="h-6 w-6 text-red-400 mr-3"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -209,35 +212,35 @@ export default function ScraperPage() {
               ) : null}
 
               <div className="flex-1">
-                <p className="font-semibold text-lg mb-1">{progress.message}</p>
+                <p className="font-semibold text-lg mb-1 text-white">{progress.message}</p>
 
                 <div className="mt-3 space-y-1">
                   {progress.urlsFound !== undefined && (
-                    <p className="text-sm text-gray-700">
+                    <p className="text-sm text-slate-300">
                       <span className="font-medium">URLs in file:</span> {progress.urlsFound}
                     </p>
                   )}
 
                   {progress.duplicatesInFile !== undefined && progress.duplicatesInFile > 0 && (
-                    <p className="text-sm text-orange-700">
+                    <p className="text-sm text-orange-400">
                       <span className="font-medium">Duplicates in file:</span> {progress.duplicatesInFile}
                     </p>
                   )}
 
                   {progress.alreadyInDatabase !== undefined && progress.alreadyInDatabase > 0 && (
-                    <p className="text-sm text-orange-700">
+                    <p className="text-sm text-orange-400">
                       <span className="font-medium">Already in database:</span> {progress.alreadyInDatabase}
                     </p>
                   )}
 
                   {progress.newProperties !== undefined && (
-                    <p className="text-sm text-green-700 font-medium">
+                    <p className="text-sm text-emerald-400 font-medium">
                       <span>New properties:</span> {progress.newProperties}
                     </p>
                   )}
 
                   {progress.propertiesScraped !== undefined && (
-                    <p className="text-sm text-gray-700 mt-2">
+                    <p className="text-sm text-slate-300 mt-2">
                       <span className="font-medium">Properties imported:</span> {progress.propertiesScraped}
                       {progress.total && ` / ${progress.total}`}
                     </p>
@@ -250,30 +253,32 @@ export default function ScraperPage() {
       )}
 
       {/* Instructions */}
-      <div className="mt-12 bg-gray-50 p-6 rounded-lg">
-        <h2 className="text-lg font-semibold mb-3">How it works</h2>
-        <ol className="list-decimal list-inside space-y-2 text-gray-700">
+      <div className="mt-12 bg-slate-800 border border-slate-700 p-6 rounded-lg">
+        <h2 className="text-lg font-semibold mb-3 text-white">How it works</h2>
+        <ol className="list-decimal list-inside space-y-2 text-slate-300">
           <li>Upload a CSV or Excel file containing Zillow property URLs</li>
           <li>The system automatically removes duplicates within the file</li>
           <li>Checks against existing properties in the database</li>
           <li>Only new properties are sent to Apify for scraping</li>
-          <li>All data is saved to the <code className="bg-gray-200 px-2 py-1 rounded">zillow_imports</code> collection</li>
+          <li>All data is saved to the <code className="bg-slate-700 px-2 py-1 rounded text-emerald-400">zillow_imports</code> collection</li>
           <li>Review imported properties in Firebase before moving to production</li>
         </ol>
 
-        <div className="mt-4 p-4 bg-green-100 rounded">
-          <p className="text-sm font-medium text-green-900 mb-1">✓ Duplicate Protection</p>
-          <p className="text-sm text-green-800">
+        <div className="mt-4 p-4 bg-emerald-900/30 border border-emerald-700 rounded">
+          <p className="text-sm font-medium text-emerald-300 mb-1">✓ Duplicate Protection</p>
+          <p className="text-sm text-emerald-200">
             The scraper automatically prevents importing duplicate properties. It checks both within your file and against existing database records.
           </p>
         </div>
 
-        <div className="mt-4 p-4 bg-blue-100 rounded">
-          <p className="text-sm font-medium text-blue-900 mb-1">Expected File Format</p>
-          <p className="text-sm text-blue-800">
+        <div className="mt-4 p-4 bg-blue-900/30 border border-blue-700 rounded">
+          <p className="text-sm font-medium text-blue-300 mb-1">Expected File Format</p>
+          <p className="text-sm text-blue-200">
             Your file should have a column named <strong>URL</strong>, <strong>url</strong>, or{' '}
             <strong>link</strong> containing Zillow property URLs
           </p>
+        </div>
+      </div>
         </div>
       </div>
     </div>

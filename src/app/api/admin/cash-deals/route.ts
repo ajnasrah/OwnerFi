@@ -94,10 +94,10 @@ function normalizeProperty(doc: FirebaseFirestore.DocumentSnapshot, source: stri
   const percentOfArv = data.percentOfArv || (arv > 0 ? Math.round((price / arv) * 100 * 10) / 10 : 100);
   const discount = data.discount || (arv > 0 ? Math.round((1 - price / arv) * 100 * 10) / 10 : 0);
 
-  // Cash flow inputs
-  const rentEstimate = data.rentEstimate || 0;
-  const annualTax = data.annualTaxAmount || 0;
-  const monthlyHoa = data.hoa || 0;
+  // Cash flow inputs - check multiple field names
+  const rentEstimate = data.rentEstimate || data.rentalEstimate || data.rentZestimate || data.rentCastEstimate || 0;
+  const annualTax = data.annualTaxAmount || data.taxAmount || 0;
+  const monthlyHoa = data.hoa || data.hoaFees || 0;
 
   // Track missing fields for warnings
   const missingFields: string[] = [];

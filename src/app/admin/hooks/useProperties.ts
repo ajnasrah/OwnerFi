@@ -2,6 +2,15 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 
+export interface CashFlowData {
+  downPayment: number;
+  monthlyMortgage: number;
+  monthlyExpenses: number;
+  monthlyCashFlow: number;
+  annualCashFlow: number;
+  cocReturn: number;
+}
+
 export interface AdminProperty {
   id: string;
   address: string;
@@ -32,6 +41,13 @@ export interface AdminProperty {
   ownerFinanceVerified?: boolean;
   estimatedValue?: number;
   description?: string;
+  sentToGHL?: string; // ISO timestamp when sent to GHL
+  // Cash flow fields (admin only)
+  rentEstimate?: number;
+  annualTax?: number;
+  monthlyHoa?: number;
+  missingFields?: string[];
+  cashFlow?: CashFlowData | null;
 }
 
 export function useProperties() {
@@ -42,7 +58,7 @@ export function useProperties() {
   const [itemsPerPage] = useState(75);
   const [addressSearch, setAddressSearch] = useState('');
   const [cityFilter, setCityFilter] = useState('');
-  const [sortField, setSortField] = useState<'address' | 'city' | 'state' | 'listPrice' | 'bedrooms' | 'downPaymentAmount' | 'monthlyPayment' | null>('address');
+  const [sortField, setSortField] = useState<'address' | 'city' | 'state' | 'listPrice' | 'bedrooms' | 'downPaymentAmount' | 'monthlyPayment' | 'monthlyCashFlow' | 'cocReturn' | null>('address');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   // Fetch properties from API
@@ -72,10 +88,15 @@ export function useProperties() {
   }, [fetchProperties]);
 
   // Sort handler
-  const handleSort = useCallback((field: 'address' | 'city' | 'state' | 'listPrice' | 'bedrooms' | 'downPaymentAmount' | 'monthlyPayment') => {
+  const handleSort = useCallback((field: 'address' | 'city' | 'state' | 'listPrice' | 'bedrooms' | 'downPaymentAmount' | 'monthlyPayment' | 'monthlyCashFlow' | 'cocReturn') => {
     const newDirection = sortField === field && sortDirection === 'asc' ? 'desc' : 'asc';
     setSortField(field);
-    setSortDirection(newDirection);
+    // Default to desc for cash flow fields (higher is better)
+    if ((field === 'monthlyCashFlow' || field === 'cocReturn') && sortField !== field) {
+      setSortDirection('desc');
+    } else {
+      setSortDirection(newDirection);
+    }
   }, [sortField, sortDirection]);
 
   // Memoized filtered properties
@@ -132,6 +153,14 @@ export function useProperties() {
           case 'monthlyPayment':
             aValue = a.monthlyPayment ?? 0;
             bValue = b.monthlyPayment ?? 0;
+            break;
+          case 'monthlyCashFlow':
+            aValue = a.cashFlow?.monthlyCashFlow ?? -Infinity;
+            bValue = b.cashFlow?.monthlyCashFlow ?? -Infinity;
+            break;
+          case 'cocReturn':
+            aValue = a.cashFlow?.cocReturn ?? -Infinity;
+            bValue = b.cashFlow?.cocReturn ?? -Infinity;
             break;
         }
 

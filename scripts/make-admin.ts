@@ -1,5 +1,5 @@
 /**
- * Grant admin access to phone +19018319661
+ * Grant admin access to specified phones
  * Also ensures buyer profile exists for admin access
  */
 
@@ -20,8 +20,11 @@ if (!admin.apps.length) {
 
 const db = admin.firestore();
 
+// Admin phone numbers
+const ADMIN_PHONES = ['+19018319661', '+19018319662'];
+
 async function makeAdmin() {
-  const phone = '+19018319661';
+  const phone = process.argv[2] || ADMIN_PHONES[0];
 
   console.log(`\n🔧 Granting admin access to ${phone}...\n`);
 

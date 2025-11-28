@@ -210,11 +210,16 @@ async function enhancePropertyImages() {
       const collRef = db.collection(collectionName);
       const allDocs = await collRef.get();
 
-      // Filter to unprocessed docs (imageEnhanced !== true OR missing high-res imgSrc)
+      // Filter to unprocessed docs (imageEnhanced !== true OR missing high-res imgSrc OR has low-res in propertyImages)
+      const lowResPatterns = ['p_a.jpg', 'p_b.jpg', 'p_c.jpg', 'p_d.jpg', 'cc_ft_192', 'cc_ft_384', 'cc_ft_576'];
       const unprocessed = allDocs.docs.filter(doc => {
         const data = doc.data();
-        const hasHighResImage = data.imgSrc && data.imgSrc.includes('uncropped_scaled_within');
-        return data.imageEnhanced !== true || !hasHighResImage;
+        const hasHighResImgSrc = data.imgSrc && data.imgSrc.includes('uncropped_scaled_within');
+        // Check if any image in propertyImages array is still low-res
+        const hasLowResInArray = (data.propertyImages || []).some((url: string) =>
+          typeof url === 'string' && lowResPatterns.some(p => url.includes(p))
+        );
+        return data.imageEnhanced !== true || !hasHighResImgSrc || hasLowResInArray;
       });
       const toProcess = unprocessed.slice(0, BATCH_SIZE);
 

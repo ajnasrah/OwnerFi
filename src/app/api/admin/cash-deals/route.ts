@@ -1,6 +1,88 @@
 import { NextResponse } from 'next/server';
 import { getAdminDb } from '@/lib/firebase-admin';
 
+// Cache for states list (refresh every 5 minutes)
+let statesCache: { states: string[]; timestamp: number } | null = null;
+const STATES_CACHE_TTL = 5 * 60 * 1000;
+
+// Calculate monthly mortgage payment
+// Formula: P = L[c(1+c)^n]/[(1+c)^n-1]
+function calculateMonthlyMortgage(loanAmount: number, annualRate: number, years: number): number {
+  const monthlyRate = annualRate / 12;
+  const numPayments = years * 12;
+  if (monthlyRate === 0) return loanAmount / numPayments;
+  const x = Math.pow(1 + monthlyRate, numPayments);
+  return loanAmount * (monthlyRate * x) / (x - 1);
+}
+
+// Calculate cash flow analysis
+// Uses standard real estate investor assumptions
+function calculateCashFlow(price: number, rentEstimate: number, annualTax: number, monthlyHoa: number, useEstimatedTax: boolean = false) {
+  // Financing assumptions
+  const DOWN_PAYMENT_PERCENT = 0.10; // 10% down
+  const CLOSING_COSTS_PERCENT = 0.03; // 3% closing costs
+  const INTEREST_RATE = 0.06; // 6% annual
+  const LOAN_TERM_YEARS = 20;
+
+  // Operating expense rates
+  const INSURANCE_RATE = 0.01; // 1% of price annually
+  const PROPERTY_MGMT_RATE = 0.10; // 10% of rent
+  const VACANCY_RATE = 0.08; // 8% vacancy allowance
+  const MAINTENANCE_RATE = 0.05; // 5% of rent for repairs
+  const CAPEX_RATE = 0.05; // 5% of rent for capital expenditures (roof, HVAC, etc)
+
+  // Estimate tax as 1.2% of price if not provided (US average is ~1.1%)
+  const ESTIMATED_TAX_RATE = 0.012;
+
+  // Use estimated tax if actual tax is missing
+  const effectiveTax = annualTax > 0 ? annualTax : (useEstimatedTax ? price * ESTIMATED_TAX_RATE : 0);
+
+  // Investment calculation (includes closing costs for accurate CoC)
+  const downPayment = price * DOWN_PAYMENT_PERCENT;
+  const closingCosts = price * CLOSING_COSTS_PERCENT;
+  const totalInvestment = downPayment + closingCosts;
+
+  const loanAmount = price - downPayment;
+
+  // Monthly calculations
+  const monthlyMortgage = calculateMonthlyMortgage(loanAmount, INTEREST_RATE, LOAN_TERM_YEARS);
+  const monthlyInsurance = (price * INSURANCE_RATE) / 12;
+  const monthlyTax = effectiveTax / 12;
+  const monthlyMgmt = rentEstimate * PROPERTY_MGMT_RATE;
+
+  // Additional operating expenses that investors always account for
+  const monthlyVacancy = rentEstimate * VACANCY_RATE;
+  const monthlyMaintenance = rentEstimate * MAINTENANCE_RATE;
+  const monthlyCapex = rentEstimate * CAPEX_RATE;
+
+  // Total monthly expenses
+  const monthlyExpenses = monthlyMortgage + monthlyInsurance + monthlyTax + monthlyHoa + monthlyMgmt + monthlyVacancy + monthlyMaintenance + monthlyCapex;
+
+  // Monthly cash flow
+  const monthlyCashFlow = rentEstimate - monthlyExpenses;
+
+  // Annual cash flow
+  const annualCashFlow = monthlyCashFlow * 12;
+
+  // CoC uses total investment (down payment + closing costs)
+  const cocReturn = totalInvestment > 0 ? (annualCashFlow / totalInvestment) * 100 : 0;
+
+  return {
+    downPayment: Math.round(downPayment),
+    totalInvestment: Math.round(totalInvestment),
+    monthlyMortgage: Math.round(monthlyMortgage),
+    monthlyInsurance: Math.round(monthlyInsurance),
+    monthlyTax: Math.round(monthlyTax),
+    monthlyHoa: Math.round(monthlyHoa),
+    monthlyMgmt: Math.round(monthlyMgmt),
+    monthlyExpenses: Math.round(monthlyExpenses),
+    monthlyCashFlow: Math.round(monthlyCashFlow),
+    annualCashFlow: Math.round(annualCashFlow),
+    cocReturn: Math.round(cocReturn * 10) / 10, // 1 decimal place
+    usedEstimatedTax: useEstimatedTax,
+  };
+}
+
 // Normalize data from different collections to a common format
 function normalizeProperty(doc: FirebaseFirestore.DocumentSnapshot, source: string): any {
   const data = doc.data() || {};
@@ -10,6 +92,24 @@ function normalizeProperty(doc: FirebaseFirestore.DocumentSnapshot, source: stri
   const arv = data.arv || data.estimate || data.zestimate || 0;
   const percentOfArv = data.percentOfArv || (arv > 0 ? Math.round((price / arv) * 100 * 10) / 10 : 100);
   const discount = data.discount || (arv > 0 ? Math.round((1 - price / arv) * 100 * 10) / 10 : 0);
+
+  // Cash flow inputs
+  const rentEstimate = data.rentEstimate || 0;
+  const annualTax = data.annualTaxAmount || 0;
+  const monthlyHoa = data.hoa || 0;
+
+  // Track missing fields for warnings
+  const missingFields: string[] = [];
+  if (!rentEstimate) missingFields.push('rent');
+  if (!annualTax) missingFields.push('tax');
+
+  // Calculate cash flow if we have price and rent
+  // Use estimated tax (1.2% of price) when actual tax is missing
+  let cashFlowData = null;
+  if (price > 0 && rentEstimate > 0) {
+    const useEstimatedTax = !annualTax;
+    cashFlowData = calculateCashFlow(price, rentEstimate, annualTax, monthlyHoa, useEstimatedTax);
+  }
 
   return {
     id: doc.id,
@@ -41,11 +141,25 @@ function normalizeProperty(doc: FirebaseFirestore.DocumentSnapshot, source: stri
     matchedKeywords: data.matchedKeywords,
     financingType: data.financingType,
     description: data.description,
+    // Owner finance terms (the seller's actual terms)
+    monthlyPayment: data.monthlyPayment,
+    downPaymentAmount: data.downPaymentAmount,
+    downPaymentPercent: data.downPaymentPercent,
+    interestRate: data.interestRate,
+    termYears: data.termYears,
+    balloonYears: data.balloonYears,
+    // Cash flow fields
+    rentEstimate,
+    annualTax,
+    monthlyHoa,
+    missingFields,
+    cashFlow: cashFlowData,
   };
 }
 
 export async function GET(request: Request) {
   try {
+    const startTime = Date.now();
     const db = await getAdminDb();
     if (!db) {
       return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
@@ -56,37 +170,49 @@ export async function GET(request: Request) {
     const state = searchParams.get('state')?.toUpperCase();
     const sortBy = searchParams.get('sortBy') || 'percentOfArv';
     const sortOrder = searchParams.get('sortOrder') || 'asc';
-    const limit = parseInt(searchParams.get('limit') || '200');
+    const limit = parseInt(searchParams.get('limit') || '100');
     const collection = searchParams.get('collection'); // 'cash_houses', 'zillow_imports', or null for both
 
     let allDeals: any[] = [];
-    const allStates = new Set<string>();
 
-    // Fetch from cash_houses (discount deals)
+    // Fetch limit per collection (fetch more to allow for filtering)
+    const fetchLimit = city ? limit * 3 : limit;
+
+    // Fetch from both collections in parallel
+    const fetchPromises: Promise<void>[] = [];
+
+    // Fetch from cash_houses (discount deals) - smaller collection, fetch all
     if (!collection || collection === 'cash_houses') {
-      let cashQuery: FirebaseFirestore.Query = db.collection('cash_houses');
-      if (state) cashQuery = cashQuery.where('state', '==', state);
-      const cashSnapshot = await cashQuery.get();
-
-      cashSnapshot.docs.forEach(doc => {
-        const normalized = normalizeProperty(doc, 'cash_houses');
-        allDeals.push(normalized);
-        if (normalized.state) allStates.add(normalized.state);
-      });
+      fetchPromises.push((async () => {
+        let cashQuery: FirebaseFirestore.Query = db.collection('cash_houses');
+        if (state) cashQuery = cashQuery.where('state', '==', state);
+        // cash_houses is small (~150), fetch all but order by addedAt DESC for freshness
+        cashQuery = cashQuery.orderBy('addedAt', 'desc');
+        const cashSnapshot = await cashQuery.get();
+        cashSnapshot.docs.forEach(doc => {
+          allDeals.push(normalizeProperty(doc, 'cash_houses'));
+        });
+      })());
     }
 
-    // Fetch from zillow_imports (owner finance deals)
+    // Fetch from zillow_imports (owner finance deals) - larger collection, use limits
     if (!collection || collection === 'zillow_imports') {
-      let zillowQuery: FirebaseFirestore.Query = db.collection('zillow_imports');
-      if (state) zillowQuery = zillowQuery.where('state', '==', state);
-      const zillowSnapshot = await zillowQuery.get();
-
-      zillowSnapshot.docs.forEach(doc => {
-        const normalized = normalizeProperty(doc, 'zillow_imports');
-        allDeals.push(normalized);
-        if (normalized.state) allStates.add(normalized.state);
-      });
+      fetchPromises.push((async () => {
+        let zillowQuery: FirebaseFirestore.Query = db.collection('zillow_imports');
+        if (state) zillowQuery = zillowQuery.where('state', '==', state);
+        // Order by foundAt DESC to get most recent first, then limit
+        zillowQuery = zillowQuery.orderBy('foundAt', 'desc').limit(fetchLimit * 2);
+        const zillowSnapshot = await zillowQuery.get();
+        zillowSnapshot.docs.forEach(doc => {
+          allDeals.push(normalizeProperty(doc, 'zillow_imports'));
+        });
+      })());
     }
+
+    await Promise.all(fetchPromises);
+
+    // Filter out $0 price properties
+    allDeals = allDeals.filter((deal: any) => deal.price > 0);
 
     // Filter by city (case-insensitive partial match)
     if (city) {
@@ -95,10 +221,19 @@ export async function GET(request: Request) {
       );
     }
 
-    // Sort
+    // Sort - handle nested cashFlow fields
     allDeals.sort((a: any, b: any) => {
-      const aVal = a[sortBy] ?? (sortOrder === 'asc' ? Infinity : -Infinity);
-      const bVal = b[sortBy] ?? (sortOrder === 'asc' ? Infinity : -Infinity);
+      let aVal, bVal;
+
+      // Handle cash flow sorting
+      if (sortBy === 'monthlyCashFlow' || sortBy === 'cocReturn') {
+        aVal = a.cashFlow?.[sortBy] ?? (sortOrder === 'asc' ? Infinity : -Infinity);
+        bVal = b.cashFlow?.[sortBy] ?? (sortOrder === 'asc' ? Infinity : -Infinity);
+      } else {
+        aVal = a[sortBy] ?? (sortOrder === 'asc' ? Infinity : -Infinity);
+        bVal = b[sortBy] ?? (sortOrder === 'asc' ? Infinity : -Infinity);
+      }
+
       return sortOrder === 'asc' ? aVal - bVal : bVal - aVal;
     });
 
@@ -107,10 +242,38 @@ export async function GET(request: Request) {
     // Limit results
     allDeals = allDeals.slice(0, limit);
 
+    // Get states from cache or fetch separately (async, don't block)
+    let states: string[] = [];
+    if (statesCache && Date.now() - statesCache.timestamp < STATES_CACHE_TTL) {
+      states = statesCache.states;
+    } else {
+      // Return empty states first time, fetch in background
+      const allStates = new Set<string>();
+      allDeals.forEach(d => d.state && allStates.add(d.state));
+      states = [...allStates].sort();
+      // Update cache async
+      (async () => {
+        try {
+          const [cashSnap, zillowSnap] = await Promise.all([
+            db.collection('cash_houses').select('state').get(),
+            db.collection('zillow_imports').select('state').limit(1000).get()
+          ]);
+          const allS = new Set<string>();
+          cashSnap.docs.forEach(d => d.data().state && allS.add(d.data().state));
+          zillowSnap.docs.forEach(d => d.data().state && allS.add(d.data().state));
+          statesCache = { states: [...allS].sort(), timestamp: Date.now() };
+        } catch (e) {
+          console.error('Failed to update states cache:', e);
+        }
+      })();
+    }
+
+    console.log(`[cash-deals] Fetched ${total} deals in ${Date.now() - startTime}ms`);
+
     return NextResponse.json({
       deals: allDeals,
       total,
-      states: [...allStates].sort()
+      states
     });
   } catch (error: any) {
     console.error('Error fetching cash deals:', error);

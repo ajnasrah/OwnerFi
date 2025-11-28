@@ -141,7 +141,7 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
           <div
             className="absolute bottom-0 left-0 right-0 bg-white/98 backdrop-blur-sm rounded-t-3xl pointer-events-auto shadow-2xl transition-transform duration-300 ease-out"
             style={{
-              transform: showDetails ? 'translateY(0)' : 'translateY(calc(100% - 195px))',
+              transform: showDetails ? 'translateY(0)' : 'translateY(calc(100% - 210px))',
               height: '100%',
             }}
             onTouchStart={(e) => { if (showDetails) e.stopPropagation(); }}
@@ -204,7 +204,12 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
                 <div className="flex items-start gap-2">
                   <div className="flex-1">
                     <h2 className="text-sm font-bold text-slate-900 leading-tight">
-                      {(property as any).streetAddress || property.address}
+                      {(() => {
+                        const streetAddr = (property as any).streetAddress || property.address || '';
+                        // Extract just the street address (before city/state/zip)
+                        const parts = streetAddr.split(',');
+                        return parts[0]?.trim() || streetAddr;
+                      })()}
                     </h2>
                     <p className="text-slate-600 text-xs">
                       {property.city}, {property.state} {property.zipCode}

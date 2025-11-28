@@ -6,6 +6,7 @@ import {
   where,
   orderBy,
   limit,
+  documentId,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { PropertyListing } from "@/lib/property-schema";
@@ -187,8 +188,10 @@ export async function GET(request: NextRequest) {
         ...data,
         source: 'zillow',
         // Field mapping for UI compatibility (Zillow fields -> PropertyListing schema)
-        address: data.fullAddress || data.address,
-        streetAddress: data.streetAddress || data.address,
+        // Use streetAddress for display, fullAddress only for complete address
+        address: data.streetAddress || data.address?.split(',')[0]?.trim() || data.fullAddress?.split(',')[0]?.trim(),
+        streetAddress: data.streetAddress || data.address?.split(',')[0]?.trim() || data.fullAddress?.split(',')[0]?.trim(),
+        fullAddress: data.fullAddress || `${data.streetAddress || data.address}, ${data.city}, ${data.state} ${data.zipCode || data.zipcode}`,
         squareFeet: data.squareFoot || data.squareFeet,
         lotSize: data.lotSquareFoot || data.lotSize,
         listPrice: data.price || data.listPrice,
@@ -302,25 +305,33 @@ export async function GET(request: NextRequest) {
 
     // 2. NEARBY MATCHES: Properties located IN cities that are within 30 miles
     // Location + property filters (bedrooms, bathrooms, sqft, asking price)
+    // PERF: Pre-compute partial match patterns once instead of O(n*m) per property
+    const searchCityLower = searchCity.toLowerCase();
+    const nearbyCityArray = Array.from(nearbyCityNames);
+
     const nearbyProperties = allProperties.filter((property: PropertyListing & { id: string }) => {
       const propertyCity = property.city?.split(',')[0].trim();
       const propCityLower = propertyCity?.toLowerCase();
 
       // Must be different city (state already filtered in query)
-      if (propCityLower === searchCity.toLowerCase()) return false;
+      if (propCityLower === searchCityLower) return false;
 
-      // Check if property's city is in the list of nearby cities (exact or partial match)
-      // Partial match handles cases like "Iowa" matching "Iowa Park"
-      const locationMatch = propCityLower && (
-        nearbyCityNames.has(propCityLower) ||
-        Array.from(nearbyCityNames).some(buyerCity =>
-          propCityLower.startsWith(buyerCity + ' ') ||
-          propCityLower.includes(' ' + buyerCity) ||
-          buyerCity.startsWith(propCityLower + ' ') ||
-          buyerCity.includes(' ' + propCityLower)
-        )
+      // PERF: O(1) exact match first, then O(m) partial match only if needed
+      if (!propCityLower) return false;
+
+      // Fast path: exact match
+      if (nearbyCityNames.has(propCityLower)) {
+        return matchesPropertyFilters(property);
+      }
+
+      // Slow path: partial match (only for edge cases like "Iowa" vs "Iowa Park")
+      const partialMatch = nearbyCityArray.some(buyerCity =>
+        propCityLower.startsWith(buyerCity + ' ') ||
+        propCityLower.includes(' ' + buyerCity) ||
+        buyerCity.startsWith(propCityLower + ' ') ||
+        buyerCity.includes(' ' + propCityLower)
       );
-      return locationMatch && matchesPropertyFilters(property);
+      return partialMatch && matchesPropertyFilters(property);
     });
 
     // 3. LIKED PROPERTIES: Always include liked properties regardless of search criteria
@@ -353,7 +364,7 @@ export async function GET(request: NextRequest) {
         // Firestore 'in' operator supports max 10 values
         for (let i = 0; i < missingLikedIds.length; i += 10) {
           const batchIds = missingLikedIds.slice(i, i + 10);
-          const { documentId } = await import('firebase/firestore');
+          // PERF: documentId imported at top level instead of dynamic import in loop
 
           const likedQuery = query(
             collection(db, 'properties'),
@@ -483,7 +494,8 @@ export async function GET(request: NextRequest) {
       Page: ${page}/${Math.ceil(totalResults / pageSize)}
     `);
 
-    return NextResponse.json({
+    // PERF: Add cache headers - client can cache for 60s, CDN can cache for 5 min
+    const response = NextResponse.json({
       properties: allResults,
       total: totalResults, // Total matching properties (not just this page)
       page,
@@ -502,6 +514,8 @@ export async function GET(request: NextRequest) {
         state: searchState
       }
     });
+    response.headers.set('Cache-Control', 'private, max-age=60, stale-while-revalidate=300');
+    return response;
 
   } catch (error) {
     logError('GET /api/buyer/properties', error, {

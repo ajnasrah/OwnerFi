@@ -14,6 +14,9 @@ import { unifiedDb } from './unified-db';
 import { normalizePhone } from './phone-utils';
 // NextAuthOptions type doesn't exist in newer versions, use a generic type
 
+// Phone numbers that always get admin access
+const ADMIN_PHONES = ['+19018319661', '+19018319662'];
+
 export const authOptions = {
   providers: [
     CredentialsProvider({
@@ -49,10 +52,15 @@ export const authOptions = {
             return null;
           }
 
+          // Check if phone is in admin list
+          const isAdminPhone = ADMIN_PHONES.includes(normalizedPhone);
+          const effectiveRole = isAdminPhone ? 'admin' : user.role;
+
           console.log('✅ [AUTH] User found:', {
             id: user.id,
-            role: user.role,
-            email: user.email
+            role: effectiveRole,
+            email: user.email,
+            isAdminPhone
           });
 
           return {
@@ -60,7 +68,7 @@ export const authOptions = {
             email: user.email,
             name: user.name,
             phone: user.phone,
-            role: user.role,
+            role: effectiveRole,
           };
         }
 

@@ -1,10 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // TEMP: Disable all static generation to fix useSearchParams errors
-  experimental: {
-    isrMemoryCacheSize: 0, // Disable ISR
-  },
-
   // Production optimizations
   compress: true,
 
@@ -141,9 +136,10 @@ const nextConfig = {
     return config;
   },
 
-  // PERFORMANCE FIX: Enable CSS optimization
+  // PERFORMANCE FIX: Enable CSS optimization + ISR disabled for useSearchParams
   experimental: {
     optimizeCss: true,
+    isrMemoryCacheSize: 0, // Disable ISR to fix useSearchParams errors
   },
 
   // Environment variables that should be available client-side

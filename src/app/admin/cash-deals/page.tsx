@@ -3,6 +3,19 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
+interface CashFlowData {
+  downPayment: number;
+  monthlyMortgage: number;
+  monthlyInsurance: number;
+  monthlyTax: number;
+  monthlyHoa: number;
+  monthlyMgmt: number;
+  monthlyExpenses: number;
+  monthlyCashFlow: number;
+  annualCashFlow: number;
+  cocReturn: number;
+}
+
 interface CashDeal {
   id: string;
   address: string;
@@ -19,9 +32,22 @@ interface CashDeal {
   url: string;
   imgSrc: string;
   status: string;
+  rentEstimate: number;
+  annualTax: number;
+  monthlyHoa: number;
+  missingFields: string[];
+  cashFlow: CashFlowData | null;
+  // Owner finance terms (from seller)
+  ownerFinanceVerified?: boolean;
+  monthlyPayment?: number;
+  downPaymentAmount?: number;
+  downPaymentPercent?: number;
+  interestRate?: number;
+  termYears?: number;
+  balloonYears?: number;
 }
 
-type SortField = 'percentOfArv' | 'price' | 'arv' | 'discount';
+type SortField = 'percentOfArv' | 'price' | 'arv' | 'discount' | 'monthlyCashFlow' | 'cocReturn';
 
 export default function CashDealsPage() {
   const [deals, setDeals] = useState<CashDeal[]>([]);
@@ -81,7 +107,9 @@ export default function CashDealsPage() {
       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
     } else {
       setSortBy(field);
-      setSortOrder(field === 'discount' ? 'desc' : 'asc');
+      // Default sort order based on field
+      const descFields = ['discount', 'monthlyCashFlow', 'cocReturn'];
+      setSortOrder(descFields.includes(field) ? 'desc' : 'asc');
     }
   };
 
@@ -197,17 +225,18 @@ export default function CashDealsPage() {
                 <tr>
                   <th className="px-4 py-3 text-left">Property</th>
                   <th className="px-4 py-3 text-left">Location</th>
-                  <SortHeader field="price" label="Asking Price" />
-                  <SortHeader field="arv" label="ARV (Zestimate)" />
-                  <SortHeader field="percentOfArv" label="% of ARV" />
-                  <SortHeader field="discount" label="Discount" />
+                  <SortHeader field="price" label="Price" />
+                  <SortHeader field="percentOfArv" label="% ARV" />
+                  <SortHeader field="monthlyCashFlow" label="Cash Flow" />
+                  <SortHeader field="cocReturn" label="CoC %" />
+                  <th className="px-4 py-3 text-left">Rent Est.</th>
                   <th className="px-4 py-3 text-left">Details</th>
                   <th className="px-4 py-3 text-left">Link</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
                 {deals.map((deal) => (
-                  <tr key={deal.id} className="hover:bg-gray-50">
+                  <tr key={deal.id} className={`hover:bg-gray-50 ${deal.missingFields?.length > 0 ? 'bg-yellow-50' : ''}`}>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
                         {deal.imgSrc && (
@@ -217,8 +246,20 @@ export default function CashDealsPage() {
                             className="w-16 h-12 object-cover rounded"
                           />
                         )}
-                        <div className="text-sm font-medium truncate max-w-[200px]">
-                          {deal.address}
+                        <div>
+                          <div className="text-sm font-medium truncate max-w-[200px]">
+                            {deal.address}
+                          </div>
+                          {deal.ownerFinanceVerified && (
+                            <span className="inline-block px-1.5 py-0.5 text-xs font-semibold bg-blue-100 text-blue-700 rounded">
+                              Owner Finance
+                            </span>
+                          )}
+                          {deal.missingFields?.length > 0 && (
+                            <div className="text-xs text-yellow-600 flex items-center gap-1">
+                              <span>Missing: {deal.missingFields.join(', ')}</span>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </td>
@@ -226,11 +267,18 @@ export default function CashDealsPage() {
                       <div className="text-sm">{deal.city}</div>
                       <div className="text-xs text-gray-500">{deal.state} {deal.zipcode}</div>
                     </td>
-                    <td className="px-4 py-3 font-medium">
-                      ${deal.price?.toLocaleString()}
-                    </td>
-                    <td className="px-4 py-3 text-gray-600">
-                      ${deal.arv?.toLocaleString()}
+                    <td className="px-4 py-3">
+                      <div className="font-medium">${deal.price?.toLocaleString()}</div>
+                      {deal.ownerFinanceVerified && deal.downPaymentAmount ? (
+                        <div className="text-xs text-blue-600 font-medium">
+                          OF: ${deal.downPaymentAmount?.toLocaleString()} down
+                          {deal.monthlyPayment && ` / $${deal.monthlyPayment?.toLocaleString()}/mo`}
+                        </div>
+                      ) : (
+                        <div className="text-xs text-gray-500">
+                          Down: ${deal.cashFlow?.downPayment?.toLocaleString() || '-'}
+                        </div>
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       <span className={`font-bold ${
@@ -242,13 +290,49 @@ export default function CashDealsPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-sm font-medium">
-                        {deal.discount}% off
-                      </span>
+                      {deal.cashFlow ? (
+                        <div>
+                          <span className={`font-bold ${
+                            deal.cashFlow.monthlyCashFlow > 0 ? 'text-green-600' : 'text-red-600'
+                          }`}>
+                            ${deal.cashFlow.monthlyCashFlow?.toLocaleString()}/mo
+                          </span>
+                          <div className="text-xs text-gray-500">
+                            ${deal.cashFlow.annualCashFlow?.toLocaleString()}/yr
+                          </div>
+                        </div>
+                      ) : (
+                        <span className="text-gray-400">-</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      {deal.cashFlow ? (
+                        <span className={`font-bold ${
+                          deal.cashFlow.cocReturn > 10 ? 'text-green-600' :
+                          deal.cashFlow.cocReturn > 0 ? 'text-yellow-600' :
+                          'text-red-600'
+                        }`}>
+                          {deal.cashFlow.cocReturn}%
+                        </span>
+                      ) : (
+                        <span className="text-gray-400">-</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-sm">
+                      {deal.rentEstimate > 0 ? (
+                        <div>
+                          <div className="font-medium">${deal.rentEstimate?.toLocaleString()}/mo</div>
+                          {deal.monthlyHoa > 0 && (
+                            <div className="text-xs text-gray-500">HOA: ${deal.monthlyHoa}</div>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-gray-400">-</span>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-600">
                       {deal.beds}bd / {deal.baths}ba
-                      {deal.sqft > 0 && <span> / {deal.sqft.toLocaleString()} sqft</span>}
+                      {deal.sqft > 0 && <div className="text-xs">{deal.sqft.toLocaleString()} sqft</div>}
                     </td>
                     <td className="px-4 py-3">
                       <a

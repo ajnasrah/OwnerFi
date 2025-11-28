@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -147,12 +147,13 @@ export default function Dashboard() {
     }
   };
 
-  const toggleLike = async (propertyId: string, property?: Property) => {
+  // PERF: Memoized toggle like handler to prevent re-renders
+  const toggleLike = useCallback(async (propertyId: string, property?: Property) => {
     try {
       const isLiked = likedProperties.includes(propertyId);
       const action = isLiked ? 'unlike' : 'like';
 
-      // 🆕 Include property context for ML training
+      // Include property context for ML training
       const propertyContext = property ? {
         monthlyPayment: property.monthlyPayment || 0,
         downPayment: property.downPaymentAmount || 0,
@@ -179,7 +180,7 @@ export default function Dashboard() {
     } catch {
       // Error updating like status
     }
-  };
+  }, [likedProperties]);
 
   if (loading) {
     return (
@@ -255,8 +256,8 @@ export default function Dashboard() {
     );
   }
 
-  // Convert Property to PropertyListing format
-  const toPropertyListing = (property: Property): PropertyListing => {
+  // PERF: Convert Property to PropertyListing format - memoized to prevent recreation on every render
+  const toPropertyListing = useCallback((property: Property): PropertyListing => {
     return {
       id: property.id,
       address: property.address,
@@ -287,15 +288,21 @@ export default function Dashboard() {
       featured: false,
       source: 'manual' as const,
     };
-  };
+  }, []);
 
-  // 🆕 Handler for liking a property (with full context tracking)
-  const handleLikeProperty = async (property: PropertyListing) => {
+  // PERF: Memoize converted properties to avoid mapping on every render
+  const propertyListings = useMemo(
+    () => properties.map(toPropertyListing),
+    [properties, toPropertyListing]
+  );
+
+  // PERF: Memoized handler for liking a property
+  const handleLikeProperty = useCallback(async (property: PropertyListing) => {
     await toggleLike(property.id, property as Property);
-  };
+  }, [toggleLike]);
 
-  // 🆕 Handler for passing a property (NOW TRACKS PASSES!)
-  const handlePassProperty = async (property: PropertyListing) => {
+  // PERF: Memoized handler for passing a property
+  const handlePassProperty = useCallback(async (property: PropertyListing) => {
     try {
       // Optimistic update: remove from UI immediately for smooth transition
       setProperties(prev => prev.filter(p => p.id !== property.id));
@@ -318,13 +325,10 @@ export default function Dashboard() {
           propertyId: property.id,
           action: 'pass',
           propertyContext,
-          // Future: Could add UI for pass reason selection
-          // passReason: 'too_expensive' | 'wrong_location' | 'too_small' | 'needs_work'
         })
       });
 
       if (!response.ok) {
-        // Revert if API call failed
         throw new Error('Failed to pass property');
       }
 
@@ -335,10 +339,9 @@ export default function Dashboard() {
       // Revert the optimistic update
       setProperties(prev => [...prev, property as Property]);
 
-      // Show error to user
       alert('Failed to skip property. Please try again.');
     }
-  };
+  }, []);
 
   return (
     <div className="h-screen overflow-hidden">
@@ -417,7 +420,7 @@ export default function Dashboard() {
 
       {/* PropertySwiper2 Component - New Modern Swiper */}
       <PropertySwiper2
-        properties={properties.map(toPropertyListing)}
+        properties={propertyListings}
         onLike={handleLikeProperty}
         onPass={handlePassProperty}
         favorites={likedProperties}

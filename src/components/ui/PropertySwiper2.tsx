@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect, memo, useCallback } from 'react';
+import React, { useState, useRef, useEffect, memo, useMemo } from 'react';
 import { PropertyListing } from '@/lib/property-schema';
 import { PropertyCard } from './PropertyCard';
 
@@ -30,8 +30,14 @@ export const PropertySwiper2 = memo(function PropertySwiper2({
   const [animating, setAnimating] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Filter visible properties
-  const visibleProperties = properties.filter(p => !passedIds.includes(p.id));
+  // PERF: Convert passedIds to Set for O(1) lookup instead of O(n) includes()
+  const passedIdsSet = useMemo(() => new Set(passedIds), [passedIds]);
+
+  // PERF: Memoize filtered properties - was O(n*m), now O(n)
+  const visibleProperties = useMemo(
+    () => properties.filter(p => !passedIdsSet.has(p.id)),
+    [properties, passedIdsSet]
+  );
   const currentProperty = visibleProperties[currentIndex];
   const nextProperty = visibleProperties[currentIndex + 1];
 
@@ -254,23 +260,11 @@ export const PropertySwiper2 = memo(function PropertySwiper2({
       style={{ width: '100vw', maxWidth: '100vw', overflowX: 'hidden' }}
     >
       {/* Cards Stack */}
-      <div className="absolute inset-1 sm:inset-2 flex items-center justify-center" style={{ maxWidth: '100%' }}>
-        {/* Next Card (Behind) - lazy load image */}
-        {nextProperty && (
-          <div className="absolute w-[calc(100%-1rem)] sm:w-full max-w-[min(28rem,calc(100vw-2rem))] h-full max-h-[calc(100dvh-10rem)]">
-            <PropertyCard
-              property={nextProperty}
-              onLike={() => {}}
-              onPass={() => {}}
-              isFavorited={favorites.includes(nextProperty.id)}
-              style={getCardStyle(false)}
-              isPriority={false}
-            />
-          </div>
-        )}
+      <div className="absolute top-1 left-1 right-1 bottom-24 sm:top-2 sm:left-2 sm:right-2 flex items-center justify-center" style={{ maxWidth: '100%' }}>
+        {/* Next Card (Behind) - hidden to avoid overlap */}
 
         {/* Current Card - priority load image */}
-        <div className="absolute w-[calc(100%-1rem)] sm:w-full max-w-[min(28rem,calc(100vw-2rem))] h-full max-h-[calc(100dvh-10rem)]">
+        <div className="absolute w-[calc(100%-1rem)] sm:w-full max-w-[min(28rem,calc(100vw-2rem))] h-full">
           <PropertyCard
             property={currentProperty}
             onLike={handleLikeButton}

@@ -25,9 +25,93 @@ import { autoCleanPropertyData } from '@/lib/property-auto-cleanup';
 let cachedCount: { value: number; timestamp: number } | null = null;
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
+// Calculate monthly mortgage payment
+function calculateMonthlyMortgage(loanAmount: number, annualRate: number, years: number): number {
+  const monthlyRate = annualRate / 12;
+  const numPayments = years * 12;
+  if (monthlyRate === 0) return loanAmount / numPayments;
+  const x = Math.pow(1 + monthlyRate, numPayments);
+  return loanAmount * (monthlyRate * x) / (x - 1);
+}
+
+// Calculate cash flow analysis for admin view
+// Uses standard real estate investor assumptions
+function calculateCashFlow(price: number, rentEstimate: number, annualTax: number, monthlyHoa: number, usedEstimatedTax: boolean = false) {
+  // Financing assumptions
+  const DOWN_PAYMENT_PERCENT = 0.10;
+  const CLOSING_COSTS_PERCENT = 0.03; // 3% closing costs
+  const INTEREST_RATE = 0.06;
+  const LOAN_TERM_YEARS = 20;
+
+  // Operating expense rates
+  const INSURANCE_RATE = 0.01; // 1% of price annually
+  const PROPERTY_MGMT_RATE = 0.10; // 10% of rent
+  const VACANCY_RATE = 0.08; // 8% vacancy allowance
+  const MAINTENANCE_RATE = 0.05; // 5% of rent for repairs
+  const CAPEX_RATE = 0.05; // 5% of rent for capital expenditures (roof, HVAC, etc)
+
+  // Estimate tax as 1.2% of price if not provided (US average is ~1.1%)
+  const ESTIMATED_TAX_RATE = 0.012;
+
+  // Use estimated tax if actual tax is missing
+  const effectiveTax = annualTax > 0 ? annualTax : (usedEstimatedTax ? price * ESTIMATED_TAX_RATE : 0);
+
+  // Investment calculation (includes closing costs for accurate CoC)
+  const downPayment = price * DOWN_PAYMENT_PERCENT;
+  const closingCosts = price * CLOSING_COSTS_PERCENT;
+  const totalInvestment = downPayment + closingCosts;
+
+  const loanAmount = price - downPayment;
+  const monthlyMortgage = calculateMonthlyMortgage(loanAmount, INTEREST_RATE, LOAN_TERM_YEARS);
+  const monthlyInsurance = (price * INSURANCE_RATE) / 12;
+  const monthlyTax = effectiveTax / 12;
+  const monthlyMgmt = rentEstimate * PROPERTY_MGMT_RATE;
+
+  // Additional operating expenses that investors always account for
+  const monthlyVacancy = rentEstimate * VACANCY_RATE;
+  const monthlyMaintenance = rentEstimate * MAINTENANCE_RATE;
+  const monthlyCapex = rentEstimate * CAPEX_RATE;
+
+  const monthlyExpenses = monthlyMortgage + monthlyInsurance + monthlyTax + monthlyHoa + monthlyMgmt + monthlyVacancy + monthlyMaintenance + monthlyCapex;
+  const monthlyCashFlow = rentEstimate - monthlyExpenses;
+  const annualCashFlow = monthlyCashFlow * 12;
+
+  // CoC uses total investment (down payment + closing costs)
+  const cocReturn = totalInvestment > 0 ? (annualCashFlow / totalInvestment) * 100 : 0;
+
+  return {
+    downPayment: Math.round(downPayment),
+    totalInvestment: Math.round(totalInvestment),
+    monthlyMortgage: Math.round(monthlyMortgage),
+    monthlyExpenses: Math.round(monthlyExpenses),
+    monthlyCashFlow: Math.round(monthlyCashFlow),
+    annualCashFlow: Math.round(annualCashFlow),
+    cocReturn: Math.round(cocReturn * 10) / 10,
+    usedEstimatedTax,
+  };
+}
+
 // Fast field mapper - only essential fields
 function mapPropertyFields(doc: any) {
   const data = doc.data();
+  const price = data.price || data.listPrice || 0;
+  const rentEstimate = data.rentEstimate || 0;
+  const annualTax = data.annualTaxAmount || 0;
+  const monthlyHoa = data.hoa || 0;
+
+  // Track missing fields
+  const missingFields: string[] = [];
+  if (!rentEstimate) missingFields.push('rent');
+  if (!annualTax) missingFields.push('tax');
+
+  // Calculate cash flow if we have price and rent
+  // Use estimated tax (1.2% of price) when actual tax is missing
+  let cashFlow = null;
+  if (price > 0 && rentEstimate > 0) {
+    const useEstimatedTax = !annualTax;
+    cashFlow = calculateCashFlow(price, rentEstimate, annualTax, monthlyHoa, useEstimatedTax);
+  }
+
   return {
     id: doc.id,
     // Core fields only
@@ -36,7 +120,7 @@ function mapPropertyFields(doc: any) {
     city: data.city,
     state: data.state,
     zipCode: data.zipCode,
-    price: data.price,
+    price,
     squareFoot: data.squareFoot,
     bedrooms: data.bedrooms,
     bathrooms: data.bathrooms,
@@ -62,12 +146,18 @@ function mapPropertyFields(doc: any) {
     imageUrl: data.firstPropertyImage || data.imageUrl,
     imageUrls: data.propertyImages || data.imageUrls || [],
     zillowImageUrl: data.firstPropertyImage || data.zillowImageUrl,
-    listPrice: data.price || data.listPrice,
+    listPrice: price,
     // Description - important for owner finance details
     description: data.description || '',
     // Owner finance keywords
     primaryKeyword: data.primaryKeyword || null,
     matchedKeywords: data.matchedKeywords || [],
+    // Cash flow fields (admin only)
+    rentEstimate,
+    annualTax,
+    monthlyHoa,
+    missingFields,
+    cashFlow,
   };
 }
 
@@ -158,8 +248,8 @@ export async function GET(request: NextRequest) {
       new Map(allProperties.map(p => [p.id, p])).values()
     );
 
-    // Return all properties
-    return NextResponse.json({
+    // Return all properties with caching headers
+    const response = NextResponse.json({
       properties: uniqueProperties,
       count: uniqueProperties.length,
       total: uniqueProperties.length,
@@ -167,6 +257,9 @@ export async function GET(request: NextRequest) {
       nextCursor: null,
       showing: `Showing all ${uniqueProperties.length} properties (${zillowProperties.length} from Zillow, ${ghlProperties.length} from GHL)`
     });
+    // PERF: Cache for 30s client-side, 2 min CDN, allows stale for 5 min while revalidating
+    response.headers.set('Cache-Control', 'private, max-age=30, stale-while-revalidate=300');
+    return response;
 
   } catch (error) {
     await logError('Failed to fetch admin properties', {

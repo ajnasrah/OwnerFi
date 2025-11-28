@@ -52,16 +52,20 @@ export async function POST(request: NextRequest) {
     const results = {
       sent: 0,
       failed: 0,
+      skipped: 0,
       errors: [] as { id: string; error: string }[],
+      skippedProperties: [] as { id: string; address: string; sentAt: string }[],
     };
 
     for (const propertyId of propertyIds) {
       try {
         // Try zillow_imports first, then properties collection
         let doc = await db.collection('zillow_imports').doc(propertyId).get();
+        let collection = 'zillow_imports';
 
         if (!doc.exists) {
           doc = await db.collection('properties').doc(propertyId).get();
+          collection = 'properties';
         }
 
         if (!doc.exists) {
@@ -71,6 +75,18 @@ export async function POST(request: NextRequest) {
         }
 
         const property = doc.data()!;
+
+        // Check if already sent to GHL
+        if (property.sentToGHL) {
+          results.skipped++;
+          results.skippedProperties.push({
+            id: propertyId,
+            address: property.address || property.streetAddress || 'Unknown',
+            sentAt: property.sentToGHL,
+          });
+          console.log(`   ⏭️ Skipped (already sent): ${property.address || propertyId}`);
+          continue;
+        }
 
         // Build GHL payload
         const ghlPayload = {
@@ -125,6 +141,12 @@ export async function POST(request: NextRequest) {
           throw new Error(`GHL returned ${response.status}`);
         }
 
+        // Mark property as sent to GHL
+        const sentTimestamp = new Date().toISOString();
+        await db.collection(collection).doc(propertyId).update({
+          sentToGHL: sentTimestamp,
+        });
+
         results.sent++;
         console.log(`   ✅ Sent: ${ghlPayload.propertyAddress}`);
 
@@ -135,12 +157,14 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    console.log(`\n✅ [SEND TO GHL] Complete: ${results.sent} sent, ${results.failed} failed`);
+    console.log(`\n✅ [SEND TO GHL] Complete: ${results.sent} sent, ${results.skipped} skipped (already sent), ${results.failed} failed`);
 
     return NextResponse.json({
       success: true,
       sent: results.sent,
       failed: results.failed,
+      skipped: results.skipped,
+      skippedProperties: results.skippedProperties.length > 0 ? results.skippedProperties : undefined,
       errors: results.errors.length > 0 ? results.errors : undefined,
     });
 

@@ -37,7 +37,17 @@ export default function PropertiesTab({ setEditingProperty, setEditForm }: Prope
   const handleSendToGHL = async () => {
     if (selectedProperties.length === 0) return;
 
-    if (!confirm(`Send ${selectedProperties.length} properties to GHL?`)) return;
+    // Check how many selected properties are already sent to GHL
+    const alreadySentCount = filteredProperties.filter(
+      p => selectedProperties.includes(p.id) && (p as any).sentToGHL
+    ).length;
+
+    let confirmMessage = `Send ${selectedProperties.length} properties to GHL?`;
+    if (alreadySentCount > 0) {
+      confirmMessage += `\n\n⚠️ ${alreadySentCount} of these have already been sent and will be skipped.`;
+    }
+
+    if (!confirm(confirmMessage)) return;
 
     setSendingToGHL(true);
     try {
@@ -52,8 +62,16 @@ export default function PropertiesTab({ setEditingProperty, setEditForm }: Prope
       if (result.error) {
         alert(`Error: ${result.error}`);
       } else {
-        alert(`Successfully sent ${result.sent} properties to GHL${result.failed > 0 ? `. ${result.failed} failed.` : ''}`);
+        let message = `Successfully sent ${result.sent} properties to GHL`;
+        if (result.skipped > 0) {
+          message += `\n${result.skipped} skipped (already sent to GHL)`;
+        }
+        if (result.failed > 0) {
+          message += `\n${result.failed} failed`;
+        }
+        alert(message);
         setSelectedProperties([]);
+        fetchProperties(undefined, false); // Refresh to show updated GHL status
       }
     } catch (error) {
       alert('Failed to send properties to GHL');
@@ -214,8 +232,11 @@ export default function PropertiesTab({ setEditingProperty, setEditForm }: Prope
               <th scope="col" className="hidden lg:table-cell px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Details
               </th>
-              <th scope="col" className="hidden xl:table-cell px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Estimates
+              <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 bg-green-50" onClick={() => handleSort('monthlyCashFlow' as any)}>
+                Cash Flow {sortField === 'monthlyCashFlow' && (sortDirection === 'asc' ? '↑' : '↓')}
+              </th>
+              <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 bg-green-50" onClick={() => handleSort('cocReturn' as any)}>
+                CoC % {sortField === 'cocReturn' && (sortDirection === 'asc' ? '↑' : '↓')}
               </th>
             </tr>
           </thead>
@@ -289,6 +310,14 @@ export default function PropertiesTab({ setEditingProperty, setEditForm }: Prope
                     <div className="ml-2">
                       <div className="flex items-center gap-1">
                         <div className="text-xs md:text-sm font-medium text-gray-900 truncate max-w-[200px] md:max-w-none">{property.address}</div>
+                        {(property as any).sentToGHL && (
+                          <span
+                            className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 flex-shrink-0"
+                            title={`Sent to GHL: ${new Date((property as any).sentToGHL).toLocaleString()}`}
+                          >
+                            GHL
+                          </span>
+                        )}
                         <button
                           onClick={() => {
                             const fullAddress = property.fullAddress || `${property.address}, ${property.city}, ${property.state} ${property.zipCode}`;
@@ -340,14 +369,47 @@ export default function PropertiesTab({ setEditingProperty, setEditForm }: Prope
                     {(property as any).yearBuilt && ` • ${(property as any).yearBuilt}`}
                   </div>
                 </td>
-                <td className="hidden xl:table-cell px-3 py-4 whitespace-nowrap">
-                  {(property as any).estimatedValue && (property as any).estimatedValue > 0 ? (
+                <td className="px-3 py-4 whitespace-nowrap bg-green-50">
+                  {(property as any).cashFlow ? (
                     <div>
-                      <div className="text-sm text-gray-900">${((property as any).estimatedValue)?.toLocaleString()}</div>
-                      <div className="text-xs text-gray-500">Est. Value</div>
+                      <div className={`text-sm font-medium ${(property as any).cashFlow.monthlyCashFlow > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        ${(property as any).cashFlow.monthlyCashFlow?.toLocaleString()}/mo
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        ${(property as any).cashFlow.annualCashFlow?.toLocaleString()}/yr
+                      </div>
+                      {(property as any).cashFlow.usedEstimatedTax && (
+                        <div className="text-xs text-orange-500" title="Tax estimated at 1.2% of price">
+                          ~tax est
+                        </div>
+                      )}
                     </div>
                   ) : (
-                    <span className="text-xs text-gray-400">No estimate</span>
+                    <div>
+                      <span className="text-xs text-yellow-600">
+                        {(property as any).missingFields?.length > 0
+                          ? `Missing: ${(property as any).missingFields.join(', ')}`
+                          : 'No data'}
+                      </span>
+                    </div>
+                  )}
+                </td>
+                <td className="px-3 py-4 whitespace-nowrap bg-green-50">
+                  {(property as any).cashFlow ? (
+                    <div>
+                      <div className={`text-sm font-bold ${
+                        (property as any).cashFlow.cocReturn > 10 ? 'text-green-600' :
+                        (property as any).cashFlow.cocReturn > 0 ? 'text-yellow-600' :
+                        'text-red-600'
+                      }`}>
+                        {(property as any).cashFlow.cocReturn}%
+                      </div>
+                      {(property as any).cashFlow.usedEstimatedTax && (
+                        <div className="text-xs text-orange-500">~</div>
+                      )}
+                    </div>
+                  ) : (
+                    <span className="text-xs text-gray-400">-</span>
                   )}
                 </td>
               </tr>

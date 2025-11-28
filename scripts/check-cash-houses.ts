@@ -1,10 +1,7 @@
 import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
-import * as dotenv from 'dotenv';
 
-dotenv.config({ path: '.env.local' });
-
-if (!getApps().length) {
+if (getApps().length === 0) {
   initializeApp({
     credential: cert({
       projectId: process.env.FIREBASE_PROJECT_ID!,
@@ -17,32 +14,16 @@ if (!getApps().length) {
 const db = getFirestore();
 
 async function check() {
-  const snap = await db.collection('cash_houses').get();
+  const snapshot = await db.collection('cash_houses').limit(3).get();
 
-  const bySource: Record<string, { total: number; noArv: number }> = {};
-
-  snap.docs.forEach(doc => {
-    const d = doc.data();
-    const source = d.source || 'unknown';
-
-    if (!bySource[source]) {
-      bySource[source] = { total: 0, noArv: 0 };
-    }
-    bySource[source].total++;
-
-    if (!d.arv || d.arv === 0) {
-      bySource[source].noArv++;
-    }
+  snapshot.docs.forEach((doc, idx) => {
+    const data = doc.data();
+    console.log('\n=== Property ' + (idx + 1) + ': ' + (data.address || data.streetAddress) + ' ===');
+    console.log('All fields:', Object.keys(data).sort().join(', '));
+    console.log('rentEstimate:', data.rentEstimate);
+    console.log('rentZestimate:', data.rentZestimate);
+    console.log('rent:', data.rent);
   });
-
-  console.log('Total cash_houses:', snap.size);
-  console.log('\nBreakdown by source:');
-  for (const [source, counts] of Object.entries(bySource)) {
-    console.log(`  ${source}: ${counts.total} total, ${counts.noArv} missing ARV`);
-  }
-
-  // Delete entries without ARV
-  console.log('\nWant to delete entries without ARV? Run with --delete flag');
 }
 
 check();

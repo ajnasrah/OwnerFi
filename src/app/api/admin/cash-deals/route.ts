@@ -209,16 +209,20 @@ export async function GET(request: Request) {
       })());
     }
 
-    // Fetch from zillow_imports (owner finance deals) - larger collection, use limits
+    // Fetch from zillow_imports (owner finance deals) - filter in memory to avoid index requirements
     if (!collection || collection === 'zillow_imports') {
       fetchPromises.push((async () => {
-        let zillowQuery: FirebaseFirestore.Query = db.collection('zillow_imports');
-        if (state) zillowQuery = zillowQuery.where('state', '==', state);
-        // Order by foundAt DESC to get most recent first, then limit
-        zillowQuery = zillowQuery.orderBy('foundAt', 'desc').limit(fetchLimit * 2);
-        const zillowSnapshot = await zillowQuery.get();
+        // Fetch without state filter to avoid index requirements, filter in memory
+        const zillowSnapshot = await db.collection('zillow_imports')
+          .orderBy('foundAt', 'desc')
+          .limit(fetchLimit * 3)
+          .get();
         zillowSnapshot.docs.forEach(doc => {
-          allDeals.push(normalizeProperty(doc, 'zillow_imports'));
+          const normalized = normalizeProperty(doc, 'zillow_imports');
+          // Filter by state in memory if specified
+          if (!state || normalized.state === state) {
+            allDeals.push(normalized);
+          }
         });
       })());
     }

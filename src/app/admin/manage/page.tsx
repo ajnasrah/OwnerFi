@@ -854,32 +854,32 @@ export default function AdminDashboard() {
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <div className="text-lg font-medium text-gray-900">Loading Admin Dashboard</div>
+          <div className="w-8 h-8 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="text-lg font-medium text-white">Loading Admin Dashboard</div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen md:h-screen bg-slate-50 flex flex-col md:flex-row max-w-full overflow-y-auto md:overflow-hidden">
+    <div className="h-screen overflow-hidden bg-slate-900 flex flex-col md:flex-row">
       {/* Mobile Dropdown Navigation */}
-      <div className="md:hidden bg-white border-b border-slate-200 p-4">
-        <a href="/admin" className="text-indigo-600 hover:text-indigo-800 text-sm mb-2 inline-flex items-center gap-1">
+      <div className="md:hidden bg-slate-800 border-b border-slate-700 p-4">
+        <a href="/admin" className="text-emerald-400 hover:text-emerald-300 text-sm mb-2 inline-flex items-center gap-1">
           ← Back to Hub
         </a>
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-lg flex items-center justify-center">
-              <div className="w-4 h-4 bg-white rounded-sm"></div>
+            <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg flex items-center justify-center">
+              <div className="w-4 h-4 bg-slate-800 rounded-sm"></div>
             </div>
-            <h1 className="text-lg font-bold text-slate-900">OwnerFi Admin</h1>
+            <h1 className="text-lg font-bold text-white">OwnerFi Admin</h1>
           </div>
           <button
             onClick={() => signOut({ callbackUrl: '/auth/signout' })}
-            className="text-slate-600 hover:text-red-600"
+            className="text-slate-400 hover:text-red-600"
             title="Sign Out"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -890,7 +890,7 @@ export default function AdminDashboard() {
         <select
           value={activeTab}
           onChange={(e) => setActiveTab(e.target.value as any)}
-          className="w-full px-4 py-2 border border-slate-300 rounded-lg bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="w-full px-4 py-2 border border-slate-600 rounded-lg bg-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
         >
           <option value="overview">📊 Overview</option>
           <option value="properties">🏠 Properties {stats.totalProperties > 0 ? `(${stats.totalProperties})` : ''}</option>
@@ -906,18 +906,18 @@ export default function AdminDashboard() {
       </div>
 
       {/* Desktop Sidebar */}
-      <div className="hidden md:flex w-64 lg:w-72 bg-white shadow-xl border-r border-slate-200 flex-shrink-0 relative flex-col h-screen">
+      <div className="hidden md:flex w-64 lg:w-72 bg-slate-800 shadow-xl border-r border-slate-700 flex-shrink-0 relative flex-col h-screen">
         {/* Logo Section */}
-        <div className="p-6 border-b border-slate-200 flex-shrink-0">
-          <a href="/admin" className="text-indigo-600 hover:text-indigo-800 text-sm mb-2 inline-flex items-center gap-1">
+        <div className="p-6 border-b border-slate-700 flex-shrink-0">
+          <a href="/admin" className="text-emerald-400 hover:text-emerald-300 text-sm mb-2 inline-flex items-center gap-1">
             ← Back to Hub
           </a>
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-              <div className="w-5 h-5 bg-white rounded-md"></div>
+            <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
+              <div className="w-5 h-5 bg-slate-800 rounded-md"></div>
             </div>
             <div>
-              <h1 className="text-xl font-bold text-slate-900">OwnerFi</h1>
+              <h1 className="text-xl font-bold text-white">OwnerFi</h1>
               <p className="text-sm text-slate-500">Admin Dashboard</p>
             </div>
           </div>
@@ -942,8 +942,8 @@ export default function AdminDashboard() {
               onClick={() => setActiveTab(tab.key as any)}
               className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-left transition-all duration-200 group ${
                 activeTab === tab.key
-                  ? 'bg-gradient-to-r from-indigo-500 to-indigo-600 text-white shadow-lg transform scale-[1.02]'
-                  : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                  ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg transform scale-[1.02]'
+                  : 'text-slate-300 hover:bg-slate-700 hover:text-white'
               }`}
             >
               <div className="flex items-center space-x-3">
@@ -953,10 +953,10 @@ export default function AdminDashboard() {
               {tab.count !== null && tab.count > 0 && (
                 <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${
                   activeTab === tab.key
-                    ? 'bg-white/20 text-white'
+                    ? 'bg-slate-800/20 text-white'
                     : tab.key === 'disputes'
                     ? 'bg-red-100 text-red-700 animate-pulse'
-                    : 'bg-slate-200 text-slate-700'
+                    : 'bg-slate-200 text-slate-300'
                 }`}>
                   {tab.count}
                 </span>
@@ -966,20 +966,20 @@ export default function AdminDashboard() {
         </nav>
 
         {/* External Dashboards */}
-        <div className="p-4 space-y-2 border-t border-slate-200 flex-shrink-0">
+        <div className="p-4 space-y-2 border-t border-slate-700 flex-shrink-0">
           <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider px-4 mb-2">
             Dashboards
           </div>
           <a
             href="/admin/analytics"
-            className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-left transition-all duration-200 text-slate-700 hover:bg-slate-100 hover:text-slate-900"
+            className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-left transition-all duration-200 text-slate-300 hover:bg-slate-700 hover:text-white"
           >
             <span className="text-lg">📈</span>
             <span className="font-medium">Analytics</span>
           </a>
           <a
             href="/admin/costs"
-            className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-left transition-all duration-200 text-slate-700 hover:bg-slate-100 hover:text-slate-900"
+            className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-left transition-all duration-200 text-slate-300 hover:bg-slate-700 hover:text-white"
           >
             <span className="text-lg">💰</span>
             <span className="font-medium">Cost Tracking</span>
@@ -987,15 +987,15 @@ export default function AdminDashboard() {
         </div>
 
         {/* User Section */}
-        <div className="p-4 border-t border-slate-200 bg-white flex-shrink-0 mt-auto">
+        <div className="p-4 border-t border-slate-700 bg-slate-800 flex-shrink-0 mt-auto">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <span className="text-sm text-slate-600">System Online</span>
+              <span className="text-sm text-slate-400">System Online</span>
             </div>
             <button
               onClick={() => signOut({ callbackUrl: '/auth/signout' })}
-              className="flex items-center space-x-2 px-3 py-2 text-sm text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
+              className="flex items-center space-x-2 px-3 py-2 text-sm text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
               title="Sign Out"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1011,10 +1011,10 @@ export default function AdminDashboard() {
       <div className="flex-1 flex flex-col w-full">
         {/* Top Header */}
         {activeTab !== 'buyer-preview' && (
-        <header className="bg-white shadow-sm border-b border-slate-200 px-4 md:px-6 lg:px-8 py-4 md:py-6">
+        <header className="bg-slate-800 shadow-sm border-b border-slate-700 px-4 md:px-6 lg:px-8 py-4 md:py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-xl md:text-2xl font-bold text-slate-900">
+              <h2 className="text-xl md:text-2xl font-bold text-white">
                 {activeTab === 'overview' && 'Dashboard Overview'}
                 {activeTab === 'properties' && 'Property Management'}
                 {activeTab === 'upload' && 'Upload Properties'}
@@ -1025,7 +1025,7 @@ export default function AdminDashboard() {
                 {activeTab === 'contacts' && 'Contact Submissions'}
                 {activeTab === 'social' && 'Social Media & Articles'}
               </h2>
-              <p className="text-sm md:text-base text-slate-600 mt-1">
+              <p className="text-sm md:text-base text-slate-400 mt-1">
                 {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
               </p>
             </div>
@@ -1051,7 +1051,7 @@ export default function AdminDashboard() {
                 <button
                   onClick={() => fetchProperties(undefined, false)}
                   disabled={loadingProperties}
-                  className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors disabled:bg-gray-400 shadow-sm"
+                  className="px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-colors disabled:bg-slate-600 shadow-sm"
                 >
                   {loadingProperties ? 'Refreshing...' : 'Refresh'}
                 </button>
@@ -1062,13 +1062,13 @@ export default function AdminDashboard() {
         )}
 
         {/* Content Area */}
-        <main className="flex-1 p-4 md:p-6 lg:p-8 pb-20 md:pb-8 bg-slate-50 md:overflow-y-auto w-full">
+        <main className="flex-1 p-4 md:p-6 lg:p-8 pb-20 md:pb-8 bg-slate-900 md:overflow-y-auto w-full">
           {/* Overview Tab */}
           {activeTab === 'overview' && (
             <div className="space-y-6">
               {/* Stats Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div className="bg-white overflow-hidden shadow rounded-lg">
+                <div className="bg-slate-800 overflow-hidden shadow rounded-lg">
                   <div className="p-5">
                     <div className="flex items-center">
                       <div className="flex-shrink-0">
@@ -1080,15 +1080,15 @@ export default function AdminDashboard() {
                       </div>
                       <div className="ml-5 w-0 flex-1">
                         <dl>
-                          <dt className="text-sm font-medium text-gray-500 truncate">Total Properties</dt>
-                          <dd className="text-lg font-medium text-gray-900">{stats.totalProperties.toLocaleString()}</dd>
+                          <dt className="text-sm font-medium text-slate-400 truncate">Total Properties</dt>
+                          <dd className="text-lg font-medium text-white">{stats.totalProperties.toLocaleString()}</dd>
                         </dl>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-white overflow-hidden shadow rounded-lg">
+                <div className="bg-slate-800 overflow-hidden shadow rounded-lg">
                   <div className="p-5">
                     <div className="flex items-center">
                       <div className="flex-shrink-0">
@@ -1100,19 +1100,19 @@ export default function AdminDashboard() {
                       </div>
                       <div className="ml-5 w-0 flex-1">
                         <dl>
-                          <dt className="text-sm font-medium text-gray-500 truncate">Active Buyers</dt>
-                          <dd className="text-lg font-medium text-gray-900">{stats.totalBuyers.toLocaleString()}</dd>
+                          <dt className="text-sm font-medium text-slate-400 truncate">Active Buyers</dt>
+                          <dd className="text-lg font-medium text-white">{stats.totalBuyers.toLocaleString()}</dd>
                         </dl>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-white overflow-hidden shadow rounded-lg">
+                <div className="bg-slate-800 overflow-hidden shadow rounded-lg">
                   <div className="p-5">
                     <div className="flex items-center">
                       <div className="flex-shrink-0">
-                        <div className="w-8 h-8 bg-indigo-500 rounded-md flex items-center justify-center">
+                        <div className="w-8 h-8 bg-emerald-900/300 rounded-md flex items-center justify-center">
                           <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm3 2h6v4H7V6zm8 8v2h1v-2h-1zm-2-2H7v4h6v-4z" clipRule="evenodd" />
                           </svg>
@@ -1120,20 +1120,20 @@ export default function AdminDashboard() {
                       </div>
                       <div className="ml-5 w-0 flex-1">
                         <dl>
-                          <dt className="text-sm font-medium text-gray-500 truncate">Active Realtors</dt>
-                          <dd className="text-lg font-medium text-gray-900">{stats.totalRealtors.toLocaleString()}</dd>
+                          <dt className="text-sm font-medium text-slate-400 truncate">Active Realtors</dt>
+                          <dd className="text-lg font-medium text-white">{stats.totalRealtors.toLocaleString()}</dd>
                         </dl>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-white overflow-hidden shadow rounded-lg">
+                <div className="bg-slate-800 overflow-hidden shadow rounded-lg">
                   <div className="p-5">
                     <div className="flex items-center">
                       <div className="flex-shrink-0">
                         <div className={`w-8 h-8 rounded-md flex items-center justify-center ${
-                          stats.pendingDisputes > 0 ? 'bg-red-500' : 'bg-gray-400'
+                          stats.pendingDisputes > 0 ? 'bg-red-500' : 'bg-slate-600'
                         }`}>
                           <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
@@ -1142,8 +1142,8 @@ export default function AdminDashboard() {
                       </div>
                       <div className="ml-5 w-0 flex-1">
                         <dl>
-                          <dt className="text-sm font-medium text-gray-500 truncate">Pending Disputes</dt>
-                          <dd className="text-lg font-medium text-gray-900">{stats.pendingDisputes}</dd>
+                          <dt className="text-sm font-medium text-slate-400 truncate">Pending Disputes</dt>
+                          <dd className="text-lg font-medium text-white">{stats.pendingDisputes}</dd>
                         </dl>
                       </div>
                     </div>
@@ -1152,53 +1152,53 @@ export default function AdminDashboard() {
               </div>
 
               {/* Quick Actions */}
-              <div className="bg-white shadow rounded-lg overflow-hidden">
+              <div className="bg-slate-800 shadow rounded-lg overflow-hidden">
                 <div className="px-4 py-5 sm:p-6">
-                  <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">Quick Actions</h3>
+                  <h3 className="text-lg leading-6 font-medium text-white mb-4">Quick Actions</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     <button
                       onClick={() => setActiveTab('upload')}
-                      className="relative group bg-gray-50 p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-500 rounded-lg hover:bg-gray-100 transition-colors"
+                      className="relative group bg-slate-700 p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-emerald-500 rounded-lg hover:bg-slate-600 transition-colors"
                     >
                       <div>
-                        <span className="rounded-lg inline-flex p-3 bg-indigo-50 text-indigo-600 group-hover:bg-indigo-100">
+                        <span className="rounded-lg inline-flex p-3 bg-emerald-900/30 text-emerald-400 group-hover:bg-emerald-800">
                           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                           </svg>
                         </span>
                       </div>
                       <div className="mt-8">
-                        <h3 className="text-lg font-medium text-gray-900">Upload Properties</h3>
-                        <p className="mt-2 text-sm text-gray-500">Upload new property listings via CSV file</p>
+                        <h3 className="text-lg font-medium text-white">Upload Properties</h3>
+                        <p className="mt-2 text-sm text-slate-400">Upload new property listings via CSV file</p>
                       </div>
                     </button>
 
                     <button
                       onClick={() => setActiveTab('properties')}
-                      className="relative group bg-gray-50 p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-500 rounded-lg hover:bg-gray-100 transition-colors"
+                      className="relative group bg-slate-700 p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-emerald-500 rounded-lg hover:bg-slate-600 transition-colors"
                     >
                       <div>
-                        <span className="rounded-lg inline-flex p-3 bg-green-50 text-green-600 group-hover:bg-green-100">
+                        <span className="rounded-lg inline-flex p-3 bg-green-900/30 text-green-400 group-hover:bg-green-800/50">
                           <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
                             <path d="M10.707 2.293a1 1 0 00-1.414 0l-9 9a1 1 0 001.414 1.414L2 12.414V17a1 1 0 001 1h3a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1h3a1 1 0 001-1v-4.586l.293.293a1 1 0 001.414-1.414l-9-9z" />
                           </svg>
                         </span>
                       </div>
                       <div className="mt-8">
-                        <h3 className="text-lg font-medium text-gray-900">Manage Properties</h3>
-                        <p className="mt-2 text-sm text-gray-500">View, edit, and manage all property listings</p>
+                        <h3 className="text-lg font-medium text-white">Manage Properties</h3>
+                        <p className="mt-2 text-sm text-slate-400">View, edit, and manage all property listings</p>
                       </div>
                     </button>
 
                     <button
                       onClick={() => setActiveTab('disputes')}
-                      className="relative group bg-gray-50 p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-500 rounded-lg hover:bg-gray-100 transition-colors"
+                      className="relative group bg-slate-700 p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-emerald-500 rounded-lg hover:bg-slate-600 transition-colors"
                     >
                       <div>
                         <span className={`rounded-lg inline-flex p-3 ${
                           stats.pendingDisputes > 0
-                            ? 'bg-red-50 text-red-600 group-hover:bg-red-100'
-                            : 'bg-gray-50 text-gray-600 group-hover:bg-gray-100'
+                            ? 'bg-red-900/30 text-red-400 group-hover:bg-red-800/50'
+                            : 'bg-slate-700 text-slate-400 group-hover:bg-slate-600'
                         }`}>
                           <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
@@ -1206,8 +1206,8 @@ export default function AdminDashboard() {
                         </span>
                       </div>
                       <div className="mt-8">
-                        <h3 className="text-lg font-medium text-gray-900">Resolve Disputes</h3>
-                        <p className="mt-2 text-sm text-gray-500">
+                        <h3 className="text-lg font-medium text-white">Resolve Disputes</h3>
+                        <p className="mt-2 text-sm text-slate-400">
                           {stats.pendingDisputes > 0
                             ? `${stats.pendingDisputes} pending dispute${stats.pendingDisputes > 1 ? 's' : ''}`
                             : 'No pending disputes'
@@ -1218,7 +1218,7 @@ export default function AdminDashboard() {
 
                     <a
                       href="/admin/analytics"
-                      className="relative group bg-gradient-to-br from-blue-50 to-indigo-50 p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-blue-500 rounded-lg hover:from-blue-100 hover:to-indigo-100 transition-colors"
+                      className="relative group bg-slate-700 p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-blue-500 rounded-lg hover:bg-slate-600 transition-colors"
                     >
                       <div>
                         <span className="rounded-lg inline-flex p-3 bg-blue-500 text-white group-hover:bg-blue-600">
@@ -1228,14 +1228,14 @@ export default function AdminDashboard() {
                         </span>
                       </div>
                       <div className="mt-8">
-                        <h3 className="text-lg font-medium text-gray-900">Analytics Dashboard</h3>
-                        <p className="mt-2 text-sm text-gray-600">View social media performance insights</p>
+                        <h3 className="text-lg font-medium text-white">Analytics Dashboard</h3>
+                        <p className="mt-2 text-sm text-slate-400">View social media performance insights</p>
                       </div>
                     </a>
 
                     <a
                       href="/admin/costs"
-                      className="relative group bg-gradient-to-br from-green-50 to-emerald-50 p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-green-500 rounded-lg hover:from-green-100 hover:to-emerald-100 transition-colors"
+                      className="relative group bg-slate-700 p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-green-500 rounded-lg hover:bg-slate-600 transition-colors"
                     >
                       <div>
                         <span className="rounded-lg inline-flex p-3 bg-green-500 text-white group-hover:bg-green-600">
@@ -1245,8 +1245,8 @@ export default function AdminDashboard() {
                         </span>
                       </div>
                       <div className="mt-8">
-                        <h3 className="text-lg font-medium text-gray-900">Cost Dashboard</h3>
-                        <p className="mt-2 text-sm text-gray-600">Track API costs and budget usage</p>
+                        <h3 className="text-lg font-medium text-white">Cost Dashboard</h3>
+                        <p className="mt-2 text-sm text-slate-400">Track API costs and budget usage</p>
                       </div>
                     </a>
                   </div>
@@ -1257,7 +1257,7 @@ export default function AdminDashboard() {
 
           {/* Properties Tab */}
           {activeTab === 'properties' && (
-            <Suspense fallback={<div className="flex items-center justify-center py-12"><div className="text-gray-500">Loading properties...</div></div>}>
+            <Suspense fallback={<div className="flex items-center justify-center py-12"><div className="text-slate-400">Loading properties...</div></div>}>
               <PropertiesTab
                 setEditingProperty={setEditingProperty as any}
                 setEditForm={setEditForm as any}
@@ -1269,14 +1269,14 @@ export default function AdminDashboard() {
           {activeTab === 'upload' && (
             <div className="max-w-4xl mx-auto">
               {/* Mode Toggle */}
-              <div className="bg-white shadow rounded-lg p-4 mb-6">
+              <div className="bg-slate-800 shadow rounded-lg p-4 mb-6">
                 <div className="flex space-x-3">
                   <button
                     onClick={() => { setUploadMode('csv'); setUploadResult(null); }}
                     className={`px-6 py-3 rounded-lg font-medium transition-colors ${
                       uploadMode === 'csv'
-                        ? 'bg-indigo-600 text-white'
-                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                        ? 'bg-emerald-600 text-white'
+                        : 'bg-slate-100 text-slate-300 hover:bg-slate-200'
                     }`}
                   >
                     📄 CSV Upload
@@ -1285,8 +1285,8 @@ export default function AdminDashboard() {
                     onClick={() => { setUploadMode('scraper'); setUploadResult(null); }}
                     className={`px-6 py-3 rounded-lg font-medium transition-colors ${
                       uploadMode === 'scraper'
-                        ? 'bg-indigo-600 text-white'
-                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                        ? 'bg-emerald-600 text-white'
+                        : 'bg-slate-100 text-slate-300 hover:bg-slate-200'
                     }`}
                   >
                     🤖 Zillow Scraper
@@ -1295,8 +1295,8 @@ export default function AdminDashboard() {
                     onClick={() => { setUploadMode('new-properties'); setUploadResult(null); }}
                     className={`px-6 py-3 rounded-lg font-medium transition-colors ${
                       uploadMode === 'new-properties'
-                        ? 'bg-indigo-600 text-white'
-                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                        ? 'bg-emerald-600 text-white'
+                        : 'bg-slate-100 text-slate-300 hover:bg-slate-200'
                     }`}
                   >
                     ✨ New Properties
@@ -1305,8 +1305,8 @@ export default function AdminDashboard() {
                     onClick={() => { setUploadMode('manual'); setUploadResult(null); }}
                     className={`px-6 py-3 rounded-lg font-medium transition-colors ${
                       uploadMode === 'manual'
-                        ? 'bg-indigo-600 text-white'
-                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                        ? 'bg-emerald-600 text-white'
+                        : 'bg-slate-100 text-slate-300 hover:bg-slate-200'
                     }`}
                   >
                     ✏️ Manual Entry
@@ -1316,17 +1316,17 @@ export default function AdminDashboard() {
 
               {/* CSV Upload Mode */}
               {uploadMode === 'csv' && (
-                <div className="bg-white shadow rounded-lg">
+                <div className="bg-slate-800 shadow rounded-lg">
                   <div className="px-4 py-5 sm:p-6">
-                    <h3 className="text-lg leading-6 font-medium text-gray-900 mb-6">Upload Property CSV File</h3>
+                    <h3 className="text-lg leading-6 font-medium text-white mb-6">Upload Property CSV File</h3>
 
-                    <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                    <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-slate-600 border-dashed rounded-md">
                       <div className="space-y-1 text-center">
-                        <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                        <svg className="mx-auto h-12 w-12 text-slate-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
                           <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
-                        <div className="flex text-sm text-gray-600">
-                          <label htmlFor="file-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500">
+                        <div className="flex text-sm text-slate-400">
+                          <label htmlFor="file-upload" className="relative cursor-pointer bg-slate-800 rounded-md font-medium text-emerald-400 hover:text-emerald-300 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500">
                             <span>{file ? file.name : 'Upload a file'}</span>
                             <input
                               id="file-upload"
@@ -1339,7 +1339,7 @@ export default function AdminDashboard() {
                           </label>
                           <p className="pl-1">or drag and drop</p>
                         </div>
-                        <p className="text-xs text-gray-500">CSV files only</p>
+                        <p className="text-xs text-slate-400">CSV files only</p>
                       </div>
                     </div>
 
@@ -1348,7 +1348,7 @@ export default function AdminDashboard() {
                         <button
                           onClick={handleUpload}
                           disabled={uploading}
-                          className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-gray-400"
+                          className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:bg-slate-600"
                         >
                           {uploading ? 'Uploading...' : 'Upload Properties'}
                         </button>
@@ -1394,8 +1394,8 @@ export default function AdminDashboard() {
                   {/* Dropzone */}
                   <div
                     {...getRootProps()}
-                    className={`border-2 border-dashed rounded-lg p-12 text-center cursor-pointer transition-colors bg-white shadow ${
-                      isDragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-gray-400'
+                    className={`border-2 border-dashed rounded-lg p-12 text-center cursor-pointer transition-colors bg-slate-800 shadow ${
+                      isDragActive ? 'border-blue-500 bg-blue-50' : 'border-slate-600 hover:border-gray-400'
                     } ${
                       scraperProgress.status === 'uploading' || scraperProgress.status === 'scraping' ? 'opacity-50 pointer-events-none' : ''
                     }`}
@@ -1404,7 +1404,7 @@ export default function AdminDashboard() {
 
                     <div className="mb-4">
                       <svg
-                        className="mx-auto h-12 w-12 text-gray-400"
+                        className="mx-auto h-12 w-12 text-slate-400"
                         stroke="currentColor"
                         fill="none"
                         viewBox="0 0 48 48"
@@ -1423,7 +1423,7 @@ export default function AdminDashboard() {
                     ) : (
                       <div>
                         <p className="text-lg mb-2">Drag & drop Excel or CSV files here</p>
-                        <p className="text-sm text-gray-500">or click to select files (multiple files supported)</p>
+                        <p className="text-sm text-slate-400">or click to select files (multiple files supported)</p>
                       </div>
                     )}
                   </div>
@@ -1431,7 +1431,7 @@ export default function AdminDashboard() {
                   {/* Progress */}
                   {scraperProgress.status !== 'idle' && (
                     <div
-                      className={`p-6 rounded-lg border-2 bg-white shadow ${
+                      className={`p-6 rounded-lg border-2 bg-slate-800 shadow ${
                         scraperProgress.status === 'error'
                           ? 'bg-red-50 border-red-200'
                           : scraperProgress.status === 'complete'
@@ -1479,7 +1479,7 @@ export default function AdminDashboard() {
 
                           <div className="mt-3 space-y-1">
                             {scraperProgress.urlsFound !== undefined && (
-                              <p className="text-sm text-gray-700">
+                              <p className="text-sm text-slate-300">
                                 <span className="font-medium">URLs in file:</span> {scraperProgress.urlsFound}
                               </p>
                             )}
@@ -1503,7 +1503,7 @@ export default function AdminDashboard() {
                             )}
 
                             {scraperProgress.propertiesScraped !== undefined && (
-                              <p className="text-sm text-gray-700 mt-2">
+                              <p className="text-sm text-slate-300 mt-2">
                                 <span className="font-medium">Properties imported:</span> {scraperProgress.propertiesScraped}
                                 {scraperProgress.total && ` / ${scraperProgress.total}`}
                               </p>
@@ -1515,14 +1515,14 @@ export default function AdminDashboard() {
                   )}
 
                   {/* Instructions */}
-                  <div className="bg-gray-50 p-6 rounded-lg shadow">
+                  <div className="bg-slate-700 p-6 rounded-lg shadow">
                     <h2 className="text-lg font-semibold mb-3">How it works</h2>
-                    <ol className="list-decimal list-inside space-y-2 text-gray-700">
+                    <ol className="list-decimal list-inside space-y-2 text-slate-300">
                       <li>Upload one or multiple CSV/Excel files containing Zillow property URLs</li>
                       <li>The system combines all files and automatically removes duplicates</li>
                       <li>Checks against existing properties in the database</li>
                       <li>Only new properties are sent to Apify for scraping</li>
-                      <li>All data is saved to the <code className="bg-gray-200 px-2 py-1 rounded">zillow_imports</code> collection</li>
+                      <li>All data is saved to the <code className="bg-slate-600 px-2 py-1 rounded">zillow_imports</code> collection</li>
                       <li>Review imported properties in Firebase before moving to production</li>
                     </ol>
 
@@ -1555,11 +1555,11 @@ export default function AdminDashboard() {
               {uploadMode === 'new-properties' && (
                 <div className="space-y-6">
                   {/* Header with Retry Button */}
-                  <div className="bg-white shadow rounded-lg p-6">
+                  <div className="bg-slate-800 shadow rounded-lg p-6">
                     <div className="flex justify-between items-center mb-4">
                       <div>
-                        <h3 className="text-lg leading-6 font-medium text-gray-900">⚠️ Failed GHL Webhook Sends</h3>
-                        <p className="mt-1 text-sm text-gray-500">
+                        <h3 className="text-lg leading-6 font-medium text-white">⚠️ Failed GHL Webhook Sends</h3>
+                        <p className="mt-1 text-sm text-slate-400">
                           Properties that failed to send to GoHighLevel - {newPropertiesData.length} total
                         </p>
                       </div>
@@ -1567,7 +1567,7 @@ export default function AdminDashboard() {
                         <button
                           onClick={handleSendToGHL}
                           disabled={sendingToGHL || newPropertiesData.length === 0}
-                          className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                          className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:bg-slate-600 disabled:cursor-not-allowed transition-colors"
                         >
                           {sendingToGHL ? 'Retrying...' : '🔄 Retry Send to GHL'}
                         </button>
@@ -1577,7 +1577,7 @@ export default function AdminDashboard() {
                     {/* Loading State */}
                     {loadingNewProperties && (
                       <div className="text-center py-12">
-                        <div className="animate-spin inline-block h-8 w-8 border-4 border-indigo-600 border-t-transparent rounded-full"></div>
+                        <div className="animate-spin inline-block h-8 w-8 border-4 border-emerald-400 border-t-transparent rounded-full"></div>
                         <p className="mt-4 text-gray-600">Loading failed properties...</p>
                       </div>
                     )}
@@ -1586,7 +1586,7 @@ export default function AdminDashboard() {
                     {!loadingNewProperties && newPropertiesData.length === 0 && (
                       <div className="text-center py-12">
                         <p className="text-green-600 font-medium">✅ No failed sends!</p>
-                        <p className="text-sm text-gray-400 mt-2">All properties with contact info have been successfully sent to GHL.</p>
+                        <p className="text-sm text-slate-400 mt-2">All properties with contact info have been successfully sent to GHL.</p>
                       </div>
                     )}
 
@@ -1594,72 +1594,72 @@ export default function AdminDashboard() {
                     {!loadingNewProperties && newPropertiesData.length > 0 && (
                       <div className="overflow-x-auto">
                         <table className="min-w-full divide-y divide-gray-200">
-                          <thead className="bg-gray-50">
+                          <thead className="bg-slate-700">
                             <tr>
-                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
                                 Address
                               </th>
-                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
                                 City
                               </th>
-                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
                                 State
                               </th>
-                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
                                 Price
                               </th>
-                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
                                 Beds
                               </th>
-                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
                                 Baths
                               </th>
-                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
                                 Sq Ft
                               </th>
-                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
                                 Type
                               </th>
-                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              <th className="px-4 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">
                                 Imported
                               </th>
                             </tr>
                           </thead>
-                          <tbody className="bg-white divide-y divide-gray-200">
+                          <tbody className="bg-slate-800 divide-y divide-gray-200">
                             {newPropertiesData.map((property) => (
-                              <tr key={property.id} className="hover:bg-gray-50">
-                                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                              <tr key={property.id} className="hover:bg-slate-700">
+                                <td className="px-4 py-4 whitespace-nowrap text-sm text-white">
                                   <a
                                     href={property.url}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="text-indigo-600 hover:text-indigo-900 hover:underline"
+                                    className="text-emerald-400 hover:text-emerald-300 hover:underline"
                                   >
                                     {property.streetAddress || property.fullAddress || 'N/A'}
                                   </a>
                                 </td>
-                                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <td className="px-4 py-4 whitespace-nowrap text-sm text-slate-400">
                                   {property.city || 'N/A'}
                                 </td>
-                                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <td className="px-4 py-4 whitespace-nowrap text-sm text-slate-400">
                                   {property.state || 'N/A'}
                                 </td>
-                                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
+                                <td className="px-4 py-4 whitespace-nowrap text-sm text-white font-medium">
                                   ${property.price?.toLocaleString() || 'N/A'}
                                 </td>
-                                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <td className="px-4 py-4 whitespace-nowrap text-sm text-slate-400">
                                   {property.bedrooms || 'N/A'}
                                 </td>
-                                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <td className="px-4 py-4 whitespace-nowrap text-sm text-slate-400">
                                   {property.bathrooms || 'N/A'}
                                 </td>
-                                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <td className="px-4 py-4 whitespace-nowrap text-sm text-slate-400">
                                   {property.squareFoot?.toLocaleString() || 'N/A'}
                                 </td>
-                                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <td className="px-4 py-4 whitespace-nowrap text-sm text-slate-400">
                                   {property.buildingType || 'N/A'}
                                 </td>
-                                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <td className="px-4 py-4 whitespace-nowrap text-sm text-slate-400">
                                   {(() => {
                                     const ts = property.importedAt as any;
                                     if (!ts) return 'N/A';
@@ -1691,9 +1691,9 @@ export default function AdminDashboard() {
 
               {/* Manual Entry Mode */}
               {uploadMode === 'manual' && (
-                <div className="bg-white shadow rounded-lg">
+                <div className="bg-slate-800 shadow rounded-lg">
                   <div className="px-4 py-5 sm:p-6">
-                    <h3 className="text-lg leading-6 font-medium text-gray-900 mb-6">Add Property Manually</h3>
+                    <h3 className="text-lg leading-6 font-medium text-white mb-6">Add Property Manually</h3>
 
                     <form onSubmit={async (e) => {
                       e.preventDefault();
@@ -1728,64 +1728,64 @@ export default function AdminDashboard() {
                       }
                     }} className="space-y-6">
                       {/* Address Section */}
-                      <div className="border-b border-gray-200 pb-6">
-                        <h4 className="text-md font-semibold text-gray-900 mb-4">Address & Location</h4>
+                      <div className="border-b border-slate-700 pb-6">
+                        <h4 className="text-md font-semibold text-white mb-4">Address & Location</h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div className="md:col-span-2">
-                            <label className="block text-sm font-medium text-gray-700">Street Address *</label>
+                            <label className="block text-sm font-medium text-slate-300">Street Address *</label>
                             <input
                               type="text"
                               required
                               value={manualPropertyData.address || ''}
                               onChange={(e) => setManualPropertyData({ ...manualPropertyData, address: e.target.value })}
-                              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                              className="mt-1 block w-full border border-slate-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
                             />
                           </div>
                           <div>
-                            <label className="block text-sm font-medium text-gray-700">City *</label>
+                            <label className="block text-sm font-medium text-slate-300">City *</label>
                             <input
                               type="text"
                               required
                               value={manualPropertyData.city || ''}
                               onChange={(e) => setManualPropertyData({ ...manualPropertyData, city: e.target.value })}
-                              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                              className="mt-1 block w-full border border-slate-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
                             />
                           </div>
                           <div>
-                            <label className="block text-sm font-medium text-gray-700">State *</label>
+                            <label className="block text-sm font-medium text-slate-300">State *</label>
                             <input
                               type="text"
                               required
                               maxLength={2}
                               value={manualPropertyData.state || ''}
                               onChange={(e) => setManualPropertyData({ ...manualPropertyData, state: e.target.value.toUpperCase() })}
-                              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                              className="mt-1 block w-full border border-slate-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
                             />
                           </div>
                           <div>
-                            <label className="block text-sm font-medium text-gray-700">ZIP Code *</label>
+                            <label className="block text-sm font-medium text-slate-300">ZIP Code *</label>
                             <input
                               type="text"
                               required
                               value={manualPropertyData.zipCode || ''}
                               onChange={(e) => setManualPropertyData({ ...manualPropertyData, zipCode: e.target.value })}
-                              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                              className="mt-1 block w-full border border-slate-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
                             />
                           </div>
                         </div>
                       </div>
 
                       {/* Property Details */}
-                      <div className="border-b border-gray-200 pb-6">
-                        <h4 className="text-md font-semibold text-gray-900 mb-4">Property Details</h4>
+                      <div className="border-b border-slate-700 pb-6">
+                        <h4 className="text-md font-semibold text-white mb-4">Property Details</h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
-                            <label className="block text-sm font-medium text-gray-700">Property Type *</label>
+                            <label className="block text-sm font-medium text-slate-300">Property Type *</label>
                             <select
                               required
                               value={manualPropertyData.propertyType || 'single-family'}
                               onChange={(e) => setManualPropertyData({ ...manualPropertyData, propertyType: e.target.value })}
-                              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                              className="mt-1 block w-full border border-slate-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
                             >
                               <option value="single-family">Single Family</option>
                               <option value="condo">Condo</option>
@@ -1796,18 +1796,18 @@ export default function AdminDashboard() {
                             </select>
                           </div>
                           <div>
-                            <label className="block text-sm font-medium text-gray-700">Bedrooms *</label>
+                            <label className="block text-sm font-medium text-slate-300">Bedrooms *</label>
                             <input
                               type="number"
                               required
                               min="0"
                               value={manualPropertyData.bedrooms || ''}
                               onChange={(e) => setManualPropertyData({ ...manualPropertyData, bedrooms: e.target.value })}
-                              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                              className="mt-1 block w-full border border-slate-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
                             />
                           </div>
                           <div>
-                            <label className="block text-sm font-medium text-gray-700">Bathrooms *</label>
+                            <label className="block text-sm font-medium text-slate-300">Bathrooms *</label>
                             <input
                               type="number"
                               required
@@ -1815,61 +1815,61 @@ export default function AdminDashboard() {
                               step="0.5"
                               value={manualPropertyData.bathrooms || ''}
                               onChange={(e) => setManualPropertyData({ ...manualPropertyData, bathrooms: e.target.value })}
-                              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                              className="mt-1 block w-full border border-slate-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
                             />
                           </div>
                           <div>
-                            <label className="block text-sm font-medium text-gray-700">Square Feet</label>
+                            <label className="block text-sm font-medium text-slate-300">Square Feet</label>
                             <input
                               type="number"
                               min="0"
                               value={manualPropertyData.squareFeet || ''}
                               onChange={(e) => setManualPropertyData({ ...manualPropertyData, squareFeet: e.target.value })}
-                              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                              className="mt-1 block w-full border border-slate-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
                             />
                           </div>
                           <div>
-                            <label className="block text-sm font-medium text-gray-700">Year Built</label>
+                            <label className="block text-sm font-medium text-slate-300">Year Built</label>
                             <input
                               type="number"
                               min="1800"
                               max={new Date().getFullYear() + 1}
                               value={manualPropertyData.yearBuilt || ''}
                               onChange={(e) => setManualPropertyData({ ...manualPropertyData, yearBuilt: e.target.value })}
-                              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                              className="mt-1 block w-full border border-slate-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
                             />
                           </div>
                         </div>
                       </div>
 
                       {/* Financial Information */}
-                      <div className="border-b border-gray-200 pb-6">
-                        <h4 className="text-md font-semibold text-gray-900 mb-4">Financial Information</h4>
+                      <div className="border-b border-slate-700 pb-6">
+                        <h4 className="text-md font-semibold text-white mb-4">Financial Information</h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
-                            <label className="block text-sm font-medium text-gray-700">List Price * ($)</label>
+                            <label className="block text-sm font-medium text-slate-300">List Price * ($)</label>
                             <input
                               type="number"
                               required
                               min="0"
                               value={manualPropertyData.listPrice || ''}
                               onChange={(e) => setManualPropertyData({ ...manualPropertyData, listPrice: e.target.value })}
-                              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                              className="mt-1 block w-full border border-slate-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
                             />
                           </div>
                           <div>
-                            <label className="block text-sm font-medium text-gray-700">Down Payment * ($)</label>
+                            <label className="block text-sm font-medium text-slate-300">Down Payment * ($)</label>
                             <input
                               type="number"
                               required
                               min="0"
                               value={manualPropertyData.downPaymentAmount || ''}
                               onChange={(e) => setManualPropertyData({ ...manualPropertyData, downPaymentAmount: e.target.value })}
-                              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                              className="mt-1 block w-full border border-slate-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
                             />
                           </div>
                           <div>
-                            <label className="block text-sm font-medium text-gray-700">Down Payment * (%)</label>
+                            <label className="block text-sm font-medium text-slate-300">Down Payment * (%)</label>
                             <input
                               type="number"
                               required
@@ -1878,22 +1878,22 @@ export default function AdminDashboard() {
                               step="0.1"
                               value={manualPropertyData.downPaymentPercent || ''}
                               onChange={(e) => setManualPropertyData({ ...manualPropertyData, downPaymentPercent: e.target.value })}
-                              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                              className="mt-1 block w-full border border-slate-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
                             />
                           </div>
                           <div>
-                            <label className="block text-sm font-medium text-gray-700">Monthly Payment * ($)</label>
+                            <label className="block text-sm font-medium text-slate-300">Monthly Payment * ($)</label>
                             <input
                               type="number"
                               required
                               min="0"
                               value={manualPropertyData.monthlyPayment || ''}
                               onChange={(e) => setManualPropertyData({ ...manualPropertyData, monthlyPayment: e.target.value })}
-                              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                              className="mt-1 block w-full border border-slate-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
                             />
                           </div>
                           <div>
-                            <label className="block text-sm font-medium text-gray-700">Interest Rate * (%)</label>
+                            <label className="block text-sm font-medium text-slate-300">Interest Rate * (%)</label>
                             <input
                               type="number"
                               required
@@ -1902,11 +1902,11 @@ export default function AdminDashboard() {
                               step="0.01"
                               value={manualPropertyData.interestRate || ''}
                               onChange={(e) => setManualPropertyData({ ...manualPropertyData, interestRate: e.target.value })}
-                              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                              className="mt-1 block w-full border border-slate-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
                             />
                           </div>
                           <div>
-                            <label className="block text-sm font-medium text-gray-700">Term * (Years)</label>
+                            <label className="block text-sm font-medium text-slate-300">Term * (Years)</label>
                             <input
                               type="number"
                               required
@@ -1914,33 +1914,33 @@ export default function AdminDashboard() {
                               max="50"
                               value={manualPropertyData.termYears || ''}
                               onChange={(e) => setManualPropertyData({ ...manualPropertyData, termYears: e.target.value })}
-                              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                              className="mt-1 block w-full border border-slate-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
                             />
                           </div>
                         </div>
                       </div>
 
                       {/* Description & Images */}
-                      <div className="border-b border-gray-200 pb-6">
-                        <h4 className="text-md font-semibold text-gray-900 mb-4">Description & Media</h4>
+                      <div className="border-b border-slate-700 pb-6">
+                        <h4 className="text-md font-semibold text-white mb-4">Description & Media</h4>
                         <div className="space-y-4">
                           <div>
-                            <label className="block text-sm font-medium text-gray-700">Description</label>
+                            <label className="block text-sm font-medium text-slate-300">Description</label>
                             <textarea
                               rows={4}
                               value={manualPropertyData.description || ''}
                               onChange={(e) => setManualPropertyData({ ...manualPropertyData, description: e.target.value })}
-                              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                              className="mt-1 block w-full border border-slate-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
                               placeholder="Property description..."
                             />
                           </div>
                           <div>
-                            <label className="block text-sm font-medium text-gray-700">Image URLs (comma-separated)</label>
+                            <label className="block text-sm font-medium text-slate-300">Image URLs (comma-separated)</label>
                             <textarea
                               rows={2}
                               value={manualPropertyData.imageUrls || ''}
                               onChange={(e) => setManualPropertyData({ ...manualPropertyData, imageUrls: e.target.value })}
-                              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                              className="mt-1 block w-full border border-slate-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
                               placeholder="https://example.com/image1.jpg, https://example.com/image2.jpg"
                             />
                           </div>
@@ -1959,14 +1959,14 @@ export default function AdminDashboard() {
                               priority: 5
                             });
                           }}
-                          className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                          className="px-4 py-2 border border-slate-600 rounded-md shadow-sm text-sm font-medium text-slate-300 bg-slate-800 hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
                         >
                           Reset Form
                         </button>
                         <button
                           type="submit"
                           disabled={uploading}
-                          className="px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-gray-400"
+                          className="px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:bg-slate-600"
                         >
                           {uploading ? 'Creating...' : 'Create Property'}
                         </button>
@@ -2011,11 +2011,11 @@ export default function AdminDashboard() {
 
           {/* Buyers Tab */}
           {activeTab === 'buyers' && (
-            <div className="bg-white shadow rounded-lg">
+            <div className="bg-slate-800 shadow rounded-lg">
               <div className="px-4 py-5 sm:p-6">
                 {/* Filter Section */}
-                <div className="mb-6 bg-gray-50 p-4 rounded-lg">
-                  <h4 className="text-sm font-medium text-gray-900 mb-3">🔍 Filter Buyers</h4>
+                <div className="mb-6 bg-slate-700 p-4 rounded-lg">
+                  <h4 className="text-sm font-medium text-white mb-3">🔍 Filter Buyers</h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs text-gray-600 mb-1">City</label>
@@ -2024,7 +2024,7 @@ export default function AdminDashboard() {
                         value={cityFilter}
                         onChange={(e) => setCityFilter(e.target.value)}
                         placeholder="Enter city name (e.g., Memphis, Dallas...)"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
+                        className="w-full px-3 py-2 border border-slate-600 rounded-md text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
                       />
                     </div>
                     <div>
@@ -2034,14 +2034,14 @@ export default function AdminDashboard() {
                         value={stateFilter}
                         onChange={(e) => setStateFilter(e.target.value)}
                         placeholder="Enter state (e.g., TX, TN, CA...)"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
+                        className="w-full px-3 py-2 border border-slate-600 rounded-md text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
                         maxLength={2}
                       />
                     </div>
                   </div>
                   {(cityFilter || stateFilter) && (
                     <div className="mt-3 flex items-center justify-between">
-                      <span className="text-sm text-gray-600">
+                      <span className="text-sm text-slate-400">
                         Showing {filteredBuyers.length} of {buyers.length} buyers
                       </span>
                       <button
@@ -2049,7 +2049,7 @@ export default function AdminDashboard() {
                           setCityFilter('');
                           setStateFilter('');
                         }}
-                        className="text-sm text-indigo-600 hover:text-indigo-700"
+                        className="text-sm text-emerald-400 hover:text-emerald-400"
                       >
                         ✕ Clear filters
                       </button>
@@ -2059,8 +2059,8 @@ export default function AdminDashboard() {
 
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-4">
-                    <h3 className="text-lg leading-6 font-medium text-gray-900">Registered Buyers</h3>
-                    <label className="flex items-center gap-2 text-sm text-gray-600">
+                    <h3 className="text-lg leading-6 font-medium text-white">Registered Buyers</h3>
+                    <label className="flex items-center gap-2 text-sm text-slate-400">
                       <input
                         type="checkbox"
                         checked={filteredBuyers.length > 0 && selectedBuyers.length === filteredBuyers.length}
@@ -2071,12 +2071,12 @@ export default function AdminDashboard() {
                             setSelectedBuyers(filteredBuyers.map(b => b.userId));
                           }
                         }}
-                        className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                        className="h-4 w-4 rounded border-slate-600 text-emerald-400 focus:ring-indigo-500"
                       />
                       Select All
                     </label>
                     {selectedBuyers.length > 0 && (
-                      <span className="text-sm text-gray-500">
+                      <span className="text-sm text-slate-400">
                         {selectedBuyers.length} selected
                       </span>
                     )}
@@ -2115,24 +2115,24 @@ export default function AdminDashboard() {
                     <button
                       onClick={fetchBuyers}
                       disabled={loadingBuyers}
-                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-gray-400"
+                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:bg-slate-600"
                     >
                       {loadingBuyers ? 'Loading...' : 'Refresh'}
                     </button>
                   </div>
                 </div>
 
-                <div className="overflow-x-auto bg-white shadow sm:rounded-lg">
+                <div className="overflow-x-auto bg-slate-800 shadow sm:rounded-lg">
                   <table className="min-w-full divide-y divide-gray-200">
                     {/* Table Header */}
-                    <thead className="bg-gray-50">
+                    <thead className="bg-slate-700">
                       <tr>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12">
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider w-12">
                           {/* Checkbox column */}
                         </th>
                         <th
                           scope="col"
-                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                          className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                           onClick={() => {
                             if (buyerSortField === 'name') {
                               setBuyerSortDirection(buyerSortDirection === 'asc' ? 'desc' : 'asc');
@@ -2151,7 +2151,7 @@ export default function AdminDashboard() {
                         </th>
                         <th
                           scope="col"
-                          className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 w-24"
+                          className="px-6 py-3 text-center text-xs font-medium text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 w-24"
                           onClick={() => {
                             if (buyerSortField === 'matched') {
                               setBuyerSortDirection(buyerSortDirection === 'asc' ? 'desc' : 'asc');
@@ -2170,7 +2170,7 @@ export default function AdminDashboard() {
                         </th>
                         <th
                           scope="col"
-                          className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 w-24"
+                          className="px-6 py-3 text-center text-xs font-medium text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 w-24"
                           onClick={() => {
                             if (buyerSortField === 'liked') {
                               setBuyerSortDirection(buyerSortDirection === 'asc' ? 'desc' : 'asc');
@@ -2189,7 +2189,7 @@ export default function AdminDashboard() {
                         </th>
                         <th
                           scope="col"
-                          className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 w-32"
+                          className="px-6 py-3 text-center text-xs font-medium text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 w-32"
                           onClick={() => {
                             if (buyerSortField === 'budget') {
                               setBuyerSortDirection(buyerSortDirection === 'asc' ? 'desc' : 'asc');
@@ -2208,7 +2208,7 @@ export default function AdminDashboard() {
                         </th>
                         <th
                           scope="col"
-                          className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 w-32"
+                          className="px-6 py-3 text-center text-xs font-medium text-slate-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 w-32"
                           onClick={() => {
                             if (buyerSortField === 'downpay') {
                               setBuyerSortDirection(buyerSortDirection === 'asc' ? 'desc' : 'asc');
@@ -2228,7 +2228,7 @@ export default function AdminDashboard() {
                       </tr>
                     </thead>
                     {/* Table Body */}
-                    <tbody className="bg-white divide-y divide-gray-200">
+                    <tbody className="bg-slate-800 divide-y divide-gray-200">
                       {[...filteredBuyers].sort((a, b) => {
                         let aVal: any, bVal: any;
                         switch (buyerSortField) {
@@ -2257,7 +2257,7 @@ export default function AdminDashboard() {
                         if (aVal > bVal) return buyerSortDirection === 'asc' ? 1 : -1;
                         return 0;
                       }).map((buyer) => (
-                        <tr key={buyer.id} className="hover:bg-gray-50">
+                        <tr key={buyer.id} className="hover:bg-slate-700">
                           <td className="px-6 py-4 whitespace-nowrap">
                             <input
                               type="checkbox"
@@ -2269,48 +2269,48 @@ export default function AdminDashboard() {
                                   setSelectedBuyers(prev => [...prev, buyer.userId]);
                                 }
                               }}
-                              className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                              className="h-4 w-4 rounded border-slate-600 text-emerald-400 focus:ring-indigo-500"
                             />
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center">
                               <div className="flex-shrink-0 h-10 w-10">
                                 <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
-                                  <span className="text-sm font-medium text-gray-700">
+                                  <span className="text-sm font-medium text-slate-300">
                                     {buyer.firstName?.charAt(0).toUpperCase() || buyer.email.charAt(0).toUpperCase()}
                                   </span>
                                 </div>
                               </div>
                               <div className="ml-4">
-                                <div className="text-sm font-medium text-gray-900">
+                                <div className="text-sm font-medium text-white">
                                   {buyer.firstName && buyer.lastName ? `${buyer.firstName} ${buyer.lastName}` : buyer.email}
                                 </div>
-                                <div className="text-sm text-gray-500">{buyer.email}</div>
-                                {buyer.phone && <div className="text-sm text-gray-500">{buyer.phone}</div>}
+                                <div className="text-sm text-slate-400">{buyer.email}</div>
+                                {buyer.phone && <div className="text-sm text-slate-400">{buyer.phone}</div>}
                                 {(buyer.city || buyer.primaryCity) && (buyer.state || buyer.primaryState) && (
-                                  <div className="text-sm text-gray-500">📍 {buyer.city || buyer.primaryCity}, {buyer.state || buyer.primaryState}</div>
+                                  <div className="text-sm text-slate-400">📍 {buyer.city || buyer.primaryCity}, {buyer.state || buyer.primaryState}</div>
                                 )}
                               </div>
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-center">
-                            <div className="text-sm font-semibold text-gray-900">{buyer.matchedPropertiesCount || 0}</div>
+                            <div className="text-sm font-semibold text-white">{buyer.matchedPropertiesCount || 0}</div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-center">
-                            <div className="text-sm font-semibold text-gray-900">{buyer.likedPropertiesCount || 0}</div>
+                            <div className="text-sm font-semibold text-white">{buyer.likedPropertiesCount || 0}</div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-center">
-                            <div className="text-sm font-semibold text-gray-900">${(buyer.maxMonthlyPayment || buyer.monthlyBudget || 0).toLocaleString()}</div>
+                            <div className="text-sm font-semibold text-white">${(buyer.maxMonthlyPayment || buyer.monthlyBudget || 0).toLocaleString()}</div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-center">
-                            <div className="text-sm font-semibold text-gray-900">${(buyer.maxDownPayment || buyer.downPayment || 0).toLocaleString()}</div>
+                            <div className="text-sm font-semibold text-white">${(buyer.maxDownPayment || buyer.downPayment || 0).toLocaleString()}</div>
                           </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                   {filteredBuyers.length === 0 && (
-                    <div className="p-8 text-center text-gray-500">
+                    <div className="p-8 text-center text-slate-400">
                       {cityFilter || stateFilter ? 'No buyers found matching your filters' : 'No buyers found'}
                     </div>
                   )}
@@ -2321,20 +2321,20 @@ export default function AdminDashboard() {
 
           {/* Realtors Tab */}
           {activeTab === 'realtors' && (
-            <div className="bg-white shadow rounded-lg">
+            <div className="bg-slate-800 shadow rounded-lg">
               <div className="px-4 py-5 sm:p-6">
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg leading-6 font-medium text-gray-900">Registered Realtors</h3>
+                  <h3 className="text-lg leading-6 font-medium text-white">Registered Realtors</h3>
                   <button
                     onClick={fetchRealtors}
                     disabled={loadingRealtors}
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-gray-400"
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:bg-slate-600"
                   >
                     {loadingRealtors ? 'Loading...' : 'Refresh'}
                   </button>
                 </div>
 
-                <div className="overflow-hidden bg-white shadow sm:rounded-md">
+                <div className="overflow-hidden bg-slate-800 shadow sm:rounded-md">
                   <ul className="divide-y divide-gray-200">
                     {realtors.map((realtor) => (
                       <li key={realtor.id}>
@@ -2343,28 +2343,28 @@ export default function AdminDashboard() {
                             <div className="flex items-center">
                               <div className="flex-shrink-0">
                                 <div className="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center">
-                                  <span className="text-sm font-medium text-indigo-700">
+                                  <span className="text-sm font-medium text-emerald-400">
                                     {realtor.name.charAt(0).toUpperCase()}
                                   </span>
                                 </div>
                               </div>
                               <div className="ml-4">
-                                <div className="text-sm font-medium text-gray-900">{realtor.name}</div>
-                                <div className="text-sm text-gray-500">{realtor.email}</div>
-                                {realtor.brokerage && <div className="text-sm text-gray-500">{realtor.brokerage}</div>}
+                                <div className="text-sm font-medium text-white">{realtor.name}</div>
+                                <div className="text-sm text-slate-400">{realtor.email}</div>
+                                {realtor.brokerage && <div className="text-sm text-slate-400">{realtor.brokerage}</div>}
                                 {realtor.city && realtor.state && (
-                                  <div className="text-sm text-gray-500">📍 {realtor.city}, {realtor.state}</div>
+                                  <div className="text-sm text-slate-400">📍 {realtor.city}, {realtor.state}</div>
                                 )}
                               </div>
                             </div>
                             <div className="flex items-center space-x-8">
                               <div className="text-center">
-                                <div className="text-lg font-semibold text-gray-900">{realtor.credits}</div>
-                                <div className="text-xs text-gray-500">Credits</div>
+                                <div className="text-lg font-semibold text-white">{realtor.credits}</div>
+                                <div className="text-xs text-slate-400">Credits</div>
                               </div>
                               <div className="text-center">
-                                <div className="text-lg font-semibold text-gray-900">{realtor.availableBuyersCount}</div>
-                                <div className="text-xs text-gray-500">Leads</div>
+                                <div className="text-lg font-semibold text-white">{realtor.availableBuyersCount}</div>
+                                <div className="text-xs text-slate-400">Leads</div>
                               </div>
                               <div className="text-center">
                                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
@@ -2394,14 +2394,14 @@ export default function AdminDashboard() {
           {activeTab === 'disputes' && (
             <div className="space-y-6">
               {disputes.map((dispute) => (
-                <div key={dispute.id} className="bg-white shadow rounded-lg">
+                <div key={dispute.id} className="bg-slate-800 shadow rounded-lg">
                   <div className="px-4 py-5 sm:p-6">
                     <div className="flex items-start justify-between mb-4">
                       <div>
-                        <h3 className="text-lg font-medium text-gray-900">
+                        <h3 className="text-lg font-medium text-white">
                           Dispute #{dispute.id.substring(0, 8)}
                         </h3>
-                        <p className="text-sm text-gray-500 mt-1">
+                        <p className="text-sm text-slate-400 mt-1">
                           Submitted: {(() => {
                             const ts = dispute.submittedAt as any;
                             if (!ts) return 'N/A';
@@ -2423,41 +2423,41 @@ export default function AdminDashboard() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                       <div>
-                        <h4 className="text-sm font-medium text-gray-900 mb-2">Realtor Information</h4>
-                        <div className="bg-gray-50 rounded-md p-3">
-                          <div className="text-sm text-gray-900 font-medium">{dispute.realtorName}</div>
-                          <div className="text-sm text-gray-600">{dispute.realtorEmail}</div>
+                        <h4 className="text-sm font-medium text-white mb-2">Realtor Information</h4>
+                        <div className="bg-slate-700 rounded-md p-3">
+                          <div className="text-sm text-white font-medium">{dispute.realtorName}</div>
+                          <div className="text-sm text-slate-400">{dispute.realtorEmail}</div>
                         </div>
                       </div>
                       <div>
-                        <h4 className="text-sm font-medium text-gray-900 mb-2">Buyer Information</h4>
-                        <div className="bg-gray-50 rounded-md p-3">
-                          <div className="text-sm text-gray-900 font-medium">{dispute.buyerName}</div>
-                          <div className="text-sm text-gray-600">{dispute.buyerPhone}</div>
-                          <div className="text-sm text-gray-600">{dispute.buyerCity}, {dispute.buyerState}</div>
+                        <h4 className="text-sm font-medium text-white mb-2">Buyer Information</h4>
+                        <div className="bg-slate-700 rounded-md p-3">
+                          <div className="text-sm text-white font-medium">{dispute.buyerName}</div>
+                          <div className="text-sm text-slate-400">{dispute.buyerPhone}</div>
+                          <div className="text-sm text-slate-400">{dispute.buyerCity}, {dispute.buyerState}</div>
                         </div>
                       </div>
                     </div>
 
                     <div className="mb-6">
-                      <h4 className="text-sm font-medium text-gray-900 mb-2">Dispute Reason</h4>
-                      <div className="bg-gray-50 rounded-md p-3">
-                        <p className="text-sm text-gray-900 font-medium">
+                      <h4 className="text-sm font-medium text-white mb-2">Dispute Reason</h4>
+                      <div className="bg-slate-700 rounded-md p-3">
+                        <p className="text-sm text-white font-medium">
                           {dispute.reason === 'no_response' ? 'No Response from Buyer' :
                            dispute.reason === 'wrong_info' ? 'Wrong/Invalid Information' :
                            dispute.reason === 'not_interested' ? 'Buyer Not Interested' :
                            dispute.reason}
                         </p>
                         {dispute.explanation && (
-                          <p className="text-sm text-gray-600 mt-2">{dispute.explanation}</p>
+                          <p className="text-sm text-slate-400 mt-2">{dispute.explanation}</p>
                         )}
                       </div>
                     </div>
 
                     {dispute.status === 'pending' && (
-                      <div className="border-t border-gray-200 pt-4">
+                      <div className="border-t border-slate-700 pt-4">
                         <div className="flex items-center space-x-4">
-                          <select className="block w-40 pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                          <select className="block w-40 pl-3 pr-10 py-2 text-base border-slate-600 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm rounded-md">
                             <option value="1">Refund 1 Credit</option>
                             <option value="2">Refund 2 Credits</option>
                             <option value="3">Refund 3 Credits</option>
@@ -2485,14 +2485,14 @@ export default function AdminDashboard() {
 
           {/* Contacts Tab */}
           {activeTab === 'contacts' && (
-            <div className="bg-white shadow rounded-lg">
+            <div className="bg-slate-800 shadow rounded-lg">
               <div className="px-4 py-5 sm:p-6">
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg leading-6 font-medium text-gray-900">Contact Form Submissions</h3>
+                  <h3 className="text-lg leading-6 font-medium text-white">Contact Form Submissions</h3>
                   <button
                     onClick={fetchContacts}
                     disabled={loadingContacts}
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-gray-400"
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:bg-slate-600"
                   >
                     {loadingContacts ? 'Loading...' : 'Refresh'}
                   </button>
@@ -2500,16 +2500,16 @@ export default function AdminDashboard() {
 
                 <div className="space-y-6">
                   {contacts.map((contact) => (
-                    <div key={contact.id} className="border border-gray-200 rounded-lg p-4">
+                    <div key={contact.id} className="border border-slate-700 rounded-lg p-4">
                       <div className="flex items-start justify-between mb-3">
                         <div>
-                          <h4 className="text-sm font-medium text-gray-900">{contact.name}</h4>
-                          <div className="text-sm text-gray-600">
+                          <h4 className="text-sm font-medium text-white">{contact.name}</h4>
+                          <div className="text-sm text-slate-400">
                             <div>{contact.email}</div>
                             {contact.phone && <div>{contact.phone}</div>}
                           </div>
                         </div>
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-slate-400">
                           {(() => {
                             const ts = contact.createdAt as any;
                             if (!ts) return 'N/A';
@@ -2519,8 +2519,8 @@ export default function AdminDashboard() {
                           })()}
                         </span>
                       </div>
-                      <div className="bg-gray-50 rounded-md p-3">
-                        <p className="text-sm text-gray-700">{contact.message}</p>
+                      <div className="bg-slate-700 rounded-md p-3">
+                        <p className="text-sm text-slate-300">{contact.message}</p>
                       </div>
                     </div>
                   ))}
@@ -2533,21 +2533,21 @@ export default function AdminDashboard() {
           {activeTab === 'social' && (
             <div className="space-y-6">
               {/* Social Media Dashboard Component */}
-              <div className="bg-white rounded-lg shadow p-4">
+              <div className="bg-slate-800 rounded-lg shadow p-4">
                 <h3 className="text-lg font-semibold mb-4">Social Media Automation</h3>
                 <iframe
                   src="/admin/social-dashboard"
-                  className="w-full h-[calc(50vh-150px)] border-0 rounded-lg shadow-lg bg-white"
+                  className="w-full h-[calc(50vh-150px)] border-0 rounded-lg shadow-lg bg-slate-800"
                   title="Social Media Dashboard"
                 />
               </div>
 
               {/* Articles Queue Dashboard Component */}
-              <div className="bg-white rounded-lg shadow p-4">
+              <div className="bg-slate-800 rounded-lg shadow p-4">
                 <h3 className="text-lg font-semibold mb-4">Article Queue Management</h3>
                 <iframe
                   src="/admin/articles"
-                  className="w-full h-[calc(50vh-150px)] border-0 rounded-lg shadow-lg bg-white"
+                  className="w-full h-[calc(50vh-150px)] border-0 rounded-lg shadow-lg bg-slate-800"
                   title="Articles Queue Dashboard"
                 />
               </div>
@@ -2556,24 +2556,29 @@ export default function AdminDashboard() {
 
           {/* Cash Houses Tab */}
           {activeTab === 'cash-houses' && (
-            <div className="bg-white shadow rounded-lg">
+            <div className="bg-slate-800 shadow rounded-lg">
               <div className="px-4 py-5 sm:p-6">
                 <div className="flex items-center justify-between mb-6">
                   <div>
-                    <h3 className="text-lg leading-6 font-medium text-gray-900">Cash Houses - Investor Opportunities</h3>
-                    <p className="mt-1 text-sm text-gray-500">Properties for investors: discounted deals, owner finance, and fixer-uppers</p>
+                    <div className="flex items-center gap-3">
+                      <h3 className="text-lg leading-6 font-medium text-white">Cash Houses - Investor Opportunities</h3>
+                      <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-emerald-600/20 text-emerald-400 border border-emerald-600/30">
+                        Under $300K
+                      </span>
+                    </div>
+                    <p className="mt-1 text-sm text-slate-400">Properties for investors: discounted deals, owner finance, and fixer-uppers</p>
                   </div>
                   <button
                     onClick={fetchCashHouses}
                     disabled={loadingCashHouses}
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-gray-400"
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:bg-slate-600"
                   >
                     {loadingCashHouses ? 'Loading...' : 'Refresh'}
                   </button>
                 </div>
 
                 {/* Filter Tabs */}
-                <div className="border-b border-gray-200 mb-6">
+                <div className="border-b border-slate-700 mb-6">
                   <nav className="-mb-px flex space-x-8" aria-label="Tabs">
                     {[
                       { key: 'all', label: 'All Properties', icon: '🏘️' },
@@ -2586,8 +2591,8 @@ export default function AdminDashboard() {
                         onClick={() => setCashHousesFilter(filter.key as any)}
                         className={`${
                           cashHousesFilter === filter.key
-                            ? 'border-indigo-500 text-indigo-600'
-                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                            ? 'border-indigo-500 text-emerald-400'
+                            : 'border-transparent text-slate-400 hover:text-slate-300 hover:border-slate-600'
                         } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2`}
                       >
                         <span>{filter.icon}</span>
@@ -2607,24 +2612,24 @@ export default function AdminDashboard() {
                         placeholder="Search city..."
                         value={cashHousesCitySearch}
                         onChange={(e) => setCashHousesCitySearch(e.target.value)}
-                        className="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm px-3 py-1.5 w-40"
+                        className="rounded-md border-slate-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm px-3 py-1.5 w-40"
                       />
                       {cashHousesCitySearch && (
                         <button
                           onClick={() => setCashHousesCitySearch('')}
-                          className="text-gray-400 hover:text-gray-600 text-sm"
+                          className="text-slate-400 hover:text-gray-600 text-sm"
                         >
                           Clear
                         </button>
                       )}
                     </div>
                     {/* Sort */}
-                    <label className="text-sm font-medium text-gray-700">
+                    <label className="text-sm font-medium text-slate-300">
                       Sort by:
                       <select
                         value={cashHousesSortBy}
                         onChange={(e) => setCashHousesSortBy(e.target.value as any)}
-                        className="ml-2 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+                        className="ml-2 rounded-md border-slate-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
                       >
                         <option value="arv_pct_asc">Lowest % of ARV</option>
                         <option value="arv_pct_desc">Highest % of ARV</option>
@@ -2646,11 +2651,17 @@ export default function AdminDashboard() {
 
                 {loadingCashHouses ? (
                   <div className="flex items-center justify-center h-64">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-400"></div>
                   </div>
                 ) : (() => {
                   // Filter cash houses based on selected filter and city search
+                  // GLOBAL: Max $300K asking price for all Cash Houses
+                  const MAX_ASKING_PRICE = 300000;
+
                   let filteredHouses = cashHouses.filter(house => {
+                    // Always filter out properties over $300K
+                    if (house.price > MAX_ASKING_PRICE) return false;
+
                     // City search filter (case-insensitive, partial match)
                     if (cashHousesCitySearch) {
                       const searchLower = cashHousesCitySearch.toLowerCase();
@@ -2706,12 +2717,12 @@ export default function AdminDashboard() {
                   const allSelected = filteredHouses.length > 0 && filteredHouses.every(h => selectedCashHouses.has(h.id));
 
                   return filteredHouses.length === 0 ? (
-                    <div className="bg-gray-50 rounded-lg p-8 text-center">
-                      <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="bg-slate-700 rounded-lg p-8 text-center">
+                      <svg className="mx-auto h-12 w-12 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                       </svg>
-                      <h3 className="mt-2 text-sm font-medium text-gray-900">No Properties Found</h3>
-                      <p className="mt-1 text-sm text-gray-500">
+                      <h3 className="mt-2 text-sm font-medium text-white">No Properties Found</h3>
+                      <p className="mt-1 text-sm text-slate-400">
                         {cashHousesCitySearch && `No properties found in "${cashHousesCitySearch}"`}
                         {!cashHousesCitySearch && cashHousesFilter === 'all' && 'No properties in queue. Run the scraper to add deals.'}
                         {!cashHousesCitySearch && cashHousesFilter === 'discount' && 'No discount deals found (under 80% ARV, non-owner finance)'}
@@ -2722,7 +2733,7 @@ export default function AdminDashboard() {
                   ) : (
                     <div className="overflow-x-auto">
                       <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
+                        <thead className="bg-slate-700">
                           <tr>
                             <th className="px-3 py-3 text-left">
                               <input
@@ -2735,27 +2746,27 @@ export default function AdminDashboard() {
                                     setSelectedCashHouses(new Set());
                                   }
                                 }}
-                                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                                className="h-4 w-4 text-emerald-400 focus:ring-indigo-500 border-slate-600 rounded"
                               />
                             </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Property</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Zestimate / 80%</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Discount %</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cash Flow</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CoC %</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Details</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Property</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Price</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Zestimate / 80%</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Discount %</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Cash Flow</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">CoC %</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Type</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Details</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Actions</th>
                           </tr>
                         </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
+                        <tbody className="bg-slate-800 divide-y divide-gray-200">
                           {filteredHouses.map((house) => {
                             const isSelected = selectedCashHouses.has(house.id);
                             const discountPct = house.discountPercentage || 0;
                             const isDiscount = discountPct > 0;
                             return (
-                          <tr key={house.id} className={`hover:bg-gray-50 ${isSelected ? 'bg-indigo-50' : ''}`}>
+                          <tr key={house.id} className={`hover:bg-slate-700 ${isSelected ? 'bg-emerald-900/30' : ''}`}>
                             <td className="px-3 py-4">
                               <input
                                 type="checkbox"
@@ -2769,7 +2780,7 @@ export default function AdminDashboard() {
                                   }
                                   setSelectedCashHouses(newSelected);
                                 }}
-                                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                                className="h-4 w-4 text-emerald-400 focus:ring-indigo-500 border-slate-600 rounded"
                               />
                             </td>
                             <td className="px-6 py-4">
@@ -2784,9 +2795,9 @@ export default function AdminDashboard() {
                                   </div>
                                 )}
                                 <div>
-                                  <div className="text-sm font-medium text-gray-900">{house.streetAddress}</div>
-                                  <div className="text-sm text-gray-500">{house.city}, {house.state} {house.zipCode}</div>
-                                  <div className="text-xs text-gray-400">ZPID: {house.zpid}</div>
+                                  <div className="text-sm font-medium text-white">{house.streetAddress}</div>
+                                  <div className="text-sm text-slate-400">{house.city}, {house.state} {house.zipCode}</div>
+                                  <div className="text-xs text-slate-400">ZPID: {house.zpid}</div>
                                 </div>
                               </div>
                             </td>
@@ -2796,10 +2807,10 @@ export default function AdminDashboard() {
                               </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm text-gray-900">
+                              <div className="text-sm text-white">
                                 ${house.estimate?.toLocaleString() || 'N/A'}
                               </div>
-                              <div className="text-xs text-gray-500">
+                              <div className="text-xs text-slate-400">
                                 80% = ${house.eightyPercentOfZestimate?.toLocaleString() || 'N/A'}
                               </div>
                             </td>
@@ -2820,12 +2831,12 @@ export default function AdminDashboard() {
                                   <span className={`font-semibold ${house.cashFlow.monthlyCashFlow > 0 ? 'text-green-600' : 'text-red-600'}`}>
                                     ${house.cashFlow.monthlyCashFlow?.toLocaleString()}/mo
                                   </span>
-                                  <div className="text-xs text-gray-500">
+                                  <div className="text-xs text-slate-400">
                                     ${house.cashFlow.annualCashFlow?.toLocaleString()}/yr
                                   </div>
                                 </div>
                               ) : (
-                                <span className="text-gray-400 text-sm">-</span>
+                                <span className="text-slate-400 text-sm">-</span>
                               )}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
@@ -2834,7 +2845,7 @@ export default function AdminDashboard() {
                                   {house.cashFlow.cocReturn}%
                                 </span>
                               ) : (
-                                <span className="text-gray-400 text-sm">-</span>
+                                <span className="text-slate-400 text-sm">-</span>
                               )}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
@@ -2855,13 +2866,13 @@ export default function AdminDashboard() {
                                   </span>
                                 )}
                                 {house.needsWork && house.needsWorkKeywords && house.needsWorkKeywords.length > 0 && (
-                                  <div className="text-xs text-gray-500 mt-1">
+                                  <div className="text-xs text-slate-400 mt-1">
                                     {house.needsWorkKeywords.slice(0, 3).join(', ')}
                                     {house.needsWorkKeywords.length > 3 && '...'}
                                   </div>
                                 )}
                                 {house.source && (
-                                  <div className="text-xs text-gray-400">
+                                  <div className="text-xs text-slate-400">
                                     {house.source === 'zillow_scraper' && 'Zillow'}
                                     {house.source === 'cash_deals_scraper' && 'Cash'}
                                   </div>
@@ -2869,14 +2880,14 @@ export default function AdminDashboard() {
                               </div>
                             </td>
                             <td className="px-6 py-4">
-                              <div className="text-sm text-gray-900">
+                              <div className="text-sm text-white">
                                 {house.bedrooms} bed | {house.bathrooms} bath
                               </div>
-                              <div className="text-xs text-gray-500">
+                              <div className="text-xs text-slate-400">
                                 {house.squareFoot?.toLocaleString() || 'N/A'} sqft
                               </div>
                               {house.agentPhoneNumber && (
-                                <div className="text-xs text-indigo-600 mt-1">
+                                <div className="text-xs text-emerald-400 mt-1">
                                   📞 {house.agentPhoneNumber}
                                 </div>
                               )}
@@ -2886,7 +2897,7 @@ export default function AdminDashboard() {
                                 href={house.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-indigo-600 hover:text-indigo-900 font-medium"
+                                className="text-emerald-400 hover:text-emerald-300 font-medium"
                               >
                                 View on Zillow →
                               </a>
@@ -2896,11 +2907,11 @@ export default function AdminDashboard() {
                           })}
                         </tbody>
                       </table>
-                      <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
-                        <p className="text-sm text-gray-600">
+                      <div className="px-6 py-4 bg-slate-700 border-t border-slate-700">
+                        <p className="text-sm text-slate-400">
                           Showing {filteredHouses.length} of {cashHouses.length} total properties
                           {cashHousesFilter !== 'all' && (
-                            <span className="ml-2 text-indigo-600 font-medium">
+                            <span className="ml-2 text-emerald-400 font-medium">
                               ({cashHousesFilter === 'discount' && 'Discount Deals'}
                               {cashHousesFilter === 'needs_work' && 'Needs Work'}
                               {cashHousesFilter === 'owner_finance' && 'Owner Finance'})
@@ -2947,16 +2958,16 @@ export default function AdminDashboard() {
       {/* Edit Property Modal */}
       {editingProperty && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-slate-800 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h3 className="text-2xl font-bold text-slate-900">Edit Property</h3>
-                  <p className="text-slate-600 mt-1">Update property information and details</p>
+                  <h3 className="text-2xl font-bold text-white">Edit Property</h3>
+                  <p className="text-slate-400 mt-1">Update property information and details</p>
                 </div>
                 <button
                   onClick={() => setEditingProperty(null)}
-                  className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                  className="p-2 text-slate-400 hover:text-slate-400 hover:bg-slate-700 rounded-lg transition-colors"
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -2968,75 +2979,75 @@ export default function AdminDashboard() {
                 {/* Left Column - Basic Info */}
                 <div className="space-y-6">
                   <div>
-                    <h4 className="text-lg font-semibold text-slate-900 mb-4">Property Details</h4>
+                    <h4 className="text-lg font-semibold text-white mb-4">Property Details</h4>
                     <div className="space-y-4">
                       <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-2">Address</label>
+                        <label className="block text-sm font-medium text-slate-300 mb-2">Address</label>
                         <input
                           type="text"
                           value={editForm.address || ''}
                           onChange={(e) => setEditForm({ ...editForm, address: e.target.value })}
-                          className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                          className="w-full px-4 py-3 border border-slate-600 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
                         />
                       </div>
 
                       <div className="grid grid-cols-3 gap-4">
                         <div>
-                          <label className="block text-sm font-medium text-slate-700 mb-2">City</label>
+                          <label className="block text-sm font-medium text-slate-300 mb-2">City</label>
                           <input
                             type="text"
                             value={editForm.city || ''}
                             onChange={(e) => setEditForm({ ...editForm, city: e.target.value })}
-                            className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                            className="w-full px-4 py-3 border border-slate-600 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-slate-700 mb-2">State</label>
+                          <label className="block text-sm font-medium text-slate-300 mb-2">State</label>
                           <input
                             type="text"
                             value={editForm.state || ''}
                             onChange={(e) => setEditForm({ ...editForm, state: e.target.value })}
-                            className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                            className="w-full px-4 py-3 border border-slate-600 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-slate-700 mb-2">ZIP Code</label>
+                          <label className="block text-sm font-medium text-slate-300 mb-2">ZIP Code</label>
                           <input
                             type="text"
                             value={editForm.zipCode || ''}
                             onChange={(e) => setEditForm({ ...editForm, zipCode: e.target.value })}
-                            className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                            className="w-full px-4 py-3 border border-slate-600 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
                           />
                         </div>
                       </div>
 
                       <div className="grid grid-cols-3 gap-4">
                         <div>
-                          <label className="block text-sm font-medium text-slate-700 mb-2">Bedrooms</label>
+                          <label className="block text-sm font-medium text-slate-300 mb-2">Bedrooms</label>
                           <input
                             type="number"
                             value={editForm.bedrooms || ''}
                             onChange={(e) => setEditForm({ ...editForm, bedrooms: parseInt(e.target.value) })}
-                            className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                            className="w-full px-4 py-3 border border-slate-600 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-slate-700 mb-2">Bathrooms</label>
+                          <label className="block text-sm font-medium text-slate-300 mb-2">Bathrooms</label>
                           <input
                             type="number"
                             step="0.5"
                             value={editForm.bathrooms || ''}
                             onChange={(e) => setEditForm({ ...editForm, bathrooms: parseFloat(e.target.value) })}
-                            className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                            className="w-full px-4 py-3 border border-slate-600 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-slate-700 mb-2">Square Feet</label>
+                          <label className="block text-sm font-medium text-slate-300 mb-2">Square Feet</label>
                           <input
                             type="number"
                             value={editForm.squareFeet || ''}
                             onChange={(e) => setEditForm({ ...editForm, squareFeet: parseInt(e.target.value) })}
-                            className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                            className="w-full px-4 py-3 border border-slate-600 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
                           />
                         </div>
                       </div>
@@ -3047,10 +3058,10 @@ export default function AdminDashboard() {
                 {/* Right Column - Financial Info */}
                 <div className="space-y-6">
                   <div>
-                    <h4 className="text-lg font-semibold text-slate-900 mb-4">Financial Information</h4>
+                    <h4 className="text-lg font-semibold text-white mb-4">Financial Information</h4>
                     <div className="space-y-4">
                       <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-2">List Price</label>
+                        <label className="block text-sm font-medium text-slate-300 mb-2">List Price</label>
                         <div className="relative">
                           <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500 font-medium z-10 pointer-events-none">$</span>
                           <input
@@ -3061,14 +3072,14 @@ export default function AdminDashboard() {
                               handlePriceChange(newPrice);
                             }}
                             placeholder="169000"
-                            className="w-full pl-8 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                            className="w-full pl-8 pr-4 py-3 border border-slate-600 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
                           />
                         </div>
                       </div>
 
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-sm font-medium text-slate-700 mb-2">Monthly Payment</label>
+                          <label className="block text-sm font-medium text-slate-300 mb-2">Monthly Payment</label>
                           <div className="relative">
                             <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500 font-medium z-10 pointer-events-none">$</span>
                             <input
@@ -3076,12 +3087,12 @@ export default function AdminDashboard() {
                               value={editForm.monthlyPayment || ''}
                               onChange={(e) => setEditForm({ ...editForm, monthlyPayment: parseFloat(e.target.value) })}
                               placeholder="1092"
-                              className="w-full pl-8 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                              className="w-full pl-8 pr-4 py-3 border border-slate-600 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
                             />
                           </div>
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-slate-700 mb-2">Down Payment</label>
+                          <label className="block text-sm font-medium text-slate-300 mb-2">Down Payment</label>
                           <div className="relative">
                             <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500 font-medium z-10 pointer-events-none">$</span>
                             <input
@@ -3089,7 +3100,7 @@ export default function AdminDashboard() {
                               value={editForm.downPaymentAmount || ''}
                               onChange={(e) => setEditForm({ ...editForm, downPaymentAmount: parseFloat(e.target.value) })}
                               placeholder="16900"
-                              className="w-full pl-8 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                              className="w-full pl-8 pr-4 py-3 border border-slate-600 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
                             />
                           </div>
                         </div>
@@ -3098,7 +3109,7 @@ export default function AdminDashboard() {
                       {/* Interest Rate and Down Payment Percentage */}
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-sm font-medium text-slate-700 mb-2">Interest Rate</label>
+                          <label className="block text-sm font-medium text-slate-300 mb-2">Interest Rate</label>
                           <div className="relative">
                             <input
                               type="number"
@@ -3109,13 +3120,13 @@ export default function AdminDashboard() {
                                 handleInterestRateChange(newRate);
                               }}
                               placeholder="6.75"
-                              className="w-full pr-10 pl-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                              className="w-full pr-10 pl-4 py-3 border border-slate-600 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
                             />
                             <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-500 font-medium">%</span>
                           </div>
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-slate-700 mb-2">Down Payment %</label>
+                          <label className="block text-sm font-medium text-slate-300 mb-2">Down Payment %</label>
                           <div className="relative">
                             <input
                               type="number"
@@ -3126,7 +3137,7 @@ export default function AdminDashboard() {
                                 handleDownPaymentPercentChange(newPercent);
                               }}
                               placeholder="10"
-                              className="w-full pr-10 pl-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                              className="w-full pr-10 pl-4 py-3 border border-slate-600 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
                             />
                             <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-500 font-medium">%</span>
                           </div>
@@ -3135,7 +3146,7 @@ export default function AdminDashboard() {
 
                       {/* Term Years (Amortization) */}
                       <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-2">Amortization Term Years</label>
+                        <label className="block text-sm font-medium text-slate-300 mb-2">Amortization Term Years</label>
                         <div className="relative">
                           <input
                             type="number"
@@ -3145,7 +3156,7 @@ export default function AdminDashboard() {
                             value={editForm.termYears || ''}
                             onChange={(e) => setEditForm({ ...editForm, termYears: parseInt(e.target.value) || undefined })}
                             placeholder="Auto-calculated based on price"
-                            className="w-full pr-16 pl-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                            className="w-full pr-16 pl-4 py-3 border border-slate-600 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
                           />
                           <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-500 font-medium">years</span>
                         </div>
@@ -3154,7 +3165,7 @@ export default function AdminDashboard() {
 
                       {/* Balloon Year Term */}
                       <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-2">Balloon Year Term</label>
+                        <label className="block text-sm font-medium text-slate-300 mb-2">Balloon Year Term</label>
                         <div className="relative">
                           <input
                             type="number"
@@ -3164,7 +3175,7 @@ export default function AdminDashboard() {
                             value={editForm.balloonYears || ''}
                             onChange={(e) => setEditForm({ ...editForm, balloonYears: parseInt(e.target.value) || undefined })}
                             placeholder="5"
-                            className="w-full pr-16 pl-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                            className="w-full pr-16 pl-4 py-3 border border-slate-600 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
                           />
                           <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-500 font-medium">years</span>
                         </div>
@@ -3173,13 +3184,13 @@ export default function AdminDashboard() {
 
                       {/* Image URL Field */}
                       <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-2">Property Image URL</label>
+                        <label className="block text-sm font-medium text-slate-300 mb-2">Property Image URL</label>
                         <input
                           type="url"
                           value={editForm.imageUrl || ''}
                           onChange={(e) => setEditForm({ ...editForm, imageUrl: e.target.value })}
                           placeholder="https://example.com/image.jpg"
-                          className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                          className="w-full px-4 py-3 border border-slate-600 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
                         />
                         {(editForm.imageUrl || editingProperty.imageUrl || (editingProperty as any).imageUrls?.[0]) && (
                           <div className="mt-3">
@@ -3188,7 +3199,7 @@ export default function AdminDashboard() {
                               alt="Property preview"
                               width={300}
                               height={200}
-                              className="rounded-lg border border-slate-200 object-cover"
+                              className="rounded-lg border border-slate-700 object-cover"
                               onError={(e) => {
                                 const target = e.target as HTMLImageElement;
                                 target.src = '/placeholder-house.jpg';
@@ -3202,10 +3213,10 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              <div className="flex justify-end space-x-4 mt-8 pt-6 border-t border-slate-200">
+              <div className="flex justify-end space-x-4 mt-8 pt-6 border-t border-slate-700">
                 <button
                   onClick={() => setEditingProperty(null)}
-                  className="px-6 py-3 border border-slate-300 rounded-xl text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+                  className="px-6 py-3 border border-slate-600 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors"
                 >
                   Cancel
                 </button>
@@ -3223,7 +3234,7 @@ export default function AdminDashboard() {
                     setEditingProperty(null);
                     fetchProperties(undefined, false);
                   }}
-                  className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-xl font-medium hover:from-indigo-600 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all transform hover:scale-105 shadow-lg"
+                  className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-xl font-medium hover:from-indigo-600 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-all transform hover:scale-105 shadow-lg"
                 >
                   Save Changes
                 </button>

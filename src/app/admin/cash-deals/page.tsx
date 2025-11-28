@@ -47,13 +47,17 @@ interface CashDeal {
 
 type SortField = 'percentOfArv' | 'price' | 'arv' | 'discount' | 'monthlyCashFlow' | 'cocReturn' | 'rentEstimate';
 
-// Quick filter presets for investors
+// Global max price cap - applies to ALL tabs
+const GLOBAL_MAX_PRICE = 300000;
+
+// Quick filter presets for investors (all within $300K cap)
 const QUICK_FILTERS = {
   bestCoc: { label: 'Best CoC %', icon: '%', sortBy: 'cocReturn' as SortField, sortOrder: 'desc' as const, minCoc: 15 },
   highCashFlow: { label: 'High Cash Flow', icon: '$', sortBy: 'monthlyCashFlow' as SortField, sortOrder: 'desc' as const, minCashFlow: 300 },
   bigDiscounts: { label: 'Big Discounts', icon: '!', sortBy: 'percentOfArv' as SortField, sortOrder: 'asc' as const, maxArv: 55 },
   under100k: { label: 'Under $100K', icon: '<', sortBy: 'cocReturn' as SortField, sortOrder: 'desc' as const, maxPrice: 100000 },
   midRange: { label: '$100K-$200K', icon: '~', sortBy: 'cocReturn' as SortField, sortOrder: 'desc' as const, minPrice: 100000, maxPrice: 200000 },
+  highEnd: { label: '$200K-$300K', icon: '+', sortBy: 'cocReturn' as SortField, sortOrder: 'desc' as const, minPrice: 200000, maxPrice: 300000 },
   allDeals: { label: 'All Deals', icon: '*', sortBy: 'cocReturn' as SortField, sortOrder: 'desc' as const },
 };
 
@@ -141,6 +145,9 @@ export default function CashDealsPage() {
   // Client-side filtered and sorted deals
   const filteredDeals = useMemo(() => {
     let result = [...allDeals];
+
+    // GLOBAL: Always filter out properties over $300K
+    result = result.filter(d => d.price <= GLOBAL_MAX_PRICE);
 
     // Apply client-side filters
     if (minPrice !== '') result = result.filter(d => d.price >= minPrice);
@@ -230,7 +237,12 @@ export default function CashDealsPage() {
           <div className="flex justify-between items-start mb-4">
             <div>
               <a href="/admin" className="text-emerald-400 hover:text-emerald-300 text-sm mb-1 inline-block">← Back</a>
-              <h1 className="text-2xl font-bold text-white">Cash Deals Finder</h1>
+              <div className="flex items-center gap-3">
+                <h1 className="text-2xl font-bold text-white">Cash Deals Finder</h1>
+                <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-emerald-600/20 text-emerald-400 border border-emerald-600/30">
+                  Under $300K
+                </span>
+              </div>
             </div>
             <div className="flex gap-6 text-right">
               <div>

@@ -66,6 +66,13 @@ export default function AdminHub() {
       color: 'blue',
     },
     {
+      href: '/admin/cash-deals',
+      icon: '💰',
+      title: 'Cash Deals',
+      description: 'Investor deals under $300K',
+      color: 'yellow',
+    },
+    {
       href: '/admin/buyers',
       icon: '👥',
       title: 'Buyer Leads',
@@ -92,7 +99,8 @@ export default function AdminHub() {
     blue: { border: 'hover:border-blue-500/50', shadow: 'hover:shadow-blue-500/10', text: 'text-blue-400', bg: 'from-blue-400 to-blue-600' },
     emerald: { border: 'hover:border-emerald-500/50', shadow: 'hover:shadow-emerald-500/10', text: 'text-emerald-400', bg: 'from-emerald-400 to-emerald-600' },
     purple: { border: 'hover:border-purple-500/50', shadow: 'hover:shadow-purple-500/10', text: 'text-purple-400', bg: 'from-purple-400 to-purple-600' },
-    pink: { border: 'hover:border-pink-500/50', shadow: 'hover:shadow-pink-500/10', text: 'text-pink-400', bg: 'from-pink-400 to-pink-600' }
+    pink: { border: 'hover:border-pink-500/50', shadow: 'hover:shadow-pink-500/10', text: 'text-pink-400', bg: 'from-pink-400 to-pink-600' },
+    yellow: { border: 'hover:border-yellow-500/50', shadow: 'hover:shadow-yellow-500/10', text: 'text-yellow-400', bg: 'from-yellow-400 to-yellow-600' }
   };
 
   return (

@@ -210,16 +210,37 @@ async function enhancePropertyImages() {
       const collRef = db.collection(collectionName);
       const allDocs = await collRef.get();
 
-      // Filter to unprocessed docs (imageEnhanced !== true OR missing high-res imgSrc OR has low-res in propertyImages)
-      const lowResPatterns = ['p_a.jpg', 'p_b.jpg', 'p_c.jpg', 'p_d.jpg', 'cc_ft_192', 'cc_ft_384', 'cc_ft_576'];
+      // Filter to unprocessed docs - check ALL image fields for low-res patterns
+      const lowResPatterns = ['p_a.jpg', 'p_b.jpg', 'p_c.jpg', 'p_d.jpg', 'p_e.jpg', 'p_f.jpg', 'p_g.jpg', 'p_h.jpg', 'cc_ft_192', 'cc_ft_384', 'cc_ft_576', 'cc_ft_768'];
       const unprocessed = allDocs.docs.filter(doc => {
         const data = doc.data();
-        const hasHighResImgSrc = data.imgSrc && data.imgSrc.includes('uncropped_scaled_within');
-        // Check if any image in propertyImages array is still low-res
-        const hasLowResInArray = (data.propertyImages || []).some((url: string) =>
-          typeof url === 'string' && lowResPatterns.some(p => url.includes(p))
+
+        // Collect all image URLs from all fields
+        const allImageUrls: string[] = [];
+
+        // Single fields
+        for (const field of [...imageFields, 'firstPropertyImage']) {
+          if (data[field] && typeof data[field] === 'string') {
+            allImageUrls.push(data[field]);
+          }
+        }
+
+        // Array fields
+        for (const field of ['propertyImages', 'imageUrls', 'images']) {
+          if (data[field] && Array.isArray(data[field])) {
+            for (const url of data[field]) {
+              if (typeof url === 'string') allImageUrls.push(url);
+            }
+          }
+        }
+
+        // Check if ANY image is still low-res
+        const hasAnyLowRes = allImageUrls.some(url =>
+          url.includes('zillowstatic.com') && lowResPatterns.some(p => url.includes(p))
         );
-        return data.imageEnhanced !== true || !hasHighResImgSrc || hasLowResInArray;
+
+        // Needs processing if: never enhanced, OR any low-res image exists
+        return data.imageEnhanced !== true || hasAnyLowRes;
       });
       const toProcess = unprocessed.slice(0, BATCH_SIZE);
 

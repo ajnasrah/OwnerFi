@@ -1,10 +1,32 @@
 import { NextResponse } from 'next/server';
 import { getAdminDb } from '@/lib/firebase-admin';
-import { getCitiesWithinRadiusComprehensive } from '@/lib/comprehensive-cities';
+import { getCitiesWithinRadiusComprehensive, getCityCoordinatesComprehensive } from '@/lib/comprehensive-cities';
 
 // Cache for states list (refresh every 5 minutes)
 let statesCache: { states: string[]; timestamp: number } | null = null;
 const STATES_CACHE_TTL = 5 * 60 * 1000;
+
+// Cache for deals data (refresh every 5 minutes - increased from 2min for better performance)
+interface DealsCache {
+  data: any[];
+  timestamp: number;
+  key: string;
+}
+let dealsCache: DealsCache | null = null;
+const DEALS_CACHE_TTL = 5 * 60 * 1000;
+
+// Calculate distance between two points using Haversine formula (returns miles)
+function haversineDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 3959; // Earth's radius in miles
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
 
 // Calculate monthly mortgage payment
 // Formula: P = L[c(1+c)^n]/[(1+c)^n-1]
@@ -120,6 +142,9 @@ function normalizeProperty(doc: FirebaseFirestore.DocumentSnapshot, source: stri
     city: data.city,
     state: data.state,
     zipcode: data.zipCode || data.zipcode,
+    // Coordinates for geo search
+    latitude: data.latitude || data.lat || null,
+    longitude: data.longitude || data.lng || null,
     // Price fields
     price,
     arv,
@@ -155,92 +180,101 @@ function normalizeProperty(doc: FirebaseFirestore.DocumentSnapshot, source: stri
     monthlyHoa,
     missingFields,
     cashFlow: cashFlowData,
+    // GHL tracking
+    sentToGHL: data.sentToGHL || null,
   };
 }
 
 export async function GET(request: Request) {
   try {
     const startTime = Date.now();
-    const db = await getAdminDb();
-    if (!db) {
-      return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
-    }
 
     const { searchParams } = new URL(request.url);
     const city = searchParams.get('city')?.toLowerCase();
     const state = searchParams.get('state')?.toUpperCase();
-    const radius = parseInt(searchParams.get('radius') || '0'); // Radius in miles for surrounding cities
+    const radius = parseInt(searchParams.get('radius') || '0');
     const sortBy = searchParams.get('sortBy') || 'percentOfArv';
     const sortOrder = searchParams.get('sortOrder') || 'asc';
     const limit = parseInt(searchParams.get('limit') || '100');
-    const collection = searchParams.get('collection'); // 'cash_houses', 'zillow_imports', or null for both
+    const collection = searchParams.get('collection');
 
-    // Get surrounding cities if radius is specified
-    let surroundingCities: Set<string> = new Set();
-    if (city && radius > 0) {
-      // Find cities within radius (need to find the state for the city first)
-      const searchState = state || ''; // Will search all states if not specified
-      const nearbyCities = getCitiesWithinRadiusComprehensive(city, searchState, radius);
-      surroundingCities = new Set(nearbyCities.map(c => c.name.toLowerCase()));
-      surroundingCities.add(city); // Include the searched city itself
-      console.log(`[cash-deals] Found ${surroundingCities.size} cities within ${radius} miles of ${city}`);
-    }
+    // Simple cache - fetch ALL data once and filter in memory (avoids index requirements)
+    const cacheKey = 'all_deals';
 
     let allDeals: any[] = [];
+    const now = Date.now();
 
-    // Fetch limit per collection (fetch more to allow for filtering)
-    const fetchLimit = city ? limit * 3 : limit;
+    if (dealsCache && dealsCache.key === cacheKey && (now - dealsCache.timestamp) < DEALS_CACHE_TTL) {
+      // Use cached data
+      allDeals = [...dealsCache.data];
+      console.log(`[cash-deals] Using cached data (${allDeals.length} deals)`);
+    } else {
+      // Fetch fresh data from both collections
+      const db = await getAdminDb();
+      if (!db) {
+        return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
+      }
 
-    // Fetch from both collections in parallel
-    const fetchPromises: Promise<void>[] = [];
+      // Fetch from both collections in parallel - NO filters to avoid index requirements
+      const [cashSnapshot, zillowSnapshot] = await Promise.all([
+        db.collection('cash_houses').get(),
+        db.collection('zillow_imports').get()
+      ]);
 
-    // Fetch from cash_houses (discount deals) - smaller collection, fetch all
-    if (!collection || collection === 'cash_houses') {
-      fetchPromises.push((async () => {
-        // cash_houses is small (~150), fetch all and filter/sort in memory to avoid index requirements
-        const cashSnapshot = await db.collection('cash_houses').get();
-        cashSnapshot.docs.forEach(doc => {
-          const normalized = normalizeProperty(doc, 'cash_houses');
-          // Filter by state in memory if specified
-          if (!state || normalized.state === state) {
-            allDeals.push(normalized);
-          }
-        });
-      })());
+      // Process cash_houses
+      cashSnapshot.docs.forEach(doc => {
+        allDeals.push(normalizeProperty(doc, 'cash_houses'));
+      });
+
+      // Process zillow_imports - only owner finance verified
+      zillowSnapshot.docs.forEach(doc => {
+        const data = doc.data();
+        if (data.ownerFinanceVerified === true) {
+          allDeals.push(normalizeProperty(doc, 'zillow_imports'));
+        }
+      });
+
+      // Filter out properties without price or ARV
+      allDeals = allDeals.filter((deal: any) => deal.price > 0 && deal.arv > 0);
+
+      // Update cache
+      dealsCache = { data: [...allDeals], timestamp: now, key: cacheKey };
+      console.log(`[cash-deals] Fetched and cached ${allDeals.length} deals in ${Date.now() - startTime}ms`);
     }
 
-    // Fetch from zillow_imports (owner finance deals) - filter in memory to avoid index requirements
-    if (!collection || collection === 'zillow_imports') {
-      fetchPromises.push((async () => {
-        // Fetch without state filter to avoid index requirements, filter in memory
-        const zillowSnapshot = await db.collection('zillow_imports')
-          .orderBy('foundAt', 'desc')
-          .limit(fetchLimit * 3)
-          .get();
-        zillowSnapshot.docs.forEach(doc => {
-          const normalized = normalizeProperty(doc, 'zillow_imports');
-          // Filter by state in memory if specified
-          if (!state || normalized.state === state) {
-            allDeals.push(normalized);
-          }
-        });
-      })());
+    // Apply state filter in memory
+    if (state) {
+      allDeals = allDeals.filter((deal: any) => deal.state === state);
     }
 
-    await Promise.all(fetchPromises);
+    // Apply collection filter in memory
+    if (collection) {
+      allDeals = allDeals.filter((deal: any) => deal.source === collection);
+    }
 
-    // Filter out properties without price or ARV (Zestimate) data
-    allDeals = allDeals.filter((deal: any) => deal.price > 0 && deal.arv > 0);
-
-    // Filter by city (case-insensitive partial match) or surrounding cities
+    // Filter by city/radius - use coordinates when available for accuracy
     if (city) {
-      if (surroundingCities.size > 0) {
-        // Use surrounding cities set (includes the searched city)
-        allDeals = allDeals.filter((deal: any) =>
-          surroundingCities.has(deal.city?.toLowerCase())
-        );
+      const searchState = state || '';
+
+      // Get center city coordinates
+      const centerCoords = getCityCoordinatesComprehensive(city, searchState);
+
+      if (centerCoords && radius > 0) {
+        // ACCURATE: Use actual coordinates for radius search
+        allDeals = allDeals.filter((deal: any) => {
+          // If property has coordinates, use them
+          if (deal.latitude && deal.longitude) {
+            const dist = haversineDistance(centerCoords.lat, centerCoords.lng, deal.latitude, deal.longitude);
+            return dist <= radius;
+          }
+          // Fallback: Check if city name matches any city in radius
+          const nearbyCities = getCitiesWithinRadiusComprehensive(city, searchState, radius);
+          const cityNames = new Set(nearbyCities.map(c => c.name.toLowerCase()));
+          cityNames.add(city);
+          return cityNames.has(deal.city?.toLowerCase());
+        });
       } else {
-        // Fall back to partial match
+        // No radius or no coords found - use partial match on city name
         allDeals = allDeals.filter((deal: any) =>
           deal.city?.toLowerCase().includes(city)
         );
@@ -268,30 +302,17 @@ export async function GET(request: Request) {
     // Limit results
     allDeals = allDeals.slice(0, limit);
 
-    // Get states from cache or fetch separately (async, don't block)
+    // Get states from cache or from current deals
     let states: string[] = [];
     if (statesCache && Date.now() - statesCache.timestamp < STATES_CACHE_TTL) {
       states = statesCache.states;
     } else {
-      // Return empty states first time, fetch in background
+      // Extract states from current deals
       const allStates = new Set<string>();
       allDeals.forEach(d => d.state && allStates.add(d.state));
       states = [...allStates].sort();
-      // Update cache async
-      (async () => {
-        try {
-          const [cashSnap, zillowSnap] = await Promise.all([
-            db.collection('cash_houses').select('state').get(),
-            db.collection('zillow_imports').select('state').limit(1000).get()
-          ]);
-          const allS = new Set<string>();
-          cashSnap.docs.forEach(d => d.data().state && allS.add(d.data().state));
-          zillowSnap.docs.forEach(d => d.data().state && allS.add(d.data().state));
-          statesCache = { states: [...allS].sort(), timestamp: Date.now() };
-        } catch (e) {
-          console.error('Failed to update states cache:', e);
-        }
-      })();
+      // Update cache
+      statesCache = { states, timestamp: Date.now() };
     }
 
     console.log(`[cash-deals] Fetched ${total} deals in ${Date.now() - startTime}ms`);

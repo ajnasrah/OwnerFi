@@ -3,6 +3,7 @@ import { ApifyClient } from 'apify-client';
 import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { transformApifyProperty, validatePropertyData } from '@/lib/property-transform';
+import { getNearbyCityNamesForProperty } from '@/lib/comprehensive-cities';
 
 // Initialize Firebase Admin
 if (!getApps().length) {
@@ -256,6 +257,12 @@ export async function GET(request: NextRequest) {
         const financingTypeResult = detectFinancingType(propertyData.description);
         console.log(`   Financing Type: ${financingTypeResult.financingType || 'Unknown'}`);
 
+        // Calculate nearby cities for fast array-contains queries
+        const propertyCity = propertyData.city?.split(',')[0]?.trim();
+        const nearbyCities = propertyCity && propertyData.state
+          ? getNearbyCityNamesForProperty(propertyCity, propertyData.state, 35, 100)
+          : [];
+
         // Save to zillow_imports (ONLY properties that passed strict filter)
         const docRef = db.collection('zillow_imports').doc();
         currentBatch.set(docRef, {
@@ -269,6 +276,11 @@ export async function GET(request: NextRequest) {
           financingType: financingTypeResult.financingType,         // e.g., "Owner Finance", "Rent to Own"
           allFinancingTypes: financingTypeResult.allTypes,          // All types found (if multiple)
           financingTypeLabel: financingTypeResult.displayLabel,     // Human-readable label
+
+          // Nearby cities for fast search (array-contains queries)
+          nearbyCities: nearbyCities,
+          nearbyCitiesSource: 'import-auto',
+          nearbyCitiesUpdatedAt: new Date().toISOString(),
 
           // Status tracking - starts null, auto-updates when all fields filled
           status: null,                     // Changes to 'verified' when terms are filled

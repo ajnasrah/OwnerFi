@@ -19,36 +19,49 @@ interface CashDeal {
   url: string;
 }
 
-interface CashDealsProps {
-  city: string;
-  state: string;
+interface ApiResponse {
+  deals: CashDeal[];
+  total: number;
+  message?: string;
+  error?: string;
+  filters?: {
+    city: string;
+    state: string;
+    maxPrice?: number;
+    maxArvPercent: number;
+    nearbyCitiesCount: number;
+    stateDealsAvailable?: number;
+  };
 }
 
-export function CashDeals({ city, state }: CashDealsProps) {
+export function CashDeals() {
   const [deals, setDeals] = useState<CashDeal[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+  const [filters, setFilters] = useState<ApiResponse['filters'] | null>(null);
 
   useEffect(() => {
     fetchDeals();
-  }, [city, state]);
+  }, []);
 
   const fetchDeals = async () => {
     setLoading(true);
     setError(null);
+    setMessage(null);
     try {
-      const params = new URLSearchParams();
-      if (city) params.set('city', city);
-      if (state) params.set('state', state);
-
-      const res = await fetch(`/api/buyer/cash-deals?${params}`);
-      const data = await res.json();
+      const res = await fetch('/api/buyer/cash-deals');
+      const data: ApiResponse = await res.json();
 
       if (data.error) {
         setError(data.error);
         setDeals([]);
+      } else if (data.message) {
+        setMessage(data.message);
+        setDeals([]);
       } else {
         setDeals(data.deals || []);
+        setFilters(data.filters || null);
       }
     } catch (err: any) {
       setError(err.message);
@@ -62,7 +75,7 @@ export function CashDeals({ city, state }: CashDealsProps) {
       <div className="flex items-center justify-center py-20">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-slate-700 border-t-emerald-400 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-slate-400">Finding cash deals near {city}...</p>
+          <p className="text-slate-400">Finding cash deals in your area...</p>
         </div>
       </div>
     );
@@ -85,6 +98,23 @@ export function CashDeals({ city, state }: CashDealsProps) {
     );
   }
 
+  if (message) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="text-center">
+          <div className="text-4xl mb-4">📍</div>
+          <p className="text-slate-300">{message}</p>
+          <a
+            href="/dashboard/settings"
+            className="mt-4 inline-block px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700"
+          >
+            Update Profile
+          </a>
+        </div>
+      </div>
+    );
+  }
+
   if (deals.length === 0) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -92,7 +122,13 @@ export function CashDeals({ city, state }: CashDealsProps) {
           <div className="text-4xl mb-4">🏠</div>
           <h3 className="text-xl font-bold text-white mb-2">No Cash Deals Found</h3>
           <p className="text-slate-400">
-            No properties under 80% ARV in <span className="text-emerald-400">{city}, {state}</span>
+            No properties under 80% ARV in{' '}
+            <span className="text-emerald-400">
+              {filters?.city}, {filters?.state}
+            </span>
+            {filters?.maxPrice && (
+              <span> under ${filters.maxPrice.toLocaleString()}</span>
+            )}
           </p>
         </div>
       </div>
@@ -111,7 +147,13 @@ export function CashDeals({ city, state }: CashDealsProps) {
       {/* Header */}
       <div className="mb-4">
         <p className="text-slate-400 text-sm">
-          {deals.length} cash deal{deals.length !== 1 ? 's' : ''} under 80% ARV near {city}
+          {deals.length} cash deal{deals.length !== 1 ? 's' : ''} under 80% ARV
+          {filters?.city && (
+            <span> near <span className="text-emerald-400">{filters.city}</span></span>
+          )}
+          {filters?.maxPrice && (
+            <span> under <span className="text-emerald-400">${filters.maxPrice.toLocaleString()}</span></span>
+          )}
         </p>
       </div>
 

@@ -141,13 +141,18 @@ export async function GET(request: NextRequest) {
     }
 
     // ===== QUERY PROPERTIES FROM TWO SOURCES =====
+    // OPTIMIZATION: Use array-contains on nearbyCities for fast geo filtering
+    // This avoids fetching all properties and filtering in memory
 
-    // 1. Curated properties (existing system)
     // PAGINATION: Limit initial queries to reduce bandwidth and improve performance
-    // We'll fetch more than needed to account for filtering
     const fetchLimit = Math.min(pageSize * 3, 300); // Fetch 3x pageSize, max 300
 
-    const propertiesQuery = query(
+    // Build queries - use array-contains if buyer's city is in property's nearbyCities
+    // This means: "Find properties whose nearbyCities array contains the buyer's search city"
+    // Which finds properties that are NEAR the buyer's search city
+
+    // 1. Curated properties - DIRECT matches (property IS in search city)
+    const propertiesDirectQuery = query(
       collection(db, 'properties'),
       where('isActive', '==', true),
       where('state', '==', searchState),
@@ -155,20 +160,50 @@ export async function GET(request: NextRequest) {
       limit(fetchLimit)
     );
 
-    // 2. Zillow scraped properties (ALL passed strict filter - 100% verified owner finance)
-    // Show ALL properties regardless of status (status only changes when terms are filled)
-    const zillowQuery = query(
-      collection(db, 'zillow_imports'),
-      where('state', '==', searchState),
-      where('ownerFinanceVerified', '==', true), // All with owner finance keywords
+    // 2. Curated properties - NEARBY matches (buyer's city is in property's nearbyCities)
+    const propertiesNearbyQuery = query(
+      collection(db, 'properties'),
+      where('isActive', '==', true),
+      where('nearbyCities', 'array-contains', searchCity),
       limit(fetchLimit)
     );
 
-    // Execute queries in parallel for performance
-    const [propertiesSnapshot, zillowSnapshot] = await Promise.all([
-      getDocs(propertiesQuery),
-      getDocs(zillowQuery)
+    // 3. Zillow scraped properties - DIRECT matches
+    const zillowDirectQuery = query(
+      collection(db, 'zillow_imports'),
+      where('state', '==', searchState),
+      where('ownerFinanceVerified', '==', true),
+      limit(fetchLimit)
+    );
+
+    // 4. Zillow scraped properties - NEARBY matches
+    const zillowNearbyQuery = query(
+      collection(db, 'zillow_imports'),
+      where('ownerFinanceVerified', '==', true),
+      where('nearbyCities', 'array-contains', searchCity),
+      limit(fetchLimit)
+    );
+
+    // Execute ALL queries in parallel for maximum performance
+    const [propertiesDirectSnapshot, propertiesNearbySnapshot, zillowDirectSnapshot, zillowNearbySnapshot] = await Promise.all([
+      getDocs(propertiesDirectQuery),
+      getDocs(propertiesNearbyQuery),
+      getDocs(zillowDirectQuery),
+      getDocs(zillowNearbyQuery)
     ]);
+
+    // Merge snapshots (dedupe by ID)
+    const propertiesMap = new Map();
+    propertiesDirectSnapshot.docs.forEach(doc => propertiesMap.set(doc.id, doc));
+    propertiesNearbySnapshot.docs.forEach(doc => propertiesMap.set(doc.id, doc));
+    const propertiesSnapshot = { docs: Array.from(propertiesMap.values()) };
+
+    const zillowMap = new Map();
+    zillowDirectSnapshot.docs.forEach(doc => zillowMap.set(doc.id, doc));
+    zillowNearbySnapshot.docs.forEach(doc => zillowMap.set(doc.id, doc));
+    const zillowSnapshot = { docs: Array.from(zillowMap.values()) };
+
+    console.log(`📊 [buyer-search] Query results: ${propertiesSnapshot.docs.length} curated, ${zillowSnapshot.docs.length} zillow`);
 
     // Combine results from both sources
     const curatedProperties = propertiesSnapshot.docs.map(doc => {
@@ -284,7 +319,7 @@ export async function GET(request: NextRequest) {
       }
 
       // Asking price filter
-      const askingPrice = property.listPrice || property.price;
+      const askingPrice = property.listPrice || (property.price as number | undefined);
       if (buyerFilters.minPrice !== undefined && askingPrice && askingPrice < buyerFilters.minPrice) {
         return false;
       }

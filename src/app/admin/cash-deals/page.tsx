@@ -43,6 +43,7 @@ interface CashDeal {
   interestRate?: number;
   termYears?: number;
   balloonYears?: number;
+  sentToGHL?: string;
 }
 
 type SortField = 'percentOfArv' | 'price' | 'arv' | 'discount' | 'monthlyCashFlow' | 'cocReturn' | 'rentEstimate';
@@ -92,6 +93,55 @@ export default function CashDealsPage() {
   // Bulk selection for delete
   const [selectedDeals, setSelectedDeals] = useState<Set<string>>(new Set());
   const [deleting, setDeleting] = useState(false);
+  const [sendingToGHL, setSendingToGHL] = useState(false);
+
+  // Send selected deals to GHL
+  const handleSendToGHL = async () => {
+    if (selectedDeals.size === 0) return;
+
+    // Check how many selected deals are already sent to GHL
+    const alreadySentCount = filteredDeals.filter(
+      d => selectedDeals.has(d.id) && d.sentToGHL
+    ).length;
+
+    let confirmMessage = `Send ${selectedDeals.size} deals to GHL?`;
+    if (alreadySentCount > 0) {
+      confirmMessage += `\n\n⚠️ ${alreadySentCount} of these have already been sent and will be skipped.`;
+    }
+
+    if (!confirm(confirmMessage)) return;
+
+    setSendingToGHL(true);
+    try {
+      const response = await fetch('/api/admin/cash-deals/send-to-ghl', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dealIds: Array.from(selectedDeals) }),
+      });
+
+      const result = await response.json();
+
+      if (result.error) {
+        alert(`Error: ${result.error}`);
+      } else {
+        let message = `Successfully sent ${result.sent} deals to GHL`;
+        if (result.skipped > 0) {
+          message += `\n${result.skipped} skipped (already sent)`;
+        }
+        if (result.failed > 0) {
+          message += `\n${result.failed} failed`;
+        }
+        alert(message);
+        setSelectedDeals(new Set());
+        fetchDeals(); // Refresh to show GHL status
+      }
+    } catch (error) {
+      alert('Failed to send deals to GHL');
+      console.error('Send to GHL error:', error);
+    } finally {
+      setSendingToGHL(false);
+    }
+  };
 
   const fetchDeals = async () => {
     setLoading(true);
@@ -425,6 +475,13 @@ export default function CashDealsPage() {
                   Clear
                 </button>
                 <button
+                  onClick={handleSendToGHL}
+                  disabled={sendingToGHL}
+                  className="px-4 py-1.5 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 disabled:bg-slate-600"
+                >
+                  {sendingToGHL ? 'Sending...' : `Send ${selectedDeals.size} to GHL`}
+                </button>
+                <button
                   onClick={deleteSelectedDeals}
                   disabled={deleting}
                   className="px-4 py-1.5 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 disabled:bg-slate-600"
@@ -586,6 +643,14 @@ export default function CashDealsPage() {
                                   {deal.ownerFinanceVerified && (
                                     <span className="inline-block px-1 py-0.5 text-[10px] font-semibold bg-blue-600 text-white rounded">
                                       OF
+                                    </span>
+                                  )}
+                                  {deal.sentToGHL && (
+                                    <span
+                                      className="inline-block px-1 py-0.5 text-[10px] font-semibold bg-green-600 text-white rounded"
+                                      title={`Sent to GHL: ${new Date(deal.sentToGHL).toLocaleString()}`}
+                                    >
+                                      GHL
                                     </span>
                                   )}
                                 </div>

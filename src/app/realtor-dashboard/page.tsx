@@ -112,6 +112,50 @@ export default function RealtorDashboardHub() {
             </div>
           </Link>
 
+          {/* Cash Deals */}
+          <Link
+            href="/admin/cash-deals"
+            className="group bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-8 hover:border-yellow-500/50 transition-all duration-300 hover:shadow-xl hover:shadow-yellow-500/10 hover:scale-[1.02]"
+          >
+            <div className="text-center">
+              <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center text-4xl group-hover:scale-110 transition-transform">
+                💰
+              </div>
+              <h2 className="text-2xl font-bold text-white mb-3">
+                Cash Deals
+              </h2>
+              <p className="text-slate-300 mb-4">
+                Find discounted properties under market value for investors
+              </p>
+              <div className="inline-flex items-center gap-2 text-yellow-400 font-semibold">
+                <span>View Deals</span>
+                <span className="group-hover:translate-x-1 transition-transform">→</span>
+              </div>
+            </div>
+          </Link>
+
+          {/* Account Settings */}
+          <Link
+            href="/realtor-dashboard/settings"
+            className="group bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-8 hover:border-purple-500/50 transition-all duration-300 hover:shadow-xl hover:shadow-purple-500/10 hover:scale-[1.02]"
+          >
+            <div className="text-center">
+              <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center text-4xl group-hover:scale-110 transition-transform">
+                ⚙️
+              </div>
+              <h2 className="text-2xl font-bold text-white mb-3">
+                Settings
+              </h2>
+              <p className="text-slate-300 mb-4">
+                Manage your account, service area, and preferences
+              </p>
+              <div className="inline-flex items-center gap-2 text-purple-400 font-semibold">
+                <span>View Settings</span>
+                <span className="group-hover:translate-x-1 transition-transform">→</span>
+              </div>
+            </div>
+          </Link>
+
         </div>
 
         {/* Quick Actions */}

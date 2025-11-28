@@ -29,83 +29,12 @@ if (!getApps().length) {
 
 const db = getFirestore();
 
-// Import cities database
-import citiesData from 'cities.json';
+// Use the shared comprehensive-cities module with fuzzy matching
+import { getNearbyCityNamesForProperty, getCityCoordinatesComprehensive, getCitiesDatabaseStats } from '../src/lib/comprehensive-cities';
 
-interface City {
-  name: string;
-  state: string;
-  lat: number;
-  lng: number;
-}
-
-// Filter to US cities only
-const usCities: City[] = (citiesData as Array<{
-  name: string;
-  country: string;
-  admin1: string;
-  lat: string;
-  lng: string;
-}>)
-  .filter((city) => city.country === 'US')
-  .map((city) => ({
-    name: city.name,
-    state: city.admin1,
-    lat: parseFloat(city.lat),
-    lng: parseFloat(city.lng)
-  }))
-  .filter((city: City) => city.state && city.lat && city.lng);
-
-console.log(`📍 Loaded ${usCities.length} US cities`);
-
-// Haversine distance calculation
-function calculateDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
-  const R = 3959; // Earth's radius in miles
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLng = (lng2 - lng1) * Math.PI / 180;
-  const a =
-    Math.sin(dLat/2) * Math.sin(dLat/2) +
-    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-    Math.sin(dLng/2) * Math.sin(dLng/2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-  return R * c;
-}
-
-// Get city coordinates
-function getCityCoordinates(cityName: string, state: string): { lat: number; lng: number } | null {
-  const city = usCities.find(c =>
-    c.name.toLowerCase() === cityName.toLowerCase() &&
-    c.state === state
-  );
-  return city ? { lat: city.lat, lng: city.lng } : null;
-}
-
-// Get nearby city names within radius
-function getNearbyCityNames(
-  propertyCity: string,
-  propertyState: string,
-  radiusMiles: number = 35,
-  maxCities: number = 100
-): string[] {
-  const centerCoords = getCityCoordinates(propertyCity, propertyState);
-  if (!centerCoords) {
-    return [];
-  }
-
-  // Calculate distances to all cities in the same state
-  const nearbyCities = usCities
-    .filter(city => city.state === propertyState)
-    .map(city => ({
-      name: city.name,
-      distance: calculateDistance(centerCoords.lat, centerCoords.lng, city.lat, city.lng)
-    }))
-    .filter(city => city.distance <= radiusMiles && city.name.toLowerCase() !== propertyCity.toLowerCase())
-    .sort((a, b) => a.distance - b.distance)
-    .slice(0, maxCities)
-    .map(city => city.name);
-
-  return nearbyCities;
-}
+// Log database stats
+const stats = getCitiesDatabaseStats();
+console.log(`📍 Loaded ${stats.totalCities} US cities`);
 
 async function backfillCollection(collectionName: string, dryRun: boolean = false): Promise<{ updated: number; skipped: number; failed: number }> {
   console.log(`\n📦 Processing ${collectionName}...`);
@@ -136,13 +65,18 @@ async function backfillCollection(collectionName: string, dryRun: boolean = fals
 
     // Check if already has nearbyCities
     if (data.nearbyCities && Array.isArray(data.nearbyCities) && data.nearbyCities.length > 0) {
-      console.log(`   ⏭️ Skipping ${doc.id}: Already has ${data.nearbyCities.length} nearby cities`);
-      skipped++;
-      continue;
+      // Skip if already has nearbyCities, but check if we can improve it
+      const coords = getCityCoordinatesComprehensive(city, state);
+      if (coords) {
+        // City is in database - skip, already done
+        skipped++;
+        continue;
+      }
+      // City wasn't found before but might be now with fuzzy matching
     }
 
-    // Calculate nearby cities
-    const nearbyCities = getNearbyCityNames(city, state, 35, 100);
+    // Calculate nearby cities using fuzzy matching
+    const nearbyCities = getNearbyCityNamesForProperty(city, state, 35, 100);
 
     if (nearbyCities.length === 0) {
       console.log(`   ⚠️ No nearby cities found for ${city}, ${state}`);
@@ -159,7 +93,7 @@ async function backfillCollection(collectionName: string, dryRun: boolean = fals
     // Add to batch
     batch.update(doc.ref, {
       nearbyCities: nearbyCities,
-      nearbyCitiesSource: 'backfill-script',
+      nearbyCitiesSource: 'backfill-script-v2',
       nearbyCitiesUpdatedAt: new Date().toISOString()
     });
 
@@ -187,12 +121,16 @@ async function backfillCollection(collectionName: string, dryRun: boolean = fals
 async function main() {
   const args = process.argv.slice(2);
   const dryRun = args.includes('--dry-run');
+  const forceAll = args.includes('--force');
 
   if (dryRun) {
     console.log('🔍 DRY RUN MODE - No changes will be made\n');
   }
+  if (forceAll) {
+    console.log('⚠️ FORCE MODE - Will update ALL properties, even those with existing nearbyCities\n');
+  }
 
-  console.log('🚀 Starting nearbyCities backfill...\n');
+  console.log('🚀 Starting nearbyCities backfill (v2 with fuzzy matching)...\n');
   const startTime = Date.now();
 
   const collections = ['properties', 'zillow_imports', 'cash_houses'];

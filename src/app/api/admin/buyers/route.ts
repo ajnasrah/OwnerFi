@@ -14,7 +14,7 @@ import { logError } from '@/lib/logger';
 import { ExtendedSession } from '@/types/session';
 import { BuyerAdminView, firestoreToBuyerProfile, toBuyerAdminView } from '@/lib/view-models';
 import { convertTimestampToDate } from '@/lib/firebase-models';
-import { getCitiesWithinRadiusComprehensive } from '@/lib/comprehensive-cities';
+import { getCitiesWithinRadiusWithExpansion } from '@/lib/comprehensive-cities';
 
 // Property filter interface matching buyer profile fields
 interface BuyerFilters {
@@ -275,8 +275,8 @@ export async function GET(request: NextRequest) {
             // Use cached result
             nearbyCityNames = cityRadiusCache.get(cacheKey)!;
           } else {
-            // Calculate and cache
-            const nearbyCitiesList = getCitiesWithinRadiusComprehensive(searchCity, state, 30);
+            // Calculate and cache (with automatic radius expansion: 30mi → 60mi → 120mi)
+            const { cities: nearbyCitiesList } = getCitiesWithinRadiusWithExpansion(searchCity, state, 30, 5);
             nearbyCityNames = new Set(
               nearbyCitiesList.map(city => city.name.toLowerCase())
             );

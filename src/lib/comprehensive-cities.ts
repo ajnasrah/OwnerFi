@@ -13,7 +13,7 @@ interface CityWithDistance extends City {
   distance: number;
 }
 
-// Filter to get only US cities (admin1 is already state abbreviation)  
+// Filter to get only US cities (admin1 is already state abbreviation)
 const usCities: City[] = (citiesData as Array<{
   name: string;
   country: string;
@@ -30,6 +30,85 @@ const usCities: City[] = (citiesData as Array<{
     lng: parseFloat(city.lng)
   }))
   .filter((city: City) => city.state && city.lat && city.lng); // Valid data only
+
+/**
+ * Normalize city name to handle common variations
+ * - "Saint" ↔ "St." / "St"
+ * - "Fort" ↔ "Ft." / "Ft"
+ * - "Port" ↔ "Pt." / "Pt"
+ * - "Mount" ↔ "Mt." / "Mt"
+ * - Handles suffixes like "Beach", "City", "Park", etc.
+ */
+function normalizeCityName(name: string): string {
+  return name
+    .toLowerCase()
+    .trim()
+    // Normalize "Saint" variations
+    .replace(/^saint\s+/i, 'st. ')
+    .replace(/^st\s+/i, 'st. ')
+    // Normalize "Fort" variations
+    .replace(/^fort\s+/i, 'ft. ')
+    .replace(/^ft\s+/i, 'ft. ')
+    // Normalize "Port" variations
+    .replace(/^port\s+/i, 'port ')
+    .replace(/^pt\s+/i, 'port ')
+    // Normalize "Mount" variations
+    .replace(/^mount\s+/i, 'mt. ')
+    .replace(/^mt\s+/i, 'mt. ')
+    // Normalize "North/South/East/West" abbreviations
+    .replace(/^n\s+/i, 'north ')
+    .replace(/^s\s+/i, 'south ')
+    .replace(/^e\s+/i, 'east ')
+    .replace(/^w\s+/i, 'west ')
+    // Remove extra spaces
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
+ * Find city with fuzzy matching for common variations
+ */
+function findCityFuzzy(cityName: string, state: string): City | null {
+  const stateCities = usCities.filter(c => c.state === state);
+  const normalizedInput = normalizeCityName(cityName);
+
+  // 1. Try exact match first
+  let match = stateCities.find(c => c.name.toLowerCase() === cityName.toLowerCase());
+  if (match) return match;
+
+  // 2. Try normalized match
+  match = stateCities.find(c => normalizeCityName(c.name) === normalizedInput);
+  if (match) return match;
+
+  // 3. Try with/without common suffixes (Beach, City, Park, Heights, etc.)
+  const suffixes = ['beach', 'city', 'park', 'heights', 'springs', 'falls', 'lake', 'lakes', 'hills', 'village', 'township'];
+
+  // Try adding suffixes
+  for (const suffix of suffixes) {
+    match = stateCities.find(c =>
+      normalizeCityName(c.name) === `${normalizedInput} ${suffix}`
+    );
+    if (match) return match;
+  }
+
+  // Try removing suffixes from input
+  for (const suffix of suffixes) {
+    if (normalizedInput.endsWith(` ${suffix}`)) {
+      const withoutSuffix = normalizedInput.replace(new RegExp(` ${suffix}$`), '');
+      match = stateCities.find(c => normalizeCityName(c.name) === withoutSuffix);
+      if (match) return match;
+    }
+  }
+
+  // 4. Try partial match (input starts with city name or vice versa)
+  match = stateCities.find(c => {
+    const normalizedDbName = normalizeCityName(c.name);
+    return normalizedDbName.startsWith(normalizedInput) || normalizedInput.startsWith(normalizedDbName);
+  });
+  if (match) return match;
+
+  return null;
+}
 
 
 /**
@@ -49,13 +128,10 @@ function calculateDistance(lat1: number, lng1: number, lat2: number, lng2: numbe
 
 /**
  * Get coordinates for a city (FAST lookup from comprehensive database)
+ * Uses fuzzy matching for common variations (Saint/St., Port/Pt., Beach suffix, etc.)
  */
 export function getCityCoordinatesComprehensive(cityName: string, state: string): { lat: number; lng: number } | null {
-  const city = usCities.find(c => 
-    c.name.toLowerCase() === cityName.toLowerCase() && 
-    c.state === state
-  );
-  
+  const city = findCityFuzzy(cityName, state);
   return city ? { lat: city.lat, lng: city.lng } : null;
 }
 
@@ -64,12 +140,10 @@ export function getCityCoordinatesComprehensive(cityName: string, state: string)
  * NO EXTERNAL API CALLS - Pure JavaScript calculation
  */
 export function getCitiesWithinRadiusComprehensive(
-  centerCity: string, 
-  centerState: string, 
+  centerCity: string,
+  centerState: string,
   radiusMiles: number = 35
 ): CityWithDistance[] {
-  const startTime = Date.now();
-  
   // Find center city coordinates
   const centerCoords = getCityCoordinatesComprehensive(centerCity, centerState);
   if (!centerCoords) {
@@ -85,8 +159,6 @@ export function getCitiesWithinRadiusComprehensive(
     }))
     .filter(city => city.distance <= radiusMiles)
     .sort((a, b) => a.distance - b.distance);
-
-  const endTime = Date.now() - startTime;
 
   return nearbyCities;
 }
@@ -115,6 +187,7 @@ export function getCitiesWithinRadiusByCoordinates(
 
 /**
  * Get nearby city names for property storage (excludes center city)
+ * With automatic radius expansion: 35mi → 60mi → 120mi if no cities found
  */
 export function getNearbyCityNamesForProperty(
   propertyCity: string,
@@ -122,12 +195,53 @@ export function getNearbyCityNamesForProperty(
   radiusMiles: number = 35,
   maxCities: number = 100
 ): string[] {
-  const nearbyCities = getCitiesWithinRadiusComprehensive(propertyCity, propertyState, radiusMiles);
+  // Try with requested radius first
+  let nearbyCities = getCitiesWithinRadiusComprehensive(propertyCity, propertyState, radiusMiles);
+
+  // Failsafe: Expand radius if no nearby cities found
+  const radiusSteps = [60, 120];
+  let currentRadius = radiusMiles;
+
+  for (const expandedRadius of radiusSteps) {
+    if (nearbyCities.length <= 1 && expandedRadius > currentRadius) {
+      nearbyCities = getCitiesWithinRadiusComprehensive(propertyCity, propertyState, expandedRadius);
+      currentRadius = expandedRadius;
+    }
+  }
 
   return nearbyCities
     .filter(city => city.name.toLowerCase() !== propertyCity.toLowerCase()) // Exclude property's own city
     .slice(0, maxCities) // Limit for storage efficiency
     .map(city => city.name);
+}
+
+/**
+ * Get cities within radius with automatic expansion if needed
+ * Expands: 30mi → 60mi → 120mi until at least minCities are found
+ */
+export function getCitiesWithinRadiusWithExpansion(
+  centerCity: string,
+  centerState: string,
+  initialRadius: number = 30,
+  minCities: number = 5
+): { cities: CityWithDistance[]; radiusUsed: number } {
+  const radiusSteps = [initialRadius, 60, 120, 200];
+
+  for (const radius of radiusSteps) {
+    if (radius < initialRadius) continue;
+
+    const cities = getCitiesWithinRadiusComprehensive(centerCity, centerState, radius);
+
+    if (cities.length >= minCities || radius === 200) {
+      return { cities, radiusUsed: radius };
+    }
+  }
+
+  // Fallback - return whatever we got
+  return {
+    cities: getCitiesWithinRadiusComprehensive(centerCity, centerState, 200),
+    radiusUsed: 200
+  };
 }
 
 /**

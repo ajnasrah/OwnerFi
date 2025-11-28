@@ -10,7 +10,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { PropertyListing } from "@/lib/property-schema";
-import { getCitiesWithinRadiusComprehensive } from '@/lib/comprehensive-cities';
+import { getCitiesWithinRadiusWithExpansion } from '@/lib/comprehensive-cities';
 import { checkDatabaseAvailable, applyRateLimit, getClientIp } from '@/lib/api-guards';
 import { requireAuth } from '@/lib/auth-helpers';
 import { ErrorResponses, createSuccessResponse, logError } from '@/lib/api-error-handler';
@@ -121,12 +121,13 @@ export async function GET(request: NextRequest) {
         console.log(`✅ [buyer-search] Using stored filter: ${nearbyCityNames.size} nearby cities`);
       } else {
         // Fallback: Calculate on-the-fly if no filter exists (shouldn't happen after settings)
+        // Uses automatic radius expansion: 30mi → 60mi → 120mi if needed
         console.log(`⚠️  [buyer-search] No stored filter found, calculating on-the-fly`);
-        const nearbyCitiesList = getCitiesWithinRadiusComprehensive(searchCity, searchState, 30);
+        const { cities: nearbyCitiesList, radiusUsed } = getCitiesWithinRadiusWithExpansion(searchCity, searchState, 30, 5);
         nearbyCityNames = new Set(
           nearbyCitiesList.map(city => city.name.toLowerCase())
         );
-        console.log(`✅ [buyer-search] Calculated ${nearbyCityNames.size} nearby cities as fallback`);
+        console.log(`✅ [buyer-search] Calculated ${nearbyCityNames.size} nearby cities as fallback (radius: ${radiusUsed}mi)`);
       }
 
       console.log(`✅ [buyer-search] Buyer filters:`, buyerFilters);

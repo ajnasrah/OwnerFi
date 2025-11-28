@@ -188,9 +188,9 @@ async function checkPropertyMatchesBuyer(property: PropertyListing & { id: strin
     const buyerCity = criteria.city || buyerData.preferredCity;
     const buyerState = criteria.state || buyerData.preferredState;
 
-    // Get cities within 30 miles of buyer's search city
-    const { getCitiesWithinRadiusComprehensive } = await import('@/lib/comprehensive-cities');
-    const nearbyCities = getCitiesWithinRadiusComprehensive(buyerCity, buyerState, 30);
+    // Get cities within 30 miles of buyer's search city (with auto-expansion to 60/120mi if needed)
+    const { getCitiesWithinRadiusWithExpansion } = await import('@/lib/comprehensive-cities');
+    const { cities: nearbyCities } = getCitiesWithinRadiusWithExpansion(buyerCity, buyerState, 30, 5);
     const nearbyCityNames = new Set(nearbyCities.map(c => c.name.toLowerCase()));
 
     // Property matches if in ANY nearby city

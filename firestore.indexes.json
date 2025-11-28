@@ -795,16 +795,6 @@
           "arrayConfig": "CONTAINS"
         }
       ]
-    },
-    {
-      "collectionGroup": "cash_houses",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "nearbyCities",
-          "arrayConfig": "CONTAINS"
-        }
-      ]
     }
   ],
   "fieldOverrides": []

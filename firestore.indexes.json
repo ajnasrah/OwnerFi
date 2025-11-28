@@ -251,6 +251,24 @@
       ]
     },
     {
+      "collectionGroup": "scraper_queue",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "retryCount",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "failedAt",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
       "collectionGroup": "zillow_imports",
       "queryScope": "COLLECTION",
       "fields": [

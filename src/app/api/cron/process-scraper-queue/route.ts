@@ -76,20 +76,57 @@ export async function GET(request: NextRequest) {
       .limit(50)
       .get();
 
-    if (pendingItems.empty) {
+    // Also check for failed items that can be retried (max 3 retries, 24h wait)
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const retryableItems = await db
+      .collection('scraper_queue')
+      .where('status', '==', 'failed')
+      .where('retryCount', '<', 3)
+      .where('failedAt', '<', twentyFourHoursAgo)
+      .orderBy('failedAt', 'asc')
+      .limit(50 - pendingItems.size)
+      .get();
+
+    if (!retryableItems.empty) {
+      console.log(`🔄 [QUEUE CRON] Found ${retryableItems.size} failed items eligible for retry`);
+
+      // Reset retryable items back to pending
+      const retryBatch = db.batch();
+      retryableItems.docs.forEach(doc => {
+        retryBatch.update(doc.ref, {
+          status: 'pending',
+          lastRetryAt: new Date(),
+        });
+      });
+      await retryBatch.commit();
+      console.log(`✅ [QUEUE CRON] Reset ${retryableItems.size} failed items to pending for retry`);
+    }
+
+    // Re-fetch pending items after retry reset
+    const allPendingItems = await db
+      .collection('scraper_queue')
+      .where('status', '==', 'pending')
+      .orderBy('addedAt', 'asc')
+      .limit(50)
+      .get();
+
+    if (allPendingItems.empty) {
       console.log('✅ [QUEUE CRON] No pending items in queue');
       return NextResponse.json({ message: 'No pending items in queue' });
     }
 
-    const urls = pendingItems.docs.map(doc => doc.data().url);
-    const queueDocRefs = pendingItems.docs.map(doc => doc.ref);
+    // Use allPendingItems instead of pendingItems for the rest
+    const pendingDocs = allPendingItems.docs;
+
+    const urls = pendingDocs.map(doc => doc.data().url);
+    const queueDocRefs = pendingDocs.map(doc => doc.ref);
     metrics.queueItemsProcessed = urls.length;
 
     console.log(`📋 [QUEUE CRON] Processing ${urls.length} URLs from queue`);
 
     // Mark as processing
     const batch = db.batch();
-    pendingItems.docs.forEach(doc => {
+    pendingDocs.forEach(doc => {
       batch.update(doc.ref, {
         status: 'processing',
         processingStartedAt: new Date(),
@@ -385,18 +422,45 @@ export async function GET(request: NextRequest) {
       console.log(`✅ [QUEUE CRON] Marked ${urls.length} queue items as completed`);
     } else {
       // Mark as failed if no properties were saved
+      // Check each item's retry count to determine if it should be permanently failed
       const failBatch = db.batch();
-      queueDocRefs.forEach(docRef => {
-        failBatch.update(docRef, {
-          status: 'failed',
-          failedAt: new Date(),
-          failureReason: 'No properties were successfully saved',
-          retryCount: FieldValue.increment(1),
-        });
-      });
+      let permanentlyFailed = 0;
+      let retriable = 0;
+
+      for (const docRef of queueDocRefs) {
+        const docSnap = await docRef.get();
+        const currentRetryCount = docSnap.data()?.retryCount || 0;
+
+        if (currentRetryCount >= 2) {
+          // This will be the 3rd failure - mark as permanently failed
+          failBatch.update(docRef, {
+            status: 'permanently_failed',
+            failedAt: new Date(),
+            failureReason: 'No properties were successfully saved after 3 attempts',
+            retryCount: FieldValue.increment(1),
+          });
+          permanentlyFailed++;
+        } else {
+          // Still has retries left
+          failBatch.update(docRef, {
+            status: 'failed',
+            failedAt: new Date(),
+            failureReason: 'No properties were successfully saved',
+            retryCount: FieldValue.increment(1),
+          });
+          retriable++;
+        }
+      }
+
       await failBatch.commit();
       metrics.queueItemsFailed = urls.length;
       console.log(`⚠️ [QUEUE CRON] Marked ${urls.length} queue items as failed (no properties saved)`);
+      if (permanentlyFailed > 0) {
+        console.log(`   ❌ ${permanentlyFailed} items permanently failed (3 attempts exhausted)`);
+      }
+      if (retriable > 0) {
+        console.log(`   🔄 ${retriable} items will be retried in 24 hours`);
+      }
     }
 
     const duration = ((Date.now() - startTime) / 1000).toFixed(2);

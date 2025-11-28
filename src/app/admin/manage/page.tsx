@@ -2742,6 +2742,8 @@ export default function AdminDashboard() {
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Zestimate / 80%</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Discount %</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cash Flow</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CoC %</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Details</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
@@ -2810,6 +2812,29 @@ export default function AdminDashboard() {
                                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
                                   ⚠️ {Math.abs(discountPct).toFixed(1)}% PREMIUM
                                 </span>
+                              )}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              {house.cashFlow ? (
+                                <div>
+                                  <span className={`font-semibold ${house.cashFlow.monthlyCashFlow > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                    ${house.cashFlow.monthlyCashFlow?.toLocaleString()}/mo
+                                  </span>
+                                  <div className="text-xs text-gray-500">
+                                    ${house.cashFlow.annualCashFlow?.toLocaleString()}/yr
+                                  </div>
+                                </div>
+                              ) : (
+                                <span className="text-gray-400 text-sm">-</span>
+                              )}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              {house.cashFlow ? (
+                                <span className={`font-semibold ${house.cashFlow.cocReturn > 10 ? 'text-green-600' : house.cashFlow.cocReturn > 0 ? 'text-yellow-600' : 'text-red-600'}`}>
+                                  {house.cashFlow.cocReturn}%
+                                </span>
+                              ) : (
+                                <span className="text-gray-400 text-sm">-</span>
                               )}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">

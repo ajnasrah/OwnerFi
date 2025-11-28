@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getAdminDb } from '@/lib/firebase-admin';
+import { getCitiesWithinRadiusComprehensive } from '@/lib/comprehensive-cities';
 
 // Cache for states list (refresh every 5 minutes)
 let statesCache: { states: string[]; timestamp: number } | null = null;
@@ -168,10 +169,22 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const city = searchParams.get('city')?.toLowerCase();
     const state = searchParams.get('state')?.toUpperCase();
+    const radius = parseInt(searchParams.get('radius') || '0'); // Radius in miles for surrounding cities
     const sortBy = searchParams.get('sortBy') || 'percentOfArv';
     const sortOrder = searchParams.get('sortOrder') || 'asc';
     const limit = parseInt(searchParams.get('limit') || '100');
     const collection = searchParams.get('collection'); // 'cash_houses', 'zillow_imports', or null for both
+
+    // Get surrounding cities if radius is specified
+    let surroundingCities: Set<string> = new Set();
+    if (city && radius > 0) {
+      // Find cities within radius (need to find the state for the city first)
+      const searchState = state || ''; // Will search all states if not specified
+      const nearbyCities = getCitiesWithinRadiusComprehensive(city, searchState, radius);
+      surroundingCities = new Set(nearbyCities.map(c => c.name.toLowerCase()));
+      surroundingCities.add(city); // Include the searched city itself
+      console.log(`[cash-deals] Found ${surroundingCities.size} cities within ${radius} miles of ${city}`);
+    }
 
     let allDeals: any[] = [];
 
@@ -184,13 +197,14 @@ export async function GET(request: Request) {
     // Fetch from cash_houses (discount deals) - smaller collection, fetch all
     if (!collection || collection === 'cash_houses') {
       fetchPromises.push((async () => {
-        let cashQuery: FirebaseFirestore.Query = db.collection('cash_houses');
-        if (state) cashQuery = cashQuery.where('state', '==', state);
-        // cash_houses is small (~150), fetch all but order by addedAt DESC for freshness
-        cashQuery = cashQuery.orderBy('addedAt', 'desc');
-        const cashSnapshot = await cashQuery.get();
+        // cash_houses is small (~150), fetch all and filter/sort in memory to avoid index requirements
+        const cashSnapshot = await db.collection('cash_houses').get();
         cashSnapshot.docs.forEach(doc => {
-          allDeals.push(normalizeProperty(doc, 'cash_houses'));
+          const normalized = normalizeProperty(doc, 'cash_houses');
+          // Filter by state in memory if specified
+          if (!state || normalized.state === state) {
+            allDeals.push(normalized);
+          }
         });
       })());
     }
@@ -214,11 +228,19 @@ export async function GET(request: Request) {
     // Filter out $0 price properties
     allDeals = allDeals.filter((deal: any) => deal.price > 0);
 
-    // Filter by city (case-insensitive partial match)
+    // Filter by city (case-insensitive partial match) or surrounding cities
     if (city) {
-      allDeals = allDeals.filter((deal: any) =>
-        deal.city?.toLowerCase().includes(city)
-      );
+      if (surroundingCities.size > 0) {
+        // Use surrounding cities set (includes the searched city)
+        allDeals = allDeals.filter((deal: any) =>
+          surroundingCities.has(deal.city?.toLowerCase())
+        );
+      } else {
+        // Fall back to partial match
+        allDeals = allDeals.filter((deal: any) =>
+          deal.city?.toLowerCase().includes(city)
+        );
+      }
     }
 
     // Sort - handle nested cashFlow fields

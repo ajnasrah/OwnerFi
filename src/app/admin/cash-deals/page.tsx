@@ -59,6 +59,7 @@ export default function CashDealsPage() {
   // Filters
   const [citySearch, setCitySearch] = useState('');
   const [stateFilter, setStateFilter] = useState('');
+  const [radius, setRadius] = useState(0); // 0 = no radius, otherwise miles
   const [sortBy, setSortBy] = useState<SortField>('percentOfArv');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
@@ -69,6 +70,7 @@ export default function CashDealsPage() {
       const params = new URLSearchParams();
       if (citySearch) params.set('city', citySearch);
       if (stateFilter) params.set('state', stateFilter);
+      if (radius > 0) params.set('radius', String(radius));
       params.set('sortBy', sortBy);
       params.set('sortOrder', sortOrder);
       params.set('limit', '200');
@@ -174,6 +176,23 @@ export default function CashDealsPage() {
             </select>
           </div>
 
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Radius
+            </label>
+            <select
+              value={radius}
+              onChange={(e) => setRadius(parseInt(e.target.value))}
+              className="border rounded-lg px-3 py-2 w-32"
+            >
+              <option value="0">Exact City</option>
+              <option value="15">15 miles</option>
+              <option value="30">30 miles</option>
+              <option value="50">50 miles</option>
+              <option value="75">75 miles</option>
+            </select>
+          </div>
+
           <button
             type="submit"
             className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
@@ -181,12 +200,13 @@ export default function CashDealsPage() {
             Search
           </button>
 
-          {(citySearch || stateFilter) && (
+          {(citySearch || stateFilter || radius > 0) && (
             <button
               type="button"
               onClick={() => {
                 setCitySearch('');
                 setStateFilter('');
+                setRadius(0);
               }}
               className="text-gray-600 px-4 py-2 hover:text-gray-800"
             >

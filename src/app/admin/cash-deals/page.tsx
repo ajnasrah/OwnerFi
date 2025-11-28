@@ -52,6 +52,7 @@ const GLOBAL_MAX_PRICE = 300000;
 
 // Quick filter presets for investors (all within $300K cap)
 const QUICK_FILTERS = {
+  ownerFinance: { label: 'Owner Finance <80%', icon: '🏠', sortBy: 'percentOfArv' as SortField, sortOrder: 'asc' as const, maxArv: 80, ownerFinanceOnly: true },
   bestCoc: { label: 'Best CoC %', icon: '%', sortBy: 'cocReturn' as SortField, sortOrder: 'desc' as const, minCoc: 15 },
   highCashFlow: { label: 'High Cash Flow', icon: '$', sortBy: 'monthlyCashFlow' as SortField, sortOrder: 'desc' as const, minCashFlow: 300 },
   bigDiscounts: { label: 'Big Discounts', icon: '!', sortBy: 'percentOfArv' as SortField, sortOrder: 'asc' as const, maxArv: 55 },
@@ -84,8 +85,13 @@ export default function CashDealsPage() {
   const [minCoc, setMinCoc] = useState<number | ''>('');
   const [minCashFlow, setMinCashFlow] = useState<number | ''>('');
   const [maxArv, setMaxArv] = useState<number | ''>('');
-  const [activeQuickFilter, setActiveQuickFilter] = useState<QuickFilterKey>('allDeals');
+  const [ownerFinanceOnly, setOwnerFinanceOnly] = useState(false);
+  const [activeQuickFilter, setActiveQuickFilter] = useState<QuickFilterKey>('ownerFinance');
   const [showAdvanced, setShowAdvanced] = useState(false);
+
+  // Bulk selection for delete
+  const [selectedDeals, setSelectedDeals] = useState<Set<string>>(new Set());
+  const [deleting, setDeleting] = useState(false);
 
   const fetchDeals = async () => {
     setLoading(true);
@@ -120,6 +126,11 @@ export default function CashDealsPage() {
     fetchDeals();
   }, [stateFilter, citySearch, radius]);
 
+  // Apply default Owner Finance filter on mount
+  useEffect(() => {
+    applyQuickFilter('ownerFinance');
+  }, []);
+
   // Apply quick filter preset
   const applyQuickFilter = (key: QuickFilterKey) => {
     const filter = QUICK_FILTERS[key];
@@ -133,6 +144,7 @@ export default function CashDealsPage() {
     setMinCoc('');
     setMinCashFlow('');
     setMaxArv('');
+    setOwnerFinanceOnly(false);
 
     // Apply preset filters
     if ('minCoc' in filter) setMinCoc(filter.minCoc!);
@@ -140,6 +152,7 @@ export default function CashDealsPage() {
     if ('maxArv' in filter) setMaxArv(filter.maxArv!);
     if ('minPrice' in filter) setMinPrice(filter.minPrice!);
     if ('maxPrice' in filter) setMaxPrice(filter.maxPrice!);
+    if ('ownerFinanceOnly' in filter) setOwnerFinanceOnly(filter.ownerFinanceOnly!);
   };
 
   // Client-side filtered and sorted deals
@@ -148,6 +161,9 @@ export default function CashDealsPage() {
 
     // GLOBAL: Always filter out properties over $300K
     result = result.filter(d => d.price <= GLOBAL_MAX_PRICE);
+
+    // Owner Finance filter
+    if (ownerFinanceOnly) result = result.filter(d => d.ownerFinanceVerified === true);
 
     // Apply client-side filters
     if (minPrice !== '') result = result.filter(d => d.price >= minPrice);
@@ -172,7 +188,7 @@ export default function CashDealsPage() {
     });
 
     return result;
-  }, [allDeals, minPrice, maxPrice, minCoc, minCashFlow, maxArv, sortBy, sortOrder]);
+  }, [allDeals, minPrice, maxPrice, minCoc, minCashFlow, maxArv, ownerFinanceOnly, sortBy, sortOrder]);
 
   // Stats for filtered deals
   const stats = useMemo(() => {
@@ -208,9 +224,59 @@ export default function CashDealsPage() {
     setMinCoc('');
     setMinCashFlow('');
     setMaxArv('');
+    setOwnerFinanceOnly(false);
     setActiveQuickFilter('allDeals');
     setSortBy('cocReturn');
     setSortOrder('desc');
+  };
+
+  // Bulk delete selected deals
+  const deleteSelectedDeals = async () => {
+    if (selectedDeals.size === 0) return;
+    if (!confirm(`Delete ${selectedDeals.size} propert${selectedDeals.size === 1 ? 'y' : 'ies'}? This cannot be undone.`)) return;
+
+    setDeleting(true);
+    try {
+      const res = await fetch('/api/admin/cash-deals', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: Array.from(selectedDeals) }),
+      });
+      const data = await res.json();
+      if (data.error) {
+        alert(`Error: ${data.error}`);
+      } else {
+        // Remove deleted deals from local state
+        setAllDeals(prev => prev.filter(d => !selectedDeals.has(d.id)));
+        setSelectedDeals(new Set());
+        alert(`Deleted ${data.deleted} propert${data.deleted === 1 ? 'y' : 'ies'} successfully!`);
+      }
+    } catch (err: any) {
+      alert(`Failed to delete: ${err.message}`);
+    }
+    setDeleting(false);
+  };
+
+  // Toggle selection for a deal
+  const toggleSelection = (id: string) => {
+    setSelectedDeals(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  };
+
+  // Select/deselect all visible deals
+  const toggleSelectAll = () => {
+    if (selectedDeals.size === filteredDeals.length) {
+      setSelectedDeals(new Set());
+    } else {
+      setSelectedDeals(new Set(filteredDeals.map(d => d.id)));
+    }
   };
 
   const SortHeader = ({ field, label }: { field: SortField; label: string }) => (
@@ -288,6 +354,30 @@ export default function CashDealsPage() {
               {showAdvanced ? 'Hide Filters' : 'More Filters'}
             </button>
           </div>
+
+          {/* Bulk Delete Bar */}
+          {selectedDeals.size > 0 && (
+            <div className="bg-red-900/30 border border-red-700 rounded-lg p-3 mb-4 flex items-center justify-between">
+              <span className="text-red-300 font-medium">
+                {selectedDeals.size} propert{selectedDeals.size === 1 ? 'y' : 'ies'} selected
+              </span>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setSelectedDeals(new Set())}
+                  className="px-3 py-1.5 text-sm text-slate-300 hover:text-white"
+                >
+                  Clear
+                </button>
+                <button
+                  onClick={deleteSelectedDeals}
+                  disabled={deleting}
+                  className="px-4 py-1.5 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 disabled:bg-slate-600"
+                >
+                  {deleting ? 'Deleting...' : `Delete ${selectedDeals.size}`}
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Advanced Filters Panel */}
           {showAdvanced && (
@@ -411,6 +501,14 @@ export default function CashDealsPage() {
                 <table className="w-full">
                   <thead className="bg-slate-700 border-b border-slate-600">
                     <tr>
+                      <th className="px-3 py-3 text-left text-slate-300 text-xs font-semibold w-10">
+                        <input
+                          type="checkbox"
+                          checked={selectedDeals.size === filteredDeals.length && filteredDeals.length > 0}
+                          onChange={toggleSelectAll}
+                          className="w-4 h-4 rounded border-slate-500 bg-slate-600 text-emerald-500 focus:ring-emerald-500"
+                        />
+                      </th>
                       <th className="px-3 py-3 text-left text-slate-300 text-xs font-semibold">Property</th>
                       <th className="px-3 py-3 text-left text-slate-300 text-xs font-semibold">Location</th>
                       <SortHeader field="price" label="Price" />
@@ -425,11 +523,20 @@ export default function CashDealsPage() {
                   <tbody className="divide-y divide-slate-700">
                     {filteredDeals.map((deal, idx) => {
                       const isTopDeal = (deal.cashFlow?.cocReturn || 0) >= 20 || (deal.cashFlow?.monthlyCashFlow || 0) >= 500;
+                      const isSelected = selectedDeals.has(deal.id);
                       return (
                         <tr
                           key={deal.id}
-                          className={`hover:bg-slate-700/50 ${isTopDeal ? 'bg-emerald-900/20' : ''}`}
+                          className={`hover:bg-slate-700/50 ${isTopDeal ? 'bg-emerald-900/20' : ''} ${isSelected ? 'bg-red-900/20' : ''}`}
                         >
+                          <td className="px-3 py-2">
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => toggleSelection(deal.id)}
+                              className="w-4 h-4 rounded border-slate-500 bg-slate-600 text-emerald-500 focus:ring-emerald-500"
+                            />
+                          </td>
                           <td className="px-3 py-2">
                             <div className="flex items-center gap-2">
                               {deal.imgSrc && (

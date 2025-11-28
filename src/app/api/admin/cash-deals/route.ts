@@ -306,3 +306,52 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
+
+// DELETE - Bulk delete cash deals
+export async function DELETE(request: Request) {
+  try {
+    const db = await getAdminDb();
+    if (!db) {
+      return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
+    }
+
+    const { ids } = await request.json();
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return NextResponse.json({ error: 'No IDs provided' }, { status: 400 });
+    }
+
+    console.log(`[cash-deals] Deleting ${ids.length} properties...`);
+
+    let deleted = 0;
+    const batch = db.batch();
+
+    for (const id of ids) {
+      // Try to delete from both collections
+      const cashHouseRef = db.collection('cash_houses').doc(id);
+      const zillowRef = db.collection('zillow_imports').doc(id);
+
+      // Check which collection has the doc
+      const [cashDoc, zillowDoc] = await Promise.all([
+        cashHouseRef.get(),
+        zillowRef.get()
+      ]);
+
+      if (cashDoc.exists) {
+        batch.delete(cashHouseRef);
+        deleted++;
+      }
+      if (zillowDoc.exists) {
+        batch.delete(zillowRef);
+        deleted++;
+      }
+    }
+
+    await batch.commit();
+    console.log(`[cash-deals] Deleted ${deleted} properties`);
+
+    return NextResponse.json({ deleted, success: true });
+  } catch (error: any) {
+    console.error('Error deleting cash deals:', error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}

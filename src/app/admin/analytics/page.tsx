@@ -12,29 +12,20 @@ export const metadata = {
 
 export default function AnalyticsDashboardPage() {
   return (
-    <div className="h-screen overflow-hidden bg-gray-50 flex flex-col">
-      <div className="flex-1 overflow-y-auto">
-        <div className="container mx-auto px-4 py-8">
+    <div className="h-screen overflow-hidden bg-slate-900 flex flex-col">
+      <div className="flex-1 overflow-y-auto p-6">
+        <div className="max-w-7xl mx-auto">
+        <a href="/admin" className="text-emerald-400 hover:text-emerald-300 text-sm mb-4 inline-block">← Back to Admin</a>
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">📊 Platform Analytics Dashboard</h1>
-          <p className="text-gray-600">
+          <h1 className="text-3xl font-bold text-white mb-2">📊 Platform Analytics Dashboard</h1>
+          <p className="text-slate-400">
             Platform-specific insights, peak times, engagement trends, and AI-powered recommendations
           </p>
         </div>
 
         {/* Dashboard */}
         <PlatformAnalyticsDashboard />
-
-        {/* Back to Admin */}
-        <div className="mt-8">
-          <a
-            href="/admin"
-            className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700"
-          >
-            ← Back to Admin Dashboard
-          </a>
-        </div>
         </div>
       </div>
     </div>

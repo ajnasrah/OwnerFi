@@ -210,11 +210,6 @@ export default function ArticlesPage() {
 
   const allArticles = activeBrand === 'carz' ? articles?.articles.carz || [] : activeBrand === 'vassdistro' ? articles?.articles.vassdistro || [] : articles?.articles.ownerfi || [];
 
-  // Debug logging
-  console.log(`[${activeBrand}] Total articles:`, allArticles.length);
-  console.log(`[${activeBrand}] Processed count:`, allArticles.filter(a => a.processed).length);
-  console.log(`[${activeBrand}] Unprocessed count:`, allArticles.filter(a => !a.processed).length);
-  console.log(`[${activeBrand}] With scores:`, allArticles.filter(a => a.qualityScore !== undefined).length);
 
   // Article Queue: Unprocessed articles with scores >= 50, sorted by score DESC
   const queueArticles = allArticles
@@ -227,13 +222,14 @@ export default function ArticlesPage() {
   const displayArticles = activeView === 'queue' ? queueArticles : unprocessedArticles;
 
   return (
-    <div className="h-screen overflow-hidden bg-slate-50 flex flex-col">
-      <div className="flex-1 overflow-y-auto p-8">
+    <div className="h-screen overflow-hidden bg-slate-900 flex flex-col">
+      <div className="flex-1 overflow-y-auto p-6">
         <div className="max-w-7xl mx-auto">
+        <a href="/admin" className="text-emerald-400 hover:text-emerald-300 text-sm mb-4 inline-block">← Back to Admin</a>
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-slate-900">Article Management</h1>
-          <p className="text-slate-600 mt-1">Manage articles for video generation</p>
+          <h1 className="text-3xl font-bold text-white">Article Management</h1>
+          <p className="text-slate-400 mt-1">Manage articles for video generation</p>
         </div>
 
         {/* Brand Tabs */}
@@ -248,8 +244,8 @@ export default function ArticlesPage() {
               onClick={() => setActiveBrand(tab.key as any)}
               className={`flex items-center space-x-2 px-6 py-3 rounded-xl font-medium transition-all ${
                 activeBrand === tab.key
-                  ? 'bg-gradient-to-r from-indigo-500 to-indigo-600 text-white shadow-lg'
-                  : 'bg-white text-slate-700 hover:bg-slate-100'
+                  ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg'
+                  : 'bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700'
               }`}
             >
               <span className="text-lg">{tab.icon}</span>
@@ -269,14 +265,14 @@ export default function ArticlesPage() {
               onClick={() => setActiveView(tab.key as any)}
               className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                 activeView === tab.key
-                  ? 'bg-indigo-600 text-white'
-                  : 'bg-white text-slate-700 hover:bg-slate-100'
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700'
               }`}
             >
               <span>{tab.icon}</span>
               <span>{tab.label}</span>
               <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
-                activeView === tab.key ? 'bg-white/20' : 'bg-slate-200'
+                activeView === tab.key ? 'bg-white/20' : 'bg-slate-700 text-slate-300'
               }`}>
                 {tab.count}
               </span>
@@ -285,9 +281,9 @@ export default function ArticlesPage() {
         </div>
 
         {/* Articles List */}
-        <div className="bg-white rounded-xl shadow-sm p-6">
+        <div className="bg-slate-800 rounded-xl border border-slate-700 p-6">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-slate-900">
+            <h2 className="text-lg font-semibold text-white">
               {activeView === 'queue' ? `Video-Ready Articles (${queueArticles.length} with score ≥65)` : 'All Unprocessed Articles'}
             </h2>
             <div className="flex items-center gap-2">
@@ -296,7 +292,7 @@ export default function ArticlesPage() {
                 disabled={fetching}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   fetching
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    ? 'bg-slate-600 text-slate-400 cursor-not-allowed'
                     : 'bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700'
                 }`}
               >
@@ -308,7 +304,7 @@ export default function ArticlesPage() {
                   disabled={rating || unprocessedArticles.length === 0}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                     rating || unprocessedArticles.length === 0
-                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      ? 'bg-slate-600 text-slate-400 cursor-not-allowed'
                       : 'bg-gradient-to-r from-purple-500 to-purple-600 text-white hover:from-purple-600 hover:to-purple-700'
                   }`}
                 >
@@ -317,7 +313,7 @@ export default function ArticlesPage() {
               )}
               <button
                 onClick={loadArticles}
-                className="px-4 py-2 rounded-lg text-sm font-medium bg-white text-indigo-600 hover:bg-indigo-50 border border-indigo-200 transition-colors"
+                className="px-4 py-2 rounded-lg text-sm font-medium bg-slate-700 text-emerald-400 hover:bg-slate-600 border border-slate-600 transition-colors"
               >
                 🔄 Refresh
               </button>
@@ -329,19 +325,19 @@ export default function ArticlesPage() {
               {displayArticles.map((article, index) => (
                 <div
                   key={article.id}
-                  className="border border-slate-200 rounded-lg p-4 hover:border-indigo-300 transition-colors"
+                  className="border border-slate-600 rounded-lg p-4 hover:border-emerald-500 transition-colors bg-slate-700/50"
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
                       <div className="flex items-start gap-3">
-                        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 font-semibold text-sm flex-shrink-0">
+                        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-emerald-900/50 text-emerald-400 font-semibold text-sm flex-shrink-0">
                           {index + 1}
                         </span>
                         <div className="flex-1">
-                          <h3 className="font-semibold text-slate-900 text-base mb-1">
+                          <h3 className="font-semibold text-white text-base mb-1">
                             {decodeHTML(article.title)}
                           </h3>
-                          <p className="text-sm text-slate-600 line-clamp-2 mb-2">
+                          <p className="text-sm text-slate-400 line-clamp-2 mb-2">
                             {decodeHTML(article.description)}
                           </p>
                           <div className="flex items-center gap-4 text-xs text-slate-500">
@@ -365,7 +361,7 @@ export default function ArticlesPage() {
                         href={article.link}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+                        className="inline-flex items-center px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-colors"
                       >
                         View Article →
                       </a>
@@ -380,21 +376,21 @@ export default function ArticlesPage() {
                   </div>
 
                   {article.aiReasoning && (
-                    <div className="mt-3 pt-3 border-t border-slate-200">
-                      <div className="text-xs font-semibold text-slate-700 mb-1">🤖 AI Analysis:</div>
-                      <div className="text-sm text-slate-600 italic">"{article.aiReasoning}"</div>
+                    <div className="mt-3 pt-3 border-t border-slate-600">
+                      <div className="text-xs font-semibold text-slate-300 mb-1">🤖 AI Analysis:</div>
+                      <div className="text-sm text-slate-400 italic">"{article.aiReasoning}"</div>
                     </div>
                   )}
                 </div>
               ))}
             </div>
           ) : (
-            <div className="bg-slate-50 rounded-lg p-12 text-center border border-slate-200">
+            <div className="bg-slate-700/50 rounded-lg p-12 text-center border border-slate-600">
               <div className="text-4xl mb-3">📭</div>
-              <div className="text-slate-500 text-sm font-medium">
+              <div className="text-slate-400 text-sm font-medium">
                 {activeView === 'queue' ? 'No video-ready articles (score ≥65)' : 'No unprocessed articles'}
               </div>
-              <div className="text-xs text-slate-400 mt-1">
+              <div className="text-xs text-slate-500 mt-1">
                 {activeView === 'queue'
                   ? 'Rate unprocessed articles to populate the queue with high-quality content'
                   : 'Articles will appear here when fetched from RSS feeds'}
@@ -405,23 +401,23 @@ export default function ArticlesPage() {
 
         {/* Stats Summary */}
         <div className="mt-6 grid grid-cols-4 gap-4">
-          <div className="bg-white rounded-lg shadow-sm p-4">
-            <div className="text-sm text-slate-600">Video-Ready Queue</div>
-            <div className="text-2xl font-bold text-green-600 mt-1">
+          <div className="bg-slate-800 rounded-lg border border-slate-700 p-4">
+            <div className="text-sm text-slate-400">Video-Ready Queue</div>
+            <div className="text-2xl font-bold text-emerald-400 mt-1">
               {queueArticles.length}
             </div>
             <div className="text-xs text-slate-500 mt-1">Score ≥65</div>
           </div>
-          <div className="bg-white rounded-lg shadow-sm p-4">
-            <div className="text-sm text-slate-600">Total Unprocessed</div>
-            <div className="text-2xl font-bold text-slate-900 mt-1">
+          <div className="bg-slate-800 rounded-lg border border-slate-700 p-4">
+            <div className="text-sm text-slate-400">Total Unprocessed</div>
+            <div className="text-2xl font-bold text-white mt-1">
               {unprocessedArticles.length}
             </div>
             <div className="text-xs text-slate-500 mt-1">Needs rating</div>
           </div>
-          <div className="bg-white rounded-lg shadow-sm p-4">
-            <div className="text-sm text-slate-600">Avg Score (Queue)</div>
-            <div className="text-2xl font-bold text-slate-900 mt-1">
+          <div className="bg-slate-800 rounded-lg border border-slate-700 p-4">
+            <div className="text-sm text-slate-400">Avg Score (Queue)</div>
+            <div className="text-2xl font-bold text-white mt-1">
               {queueArticles.length > 0
                 ? Math.round(
                     queueArticles
@@ -432,9 +428,9 @@ export default function ArticlesPage() {
             </div>
             <div className="text-xs text-slate-500 mt-1">Quality rating</div>
           </div>
-          <div className="bg-white rounded-lg shadow-sm p-4">
-            <div className="text-sm text-slate-600">Total Articles</div>
-            <div className="text-2xl font-bold text-slate-900 mt-1">
+          <div className="bg-slate-800 rounded-lg border border-slate-700 p-4">
+            <div className="text-sm text-slate-400">Total Articles</div>
+            <div className="text-2xl font-bold text-white mt-1">
               {allArticles.length}
             </div>
             <div className="text-xs text-slate-500 mt-1">In database</div>

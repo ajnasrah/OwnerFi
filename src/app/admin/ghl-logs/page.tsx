@@ -171,13 +171,15 @@ export default function GoHighLevelLogsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white p-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="h-screen overflow-hidden bg-slate-900 flex flex-col">
+      <div className="flex-1 overflow-y-auto p-6">
+        <div className="max-w-7xl mx-auto">
+        <a href="/admin" className="text-emerald-400 hover:text-emerald-300 text-sm mb-4 inline-block">← Back to Admin</a>
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h1 className="text-3xl font-bold">GoHighLevel SMS Logs</h1>
+              <h1 className="text-3xl font-bold text-white">GoHighLevel SMS Logs</h1>
               <p className="text-slate-400 mt-2">Monitor property match notifications sent to buyers</p>
             </div>
             <button
@@ -352,14 +354,6 @@ export default function GoHighLevelLogsPage() {
           </div>
         </div>
 
-        {/* Back Button */}
-        <div className="mt-8">
-          <button
-            onClick={() => router.push('/admin')}
-            className="bg-slate-700 hover:bg-slate-600 px-6 py-3 rounded-lg font-semibold transition-colors"
-          >
-            ← Back to Admin Dashboard
-          </button>
         </div>
       </div>
     </div>

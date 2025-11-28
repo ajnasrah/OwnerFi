@@ -867,18 +867,19 @@ ${script.caption}`;
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 p-8">
-      <div className="max-w-7xl mx-auto">
+    <div className="h-screen overflow-hidden bg-slate-900 flex flex-col">
+      <div className="flex-1 overflow-y-auto p-6">
+        <div className="max-w-7xl mx-auto">
         {/* Back to Hub */}
-        <a href="/admin" className="text-indigo-600 hover:text-indigo-800 mb-4 inline-flex items-center gap-1">
+        <a href="/admin" className="text-emerald-400 hover:text-emerald-300 mb-4 inline-flex items-center gap-1">
           ← Back to Admin Hub
         </a>
 
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-slate-900">Social Media Automation</h1>
-            <p className="text-slate-600 mt-1">Monitor and control viral video generation</p>
+            <h1 className="text-3xl font-bold text-white">Social Media Automation</h1>
+            <p className="text-slate-400 mt-1">Monitor and control viral video generation</p>
           </div>
           <a
             href="/admin/ab-tests"
@@ -890,7 +891,7 @@ ${script.caption}`;
         </div>
 
         {/* Sub-navigation Tabs - Scrollable on mobile */}
-        <div className="flex space-x-2 mb-6 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 scrollbar-hide">
+        <div className="flex space-x-2 mb-6 overflow-x-auto pb-2 scrollbar-hide">
           {[
             { key: 'carz', label: 'Carz Inc', icon: '🚗' },
             { key: 'ownerfi', label: 'OwnerFi', icon: '🏠', hasSubtabs: true },
@@ -915,8 +916,8 @@ ${script.caption}`;
                 (activeSubTab === tab.key ||
                  (tab.key === 'ownerfi' && activeSubTab.startsWith('ownerfi')) ||
                  (tab.key === 'abdullah' && (activeSubTab === 'abdullah' || activeSubTab === 'abdullah-podcast')))
-                  ? 'bg-gradient-to-r from-indigo-500 to-indigo-600 text-white shadow-lg'
-                  : 'bg-white text-slate-700 hover:bg-slate-100'
+                  ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg'
+                  : 'bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700'
               }`}
             >
               <span className="text-lg">{tab.icon}</span>
@@ -927,13 +928,13 @@ ${script.caption}`;
 
         {/* Sub-tabs for OwnerFi */}
         {(activeSubTab.startsWith('ownerfi')) && (
-          <div className="flex space-x-2 mb-6 ml-0 md:ml-4 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 scrollbar-hide">
+          <div className="flex space-x-2 mb-6 ml-0 md:ml-4 overflow-x-auto pb-2 scrollbar-hide">
             <button
               onClick={() => setActiveSubTab('ownerfi')}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap flex-shrink-0 ${
                 activeSubTab === 'ownerfi'
-                  ? 'bg-indigo-100 text-indigo-700'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
               }`}
             >
               Viral Videos
@@ -942,8 +943,8 @@ ${script.caption}`;
               onClick={() => setActiveSubTab('ownerfi-benefits')}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap flex-shrink-0 ${
                 activeSubTab === 'ownerfi-benefits'
-                  ? 'bg-indigo-100 text-indigo-700'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
               }`}
             >
               💎 Benefits
@@ -952,8 +953,8 @@ ${script.caption}`;
               onClick={() => setActiveSubTab('ownerfi-properties')}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap flex-shrink-0 ${
                 activeSubTab === 'ownerfi-properties'
-                  ? 'bg-indigo-100 text-indigo-700'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
               }`}
             >
               🏡 Properties
@@ -962,8 +963,8 @@ ${script.caption}`;
               onClick={() => setActiveSubTab('ownerfi-properties-spanish')}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap flex-shrink-0 ${
                 activeSubTab === 'ownerfi-properties-spanish'
-                  ? 'bg-indigo-100 text-indigo-700'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
               }`}
             >
               🏡 Spanish
@@ -973,13 +974,13 @@ ${script.caption}`;
 
         {/* Sub-tabs for Abdullah */}
         {(activeSubTab === 'abdullah' || activeSubTab === 'abdullah-podcast') && (
-          <div className="flex space-x-2 mb-6 ml-0 md:ml-4 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 scrollbar-hide">
+          <div className="flex space-x-2 mb-6 ml-0 md:ml-4 overflow-x-auto pb-2 scrollbar-hide">
             <button
               onClick={() => setActiveSubTab('abdullah')}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap flex-shrink-0 ${
                 activeSubTab === 'abdullah'
-                  ? 'bg-indigo-100 text-indigo-700'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
               }`}
             >
               Daily Content
@@ -988,8 +989,8 @@ ${script.caption}`;
               onClick={() => setActiveSubTab('abdullah-podcast')}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap flex-shrink-0 ${
                 activeSubTab === 'abdullah-podcast'
-                  ? 'bg-indigo-100 text-indigo-700'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
               }`}
             >
               🎙️ Podcast
@@ -999,50 +1000,50 @@ ${script.caption}`;
 
         {/* Status Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          <div className="bg-white rounded-xl shadow-sm p-6">
+          <div className="bg-slate-800 rounded-xl border border-slate-700 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-sm font-medium text-slate-600">System Mode</div>
-                <div className="text-lg font-bold text-slate-900 mt-1">
+                <div className="text-sm font-medium text-slate-400">System Mode</div>
+                <div className="text-lg font-bold text-white mt-1">
                   Serverless Cron
                 </div>
                 <div className="text-xs text-slate-500 mt-1">5x daily (9AM-9PM CDT)</div>
               </div>
-              <div className="w-12 h-12 rounded-full flex items-center justify-center bg-blue-100">
+              <div className="w-12 h-12 rounded-full flex items-center justify-center bg-blue-900/30">
                 <div className="w-6 h-6 rounded-full bg-blue-500"></div>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm p-6">
+          <div className="bg-slate-800 rounded-xl border border-slate-700 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-sm font-medium text-slate-600">RSS Feeds</div>
-                <div className="text-2xl font-bold text-slate-900 mt-1">
+                <div className="text-sm font-medium text-slate-400">RSS Feeds</div>
+                <div className="text-2xl font-bold text-white mt-1">
                   {status?.feeds?.total || 0}
                 </div>
                 <div className="text-xs text-slate-500 mt-1">
                   {status?.feeds?.carz || 0} Carz • {status?.feeds?.ownerfi || 0} OwnerFi • {status?.feeds?.vassdistro || 0} Vass
                 </div>
               </div>
-              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+              <div className="w-12 h-12 bg-blue-900/30 rounded-full flex items-center justify-center">
                 <span className="text-2xl">📰</span>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm p-6">
+          <div className="bg-slate-800 rounded-xl border border-slate-700 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-sm font-medium text-slate-600">Articles in Queue</div>
-                <div className="text-2xl font-bold text-slate-900 mt-1">
+                <div className="text-sm font-medium text-slate-400">Articles in Queue</div>
+                <div className="text-2xl font-bold text-white mt-1">
                   {(status?.stats?.carz?.unprocessedArticles || 0) + (status?.stats?.ownerfi?.unprocessedArticles || 0)}
                 </div>
                 <div className="text-xs text-slate-500 mt-1">
                   {status?.stats?.carz?.unprocessedArticles || 0} Carz • {status?.stats?.ownerfi?.unprocessedArticles || 0} OwnerFi • {status?.stats?.vassdistro?.unprocessedArticles || 0} Vass
                 </div>
               </div>
-              <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+              <div className="w-12 h-12 bg-purple-900/30 rounded-full flex items-center justify-center">
                 <span className="text-2xl">📋</span>
               </div>
             </div>
@@ -1052,13 +1053,13 @@ ${script.caption}`;
         {/* Brand-Specific Content */}
         {activeSubTab === 'carz' && (
           <div className="space-y-6">
-            <div className="bg-white rounded-xl shadow-sm p-6">
+            <div className="bg-slate-800 rounded-xl border border-slate-700 p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-slate-900">Carz Inc Status</h3>
+                <h3 className="text-lg font-semibold text-white">Carz Inc Status</h3>
                 <button
                   onClick={triggerCron}
                   disabled={triggeringViral}
-                  className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:bg-gray-400 transition-colors"
+                  className="px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 disabled:bg-gray-400 transition-colors"
                 >
                   {triggeringViral ? 'Generating...' : 'Generate Video Now'}
                 </button>
@@ -1066,24 +1067,24 @@ ${script.caption}`;
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="bg-slate-50 rounded-lg p-4">
-                  <div className="text-sm text-slate-600">Daily Limit</div>
-                  <div className="text-2xl font-bold text-slate-900 mt-1">
+                  <div className="text-sm text-slate-400">Daily Limit</div>
+                  <div className="text-2xl font-bold text-white mt-1">
                     {status?.scheduler?.config?.maxVideosPerDay?.carz || 5}
                   </div>
                   <div className="text-xs text-slate-500 mt-1">videos/day</div>
                 </div>
 
                 <div className="bg-slate-50 rounded-lg p-4">
-                  <div className="text-sm text-slate-600">Available Articles</div>
-                  <div className="text-2xl font-bold text-slate-900 mt-1">
+                  <div className="text-sm text-slate-400">Available Articles</div>
+                  <div className="text-2xl font-bold text-white mt-1">
                     {status?.stats?.carz?.unprocessedArticles || 0}
                   </div>
                   <div className="text-xs text-slate-500 mt-1">ready to process</div>
                 </div>
 
                 <div className="bg-slate-50 rounded-lg p-4">
-                  <div className="text-sm text-slate-600">In Queue</div>
-                  <div className="text-2xl font-bold text-slate-900 mt-1">
+                  <div className="text-sm text-slate-400">In Queue</div>
+                  <div className="text-2xl font-bold text-white mt-1">
                     {(status?.stats?.carz?.queuePending || 0) + (status?.stats?.carz?.queueProcessing || 0)}
                   </div>
                   <div className="text-xs text-slate-500 mt-1">
@@ -1092,8 +1093,8 @@ ${script.caption}`;
                 </div>
 
                 <div className="bg-slate-50 rounded-lg p-4">
-                  <div className="text-sm text-slate-600">RSS Feeds</div>
-                  <div className="text-2xl font-bold text-slate-900 mt-1">
+                  <div className="text-sm text-slate-400">RSS Feeds</div>
+                  <div className="text-2xl font-bold text-white mt-1">
                     {status?.feeds?.carz || 0}
                   </div>
                   <div className="text-xs text-slate-500 mt-1">active sources</div>
@@ -1101,7 +1102,7 @@ ${script.caption}`;
               </div>
 
               <div className="mt-6 pt-6 border-t border-slate-200">
-                <h4 className="text-sm font-semibold text-slate-900 mb-3">Publishing Platforms</h4>
+                <h4 className="text-sm font-semibold text-white mb-3">Publishing Platforms</h4>
                 <div className="flex flex-wrap gap-2">
                   {['Instagram', 'TikTok', 'YouTube', 'Facebook', 'LinkedIn'].map((platform) => (
                     <span key={platform} className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700">
@@ -1114,10 +1115,10 @@ ${script.caption}`;
               {/* Workflow Logs */}
               <div className="mt-6 pt-6 border-t border-slate-200">
                 <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-sm font-semibold text-slate-900">Workflows</h4>
+                  <h4 className="text-sm font-semibold text-white">Workflows</h4>
                   <button
                     onClick={() => setShowHistory(!showHistory)}
-                    className="text-xs px-3 py-1 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition-colors"
+                    className="text-xs px-3 py-1 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-300 font-medium transition-colors"
                   >
                     {showHistory ? 'Active Only' : 'Show History'}
                   </button>
@@ -1128,7 +1129,7 @@ ${script.caption}`;
                       <div key={workflow.id} className="bg-white border border-slate-200 rounded-lg p-4 hover:border-indigo-300 transition-colors">
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex-1">
-                            <div className="font-medium text-slate-900 text-sm mb-1" dangerouslySetInnerHTML={{ __html: workflow.articleTitle }} />
+                            <div className="font-medium text-white text-sm mb-1" dangerouslySetInnerHTML={{ __html: workflow.articleTitle }} />
                             <div className="flex items-center gap-2 mt-1">
                               <div className="text-xs text-slate-500">{formatTimeAgo(workflow.createdAt)}</div>
                               {workflow.captionTemplate && (
@@ -1166,19 +1167,19 @@ ${script.caption}`;
                             {workflow.heygenVideoId && (
                               <div>
                                 <div className="text-slate-500 mb-1">HeyGen</div>
-                                <div className="font-mono text-slate-700 truncate">{workflow.heygenVideoId.substring(0, 12)}...</div>
+                                <div className="font-mono text-slate-300 truncate">{workflow.heygenVideoId.substring(0, 12)}...</div>
                               </div>
                             )}
                             {workflow.submagicVideoId && (
                               <div>
                                 <div className="text-slate-500 mb-1">Submagic</div>
-                                <div className="font-mono text-slate-700 truncate">{workflow.submagicVideoId.substring(0, 12)}...</div>
+                                <div className="font-mono text-slate-300 truncate">{workflow.submagicVideoId.substring(0, 12)}...</div>
                               </div>
                             )}
                             {(workflow.latePostId || workflow.metricoolPostId) && (
                               <div>
                                 <div className="text-slate-500 mb-1">GetLate</div>
-                                <div className="font-mono text-slate-700 truncate">{(workflow.latePostId || workflow.metricoolPostId)?.substring(0, 12)}...</div>
+                                <div className="font-mono text-slate-300 truncate">{(workflow.latePostId || workflow.metricoolPostId)?.substring(0, 12)}...</div>
                               </div>
                             )}
                           </div>
@@ -1207,13 +1208,13 @@ ${script.caption}`;
 
         {activeSubTab === 'ownerfi' && (
           <div className="space-y-6">
-            <div className="bg-white rounded-xl shadow-sm p-6">
+            <div className="bg-slate-800 rounded-xl border border-slate-700 p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-slate-900">OwnerFi Status</h3>
+                <h3 className="text-lg font-semibold text-white">OwnerFi Status</h3>
                 <button
                   onClick={triggerCron}
                   disabled={triggeringViral}
-                  className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:bg-gray-400 transition-colors"
+                  className="px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 disabled:bg-gray-400 transition-colors"
                 >
                   {triggeringViral ? 'Generating...' : 'Generate Video Now'}
                 </button>
@@ -1221,24 +1222,24 @@ ${script.caption}`;
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="bg-slate-50 rounded-lg p-4">
-                  <div className="text-sm text-slate-600">Daily Limit</div>
-                  <div className="text-2xl font-bold text-slate-900 mt-1">
+                  <div className="text-sm text-slate-400">Daily Limit</div>
+                  <div className="text-2xl font-bold text-white mt-1">
                     {status?.scheduler?.config?.maxVideosPerDay?.ownerfi || 5}
                   </div>
                   <div className="text-xs text-slate-500 mt-1">videos/day</div>
                 </div>
 
                 <div className="bg-slate-50 rounded-lg p-4">
-                  <div className="text-sm text-slate-600">Available Articles</div>
-                  <div className="text-2xl font-bold text-slate-900 mt-1">
+                  <div className="text-sm text-slate-400">Available Articles</div>
+                  <div className="text-2xl font-bold text-white mt-1">
                     {status?.stats?.ownerfi?.unprocessedArticles || 0}
                   </div>
                   <div className="text-xs text-slate-500 mt-1">ready to process</div>
                 </div>
 
                 <div className="bg-slate-50 rounded-lg p-4">
-                  <div className="text-sm text-slate-600">In Queue</div>
-                  <div className="text-2xl font-bold text-slate-900 mt-1">
+                  <div className="text-sm text-slate-400">In Queue</div>
+                  <div className="text-2xl font-bold text-white mt-1">
                     {(status?.stats?.ownerfi?.queuePending || 0) + (status?.stats?.ownerfi?.queueProcessing || 0)}
                   </div>
                   <div className="text-xs text-slate-500 mt-1">
@@ -1247,8 +1248,8 @@ ${script.caption}`;
                 </div>
 
                 <div className="bg-slate-50 rounded-lg p-4">
-                  <div className="text-sm text-slate-600">RSS Feeds</div>
-                  <div className="text-2xl font-bold text-slate-900 mt-1">
+                  <div className="text-sm text-slate-400">RSS Feeds</div>
+                  <div className="text-2xl font-bold text-white mt-1">
                     {status?.feeds?.ownerfi || 0}
                   </div>
                   <div className="text-xs text-slate-500 mt-1">active sources</div>
@@ -1256,7 +1257,7 @@ ${script.caption}`;
               </div>
 
               <div className="mt-6 pt-6 border-t border-slate-200">
-                <h4 className="text-sm font-semibold text-slate-900 mb-3">Publishing Platforms</h4>
+                <h4 className="text-sm font-semibold text-white mb-3">Publishing Platforms</h4>
                 <div className="flex flex-wrap gap-2">
                   {['Instagram', 'TikTok', 'YouTube', 'Facebook', 'LinkedIn', 'Threads'].map((platform) => (
                     <span key={platform} className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700">
@@ -1269,10 +1270,10 @@ ${script.caption}`;
               {/* Workflow Logs */}
               <div className="mt-6 pt-6 border-t border-slate-200">
                 <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-sm font-semibold text-slate-900">Workflows</h4>
+                  <h4 className="text-sm font-semibold text-white">Workflows</h4>
                   <button
                     onClick={() => setShowHistory(!showHistory)}
-                    className="text-xs px-3 py-1 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition-colors"
+                    className="text-xs px-3 py-1 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-300 font-medium transition-colors"
                   >
                     {showHistory ? 'Active Only' : 'Show History'}
                   </button>
@@ -1283,7 +1284,7 @@ ${script.caption}`;
                       <div key={workflow.id} className="bg-white border border-slate-200 rounded-lg p-4 hover:border-indigo-300 transition-colors">
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex-1">
-                            <div className="font-medium text-slate-900 text-sm mb-1" dangerouslySetInnerHTML={{ __html: workflow.articleTitle }} />
+                            <div className="font-medium text-white text-sm mb-1" dangerouslySetInnerHTML={{ __html: workflow.articleTitle }} />
                             <div className="flex items-center gap-2 mt-1">
                               <div className="text-xs text-slate-500">{formatTimeAgo(workflow.createdAt)}</div>
                               {workflow.captionTemplate && (
@@ -1321,19 +1322,19 @@ ${script.caption}`;
                             {workflow.heygenVideoId && (
                               <div>
                                 <div className="text-slate-500 mb-1">HeyGen</div>
-                                <div className="font-mono text-slate-700 truncate">{workflow.heygenVideoId.substring(0, 12)}...</div>
+                                <div className="font-mono text-slate-300 truncate">{workflow.heygenVideoId.substring(0, 12)}...</div>
                               </div>
                             )}
                             {workflow.submagicVideoId && (
                               <div>
                                 <div className="text-slate-500 mb-1">Submagic</div>
-                                <div className="font-mono text-slate-700 truncate">{workflow.submagicVideoId.substring(0, 12)}...</div>
+                                <div className="font-mono text-slate-300 truncate">{workflow.submagicVideoId.substring(0, 12)}...</div>
                               </div>
                             )}
                             {(workflow.latePostId || workflow.metricoolPostId) && (
                               <div>
                                 <div className="text-slate-500 mb-1">GetLate</div>
-                                <div className="font-mono text-slate-700 truncate">{(workflow.latePostId || workflow.metricoolPostId)?.substring(0, 12)}...</div>
+                                <div className="font-mono text-slate-300 truncate">{(workflow.latePostId || workflow.metricoolPostId)?.substring(0, 12)}...</div>
                               </div>
                             )}
                           </div>
@@ -1362,13 +1363,13 @@ ${script.caption}`;
 
         {activeSubTab === 'vassdistro' && (
           <div className="space-y-6">
-            <div className="bg-white rounded-xl shadow-sm p-6">
+            <div className="bg-slate-800 rounded-xl border border-slate-700 p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-slate-900">Vass Distro Status</h3>
+                <h3 className="text-lg font-semibold text-white">Vass Distro Status</h3>
                 <button
                   onClick={triggerCron}
                   disabled={triggeringViral}
-                  className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:bg-gray-400 transition-colors"
+                  className="px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 disabled:bg-gray-400 transition-colors"
                 >
                   {triggeringViral ? 'Generating...' : 'Generate Video Now'}
                 </button>
@@ -1376,24 +1377,24 @@ ${script.caption}`;
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="bg-slate-50 rounded-lg p-4">
-                  <div className="text-sm text-slate-600">Daily Limit</div>
-                  <div className="text-2xl font-bold text-slate-900 mt-1">
+                  <div className="text-sm text-slate-400">Daily Limit</div>
+                  <div className="text-2xl font-bold text-white mt-1">
                     {status?.scheduler?.config?.maxVideosPerDay?.vassdistro || 1}
                   </div>
                   <div className="text-xs text-slate-500 mt-1">videos/day</div>
                 </div>
 
                 <div className="bg-slate-50 rounded-lg p-4">
-                  <div className="text-sm text-slate-600">Available Articles</div>
-                  <div className="text-2xl font-bold text-slate-900 mt-1">
+                  <div className="text-sm text-slate-400">Available Articles</div>
+                  <div className="text-2xl font-bold text-white mt-1">
                     {status?.stats?.vassdistro?.unprocessedArticles || 0}
                   </div>
                   <div className="text-xs text-slate-500 mt-1">ready to process</div>
                 </div>
 
                 <div className="bg-slate-50 rounded-lg p-4">
-                  <div className="text-sm text-slate-600">In Queue</div>
-                  <div className="text-2xl font-bold text-slate-900 mt-1">
+                  <div className="text-sm text-slate-400">In Queue</div>
+                  <div className="text-2xl font-bold text-white mt-1">
                     {(status?.stats?.vassdistro?.queuePending || 0) + (status?.stats?.vassdistro?.queueProcessing || 0)}
                   </div>
                   <div className="text-xs text-slate-500 mt-1">
@@ -1402,8 +1403,8 @@ ${script.caption}`;
                 </div>
 
                 <div className="bg-slate-50 rounded-lg p-4">
-                  <div className="text-sm text-slate-600">RSS Feeds</div>
-                  <div className="text-2xl font-bold text-slate-900 mt-1">
+                  <div className="text-sm text-slate-400">RSS Feeds</div>
+                  <div className="text-2xl font-bold text-white mt-1">
                     {status?.feeds?.vassdistro || 0}
                   </div>
                   <div className="text-xs text-slate-500 mt-1">active sources</div>
@@ -1411,7 +1412,7 @@ ${script.caption}`;
               </div>
 
               <div className="mt-6 pt-6 border-t border-slate-200">
-                <h4 className="text-sm font-semibold text-slate-900 mb-3">Publishing Platforms</h4>
+                <h4 className="text-sm font-semibold text-white mb-3">Publishing Platforms</h4>
                 <div className="flex flex-wrap gap-2">
                   {['Instagram', 'TikTok', 'YouTube', 'Facebook', 'LinkedIn', 'Threads'].map((platform) => (
                     <span key={platform} className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
@@ -1424,10 +1425,10 @@ ${script.caption}`;
               {/* Workflow Logs */}
               <div className="mt-6 pt-6 border-t border-slate-200">
                 <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-sm font-semibold text-slate-900">Workflows</h4>
+                  <h4 className="text-sm font-semibold text-white">Workflows</h4>
                   <button
                     onClick={() => setShowHistory(!showHistory)}
-                    className="text-xs px-3 py-1 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition-colors"
+                    className="text-xs px-3 py-1 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-300 font-medium transition-colors"
                   >
                     {showHistory ? 'Active Only' : 'Show History'}
                   </button>
@@ -1438,7 +1439,7 @@ ${script.caption}`;
                       <div key={workflow.id} className="bg-white border border-slate-200 rounded-lg p-4 hover:border-indigo-300 transition-colors">
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex-1">
-                            <div className="font-medium text-slate-900 text-sm mb-1" dangerouslySetInnerHTML={{ __html: workflow.articleTitle }} />
+                            <div className="font-medium text-white text-sm mb-1" dangerouslySetInnerHTML={{ __html: workflow.articleTitle }} />
                             <div className="flex items-center gap-2 mt-1">
                               <div className="text-xs text-slate-500">{formatTimeAgo(workflow.createdAt)}</div>
                               {workflow.captionTemplate && (
@@ -1476,19 +1477,19 @@ ${script.caption}`;
                             {workflow.heygenVideoId && (
                               <div>
                                 <div className="text-slate-500 mb-1">HeyGen</div>
-                                <div className="font-mono text-slate-700 truncate">{workflow.heygenVideoId.substring(0, 12)}...</div>
+                                <div className="font-mono text-slate-300 truncate">{workflow.heygenVideoId.substring(0, 12)}...</div>
                               </div>
                             )}
                             {workflow.submagicVideoId && (
                               <div>
                                 <div className="text-slate-500 mb-1">Submagic</div>
-                                <div className="font-mono text-slate-700 truncate">{workflow.submagicVideoId.substring(0, 12)}...</div>
+                                <div className="font-mono text-slate-300 truncate">{workflow.submagicVideoId.substring(0, 12)}...</div>
                               </div>
                             )}
                             {(workflow.latePostId || workflow.metricoolPostId) && (
                               <div>
                                 <div className="text-slate-500 mb-1">GetLate</div>
-                                <div className="font-mono text-slate-700 truncate">{(workflow.latePostId || workflow.metricoolPostId)?.substring(0, 12)}...</div>
+                                <div className="font-mono text-slate-300 truncate">{(workflow.latePostId || workflow.metricoolPostId)?.substring(0, 12)}...</div>
                               </div>
                             )}
                           </div>
@@ -1517,13 +1518,13 @@ ${script.caption}`;
 
         {activeSubTab === 'abdullah-podcast' && (
           <div className="space-y-6">
-            <div className="bg-white rounded-xl shadow-sm p-6">
+            <div className="bg-slate-800 rounded-xl border border-slate-700 p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-slate-900">Podcast Status</h3>
+                <h3 className="text-lg font-semibold text-white">Podcast Status</h3>
                 <button
                   onClick={triggerPodcastCron}
                   disabled={triggeringPodcast}
-                  className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:bg-gray-400 transition-colors"
+                  className="px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 disabled:bg-gray-400 transition-colors"
                 >
                   {triggeringPodcast ? 'Generating...' : 'Generate Episode Now'}
                 </button>
@@ -1531,31 +1532,31 @@ ${script.caption}`;
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="bg-slate-50 rounded-lg p-4">
-                  <div className="text-sm text-slate-600">Post Schedule</div>
-                  <div className="text-lg font-bold text-slate-900 mt-1">
+                  <div className="text-sm text-slate-400">Post Schedule</div>
+                  <div className="text-lg font-bold text-white mt-1">
                     Smart Slots
                   </div>
                   <div className="text-xs text-slate-500 mt-1">9AM, 12PM, 3PM, 6PM, 9PM CDT</div>
                 </div>
 
                 <div className="bg-slate-50 rounded-lg p-4">
-                  <div className="text-sm text-slate-600">Daily Limit</div>
-                  <div className="text-lg font-bold text-slate-900 mt-1">
+                  <div className="text-sm text-slate-400">Daily Limit</div>
+                  <div className="text-lg font-bold text-white mt-1">
                     3 episodes
                   </div>
                   <div className="text-xs text-slate-500 mt-1">per day</div>
                 </div>
 
                 <div className="bg-slate-50 rounded-lg p-4">
-                  <div className="text-sm text-slate-600">Duration</div>
-                  <div className="text-lg font-bold text-slate-900 mt-1">
+                  <div className="text-sm text-slate-400">Duration</div>
+                  <div className="text-lg font-bold text-white mt-1">
                     ~3-4 min
                   </div>
                   <div className="text-xs text-slate-500 mt-1">per episode</div>
                 </div>
 
                 <div className="bg-slate-50 rounded-lg p-4">
-                  <div className="text-sm text-slate-600">Status</div>
+                  <div className="text-sm text-slate-400">Status</div>
                   <div className="text-lg font-bold text-green-600 mt-1">
                     Ready
                   </div>
@@ -1564,7 +1565,7 @@ ${script.caption}`;
               </div>
 
               <div className="mt-6 pt-6 border-t border-slate-200">
-                <h4 className="text-sm font-semibold text-slate-900 mb-3">Publishing Platforms</h4>
+                <h4 className="text-sm font-semibold text-white mb-3">Publishing Platforms</h4>
                 <div className="flex flex-wrap gap-2">
                   {['YouTube', 'Facebook', 'Instagram Reels', 'TikTok', 'LinkedIn', 'Twitter', 'Threads'].map((platform) => (
                     <span key={platform} className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
@@ -1575,9 +1576,9 @@ ${script.caption}`;
               </div>
 
               <div className="mt-6 pt-6 border-t border-slate-200">
-                <h4 className="text-sm font-semibold text-slate-900 mb-3">Episode Format</h4>
+                <h4 className="text-sm font-semibold text-white mb-3">Episode Format</h4>
                 <div className="bg-slate-50 rounded-lg p-4">
-                  <ul className="text-sm text-slate-700 space-y-2">
+                  <ul className="text-sm text-slate-300 space-y-2">
                     <li>• <strong>3 episodes daily</strong> - Posted at optimal engagement times</li>
                     <li>• Host + AI Guest (HeyGen avatars)</li>
                     <li>• 2 Q&A pairs (~1.5 minutes each)</li>
@@ -1589,7 +1590,7 @@ ${script.caption}`;
 
               {/* Guest Profiles */}
               <div className="mt-6 pt-6 border-t border-slate-200">
-                <h4 className="text-sm font-semibold text-slate-900 mb-3">Active Guest Profiles ({guestProfiles.length})</h4>
+                <h4 className="text-sm font-semibold text-white mb-3">Active Guest Profiles ({guestProfiles.length})</h4>
                 <div className="space-y-3">
                   {guestProfiles.map((profile) => (
                     <div key={profile.id} className="bg-white border border-slate-200 rounded-lg p-4">
@@ -1597,7 +1598,7 @@ ${script.caption}`;
                         <div className="space-y-3">
                           <div className="grid grid-cols-2 gap-3">
                             <div>
-                              <label className="text-xs text-slate-600 font-medium">Name</label>
+                              <label className="text-xs text-slate-400 font-medium">Name</label>
                               <input
                                 type="text"
                                 defaultValue={profile.name}
@@ -1610,7 +1611,7 @@ ${script.caption}`;
                               />
                             </div>
                             <div>
-                              <label className="text-xs text-slate-600 font-medium">Title</label>
+                              <label className="text-xs text-slate-400 font-medium">Title</label>
                               <input
                                 type="text"
                                 defaultValue={profile.title}
@@ -1625,7 +1626,7 @@ ${script.caption}`;
                           </div>
                           <div className="grid grid-cols-2 gap-3">
                             <div>
-                              <label className="text-xs text-slate-600 font-medium">Avatar ID</label>
+                              <label className="text-xs text-slate-400 font-medium">Avatar ID</label>
                               <input
                                 type="text"
                                 defaultValue={profile.avatar_id}
@@ -1638,7 +1639,7 @@ ${script.caption}`;
                               />
                             </div>
                             <div>
-                              <label className="text-xs text-slate-600 font-medium">Voice ID</label>
+                              <label className="text-xs text-slate-400 font-medium">Voice ID</label>
                               <input
                                 type="text"
                                 defaultValue={profile.voice_id}
@@ -1661,8 +1662,8 @@ ${script.caption}`;
                       ) : (
                         <div className="flex items-center justify-between">
                           <div className="flex-1">
-                            <div className="font-medium text-slate-900 text-sm">{profile.name}</div>
-                            <div className="text-xs text-slate-600 mt-1">{profile.title}</div>
+                            <div className="font-medium text-white text-sm">{profile.name}</div>
+                            <div className="text-xs text-slate-400 mt-1">{profile.title}</div>
                             <div className="flex gap-4 mt-2 text-xs text-slate-500">
                               <div>
                                 <span className="font-medium">Avatar:</span> <span className="font-mono">{profile.avatar_id.substring(0, 20)}...</span>
@@ -1694,10 +1695,10 @@ ${script.caption}`;
               {/* Podcast Workflow Logs */}
               <div className="mt-6 pt-6 border-t border-slate-200">
                 <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-sm font-semibold text-slate-900">Workflows</h4>
+                  <h4 className="text-sm font-semibold text-white">Workflows</h4>
                   <button
                     onClick={() => setShowHistory(!showHistory)}
-                    className="text-xs px-3 py-1 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition-colors"
+                    className="text-xs px-3 py-1 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-300 font-medium transition-colors"
                   >
                     {showHistory ? 'Active Only' : 'Show History'}
                   </button>
@@ -1708,14 +1709,14 @@ ${script.caption}`;
                       <div key={workflow.id} className="bg-white border border-slate-200 rounded-lg p-4 hover:border-indigo-300 transition-colors">
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex-1">
-                            <div className="font-medium text-slate-900 text-sm mb-1">
+                            <div className="font-medium text-white text-sm mb-1">
                               Episode #{workflow.episodeNumber}: {workflow.episodeTitle || 'Generating...'}
                             </div>
                             {workflow.guestName && (
-                              <div className="text-xs text-slate-600 mb-1">Guest: {workflow.guestName}</div>
+                              <div className="text-xs text-slate-400 mb-1">Guest: {workflow.guestName}</div>
                             )}
                             {workflow.topic && (
-                              <div className="text-xs text-slate-600 mb-1">Topic: {workflow.topic}</div>
+                              <div className="text-xs text-slate-400 mb-1">Topic: {workflow.topic}</div>
                             )}
                             <div className="text-xs text-slate-500">{formatTimeAgo(workflow.createdAt)}</div>
                           </div>
@@ -1747,19 +1748,19 @@ ${script.caption}`;
                             {workflow.heygenVideoId && (
                               <div>
                                 <div className="text-slate-500 mb-1">HeyGen</div>
-                                <div className="font-mono text-slate-700 truncate">{workflow.heygenVideoId.substring(0, 12)}...</div>
+                                <div className="font-mono text-slate-300 truncate">{workflow.heygenVideoId.substring(0, 12)}...</div>
                               </div>
                             )}
                             {workflow.submagicProjectId && (
                               <div>
                                 <div className="text-slate-500 mb-1">Submagic</div>
-                                <div className="font-mono text-slate-700 truncate">{workflow.submagicProjectId.substring(0, 12)}...</div>
+                                <div className="font-mono text-slate-300 truncate">{workflow.submagicProjectId.substring(0, 12)}...</div>
                               </div>
                             )}
                             {(workflow.latePostId || workflow.metricoolPostId) && (
                               <div>
                                 <div className="text-slate-500 mb-1">GetLate</div>
-                                <div className="font-mono text-slate-700 truncate">{(workflow.latePostId || workflow.metricoolPostId)?.substring(0, 12)}...</div>
+                                <div className="font-mono text-slate-300 truncate">{(workflow.latePostId || workflow.metricoolPostId)?.substring(0, 12)}...</div>
                               </div>
                             )}
                           </div>
@@ -1788,13 +1789,13 @@ ${script.caption}`;
 
         {activeSubTab === 'ownerfi-benefits' && (
           <div className="space-y-6">
-            <div className="bg-white rounded-xl shadow-sm p-6">
+            <div className="bg-slate-800 rounded-xl border border-slate-700 p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-slate-900">Owner Financing Benefits</h3>
+                <h3 className="text-lg font-semibold text-white">Owner Financing Benefits</h3>
                 <button
                   onClick={triggerBenefitCron}
                   disabled={triggeringBenefit}
-                  className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:bg-gray-400 transition-colors"
+                  className="px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 disabled:bg-gray-400 transition-colors"
                 >
                   {triggeringBenefit ? 'Generating...' : 'Generate Video Now'}
                 </button>
@@ -1802,31 +1803,31 @@ ${script.caption}`;
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="bg-slate-50 rounded-lg p-4">
-                  <div className="text-sm text-slate-600">Schedule</div>
-                  <div className="text-lg font-bold text-slate-900 mt-1">
+                  <div className="text-sm text-slate-400">Schedule</div>
+                  <div className="text-lg font-bold text-white mt-1">
                     2x Daily
                   </div>
                   <div className="text-xs text-slate-500 mt-1">6 AM, 2 PM CDT</div>
                 </div>
 
                 <div className="bg-slate-50 rounded-lg p-4">
-                  <div className="text-sm text-slate-600">Daily Target</div>
-                  <div className="text-lg font-bold text-slate-900 mt-1">
+                  <div className="text-sm text-slate-400">Daily Target</div>
+                  <div className="text-lg font-bold text-white mt-1">
                     2 videos
                   </div>
                   <div className="text-xs text-slate-500 mt-1">1 seller + 1 buyer</div>
                 </div>
 
                 <div className="bg-slate-50 rounded-lg p-4">
-                  <div className="text-sm text-slate-600">Content Library</div>
-                  <div className="text-lg font-bold text-slate-900 mt-1">
+                  <div className="text-sm text-slate-400">Content Library</div>
+                  <div className="text-lg font-bold text-white mt-1">
                     20 benefits
                   </div>
                   <div className="text-xs text-slate-500 mt-1">10 seller + 10 buyer</div>
                 </div>
 
                 <div className="bg-slate-50 rounded-lg p-4">
-                  <div className="text-sm text-slate-600">Status</div>
+                  <div className="text-sm text-slate-400">Status</div>
                   <div className="text-lg font-bold text-green-600 mt-1">
                     Ready
                   </div>
@@ -1835,7 +1836,7 @@ ${script.caption}`;
               </div>
 
               <div className="mt-6 pt-6 border-t border-slate-200">
-                <h4 className="text-sm font-semibold text-slate-900 mb-3">Publishing Platforms</h4>
+                <h4 className="text-sm font-semibold text-white mb-3">Publishing Platforms</h4>
                 <div className="flex flex-wrap gap-2">
                   {['Instagram', 'TikTok', 'YouTube', 'Facebook', 'LinkedIn', 'Threads'].map((platform) => (
                     <span key={platform} className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
@@ -1846,9 +1847,9 @@ ${script.caption}`;
               </div>
 
               <div className="mt-6 pt-6 border-t border-slate-200">
-                <h4 className="text-sm font-semibold text-slate-900 mb-3">Video Format</h4>
+                <h4 className="text-sm font-semibold text-white mb-3">Video Format</h4>
                 <div className="bg-slate-50 rounded-lg p-4">
-                  <ul className="text-sm text-slate-700 space-y-2">
+                  <ul className="text-sm text-slate-300 space-y-2">
                     <li>• <strong>Educational format</strong> - ONE benefit per video</li>
                     <li>• Rotating audience (alternates seller/buyer)</li>
                     <li>• Smart anti-repetition (avoids last 5 used benefits)</li>
@@ -1862,10 +1863,10 @@ ${script.caption}`;
               {/* Benefit Workflow Logs */}
               <div className="mt-6 pt-6 border-t border-slate-200">
                 <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-sm font-semibold text-slate-900">Workflows</h4>
+                  <h4 className="text-sm font-semibold text-white">Workflows</h4>
                   <button
                     onClick={() => setShowHistory(!showHistory)}
-                    className="text-xs px-3 py-1 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition-colors"
+                    className="text-xs px-3 py-1 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-300 font-medium transition-colors"
                   >
                     {showHistory ? 'Active Only' : 'Show History'}
                   </button>
@@ -1882,7 +1883,7 @@ ${script.caption}`;
                               }`}>
                                 {workflow.audience === 'seller' ? '💼 Seller' : '🏡 Buyer'}
                               </span>
-                              <div className="font-medium text-slate-900 text-sm">{workflow.benefitTitle}</div>
+                              <div className="font-medium text-white text-sm">{workflow.benefitTitle}</div>
                             </div>
                             <div className="text-xs text-slate-500">{formatTimeAgo(workflow.createdAt)}</div>
                           </div>
@@ -1914,19 +1915,19 @@ ${script.caption}`;
                             {workflow.heygenVideoId && (
                               <div>
                                 <div className="text-slate-500 mb-1">HeyGen</div>
-                                <div className="font-mono text-slate-700 truncate">{workflow.heygenVideoId.substring(0, 12)}...</div>
+                                <div className="font-mono text-slate-300 truncate">{workflow.heygenVideoId.substring(0, 12)}...</div>
                               </div>
                             )}
                             {workflow.submagicProjectId && (
                               <div>
                                 <div className="text-slate-500 mb-1">Submagic</div>
-                                <div className="font-mono text-slate-700 truncate">{workflow.submagicProjectId.substring(0, 12)}...</div>
+                                <div className="font-mono text-slate-300 truncate">{workflow.submagicProjectId.substring(0, 12)}...</div>
                               </div>
                             )}
                             {workflow.latePostId && (
                               <div>
                                 <div className="text-slate-500 mb-1">GetLate</div>
-                                <div className="font-mono text-slate-700 truncate">{workflow.latePostId.substring(0, 12)}...</div>
+                                <div className="font-mono text-slate-300 truncate">{workflow.latePostId.substring(0, 12)}...</div>
                               </div>
                             )}
                           </div>
@@ -1952,13 +1953,13 @@ ${script.caption}`;
 
         {activeSubTab === 'ownerfi-properties' && (
           <div className="space-y-6">
-            <div className="bg-white rounded-xl shadow-sm p-6">
+            <div className="bg-slate-800 rounded-xl border border-slate-700 p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-slate-900">Property Showcase Videos</h3>
+                <h3 className="text-lg font-semibold text-white">Property Showcase Videos</h3>
                 <button
                   onClick={triggerPropertyCron}
                   disabled={triggeringProperty}
-                  className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:bg-gray-400 transition-colors"
+                  className="px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 disabled:bg-gray-400 transition-colors"
                 >
                   {triggeringProperty ? 'Generating...' : 'Generate Property Video'}
                 </button>
@@ -1966,16 +1967,16 @@ ${script.caption}`;
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="bg-slate-50 rounded-lg p-4">
-                  <div className="text-sm text-slate-600">Rotation Queue Size</div>
-                  <div className="text-2xl font-bold text-slate-900 mt-1">
+                  <div className="text-sm text-slate-400">Rotation Queue Size</div>
+                  <div className="text-2xl font-bold text-white mt-1">
                     {propertyStats?.total || 0}
                   </div>
                   <div className="text-xs text-slate-500 mt-1">properties</div>
                 </div>
 
                 <div className="bg-slate-50 rounded-lg p-4">
-                  <div className="text-sm text-slate-600">Videos Today</div>
-                  <div className="text-2xl font-bold text-slate-900 mt-1">
+                  <div className="text-sm text-slate-400">Videos Today</div>
+                  <div className="text-2xl font-bold text-white mt-1">
                     {propertyWorkflows?.workflows.filter(w => {
                       const today = new Date().setHours(0, 0, 0, 0);
                       return new Date(w.createdAt).setHours(0, 0, 0, 0) === today;
@@ -1985,8 +1986,8 @@ ${script.caption}`;
                 </div>
 
                 <div className="bg-slate-50 rounded-lg p-4">
-                  <div className="text-sm text-slate-600">Next Property</div>
-                  <div className="text-sm font-bold text-slate-900 mt-1">
+                  <div className="text-sm text-slate-400">Next Property</div>
+                  <div className="text-sm font-bold text-white mt-1">
                     {propertyStats?.nextProperty ? (
                       <>{propertyStats.nextProperty.address.substring(0, 20)}...</>
                     ) : (
@@ -1999,8 +2000,8 @@ ${script.caption}`;
                 </div>
 
                 <div className="bg-slate-50 rounded-lg p-4">
-                  <div className="text-sm text-slate-600">Rotation Days</div>
-                  <div className="text-2xl font-bold text-slate-900 mt-1">
+                  <div className="text-sm text-slate-400">Rotation Days</div>
+                  <div className="text-2xl font-bold text-white mt-1">
                     {propertyStats?.rotationDays || 0}
                   </div>
                   <div className="text-xs text-slate-500 mt-1">days per cycle</div>
@@ -2008,7 +2009,7 @@ ${script.caption}`;
               </div>
 
               <div className="mt-6 pt-6 border-t border-slate-200">
-                <h4 className="text-sm font-semibold text-slate-900 mb-3">Publishing Platforms</h4>
+                <h4 className="text-sm font-semibold text-white mb-3">Publishing Platforms</h4>
                 <div className="flex flex-wrap gap-2">
                   {['Instagram', 'TikTok', 'YouTube', 'Facebook', 'LinkedIn', 'Threads'].map((platform) => (
                     <span key={platform} className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700">
@@ -2019,9 +2020,9 @@ ${script.caption}`;
               </div>
 
               <div className="mt-6 pt-6 border-t border-slate-200">
-                <h4 className="text-sm font-semibold text-slate-900 mb-3">Video Format</h4>
+                <h4 className="text-sm font-semibold text-white mb-3">Video Format</h4>
                 <div className="bg-slate-50 rounded-lg p-4">
-                  <ul className="text-sm text-slate-700 space-y-2">
+                  <ul className="text-sm text-slate-300 space-y-2">
                     <li>• <strong>Property showcase format</strong> - 15-second videos</li>
                     <li>• Rotating queue of active properties with &lt;$15k down</li>
                     <li>• Smart rotation (each property shown every {propertyStats?.rotationDays || 0} days)</li>
@@ -2035,10 +2036,10 @@ ${script.caption}`;
               {/* Property Workflow Logs */}
               <div className="mt-6 pt-6 border-t border-slate-200">
                 <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-sm font-semibold text-slate-900">Workflows</h4>
+                  <h4 className="text-sm font-semibold text-white">Workflows</h4>
                   <button
                     onClick={() => setShowHistory(!showHistory)}
-                    className="text-xs px-3 py-1 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition-colors"
+                    className="text-xs px-3 py-1 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-300 font-medium transition-colors"
                   >
                     {showHistory ? 'Active Only' : 'Show History'}
                   </button>
@@ -2053,9 +2054,9 @@ ${script.caption}`;
                               <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700">
                                 {workflow.variant}
                               </span>
-                              <div className="font-medium text-slate-900 text-sm">{workflow.address}</div>
+                              <div className="font-medium text-white text-sm">{workflow.address}</div>
                             </div>
-                            <div className="text-xs text-slate-600 mb-1">
+                            <div className="text-xs text-slate-400 mb-1">
                               {workflow.city}, {workflow.state} • Down: ${workflow.downPayment.toLocaleString()} • Monthly: ${workflow.monthlyPayment.toLocaleString()}
                             </div>
                             <div className="text-xs text-slate-500">{formatTimeAgo(workflow.createdAt)}</div>
@@ -2088,19 +2089,19 @@ ${script.caption}`;
                             {workflow.heygenVideoId && (
                               <div>
                                 <div className="text-slate-500 mb-1">HeyGen</div>
-                                <div className="font-mono text-slate-700 truncate">{workflow.heygenVideoId.substring(0, 12)}...</div>
+                                <div className="font-mono text-slate-300 truncate">{workflow.heygenVideoId.substring(0, 12)}...</div>
                               </div>
                             )}
                             {workflow.submagicProjectId && (
                               <div>
                                 <div className="text-slate-500 mb-1">Submagic</div>
-                                <div className="font-mono text-slate-700 truncate">{workflow.submagicProjectId.substring(0, 12)}...</div>
+                                <div className="font-mono text-slate-300 truncate">{workflow.submagicProjectId.substring(0, 12)}...</div>
                               </div>
                             )}
                             {workflow.latePostId && (
                               <div>
                                 <div className="text-slate-500 mb-1">GetLate</div>
-                                <div className="font-mono text-slate-700 truncate">{workflow.latePostId.substring(0, 12)}...</div>
+                                <div className="font-mono text-slate-300 truncate">{workflow.latePostId.substring(0, 12)}...</div>
                               </div>
                             )}
                           </div>
@@ -2126,13 +2127,13 @@ ${script.caption}`;
 
         {activeSubTab === 'ownerfi-properties-spanish' && (
           <div className="space-y-6">
-            <div className="bg-white rounded-xl shadow-sm p-6">
+            <div className="bg-slate-800 rounded-xl border border-slate-700 p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-slate-900">Property Showcase Videos (Spanish)</h3>
+                <h3 className="text-lg font-semibold text-white">Property Showcase Videos (Spanish)</h3>
                 <button
                   onClick={triggerSpanishPropertyCron}
                   disabled={triggeringSpanishProperty}
-                  className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:bg-gray-400 transition-colors"
+                  className="px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 disabled:bg-gray-400 transition-colors"
                 >
                   {triggeringSpanishProperty ? 'Generating...' : 'Generate Spanish Property Video'}
                 </button>
@@ -2140,16 +2141,16 @@ ${script.caption}`;
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="bg-slate-50 rounded-lg p-4">
-                  <div className="text-sm text-slate-600">Rotation Queue Size</div>
-                  <div className="text-2xl font-bold text-slate-900 mt-1">
+                  <div className="text-sm text-slate-400">Rotation Queue Size</div>
+                  <div className="text-2xl font-bold text-white mt-1">
                     {spanishPropertyStats?.total || 0}
                   </div>
                   <div className="text-xs text-slate-500 mt-1">properties</div>
                 </div>
 
                 <div className="bg-slate-50 rounded-lg p-4">
-                  <div className="text-sm text-slate-600">Videos Today</div>
-                  <div className="text-2xl font-bold text-slate-900 mt-1">
+                  <div className="text-sm text-slate-400">Videos Today</div>
+                  <div className="text-2xl font-bold text-white mt-1">
                     {spanishPropertyWorkflows?.workflows.filter(w => {
                       const today = new Date().setHours(0, 0, 0, 0);
                       return new Date(w.createdAt).setHours(0, 0, 0, 0) === today;
@@ -2159,8 +2160,8 @@ ${script.caption}`;
                 </div>
 
                 <div className="bg-slate-50 rounded-lg p-4">
-                  <div className="text-sm text-slate-600">Next Property</div>
-                  <div className="text-sm font-bold text-slate-900 mt-1">
+                  <div className="text-sm text-slate-400">Next Property</div>
+                  <div className="text-sm font-bold text-white mt-1">
                     {spanishPropertyStats?.nextProperty ? (
                       <>{spanishPropertyStats.nextProperty.address.substring(0, 20)}...</>
                     ) : (
@@ -2173,8 +2174,8 @@ ${script.caption}`;
                 </div>
 
                 <div className="bg-slate-50 rounded-lg p-4">
-                  <div className="text-sm text-slate-600">Rotation Days</div>
-                  <div className="text-2xl font-bold text-slate-900 mt-1">
+                  <div className="text-sm text-slate-400">Rotation Days</div>
+                  <div className="text-2xl font-bold text-white mt-1">
                     {spanishPropertyStats?.rotationDays || 0}
                   </div>
                   <div className="text-xs text-slate-500 mt-1">days per cycle</div>
@@ -2182,7 +2183,7 @@ ${script.caption}`;
               </div>
 
               <div className="mt-6 pt-6 border-t border-slate-200">
-                <h4 className="text-sm font-semibold text-slate-900 mb-3">Publishing Platforms</h4>
+                <h4 className="text-sm font-semibold text-white mb-3">Publishing Platforms</h4>
                 <div className="flex flex-wrap gap-2">
                   {['Instagram', 'TikTok', 'YouTube', 'Facebook', 'LinkedIn', 'Threads'].map((platform) => (
                     <span key={platform} className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700">
@@ -2193,9 +2194,9 @@ ${script.caption}`;
               </div>
 
               <div className="mt-6 pt-6 border-t border-slate-200">
-                <h4 className="text-sm font-semibold text-slate-900 mb-3">Video Format</h4>
+                <h4 className="text-sm font-semibold text-white mb-3">Video Format</h4>
                 <div className="bg-slate-50 rounded-lg p-4">
-                  <ul className="text-sm text-slate-700 space-y-2">
+                  <ul className="text-sm text-slate-300 space-y-2">
                     <li>• <strong>Property showcase format (Spanish)</strong> - 15-second videos</li>
                     <li>• Rotating queue of active properties with &lt;$15k down</li>
                     <li>• Smart rotation (each property shown every {spanishPropertyStats?.rotationDays || 0} days)</li>
@@ -2209,10 +2210,10 @@ ${script.caption}`;
               {/* Spanish Property Workflow Logs */}
               <div className="mt-6 pt-6 border-t border-slate-200">
                 <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-sm font-semibold text-slate-900">Workflows</h4>
+                  <h4 className="text-sm font-semibold text-white">Workflows</h4>
                   <button
                     onClick={() => setShowHistory(!showHistory)}
-                    className="text-xs px-3 py-1 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition-colors"
+                    className="text-xs px-3 py-1 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-300 font-medium transition-colors"
                   >
                     {showHistory ? 'Active Only' : 'Show History'}
                   </button>
@@ -2230,9 +2231,9 @@ ${script.caption}`;
                               <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
                                 ES
                               </span>
-                              <div className="font-medium text-slate-900 text-sm">{workflow.address}</div>
+                              <div className="font-medium text-white text-sm">{workflow.address}</div>
                             </div>
-                            <div className="text-xs text-slate-600 mb-1">
+                            <div className="text-xs text-slate-400 mb-1">
                               {workflow.city}, {workflow.state} • Down: ${workflow.downPayment.toLocaleString()} • Monthly: ${workflow.monthlyPayment.toLocaleString()}
                             </div>
                             <div className="text-xs text-slate-500">{formatTimeAgo(workflow.createdAt)}</div>
@@ -2265,19 +2266,19 @@ ${script.caption}`;
                             {workflow.heygenVideoId && (
                               <div>
                                 <div className="text-slate-500 mb-1">HeyGen</div>
-                                <div className="font-mono text-slate-700 truncate">{workflow.heygenVideoId.substring(0, 12)}...</div>
+                                <div className="font-mono text-slate-300 truncate">{workflow.heygenVideoId.substring(0, 12)}...</div>
                               </div>
                             )}
                             {workflow.submagicProjectId && (
                               <div>
                                 <div className="text-slate-500 mb-1">Submagic</div>
-                                <div className="font-mono text-slate-700 truncate">{workflow.submagicProjectId.substring(0, 12)}...</div>
+                                <div className="font-mono text-slate-300 truncate">{workflow.submagicProjectId.substring(0, 12)}...</div>
                               </div>
                             )}
                             {workflow.latePostId && (
                               <div>
                                 <div className="text-slate-500 mb-1">GetLate</div>
-                                <div className="font-mono text-slate-700 truncate">{workflow.latePostId.substring(0, 12)}...</div>
+                                <div className="font-mono text-slate-300 truncate">{workflow.latePostId.substring(0, 12)}...</div>
                               </div>
                             )}
                           </div>
@@ -2303,9 +2304,9 @@ ${script.caption}`;
 
         {activeSubTab === 'abdullah' && (
           <div className="space-y-6">
-            <div className="bg-white rounded-xl shadow-sm p-6">
+            <div className="bg-slate-800 rounded-xl border border-slate-700 p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-slate-900">Abdullah Personal Brand</h3>
+                <h3 className="text-lg font-semibold text-white">Abdullah Personal Brand</h3>
                 <button
                   onClick={() => triggerAbdullahWorkflow()}
                   disabled={triggeringAbdullah}
@@ -2317,7 +2318,7 @@ ${script.caption}`;
 
               {/* Queue Stats */}
               <div className="mb-6">
-                <h4 className="text-sm font-semibold text-slate-900 mb-3">Daily Content Queue</h4>
+                <h4 className="text-sm font-semibold text-white mb-3">Daily Content Queue</h4>
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                   <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
                     <div className="text-sm text-blue-600 font-medium">Pending</div>
@@ -2364,7 +2365,7 @@ ${script.caption}`;
               {/* Next Scheduled Items */}
               {abdullahQueueStats?.nextItems && abdullahQueueStats.nextItems.length > 0 && (
                 <div className="mb-6 pb-6 border-b border-slate-200">
-                  <h4 className="text-sm font-semibold text-slate-900 mb-3">Upcoming Videos</h4>
+                  <h4 className="text-sm font-semibold text-white mb-3">Upcoming Videos</h4>
                   <div className="space-y-2">
                     {abdullahQueueStats.nextItems.map((item: any, index: number) => (
                       <div key={item.id} className="flex items-center justify-between bg-slate-50 rounded-lg p-3">
@@ -2373,12 +2374,12 @@ ${script.caption}`;
                             {index + 1}
                           </div>
                           <div>
-                            <div className="font-medium text-slate-900 text-sm">{item.title}</div>
+                            <div className="font-medium text-white text-sm">{item.title}</div>
                             <div className="text-xs text-slate-500 capitalize">{item.theme}</div>
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="text-xs text-slate-600">
+                          <div className="text-xs text-slate-400">
                             Generate: {new Date(item.scheduledGenerationTime).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'America/Chicago' })} CST
                           </div>
                           <div className="text-xs text-slate-500">
@@ -2394,26 +2395,26 @@ ${script.caption}`;
               {/* System Info */}
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
                 <div className="bg-slate-50 rounded-lg p-4">
-                  <div className="text-sm text-slate-600">Daily Videos</div>
-                  <div className="text-2xl font-bold text-slate-900 mt-1">5</div>
+                  <div className="text-sm text-slate-400">Daily Videos</div>
+                  <div className="text-2xl font-bold text-white mt-1">5</div>
                   <div className="text-xs text-slate-500 mt-1">videos/day</div>
                 </div>
 
                 <div className="bg-slate-50 rounded-lg p-4">
-                  <div className="text-sm text-slate-600">Content Type</div>
-                  <div className="text-sm font-bold text-slate-900 mt-1">AI Generated</div>
+                  <div className="text-sm text-slate-400">Content Type</div>
+                  <div className="text-sm font-bold text-white mt-1">AI Generated</div>
                   <div className="text-xs text-slate-500 mt-1">queue system</div>
                 </div>
 
                 <div className="bg-slate-50 rounded-lg p-4">
-                  <div className="text-sm text-slate-600">Schedule</div>
-                  <div className="text-sm font-bold text-slate-900 mt-1">11 AM CST</div>
+                  <div className="text-sm text-slate-400">Schedule</div>
+                  <div className="text-sm font-bold text-white mt-1">11 AM CST</div>
                   <div className="text-xs text-slate-500 mt-1">daily scripts</div>
                 </div>
               </div>
 
               <div className="mt-6 pt-6 border-t border-slate-200">
-                <h4 className="text-sm font-semibold text-slate-900 mb-3">Daily Themes</h4>
+                <h4 className="text-sm font-semibold text-white mb-3">Daily Themes</h4>
                 <div className="flex flex-wrap gap-2">
                   {['Mindset', 'Business', 'Money', 'Freedom', 'Story/Lesson'].map((theme) => (
                     <span key={theme} className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
@@ -2424,7 +2425,7 @@ ${script.caption}`;
               </div>
 
               <div className="mt-6 pt-6 border-t border-slate-200">
-                <h4 className="text-sm font-semibold text-slate-900 mb-3">Publishing Platforms</h4>
+                <h4 className="text-sm font-semibold text-white mb-3">Publishing Platforms</h4>
                 <div className="flex flex-wrap gap-2">
                   {['Instagram', 'TikTok', 'YouTube', 'Facebook', 'LinkedIn'].map((platform) => (
                     <span key={platform} className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700">
@@ -2437,10 +2438,10 @@ ${script.caption}`;
               {/* Workflow Logs */}
               <div className="mt-6 pt-6 border-t border-slate-200">
                 <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-sm font-semibold text-slate-900">Workflows</h4>
+                  <h4 className="text-sm font-semibold text-white">Workflows</h4>
                   <button
                     onClick={() => setShowHistory(!showHistory)}
-                    className="text-xs px-3 py-1 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium transition-colors"
+                    className="text-xs px-3 py-1 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-300 font-medium transition-colors"
                   >
                     {showHistory ? 'Active Only' : 'Show History'}
                   </button>
@@ -2451,7 +2452,7 @@ ${script.caption}`;
                       <div key={workflow.id} className="bg-white border border-slate-200 rounded-lg p-4 hover:border-purple-300 transition-colors">
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex-1">
-                            <div className="font-medium text-slate-900 text-sm mb-1" dangerouslySetInnerHTML={{ __html: workflow.articleTitle }} />
+                            <div className="font-medium text-white text-sm mb-1" dangerouslySetInnerHTML={{ __html: workflow.articleTitle }} />
                             <div className="flex items-center gap-2 mt-1">
                               <div className="text-xs text-slate-500">{formatTimeAgo(workflow.createdAt)}</div>
                             </div>
@@ -2484,19 +2485,19 @@ ${script.caption}`;
                             {workflow.heygenVideoId && (
                               <div>
                                 <div className="text-slate-500 mb-1">HeyGen</div>
-                                <div className="font-mono text-slate-700 truncate">{workflow.heygenVideoId.substring(0, 12)}...</div>
+                                <div className="font-mono text-slate-300 truncate">{workflow.heygenVideoId.substring(0, 12)}...</div>
                               </div>
                             )}
                             {workflow.submagicVideoId && (
                               <div>
                                 <div className="text-slate-500 mb-1">Submagic</div>
-                                <div className="font-mono text-slate-700 truncate">{workflow.submagicVideoId.substring(0, 12)}...</div>
+                                <div className="font-mono text-slate-300 truncate">{workflow.submagicVideoId.substring(0, 12)}...</div>
                               </div>
                             )}
                             {(workflow.latePostId || workflow.metricoolPostId) && (
                               <div>
                                 <div className="text-slate-500 mb-1">GetLate</div>
-                                <div className="font-mono text-slate-700 truncate">{(workflow.latePostId || workflow.metricoolPostId)?.substring(0, 12)}...</div>
+                                <div className="font-mono text-slate-300 truncate">{(workflow.latePostId || workflow.metricoolPostId)?.substring(0, 12)}...</div>
                               </div>
                             )}
                           </div>
@@ -2523,7 +2524,7 @@ ${script.caption}`;
               {/* Recent ChatGPT Scripts - For Prompt Improvement */}
               <div className="mt-6 pt-6 border-t border-slate-200">
                 <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-sm font-semibold text-slate-900">Recent ChatGPT Scripts</h4>
+                  <h4 className="text-sm font-semibold text-white">Recent ChatGPT Scripts</h4>
                   <span className="text-xs text-slate-500">Copy to improve prompts</span>
                 </div>
                 {recentScripts.length > 0 ? (
@@ -2533,7 +2534,7 @@ ${script.caption}`;
                         <div className="flex items-start justify-between mb-2">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
-                              <span className="font-semibold text-slate-900 text-sm">{script.title}</span>
+                              <span className="font-semibold text-white text-sm">{script.title}</span>
                               <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700 capitalize">
                                 {script.theme}
                               </span>
@@ -2579,7 +2580,7 @@ ${script.caption}`;
                         {script.hook && (
                           <div className="mb-2">
                             <div className="text-xs font-medium text-purple-600 mb-1">Hook:</div>
-                            <div className="text-xs text-slate-700 bg-purple-50 rounded px-2 py-1 italic">
+                            <div className="text-xs text-slate-300 bg-purple-50 rounded px-2 py-1 italic">
                               "{script.hook}"
                             </div>
                           </div>
@@ -2587,16 +2588,16 @@ ${script.caption}`;
 
                         {/* Script */}
                         <div className="mb-2">
-                          <div className="text-xs font-medium text-slate-600 mb-1">Script:</div>
-                          <div className="text-xs text-slate-700 bg-white rounded px-2 py-1.5 border border-slate-200 max-h-20 overflow-y-auto">
+                          <div className="text-xs font-medium text-slate-400 mb-1">Script:</div>
+                          <div className="text-xs text-slate-300 bg-white rounded px-2 py-1.5 border border-slate-200 max-h-20 overflow-y-auto">
                             {script.script}
                           </div>
                         </div>
 
                         {/* Caption */}
                         <div>
-                          <div className="text-xs font-medium text-slate-600 mb-1">Caption:</div>
-                          <div className="text-xs text-slate-600 bg-slate-100 rounded px-2 py-1.5 max-h-16 overflow-y-auto">
+                          <div className="text-xs font-medium text-slate-400 mb-1">Caption:</div>
+                          <div className="text-xs text-slate-400 bg-slate-100 rounded px-2 py-1.5 max-h-16 overflow-y-auto">
                             {script.caption}
                           </div>
                         </div>
@@ -2645,8 +2646,8 @@ ${script.caption}`;
             {/* Overall Health */}
             {analytics && (
               <>
-                <div className="bg-white rounded-xl shadow-sm p-6">
-                  <h3 className="text-lg font-semibold text-slate-900 mb-4">System Health & Performance</h3>
+                <div className="bg-slate-800 rounded-xl border border-slate-700 p-6">
+                  <h3 className="text-lg font-semibold text-white mb-4">System Health & Performance</h3>
 
                   {/* Health Badge */}
                   <div className="mb-6">
@@ -2666,15 +2667,15 @@ ${script.caption}`;
                   {/* Key Metrics */}
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="bg-slate-50 rounded-lg p-4">
-                      <div className="text-sm text-slate-600">Total Videos</div>
-                      <div className="text-2xl font-bold text-slate-900 mt-1">
+                      <div className="text-sm text-slate-400">Total Videos</div>
+                      <div className="text-2xl font-bold text-white mt-1">
                         {analytics.keyMetrics.totalVideosGenerated}
                       </div>
                       <div className="text-xs text-slate-500 mt-1">all time</div>
                     </div>
 
                     <div className="bg-slate-50 rounded-lg p-4">
-                      <div className="text-sm text-slate-600">Success Rate</div>
+                      <div className="text-sm text-slate-400">Success Rate</div>
                       <div className={`text-2xl font-bold mt-1 ${
                         analytics.keyMetrics.successRate >= 90 ? 'text-green-600' :
                         analytics.keyMetrics.successRate >= 75 ? 'text-yellow-600' :
@@ -2686,16 +2687,16 @@ ${script.caption}`;
                     </div>
 
                     <div className="bg-slate-50 rounded-lg p-4">
-                      <div className="text-sm text-slate-600">Processing Time</div>
-                      <div className="text-lg font-bold text-slate-900 mt-1">
+                      <div className="text-sm text-slate-400">Processing Time</div>
+                      <div className="text-lg font-bold text-white mt-1">
                         {analytics.keyMetrics.averageProcessingTime}
                       </div>
                       <div className="text-xs text-slate-500 mt-1">per video</div>
                     </div>
 
                     <div className="bg-slate-50 rounded-lg p-4">
-                      <div className="text-sm text-slate-600">Content Quality</div>
-                      <div className="text-sm font-bold text-slate-900 mt-1">
+                      <div className="text-sm text-slate-400">Content Quality</div>
+                      <div className="text-sm font-bold text-white mt-1">
                         {analytics.keyMetrics.contentQuality}
                       </div>
                       <div className="text-xs text-slate-500 mt-1">AI filtering</div>
@@ -2704,8 +2705,8 @@ ${script.caption}`;
                 </div>
 
                 {/* Brand Comparison */}
-                <div className="bg-white rounded-xl shadow-sm p-6">
-                  <h3 className="text-lg font-semibold text-slate-900 mb-4">Brand Performance Comparison</h3>
+                <div className="bg-slate-800 rounded-xl border border-slate-700 p-6">
+                  <h3 className="text-lg font-semibold text-white mb-4">Brand Performance Comparison</h3>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Carz Analytics */}
@@ -2713,7 +2714,7 @@ ${script.caption}`;
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2">
                           <span className="text-2xl">🚗</span>
-                          <h4 className="font-semibold text-slate-900">Carz Inc</h4>
+                          <h4 className="font-semibold text-white">Carz Inc</h4>
                         </div>
                         <span className={`text-xs px-3 py-1 rounded-full font-semibold ${
                           analytics.brands.carz.health === 'excellent' ? 'bg-green-100 text-green-700' :
@@ -2726,19 +2727,19 @@ ${script.caption}`;
                       </div>
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
-                          <span className="text-slate-600">Success Rate:</span>
+                          <span className="text-slate-400">Success Rate:</span>
                           <span className="font-medium">{analytics.brands.carz.successRate.toFixed(1)}%</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-slate-600">Articles Ready:</span>
+                          <span className="text-slate-400">Articles Ready:</span>
                           <span className="font-medium">{analytics.brands.carz.unprocessedArticles}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-slate-600">Videos Generated:</span>
+                          <span className="text-slate-400">Videos Generated:</span>
                           <span className="font-medium">{analytics.brands.carz.videosGenerated}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-slate-600">Failed Workflows:</span>
+                          <span className="text-slate-400">Failed Workflows:</span>
                           <span className="font-medium text-red-600">{analytics.brands.carz.queueStats.failed}</span>
                         </div>
                       </div>
@@ -2749,7 +2750,7 @@ ${script.caption}`;
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2">
                           <span className="text-2xl">🏠</span>
-                          <h4 className="font-semibold text-slate-900">OwnerFi</h4>
+                          <h4 className="font-semibold text-white">OwnerFi</h4>
                         </div>
                         <span className={`text-xs px-3 py-1 rounded-full font-semibold ${
                           analytics.brands.ownerfi.health === 'excellent' ? 'bg-green-100 text-green-700' :
@@ -2762,19 +2763,19 @@ ${script.caption}`;
                       </div>
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
-                          <span className="text-slate-600">Success Rate:</span>
+                          <span className="text-slate-400">Success Rate:</span>
                           <span className="font-medium">{analytics.brands.ownerfi.successRate.toFixed(1)}%</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-slate-600">Articles Ready:</span>
+                          <span className="text-slate-400">Articles Ready:</span>
                           <span className="font-medium">{analytics.brands.ownerfi.unprocessedArticles}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-slate-600">Videos Generated:</span>
+                          <span className="text-slate-400">Videos Generated:</span>
                           <span className="font-medium">{analytics.brands.ownerfi.videosGenerated}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-slate-600">Failed Workflows:</span>
+                          <span className="text-slate-400">Failed Workflows:</span>
                           <span className="font-medium text-red-600">{analytics.brands.ownerfi.queueStats.failed}</span>
                         </div>
                       </div>
@@ -2783,22 +2784,22 @@ ${script.caption}`;
                 </div>
 
                 {/* Recommendations */}
-                <div className="bg-white rounded-xl shadow-sm p-6">
+                <div className="bg-slate-800 rounded-xl border border-slate-700 p-6">
                   <div className="flex items-center justify-between mb-4">
                     <div>
-                      <h3 className="text-lg font-semibold text-slate-900">AI Recommendations</h3>
+                      <h3 className="text-lg font-semibold text-white">AI Recommendations</h3>
                       <div className="text-xs text-slate-500 mt-1">
                         Last updated: {new Date(analytics.timestamp).toLocaleTimeString()}
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
-                      <div className="text-sm text-slate-600">
+                      <div className="text-sm text-slate-400">
                         {analytics.recommendations.length} insights
                       </div>
                       <button
                         onClick={() => loadAnalytics(true)}
                         disabled={refreshingAnalytics}
-                        className="px-3 py-2 bg-indigo-600 text-white text-xs font-medium rounded-lg hover:bg-indigo-700 disabled:bg-gray-400 transition-colors flex items-center gap-2"
+                        className="px-3 py-2 bg-emerald-600 text-white text-xs font-medium rounded-lg hover:bg-emerald-700 disabled:bg-gray-400 transition-colors flex items-center gap-2"
                       >
                         {refreshingAnalytics ? (
                           <>
@@ -2846,7 +2847,7 @@ ${script.caption}`;
                                   rec.type === 'success' ? '✅' :
                                   '💡'
                                 }`}></span>
-                                <h4 className="font-semibold text-slate-900">{rec.title}</h4>
+                                <h4 className="font-semibold text-white">{rec.title}</h4>
                                 <span className={`text-xs px-2 py-1 rounded-full font-medium ${
                                   rec.impact === 'high' ? 'bg-red-200 text-red-800' :
                                   rec.impact === 'medium' ? 'bg-yellow-200 text-yellow-800' :
@@ -2855,27 +2856,27 @@ ${script.caption}`;
                                   {rec.impact.toUpperCase()} IMPACT
                                 </span>
                               </div>
-                              <p className="text-sm text-slate-700 mb-2">{rec.description}</p>
-                              <div className="text-xs text-slate-600 mb-3">
+                              <p className="text-sm text-slate-300 mb-2">{rec.description}</p>
+                              <div className="text-xs text-slate-400 mb-3">
                                 <span className="font-medium">Action:</span> {rec.action}
                               </div>
 
                               {/* Copy-Paste Section */}
                               <div className="bg-white border border-slate-300 rounded-lg p-3 mt-3">
                                 <div className="flex items-center justify-between mb-2">
-                                  <span className="text-xs font-semibold text-slate-700">Copy for Claude:</span>
+                                  <span className="text-xs font-semibold text-slate-300">Copy for Claude:</span>
                                   <button
                                     onClick={() => copyToClipboard(rec.copyPasteText, rec.id)}
                                     className={`text-xs px-3 py-1 rounded-lg font-medium transition-all ${
                                       copiedRecId === rec.id
                                         ? 'bg-green-600 text-white'
-                                        : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                                        : 'bg-emerald-600 text-white hover:bg-emerald-700'
                                     }`}
                                   >
                                     {copiedRecId === rec.id ? '✓ Copied!' : '📋 Copy'}
                                   </button>
                                 </div>
-                                <pre className="text-xs text-slate-700 whitespace-pre-wrap font-mono bg-slate-50 p-2 rounded border border-slate-200">
+                                <pre className="text-xs text-slate-300 whitespace-pre-wrap font-mono bg-slate-50 p-2 rounded border border-slate-200">
                                   {rec.copyPasteText}
                                 </pre>
                               </div>
@@ -2891,12 +2892,12 @@ ${script.caption}`;
                 <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl shadow-sm p-6 border-2 border-dashed border-purple-300">
                   <div className="flex items-center gap-3 mb-3">
                     <span className="text-3xl">🚀</span>
-                    <h3 className="text-lg font-semibold text-slate-900">Coming Soon: Late.so Analytics Integration</h3>
+                    <h3 className="text-lg font-semibold text-white">Coming Soon: Late.so Analytics Integration</h3>
                   </div>
-                  <p className="text-sm text-slate-700 mb-4">
+                  <p className="text-sm text-slate-300 mb-4">
                     Once Late.so releases their analytics API, we'll automatically track:
                   </p>
-                  <ul className="text-sm text-slate-700 space-y-2">
+                  <ul className="text-sm text-slate-300 space-y-2">
                     <li>• Real-time engagement metrics (views, likes, comments, shares)</li>
                     <li>• Platform-specific performance comparison</li>
                     <li>• Optimal posting time analysis</li>
@@ -2904,7 +2905,7 @@ ${script.caption}`;
                     <li>• Audience retention heatmaps</li>
                     <li>• A/B testing results for captions and thumbnails</li>
                   </ul>
-                  <div className="mt-4 text-xs text-slate-600">
+                  <div className="mt-4 text-xs text-slate-400">
                     For now, manually track engagement in your platform dashboards and use the recommendations above to optimize performance.
                   </div>
                 </div>
@@ -2912,7 +2913,7 @@ ${script.caption}`;
             )}
 
             {!analytics && (
-              <div className="bg-white rounded-xl shadow-sm p-6">
+              <div className="bg-slate-800 rounded-xl border border-slate-700 p-6">
                 <div className="flex items-center justify-center h-64">
                   <div className="text-center">
                     <div className="w-12 h-12 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
@@ -2925,34 +2926,34 @@ ${script.caption}`;
         )}
 
         {/* System Information */}
-        <div className="bg-white rounded-xl shadow-sm p-6 mt-6">
-          <h3 className="text-lg font-semibold text-slate-900 mb-4">System Information</h3>
+        <div className="bg-slate-800 rounded-xl border border-slate-700 p-6 mt-6">
+          <h3 className="text-lg font-semibold text-white mb-4">System Information</h3>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
             <div>
-              <div className="text-slate-600">Cron Schedule</div>
-              <div className="font-medium text-slate-900 mt-1">5x daily (9AM-9PM CDT)</div>
+              <div className="text-slate-400">Cron Schedule</div>
+              <div className="font-medium text-white mt-1">5x daily (9AM-9PM CDT)</div>
             </div>
             <div>
-              <div className="text-slate-600">Video Generation</div>
-              <div className="font-medium text-slate-900 mt-1">HeyGen + Submagic</div>
+              <div className="text-slate-400">Video Generation</div>
+              <div className="font-medium text-white mt-1">HeyGen + Submagic</div>
             </div>
             <div>
-              <div className="text-slate-600">Storage</div>
-              <div className="font-medium text-slate-900 mt-1">Cloudflare R2</div>
+              <div className="text-slate-400">Storage</div>
+              <div className="font-medium text-white mt-1">Cloudflare R2</div>
             </div>
             <div>
-              <div className="text-slate-600">Publishing</div>
-              <div className="font-medium text-slate-900 mt-1">GetLate API</div>
+              <div className="text-slate-400">Publishing</div>
+              <div className="font-medium text-white mt-1">GetLate API</div>
             </div>
             <div>
-              <div className="text-slate-600">Last Updated</div>
-              <div className="font-medium text-slate-900 mt-1">
+              <div className="text-slate-400">Last Updated</div>
+              <div className="font-medium text-white mt-1">
                 {status?.timestamp ? new Date(status.timestamp).toLocaleTimeString() : 'N/A'}
               </div>
             </div>
             <div>
-              <div className="text-slate-600">Cost per Video</div>
-              <div className="font-medium text-slate-900 mt-1">~$1.05</div>
+              <div className="text-slate-400">Cost per Video</div>
+              <div className="font-medium text-white mt-1">~$1.05</div>
             </div>
           </div>
         </div>

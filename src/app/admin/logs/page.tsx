@@ -119,8 +119,8 @@ export default function AdminLogsPage() {
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen bg-primary-bg flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="h-screen bg-slate-900 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-400"></div>
       </div>
     );
   }
@@ -129,21 +129,20 @@ export default function AdminLogsPage() {
   const insertErrors = logs.filter(log => log.context?.action === 'insert_property' && log.level === 'error');
 
   return (
-    <div className="min-h-screen bg-primary-bg flex flex-col">
-      <Header />
-
-      <div className="flex-1 px-6 py-12">
+    <div className="h-screen overflow-hidden bg-slate-900 flex flex-col">
+      <div className="flex-1 overflow-y-auto p-6">
         <div className="max-w-6xl mx-auto">
+          <a href="/admin" className="text-emerald-400 hover:text-emerald-300 text-sm mb-4 inline-block">← Back to Admin</a>
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h1 className="text-3xl font-bold text-primary-text mb-2">System Logs</h1>
-              <p className="text-secondary-text">View property upload logs and system errors</p>
+              <h1 className="text-3xl font-bold text-white mb-2">System Logs</h1>
+              <p className="text-slate-400">View property upload logs and system errors</p>
             </div>
             <div className="flex items-center space-x-4">
               <select
                 value={filter}
                 onChange={(e) => setFilter(e.target.value as 'all' | 'upload' | 'error')}
-                className="px-4 py-2 border border-slate-300 rounded-lg bg-white"
+                className="px-4 py-2 border border-slate-600 rounded-lg bg-slate-800 text-white"
               >
                 <option value="upload">Upload Logs</option>
                 <option value="error">Error Logs</option>
@@ -152,7 +151,7 @@ export default function AdminLogsPage() {
               <button
                 onClick={fetchLogs}
                 disabled={loading}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-slate-400"
+                className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors disabled:bg-slate-600"
               >
                 {loading ? 'Loading...' : 'Refresh'}
               </button>
@@ -161,11 +160,11 @@ export default function AdminLogsPage() {
 
           {/* Upload Summaries */}
           {filter === 'upload' && uploadSummaries.length > 0 && (
-            <div className="bg-white rounded-xl p-6 shadow-lg mb-6">
-              <h2 className="text-xl font-semibold text-slate-900 mb-4">Upload Summaries</h2>
+            <div className="bg-slate-800 rounded-xl p-6 border border-slate-700 mb-6">
+              <h2 className="text-xl font-semibold text-white mb-4">Upload Summaries</h2>
               <div className="space-y-4">
                 {uploadSummaries.map((log) => (
-                  <div key={log.id} className="border border-slate-200 rounded-lg p-4 bg-slate-50">
+                  <div key={log.id} className="border border-slate-600 rounded-lg p-4 bg-slate-700/50">
                     <div className="flex justify-between items-start mb-2">
                       <div>
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -188,24 +187,24 @@ export default function AdminLogsPage() {
                         </span>
                       </div>
                     </div>
-                    <h3 className="font-medium text-slate-900 mb-2">{log.message}</h3>
+                    <h3 className="font-medium text-white mb-2">{log.message}</h3>
                     {log.context?.metadata && (
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                         <div>
-                          <span className="font-medium text-slate-700">File:</span>
-                          <p className="text-slate-600">{(log.context.metadata.fileName as string) || 'Unknown'}</p>
+                          <span className="font-medium text-slate-300">File:</span>
+                          <p className="text-slate-400">{(log.context.metadata.fileName as string) || 'Unknown'}</p>
                         </div>
                         <div>
-                          <span className="font-medium text-slate-700">Total Rows:</span>
-                          <p className="text-slate-600">{(log.context.metadata.totalProcessed as string) || (log.context.metadata.totalRows as string) || 'Unknown'}</p>
+                          <span className="font-medium text-slate-300">Total Rows:</span>
+                          <p className="text-slate-400">{(log.context.metadata.totalProcessed as string) || (log.context.metadata.totalRows as string) || 'Unknown'}</p>
                         </div>
                         <div>
-                          <span className="font-medium text-slate-700">Successful:</span>
-                          <p className="text-green-600 font-medium">{(log.context.metadata.successfulInserts as string) || 'Unknown'}</p>
+                          <span className="font-medium text-slate-300">Successful:</span>
+                          <p className="text-emerald-400 font-medium">{(log.context.metadata.successfulInserts as string) || 'Unknown'}</p>
                         </div>
                         <div>
-                          <span className="font-medium text-slate-700">Errors:</span>
-                          <p className="text-red-600 font-medium">
+                          <span className="font-medium text-slate-300">Errors:</span>
+                          <p className="text-red-400 font-medium">
                             Parse: {(log.context.metadata.parseErrors as number) || 0}, Insert: {(log.context.metadata.insertErrors as number) || 0}
                           </p>
                         </div>
@@ -219,23 +218,23 @@ export default function AdminLogsPage() {
 
           {/* Insert Errors */}
           {filter === 'upload' && insertErrors.length > 0 && (
-            <div className="bg-white rounded-xl p-6 shadow-lg mb-6">
-              <h2 className="text-xl font-semibold text-slate-900 mb-4">
+            <div className="bg-slate-800 rounded-xl p-6 border border-slate-700 mb-6">
+              <h2 className="text-xl font-semibold text-white mb-4">
                 Individual Property Insert Errors ({insertErrors.length})
               </h2>
               <div className="space-y-3">
                 {insertErrors.slice(0, 20).map((log) => (
-                  <div key={log.id} className="border border-red-200 rounded-lg p-4 bg-red-50">
+                  <div key={log.id} className="border border-red-700 rounded-lg p-4 bg-red-900/30">
                     <div className="flex justify-between items-start mb-2">
                       <div className="flex-1">
-                        <h4 className="font-medium text-red-900">
+                        <h4 className="font-medium text-red-300">
                           Property: {(log.context?.metadata?.property as string) || 'Unknown'}
                         </h4>
-                        <p className="text-sm text-red-700">
+                        <p className="text-sm text-red-400">
                           ID: {(log.context?.metadata?.propertyId as string) || 'Unknown'}
                         </p>
                       </div>
-                      <span className="text-xs text-red-600">
+                      <span className="text-xs text-red-400">
                         {(() => {
                           const ts = log.createdAt as any;
                           if (!ts) return 'Unknown time';
@@ -248,17 +247,17 @@ export default function AdminLogsPage() {
                       </span>
                     </div>
                     <div className="mb-2">
-                      <span className="font-medium text-red-800">Error Type:</span>
-                      <p className="text-red-700">{(log.context?.metadata?.errorType as string) || 'Unknown'}</p>
+                      <span className="font-medium text-red-300">Error Type:</span>
+                      <p className="text-red-400">{(log.context?.metadata?.errorType as string) || 'Unknown'}</p>
                     </div>
                     <div className="mb-2">
-                      <span className="font-medium text-red-800">Error Message:</span>
-                      <p className="text-red-700 text-sm">{(log.context?.metadata?.errorMessage as string) || log.message}</p>
+                      <span className="font-medium text-red-300">Error Message:</span>
+                      <p className="text-red-400 text-sm">{(log.context?.metadata?.errorMessage as string) || log.message}</p>
                     </div>
                     {log.stackTrace && (
                       <details className="mt-2">
-                        <summary className="cursor-pointer text-red-800 font-medium text-sm">Stack Trace</summary>
-                        <pre className="mt-2 text-xs text-red-600 bg-red-100 p-2 rounded overflow-x-auto">
+                        <summary className="cursor-pointer text-red-300 font-medium text-sm">Stack Trace</summary>
+                        <pre className="mt-2 text-xs text-red-400 bg-red-900/50 p-2 rounded overflow-x-auto">
                           {log.stackTrace}
                         </pre>
                       </details>
@@ -266,7 +265,7 @@ export default function AdminLogsPage() {
                   </div>
                 ))}
                 {insertErrors.length > 20 && (
-                  <p className="text-slate-600 text-center py-4">
+                  <p className="text-slate-400 text-center py-4">
                     ... and {insertErrors.length - 20} more errors
                   </p>
                 )}
@@ -276,42 +275,42 @@ export default function AdminLogsPage() {
 
           {/* All Logs */}
           {filter !== 'upload' && (
-            <div className="bg-white rounded-xl p-6 shadow-lg">
-              <h2 className="text-xl font-semibold text-slate-900 mb-4">
+            <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
+              <h2 className="text-xl font-semibold text-white mb-4">
                 Recent Logs ({logs.length})
               </h2>
               {loading ? (
                 <div className="text-center py-12">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-                  <p className="mt-4 text-slate-600">Loading logs...</p>
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-400 mx-auto"></div>
+                  <p className="mt-4 text-slate-400">Loading logs...</p>
                 </div>
               ) : logs.length === 0 ? (
                 <div className="text-center py-12">
                   <div className="text-6xl mb-4">📄</div>
-                  <h3 className="text-xl font-semibold text-slate-800 mb-2">No Logs Found</h3>
-                  <p className="text-slate-600">No logs match the current filter</p>
+                  <h3 className="text-xl font-semibold text-white mb-2">No Logs Found</h3>
+                  <p className="text-slate-400">No logs match the current filter</p>
                 </div>
               ) : (
                 <div className="space-y-3">
                   {logs.map((log) => (
-                    <div key={log.id} className="border border-slate-200 rounded-lg p-4 bg-slate-50">
+                    <div key={log.id} className="border border-slate-600 rounded-lg p-4 bg-slate-700/50">
                       <div className="flex justify-between items-start mb-2">
                         <div className="flex items-center space-x-2">
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            log.level === 'error' ? 'bg-red-100 text-red-800' :
-                            log.level === 'warn' ? 'bg-yellow-100 text-yellow-800' :
-                            log.level === 'info' ? 'bg-blue-100 text-blue-800' :
-                            'bg-gray-100 text-gray-800'
+                            log.level === 'error' ? 'bg-red-900/50 text-red-300' :
+                            log.level === 'warn' ? 'bg-yellow-900/50 text-yellow-300' :
+                            log.level === 'info' ? 'bg-blue-900/50 text-blue-300' :
+                            'bg-slate-600 text-slate-300'
                           }`}>
                             {log.level.toUpperCase()}
                           </span>
                           {log.context?.action && (
-                            <span className="px-2 py-1 bg-slate-200 text-slate-700 rounded text-xs">
+                            <span className="px-2 py-1 bg-slate-600 text-slate-300 rounded text-xs">
                               {log.context.action}
                             </span>
                           )}
                         </div>
-                        <span className="text-xs text-slate-500">
+                        <span className="text-xs text-slate-400">
                           {(() => {
                             const ts = log.createdAt as any;
                             if (!ts) return 'Unknown time';
@@ -323,13 +322,13 @@ export default function AdminLogsPage() {
                           })()}
                         </span>
                       </div>
-                      <p className="text-slate-900 mb-2">{log.message}</p>
+                      <p className="text-white mb-2">{log.message}</p>
                       {log.stackTrace && (
                         <details className="mt-2">
-                          <summary className="cursor-pointer text-slate-700 font-medium text-sm">
+                          <summary className="cursor-pointer text-slate-300 font-medium text-sm">
                             Stack Trace
                           </summary>
-                          <pre className="mt-2 text-xs text-slate-600 bg-slate-100 p-2 rounded overflow-x-auto">
+                          <pre className="mt-2 text-xs text-slate-400 bg-slate-900 p-2 rounded overflow-x-auto">
                             {log.stackTrace}
                           </pre>
                         </details>
@@ -342,18 +341,16 @@ export default function AdminLogsPage() {
           )}
 
           {filter === 'upload' && logs.length === 0 && !loading && (
-            <div className="bg-white rounded-xl p-6 shadow-lg">
+            <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
               <div className="text-center py-12">
                 <div className="text-6xl mb-4">📊</div>
-                <h3 className="text-xl font-semibold text-slate-800 mb-2">No Upload Logs Found</h3>
-                <p className="text-slate-600">No property upload logs found in the system</p>
+                <h3 className="text-xl font-semibold text-white mb-2">No Upload Logs Found</h3>
+                <p className="text-slate-400">No property upload logs found in the system</p>
               </div>
             </div>
           )}
         </div>
       </div>
-
-      <Footer />
     </div>
   );
 }

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSession, signOut } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { ExtendedSession, isExtendedSession } from '@/types/session';
 import Tutorial from '@/components/dashboard/Tutorial';
@@ -45,6 +45,7 @@ interface Property extends Partial<PropertyListing> {
 export default function Dashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [profile, setProfile] = useState<BuyerDashboardView | null>(null);
   const [properties, setProperties] = useState<Property[]>([]);
@@ -181,6 +182,33 @@ export default function Dashboard() {
       // Error updating like status
     }
   }, [likedProperties]);
+
+  // Handle auto-like from shared property link
+  useEffect(() => {
+    const likePropertyId = searchParams?.get('likeProperty');
+    if (likePropertyId && profile && !likedProperties.includes(likePropertyId) && !loading) {
+      // Auto-like the shared property
+      const autoLikeProperty = async () => {
+        try {
+          const response = await fetch('/api/buyer/like-property', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ propertyId: likePropertyId, action: 'like' })
+          });
+
+          if (response.ok) {
+            setLikedProperties(prev => [...prev, likePropertyId]);
+            // Remove the query param from URL without reload
+            const newUrl = window.location.pathname;
+            window.history.replaceState({}, '', newUrl);
+          }
+        } catch (err) {
+          console.error('Failed to auto-like property:', err);
+        }
+      };
+      autoLikeProperty();
+    }
+  }, [searchParams, profile, likedProperties, loading]);
 
   if (loading) {
     return (

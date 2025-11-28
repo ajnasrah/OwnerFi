@@ -119,8 +119,12 @@ export default function AuthSetup() {
       console.log('🔐 [SETUP] Sign in result:', signInResult);
 
       if (signInResult?.ok) {
+        // Check for shared property to auto-like
+        const sharedPropertyId = sessionStorage.getItem('shared_property_id');
+
         // Clear session storage
         sessionStorage.removeItem('verified_phone');
+        sessionStorage.removeItem('shared_property_id');
 
         // 🔧 Small delay to ensure session is established
         await new Promise(resolve => setTimeout(resolve, 500));
@@ -129,7 +133,12 @@ export default function AuthSetup() {
         if (formData.isRealtor) {
           router.push('/realtor-dashboard');
         } else {
-          router.push('/dashboard');
+          // If coming from shared property, pass it as query param
+          if (sharedPropertyId) {
+            router.push(`/dashboard?likeProperty=${sharedPropertyId}`);
+          } else {
+            router.push('/dashboard');
+          }
         }
       } else {
         console.error('❌ [SETUP] Sign in failed:', signInResult);

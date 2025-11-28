@@ -122,6 +122,10 @@ export default function AuthPage() {
         });
 
         if (signInResult?.ok) {
+          // Check for shared property to auto-like
+          const sharedPropertyId = sessionStorage.getItem('shared_property_id');
+          sessionStorage.removeItem('shared_property_id');
+
           // Redirect based on role
           let redirectTo = searchParams?.get('callbackUrl') || '/dashboard';
 
@@ -130,6 +134,9 @@ export default function AuthPage() {
             redirectTo = '/admin';
           } else if (checkData.role === 'realtor') {
             redirectTo = '/realtor-dashboard';
+          } else if (sharedPropertyId && checkData.role === 'buyer') {
+            // Buyer with shared property - add to redirect
+            redirectTo = `/dashboard?likeProperty=${sharedPropertyId}`;
           }
 
           // Small delay to ensure session is established
@@ -157,6 +164,22 @@ export default function AuthPage() {
     setError('');
     setStep('phone');
     setConfirmationResult(null);
+
+    // Reset the reCAPTCHA verifier so a fresh one is created
+    if ((window as any).recaptchaVerifier) {
+      try {
+        (window as any).recaptchaVerifier.clear();
+      } catch (e) {
+        // Ignore clear errors
+      }
+      (window as any).recaptchaVerifier = null;
+    }
+
+    // Clear the reCAPTCHA container and recreate
+    const container = document.getElementById('recaptcha-container');
+    if (container) {
+      container.innerHTML = '';
+    }
   };
 
   const handleEmailSubmit = async (e: React.FormEvent) => {

@@ -26,7 +26,7 @@ async function backfillRentEstimates() {
 
   // Get all cash_houses without rentEstimate
   const snap = await db.collection('cash_houses').get();
-  const needsBackfill: Array<{ id: string; url: string; address: string }> = [];
+  const needsBackfill: Array<{ id: string; zpid: string; url: string; address: string }> = [];
 
   snap.docs.forEach(doc => {
     const data = doc.data();
@@ -34,6 +34,7 @@ async function backfillRentEstimates() {
     if ((!data.rentEstimate || data.rentEstimate === 0) && data.url && data.url.includes('zillow.com')) {
       needsBackfill.push({
         id: doc.id,
+        zpid: String(data.zpid || doc.id), // zpid stored as doc ID
         url: data.url,
         address: data.address || 'Unknown',
       });
@@ -79,7 +80,23 @@ async function backfillRentEstimates() {
       const { items } = await client.dataset(run.defaultDatasetId!).listItems();
       console.log(`📥 Received ${items.length} results from Apify`);
 
-      // Create a map of URL to rent estimate
+      // Create a map of ZPID to rent estimate (more reliable than URL matching)
+      const rentByZpid = new Map<string, { rentEstimate: number; annualTax: number; hoa: number }>();
+      for (const item of items as any[]) {
+        const zpid = String(item.zpid); // Convert to string for consistent matching
+        if (zpid && zpid !== 'undefined') {
+          const rentData = {
+            rentEstimate: item.rentZestimate || 0,
+            annualTax: (Array.isArray(item.taxHistory) && item.taxHistory.find((t: any) => t.taxPaid)?.taxPaid) || 0,
+            hoa: item.monthlyHoaFee || 0,
+          };
+          rentByZpid.set(zpid, rentData);
+          console.log(`  [Apify] ZPID ${zpid}: rent=$${item.rentZestimate || 0}/mo`);
+        }
+      }
+      console.log(`  [Map] Created ${rentByZpid.size} ZPID entries`);
+
+      // Also create URL map as fallback
       const rentByUrl = new Map<string, { rentEstimate: number; annualTax: number; hoa: number }>();
       for (const item of items as any[]) {
         const url = item.url || item.hdpUrl;
@@ -97,7 +114,14 @@ async function backfillRentEstimates() {
       let batchUpdates = 0;
 
       for (const item of batchItems) {
-        const data = rentByUrl.get(item.url);
+        // Try ZPID first, then URL
+        const zpidKey = String(item.zpid);
+        let data = rentByZpid.get(zpidKey);
+        const foundByZpid = !!data;
+        if (!data || data.rentEstimate === 0) {
+          data = rentByUrl.get(item.url);
+        }
+
         if (data && data.rentEstimate > 0) {
           updateBatch.update(db.collection('cash_houses').doc(item.id), {
             rentEstimate: data.rentEstimate,
@@ -108,7 +132,7 @@ async function backfillRentEstimates() {
           batchUpdates++;
           console.log(`  ✓ ${item.address}: $${data.rentEstimate}/mo rent`);
         } else {
-          console.log(`  ✗ ${item.address}: No rent estimate found`);
+          console.log(`  ✗ ${item.address}: No rent estimate on Zillow`);
         }
       }
 

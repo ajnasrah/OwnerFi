@@ -96,11 +96,12 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Runs every 2 hours (12x/day) × 125 = 1500 properties/day
-    const MAX_PROPERTIES_PER_RUN = 125;
-    const BATCH_SIZE = 25; // Larger batches = fewer API calls
-    const MIN_DELAY = 1500; // 1.5 seconds (Apify handles rate limiting)
-    const MAX_DELAY = 2500; // 2.5 seconds max
+    // Runs every 2 hours (12x/day) × 200 = 2400 properties/day
+    // With ~4200 properties, full cycle takes ~1.75 days
+    const MAX_PROPERTIES_PER_RUN = 200;
+    const BATCH_SIZE = 40; // Larger batches = fewer API calls
+    const MIN_DELAY = 1000; // 1 second (Apify handles rate limiting)
+    const MAX_DELAY = 2000; // 2 seconds max
     const DELETE_INACTIVE = true; // Delete sold/pending properties
 
     // Get all properties, then filter/sort in memory
@@ -246,20 +247,33 @@ export async function GET(request: NextRequest) {
             'OFF_MARKET',                 // No longer listed
             'FOR_RENT',                   // Changed to rental
             'CONTINGENT',                 // Contingent offer accepted
+            'OTHER',                      // Suspicious - often means listing removed
+            'UNKNOWN',                    // Apify couldn't determine - likely off-market
             // Note: ACCEPTING_BACKUP_OFFERS kept active - still a valid opportunity
           ];
           const isInactive = inactiveStatuses.includes(newStatus);
 
-          if (isInactive && DELETE_INACTIVE) {
-            // Delete inactive properties
+          // Also check for price = 0 or null, which indicates off-market
+          const hasNoPrice = !item.price && !item.listPrice;
+          const isPriceZero = (item.price === 0 || item.listPrice === 0);
+
+          if ((isInactive || hasNoPrice || isPriceZero) && DELETE_INACTIVE) {
+            // Delete inactive properties or those with no/zero price (off-market indicator)
+            const reason = isInactive
+              ? 'Property no longer FOR_SALE'
+              : hasNoPrice
+                ? 'No price data (likely off-market)'
+                : 'Price is $0 (likely off-market)';
+
             firestoreBatch.delete(docRef);
             deleted++;
             deletedProperties.push({
               address: originalProp?.address || item.address?.streetAddress || 'Unknown',
               status: newStatus,
-              reason: 'Property no longer FOR_SALE',
+              reason,
             });
-            console.log(`   🗑️  DELETING PROPERTY (Status: ${newStatus})`);
+            console.log(`   🗑️  DELETING PROPERTY (${reason})`);
+            console.log(`      Status: ${newStatus}, Price: ${item.price || item.listPrice || 'N/A'}`);
             console.log(`      Address: ${originalProp?.address}`);
             console.log(`      ZPID: ${originalProp?.zpid}`);
             console.log(`      ℹ️  If relisted later, this ZPID can be imported again with new agent info`);
@@ -357,8 +371,8 @@ export async function GET(request: NextRequest) {
         }
 
         // Handle properties that didn't get Apify results
-        // Track consecutive failures and delete after 3
-        const MAX_CONSECUTIVE_NO_RESULTS = 3;
+        // Delete immediately on first failure - if Apify can't find it, it's likely off-market
+        const MAX_CONSECUTIVE_NO_RESULTS = 1;
         let batchNoResult = 0;
         for (const prop of batch) {
           const propZpid = String(prop.zpid || '');

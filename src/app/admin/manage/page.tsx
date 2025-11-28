@@ -864,7 +864,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="h-screen bg-slate-50 flex flex-col md:flex-row max-w-full overflow-hidden">
+    <div className="min-h-screen md:h-screen bg-slate-50 flex flex-col md:flex-row max-w-full overflow-y-auto md:overflow-hidden">
       {/* Mobile Dropdown Navigation */}
       <div className="md:hidden bg-white border-b border-slate-200 p-4">
         <a href="/admin" className="text-indigo-600 hover:text-indigo-800 text-sm mb-2 inline-flex items-center gap-1">
@@ -1062,7 +1062,7 @@ export default function AdminDashboard() {
         )}
 
         {/* Content Area */}
-        <main className="flex-1 p-4 md:p-6 lg:p-8 bg-slate-50 overflow-y-auto w-full">
+        <main className="flex-1 p-4 md:p-6 lg:p-8 pb-20 md:pb-8 bg-slate-50 md:overflow-y-auto w-full">
           {/* Overview Tab */}
           {activeTab === 'overview' && (
             <div className="space-y-6">

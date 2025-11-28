@@ -4,6 +4,7 @@ import React, { useState, useMemo, useCallback } from 'react';
 import Image from 'next/image';
 import { PropertyListing } from '@/lib/property-schema';
 import { LEGAL_DISCLAIMERS, LEGAL_COLORS, AGENT_CONTACT_DISCLAIMER } from '@/lib/legal-disclaimers';
+import { ShareModal } from './ShareModal';
 
 interface PropertyCardProps {
   property: PropertyListing;
@@ -18,6 +19,7 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
   const [imageLoading, setImageLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
 
   // ONLY use first image - no gallery
   const currentImage = useMemo(() => {
@@ -505,18 +507,18 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="grid grid-cols-2 gap-3 pt-2">
+                  <div className="grid grid-cols-3 gap-2 pt-2">
                     <a
                       href={`https://www.google.com/search?q=${encodeURIComponent(`${property.address} ${property.city}, ${property.state} ${property.zipCode}`)}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="block bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-2.5 px-4 rounded-xl font-bold text-sm shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-95 transition-all"
+                      className="block bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-2.5 px-3 rounded-xl font-bold text-sm shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-95 transition-all"
                     >
-                      <div className="flex items-center justify-center gap-2">
+                      <div className="flex items-center justify-center gap-1.5">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
-                        <span>Search Online</span>
+                        <span>Search</span>
                       </div>
                     </a>
 
@@ -526,14 +528,30 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
                         const phone = property.agentPhone || (property as any).phone || '+1234567890';
                         window.open(`sms:${phone}&body=${encodeURIComponent(message)}`, '_self');
                       }}
-                      className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white py-2.5 px-4 rounded-xl font-bold text-sm shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-95 transition-all"
+                      className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white py-2.5 px-3 rounded-xl font-bold text-sm shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-95 transition-all"
                       title={AGENT_CONTACT_DISCLAIMER}
                     >
-                      <div className="flex items-center justify-center gap-2">
+                      <div className="flex items-center justify-center gap-1.5">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                         </svg>
-                        <span>Contact Agent</span>
+                        <span>Contact</span>
+                      </div>
+                    </button>
+
+                    {/* Share Button */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowShareModal(true);
+                      }}
+                      className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white py-2.5 px-3 rounded-xl font-bold text-sm shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-95 transition-all"
+                    >
+                      <div className="flex items-center justify-center gap-1.5">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                        </svg>
+                        <span>Share</span>
                       </div>
                     </button>
                   </div>
@@ -551,6 +569,13 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
           </div>
         </div>
       </div>
+
+      {/* Share Modal */}
+      <ShareModal
+        property={property}
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+      />
     </div>
   );
 });

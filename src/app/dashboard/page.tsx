@@ -9,7 +9,7 @@ import Tutorial from '@/components/dashboard/Tutorial';
 import { PropertySwiper2 } from '@/components/ui/PropertySwiper2';
 import { FilterUpgradeModal } from '@/components/FilterUpgradeModal';
 import { useFilterUpgradePrompt } from '@/hooks/useFilterUpgradePrompt';
-import { CashDeals } from '@/components/dashboard/CashDeals';
+// import { CashDeals } from '@/components/dashboard/CashDeals'; // Hidden for now
 
 import { PropertyListing } from '@/lib/property-schema';
 import { BuyerDashboardView } from '@/lib/view-models';
@@ -55,7 +55,7 @@ export default function Dashboard() {
   const [showTutorial, setShowTutorial] = useState(false);
   const [currentFact, setCurrentFact] = useState('');
   const [isInvestor, setIsInvestor] = useState(false);
-  const [activeTab, setActiveTab] = useState<'owner-finance' | 'cash-deals'>('owner-finance');
+  // const [activeTab, setActiveTab] = useState<'owner-finance' | 'cash-deals'>('owner-finance'); // Hidden for now
 
   // Filter upgrade prompt for old users
   const { shouldShow: shouldShowFilterUpgrade, dismissPrompt: dismissFilterUpgrade } = useFilterUpgradePrompt(profile);
@@ -128,28 +128,18 @@ export default function Dashboard() {
 
       setProperties(propertiesData.properties || []);
 
-      // Check if tutorial should be shown
+      // Check if tutorial should be shown - ONLY for first time users
       const tutorialCompleted = localStorage.getItem('buyerTutorialCompleted');
       const isNewAccount = localStorage.getItem('isNewBuyerAccount');
-      const loginCount = parseInt(localStorage.getItem('tutorialLoginCount') || '0');
 
-      // Show tutorial for new accounts or every 3 logins if they skipped it
+      // Show tutorial ONLY for new accounts that haven't seen it
       if (propertiesData.properties?.length > 0) {
-        if (isNewAccount === 'true' || !tutorialCompleted) {
-          // First time user or never completed tutorial
+        if (isNewAccount === 'true' && !tutorialCompleted) {
+          // First time user who hasn't completed tutorial
           setShowTutorial(true);
           localStorage.removeItem('isNewBuyerAccount');
-        } else if (tutorialCompleted === 'true') {
-          // User has completed/skipped tutorial before - increment login counter
-          const newLoginCount = loginCount + 1;
-          localStorage.setItem('tutorialLoginCount', newLoginCount.toString());
-
-          // Show tutorial every 3 logins
-          if (newLoginCount >= 3) {
-            setShowTutorial(true);
-            localStorage.setItem('tutorialLoginCount', '0'); // Reset counter
-          }
         }
+        // Once completed, never show automatically again (user can click ? to see it)
       }
     } catch {
       // Error loading properties
@@ -455,49 +445,42 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Tab Navigation - Only show for investors */}
+          {/* Tab Navigation Bar - Hidden for now, Cash Deals only available in certain cities
           {isInvestor && (
-            <div className="flex gap-2 mt-2">
+            <div className="flex mt-3 h-2 rounded-full overflow-hidden bg-slate-700/50">
               <button
                 onClick={() => setActiveTab('owner-finance')}
-                className={`flex-1 py-2 px-3 rounded-lg text-sm font-semibold transition-all ${
+                className={`flex-1 transition-all ${
                   activeTab === 'owner-finance'
-                    ? 'bg-emerald-600 text-white'
-                    : 'bg-white/10 text-slate-300 hover:bg-white/20'
+                    ? 'bg-emerald-500'
+                    : 'bg-transparent hover:bg-emerald-500/30'
                 }`}
-              >
-                🏠 Owner Finance
-              </button>
+                title="Owner Finance Properties"
+              />
               <button
                 onClick={() => setActiveTab('cash-deals')}
-                className={`flex-1 py-2 px-3 rounded-lg text-sm font-semibold transition-all ${
+                className={`flex-1 transition-all ${
                   activeTab === 'cash-deals'
-                    ? 'bg-yellow-600 text-white'
-                    : 'bg-white/10 text-slate-300 hover:bg-white/20'
+                    ? 'bg-yellow-500'
+                    : 'bg-transparent hover:bg-yellow-500/30'
                 }`}
-              >
-                💰 Cash Deals
-              </button>
+                title="Cash Deals"
+              />
             </div>
           )}
+          */}
         </div>
       </div>
 
-      {/* Content based on active tab */}
-      {activeTab === 'owner-finance' ? (
-        <PropertySwiper2
-          properties={propertyListings}
-          onLike={handleLikeProperty}
-          onPass={handlePassProperty}
-          favorites={likedProperties}
-          passedIds={[]}
-          isLoading={loading}
-        />
-      ) : (
-        <div className={`h-full overflow-y-auto bg-slate-900 ${isInvestor ? 'pt-24' : 'pt-16'}`}>
-          <CashDeals city={profile?.city || ''} state={profile?.state || ''} />
-        </div>
-      )}
+      {/* Content - Always show PropertySwiper (Cash Deals tab hidden for now) */}
+      <PropertySwiper2
+        properties={propertyListings}
+        onLike={handleLikeProperty}
+        onPass={handlePassProperty}
+        favorites={likedProperties}
+        passedIds={[]}
+        isLoading={loading}
+      />
 
       {/* Filter Upgrade Modal - One-time prompt for old users */}
       {shouldShowFilterUpgrade && (

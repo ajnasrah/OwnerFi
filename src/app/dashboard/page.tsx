@@ -9,6 +9,7 @@ import Tutorial from '@/components/dashboard/Tutorial';
 import { PropertySwiper2 } from '@/components/ui/PropertySwiper2';
 import { FilterUpgradeModal } from '@/components/FilterUpgradeModal';
 import { useFilterUpgradePrompt } from '@/hooks/useFilterUpgradePrompt';
+import { CashDeals } from '@/components/dashboard/CashDeals';
 
 import { PropertyListing } from '@/lib/property-schema';
 import { BuyerDashboardView } from '@/lib/view-models';
@@ -53,6 +54,8 @@ export default function Dashboard() {
   const [likedProperties, setLikedProperties] = useState<string[]>([]);
   const [showTutorial, setShowTutorial] = useState(false);
   const [currentFact, setCurrentFact] = useState('');
+  const [isInvestor, setIsInvestor] = useState(false);
+  const [activeTab, setActiveTab] = useState<'owner-finance' | 'cash-deals'>('owner-finance');
 
   // Filter upgrade prompt for old users
   const { shouldShow: shouldShowFilterUpgrade, dismissPrompt: dismissFilterUpgrade } = useFilterUpgradePrompt(profile);
@@ -110,6 +113,11 @@ export default function Dashboard() {
 
       setProfile(dashboardProfile);
       setLikedProperties(dashboardProfile.likedProperties || []);
+
+      // Check if user is an investor
+      if (profileData.profile.isInvestor) {
+        setIsInvestor(true);
+      }
 
       const propertiesRes = await fetch(
         `/api/buyer/properties?city=${encodeURIComponent(dashboardProfile.city)}&state=${encodeURIComponent(dashboardProfile.state)}`
@@ -444,18 +452,50 @@ export default function Dashboard() {
               </button>
             </div>
           </div>
+
+          {/* Tab Navigation - Only show for investors */}
+          {isInvestor && (
+            <div className="flex gap-2 mt-2">
+              <button
+                onClick={() => setActiveTab('owner-finance')}
+                className={`flex-1 py-2 px-3 rounded-lg text-sm font-semibold transition-all ${
+                  activeTab === 'owner-finance'
+                    ? 'bg-emerald-600 text-white'
+                    : 'bg-white/10 text-slate-300 hover:bg-white/20'
+                }`}
+              >
+                🏠 Owner Finance
+              </button>
+              <button
+                onClick={() => setActiveTab('cash-deals')}
+                className={`flex-1 py-2 px-3 rounded-lg text-sm font-semibold transition-all ${
+                  activeTab === 'cash-deals'
+                    ? 'bg-yellow-600 text-white'
+                    : 'bg-white/10 text-slate-300 hover:bg-white/20'
+                }`}
+              >
+                💰 Cash Deals
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* PropertySwiper2 Component - New Modern Swiper */}
-      <PropertySwiper2
-        properties={propertyListings}
-        onLike={handleLikeProperty}
-        onPass={handlePassProperty}
-        favorites={likedProperties}
-        passedIds={[]}
-        isLoading={loading}
-      />
+      {/* Content based on active tab */}
+      {activeTab === 'owner-finance' ? (
+        <PropertySwiper2
+          properties={propertyListings}
+          onLike={handleLikeProperty}
+          onPass={handlePassProperty}
+          favorites={likedProperties}
+          passedIds={[]}
+          isLoading={loading}
+        />
+      ) : (
+        <div className={`h-full overflow-y-auto bg-slate-900 ${isInvestor ? 'pt-24' : 'pt-16'}`}>
+          <CashDeals city={profile?.city || ''} state={profile?.state || ''} />
+        </div>
+      )}
 
       {/* Filter Upgrade Modal - One-time prompt for old users */}
       {shouldShowFilterUpgrade && (

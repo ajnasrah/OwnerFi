@@ -52,10 +52,10 @@ const GLOBAL_MAX_PRICE = 300000;
 
 // Quick filter presets for investors (all within $300K cap)
 const QUICK_FILTERS = {
-  ownerFinance: { label: 'Owner Finance <80%', icon: '🏠', sortBy: 'percentOfArv' as SortField, sortOrder: 'asc' as const, maxArv: 80, ownerFinanceOnly: true },
+  ownerFinance: { label: 'Owner Finance', icon: '🏠', sortBy: 'percentOfArv' as SortField, sortOrder: 'asc' as const, ownerFinanceOnly: true },
+  discountDeals: { label: 'Under 80% ARV', icon: '!', sortBy: 'percentOfArv' as SortField, sortOrder: 'asc' as const, maxArv: 80 },
   bestCoc: { label: 'Best CoC %', icon: '%', sortBy: 'cocReturn' as SortField, sortOrder: 'desc' as const, minCoc: 15 },
   highCashFlow: { label: 'High Cash Flow', icon: '$', sortBy: 'monthlyCashFlow' as SortField, sortOrder: 'desc' as const, minCashFlow: 300 },
-  bigDiscounts: { label: 'Big Discounts', icon: '!', sortBy: 'percentOfArv' as SortField, sortOrder: 'asc' as const, maxArv: 55 },
   under100k: { label: 'Under $100K', icon: '<', sortBy: 'cocReturn' as SortField, sortOrder: 'desc' as const, maxPrice: 100000 },
   midRange: { label: '$100K-$200K', icon: '~', sortBy: 'cocReturn' as SortField, sortOrder: 'desc' as const, minPrice: 100000, maxPrice: 200000 },
   highEnd: { label: '$200K-$300K', icon: '+', sortBy: 'cocReturn' as SortField, sortOrder: 'desc' as const, minPrice: 200000, maxPrice: 300000 },

@@ -138,16 +138,13 @@ export async function GET(request: NextRequest) {
     const countOnly = searchParams.get('countOnly') === 'true';
 
     // FAST PATH: Count-only mode for stats (skip expensive calculations)
+    // FIXED: Count buyerProfiles instead of users, since we only show buyers WITH profiles
     if (countOnly) {
       const { getCountFromServer } = await import('firebase/firestore');
-      const usersCountQuery = query(
-        collection(db, 'users'),
-        where('role', '==', 'buyer')
-      );
-      const countSnapshot = await getCountFromServer(usersCountQuery);
+      const profilesCountSnapshot = await getCountFromServer(collection(db, 'buyerProfiles'));
       return NextResponse.json({
         buyers: [],
-        total: countSnapshot.data().count,
+        total: profilesCountSnapshot.data().count,
         totalPages: 0,
         currentPage: 1,
         pageSize: 0

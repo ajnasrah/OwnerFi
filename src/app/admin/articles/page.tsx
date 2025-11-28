@@ -119,10 +119,10 @@ export default function ArticlesPage() {
   };
 
   const getScoreColor = (score?: number) => {
-    if (!score) return 'bg-gray-100 text-gray-700';
-    if (score >= 80) return 'bg-green-100 text-green-700';
-    if (score >= 70) return 'bg-yellow-100 text-yellow-700';
-    return 'bg-red-100 text-red-700';
+    if (!score) return 'bg-slate-700 text-slate-300';
+    if (score >= 80) return 'bg-green-900/50 text-green-300';
+    if (score >= 70) return 'bg-yellow-900/50 text-yellow-300';
+    return 'bg-red-900/50 text-red-300';
   };
 
   const fetchNewArticles = async () => {
@@ -199,10 +199,10 @@ export default function ArticlesPage() {
 
   if (authStatus === 'loading' || loading) {
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div className="flex items-center justify-center h-screen bg-slate-900">
         <div className="text-center">
-          <div className="w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <div className="text-lg font-medium text-gray-900">Loading articles...</div>
+          <div className="w-8 h-8 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="text-lg font-medium text-white">Loading articles...</div>
         </div>
       </div>
     );

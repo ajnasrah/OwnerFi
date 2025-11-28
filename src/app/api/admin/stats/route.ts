@@ -34,15 +34,21 @@ export async function GET() {
 
     // Use getCountFromServer - much more efficient than loading all docs
     // This only counts documents, doesn't load them into memory
-    const [propertiesCount, buyersCount, realtorsCount, disputesCount] = await Promise.all([
-      getCountFromServer(collection(db, 'properties')),
-      getCountFromServer(collection(db, 'buyers')),
-      getCountFromServer(collection(db, 'realtors')),
-      getCountFromServer(query(collection(db, 'disputes'), where('status', '==', 'pending')))
+    // FIXED: Count from correct collections:
+    // - Properties: both 'properties' (isActive=true) AND 'zillow_imports' (ownerFinanceVerified=true)
+    // - Buyers: buyerProfiles collection (only buyers with completed profiles are shown)
+    // - Realtors: users with role='realtor'
+    // - Disputes: leadDisputes collection
+    const [propertiesCount, zillowCount, buyersCount, realtorsCount, disputesCount] = await Promise.all([
+      getCountFromServer(query(collection(db, 'properties'), where('isActive', '==', true))),
+      getCountFromServer(query(collection(db, 'zillow_imports'), where('ownerFinanceVerified', '==', true))),
+      getCountFromServer(collection(db, 'buyerProfiles')),
+      getCountFromServer(query(collection(db, 'users'), where('role', '==', 'realtor'))),
+      getCountFromServer(query(collection(db, 'leadDisputes'), where('status', '==', 'pending')))
     ]);
 
     const stats = {
-      totalProperties: propertiesCount.data().count,
+      totalProperties: propertiesCount.data().count + zillowCount.data().count,
       totalBuyers: buyersCount.data().count,
       totalRealtors: realtorsCount.data().count,
       pendingDisputes: disputesCount.data().count

@@ -17,14 +17,17 @@ if (!getApps().length) {
 const db = getFirestore();
 
 async function cleanup() {
-  console.log('=== CLEANING UP CASH_HOUSES WITHOUT ARV ===\n');
+  console.log('=== CLEANING UP CASH_HOUSES WITHOUT ARV/ZESTIMATE ===\n');
 
   const snap = await db.collection('cash_houses').get();
   const toDelete: string[] = [];
 
   snap.docs.forEach(doc => {
     const d = doc.data();
-    if (!d.arv || d.arv === 0) {
+    // Check all possible ARV fields - arv, estimate, zestimate
+    const arv = d.arv || d.estimate || d.zestimate || 0;
+    if (!arv || arv <= 0) {
+      console.log(`  ❌ ${doc.id}: arv=${d.arv}, estimate=${d.estimate}, zestimate=${d.zestimate}`);
       toDelete.push(doc.id);
     }
   });

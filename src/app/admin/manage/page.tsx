@@ -427,7 +427,7 @@ export default function AdminDashboard() {
       if (!response.ok) return;
       const data = await response.json();
       setRealtors(data.realtors || []);
-      setStats(prev => ({ ...prev, totalRealtors: data.realtors?.length || 0 }));
+      setStats(prev => ({ ...prev, totalRealtors: data.total || data.realtors?.length || 0 }));
     } catch (error) {
       console.error('Failed to fetch realtors:', error);
     } finally {

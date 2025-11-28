@@ -229,8 +229,8 @@ export async function GET(request: Request) {
 
     await Promise.all(fetchPromises);
 
-    // Filter out $0 price properties
-    allDeals = allDeals.filter((deal: any) => deal.price > 0);
+    // Filter out properties without price or ARV (Zestimate) data
+    allDeals = allDeals.filter((deal: any) => deal.price > 0 && deal.arv > 0);
 
     // Filter by city (case-insensitive partial match) or surrounding cities
     if (city) {

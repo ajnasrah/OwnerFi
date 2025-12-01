@@ -25,15 +25,7 @@
       "path": "/api/cron/rate-articles",
       "schedule": "0 13 * * *"
     },
-    {
-      "path": "/api/property/video-cron",
-      "schedule": "40 9,12,15,18,21 * * *"
-    },
-    {
-      "path": "/api/property/video-cron-spanish",
-      "schedule": "0 10,13,16,19,22 * * *"
-    },
-    {
+        {
       "path": "/api/cron/check-google-drive",
       "schedule": "0 7,11,15,19 * * *"
     },

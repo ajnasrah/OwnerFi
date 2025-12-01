@@ -76,52 +76,12 @@ export async function GET(request: NextRequest) {
       .limit(50)
       .get();
 
-    // Also check for failed items that can be retried (max 3 retries, 24h wait)
-    // Simplified query to avoid needing composite index
-    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    const failedItems = await db
-      .collection('scraper_queue')
-      .where('status', '==', 'failed')
-      .where('failedAt', '<', twentyFourHoursAgo)
-      .limit(100)
-      .get();
-
-    // Filter in-memory for retryCount < 3
-    const retryableItems = failedItems.docs.filter(doc => {
-      const data = doc.data();
-      return (data.retryCount || 0) < 3;
-    }).slice(0, 50 - pendingItems.size);
-
-    if (retryableItems.length > 0) {
-      console.log(`🔄 [QUEUE CRON] Found ${retryableItems.length} failed items eligible for retry`);
-
-      // Reset retryable items back to pending
-      const retryBatch = db.batch();
-      retryableItems.forEach(doc => {
-        retryBatch.update(doc.ref, {
-          status: 'pending',
-          lastRetryAt: new Date(),
-        });
-      });
-      await retryBatch.commit();
-      console.log(`✅ [QUEUE CRON] Reset ${retryableItems.length} failed items to pending for retry`);
-    }
-
-    // Re-fetch pending items after retry reset
-    const allPendingItems = await db
-      .collection('scraper_queue')
-      .where('status', '==', 'pending')
-      .orderBy('addedAt', 'asc')
-      .limit(50)
-      .get();
-
-    if (allPendingItems.empty) {
+    if (pendingItems.empty) {
       console.log('✅ [QUEUE CRON] No pending items in queue');
       return NextResponse.json({ message: 'No pending items in queue' });
     }
 
-    // Use allPendingItems instead of pendingItems for the rest
-    const pendingDocs = allPendingItems.docs;
+    const pendingDocs = pendingItems.docs;
 
     const urls = pendingDocs.map(doc => doc.data().url);
     const queueDocRefs = pendingDocs.map(doc => doc.ref);

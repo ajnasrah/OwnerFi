@@ -80,6 +80,10 @@
     {
       "path": "/api/cron/process-agent-outreach-queue",
       "schedule": "0 */4 * * *"
+    },
+    {
+      "path": "/api/cron/process-cash-deals-queue",
+      "schedule": "30 */2 * * *"
     }
   ],
   "functions": {
@@ -144,6 +148,9 @@
       "maxDuration": 300
     },
     "src/app/api/cron/process-agent-outreach-queue/route.ts": {
+      "maxDuration": 300
+    },
+    "src/app/api/cron/process-cash-deals-queue/route.ts": {
       "maxDuration": 300
     },
     "src/app/api/**/*.ts": {

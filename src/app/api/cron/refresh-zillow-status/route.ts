@@ -279,10 +279,16 @@ export async function GET(request: NextRequest) {
             console.log(`      ℹ️  If relisted later, this ZPID can be imported again with new agent info`);
           } else {
             // Property is still active (FOR_SALE) - check if it still mentions owner financing
+            // BYPASS: Skip owner finance keyword check for agent-confirmed properties
+            const propDoc = await db.collection('zillow_imports').doc(actualDocId).get();
+            const propData = propDoc.data();
+            const isAgentConfirmed = propData?.agentConfirmedOwnerFinance === true || propData?.source === 'agent_outreach';
+
             const ownerFinanceCheck = hasStrictOwnerFinancing(item.description);
 
-            if (!ownerFinanceCheck.passes && DELETE_INACTIVE) {
+            if (!ownerFinanceCheck.passes && DELETE_INACTIVE && !isAgentConfirmed) {
               // Delete properties that no longer mention owner financing
+              // BUT keep agent-confirmed properties even without keywords
               firestoreBatch.delete(docRef);
               deleted++;
               deletedProperties.push({
@@ -296,6 +302,10 @@ export async function GET(request: NextRequest) {
               console.log(`      Status: ${newStatus} (active, but keywords removed)`);
               console.log(`      ℹ️  If owner financing is added back later, can be imported again`);
             } else {
+              // Log if we're keeping an agent-confirmed property without keywords
+              if (isAgentConfirmed && !ownerFinanceCheck.passes) {
+                console.log(`   ✅ KEEPING (agent confirmed): ${originalProp?.address}`);
+              }
               // Update ALL fields from Apify response (full refresh)
               const updateData: Record<string, unknown> = {
                 // Core status fields

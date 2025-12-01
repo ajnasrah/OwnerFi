@@ -62,10 +62,10 @@ export function getPlatformGroups(brand: Brand): PlatformGroup[] {
     groups[2].description = 'B2B audience - business owners ending workday';
   }
 
-  // Abdullah: No Twitter/Bluesky/Threads in default platforms
+  // Abdullah: Include Twitter and Threads
   if (brand === 'abdullah') {
-    groups[0].platforms = ['linkedin'];
-    groups[2].platforms = ['instagram', 'tiktok'];
+    groups[0].platforms = ['linkedin', 'twitter'];
+    groups[2].platforms = ['instagram', 'tiktok', 'threads'];
   }
 
   // Carz: No Twitter/Bluesky

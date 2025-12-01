@@ -455,7 +455,7 @@ export const ABDULLAH_CONFIG: BrandConfig = {
   lateProfileId: process.env.LATE_ABDULLAH_PROFILE_ID || '', // Create new Late profile for Abdullah
 
   platforms: {
-    default: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin'],
+    default: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'threads', 'twitter'],
     all: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'threads', 'twitter', 'bluesky'],
     excludeFromDefault: [], // All platforms enabled
   },

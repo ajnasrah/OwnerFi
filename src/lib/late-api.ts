@@ -355,9 +355,10 @@ export async function postToLate(request: LatePostRequest): Promise<LatePostResp
 
           // Add scheduling or queue
           if (request.useQueue) {
-            // Use Late.so's built-in queue - just set queuedFromProfile
+            // Use Late.so's built-in queue - set queuedFromProfile AND timezone
             requestBody.queuedFromProfile = profileId;
-            console.log(`   Adding to Late.so queue for profile: ${profileId}`);
+            requestBody.timezone = timezone || 'America/Chicago'; // CST timezone for queue
+            console.log(`   Adding to Late.so queue for profile: ${profileId} (timezone: ${requestBody.timezone})`);
           } else if (scheduleTime) {
             // Explicit schedule time provided
             requestBody.scheduledFor = scheduleTime;

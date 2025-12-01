@@ -87,9 +87,9 @@ export async function downloadAndUploadVideo(
   const bucket = storage.bucket();
   const file = bucket.file(fileName);
 
-  // Calculate deletion date (7 days from now)
+  // Calculate deletion date (21 days from now)
   const deletionDate = new Date();
-  deletionDate.setDate(deletionDate.getDate() + 7);
+  deletionDate.setDate(deletionDate.getDate() + 21);
 
   await file.save(buffer, {
     contentType: 'video/mp4',
@@ -102,11 +102,11 @@ export async function downloadAndUploadVideo(
     }
   });
 
-  // Generate a signed URL (valid for 7 days) instead of making file public
+  // Generate a signed URL (valid for 21 days) instead of making file public
   // This works with uniform bucket-level access enabled
   const [signedUrl] = await file.getSignedUrl({
     action: 'read',
-    expires: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
+    expires: Date.now() + 21 * 24 * 60 * 60 * 1000, // 21 days
   });
 
   console.log(`✅ Uploaded to Firebase Storage with signed URL`);
@@ -198,7 +198,7 @@ export async function downloadAndUploadToR2(
     Metadata: {
       'uploaded-at': new Date().toISOString(),
       'source': 'heygen',
-      'auto-delete-after': new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days
+      'auto-delete-after': new Date(Date.now() + 21 * 24 * 60 * 60 * 1000).toISOString(), // 21 days
     },
   }));
 
@@ -386,7 +386,7 @@ export async function uploadSubmagicVideo(
         Metadata: {
           'uploaded-at': new Date().toISOString(),
           'source': 'submagic',
-          'auto-delete-after': new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days
+          'auto-delete-after': new Date(Date.now() + 21 * 24 * 60 * 60 * 1000).toISOString(), // 21 days
         },
       }));
 
@@ -532,7 +532,7 @@ export async function uploadVideoToR2(
 }
 
 /**
- * Delete expired videos (older than 7 days)
+ * Delete expired videos (older than 21 days)
  * Called daily at 3 AM by cleanup-videos cron
  */
 export async function deleteExpiredVideos(): Promise<{
@@ -546,7 +546,7 @@ export async function deleteExpiredVideos(): Promise<{
   let errors = 0;
   let totalSize = 0;
   const now = Date.now();
-  const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+  const TWENTY_ONE_DAYS_MS = 21 * 24 * 60 * 60 * 1000;
 
   // ===== CLOUDFLARE R2 CLEANUP =====
   console.log('☁️  Cleaning up R2...');
@@ -588,7 +588,7 @@ export async function deleteExpiredVideos(): Promise<{
 
           const ageMs = now - obj.LastModified.getTime();
 
-          if (ageMs > SEVEN_DAYS_MS) {
+          if (ageMs > TWENTY_ONE_DAYS_MS) {
             console.log(`  Deleting R2: ${obj.Key} (${((obj.Size || 0) / 1024 / 1024).toFixed(2)} MB, ${(ageMs / 1000 / 60 / 60).toFixed(1)}h old)`);
             await r2Client.send(new DeleteObjectCommand({ Bucket: bucketName, Key: obj.Key }));
             deleted++;

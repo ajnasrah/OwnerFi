@@ -2,6 +2,7 @@
  * Benefit Video Generator - BUYER-ONLY
  * Generates HeyGen avatar videos for owner financing buyer benefits
  * NOW WITH COMPLIANCE CHECKING - validates marketing laws before video creation
+ * NOW WITH MULTI-AGENT SUPPORT - uses agent pool for variety
  */
 
 import { BenefitPoint } from '@/lib/benefit-content';
@@ -9,10 +10,20 @@ import { circuitBreakers, fetchWithTimeout, TIMEOUTS } from '@/lib/api-utils';
 import { getBrandWebhookUrl } from '@/lib/brand-utils';
 import { checkScriptCompliance, appendDisclaimers, ComplianceCheckResult } from './compliance-checker';
 import { Brand } from '@/config/brand-configs';
+import { selectAgent, AgentSelectionOptions } from './agent-selector';
+import {
+  HeyGenAgent,
+  buildCharacterConfig,
+  buildVoiceConfig,
+  getPrimaryAgentForBrand,
+} from '@/config/heygen-agents';
 
 const HEYGEN_API_URL = 'https://api.heygen.com/v2/video/generate';
 
-// Abdullah avatar config (same as viral system)
+// Default background color for benefit videos (green for buyers)
+const DEFAULT_BACKGROUND_COLOR = '#059669';
+
+// Legacy config for backward compatibility (will be replaced by agent system)
 const AVATAR_CONFIG = {
   talking_photo_id: 'd33fe3abc2914faa88309c3bdb9f47f4', // Abdullah avatar
   voice_id: '9070a6c2dbd54c10bb111dc8c655bff7',
@@ -348,8 +359,17 @@ Disclaimer: "Educational only. No financing guarantees."`;
 
   /**
    * Generate benefit video via HeyGen API
+   * Now with multi-agent support for content variety
+   *
+   * @param benefit - The benefit point to generate video for
+   * @param workflowId - Workflow ID for tracking
+   * @param agentOptions - Optional agent selection preferences
    */
-  async generateVideo(benefit: BenefitPoint, workflowId: string): Promise<string> {
+  async generateVideo(
+    benefit: BenefitPoint,
+    workflowId: string,
+    agentOptions?: AgentSelectionOptions
+  ): Promise<{ videoId: string; agentId: string }> {
     console.log(`\n📹 Generating benefit video: ${benefit.title}`);
     console.log(`   Workflow ID: ${workflowId}`);
 
@@ -357,36 +377,44 @@ Disclaimer: "Educational only. No financing guarantees."`;
     const script = await this.generateScript(benefit);
     console.log(`   ✅ Script generated and validated`);
 
-    // Validate avatar config
-    if (!AVATAR_CONFIG.talking_photo_id) {
-      throw new Error('CRITICAL: talking_photo_id is missing from AVATAR_CONFIG');
+    // Select agent for this video (uses round-robin by default)
+    const agent = await selectAgent('benefit', {
+      mode: agentOptions?.mode || 'round-robin',
+      language: 'en',
+      ...agentOptions,
+    });
+
+    // Fallback to legacy config if no agent available
+    if (!agent) {
+      console.warn('⚠️  No agent available, using legacy AVATAR_CONFIG');
+      return this.generateVideoLegacy(benefit, workflowId, script);
     }
-    if (!AVATAR_CONFIG.voice_id) {
-      throw new Error('CRITICAL: voice_id is missing from AVATAR_CONFIG');
+
+    console.log(`   🤖 Selected agent: ${agent.name} (${agent.id})`);
+    console.log(`   🎭 Avatar: ${agent.avatar.avatarId.substring(0, 12)}...`);
+    console.log(`   🗣️  Voice: ${agent.voice.voiceId.substring(0, 12)}...`);
+    if (agent.voice.emotion) {
+      console.log(`   😊 Emotion: ${agent.voice.emotion}`);
     }
 
     // Get webhook URL
     const webhookUrl = getBrandWebhookUrl('benefit', 'heygen');
 
+    // Build character config from agent
+    const characterConfig = buildCharacterConfig(agent, 'vertical');
+
+    // Build voice config from agent with the script
+    const voiceConfig = buildVoiceConfig(agent, script);
+
     // Build HeyGen API request
     const request = {
       video_inputs: [
         {
-          character: {
-            type: 'talking_photo',
-            talking_photo_id: AVATAR_CONFIG.talking_photo_id,
-            scale: AVATAR_CONFIG.scale,
-            talking_style: 'expressive'
-          },
-          voice: {
-            type: 'text',
-            input_text: script,
-            voice_id: AVATAR_CONFIG.voice_id,
-            speed: 1.0
-          },
+          character: characterConfig,
+          voice: voiceConfig,
           background: {
             type: 'color',
-            value: AVATAR_CONFIG.background_color
+            value: DEFAULT_BACKGROUND_COLOR
           }
         }
       ],
@@ -479,7 +507,90 @@ Disclaimer: "Educational only. No financing guarantees."`;
     console.log(`✅ Video generation started successfully!`);
     console.log(`   Video ID: ${videoId}`);
     console.log(`   Workflow ID: ${workflowId}`);
+    console.log(`   Agent: ${agent.name} (${agent.id})`);
 
-    return videoId;
+    return { videoId, agentId: agent.id };
+  }
+
+  /**
+   * Legacy video generation (fallback when no agents available)
+   * Uses the hardcoded AVATAR_CONFIG
+   */
+  private async generateVideoLegacy(
+    benefit: BenefitPoint,
+    workflowId: string,
+    script: string
+  ): Promise<{ videoId: string; agentId: string }> {
+    console.log('   ⚠️  Using legacy avatar config (no agent system)');
+
+    // Validate avatar config
+    if (!AVATAR_CONFIG.talking_photo_id) {
+      throw new Error('CRITICAL: talking_photo_id is missing from AVATAR_CONFIG');
+    }
+    if (!AVATAR_CONFIG.voice_id) {
+      throw new Error('CRITICAL: voice_id is missing from AVATAR_CONFIG');
+    }
+
+    const webhookUrl = getBrandWebhookUrl('benefit', 'heygen');
+
+    const request = {
+      video_inputs: [
+        {
+          character: {
+            type: 'talking_photo',
+            talking_photo_id: AVATAR_CONFIG.talking_photo_id,
+            scale: AVATAR_CONFIG.scale,
+          },
+          voice: {
+            type: 'text',
+            input_text: script,
+            voice_id: AVATAR_CONFIG.voice_id,
+            speed: 1.0,
+            emotion: 'Excited', // Use excited emotion
+          },
+          background: {
+            type: 'color',
+            value: AVATAR_CONFIG.background_color
+          }
+        }
+      ],
+      dimension: {
+        width: 1080,
+        height: 1920
+      },
+      title: benefit.title,
+      caption: false,
+      callback_id: workflowId,
+      webhook_url: webhookUrl
+    };
+
+    const response = await circuitBreakers.heygen.execute(async () => {
+      return await fetchWithTimeout(
+        HEYGEN_API_URL,
+        {
+          method: 'POST',
+          headers: {
+            'accept': 'application/json',
+            'content-type': 'application/json',
+            'x-api-key': this.apiKey
+          },
+          body: JSON.stringify(request)
+        },
+        TIMEOUTS.HEYGEN_API
+      );
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`HeyGen API error: ${response.status} - ${errorText}`);
+    }
+
+    const result: HeyGenVideoResponse = await response.json();
+
+    if (result.error || !result.data?.video_id) {
+      throw new Error(`HeyGen API error: ${JSON.stringify(result.error || 'No video ID')}`);
+    }
+
+    return { videoId: result.data.video_id, agentId: 'legacy' };
   }
 }

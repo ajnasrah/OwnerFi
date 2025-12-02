@@ -330,6 +330,7 @@ Disclaimer: "Educational only. No financing guarantees."`;
 
   /**
    * Validate HeyGen request before sending
+   * Supports both talking_photo and avatar types
    */
   private validateHeyGenRequest(request: any): { valid: boolean; reason?: string } {
     if (!request.video_inputs || !Array.isArray(request.video_inputs)) {
@@ -342,8 +343,9 @@ Disclaimer: "Educational only. No financing guarantees."`;
 
     const scene = request.video_inputs[0];
 
-    if (!scene.character?.talking_photo_id) {
-      return { valid: false, reason: 'Missing talking_photo_id' };
+    // Check for either talking_photo_id OR avatar_id (supports both types)
+    if (!scene.character?.talking_photo_id && !scene.character?.avatar_id) {
+      return { valid: false, reason: 'Missing talking_photo_id or avatar_id' };
     }
 
     if (!scene.voice?.input_text || scene.voice.input_text.trim().length === 0) {

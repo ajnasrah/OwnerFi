@@ -33,8 +33,8 @@ const db = getFirestore();
 const SEARCH_CONFIG = {
   // YOUR EXACT SEARCH URL - Memphis TN area
   searchUrl: 'https://www.zillow.com/homes/for_sale/?category=SEMANTIC&searchQueryState=%7B%22isMapVisible%22%3Atrue%2C%22mapBounds%22%3A%7B%22west%22%3A-92.64805231635005%2C%22east%22%3A-88.4759942108813%2C%22south%22%3A34.04448627074044%2C%22north%22%3A36.477417577203184%7D%2C%22filterState%22%3A%7B%22sort%22%3A%7B%22value%22%3A%22globalrelevanceex%22%7D%2C%22price%22%3A%7B%22max%22%3A500000%2C%22min%22%3A50000%7D%2C%22mf%22%3A%7B%22value%22%3Afalse%7D%2C%22land%22%3A%7B%22value%22%3Afalse%7D%2C%22apa%22%3A%7B%22value%22%3Afalse%7D%2C%22manu%22%3A%7B%22value%22%3Afalse%7D%2C%22fore%22%3A%7B%22value%22%3Afalse%7D%2C%22nc%22%3A%7B%22value%22%3Afalse%7D%2C%22auc%22%3A%7B%22value%22%3Afalse%7D%2C%2255plus%22%3A%7B%22value%22%3A%22e%22%7D%2C%22doz%22%3A%7B%22value%22%3A%227%22%7D%7D%2C%22isListVisible%22%3Atrue%2C%22mapZoom%22%3A9%2C%22customRegionId%22%3A%225f8096924aX1-CR1i1r231i2qe0e_1276cg%22%2C%22pagination%22%3A%7B%7D%2C%22usersSearchTerm%22%3A%22%22%7D',
-  maxResults: 500,        // Get all from search
-  detailBatchSize: 500,   // Process all through detail scraper
+  maxResults: 200,        // Reduced to avoid timeout - runs 3x daily now
+  detailBatchSize: 100,   // Process fewer at a time to stay under 5min limit
 };
 
 export async function GET(request: NextRequest) {

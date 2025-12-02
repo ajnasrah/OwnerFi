@@ -19,29 +19,32 @@ export const maxDuration = 300; // 5 minutes
 
 // TikTok scraper config
 const SCRAPER_CONFIG = {
-  // Apify actor for TikTok scraping
-  actorId: 'clockworks/tiktok-scraper',  // Popular TikTok scraper
+  // Apify actor for TikTok scraping - using clockworks/tiktok-scraper with hashtags
+  actorId: 'clockworks/tiktok-scraper',
 
-  // Search for viral content with good hooks
-  searchQueries: [
-    'viral hooks',
-    'attention grabbing',
-    'stop scrolling',
-    'wait for it',
-    'pov',
-  ],
-
-  // Hashtags to search
+  // Hashtags to search for viral hook content
   hashtags: [
     'fyp',
     'viral',
     'foryou',
     'trending',
     'mustwatch',
+    'stopscrolling',
+    'waitforit',
   ],
 
-  // Limits
-  maxVideosPerQuery: 20,
+  // Search queries for finding hook-style content
+  searchQueries: [
+    'viral hooks',
+    'attention grabbing intro',
+    'stop scrolling',
+    'wait for it',
+    'pov viral',
+  ],
+
+  // Limits per input type
+  resultsPerHashtag: 15,
+  resultsPerSearch: 10,
   maxTotalVideos: 100,
 
   // Filter criteria
@@ -83,23 +86,65 @@ export async function GET(request: NextRequest) {
     let totalAdded = 0;
     const errors: string[] = [];
 
-    // Scrape trending TikTok content
+    // Scrape TikTok content using hashtags and search queries
     console.log('📡 Scraping TikTok for viral hooks...');
 
-    // Run the scraper for trending content
-    const run = await client.actor(SCRAPER_CONFIG.actorId).call({
-      // Scrape trending/fyp content
-      type: 'TREND',
-      maxItems: SCRAPER_CONFIG.maxTotalVideos,
+    const allItems: any[] = [];
 
-      // Additional filters
-      shouldDownloadVideos: false, // We'll download separately
-      shouldDownloadCovers: true,  // Get thumbnails
+    // Run scraper for each hashtag
+    for (const hashtag of SCRAPER_CONFIG.hashtags.slice(0, 3)) { // Limit to 3 hashtags to save API calls
+      try {
+        console.log(`  🔍 Scraping hashtag: #${hashtag}`);
+        const run = await client.actor(SCRAPER_CONFIG.actorId).call({
+          hashtags: [hashtag],
+          resultsPerPage: SCRAPER_CONFIG.resultsPerHashtag,
+          shouldDownloadVideos: false,
+          shouldDownloadCovers: true,
+        });
+
+        const { items } = await client.dataset(run.defaultDatasetId).listItems();
+        console.log(`    Found ${items.length} videos for #${hashtag}`);
+        allItems.push(...items);
+
+        if (allItems.length >= SCRAPER_CONFIG.maxTotalVideos) break;
+      } catch (hashtagError) {
+        console.warn(`    ⚠️ Failed to scrape #${hashtag}:`, hashtagError);
+      }
+    }
+
+    // Run scraper for search queries if we need more
+    if (allItems.length < SCRAPER_CONFIG.maxTotalVideos) {
+      for (const query of SCRAPER_CONFIG.searchQueries.slice(0, 2)) { // Limit to 2 searches
+        try {
+          console.log(`  🔍 Searching: "${query}"`);
+          const run = await client.actor(SCRAPER_CONFIG.actorId).call({
+            searchQueries: [query],
+            resultsPerPage: SCRAPER_CONFIG.resultsPerSearch,
+            shouldDownloadVideos: false,
+            shouldDownloadCovers: true,
+          });
+
+          const { items } = await client.dataset(run.defaultDatasetId).listItems();
+          console.log(`    Found ${items.length} videos for "${query}"`);
+          allItems.push(...items);
+
+          if (allItems.length >= SCRAPER_CONFIG.maxTotalVideos) break;
+        } catch (searchError) {
+          console.warn(`    ⚠️ Failed to search "${query}":`, searchError);
+        }
+      }
+    }
+
+    // Deduplicate by video ID
+    const seenIds = new Set<string>();
+    const items = allItems.filter(item => {
+      const id = item.id || item.videoId;
+      if (seenIds.has(id)) return false;
+      seenIds.add(id);
+      return true;
     });
 
-    // Get results
-    const { items } = await client.dataset(run.defaultDatasetId).listItems();
-    console.log(`📊 Found ${items.length} potential hook videos`);
+    console.log(`📊 Found ${items.length} unique potential hook videos`);
 
     // Process each video
     for (const video of items) {

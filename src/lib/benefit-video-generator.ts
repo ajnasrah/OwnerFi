@@ -15,6 +15,7 @@ import {
   HeyGenAgent,
   buildCharacterConfig,
   buildVoiceConfig,
+  buildBackgroundConfig,
   getPrimaryAgentForBrand,
 } from '@/config/heygen-agents';
 
@@ -408,18 +409,22 @@ Disclaimer: "Educational only. No financing guarantees."`;
     // Build voice config from agent with the script
     const voiceConfig = buildVoiceConfig(agent, script);
 
+    // Build background config - use agent's built-in background if available
+    const backgroundConfig = buildBackgroundConfig(agent, DEFAULT_BACKGROUND_COLOR);
+
     // Build HeyGen API request
+    const videoInput: any = {
+      character: characterConfig,
+      voice: voiceConfig,
+    };
+
+    // Only add background for talking photos (not studio avatars with built-in backgrounds)
+    if (backgroundConfig) {
+      videoInput.background = backgroundConfig;
+    }
+
     const request = {
-      video_inputs: [
-        {
-          character: characterConfig,
-          voice: voiceConfig,
-          background: {
-            type: 'color',
-            value: DEFAULT_BACKGROUND_COLOR
-          }
-        }
-      ],
+      video_inputs: [videoInput],
       dimension: {
         width: 1080,
         height: 1920 // Vertical for mobile/social

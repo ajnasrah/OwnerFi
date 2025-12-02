@@ -244,7 +244,9 @@ export async function markArticleProcessed(id: string, category: Brand, workflow
 }
 
 // Get and lock article for processing (atomic operation to prevent race conditions)
-// Selects the top-rated article (must be pre-rated with qualityScore)
+// PRIORITY ORDER:
+// 1. Social trends (TikTok, Twitter, Reddit, Google Trends) - what's viral RIGHT NOW
+// 2. High quality RSS articles (qualityScore >= 50)
 // Uses Firestore transactions to ensure only one process can lock each article
 export async function getAndLockArticle(category: Brand): Promise<Article | null> {
   if (!db) return null;
@@ -255,7 +257,7 @@ export async function getAndLockArticle(category: Brand): Promise<Article | null
   const q = query(
     collection(db, collectionName),
     where('processed', '==', false),
-    firestoreLimit(50) // Get more to sort in memory
+    firestoreLimit(100) // Get more to have good selection
   );
 
   const snapshot = await getDocs(q);
@@ -266,42 +268,58 @@ export async function getAndLockArticle(category: Brand): Promise<Article | null
     return null;
   }
 
-  // Convert to articles and sort by qualityScore in memory
+  // Convert to articles
   const articles = snapshot.docs.map(docSnap => ({
     id: docSnap.id,
     ...docSnap.data()
-  } as Article));
+  }) as Article & { source?: string; engagementScore?: number; platform?: string; velocity?: string });
+
+  // Separate social trends from RSS articles
+  const socialTrends = articles.filter(a => a.source === 'social_trends');
+  const rssArticles = articles.filter(a => a.source !== 'social_trends');
 
   console.log(`📊 [${category}] Found ${articles.length} unprocessed articles`);
-  console.log(`   Quality scores: ${articles.map(a => a.qualityScore || 'N/A').join(', ')}`);
+  console.log(`   🔥 Social trends: ${socialTrends.length}`);
+  console.log(`   📰 RSS articles: ${rssArticles.length}`);
 
-  // Filter articles with score >= 50 (we pick top-rated anyway, so lower bar is fine)
-  // NO AGE RESTRICTION - ensures articles are always available for automation
-  const threshold = 50;
-
-  const ratedArticles = articles
+  // PRIORITY 1: Social trends (sorted by engagement score)
+  // These are ALREADY proven viral - use them first!
+  const sortedSocialTrends = socialTrends
     .filter(a => {
-      // Must have quality score >= threshold (video-worthy)
-      if (typeof a.qualityScore !== 'number' || a.qualityScore < threshold) {
-        return false;
-      }
-      return true;
+      // Social trends from last 48 hours only (they're time-sensitive)
+      const hoursOld = (Date.now() - (a.pubDate || a.createdAt)) / (1000 * 60 * 60);
+      return hoursOld < 48;
     })
+    .sort((a, b) => (b.engagementScore || 0) - (a.engagementScore || 0));
+
+  if (sortedSocialTrends.length > 0) {
+    console.log(`🔥 [${category}] Prioritizing ${sortedSocialTrends.length} social trends!`);
+    console.log(`   Top trend: [${sortedSocialTrends[0].platform}] ${sortedSocialTrends[0].title?.substring(0, 50)}...`);
+  }
+
+  // PRIORITY 2: High quality RSS articles (fallback)
+  const threshold = 50;
+  const sortedRssArticles = rssArticles
+    .filter(a => typeof a.qualityScore === 'number' && a.qualityScore >= threshold)
     .sort((a, b) => (b.qualityScore || 0) - (a.qualityScore || 0));
 
-  console.log(`✅ [${category}] Filtered to ${ratedArticles.length} eligible articles (score >= ${threshold})`);
+  // Combine: social trends first, then RSS
+  const prioritizedArticles = [...sortedSocialTrends, ...sortedRssArticles];
 
-  if (ratedArticles.length === 0) {
-    console.log(`⚠️  No rated articles available for ${category}`);
+  console.log(`✅ [${category}] Total eligible: ${prioritizedArticles.length} (${sortedSocialTrends.length} trends + ${sortedRssArticles.length} RSS)`);
+
+  if (prioritizedArticles.length === 0) {
+    console.log(`⚠️  No eligible articles available for ${category}`);
     console.log(`   Reasons:`);
-    console.log(`     - Articles with score >= 70: ${articles.filter(a => typeof a.qualityScore === 'number' && a.qualityScore >= 70).length}`);
+    console.log(`     - Social trends (< 48hrs old): ${sortedSocialTrends.length}`);
+    console.log(`     - RSS with score >= ${threshold}: ${sortedRssArticles.length}`);
     console.log(`     - Total unprocessed: ${articles.length}`);
     return null;
   }
 
-  // Try to lock articles in order (highest score first)
+  // Try to lock articles in order (social trends first, then highest quality RSS)
   // Use transaction to ensure atomic read-write (prevents race conditions)
-  for (const candidate of ratedArticles) {
+  for (const candidate of prioritizedArticles) {
     try {
       // ✅ ATOMIC OPERATION: Read + Write in single transaction
       // This ensures only ONE process can lock each article, even if multiple processes
@@ -335,8 +353,18 @@ export async function getAndLockArticle(category: Brand): Promise<Article | null
         } as Article;
       });
 
-      const qualityScore = lockedArticle.qualityScore || 0;
-      console.log(`🔒 Locked top-rated article (score: ${qualityScore}): ${lockedArticle.title.substring(0, 60)}...`);
+      // Log what type of content we locked
+      const isSocialTrend = (lockedArticle as any).source === 'social_trends';
+      const platform = (lockedArticle as any).platform || 'rss';
+      const score = isSocialTrend
+        ? (lockedArticle as any).engagementScore || 0
+        : lockedArticle.qualityScore || 0;
+
+      if (isSocialTrend) {
+        console.log(`🔥 Locked SOCIAL TREND [${platform}] (engagement: ${score}): ${lockedArticle.title.substring(0, 60)}...`);
+      } else {
+        console.log(`📰 Locked RSS article (quality: ${score}): ${lockedArticle.title.substring(0, 60)}...`);
+      }
       return lockedArticle;
 
     } catch (error) {

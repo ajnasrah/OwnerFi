@@ -16,6 +16,7 @@ import {
   HeyGenAgent,
   buildCharacterConfig,
   buildVoiceConfig,
+  buildBackgroundConfig,
   getPrimaryAgentForBrand,
 } from '@/config/heygen-agents';
 import { Article } from '@/lib/feed-store-firestore';
@@ -323,28 +324,38 @@ Return ONLY the script text - no labels, brackets, or formatting. Just the spoke
     // Build voice config with script
     const voiceConfig = buildVoiceConfig(agent, script);
 
-    // Build background config - use article image if available, otherwise dark color
-    const backgroundConfig = backgroundImageUrl
-      ? {
-          type: 'image',
-          url: backgroundImageUrl,
-          fit: 'cover' as const,
-        }
-      : {
-          type: 'color',
-          value: DEFAULT_BACKGROUND_COLOR,
-        };
+    // Build background config
+    // For Gaza: use article image if available, otherwise use agent's built-in background or dark color
+    let backgroundConfig: any = undefined;
+    if (backgroundImageUrl) {
+      // Use article screenshot as background
+      backgroundConfig = {
+        type: 'image',
+        url: backgroundImageUrl,
+        fit: 'cover' as const,
+      };
+    } else {
+      // Use agent's built-in background (for studio avatars) or fallback color (for talking photos)
+      backgroundConfig = buildBackgroundConfig(agent, DEFAULT_BACKGROUND_COLOR);
+    }
 
     // Get webhook URL for Gaza
     const webhookUrl = getBrandWebhookUrl('gaza', 'heygen');
 
+    // Build video input
+    const videoInput: any = {
+      character: characterConfig,
+      voice: voiceConfig,
+    };
+
+    // Only add background if needed (not for studio avatars with built-in backgrounds)
+    if (backgroundConfig) {
+      videoInput.background = backgroundConfig;
+    }
+
     // Build complete request
     const request = {
-      video_inputs: [{
-        character: characterConfig,
-        voice: voiceConfig,
-        background: backgroundConfig,
-      }],
+      video_inputs: [videoInput],
       dimension: {
         width: 1080,
         height: 1920 // Vertical for social media

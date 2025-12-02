@@ -36,15 +36,23 @@ export async function GET(request: NextRequest) {
     // Use cron lock to prevent concurrent runs
     return withCronLock('generate-videos', async () => {
       const results = {
-        articles: [] as any[]
+        articles: [] as any[],
+        gaza: null as any
       };
 
-      // Generate article videos for brands with RSS feeds
+      // 1. Generate article videos for brands with RSS feeds
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log('🎬 GENERATING ARTICLE VIDEOS');
+      console.log('🎬 GENERATING ARTICLE VIDEOS (Viral Brands)');
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
       const articleResults = await generateArticleVideos();
       results.articles = articleResults;
+
+      // 2. Generate Gaza humanitarian news videos (separate workflow)
+      console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('🕊️  GENERATING GAZA NEWS VIDEOS');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+      const gazaResult = await generateGazaVideo();
+      results.gaza = gazaResult;
 
       const duration = Date.now() - startTime;
 
@@ -53,6 +61,7 @@ export async function GET(request: NextRequest) {
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       console.log(`📊 Summary:`);
       console.log(`   Articles: ${results.articles.filter(r => r.success).length}/${results.articles.length} generated`);
+      console.log(`   Gaza: ${results.gaza?.success ? '✅' : '⏭️ '} ${results.gaza?.message || results.gaza?.workflowId || 'skipped'}`);
       console.log(`   Duration: ${duration}ms`);
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
@@ -188,4 +197,131 @@ async function generateArticleVideos() {
   }
 
   return results;
+}
+
+// ============================================================================
+// 3. GENERATE GAZA VIDEO (Humanitarian News - Special Workflow)
+// ============================================================================
+
+async function generateGazaVideo() {
+  const { db } = await import('@/lib/firebase');
+  const { collection, query, where, getDocs, limit: firestoreLimit } = await import('firebase/firestore');
+  const { getCollectionName, getAndLockArticle, addWorkflowToQueue, updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
+  const { createGazaVideoGenerator } = await import('@/lib/gaza-video-generator');
+  const { getBrandConfig } = await import('@/config/brand-configs');
+
+  const brand = 'gaza';
+
+  try {
+    // Check daily limit (5 videos per day)
+    const { getAdminDb } = await import('@/lib/firebase-admin');
+    const adminDb = await getAdminDb();
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const startOfDay = today.getTime();
+
+    const todaySnapshot = await adminDb
+      .collection('gaza_workflow_queue')
+      .where('createdAt', '>=', startOfDay)
+      .get();
+
+    const videosToday = todaySnapshot.size;
+    const maxPerDay = 5;
+
+    console.log(`   Videos generated today: ${videosToday}/${maxPerDay}`);
+
+    if (videosToday >= maxPerDay) {
+      console.log(`   ⏭️  Daily limit reached (${maxPerDay}/day)`);
+      return {
+        success: false,
+        skipped: true,
+        message: `Daily limit reached (${videosToday}/${maxPerDay})`
+      };
+    }
+
+    // Get and lock best article
+    console.log(`   📰 Fetching best Gaza article...`);
+    const article = await getAndLockArticle(brand as any);
+
+    if (!article) {
+      console.log(`   ⏭️  No quality articles available`);
+      return {
+        success: false,
+        skipped: true,
+        message: 'No quality articles available'
+      };
+    }
+
+    console.log(`   ✅ Article: "${article.title.substring(0, 50)}..."`);
+
+    // Create workflow entry
+    const workflowId = `gaza-${Date.now()}`;
+    await addWorkflowToQueue({
+      id: workflowId,
+      articleId: article.id,
+      brand: brand as any,
+      status: 'pending',
+      articleTitle: article.title,
+      createdAt: Date.now(),
+      updatedAt: Date.now()
+    });
+
+    // Generate video using Gaza-specific generator
+    console.log(`   🎬 Generating Gaza video...`);
+    const apiKey = process.env.HEYGEN_API_KEY;
+    if (!apiKey) {
+      throw new Error('HEYGEN_API_KEY not configured');
+    }
+
+    const generator = createGazaVideoGenerator(apiKey);
+    const brandConfig = getBrandConfig(brand);
+
+    const result = await generator.generateVideo({
+      id: article.id,
+      title: article.title,
+      content: article.content || article.description,
+      link: article.link,
+      description: article.description
+    }, {
+      webhookUrl: brandConfig.webhookUrl,
+      workflowId,
+      agentOptions: {
+        mood: 'sad',
+        topic: 'humanitarian'
+      }
+    });
+
+    if (result.success && result.videoId) {
+      await updateWorkflowStatus(workflowId, brand as any, 'heygen_processing', {
+        heygenVideoId: result.videoId,
+        statusChangedAt: Date.now()
+      });
+
+      console.log(`   ✅ Video generation started: ${result.videoId}`);
+      return {
+        success: true,
+        workflowId,
+        videoId: result.videoId,
+        article: article.title.substring(0, 60)
+      };
+    } else {
+      await updateWorkflowStatus(workflowId, brand as any, 'failed', {
+        error: result.error || 'Video generation failed'
+      });
+
+      console.error(`   ❌ Video generation failed: ${result.error}`);
+      return {
+        success: false,
+        error: result.error || 'Video generation failed'
+      };
+    }
+
+  } catch (error) {
+    console.error(`   ❌ Error generating Gaza video:`, error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
+  }
 }

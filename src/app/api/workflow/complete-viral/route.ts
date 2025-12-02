@@ -210,39 +210,71 @@ export async function POST(request: NextRequest) {
     // - Financial Advisor (Henry): talking_photo_id '1375223b2cc24ff0a21830fbf5cb45ba', voice '8c0bd8c49b2849dc96f8e89b8eace60'
 
     // Get brand-specific avatar and voice defaults
-    let defaultAvatarId = 'd33fe3abc2914faa88309c3bdb9f47f4'; // Abdullah avatar for Carz/OwnerFi
+    let defaultAvatarId = 'd33fe3abc2914faa88309c3bdb9f47f4'; // Abdullah talking photo for Carz/OwnerFi
     let defaultVoiceId = '9070a6c2dbd54c10bb111dc8c655bff7'; // Original voice
-    let avatarType: 'avatar' | 'talking_photo' = 'talking_photo'; // Motion-enabled avatar is talking_photo type
+    let defaultAvatarType: 'avatar' | 'talking_photo' = 'talking_photo';
+    let defaultHasBuiltInBackground = false; // Talking photos need explicit background
 
     if (brand === 'vassdistro') {
-      defaultAvatarId = '6764a52c1b734750a0fba6ab6caa9cd9'; // VassDistro keeps its own avatar (unchanged)
-      defaultVoiceId = '9070a6c2dbd54c10bb111dc8c655bff7'; // VassDistro uses same voice
-      avatarType = 'talking_photo'; // VassDistro uses talking_photo (motion-enabled)
+      defaultAvatarId = '6764a52c1b734750a0fba6ab6caa9cd9'; // VassDistro keeps its own avatar
+      defaultVoiceId = '9070a6c2dbd54c10bb111dc8c655bff7';
+      defaultAvatarType = 'talking_photo';
+      defaultHasBuiltInBackground = false;
     }
 
     // Build HeyGen request with webhook URL
     const { getBrandWebhookUrl } = await import('@/lib/brand-utils');
     const webhookUrl = getBrandWebhookUrl(brand as 'carz' | 'ownerfi' | 'vassdistro', 'heygen');
 
+    // Determine if we're using a studio avatar (with built-in background) or talking photo
+    // Studio avatars use avatar_id, talking photos use talking_photo_id
+    const isStudioAvatar = body.avatar_id !== undefined;
+    const avatarType: 'avatar' | 'talking_photo' = isStudioAvatar ? 'avatar' : defaultAvatarType;
+    const avatarId = body.avatar_id || body.talking_photo_id || defaultAvatarId;
+    const hasBuiltInBackground = isStudioAvatar ? true : defaultHasBuiltInBackground;
+
+    // Build character config based on avatar type
     const character: any = {
       type: avatarType,
-      scale: 1.4  // Proper scale for vertical 9:16 social media videos
+      scale: 2.0  // Larger scale for better visibility in vertical 9:16 videos
     };
 
-    // All brands now use talking_photo type (motion-enabled avatar)
-    character.talking_photo_id = body.talking_photo_id || defaultAvatarId;
-    character.talking_style = 'expressive';
+    if (isStudioAvatar) {
+      // Studio avatars use avatar_id
+      character.avatar_id = avatarId;
+      character.talking_style = 'expressive';
+    } else {
+      // Talking photos use talking_photo_id
+      character.talking_photo_id = avatarId;
+      character.talking_style = 'expressive';
+    }
+
+    // Build video input - only include background for talking photos (not studio avatars)
+    const videoInput: any = {
+      character,
+      voice: {
+        type: 'text' as const,
+        input_text: content.script,
+        voice_id: body.voice_id || defaultVoiceId,
+        speed: 1.1
+      }
+    };
+
+    // Check if avatar ID suggests it has a built-in background
+    // Avatar IDs with "BizTalk", "Sitting", "Office", "Front" often include studio backgrounds
+    const avatarHasBuiltInBg = /BizTalk|Sitting|Office|Studio|Desk/i.test(avatarId);
+
+    if (!avatarHasBuiltInBg) {
+      // Only add background for avatars that don't have built-in backgrounds
+      videoInput.background = {
+        type: 'color',
+        value: '#1a1a2e'  // Professional dark blue-black background
+      };
+    }
+    // For BizTalk/Studio avatars, omit background to use their built-in one
 
     const heygenRequest = {
-      video_inputs: [{
-        character,
-        voice: {
-          type: 'text' as const,
-          input_text: content.script,
-          voice_id: body.voice_id || defaultVoiceId,
-          speed: 1.1
-        }
-      }],
+      video_inputs: [videoInput],
       caption: false,
       dimension: { width: 1080, height: 1920 },
       test: false,

@@ -36,6 +36,7 @@ export interface AgentSelectionOptions {
   language?: VoiceLanguage;         // Filter by language
   excludeAgentIds?: string[];       // Exclude specific agents
   preferExpressive?: boolean;       // Prefer agents with expressive talking style
+  requireBuiltInBackground?: boolean; // Only select agents with built-in backgrounds
 }
 
 export interface AgentUsageRecord {
@@ -177,19 +178,26 @@ export async function selectAgent(
     language,
     excludeAgentIds = [],
     preferExpressive = true,
+    requireBuiltInBackground = false,
   } = options;
 
-  console.log(`🤖 Selecting agent for ${brand} (mode: ${mode}, language: ${language || 'any'})`);
+  console.log(`🤖 Selecting agent for ${brand} (mode: ${mode}, language: ${language || 'any'}, requireBg: ${requireBuiltInBackground})`);
 
   // Handle specific agent request
   if (mode === 'specific' && specificAgentId) {
     const agent = getAgentById(specificAgentId);
     if (agent && agent.isActive && agent.brands.includes(brand)) {
-      console.log(`   ✅ Using specific agent: ${agent.name}`);
-      await incrementAgentUsage(agent.id, brand);
-      return agent;
+      // Check background requirement
+      if (requireBuiltInBackground && !agent.avatar.hasBuiltInBackground) {
+        console.warn(`   ⚠️  Specific agent ${specificAgentId} doesn't have built-in background, falling back to round-robin`);
+      } else {
+        console.log(`   ✅ Using specific agent: ${agent.name}`);
+        await incrementAgentUsage(agent.id, brand);
+        return agent;
+      }
+    } else {
+      console.warn(`   ⚠️  Specific agent ${specificAgentId} not available, falling back to round-robin`);
     }
-    console.warn(`   ⚠️  Specific agent ${specificAgentId} not available, falling back to round-robin`);
   }
 
   // Handle primary agent request
@@ -214,6 +222,11 @@ export async function selectAgent(
   // Filter out excluded agents
   if (excludeAgentIds.length > 0) {
     eligibleAgents = eligibleAgents.filter(a => !excludeAgentIds.includes(a.id));
+  }
+
+  // Filter by background requirement
+  if (requireBuiltInBackground) {
+    eligibleAgents = eligibleAgents.filter(a => a.avatar.hasBuiltInBackground === true);
   }
 
   // If no eligible agents, return null

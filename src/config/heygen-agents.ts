@@ -34,6 +34,7 @@ export interface HeyGenAgentAvatarConfig {
   talkingStyle?: TalkingStyle;  // Only for 'avatar' type, not 'talking_photo'
   offsetX?: number;        // Horizontal offset in pixels
   offsetY?: number;        // Vertical offset in pixels
+  hasBuiltInBackground?: boolean;  // True for studio avatars with backgrounds, false for talking photos
 }
 
 export interface HeyGenAgent {
@@ -127,6 +128,7 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
       avatarId: 'd33fe3abc2914faa88309c3bdb9f47f4',
       avatarType: 'talking_photo',
       scale: SCALE_PRESETS.vertical.talkingPhoto, // 1.4
+      hasBuiltInBackground: false, // Talking photos need explicit background
     },
     voice: {
       voiceId: '9070a6c2dbd54c10bb111dc8c655bff7',
@@ -148,6 +150,7 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
       avatarType: 'avatar',
       scale: SCALE_PRESETS.vertical.upperBody,
       talkingStyle: 'expressive',
+      hasBuiltInBackground: true, // Studio avatar with built-in background
     },
     voice: {
       voiceId: '33e77b383694491db3160af5a9f9e0ab', // Abdullah voice clone
@@ -173,6 +176,7 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
       avatarType: 'avatar',
       scale: SCALE_PRESETS.vertical.upperBody,
       talkingStyle: 'expressive',
+      hasBuiltInBackground: true, // Studio avatar with built-in background
     },
     voice: {
       voiceId: '35659e86ce244d8389d525a9648d9c4a', // Carter Lee
@@ -193,6 +197,7 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
       avatarType: 'avatar',
       scale: SCALE_PRESETS.vertical.upperBody,
       talkingStyle: 'expressive',
+      hasBuiltInBackground: true, // Studio avatar with built-in background
     },
     voice: {
       voiceId: 'f38a635bee7a4d1f9b0a654a31d050d2', // Chill Brian
@@ -217,6 +222,7 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
       avatarType: 'avatar',
       scale: SCALE_PRESETS.vertical.upperBody,
       talkingStyle: 'expressive',
+      hasBuiltInBackground: true, // Studio avatar with built-in background
     },
     voice: {
       voiceId: 'dc491816e53f46eaa466740fbfec09bb', // Adventure Alex - Excited
@@ -237,6 +243,7 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
       avatarType: 'avatar',
       scale: SCALE_PRESETS.vertical.upperBody,
       talkingStyle: 'expressive',
+      hasBuiltInBackground: true, // Studio avatar with built-in background
     },
     voice: {
       voiceId: '42d00d4aac5441279d8536cd6b52c53c', // Hope
@@ -261,6 +268,7 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
       avatarType: 'avatar',
       scale: SCALE_PRESETS.vertical.upperBody,
       talkingStyle: 'stable', // Stable for serious news delivery
+      hasBuiltInBackground: true, // Studio avatar with built-in background
     },
     voice: {
       voiceId: 'f38a635bee7a4d1f9b0a654a31d050d2', // Chill Brian
@@ -282,6 +290,7 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
       avatarType: 'avatar',
       scale: SCALE_PRESETS.vertical.upperBody,
       talkingStyle: 'stable', // Stable for serious news delivery
+      hasBuiltInBackground: true, // Studio avatar with built-in background
     },
     voice: {
       voiceId: '42d00d4aac5441279d8536cd6b52c53c', // Hope
@@ -303,6 +312,7 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
       avatarType: 'avatar',
       scale: SCALE_PRESETS.vertical.upperBody,
       talkingStyle: 'expressive', // Slightly more expressive for urgent news
+      hasBuiltInBackground: true, // Studio avatar with built-in background
     },
     voice: {
       voiceId: '35659e86ce244d8389d525a9648d9c4a', // Carter Lee
@@ -324,6 +334,7 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
       avatarType: 'avatar',
       scale: SCALE_PRESETS.vertical.upperBody,
       talkingStyle: 'expressive',
+      hasBuiltInBackground: true, // Studio avatar with built-in background
     },
     voice: {
       voiceId: 'dc491816e53f46eaa466740fbfec09bb', // Adventure Alex
@@ -348,6 +359,7 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
       avatarId: 'd33fe3abc2914faa88309c3bdb9f47f4',
       avatarType: 'talking_photo',
       scale: SCALE_PRESETS.vertical.talkingPhoto,
+      hasBuiltInBackground: false, // Talking photos need explicit background
     },
     voice: {
       // Will need to get a Spanish voice ID - placeholder for now
@@ -401,6 +413,31 @@ export function getAgentsByLanguage(language: VoiceLanguage, brand?: Brand): Hey
  */
 export function getAgentById(agentId: string): HeyGenAgent | undefined {
   return HEYGEN_AGENTS.find(agent => agent.id === agentId);
+}
+
+/**
+ * Get agents with built-in backgrounds (studio avatars)
+ * These are HeyGen's pre-built avatars that include their own studio backgrounds
+ * Use these when you want the avatar's natural background instead of a solid color
+ */
+export function getAgentsWithBuiltInBackground(brand?: Brand): HeyGenAgent[] {
+  return HEYGEN_AGENTS.filter(agent => {
+    const hasBackground = agent.avatar.hasBuiltInBackground === true;
+    const brandMatch = !brand || agent.brands.includes(brand);
+    return agent.isActive && hasBackground && brandMatch;
+  });
+}
+
+/**
+ * Get agents without built-in backgrounds (talking photos)
+ * These need an explicit background color or image specified
+ */
+export function getAgentsWithoutBuiltInBackground(brand?: Brand): HeyGenAgent[] {
+  return HEYGEN_AGENTS.filter(agent => {
+    const needsBackground = agent.avatar.hasBuiltInBackground !== true;
+    const brandMatch = !brand || agent.brands.includes(brand);
+    return agent.isActive && needsBackground && brandMatch;
+  });
 }
 
 /**
@@ -472,6 +509,27 @@ export function buildVoiceConfig(agent: HeyGenAgent, inputText: string) {
   return config;
 }
 
+/**
+ * Build HeyGen video request background config from agent
+ * Returns undefined if agent has built-in background (studio avatars)
+ * Returns a color background config if agent needs explicit background (talking photos)
+ */
+export function buildBackgroundConfig(
+  agent: HeyGenAgent,
+  fallbackColor: string = '#1a1a2e'
+): { type: 'color'; value: string } | undefined {
+  // Studio avatars have built-in backgrounds - don't specify a background
+  if (agent.avatar.hasBuiltInBackground) {
+    return undefined;
+  }
+
+  // Talking photos need an explicit background
+  return {
+    type: 'color',
+    value: fallbackColor
+  };
+}
+
 // ============================================================================
 // Exports
 // ============================================================================
@@ -483,7 +541,10 @@ export default {
   getPrimaryAgentForBrand,
   getAgentsByLanguage,
   getAgentById,
+  getAgentsWithBuiltInBackground,
+  getAgentsWithoutBuiltInBackground,
   getRecommendedScale,
   buildCharacterConfig,
   buildVoiceConfig,
+  buildBackgroundConfig,
 };

@@ -54,10 +54,6 @@
       "schedule": "0 9,12,15,18,21 * * *"
     },
     {
-      "path": "/api/cron/gaza",
-      "schedule": "40 9,12,15,18,21 * * *"
-    },
-    {
       "path": "/api/cron/sync-property-queue-new",
       "schedule": "0 */6 * * *"
     },
@@ -84,6 +80,10 @@
     {
       "path": "/api/cron/process-cash-deals-queue",
       "schedule": "30 */2 * * *"
+    },
+    {
+      "path": "/api/cron/fetch-social-trends",
+      "schedule": "0 8,14,20 * * *"
     }
   ],
   "functions": {
@@ -154,6 +154,9 @@
       "maxDuration": 300
     },
     "src/app/api/cron/process-cash-deals-queue/route.ts": {
+      "maxDuration": 300
+    },
+    "src/app/api/cron/fetch-social-trends/route.ts": {
       "maxDuration": 300
     },
     "src/app/api/**/*.ts": {

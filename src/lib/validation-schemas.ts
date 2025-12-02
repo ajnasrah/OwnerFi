@@ -26,7 +26,8 @@ export const CompleteWorkflowRequestSchema = z.object({
   brand: BrandSchema,
   platforms: z.array(PlatformSchema).optional().default(['instagram', 'tiktok', 'youtube']),
   schedule: z.enum(['immediate', '1hour', '2hours', '4hours', 'optimal']).optional().default('immediate'),
-  talking_photo_id: z.string().optional(),
+  talking_photo_id: z.string().optional(),  // For talking photo avatars (user's face photos)
+  avatar_id: z.string().optional(),  // For studio avatars (HeyGen's pre-built avatars with backgrounds)
   voice_id: z.string().optional(),
 });
 

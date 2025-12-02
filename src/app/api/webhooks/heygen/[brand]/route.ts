@@ -5,7 +5,7 @@
  * Each brand has its own isolated webhook endpoint to prevent failures from affecting other brands.
  *
  * Route: /api/webhooks/heygen/[brand]
- * Brands: carz, ownerfi, podcast, vassdistro, benefit, property, property-spanish, abdullah
+ * Brands: carz, ownerfi, podcast, vassdistro, benefit, property, property-spanish, abdullah, gaza
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -272,7 +272,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
  * Get workflow for specific brand (NO sequential lookups)
  */
 async function getWorkflowForBrand(
-  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit' | 'property' | 'property-spanish' | 'vassdistro' | 'abdullah',
+  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit' | 'property' | 'property-spanish' | 'vassdistro' | 'abdullah' | 'gaza',
   workflowId: string
 ): Promise<any | null> {
   const { getAdminDb } = await import('@/lib/firebase-admin');
@@ -291,6 +291,9 @@ async function getWorkflowForBrand(
   } else if (brand === 'abdullah') {
     const docSnap = await adminDb.collection('abdullah_workflow_queue').doc(workflowId).get();
     return docSnap.exists ? docSnap.data() : null;
+  } else if (brand === 'gaza') {
+    const docSnap = await adminDb.collection('gaza_workflow_queue').doc(workflowId).get();
+    return docSnap.exists ? docSnap.data() : null;
   } else {
     // For carz, ownerfi, vassdistro
     const collectionName = `${brand}_workflow_queue`;
@@ -303,7 +306,7 @@ async function getWorkflowForBrand(
  * Update workflow for specific brand
  */
 async function updateWorkflowForBrand(
-  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit' | 'property' | 'property-spanish' | 'vassdistro' | 'abdullah',
+  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit' | 'property' | 'property-spanish' | 'vassdistro' | 'abdullah' | 'gaza',
   workflowId: string,
   updates: Record<string, any>
 ): Promise<void> {
@@ -324,7 +327,7 @@ async function updateWorkflowForBrand(
  * Trigger Submagic processing with brand-specific webhook
  */
 async function triggerSubmagicProcessing(
-  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit' | 'property' | 'property-spanish' | 'vassdistro' | 'abdullah',
+  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit' | 'property' | 'property-spanish' | 'vassdistro' | 'abdullah' | 'gaza',
   workflowId: string,
   heygenVideoUrl: string,
   workflow: any
@@ -517,13 +520,13 @@ async function triggerSubmagicProcessing(
  * Send failure alert for brand
  */
 async function sendFailureAlert(
-  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit' | 'property' | 'property-spanish' | 'vassdistro' | 'abdullah',
+  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit' | 'property' | 'property-spanish' | 'vassdistro' | 'abdullah' | 'gaza',
   workflowId: string,
   workflow: any,
   reason: string
 ): Promise<void> {
   try {
-    if (brand !== 'podcast' && brand !== 'benefit') {
+    if (brand !== 'podcast' && brand !== 'benefit' && brand !== 'gaza') {
       const { alertWorkflowFailure } = await import('@/lib/error-monitoring');
       await alertWorkflowFailure(
         brand,

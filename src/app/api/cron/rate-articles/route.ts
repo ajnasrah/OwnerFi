@@ -31,7 +31,8 @@ export async function GET(request: NextRequest) {
     const results = {
       carz: await rateAndMergeBrand('carz'),
       ownerfi: await rateAndMergeBrand('ownerfi'),
-      vassdistro: await rateAndMergeBrand('vassdistro')
+      vassdistro: await rateAndMergeBrand('vassdistro'),
+      gaza: await rateAndMergeBrand('gaza')
     };
 
     console.log('✅ Article rating complete:', results);
@@ -54,7 +55,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-async function rateAndMergeBrand(brand: 'carz' | 'ownerfi' | 'vassdistro') {
+async function rateAndMergeBrand(brand: 'carz' | 'ownerfi' | 'vassdistro' | 'gaza') {
   console.log(`🤖 [${brand}] Starting rating process...`);
 
   const collectionName = getCollectionName('ARTICLES', brand);

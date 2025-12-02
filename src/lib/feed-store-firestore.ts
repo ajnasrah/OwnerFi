@@ -97,6 +97,11 @@ const COLLECTIONS = {
   ABDULLAH: {
     CONTENT: 'abdullah_daily_content',
     WORKFLOW_QUEUE: 'abdullah_workflow_queue',
+  },
+  GAZA: {
+    FEEDS: 'gaza_rss_feeds',
+    ARTICLES: 'gaza_articles',
+    WORKFLOW_QUEUE: 'gaza_workflow_queue',
   }
 };
 
@@ -151,9 +156,11 @@ export async function getAllFeedSources(category?: Brand): Promise<FeedSource[]>
     const carzSnapshot = await getDocs(collection(db, COLLECTIONS.CARZ.FEEDS));
     const ownerfiSnapshot = await getDocs(collection(db, COLLECTIONS.OWNERFI.FEEDS));
     const vassdistroSnapshot = await getDocs(collection(db, COLLECTIONS.VASSDISTRO.FEEDS));
+    const gazaSnapshot = await getDocs(collection(db, COLLECTIONS.GAZA.FEEDS));
     carzSnapshot.docs.forEach(doc => sources.push(doc.data() as FeedSource));
     ownerfiSnapshot.docs.forEach(doc => sources.push(doc.data() as FeedSource));
     vassdistroSnapshot.docs.forEach(doc => sources.push(doc.data() as FeedSource));
+    gazaSnapshot.docs.forEach(doc => sources.push(doc.data() as FeedSource));
   }
 
   return sources;

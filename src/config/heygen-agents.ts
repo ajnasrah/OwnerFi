@@ -250,6 +250,94 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
   },
 
   // ========================================
+  // GAZA AGENTS (Serious/Dramatic tone for humanitarian news)
+  // ========================================
+  {
+    id: 'gaza-newsreader-male',
+    name: 'David (News Reader)',
+    description: 'Professional male newsreader for serious humanitarian news',
+    avatar: {
+      avatarId: 'Adrian_public_20240312', // Using Adrian for serious news
+      avatarType: 'avatar',
+      scale: SCALE_PRESETS.vertical.upperBody,
+      talkingStyle: 'stable', // Stable for serious news delivery
+    },
+    voice: {
+      voiceId: 'f38a635bee7a4d1f9b0a654a31d050d2', // Chill Brian
+      speed: 0.95, // Slightly slower for serious tone
+      emotion: 'Serious', // Serious emotion for humanitarian content
+    },
+    voiceLanguage: 'en',
+    brands: ['gaza'],
+    isActive: true,
+    isPrimary: true,
+    previewImageUrl: 'https://files2.heygen.ai/avatar/v3/3e3d8f2231e44f73af86ff2f68b7649a_14947/preview_talk_4.webp',
+  },
+  {
+    id: 'gaza-newsreader-female',
+    name: 'Sarah (News Anchor)',
+    description: 'Professional female news anchor for empathetic humanitarian coverage',
+    avatar: {
+      avatarId: 'Adriana_BizTalk_Front_public', // Professional female avatar
+      avatarType: 'avatar',
+      scale: SCALE_PRESETS.vertical.upperBody,
+      talkingStyle: 'stable', // Stable for serious news delivery
+    },
+    voice: {
+      voiceId: '42d00d4aac5441279d8536cd6b52c53c', // Hope
+      speed: 0.95,
+      emotion: 'Soothing', // Soothing emotion for empathetic delivery
+    },
+    voiceLanguage: 'en',
+    brands: ['gaza'],
+    isActive: true,
+    isPrimary: false,
+    previewImageUrl: 'https://files2.heygen.ai/avatar/v3/c3d1baaebbe84752b7a473373c6cd385_42780/preview_target.webp',
+  },
+  {
+    id: 'gaza-correspondent',
+    name: 'Aditya (Correspondent)',
+    description: 'Field correspondent style for breaking news coverage',
+    avatar: {
+      avatarId: 'Aditya_public_4',
+      avatarType: 'avatar',
+      scale: SCALE_PRESETS.vertical.upperBody,
+      talkingStyle: 'expressive', // Slightly more expressive for urgent news
+    },
+    voice: {
+      voiceId: '35659e86ce244d8389d525a9648d9c4a', // Carter Lee
+      speed: 1.0,
+      emotion: 'Serious', // Serious for news correspondent
+    },
+    voiceLanguage: 'en',
+    brands: ['gaza'],
+    isActive: true,
+    isPrimary: false,
+    previewImageUrl: 'https://files2.heygen.ai/avatar/v3/17ad4b824e5a47e8b4f61e6a9cd346e7_62180/preview_target.webp',
+  },
+  {
+    id: 'gaza-humanitarian',
+    name: 'Abigail (Humanitarian)',
+    description: 'Compassionate presenter for emotional humanitarian stories',
+    avatar: {
+      avatarId: 'Abigail_expressive_2024112501',
+      avatarType: 'avatar',
+      scale: SCALE_PRESETS.vertical.upperBody,
+      talkingStyle: 'expressive',
+    },
+    voice: {
+      voiceId: 'dc491816e53f46eaa466740fbfec09bb', // Adventure Alex
+      speed: 0.95,
+      emotion: 'Soothing', // Soothing for humanitarian stories
+    },
+    voiceLanguage: 'en',
+    brands: ['gaza'],
+    isActive: true,
+    isPrimary: false,
+    previewImageUrl: 'https://files2.heygen.ai/avatar/v3/1ad51ab9fee24ae88af067206e14a1d8_44250/preview_target.webp',
+  },
+
+  // ========================================
   // SPANISH AGENTS
   // ========================================
   {

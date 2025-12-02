@@ -543,6 +543,58 @@ export const PERSONAL_CONFIG: BrandConfig = {
 };
 
 /**
+ * Gaza Relief News Brand Configuration
+ * For pro-Gaza humanitarian news content with donation CTAs
+ */
+export const GAZA_CONFIG: BrandConfig = {
+  id: 'gaza',
+  displayName: 'Gaza Relief News',
+
+  lateProfileId: process.env.LATE_GAZA_PROFILE_ID || '',
+
+  platforms: {
+    default: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'threads', 'twitter'],
+    all: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'threads', 'twitter', 'bluesky'],
+    excludeFromDefault: [],
+  },
+
+  webhooks: {
+    heygen: `${BASE_URL}/api/webhooks/heygen/gaza`,
+    submagic: `${BASE_URL}/api/webhooks/submagic/gaza`,
+  },
+
+  content: {
+    youtubeCategory: 'NEWS_POLITICS',
+    defaultHashtags: ['#Gaza', '#Palestine', '#HumanitarianCrisis', '#FreePalestine', '#GazaRelief'],
+    captionStyle: 'professional', // Serious professional tone for humanitarian news
+  },
+
+  collections: {
+    feeds: 'gaza_rss_feeds',
+    articles: 'gaza_articles',
+    workflows: 'gaza_workflow_queue',
+  },
+
+  rateLimits: {
+    lateAPI: 50,
+    heygen: 20,
+    submagic: 240,
+  },
+
+  scheduling: {
+    timezone: 'America/Chicago',
+    postingHours: [9, 12, 15, 18, 21],
+    maxPostsPerDay: 5,
+  },
+
+  features: {
+    autoPosting: true,
+    abTesting: false,
+    analytics: true,
+  },
+};
+
+/**
  * Brand Configuration Map
  * Easy lookup of brand configs by brand ID
  */
@@ -556,6 +608,7 @@ export const BRAND_CONFIGS: Record<Brand, BrandConfig> = {
   vassdistro: VASSDISTRO_CONFIG,
   abdullah: ABDULLAH_CONFIG,
   personal: PERSONAL_CONFIG,
+  gaza: GAZA_CONFIG,
 } as const;
 
 /**
@@ -567,7 +620,7 @@ export const BRAND_CONFIGS: Record<Brand, BrandConfig> = {
 export function getBrandConfig(brand: Brand): BrandConfig {
   const config = BRAND_CONFIGS[brand];
   if (!config) {
-    throw new Error(`Invalid brand: ${brand}. Must be one of: carz, ownerfi, podcast, benefit, property, property-spanish, vassdistro, abdullah, personal`);
+    throw new Error(`Invalid brand: ${brand}. Must be one of: carz, ownerfi, podcast, benefit, property, property-spanish, vassdistro, abdullah, personal, gaza`);
   }
   return config;
 }
@@ -669,5 +722,6 @@ export function validateAllBrandConfigs(): Record<Brand, { valid: boolean; error
     vassdistro: validateBrandConfig('vassdistro'),
     abdullah: validateBrandConfig('abdullah'),
     personal: validateBrandConfig('personal'),
+    gaza: validateBrandConfig('gaza'),
   };
 }

@@ -20,7 +20,7 @@ export interface QualityScore {
 export async function evaluateArticleQuality(
   title: string,
   content: string,
-  category: 'carz' | 'ownerfi' | 'vassdistro'
+  category: 'carz' | 'ownerfi' | 'vassdistro' | 'gaza'
 ): Promise<QualityScore> {
   // Pre-check: Reject articles with insufficient content BEFORE calling OpenAI
   const contentLength = content?.trim().length || 0;
@@ -115,11 +115,47 @@ export async function evaluateArticleQuality(
 /**
  * Build the AI prompt for quality evaluation
  */
-function buildQualityPrompt(title: string, content: string, category: 'carz' | 'ownerfi' | 'vassdistro'): {
+function buildQualityPrompt(title: string, content: string, category: 'carz' | 'ownerfi' | 'vassdistro' | 'gaza'): {
   system: string;
   user: string;
 } {
-  const categoryContext = category === 'carz'
+  const categoryContext = category === 'gaza'
+    ? `This is for a PRO-GAZA humanitarian news channel supporting Palestine and Gaza civilians.
+
+       TARGET AUDIENCE:
+       - People who support Gaza and Palestine
+       - Pro-Palestine advocates and activists
+       - Humanitarian donors interested in helping Gaza
+       - Those concerned about the Gaza humanitarian crisis
+       - Social justice advocates
+
+       RATE HIGHLY (80-100) - PRO-GAZA CONTENT:
+       - Articles sympathetic to Palestinian civilians and their suffering
+       - Humanitarian crisis coverage showing the human cost in Gaza
+       - Stories about aid workers, relief efforts, and donations helping Gaza
+       - Coverage of protests and movements supporting Palestine worldwide
+       - Articles critical of actions harming Gaza civilians
+       - Personal stories of Gaza families, children, and survivors
+       - Coverage of international support for Gaza/Palestine
+       - Breaking news about Gaza humanitarian situation
+       - Updates on ceasefire efforts and peace negotiations
+
+       RATE POORLY (0-40) - NOT PRO-GAZA:
+       - Articles with anti-Palestine or anti-Gaza framing
+       - Pro-occupation perspectives or justifications
+       - Articles that minimize civilian suffering in Gaza
+       - Content that dehumanizes Palestinians
+       - Propaganda against humanitarian aid to Gaza
+       - Articles completely unrelated to Gaza/Palestine
+
+       NEUTRAL (50-70):
+       - Balanced reporting without clear humanitarian focus
+       - General Middle East news not specifically about Gaza
+       - Technical/political analysis without human angle
+
+       The goal is to amplify voices that support Gaza civilians and the humanitarian cause.
+       Every video should make viewers want to help Gaza.`
+    : category === 'carz'
     ? `This is for a CARZ INC video channel targeting 30-year-old adults interested in cars and automotive news.
 
        TARGET AUDIENCE (30-year-olds):
@@ -299,7 +335,7 @@ function parseQualityResponse(response: string): QualityScore {
  * @param maxConcurrent - Number of concurrent API calls (default: 3, recommended: 10 for batch jobs)
  */
 export async function evaluateArticlesBatch(
-  articles: Array<{ title: string; content: string; category: 'carz' | 'ownerfi' | 'vassdistro' }>,
+  articles: Array<{ title: string; content: string; category: 'carz' | 'ownerfi' | 'vassdistro' | 'gaza' }>,
   maxConcurrent: number = 15 // PERFORMANCE FIX: Increased from 3 to 15 for 5x faster processing
 ): Promise<QualityScore[]> {
   const results: QualityScore[] = [];

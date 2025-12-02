@@ -518,6 +518,67 @@ export const VASSDISTRO_FEEDS: Omit<FeedSource, 'articlesProcessed'>[] = [
 ];
 
 /**
+ * GAZA FEEDS (6 working feeds - Pro-Palestine humanitarian news sources)
+ * Focus: Gaza humanitarian crisis, Palestine news, relief efforts
+ */
+export const GAZA_FEEDS: Omit<FeedSource, 'articlesProcessed'>[] = [
+  {
+    id: 'gaza-aljazeera',
+    name: 'Al Jazeera English - Middle East',
+    url: 'https://www.aljazeera.com/xml/rss/all.xml',
+    category: 'gaza',
+    subcategory: 'news',
+    enabled: true,
+    fetchInterval: 60
+  },
+  {
+    id: 'gaza-middleeasteye',
+    name: 'Middle East Eye - Palestine Coverage',
+    url: 'https://www.middleeasteye.net/rss',
+    category: 'gaza',
+    subcategory: 'news',
+    enabled: true,
+    fetchInterval: 60
+  },
+  {
+    id: 'gaza-electronicintifada',
+    name: 'Electronic Intifada - Palestinian Perspective',
+    url: 'https://electronicintifada.net/rss.xml',
+    category: 'gaza',
+    subcategory: 'news',
+    enabled: true,
+    fetchInterval: 120
+  },
+  {
+    id: 'gaza-reuters-mideast',
+    name: 'Reuters - Middle East News',
+    url: 'https://www.reuters.com/world/middle-east/rss',
+    category: 'gaza',
+    subcategory: 'news',
+    enabled: true,
+    fetchInterval: 60
+  },
+  {
+    id: 'gaza-bbc-mideast',
+    name: 'BBC News - Middle East',
+    url: 'https://feeds.bbci.co.uk/news/world/middle_east/rss.xml',
+    category: 'gaza',
+    subcategory: 'news',
+    enabled: true,
+    fetchInterval: 60
+  },
+  {
+    id: 'gaza-mondoweiss',
+    name: 'Mondoweiss - Palestine News & Opinion',
+    url: 'https://mondoweiss.net/feed/',
+    category: 'gaza',
+    subcategory: 'news',
+    enabled: true,
+    fetchInterval: 120
+  }
+];
+
+/**
  * Initialize all feed sources in Firestore (only if they don't exist)
  */
 export async function initializeFeedSources() {
@@ -549,9 +610,16 @@ export async function initializeFeedSources() {
     totalCount++;
   }
 
+  // Add Gaza feeds
+  for (const feed of GAZA_FEEDS) {
+    await addFeedSourceFirestore(feed);
+    totalCount++;
+  }
+
   console.log(`\n✅ Initialized ${CARZ_FEEDS.length} Carz feeds - expanded coverage with major EV news sources`);
   console.log(`✅ Initialized ${OWNERFI_FEEDS.length} OwnerFi feeds - comprehensive real estate & mortgage coverage`);
   console.log(`✅ Initialized ${VASSDISTRO_FEEDS.length} Vass Distro feeds - global vaping industry sources`);
+  console.log(`✅ Initialized ${GAZA_FEEDS.length} Gaza feeds - pro-Palestine humanitarian news sources`);
   console.log(`📊 Total: ${totalCount} feed sources (TESTED & VERIFIED 2025)\n`);
 }
 

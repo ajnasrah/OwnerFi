@@ -54,6 +54,10 @@
       "schedule": "0 9,12,15,18,21 * * *"
     },
     {
+      "path": "/api/cron/gaza",
+      "schedule": "40 9,12,15,18,21 * * *"
+    },
+    {
       "path": "/api/cron/sync-property-queue-new",
       "schedule": "0 */6 * * *"
     },
@@ -123,6 +127,9 @@
       "maxDuration": 60
     },
     "src/app/api/cron/abdullah/route.ts": {
+      "maxDuration": 60
+    },
+    "src/app/api/cron/gaza/route.ts": {
       "maxDuration": 60
     },
     "src/app/api/cron/sync-property-queue-new/route.ts": {

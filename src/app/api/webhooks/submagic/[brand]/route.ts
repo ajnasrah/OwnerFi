@@ -5,7 +5,7 @@
  * Each brand has its own isolated webhook endpoint to prevent failures from affecting other brands.
  *
  * Route: /api/webhooks/submagic/[brand]
- * Brands: carz, ownerfi, vassdistro, property, property-spanish, abdullah, personal
+ * Brands: carz, ownerfi, vassdistro, property, property-spanish, abdullah, personal, gaza
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -256,7 +256,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
  * Get workflow by Submagic project ID for specific brand
  */
 async function getWorkflowBySubmagicId(
-  brand: 'carz' | 'ownerfi' | 'property' | 'property-spanish' | 'vassdistro' | 'abdullah' | 'personal',
+  brand: 'carz' | 'ownerfi' | 'property' | 'property-spanish' | 'vassdistro' | 'abdullah' | 'personal' | 'gaza',
   submagicProjectId: string
 ): Promise<{ workflowId: string; workflow: any } | null> {
   const { getAdminDb } = await import('@/lib/firebase-admin');
@@ -275,6 +275,8 @@ async function getWorkflowBySubmagicId(
     collectionName = 'abdullah_workflow_queue';
   } else if (brand === 'personal') {
     collectionName = 'personal_workflow_queue';
+  } else if (brand === 'gaza') {
+    collectionName = 'gaza_workflow_queue';
   } else {
     collectionName = `${brand}_workflow_queue`;
   }
@@ -312,7 +314,7 @@ async function getWorkflowBySubmagicId(
  * Update workflow for specific brand
  */
 async function updateWorkflowForBrand(
-  brand: 'carz' | 'ownerfi' | 'property' | 'property-spanish' | 'vassdistro' | 'abdullah' | 'personal',
+  brand: 'carz' | 'ownerfi' | 'property' | 'property-spanish' | 'vassdistro' | 'abdullah' | 'personal' | 'gaza',
   workflowId: string,
   updates: Record<string, any>
 ): Promise<void> {
@@ -331,6 +333,13 @@ async function updateWorkflowForBrand(
     const { getAdminDb } = await import('@/lib/firebase-admin');
     const adminDb = await getAdminDb();
     await adminDb.collection('personal_workflow_queue').doc(workflowId).update({
+      ...updates,
+      updatedAt: Date.now()
+    });
+  } else if (brand === 'gaza') {
+    const { getAdminDb } = await import('@/lib/firebase-admin');
+    const adminDb = await getAdminDb();
+    await adminDb.collection('gaza_workflow_queue').doc(workflowId).update({
       ...updates,
       updatedAt: Date.now()
     });
@@ -378,7 +387,7 @@ async function fetchVideoUrlFromSubmagic(submagicProjectId: string): Promise<str
  * Process video upload to R2 and post to Late
  */
 async function processVideoAndPost(
-  brand: 'carz' | 'ownerfi' | 'property' | 'vassdistro' | 'abdullah',
+  brand: 'carz' | 'ownerfi' | 'property' | 'vassdistro' | 'abdullah' | 'personal' | 'gaza',
   workflowId: string,
   workflow: any,
   videoUrl: string
@@ -423,6 +432,9 @@ async function processVideoAndPost(
     } else if (brand === 'vassdistro') {
       caption = workflow.caption || workflow.articleTitle || 'Check out this vape industry update! 🔥';
       title = workflow.title || workflow.articleTitle || 'Vape Industry News';
+    } else if (brand === 'gaza') {
+      caption = workflow.caption || workflow.articleTitle || 'Breaking news from Gaza. Help families in need.';
+      title = workflow.title || workflow.articleTitle || 'Gaza News Update';
     } else {
       caption = workflow.caption || workflow.articleTitle || 'Check out this video! 🔥';
       title = workflow.title || workflow.articleTitle || 'Viral Video';
@@ -482,13 +494,13 @@ async function processVideoAndPost(
  * Send failure alert for brand
  */
 async function sendFailureAlert(
-  brand: 'carz' | 'ownerfi' | 'property' | 'vassdistro',
+  brand: 'carz' | 'ownerfi' | 'property' | 'vassdistro' | 'personal' | 'gaza' | 'abdullah',
   workflowId: string,
   workflow: any,
   reason: string
 ): Promise<void> {
   try {
-    if (brand !== 'property') {
+    if (brand !== 'property' && brand !== 'gaza' && brand !== 'personal') {
       const { alertWorkflowFailure } = await import('@/lib/error-monitoring');
       await alertWorkflowFailure(
         brand,

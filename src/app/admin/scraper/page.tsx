@@ -14,11 +14,80 @@ interface UploadProgress {
   newProperties?: number;
 }
 
+interface QuickAddResult {
+  url: string;
+  status: 'pending' | 'adding' | 'added' | 'exists' | 'error';
+  message?: string;
+}
+
 export default function ScraperPage() {
   const [progress, setProgress] = useState<UploadProgress>({
     status: 'idle',
     message: 'Upload an Excel or CSV file to begin',
   });
+
+  // Quick add state
+  const [quickUrl, setQuickUrl] = useState('');
+  const [quickResults, setQuickResults] = useState<QuickAddResult[]>([]);
+  const [quickAdding, setQuickAdding] = useState(false);
+
+  const handleQuickAdd = async () => {
+    // Parse URLs (one per line or comma separated)
+    const urls = quickUrl
+      .split(/[\n,]/)
+      .map(u => u.trim())
+      .filter(u => u.includes('zillow.com'));
+
+    if (urls.length === 0) {
+      alert('No valid Zillow URLs found');
+      return;
+    }
+
+    setQuickAdding(true);
+    setQuickResults(urls.map(url => ({ url, status: 'pending' })));
+
+    for (let i = 0; i < urls.length; i++) {
+      const url = urls[i];
+
+      setQuickResults(prev => prev.map((r, idx) =>
+        idx === i ? { ...r, status: 'adding' } : r
+      ));
+
+      try {
+        const response = await fetch('/api/scraper/add-to-queue', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url }),
+        });
+
+        const data = await response.json();
+
+        if (data.alreadyExists) {
+          setQuickResults(prev => prev.map((r, idx) =>
+            idx === i ? { ...r, status: 'exists', message: data.message } : r
+          ));
+        } else if (data.success) {
+          setQuickResults(prev => prev.map((r, idx) =>
+            idx === i ? { ...r, status: 'added', message: 'Added to queue' } : r
+          ));
+        } else {
+          throw new Error(data.error || 'Failed');
+        }
+      } catch (error: any) {
+        setQuickResults(prev => prev.map((r, idx) =>
+          idx === i ? { ...r, status: 'error', message: error.message } : r
+        ));
+      }
+
+      // Small delay
+      if (i < urls.length - 1) {
+        await new Promise(r => setTimeout(r, 300));
+      }
+    }
+
+    setQuickAdding(false);
+    setQuickUrl('');
+  };
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
@@ -125,8 +194,82 @@ export default function ScraperPage() {
       <a href="/admin" className="text-emerald-400 hover:text-emerald-300 text-sm mb-4 inline-block">← Back to Admin</a>
       <h1 className="text-3xl font-bold mb-2 text-white">Zillow Property Scraper</h1>
       <p className="text-slate-400 mb-8">
-        Upload CSV or Excel files with Zillow property URLs to automatically scrape and import
+        Add Zillow URLs to queue for scraping and GHL agent outreach
       </p>
+
+      {/* Quick Add Section */}
+      <div className="mb-8 p-6 bg-slate-800 border border-slate-700 rounded-lg">
+        <h2 className="text-lg font-semibold mb-3 text-white">Quick Add URLs</h2>
+        <p className="text-sm text-slate-400 mb-4">Paste Zillow URLs (one per line) to add to scraper queue</p>
+
+        <textarea
+          value={quickUrl}
+          onChange={(e) => setQuickUrl(e.target.value)}
+          placeholder="https://www.zillow.com/homedetails/123-Main-St/12345678_zpid/"
+          className="w-full h-24 bg-slate-900 border border-slate-600 rounded-lg p-3 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 text-sm font-mono"
+          disabled={quickAdding}
+        />
+
+        <div className="mt-3 flex items-center gap-4">
+          <button
+            onClick={handleQuickAdd}
+            disabled={quickAdding || !quickUrl.trim()}
+            className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
+              quickAdding || !quickUrl.trim()
+                ? 'bg-slate-700 text-slate-400 cursor-not-allowed'
+                : 'bg-emerald-600 hover:bg-emerald-500 text-white'
+            }`}
+          >
+            {quickAdding ? 'Adding...' : 'Add to Queue'}
+          </button>
+
+          {quickResults.length > 0 && (
+            <span className="text-sm text-slate-400">
+              {quickResults.filter(r => r.status === 'added').length} added,{' '}
+              {quickResults.filter(r => r.status === 'exists').length} already exist
+            </span>
+          )}
+        </div>
+
+        {/* Quick add results */}
+        {quickResults.length > 0 && (
+          <div className="mt-4 space-y-2 max-h-48 overflow-y-auto">
+            {quickResults.map((result, idx) => (
+              <div
+                key={idx}
+                className={`text-sm px-3 py-2 rounded flex items-center justify-between ${
+                  result.status === 'added'
+                    ? 'bg-emerald-900/30 text-emerald-300'
+                    : result.status === 'exists'
+                    ? 'bg-yellow-900/30 text-yellow-300'
+                    : result.status === 'error'
+                    ? 'bg-red-900/30 text-red-300'
+                    : result.status === 'adding'
+                    ? 'bg-blue-900/30 text-blue-300'
+                    : 'bg-slate-700 text-slate-400'
+                }`}
+              >
+                <span className="truncate flex-1 font-mono text-xs">{result.url.slice(0, 60)}...</span>
+                <span className="ml-2 whitespace-nowrap">
+                  {result.status === 'adding' && '...'}
+                  {result.status === 'added' && '✓ Added'}
+                  {result.status === 'exists' && '⚠ Exists'}
+                  {result.status === 'error' && '✗ Error'}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="relative mb-8">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-slate-700"></div>
+        </div>
+        <div className="relative flex justify-center">
+          <span className="px-3 bg-slate-900 text-slate-500 text-sm">or upload a file</span>
+        </div>
+      </div>
 
       {/* Dropzone */}
       <div

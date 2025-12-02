@@ -10,7 +10,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { validateBrand, buildErrorContext, createBrandError, getBrandWebhookUrl } from '@/lib/brand-utils';
-import { getBrandConfig } from '@/config/brand-configs';
+import { getBrandConfig, Brand } from '@/config/brand-configs';
+import { addHookToVideo } from '@/lib/video-hook-integration';
 
 // Handle OPTIONS for HeyGen webhook validation (required)
 export async function OPTIONS() {
@@ -156,17 +157,49 @@ export async function POST(request: NextRequest, context: RouteContext) {
         // Don't fail the webhook - try to continue anyway
       }
 
-      // Trigger Submagic processing with timeout protection
+      // STEP 2: Add viral hook to video (optional - based on brand settings)
+      // This concatenates a 2-3 second hook video to the beginning
+      let finalVideoUrl = event_data.url;
+      console.log(`🎣 [${brandConfig.displayName}] STEP 2: Checking for viral hook...`);
+
+      try {
+        const hookResult = await addHookToVideo(
+          brand as Brand,
+          workflowId,
+          event_data.url,
+          workflow?.articleTitle || workflow?.title || 'Video content',
+          workflow?.articleDescription || ''
+        );
+
+        if (hookResult.hookUsed) {
+          console.log(`✅ [${brandConfig.displayName}] Hook added: ${hookResult.hookId} (${hookResult.hookCategory})`);
+          finalVideoUrl = hookResult.finalVideoUrl;
+
+          // Update workflow with hook info
+          await updateWorkflowForBrand(brand, workflowId, {
+            hookId: hookResult.hookId,
+            hookCategory: hookResult.hookCategory,
+            videoWithHookUrl: hookResult.finalVideoUrl
+          });
+        } else {
+          console.log(`⏭️  [${brandConfig.displayName}] No hook added (brand preference or no matching hooks)`);
+        }
+      } catch (hookError) {
+        // Hook failure is non-critical - continue with original video
+        console.warn(`⚠️  [${brandConfig.displayName}] Hook processing failed, using original video:`, hookError);
+      }
+
+      // STEP 3: Trigger Submagic processing with timeout protection
       // Wait up to 25 seconds for Submagic API call to complete
       // This ensures we catch immediate failures but don't timeout the webhook
-      console.log(`🚀 [${brandConfig.displayName}] STEP 2: Triggering Submagic processing...`);
+      console.log(`🚀 [${brandConfig.displayName}] STEP 3: Triggering Submagic processing...`);
 
       try {
         await Promise.race([
           triggerSubmagicProcessing(
             brand,
             workflowId,
-            event_data.url,
+            finalVideoUrl,  // Use video with hook if available
             workflow
           ),
           new Promise((_, reject) =>

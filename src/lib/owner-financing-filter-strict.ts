@@ -38,14 +38,11 @@ export interface StrictFilterResult {
  */
 const STRICT_PATTERNS = [
   // Tier 1: Explicit owner/seller financing - MUST have "owner" or "seller" (0% FP)
-  { pattern: /owner\s*financ/i, name: 'owner financing' },
-  { pattern: /seller\s*financ/i, name: 'seller financing' },
-  { pattern: /owner\s*carry/i, name: 'owner carry' },
-  { pattern: /owner\s*will\s*carry/i, name: 'owner will carry' },
-  { pattern: /seller\s*carry/i, name: 'seller carry' },
-  { pattern: /seller\s*will\s*carry/i, name: 'seller will carry' },
-  { pattern: /owner\s*will\s*finance/i, name: 'owner will finance' },
-  { pattern: /seller\s*will\s*finance/i, name: 'seller will finance' },
+  // Updated: Allow optional words like "may", "will", "can" between owner/seller and financing
+  { pattern: /owner\s*(may\s*|will\s*|can\s*)?financ/i, name: 'owner financing' },
+  { pattern: /seller\s*(may\s*|will\s*|can\s*)?financ/i, name: 'seller financing' },
+  { pattern: /owner\s*(may\s*|will\s*|can\s*)?carry/i, name: 'owner carry' },
+  { pattern: /seller\s*(may\s*|will\s*|can\s*)?carry/i, name: 'seller carry' },
   { pattern: /owner\s*terms/i, name: 'owner terms' },
   { pattern: /seller\s*terms/i, name: 'seller terms' },
 

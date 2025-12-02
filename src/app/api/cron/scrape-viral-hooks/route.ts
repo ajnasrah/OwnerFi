@@ -47,10 +47,10 @@ const SCRAPER_CONFIG = {
   resultsPerSearch: 10,
   maxTotalVideos: 100,
 
-  // Filter criteria
-  minLikes: 10000,       // Only viral content
-  minViews: 50000,
-  maxDuration: 15,       // Short videos more likely to have good hooks
+  // Filter criteria (lowered to capture more content for review)
+  minLikes: 1000,        // Lower threshold - will be reviewed manually
+  minViews: 5000,        // Lower threshold - quality filtering happens at review
+  maxDuration: 30,       // Allow longer videos - we'll trim to first 3 seconds
 };
 
 // Brand targeting for hooks
@@ -147,6 +147,12 @@ export async function GET(request: NextRequest) {
     console.log(`📊 Found ${items.length} unique potential hook videos`);
 
     // Process each video
+    let skippedLowLikes = 0;
+    let skippedLowViews = 0;
+    let skippedTooLong = 0;
+    let skippedNoUrl = 0;
+    let skippedDuplicate = 0;
+
     for (const video of items) {
       try {
         totalScraped++;
@@ -156,18 +162,23 @@ export async function GET(request: NextRequest) {
         const views = video.playCount || video.views || 0;
         const duration = video.duration || video.videoMeta?.duration || 0;
 
+        // Log first few videos for debugging
+        if (totalScraped <= 5) {
+          console.log(`  📊 Video ${totalScraped}: likes=${likes}, views=${views}, duration=${duration}s`);
+        }
+
         if (likes < SCRAPER_CONFIG.minLikes) {
-          console.log(`  ⏭️  Skipping - low likes (${likes})`);
+          skippedLowLikes++;
           continue;
         }
 
         if (views < SCRAPER_CONFIG.minViews) {
-          console.log(`  ⏭️  Skipping - low views (${views})`);
+          skippedLowViews++;
           continue;
         }
 
         if (duration > SCRAPER_CONFIG.maxDuration) {
-          console.log(`  ⏭️  Skipping - too long (${duration}s)`);
+          skippedTooLong++;
           continue;
         }
 
@@ -180,7 +191,7 @@ export async function GET(request: NextRequest) {
           .get();
 
         if (!existingQuery.empty) {
-          console.log(`  ⏭️  Already exists: ${sourceUrl}`);
+          skippedDuplicate++;
           continue;
         }
 
@@ -198,7 +209,7 @@ export async function GET(request: NextRequest) {
         const videoUrl = video.videoUrl || video.downloadAddr || '';
 
         if (!videoUrl) {
-          console.log(`  ⏭️  No video URL available`);
+          skippedNoUrl++;
           continue;
         }
 
@@ -241,6 +252,11 @@ export async function GET(request: NextRequest) {
     console.log(`\n🎉 Scraping complete!`);
     console.log(`   Total scraped: ${totalScraped}`);
     console.log(`   Added to queue: ${totalAdded}`);
+    console.log(`   Skipped - low likes (<${SCRAPER_CONFIG.minLikes}): ${skippedLowLikes}`);
+    console.log(`   Skipped - low views (<${SCRAPER_CONFIG.minViews}): ${skippedLowViews}`);
+    console.log(`   Skipped - too long (>${SCRAPER_CONFIG.maxDuration}s): ${skippedTooLong}`);
+    console.log(`   Skipped - no video URL: ${skippedNoUrl}`);
+    console.log(`   Skipped - duplicate: ${skippedDuplicate}`);
     console.log(`   Errors: ${errors.length}`);
 
     return NextResponse.json({
@@ -248,6 +264,13 @@ export async function GET(request: NextRequest) {
       totalScraped,
       totalAdded,
       pendingReview: totalAdded,
+      skipped: {
+        lowLikes: skippedLowLikes,
+        lowViews: skippedLowViews,
+        tooLong: skippedTooLong,
+        noUrl: skippedNoUrl,
+        duplicate: skippedDuplicate,
+      },
       errors: errors.slice(0, 10), // First 10 errors
     });
 

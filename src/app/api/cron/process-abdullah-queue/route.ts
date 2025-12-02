@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
 
     // Import queue system
     const { getNextPendingItem, updateQueueItem, getQueueStats } = await import('@/lib/abdullah-queue');
-    const { buildAbdullahVideoRequest } = await import('@/lib/abdullah-content-generator');
+    const { buildAbdullahVideoRequestWithAgent } = await import('@/lib/abdullah-content-generator');
     const { getBrandWebhookUrl } = await import('@/lib/brand-utils');
     const { addWorkflowToQueue, updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
     const { circuitBreakers, fetchWithTimeout, TIMEOUTS } = await import('@/lib/api-utils');
@@ -122,8 +122,8 @@ export async function GET(request: NextRequest) {
         workflowId: workflow.id
       });
 
-      // Build HeyGen request
-      const videoRequest = buildAbdullahVideoRequest(
+      // Build HeyGen request with agent rotation
+      const { request: videoRequest, agentId } = await buildAbdullahVideoRequestWithAgent(
         {
           theme: queueItem.theme,
           title: queueItem.title,
@@ -145,6 +145,7 @@ export async function GET(request: NextRequest) {
 
       console.log(`🚀 Sending to HeyGen...`);
       console.log(`   Webhook: ${webhookUrl}`);
+      console.log(`   Agent: ${agentId}`);
       console.log();
 
       // Call HeyGen API
@@ -178,14 +179,16 @@ export async function GET(request: NextRequest) {
       const videoId = data.data.video_id;
       console.log(`✅ HeyGen video initiated: ${videoId}`);
 
-      // Update workflow with video ID
+      // Update workflow with video ID and agent
       await updateWorkflowStatus(workflow.id, 'abdullah', {
-        heygenVideoId: videoId
+        heygenVideoId: videoId,
+        agentId
       } as any);
 
       // Update queue item
       await updateQueueItem(queueItem.id!, {
         heygenVideoId: videoId,
+        agentId,
         generatedAt: new Date()
       });
 

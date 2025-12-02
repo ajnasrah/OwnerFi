@@ -10,6 +10,9 @@
  * - Uses round-robin multi-agent selection
  * - Article screenshot backgrounds
  * - Donation CTA in every video
+ * - Environment validation at startup
+ * - Feed health checks before article selection
+ * - Error alerting for failures
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -21,6 +24,21 @@ import {
   getCollectionName,
 } from '@/lib/feed-store-firestore';
 import { getBrandConfig } from '@/config/brand-configs';
+import {
+  validateGazaEnv,
+  logGazaEnvValidation,
+} from '@/lib/gaza-env-validation';
+import {
+  alertEnvValidationFailed,
+  alertArticleSelectionFailed,
+  alertHeyGenFailed,
+  alertDailyLimitReached,
+} from '@/lib/gaza-alerting';
+import {
+  isGazaFeedsHealthy,
+  getAvailableArticleCount,
+} from '@/lib/gaza-feed-health';
+import { captureArticleScreenshot } from '@/lib/gaza-screenshot';
 
 const CRON_SECRET = process.env.CRON_SECRET;
 const BRAND = 'gaza' as const;
@@ -68,6 +86,32 @@ export async function GET(request: NextRequest) {
 
     console.log('\n🇵🇸 Gaza news video cron triggered');
 
+    // STEP 1: Validate environment variables
+    const envValidation = validateGazaEnv();
+    logGazaEnvValidation(envValidation);
+
+    if (!envValidation.valid) {
+      // Alert about env validation failure
+      await alertEnvValidationFailed(envValidation.errors);
+
+      return NextResponse.json({
+        success: false,
+        error: 'Environment validation failed',
+        errors: envValidation.errors,
+        warnings: envValidation.warnings,
+      }, { status: 500 });
+    }
+
+    // STEP 2: Check feed health (use cached result if recent)
+    const feedsHealthy = await isGazaFeedsHealthy();
+    if (!feedsHealthy) {
+      console.warn('⚠️  Gaza feeds may be unhealthy - continuing anyway');
+    }
+
+    // Log article availability
+    const availableArticles = await getAvailableArticleCount();
+    console.log(`📊 Available high-quality articles: ${availableArticles}`);
+
     // Check for force parameter to bypass daily limit
     const forceGenerate = request.nextUrl.searchParams.get('force') === 'true';
     const brandConfig = getBrandConfig(BRAND);
@@ -78,6 +122,10 @@ export async function GET(request: NextRequest) {
 
     if (videosToday >= maxPerDay && !forceGenerate) {
       console.log(`⏭️  Already generated ${videosToday}/${maxPerDay} videos today - skipping`);
+
+      // Alert (info level) that daily limit was reached
+      await alertDailyLimitReached(videosToday, maxPerDay);
+
       return NextResponse.json({
         success: true,
         skipped: true,
@@ -105,11 +153,19 @@ export async function GET(request: NextRequest) {
     if (!article) {
       console.log('⚠️  No articles available for video generation');
       console.log('   Check if RSS feeds have been fetched and rated');
+
+      // Alert about article selection failure
+      await alertArticleSelectionFailed(
+        `No high-quality articles available. Available: ${availableArticles}, Feeds healthy: ${feedsHealthy}`
+      );
+
       return NextResponse.json({
         success: true,
         skipped: true,
         message: 'No articles available - ensure RSS feeds are fetched and rated',
-        videosToday
+        videosToday,
+        availableArticles,
+        feedsHealthy,
       });
     }
 
@@ -131,6 +187,20 @@ export async function GET(request: NextRequest) {
       const generator = createGazaVideoGenerator();
 
       // Convert Article to GazaArticle format
+      // Capture screenshot of article for video background
+      let screenshotUrl: string | undefined;
+      try {
+        const screenshotResult = await captureArticleScreenshot(article.link);
+        if (screenshotResult.success && screenshotResult.imageUrl) {
+          screenshotUrl = screenshotResult.imageUrl;
+          console.log(`📸 Article screenshot captured: ${screenshotUrl}`);
+        } else {
+          console.log(`📸 Using dark background (screenshot ${screenshotResult.fallbackUsed ? 'fallback' : 'failed'})`);
+        }
+      } catch (screenshotError) {
+        console.warn('⚠️  Screenshot capture error:', screenshotError);
+      }
+
       const gazaArticle: GazaArticle = {
         id: article.id,
         title: article.title,
@@ -139,15 +209,14 @@ export async function GET(request: NextRequest) {
         link: article.link,
         pubDate: article.pubDate,
         source: article.feedId,
-        // TODO: Add article screenshot capture for background
-        // imageUrl: await captureArticleScreenshot(article.link),
+        imageUrl: screenshotUrl, // Article screenshot for background
       };
 
       // Generate video with round-robin agent selection
       const { videoId, agentId, script } = await generator.generateVideo(
         gazaArticle,
         workflow.id,
-        undefined, // backgroundImageUrl - can add screenshot capture later
+        screenshotUrl, // Use captured screenshot as background
         { mode: 'round-robin' }
       );
 
@@ -194,12 +263,17 @@ export async function GET(request: NextRequest) {
       });
 
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+
       // Mark workflow as failed
       await updateWorkflowStatus(workflow.id, BRAND, {
         status: 'failed',
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: errorMessage,
         failedAt: Date.now()
       });
+
+      // Alert about HeyGen generation failure
+      await alertHeyGenFailed(workflow.id, article.title, errorMessage);
 
       throw error;
     }

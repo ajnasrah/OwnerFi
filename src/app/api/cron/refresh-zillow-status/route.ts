@@ -96,8 +96,8 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Runs every 2 hours (12x/day) × 80 = 960 properties/day
-    // With ~4300 properties, full cycle takes ~4.5 days
+    // Runs every hour (24x/day) × 80 = 1920 properties/day
+    // With ~4300 properties, full cycle takes ~2.25 days
     // Reduced from 200 to 80 to fit in 5 min Vercel timeout (each Apify batch ~60s)
     const MAX_PROPERTIES_PER_RUN = 80;
     const BATCH_SIZE = 40; // 2 batches × ~60s each = ~2-3 min with buffer

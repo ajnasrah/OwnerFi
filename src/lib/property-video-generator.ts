@@ -1,11 +1,19 @@
 // Property Showcase Video Generator
 // Automatically creates videos for owner-financed properties < $15k down
 // A/B Testing: Generates both 30-sec and 15-sec variants
+// NOW WITH MULTI-AGENT SUPPORT - uses agent pool for variety
 
 import { PropertyListing } from './property-schema';
 import { calculatePropertyFinancials } from './property-calculations';
 import { validateAndFixScript, ComplianceCheckResult } from './compliance-checker';
 import { Brand } from '@/config/brand-configs';
+import { selectAgent, AgentSelectionOptions } from './agent-selector';
+import {
+  HeyGenAgent,
+  buildCharacterConfig,
+  buildVoiceConfig,
+  buildBackgroundConfig,
+} from '@/config/heygen-agents';
 
 export interface PropertyVideoScript {
   script: string;
@@ -376,7 +384,8 @@ function formatNumber(num: number): string {
 }
 
 /**
- * Generate HeyGen-compatible video request
+ * Generate HeyGen-compatible video request (legacy - uses hardcoded avatar)
+ * @deprecated Use buildPropertyVideoRequestWithAgent instead
  */
 export function buildPropertyVideoRequest(
   property: PropertyListing,
@@ -416,6 +425,68 @@ export function buildPropertyVideoRequest(
     title: `${property.address} - Owner Finance`,
     callback_id: `property_${property.id}`
   };
+}
+
+/**
+ * Generate HeyGen-compatible video request with agent rotation
+ * Uses the agent selector for round-robin agent selection
+ */
+export async function buildPropertyVideoRequestWithAgent(
+  property: PropertyListing,
+  script: string,
+  workflowId: string,
+  agentOptions?: AgentSelectionOptions
+): Promise<{ request: any; agentId: string }> {
+  // Select agent for this video (uses round-robin by default)
+  const agent = await selectAgent('property', {
+    mode: agentOptions?.mode || 'round-robin',
+    language: agentOptions?.language || 'en',
+    ...agentOptions,
+  });
+
+  // Fallback to legacy if no agent available
+  if (!agent) {
+    console.warn('⚠️  No agent available for property, using legacy config');
+    const request = buildPropertyVideoRequest(property, script);
+    return { request, agentId: 'legacy' };
+  }
+
+  console.log(`   🤖 Selected agent: ${agent.name} (${agent.id})`);
+  console.log(`   🎭 Avatar: ${agent.avatar.avatarId.substring(0, 12)}...`);
+  console.log(`   🗣️  Voice: ${agent.voice.voiceId.substring(0, 12)}...`);
+  if (agent.voice.emotion) {
+    console.log(`   😊 Emotion: ${agent.voice.emotion}`);
+  }
+
+  // Get best property image (prefer exterior shots)
+  const backgroundImage = selectBestPropertyImage(property);
+
+  // Build character config from agent
+  const characterConfig = buildCharacterConfig(agent, 'vertical');
+
+  // For property videos, we want smaller avatar to show more property
+  // Override scale to 0.4 for property showcase
+  characterConfig.scale = 0.4;
+
+  // Build voice config from agent with the script
+  const voiceConfig = buildVoiceConfig(agent, script);
+
+  // Property videos use property image as background
+  const request = {
+    video_inputs: [{
+      character: characterConfig,
+      voice: voiceConfig,
+      background: {
+        type: 'image',
+        url: backgroundImage
+      }
+    }],
+    dimension: { width: 1080, height: 1920 },
+    title: `${property.address} - Owner Finance`,
+    callback_id: workflowId
+  };
+
+  return { request, agentId: agent.id };
 }
 
 /**

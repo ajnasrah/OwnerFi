@@ -186,7 +186,25 @@ export async function POST(request: NextRequest, context: RouteContext) {
         }
       } catch (hookError) {
         // Hook failure is non-critical - continue with original video
-        console.warn(`⚠️  [${brandConfig.displayName}] Hook processing failed, using original video:`, hookError);
+        // BUT log explicitly for Gaza brand so we can track this
+        const errorMessage = hookError instanceof Error ? hookError.message : 'Unknown error';
+        console.warn(`⚠️  [${brandConfig.displayName}] Hook processing failed, using original video:`, errorMessage);
+
+        // For Gaza, log this alert explicitly
+        if (brand === 'gaza') {
+          try {
+            const { alertHookProcessingFailed } = await import('@/lib/gaza-alerting');
+            await alertHookProcessingFailed(workflowId, errorMessage);
+          } catch (alertError) {
+            console.error('Failed to log hook alert:', alertError);
+          }
+        }
+
+        // Update workflow to indicate hook was skipped
+        await updateWorkflowForBrand(brand, workflowId, {
+          hookSkipped: true,
+          hookSkipReason: errorMessage,
+        });
       }
 
       // STEP 3: Trigger Submagic processing with timeout protection

@@ -22,43 +22,139 @@ const SCRAPER_CONFIG = {
   // Apify actor for TikTok scraping - using clockworks/tiktok-scraper with hashtags
   actorId: 'clockworks/tiktok-scraper',
 
-  // Hashtags to search for viral hook content
-  hashtags: [
-    'fyp',
-    'viral',
-    'foryou',
-    'trending',
-    'mustwatch',
-    'stopscrolling',
-    'waitforit',
-  ],
+  // NICHE-SPECIFIC HASHTAGS - Relevant to our brands
+  hashtags: {
+    // Real Estate / Owner Financing (OwnerFi, Property, Benefit)
+    realEstate: [
+      'realestate',
+      'realestatetiktok',
+      'firsttimehomebuyer',
+      'homebuying',
+      'ownerfinancing',
+      'renttoown',
+      'housingmarket',
+      'realestateagent',
+      'homeownership',
+      'realestatetips',
+    ],
 
-  // Search queries for finding hook-style content
+    // Business / Entrepreneurship (Abdullah, VassDistro)
+    business: [
+      'entrepreneur',
+      'businesstiktok',
+      'smallbusiness',
+      'sidehustle',
+      'moneytok',
+      'financetok',
+      'wealthbuilding',
+      'passiveincome',
+      'businessowner',
+      'entrepreneurlife',
+    ],
+
+    // News / Current Events (Gaza, Carz for EV news)
+    news: [
+      'breakingnews',
+      'worldnews',
+      'newstiktok',
+      'currentevents',
+      'journalismtiktok',
+    ],
+
+    // Gaza / Humanitarian
+    humanitarian: [
+      'freepalestine',
+      'gaza',
+      'palestine',
+      'humanitarian',
+      'standwithpalestine',
+    ],
+
+    // Cars / EVs (Carz)
+    automotive: [
+      'cartok',
+      'cartiktok',
+      'electricvehicle',
+      'evtok',
+      'tesla',
+      'evnews',
+      'carsoftiktok',
+      'carnews',
+    ],
+
+    // Motivational / Personal Brand (Abdullah)
+    motivation: [
+      'motivation',
+      'mindset',
+      'success',
+      'growthmindset',
+      'selfimprovement',
+      'motivationaltiktok',
+    ],
+  },
+
+  // Search queries for finding hook-style content (niche-specific)
   searchQueries: [
-    'viral hooks',
-    'attention grabbing intro',
-    'stop scrolling',
-    'wait for it',
-    'pov viral',
+    // Real estate hooks
+    'real estate tips',
+    'how to buy a house',
+    'owner financing homes',
+    'first time home buyer tips',
+
+    // Business hooks
+    'business advice',
+    'entrepreneur tips',
+    'money tips',
+    'wealth building',
+
+    // News style hooks
+    'breaking news intro',
+    'news update',
+
+    // Motivational hooks
+    'motivation speech',
+    'success mindset',
   ],
 
   // Limits per input type
-  resultsPerHashtag: 15,
-  resultsPerSearch: 10,
-  maxTotalVideos: 100,
+  resultsPerHashtag: 10,
+  resultsPerSearch: 8,
+  maxTotalVideos: 80,
 
-  // Filter criteria (lowered to capture more content for review)
-  minLikes: 1000,        // Lower threshold - will be reviewed manually
-  minViews: 5000,        // Lower threshold - quality filtering happens at review
+  // Filter criteria
+  minLikes: 5000,        // Higher threshold for quality
+  minViews: 20000,       // Higher threshold - need actually viral content
   maxDuration: 30,       // Allow longer videos - we'll trim to first 3 seconds
 };
 
-// Brand targeting for hooks
+// Brand targeting for hooks - maps hashtag categories to brands
 const BRAND_HOOK_MAPPING: Record<string, string[]> = {
-  gaza: ['news', 'breaking', 'urgent', 'emotional', 'awareness'],
-  ownerfi: ['realestate', 'home', 'money', 'tips', 'education'],
-  carz: ['cars', 'auto', 'electric', 'tesla', 'ev'],
-  vassdistro: ['business', 'entrepreneur', 'industry', 'news'],
+  // Gaza - news, humanitarian content
+  gaza: ['news', 'breaking', 'urgent', 'emotional', 'awareness', 'humanitarian', 'palestine', 'freepalestine', 'worldnews'],
+
+  // OwnerFi / Benefit - real estate, homebuying
+  ownerfi: ['realestate', 'home', 'homebuying', 'firsttimehomebuyer', 'ownerfinancing', 'renttoown', 'housingmarket', 'homeownership'],
+  benefit: ['realestate', 'home', 'homebuying', 'firsttimehomebuyer', 'ownerfinancing', 'renttoown', 'housingmarket', 'homeownership'],
+  property: ['realestate', 'home', 'homebuying', 'firsttimehomebuyer', 'ownerfinancing', 'renttoown', 'housingmarket', 'homeownership'],
+
+  // Carz - automotive, EVs
+  carz: ['car', 'cars', 'auto', 'electric', 'tesla', 'ev', 'cartok', 'evtok', 'carnews', 'electricvehicle'],
+
+  // VassDistro - business, industry news
+  vassdistro: ['business', 'entrepreneur', 'industry', 'news', 'smallbusiness', 'businessowner'],
+
+  // Abdullah - motivation, business, personal brand
+  abdullah: ['motivation', 'mindset', 'success', 'entrepreneur', 'business', 'moneytok', 'wealthbuilding', 'growthmindset', 'selfimprovement'],
+};
+
+// Map hashtag categories to the brands that should use them
+const CATEGORY_TO_BRANDS: Record<string, string[]> = {
+  realEstate: ['ownerfi', 'benefit', 'property'],
+  business: ['abdullah', 'vassdistro'],
+  news: ['gaza', 'carz', 'vassdistro'],
+  humanitarian: ['gaza'],
+  automotive: ['carz'],
+  motivation: ['abdullah'],
 };
 
 export async function GET(request: NextRequest) {
@@ -86,35 +182,62 @@ export async function GET(request: NextRequest) {
     let totalAdded = 0;
     const errors: string[] = [];
 
-    // Scrape TikTok content using hashtags and search queries
-    console.log('📡 Scraping TikTok for viral hooks...');
+    // Scrape TikTok content using NICHE-SPECIFIC hashtags
+    console.log('📡 Scraping TikTok for niche-specific viral hooks...');
 
     const allItems: any[] = [];
+    const itemCategories = new Map<string, string>(); // Track which category each item came from
 
-    // Run scraper for each hashtag
-    for (const hashtag of SCRAPER_CONFIG.hashtags.slice(0, 3)) { // Limit to 3 hashtags to save API calls
-      try {
-        console.log(`  🔍 Scraping hashtag: #${hashtag}`);
-        const run = await client.actor(SCRAPER_CONFIG.actorId).call({
-          hashtags: [hashtag],
-          resultsPerPage: SCRAPER_CONFIG.resultsPerHashtag,
-          shouldDownloadVideos: false,
-          shouldDownloadCovers: true,
-        });
+    // Scrape each category of hashtags
+    const categories = Object.entries(SCRAPER_CONFIG.hashtags);
 
-        const { items } = await client.dataset(run.defaultDatasetId).listItems();
-        console.log(`    Found ${items.length} videos for #${hashtag}`);
-        allItems.push(...items);
+    for (const [category, hashtags] of categories) {
+      if (allItems.length >= SCRAPER_CONFIG.maxTotalVideos) break;
 
+      console.log(`\n📁 Scraping category: ${category.toUpperCase()}`);
+
+      // Pick 2 random hashtags from each category to diversify
+      const selectedHashtags = hashtags
+        .sort(() => Math.random() - 0.5)
+        .slice(0, 2);
+
+      for (const hashtag of selectedHashtags) {
         if (allItems.length >= SCRAPER_CONFIG.maxTotalVideos) break;
-      } catch (hashtagError) {
-        console.warn(`    ⚠️ Failed to scrape #${hashtag}:`, hashtagError);
+
+        try {
+          console.log(`  🔍 Scraping hashtag: #${hashtag}`);
+          const run = await client.actor(SCRAPER_CONFIG.actorId).call({
+            hashtags: [hashtag],
+            resultsPerPage: SCRAPER_CONFIG.resultsPerHashtag,
+            shouldDownloadVideos: false,
+            shouldDownloadCovers: true,
+          });
+
+          const { items } = await client.dataset(run.defaultDatasetId).listItems();
+          console.log(`    Found ${items.length} videos for #${hashtag}`);
+
+          // Tag items with their source category
+          for (const item of items) {
+            const id = item.id || item.videoId;
+            if (id) {
+              itemCategories.set(id, category);
+            }
+          }
+
+          allItems.push(...items);
+        } catch (hashtagError) {
+          console.warn(`    ⚠️ Failed to scrape #${hashtag}:`, hashtagError);
+        }
       }
     }
 
     // Run scraper for search queries if we need more
     if (allItems.length < SCRAPER_CONFIG.maxTotalVideos) {
-      for (const query of SCRAPER_CONFIG.searchQueries.slice(0, 2)) { // Limit to 2 searches
+      console.log(`\n🔎 Running search queries for more content...`);
+
+      for (const query of SCRAPER_CONFIG.searchQueries.slice(0, 4)) {
+        if (allItems.length >= SCRAPER_CONFIG.maxTotalVideos) break;
+
         try {
           console.log(`  🔍 Searching: "${query}"`);
           const run = await client.actor(SCRAPER_CONFIG.actorId).call({
@@ -126,9 +249,27 @@ export async function GET(request: NextRequest) {
 
           const { items } = await client.dataset(run.defaultDatasetId).listItems();
           console.log(`    Found ${items.length} videos for "${query}"`);
-          allItems.push(...items);
 
-          if (allItems.length >= SCRAPER_CONFIG.maxTotalVideos) break;
+          // Determine category from search query
+          let searchCategory = 'general';
+          if (query.includes('real estate') || query.includes('house') || query.includes('home')) {
+            searchCategory = 'realEstate';
+          } else if (query.includes('business') || query.includes('entrepreneur') || query.includes('money')) {
+            searchCategory = 'business';
+          } else if (query.includes('news')) {
+            searchCategory = 'news';
+          } else if (query.includes('motivation') || query.includes('success')) {
+            searchCategory = 'motivation';
+          }
+
+          for (const item of items) {
+            const id = item.id || item.videoId;
+            if (id && !itemCategories.has(id)) {
+              itemCategories.set(id, searchCategory);
+            }
+          }
+
+          allItems.push(...items);
         } catch (searchError) {
           console.warn(`    ⚠️ Failed to search "${query}":`, searchError);
         }
@@ -162,8 +303,21 @@ export async function GET(request: NextRequest) {
         const views = video.playCount || video.views || 0;
         const duration = video.duration || video.videoMeta?.duration || 0;
 
-        // Log first few videos for debugging
-        if (totalScraped <= 5) {
+        // Log first few videos for debugging - show raw data structure
+        if (totalScraped <= 3) {
+          console.log(`  📊 Video ${totalScraped} raw data:`, JSON.stringify({
+            id: video.id,
+            diggCount: video.diggCount,
+            likes: video.likes,
+            playCount: video.playCount,
+            views: video.views,
+            duration: video.duration,
+            videoMeta: video.videoMeta,
+            videoUrl: video.videoUrl,
+            downloadAddr: video.downloadAddr,
+            stats: video.stats,
+            statsV2: video.statsV2,
+          }, null, 2));
           console.log(`  📊 Video ${totalScraped}: likes=${likes}, views=${views}, duration=${duration}s`);
         }
 
@@ -197,12 +351,15 @@ export async function GET(request: NextRequest) {
 
         // Determine hook category based on content
         const text = (video.text || video.desc || '').toLowerCase();
+        const videoId = video.id || video.videoId;
+        const sourceCategory = itemCategories.get(videoId) || 'general';
+
         const category = categorizeHook(text);
         const mood = detectMood(text);
         const contentType = detectContentType(text);
 
-        // Determine which brands can use this hook
-        const brands = determineBrands(text, mood, contentType);
+        // Determine which brands can use this hook (using source category for better targeting)
+        const brands = determineBrandsFromCategory(sourceCategory, text, mood, contentType);
 
         // Download and process video (first 3 seconds)
         // For now, we'll save the source URL and process later
@@ -315,14 +472,28 @@ function categorizeHook(text: string): HookCategory {
 }
 
 /**
- * Determine which brands can use this hook based on text, mood, and content type
+ * Determine which brands can use this hook based on source category, text, mood, and content type
+ * This provides much better targeting since we know which hashtag category the content came from
  */
-function determineBrands(text: string, mood: HookMood, contentType: ContentType): string[] {
-  const lower = text.toLowerCase();
+function determineBrandsFromCategory(
+  sourceCategory: string,
+  text: string,
+  mood: HookMood,
+  contentType: ContentType
+): string[] {
   const brands: string[] = [];
 
-  // Check each brand's keywords
+  // First, add brands based on the source category (most reliable)
+  const categoryBrands = CATEGORY_TO_BRANDS[sourceCategory];
+  if (categoryBrands) {
+    brands.push(...categoryBrands);
+  }
+
+  // Then check text for additional brand keywords
+  const lower = text.toLowerCase();
   for (const [brand, keywords] of Object.entries(BRAND_HOOK_MAPPING)) {
+    if (brands.includes(brand)) continue; // Already added
+
     for (const keyword of keywords) {
       if (lower.includes(keyword)) {
         brands.push(brand);
@@ -331,37 +502,31 @@ function determineBrands(text: string, mood: HookMood, contentType: ContentType)
     }
   }
 
-  // Add brands based on mood matching
+  // Add brands based on mood matching (secondary signal)
   if (mood === 'serious' || mood === 'urgent' || mood === 'sad') {
     if (!brands.includes('gaza')) brands.push('gaza');
   }
-  if (mood === 'excited' || mood === 'inspiring') {
-    if (!brands.includes('ownerfi')) brands.push('ownerfi');
+  if (mood === 'inspiring' || mood === 'excited') {
     if (!brands.includes('abdullah')) brands.push('abdullah');
-    if (!brands.includes('property')) brands.push('property');
   }
 
-  // Add brands based on content type
+  // Add brands based on content type (secondary signal)
   if (contentType === 'news') {
     if (!brands.includes('gaza')) brands.push('gaza');
-    if (!brands.includes('carz')) brands.push('carz');
-    if (!brands.includes('vassdistro')) brands.push('vassdistro');
   }
   if (contentType === 'educational') {
     if (!brands.includes('ownerfi')) brands.push('ownerfi');
-    if (!brands.includes('carz')) brands.push('carz');
+    if (!brands.includes('benefit')) brands.push('benefit');
   }
   if (contentType === 'humanitarian') {
     if (!brands.includes('gaza')) brands.push('gaza');
   }
-  if (contentType === 'lifestyle') {
-    if (!brands.includes('abdullah')) brands.push('abdullah');
-    if (!brands.includes('property')) brands.push('property');
-  }
 
-  // If still no brands, make it available to all
+  // If still no brands (shouldn't happen with category-based approach), be conservative
+  // Only assign to brands that make sense for general content
   if (brands.length === 0) {
-    return ['gaza', 'ownerfi', 'carz', 'vassdistro', 'abdullah', 'property'];
+    // General content can work for business/motivation brands
+    return ['abdullah', 'vassdistro'];
   }
 
   return [...new Set(brands)]; // Remove duplicates

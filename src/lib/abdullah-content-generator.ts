@@ -2,9 +2,17 @@
  * Abdullah Personal Brand Content Generator
  * Generates daily personal brand videos (Mindset, Business, Money, Freedom, Story)
  * NOW WITH COMPLIANCE CHECKING - validates marketing laws before video creation
+ * NOW WITH MULTI-AGENT SUPPORT - uses agent pool for variety
  */
 
 import { validateAndFixScript } from './compliance-checker';
+import { selectAgent, AgentSelectionOptions } from './agent-selector';
+import {
+  HeyGenAgent,
+  buildCharacterConfig,
+  buildVoiceConfig,
+  buildBackgroundConfig,
+} from '@/config/heygen-agents';
 
 export interface AbdullahVideo {
   theme: string;
@@ -277,7 +285,8 @@ export function validateAbdullahScript(video: AbdullahVideo): { valid: boolean; 
 }
 
 /**
- * Build HeyGen video request for Abdullah video
+ * Build HeyGen video request for Abdullah video (legacy - uses hardcoded avatar)
+ * @deprecated Use buildAbdullahVideoRequestWithAgent instead
  */
 export function buildAbdullahVideoRequest(
   video: AbdullahVideoScript | AbdullahVideo,
@@ -305,9 +314,71 @@ export function buildAbdullahVideoRequest(
   };
 }
 
+/**
+ * Build HeyGen video request for Abdullah video with agent rotation
+ * Uses the agent selector for round-robin agent selection
+ */
+export async function buildAbdullahVideoRequestWithAgent(
+  video: AbdullahVideoScript | AbdullahVideo,
+  callbackId: string,
+  agentOptions?: AgentSelectionOptions
+): Promise<{ request: any; agentId: string }> {
+  // Select agent for this video (uses round-robin by default)
+  const agent = await selectAgent('abdullah', {
+    mode: agentOptions?.mode || 'round-robin',
+    language: 'en',
+    ...agentOptions,
+  });
+
+  // Fallback to legacy if no agent available
+  if (!agent) {
+    console.warn('⚠️  No agent available for abdullah, using legacy config');
+    const request = buildAbdullahVideoRequest(video, callbackId);
+    return { request, agentId: 'legacy' };
+  }
+
+  console.log(`   🤖 Selected agent: ${agent.name} (${agent.id})`);
+  console.log(`   🎭 Avatar: ${agent.avatar.avatarId.substring(0, 12)}...`);
+  console.log(`   🗣️  Voice: ${agent.voice.voiceId.substring(0, 12)}...`);
+  if (agent.voice.emotion) {
+    console.log(`   😊 Emotion: ${agent.voice.emotion}`);
+  }
+
+  // Build character config from agent
+  const characterConfig = buildCharacterConfig(agent, 'vertical');
+
+  // Build voice config from agent with the script
+  const voiceConfig = buildVoiceConfig(agent, video.script);
+
+  // Abdullah videos use solid color background or agent's built-in background
+  const backgroundConfig = buildBackgroundConfig(agent, '#1a1a2e'); // Dark background
+
+  // Build request
+  const videoInput: any = {
+    character: characterConfig,
+    voice: voiceConfig,
+  };
+
+  // Only add background for talking photos (not studio avatars with built-in backgrounds)
+  if (backgroundConfig) {
+    videoInput.background = backgroundConfig;
+  }
+
+  const request = {
+    video_inputs: [videoInput],
+    caption: false,
+    dimension: { width: 1080, height: 1920 },
+    test: false,
+    callback_id: callbackId,
+  };
+
+  return { request, agentId: agent.id };
+}
+
 export default {
   generateAbdullahDailyContent,
   generateSingleAbdullahScript,
   validateAbdullahScript,
   buildAbdullahVideoRequest,
+  buildAbdullahVideoRequestWithAgent,
 };

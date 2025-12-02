@@ -1,5 +1,6 @@
 // Property Video Generation Service
 // Shared logic for generating property videos (used by API route and cron)
+// NOW WITH MULTI-AGENT SUPPORT - uses agent pool for variety
 
 import { getAdminDb } from '@/lib/firebase-admin';
 import {
@@ -7,7 +8,7 @@ import {
   generatePropertyScriptWithAI,
   isEligibleForVideo,
   validatePropertyForVideo,
-  buildPropertyVideoRequest
+  buildPropertyVideoRequestWithAgent
 } from '@/lib/property-video-generator';
 import type { PropertyListing } from '@/lib/property-schema';
 
@@ -168,8 +169,14 @@ export async function generatePropertyVideo(
       throw new Error('HeyGen API key not configured');
     }
 
-    // Build HeyGen request
-    const heygenRequest = buildPropertyVideoRequest(property, script);
+    // Build HeyGen request with agent rotation
+    console.log(`🤖 Selecting agent for property video...`);
+    const { request: heygenRequest, agentId } = await buildPropertyVideoRequestWithAgent(
+      property,
+      script,
+      workflowId,
+      { language: language as 'en' | 'es' }
+    );
 
     // Add webhook URL using brand-utils for consistency
     const { getBrandWebhookUrl } = await import('@/lib/brand-utils');
@@ -183,6 +190,7 @@ export async function generatePropertyVideo(
 
     console.log(`🎥 Sending request to HeyGen...`);
     console.log(`📞 Webhook URL: ${webhookUrl}`);
+    console.log(`🤖 Agent: ${agentId}`);
 
     // Call HeyGen API with circuit breaker and timeout (same as Carz/OwnerFi)
     const { circuitBreakers, fetchWithTimeout, TIMEOUTS } = await import('@/lib/api-utils');
@@ -220,12 +228,13 @@ export async function generatePropertyVideo(
       throw new Error('HeyGen did not return video ID');
     }
 
-    // Update workflow with HeyGen video ID
+    // Update workflow with HeyGen video ID and agent used
     await (adminDb as any)
       .collection('property_videos')
       .doc(workflowId)
       .update({
         heygenVideoId: videoId,
+        agentId,
         updatedAt: Date.now()
       });
 

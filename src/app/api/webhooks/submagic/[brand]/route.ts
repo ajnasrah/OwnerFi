@@ -217,6 +217,16 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
       await sendFailureAlert(brand, workflowId, workflow, 'Submagic processing failed');
 
+      // For Gaza, log explicit alert
+      if (brand === 'gaza') {
+        try {
+          const { alertSubmagicFailed } = await import('@/lib/gaza-alerting');
+          await alertSubmagicFailed(workflowId, workflow?.articleTitle || 'Unknown', 'Submagic processing failed');
+        } catch (alertError) {
+          console.error('Failed to log Gaza alert:', alertError);
+        }
+      }
+
       return NextResponse.json({
         success: true,
         brand,

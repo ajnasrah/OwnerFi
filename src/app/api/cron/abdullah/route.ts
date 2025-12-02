@@ -1,9 +1,10 @@
 // Abdullah Personal Brand Cron
 // Runs 5 times daily - generates 1 video per run based on time of day
 // 9 AM = Mindset, 12 PM = Business, 3 PM = Money, 6 PM = Freedom, 9 PM = Story
+// NOW WITH MULTI-AGENT SUPPORT - uses agent pool for variety
 
 import { NextRequest, NextResponse } from 'next/server';
-import { generateSingleAbdullahScript, buildAbdullahVideoRequest } from '@/lib/abdullah-content-generator';
+import { generateSingleAbdullahScript, buildAbdullahVideoRequestWithAgent } from '@/lib/abdullah-content-generator';
 import { addWorkflowToQueue, updateWorkflowStatus } from '@/lib/feed-store-firestore';
 import { circuitBreakers, fetchWithTimeout, TIMEOUTS } from '@/lib/api-utils';
 import { getBrandWebhookUrl } from '@/lib/brand-utils';
@@ -99,10 +100,12 @@ export async function GET(request: NextRequest) {
       status: 'heygen_processing'
     } as any);
 
-    // Step 3: Generate HeyGen video
-    console.log('\n🎥 Step 3: Sending to HeyGen...');
+    // Step 3: Generate HeyGen video with agent rotation
+    console.log('\n🎥 Step 3: Sending to HeyGen (with agent rotation)...');
     const webhookUrl = getBrandWebhookUrl('abdullah', 'heygen');
-    const videoRequest = buildAbdullahVideoRequest(script, workflowId);
+
+    // Use new agent rotation function
+    const { request: videoRequest, agentId } = await buildAbdullahVideoRequestWithAgent(script, workflowId);
 
     const fullRequest = {
       ...videoRequest,
@@ -111,6 +114,7 @@ export async function GET(request: NextRequest) {
     };
 
     console.log(`   Webhook: ${webhookUrl}`);
+    console.log(`   Agent: ${agentId}`);
 
     const response = await circuitBreakers.heygen.execute(async () => {
       return await fetchWithTimeout(
@@ -151,9 +155,10 @@ export async function GET(request: NextRequest) {
     const heygenVideoId = data.data.video_id;
     console.log(`✅ HeyGen video ID: ${heygenVideoId}`);
 
-    // Update workflow with HeyGen video ID
+    // Update workflow with HeyGen video ID and agent used
     await updateWorkflowStatus(workflowId, 'abdullah', {
-      heygenVideoId
+      heygenVideoId,
+      agentId
     } as any);
 
     const duration = Date.now() - startTime;

@@ -1,5 +1,6 @@
 // Property Video Generation Service (New Simplified Version)
 // Uses single-collection workflow system
+// NOW WITH MULTI-AGENT SUPPORT - uses agent pool for variety
 
 import { getAdminDb } from '@/lib/firebase-admin';
 import {
@@ -7,7 +8,7 @@ import {
   generatePropertyScriptWithAI,
   isEligibleForVideo,
   validatePropertyForVideo,
-  buildPropertyVideoRequest
+  buildPropertyVideoRequestWithAgent
 } from '@/lib/property-video-generator';
 import { updatePropertyWorkflow } from '@/lib/property-workflow';
 import type { PropertyListing } from '@/lib/property-schema';
@@ -172,8 +173,14 @@ export async function generatePropertyVideoNew(
       throw new Error('HeyGen API key not configured');
     }
 
-    // Build HeyGen request
-    const heygenRequest = buildPropertyVideoRequest(property, script);
+    // Build HeyGen request with agent rotation
+    console.log(`🤖 Selecting agent for property video...`);
+    const { request: heygenRequest, agentId } = await buildPropertyVideoRequestWithAgent(
+      property,
+      script,
+      workflowId,
+      { language: language as 'en' | 'es' }
+    );
 
     // Add webhook URL (use property-spanish brand for Spanish videos)
     const { getBrandWebhookUrl } = await import('@/lib/brand-utils');
@@ -188,6 +195,7 @@ export async function generatePropertyVideoNew(
 
     console.log(`🎥 Sending request to HeyGen...`);
     console.log(`📞 Webhook URL: ${webhookUrl}`);
+    console.log(`🤖 Agent: ${agentId}`);
 
     // Call HeyGen API with circuit breaker
     const { circuitBreakers, fetchWithTimeout, TIMEOUTS } = await import('@/lib/api-utils');
@@ -225,9 +233,10 @@ export async function generatePropertyVideoNew(
       throw new Error('HeyGen did not return video ID');
     }
 
-    // Update workflow with HeyGen video ID
+    // Update workflow with HeyGen video ID and agent used
     await updatePropertyWorkflow(workflowId, {
-      heygenVideoId: videoId
+      heygenVideoId: videoId,
+      agentId
     });
 
     console.log(`✅ Property video generation started!`);

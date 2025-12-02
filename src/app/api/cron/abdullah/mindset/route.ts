@@ -77,15 +77,16 @@ export async function GET(request: NextRequest) {
     console.log(`✅ Scheduled to post at: ${postTime.toLocaleString('en-US', { timeZone: 'America/Chicago' })} CST`);
     console.log();
 
-    // 3. Build HeyGen request
-    console.log('Step 3: Preparing HeyGen video request...');
-    const { buildAbdullahVideoRequest } = await import('@/lib/abdullah-content-generator');
+    // 3. Build HeyGen request with agent rotation
+    console.log('Step 3: Preparing HeyGen video request (with agent rotation)...');
+    const { buildAbdullahVideoRequestWithAgent } = await import('@/lib/abdullah-content-generator');
     const { getBrandWebhookUrl } = await import('@/lib/brand-utils');
 
-    const videoRequest = buildAbdullahVideoRequest(script, workflow.id);
+    const { request: videoRequest, agentId } = await buildAbdullahVideoRequestWithAgent(script, workflow.id);
     const webhookUrl = getBrandWebhookUrl('abdullah', 'heygen');
 
     console.log(`   Webhook URL: ${webhookUrl}`);
+    console.log(`   Agent: ${agentId}`);
 
     // 4. Send to HeyGen
     console.log('Step 4: Sending to HeyGen API...');
@@ -119,10 +120,11 @@ export async function GET(request: NextRequest) {
     console.log(`✅ HeyGen video initiated: ${videoId}`);
     console.log();
 
-    // 5. Update workflow with video ID
+    // 5. Update workflow with video ID and agent
     console.log('Step 5: Updating workflow with HeyGen video ID...');
     await updateWorkflowStatus(workflow.id, 'abdullah', {
-      heygenVideoId: videoId
+      heygenVideoId: videoId,
+      agentId
     } as any);
 
     console.log(`✅ Workflow updated`);

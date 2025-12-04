@@ -210,7 +210,7 @@ export async function POST(request: NextRequest) {
     const agent = await selectAgent(brand as any, {
       mode: 'round-robin',
       language: 'en',
-      requireBuiltInBackground: true, // Prefer avatars with built-in backgrounds
+      // Don't require built-in background - we add background for talking photos via buildBackgroundConfig
     });
 
     // Build HeyGen request with webhook URL

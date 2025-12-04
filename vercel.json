@@ -87,6 +87,9 @@
     }
   ],
   "functions": {
+    "src/app/api/**/*.ts": {
+      "maxDuration": 30
+    },
     "src/app/api/cron/process-scraper-queue/route.ts": {
       "maxDuration": 300
     },
@@ -167,9 +170,6 @@
     },
     "src/app/api/webhooks/heygen/[brand]/route.ts": {
       "maxDuration": 60
-    },
-    "src/app/api/**/*.ts": {
-      "maxDuration": 30
     }
   },
   "headers": [

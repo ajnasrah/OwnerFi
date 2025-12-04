@@ -119,33 +119,50 @@ export async function createVideoProcessingTask(
 
 /**
  * Fallback mechanism when Cloud Tasks is not available
- * Uses the existing fetch-based approach but with better error handling
+ * Actually processes the video inline instead of fire-and-forget
  */
 async function fallbackToDirectFetch(payload: TaskPayload): Promise<{ taskName: string; scheduleTime: Date }> {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ||
-                  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
+  console.log(`⚠️  Cloud Tasks unavailable - processing video inline for ${payload.brand}/${payload.workflowId}`);
 
-  // CRITICAL FIX: Use correct worker endpoint path
-  const workerUrl = `${baseUrl}/api/workers/process-video`;
-  const secret = process.env.CLOUD_TASKS_SECRET || process.env.CRON_SECRET;
+  // Import and run video processing directly instead of fire-and-forget fetch
+  try {
+    const { processVideoForWorkflow } = await import('./video-processing');
 
-  console.log(`⚠️  Using fallback fetch to: ${workerUrl}`);
+    // Run in background but don't block webhook response
+    // Use setTimeout to allow webhook to respond first
+    setTimeout(async () => {
+      try {
+        console.log(`🎬 [INLINE] Starting video processing for ${payload.workflowId}`);
+        await processVideoForWorkflow(payload.brand, payload.workflowId, payload.videoUrl);
+        console.log(`✅ [INLINE] Video processing completed for ${payload.workflowId}`);
+      } catch (error) {
+        console.error(`❌ [INLINE] Video processing failed for ${payload.workflowId}:`, error);
+      }
+    }, 100);
 
-  // Don't await - fire and forget
-  fetch(workerUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Cloud-Tasks-Worker': secret || '',
-    },
-    body: JSON.stringify(payload),
-  }).catch((err) => {
-    console.error(`❌ Fallback fetch failed:`, err);
-    console.error(`   This workflow will be picked up by the cron failsafe`);
-  });
+  } catch (importError) {
+    console.error(`❌ Failed to import video-processing module:`, importError);
+
+    // Ultimate fallback - just do a fetch
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ||
+                    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
+    const workerUrl = `${baseUrl}/api/workers/process-video`;
+    const secret = process.env.CLOUD_TASKS_SECRET || process.env.CRON_SECRET;
+
+    fetch(workerUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Cloud-Tasks-Worker': secret || '',
+      },
+      body: JSON.stringify(payload),
+    }).catch((err) => {
+      console.error(`❌ Fallback fetch also failed:`, err);
+    });
+  }
 
   return {
-    taskName: 'fallback-fetch',
+    taskName: 'inline-processing',
     scheduleTime: new Date(),
   };
 }

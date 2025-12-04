@@ -136,7 +136,7 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
       emotion: 'Excited', // Use excited emotion for engaging content
     },
     voiceLanguage: 'en',
-    brands: ['ownerfi', 'benefit', 'property', 'abdullah'],
+    brands: ['ownerfi', 'carz', 'vassdistro', 'benefit', 'property', 'abdullah'],
     isActive: true,
     isPrimary: true,
     previewImageUrl: 'https://files2.heygen.ai/avatar/v3/d33fe3abc2914faa88309c3bdb9f47f4/half/2.2/raw_preview_image.webp',
@@ -158,7 +158,7 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
       emotion: 'Excited', // Changed to Excited for engaging content
     },
     voiceLanguage: 'en',
-    brands: ['ownerfi', 'benefit', 'property', 'abdullah'],
+    brands: ['ownerfi', 'carz', 'vassdistro', 'benefit', 'property', 'abdullah'],
     isActive: true,
     isPrimary: false,
     previewImageUrl: 'https://files2.heygen.ai/avatar/v3/8988e02d16544a4286305603244310fc/full/2.2/preview_target.webp',
@@ -184,7 +184,7 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
       emotion: 'Excited',
     },
     voiceLanguage: 'en',
-    brands: ['ownerfi', 'benefit', 'property'],
+    brands: ['ownerfi', 'carz', 'vassdistro', 'benefit', 'property'],
     isActive: true,
     previewImageUrl: 'https://files2.heygen.ai/avatar/v3/17ad4b824e5a47e8b4f61e6a9cd346e7_62180/preview_target.webp',
   },
@@ -205,7 +205,7 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
       emotion: 'Excited', // Changed to Excited for engaging content
     },
     voiceLanguage: 'en',
-    brands: ['ownerfi', 'benefit', 'property'],
+    brands: ['ownerfi', 'carz', 'vassdistro', 'benefit', 'property'],
     isActive: true,
     previewImageUrl: 'https://files2.heygen.ai/avatar/v3/3e3d8f2231e44f73af86ff2f68b7649a_14947/preview_talk_4.webp',
   },
@@ -230,7 +230,7 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
       emotion: 'Excited',
     },
     voiceLanguage: 'en',
-    brands: ['ownerfi', 'benefit', 'property'],
+    brands: ['ownerfi', 'carz', 'vassdistro', 'benefit', 'property'],
     isActive: true,
     previewImageUrl: 'https://files2.heygen.ai/avatar/v3/1ad51ab9fee24ae88af067206e14a1d8_44250/preview_target.webp',
   },
@@ -251,7 +251,7 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
       emotion: 'Excited', // Changed to Excited for engaging content
     },
     voiceLanguage: 'en',
-    brands: ['ownerfi', 'benefit', 'property'],
+    brands: ['ownerfi', 'carz', 'vassdistro', 'benefit', 'property'],
     isActive: true,
     previewImageUrl: 'https://files2.heygen.ai/avatar/v3/c3d1baaebbe84752b7a473373c6cd385_42780/preview_target.webp',
   },

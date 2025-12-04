@@ -206,9 +206,8 @@ export async function POST(request: NextRequest) {
     // This prevents workflows from being stuck in heygen_processing without a video ID
 
     // Select agent for this video using round-robin rotation
-    // Maps brand to agent brand (carz/vassdistro -> ownerfi for shared agent pool)
-    const agentBrand = brand === 'vassdistro' ? 'ownerfi' : brand;
-    const agent = await selectAgent(agentBrand as any, {
+    // All article brands (carz, ownerfi, vassdistro) share the same agent pool
+    const agent = await selectAgent(brand as any, {
       mode: 'round-robin',
       language: 'en',
       requireBuiltInBackground: true, // Prefer avatars with built-in backgrounds

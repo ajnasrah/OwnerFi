@@ -54,17 +54,17 @@ export class PodcastScheduler {
    */
   async loadStateFromFirestore(): Promise<void> {
     try {
-      const { db } = await import('@/lib/firebase');
-      const { doc, getDoc } = await import('firebase/firestore');
+      const { getAdminDb } = await import('../../src/lib/firebase-admin');
+      const db = await getAdminDb();
 
       if (!db) {
-        console.warn('Firebase not initialized, using default state');
+        console.warn('Firebase Admin not initialized, using default state');
         return;
       }
 
-      const stateDoc = await getDoc(doc(db, 'podcast_scheduler', 'state'));
+      const stateDoc = await db.collection('podcast_scheduler').doc('state').get();
 
-      if (stateDoc.exists()) {
+      if (stateDoc.exists) {
         this.state = stateDoc.data() as SchedulerState;
       }
     } catch (error) {
@@ -78,15 +78,15 @@ export class PodcastScheduler {
    */
   private async saveStateToFirestore(): Promise<void> {
     try {
-      const { db } = await import('@/lib/firebase');
-      const { doc, setDoc } = await import('firebase/firestore');
+      const { getAdminDb } = await import('../../src/lib/firebase-admin');
+      const db = await getAdminDb();
 
       if (!db) {
-        console.warn('Firebase not initialized, cannot save state');
+        console.warn('Firebase Admin not initialized, cannot save state');
         return;
       }
 
-      await setDoc(doc(db, 'podcast_scheduler', 'state'), this.state);
+      await db.collection('podcast_scheduler').doc('state').set(this.state);
     } catch (error) {
       console.error('Error saving scheduler state to Firestore:', error);
     }

@@ -39,8 +39,10 @@ export async function GET(request: NextRequest) {
     }
 
     // Import podcast generation libraries
-    const { PodcastScheduler } = await import('../../../../../podcast/lib/podcast-scheduler');
-    const ScriptGenerator = (await import('../../../../../podcast/lib/script-generator')).default;
+    const podcastSchedulerModule = await import('../../../../../podcast/lib/podcast-scheduler');
+    const PodcastScheduler = podcastSchedulerModule.default?.PodcastScheduler || podcastSchedulerModule.PodcastScheduler;
+    const scriptGeneratorModule = await import('../../../../../podcast/lib/script-generator');
+    const ScriptGenerator = scriptGeneratorModule.default?.ScriptGenerator || scriptGeneratorModule.default || scriptGeneratorModule.ScriptGenerator;
     const { addPodcastWorkflow, updatePodcastWorkflow } = await import('@/lib/feed-store-firestore');
 
     // Check if we should generate an episode (skip check if forced)

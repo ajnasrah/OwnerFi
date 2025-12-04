@@ -1,0 +1,56 @@
+{
+  "podcast": {
+    "title": "Expert Insights with Abdullah",
+    "description": "Weekly educational conversations with industry experts",
+    "category": "Education",
+    "language": "en",
+    "target_audience": "adults",
+    "content_style": "informational_educational"
+  },
+  "schedule": {
+    "frequency": "weekly",
+    "day_of_week": "monday",
+    "time": "09:00",
+    "timezone": "America/New_York",
+    "enabled": true
+  },
+  "generation": {
+    "questions_per_episode": 5,
+    "answer_length": "medium",
+    "question_length": "short",
+    "conversational_style": "professional_friendly",
+    "use_follow_up_questions": false
+  },
+  "video": {
+    "format": "vertical",
+    "width": 1080,
+    "height": 1920,
+    "quality": "high",
+    "transitions": "smooth",
+    "scene_duration_seconds": 30
+  },
+  "captions": {
+    "enabled": true,
+    "provider": "submagic",
+    "template": "Hormozi 2",
+    "language": "en",
+    "split_clips": true
+  },
+  "publishing": {
+    "auto_publish": true,
+    "platforms": ["youtube"],
+    "youtube": {
+      "title_format": "{guest_title} Answers Top 5 Questions | Expert Insights",
+      "description_template": "In this episode, {guest_name} ({guest_title}) shares expert insights on {topic}.\n\nTopics covered:\n{topics_list}\n\nSubscribe for weekly expert interviews!",
+      "tags": ["education", "expert interview", "q&a", "informational"],
+      "category": "22",
+      "privacy_status": "public",
+      "made_for_kids": false
+    }
+  },
+  "guest_rotation": {
+    "mode": "random",
+    "avoid_repeat_within_episodes": 4,
+    "prioritize_unused": true
+  }
+}

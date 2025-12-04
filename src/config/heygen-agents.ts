@@ -89,10 +89,10 @@ export interface HeyGenAgent {
 export const SCALE_PRESETS = {
   // For vertical social media videos (9:16)
   vertical: {
-    talkingPhoto: 1.4,      // Your current setting - works well
-    talkingPhotoLarge: 1.5, // More zoomed in
-    upperBody: 1.3,
-    fullBody: 0.9,
+    talkingPhoto: 2.0,      // Larger scale for better visibility
+    talkingPhotoLarge: 2.0, // Larger scale for better visibility
+    upperBody: 2.0,         // Larger scale for better visibility
+    fullBody: 2.0,          // Larger scale for better visibility
   },
   // For horizontal videos (16:9)
   horizontal: {

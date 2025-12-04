@@ -248,7 +248,7 @@ interface BrandAnalytics {
 export default function SocialMediaDashboard() {
   const { data: session, status: authStatus } = useSession();
   const router = useRouter();
-  const [activeSubTab, setActiveSubTab] = useState<'carz' | 'ownerfi' | 'vassdistro' | 'ownerfi-benefits' | 'ownerfi-properties' | 'ownerfi-properties-spanish' | 'abdullah' | 'abdullah-podcast' | 'analytics' | 'youtube-analytics'>('carz');
+  const [activeSubTab, setActiveSubTab] = useState<'carz' | 'ownerfi' | 'vassdistro' | 'ownerfi-benefits' | 'ownerfi-properties' | 'ownerfi-properties-spanish' | 'abdullah' | 'abdullah-podcast' | 'gaza' | 'analytics' | 'youtube-analytics'>('carz');
   const [status, setStatus] = useState<SchedulerStatus | null>(null);
   const [workflows, setWorkflows] = useState<WorkflowLogs | null>(null);
   const [podcastWorkflows, setPodcastWorkflows] = useState<PodcastWorkflowLogs | null>(null);
@@ -897,6 +897,7 @@ ${script.caption}`;
             { key: 'ownerfi', label: 'OwnerFi', icon: '🏠', hasSubtabs: true },
             { key: 'vassdistro', label: 'Vass Distro', icon: '💨' },
             { key: 'abdullah', label: 'Abdullah', icon: '👤', hasSubtabs: true },
+            { key: 'gaza', label: 'Gaza', icon: '🇵🇸' },
             { key: 'analytics', label: 'Analytics', icon: '📊' },
             { key: 'youtube-analytics', label: 'YouTube', icon: '📺' }
           ].map((tab) => (
@@ -1066,7 +1067,7 @@ ${script.caption}`;
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-slate-50 rounded-lg p-4">
+                <div className="bg-slate-700/50 rounded-lg p-4">
                   <div className="text-sm text-slate-400">Daily Limit</div>
                   <div className="text-2xl font-bold text-white mt-1">
                     {status?.scheduler?.config?.maxVideosPerDay?.carz || 5}
@@ -1074,7 +1075,7 @@ ${script.caption}`;
                   <div className="text-xs text-slate-500 mt-1">videos/day</div>
                 </div>
 
-                <div className="bg-slate-50 rounded-lg p-4">
+                <div className="bg-slate-700/50 rounded-lg p-4">
                   <div className="text-sm text-slate-400">Available Articles</div>
                   <div className="text-2xl font-bold text-white mt-1">
                     {status?.stats?.carz?.unprocessedArticles || 0}
@@ -1082,7 +1083,7 @@ ${script.caption}`;
                   <div className="text-xs text-slate-500 mt-1">ready to process</div>
                 </div>
 
-                <div className="bg-slate-50 rounded-lg p-4">
+                <div className="bg-slate-700/50 rounded-lg p-4">
                   <div className="text-sm text-slate-400">In Queue</div>
                   <div className="text-2xl font-bold text-white mt-1">
                     {(status?.stats?.carz?.queuePending || 0) + (status?.stats?.carz?.queueProcessing || 0)}
@@ -1092,7 +1093,7 @@ ${script.caption}`;
                   </div>
                 </div>
 
-                <div className="bg-slate-50 rounded-lg p-4">
+                <div className="bg-slate-700/50 rounded-lg p-4">
                   <div className="text-sm text-slate-400">RSS Feeds</div>
                   <div className="text-2xl font-bold text-white mt-1">
                     {status?.feeds?.carz || 0}
@@ -1118,7 +1119,7 @@ ${script.caption}`;
                   <h4 className="text-sm font-semibold text-white">Workflows</h4>
                   <button
                     onClick={() => setShowHistory(!showHistory)}
-                    className="text-xs px-3 py-1 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-300 font-medium transition-colors"
+                    className="text-xs px-3 py-1 rounded-full bg-slate-600 hover:bg-slate-500 text-slate-200 font-medium transition-colors"
                   >
                     {showHistory ? 'Active Only' : 'Show History'}
                   </button>
@@ -1126,7 +1127,7 @@ ${script.caption}`;
                 {workflows && workflows.workflows && workflows.workflows.carz && workflows.workflows.carz.length > 0 ? (
                   <div className="space-y-3">
                     {workflows.workflows.carz.map((workflow) => (
-                      <div key={workflow.id} className="bg-white border border-slate-200 rounded-lg p-4 hover:border-indigo-300 transition-colors">
+                      <div key={workflow.id} className="bg-slate-700 border border-slate-600 rounded-lg p-4 hover:border-indigo-400 transition-colors">
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex-1">
                             <div className="font-medium text-white text-sm mb-1" dangerouslySetInnerHTML={{ __html: workflow.articleTitle }} />
@@ -1196,7 +1197,7 @@ ${script.caption}`;
                     ))}
                   </div>
                 ) : (
-                  <div className="bg-slate-50 rounded-lg p-8 text-center border border-slate-200">
+                  <div className="bg-slate-700/50 rounded-lg p-8 text-center border border-slate-600">
                     <div className="text-slate-500 text-sm font-medium">No active workflows</div>
                     <div className="text-xs text-slate-400 mt-1">Videos will appear here when being processed</div>
                   </div>
@@ -1221,7 +1222,7 @@ ${script.caption}`;
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-slate-50 rounded-lg p-4">
+                <div className="bg-slate-700/50 rounded-lg p-4">
                   <div className="text-sm text-slate-400">Daily Limit</div>
                   <div className="text-2xl font-bold text-white mt-1">
                     {status?.scheduler?.config?.maxVideosPerDay?.ownerfi || 5}
@@ -1229,7 +1230,7 @@ ${script.caption}`;
                   <div className="text-xs text-slate-500 mt-1">videos/day</div>
                 </div>
 
-                <div className="bg-slate-50 rounded-lg p-4">
+                <div className="bg-slate-700/50 rounded-lg p-4">
                   <div className="text-sm text-slate-400">Available Articles</div>
                   <div className="text-2xl font-bold text-white mt-1">
                     {status?.stats?.ownerfi?.unprocessedArticles || 0}
@@ -1237,7 +1238,7 @@ ${script.caption}`;
                   <div className="text-xs text-slate-500 mt-1">ready to process</div>
                 </div>
 
-                <div className="bg-slate-50 rounded-lg p-4">
+                <div className="bg-slate-700/50 rounded-lg p-4">
                   <div className="text-sm text-slate-400">In Queue</div>
                   <div className="text-2xl font-bold text-white mt-1">
                     {(status?.stats?.ownerfi?.queuePending || 0) + (status?.stats?.ownerfi?.queueProcessing || 0)}
@@ -1247,7 +1248,7 @@ ${script.caption}`;
                   </div>
                 </div>
 
-                <div className="bg-slate-50 rounded-lg p-4">
+                <div className="bg-slate-700/50 rounded-lg p-4">
                   <div className="text-sm text-slate-400">RSS Feeds</div>
                   <div className="text-2xl font-bold text-white mt-1">
                     {status?.feeds?.ownerfi || 0}
@@ -1273,7 +1274,7 @@ ${script.caption}`;
                   <h4 className="text-sm font-semibold text-white">Workflows</h4>
                   <button
                     onClick={() => setShowHistory(!showHistory)}
-                    className="text-xs px-3 py-1 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-300 font-medium transition-colors"
+                    className="text-xs px-3 py-1 rounded-full bg-slate-600 hover:bg-slate-500 text-slate-200 font-medium transition-colors"
                   >
                     {showHistory ? 'Active Only' : 'Show History'}
                   </button>
@@ -1281,7 +1282,7 @@ ${script.caption}`;
                 {workflows && workflows.workflows && workflows.workflows.ownerfi && workflows.workflows.ownerfi.length > 0 ? (
                   <div className="space-y-3">
                     {workflows.workflows.ownerfi.map((workflow) => (
-                      <div key={workflow.id} className="bg-white border border-slate-200 rounded-lg p-4 hover:border-indigo-300 transition-colors">
+                      <div key={workflow.id} className="bg-slate-700 border border-slate-600 rounded-lg p-4 hover:border-indigo-400 transition-colors">
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex-1">
                             <div className="font-medium text-white text-sm mb-1" dangerouslySetInnerHTML={{ __html: workflow.articleTitle }} />
@@ -1351,7 +1352,7 @@ ${script.caption}`;
                     ))}
                   </div>
                 ) : (
-                  <div className="bg-slate-50 rounded-lg p-8 text-center border border-slate-200">
+                  <div className="bg-slate-700/50 rounded-lg p-8 text-center border border-slate-600">
                     <div className="text-slate-500 text-sm font-medium">No active workflows</div>
                     <div className="text-xs text-slate-400 mt-1">Videos will appear here when being processed</div>
                   </div>
@@ -1376,7 +1377,7 @@ ${script.caption}`;
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-slate-50 rounded-lg p-4">
+                <div className="bg-slate-700/50 rounded-lg p-4">
                   <div className="text-sm text-slate-400">Daily Limit</div>
                   <div className="text-2xl font-bold text-white mt-1">
                     {status?.scheduler?.config?.maxVideosPerDay?.vassdistro || 1}
@@ -1384,7 +1385,7 @@ ${script.caption}`;
                   <div className="text-xs text-slate-500 mt-1">videos/day</div>
                 </div>
 
-                <div className="bg-slate-50 rounded-lg p-4">
+                <div className="bg-slate-700/50 rounded-lg p-4">
                   <div className="text-sm text-slate-400">Available Articles</div>
                   <div className="text-2xl font-bold text-white mt-1">
                     {status?.stats?.vassdistro?.unprocessedArticles || 0}
@@ -1392,7 +1393,7 @@ ${script.caption}`;
                   <div className="text-xs text-slate-500 mt-1">ready to process</div>
                 </div>
 
-                <div className="bg-slate-50 rounded-lg p-4">
+                <div className="bg-slate-700/50 rounded-lg p-4">
                   <div className="text-sm text-slate-400">In Queue</div>
                   <div className="text-2xl font-bold text-white mt-1">
                     {(status?.stats?.vassdistro?.queuePending || 0) + (status?.stats?.vassdistro?.queueProcessing || 0)}
@@ -1402,7 +1403,7 @@ ${script.caption}`;
                   </div>
                 </div>
 
-                <div className="bg-slate-50 rounded-lg p-4">
+                <div className="bg-slate-700/50 rounded-lg p-4">
                   <div className="text-sm text-slate-400">RSS Feeds</div>
                   <div className="text-2xl font-bold text-white mt-1">
                     {status?.feeds?.vassdistro || 0}
@@ -1428,7 +1429,7 @@ ${script.caption}`;
                   <h4 className="text-sm font-semibold text-white">Workflows</h4>
                   <button
                     onClick={() => setShowHistory(!showHistory)}
-                    className="text-xs px-3 py-1 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-300 font-medium transition-colors"
+                    className="text-xs px-3 py-1 rounded-full bg-slate-600 hover:bg-slate-500 text-slate-200 font-medium transition-colors"
                   >
                     {showHistory ? 'Active Only' : 'Show History'}
                   </button>
@@ -1436,7 +1437,7 @@ ${script.caption}`;
                 {workflows && workflows.workflows && workflows.workflows.vassdistro && workflows.workflows.vassdistro.length > 0 ? (
                   <div className="space-y-3">
                     {workflows.workflows.vassdistro.map((workflow) => (
-                      <div key={workflow.id} className="bg-white border border-slate-200 rounded-lg p-4 hover:border-indigo-300 transition-colors">
+                      <div key={workflow.id} className="bg-slate-700 border border-slate-600 rounded-lg p-4 hover:border-indigo-400 transition-colors">
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex-1">
                             <div className="font-medium text-white text-sm mb-1" dangerouslySetInnerHTML={{ __html: workflow.articleTitle }} />
@@ -1506,7 +1507,7 @@ ${script.caption}`;
                     ))}
                   </div>
                 ) : (
-                  <div className="bg-slate-50 rounded-lg p-8 text-center border border-slate-200">
+                  <div className="bg-slate-700/50 rounded-lg p-8 text-center border border-slate-600">
                     <div className="text-slate-500 text-sm font-medium">No active workflows</div>
                     <div className="text-xs text-slate-400 mt-1">Videos will appear here when being processed</div>
                   </div>
@@ -1531,7 +1532,7 @@ ${script.caption}`;
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-slate-50 rounded-lg p-4">
+                <div className="bg-slate-700/50 rounded-lg p-4">
                   <div className="text-sm text-slate-400">Post Schedule</div>
                   <div className="text-lg font-bold text-white mt-1">
                     Smart Slots
@@ -1539,7 +1540,7 @@ ${script.caption}`;
                   <div className="text-xs text-slate-500 mt-1">9AM, 12PM, 3PM, 6PM, 9PM CDT</div>
                 </div>
 
-                <div className="bg-slate-50 rounded-lg p-4">
+                <div className="bg-slate-700/50 rounded-lg p-4">
                   <div className="text-sm text-slate-400">Daily Limit</div>
                   <div className="text-lg font-bold text-white mt-1">
                     3 episodes
@@ -1547,7 +1548,7 @@ ${script.caption}`;
                   <div className="text-xs text-slate-500 mt-1">per day</div>
                 </div>
 
-                <div className="bg-slate-50 rounded-lg p-4">
+                <div className="bg-slate-700/50 rounded-lg p-4">
                   <div className="text-sm text-slate-400">Duration</div>
                   <div className="text-lg font-bold text-white mt-1">
                     ~3-4 min
@@ -1555,7 +1556,7 @@ ${script.caption}`;
                   <div className="text-xs text-slate-500 mt-1">per episode</div>
                 </div>
 
-                <div className="bg-slate-50 rounded-lg p-4">
+                <div className="bg-slate-700/50 rounded-lg p-4">
                   <div className="text-sm text-slate-400">Status</div>
                   <div className="text-lg font-bold text-green-600 mt-1">
                     Ready
@@ -1577,7 +1578,7 @@ ${script.caption}`;
 
               <div className="mt-6 pt-6 border-t border-slate-200">
                 <h4 className="text-sm font-semibold text-white mb-3">Episode Format</h4>
-                <div className="bg-slate-50 rounded-lg p-4">
+                <div className="bg-slate-700/50 rounded-lg p-4">
                   <ul className="text-sm text-slate-300 space-y-2">
                     <li>• <strong>3 episodes daily</strong> - Posted at optimal engagement times</li>
                     <li>• Host + AI Guest (HeyGen avatars)</li>
@@ -1593,7 +1594,7 @@ ${script.caption}`;
                 <h4 className="text-sm font-semibold text-white mb-3">Active Guest Profiles ({guestProfiles.length})</h4>
                 <div className="space-y-3">
                   {guestProfiles.map((profile) => (
-                    <div key={profile.id} className="bg-white border border-slate-200 rounded-lg p-4">
+                    <div key={profile.id} className="bg-slate-700 border border-slate-600 rounded-lg p-4">
                       {editingProfile === profile.id ? (
                         <div className="space-y-3">
                           <div className="grid grid-cols-2 gap-3">
@@ -1684,7 +1685,7 @@ ${script.caption}`;
                     </div>
                   ))}
                   {guestProfiles.length === 0 && (
-                    <div className="bg-slate-50 rounded-lg p-8 text-center border border-slate-200">
+                    <div className="bg-slate-700/50 rounded-lg p-8 text-center border border-slate-600">
                       <div className="text-slate-500 text-sm font-medium">No guest profiles loaded</div>
                       <div className="text-xs text-slate-400 mt-1">Check Firestore configuration</div>
                     </div>
@@ -1698,7 +1699,7 @@ ${script.caption}`;
                   <h4 className="text-sm font-semibold text-white">Workflows</h4>
                   <button
                     onClick={() => setShowHistory(!showHistory)}
-                    className="text-xs px-3 py-1 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-300 font-medium transition-colors"
+                    className="text-xs px-3 py-1 rounded-full bg-slate-600 hover:bg-slate-500 text-slate-200 font-medium transition-colors"
                   >
                     {showHistory ? 'Active Only' : 'Show History'}
                   </button>
@@ -1706,7 +1707,7 @@ ${script.caption}`;
                 {podcastWorkflows && podcastWorkflows.workflows && podcastWorkflows.workflows.length > 0 ? (
                   <div className="space-y-3">
                     {podcastWorkflows.workflows.map((workflow) => (
-                      <div key={workflow.id} className="bg-white border border-slate-200 rounded-lg p-4 hover:border-indigo-300 transition-colors">
+                      <div key={workflow.id} className="bg-slate-700 border border-slate-600 rounded-lg p-4 hover:border-indigo-400 transition-colors">
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex-1">
                             <div className="font-medium text-white text-sm mb-1">
@@ -1777,7 +1778,7 @@ ${script.caption}`;
                     ))}
                   </div>
                 ) : (
-                  <div className="bg-slate-50 rounded-lg p-8 text-center border border-slate-200">
+                  <div className="bg-slate-700/50 rounded-lg p-8 text-center border border-slate-600">
                     <div className="text-slate-500 text-sm font-medium">No active workflows</div>
                     <div className="text-xs text-slate-400 mt-1">Episodes will appear here when being generated</div>
                   </div>
@@ -1802,7 +1803,7 @@ ${script.caption}`;
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-slate-50 rounded-lg p-4">
+                <div className="bg-slate-700/50 rounded-lg p-4">
                   <div className="text-sm text-slate-400">Schedule</div>
                   <div className="text-lg font-bold text-white mt-1">
                     2x Daily
@@ -1810,7 +1811,7 @@ ${script.caption}`;
                   <div className="text-xs text-slate-500 mt-1">6 AM, 2 PM CDT</div>
                 </div>
 
-                <div className="bg-slate-50 rounded-lg p-4">
+                <div className="bg-slate-700/50 rounded-lg p-4">
                   <div className="text-sm text-slate-400">Daily Target</div>
                   <div className="text-lg font-bold text-white mt-1">
                     2 videos
@@ -1818,7 +1819,7 @@ ${script.caption}`;
                   <div className="text-xs text-slate-500 mt-1">1 seller + 1 buyer</div>
                 </div>
 
-                <div className="bg-slate-50 rounded-lg p-4">
+                <div className="bg-slate-700/50 rounded-lg p-4">
                   <div className="text-sm text-slate-400">Content Library</div>
                   <div className="text-lg font-bold text-white mt-1">
                     20 benefits
@@ -1826,7 +1827,7 @@ ${script.caption}`;
                   <div className="text-xs text-slate-500 mt-1">10 seller + 10 buyer</div>
                 </div>
 
-                <div className="bg-slate-50 rounded-lg p-4">
+                <div className="bg-slate-700/50 rounded-lg p-4">
                   <div className="text-sm text-slate-400">Status</div>
                   <div className="text-lg font-bold text-green-600 mt-1">
                     Ready
@@ -1848,7 +1849,7 @@ ${script.caption}`;
 
               <div className="mt-6 pt-6 border-t border-slate-200">
                 <h4 className="text-sm font-semibold text-white mb-3">Video Format</h4>
-                <div className="bg-slate-50 rounded-lg p-4">
+                <div className="bg-slate-700/50 rounded-lg p-4">
                   <ul className="text-sm text-slate-300 space-y-2">
                     <li>• <strong>Educational format</strong> - ONE benefit per video</li>
                     <li>• Rotating audience (alternates seller/buyer)</li>
@@ -1866,7 +1867,7 @@ ${script.caption}`;
                   <h4 className="text-sm font-semibold text-white">Workflows</h4>
                   <button
                     onClick={() => setShowHistory(!showHistory)}
-                    className="text-xs px-3 py-1 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-300 font-medium transition-colors"
+                    className="text-xs px-3 py-1 rounded-full bg-slate-600 hover:bg-slate-500 text-slate-200 font-medium transition-colors"
                   >
                     {showHistory ? 'Active Only' : 'Show History'}
                   </button>
@@ -1874,7 +1875,7 @@ ${script.caption}`;
                 {benefitWorkflows && benefitWorkflows.workflows && benefitWorkflows.workflows.length > 0 ? (
                   <div className="space-y-3">
                     {benefitWorkflows.workflows.map((workflow) => (
-                      <div key={workflow.id} className="bg-white border border-slate-200 rounded-lg p-4 hover:border-indigo-300 transition-colors">
+                      <div key={workflow.id} className="bg-slate-700 border border-slate-600 rounded-lg p-4 hover:border-indigo-400 transition-colors">
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
@@ -1941,7 +1942,7 @@ ${script.caption}`;
                     ))}
                   </div>
                 ) : (
-                  <div className="bg-slate-50 rounded-lg p-8 text-center border border-slate-200">
+                  <div className="bg-slate-700/50 rounded-lg p-8 text-center border border-slate-600">
                     <div className="text-slate-500 text-sm font-medium">No active workflows</div>
                     <div className="text-xs text-slate-400 mt-1">Benefit videos will appear here when being generated</div>
                   </div>
@@ -1966,7 +1967,7 @@ ${script.caption}`;
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-slate-50 rounded-lg p-4">
+                <div className="bg-slate-700/50 rounded-lg p-4">
                   <div className="text-sm text-slate-400">Rotation Queue Size</div>
                   <div className="text-2xl font-bold text-white mt-1">
                     {propertyStats?.total || 0}
@@ -1974,7 +1975,7 @@ ${script.caption}`;
                   <div className="text-xs text-slate-500 mt-1">properties</div>
                 </div>
 
-                <div className="bg-slate-50 rounded-lg p-4">
+                <div className="bg-slate-700/50 rounded-lg p-4">
                   <div className="text-sm text-slate-400">Videos Today</div>
                   <div className="text-2xl font-bold text-white mt-1">
                     {propertyWorkflows?.workflows.filter(w => {
@@ -1985,7 +1986,7 @@ ${script.caption}`;
                   <div className="text-xs text-slate-500 mt-1">generated</div>
                 </div>
 
-                <div className="bg-slate-50 rounded-lg p-4">
+                <div className="bg-slate-700/50 rounded-lg p-4">
                   <div className="text-sm text-slate-400">Next Property</div>
                   <div className="text-sm font-bold text-white mt-1">
                     {propertyStats?.nextProperty ? (
@@ -1999,7 +2000,7 @@ ${script.caption}`;
                   </div>
                 </div>
 
-                <div className="bg-slate-50 rounded-lg p-4">
+                <div className="bg-slate-700/50 rounded-lg p-4">
                   <div className="text-sm text-slate-400">Rotation Days</div>
                   <div className="text-2xl font-bold text-white mt-1">
                     {propertyStats?.rotationDays || 0}
@@ -2021,7 +2022,7 @@ ${script.caption}`;
 
               <div className="mt-6 pt-6 border-t border-slate-200">
                 <h4 className="text-sm font-semibold text-white mb-3">Video Format</h4>
-                <div className="bg-slate-50 rounded-lg p-4">
+                <div className="bg-slate-700/50 rounded-lg p-4">
                   <ul className="text-sm text-slate-300 space-y-2">
                     <li>• <strong>Property showcase format</strong> - 15-second videos</li>
                     <li>• Rotating queue of active properties with &lt;$15k down</li>
@@ -2039,7 +2040,7 @@ ${script.caption}`;
                   <h4 className="text-sm font-semibold text-white">Workflows</h4>
                   <button
                     onClick={() => setShowHistory(!showHistory)}
-                    className="text-xs px-3 py-1 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-300 font-medium transition-colors"
+                    className="text-xs px-3 py-1 rounded-full bg-slate-600 hover:bg-slate-500 text-slate-200 font-medium transition-colors"
                   >
                     {showHistory ? 'Active Only' : 'Show History'}
                   </button>
@@ -2047,7 +2048,7 @@ ${script.caption}`;
                 {propertyWorkflows && propertyWorkflows.workflows && propertyWorkflows.workflows.length > 0 ? (
                   <div className="space-y-3">
                     {propertyWorkflows.workflows.map((workflow) => (
-                      <div key={workflow.id} className="bg-white border border-slate-200 rounded-lg p-4 hover:border-indigo-300 transition-colors">
+                      <div key={workflow.id} className="bg-slate-700 border border-slate-600 rounded-lg p-4 hover:border-indigo-400 transition-colors">
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
@@ -2115,7 +2116,7 @@ ${script.caption}`;
                     ))}
                   </div>
                 ) : (
-                  <div className="bg-slate-50 rounded-lg p-8 text-center border border-slate-200">
+                  <div className="bg-slate-700/50 rounded-lg p-8 text-center border border-slate-600">
                     <div className="text-slate-500 text-sm font-medium">No active workflows</div>
                     <div className="text-xs text-slate-400 mt-1">Property videos will appear here when being generated</div>
                   </div>
@@ -2140,7 +2141,7 @@ ${script.caption}`;
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-slate-50 rounded-lg p-4">
+                <div className="bg-slate-700/50 rounded-lg p-4">
                   <div className="text-sm text-slate-400">Rotation Queue Size</div>
                   <div className="text-2xl font-bold text-white mt-1">
                     {spanishPropertyStats?.total || 0}
@@ -2148,7 +2149,7 @@ ${script.caption}`;
                   <div className="text-xs text-slate-500 mt-1">properties</div>
                 </div>
 
-                <div className="bg-slate-50 rounded-lg p-4">
+                <div className="bg-slate-700/50 rounded-lg p-4">
                   <div className="text-sm text-slate-400">Videos Today</div>
                   <div className="text-2xl font-bold text-white mt-1">
                     {spanishPropertyWorkflows?.workflows.filter(w => {
@@ -2159,7 +2160,7 @@ ${script.caption}`;
                   <div className="text-xs text-slate-500 mt-1">generated</div>
                 </div>
 
-                <div className="bg-slate-50 rounded-lg p-4">
+                <div className="bg-slate-700/50 rounded-lg p-4">
                   <div className="text-sm text-slate-400">Next Property</div>
                   <div className="text-sm font-bold text-white mt-1">
                     {spanishPropertyStats?.nextProperty ? (
@@ -2173,7 +2174,7 @@ ${script.caption}`;
                   </div>
                 </div>
 
-                <div className="bg-slate-50 rounded-lg p-4">
+                <div className="bg-slate-700/50 rounded-lg p-4">
                   <div className="text-sm text-slate-400">Rotation Days</div>
                   <div className="text-2xl font-bold text-white mt-1">
                     {spanishPropertyStats?.rotationDays || 0}
@@ -2195,7 +2196,7 @@ ${script.caption}`;
 
               <div className="mt-6 pt-6 border-t border-slate-200">
                 <h4 className="text-sm font-semibold text-white mb-3">Video Format</h4>
-                <div className="bg-slate-50 rounded-lg p-4">
+                <div className="bg-slate-700/50 rounded-lg p-4">
                   <ul className="text-sm text-slate-300 space-y-2">
                     <li>• <strong>Property showcase format (Spanish)</strong> - 15-second videos</li>
                     <li>• Rotating queue of active properties with &lt;$15k down</li>
@@ -2213,7 +2214,7 @@ ${script.caption}`;
                   <h4 className="text-sm font-semibold text-white">Workflows</h4>
                   <button
                     onClick={() => setShowHistory(!showHistory)}
-                    className="text-xs px-3 py-1 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-300 font-medium transition-colors"
+                    className="text-xs px-3 py-1 rounded-full bg-slate-600 hover:bg-slate-500 text-slate-200 font-medium transition-colors"
                   >
                     {showHistory ? 'Active Only' : 'Show History'}
                   </button>
@@ -2221,7 +2222,7 @@ ${script.caption}`;
                 {spanishPropertyWorkflows && spanishPropertyWorkflows.workflows && spanishPropertyWorkflows.workflows.length > 0 ? (
                   <div className="space-y-3">
                     {spanishPropertyWorkflows.workflows.map((workflow) => (
-                      <div key={workflow.id} className="bg-white border border-slate-200 rounded-lg p-4 hover:border-indigo-300 transition-colors">
+                      <div key={workflow.id} className="bg-slate-700 border border-slate-600 rounded-lg p-4 hover:border-indigo-400 transition-colors">
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
@@ -2292,7 +2293,7 @@ ${script.caption}`;
                     ))}
                   </div>
                 ) : (
-                  <div className="bg-slate-50 rounded-lg p-8 text-center border border-slate-200">
+                  <div className="bg-slate-700/50 rounded-lg p-8 text-center border border-slate-600">
                     <div className="text-slate-500 text-sm font-medium">No active workflows</div>
                     <div className="text-xs text-slate-400 mt-1">Spanish property videos will appear here when being generated</div>
                   </div>
@@ -2368,7 +2369,7 @@ ${script.caption}`;
                   <h4 className="text-sm font-semibold text-white mb-3">Upcoming Videos</h4>
                   <div className="space-y-2">
                     {abdullahQueueStats.nextItems.map((item: any, index: number) => (
-                      <div key={item.id} className="flex items-center justify-between bg-slate-50 rounded-lg p-3">
+                      <div key={item.id} className="flex items-center justify-between bg-slate-700/50 rounded-lg p-3">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-full bg-purple-100 text-purple-700 font-bold flex items-center justify-center text-sm">
                             {index + 1}
@@ -2394,19 +2395,19 @@ ${script.caption}`;
 
               {/* System Info */}
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-                <div className="bg-slate-50 rounded-lg p-4">
+                <div className="bg-slate-700/50 rounded-lg p-4">
                   <div className="text-sm text-slate-400">Daily Videos</div>
                   <div className="text-2xl font-bold text-white mt-1">5</div>
                   <div className="text-xs text-slate-500 mt-1">videos/day</div>
                 </div>
 
-                <div className="bg-slate-50 rounded-lg p-4">
+                <div className="bg-slate-700/50 rounded-lg p-4">
                   <div className="text-sm text-slate-400">Content Type</div>
                   <div className="text-sm font-bold text-white mt-1">AI Generated</div>
                   <div className="text-xs text-slate-500 mt-1">queue system</div>
                 </div>
 
-                <div className="bg-slate-50 rounded-lg p-4">
+                <div className="bg-slate-700/50 rounded-lg p-4">
                   <div className="text-sm text-slate-400">Schedule</div>
                   <div className="text-sm font-bold text-white mt-1">11 AM CST</div>
                   <div className="text-xs text-slate-500 mt-1">daily scripts</div>
@@ -2441,7 +2442,7 @@ ${script.caption}`;
                   <h4 className="text-sm font-semibold text-white">Workflows</h4>
                   <button
                     onClick={() => setShowHistory(!showHistory)}
-                    className="text-xs px-3 py-1 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-300 font-medium transition-colors"
+                    className="text-xs px-3 py-1 rounded-full bg-slate-600 hover:bg-slate-500 text-slate-200 font-medium transition-colors"
                   >
                     {showHistory ? 'Active Only' : 'Show History'}
                   </button>
@@ -2449,7 +2450,7 @@ ${script.caption}`;
                 {workflows && workflows.workflows && workflows.workflows.abdullah && workflows.workflows.abdullah.length > 0 ? (
                   <div className="space-y-3">
                     {workflows.workflows.abdullah.map((workflow) => (
-                      <div key={workflow.id} className="bg-white border border-slate-200 rounded-lg p-4 hover:border-purple-300 transition-colors">
+                      <div key={workflow.id} className="bg-slate-700 border border-slate-600 rounded-lg p-4 hover:border-purple-400 transition-colors">
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex-1">
                             <div className="font-medium text-white text-sm mb-1" dangerouslySetInnerHTML={{ __html: workflow.articleTitle }} />
@@ -2514,7 +2515,7 @@ ${script.caption}`;
                     ))}
                   </div>
                 ) : (
-                  <div className="bg-slate-50 rounded-lg p-8 text-center border border-slate-200">
+                  <div className="bg-slate-700/50 rounded-lg p-8 text-center border border-slate-600">
                     <div className="text-slate-500 text-sm font-medium">No active workflows</div>
                     <div className="text-xs text-slate-400 mt-1">Videos will appear here when being processed</div>
                   </div>
@@ -2623,11 +2624,81 @@ ${script.caption}`;
                     ))}
                   </div>
                 ) : (
-                  <div className="bg-slate-50 rounded-lg p-8 text-center border border-slate-200">
+                  <div className="bg-slate-700/50 rounded-lg p-8 text-center border border-slate-600">
                     <div className="text-slate-500 text-sm font-medium">No scripts available yet</div>
                     <div className="text-xs text-slate-400 mt-1">Scripts will appear here after the next video generation</div>
                   </div>
                 )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeSubTab === 'gaza' && (
+          <div className="space-y-6">
+            <div className="bg-slate-800 rounded-xl border border-slate-700 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-white">🇵🇸 Gaza News Channel</h3>
+                <button
+                  onClick={async () => {
+                    try {
+                      const response = await fetch('/api/cron/gaza?force=true', {
+                        headers: { 'Authorization': `Bearer ${process.env.NEXT_PUBLIC_CRON_SECRET || ''}` }
+                      });
+                      const data = await response.json();
+                      alert(data.success ? `Video workflow started: ${data.workflow_id}` : `Error: ${data.error || data.message}`);
+                    } catch (e) {
+                      alert('Failed to trigger Gaza video generation');
+                    }
+                  }}
+                  className="px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-colors"
+                >
+                  Generate Video Now
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div className="bg-emerald-50 rounded-lg p-4 border border-emerald-200">
+                  <div className="text-sm text-emerald-600 font-medium">Profile ID</div>
+                  <div className="text-xs font-mono text-emerald-900 mt-1 truncate">6930ec1545584e27f626ccb6</div>
+                </div>
+                <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                  <div className="text-sm text-blue-600 font-medium">Videos/Day</div>
+                  <div className="text-2xl font-bold text-blue-900 mt-1">5</div>
+                </div>
+                <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
+                  <div className="text-sm text-purple-600 font-medium">Schedule</div>
+                  <div className="text-sm text-purple-900 mt-1">9am, 12pm, 3pm, 6pm, 9pm</div>
+                </div>
+                <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
+                  <div className="text-sm text-orange-600 font-medium">Platforms</div>
+                  <div className="text-xs text-orange-900 mt-1">IG, TikTok, YT, FB, LI, Threads, X</div>
+                </div>
+              </div>
+
+              <div className="bg-slate-700/50 rounded-lg p-4 mb-6">
+                <h4 className="text-sm font-semibold text-white mb-2">System Info</h4>
+                <div className="text-sm text-slate-300 space-y-1">
+                  <p>• <strong>Late Profile:</strong> Connected for Threads, Instagram, TikTok, Twitter, Bluesky, Facebook, LinkedIn</p>
+                  <p>• <strong>YouTube:</strong> Direct API upload (bypasses quota limits)</p>
+                  <p>• <strong>Cron:</strong> Runs via consolidated /api/cron/generate-videos</p>
+                  <p>• <strong>RSS Feeds:</strong> Stored in <code className="bg-slate-600 px-1 rounded">gaza_rss_feeds</code> collection</p>
+                  <p>• <strong>Articles:</strong> Stored in <code className="bg-slate-600 px-1 rounded">gaza_articles</code> collection</p>
+                  <p>• <strong>Workflows:</strong> Stored in <code className="bg-slate-600 px-1 rounded">gaza_workflow_queue</code> collection</p>
+                </div>
+              </div>
+
+              <div className="bg-amber-900/30 border border-amber-600/50 rounded-lg p-4">
+                <h4 className="text-sm font-semibold text-amber-400 mb-2">⚠️ Setup Required</h4>
+                <div className="text-sm text-amber-200">
+                  <p>To start generating Gaza news videos:</p>
+                  <ol className="list-decimal ml-4 mt-2 space-y-1">
+                    <li>Connect social accounts in Get Late dashboard (profile: 6930ec1545584e27f626ccb6)</li>
+                    <li>Add RSS feeds to <code className="bg-amber-800/50 px-1 rounded">gaza_rss_feeds</code> Firestore collection</li>
+                    <li>Run /api/cron/fetch-rss to populate articles</li>
+                    <li>Run /api/cron/rate-articles to score articles</li>
+                  </ol>
+                </div>
               </div>
             </div>
           </div>
@@ -2666,7 +2737,7 @@ ${script.caption}`;
 
                   {/* Key Metrics */}
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="bg-slate-50 rounded-lg p-4">
+                    <div className="bg-slate-700/50 rounded-lg p-4">
                       <div className="text-sm text-slate-400">Total Videos</div>
                       <div className="text-2xl font-bold text-white mt-1">
                         {analytics.keyMetrics.totalVideosGenerated}
@@ -2674,7 +2745,7 @@ ${script.caption}`;
                       <div className="text-xs text-slate-500 mt-1">all time</div>
                     </div>
 
-                    <div className="bg-slate-50 rounded-lg p-4">
+                    <div className="bg-slate-700/50 rounded-lg p-4">
                       <div className="text-sm text-slate-400">Success Rate</div>
                       <div className={`text-2xl font-bold mt-1 ${
                         analytics.keyMetrics.successRate >= 90 ? 'text-green-600' :
@@ -2686,7 +2757,7 @@ ${script.caption}`;
                       <div className="text-xs text-slate-500 mt-1">completion rate</div>
                     </div>
 
-                    <div className="bg-slate-50 rounded-lg p-4">
+                    <div className="bg-slate-700/50 rounded-lg p-4">
                       <div className="text-sm text-slate-400">Processing Time</div>
                       <div className="text-lg font-bold text-white mt-1">
                         {analytics.keyMetrics.averageProcessingTime}
@@ -2694,7 +2765,7 @@ ${script.caption}`;
                       <div className="text-xs text-slate-500 mt-1">per video</div>
                     </div>
 
-                    <div className="bg-slate-50 rounded-lg p-4">
+                    <div className="bg-slate-700/50 rounded-lg p-4">
                       <div className="text-sm text-slate-400">Content Quality</div>
                       <div className="text-sm font-bold text-white mt-1">
                         {analytics.keyMetrics.contentQuality}
@@ -2822,7 +2893,7 @@ ${script.caption}`;
                   </div>
 
                   {analytics.recommendations.length === 0 ? (
-                    <div className="bg-slate-50 rounded-lg p-8 text-center border border-slate-200">
+                    <div className="bg-slate-700/50 rounded-lg p-8 text-center border border-slate-600">
                       <div className="text-slate-500 text-sm font-medium">No recommendations at this time</div>
                       <div className="text-xs text-slate-400 mt-1">Your system is running optimally!</div>
                     </div>
@@ -2876,7 +2947,7 @@ ${script.caption}`;
                                     {copiedRecId === rec.id ? '✓ Copied!' : '📋 Copy'}
                                   </button>
                                 </div>
-                                <pre className="text-xs text-slate-300 whitespace-pre-wrap font-mono bg-slate-50 p-2 rounded border border-slate-200">
+                                <pre className="text-xs text-slate-300 whitespace-pre-wrap font-mono bg-slate-700/50 p-2 rounded border border-slate-600">
                                   {rec.copyPasteText}
                                 </pre>
                               </div>

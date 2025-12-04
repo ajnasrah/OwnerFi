@@ -118,12 +118,12 @@ export const SCALE_PRESETS = {
  */
 export const HEYGEN_AGENTS: HeyGenAgent[] = [
   // ========================================
-  // ABDULLAH AGENTS (Primary)
+  // ABDULLAH AGENTS (DISABLED - no longer used for article videos)
   // ========================================
   {
     id: 'abdullah-primary',
     name: 'Abdullah (Talking Photo)',
-    description: 'Primary Abdullah talking photo - currently in production',
+    description: 'Primary Abdullah talking photo - DISABLED',
     avatar: {
       avatarId: 'd33fe3abc2914faa88309c3bdb9f47f4',
       avatarType: 'talking_photo',
@@ -136,15 +136,15 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
       emotion: 'Excited', // Use excited emotion for engaging content
     },
     voiceLanguage: 'en',
-    brands: ['ownerfi', 'carz', 'vassdistro', 'benefit', 'property', 'abdullah'],
-    isActive: true,
+    brands: ['abdullah'], // Only for Abdullah personal brand, not article videos
+    isActive: false, // DISABLED
     isPrimary: true,
     previewImageUrl: 'https://files2.heygen.ai/avatar/v3/d33fe3abc2914faa88309c3bdb9f47f4/half/2.2/raw_preview_image.webp',
   },
   {
     id: 'abdullah-avatar',
     name: 'Abdullah (Full Avatar)',
-    description: 'Abdullah interactive avatar - for variety',
+    description: 'Abdullah interactive avatar - DISABLED',
     avatar: {
       avatarId: '8988e02d16544a4286305603244310fc',
       avatarType: 'avatar',
@@ -158,8 +158,8 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
       emotion: 'Excited', // Changed to Excited for engaging content
     },
     voiceLanguage: 'en',
-    brands: ['ownerfi', 'carz', 'vassdistro', 'benefit', 'property', 'abdullah'],
-    isActive: true,
+    brands: ['abdullah'], // Only for Abdullah personal brand, not article videos
+    isActive: false, // DISABLED
     isPrimary: false,
     previewImageUrl: 'https://files2.heygen.ai/avatar/v3/8988e02d16544a4286305603244310fc/full/2.2/preview_target.webp',
   },
@@ -254,6 +254,130 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
     brands: ['ownerfi', 'carz', 'vassdistro', 'benefit', 'property'],
     isActive: true,
     previewImageUrl: 'https://files2.heygen.ai/avatar/v3/c3d1baaebbe84752b7a473373c6cd385_42780/preview_target.webp',
+  },
+
+  // ========================================
+  // ADDITIONAL DIVERSE AGENTS
+  // ========================================
+  {
+    id: 'josh-casual',
+    name: 'Josh (Casual)',
+    description: 'Young casual male avatar',
+    avatar: {
+      avatarId: 'Josh_public_lite2_20230714',
+      avatarType: 'avatar',
+      scale: SCALE_PRESETS.vertical.upperBody,
+      talkingStyle: 'expressive',
+      hasBuiltInBackground: true,
+    },
+    voice: {
+      voiceId: 'f38a635bee7a4d1f9b0a654a31d050d2', // Chill Brian
+      speed: 1.0,
+      emotion: 'Friendly',
+    },
+    voiceLanguage: 'en',
+    brands: ['ownerfi', 'carz', 'vassdistro', 'benefit', 'property'],
+    isActive: true,
+  },
+  {
+    id: 'kayla-casual',
+    name: 'Kayla (Casual)',
+    description: 'Young casual female avatar',
+    avatar: {
+      avatarId: 'Kayla-inkhead-20220820',
+      avatarType: 'avatar',
+      scale: SCALE_PRESETS.vertical.upperBody,
+      talkingStyle: 'expressive',
+      hasBuiltInBackground: true,
+    },
+    voice: {
+      voiceId: 'dc491816e53f46eaa466740fbfec09bb', // Adventure Alex
+      speed: 1.0,
+      emotion: 'Excited',
+    },
+    voiceLanguage: 'en',
+    brands: ['ownerfi', 'carz', 'vassdistro', 'benefit', 'property'],
+    isActive: true,
+  },
+  {
+    id: 'edward-business',
+    name: 'Edward (Business)',
+    description: 'Professional male avatar in suit',
+    avatar: {
+      avatarId: 'Edward_public_pro2_20230608',
+      avatarType: 'avatar',
+      scale: SCALE_PRESETS.vertical.upperBody,
+      talkingStyle: 'expressive',
+      hasBuiltInBackground: true,
+    },
+    voice: {
+      voiceId: '35659e86ce244d8389d525a9648d9c4a', // Carter Lee
+      speed: 1.0,
+      emotion: 'Excited',
+    },
+    voiceLanguage: 'en',
+    brands: ['ownerfi', 'carz', 'vassdistro', 'benefit', 'property'],
+    isActive: true,
+  },
+  {
+    id: 'susan-professional',
+    name: 'Susan (Professional)',
+    description: 'Professional female avatar',
+    avatar: {
+      avatarId: 'Susan_public_2_20240328',
+      avatarType: 'avatar',
+      scale: SCALE_PRESETS.vertical.upperBody,
+      talkingStyle: 'expressive',
+      hasBuiltInBackground: true,
+    },
+    voice: {
+      voiceId: '42d00d4aac5441279d8536cd6b52c53c', // Hope
+      speed: 1.0,
+      emotion: 'Friendly',
+    },
+    voiceLanguage: 'en',
+    brands: ['ownerfi', 'carz', 'vassdistro', 'benefit', 'property'],
+    isActive: true,
+  },
+  {
+    id: 'tyler-hoodie',
+    name: 'Tyler (Hoodie)',
+    description: 'Casual male in hoodie',
+    avatar: {
+      avatarId: 'Tyler-incasualsuit-20220721',
+      avatarType: 'avatar',
+      scale: SCALE_PRESETS.vertical.upperBody,
+      talkingStyle: 'expressive',
+      hasBuiltInBackground: true,
+    },
+    voice: {
+      voiceId: 'f38a635bee7a4d1f9b0a654a31d050d2', // Chill Brian
+      speed: 1.0,
+      emotion: 'Excited',
+    },
+    voiceLanguage: 'en',
+    brands: ['ownerfi', 'carz', 'vassdistro', 'benefit', 'property'],
+    isActive: true,
+  },
+  {
+    id: 'anna-teacher',
+    name: 'Anna (Teacher)',
+    description: 'Friendly female teacher avatar',
+    avatar: {
+      avatarId: 'Anna_public_3_20240108',
+      avatarType: 'avatar',
+      scale: SCALE_PRESETS.vertical.upperBody,
+      talkingStyle: 'expressive',
+      hasBuiltInBackground: true,
+    },
+    voice: {
+      voiceId: 'dc491816e53f46eaa466740fbfec09bb', // Adventure Alex
+      speed: 1.0,
+      emotion: 'Friendly',
+    },
+    voiceLanguage: 'en',
+    brands: ['ownerfi', 'carz', 'vassdistro', 'benefit', 'property'],
+    isActive: true,
   },
 
   // ========================================

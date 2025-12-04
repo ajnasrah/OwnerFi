@@ -16,6 +16,7 @@ const getLatePodcastProfileId = () => process.env.LATE_PODCAST_PROFILE_ID?.trim(
 const getLateVassDistroProfileId = () => process.env.LATE_VASSDISTRO_PROFILE_ID?.trim();
 const getLateAbdullahProfileId = () => process.env.LATE_ABDULLAH_PROFILE_ID?.trim();
 const getLatePersonalProfileId = () => process.env.LATE_PERSONAL_PROFILE_ID?.trim();
+const getLateGazaProfileId = () => process.env.LATE_GAZA_PROFILE_ID?.trim();
 
 export interface LatePostRequest {
   videoUrl?: string; // For video posts
@@ -25,7 +26,7 @@ export interface LatePostRequest {
   hashtags?: string[];
   platforms: ('instagram' | 'tiktok' | 'youtube' | 'facebook' | 'linkedin' | 'threads' | 'twitter' | 'pinterest' | 'reddit' | 'bluesky')[];
   scheduleTime?: string; // ISO 8601 format, or omit for immediate posting
-  brand: 'carz' | 'ownerfi' | 'podcast' | 'property' | 'vassdistro' | 'benefit' | 'abdullah';
+  brand: 'carz' | 'ownerfi' | 'podcast' | 'property' | 'property-spanish' | 'vassdistro' | 'benefit' | 'abdullah' | 'personal' | 'gaza';
   postTypes?: {
     instagram?: 'reel' | 'story' | 'feed'; // Added 'feed' for image posts
     facebook?: 'feed' | 'story';
@@ -58,10 +59,11 @@ export interface LateProfile {
 /**
  * Get profile ID for a brand
  */
-function getProfileId(brand: 'carz' | 'ownerfi' | 'podcast' | 'property' | 'vassdistro' | 'benefit' | 'abdullah' | 'personal'): string | null {
+function getProfileId(brand: 'carz' | 'ownerfi' | 'podcast' | 'property' | 'property-spanish' | 'vassdistro' | 'benefit' | 'abdullah' | 'personal' | 'gaza'): string | null {
   switch (brand) {
     case 'ownerfi':
     case 'property': // Property videos use OwnerFi profile
+    case 'property-spanish': // Spanish property videos also use OwnerFi profile
     case 'benefit': // Benefit videos also use OwnerFi profile
       return getLateOwnerfiProfileId() || null;
     case 'carz':
@@ -74,6 +76,8 @@ function getProfileId(brand: 'carz' | 'ownerfi' | 'podcast' | 'property' | 'vass
       return getLateAbdullahProfileId() || null;
     case 'personal':
       return getLatePersonalProfileId() || null;
+    case 'gaza':
+      return getLateGazaProfileId() || null;
   }
 }
 
@@ -188,10 +192,12 @@ export async function postToLate(request: LatePostRequest): Promise<LatePostResp
       'ownerfi': 'OwnerFi',
       'podcast': 'Podcast',
       'property': 'Property',
+      'property-spanish': 'Property (Spanish)',
       'vassdistro': 'VassDistro',
       'benefit': 'Benefit',
       'abdullah': 'Abdullah',
-      'personal': 'Personal'
+      'personal': 'Personal',
+      'gaza': 'Gaza'
     };
     const brandName = brandNameMap[request.brand] || request.brand;
     console.error(`❌ Profile ID not configured for ${brandName}`);

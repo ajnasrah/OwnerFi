@@ -26,8 +26,9 @@ const HEYGEN_API_URL = 'https://api.heygen.com/v2/video/generate';
 // Default dark/somber background color for Gaza content
 const DEFAULT_BACKGROUND_COLOR = '#1a1a2e'; // Dark blue-black for serious news
 
-// Donation URL placeholder - will be set via environment variable
-const DONATION_URL = process.env.GAZA_DONATION_URL || 'link in bio';
+// Donation URL placeholder - disabled for now, will be enabled later
+// const DONATION_URL = process.env.GAZA_DONATION_URL || 'link in bio';
+const DONATION_CTA_ENABLED = false; // Set to true when ready to add donation CTAs
 
 interface HeyGenVideoResponse {
   error?: any;
@@ -113,17 +114,6 @@ export class GazaVideoGenerator {
 
     const todayTheme = dailyThemes[today as keyof typeof dailyThemes];
 
-    // Donation CTA pool
-    const ctaPool = [
-      `Help families in Gaza. Donate through ${DONATION_URL}.`,
-      `Every donation saves lives. Help Gaza at ${DONATION_URL}.`,
-      `Stand with Gaza. Donate now at ${DONATION_URL}.`,
-      `Your support matters. Help families in Gaza at ${DONATION_URL}.`,
-      `Together we can help. Donate to Gaza relief at ${DONATION_URL}.`,
-    ];
-
-    const randomCTA = ctaPool[Math.floor(Math.random() * ctaPool.length)];
-
     const prompt = `SYSTEM ROLE:
 You are creating a short-form news video script about the Gaza humanitarian crisis.
 
@@ -131,7 +121,7 @@ TONE: Somber, empathetic, urgent but respectful. NEVER sensationalize suffering.
 EMOTION TODAY: ${todayTheme.emotion}
 THEME: ${todayTheme.theme}
 
-TARGET AUDIENCE: People who support Gaza and Palestine, humanitarian donors, activists
+TARGET AUDIENCE: People who support Gaza and Palestine, humanitarian advocates, activists
 
 ARTICLE TO COVER:
 Title: ${article.title}
@@ -141,8 +131,7 @@ Source: ${article.source || 'News source'}
 STRUCTURE:
 1. HOOK (3-5 seconds): Urgent headline grabber with ${todayTheme.emotion.toLowerCase()}
 2. STORY (15-20 seconds): Human-focused facts from the article
-3. IMPACT (5-7 seconds): Why this matters, scale of crisis
-4. CTA (5 seconds): "${randomCTA}"
+3. IMPACT (5-10 seconds): Why this matters, scale of crisis, call for awareness
 
 LENGTH: 30 seconds max (~90 words)
 
@@ -151,14 +140,12 @@ VOICE STYLE:
 - Somber and respectful - never exploit suffering
 - Empathetic and compassionate
 - Urgent without being sensational
-- Focus on human impact and the need for aid
-- Every word should move viewers to want to help
+- Focus on human impact and raising awareness
 
 STRUCTURE YOUR SCRIPT:
 [Hook - urgent attention grabber based on ${todayTheme.emotion.toLowerCase()}]
 [Main story - human-focused news coverage]
-[Impact - why viewers should care]
-[CTA - always end with donation call to action]
+[Impact - why viewers should care and spread awareness]
 
 🚫 BANNED:
 - Sensationalizing death or suffering
@@ -170,9 +157,8 @@ STRUCTURE YOUR SCRIPT:
 ✅ REQUIRED:
 - Focus on humanitarian impact
 - Respectful tone for those suffering
-- Clear call to action for donations
 - Factual reporting from the article
-- End with: "${randomCTA}"
+- End with a call for awareness (NOT donations)
 
 OUTPUT:
 Return ONLY the script text - no labels, brackets, or formatting. Just the spoken words.`;
@@ -246,7 +232,7 @@ Return ONLY the script text - no labels, brackets, or formatting. Just the spoke
    * Create a fallback script if OpenAI fails
    */
   private createFallbackScript(article: GazaArticle): string {
-    return `Breaking news from Gaza. ${article.title}. The humanitarian crisis continues as civilians desperately need aid. Families are struggling to survive. Your support can make a difference. Help families in Gaza. Donate through ${DONATION_URL}.`;
+    return `Breaking news from Gaza. ${article.title}. The humanitarian crisis continues as civilians desperately need aid. Families are struggling to survive. Share this to spread awareness.`;
   }
 
   /**
@@ -428,8 +414,6 @@ Return ONLY the script text - no labels, brackets, or formatting. Just the spoke
       : article.title;
 
     return `${title}
-
-Help families in Gaza: ${DONATION_URL}
 
 ${tags.join(' ')}`;
   }

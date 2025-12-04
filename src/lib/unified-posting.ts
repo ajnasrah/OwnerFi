@@ -14,7 +14,7 @@ interface UnifiedPostOptions {
   caption: string;
   title: string;
   platforms: ('instagram' | 'tiktok' | 'youtube' | 'facebook' | 'linkedin' | 'threads' | 'twitter')[];
-  brand: 'carz' | 'ownerfi' | 'podcast' | 'property' | 'vassdistro' | 'benefit' | 'abdullah' | 'personal';
+  brand: 'carz' | 'ownerfi' | 'podcast' | 'property' | 'property-spanish' | 'vassdistro' | 'benefit' | 'abdullah' | 'personal' | 'gaza';
   hashtags?: string[];
   useQueue?: boolean;
   timezone?: string;

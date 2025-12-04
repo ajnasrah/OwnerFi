@@ -24,7 +24,7 @@ interface YouTubeUploadOptions {
   privacy?: 'public' | 'unlisted' | 'private';
   madeForKids?: boolean;
   isShort?: boolean;
-  brand: 'carz' | 'ownerfi' | 'podcast' | 'property' | 'vassdistro' | 'benefit' | 'abdullah' | 'personal';
+  brand: 'carz' | 'ownerfi' | 'podcast' | 'property' | 'property-spanish' | 'vassdistro' | 'benefit' | 'abdullah' | 'personal' | 'gaza';
 }
 
 interface YouTubeUploadResult {
@@ -270,7 +270,7 @@ export async function postVideoToYouTube(
   videoUrl: string,
   title: string,
   description: string,
-  brand: 'carz' | 'ownerfi' | 'podcast' | 'property' | 'vassdistro' | 'benefit' | 'abdullah' | 'personal',
+  brand: 'carz' | 'ownerfi' | 'podcast' | 'property' | 'property-spanish' | 'vassdistro' | 'benefit' | 'abdullah' | 'personal' | 'gaza',
   options?: {
     tags?: string[];
     category?: string;

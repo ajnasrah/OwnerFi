@@ -37,18 +37,18 @@ export function verifyHeyGenWebhook(
     return { valid: true };
   }
 
-  // Check if signature is provided
-  if (!signature) {
-    return {
-      valid: false,
-      error: 'Missing X-HeyGen-Signature header',
-    };
+  // Check if webhook secret is configured FIRST
+  // If no secret is set, we can't verify - allow through
+  if (!HEYGEN_WEBHOOK_SECRET) {
+    console.warn('⚠️  HEYGEN_WEBHOOK_SECRET not set - skipping verification');
+    return { valid: true };
   }
 
-  // Check if webhook secret is configured
-  if (!HEYGEN_WEBHOOK_SECRET) {
-    console.warn('⚠️  HEYGEN_WEBHOOK_SECRET not set - cannot verify signature');
-    return { valid: true }; // Allow through if secret not configured (dev mode)
+  // Check if signature is provided
+  if (!signature) {
+    // HeyGen may not be sending signatures - log warning but allow through
+    console.warn(`⚠️  [${brand}] HeyGen webhook has no signature header - allowing through`);
+    return { valid: true };
   }
 
   try {

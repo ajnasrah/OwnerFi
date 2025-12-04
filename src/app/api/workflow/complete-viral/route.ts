@@ -10,6 +10,13 @@ import { ERROR_MESSAGES } from '@/config/constants';
 import { generateCaptionAndComment } from '@/lib/caption-intelligence';
 import { validateAndFixScript } from '@/lib/compliance-checker';
 import { Brand } from '@/config/brand-configs';
+import { selectAgent } from '@/lib/agent-selector';
+import {
+  buildCharacterConfig,
+  buildVoiceConfig,
+  buildBackgroundConfig,
+  SCALE_PRESETS
+} from '@/config/heygen-agents';
 
 const HEYGEN_API_KEY = process.env.HEYGEN_API_KEY;
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
@@ -191,96 +198,104 @@ export async function POST(request: NextRequest) {
       firstComment: captionData.firstComment
     };
 
-    // Step 3: Generate HeyGen video
-    console.log('🎥 Step 3: Creating HeyGen video...');
+    // Step 3: Generate HeyGen video with agent rotation
+    console.log('🎥 Step 3: Creating HeyGen video with agent rotation...');
 
     // CRITICAL FIX: DON'T set status to heygen_processing yet
     // Will set it AFTER we get the video ID from HeyGen API
     // This prevents workflows from being stuck in heygen_processing without a video ID
 
-    // NOTE: Avatar and voice configuration by brand:
-    // - Carz & OwnerFi: Default "me" avatar (31c6b2b6306b47a2ba3572a23be09dbc)
-    // - Vass Distro: Custom avatar (feec83b62d9e48478a988eec5730154c), voice (d2f4f24783d04e22ab49ee8fdc3715e0)
-    // The following avatars are available for PODCAST INTERVIEWEES only:
-    // - Personal Trainer (Oxana Yoga): talking_photo_id '5eb1adac973c432f90e07a5807059d55'
-    // - Real Estate Agent (Zelena): talking_photo_id 'c308729a2d444a09a98cb29baee73d88', voice 'c4313f9f0b214a7a8189c134736ce897'
-    // - Doctor (Sofia): talking_photo_id '1732832799', voice '2e4de8a01f3b4e9c96794045e2f12779'
-    // - Automotive Expert (Colton): talking_photo_id '711a1d390a2a4634b5b515d44a631ab3', voice 'dcc89bc2097f47bd93f0c9e8d5e53b5f'
-    // - Technology Expert (Vince): talking_photo_id '1727676442', voice '219a23d690fc48c7b3a24ea4a0ac651a'
-    // - Financial Advisor (Henry): talking_photo_id '1375223b2cc24ff0a21830fbf5cb45ba', voice '8c0bd8c49b2849dc96f8e89b8eace60'
-
-    // Get brand-specific avatar and voice defaults
-    let defaultAvatarId = 'd33fe3abc2914faa88309c3bdb9f47f4'; // Abdullah talking photo for Carz/OwnerFi
-    let defaultVoiceId = '9070a6c2dbd54c10bb111dc8c655bff7'; // Original voice
-    let defaultAvatarType: 'avatar' | 'talking_photo' = 'talking_photo';
-    let defaultHasBuiltInBackground = false; // Talking photos need explicit background
-
-    if (brand === 'vassdistro') {
-      defaultAvatarId = '6764a52c1b734750a0fba6ab6caa9cd9'; // VassDistro keeps its own avatar
-      defaultVoiceId = '9070a6c2dbd54c10bb111dc8c655bff7';
-      defaultAvatarType = 'talking_photo';
-      defaultHasBuiltInBackground = false;
-    }
+    // Select agent for this video using round-robin rotation
+    // Maps brand to agent brand (carz/vassdistro -> ownerfi for shared agent pool)
+    const agentBrand = brand === 'vassdistro' ? 'ownerfi' : brand;
+    const agent = await selectAgent(agentBrand as any, {
+      mode: 'round-robin',
+      language: 'en',
+      requireBuiltInBackground: true, // Prefer avatars with built-in backgrounds
+    });
 
     // Build HeyGen request with webhook URL
     const { getBrandWebhookUrl } = await import('@/lib/brand-utils');
     const webhookUrl = getBrandWebhookUrl(brand as 'carz' | 'ownerfi' | 'vassdistro', 'heygen');
 
-    // Determine if we're using a studio avatar (with built-in background) or talking photo
-    // Studio avatars use avatar_id, talking photos use talking_photo_id
-    const isStudioAvatar = body.avatar_id !== undefined;
-    const avatarType: 'avatar' | 'talking_photo' = isStudioAvatar ? 'avatar' : defaultAvatarType;
-    const avatarId = body.avatar_id || body.talking_photo_id || defaultAvatarId;
-    const hasBuiltInBackground = isStudioAvatar ? true : defaultHasBuiltInBackground;
+    let heygenRequest: any;
+    let agentId = 'legacy';
 
-    // Build character config based on avatar type
-    const character: any = {
-      type: avatarType,
-      scale: 2.0  // Larger scale for better visibility in vertical 9:16 videos
-    };
-
-    if (isStudioAvatar) {
-      // Studio avatars use avatar_id
-      character.avatar_id = avatarId;
-      character.talking_style = 'expressive';
-    } else {
-      // Talking photos use talking_photo_id
-      character.talking_photo_id = avatarId;
-      character.talking_style = 'expressive';
-    }
-
-    // Build video input - only include background for talking photos (not studio avatars)
-    const videoInput: any = {
-      character,
-      voice: {
-        type: 'text' as const,
-        input_text: content.script,
-        voice_id: body.voice_id || defaultVoiceId,
-        speed: 1.1
+    if (agent) {
+      // Use agent system with proper scale and background
+      console.log(`   🤖 Selected agent: ${agent.name} (${agent.id})`);
+      console.log(`   🎭 Avatar: ${agent.avatar.avatarId.substring(0, 20)}...`);
+      console.log(`   🗣️  Voice: ${agent.voice.voiceId.substring(0, 12)}...`);
+      if (agent.voice.emotion) {
+        console.log(`   😊 Emotion: ${agent.voice.emotion}`);
       }
-    };
 
-    // Check if avatar ID suggests it has a built-in background
-    // Avatar IDs with "BizTalk", "Sitting", "Office", "Front" often include studio backgrounds
-    const avatarHasBuiltInBg = /BizTalk|Sitting|Office|Studio|Desk/i.test(avatarId);
+      agentId = agent.id;
 
-    if (!avatarHasBuiltInBg) {
-      // Only add background for avatars that don't have built-in backgrounds
-      videoInput.background = {
-        type: 'color',
-        value: '#1a1a2e'  // Professional dark blue-black background
+      // Build character config from agent (uses SCALE_PRESETS for proper sizing)
+      const characterConfig = buildCharacterConfig(agent, 'vertical');
+
+      // Build voice config from agent with the script
+      const voiceConfig = buildVoiceConfig(agent, content.script);
+      voiceConfig.speed = 1.1; // Keep the speed setting
+
+      // Build background config - uses agent's built-in background or fallback color
+      const backgroundConfig = buildBackgroundConfig(agent, '#1a1a2e');
+
+      // Build video input
+      const videoInput: any = {
+        character: characterConfig,
+        voice: voiceConfig,
+      };
+
+      // Only add background for talking photos (not studio avatars with built-in backgrounds)
+      if (backgroundConfig) {
+        videoInput.background = backgroundConfig;
+      }
+
+      heygenRequest = {
+        video_inputs: [videoInput],
+        caption: false,
+        dimension: { width: 1080, height: 1920 },
+        test: false,
+        webhook_url: webhookUrl,
+        callback_id: workflowId
+      };
+    } else {
+      // Fallback to legacy config if no agent available
+      console.warn('⚠️  No agent available, using legacy config');
+
+      // Legacy defaults with CORRECT scale (1.4 for talking photos in vertical videos)
+      const defaultAvatarId = brand === 'vassdistro'
+        ? '6764a52c1b734750a0fba6ab6caa9cd9'
+        : 'd33fe3abc2914faa88309c3bdb9f47f4';
+      const defaultVoiceId = '9070a6c2dbd54c10bb111dc8c655bff7';
+
+      heygenRequest = {
+        video_inputs: [{
+          character: {
+            type: 'talking_photo',
+            talking_photo_id: defaultAvatarId,
+            scale: SCALE_PRESETS.vertical.talkingPhoto, // 1.4 - correct scale for vertical videos
+          },
+          voice: {
+            type: 'text' as const,
+            input_text: content.script,
+            voice_id: defaultVoiceId,
+            speed: 1.1
+          },
+          background: {
+            type: 'color',
+            value: '#1a1a2e'
+          }
+        }],
+        caption: false,
+        dimension: { width: 1080, height: 1920 },
+        test: false,
+        webhook_url: webhookUrl,
+        callback_id: workflowId
       };
     }
-    // For BizTalk/Studio avatars, omit background to use their built-in one
-
-    const heygenRequest = {
-      video_inputs: [videoInput],
-      caption: false,
-      dimension: { width: 1080, height: 1920 },
-      test: false,
-      webhook_url: webhookUrl,
-      callback_id: workflowId
-    };
 
     // Use the heygen-client function that includes cost tracking
     const videoResult = await generateHeyGenVideoWithTracking(
@@ -307,6 +322,7 @@ export async function POST(request: NextRequest) {
 
     console.log(`✅ HeyGen video ID: ${videoResult.video_id}`);
     console.log(`📋 Workflow ID: ${workflowId}`);
+    console.log(`🎭 Agent used: ${agentId}`);
 
     // CRITICAL FIX: Update workflow with HeyGen video ID AND status atomically
     // This ensures we never have heygen_processing without a video ID
@@ -314,6 +330,7 @@ export async function POST(request: NextRequest) {
       const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
       await updateWorkflowStatus(workflowId, brand as 'carz' | 'ownerfi', {
         heygenVideoId: videoResult.video_id,
+        agentId,  // Track which agent was used for analytics
         status: 'heygen_processing',  // ✅ Set status HERE after getting video ID
         caption: content.caption,
         title: content.title

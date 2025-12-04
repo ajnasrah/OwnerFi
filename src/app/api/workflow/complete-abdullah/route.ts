@@ -5,7 +5,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { scheduleVideoPost } from '@/lib/late-api';
 import { circuitBreakers, fetchWithTimeout, TIMEOUTS } from '@/lib/api-utils';
-import { generateAbdullahDailyContent, validateAbdullahScript, buildAbdullahVideoRequest, type AbdullahVideoScript } from '@/lib/abdullah-content-generator';
+import { generateAbdullahDailyContent, validateAbdullahScript, buildAbdullahVideoRequestWithAgent, type AbdullahVideoScript } from '@/lib/abdullah-content-generator';
 import { getBrandWebhookUrl } from '@/lib/brand-utils';
 import { ERROR_MESSAGES } from '@/config/constants';
 
@@ -121,10 +121,12 @@ export async function POST(request: NextRequest) {
         }
 
         console.log(`   ✅ HeyGen video ID: ${videoResult.video_id}`);
+        console.log(`   🎭 Agent used: ${videoResult.agentId}`);
 
         // CRITICAL FIX: Update workflow with HeyGen video ID AND status atomically
         await updateWorkflowStatus(workflowId, 'abdullah', {
           heygenVideoId: videoResult.video_id,
+          agentId: videoResult.agentId,  // Track which agent was used
           status: 'heygen_processing'  // ✅ Set status HERE after getting video ID
         } as any);
 
@@ -150,6 +152,7 @@ export async function POST(request: NextRequest) {
           title: video.title,
           workflowId,
           heygenVideoId: videoResult.video_id,
+          agentId: videoResult.agentId,
           scheduledTime,
           status: 'heygen_processing'
         });
@@ -223,13 +226,13 @@ async function generateAbdullahHeyGenVideo(
   script: AbdullahVideoScript,
   workflowId: string,
   apiKey: string
-): Promise<{ success: boolean; video_id?: string; error?: string }> {
+): Promise<{ success: boolean; video_id?: string; agentId?: string; error?: string }> {
   try {
     // Get webhook URL for Abdullah brand
     const webhookUrl = getBrandWebhookUrl('abdullah', 'heygen');
 
-    // Build HeyGen request using the helper from abdullah-content-generator
-    const request = buildAbdullahVideoRequest(script, workflowId);
+    // Build HeyGen request with agent rotation (uses round-robin by default)
+    const { request, agentId } = await buildAbdullahVideoRequestWithAgent(script, workflowId);
 
     // Add webhook URL to request
     const fullRequest = {
@@ -238,6 +241,7 @@ async function generateAbdullahHeyGenVideo(
       test: false
     };
 
+    console.log(`   🎭 Using agent: ${agentId}`);
     console.log(`   🚀 Sending to HeyGen...`);
     console.log(`   📞 Webhook: ${webhookUrl}`);
 
@@ -272,7 +276,7 @@ async function generateAbdullahHeyGenVideo(
       return { success: false, error: 'HeyGen did not return video_id' };
     }
 
-    return { success: true, video_id: data.data.video_id };
+    return { success: true, video_id: data.data.video_id, agentId };
 
   } catch (error) {
     console.error(`   ❌ HeyGen generation error:`, error);

@@ -335,7 +335,7 @@ async function retryOperation<T>(
  * Get workflow for specific brand
  */
 async function getWorkflowForBrand(
-  brand: 'carz' | 'ownerfi' | 'property' | 'vassdistro' | 'abdullah' | 'personal',
+  brand: 'carz' | 'ownerfi' | 'property' | 'vassdistro' | 'abdullah' | 'personal' | 'gaza',
   workflowId: string
 ): Promise<any | null> {
   if (brand === 'property') {
@@ -351,6 +351,11 @@ async function getWorkflowForBrand(
     const { doc, getDoc } = await import('firebase/firestore');
     const docSnap = await getDoc(doc(db, 'personal_workflow_queue', workflowId));
     return docSnap.exists() ? docSnap.data() : null;
+  } else if (brand === 'gaza') {
+    const { getAdminDb } = await import('@/lib/firebase-admin');
+    const adminDb = await getAdminDb();
+    const docSnap = await adminDb.collection('gaza_workflow_queue').doc(workflowId).get();
+    return docSnap.exists ? docSnap.data() : null;
   } else {
     const { getWorkflowById } = await import('@/lib/feed-store-firestore');
     const result = await getWorkflowById(workflowId);
@@ -362,7 +367,7 @@ async function getWorkflowForBrand(
  * Update workflow for specific brand
  */
 async function updateWorkflowForBrand(
-  brand: 'carz' | 'ownerfi' | 'property' | 'vassdistro' | 'abdullah' | 'personal',
+  brand: 'carz' | 'ownerfi' | 'property' | 'vassdistro' | 'abdullah' | 'personal' | 'gaza',
   workflowId: string,
   updates: Record<string, any>
 ): Promise<void> {
@@ -380,6 +385,13 @@ async function updateWorkflowForBrand(
     const { db } = await import('@/lib/firebase');
     const { doc, updateDoc } = await import('firebase/firestore');
     await updateDoc(doc(db, 'personal_workflow_queue', workflowId), {
+      ...updates,
+      updatedAt: Date.now()
+    });
+  } else if (brand === 'gaza') {
+    const { getAdminDb } = await import('@/lib/firebase-admin');
+    const adminDb = await getAdminDb();
+    await adminDb.collection('gaza_workflow_queue').doc(workflowId).update({
       ...updates,
       updatedAt: Date.now()
     });

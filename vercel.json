@@ -87,9 +87,6 @@
     }
   ],
   "functions": {
-    "src/app/api/**/*.ts": {
-      "maxDuration": 30
-    },
     "src/app/api/cron/process-scraper-queue/route.ts": {
       "maxDuration": 300
     },

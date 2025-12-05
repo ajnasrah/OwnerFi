@@ -262,7 +262,7 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
   {
     id: 'josh-casual',
     name: 'Josh (Casual)',
-    description: 'Young casual male avatar',
+    description: 'Young casual male avatar - DISABLED (avatar no longer available)',
     avatar: {
       avatarId: 'Josh_public_lite2_20230714',
       avatarType: 'avatar',
@@ -277,12 +277,12 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
     },
     voiceLanguage: 'en',
     brands: ['ownerfi', 'carz', 'vassdistro', 'benefit', 'property', 'personal', 'abdullah'],
-    isActive: true,
+    isActive: false, // DISABLED - avatar not found in HeyGen
   },
   {
     id: 'kayla-casual',
     name: 'Kayla (Casual)',
-    description: 'Young casual female avatar',
+    description: 'Young casual female avatar - DISABLED (avatar no longer available)',
     avatar: {
       avatarId: 'Kayla-inkhead-20220820',
       avatarType: 'avatar',
@@ -297,12 +297,12 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
     },
     voiceLanguage: 'en',
     brands: ['ownerfi', 'carz', 'vassdistro', 'benefit', 'property', 'personal', 'abdullah'],
-    isActive: true,
+    isActive: false, // DISABLED - avatar not found in HeyGen
   },
   {
     id: 'edward-business',
     name: 'Edward (Business)',
-    description: 'Professional male avatar in suit',
+    description: 'Professional male avatar in suit - DISABLED (avatar no longer available)',
     avatar: {
       avatarId: 'Edward_public_pro2_20230608',
       avatarType: 'avatar',
@@ -317,7 +317,7 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
     },
     voiceLanguage: 'en',
     brands: ['ownerfi', 'carz', 'vassdistro', 'benefit', 'property', 'personal', 'abdullah'],
-    isActive: true,
+    isActive: false, // DISABLED - avatar not found in HeyGen
   },
   {
     id: 'susan-professional',

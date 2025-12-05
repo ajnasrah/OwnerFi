@@ -111,12 +111,13 @@ export async function GET(request: NextRequest) {
     console.log(`📝 Created workflow: ${workflow.id}`);
 
     try {
-      // Generate video
-      const videoId = await generator.generateVideo(benefit, workflow.id);
+      // Generate video - returns { videoId, agentId }
+      const result = await generator.generateVideo(benefit, workflow.id);
 
       // CRITICAL FIX: Update workflow with video ID AND status atomically
       await updateBenefitWorkflow(workflow.id, {
-        heygenVideoId: videoId,
+        heygenVideoId: result.videoId,
+        agentId: result.agentId,
         status: 'heygen_processing',  // ✅ Set status HERE after getting video ID
         caption: generateBenefitCaption(benefit),
         title: generateBenefitTitle(benefit)
@@ -127,7 +128,7 @@ export async function GET(request: NextRequest) {
       results.push({
         benefit_id: benefit.id,
         benefit_title: benefit.title,
-        video_id: videoId,
+        video_id: result.videoId,
         workflow_id: workflow.id
       });
 

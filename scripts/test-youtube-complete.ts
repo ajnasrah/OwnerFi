@@ -7,7 +7,8 @@ import { google } from 'googleapis';
 const brands = [
   { name: 'ABDULLAH', expectedChannel: 'Abdullah Abunasrah' },
   { name: 'CARZ', expectedChannel: 'Carz Inc' },
-  { name: 'OWNERFI', expectedChannel: 'Prosway' }
+  { name: 'OWNERFI', expectedChannel: 'Prosway' },
+  { name: 'GAZA', expectedChannel: 'Gaza' }
 ];
 
 async function testAll() {

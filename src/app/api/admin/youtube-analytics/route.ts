@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminDb } from '@/lib/firebase-admin';
 
-const YOUTUBE_BRANDS = ['abdullah', 'ownerfi', 'carz'];
+const YOUTUBE_BRANDS = ['abdullah', 'ownerfi', 'carz', 'gaza'];
 
 /**
  * GET /api/admin/youtube-analytics

@@ -490,7 +490,7 @@ export async function syncYouTubeAnalytics(brand: string): Promise<YouTubeAnalyt
  * Sync YouTube analytics for all brands
  */
 export async function syncAllYouTubeAnalytics(): Promise<Map<string, YouTubeAnalyticsSummary | null>> {
-  const brands = ['abdullah', 'ownerfi', 'carz'];
+  const brands = ['abdullah', 'ownerfi', 'carz', 'gaza'];
   const results = new Map<string, YouTubeAnalyticsSummary | null>();
 
   for (const brand of brands) {

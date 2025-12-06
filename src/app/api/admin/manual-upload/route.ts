@@ -123,7 +123,11 @@ export async function POST(request: NextRequest) {
       source: 'manual-upload',
       importMethod: 'admin-manual-upload',
 
+      // Status for admin panel visibility
+      status: 'active',
+
       // Timestamps
+      foundAt: new Date(),
       addedToDatabase: new Date(),
       importedAt: new Date(),
       createdAt: new Date(),

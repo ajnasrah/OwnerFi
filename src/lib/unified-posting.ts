@@ -1,8 +1,8 @@
 /**
  * Unified Social Media Posting
  *
- * Posts to multiple platforms efficiently:
- * - YouTube: Direct API (bypasses Late.dev quota)
+ * Posts to multiple platforms:
+ * - YouTube: Direct API for immediate posting + Late.dev for scheduling
  * - Other platforms: Late.dev API (Instagram, TikTok, Facebook, LinkedIn)
  */
 
@@ -24,6 +24,7 @@ interface UnifiedPostOptions {
   youtubeCategory?: string;
   youtubeMadeForKids?: boolean;
   youtubePrivacy?: 'public' | 'unlisted' | 'private';
+  youtubeUseSchedule?: boolean; // If true, use schedule slots for YouTube
 }
 
 interface UnifiedPostResult {
@@ -45,7 +46,10 @@ interface UnifiedPostResult {
 }
 
 /**
- * Post video to all platforms with YouTube direct upload
+ * Post video to all platforms
+ * - YouTube: Direct API ONLY (once)
+ * - Other platforms: Late.dev (excludes YouTube)
+ * - Stores both YouTube videoId AND Late.dev postId
  */
 export async function postToAllPlatforms(options: UnifiedPostOptions): Promise<UnifiedPostResult> {
   const result: UnifiedPostResult = {
@@ -59,14 +63,14 @@ export async function postToAllPlatforms(options: UnifiedPostOptions): Promise<U
   console.log(`   Video URL: ${options.videoUrl.substring(0, 80)}...`);
   console.log(`   Title: ${options.title}`);
 
-  // Separate YouTube from other platforms
   const hasYouTube = options.platforms.includes('youtube');
-  const otherPlatforms = options.platforms.filter(p => p !== 'youtube') as any[];
+  // Remove YouTube from Late.dev platforms - we handle it directly
+  const latePlatforms = options.platforms.filter(p => p !== 'youtube') as any[];
 
-  console.log(`   Has YouTube: ${hasYouTube ? 'YES' : 'NO'}`);
-  console.log(`   Other platforms: ${otherPlatforms.join(', ')}`);
+  console.log(`   YouTube (direct API): ${hasYouTube ? 'YES' : 'NO'}`);
+  console.log(`   Late.dev platforms: ${latePlatforms.join(', ') || 'none'}`);
 
-  // Step 1: Upload to YouTube directly (if requested)
+  // Step 1: Upload to YouTube via DIRECT API (only once)
   if (hasYouTube) {
     console.log(`\n📺 Step 1: Uploading to YouTube (direct API)...`);
 
@@ -81,7 +85,8 @@ export async function postToAllPlatforms(options: UnifiedPostOptions): Promise<U
           category: options.youtubeCategory,
           privacy: options.youtubePrivacy || 'public',
           madeForKids: options.youtubeMadeForKids || false,
-          isShort: true, // All short-form videos
+          isShort: true,
+          useSchedule: options.youtubeUseSchedule,
         }
       );
 
@@ -89,6 +94,10 @@ export async function postToAllPlatforms(options: UnifiedPostOptions): Promise<U
 
       if (youtubeResult.success) {
         console.log(`✅ YouTube upload successful!`);
+        console.log(`   Video ID: ${youtubeResult.videoId}`);
+        if (youtubeResult.scheduledAt) {
+          console.log(`   📅 Scheduled for: ${youtubeResult.scheduledAt}`);
+        }
         result.totalPublished++;
       } else {
         console.error(`❌ YouTube upload failed: ${youtubeResult.error}`);
@@ -105,17 +114,17 @@ export async function postToAllPlatforms(options: UnifiedPostOptions): Promise<U
     }
   }
 
-  // Step 2: Post to other platforms via Late.dev (if any)
-  if (otherPlatforms.length > 0) {
-    console.log(`\n📱 Step 2: Posting to other platforms via Late.dev...`);
-    console.log(`   Platforms: ${otherPlatforms.join(', ')}`);
+  // Step 2: Post to other platforms via Late.dev (NOT YouTube)
+  if (latePlatforms.length > 0) {
+    console.log(`\n📱 Step 2: Posting to Late.dev...`);
+    console.log(`   Platforms: ${latePlatforms.join(', ')}`);
 
     try {
       const lateResult = await postToLate({
         videoUrl: options.videoUrl,
         caption: options.caption,
         title: options.title,
-        platforms: otherPlatforms,
+        platforms: latePlatforms,
         brand: options.brand,
         hashtags: options.hashtags,
         useQueue: options.useQueue,
@@ -132,7 +141,9 @@ export async function postToAllPlatforms(options: UnifiedPostOptions): Promise<U
 
       if (lateResult.success) {
         const publishedCount = lateResult.platforms?.length || 0;
-        console.log(`✅ Late.dev posting successful! Published to ${publishedCount} platforms`);
+        console.log(`✅ Late.dev posting successful!`);
+        console.log(`   Post ID: ${lateResult.postId}`);
+        console.log(`   Platforms queued: ${publishedCount}`);
         result.totalPublished += publishedCount;
       } else {
         console.error(`❌ Late.dev posting failed: ${lateResult.error}`);
@@ -150,10 +161,12 @@ export async function postToAllPlatforms(options: UnifiedPostOptions): Promise<U
   }
 
   // Determine overall success
-  result.success = result.totalPublished > 0;
+  result.success = result.totalPublished > 0 || (result.youtube?.success ?? false);
 
   console.log(`\n📊 Posting Summary:`);
-  console.log(`   Total platforms published: ${result.totalPublished}/${options.platforms.length}`);
+  console.log(`   YouTube: ${result.youtube?.success ? `✅ (${result.youtube.videoId})` : '❌'}`);
+  console.log(`   Late.dev: ${result.otherPlatforms?.success ? `✅ (${result.otherPlatforms.postId})` : '❌'}`);
+  console.log(`   Total platforms: ${result.totalPublished}`);
   if (result.errors.length > 0) {
     console.log(`   Errors: ${result.errors.join(', ')}`);
   }
@@ -169,11 +182,13 @@ export function getYouTubeCategoryForBrand(brand: string): string {
     'carz': 'Autos & Vehicles',
     'ownerfi': 'Howto & Style',
     'property': 'Howto & Style',
+    'property-spanish': 'Howto & Style',
     'podcast': 'Education',
     'benefit': 'Howto & Style',
     'abdullah': 'People & Blogs',
     'personal': 'People & Blogs',
     'vassdistro': 'People & Blogs',
+    'gaza': 'News & Politics',
   };
 
   return categoryMap[brand] || 'People & Blogs';

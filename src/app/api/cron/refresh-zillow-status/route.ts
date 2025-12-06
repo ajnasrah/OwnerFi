@@ -4,6 +4,7 @@ import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { sanitizeDescription } from '@/lib/description-sanitizer';
 import { hasStrictOwnerFinancing } from '@/lib/owner-financing-filter-strict';
+import { detectNeedsWork, getMatchingKeywords } from '@/lib/property-needs-work-detector';
 
 // Type for Apify Zillow scraper response
 interface ZillowApifyItem {
@@ -166,6 +167,8 @@ export async function GET(request: NextRequest) {
     let deleted = 0;
     let errors = 0;
     let noResultCount = 0; // Properties with no Apify result (URL removed, etc.)
+    let cashDealsFound = 0; // Cash deals discovered
+    let needsWorkFound = 0; // Needs work properties discovered
     const statusChanges: Array<{
       address: string;
       oldStatus: string;
@@ -175,6 +178,13 @@ export async function GET(request: NextRequest) {
       address: string;
       status: string;
       reason: string;
+    }> = [];
+    const newCashDeals: Array<{
+      address: string;
+      price: number;
+      estimate: number;
+      discountPercent: number;
+      needsWork: boolean;
     }> = [];
 
     // Process in small batches with random delays
@@ -377,6 +387,100 @@ export async function GET(request: NextRequest) {
 
               firestoreBatch.update(docRef, cleanedData);
               updated++;
+
+              // ============================================
+              // CASH DEAL DISCOVERY - Check if property qualifies
+              // ============================================
+              const price = item.price || item.listPrice || 0;
+              const estimate = item.zestimate || item.estimate || 0;
+
+              if (price > 0 && estimate > 0) {
+                const eightyPercentOfZestimate = estimate * 0.8;
+                const discountPercent = ((estimate - price) / estimate) * 100;
+                const needsWork = detectNeedsWork(item.description);
+                const needsWorkKeywords = needsWork ? getMatchingKeywords(item.description) : [];
+
+                // Check if qualifies as cash deal: price < 80% of Zestimate OR needs work
+                const meetsDiscountCriteria = price < eightyPercentOfZestimate;
+                const meetsNeedsWorkCriteria = needsWork;
+
+                if (meetsDiscountCriteria || meetsNeedsWorkCriteria) {
+                  // Check if already in cash_houses by ZPID
+                  const existingCashDeal = await db.collection('cash_houses')
+                    .where('zpid', '==', Number(zpid) || zpid)
+                    .limit(1)
+                    .get();
+
+                  if (existingCashDeal.empty) {
+                    // Add to cash_houses collection
+                    const cashDealData = {
+                      // Copy core data from zillow_imports
+                      zpid: Number(zpid) || zpid,
+                      url: originalProp?.url,
+                      fullAddress: originalProp?.address || item.address?.streetAddress,
+                      streetAddress: item.address?.streetAddress,
+                      price,
+                      listPrice: item.listPrice || price,
+                      estimate,
+                      zestimate: estimate,
+                      description: sanitizeDescription(item.description),
+                      bedrooms: item.bedrooms,
+                      bathrooms: item.bathrooms,
+                      squareFoot: item.livingArea || item.livingAreaValue || item.squareFoot,
+                      lotSquareFoot: item.lotAreaValue || item.lotSize,
+                      yearBuilt: item.yearBuilt,
+                      homeType: item.homeType || item.propertyType,
+                      homeStatus: newStatus,
+                      latitude: item.latitude,
+                      longitude: item.longitude,
+                      hoa: item.monthlyHoaFee || item.hoaFee || 0,
+                      annualTaxAmount: item.annualTaxAmount,
+                      rentEstimate: item.rentZestimate || item.rentEstimate,
+
+                      // Agent info
+                      agentName: item.attributionInfo?.agentName || item.agentName,
+                      agentPhoneNumber: item.attributionInfo?.agentPhoneNumber || item.agentPhoneNumber,
+                      brokerName: item.attributionInfo?.brokerName || item.brokerName,
+
+                      // Images
+                      imgSrc: item.hiResImageLink || item.propertyImages?.[0],
+                      propertyImages: item.propertyImages || item.responsivePhotos?.map((p: any) => p.mixedSources?.jpeg?.[0]?.url).filter(Boolean),
+
+                      // Cash deal specific fields
+                      discountPercentage: parseFloat(discountPercent.toFixed(2)),
+                      eightyPercentOfZestimate: Math.round(eightyPercentOfZestimate),
+                      needsWork,
+                      needsWorkKeywords,
+                      dealType: meetsDiscountCriteria ? 'discount' : 'needs_work',
+                      source: 'auto_discovery_zillow_refresh',
+
+                      // Timestamps
+                      createdAt: new Date(),
+                      discoveredAt: new Date(),
+                      imageEnhanced: true,
+                      imageEnhancedAt: new Date().toISOString(),
+                    };
+
+                    firestoreBatch.set(db.collection('cash_houses').doc(), cashDealData);
+
+                    if (meetsNeedsWorkCriteria && !meetsDiscountCriteria) {
+                      needsWorkFound++;
+                      console.log(`   🔨 NEW NEEDS WORK: ${originalProp?.address} - Keywords: ${needsWorkKeywords.join(', ')}`);
+                    } else {
+                      cashDealsFound++;
+                      console.log(`   💰 NEW CASH DEAL: ${originalProp?.address} - $${price.toLocaleString()} vs $${estimate.toLocaleString()} (${discountPercent.toFixed(1)}% discount)`);
+                    }
+
+                    newCashDeals.push({
+                      address: originalProp?.address || item.address?.streetAddress || 'Unknown',
+                      price,
+                      estimate,
+                      discountPercent: parseFloat(discountPercent.toFixed(2)),
+                      needsWork,
+                    });
+                  }
+                }
+              }
             }
           }
         }
@@ -461,6 +565,11 @@ export async function GET(request: NextRequest) {
     console.log(`Deleted (inactive): ${deleted}`);
     console.log(`Errors: ${errors}`);
     console.log(`✓ All ${updated + noResultCount + deleted} properties got lastStatusCheck updated`);
+    console.log('');
+    console.log('💰 CASH DEALS DISCOVERY:');
+    console.log(`   New cash deals found: ${cashDealsFound}`);
+    console.log(`   Needs work properties: ${needsWorkFound}`);
+    console.log(`   Total added to cash_houses: ${cashDealsFound + needsWorkFound}`);
 
     if (statusChanges.length > 0) {
       console.log('\n📊 Status Changes:');
@@ -490,6 +599,13 @@ export async function GET(request: NextRequest) {
         allProcessed: updated + noResultCount + deleted, // Should equal totalProperties
         statusChanges: statusChanges.length > 0 ? statusChanges : undefined,
         deletedProperties: deletedProperties.length > 0 ? deletedProperties : undefined,
+        // Cash deals discovery stats
+        cashDeals: {
+          newDealsFound: cashDealsFound,
+          needsWorkFound: needsWorkFound,
+          totalAdded: cashDealsFound + needsWorkFound,
+          deals: newCashDeals.length > 0 ? newCashDeals : undefined,
+        },
       },
     });
 

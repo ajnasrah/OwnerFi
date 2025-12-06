@@ -221,6 +221,9 @@ export async function POST(request: NextRequest) {
       phone,
       city,
       state,
+      // User type flags
+      isRealtor,
+      isInvestor,
       // Optional property filters
       minBedrooms,
       maxBedrooms,
@@ -277,6 +280,10 @@ export async function POST(request: NextRequest) {
       city: city,                    // API compatibility
       state: state,                  // API compatibility
       searchRadius: 25,
+
+      // User type flags
+      ...(isRealtor !== undefined && { isRealtor: isRealtor === true }),
+      ...(isInvestor !== undefined && { isInvestor: isInvestor === true }),
 
       // Property requirements (optional filters)
       ...(minBedrooms !== undefined && { minBedrooms: Number(minBedrooms) }),

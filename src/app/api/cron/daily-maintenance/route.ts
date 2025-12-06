@@ -211,7 +211,10 @@ async function enhancePropertyImages() {
       const allDocs = await collRef.get();
 
       // Filter to unprocessed docs - check ALL image fields for low-res patterns
-      const lowResPatterns = ['p_a.jpg', 'p_b.jpg', 'p_c.jpg', 'p_d.jpg', 'p_e.jpg', 'p_f.jpg', 'p_g.jpg', 'p_h.jpg', 'cc_ft_192', 'cc_ft_384', 'cc_ft_576', 'cc_ft_768'];
+      const lowResPatterns = [
+        'p_a.jpg', 'p_b.jpg', 'p_c.jpg', 'p_d.jpg', 'p_e.jpg', 'p_f.jpg', 'p_g.jpg', 'p_h.jpg',
+        'cc_ft_192', 'cc_ft_384', 'cc_ft_576', 'cc_ft_768', 'cc_ft_960', 'cc_ft_1344', 'cc_ft_1536'
+      ];
       const unprocessed = allDocs.docs.filter(doc => {
         const data = doc.data();
 
@@ -263,8 +266,9 @@ async function enhancePropertyImages() {
           };
           let wasUpgraded = false;
 
-          // Process single image fields
-          for (const field of imageFields) {
+          // Process single image fields (including firstPropertyImage)
+          const allSingleFields = [...imageFields, 'firstPropertyImage'];
+          for (const field of allSingleFields) {
             if (data[field] && typeof data[field] === 'string' && data[field].includes('zillowstatic.com')) {
               const newUrl = upgradeZillowImageUrl(data[field]);
               if (newUrl !== data[field]) {

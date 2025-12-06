@@ -18,6 +18,9 @@ export default function BuyerSettings() {
   // FORM DATA - Search preferences and optional filters
   const [formData, setFormData] = useState({
     city: '',
+    // User type flags
+    isRealtor: false,
+    isInvestor: false,
     // Optional property filters
     minBedrooms: '',
     maxBedrooms: '',
@@ -69,6 +72,9 @@ export default function BuyerSettings() {
 
         setFormData({
           city: displayCity,
+          // User type flags
+          isRealtor: data.profile.isRealtor || false,
+          isInvestor: data.profile.isInvestor || false,
           // Optional property filters
           minBedrooms: data.profile.minBedrooms?.toString() || '',
           maxBedrooms: data.profile.maxBedrooms?.toString() || '',
@@ -122,6 +128,9 @@ export default function BuyerSettings() {
           phone: phone,
           city,
           state,
+          // User type flags
+          isRealtor: formData.isRealtor,
+          isInvestor: formData.isInvestor,
           // Optional property filters (only send if provided)
           ...(formData.minBedrooms && { minBedrooms: Number(formData.minBedrooms) }),
           ...(formData.maxBedrooms && { maxBedrooms: Number(formData.maxBedrooms) }),
@@ -279,6 +288,48 @@ export default function BuyerSettings() {
               onChange={(city) => setFormData(prev => ({ ...prev, city }))}
               placeholder="Dallas, TX"
             />
+          </div>
+
+          {/* User Type Card */}
+          <div className="bg-gradient-to-br from-slate-800/50 to-slate-800/30 border border-slate-700/50 rounded-xl p-4 backdrop-blur-xl shadow-lg">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-lg">👤</span>
+              <h2 className="text-base font-bold text-white">About You</h2>
+            </div>
+
+            <div className="space-y-3">
+              {/* Are you a realtor? */}
+              <label className="flex items-center gap-3 p-3 bg-slate-900/30 rounded-lg cursor-pointer hover:bg-slate-900/50 transition-all group">
+                <input
+                  type="checkbox"
+                  checked={formData.isRealtor}
+                  onChange={(e) => setFormData(prev => ({ ...prev, isRealtor: e.target.checked }))}
+                  className="w-5 h-5 text-emerald-500 bg-slate-700 border-slate-600 rounded focus:ring-emerald-400 cursor-pointer"
+                />
+                <div className="flex-1">
+                  <span className="text-sm font-semibold text-white group-hover:text-emerald-400 transition-colors">
+                    I am a licensed realtor
+                  </span>
+                  <p className="text-xs text-slate-400 mt-0.5">Check this if you have a real estate license</p>
+                </div>
+              </label>
+
+              {/* Are you an investor? */}
+              <label className="flex items-center gap-3 p-3 bg-slate-900/30 rounded-lg cursor-pointer hover:bg-slate-900/50 transition-all group">
+                <input
+                  type="checkbox"
+                  checked={formData.isInvestor}
+                  onChange={(e) => setFormData(prev => ({ ...prev, isInvestor: e.target.checked }))}
+                  className="w-5 h-5 text-emerald-500 bg-slate-700 border-slate-600 rounded focus:ring-emerald-400 cursor-pointer"
+                />
+                <div className="flex-1">
+                  <span className="text-sm font-semibold text-white group-hover:text-emerald-400 transition-colors">
+                    I am a real estate investor
+                  </span>
+                  <p className="text-xs text-slate-400 mt-0.5">Looking to buy properties for investment purposes</p>
+                </div>
+              </label>
+            </div>
           </div>
 
           {/* Property Filters Card */}

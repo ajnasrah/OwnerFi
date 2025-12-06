@@ -215,9 +215,11 @@ export async function POST(request: NextRequest) {
         );
 
         // Convert unified result to standard postResult format
+        // Store BOTH YouTube videoId AND Late.dev postId
         postResult = {
           success: unifiedResult.success,
-          postId: unifiedResult.otherPlatforms?.postId || unifiedResult.youtube?.videoId,
+          postId: unifiedResult.otherPlatforms?.postId,
+          youtubeVideoId: unifiedResult.youtube?.videoId,
           platforms: [
             ...(unifiedResult.otherPlatforms?.platforms || []),
             ...(unifiedResult.youtube?.success ? ['youtube'] : [])
@@ -227,18 +229,22 @@ export async function POST(request: NextRequest) {
       }
 
       if (postResult.success) {
-        console.log(`✅ Posted to Late queue successfully`);
+        console.log(`✅ Posted successfully`);
+        if (postResult.youtubeVideoId) {
+          console.log(`   YouTube Video ID: ${postResult.youtubeVideoId}`);
+        }
         if (postResult.postId) {
-          console.log(`   Post ID: ${postResult.postId}`);
+          console.log(`   Late.dev Post ID: ${postResult.postId}`);
         }
         if (postResult.scheduledFor) {
           console.log(`   Scheduled for: ${postResult.scheduledFor}`);
         }
 
-        // Mark as completed
+        // Mark as completed - store BOTH IDs
         await updateWorkflowForBrand(brand, workflowId, {
           status: 'completed',
           latePostId: postResult.postId,
+          youtubeVideoId: postResult.youtubeVideoId,
           completedAt: Date.now(),
         });
 

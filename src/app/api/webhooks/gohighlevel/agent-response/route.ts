@@ -212,6 +212,10 @@ export async function POST(request: NextRequest) {
           agentNote: agentNote || null,
           originalQueueId: firebaseId,
 
+          // CRITICAL: These flags make the property visible to buyers
+          ownerFinanceVerified: true,
+          isActive: true,
+
           // Metadata
           importedAt: new Date(),
           lastStatusCheck: new Date(),

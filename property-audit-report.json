@@ -1,1234 +1,2007 @@
 {
-  "timestamp": "2025-11-24T19:12:48.258Z",
-  "totalScanned": 1272,
-  "totalPassed": 1192,
-  "totalIssues": 85,
+  "timestamp": "2025-12-06T02:27:11.211Z",
+  "totalScanned": 4151,
+  "totalPassed": 3866,
+  "totalIssues": 285,
   "issues": {
-    "noDescription": [],
-    "emptyDescription": [],
-    "hasNegativeKeywords": [
+    "noDescription": [
       {
-        "id": "IEkJ0xU7XKDkAubepVRo",
-        "address": "1580 Elmore Ave, Idaho Falls, ID 83402",
-        "zpid": 76905428,
-        "negativeKeywords": [
-          "no owner-carry"
-        ],
-        "description": "Nice duplex. Each unit has three bedrooms and a full bath. Separate meters. In Idaho Falls, tenants pay water/sewer/trash with electrical bill. Basement had a flood a few months ago. Water main was re"
+        "id": "h38BduHJgKAe7ll0cja7",
+        "address": "620 Williams Ave, Memphis, TN 38126",
+        "zpid": "458491460",
+        "reason": "undefined"
       },
       {
-        "id": "S9gVOzfGWDzrR2y6jfuz",
-        "address": "1414 Greendale Ave, Memphis, TN 38127",
-        "zpid": 42220462,
-        "negativeKeywords": [
-          "no wholesalers or seller financing"
-        ],
-        "description": "JUST LIKE NEW! This property is renovated and ready to go! Perfect for a 1031 Exchange, Investor or First Time Buyer! What's not to love about this traditional brick home with all new flooring and til"
+        "id": "l940dweTFXpVEbJtMx2o",
+        "address": "386 McFarland Dr, Memphis, TN 38109",
+        "zpid": "42247710",
+        "reason": "undefined"
       },
       {
-        "id": "jEXDiHo8D3dkup4bakss",
-        "address": "1380 Gill Ave, Memphis, TN 38106",
-        "zpid": 42173211,
-        "negativeKeywords": [
-          "no wholesalers or seller financing"
-        ],
-        "description": "Perfect for Investors and First Time Buyers! This home is located minutes from expressway, Stax Museum, LeMoyne Owen College, Graceland , Midtown and Downtown! This home is also walking distance to Ha"
-      },
-      {
-        "id": "oXtrHmD6b82YdDWVtBWX",
-        "address": "3230 Yale Ave, Memphis, TN 38112",
-        "zpid": 42162462,
-        "negativeKeywords": [
-          "no seller-financing",
-          "no seller-financing offered"
-        ],
-        "description": "Here is a chance for an awesome value-add fixer in a burgeoning, up-and-coming neighborhood! Binghampton is seeing great growth year over year, with flippers and turnkey companies coming in and changi"
-      },
-      {
-        "id": "ounsULsNmvCvPNf1k5S4",
-        "address": "637-639 E 102nd St, Cleveland, OH 44108",
-        "zpid": 458449038,
-        "negativeKeywords": [
-          "no wholesalers or owner-financing"
-        ],
-        "description": "Exceptional and affordable, this rare 6-bedroom, 2-full-bath side-by-side duplex is an opportunity that will not last! Attention investors and owner-occupant buyers this vacant property is easy to sho"
+        "id": "mCzxDoOvzRX5J2VGmnA3",
+        "address": "3589 Covington Pike APT 124, Memphis, TN 38128",
+        "zpid": "42278217",
+        "reason": "undefined"
       }
     ],
+    "emptyDescription": [],
+    "hasNegativeKeywords": [],
     "shouldNotPass": [
       {
-        "id": "0fgy6NYQGG2PtKl2WWSr",
-        "address": "520 Munson, Tow, TX 78672",
-        "zpid": 87421892,
+        "id": "0A3o52AAuUqzVqwgS3kh",
+        "address": "304 Johnson St, Little Rock, AR 72205",
+        "zpid": "308757",
         "reason": "Does not pass strict filter",
-        "description": "Not many homes Offering Seller Financing. Featuring 3 bedrooms and 2 baths with approx. 2,394 sq. ft. of living space. The back porch has been enclosed and would be perfect for a game room or home gym"
+        "description": "Step into this charming and historic Craftsman home, perfectly located close to hospitals, dining, and shopping. Two lots and on the corner! This 3-bedroom, 1.5-bath treasure offers both a living room"
       },
       {
-        "id": "1c7x5wF7EqXoN2bNQp3F",
-        "address": "507 Jorgette Dr, Harker Heights, TX 76548",
-        "zpid": 79914446,
+        "id": "0II4QjxqozB4woQssFfX",
+        "address": "1554 Hopewell Rd, Memphis, TN 38117",
+        "zpid": "42212261",
         "reason": "Does not pass strict filter",
-        "description": "NO BANKS NEEDED - OFFERING SELLER FINANCING Very well maintained, 4-side brick home nestled in a quiet, established neighborhood. This charming property features a spacious yard with plenty of room to"
+        "description": "Freshly updated and move-in ready, this charming home features new interior paint throughout and comes complete with all major appliances including the washer, dryer, and kitchen appliances. The layou"
       },
       {
-        "id": "3GP1clmEt0Ty3gDlGzLx",
-        "address": "4910 38th Way S APT 111, saint petersburg, FL 33711",
+        "id": "0RhLz9PmzhPD28PPpdWD",
+        "address": "344 Greenway Pl, Memphis, TN 38117",
+        "zpid": "42187073",
         "reason": "Does not pass strict filter",
-        "description": "DATE: 2025-11-10\nASKING PRICE: N/A\nDOWN PAYMENT: 10%\nINTEREST RATE: 6.5-7.5% plus .5-1 point\nAMORTIZATION: N/A\nBALLOON: N/A\nMONTHLY PAYMENT: $3,150\nNOTES: Monthly payment includes taxes, insurance, an"
+        "description": "Charming 3 bedroom, 2.5 bath home in sought after East Memphis location. Primary bedroom down with hardwood floors and bath with double vanities, separate shower and tub. Separate den and dining room."
       },
       {
-        "id": "3k4X1xitOOzMWhyKavos",
-        "address": "205 W Washington St, Boston, GA 31626",
-        "zpid": 452774689,
+        "id": "1CWNOON33IKlEWlYnRxB",
+        "address": "3432 Radford Rd, Memphis, TN 38111",
+        "zpid": "42189012",
         "reason": "Does not pass strict filter",
-        "description": "Charming Country-Style Home Near Downtown Boston\nThis beautifully updated 2-bedroom, 2-bath home blends timeless country charm with modern upgrades. Enjoy a freshly painted interior and exterior, bran"
+        "description": "TENANT OCCUPIED, DO NOT DISTURB TENANT. Drive by ONLY! Property is rented for $995/month & the lease expires 4/30/2026. Cash tenant. Copy of the lease available upon request. No showings without an ac"
       },
       {
-        "id": "43JlzaVQWHtCJkL27LIA",
-        "address": "3409 Catalan Aly, decatur, GA 30032",
+        "id": "1IPwgRGz8b8ZdqsTRRbk",
+        "address": "1205 Bristol Dr APT 14, Memphis, TN 38119",
+        "zpid": "42264633",
         "reason": "Does not pass strict filter",
-        "description": "PROPERTY: 3409 Catalan Aly, Decatur, GA 30032\nAGENT: Isaac Jordan\nDATE: 2025-11-11\nDOWN PAYMENT: 10-20%\nAPR: 8.5%\nAMORTIZATION: 30 yrs\nBALLOON: 3 yrs\nTERM: 3 years\nMONTHLY PAYMENT: ~$2,600\nNOTES: Ball"
+        "description": "Charming Two-Bedroom condo in East Memphis- Low Maintenance Living with Southern Charm. Condo offers a perfect blend of convenience,comfort, and style. Ideal for those seeking a low-maintenance lifest"
       },
       {
-        "id": "5anY0KAIekABDLTm6Hvl",
-        "address": "6926 College Ave, Kansas City, MO 64132",
-        "zpid": 2410081,
+        "id": "1QvCHtRl8wW2LBqcfVZ9",
+        "address": "1387 Hunters Mill Trl, Collierville, TN 38017",
+        "zpid": "50219235",
         "reason": "Does not pass strict filter",
-        "description": "Don't miss this three bedroom, one full bath ranch style home located in the heart of Kansas City. Whether looking for sweat equity while living in the home, or adding a new property to your investmen"
+        "description": "A fantastic home in a wonderful subdivision! This spacious property offers 4 bedrooms and 3 full bathrooms, featuring 3 bedrooms and 2 full baths downstairs, plus a private bedroom and full bath upsta"
       },
       {
-        "id": "5uEI2tLkzKhaUUfZbFSE",
-        "address": "1719 Fields Rd, Memphis, TN 38109",
-        "zpid": 42269611,
+        "id": "1T5A8oRnp9noI6LtuH7M",
+        "address": "255 Highland Park Cv, Oakland, TN 38060",
+        "zpid": "2061545494",
         "reason": "Does not pass strict filter",
-        "description": "Investor Special! This 3 Bedroom 1 Bathroom Home would be Great to add to your portfolio! With over 2.5 Acres, the possibilities are endless. Selling AS-IS. NO Wholesale, Assignments or Seller Finance"
+        "description": "Back on market due to no fault of seller or home. This GORGEOUS practically LIKE NEW 4BR/2BA home (4th BR could be used as a bonus) has so much to offer! The home is situated in a quiet cove and featu"
       },
       {
-        "id": "7tPcW5uZnbvGcJSORamu",
-        "address": "903 N Miller St, Decatur, TX 76234",
-        "zpid": 78942063,
+        "id": "1YZJ7gOTGgyAH5k7COV8",
+        "address": "5286 Autumn Forrest Dr, Memphis, TN 38125",
+        "zpid": "42347485",
         "reason": "Does not pass strict filter",
-        "description": "Howdy! Down at least 20k. The rest of the terms are flexible. Payments around 1900$ 7% interest preferred with a balloon after a few years. No credit check. She wants to be as flexible as possible.\n"
+        "description": "Welcome to your beautiful, custom-built and well-maintained home by original owners with plenty of space! Carpet-free home with split floor plan and primary bedroom has sitting room which can serve as"
       },
       {
-        "id": "9gudgXqXb0w54B1Phc5h",
-        "address": "147 Western Lake Dr, weatherford, TX 76087",
+        "id": "1d2J73ddiwmmWqqdxBZ7",
+        "address": "1802 N Houston Levee Rd, Cordova, TN 38016",
+        "zpid": "68520892",
         "reason": "Does not pass strict filter",
-        "description": "I got the purchase price wrong (price is based on appraisal)\n\nPurchase price: $280,000.00\nDown payment: 10% ($28,000)\nInterest rate: 9%\nMonthly payment (P&I): $2027.65\nInsurance: $1936.00\nTaxes: $3467"
+        "description": "Welcome to 1802 North Houston Levee Rd, a stunning single-family home that blends elegance, comfort, and convenience all in one exceptional location. Nestled in the heart of Cordova, this beautiful pr"
       },
       {
-        "id": "9uo8igdUajycVmJIqPqP",
-        "address": "704 Falmouth St, Birmingham, AL 35224",
-        "zpid": 926444,
+        "id": "2EUZDfZg0BA2a4HygPyk",
+        "address": "3596 Kendrick Rd, Memphis, TN 38108",
+        "zpid": "42204309",
         "reason": "Does not pass strict filter",
-        "description": "Investment opportunity! Leased until 9/30/26 Great rental income for investors at $890/mo. This property is 1 of 3 offered in a portfolio of other properties. Seller willing to sell individually or al"
+        "description": "Unique Opportunity! Near National, Jackson and Highland Every detail of this home was designed to provide comfort and purpose. With 2 bedrooms and space for a third, this property offers the flexibili"
       },
       {
-        "id": "ADgWUDsdBYqi0j9LyhVy",
-        "address": "2417 Greenlawn St, lake charles, LA 70607",
-        "zpid": 91784007,
+        "id": "2FlhLcJwQmc6rVjMfY0C",
+        "address": "8405 Brownstone Ln #56, Cordova, TN 38016",
+        "zpid": "2064445755",
         "reason": "Does not pass strict filter",
-        "description": "Charming Home on Spacious Lot in South Lake Charles - Owner Financing Available Welcome to this beautifully maintained property situated on a peaceful street in desirable South Lake Charles. Perfect a"
+        "description": "Beautifully updated and move-in ready, this spacious condo features an open floor plan, modern finishes, and abundant natural light. The renovated kitchen offers sleek countertops, custom cabinetry, a"
       },
       {
-        "id": "CITJlkMRs4jzymZa4D4B",
-        "address": "1935 Nomas St, Dallas, TX 75212",
-        "zpid": 162327110,
+        "id": "2hMkS2aUvutsbkqTHVBG",
+        "address": "4931 Gardenwood Dr, Memphis, TN 38116",
+        "zpid": "42259097",
         "reason": "Does not pass strict filter",
-        "description": "A beautifully updated and fully furnished home perfect for first-time buyers or savvy investors. Nestled in a rapidly developing neighborhood just 10 minutes from Downtown Dallas, this cozy property h"
+        "description": "Discover this wonderful home located in a well established Whitehaven neighborhood, offering comfort, convenience, and a fantastic backyard retreat. The large living room provides plenty of space for "
       },
       {
-        "id": "DR7WJt6F2fbUFj8UMmEt",
-        "address": "602 ray rd, Jacksonville, AR 72076",
+        "id": "2isvuPnMZhgCOOD0a9JW",
+        "address": "1257 Deer Trail Ln, Memphis, TN 38109",
+        "zpid": "42270600",
         "reason": "Does not pass strict filter",
-        "description": "You have an offer coming? Seller does finance by owner with minimum 10k down, his rate is 9.75 payments at 20 years\n"
+        "description": "Tranquil, inviting home offers 3 bedrooms, separate living room & den off the kitchen. Crisp & clean with fresh new interior & exterior paint, new light fixtures, a one car garage for your favorite au"
       },
       {
-        "id": "EEJNzSJcUhQcacdNm7z2",
-        "address": "2513 Rochelle St, durham, NC 27703",
+        "id": "2jUwO2mlVltIEJhbGrZI",
+        "address": "4029 Hermitage Dr, Memphis, TN 38116",
+        "zpid": "42257140",
         "reason": "Does not pass strict filter",
-        "description": "10% over asking price @ 8% interest rate 25-30% down. 30year AM. ballon 3 yr with renew option for 1yr up to 2years depending on payment history\n"
+        "description": "Call appointment number for showings, easy show. Beautiful home with 3 Bedrooms 2 Bathrooms, this property has a ton of luxury upgrades including totally renovated kitchen and bathrooms including new "
       },
       {
-        "id": "FtZmSl4jhrXJB4d3dtdZ",
-        "address": "6394 Roadstead Ct, apollo beach, FL 33572",
+        "id": "3CZA2FnHmDfcnBwRvCHB",
+        "address": "1209 Bush St, West Memphis, AR 72301",
+        "zpid": "76143255",
         "reason": "Does not pass strict filter",
-        "description": "MODERN LUXURY WITH OWNER FINANCING BUY LIKE RENT! No Banks Needed! Bad Credit, NO Credit, OK! BRING ALL OFFERS MOTIVATED SELLER What if you could skip the stress of the bank... and still step into the"
+        "description": "Take a look at this one and a half story home featuring 3 bedrooms, 1 full bath, laundry room, and an additional space perfect for a home office. Currently tenant-occupied, this property offers immedi"
       },
       {
-        "id": "HNz1wxaXdFgoy60VxbnG",
-        "address": "30417 N 42nd Pl, Cave Creek, AZ 85331",
+        "id": "3VUo3QDCO03ZdQcEe0M4",
+        "address": "8 E Paxton Ln, Memphis, TN 38109",
+        "zpid": "42251002",
         "reason": "Does not pass strict filter",
-        "description": "All they have shared with me is that they would carry for a three year period at 5% so those payments would be amortized over 30 years obviously with a balloon after three years as far as down payment"
+        "description": "Don t sleep on this one! Fully renovated 4-bed, 1.5-bath gem with all-new carpet, fresh paint throughout, and a massive fenced backyard ready for summer BBQs. Turn-key and priced to move call today be"
       },
       {
-        "id": "HS2AtqzYIGXXx7uyIAXD",
-        "address": "329 Wheeler Ln, Jamestown, TN 38556",
-        "zpid": 41267125,
+        "id": "3bikQYC340YuyQDXiUvM",
+        "address": "124 Glendale St, Jackson, TN 38301",
+        "zpid": "41812416",
         "reason": "Does not pass strict filter",
-        "description": "Totally remodeled historic, old school house built in 1920. Has been an established restaurant for the past 30 plus years with extensive remodeling done in 2021. This restaurant is ready to go and jus"
+        "description": "124 Glendale Street, a freshly updated 3-bedroom, 2-bath, 1,700sqft home that's move-in ready. The roof is only about 5 years old, and the HVAC system and furnace were both replaced roughly 2-3 years "
       },
       {
-        "id": "IEkJ0xU7XKDkAubepVRo",
-        "address": "1580 Elmore Ave, Idaho Falls, ID 83402",
-        "zpid": 76905428,
+        "id": "3jze0LjwFtKXZUZZPLSl",
+        "address": "86 Bame Cir, Bryant, AR 72022",
+        "zpid": "389907",
         "reason": "Does not pass strict filter",
-        "description": "Nice duplex. Each unit has three bedrooms and a full bath. Separate meters. In Idaho Falls, tenants pay water/sewer/trash with electrical bill. Basement had a flood a few months ago. Water main was re"
+        "description": "Welcome to this newly remodeled home designed with comfort, style, and functionality in mind. Step inside to find brand-new LVP flooring throughout along with a brand new roof for peace of mind. Enjoy"
       },
       {
-        "id": "JIE1QbhWXjg1cj5JQD6i",
-        "address": "6380 Bellavia Lane, Panama City, FL 32404",
-        "zpid": 2058479150,
+        "id": "3sovYoQiQZVzICcd50fm",
+        "address": "2390 Oak Springs Dr, Cordova, TN 38016",
+        "zpid": "42330120",
         "reason": "Does not pass strict filter",
-        "description": "NO BANK NEEDED SELLER FINANCING AVAILABLE FINANCIAMIENTO DISPONIBLE Move In Special: $28,200 Down and $2,451.26 monthly Bright New-Home in Liberty-- Modern 4-Bed / 2-Bath Gem! Move into your dream hom"
+        "description": "Beautiful. Updated. Move-In Ready. Welcome home to this charming 3-bedroom, 2-bath gem perfectly situated in the heart of Cordova convenient to top-rated schools, shopping, dining, and easy highway ac"
       },
       {
-        "id": "KqsmbKL5xJf9ucA7pZgg",
-        "address": "294 Eagle Dr, big bear lake, CA 92315",
+        "id": "47QPCF4QBBNusvISvAvz",
+        "address": "728 Sula Ln, West Memphis, AR 72301",
+        "zpid": "90788441",
         "reason": "Does not pass strict filter",
-        "description": "Welcome to 294 Eagle Dr in the Eagle Point neighborhood of Big Bear Lake, CA! Incredible opportunity to move in, landlord, or AirB&B this upgraded & turnkey, 2 bedroom, 1 bathroom mountain cabin - wit"
+        "description": "Investor Opportunity! This updated 2-bedroom, 1-bath home in West Memphis is rehabbed and currently tenant-occupied, offering instant monthly income from day one. Sitting on a spacious 7,405 sq ft lot"
       },
       {
-        "id": "Mu7BZ0687nsgjte5hLnn",
-        "address": "2102 29th St, lubbock, TX 79411",
-        "zpid": 54084075,
+        "id": "4N1czo9mHpmhGcpfWuZ5",
+        "address": "229 E B Ave, N Little Rock, AR 72116",
+        "zpid": "293244",
         "reason": "Does not pass strict filter",
-        "description": "Welcome to 2102 29th Street in Lubbock, Texas - a newly updated home with a unique opportunity you won't want to miss. This property not only offers charm and convenience but also comes with special o"
+        "description": "Welcome to 229 E B Avenue perfectly Park Hill and set on a picturesque, tree-lined street just minutes from lakes, parks, dining, shops, and within Lakewood Elementary zoning. Natural light fills ever"
       },
       {
-        "id": "OS7Wa92vrUnv9WBWWC6U",
-        "address": "100 White Hall Ave, White Hall, AR 71602",
-        "zpid": 90708268,
+        "id": "4SZy6zjBnpObv6O99h22",
+        "address": "5194 Warfield Dr, Memphis, TN 38117",
+        "zpid": "42208279",
         "reason": "Does not pass strict filter",
-        "description": "No Banks Needed, Owner Financing Available Welcome to this inviting 3-bedroom, 2-bath home located in White Hall. Perfect for a starter home or to add to an investment portfolio! This home offers a co"
+        "description": "Welcome to 5194 Warfield Cv a beautifully updated 3 bed, 2 bath home tucked away in a quiet East Memphis cove. Inside, you ll find fresh renovations throughout, including luxury vinyl flooring, update"
       },
       {
-        "id": "OwoATl9xnUUbA6XLhE3T",
-        "address": "4145 S Madison Ave, South Ogden, UT 84403",
-        "zpid": 145124430,
+        "id": "4ld2StBcGnXbyhBhR10N",
+        "address": "1723 Brookside Dr, Germantown, TN 38138",
+        "zpid": "42354819",
         "reason": "Does not pass strict filter",
-        "description": "SALE NEEDS TO SATISFY A BALANCE ON A REVERSE MORTGAGE, THEREFORE SELLER IS NOT INTERESTED IN ANY SELLER FINANCING, OR \"CREATIVE FINANCE\" OFFERS. 1/3 acre lot with tons of garage space to fit 5 cars, a"
+        "description": "Welcome to this beautiful home located in the desirable Germantown neighborhood. All living space is on one level. This charming residence features four bedrooms and three bathrooms, offering spacious"
       },
       {
-        "id": "OybOLF08EIEVESUnpMmm",
-        "address": "827 Maggie Walker Ave, Richmond, VA 23222",
-        "zpid": 12535569,
+        "id": "4vEb623zPxK83ln6qT71",
+        "address": "1509 Ragan St, Memphis, TN 38106",
+        "zpid": "42173751",
         "reason": "Does not pass strict filter",
-        "description": "Make this your home sweet home.\nPlease leave message with name and contact to let us know what time to expect you.\nHardwood floor, UPGRADED to HVAC (Heat pump) central heat and air, close to schools ("
+        "description": "Welcome to your new home with a little tlc this could be yours. Investors are welcome. Close to downtown Memphis. Five minutes from the expressway. With the opportunity to grow in an expanding neighbo"
       },
       {
-        "id": "QBYle4PH4andEO0S3e7k",
-        "address": "7346 Tradinghouse, san antonio, TX 78252",
-        "zpid": 2062392016,
+        "id": "5C0yoiOf8ciy22eNHjPc",
+        "address": "4970 Lochinvar Rd, Memphis, TN 38116",
+        "zpid": "42260399",
         "reason": "Does not pass strict filter",
-        "description": "Payments should be 2,600\n01:45 PM\nMG\nIf the buyer will put down $63,000 that will pay the commission that will pay off the solar panels then the buyer will only be doing the wraparound on the $283,000"
+        "description": "This 3-bedroom, 1-bath home offers a great opportunity for owner occupant buyers or investors looking to add value. Featuring a generous backyard, this property has endless potential. It is being sold"
       },
       {
-        "id": "RJjRAg8FJ3K138twmI6q",
-        "address": "19118 Lanbury Ave, Warrensville Heights, OH 44122",
-        "zpid": 52692278,
+        "id": "5KQE2C5cBTD0fy2pZzF3",
+        "address": "3249 Goodlett Rd, Memphis, TN 38118",
+        "zpid": "2057141095",
         "reason": "Does not pass strict filter",
-        "description": "Opportunity knocks and this is the one that buyers and investors have been waiting for! This 2-story home is in need of a light remodel to bring it back to life. There is a lot of potential with this "
+        "description": "Call appointment number for showings, easy show. Recently renovated 3bd/1.5ba home! This home is outfitted with a revamped kitchen with fresh white cabinets and beautiful granite countertops. Luxury v"
       },
       {
-        "id": "RWAaRivpushX9VHP9gee",
-        "address": "1439 Caballero, san antonio, TX 78224",
-        "zpid": 26340354,
+        "id": "5MPBhLQYxdiWd2QmaJRm",
+        "address": "527 Oakdale Rd, Alexander, AR 72002",
+        "zpid": "376983",
         "reason": "Does not pass strict filter",
-        "description": "Hello AJ. I did not see your message. Not sure. Anyways. Thank you for your text sir. Seller is needing 50k down payment. He's like 8% interest and 5 to 10 years. The only thing that is not negotiable"
+        "description": "Step inside to find a warm, welcoming layout featuring generous living spaces perfect for gatherings and everyday comfort. The kitchen flows easily to the outside where you will enjoy the tranquility "
       },
       {
-        "id": "Rc4BjlJ3OqESayWLW4nF",
-        "address": "117 Windward Passage St, Slidell, LA 70458",
-        "zpid": 2065913203,
+        "id": "5VwUHeZ9yfowOmtwwdGP",
+        "address": "7700 Old Brownsville Rd, Arlington, TN 38002",
+        "zpid": "42320944",
         "reason": "Does not pass strict filter",
-        "description": "Waterfront Living with an Incredible 2.9% Assumable Loan!\nWelcome to your cozy retreat in Eden Isles waterfront community! This single-story, 3-bed, 2-bath home with a spacious open floor plan offers "
+        "description": "This expansive 4-acre property offers incredible space and versatility, featuring 4-5 bedrooms, 3.5 baths, and an in-law wing or second master suite on the main level. Enjoy multiple living areas incl"
       },
       {
-        "id": "RmBccLSXdg6nwwLNfsfo",
-        "address": "1356 E 120th St, Cleveland, OH 44106",
-        "zpid": 33408030,
+        "id": "5dolUMHTDQK5i18gwTEh",
+        "address": "1033 Forrest Ave, Memphis, TN 38105",
+        "zpid": "42132085",
         "reason": "Does not pass strict filter",
-        "description": "Duplex/Triplex for sale. Can be delivered vacant. Was rented by the room bringing in almost $3,800 per month. Can be converted back into original layout easily.\nNo wholesalers, joint venture or seller"
+        "description": "LOOKING FOR A SPACIOUS HOME IN THE MIDTOWN/CROSSTOWN AREA THEN COULD BE THE HOME YOU ARE LOOKING FOR. WITH SOME TLC AND SOME IMAGINATION THIS HOUSE COULD BECOME YOUR HOME. THIS HOME IS 5 MINUTES FROM "
       },
       {
-        "id": "S9gVOzfGWDzrR2y6jfuz",
-        "address": "1414 Greendale Ave, Memphis, TN 38127",
-        "zpid": 42220462,
+        "id": "5edh7mPF44hEgg5XOoc3",
+        "address": "8200 W 34th St, Little Rock, AR 72204",
+        "zpid": "35735560",
         "reason": "Does not pass strict filter",
-        "description": "JUST LIKE NEW! This property is renovated and ready to go! Perfect for a 1031 Exchange, Investor or First Time Buyer! What's not to love about this traditional brick home with all new flooring and til"
+        "description": "Remodeled and set on a spacious corner lot, this home sits in a quiet, established neighborhood just moments from the University of Arkansas at Little Rock. Inside, you ll find fresh modern updates, a"
       },
       {
-        "id": "T34lDdqvHJll3MGAe7s3",
-        "address": "3801 La Paloma Dr, san juan, TX 78589",
-        "zpid": 446023629,
+        "id": "5nxqcHRo6LeKiGcACNDB",
+        "address": "33 Foxwood Cir W, Hernando, MS 38632",
+        "zpid": "89313317",
         "reason": "Does not pass strict filter",
-        "description": "Paloma - 10% interest rate, 5 yr balloon, 30 yr amortization. He has not determined the down payment as it is negotiable but does need to surpass covering commissions and closing costs. They are going"
+        "description": "Beautifully updated with over 3,600 square feet, 5 bedrooms, 3 full bathrooms and located on a large 1.5 acre lot.\nPerfect for a large family, there is plenty of room to live, entertain and grow!\nStep"
       },
       {
-        "id": "TqIN4dJdqmBwWs32PCmS",
-        "address": "130 Scranton Street, Fort Walton Beach, FL 32547",
-        "zpid": 45979244,
+        "id": "5yRe41czS51HkIFgZ250",
+        "address": "251 N Montgomery St, Memphis, TN 38104",
+        "zpid": "455296150",
         "reason": "Does not pass strict filter",
-        "description": "NO BANK NEEDED SELLER FINANCING AVAILABLE FINANCIAMIENTO DISPONIBLE Move In Special: $28,200 Down and $3,137.26 monthly Spacious & Upgraded Home Near the Coast! This is a beautifully maintained, move-"
+        "description": "Super cute midtown stone house. Make this your own design. Interior has not been finished. Home cannot qualify for FHA/VA/conventional."
       },
       {
-        "id": "TvaDGdcqH3lPG35ZZ2Lk",
-        "address": "91 County Road 4237, Salem, MO 65560",
-        "zpid": 194553969,
+        "id": "68Zlx7ao3lYdFoK2NvwJ",
+        "address": "4 Yazoo Cv, Maumelle, AR 72113",
+        "zpid": "343272",
         "reason": "Does not pass strict filter",
-        "description": "3 bedroom 2 bath house w/full walkout basement and 5 acres. Newly remodeld house, almost every thing is brand new. I tems that have been replaced:\nRoof, siding, widows, sliding door and all other door"
+        "description": "Spacious 4-bedroom, 2.5-bath home with 2 bedrooms upstairs and 2 downstairs. Features a large living area, a separate dining room, and a primary suite with a huge walk-in closet. With plenty of space "
       },
       {
-        "id": "VOAcTP35SofgcptfNoH5",
-        "address": "3232 Springview Ave, Dallas, TX 75216",
-        "zpid": 26784122,
+        "id": "6HcVG0doAWueiLTzHxNn",
+        "address": "2639 Cedar Ridge Dr, Germantown, TN 38138",
+        "zpid": "42362083",
         "reason": "Does not pass strict filter",
-        "description": "Charming South Oak Cliff Home! Perfect for an owner occupant looking to add value over time! This 3 bedroom, 1 bath home sits in a neighborhood on the rise with renovations and new builds popping up o"
+        "description": "One-Story, 1820 sq ft home, 3 bedrooms, 2 full bathrooms, sitting room, dining room, kitchen with breakfast nook, office, living room, and attached enclosed garage. Both bathrooms updated with Master "
       },
       {
-        "id": "VXQMMV6mqH8oPOS5PyMi",
-        "address": "321 Michel St, Hot Springs, MT 59845",
-        "zpid": 78191049,
+        "id": "6ZXAWbJLHk8Oxnuq4ZFC",
+        "address": "405 Henderson Rd, Jackson, TN 38305",
+        "zpid": "41799411",
         "reason": "Does not pass strict filter",
-        "description": "Down 20,000. Interest rate 6%    5 year balloon   monthly payment is negotiable\n"
+        "description": "A nice brick home on just over half an acre lot!! Will be delivered vacant and clean!! Great property with plenty of potential and ready for your personal touch! This home is perfect for those eager t"
       },
       {
-        "id": "VmjbWE2YmRv4OOhDgDIb",
-        "address": "26736 Rue Saint Anne Ct, cleveland, OH 44128",
-        "zpid": 457289232,
+        "id": "6cjXMYnbZZIp8z9g2jPU",
+        "address": "2344 Bethany Dr, Southaven, MS 38672",
+        "zpid": "89314822",
         "reason": "Does not pass strict filter",
-        "description": "Seller financing available! Purchase subject to the existing $200k mortgage @ 4.5% interest with 25 years remaining. Welcome to your new home in the beautiful and luxurious Chateau of Emery Woods deve"
+        "description": "Welcome to this well-maintained 3 bedroom, 2 bathroom home offering 1,642 sq/ft of comfortable living space in the desirable Southern Trace neighborhood. This home features an open floor plan with a s"
       },
       {
-        "id": "W3dW1WAUJ2sfJxw2Nu3q",
-        "address": "4870 Highway 67, hasse, TX 76442",
+        "id": "6gDEk9m8EaAuW77fYRJO",
+        "address": "281 N Willett St, Memphis, TN 38112",
+        "zpid": "42131274",
         "reason": "Does not pass strict filter",
-        "description": "NT: [Name not provided] ([Phone number not provided])\nDATE: 2025-11-10\nASKING PRICE: $261,000\nDOWN PAYMENT: 10%\nINTEREST RATE: 6%\nAMORTIZATION: 30 yrs\nBALLOON: 12 months\nMONTHLY PAYMENT: $2,275\nNOTES:"
+        "description": "Located in the heart of Midtown within the Evergreen Historic Conservation District, this home blends timeless charm with everyday comfort. Features include soaring ceilings, tall windows, original wo"
       },
       {
-        "id": "WA9Jih04sq151q8ZuiRr",
-        "address": "22637 N Hermosillo Dr, sun city west, AZ 85375",
-        "zpid": 8123810,
+        "id": "6hwdMyKtuPUjQIZ0m9Nx",
+        "address": "1864 Walker Ave, Memphis, TN 38114",
+        "zpid": "42143055",
         "reason": "Does not pass strict filter",
-        "description": "AGENT: Scott Marlow (eXp Realty)\nDATE: 2025-11-09  \nASKING PRICE: $579,000\nDOWN PAYMENT: 20% ($115,000)\nINTEREST RATE: 5%\nAMORTIZATION: N/A\nBALLOON: 7 years\nMONTHLY PAYMENT: $2,469  \n"
+        "description": "Adorable, renovated bungalow in historic Cooper Young Neighborhood. This home offers curb appeal with a spacious front porch complete with a classic porch swing. Inside, you ll find gorgeous hardwood "
       },
       {
-        "id": "XfaTiNZ8KrGJ5qkKhylK",
-        "address": "2333 N 14th St, Terre Haute, IN 47804",
-        "zpid": 2069793319,
+        "id": "6hy1XuaIweFJYckaGkeU",
+        "address": "11500 German Rd, Little Rock, AR 72206",
+        "zpid": "99435481",
         "reason": "Does not pass strict filter",
-        "description": "Turnkey 6-Unit Apartment Building Recently Renovated\nInvestment opportunity in Terre Haute s thriving 12 Points neighborhood! This 6-unit apartment building delivers immediate cash flow, with major re"
+        "description": "Country living in Little Rock! This 2-bedroom, 2 bathroom home sits on approximately 15 acres and is only 10-15 minutes from interstate access. Granite countertops, butcher block island and stainless "
       },
       {
-        "id": "XofeAPW9J0HrbhLj2gZg",
-        "address": "861 Pershing St, East Saint Louis, IL 62203",
-        "zpid": 5232278,
+        "id": "6pCSfWTwz6LMc89DNE50",
+        "address": "700 E 9th St APT 7A, Little Rock, AR 72202",
+        "zpid": "458582911",
         "reason": "Does not pass strict filter",
-        "description": "ABSOLUTELY no contract for deed or Owner financing available.\nPLEASE DO NOT BOTHER THE PEOPLE LIVING THERE\nMAKE AN APPOINTMENT TO SEE THIS HOUSE WITH THE OWNER!!!!\nNO SOLICITING FOR ANY SERVICES PLEAS"
+        "description": "3br/2ba condo on the 7th floor of the beautiful Quapaw Towers. This unit has so much to offer with close proximity to all that downtown Little Rock has to offer. Amenities include gated parking, secur"
       },
       {
-        "id": "Z3IEHQ4xHh0wzqcbRZGe",
-        "address": "2764 S 117th East Ave, tulsa, OK 74129",
-        "zpid": 434221455,
+        "id": "6uFWbmkpXKFR1wG8Of30",
+        "address": "7526 Willey Cv, Germantown, TN 38138",
+        "zpid": "42357214",
         "reason": "Does not pass strict filter",
-        "description": "\nList Price: $235,000\nDown Payment $23,500\nInterest: 9.99%\nTerm: 30yr amortized, 5yr option to ballon\n Principal & Interest: $1,854.50\nTaxes 2025: $2,026\nInsurance: Get there own or ours is $957/yr\n"
+        "description": "Country living in Germantown on almost an acre fenced lot, has rear gate for easy access to school & parks, neighborhood has its OWN PARK too! Enough land to pitch a tent or allow kiddos & furry frien"
       },
       {
-        "id": "ZZUTnOjtSmKsuBZHaFXC",
-        "address": "3330 Calle Bolivia, brownsville, TX 78526",
-        "zpid": 123725217,
+        "id": "77upBxrcNUcwagoQEENC",
+        "address": "21718 Peach Tree Ln, Hensley, AR 72065",
+        "zpid": "376565",
         "reason": "Does not pass strict filter",
-        "description": "PROPERTY: 3330 Calle Bolivia\nAGENT: [Name not provided] ([Phone number not provided])\nDATE: 2025-11-09\nASKING PRICE: [Not provided]\nDOWN PAYMENT: 20%\nINTEREST RATE: 10%\nAMORTIZATION: N/A\nBALLOON: 3 ye"
+        "description": "Beautiful lakehouse with 1.36 acres on Lake Orchard! 2600 sq.ft. natatorium with an enclosed inground pool with full bath! Tons of updates - a New Goodman HVAC, 2 New Daiken mini splits (18,000 BTU), "
       },
       {
-        "id": "abH3AwZ9raEdhouWRQc1",
-        "address": "520 Munson, Tow, TX 78672",
-        "zpid": 87421892,
+        "id": "7PC6U1Uq6pMWOqtU8Hfq",
+        "address": "6398 1st St, Southaven, MS 38672",
+        "zpid": "2077074123",
         "reason": "Does not pass strict filter",
-        "description": "Not many homes Offering Seller Financing. Featuring 3 bedrooms and 2 baths with approx. 2,394 sq. ft. of living space. The back porch has been enclosed and would be perfect for a game room or home gym"
+        "description": "Great new listing in SILO SQUARE with convenient access to the dog park, shopping, dining, and entertainment Custom-Built with Upgrades 4 Bedrooms, 3 Bathrooms, Game Room, Unfinished Expandable, and g"
       },
       {
-        "id": "bDncLkISKkNACN2rzuSs",
-        "address": "778 F St, san antonio, TX 78245",
+        "id": "7gLqhXlstBcmXts0U7l1",
+        "address": "4401 Guildhall Dr, Memphis, TN 38128",
+        "zpid": "42283672",
         "reason": "Does not pass strict filter",
-        "description": "Beautifully remodeled home in the heart of San Antonio! This 3-bedroom, 2-bath home features an open floor plan with stylish upgrades throughout. Enjoy cooking and entertaining in a modern kitchen com"
+        "description": "TENANT OCCUPIED, DO NOT DISTURB TENANT. Drive by ONLY! Property is rented for $1,465/month & the lease expires 6/30/2026. Cash tenant. Copy of the lease available upon request. No showings without an "
       },
       {
-        "id": "bcLBL6JqbBJyTXzhtRgo",
-        "address": "6710 Blanco St, edinburg, TX 78542",
-        "zpid": 443407533,
+        "id": "7mqkiAugG7JqMms4VDB1",
+        "address": "17 Lynn Cv, Marion, AR 72364",
+        "zpid": "90785423",
         "reason": "Does not pass strict filter",
-        "description": "Thank you for the details. I’ve noted 25% down, 9% interest, 15–20 years, and a flexible monthly payment between $4,000–$5,000; terms are negotiable.\n"
+        "description": "Looking for a home under $200,000 in Marion with 3 bedrooms and 2 baths? You may just found it here. Open floor plan with a spacious living room with a dining area, a laundry room, nice fixtures and L"
       },
       {
-        "id": "dMMevyBfMfQLjfhiXC7l",
-        "address": "431 Affinity St, hoxie, AR 72433",
-        "zpid": 90858227,
+        "id": "7tuG2a2gIk1EcyRKyHWl",
+        "address": "139 Sunset Dr, N Little Rock, AR 72118",
+        "zpid": "299753",
         "reason": "Does not pass strict filter",
-        "description": "Hi! $15K down, $1360/mo which includes taxes and insurance, option to refi after 2 years, 20 year note. Proof on income 2.5x the payment, so $3400\n"
+        "description": "Welcome home to this beautifully updated 3-bedroom, 1.5-bath property sitting on a spacious corner lot in North Little Rock. This 1,353 sq ft charmer features an updated kitchen, a fully fenced backya"
       },
       {
-        "id": "eb5rR8uXd1ZGecDJwstS",
-        "address": "220 Collier Ln, Rock Island, TN 38581",
-        "zpid": 70534539,
+        "id": "7xYtTGIrcIeghtaHL3aK",
+        "address": "1413 Fair Park Blvd, Little Rock, AR 72204",
+        "zpid": "311424",
         "reason": "Does not pass strict filter",
-        "description": "3 Bedroom, 2 Bath Country Plantation home. Country living at its best. 1acre secluded lot in the middle of pastures and farmland. 2 Story farmhouse with garage, with loft for extra storage and carport"
+        "description": "Wonderfully updated home in convenient location. 3 bed and 2 bath home ready for new owners. Updates include new furnace, tankless high efficiency water heater and stove in 2021. Great space buy and w"
       },
       {
-        "id": "ebbpoFzzU404Ji4BGq1D",
-        "address": "17 Green View Cir, Richardson, TX 75081",
-        "zpid": 27164100,
+        "id": "7zLW318C0h2nLWF4meS0",
+        "address": "5598 Bordeaux Cir E, Memphis, TN 38125",
+        "zpid": "42346923",
         "reason": "Does not pass strict filter",
-        "description": "Please see the terms below from the owner.\n\nSell price => 410K Down Payment Minm => 200K Rest 210K payable in 4 years in equal installments.\n"
+        "description": "No city taxes! Sold AS IS. Lender-required repairs only. Washer, dryer, and refrigerator stay! The layout includes three bedrooms plus a large upstairs bonus room that can serve as a fourth bedroom, a"
       },
       {
-        "id": "hYJyQYUtTfnjnWwwvoGL",
-        "address": "1994 S Sierra Dr, Dewey, AZ 86327",
-        "zpid": 8764207,
+        "id": "80LOfJnSqUJNueG5FLsY",
+        "address": "48 Deerfield Cv, Jackson, TN 38305",
+        "zpid": "41805390",
         "reason": "Does not pass strict filter",
-        "description": "Welcome home to this beautifully remodeled 1,360 sq ft, 2-bedroom, 2-bath property with an additional 200 sq ft bonus room perfect for a third bedroom, office, or den. Sitting on approximately 2.68 pr"
+        "description": "Discover this inviting 4-bedroom, 2-bathroom home located in the highly desirable North Jackson area. This property offers a spacious and welcoming living room, perfect for relaxing or entertaining. T"
       },
       {
-        "id": "iJbwMdedTXquCz98bZzJ",
-        "address": "416 W Us Highway 30, Bliss, ID 83314",
-        "zpid": 456522701,
+        "id": "81mZ8KwgD0r1yYwHWzrx",
+        "address": "3263 Glen Logan Dr, Memphis, TN 38134",
+        "zpid": "446701634",
         "reason": "Does not pass strict filter",
-        "description": "ank you for confirming. Here’s a summary for AJ:\nPROPERTY: 416 W Us Highway 30\nAGENT: Aj with Exp\nDATE: 2025-11-13\nASKING PRICE (List): Not provided\nSELLER-FINANCE PRICE: Not provided\nDOWN PAYMENT: mi"
+        "description": "Welcome home! This adorable 4-bedroom, 2-bathroom beauty is just waiting for you to make it your own. As soon as you step inside, you ll fall in love with the spacious great room perfect for cozy movi"
       },
       {
-        "id": "ilA0GHr8AS6Y6KDJ3L7P",
-        "address": "405 Monroe St, garfield, GA 30425",
-        "zpid": 105249576,
+        "id": "849GqMkMPAcaxpUBsHce",
+        "address": "295 Cherokee Cir, Oakland, TN 38060",
+        "zpid": "103789670",
         "reason": "Does not pass strict filter",
-        "description": "\n$25,000 down payment \n$244,000 loan amount\n20 yr term \n5 yr balloon\n8%\n$2,040.91 per month\n"
+        "description": "Welcome to this beautifully designed custom-built 3-bedroom, 2-bath home at a private neighborhood in Oakland, TN! Offering a seamless blend of comfort and style, this home features an open-concept la"
       },
       {
-        "id": "jEXDiHo8D3dkup4bakss",
-        "address": "1380 Gill Ave, Memphis, TN 38106",
-        "zpid": 42173211,
+        "id": "85npj9UcjGImxLQxWc0o",
+        "address": "372 Goshen Ave, N Little Rock, AR 72116",
+        "zpid": "294515",
         "reason": "Does not pass strict filter",
-        "description": "Perfect for Investors and First Time Buyers! This home is located minutes from expressway, Stax Museum, LeMoyne Owen College, Graceland , Midtown and Downtown! This home is also walking distance to Ha"
+        "description": "Welcome to a quintessential Park Hill classic perfectly placed on Goshen Avenue, right in the heart of one of the neighborhood s most beloved pockets. Just down the street from Idlewild Park and momen"
       },
       {
-        "id": "kDxYmBgFjzD04MXofdLo",
-        "address": "276 Lake Havasu Ave S APT B18, lake havasu city, AZ 86403",
+        "id": "8Bn5nSFUIGcgarr1nbGc",
+        "address": "4918 Mattew Dr, Horn Lake, MS 38637",
+        "zpid": "248406534",
         "reason": "Does not pass strict filter",
-        "description": "PROPERTY: 276 Lake Havasu Ave #B-18, Zanadu Condos\nAGENT: [Name not provided]\nDATE: 2025-11-09\nASKING PRICE: $215,000\nDOWN PAYMENT: $32,500\nINTEREST RATE: 6.0%\nAMORTIZATION: N/A\nBALLOON: 2 yrs\nMONTHLY"
+        "description": "Move-in ready home in a great Horn Lake location! This property features an open layout with a comfortable living area, quartz countertops, custom cabinetry, and stainless steel appliances. Plus a spa"
       },
       {
-        "id": "lI0yQQQe2nWgHFLH3KbV",
-        "address": "2709 9th St NE, Birmingham, AL 35215",
-        "zpid": 887236,
+        "id": "8ZmbTD4aQpkxQb9jNF5S",
+        "address": "8571 Woodland Rose Cir S, Cordova, TN 38016",
+        "zpid": "244537274",
         "reason": "Does not pass strict filter",
-        "description": "New 40 gallon Rheem water heater. Updated at $1250/mo. This property is 1 of 3 offered in a portfolio of other properties. Seller willing to sell individually or all 3 together. Other properties in po"
+        "description": "Set in the Woodlands of Cordova subdivision, this home offers the convenience of suburban living with a strong community feel. With schools, shopping, and major roadways nearby, you ll find an excelle"
       },
       {
-        "id": "lNNFkI3ecapzAzxzt2zt",
-        "address": "2512 Kenner Ave, Memphis, TN 38114",
-        "zpid": 42200584,
+        "id": "8rkpSl0aLV97WGTsvLvj",
+        "address": "110 Cambridge Place Dr, Little Rock, AR 72227",
+        "zpid": "82832917",
         "reason": "Does not pass strict filter",
-        "description": "GREAT INVESTMENT OPPORTUNITY! This 3 bedroom, 1 bathroom brick home is rented for $1,000/month, to a stable long-term tenant who has occupied the house for 5 years. Lease is good until 5/31/2026. Home"
+        "description": "Beautifully updated with new paint, new flooring, new kitchen including countertops. backsplash, and appliances. This was a 3 bedroom unit converted to two large ensuite bedrooms. Wonderful quiet priv"
       },
       {
-        "id": "lrtIXsXg3VxucDn5U6VL",
-        "address": "7941 FM 1346 lot 7, san antonio, TX 78245",
+        "id": "8wnTy8Gpdehh6zBwTIZI",
+        "address": "10423 Redmond Dr, Cordova, TN 38016",
+        "zpid": "116089638",
         "reason": "Does not pass strict filter",
-        "description": "**Owner Financing available with $65,000 down. (NEGOTIABLE ) Looking for a Country Living Feel ? Then this is the perfect piece of Land with 4 bedroom 2 bath home that is situated in almost 1/4 of an "
+        "description": "Freshly painted inside and out. Granite countertops. Updated lighting. New carpet. Newly refinished hardwood. Covered patio. Stainless appliances. One story home! Owner/agents."
       },
       {
-        "id": "nbwMOfCg08AGnswHrVNj",
-        "address": "3482 Bandera Rd, fort worth, TX 76112",
+        "id": "9ayUEvTLxlhI3bgQbh0s",
+        "address": "5034 Quince Rd, Memphis, TN 38117",
+        "zpid": "42213526",
         "reason": "Does not pass strict filter",
-        "description": "Owner-Finance available with downpayment. Contact Listing agent for more info. Seller to pay closing costs to include Seller paid title policy and lender paid appraisal fee with preferred partners and"
+        "description": "Kitchen recently updated w/new countertops & paint. Wonderful large addition of den on back of house with fireplace, built-in bookshelves & breakfast bar area opens kitchen to den. Beautiful hardwood "
       },
       {
-        "id": "noyfmwZCX7Wz8fls9ySF",
-        "address": "406 S Martin St, Ligonier, IN 46767",
-        "zpid": 85628725,
+        "id": "9p3b46YowqKLXI7Fy4D9",
+        "address": "50 Purdue Cir, Little Rock, AR 72204",
+        "zpid": "351575",
         "reason": "Does not pass strict filter",
-        "description": "(REDUCED PRICE)\nNO BANKS NEEDED, SELLER FINANCING AVAILABLE.\n$20k up front, $1,138/month, and interest rate is 3.375%\nLarge historical home located in the heart of Ligonier. This house is perfect for "
+        "description": "Prime investment opportunity near the University of Arkansas at Little Rock. This charming 3BR, 1BA home is a great opportunity for a student, faculty member or home buyer looking for convenience to c"
       },
       {
-        "id": "oXtrHmD6b82YdDWVtBWX",
-        "address": "3230 Yale Ave, Memphis, TN 38112",
-        "zpid": 42162462,
+        "id": "9wirrYoYhWqH4pjWTJMu",
+        "address": "7049 Windswept Ln, Olive Branch, MS 38654",
+        "zpid": "92204052",
         "reason": "Does not pass strict filter",
-        "description": "Here is a chance for an awesome value-add fixer in a burgeoning, up-and-coming neighborhood! Binghampton is seeing great growth year over year, with flippers and turnkey companies coming in and changi"
+        "description": "Stunning 6-Bedroom Corner-Lot Home with Exceptional Upgrades Throughout\nWelcome to this beautifully appointed 4,000 sqft corner-lot residence featuring 6 bedrooms, 4 full baths, and an abundance of pr"
       },
       {
-        "id": "oZidd3nfsDN6Ja1KZPVo",
-        "address": "1709 Navidad St, victoria, TX 77901",
-        "zpid": 216842083,
+        "id": "ACrWHIf87QDuRSzW4IFA",
+        "address": "5126 Sea Isle Rd, Memphis, TN 38117",
+        "zpid": "42213364",
         "reason": "Does not pass strict filter",
-        "description": "down payment is $13,000 down. $1027 monthly Principal and interest payment. \n30 year term. \nNo prepayment penalty \nRequire an application to verify identity, income"
+        "description": "Charming Corner-Lot Home Move-In Ready! Step inside this beautifully updated 3-bedroom, 1-bath painted brick home and fall in love! The light-filled living room offers a warm, welcoming vibe, while th"
       },
       {
-        "id": "ounsULsNmvCvPNf1k5S4",
-        "address": "637-639 E 102nd St, Cleveland, OH 44108",
-        "zpid": 458449038,
+        "id": "AT4a47KvqqTm6roLVisf",
+        "address": "141 N Auburndale St #141, Memphis, TN 38104",
+        "zpid": "2064442437",
         "reason": "Does not pass strict filter",
-        "description": "Exceptional and affordable, this rare 6-bedroom, 2-full-bath side-by-side duplex is an opportunity that will not last! Attention investors and owner-occupant buyers this vacant property is easy to sho"
+        "description": "A great investment opportunity!!! Rare find in Midtown! 2 BR/1.5 Bath Condo! Move In Ready !!!"
       },
       {
-        "id": "p7wSN92vEUzASaIELOia",
-        "address": "9323 Bee Balm Ave, odessa, TX 79765",
-        "zpid": 125172978,
+        "id": "B6tRaJ3QFp6SINSiViie",
+        "address": "18 Knollwood Dr, Jackson, TN 38305",
+        "zpid": "41805288",
         "reason": "Does not pass strict filter",
-        "description": "LT\nLiked “PROPERTY: 9323 Bee Balm Ave\nAGENT: [Name not provided] ([Phone number not provided])\nDATE: 2025-11-09\nASKING PRICE: $345,000\nDOWN PAYMENT: 10%\nINTEREST RATE: 8% (7-9% APR depending on credit"
+        "description": "Remodeled 3 BR 2 BA with over 1800 heated sq feet. 16x20 workshop. New kitchen, new baths, new paint, new lights. Master has 2 sep closets with changing area off master bath. Open kitchen with eat-n-a"
       },
       {
-        "id": "prswlthUVbsQkjlnJDOJ",
-        "address": "3716 Fir Ave SW, Birmingham, AL 35221",
-        "zpid": 1010482,
+        "id": "BDjGSTBnZXFxDbbalPvI",
+        "address": "2009 Goodwin Ave, West Memphis, AR 72301",
+        "zpid": "90788452",
         "reason": "Does not pass strict filter",
-        "description": "Great investment opportunity! New HVAC system including duct work, vents, registers, and thermostat. Current tenant pays $980/mo. This property is 1 of 3 offered in a portfolio of other properties. Se"
+        "description": "Welcome to this beautifully renovated home, thoughtfully updated from top to bottom! Step inside to find brand-new walls, fresh paint, new light fixtures, and stunning flooring throughout. The fully r"
       },
       {
-        "id": "q4PJ1tClBDSwwkLyuY7y",
-        "address": "3730 E Davis Rd, edinburg, TX 78542",
-        "zpid": 108848986,
+        "id": "Bj03T5mYnJalU6fUMEzy",
+        "address": "4600 Rosemont Dr, N Little Rock, AR 72116",
+        "zpid": "295747",
         "reason": "Does not pass strict filter",
-        "description": "AGENT: Gustavo Sanchez UR Home Texas Group\nDATE: 2025-11-09  \nASKING PRICE: $470,000 minimum\nDOWN PAYMENT: $50,000 (minimum)\nINTEREST RATE: 10%\nAMORTIZATION: 30 yrs\nBALLOON: Negotiable\nMONTHLY PAYMENT"
+        "description": "Welcome to this beautifully remodeled 4-bedroom, 2.5-bathroom split-level home located in the heart of the highly desirable Lakewood community in North Little Rock. Built in 1957 and thoughtfully upda"
       },
       {
-        "id": "qCn2x9woHoPEEwOLxDtK",
-        "address": "10125 Crown Point Dr, Saint Louis, MO 63136",
-        "zpid": 2652197,
+        "id": "Bjv6p6o3CObcEyUWJb7e",
+        "address": "648 Riverside Dr APT 407, Memphis, TN 38103",
+        "zpid": "72457443",
         "reason": "Does not pass strict filter",
-        "description": "Thank you for inquiring. \nThe seller is open but an example could include: $80k PP, $20k down payment if possible, $500 monthly payment.\n"
+        "description": "2BR/2BA condo near the river with partial river views! Features include hardwood floors in the main living area, tile in baths, and new upgraded spill-proof carpet installed by Home Depot (2024). Kitc"
       },
       {
-        "id": "qc0NsFJ3wXxj2PVgqTfO",
-        "address": "324 Privett Store Rd, Colquitt, GA 39837",
-        "zpid": 126375538,
+        "id": "C7wxYbX2AHUkOpRvCPDG",
+        "address": "49 Vance Ave #49, Memphis, TN 38103",
+        "zpid": "2086577745",
         "reason": "Does not pass strict filter",
-        "description": "Just outside the quiet charm of little Colquitt, Georgia, this spacious six-bedroom, three-bathroom home sits on a little over three acres, offering room to stretch out both inside and out. From the m"
+        "description": "Downtown living at its best! This 2/2.5 bath townhome has NO HOA, COMES FURNISHED, so SHORT TERM RENTALS ARE ALLOWED! Home features open floor plan, roof top porch, 2 car covered garage."
       },
       {
-        "id": "rVXYUQbHQUCKk2SBTcSO",
-        "address": "252 Trillium Road, newland, NC 28657",
+        "id": "CccELhsEZdbYxgPHprnW",
+        "address": "1987 Sonning Dr, Germantown, TN 38138",
+        "zpid": "42357040",
         "reason": "Does not pass strict filter",
-        "description": "ASKING PRICE: $159,000\nDOWN PAYMENT: $30,000–$35,000\nINTEREST RATE: 7% (1/4 pt above bank avg)\nAMORTIZATION: 30 yrs\nBALLOON: 5–6 yrs\nMONTHLY PAYMENT: $1,190 (includes HOA and taxes)\nNOTES: Standard co"
+        "description": "This 4 bedroom home is located in the heart of Germantown. Close to shopping and restaurants. This home is selling \"as-is\" Home is vacant and easy to show. Please call the listing agent with any quest"
       },
       {
-        "id": "rxxdx9N9O6lpBeWszi6K",
-        "address": "486 W Waterloo Rd, Akron, OH 44314",
-        "zpid": 35438242,
+        "id": "Cdss5wdGQE2qOJQXbQkI",
+        "address": "8497 Bergen Dr, Cordova, TN 38018",
+        "zpid": "42289392",
         "reason": "Does not pass strict filter",
-        "description": "This is the opportunity that buyers and investors wait for! This 2-story home is in need of a light remodel to bring it back to all that it can be. There is a lot of character throughout such as built"
+        "description": "Tucked away at the end of a quiet cove in the coveted Walnut Grove Lake community, 8497 Bergen Cove offers a rare blend of space, charm, and potential. This 5-bedroom, 3.5-bath home spans approximatel"
       },
       {
-        "id": "srtgRwS4JBbY8YlPnb0k",
-        "address": "1612 Lynn Haven Ave, dallas, TX 75216",
+        "id": "D1Uxk1deLonxH3F7UhDU",
+        "address": "1924 S Woodrow St, Little Rock, AR 72204",
+        "zpid": "313220",
         "reason": "Does not pass strict filter",
-        "description": "\nLoan Type: 30-Year Fixed.\n\nDown Payment: 20%.\nInterest Rate: 10%.\n\nMonthly Payment: $2,603.95.\n\nBuyer’s Agent Commission: 2%.\n\nAdditional Requirement:\nBuyer must maintain full property insurance cove"
+        "description": "Investors take notice, this home is tenant-occupied with a tenant who wants to stay, getting $1200 monthly with stable income. 24-hour notice on all showings. Agents, please see remarks."
       },
       {
-        "id": "tOHRvIEI49AWq960ewT4",
-        "address": "2535 Tandy Dr, gulfport, MS 39503",
+        "id": "DWZcMA8PFQJt5saPy7QU",
+        "address": "3211 Walker St, Little Rock, AR 72204",
+        "zpid": "352246",
         "reason": "Does not pass strict filter",
-        "description": "I'm thinking seller will go for $20K down, 30yr amortization, 5yr balloon, 10% interest, but I'll have to run the monthly payment (to include taxes and"
+        "description": "Great Potential! The square footage is for the whole structure. Approximately 1/2 of the house is unfinished. The back portion of the house, which is down a set of stairs, can be finished out to have "
       },
       {
-        "id": "tm7oZhUdTiEHml5UbbZi",
-        "address": "5104 Springfield Ave NW, roanoke, VA 24017",
-        "zpid": 49671864,
+        "id": "DZFpSHWyYBEZrHQqsSvo",
+        "address": "13 Daven Ct, Little Rock, AR 72209",
+        "zpid": "320647",
         "reason": "Does not pass strict filter",
-        "description": "We are offering 6 percent based on 25 years. No down payment but buyer pays closing costs. Loan balloons at five years.\n"
+        "description": "Priced to Sell!!! This home includes 4bd, 2ba with a bonus room!!! New Roof, new hot water heater, new paint and a stunning deck that overlooks a massive private backyard!!! Move-In Ready!! Make it yo"
       },
       {
-        "id": "usMOIFmhz5KnHMBIl7pZ",
-        "address": "2114 Paris St, alexandria, LA 71301",
-        "zpid": 209918328,
+        "id": "Dd8oQ2UIP2yN079xbCzB",
+        "address": "3214 E Shirley Cir, Memphis, TN 38127",
+        "zpid": "453226880",
         "reason": "Does not pass strict filter",
-        "description": "The home needs work and is not move in ready. I'm out and don't have the terms directly in front of me but it is 1500 down and less than 500/month as is. I know it was rented out about 3-4 months ago."
+        "description": "Property is being sold As-Is after recent vandalization. Additional photos available upon request. Owner/Agent."
       },
       {
-        "id": "vO3hEezUUffPW4uFZs27",
-        "address": "929 Brooks Dr, cedar hill, TX 75104",
-        "zpid": 67952573,
+        "id": "DtsgAVrS3CGg1yOP2EN1",
+        "address": "909 Bayou Vista Dr, Marion, AR 72364",
+        "zpid": "112936014",
         "reason": "Does not pass strict filter",
-        "description": "10% interest, 10% down payment.\n"
+        "description": "Welcome to this beautifully maintained 3-bedroom, 2-bath home, offering comfort, style, and thoughtful upgrades throughout in the most sought out neighborhood in Marion AR. Step inside to an inviting "
       },
       {
-        "id": "vYzEOsBZCqavnofrBKRg",
-        "address": "3214 Quiet Water Ln, gulf breeze, FL 32563",
+        "id": "E4cAZGoyvzolHVWWCgTN",
+        "address": "3965 Plymouth Ave, Memphis, TN 38128",
+        "zpid": "42273327",
         "reason": "Does not pass strict filter",
-        "description": "''OWNERS FINANCING AVAILABLE!'' Nestled in the picturesque Gulf Breeze, Midway/Tiger Bay area of Florida, this dream home offers a perfect blend of luxury and convenience. This exquisite 3-bedroom, 2."
+        "description": "Great turn key rental. New roof 4/2025. Just needs a little updating. Selling as is."
       },
       {
-        "id": "vrGqxKZYdEuWG2EWf4Kr",
-        "address": "855 SYCAMORE Way, Orange Park, FL 32073",
-        "zpid": 306141199,
+        "id": "E8TCAc1hgEoKMKTeXRGo",
+        "address": "8570 May Orchard Ln, Cordova, TN 38018",
+        "zpid": "42288962",
         "reason": "Does not pass strict filter",
-        "description": "RENT TO OWN\nLEASE PURCHASE\nNO CREDIT NEEDED\nNO BANK QUALIFYING NEEDED\nSELLER FINANCING AVAILABLE\nDon't miss this beautiful 4BR/2BA rent to own home with 2-car garage in Wilford Preserve! Built in 2020"
+        "description": "Discover an incredible opportunity in Sanga Grove with an assumable 2.5% VA interest rate for qualified buyers. This spacious home offers over 2,700 sq ft, including four bedrooms plus a versatile bon"
       },
       {
-        "id": "wifunk6CV8yFvyibFPZX",
-        "address": "1336 N College St, Decatur, IL 62526",
-        "zpid": 84807245,
+        "id": "EGNFG7S2LAQ8U473KaHJ",
+        "address": "2008 Waverly Ave, Memphis, TN 38114",
+        "zpid": "42144187",
         "reason": "Does not pass strict filter",
-        "description": "reat. We are looking for 20% down, 6% interest paid over 5 years. Would work out to be $4999.80 as the 20% down payment with $386.66 a month for 60 months. We are happy to pay a $1500 cash commission "
+        "description": "Welcome to the beautiful Midtown Memphis! Gorgeous fully remodeled home located a mile from Cooper-Young! Everything is new.This 3 bedroom 2 baths home welcomes you with a large front porch area. Insi"
       },
       {
-        "id": "xOQc4BFun5PgsvRyP589",
-        "address": "11685 Pagoda St, odessa, TX 79761",
-        "zpid": 206038754,
+        "id": "EefW9v2nlvM2Ea2Amv8f",
+        "address": "3213 Robbins Dr, Bryant, AR 72022",
+        "zpid": "82275244",
         "reason": "Does not pass strict filter",
-        "description": "10% down very good credit 750+ 8.0% interest w/option to refinance anytime. \n\nWill consider lower credit score but may require higher down payment and interest rate"
+        "description": "Welcome to 3213 Robbins Drive in the sought-after Andres Place Subdivision of Bryant! This stunning 4-bedroom, 2-bath home offers 2,103 sqft of superior living space with hardwood floors, tile, and la"
       },
       {
-        "id": "yeNIsBs1pTA8He4tKegD",
-        "address": "927 Tower Loop, Mountain View, AR 72560",
-        "zpid": 109128979,
+        "id": "Ejgbu5xqZvF55fkx6mjs",
+        "address": "2620 Bishop St, Little Rock, AR 72206",
+        "zpid": "317817",
         "reason": "Does not pass strict filter",
-        "description": "Charming 4-Bedroom Home with Guest Cottage Near the White River – Seller Financing Available!Beautifully 4-bedroom, 2-bath home with a spacious primary suite set apart from the other bedrooms for priv"
+        "description": "Solid Home that needs updates. Great Investment Potential."
       },
       {
-        "id": "zhTFCVXJ4u5QTgjfh6Ra",
-        "address": "3330 NW 101st St, miami, FL 33147",
+        "id": "EqZjB3zFrkm5Wq9t8CXi",
+        "address": "7589 Pleasant Ridge Rd, Arlington, TN 38002",
+        "zpid": "42320949",
         "reason": "Does not pass strict filter",
-        "description": "Excellent investment opportunity in a growing Miami neighborhood. The main structure suffered fire damage and will require a full remodel or possible tear-down. Property includes two additional storag"
+        "description": "Welcome to the country!! Over 2 acres of land with a classic farmhouse featuring a covered front porch. Perfect for a swing. Home has had some updating over the years. Two large bedrooms downstairs an"
       },
       {
-        "id": "zlQVfmmXJPnktMsENV3F",
-        "address": "5744 Indiana Ave, Kansas City, MO 64130",
-        "zpid": 2361574,
+        "id": "F7bb5ErSg6mybJyVYJYe",
+        "address": "108 N Belvedere Blvd APT 12, Memphis, TN 38104",
+        "zpid": "42130035",
         "reason": "Does not pass strict filter",
-        "description": "Investor special with solid potential in a rapidly developing area! This 2-bed, 1-bath property offers a functional layout with great bones, ready for your creative touch. The spacious living area, fo"
+        "description": "Move in ready! Can be sold furnished! This FULLY RENOVATED condo was previously a short term rental (STR) generating approx. $1500 per month and is now ready for new tenants or an owner-occupant! ALL "
+      },
+      {
+        "id": "FRmpUxQxxOx5arbWhF9i",
+        "address": "7203 L St, Little Rock, AR 72207",
+        "zpid": "342679",
+        "reason": "Does not pass strict filter",
+        "description": "Welcome to 7203 L Street a cute and charming Midtown Little Rock home that blends character, comfort, and thoughtful updates. A brand-new roof (2024), fresh interior paint (2025), and an updated guest"
+      },
+      {
+        "id": "FSwhiRr9pDv2D5qTuBNI",
+        "address": "3901 Cedar Hill Rd APT 16, Little Rock, AR 72202",
+        "zpid": "79778517",
+        "reason": "Does not pass strict filter",
+        "description": "This nicely updated 2 bedroom and 2 full bath condo overlooking Allsopp Park is a real stunner; New blonde hardwoods throughout except for ceramic tile in wet areas (no carpet), and fresh paint throug"
+      },
+      {
+        "id": "FXpBTbglEhBNiJZBkS45",
+        "address": "2104 Vinton Ave, Memphis, TN 38104",
+        "zpid": "42129320",
+        "reason": "Does not pass strict filter",
+        "description": "Open Sunday 11/30 1 to 2:30. This charming classic 3 bedroom 3 bath Victorian home has it all including 2 bedrooms and 2 full baths on the first floor! Original details throughout: tall ceilings, hard"
+      },
+      {
+        "id": "G1nDClHwdHfWrszW7Q7k",
+        "address": "712 Blossom St, North Little Rock, AR 72117",
+        "zpid": "276313",
+        "reason": "Does not pass strict filter",
+        "description": "Welcome to 712 Blossom St. This beautifully updated property offers modern comfort and peace of mind with a full suite of recent improvements. The home features a brand-new roof, new flooring througho"
+      },
+      {
+        "id": "G88Upw51hpaQnXFZ2UfM",
+        "address": "6910 Petworth Rd #6910, Memphis, TN 38119",
+        "zpid": "2080142337",
+        "reason": "Does not pass strict filter",
+        "description": "Stunning updated 3BR 2.5BA Townhome in highly desired Germantown Village. This spacious townhome offers modern updates, fantastic amenities & low maintenance living! Step inside to a completely update"
+      },
+      {
+        "id": "H34iaDAMOBHNoLucVUAH",
+        "address": "3612 W Elkwood Cv, Memphis, TN 38111",
+        "zpid": "42190252",
+        "reason": "Does not pass strict filter",
+        "description": "Priced to sell! Move-in ready 4BR/3BA in Sherwood Forest with 2,134 SF and a functional layout for families, work-from-home setups, or investors. The main level includes a large living room, separate "
+      },
+      {
+        "id": "H4tuFfosJmLRhwi2CUOW",
+        "address": "5572 April Dr, Southaven, MS 38671",
+        "zpid": "89322852",
+        "reason": "Does not pass strict filter",
+        "description": "Charming home on a spacious corner lot, perfectly situated near the community playground! Step inside to an open, inviting floorplan featuring gorgeous wood flooring and vaulted ceilings. The great ro"
+      },
+      {
+        "id": "H5ZFgnuGARC3OAkmde29",
+        "address": "645 Walker Rd, Jackson, TN 38305",
+        "zpid": "41801860",
+        "reason": "Does not pass strict filter",
+        "description": "Looking for a cozy home? Welcome to 645 Walker Road in Jackson, TN minutes from shopping, major retail chains and restaurants , private and public schools seconds from Union University College. This 2"
+      },
+      {
+        "id": "H9ZT6Du3jtQOn9MozCTB",
+        "address": "3436 W Horn Lake Rd, Memphis, TN 38109",
+        "zpid": "42243249",
+        "reason": "Does not pass strict filter",
+        "description": "This charming property makes an ideal choice for someone looking for a quiet comfortable neighborhood atmosphere. Besides 2 bedrooms, there's an extra room ideal for an office or playroom. A laundry r"
+      },
+      {
+        "id": "HT0pOXosg8qIXZH2UYGY",
+        "address": "816 Accomack Cv, Southaven, MS 38671",
+        "zpid": "89319156",
+        "reason": "Does not pass strict filter",
+        "description": "Welcome to this adorable, well-maintained home located in a quiet neighborhood with quick access to i55. Inside, you'll find vinyl plank flooring, updated bathrooms with modern finishes, and a spaciou"
+      },
+      {
+        "id": "HhJKWRwje4tVjtDqQv8X",
+        "address": "1015 Palmer Rd, Memphis, TN 38116",
+        "zpid": "42255384",
+        "reason": "Does not pass strict filter",
+        "description": "This is a rare opportunity in this Whitehaven neighborhood. And there is still time to move into this one before Christmas! This home has 5 large bedrooms rooms and 3.5 bathrooms. It features hardwood"
+      },
+      {
+        "id": "Hlcnk820jcBgwd6eGXhM",
+        "address": "5603 Dublin Ave, North Little Rock, AR 72118",
+        "zpid": "298769",
+        "reason": "Does not pass strict filter",
+        "description": "Discover the charm of this beautifully updated 3-bedroom, 2.5-bath split-level home offering 1,835 sqft of thoughtfully designed living space, with all bedrooms located upstairs on the first level and"
+      },
+      {
+        "id": "IDvTXWQFBCkE6oN3kOjA",
+        "address": "(Undisclosed Address), Mabelvale, AR 72103",
+        "zpid": "2082584264",
+        "reason": "Does not pass strict filter",
+        "description": "YOU WON'T FIND ANOTHER HOUSE LIKE THIS! This large, split floor plan home has 4 bedrooms, 3 baths, 2 bonus rooms and 1 sunroom! The large windows throughout the property allow lots of natural sunlight"
+      },
+      {
+        "id": "IJIOTZBjqb8PXznCGEkU",
+        "address": "1013 Graham Ave, North Little Rock, AR 72117",
+        "zpid": "276032",
+        "reason": "Does not pass strict filter",
+        "description": "Discover this beautifully updated 3-bedroom, 1-bath, 1,232 sq ft home featuring a spacious flex room perfect for a second living area, office, playroom, or studio. Enjoy an open layout with a cozy woo"
+      },
+      {
+        "id": "IXuz2ZPbd3sy9Qs0FvGy",
+        "address": "8500 Lakeshore Dr, Walls, MS 38680",
+        "zpid": "89297624",
+        "reason": "Does not pass strict filter",
+        "description": "Spacious 5BR/3BA home with 3,036 SF situated on 3.4 private acres in Walls, MS. Offering incredible potential, this property needs a little TLC but provides a great opportunity to customize and add va"
+      },
+      {
+        "id": "IeB2NXpxRJsC4Av53oQP",
+        "address": "1336 James St, Memphis, TN 38106",
+        "zpid": "42136795",
+        "reason": "Does not pass strict filter",
+        "description": "Perfect home for first time buyer and/or add to your portfolio for investment .home being sold as is. 3 bedrooms/1 bath. Tenant occupied/Drive by only/do not disturb tenant"
+      },
+      {
+        "id": "IhGqVyYlltru9ooJWJ9G",
+        "address": "3780 Mallory Rd, Memphis, TN 38111",
+        "zpid": "2067629374",
+        "reason": "Does not pass strict filter",
+        "description": "Fantastic investment opportunity in the Shelby area. This 2br/1 bath single-family home is in the 38111 area. Cash flowing with a monthly rental amount of $955/month. The lease ends on 02/28/26. No sh"
+      },
+      {
+        "id": "IscAXZuUmN5RjB9zrhUx",
+        "address": "505 Tennessee St APT 213, Memphis, TN 38103",
+        "zpid": "72455905",
+        "reason": "Does not pass strict filter",
+        "description": "Fabulous condo in the sought after Lofts building, originally built in 1909. Enormous windows fill the space with natural light, enhanced by electric shades. The open living area offers flexible layou"
+      },
+      {
+        "id": "J3ZMIVbytSZ3E3eVCdpg",
+        "address": "230 Lemaster St, Memphis, TN 38104",
+        "zpid": "42128885",
+        "reason": "Does not pass strict filter",
+        "description": "Discover the charm of this spacious 4-bedroom, 2-bathroom bungalow-style home in the heart of Midtown Memphis. Located in the historic Central Gardens Subdivision, it's steps away from schools, dining"
+      },
+      {
+        "id": "JBLNLJx8uxnRyzaa3Tin",
+        "address": "53 Sanders Rd, Humboldt, TN 38343",
+        "zpid": "41794458",
+        "reason": "Does not pass strict filter",
+        "description": "Conveniently nestled between Jackson & Humboldt . Step inside to a the living room with vaulted ceilings. Featuring 3 bedrooms plus 2 versatile bonus rooms perfect for an office, playroom, or guest sp"
+      },
+      {
+        "id": "JP29fT2xHGQxWBKMcXDQ",
+        "address": "4785 Dianne Dr LOT 42, Memphis, TN 38116",
+        "zpid": "458460143",
+        "reason": "Does not pass strict filter",
+        "description": "This stunning 4-bedroom, 2-full-bathroom ranch home has been fully renovated and upgraded throughout. Enjoy beautiful hardwood floors, brand-new tiled bathrooms, granite countertops, and a convenient "
+      },
+      {
+        "id": "JYuMmF37aO1Boo0Y6882",
+        "address": "782 Frayser Dr, Memphis, TN 38127",
+        "zpid": "42218182",
+        "reason": "Does not pass strict filter",
+        "description": "Tenant being evicted! Property will be vacant and ready for show soon! This property is being sold AS-IS. Cash of hard money only. Being sold as a package along with 3432 Radford 38111, 5090 Belfast 3"
+      },
+      {
+        "id": "KJ8w3N4pqqPVKGClDW0R",
+        "address": "305 Stevenson St, Jacksonville, AR 72076",
+        "zpid": "265818",
+        "reason": "Does not pass strict filter",
+        "description": "Welcome to this beautifully remodeled 4-bedroom, 2-bath home, offering modern updates and a comfortable split floor plan. The roof and HVAC system are just three years old, giving you peace of mind fo"
+      },
+      {
+        "id": "KVtm0P2ZbGXHWIV82VJp",
+        "address": "1200 Dyson Dr, Sherwood, AR 72120",
+        "zpid": "282159",
+        "reason": "Does not pass strict filter",
+        "description": "MOVE-IN READY!!! Come and see this spacious home in the heart of Sherwood. This 4-bed, 2.5 Bath home offers two living spaces, a spacious eat in kitchen plus a seperate dining room, 2 car garage, 2 st"
+      },
+      {
+        "id": "LM4Dyw9n9OiLbEiTntvJ",
+        "address": "8227 Echo Hills Ln, Memphis, TN 38125",
+        "zpid": "42345036",
+        "reason": "Does not pass strict filter",
+        "description": "Beautifully maintained 3-bedroom, 2.5-bath home full of charm and character. Built in 1976, this home offers a warm, inviting feel with spacious living areas perfect for relaxing or entertaining. The "
+      },
+      {
+        "id": "LMJxhKzEXqPnrCgVq36t",
+        "address": "17 Glasgow Ct, Little Rock, AR 72211",
+        "zpid": "79792809",
+        "reason": "Does not pass strict filter",
+        "description": "Welcome home to this charming move-in-ready beauty tucked inside a peaceful cul-de-sac neighborhood! Step inside to a bright and welcoming layout featuring an eat-in kitchen perfect for everyday meals"
+      },
+      {
+        "id": "LVMOFU7IJgPooHz48OqU",
+        "address": "6603 Broadwing Cir W, Olive Branch, MS 38654",
+        "zpid": "316951597",
+        "reason": "Does not pass strict filter",
+        "description": "Step inside to a spacious great room featuring vaulted ceilings, beautiful built-in bookshelves, and a gas log fireplace with a striking stone surround designed for a mounted TV. The room opens direct"
+      },
+      {
+        "id": "LYRXpFM7v12bxs8hvLbE",
+        "address": "768 Eventide Dr #768, Memphis, TN 38120",
+        "zpid": "458545308",
+        "reason": "Does not pass strict filter",
+        "description": "Prime East Memphis living at its finest! This spacious 3BR, 2.5BA condo offers the perfect blend of comfort, convenience, and lifestyle. Enjoy the rare benefit of a 2-car garage, a private patio, and "
+      },
+      {
+        "id": "LZcg4eScFkHG7RAFi6JV",
+        "address": "4259 Markston Dr, Southaven, MS 38672",
+        "zpid": "110585699",
+        "reason": "Does not pass strict filter",
+        "description": "Remodeled 3 bedroom 2 bath with a bonus/4th bedroom upstairs. Home has fresh paint, laminate flooring, new carpet, updated lighting and hardware, new architectural roof and a fenced backyard with a pa"
+      },
+      {
+        "id": "LbV1lxIh0Gl87WVbSDYL",
+        "address": "9054 Chimneyrock Blvd, Cordova, TN 38016",
+        "zpid": "42329886",
+        "reason": "Does not pass strict filter",
+        "description": "Beautiful 4BR/2.5BA Home in Berryhill Farms Formal Dining Room w/Lots of Natural Light Formal Living Room w/Corner Fireplace Open Great Room w/Fireplace & Amazing Windows Spacious Eat-In Kitchen w/Ton"
+      },
+      {
+        "id": "LoKlEssFLhrpgJVEBfVa",
+        "address": "67 Shady Lane Cv, Hernando, MS 38632",
+        "zpid": "442096139",
+        "reason": "Does not pass strict filter",
+        "description": "Attractive one-owner brick & siding low maintenance home. Just minutes from the historic Hernando town square."
+      },
+      {
+        "id": "MLhb8b1kRBCsZgl78n0E",
+        "address": "176 Plainview St, Memphis, TN 38111",
+        "zpid": "42165785",
+        "reason": "Does not pass strict filter",
+        "description": "Adorable Bungalow-Renovated Top to Bottom has Modern Updates & Charm Galore-2 BR 2 Bath Bonus/Flex Room Unfinished Guest House (with all utilities-yes plumbing) Open Concept-Chef's Kitchen-Seated Brea"
+      },
+      {
+        "id": "MWUDGSQqHZI3j2IkCJcC",
+        "address": "10 N Main St APT 301, Memphis, TN 38103",
+        "zpid": "42125527",
+        "reason": "Does not pass strict filter",
+        "description": "Spacious 3rd Floor condo overlooking Court Square Park and Main Street. Updated counters and stainless appliances in Kitchen. Both Bathrooms have a Bidet. This condo has tons of natural light, great v"
+      },
+      {
+        "id": "MZgwnGg7n683iIjuTKts",
+        "address": "131 Whitehall St, Jackson, TN 38301",
+        "zpid": "67415410",
+        "reason": "Does not pass strict filter",
+        "description": "Comfortable 3 bedrooms, 2 full bathrooms in approximately 1,240 sq ft of living area.\nBuilt in 1945, offering character and solid bones.\nLot size approximately 0.53 acres\nRecent updates: New Roof-2025"
+      },
+      {
+        "id": "Mh42duAJzsfnMRXcw9Wg",
+        "address": "6038 Armistead St, Arlington, TN 38002",
+        "zpid": "55305020",
+        "reason": "Does not pass strict filter",
+        "description": "ON THE MARKET NOW!. Welcome to this beautiful home with the coffered ceiling primary suite 2 additional bedrooms down with a private split floor plan. Large 4th bedroom/bonus room upstairs. Beautiful "
+      },
+      {
+        "id": "NFNfcBy8HYGGAM1W8S3d",
+        "address": "1218 Pennock Dr, Cordova, TN 38018",
+        "zpid": "2063204903",
+        "reason": "Does not pass strict filter",
+        "description": "Immaculate and move-in ready! This 2-year-young Regency home in the desirable Cordova Ridge community features the popular \"Colter\" floor plan with 2,224 square feet. The layout is perfect for modern "
+      },
+      {
+        "id": "Nba2yVH6FqImNnJ5Fy10",
+        "address": "4433 E Mallory Ave, Memphis, TN 38117",
+        "zpid": "42210527",
+        "reason": "Does not pass strict filter",
+        "description": "Check out this great home at 4433 E Mallory Ave! It has 3 bedrooms, 2.5 bathrooms, and a nice open layout that feels bright and welcoming. It also comes with a detached 2-car carport perfect for extra"
+      },
+      {
+        "id": "NvG4KFKRoiy3tqAvJFBt",
+        "address": "2000 S Valentine St, Little Rock, AR 72204",
+        "zpid": "314396",
+        "reason": "Does not pass strict filter",
+        "description": "Great investment potential! This home needs repairs but is priced for an investor to fix it up and create a dependable rental."
+      },
+      {
+        "id": "O06SmhtPS62hjka7zMo8",
+        "address": "7953 Woodford Ln, Germantown, TN 38138",
+        "zpid": "42364500",
+        "reason": "Does not pass strict filter",
+        "description": "Charming 4BR/2BA home in the heart of Germantown! This property offers great space, a functional layout, and tons of potential with a little TLC. Perfect opportunity for owner-occupants purchase this "
+      },
+      {
+        "id": "OOI3nkUfofhHOFUgiGLN",
+        "address": "2171 Court Ave, Memphis, TN 38104",
+        "zpid": "72474179",
+        "reason": "Does not pass strict filter",
+        "description": "This well-kept home features concrete floors, abundant natural light, and a functional kitchen with plenty of storage. Both bedrooms are upstiairs and spacious. Enjoy the privacy of a fully fenced yar"
+      },
+      {
+        "id": "OXOCDLg5XuCQ5nrz4xrP",
+        "address": "3844 Wilshire Rd, Memphis, TN 38111",
+        "zpid": "42191041",
+        "reason": "Does not pass strict filter",
+        "description": "Here's your chance to own a renovated 4br 2ba w/a 1br 1ba efficiency attached in Sherwood Forrest. Very close to U of M. The efficiency apartment is currently tenant occupied at $900/mo. The 4br 2ba i"
+      },
+      {
+        "id": "OjExksJzRvech6uCv3kR",
+        "address": "4433 N Kanita Cv, Memphis, TN 38125",
+        "zpid": "64498790",
+        "reason": "Does not pass strict filter",
+        "description": "Beautifully kept home tucked in a quiet cove in Buckingham Farms. Features a warm, inviting living area with a cozy fireplace, great flow, and plenty of storage including attic space. The upstairs bon"
+      },
+      {
+        "id": "Oqw8AnaQGEx4OTi5x842",
+        "address": "10619 Panther Mountain Rd, Maumelle, AR 72113",
+        "zpid": "328826",
+        "reason": "Does not pass strict filter",
+        "description": "Welcome to this warm and cozy 4-bed, 3-bath home nestled on a full acre with updates and space that truly feel inviting. The kitchen and bathrooms were beautifully renovated in 2017, offering a fresh,"
+      },
+      {
+        "id": "P304aWJemAPcrUEm8HIE",
+        "address": "4260 Wesgate Trl, Memphis, TN 38141",
+        "zpid": "161607775",
+        "reason": "Does not pass strict filter",
+        "description": "Look no further! Move into this very well maintained home in southeast Memphis. This 1-1/2 story zero-lot home features beautiful crown molding in Living & Dining Rm. Luxury wood laminate was installe"
+      },
+      {
+        "id": "Pm18fF6f0A1IiRERRFqB",
+        "address": "4309 Deer Park Dr, Little Rock, AR 72223",
+        "zpid": "330493",
+        "reason": "Does not pass strict filter",
+        "description": "New SS appliance package in Kitchen Home features plenty of hardwoods, slab granite, remodeled Master Bath, updated lighting, paints, top-end quality PELLA Windows & doors Covered deck overlooks spaci"
+      },
+      {
+        "id": "PtbrJX4x0IVN0ov9oMeg",
+        "address": "782 Fairway Trl, Hernando, MS 38632",
+        "zpid": "89283455",
+        "reason": "Does not pass strict filter",
+        "description": "Welcome to 782 Fairway Trail, a beautifully refreshed 3-bedroom, 2-bath home offering 1,800 sq ft of comfortable one-level living with golf course views right in the heart of Hernando. Inside, you'll "
+      },
+      {
+        "id": "QJ5KZbR8apcVGN35QKWA",
+        "address": "21 Cedaridge Dr, Jacksonville, AR 72076",
+        "zpid": "271753",
+        "reason": "Does not pass strict filter",
+        "description": "Charming 3-bedroom, 2-bath home just minutes from the Little Rock Air Force Base! This inviting home features a cozy living room with a fireplace and a comfortable, easy-flow layout. The kitchen and d"
+      },
+      {
+        "id": "QNj1ndPXJgliywHxzbLI",
+        "address": "508 Oxford St, West Memphis, AR 72301",
+        "zpid": "76146352",
+        "reason": "Does not pass strict filter",
+        "description": "Anyone needing Santa to bring them the American Dream for Christmas? Here it is, you will fall in love with this 4 bed, 2 full bath home, fully sodded yard, NEW WOOD FENCE, trees have already been cut"
+      },
+      {
+        "id": "QOkFnUOmV8Ao0JVRL27s",
+        "address": "3576 Holly Cv, Olive Branch, MS 38654",
+        "zpid": "89305694",
+        "reason": "Does not pass strict filter",
+        "description": "Located in the Highly Sought-After Lewisburg School District!\nThis 3-bedroom, 2-bath home offers the perfect blend of space, peace, and potential on 3.2 beautiful acres. From the moment you arrive, th"
+      },
+      {
+        "id": "QPepLWtJgVvgKrCQVkWy",
+        "address": "3629 Huckleberry St, Memphis, TN 38116",
+        "zpid": "42256357",
+        "reason": "Does not pass strict filter",
+        "description": "Great Flip Opportunity or Value Add property located behind Graceland. 1900 Sq. Ft. 4 Bed, 2 Bath home. 2-year-old roof, the exterior is in excellent condition! New LVP floors throughout, except bathr"
+      },
+      {
+        "id": "QVmaiMckBuliNW39wNZm",
+        "address": "4841 Olds Ave, Memphis, TN 38128",
+        "zpid": "42278166",
+        "reason": "Does not pass strict filter",
+        "description": "Will not qualify for most loans. Selling as-is!! Good house for FHA 203K Rehab loan. No regular FHA, VA or conventional loans. Great opportunity for a wonderful family home or excellent rental home. L"
+      },
+      {
+        "id": "QfniE87TmiOMmULk6f9n",
+        "address": "1405 Ashwood Cir, West Memphis, AR 72301",
+        "zpid": "76145353",
+        "reason": "Does not pass strict filter",
+        "description": "Warm and welcoming you will find this 4 br 2ba plus formal dining room. LVP flooring throughout & updated kitchen with granite countertops & new cabinets & breakfast nook w/ window seat bench. Split f"
+      },
+      {
+        "id": "QoI2xesLxF0UbEvO2Qd4",
+        "address": "4785 Dianne Dr, Memphis, TN 38116",
+        "zpid": "42259466",
+        "reason": "Does not pass strict filter",
+        "description": "This stunning 4-bedroom, 2-full-bathroom ranch home has been fully renovated and upgraded throughout. Enjoy beautiful hardwood floors, brand-new tiled bathrooms, granite countertops, and a convenient "
+      },
+      {
+        "id": "R2k5Te1sg6JzN8bddXSx",
+        "address": "10 Redwing Ct, Jacksonville, AR 72076",
+        "zpid": "270201",
+        "reason": "Does not pass strict filter",
+        "description": "Discover peaceful lakefront living in beautiful North Lake Subdivision with this well-kept 1,828 sq ft home on an oversized lot. This spacious property features 3 bedrooms, 2 bathrooms, a dedicated of"
+      },
+      {
+        "id": "REL5sRxR1EGDOTWqxfkx",
+        "address": "3287 Leschallas Dr, Memphis, TN 38128",
+        "zpid": "42273717",
+        "reason": "Does not pass strict filter",
+        "description": "Investor special or sweat equity win! This gem isn t perfect, but it s got great bones and even better potential. With 4 beds, 2 baths, and a solid layout, it s the kind of place that just needs some "
+      },
+      {
+        "id": "RKuvmtPpQrsYOrNFt2Rn",
+        "address": "224 Ingle Ave, Memphis, TN 38109",
+        "zpid": "64496424",
+        "reason": "Does not pass strict filter",
+        "description": "Step into this beautifully renovated 3-bedroom, 2-bath home offering modern upgrades, stylish finishes, and a layout designed for comfortable living. Every detail has been refreshed, from flooring and"
+      },
+      {
+        "id": "RLxjwwMaK91wASDFy8Bd",
+        "address": "9761 Misty Bay Cv, Arlington, TN 38002",
+        "zpid": "62862953",
+        "reason": "Does not pass strict filter",
+        "description": "3 bedroom, 2 bath home, 1 level home in a great location! Fixer Upper! Short sale attempt! Lender makes the final decision on offers."
+      },
+      {
+        "id": "RkHh0e4uSooZzGUtxuw6",
+        "address": "2081 Carrolton Dr, Southaven, MS 38671",
+        "zpid": "89260401",
+        "reason": "Does not pass strict filter",
+        "description": "Located on a quiet cove, this 4 bedroom, 2 bathroom home in Southaven offers hardwood flooring, fresh paint, and a flexible floor plan. The inviting covered front porch welcomes you inside to comforta"
+      },
+      {
+        "id": "SfzLjEa0EZoq145vP9Vg",
+        "address": "1522 Rebel Dr, Jacksonville, AR 72076",
+        "zpid": "263871",
+        "reason": "Does not pass strict filter",
+        "description": "Check out this cute 3 bedroom 1.5 bath home in the heart of Jacksonville. It is minutes away from shopping, restaurants, entertainment, etc. The home was renovated last year with a new roof, appliance"
+      },
+      {
+        "id": "SqHzwiMuNh90ZL2btGfF",
+        "address": "6758 Racquet Club Dr #6758, Memphis, TN 38119",
+        "zpid": "458559251",
+        "reason": "Does not pass strict filter",
+        "description": "3 bedroom, 2.5 bathroom townhouse with 1 car attached garage in East Memphis. Newly remodeled Kitchen, newly remodeled 2.25 bathrooms, floating countertop in primary bathroom, 5 inch sheetrock firewal"
+      },
+      {
+        "id": "SqMa9hmte8nQ8LlRGGjQ",
+        "address": "585 E Parkway Pkwy S #34, Memphis, TN 38104",
+        "zpid": "458446104",
+        "reason": "Does not pass strict filter",
+        "description": "Outstanding opportunity to get into the midtown market at unreal price! Quiet, hidden property on Harbert, off E Parkway. Rarely available to purchase. 2bd/1bath with patio and parking. Ideal rental. "
+      },
+      {
+        "id": "SqvnCBk1nCQk0qEEPux4",
+        "address": "739 Robinson Dr, Marion, AR 72364",
+        "zpid": "458546708",
+        "reason": "Does not pass strict filter",
+        "description": "Just Listed in Marion, AR! Discover your dream home at 739 Robinson Dr. This spacious and inviting property offers a perfect blend of comfort and style. Here's just a few of the many features. Upstair"
+      },
+      {
+        "id": "SsRIYrlWFtFGbnuZ3cfz",
+        "address": "7920 Burnelle Dr, Little Rock, AR 72209",
+        "zpid": "359399",
+        "reason": "Does not pass strict filter",
+        "description": "Just in time for the Holidays. Enjoy cooking in your brand-new kitchen complete with stainless steel appliances and rest easy knowing you have a new roof, new HVAC system, and a brand-new deck perfect"
+      },
+      {
+        "id": "T3aaaZXNvLNIAOw3yCbW",
+        "address": "3836 Birchleaf Rd, Memphis, TN 38116",
+        "zpid": "42253857",
+        "reason": "Does not pass strict filter",
+        "description": "Great home close to Graceland!"
+      },
+      {
+        "id": "TPa0BLep7TzGRr8m580c",
+        "address": "686 Delta Rd, Memphis, TN 38109",
+        "zpid": "42247084",
+        "reason": "Does not pass strict filter",
+        "description": "Get up to $25,000 toward your first home! Move in with the City of Memphis' Citywide DPA program! Charming 3-bedroom, 1-bathroom home offering 948 square feet of comfortable living space on a peaceful"
+      },
+      {
+        "id": "TX0kftHXWQHXSpwlploH",
+        "address": "8480 Bergen Dr, Cordova, TN 38018",
+        "zpid": "42289388",
+        "reason": "Does not pass strict filter",
+        "description": "Discover a beautifully maintained opportunity in highly coveted Walnut Grove Lakes. This 3BR, 2BA home offers a refined, easy-flow layout with a spacious living room anchored by a classic wood-burning"
+      },
+      {
+        "id": "TXmtxoPGhpTgQ15g5WBj",
+        "address": "3162 Ford Rd, Memphis, TN 38109",
+        "zpid": "42242524",
+        "reason": "Does not pass strict filter",
+        "description": "This is a fantastic opportunity for the first time buyer as well as the savvy investor. This 3bdrm, 2bath brick home is ideally situated for access to shopping schools and transportation. Call me for "
+      },
+      {
+        "id": "Txw0sEZffx63Vi3dRNwB",
+        "address": "3921 Royal Oaks Dr, Memphis, TN 38116",
+        "zpid": "42257048",
+        "reason": "Does not pass strict filter",
+        "description": "INVESTOR'S ONLY! As-Is Cash Sale. Only ONE block from Graceland! Perfect for a renovation your way. You may even want to maintain the 50's vibe of this home! All bedrooms on one level (no stairs). Pri"
+      },
+      {
+        "id": "U1QDfZJyjrkd93XJpk1k",
+        "address": "621 Campbell Ln, Jackson, TN 38301",
+        "zpid": "41823086",
+        "reason": "Does not pass strict filter",
+        "description": "OPEN HOUSE Dec 7th from 2-4pm! Newly remodeled, this stunning home showcases exceptional craftsmanship with the seller paying attention to every square inch of detail to ensure nothing short of magnif"
+      },
+      {
+        "id": "U4Fl8IBblRreZoI4Bzmw",
+        "address": "8719 Boulder Ln, Little Rock, AR 72227",
+        "zpid": "341216",
+        "reason": "Does not pass strict filter",
+        "description": "Welcome to this spacious 3-bedroom, 2.5-bath home located in the desirable Leawood Mountain subdivision. With 2,241 sq. ft. of well-designed living space, this property offers comfort, functionality, "
+      },
+      {
+        "id": "UC3XT9rnrN2J9vtVjkge",
+        "address": "517 Creekside Cv, Bryant, AR 72022",
+        "zpid": "247595912",
+        "reason": "Does not pass strict filter",
+        "description": "The perfect combination of modern elegance and comfortable living! 3 bedroom office / 2 & 1/2 bath is conveniently located in Dawson's Pointe on almost an acre (0.95 acre double lot) at the end of the"
+      },
+      {
+        "id": "UCQVogTZvc7rFBOAeuOT",
+        "address": "3408 Tatum St, Little Rock, AR 72204",
+        "zpid": "352711",
+        "reason": "Does not pass strict filter",
+        "description": "Calling all investors, don't miss this property!!! Home is a diamond in the rough - New Roof 2024, deck rebuilt. Home needs TLC. Cute curb appeal."
+      },
+      {
+        "id": "UGaM1Kd5BaOU0spjx8rB",
+        "address": "2405 Wolfe St, Little Rock, AR 72206",
+        "zpid": "315402",
+        "reason": "Does not pass strict filter",
+        "description": "INVESTORS!!! Historic home ready to finish into a duplex! One side is ready to be a 3BR/1.5 bath with a second level and private front entrance. The other is a 1BR/1BA with a private rear entrance all"
+      },
+      {
+        "id": "USWivOgvugqRaTd7kNcU",
+        "address": "321 W 22nd St, Little Rock, AR 72206",
+        "zpid": "316286",
+        "reason": "Does not pass strict filter",
+        "description": "A storybook one-level home tucked away in the heart of the coveted Governor s Mansion District. Built in 1900, this 3 bedroom, 2 bath delightful residence blends historic character with cozy, easy liv"
+      },
+      {
+        "id": "UhakRZmyUvbLwq1fibL3",
+        "address": "2677 Tangbourne Dr, Memphis, TN 38119",
+        "zpid": "42267774",
+        "reason": "Does not pass strict filter",
+        "description": "Incredible space, both inside and out! Situated on just over 3/4 of an acre, this large, brick East Memphis home boasts generously sized rooms and lots of them, too - you'll find four bedrooms upstair"
+      },
+      {
+        "id": "UoqndyGKTfSbrJGMcLBJ",
+        "address": "606 E 21st St, Little Rock, AR 72206",
+        "zpid": "82845963",
+        "reason": "Does not pass strict filter",
+        "description": "Move-in ready and dressed to impress! This beautifully updated 3/2 features a full remodel with modern finishes everywhere you look. Enjoy granite countertops, a brand-new refrigerator, and luxury vin"
+      },
+      {
+        "id": "UyvtfxQX1e3TCEdNNWIY",
+        "address": "1465 Harbert Ave, Memphis, TN 38104",
+        "zpid": "42127676",
+        "reason": "Does not pass strict filter",
+        "description": "Located in the heart of historic Central Gardens, this well-cared-for home blends character, comfort, and an inviting sense of home. The floorplan offers an easy, graceful flow, perfect for entertaini"
+      },
+      {
+        "id": "ViFgrdsPXeIpZTGBrHxW",
+        "address": "1218 Cordova Green Dr, Cordova, TN 38018",
+        "zpid": "455294389",
+        "reason": "Does not pass strict filter",
+        "description": "Be the first to see this beauty featuring 3 bedroom, 2 1/2 ba, sep DR, office (could be a 2nd BR downstairs) and 25x15 bonus room (perfect for entertaining). Primary BR down, 2 large Br's upstairs. No"
+      },
+      {
+        "id": "VqbQM7PjZeBTeqdBtiKK",
+        "address": "585 E Parkway Pkwy S #27, Memphis, TN 38104",
+        "zpid": "458446106",
+        "reason": "Does not pass strict filter",
+        "description": "Outstanding opportunity to get into the midtown market at unreal price! Quiet, hidden property on Harbert, off E Parkway. Rarely available to purchase. 2bd/1bath with patio and parking. Ideal rental. "
+      },
+      {
+        "id": "Vv9fwUl3uU1QEcpEb43X",
+        "address": "814 Clearview Cv, Southaven, MS 38672",
+        "zpid": "89276961",
+        "reason": "Does not pass strict filter",
+        "description": "This refreshed 3 bed, 2 bath home sits in a fantastic subdivision with a beautiful lake and walking trail just a short stroll away. Featuring a desirable split floor plan, new floors, and fresh paint "
+      },
+      {
+        "id": "W01ihgVfJncltwt9Vypd",
+        "address": "108 N Belvedere Blvd APT 22, Memphis, TN 38104",
+        "zpid": "42130045",
+        "reason": "Does not pass strict filter",
+        "description": "Attention Investors! This cash-flowing renovated condo is currently rented for $975/mo through 06/30/2026. Professionally managed. PACKAGE OPPORTUNITY! Can be sold with: 108 N Belvedere Blvd 12 & 18 f"
+      },
+      {
+        "id": "WHNT8CdmARJrPR7snCMK",
+        "address": "14 Quail Creek Ct, Little Rock, AR 72206",
+        "zpid": "324577",
+        "reason": "Does not pass strict filter",
+        "description": "This newly updated 4 bedroom, 2 bathroom home features granite countertops in the kitchen and bathrooms. The entire interior has been freshly painted and new flooring has been installed throughout. Yo"
+      },
+      {
+        "id": "Whmy2L5pe1yw8MUpHxnT",
+        "address": "600 Bristol Dr, Bryant, AR 72022",
+        "zpid": "389873",
+        "reason": "Does not pass strict filter",
+        "description": "Welcome home to 600 Bristol Drive a 3-bedroom, 2-bathroom property in the heart of Bryant! Step inside to an inviting open-concept living, dining, and kitchen space filled with natural light. The prim"
+      },
+      {
+        "id": "Wjsasu1Fwt3Yyp7cGxDC",
+        "address": "533 Rienzi Dr, Memphis, TN 38103",
+        "zpid": "42125975",
+        "reason": "Does not pass strict filter",
+        "description": "Welcome to this beautiful home in The South Bluffs, one of Downtown Memphis premier gated communities just steps from the Mississippi River. This home combines style, comfort, and convenience, featuri"
+      },
+      {
+        "id": "Wx8CeTiHvmwq4xYtJp8K",
+        "address": "1002 Hunter Lee Dr, Bryant, AR 72022",
+        "zpid": "249295532",
+        "reason": "Does not pass strict filter",
+        "description": "This stunning custom-built 4 bedroom, 2 bathroom home offers exceptional space and thoughtful design. With an office and a large finished basement, there s room for work, hobbies, or entertainment. Bu"
+      },
+      {
+        "id": "XC1iJYTxsyng4G1070CD",
+        "address": "5070 Ashland Grove St, Arlington, TN 38002",
+        "zpid": "52600311",
+        "reason": "Does not pass strict filter",
+        "description": "Welcome home to the renovated 3 Bed, 2 Bath home with a Spa-Inspired Primary Suite in highly desirable Bartlett! This stunning property has been meticulously renovated from top to bottom. Step inside "
+      },
+      {
+        "id": "XGWZHhHy7sMjh99ysOEF",
+        "address": "6347 Braybourne Pl, Olive Branch, MS 38654",
+        "zpid": "89264887",
+        "reason": "Does not pass strict filter",
+        "description": "In sought-after Braybourne SD, this spacious home delivers an impressive blend of comfort, style, and versatility with 5BRs (or 4BRs plus game room) and 3 full BAs on large privacy-fenced lot. The kit"
+      },
+      {
+        "id": "XXhHweWWf73MRwDkIJwd",
+        "address": "212 Kay St, North Little Rock, AR 72117",
+        "zpid": "277013",
+        "reason": "Does not pass strict filter",
+        "description": "Cute and affordable house with a flat yard. House has been updated roof, HVAC, bathrooms and kitchen remodeled. The rooms all are very good size, the living has a lot of natural light coming. Refriger"
+      },
+      {
+        "id": "XpRc3jSpNm9jV7m3wKTp",
+        "address": "523 Louisiana St APT 9E, Little Rock, AR 72201",
+        "zpid": "2118643466",
+        "reason": "Does not pass strict filter",
+        "description": "Rare Find in the Historic Lafayette Building 9th-Floor Downtown Condo Discover a truly unique opportunity to own a turnkey, fully furnished 2-bedroom condo in one of downtown Little Rock s most iconic"
+      },
+      {
+        "id": "XsKDWUsYp49ZPWzmI33U",
+        "address": "443 N Highland St APT 2, Memphis, TN 38122",
+        "zpid": "42162843",
+        "reason": "Does not pass strict filter",
+        "description": "Discover a great investment opportunity in East Memphis. This 3 bedroom, 2.5 bath unit at 443 Highland St Apt 2 is being sold as-is and is ready for your updates and personal touch. Located within 10 "
+      },
+      {
+        "id": "YBiYv3ycEwCyeyuCjw7u",
+        "address": "549 Raines Springs Rd, Jackson, TN 38301",
+        "zpid": "41821362",
+        "reason": "Does not pass strict filter",
+        "description": "Move In Ready home in South Jackson. This home come with 3 bedrooms and 2 full baths. This home has so much new which includes new flooring (no carpet), paint, lights, hardware, vanities, cabinets, et"
+      },
+      {
+        "id": "YGfKPGicluVyJw1Fmykd",
+        "address": "1800 S Monroe St, Little Rock, AR 72204",
+        "zpid": "311133",
+        "reason": "Does not pass strict filter",
+        "description": "Split Level 5 Bedroom 2 1/2 Bath Refinished Home Ready For You and Your Family. Hard Wood Floors and Lots of Natural Light Throughout the Home. 2 Car Garage. There is room for everyone here!!!"
+      },
+      {
+        "id": "YHjxjkHHkMQFe1owaR3S",
+        "address": "3844 Kerfield Dr, Memphis, TN 38128",
+        "zpid": "42285307",
+        "reason": "Does not pass strict filter",
+        "description": "4 Bedroom 2.5 bath Super cute and All new! Paint in and out! , Carpet, appliances, siding and has a new roof!! Large Greatroom with corner fireplace Will qualify for FHA Hurry! Its ready and perfect f"
+      },
+      {
+        "id": "YSZgHccTIXqQBazC4hfd",
+        "address": "3131 Peggy Rd, Memphis, TN 38128",
+        "zpid": "42272700",
+        "reason": "Does not pass strict filter",
+        "description": "Investment opportunity. Close to Nike and Amazon. New updates include electrical, and systems, new flooring, new roof. Two-Car garage. Large storage area. Storage shed in the back. Two larger bedrooms"
+      },
+      {
+        "id": "YVNZ2CYIHHocRtWCJIhV",
+        "address": "65 Briarfield Cv, Oakland, TN 38060",
+        "zpid": "81094994",
+        "reason": "Does not pass strict filter",
+        "description": "Stunning 4BR/3BA home with bonus room in highly desired Oakland! This beautifully updated 3,603 SF home offers an open and spacious floor plan with 3 bedrooms and 2 full baths on the main level, plus "
+      },
+      {
+        "id": "Z0KjiI05FGUAOGWCpzDV",
+        "address": "1020 Sandra St, Memphis, TN 38122",
+        "zpid": "42182759",
+        "reason": "Does not pass strict filter",
+        "description": "This unique property offers a rare opportunity, presenting a versatile layout ideal for owner occupants or potential multi-tenant rental income. The 1700 /- sq ft main house features a 3-bedroom, 2-ba"
+      },
+      {
+        "id": "ZOqITWzm2WSoOBaxGsrJ",
+        "address": "(Undisclosed Address), West Memphis, AR 72301",
+        "zpid": "76144532",
+        "reason": "Does not pass strict filter",
+        "description": "Investor Opportunity!! This charming home features 3 bedrooms, 1 full bath, and an additional bonus room perfect for a home office, gym, or even an extra bedroom. Currently tenant-occupied, this prope"
+      },
+      {
+        "id": "Ze5ikfBV1rYVfKzwds96",
+        "address": "12152 Preserve Ln, Arlington, TN 38002",
+        "zpid": "72480880",
+        "reason": "Does not pass strict filter",
+        "description": "Beautiful corner-lot home in The Preserve featuring 4 bedrooms, 2.5 baths, two living areas, with a patio upstairs with a beautiful view you dont want to miss! Primary bedroom is downstairs, with thre"
+      },
+      {
+        "id": "ZhVDaemZ0WAihJWgB88u",
+        "address": "8 Bentwood Ln, Little Rock, AR 72223",
+        "zpid": "251243020",
+        "reason": "Does not pass strict filter",
+        "description": "Impressive from the moment you walk in, this 2360 SF Wildwood Place home features a versatile flex room off the entry and a stylish dining area open to a chef-inspired kitchen with oversized island, q"
+      },
+      {
+        "id": "ZnTSnUGHqkqTqCbgTFg4",
+        "address": "2002 Cumberland St, Little Rock, AR 72206",
+        "zpid": "316156",
+        "reason": "Does not pass strict filter",
+        "description": "What an incredible opportunity for an investor or someone who can put on the finishing touches for their new but historic home! Home has: New roof, new porch off primary bedroom, new hardwood floors, "
+      },
+      {
+        "id": "ZveUCQ4fqpqEK012Yeap",
+        "address": "51 Waters Edge Dr, Little Rock, AR 72204",
+        "zpid": "82839654",
+        "reason": "Does not pass strict filter",
+        "description": "Beautiful 4 bed, 2.5 bath home in Waters Edge! New Roof in 2025! This spacious home offers an open floor plan with a large dining area featuring elegant columns, flowing into the living room and kitch"
+      },
+      {
+        "id": "a8Dsu3Q96nw648UPjLqM",
+        "address": "3 Shepard Hills Ct, Little Rock, AR 72223",
+        "zpid": "330877",
+        "reason": "Does not pass strict filter",
+        "description": "Nestled in a quiet cul-de-sac, this 2-story home in Don Roberts School District is ready for a new family! Hardwood entry with crown molding opens to tiled eat-in kitchen to the left with white cabine"
+      },
+      {
+        "id": "aAd9H9mePfiqEK060qg2",
+        "address": "63 Starwood Cv, Jackson, TN 38305",
+        "zpid": "81161575",
+        "reason": "Does not pass strict filter",
+        "description": "Beautifully Updated 4BR/2BA Home in Hunters Green Welcome to this beautifully maintained 4-bedroom, 2-bath brick home located in the desirable Hunters Green Subdivision. Move-in ready and thoughtfully"
+      },
+      {
+        "id": "aBxqfBYrV1d6MLCykSiq",
+        "address": "837 Oak Forest Cir, Sherwood, AR 72120",
+        "zpid": "338321750",
+        "reason": "Does not pass strict filter",
+        "description": "Welcome to your new home! This stunning 4/2 house boasts an open layout with vaulted ceilings and lots of natural light. The gourmet kitchen shines with granite counters, stainless appliances and a sp"
+      },
+      {
+        "id": "aPyXuDobbEiTZNltMjUI",
+        "address": "507 Uams Blvd, Little Rock, AR 72205",
+        "zpid": "2056122284",
+        "reason": "Does not pass strict filter",
+        "description": "Move in ready home w/ the perfect layout, original hardwoods throughout, updated kitchen w/newer cabinets,granite counters,stainless steal appliances, laundry off kitchen w/tons of storage space, Fren"
+      },
+      {
+        "id": "adkUnUOx8TeNCNaCyGxX",
+        "address": "3480 Tallyho Rd, Memphis, TN 38128",
+        "zpid": "42272705",
+        "reason": "Does not pass strict filter",
+        "description": "Move-In Ready 4 Bedroom, 2 Bath Home Near Nike & Amazon! This solid all-brick home is built for low-maintenance living, featuring LVP flooring throughout and central HVAC for year-round comfort. The l"
+      },
+      {
+        "id": "aeESbXqmiVMkTJSeEg4z",
+        "address": "3204 Ruskin Rd, Memphis, TN 38134",
+        "zpid": "42276822",
+        "reason": "Does not pass strict filter",
+        "description": "Discover this charming 3-bedroom, 2-bath home in a quiet neighborhood with a desirable split bedroom plan. The huge great room welcomes you with vaulted ceilings, wood laminate floors, and a cozy fire"
+      },
+      {
+        "id": "b20NzqDXsCSfMIv64Due",
+        "address": "6407 Swagerty Dr, Jacksonville, AR 72076",
+        "zpid": "269289",
+        "reason": "Does not pass strict filter",
+        "description": "Welcome to the space buy of the decade! This incredible 4 bedroom, 3 bath home offers 3,983 sq ft of spacious living on 3.46 beautiful acres, all outside the city limits for added privacy and freedom."
+      },
+      {
+        "id": "bQJpU5APD0uAAR0eIWFz",
+        "address": "2937 Keeley Cv, Southaven, MS 38672",
+        "zpid": "439961067",
+        "reason": "Does not pass strict filter",
+        "description": "Welcome home to this beautifully maintained property nestled on a quiet cove lot, offering inviting curb appeal with lush landscaping and a 2-car garage. Inside, wood flooring flows from the entry int"
+      },
+      {
+        "id": "bxWwBgyIMyyb0T9IIXSJ",
+        "address": "2956 Molly Cv, Nesbit, MS 38651",
+        "zpid": "458465249",
+        "reason": "Does not pass strict filter",
+        "description": "Just WOW! New plan with incredible primary suite and large covered outdoor area. Open concept with split bedrooms. Great room has built in cabinets with cedar floating shelves on each side of fireplac"
+      },
+      {
+        "id": "c70vaeLKqM4mN7xxuUHM",
+        "address": "34 Woodglen Rd, Little Rock, AR 72207",
+        "zpid": "82848906",
+        "reason": "Does not pass strict filter",
+        "description": "Exceptional contemporary home in highly sought-after Woodglen! This one-of-a-kind property is set on a private, wooded .84-acre lot backing to Jimerson Creek, offering a rare blend of modern design an"
+      },
+      {
+        "id": "cGGRIw2TMTUa2tA592oS",
+        "address": "7926 Macon Rd, Cordova, TN 38018",
+        "zpid": "42286449",
+        "reason": "Does not pass strict filter",
+        "description": "Beautiful home located in Cordova with plenty of nearby amenities, 3-4 bedrooms (huge bonus room upstairs), 2 full baths. Large backyard fully fenced with partial new fencing and 2 new gates. Central "
+      },
+      {
+        "id": "cWPINXl2AAVNtYkMcXcl",
+        "address": "70 Oak Ridge Cv, Oakland, TN 38060",
+        "zpid": "66615618",
+        "reason": "Does not pass strict filter",
+        "description": "Tucked in a quiet cove, this move-in-ready 3BR/2BA home offers plenty of comfort, with smart updates already in place. You ll enjoy a fresh HVAC (2024), water heater (2023), and a roof that s about se"
+      },
+      {
+        "id": "caqwC8k3YM5T8jLabRxj",
+        "address": "989 Wingfield Rd, Memphis, TN 38122",
+        "zpid": "42182735",
+        "reason": "Does not pass strict filter",
+        "description": "Welcome to this charming 2 bed, 1 bath home in the desirable Berclair area. Features authentic hardwood flooring, a beautifully updated bathroom with new shower and floor tile, and a modern kitchen bo"
+      },
+      {
+        "id": "cj9ThzxysyLYrnU9yReT",
+        "address": "5332 Colony Ln, Memphis, TN 38119",
+        "zpid": "42214804",
+        "reason": "Does not pass strict filter",
+        "description": "Discover your dream home in this beautifully updated 3-bedroom, 2-bathroom home with a new HVAC (2025) & new roof (2023) right in the heart of East Memphis! The gorgeous kitchen w/sleek finishes flows"
+      },
+      {
+        "id": "cnL7GZqUqyypPoBmDgWG",
+        "address": "300 E 3rd St APT 503, Little Rock, AR 72201",
+        "zpid": "2098195913",
+        "reason": "Does not pass strict filter",
+        "description": "This stylish condo is move-in ready, boasting fresh carpet, paint, and flooring. Abundant closet space and a high-end kitchen with upgraded features, including Mont Blanc Quartzite backsplash and coun"
+      },
+      {
+        "id": "dGuH6vDrNvrZ8DU8sfip",
+        "address": "11005 King Arthurs Dr, Little Rock, AR 72209",
+        "zpid": "361729",
+        "reason": "Does not pass strict filter",
+        "description": "Totally updated family home is move in ready!! New paint! New floors!! New Carpet!! New kitchen with custom wood counters!! New cabinets ready for paint or stain---Buyers choice!! New Range!! New Refr"
+      },
+      {
+        "id": "dPeLyqwkz1VDjt97RZCq",
+        "address": "125 Keough Rd, Collierville, TN 38017",
+        "zpid": "42309769",
+        "reason": "Does not pass strict filter",
+        "description": "Discover a rare opportunity to restore classic Collierville charm on nearly an acre in a highly sought-after location. Just moments from Collierville Middle and easily walkable to the Historic Town Sq"
+      },
+      {
+        "id": "eLjpIpFfPVoUjD4LnxRq",
+        "address": "4625 White Fox St, Memphis, TN 38109",
+        "zpid": "42250401",
+        "reason": "Does not pass strict filter",
+        "description": "Don't miss this opportunity to add a property to your rental portfolio. Great rental area and this property is located near all types of commerce and industry. No blind offers and no wholesaler or ass"
+      },
+      {
+        "id": "epDBxOlEinElMSeQJBP9",
+        "address": "200 Pine Forest Dr, Maumelle, AR 72113",
+        "zpid": "79785823",
+        "reason": "Does not pass strict filter",
+        "description": "Beautifully updated Pine Forest Townhouse in the heart of Maumelle! This move-in-ready home features brand-new flooring, new appliances, refreshed paint, updated lighting, and modern touches throughou"
+      },
+      {
+        "id": "f5F6aTAbhvApQttc4hwS",
+        "address": "7211 Butterfly Dr, Memphis, TN 38133",
+        "zpid": "62849717",
+        "reason": "Does not pass strict filter",
+        "description": "Cozy 3 bed and 2 bath home for sale in quiet, friendly neighborhood near Bartlett! HVAC is less than 5 years old, updated electrical with GFCI in wet areas, HWH less than 5 years old, LVP in common ar"
+      },
+      {
+        "id": "f6jlXt5NKRjueZhXpY4n",
+        "address": "11806 Veronica Rd, North Little Rock, AR 72118",
+        "zpid": "329267",
+        "reason": "Does not pass strict filter",
+        "description": "This one has potential! 4 bedroom, 2 bath home sits on approx. 1.5 acres. NEW roof in 2025 and NEW septic tank in 2024. All on one level, the layout includes spacious bedrooms and is ready for your up"
+      },
+      {
+        "id": "fA1qaXTSytNTBJNnrZ14",
+        "address": "2534 Elmore Park Rd, Bartlett, TN 38134",
+        "zpid": "42304125",
+        "reason": "Does not pass strict filter",
+        "description": "Discover this stunning four-bedroom, three-bath Bartlett home, beautifully blending mid-century modern design with timeless vintage charm. Nestled on just over an acre in the highly sought-after Bartl"
+      },
+      {
+        "id": "fCHQGoWo3yfhvI2ho4JE",
+        "address": "3455 Rosamond Ave, Memphis, TN 38122",
+        "zpid": "42160782",
+        "reason": "Does not pass strict filter",
+        "description": "Welcome to your next investment or future headache-free home! This charming 3-bedroom, 2-bathroom house in the heart of Memphis is ready for you. The roof and HVAC are both under five years old, which"
+      },
+      {
+        "id": "fLfw5XgagDu0EpuUwjif",
+        "address": "11 Hickory Ct, Little Rock, AR 72210",
+        "zpid": "360299",
+        "reason": "Does not pass strict filter",
+        "description": "This beautifully updated home offers an open layout with 4 bedrooms, 2.5 baths, and a bonus room on a quiet cul-de-sac backing up to green space. The great room features vaulted, beam-accented ceiling"
+      },
+      {
+        "id": "fUg2ALCLUWSsVthJg0el",
+        "address": "108 N Belvedere Blvd APT 18, Memphis, TN 38104",
+        "zpid": "42130041",
+        "reason": "Does not pass strict filter",
+        "description": "Move in ready! Can be sold furnished! This renovated condo was previously a short term rental (STR) generating approx. $1500 per month and is now ready for new tenants or an owner-occupant! ALL applia"
+      },
+      {
+        "id": "fewffxAyqsIass2CQA4c",
+        "address": "16 Emerald Ct, Little Rock, AR 72212",
+        "zpid": "331907",
+        "reason": "Does not pass strict filter",
+        "description": "This property is ready for a new owner. Located in the desirable Don Roberts school zone and Pleasant View subdivision, this traditional split-level home offers 1701 sqft 3 upper level bedrooms and 2 "
+      },
+      {
+        "id": "fgtUSykYyr1kIo0mcOhr",
+        "address": "503 Skyline Dr, N Little Rock, AR 72116",
+        "zpid": "294310",
+        "reason": "Does not pass strict filter",
+        "description": "Full of charm, this Park Hill home offers 3 bedrooms, 2 bathrooms, a bonus room, and a sunroom. A stunning picture window frames views of the Little Rock skyline what a sight to start your day with! J"
+      },
+      {
+        "id": "fpUP6bgtttoBv8wXDLqo",
+        "address": "802 Towering Oaks Dr, Jacksonville, AR 72076",
+        "zpid": "266028",
+        "reason": "Does not pass strict filter",
+        "description": "Welcome to this well-kept home on a quiet street in the Towering Oaks neighborhood of Jacksonville. Inside, you ll find fresh carpet and luxury vinyl plank flooring, along with updated windows that fi"
+      },
+      {
+        "id": "guKg51CFTNGd8K7UIbxQ",
+        "address": "20 Battery Cv, Jackson, TN 38305",
+        "zpid": "66924192",
+        "reason": "Does not pass strict filter",
+        "description": "Sirva has added a closing cost credit of $2500 good thru 12/31/2025. This 3 bedroom, 2 bath brick home located on a cul-de-sac features an open floor plan .....a great room with high ceilings and a fi"
+      },
+      {
+        "id": "gvStrRK0qGLhQCIiWa4i",
+        "address": "104 Lonsdale Cir, Jacksonville, AR 72076",
+        "zpid": "265545",
+        "reason": "Does not pass strict filter",
+        "description": "Calling all investors! Perfect opportunity to add to your portfolio. Sold \"AS IS\" agent please see remarks."
+      },
+      {
+        "id": "h60tKRbpWdugIwa89x9s",
+        "address": "1806 S State St, Little Rock, AR 72206",
+        "zpid": "307128",
+        "reason": "Does not pass strict filter",
+        "description": "Fantastic opportunity!! INVESTORS or someone wanting to make a historic property their own! Cosmetic demo complete! Roughed-in new electrical, foundation repairs, framing repairs, re-framed kitchen, l"
+      },
+      {
+        "id": "iXsqvyEMwCx0rEwVtlzL",
+        "address": "(Undisclosed Address), Little Rock, AR 72202",
+        "zpid": "348918898",
+        "reason": "Does not pass strict filter",
+        "description": "Built in late 2024, this home blends modern style with practical living in one of Little Rock s most convenient pockets. You are only minutes from Arkansas Children s Hospital and the downtown ameniti"
+      },
+      {
+        "id": "ifveJ9cwvfLQ2MTZMG2g",
+        "address": "3466 Stonechase Cv, Memphis, TN 38135",
+        "zpid": "42300282",
+        "reason": "Does not pass strict filter",
+        "description": "Don't miss this 4 bedroom 2 and half bath home in Stoneridge Subdivision in Bartlett. New carpet. New range. Great home at a great price."
+      },
+      {
+        "id": "ikT1hbkkg1PUR2sNqiAo",
+        "address": "8209 Blue Lagoon Dr, Lakeland, TN 38002",
+        "zpid": "55307408",
+        "reason": "Does not pass strict filter",
+        "description": "8209 Blue Lagoon Drive Wolfchase Farms Bartlett, Tennessee\nIf you listen closely, the neighborhood tells a story.\nIt s early morning on Blue Lagoon Drive. Soft sunlight filters through the trees, and "
+      },
+      {
+        "id": "ipPOdpryOE1ouJenTgk1",
+        "address": "910 Park Valley Rd, Memphis, TN 38119",
+        "zpid": "42215159",
+        "reason": "Does not pass strict filter",
+        "description": "Lovely East Memphis split level 4BR/3.5BA home located in a quiet cul-de-sac. The seller purchased the home 5 years ago but is relocating. At the time of purchase the home boasted a new 30 year roof w"
+      },
+      {
+        "id": "itZgB8Nnk9HObGEfDS6D",
+        "address": "3456 Susie Cir, Nesbit, MS 38651",
+        "zpid": "89321831",
+        "reason": "Does not pass strict filter",
+        "description": "Welcome home to this impeccably maintained one-owner property offering 3 bedrooms, 2.5 baths, and a generous upstairs bonus room complete with a pool table. The main level features both a hearth room "
+      },
+      {
+        "id": "jG3gQIuexEjI2qjUvdoC",
+        "address": "5090 Belfast Dr, Memphis, TN 38127",
+        "zpid": "42318708",
+        "reason": "Does not pass strict filter",
+        "description": "TENANT OCCUPIED, DO NOT DISTURB TENANT. Drive by ONLY! Property is rented for $1,000/month and is month-to-month. Section 8 tenant. Copy of the lease available upon request. No showings without an acc"
+      },
+      {
+        "id": "jGeL6H7VQMRj1cXYtKOM",
+        "address": "307 Sherwood Ave, Sherwood, AR 72120",
+        "zpid": "280958",
+        "reason": "Does not pass strict filter",
+        "description": "Welcome to this beautifully updated home that blends modern comfort with cozy charm. The well-designed floor plan offers a spacious feel, with the living room opening seamlessly into the kitchen. Luxu"
+      },
+      {
+        "id": "jSRjtQFvEPkRgHr2BjAU",
+        "address": "7041 Cold Creek Dr, Alexander, AR 72002",
+        "zpid": "458459256",
+        "reason": "Does not pass strict filter",
+        "description": "Best location in Bryant-Another stunning build by J&P Homebuilders and this one is a showstopper. Creekside Subdivision- 3 Bedrooms 2 Baths Office Open Floor Plan Patio Fireplace Backs to the Woods Ta"
+      },
+      {
+        "id": "jvgCDeFcujAqL2S6pPqQ",
+        "address": "504 Warren St, Jacksonville, AR 72076",
+        "zpid": "267141",
+        "reason": "Does not pass strict filter",
+        "description": "Don t miss this lovely 3-bedroom, 2-full-bath home ideally situated in the heart of downtown Jacksonville, offering convenience and comfortable living."
+      },
+      {
+        "id": "kEKTdmJsRG7brpsVLZwc",
+        "address": "29 Dawn Ct, Jacksonville, AR 72076",
+        "zpid": "269638",
+        "reason": "Does not pass strict filter",
+        "description": "INVESTORS - perfect opportunity for a complete remodel. Great floorplan. Needs flooring, paint, appliances, etc. Seller's representative says roof is approximately 10 years old. Garage has been enclos"
+      },
+      {
+        "id": "kYeGsqH5xc4NoHK0MWNR",
+        "address": "901 E 53rd Pl, N Little Rock, AR 72116",
+        "zpid": "296930",
+        "reason": "Does not pass strict filter",
+        "description": "This home offers the perfect mix of timeless warmth and sleek modern updates! Enjoy peace of mind with a new roof (Oct 2025) and a 2-year-old HVAC. Inside, you'll love the updated flooring in the kitc"
+      },
+      {
+        "id": "kYszOnaZoPzt2nib6xxr",
+        "address": "6440 Nellwood Dr, Olive Branch, MS 38654",
+        "zpid": "89326405",
+        "reason": "Does not pass strict filter",
+        "description": "A rare 1.52- acre find in a prime location - minutes from Snowden Grove Park and Silo Square. This home offers an inviting floor plan with a spacious kitchen featuring new quartz countertops, breakfas"
+      },
+      {
+        "id": "kbw1scxB59HPrBnH0NFP",
+        "address": "4612 Hill Gail Dr, Memphis, TN 38141",
+        "zpid": "42351707",
+        "reason": "Does not pass strict filter",
+        "description": "Welcome home to this stunning, fully renovated property located at 4612 Hill Gail in Memphis, TN! This home offers the perfect combination of modern updates, comfort, and style. Step inside to enjoy f"
+      },
+      {
+        "id": "kl85rzMoonON2X8X7jv9",
+        "address": "2821 Delmar Ave, N Little Rock, AR 72116",
+        "zpid": "294239",
+        "reason": "Does not pass strict filter",
+        "description": "Full of character, this 3-bedroom, 2 full and 2 half bathroom home features hardwood floors throughout, a charming front gazebo, and a warm, inviting layout. Recent updates include a new hot water hea"
+      },
+      {
+        "id": "koXIk55C7WPGeWiyzxMI",
+        "address": "5700 Chapman Ave, Memphis, TN 38119",
+        "zpid": "42266935",
+        "reason": "Does not pass strict filter",
+        "description": "Well-Cared-For 3 Bedroom, 2 Bath Home This charming residence offers a separate living room, dining room, and a cozy family room featuring a brick fireplace. The eat-in kitchen includes stainless stee"
+      },
+      {
+        "id": "l1PjDccPAJbDm14AED0R",
+        "address": "9205 Lakeside Cir S, Walls, MS 38680",
+        "zpid": "2060809224",
+        "reason": "Does not pass strict filter",
+        "description": "Stunning 4-bed, 3-bath home built in 2022 with all the modern style today's buyers love. This nearly new property features an open layout, sleekfinishes, and a bright kitchen with a large island perfe"
+      },
+      {
+        "id": "l4QoRt9y2miChqDrmiO4",
+        "address": "2593 Rutherford Dr, Southaven, MS 38672",
+        "zpid": "2061092413",
+        "reason": "Does not pass strict filter",
+        "description": "Modern Comfort Near the Snowden District!\nWelcome to this like-new, beautiful four-bedroom, two-bath, single-story home, just 2 years old and move-in ready! Located in the highly desirable Snowden Dis"
+      },
+      {
+        "id": "l4VVu2puAeLKMRri683g",
+        "address": "1623 W 24th St, Little Rock, AR 72206",
+        "zpid": "315394",
+        "reason": "Does not pass strict filter",
+        "description": "1623 W 24th Street, Little Rock, AR is a prime income producing asset built for investors who understand leverage, scalability, and return on investment. This property is perfectly positioned for a co"
+      },
+      {
+        "id": "l8gIeI0d65qHQiJpd4Me",
+        "address": "919 Lewis St, Little Rock, AR 72204",
+        "zpid": "309268",
+        "reason": "Does not pass strict filter",
+        "description": "No Disclosure Sold As Is! Charming 2-bedroom, 1-bath home featuring an eat-in kitchen, separate dining and living areas, and a spacious backyard with a parking deck. The property is fully fenced, incl"
+      },
+      {
+        "id": "mPOkEEpx7HYV1QCTqT1r",
+        "address": "2048 Harbert Ave, Memphis, TN 38104",
+        "zpid": "42129277",
+        "reason": "Does not pass strict filter",
+        "description": "Updated bungalow on sought after block in Midtown near Overton Square and Cooper Young. The main house features lovely hardwood floors, updated kitchen, 4 bedrooms (3 down), 3 full baths. The 2 story "
+      },
+      {
+        "id": "mo1r3qjQfoKYz750g0uT",
+        "address": "3643 Big Bend Dr, Memphis, TN 38116",
+        "zpid": "42255876",
+        "reason": "Does not pass strict filter",
+        "description": "Welcome to this wonderfully maintained, move in ready, Whitehaven Gem! Offering 3 bedrooms and 1.5 baths, 1,500 sqft, with plenty of parking space, on almost a 3rd of an Acre! This home boasts beautif"
+      },
+      {
+        "id": "myHo8n34IY4FYwgpRf0Z",
+        "address": "1505 Hawkwood Rd, Sherwood, AR 72120",
+        "zpid": "281854",
+        "reason": "Does not pass strict filter",
+        "description": "Gorgeous 3br 3ba with tons of space and functionality! Beautifully updated, over 3300sq ft in total. LVP and tile floors throughout. Main level has den, formal living area, formal dining, kitchen and "
+      },
+      {
+        "id": "nIxRBIKCIFVcF0VZ4V80",
+        "address": "3418 Elk Point Dr, Memphis, TN 38128",
+        "zpid": "42282901",
+        "reason": "Does not pass strict filter",
+        "description": "Welcome to this charming all-brick home at 3418 Elk Point Dr, tucked inside a quiet and established Memphis neighborhood. This well-maintained property features a spacious yard, a covered carport, and"
+      },
+      {
+        "id": "nkS4qxMGfd3sTMu1RDRa",
+        "address": "9390 Starcross Ave, Cordova, TN 38016",
+        "zpid": "42329638",
+        "reason": "Does not pass strict filter",
+        "description": "This Cordova home at 9390 Starcross Ave offers a solid foundation, a functional layout, and great potential for anyone ready to bring their own style and updates to life. With a little cosmetic TLC su"
+      },
+      {
+        "id": "nlacSvO2MGahIAi07Www",
+        "address": "887 Dalemore Ln, Cordova, TN 38018",
+        "zpid": "52600565",
+        "reason": "Does not pass strict filter",
+        "description": "Experience easy and comfortable living in this inviting one level split floor plan nestled inside a desirable gated community in Cordova. This well designed 3 bedroom 2 bath home welcomes you with a s"
+      },
+      {
+        "id": "oCjPJswcAKvU4z6IERao",
+        "address": "3770 Swinnea Rd, Southaven, MS 38672",
+        "zpid": "89294774",
+        "reason": "Does not pass strict filter",
+        "description": "Welcome Home!!!\nDon't miss the opportunity to make this gem yours!\nSchedule your showing to view the inside.\nSeller has repositioned the home with an updated price and is offering great buyer incentiv"
+      },
+      {
+        "id": "oGzIAoPF06wyaRFNF2me",
+        "address": "3100 Cowden Ave, Memphis, TN 38111",
+        "zpid": "42167982",
+        "reason": "Does not pass strict filter",
+        "description": "Charming Central Gardens Home! This adorable residence features a separate living room, dining room, and a cozy family room that opens to the updated kitchen with newer appliances. The home offers thr"
+      },
+      {
+        "id": "ocakH4HxHE3UbP8WEoIo",
+        "address": "4511 Sumners Wells Rd, Memphis, TN 38118",
+        "zpid": "42234848",
+        "reason": "Does not pass strict filter",
+        "description": "Great 3-bedroom 2 bath home with great price. A must see."
+      },
+      {
+        "id": "odBv1lUFzO6bIIan56vq",
+        "address": "505 Eastbourne Pl, Memphis, TN 38117",
+        "zpid": "42188280",
+        "reason": "Does not pass strict filter",
+        "description": "Beautifully renovated 4 bed, 2 bath home in the heart of East Memphis! This move-in ready property features luxury vinyl plank flooring, new light fixtures, and a fully updated kitchen with brand-new "
+      },
+      {
+        "id": "omufnTEInLK7k6S4j8NT",
+        "address": "4813 Alpha St, North Little Rock, AR 72117",
+        "zpid": "276392",
+        "reason": "Does not pass strict filter",
+        "description": "Don t miss this excellent investment opportunity in North Little Rock! This charming home offers 3 bedrooms, 1 bathroom, a spacious eat-in kitchen, a separate laundry room, and a large backyard perfec"
+      },
+      {
+        "id": "ornQbfhx99ADlcDi0spm",
+        "address": "33 Summerfield Dr, Jackson, TN 38305",
+        "zpid": "41803395",
+        "reason": "Does not pass strict filter",
+        "description": "Welcome to 33 Summerfield Drive in the desirable Evergreen Subdivision! This home features 3 bedrooms plus a bonus room, a formal dining room, and an open kitchen that flows seamlessly into the main l"
+      },
+      {
+        "id": "oucZfyt6uqxqUzfL8ann",
+        "address": "4700 Northwood Hills Dr, Memphis, TN 38128",
+        "zpid": "64808362",
+        "reason": "Does not pass strict filter",
+        "description": "This beautiful home has it all! Featuring 3 bedrooms and 2.5 baths, the oversized master suite includes a cozy sitting area and a luxury bath with a Jacuzzi tub and separate stand-up shower. The home "
+      },
+      {
+        "id": "pJaIfax5r5swhCXU086R",
+        "address": "23000 Wilson St, Mabelvale, AR 72103",
+        "zpid": "367710",
+        "reason": "Does not pass strict filter",
+        "description": "Enjoy country living on 4.8 acres in the Sardis community, located in the Bryant School District. This all-brick, 3 bed, 2 bath home offers over 2,300 sq ft and features a spacious open floor plan. Bu"
+      },
+      {
+        "id": "pq8W1jU41viIpboi66kQ",
+        "address": "1845 Quail Valley Cv #1845, Memphis, TN 38134",
+        "zpid": "2128345410",
+        "reason": "Does not pass strict filter",
+        "description": "Take a look at this investment opportunity. Tenant occupied. Please don't disturb the tenant. Offer subject to inspection. Current rent is $975.00 lease ends in February 2026. Investors look at your o"
+      },
+      {
+        "id": "pt9DQ9rJBfUPjZj38buZ",
+        "address": "2947 Court St, Memphis, TN 38134",
+        "zpid": "42295009",
+        "reason": "Does not pass strict filter",
+        "description": "Location! Location! Location! Bartlett home on large corner lot near high school, senior center and close to local restaurants, coffee shops and parks. Seller selling As is. Foundation repairs needed "
+      },
+      {
+        "id": "qcQ3cpJNhUarvs1Av9R3",
+        "address": "2025 Clarksdale Ave, Memphis, TN 38108",
+        "zpid": "42155984",
+        "reason": "Does not pass strict filter",
+        "description": "Opportunity knocks! This 3-bedroom, 1-bath gem is nestled in a neighborhood undergoing exciting revitalization, making it a smart buy for homeowners and investors alike. Most renovations are already c"
+      },
+      {
+        "id": "r0IGBu1Sl4016kRKwSQx",
+        "address": "2200 Osage Dr, North Little Rock, AR 72116",
+        "zpid": "291529",
+        "reason": "Does not pass strict filter",
+        "description": "Location Location, Location! This 2-Story home boasts a 4-Bed, 3-Bath, 1-Large Bonus Downstairs Storage Space, plus 1-Mechanical Room has now wrapped up its remodel! This home is ready for a new owner"
+      },
+      {
+        "id": "r4YoWVVRXuuxcGtW21pL",
+        "address": "59 Livingston Way, Jackson, TN 38305",
+        "zpid": "99374510",
+        "reason": "Does not pass strict filter",
+        "description": "Welcome to 59 Livingston Way - a beautifully maintained 3-bedroom, 2-bath home perfectly situated in one of Jackson, TN's most convenient and desirable locations. This charming home offers an inviting"
+      },
+      {
+        "id": "rFFyQBle1d3Bkgd6JGLj",
+        "address": "7701 Old Village Cv, Germantown, TN 38138",
+        "zpid": "42362309",
+        "reason": "Does not pass strict filter",
+        "description": "Discover this well-maintained 3-bed, 3-bath home at 7701 Old Village Cove in the heart of Germantown, TN. Step inside to high ceilings, hardwood floors, and ceramic tile throughout. The primary suite "
+      },
+      {
+        "id": "s1cbhV7dO8Ym9NSSGiGV",
+        "address": "1889 Allenby Rd, Germantown, TN 38139",
+        "zpid": "42356558",
+        "reason": "Does not pass strict filter",
+        "description": "Beautifully updated Germantown home all on one level! Enjoy hardwood floors, fresh paint, smooth ceilings, and a modern kitchen with new appliances and granite countertops. The primary suite features "
+      },
+      {
+        "id": "sD725cC6DrkEohqnlLsb",
+        "address": "1409 Nanterre St, North Little Rock, AR 72114",
+        "zpid": "2054670855",
+        "reason": "Does not pass strict filter",
+        "description": "Come make this house your own! Construction is about to start on this one level home in The Gardens at Rockwater. It is a 3 bedroom, 2 bath home with an open floorplan and beautiful porches. The downt"
+      },
+      {
+        "id": "sn6VReHjHhMBq76Baqcd",
+        "address": "493 Deerskin Dr, Memphis, TN 38109",
+        "zpid": "42244149",
+        "reason": "Does not pass strict filter",
+        "description": "PRIME investment opportunity with this CASHFLOWING property. This brick home features hard surface floors, updated kitchen and bathroom, newer working HVAC, freshly painted interior, large fenced in y"
+      },
+      {
+        "id": "stHXN7ROTapHjxOKd1jd",
+        "address": "4843 Verne Rd, Memphis, TN 38117",
+        "zpid": "42212183",
+        "reason": "Does not pass strict filter",
+        "description": "Experience a prime short-term rental investment opportunity with this turnkey Colonial Acres home, offering strong cash-on-cash potential and a proven rental track record. Newly updated and thoughtful"
+      },
+      {
+        "id": "svvvR7GOCPKYBoI5TOt7",
+        "address": "775 Alma St, Memphis, TN 38107",
+        "zpid": "42133684",
+        "reason": "Does not pass strict filter",
+        "description": "7-bedroom rooming home Vacant as of now. Sold as is. 773 Alma to be sold as a package."
+      },
+      {
+        "id": "uHag048SjFEAP2yvtaoo",
+        "address": "716 Adams Dr, Jacksonville, AR 72076",
+        "zpid": "269495",
+        "reason": "Does not pass strict filter",
+        "description": "Come see this very well maintained home in a great neighborhood, close to Air Base. This 4 Bedroom 2 1/2 Bath Brick/Rock home with Bonus Room is ready for it's next family. Lots of updates include 1- "
+      },
+      {
+        "id": "uNZNDwn7rBqzPPexUWnc",
+        "address": "2864 Summer Oaks Pl, Southaven, MS 38672",
+        "zpid": "89267669",
+        "reason": "Does not pass strict filter",
+        "description": "Feast your eyes on this freshly renovated 4 bedroom, 2 bathroom home in Southaven because this one is truly something to be thankful for! With updates so good, you'll be asking for seconds.\nStep insid"
+      },
+      {
+        "id": "uUYqApBO5iw9gh5iVQwZ",
+        "address": "2367 Kingsley Ave, Memphis, TN 38127",
+        "zpid": "42224081",
+        "reason": "Does not pass strict filter",
+        "description": "Ranch style 3 bedroom, 1.5 bathroom home with attached carport, and fenced yard. Wrought iron front and back doors, great potential rental income. Some tile and original hardwood floors along with car"
+      },
+      {
+        "id": "uUdlUtZ7Nb6MhaFZODG8",
+        "address": "6018 Timberside Rd, Little Rock, AR 72204",
+        "zpid": "354079",
+        "reason": "Does not pass strict filter",
+        "description": "This 3-bedroom, 2-bath home offers comfort, convenience, and great everyday livability, with plenty of potential for those willing to put in a little work. Ideally located near shopping and dining wit"
+      },
+      {
+        "id": "upvaSPgIczQoAkr5xLjX",
+        "address": "406 Cedar Chase Dr, West Memphis, AR 72301",
+        "zpid": "76145692",
+        "reason": "Does not pass strict filter",
+        "description": "Welcome to this beautifully appointed 5-bedroom, 3-bath home offering the perfect blend of comfort, style, and functionality. Designed with both everyday living and entertaining in mind, this property"
+      },
+      {
+        "id": "v8k2s3oDM4poUj3qQdsq",
+        "address": "904 N Polk St, Little Rock, AR 72205",
+        "zpid": "288333",
+        "reason": "Does not pass strict filter",
+        "description": "Discover the perfect blend of classic Hillcrest charm and modern convenience in this immaculate, move-in ready, and beautifully renovated home. Step inside to be greeted by gorgeous hardwood floors th"
+      },
+      {
+        "id": "vB0RURK1Bqptt2FsaiAB",
+        "address": "5136 Rolling Fields Dr, Memphis, TN 38134",
+        "zpid": "42277232",
+        "reason": "Does not pass strict filter",
+        "description": "Step into this freshly renovated gem, where modern upgrades meet classic Memphis charm. Bright, stylish, and move-in ready, this 3-bedroom home offers an inviting layout with updated finishes througho"
+      },
+      {
+        "id": "vBdg9SZYZpdF5ABiCwKV",
+        "address": "7222 Newling Ln, Memphis, TN 38125",
+        "zpid": "42341672",
+        "reason": "Does not pass strict filter",
+        "description": "Ideal opportunity for first-time buyers or savvy investors! This vacant property offers a comfortable layout with generous living areas, ready for your personal touch or updates. Conveniently located "
+      },
+      {
+        "id": "veXueXYH93NmVEtn7EMW",
+        "address": "1690 Desoto Cv, Southaven, MS 38671",
+        "zpid": "89289335",
+        "reason": "Does not pass strict filter",
+        "description": "This charming Southaven home has many updates throughout and offers ample space for entertaining. 3 bedrooms and 2 full baths along with living room and den allows space for everyone. The kitchen upda"
+      },
+      {
+        "id": "vopCYHewnFcPHEuqWzwj",
+        "address": "5717 Iroquois Dr, Horn Lake, MS 38637",
+        "zpid": "89302249",
+        "reason": "Does not pass strict filter",
+        "description": "This home comes with a 1% mortgage buy down, 1 year home warranty, & satisfaction guarantee . Maintained 4 Bedroom, 1.5 Bath Home in Horn Lake. This charming home features a spacious Great Room with h"
+      },
+      {
+        "id": "wB0YpZTEGF9tlVOWlStB",
+        "address": "3651 N Trezevant St, Memphis, TN 38127",
+        "zpid": "42229227",
+        "reason": "Does not pass strict filter",
+        "description": "TENANT OCCUPIED, DO NOT DISTURB TENANT. Drive by ONLY! Property is rented for $1,500/month & the lease expires 6/30/2026. Section 8 tenant. Copy of the lease available upon request. No showings withou"
+      },
+      {
+        "id": "wMHVHzvsrJ9R0a1oRrMq",
+        "address": "207 Ross Ave, West Memphis, AR 72301",
+        "zpid": "76144132",
+        "reason": "Does not pass strict filter",
+        "description": "Investor Opportunity! This home is perfect for anyone looking to take on a light-to-moderate project with major value-add potential. The interior has already begun its transformation with new plumbing"
+      },
+      {
+        "id": "wZms2AEwOQtOT2Sw9fGs",
+        "address": "7707 W 45th St, Little Rock, AR 72204",
+        "zpid": "354391",
+        "reason": "Does not pass strict filter",
+        "description": "Welcome to the market this character-filled 3-bedroom, 2-bath home nestled in the quiet and established Westwood L 1 Subdivision of Little Rock. With approximately 1,624 square feet of living space, t"
+      },
+      {
+        "id": "wdfi3hT3qEYOdVOJfSKq",
+        "address": "3076 Harvester Ln, Memphis, TN 38127",
+        "zpid": "42218561",
+        "reason": "Does not pass strict filter",
+        "description": "Wonderful investment opportunity in Frayser! This move-in ready 4br 1.5ba w/fenced in back yard is perfect for an investor or owner/occupant. Seller will install a new hvac system prior to closing. Va"
+      },
+      {
+        "id": "wr8IAucAw5QJIMpnsA4Z",
+        "address": "30 Country Forest Dr, Oakland, TN 38060",
+        "zpid": "66616078",
+        "reason": "Does not pass strict filter",
+        "description": "All Brick home with 3 Spacious Bedrooms, Split plan, Large 4th bedroom or bonus with walk in closet. The open and inviting floor plan is highlighted by gleaming hardwood floor, soaring high ceilings, "
+      },
+      {
+        "id": "xDRrdMz52JfGe10wJmH7",
+        "address": "3678 Mason Ave, Memphis, TN 38122",
+        "zpid": "42161454",
+        "reason": "Does not pass strict filter",
+        "description": "Welcome to your new home! This charming two-bedroom, one-bathroom is perfect for those looking to take their first step toward homeownership. With an extra space that you can convert into anything you"
+      },
+      {
+        "id": "xmzbHF9UwppkONRFPMZm",
+        "address": "508 Robinson Cir, Marion, AR 72364",
+        "zpid": "217179610",
+        "reason": "Does not pass strict filter",
+        "description": "Check out this home in Rustling Oaks! 4 bedrooms, 3 FULL baths, nice open plan, formal dining room, granite and stainless steel appliances in the kitchen with a great eating bar for the family. Lots o"
+      },
+      {
+        "id": "xuiGORwGu641M8RMzQKD",
+        "address": "1406 Vine St, North Little Rock, AR 72114",
+        "zpid": "304795",
+        "reason": "Does not pass strict filter",
+        "description": "NEW ROOF MOVE IN READY!! SELLER CONCESSIONS AVAILABLE!! CLOSING COST PAID!! \"UPGRADE ALLOWNACE AVAILABLE\"."
+      },
+      {
+        "id": "yCxQ6diyuRgL44JWZdsa",
+        "address": "209 Northeastern Ave, Jacksonville, AR 72076",
+        "zpid": "265092",
+        "reason": "Does not pass strict filter",
+        "description": "This one level 3 bedroom, 1 bath home in Jacksonville offers comfort and convenience all while being turnkey. Updated in 2020, new roof, new carpet, new blinds, new interior paint, new fixtures & more"
+      },
+      {
+        "id": "yI1d126Xy5wAsql5koy7",
+        "address": "1250 Old Hickory Rd, Memphis, TN 38116",
+        "zpid": "42256291",
+        "reason": "Does not pass strict filter",
+        "description": "Discover comfort, character, and convenience in this charming home located just minutes from Elvis Presley s iconic Graceland! Beautiful curb appeal welcomes you with towering shade trees, a low-maint"
+      },
+      {
+        "id": "yKM4LOjZ7mGvDYTmiCFs",
+        "address": "614 Beaconsfield Rd, Sherwood, AR 72120",
+        "zpid": "281898",
+        "reason": "Does not pass strict filter",
+        "description": "Charming two-story traditional home located in the peaceful East Meadows subdivision of Sherwood. This property features two spacious living areas, including one with a cozy wood-burning fireplace, of"
+      },
+      {
+        "id": "ymrHsHENhKaJqSyN94os",
+        "address": "1260 Cherrydale Cv, Memphis, TN 38111",
+        "zpid": "42193221",
+        "reason": "Does not pass strict filter",
+        "description": "Discover this spacious and thoughtfully designed home featuring 4 bedrooms, 3 full bathrooms, and a dedicated office, perfect for remote work or creative space. With two primary suites, this layout of"
+      },
+      {
+        "id": "z4pBgB87iy8AOldTy2Si",
+        "address": "3158 Madeline Cir, Memphis, TN 38127",
+        "zpid": "42228008",
+        "reason": "Does not pass strict filter",
+        "description": "Fantastic investment opportunity in the Shelby area. This 3br/1 bath single-family home is in the 38127 area. Cash flowing with a monthly rental amount of $975/month. The lease ends on 10/31/2026. No "
+      },
+      {
+        "id": "zIvgb3iR5iTgIpYHYo2C",
+        "address": "6607 Foxrun East End Dr, Mabelvale, AR 72103",
+        "zpid": "367510",
+        "reason": "Does not pass strict filter",
+        "description": "Must see! Great home in a peaceful country neighborhood! Metal roofing, vinyl siding and all windows were replaced approx 7 years back. Interior of the home has a nice feel, needs cosmetic updating bu"
+      },
+      {
+        "id": "zLfqvtDzLw97D2c6PAuT",
+        "address": "735 Kent St, Memphis, TN 38111",
+        "zpid": "42166279",
+        "reason": "Does not pass strict filter",
+        "description": "Discover a classic Orange Mound opportunity with this 2-bedroom, 1-bath home perfect for investors or buyers looking to bring their renovation vision to life. This property features a charming front p"
+      },
+      {
+        "id": "zQeV4XbkpYwAGwfBxXsm",
+        "address": "4506 Faronia Rd, Memphis, TN 38116",
+        "zpid": "42258727",
+        "reason": "Does not pass strict filter",
+        "description": "Charming and move-in ready! This well-maintained 3-bedroom home features beautiful hardwood floors throughout, offering a warm and timeless feel in every room. Two major upgrades have already been tak"
       }
     ],
-    "noMatchedKeywords": [
-      {
-        "id": "0V0HLvGitdK3480Rv1tW",
-        "address": "12001 Vista Parke Dr #1002, austin, TX 78726",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "0YOxcCc1GF5OlXByOFPm",
-        "address": "2303 SW 43rd Ter, cape coral, FL 33914",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "0aCrPF4RJQMa5BC6GZNJ",
-        "address": "2837 NW 2nd Ter, cape coral, FL 33993",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "0bVDBTewlZuvtP7CWhKN",
-        "address": "4611 E 4th Pl, tulsa, OK 74112",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "16bPno9ScZA6U8Sy1N5x",
-        "address": "110 Moses Hughes, blanco, TX 78606",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "2qGVy8PsXbugQhe3pUDa",
-        "address": "375 Simpson St, the villages, FL 32162",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "3GP1clmEt0Ty3gDlGzLx",
-        "address": "4910 38th Way S APT 111, saint petersburg, FL 33711",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "3bJbMw6Gg0dTPtXyNnaS",
-        "address": "1296 Monasco Rd, millington, TN 38053",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "3bu7mc7i0Xq8OM8jpQsC",
-        "address": "308 E Date Ave, casa grande, AZ 85122",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "3gU1HjmtLz2OWgkAJFVG",
-        "address": "1110 Andean Emerald, san antonio, TX 78245",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "43JlzaVQWHtCJkL27LIA",
-        "address": "3409 Catalan Aly, decatur, GA 30032",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "5DZTFdoBzdbGitaMLJ1C",
-        "address": "11312 Haskell Dr, clermont, FL 34711",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "5L0cNvljHMmXCX79j5IX",
-        "address": "1469 Twin Cv, kyle, TX 78640",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "5UJLCGGYqF6HdLqAW2iU",
-        "address": "916 swallows, seguin, TX 78155",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "6QrDlFdm6tBQNhmRgIKa",
-        "address": "1228 Kennie Dr, commerce, TX 75428",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "6jsNz7Qf8e3JEhOYYgg7",
-        "address": "444 BEVERLY DR, san antonio, TX 78245",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "6oqSLDEuhlm8dE6xhvJV",
-        "address": "206 E Gilmer St, rice, TX 75155",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "71KJXO4ClaKzwl8cVAHA",
-        "address": "10251 Crystal View, universal city, TX 78148",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "7ad9wUHu40jo4ydUOtGN",
-        "address": "13996 Godbold Rd, tallahassee, FL 32303",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "7vzQHJl31RzKv2qfF8eZ",
-        "address": "6541 SW 111th Loop, ocala, FL 34476",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "8Qxt5hfMxYp0xSmxzPmc",
-        "address": "3302 High Plateau Dr, garland, TX 75043",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "8fLY01CmR2HOFYtyDh3z",
-        "address": "14745 Babcock Rd #204, san antonio, TX 78249",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "8tFUw4tcJoK4OJaEwunw",
-        "address": "1421 Chisholm Ridge Ct, saint cloud, FL 34771",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "9GJwwylp4IDTfJXVRbPD",
-        "address": "7305 Ridgeview Dr, rowlett, TX 75089",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "9gudgXqXb0w54B1Phc5h",
-        "address": "147 Western Lake Dr, weatherford, TX 76087",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "9tKfZXYV4BVtCZ7bg86u",
-        "address": "105 Glen Ct #105, wendell, NC 27591",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "9tlSHuObS5WLGYaUcDdb",
-        "address": "437 Middle Green, floresville, TX 78114",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "AFy75DWNMcKwsVipZMih",
-        "address": "435 Gould, san antonio, TX 78245",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "B1vJdFx1vhB4K2gN573I",
-        "address": "1003 Fauntleroy Trail, austin, TX 78758",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "C5RpxLuOzvloa7IotNCf",
-        "address": "6240 Tributary St, pensacola, FL 32504",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "CGD8qQron4kNHvUi4BE8",
-        "address": "407 N Dallas St, rice, TX 75155",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "DR7WJt6F2fbUFj8UMmEt",
-        "address": "602 ray rd, Jacksonville, AR 72076",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "EC0uTJNmwJ6bwmOOTCxc",
-        "address": "4911 Dare Ln, san antonio, TX 78245",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "EEJNzSJcUhQcacdNm7z2",
-        "address": "2513 Rochelle St, durham, NC 27703",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "EK8LB5K1sPI80hAMeLgP",
-        "address": "8815 SEBEC CIR, san antonio, TX 78245",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "EQsIKw35noAHr3QzKwLM",
-        "address": "1219 14th St, corpus christi, TX 78411",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "EXAJl6Dis80R3WmcOCnz",
-        "address": "1013 El Dorado Blvd N, cape coral, FL 33914",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "FAZPjbVZZix5cvN8ZngZ",
-        "address": "138 DUNNING AVE, san antonio, TX 78245",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "FFYikVslQrYoin4Ghf2r",
-        "address": "515 Mitchell Ave, seguin, TX 78155",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "FtZmSl4jhrXJB4d3dtdZ",
-        "address": "6394 Roadstead Ct, apollo beach, FL 33572",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "GaCdRqCf2x3a4w5kOslP",
-        "address": "3406 Mesquite Dr, sugar land, TX 77479",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "HNz1wxaXdFgoy60VxbnG",
-        "address": "30417 N 42nd Pl, Cave Creek, AZ 85331",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "IJ1kmDZ9K8JOnYNEpUYQ",
-        "address": "913 Meadow View Dr, richardson, TX 75080",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "IaR6yyaVinpwwTkeCRD3",
-        "address": "1221 Simpson Dr, hurst, TX 76053",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "IolSSNNZ1fSTCoqPChsA",
-        "address": "1422 Benjamin St, nashville, TN 37206",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "JFFccNR9YiiZeVREOcJ4",
-        "address": "3405 Sirius Ave, el paso, TX 79938",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "KqsmbKL5xJf9ucA7pZgg",
-        "address": "294 Eagle Dr, big bear lake, CA 92315",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "L8hjLqzrjUQCtrBF0hQz",
-        "address": "36690 W PIMA Drive Stanfield, stanfield, AZ 85172",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "LPmHAFdjXD1p04aV09zT",
-        "address": "1207 Ocean Blvd. S #50805, myrtle beach, SC 29577",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "MIgsFKxiaWzrem5oBSg9",
-        "address": "52 Baby Jane Ln, hendersonville, NC 28792",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "Mc1vZwayCii8BqAOMJL1",
-        "address": "200 Olive St, lone oak, TX 75453",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "MtrTbr0waGJnZMsF4eAS",
-        "address": "4313 County Road 311, henderson, TX 75654",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "MwekdKOaOAEivKclENHg",
-        "address": "208 Weaver Ave, lake wales, FL 33853",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "NgJUiQ82kP0jdxDLVXau",
-        "address": "3130 Springfield Ave, lancaster, TX 75134",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "OIqwkWC7zRtml32bp5nS",
-        "address": "917 Nolan, san antonio, TX 78245",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "OJ0oU8Z1id1J28sXZctR",
-        "address": "611 W James St, lillington, NC 27546",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "OXlPgTTTYe72eMYhEMYx",
-        "address": "2715 N Dellwood Dr, eustis, FL 32726",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "Oco2umVPfN4XThxn3fvG",
-        "address": "278 DORIE ST, san antonio, TX 78220",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "PUPPbJioB0qmqXya85m3",
-        "address": "582 Five Mile Road, richlands, NC 28540",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "QvxRXNEIL9jPSb6LwCse",
-        "address": "9323 Chattanooga, san antonio, TX 78245",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "Rr77kBtqV1nrGqpnJKKU",
-        "address": "2460 French St, fate, TX 75189",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "SE5HUi29QRCDAcYDeMl3",
-        "address": "540 N Timberlea St, liberty, NC 27298",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "TrP0JDVO0vDf2iinO2ET",
-        "address": "112 spring valley, adkins, TX 78101",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "U7H8KCpI3ae8aYdW7fFl",
-        "address": "4545 Fairway Oaks Dr, mulberry, FL 75155",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "UPR9hML8oYHrVF8j899q",
-        "address": "280 Kari Dr, westminster, SC 29693",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "Uj1fY12fW6OyRomjyaWq",
-        "address": "6033 S 4520 W, salt lake city, UT 84118",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "VHDrgwP9nM2SG7REaLhT",
-        "address": "801 Quebec Dr, garland, TX 75043",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "VLICfIi0Ba21WEJPrFIY",
-        "address": "4047 Wiggins Dr, new port richey, FL 34652",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "VydxPL1HPMLymgXtQBWf",
-        "address": "409 N Dallas St, rice, TX 75189",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "W3dW1WAUJ2sfJxw2Nu3q",
-        "address": "4870 Highway 67, hasse, TX 76442",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "WUl0yoPF9CPMymWvdsHq",
-        "address": "2842 Kingswood Dr, garland, TX 75040",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "XaqJCgOeRjCLfzWgV9vW",
-        "address": "164 Clinger Cove Rd, ocoee, FL 34761",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "Xn1KdfWrBF9lz567EsZ5",
-        "address": "607 Colwyn Pass, san antonio, TX 78245",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "Xopsy4wFwsnwX4NsZN24",
-        "address": "6601 Mediterranean Dr UNIT 6402, mckinney, TX 75069",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "XtvCrMAJ0mk4PLwwiiXf",
-        "address": "509 N 6th St, donna, TX 78537",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "YWumLgMZjlmb6sZAhAGH",
-        "address": "221 1st St, davenport, FL 33896",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "YaGC1QGEcAGWgS4TV0uX",
-        "address": "8605 Puerto Viejo, laredo, TX 78046",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "ZM3jWQOcGDF6VTneOXHG",
-        "address": "8680 W Bolsa Dr, golden valley, AZ 86413",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "ZO6HcD51lLNYwDNX7Q12",
-        "address": "3925 Moulton St, greenville, TX 75401",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "aG6vONSBYBHjNNDF4ley",
-        "address": "33582 Sky Blossom Cir, leesburg, FL 34748",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "aS7zqF2M9F6FSJvS6KuN",
-        "address": "1959 Gruene, new braunfels, TX 78132",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "aZKrYcrowmkkDCotxhWZ",
-        "address": "315 Murcia, laredo, TX 78046",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "ahZCEYP65SkdDlI7f49q",
-        "address": "6554 Lindyann Ln, houston, TX 77008",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "anyirDIS4wCPqPpL4zqe",
-        "address": "1216 Forest St, georgetown, TX 78633",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "b1NCpq1W5h3cNOTUF00u",
-        "address": "7923 Santa Catalina, san antonio, TX 78245",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "bCQ5B1CAkbUAWTw4YSID",
-        "address": "611 KIRK PL, san antonio, TX 78245",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "bDncLkISKkNACN2rzuSs",
-        "address": "778 F St, san antonio, TX 78245",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "bkSdokk1rV2apzobQFtJ",
-        "address": "4675 River Oak Cir #4675, brownsville, TX 78526",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "bozZd5TxTNMejJdoaK9W",
-        "address": "140 Great Oaks Blvd, la vernia, TX 78121",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "bwCJtSTUJVZzCG488uBE",
-        "address": "9237 Swiss Road, spring hill, FL 34607",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "c43nM7pbj7kR42rnvnOE",
-        "address": "821 S Roy Reynolds Dr, harker heights, TX 76548",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "eqt7DZQaadzISEOdGU0H",
-        "address": "6723 S Marion Ave, tulsa, OK 74136",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "garUxzvwBQxFxHvG5o8N",
-        "address": "12105 Rosita Ct, austin, TX 78748",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "hWctHvA93aSqxOlVdvPL",
-        "address": "910 Lohaina Ct, kemp, TX 75143",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "jQMC8qGdZQU9efE3IuyV",
-        "address": "507 W 13th St, casa grande, AZ 85122",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "jYJYtIzvrRyHHl0bKZhK",
-        "address": "240 Shadow Oak Dr, bastrop, TX 78602",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "kDxYmBgFjzD04MXofdLo",
-        "address": "276 Lake Havasu Ave S APT B18, lake havasu city, AZ 86403",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "kjZxsQNhfLkiC6OjOryG",
-        "address": "4714 Larcade Dr, corpus christi, TX 78415",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "l3uz340Ym7K2AsPUC59E",
-        "address": "5064 Cambry Ln, lakeland, FL 33805",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "lTFXezGdN40Je2FQhLRY",
-        "address": "534 Mary, san antonio, TX 78245",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "lohmgWNeqSLOD3c8XOqM",
-        "address": "5455 Dabney, san antonio, TX 78245",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "lrtIXsXg3VxucDn5U6VL",
-        "address": "7941 FM 1346 lot 7, san antonio, TX 78245",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "mHb1h1xKaJTYddYRwLd2",
-        "address": "417 W Andrew Dr, mabank, TX 75156",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "nSNqcid82C7cckSDOeBt",
-        "address": "5723 Soothing Water, san antonio, TX 78245",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "nbwMOfCg08AGnswHrVNj",
-        "address": "3482 Bandera Rd, fort worth, TX 76112",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "njuh5N74AoT3InWuG3pz",
-        "address": "2299 Athens St, brownsville, TX 78526",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "qRKEbG81hH6N9o4ZwO7N",
-        "address": "3228 Millmar Dr, dallas, TX 75211",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "rVXYUQbHQUCKk2SBTcSO",
-        "address": "252 Trillium Road, newland, NC 28657",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "sqwuJFIa8S0XdWNGuVLK",
-        "address": "4055 Victor Blvd, kemp, TX 75143",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "srtgRwS4JBbY8YlPnb0k",
-        "address": "1612 Lynn Haven Ave, dallas, TX 75216",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "tOHRvIEI49AWq960ewT4",
-        "address": "2535 Tandy Dr, gulfport, MS 39503",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "uaBThsgPJ3XwRgs8RVTb",
-        "address": "2138 S Scales St, reidsville, NC 27320",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "vYzEOsBZCqavnofrBKRg",
-        "address": "3214 Quiet Water Ln, gulf breeze, FL 32563",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "w5gZfciRnaicnm9lXqHQ",
-        "address": "9115 Everton, san antonio, TX 78245",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "wXOA1hCljttMue7rAINs",
-        "address": "304 Highway 98, carrabelle, FL 32322",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "whC2FHKLW26qDfAIHi0e",
-        "address": "237 W Brooklyn Ave, dallas, TX 75211",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "wwtBGTcWnOIBNGmpLMaO",
-        "address": "19173 Greenleaf Dr, flint, TX 75762",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "wx7mEOcVnuMFIIUodPoA",
-        "address": "532 Northwyck Way, socorro, TX 79928",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "x0ZtpLR8ocaJOd5v57Bw",
-        "address": "11807 Gaston Pkwy, dallas, TX 75211",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "x3nPJkHuWXb6F8mb84bv",
-        "address": "2438 Scotch Moss Dr, corpus christi, TX 78411",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "yX0XQEV5w0ukqWLBzv10",
-        "address": "7319 Holiday Dr, spring hill, FL 34607",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "zG8fTsYcbC1zA0DjNeb3",
-        "address": "2012 Indian Creek Rd, austin, TX 78734",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "zJO8HRwfgpVbIWXwqNfZ",
-        "address": "219 Hillcrest St, sanger, TX 76266",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "zhTFCVXJ4u5QTgjfh6Ra",
-        "address": "3330 NW 101st St, miami, FL 33147",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "zsRGzpc8reRJyveA3oB4",
-        "address": "2033 Pleasant Dr, dallas, TX 75211",
-        "ownerFinanceVerified": true
-      },
-      {
-        "id": "zuBpjkLRAuPGnwNxm0eb",
-        "address": "804 Tyler St, midland, TX 79707",
-        "ownerFinanceVerified": true
-      }
-    ]
+    "noMatchedKeywords": []
   }
 }

@@ -25,6 +25,9 @@ interface YouTubeUploadOptions {
   madeForKids?: boolean;
   isShort?: boolean;
   brand: 'carz' | 'ownerfi' | 'podcast' | 'property' | 'property-spanish' | 'vassdistro' | 'benefit' | 'abdullah' | 'personal' | 'gaza';
+  // Scheduling options
+  publishAt?: string; // ISO 8601 datetime for scheduled publishing
+  useSchedule?: boolean; // If true, auto-pick next available slot from brand schedule
 }
 
 interface YouTubeUploadResult {
@@ -32,6 +35,7 @@ interface YouTubeUploadResult {
   videoId?: string;
   videoUrl?: string;
   error?: string;
+  scheduledAt?: string; // ISO datetime if scheduled
 }
 
 /**
@@ -175,17 +179,45 @@ export async function uploadToYouTube(options: YouTubeUploadOptions): Promise<Yo
       );
     }
 
-    const status = {
-      privacyStatus: options.privacy || 'public',
+    // Determine publish time and privacy status
+    let publishAt: string | undefined;
+    let scheduledSlotIndex: number | undefined;
+
+    if (options.useSchedule) {
+      // Auto-pick next available slot from brand schedule
+      const { getNextScheduledTime, markSlotUsed } = await import('./youtube-schedule');
+      const nextSlot = getNextScheduledTime(options.brand);
+
+      if (nextSlot) {
+        publishAt = nextSlot.publishAt;
+        scheduledSlotIndex = nextSlot.slotIndex;
+        console.log(`   📅 Auto-scheduled for: ${publishAt}`);
+      } else {
+        console.log(`   ⚠️ No available slots, posting immediately`);
+      }
+    } else if (options.publishAt) {
+      // Use provided publish time
+      publishAt = options.publishAt;
+      console.log(`   📅 Scheduled for: ${publishAt}`);
+    }
+
+    // If scheduling, must use 'private' initially, then YouTube publishes at publishAt
+    const status: any = {
+      privacyStatus: publishAt ? 'private' : (options.privacy || 'public'),
       selfDeclaredMadeForKids: options.madeForKids || false,
     };
+
+    if (publishAt) {
+      status.publishAt = publishAt;
+      status.privacyStatus = 'private'; // Required for scheduled videos
+    }
 
     // NOTE: YouTube automatically categorizes vertical videos <60s as Shorts
     // No need to add #Shorts to title - it's redundant and wastes characters
 
     console.log(`   Title: ${snippet.title}`);
     console.log(`   Category: ${options.category || 'People & Blogs'}`);
-    console.log(`   Privacy: ${status.privacyStatus}`);
+    console.log(`   Privacy: ${status.privacyStatus}${publishAt ? ' (scheduled)' : ''}`);
     console.log(`   Is Short: ${options.isShort ? 'Yes' : 'No'}`);
 
     // Upload video
@@ -213,6 +245,16 @@ export async function uploadToYouTube(options: YouTubeUploadOptions): Promise<Yo
     console.log(`   ✅ Uploaded successfully!`);
     console.log(`   Video ID: ${videoId}`);
     console.log(`   URL: ${videoUrl}`);
+    if (publishAt) {
+      console.log(`   📅 Scheduled to publish: ${publishAt}`);
+    }
+
+    // Mark slot as used if we auto-scheduled
+    if (options.useSchedule && scheduledSlotIndex !== undefined) {
+      const { markSlotUsed } = await import('./youtube-schedule');
+      markSlotUsed(options.brand, scheduledSlotIndex);
+      console.log(`   ✅ Marked slot ${scheduledSlotIndex} as used`);
+    }
 
     // Track cost
     try {
@@ -234,6 +276,7 @@ export async function uploadToYouTube(options: YouTubeUploadOptions): Promise<Yo
       success: true,
       videoId,
       videoUrl,
+      scheduledAt: publishAt,
     };
 
   } catch (error) {
@@ -277,6 +320,8 @@ export async function postVideoToYouTube(
     privacy?: 'public' | 'unlisted' | 'private';
     madeForKids?: boolean;
     isShort?: boolean;
+    publishAt?: string; // ISO 8601 datetime for scheduled publishing
+    useSchedule?: boolean; // If true, auto-pick next available slot from brand schedule
   }
 ): Promise<YouTubeUploadResult> {
   // Retry logic
@@ -299,6 +344,8 @@ export async function postVideoToYouTube(
       privacy: options?.privacy,
       madeForKids: options?.madeForKids,
       isShort: options?.isShort ?? true, // Default to Shorts
+      publishAt: options?.publishAt,
+      useSchedule: options?.useSchedule,
     });
 
     if (result.success) {
@@ -318,3 +365,7 @@ export async function postVideoToYouTube(
     error: lastError || 'Upload failed after retries',
   };
 }
+
+// Re-export types and schedule functions for convenience
+export type { YouTubeUploadResult };
+export { getNextScheduledTime, getAvailableSlotsToday, getScheduleInfo, getAllSchedules } from './youtube-schedule';

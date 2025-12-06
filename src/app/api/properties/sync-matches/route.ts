@@ -307,7 +307,9 @@ export async function GET(request: NextRequest) {
             preferredState: buyerData.preferredState || '',
             searchRadius: criteria.searchRadius || buyerData.searchRadius || 25,
             minBedrooms: buyerData.minBedrooms,
-            minBathrooms: buyerData.minBathrooms
+            minBathrooms: buyerData.minBathrooms,
+            // CRITICAL: Include filter with nearbyCities for radius-based matching
+            filter: buyerData.filter
           };
 
           return isPropertyMatch(propertyForMatching, buyerForMatching).matches;

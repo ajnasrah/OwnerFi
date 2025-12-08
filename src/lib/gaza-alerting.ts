@@ -14,7 +14,6 @@ export type GazaAlertType =
   | 'script_generation_failed'
   | 'heygen_generation_failed'
   | 'submagic_processing_failed'
-  | 'hook_processing_failed'
   | 'late_posting_failed'
   | 'workflow_stuck'
   | 'daily_limit_reached';
@@ -176,22 +175,6 @@ export async function alertSubmagicFailed(
     'error',
     `Submagic caption processing failed: ${articleTitle}`,
     { workflowId, articleTitle, error }
-  );
-}
-
-/**
- * Alert for hook processing failures
- */
-export async function alertHookProcessingFailed(
-  workflowId: string,
-  error: string,
-  hookId?: string
-): Promise<void> {
-  await logGazaAlert(
-    'hook_processing_failed',
-    'warning',
-    `Hook processing failed for workflow ${workflowId}`,
-    { workflowId, error, hookId, skippedHook: true }
   );
 }
 

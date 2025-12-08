@@ -48,6 +48,10 @@ export interface AdminProperty {
   monthlyHoa?: number;
   missingFields?: string[];
   cashFlow?: CashFlowData | null;
+  // Agent contact info
+  agentName?: string | null;
+  agentPhone?: string | null;
+  agentEmail?: string | null;
 }
 
 export function useProperties() {

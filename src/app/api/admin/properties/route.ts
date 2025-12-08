@@ -152,6 +152,10 @@ function mapPropertyFields(doc: any) {
     // Owner finance keywords
     primaryKeyword: data.primaryKeyword || null,
     matchedKeywords: data.matchedKeywords || [],
+    // Agent/Contact info
+    agentName: data.agentName || data.listingAgentName || null,
+    agentPhone: data.agentPhoneNumber || data.agentPhone || data.brokerPhoneNumber || null,
+    agentEmail: data.agentEmail || data.listingAgentEmail || null,
     // Cash flow fields (admin only)
     rentEstimate,
     annualTax,

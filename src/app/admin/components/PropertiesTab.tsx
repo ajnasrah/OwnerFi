@@ -290,6 +290,15 @@ export default function PropertiesTab({ setEditingProperty, setEditForm }: Prope
                     >
                       Del
                     </button>
+                    {property.agentPhone && (
+                      <a
+                        href={`sms:${property.agentPhone}?body=${encodeURIComponent(`Hi, I'm interested in the owner-financed property at ${property.address}, ${property.city}, ${property.state} ${property.zipCode} listed at $${property.listPrice?.toLocaleString()}. Is it still available?`)}`}
+                        className="text-green-600 hover:text-green-900"
+                        title={`Text ${property.agentName || 'Agent'}: ${property.agentPhone}`}
+                      >
+                        Text
+                      </a>
+                    )}
                   </div>
                 </td>
                 <td className="px-3 py-4 whitespace-nowrap">

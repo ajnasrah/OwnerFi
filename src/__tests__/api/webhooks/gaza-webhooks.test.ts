@@ -53,13 +53,6 @@ jest.mock('@/lib/late-api', () => ({
   })),
 }));
 
-jest.mock('@/lib/video-hook-integration', () => ({
-  addHookToVideo: jest.fn(() => Promise.resolve({
-    hookUsed: false,
-    finalVideoUrl: 'https://test.com/video.mp4',
-  })),
-}));
-
 jest.mock('@/lib/submagic', () => ({
   submitToSubmagic: jest.fn(() => Promise.resolve({
     projectId: 'test-submagic-project-id',
@@ -120,27 +113,14 @@ describe('Gaza Submagic Webhook', () => {
   });
 });
 
-describe('Hook Processing for Gaza', () => {
-  it('should log alert when hook processing fails', async () => {
-    const { alertHookProcessingFailed } = await import('@/lib/gaza-alerting');
-
-    // Test that alert is logged correctly
-    await alertHookProcessingFailed('test-workflow-id', 'Test error');
-
-    // Since we're mocking Firebase, this should not throw
-    expect(true).toBe(true);
-  });
-});
-
 describe('Workflow Status Updates', () => {
-  it('should track hook skip status', async () => {
-    // Verify workflow updates include hookSkipped and hookSkipReason
+  it('should properly update workflow status', async () => {
     const updateData = {
-      hookSkipped: true,
-      hookSkipReason: 'No matching hooks found',
+      status: 'submagic_processing',
+      submagicProjectId: 'test-project-id',
     };
 
-    expect(updateData.hookSkipped).toBe(true);
-    expect(updateData.hookSkipReason).toBeDefined();
+    expect(updateData.status).toBe('submagic_processing');
+    expect(updateData.submagicProjectId).toBeDefined();
   });
 });

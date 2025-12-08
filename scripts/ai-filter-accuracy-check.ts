@@ -92,23 +92,25 @@ IMPORTANT:
 
 async function main() {
   console.log('='.repeat(70));
-  console.log('🤖 AI FILTER ACCURACY CHECK');
+  console.log('🤖 AI FILTER ACCURACY CHECK - FAILED FILTER PROPERTIES');
   console.log('='.repeat(70));
   console.log('');
 
-  // Focus on zillow_imports - these are properties SHOWING TO BUYERS
-  // We want to verify these are all real owner financing deals
-  const zillowSnapshot = await db.collection('zillow_imports')
-    .orderBy('importedAt', 'desc')
+  // Check failed_filter_properties - these are properties that were filtered out
+  // Either they had owner financing keywords (skipped from agent outreach)
+  // Or they had negative keywords (no owner financing, cash only, etc)
+  // This collection auto-expires after 7 days
+  const failedSnapshot = await db.collection('failed_filter_properties')
+    .orderBy('createdAt', 'desc')
     .limit(250)
     .get();
 
-  console.log(`Found ${zillowSnapshot.size} zillow_imports (properties showing to buyers)\n`);
+  console.log(`Found ${failedSnapshot.size} failed_filter_properties (stored for analysis)\n`);
 
   // Collect properties with descriptions to analyze
   const propertiesToCheck: PropertyToCheck[] = [];
 
-  for (const doc of zillowSnapshot.docs) {
+  for (const doc of failedSnapshot.docs) {
     const data = doc.data();
     const description = data.description || '';
 
@@ -118,13 +120,14 @@ async function main() {
 
       propertiesToCheck.push({
         id: doc.id,
-        address: data.fullAddress || data.address || 'Unknown',
+        address: data.address || 'Unknown',
         description,
         filterResult,
         negativeResult,
-        collection: 'zillow_imports',
-        source: data.source || 'unknown',
-        agentConfirmed: data.agentConfirmedOwnerFinance || false
+        collection: 'failed_filter_properties',
+        filterResultStored: data.filterResult || 'unknown',
+        matchedKeywordsStored: data.matchedKeywords || [],
+        reason: data.reason || 'unknown'
       } as any);
     }
   }
@@ -145,11 +148,12 @@ async function main() {
     const prop = sample[i];
     const propAny = prop as any;
     console.log(`\n[${i + 1}/${sampleSize}] ${prop.address}`);
-    console.log(`   Source: ${propAny.source || 'unknown'}`);
-    console.log(`   Agent Confirmed: ${propAny.agentConfirmed ? '✅ YES' : '❌ No'}`);
-    console.log(`   Filter Result: ${prop.filterResult.passes ? '✅ PASS' : '❌ FAIL'}`);
+    console.log(`   Stored Filter Result: ${propAny.filterResultStored}`);
+    console.log(`   Stored Keywords: ${propAny.matchedKeywordsStored?.join(', ') || 'none'}`);
+    console.log(`   Reason: ${propAny.reason}`);
+    console.log(`   Re-check Filter: ${prop.filterResult.passes ? '✅ PASS' : '❌ FAIL'}`);
     if (prop.filterResult.matchedKeywords.length > 0) {
-      console.log(`   Matched Keywords: ${prop.filterResult.matchedKeywords.join(', ')}`);
+      console.log(`   Re-check Keywords: ${prop.filterResult.matchedKeywords.join(', ')}`);
     }
     console.log(`   Negative Keywords: ${prop.negativeResult ? '⚠️ YES' : '✓ No'}`);
 

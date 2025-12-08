@@ -125,11 +125,17 @@ export async function GET(request: NextRequest) {
       noAgent: 0,
       hasOwnerFinance: 0,
       negativeKeywords: 0,
+      failedStored: 0,
     };
 
     // Batch write
     let batch = db.batch();
     let batchCount = 0;
+
+    // Separate batch for failed properties
+    let failedBatch = db.batch();
+    let failedBatchCount = 0;
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days from now
 
     for (const item of detailItems) {
       const property = item as any;
@@ -157,21 +163,70 @@ export async function GET(request: NextRequest) {
 
       // FILTER 2: Check keywords
       const description = property.description || '';
-
-      if (hasStrictOwnerFinancing(description).passes) {
-        stats.hasOwnerFinance++;
-        continue;
-      }
-
-      if (hasNegativeKeywords(description).hasNegative) {
-        stats.negativeKeywords++;
-        continue;
-      }
-
-      // Extract property data
       const streetAddr = property.streetAddress || property.address?.streetAddress || '';
       const city = property.city || property.address?.city || '';
       const state = property.state || property.address?.state || '';
+
+      const ownerFinanceResult = hasStrictOwnerFinancing(description);
+      const negativeResult = hasNegativeKeywords(description);
+
+      if (ownerFinanceResult.passes) {
+        stats.hasOwnerFinance++;
+        // Store for analysis - these passed owner financing filter
+        const failedDocRef = db.collection('failed_filter_properties').doc();
+        failedBatch.set(failedDocRef, {
+          zpid,
+          url,
+          address: streetAddr,
+          city,
+          state,
+          description: description.substring(0, 2000),
+          filterResult: 'has_owner_financing',
+          matchedKeywords: ownerFinanceResult.matchedKeywords,
+          reason: 'Property has owner financing keywords - skipped from agent outreach',
+          expiresAt,
+          createdAt: new Date(),
+        });
+        failedBatchCount++;
+        stats.failedStored++;
+
+        if (failedBatchCount >= 50) {
+          await failedBatch.commit();
+          failedBatch = db.batch();
+          failedBatchCount = 0;
+        }
+        continue;
+      }
+
+      if (negativeResult.hasNegative) {
+        stats.negativeKeywords++;
+        // Store for analysis - these had negative keywords
+        const failedDocRef = db.collection('failed_filter_properties').doc();
+        failedBatch.set(failedDocRef, {
+          zpid,
+          url,
+          address: streetAddr,
+          city,
+          state,
+          description: description.substring(0, 2000),
+          filterResult: 'negative_keywords',
+          matchedKeywords: negativeResult.matchedKeywords,
+          reason: 'Property has negative keywords (no owner financing, cash only, etc)',
+          expiresAt,
+          createdAt: new Date(),
+        });
+        failedBatchCount++;
+        stats.failedStored++;
+
+        if (failedBatchCount >= 50) {
+          await failedBatch.commit();
+          failedBatch = db.batch();
+          failedBatchCount = 0;
+        }
+        continue;
+      }
+
+      // Extract remaining property data
       const zipCode = property.zipcode || property.address?.zipcode || '';
       const price = property.price || 0;
       const zestimate = property.zestimate || 0;
@@ -242,6 +297,12 @@ export async function GET(request: NextRequest) {
       console.log(`   Committed final batch of ${batchCount}`);
     }
 
+    // Commit remaining failed properties
+    if (failedBatchCount > 0) {
+      await failedBatch.commit();
+      console.log(`   Committed ${failedBatchCount} failed filter properties for analysis`);
+    }
+
     const duration = ((Date.now() - startTime) / 1000).toFixed(2);
 
     console.log(`\n✅ [AGENT OUTREACH SCRAPER] Complete in ${duration}s`);
@@ -254,6 +315,7 @@ export async function GET(request: NextRequest) {
     console.log(`   - No agent: ${stats.noAgent}`);
     console.log(`   - Has OF keywords: ${stats.hasOwnerFinance}`);
     console.log(`   - Negative keywords: ${stats.negativeKeywords}`);
+    console.log(`   Stored for analysis: ${stats.failedStored} (expires in 7 days)`);
 
     return NextResponse.json({
       success: true,
@@ -269,7 +331,8 @@ export async function GET(request: NextRequest) {
         hasOwnerFinance: stats.hasOwnerFinance,
         negativeKeywords: stats.negativeKeywords,
       },
-      message: `Added ${stats.added} properties to agent outreach queue`,
+      failedStoredForAnalysis: stats.failedStored,
+      message: `Added ${stats.added} properties to agent outreach queue, stored ${stats.failedStored} failed properties for analysis`,
     });
 
   } catch (error: any) {

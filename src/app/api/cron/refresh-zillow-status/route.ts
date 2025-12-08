@@ -77,15 +77,20 @@ const db = getFirestore();
 /**
  * Cron job to refresh Zillow property statuses
  *
+ * UNIFIED STATUS REFRESH:
+ * - Processes zillow_imports (owner finance), cash_houses, AND agent_outreach_queue collections
+ * - Runs hourly with stealth batching
+ * - Deletes sold/off-market properties from zillow_imports and cash_houses
+ * - Updates status in agent_outreach_queue (marks off-market but doesn't delete)
+ * - Auto-discovers cash deals from owner finance properties
+ *
  * STEALTH MODE:
- * - Runs DAILY (not every 3 days)
- * - Processes only 50-100 properties per run
- * - Uses small batches (10-15 properties) with random delays
- * - Rotates through all properties over ~17 days
+ * - Processes only 80 properties per run (split between collections)
+ * - Uses small batches (40 properties) with random delays
  * - Avoids Zillow's bot detection
  */
 export async function GET(request: NextRequest) {
-  console.log('🔄 [CRON] Starting Zillow status refresh (STEALTH MODE)');
+  console.log('🔄 [CRON] Starting Zillow status refresh (UNIFIED - Owner Finance + Cash Houses + Agent Outreach)');
 
   // Security check - only allow cron secret
   const authHeader = request.headers.get('authorization');
@@ -98,66 +103,112 @@ export async function GET(request: NextRequest) {
 
   try {
     // Runs every hour (24x/day) × 80 = 1920 properties/day
-    // With ~4300 properties, full cycle takes ~2.25 days
-    // Reduced from 200 to 80 to fit in 5 min Vercel timeout (each Apify batch ~60s)
+    // Split between zillow_imports (owner finance) and cash_houses
     const MAX_PROPERTIES_PER_RUN = 80;
     const BATCH_SIZE = 40; // 2 batches × ~60s each = ~2-3 min with buffer
     const MIN_DELAY = 500; // 0.5 second
     const MAX_DELAY = 1000; // 1 second max
     const DELETE_INACTIVE = true; // Delete sold/pending properties
 
-    // Get all properties, then filter/sort in memory
-    // This avoids Firestore index issues on first run
-    const allSnapshot = await db.collection('zillow_imports').get();
+    // ============================================
+    // STEP 1: Gather properties from ALL collections
+    // ============================================
 
-    console.log(`📊 [CRON] Total properties in database: ${allSnapshot.size}`);
+    // Get zillow_imports (owner finance properties)
+    const ownerFinanceSnapshot = await db.collection('zillow_imports').get();
+    console.log(`📊 [CRON] Owner Finance (zillow_imports): ${ownerFinanceSnapshot.size} total`);
 
-    if (allSnapshot.empty) {
+    // Get cash_houses
+    const cashHousesSnapshot = await db.collection('cash_houses').get();
+    console.log(`📊 [CRON] Cash Houses: ${cashHousesSnapshot.size} total`);
+
+    // Get agent_outreach_queue (pending agent response - need to monitor for off-market)
+    // Only get properties with status 'sent_to_ghl' (awaiting agent response)
+    const agentOutreachSnapshot = await db.collection('agent_outreach_queue')
+      .where('status', '==', 'sent_to_ghl')
+      .get();
+    console.log(`📊 [CRON] Agent Outreach Queue (sent_to_ghl): ${agentOutreachSnapshot.size} total`);
+
+    const totalProperties = ownerFinanceSnapshot.size + cashHousesSnapshot.size + agentOutreachSnapshot.size;
+    console.log(`📊 [CRON] Combined total: ${totalProperties} properties`);
+
+    if (ownerFinanceSnapshot.empty && cashHousesSnapshot.empty && agentOutreachSnapshot.empty) {
       return NextResponse.json({
         success: true,
         message: 'No properties in database'
       });
     }
 
-    // Filter to only properties WITH URLs first, then sort by lastStatusCheck
-    const allProperties = allSnapshot.docs
-      .filter(doc => doc.data().url) // FILTER FIRST - only properties with URLs
+    // Combine and sort all properties by lastStatusCheck (oldest first)
+    // Tag each with its source collection
+    const allOwnerFinance = ownerFinanceSnapshot.docs
+      .filter(doc => doc.data().url)
       .map(doc => ({
         doc,
+        collection: 'zillow_imports' as const,
         lastCheck: doc.data().lastStatusCheck?.toDate?.()?.getTime() || 0,
-      }))
+      }));
+
+    const allCashHouses = cashHousesSnapshot.docs
+      .filter(doc => doc.data().url)
+      .map(doc => ({
+        doc,
+        collection: 'cash_houses' as const,
+        lastCheck: doc.data().lastStatusCheck?.toDate?.()?.getTime() || 0,
+      }));
+
+    const allAgentOutreach = agentOutreachSnapshot.docs
+      .filter(doc => doc.data().url)
+      .map(doc => ({
+        doc,
+        collection: 'agent_outreach_queue' as const,
+        lastCheck: doc.data().lastStatusCheck?.toDate?.()?.getTime() || 0,
+      }));
+
+    // Merge and sort by oldest check first
+    const combinedProperties = [...allOwnerFinance, ...allCashHouses, ...allAgentOutreach]
       .sort((a, b) => a.lastCheck - b.lastCheck);
 
-    console.log(`📊 [CRON] ${allProperties.length} properties with URLs (${allSnapshot.size - allProperties.length} without URLs skipped)`);
+    console.log(`📊 [CRON] ${combinedProperties.length} properties with URLs (${allOwnerFinance.length} owner finance, ${allCashHouses.length} cash houses, ${allAgentOutreach.length} agent outreach)`);
 
     // Take top N for this run
-    const selectedDocs = allProperties.slice(0, MAX_PROPERTIES_PER_RUN).map(p => p.doc);
+    const selectedProperties = combinedProperties.slice(0, MAX_PROPERTIES_PER_RUN);
 
-    if (selectedDocs.length === 0) {
+    // Count how many from each collection
+    const ownerFinanceCount = selectedProperties.filter(p => p.collection === 'zillow_imports').length;
+    const cashHousesCount = selectedProperties.filter(p => p.collection === 'cash_houses').length;
+    const agentOutreachCount = selectedProperties.filter(p => p.collection === 'agent_outreach_queue').length;
+    console.log(`📋 [CRON] This run: ${ownerFinanceCount} owner finance + ${cashHousesCount} cash houses + ${agentOutreachCount} agent outreach = ${selectedProperties.length} total`);
+
+    if (selectedProperties.length === 0) {
       return NextResponse.json({
         success: true,
         message: 'No properties to refresh'
       });
     }
 
-    // Extract URLs and create ZPID to document ID mapping
-    const zpidToDocId = new Map<string, string>();
-    const properties = selectedDocs.map(doc => {
-      const zpid = String(doc.data().zpid || '');
+    // Create mappings for all collections
+    const zpidToDocInfo = new Map<string, { docId: string; collection: 'zillow_imports' | 'cash_houses' | 'agent_outreach_queue' }>();
+    const properties = selectedProperties.map(item => {
+      const data = item.doc.data();
+      const zpid = String(data.zpid || '');
       if (zpid) {
-        zpidToDocId.set(zpid, doc.id); // Map ZPID to actual Firestore doc ID
+        zpidToDocInfo.set(zpid, { docId: item.doc.id, collection: item.collection });
       }
       return {
-        id: doc.id,
-        url: doc.data().url,
-        zpid: doc.data().zpid,
-        address: doc.data().fullAddress || doc.data().streetAddress,
-        currentStatus: doc.data().homeStatus,
-        lastCheck: doc.data().lastStatusCheck?.toDate?.() || null,
+        id: item.doc.id,
+        collection: item.collection,
+        url: data.url,
+        zpid: data.zpid,
+        address: data.fullAddress || data.streetAddress,
+        currentStatus: data.homeStatus,
+        lastCheck: data.lastStatusCheck?.toDate?.() || null,
+        agentConfirmedOwnerFinance: data.agentConfirmedOwnerFinance,
+        source: data.source,
       };
     });
 
-    console.log(`📋 [CRON] Processing ${properties.length} properties`);
+    console.log(`📋 [CRON] Processing ${properties.length} properties from both collections`);
 
     const client = new ApifyClient({ token: process.env.APIFY_API_KEY! });
     const actorId = 'maxcopell/zillow-detail-scraper';
@@ -223,15 +274,18 @@ export async function GET(request: NextRequest) {
           const zpid = String(item.zpid || item.id || '');
           if (!zpid) continue;
 
-          // Use the actual document ID (not ZPID) from our mapping
-          const actualDocId = zpidToDocId.get(zpid);
-          if (!actualDocId) {
+          // Use the actual document ID and collection from our mapping
+          const docInfo = zpidToDocInfo.get(zpid);
+          if (!docInfo) {
             console.warn(`   ⚠️  No document ID mapping for ZPID ${zpid}`);
             continue;
           }
 
           processedZpids.add(zpid); // Mark as processed
-          const docRef = db.collection('zillow_imports').doc(actualDocId);
+          const docRef = db.collection(docInfo.collection).doc(docInfo.docId);
+          const isOwnerFinanceCollection = docInfo.collection === 'zillow_imports';
+          const isCashHouseCollection = docInfo.collection === 'cash_houses';
+          const isAgentOutreachCollection = docInfo.collection === 'agent_outreach_queue';
 
           // Find the original property
           const originalProp = batch.find(p => String(p.zpid) === zpid);
@@ -276,47 +330,83 @@ export async function GET(request: NextRequest) {
                 ? 'No price data (likely off-market)'
                 : 'Price is $0 (likely off-market)';
 
-            firestoreBatch.delete(docRef);
-            deleted++;
-            deletedProperties.push({
-              address: originalProp?.address || item.address?.streetAddress || 'Unknown',
-              status: newStatus,
-              reason,
-            });
-            console.log(`   🗑️  DELETING PROPERTY (${reason})`);
-            console.log(`      Status: ${newStatus}, Price: ${item.price || item.listPrice || 'N/A'}`);
-            console.log(`      Address: ${originalProp?.address}`);
-            console.log(`      ZPID: ${originalProp?.zpid}`);
-            console.log(`      ℹ️  If relisted later, this ZPID can be imported again with new agent info`);
-          } else {
-            // Property is still active (FOR_SALE) - check if it still mentions owner financing
-            // BYPASS: Skip owner finance keyword check for agent-confirmed properties
-            const propDoc = await db.collection('zillow_imports').doc(actualDocId).get();
-            const propData = propDoc.data();
-            const isAgentConfirmed = propData?.agentConfirmedOwnerFinance === true || propData?.source === 'agent_outreach';
-
-            const ownerFinanceCheck = hasStrictOwnerFinancing(item.description);
-
-            if (!ownerFinanceCheck.passes && DELETE_INACTIVE && !isAgentConfirmed) {
-              // Delete properties that no longer mention owner financing
-              // BUT keep agent-confirmed properties even without keywords
+            if (isAgentOutreachCollection) {
+              // DON'T delete from agent_outreach_queue - mark as property_off_market instead
+              firestoreBatch.update(docRef, {
+                status: 'property_off_market',
+                homeStatus: newStatus,
+                offMarketReason: reason,
+                offMarketDetectedAt: new Date(),
+                lastStatusCheck: new Date(),
+              });
+              console.log(`   ⚠️  MARKING OFF-MARKET (agent_outreach_queue): ${originalProp?.address}`);
+              console.log(`      Status: ${newStatus}, Reason: ${reason}`);
+            } else {
+              // Delete from zillow_imports and cash_houses
               firestoreBatch.delete(docRef);
               deleted++;
               deletedProperties.push({
                 address: originalProp?.address || item.address?.streetAddress || 'Unknown',
                 status: newStatus,
-                reason: 'No longer offers owner financing (seller changed mind)',
+                reason,
               });
-              console.log(`   🗑️  DELETING PROPERTY (No owner financing keywords)`);
+              console.log(`   🗑️  DELETING PROPERTY (${reason})`);
+              console.log(`      Status: ${newStatus}, Price: ${item.price || item.listPrice || 'N/A'}`);
+              console.log(`      Address: ${originalProp?.address}`);
+              console.log(`      ZPID: ${originalProp?.zpid}`);
+              console.log(`      ℹ️  If relisted later, this ZPID can be imported again with new agent info`);
+            }
+          } else {
+            // Property is still active (FOR_SALE)
+            // For owner finance properties (zillow_imports): check if still mentions owner financing
+            // For cash houses: no owner financing check needed, just update
+
+            let shouldDelete = false;
+            let deleteReason = '';
+
+            if (isOwnerFinanceCollection) {
+              // OWNER FINANCE COLLECTION - Check for owner financing keywords
+              // BYPASS: Skip owner finance keyword check for agent-confirmed properties
+              const isAgentConfirmed = originalProp?.agentConfirmedOwnerFinance === true || originalProp?.source === 'agent_outreach';
+              const ownerFinanceCheck = hasStrictOwnerFinancing(item.description);
+
+              if (!ownerFinanceCheck.passes && DELETE_INACTIVE && !isAgentConfirmed) {
+                // Delete properties that no longer mention owner financing
+                shouldDelete = true;
+                deleteReason = 'No longer offers owner financing (seller changed mind)';
+              } else if (isAgentConfirmed && !ownerFinanceCheck.passes) {
+                console.log(`   ✅ KEEPING (agent confirmed): ${originalProp?.address}`);
+              }
+            }
+            // Cash houses don't need owner financing check - they're kept as long as they're FOR_SALE
+
+            if (shouldDelete && !isAgentOutreachCollection) {
+              // Only delete from zillow_imports/cash_houses, NOT from agent_outreach_queue
+              firestoreBatch.delete(docRef);
+              deleted++;
+              deletedProperties.push({
+                address: originalProp?.address || item.address?.streetAddress || 'Unknown',
+                status: newStatus,
+                reason: deleteReason,
+              });
+              console.log(`   🗑️  DELETING PROPERTY (${deleteReason})`);
+              console.log(`      Collection: ${docInfo.collection}`);
               console.log(`      Address: ${originalProp?.address}`);
               console.log(`      ZPID: ${originalProp?.zpid}`);
               console.log(`      Status: ${newStatus} (active, but keywords removed)`);
               console.log(`      ℹ️  If owner financing is added back later, can be imported again`);
+            } else if (isAgentOutreachCollection) {
+              // For agent_outreach_queue: only update minimal fields (status tracking)
+              const agentOutreachUpdate: Record<string, unknown> = {
+                homeStatus: newStatus,
+                price: item.price || item.listPrice || 0,
+                zestimate: item.zestimate || item.estimate || null,
+                lastStatusCheck: new Date(),
+                lastScrapedAt: new Date(),
+              };
+              firestoreBatch.update(docRef, agentOutreachUpdate);
+              updated++;
             } else {
-              // Log if we're keeping an agent-confirmed property without keywords
-              if (isAgentConfirmed && !ownerFinanceCheck.passes) {
-                console.log(`   ✅ KEEPING (agent confirmed): ${originalProp?.address}`);
-              }
               // Update ALL fields from Apify response (full refresh)
               const updateData: Record<string, unknown> = {
                 // Core status fields
@@ -390,11 +480,14 @@ export async function GET(request: NextRequest) {
 
               // ============================================
               // CASH DEAL DISCOVERY - Check if property qualifies
+              // Only for owner finance properties (zillow_imports)
+              // Cash houses are already cash deals, no need to re-discover
               // ============================================
-              const price = item.price || item.listPrice || 0;
-              const estimate = item.zestimate || item.estimate || 0;
+              if (isOwnerFinanceCollection) {
+                const price = item.price || item.listPrice || 0;
+                const estimate = item.zestimate || item.estimate || 0;
 
-              if (price > 0 && estimate > 0) {
+                if (price > 0 && estimate > 0) {
                 const eightyPercentOfZestimate = estimate * 0.8;
                 const discountPercent = ((estimate - price) / estimate) * 100;
                 const needsWork = detectNeedsWork(item.description);
@@ -480,7 +573,8 @@ export async function GET(request: NextRequest) {
                     });
                   }
                 }
-              }
+                }
+              } // End of isOwnerFinanceCollection check for cash deal discovery
             }
           }
         }
@@ -492,7 +586,8 @@ export async function GET(request: NextRequest) {
         for (const prop of batch) {
           const propZpid = String(prop.zpid || '');
           if (propZpid && !processedZpids.has(propZpid)) {
-            const docRef = db.collection('zillow_imports').doc(prop.id);
+            // Use the correct collection for each property
+            const docRef = db.collection(prop.collection).doc(prop.id);
 
             // Get current failure count from the property data
             const propDoc = await docRef.get();
@@ -500,15 +595,15 @@ export async function GET(request: NextRequest) {
             const newFailures = currentFailures + 1;
 
             if (newFailures >= MAX_CONSECUTIVE_NO_RESULTS) {
-              // Delete after 3 consecutive failures
+              // Delete after 1 consecutive failure
               firestoreBatch.delete(docRef);
               deleted++;
               deletedProperties.push({
                 address: prop.address || 'Unknown',
                 status: 'NO_RESULT',
-                reason: `${newFailures} consecutive Apify failures - URL likely invalid`,
+                reason: `${newFailures} consecutive Apify failures - URL likely invalid (${prop.collection})`,
               });
-              console.log(`   🗑️  DELETING (${newFailures} consecutive failures): ${prop.address}`);
+              console.log(`   🗑️  DELETING from ${prop.collection} (${newFailures} consecutive failures): ${prop.address}`);
             } else {
               // Track the failure, will try again next rotation
               firestoreBatch.update(docRef, {
@@ -516,7 +611,7 @@ export async function GET(request: NextRequest) {
                 lastStatusCheckNote: `No Apify result (failure ${newFailures}/${MAX_CONSECUTIVE_NO_RESULTS})`,
                 consecutiveNoResults: newFailures,
               });
-              console.log(`   ⚠️  No result (${newFailures}/${MAX_CONSECUTIVE_NO_RESULTS}): ${prop.address}`);
+              console.log(`   ⚠️  No result (${newFailures}/${MAX_CONSECUTIVE_NO_RESULTS}): ${prop.address} [${prop.collection}]`);
             }
             batchNoResult++;
             noResultCount++;
@@ -556,17 +651,23 @@ export async function GET(request: NextRequest) {
     }
 
     console.log('\n' + '='.repeat(60));
-    console.log('✅ [CRON] Status refresh complete');
+    console.log('✅ [CRON] Status refresh complete (UNIFIED)');
     console.log('='.repeat(60));
-    console.log(`Total properties checked: ${properties.length}`);
-    console.log(`Updated with fresh data: ${updated}`);
-    console.log(`No Apify result (URL invalid/removed): ${noResultCount}`);
-    console.log(`Status changes: ${statusChanged}`);
-    console.log(`Deleted (inactive): ${deleted}`);
-    console.log(`Errors: ${errors}`);
-    console.log(`✓ All ${updated + noResultCount + deleted} properties got lastStatusCheck updated`);
+    console.log(`📊 COLLECTIONS PROCESSED:`);
+    console.log(`   Owner Finance (zillow_imports): ${ownerFinanceCount} properties`);
+    console.log(`   Cash Houses: ${cashHousesCount} properties`);
+    console.log(`   Agent Outreach Queue: ${agentOutreachCount} properties`);
+    console.log(`   Total: ${properties.length} properties`);
     console.log('');
-    console.log('💰 CASH DEALS DISCOVERY:');
+    console.log(`📈 RESULTS:`);
+    console.log(`   Updated with fresh data: ${updated}`);
+    console.log(`   No Apify result (URL invalid/removed): ${noResultCount}`);
+    console.log(`   Status changes: ${statusChanged}`);
+    console.log(`   Deleted (inactive/sold): ${deleted}`);
+    console.log(`   Errors: ${errors}`);
+    console.log(`   ✓ All ${updated + noResultCount + deleted} properties processed`);
+    console.log('');
+    console.log('💰 CASH DEALS DISCOVERY (from owner finance):');
     console.log(`   New cash deals found: ${cashDealsFound}`);
     console.log(`   Needs work properties: ${needsWorkFound}`);
     console.log(`   Total added to cash_houses: ${cashDealsFound + needsWorkFound}`);
@@ -588,18 +689,25 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'Status refresh complete',
+      message: 'Status refresh complete (UNIFIED - Owner Finance + Cash Houses + Agent Outreach)',
       stats: {
-        totalProperties: properties.length,
+        // Collection breakdown
+        collections: {
+          ownerFinance: ownerFinanceCount,
+          cashHouses: cashHousesCount,
+          agentOutreach: agentOutreachCount,
+          total: properties.length,
+        },
+        // Processing results
         updated,
-        noResult: noResultCount, // Properties with no Apify result (URL invalid/removed)
+        noResult: noResultCount,
         statusChanged,
         deleted,
         errors,
-        allProcessed: updated + noResultCount + deleted, // Should equal totalProperties
+        allProcessed: updated + noResultCount + deleted,
         statusChanges: statusChanges.length > 0 ? statusChanges : undefined,
         deletedProperties: deletedProperties.length > 0 ? deletedProperties : undefined,
-        // Cash deals discovery stats
+        // Cash deals discovery stats (from owner finance only)
         cashDeals: {
           newDealsFound: cashDealsFound,
           needsWorkFound: needsWorkFound,

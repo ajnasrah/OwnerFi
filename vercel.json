@@ -14,6 +14,34 @@
   },
   "crons": [
     {
+      "path": "/api/cron/run-search-scraper",
+      "schedule": "0 9 * * 1,4"
+    },
+    {
+      "path": "/api/cron/process-scraper-queue",
+      "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/run-agent-outreach-scraper",
+      "schedule": "0 6,14,22 * * *"
+    },
+    {
+      "path": "/api/cron/process-agent-outreach-queue",
+      "schedule": "0 8,16,0 * * *"
+    },
+    {
+      "path": "/api/cron/search-cash-deals",
+      "schedule": "0 10 * * 1,4"
+    },
+    {
+      "path": "/api/cron/process-cash-deals-queue",
+      "schedule": "30 */2 * * *"
+    },
+    {
+      "path": "/api/cron/refresh-zillow-status",
+      "schedule": "0 * * * *"
+    },
+    {
       "path": "/api/cron/generate-videos",
       "schedule": "0 9,12,15,18,21 * * *"
     },
@@ -25,7 +53,7 @@
       "path": "/api/cron/rate-articles",
       "schedule": "0 13 * * *"
     },
-        {
+    {
       "path": "/api/benefit/cron",
       "schedule": "20 9,12,15,18,21 * * *"
     },
@@ -46,10 +74,6 @@
       "schedule": "0 */6 * * *"
     },
     {
-      "path": "/api/cron/process-scraper-queue",
-      "schedule": "0 * * * *"
-    },
-    {
       "path": "/api/cron/abdullah",
       "schedule": "0 9,12,15,18,21 * * *"
     },
@@ -60,30 +84,6 @@
     {
       "path": "/api/cron/generate-blog",
       "schedule": "0 11 * * *"
-    },
-    {
-      "path": "/api/cron/refresh-zillow-status",
-      "schedule": "0 * * * *"
-    },
-    {
-      "path": "/api/cron/run-search-scraper",
-      "schedule": "0 9 * * 1,4"
-    },
-    {
-      "path": "/api/cron/run-agent-outreach-scraper",
-      "schedule": "0 6,14,22 * * *"
-    },
-    {
-      "path": "/api/cron/process-agent-outreach-queue",
-      "schedule": "0 8,16,0 * * *"
-    },
-    {
-      "path": "/api/cron/process-cash-deals-queue",
-      "schedule": "30 */2 * * *"
-    },
-    {
-      "path": "/api/cron/search-cash-deals",
-      "schedule": "0 10 * * 1,4"
     },
     {
       "path": "/api/cron/fetch-social-trends",

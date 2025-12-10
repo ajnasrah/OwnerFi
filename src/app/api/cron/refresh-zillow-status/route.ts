@@ -102,10 +102,10 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Runs every hour (24x/day) × 80 = 1920 properties/day
+    // Runs every hour (24x/day) × 125 = 3000 properties/day
     // Split between zillow_imports (owner finance) and cash_houses
-    const MAX_PROPERTIES_PER_RUN = 80;
-    const BATCH_SIZE = 40; // 2 batches × ~60s each = ~2-3 min with buffer
+    const MAX_PROPERTIES_PER_RUN = 125;
+    const BATCH_SIZE = 42; // 3 batches × ~60s each = ~3-4 min with buffer
     const MIN_DELAY = 500; // 0.5 second
     const MAX_DELAY = 1000; // 1 second max
     const DELETE_INACTIVE = true; // Delete sold/pending properties

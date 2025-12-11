@@ -212,6 +212,9 @@ export async function GET(request: NextRequest) {
             .get();
 
           if (existingCashHouse.empty) {
+            // Get image from rawData
+            const imgSrc = property.rawData?.hiResImageLink || property.rawData?.imgSrc || null;
+
             await db.collection('cash_houses').add({
               // Property info
               zpid: property.zpid,
@@ -233,6 +236,9 @@ export async function GET(request: NextRequest) {
               bathrooms: property.baths,
               squareFoot: property.squareFeet,
               homeType: property.propertyType,
+
+              // Image
+              imgSrc,
 
               // Agent info
               agentName: property.agentName,

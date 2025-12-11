@@ -93,24 +93,34 @@ export async function POST(request: NextRequest) {
   console.log('📨 [AGENT RESPONSE WEBHOOK] Received webhook');
 
   try {
-    // Read raw body for signature verification
+    // Read raw body
     const rawBody = await request.text();
+
+    // Parse body
+    const body = JSON.parse(rawBody);
+
+    // Check for signature in header OR body (GHL sends in body)
     const signature = request.headers.get('x-webhook-signature') ||
-                     request.headers.get('x-ghl-signature');
+                     request.headers.get('x-ghl-signature') ||
+                     body['x-webhook-signature'] ||
+                     body['x-webhook-sig'] ||
+                     body['GHL_WEBHOOK'];
 
     // Verify webhook signature
     const verification = verifyWebhookSignature(rawBody, signature);
     if (!verification.valid) {
       console.error('❌ [AGENT RESPONSE WEBHOOK] Invalid signature:', verification.reason);
+      console.error('   Body keys:', Object.keys(body));
       return NextResponse.json(
         { error: 'Unauthorized', reason: verification.reason },
         { status: 401 }
       );
     }
-
-    // Parse body
-    const body = JSON.parse(rawBody);
-    const { firebaseId, response, agentNote, opportunityId } = body;
+    // Accept both firebaseId and firebase_id (GHL uses snake_case)
+    const firebaseId = body.firebaseId || body.firebase_id;
+    const response = body.response;
+    const agentNote = body.agentNote || body.agent_note;
+    const opportunityId = body.opportunityId || body.opportunity_id;
 
     console.log(`📋 [AGENT RESPONSE WEBHOOK] Processing response for ${firebaseId}`);
     console.log(`   Response: ${response}`);

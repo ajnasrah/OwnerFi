@@ -627,9 +627,21 @@ export default function CashDealsPage() {
                           </td>
                           <td className="px-3 py-2">
                             <div className="flex items-center gap-2">
-                              {deal.imgSrc && (
-                                <img src={deal.imgSrc} alt="" className="w-12 h-9 object-cover rounded" />
-                              )}
+                              <div className="w-12 h-9 flex-shrink-0 rounded overflow-hidden bg-slate-700">
+                                {deal.imgSrc ? (
+                                  <img
+                                    src={deal.imgSrc}
+                                    alt=""
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                      (e.target as HTMLImageElement).style.display = 'none';
+                                      (e.target as HTMLImageElement).parentElement!.innerHTML = '<span class="flex items-center justify-center w-full h-full text-slate-500 text-xs">🏠</span>';
+                                    }}
+                                  />
+                                ) : (
+                                  <span className="flex items-center justify-center w-full h-full text-slate-500 text-xs">🏠</span>
+                                )}
+                              </div>
                               <div className="min-w-0">
                                 <div className="text-sm font-medium truncate max-w-[180px] text-white">
                                   {deal.address}

@@ -156,6 +156,10 @@ function mapPropertyFields(doc: any) {
     agentName: data.agentName || data.listingAgentName || null,
     agentPhone: data.agentPhoneNumber || data.agentPhone || data.brokerPhoneNumber || null,
     agentEmail: data.agentEmail || data.listingAgentEmail || null,
+    // Source tracking - CRITICAL for GHL badge
+    source: data.source || null,
+    agentConfirmedOwnerFinance: data.agentConfirmedOwnerFinance || false,
+    originalQueueId: data.originalQueueId || null,
     // Cash flow fields (admin only)
     rentEstimate,
     annualTax,

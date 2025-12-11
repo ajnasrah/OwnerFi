@@ -136,11 +136,13 @@ const nextConfig = {
     return config;
   },
 
-  // PERFORMANCE FIX: Enable CSS optimization + ISR disabled for useSearchParams
+  // PERFORMANCE FIX: Enable CSS optimization
   experimental: {
     optimizeCss: true,
-    isrMemoryCacheSize: 0, // Disable ISR to fix useSearchParams errors
   },
+
+  // Next.js 16: Use webpack instead of turbopack
+  turbopack: {},
 
   // Environment variables that should be available client-side
   env: {

@@ -1,10 +1,10 @@
-import { initializeApp, cert, getApps } from 'firebase-admin/app';
-import { getFirestore } from 'firebase-admin/firestore';
 import * as dotenv from 'dotenv';
-
 dotenv.config({ path: '.env.local' });
 
-if (getApps().length === 0) {
+import { initializeApp, cert, getApps } from 'firebase-admin/app';
+import { getFirestore } from 'firebase-admin/firestore';
+
+if (!getApps().length) {
   initializeApp({
     credential: cert({
       projectId: process.env.FIREBASE_PROJECT_ID!,
@@ -16,58 +16,91 @@ if (getApps().length === 0) {
 
 const db = getFirestore();
 
-async function main() {
-  const zpid = '126639728';
-  const url = 'https://www.zillow.com/homedetails/1094-Fortyniner-Ln-Bonners-Ferry-ID-83805/126639728_zpid/';
+async function checkProperty() {
+  console.log('🔍 Searching for 6905 Petworth...\n');
 
-  // Check scraper_queue by zpid
-  const queueDocs = await db.collection('scraper_queue')
-    .where('zpid', '==', zpid)
-    .get();
+  const snap = await db.collection('cash_houses').get();
+  let found = false;
 
-  console.log('=== SCRAPER_QUEUE (by zpid) ===');
-  if (queueDocs.empty) {
-    console.log('NOT in scraper_queue by zpid');
-  } else {
-    queueDocs.docs.forEach(doc => {
-      const d = doc.data();
-      console.log('Status:', d.status);
-      console.log('Failure Reason:', d.failureReason || 'N/A');
-    });
+  snap.forEach(doc => {
+    const data = doc.data();
+    if (data.fullAddress?.includes('Petworth') || data.streetAddress?.includes('Petworth')) {
+      found = true;
+      console.log('Found:');
+      console.log('  Address:', data.fullAddress || data.streetAddress);
+      console.log('  Price:', '$' + (data.price || 0).toLocaleString());
+      console.log('  Zestimate:', '$' + (data.estimate || data.zestimate || 0).toLocaleString());
+      const price = data.price || 0;
+      const est = data.estimate || data.zestimate || 0;
+      const spread = est > 0 ? ((est - price) / est * 100).toFixed(1) : 'N/A';
+      console.log('  Spread:', spread + '%');
+      console.log('  Discount %:', data.discountPercentage);
+      console.log('  Source:', data.source);
+      console.log('  Deal Type:', data.dealType);
+      console.log('  Added:', data.importedAt?.toDate?.()?.toISOString() || data.createdAt?.toDate?.()?.toISOString() || 'unknown');
+      console.log('  Doc ID:', doc.id);
+    }
+  });
+
+  if (!found) {
+    console.log('Property not found in cash_houses');
   }
+}
 
-  // Check scraper_queue by URL
-  const urlDocs = await db.collection('scraper_queue')
-    .where('url', '==', url)
-    .get();
+async function checkAllCashHousesSpread() {
+  console.log('\n========================================');
+  console.log('📊 CASH_HOUSES SPREAD ANALYSIS');
+  console.log('========================================\n');
 
-  console.log('\n=== SCRAPER_QUEUE (by URL) ===');
-  if (urlDocs.empty) {
-    console.log('NOT in queue by URL');
-  } else {
-    urlDocs.docs.forEach(doc => {
-      const d = doc.data();
-      console.log('Status:', d.status);
-      console.log('Failure Reason:', d.failureReason || 'N/A');
-    });
-  }
+  const snap = await db.collection('cash_houses').get();
 
-  // Check zillow_imports
-  const importDocs = await db.collection('zillow_imports')
-    .where('zpid', '==', parseInt(zpid))
-    .get();
+  let noSpread = 0;
+  let under10 = 0;
+  let under20 = 0;
+  let goodSpread = 0;
+  const badDeals: Array<{address: string, price: number, estimate: number, spread: number, source: string}> = [];
 
-  console.log('\n=== ZILLOW_IMPORTS ===');
-  if (importDocs.empty) {
-    console.log('NOT in zillow_imports');
-  } else {
-    importDocs.docs.forEach(doc => {
-      const d = doc.data();
-      console.log('Found in zillow_imports!');
-      console.log('Address:', d.fullAddress);
-      console.log('Matched Keywords:', d.matchedKeywords);
+  snap.forEach(doc => {
+    const data = doc.data();
+    const price = data.price || 0;
+    const estimate = data.estimate || data.zestimate || 0;
+
+    if (!estimate || !price) {
+      noSpread++;
+      return;
+    }
+
+    const spreadPercent = ((estimate - price) / estimate) * 100;
+
+    if (spreadPercent < 10) {
+      under10++;
+      badDeals.push({
+        address: data.fullAddress || data.streetAddress || 'Unknown',
+        price,
+        estimate,
+        spread: spreadPercent,
+        source: data.source || 'unknown'
+      });
+    } else if (spreadPercent < 20) {
+      under20++;
+    } else {
+      goodSpread++;
+    }
+  });
+
+  console.log('Total:', snap.size);
+  console.log('Good spread (20%+):', goodSpread);
+  console.log('Moderate spread (10-20%):', under20);
+  console.log('Bad spread (<10%):', under10);
+  console.log('No estimate data:', noSpread);
+
+  if (badDeals.length > 0) {
+    console.log('\n🚨 PROPERTIES WITH LESS THAN 10% SPREAD:');
+    badDeals.sort((a, b) => a.spread - b.spread).forEach((d, i) => {
+      console.log('  ' + (i+1) + '. ' + d.address);
+      console.log('     Price: $' + d.price.toLocaleString() + ' | Est: $' + d.estimate.toLocaleString() + ' | Spread: ' + d.spread.toFixed(1) + '% | Source: ' + d.source);
     });
   }
 }
 
-main().then(() => process.exit(0));
+checkProperty().then(() => checkAllCashHousesSpread()).catch(console.error);

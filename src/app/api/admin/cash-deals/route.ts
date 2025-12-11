@@ -242,17 +242,13 @@ export async function GET(request: Request) {
       console.log(`[cash-deals] Fetched and cached ${allDeals.length} deals in ${Date.now() - startTime}ms`);
     }
 
-    // Apply state filter in memory
-    if (state) {
-      allDeals = allDeals.filter((deal: any) => deal.state === state);
-    }
-
     // Apply collection filter in memory
     if (collection) {
       allDeals = allDeals.filter((deal: any) => deal.source === collection);
     }
 
     // Filter by city/radius - use coordinates when available for accuracy
+    // IMPORTANT: When radius is used, we search ACROSS ALL STATES (for tri-state areas like Memphis)
     if (city) {
       const searchState = state || '';
 
@@ -260,25 +256,37 @@ export async function GET(request: Request) {
       const centerCoords = getCityCoordinatesComprehensive(city, searchState);
 
       if (centerCoords && radius > 0) {
-        // ACCURATE: Use actual coordinates for radius search
+        // RADIUS SEARCH: Search across ALL states within radius (for tri-state cities like Memphis)
+        // Get all cities within radius (includes cities from ALL states)
+        const nearbyCities = getCitiesWithinRadiusComprehensive(city, searchState, radius);
+        const cityNames = new Set(nearbyCities.map(c => c.name.toLowerCase()));
+        cityNames.add(city.toLowerCase());
+
+        // Also get the states that are included in the radius for logging
+        const statesInRadius = new Set(nearbyCities.map(c => c.state));
+        if (searchState) statesInRadius.add(searchState);
+        console.log(`[cash-deals] Radius search: ${city} + ${radius}mi includes states: ${[...statesInRadius].join(', ')}`);
+
         allDeals = allDeals.filter((deal: any) => {
-          // If property has coordinates, use them
+          // If property has coordinates, use actual distance calculation
           if (deal.latitude && deal.longitude) {
             const dist = haversineDistance(centerCoords.lat, centerCoords.lng, deal.latitude, deal.longitude);
             return dist <= radius;
           }
-          // Fallback: Check if city name matches any city in radius
-          const nearbyCities = getCitiesWithinRadiusComprehensive(city, searchState, radius);
-          const cityNames = new Set(nearbyCities.map(c => c.name.toLowerCase()));
-          cityNames.add(city);
+          // Fallback: Check if city name matches any city in radius (across all states)
           return cityNames.has(deal.city?.toLowerCase());
         });
       } else {
-        // No radius or no coords found - use partial match on city name
-        allDeals = allDeals.filter((deal: any) =>
-          deal.city?.toLowerCase().includes(city)
-        );
+        // No radius - filter by exact city match AND state if provided
+        allDeals = allDeals.filter((deal: any) => {
+          const cityMatch = deal.city?.toLowerCase().includes(city);
+          const stateMatch = state ? deal.state === state : true;
+          return cityMatch && stateMatch;
+        });
       }
+    } else if (state) {
+      // No city search, just state filter
+      allDeals = allDeals.filter((deal: any) => deal.state === state);
     }
 
     // Sort - handle nested cashFlow fields

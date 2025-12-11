@@ -134,11 +134,15 @@ function normalizeProperty(doc: FirebaseFirestore.DocumentSnapshot, source: stri
     cashFlowData = calculateCashFlow(price, rentEstimate, annualTax, monthlyHoa, useEstimatedTax);
   }
 
+  // Extract just the street address (remove city, state, zip if included)
+  const rawAddress = data.streetAddress || data.address || '';
+  const streetOnly = rawAddress.includes(',') ? rawAddress.split(',')[0].trim() : rawAddress;
+
   return {
     id: doc.id,
-    // Address fields
-    address: data.address || data.fullAddress || `${data.streetAddress}, ${data.city}, ${data.state} ${data.zipCode || data.zipcode}`,
-    streetAddress: data.streetAddress || data.address?.split(',')[0],
+    // Address fields - use street only to avoid duplication with city/state columns
+    address: streetOnly || `${data.city}, ${data.state}`,
+    streetAddress: streetOnly,
     city: data.city,
     state: data.state,
     zipcode: data.zipCode || data.zipcode,

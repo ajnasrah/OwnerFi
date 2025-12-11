@@ -94,6 +94,99 @@ export default function CashDealsPage() {
   const [selectedDeals, setSelectedDeals] = useState<Set<string>>(new Set());
   const [deleting, setDeleting] = useState(false);
   const [sendingToGHL, setSendingToGHL] = useState(false);
+  const [exporting, setExporting] = useState(false);
+
+  // Export filtered deals to CSV
+  const exportFilteredDeals = () => {
+    if (filteredDeals.length === 0) {
+      alert('No deals to export');
+      return;
+    }
+
+    setExporting(true);
+    try {
+      // CSV headers
+      const headers = [
+        'Address',
+        'City',
+        'State',
+        'Zip',
+        'Price',
+        'ARV (Zestimate)',
+        '% ARV',
+        'Discount %',
+        'Beds',
+        'Baths',
+        'SqFt',
+        'Rent Estimate',
+        'Monthly Cash Flow',
+        'CoC Return %',
+        'Down Payment',
+        'Monthly Expenses',
+        'Owner Finance',
+        'Sent to GHL',
+        'Zillow URL'
+      ];
+
+      // CSV rows
+      const rows = filteredDeals.map(deal => [
+        deal.address,
+        deal.city,
+        deal.state,
+        deal.zipcode,
+        deal.price,
+        deal.arv,
+        deal.percentOfArv,
+        deal.discount,
+        deal.beds,
+        deal.baths,
+        deal.sqft,
+        deal.rentEstimate || '',
+        deal.cashFlow?.monthlyCashFlow || '',
+        deal.cashFlow?.cocReturn || '',
+        deal.cashFlow?.downPayment || '',
+        deal.cashFlow?.monthlyExpenses || '',
+        deal.ownerFinanceVerified ? 'Yes' : 'No',
+        deal.sentToGHL ? new Date(deal.sentToGHL).toLocaleDateString() : '',
+        deal.url
+      ]);
+
+      // Build CSV content
+      const csvContent = [
+        headers.join(','),
+        ...rows.map(row => row.map(cell => {
+          // Escape commas and quotes in cell values
+          const cellStr = String(cell ?? '');
+          if (cellStr.includes(',') || cellStr.includes('"') || cellStr.includes('\n')) {
+            return `"${cellStr.replace(/"/g, '""')}"`;
+          }
+          return cellStr;
+        }).join(','))
+      ].join('\n');
+
+      // Create and download file
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+
+      // Generate filename with current filter info
+      const filterInfo = activeQuickFilter !== 'allDeals' ? `-${activeQuickFilter}` : '';
+      const locationInfo = citySearch ? `-${citySearch.replace(/\s+/g, '_')}` : '';
+      const dateStr = new Date().toISOString().split('T')[0];
+      link.download = `cash-deals${filterInfo}${locationInfo}-${dateStr}.csv`;
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Export error:', error);
+      alert('Failed to export deals');
+    } finally {
+      setExporting(false);
+    }
+  };
 
   // Send selected deals to GHL
   const handleSendToGHL = async () => {
@@ -360,22 +453,35 @@ export default function CashDealsPage() {
                 </span>
               </div>
             </div>
-            <div className="flex gap-6 text-right">
-              <div>
-                <div className="text-2xl font-bold text-emerald-400">{stats.total}</div>
-                <div className="text-xs text-slate-400">Matches</div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-blue-400">{stats.avgCoc.toFixed(1)}%</div>
-                <div className="text-xs text-slate-400">Avg CoC</div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-green-400">${Math.round(stats.avgCashFlow)}</div>
-                <div className="text-xs text-slate-400">Avg Cash Flow</div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-yellow-400">{stats.positiveCashFlow}</div>
-                <div className="text-xs text-slate-400">Positive CF</div>
+            <div className="flex items-center gap-6">
+              <button
+                onClick={exportFilteredDeals}
+                disabled={exporting || filteredDeals.length === 0}
+                className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white text-sm font-medium rounded-lg border border-slate-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                title={`Export ${stats.total} deals to CSV`}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                {exporting ? 'Exporting...' : 'Export CSV'}
+              </button>
+              <div className="flex gap-6 text-right">
+                <div>
+                  <div className="text-2xl font-bold text-emerald-400">{stats.total}</div>
+                  <div className="text-xs text-slate-400">Matches</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-blue-400">{stats.avgCoc.toFixed(1)}%</div>
+                  <div className="text-xs text-slate-400">Avg CoC</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-green-400">${Math.round(stats.avgCashFlow)}</div>
+                  <div className="text-xs text-slate-400">Avg Cash Flow</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-yellow-400">{stats.positiveCashFlow}</div>
+                  <div className="text-xs text-slate-400">Positive CF</div>
+                </div>
               </div>
             </div>
           </div>

@@ -106,6 +106,7 @@ export default function AuthPage() {
       const verifiedPhone = result.phoneNumber;
 
       // Check if user exists in database
+      console.log('🔍 [AUTH-PAGE] Checking if user exists for phone:', verifiedPhone);
       const checkResponse = await fetch('/api/auth/check-phone', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -113,13 +114,16 @@ export default function AuthPage() {
       });
 
       const checkData = await checkResponse.json();
+      console.log('📋 [AUTH-PAGE] check-phone response:', { status: checkResponse.status, data: checkData });
 
       if (checkData.exists) {
         // Existing user - sign them in
+        console.log('✅ [AUTH-PAGE] User exists, attempting sign in...');
         const signInResult = await signIn('credentials', {
           phone: verifiedPhone,
           redirect: false,
         });
+        console.log('🔐 [AUTH-PAGE] signIn result:', signInResult);
 
         if (signInResult?.ok) {
           // Check for shared property to auto-like
@@ -153,6 +157,7 @@ export default function AuthPage() {
         }
       } else {
         // New user - redirect to setup
+        console.log('❌ [AUTH-PAGE] User NOT found, redirecting to setup. checkData:', checkData);
         // Store verified phone in session storage for setup page
         sessionStorage.setItem('verified_phone', verifiedPhone);
         router.push('/auth/setup');

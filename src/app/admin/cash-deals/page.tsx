@@ -42,12 +42,10 @@ const GLOBAL_MAX_PRICE = 300000;
 const QUICK_FILTERS = {
   ownerFinance: { label: 'Owner Finance', icon: '🏠', sortBy: 'percentOfArv' as SortField, sortOrder: 'asc' as const, ownerFinanceOnly: true },
   discountDeals: { label: 'Under 80% ARV', icon: '!', sortBy: 'percentOfArv' as SortField, sortOrder: 'asc' as const, maxArv: 80 },
-  bestCoc: { label: 'Best CoC %', icon: '%', sortBy: 'cocReturn' as SortField, sortOrder: 'desc' as const, minCoc: 15 },
-  highCashFlow: { label: 'High Cash Flow', icon: '$', sortBy: 'monthlyCashFlow' as SortField, sortOrder: 'desc' as const, minCashFlow: 300 },
-  under100k: { label: 'Under $100K', icon: '<', sortBy: 'cocReturn' as SortField, sortOrder: 'desc' as const, maxPrice: 100000 },
-  midRange: { label: '$100K-$200K', icon: '~', sortBy: 'cocReturn' as SortField, sortOrder: 'desc' as const, minPrice: 100000, maxPrice: 200000 },
-  highEnd: { label: '$200K-$300K', icon: '+', sortBy: 'cocReturn' as SortField, sortOrder: 'desc' as const, minPrice: 200000, maxPrice: 300000 },
-  allDeals: { label: 'All Deals', icon: '*', sortBy: 'cocReturn' as SortField, sortOrder: 'desc' as const },
+  under100k: { label: 'Under $100K', icon: '<', sortBy: 'price' as SortField, sortOrder: 'asc' as const, maxPrice: 100000 },
+  midRange: { label: '$100K-$200K', icon: '~', sortBy: 'price' as SortField, sortOrder: 'asc' as const, minPrice: 100000, maxPrice: 200000 },
+  highEnd: { label: '$200K-$300K', icon: '+', sortBy: 'price' as SortField, sortOrder: 'asc' as const, minPrice: 200000, maxPrice: 300000 },
+  allDeals: { label: 'All Deals', icon: '*', sortBy: 'price' as SortField, sortOrder: 'asc' as const },
 };
 
 type QuickFilterKey = keyof typeof QUICK_FILTERS;
@@ -69,14 +67,12 @@ export default function CashDealsPage() {
   const [radius, setRadius] = useState(parseInt(searchParams.get('radius') || '0'));
 
   // Sort controls
-  const [sortBy, setSortBy] = useState<SortField>((searchParams.get('sortBy') as SortField) || 'cocReturn');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>((searchParams.get('sortOrder') as 'asc' | 'desc') || 'desc');
+  const [sortBy, setSortBy] = useState<SortField>((searchParams.get('sortBy') as SortField) || 'price');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>((searchParams.get('sortOrder') as 'asc' | 'desc') || 'asc');
 
   // Advanced filters (client-side for instant filtering)
   const [minPrice, setMinPrice] = useState<number | ''>('');
   const [maxPrice, setMaxPrice] = useState<number | ''>('');
-  const [minCoc, setMinCoc] = useState<number | ''>('');
-  const [minCashFlow, setMinCashFlow] = useState<number | ''>('');
   const [maxArv, setMaxArv] = useState<number | ''>('');
   const [ownerFinanceOnly, setOwnerFinanceOnly] = useState(false);
   const [activeQuickFilter, setActiveQuickFilter] = useState<QuickFilterKey>('ownerFinance');
@@ -124,8 +120,6 @@ export default function CashDealsPage() {
         'Baths',
         'SqFt',
         'Rent Estimate',
-        'Monthly Cash Flow',
-        'CoC Return %',
         'Down Payment',
         'Monthly Expenses',
         'Owner Finance',
@@ -147,10 +141,8 @@ export default function CashDealsPage() {
         deal.baths,
         deal.sqft,
         deal.rentEstimate || '',
-        deal.cashFlow?.monthlyCashFlow || '',
-        deal.cashFlow?.cocReturn || '',
-        deal.cashFlow?.downPayment || '',
-        deal.cashFlow?.monthlyExpenses || '',
+        deal.downPaymentAmount || '',
+        '',
         deal.ownerFinanceVerified ? 'Yes' : 'No',
         deal.sentToGHL ? new Date(deal.sentToGHL).toLocaleDateString() : '',
         deal.url
@@ -291,14 +283,10 @@ export default function CashDealsPage() {
     // Clear all advanced filters first
     setMinPrice('');
     setMaxPrice('');
-    setMinCoc('');
-    setMinCashFlow('');
     setMaxArv('');
     setOwnerFinanceOnly(false);
 
     // Apply preset filters
-    if ('minCoc' in filter) setMinCoc(filter.minCoc!);
-    if ('minCashFlow' in filter) setMinCashFlow(filter.minCashFlow!);
     if ('maxArv' in filter) setMaxArv(filter.maxArv!);
     if ('minPrice' in filter) setMinPrice(filter.minPrice!);
     if ('maxPrice' in filter) setMaxPrice(filter.maxPrice!);
@@ -326,40 +314,28 @@ export default function CashDealsPage() {
     // Apply client-side filters
     if (minPrice !== '') result = result.filter(d => d.price >= minPrice);
     if (maxPrice !== '') result = result.filter(d => d.price <= maxPrice);
-    if (minCoc !== '') result = result.filter(d => (d.cashFlow?.cocReturn || 0) >= minCoc);
-    if (minCashFlow !== '') result = result.filter(d => (d.cashFlow?.monthlyCashFlow || 0) >= minCashFlow);
     if (maxArv !== '') result = result.filter(d => d.percentOfArv <= maxArv);
 
     // Sort
     result.sort((a, b) => {
-      let aVal: number, bVal: number;
-
-      if (sortBy === 'monthlyCashFlow' || sortBy === 'cocReturn') {
-        aVal = a.cashFlow?.[sortBy] ?? (sortOrder === 'asc' ? Infinity : -Infinity);
-        bVal = b.cashFlow?.[sortBy] ?? (sortOrder === 'asc' ? Infinity : -Infinity);
-      } else {
-        aVal = (a as any)[sortBy] ?? (sortOrder === 'asc' ? Infinity : -Infinity);
-        bVal = (b as any)[sortBy] ?? (sortOrder === 'asc' ? Infinity : -Infinity);
-      }
-
+      const aVal = (a as any)[sortBy] ?? (sortOrder === 'asc' ? Infinity : -Infinity);
+      const bVal = (b as any)[sortBy] ?? (sortOrder === 'asc' ? Infinity : -Infinity);
       return sortOrder === 'asc' ? aVal - bVal : bVal - aVal;
     });
 
     return result;
-  }, [allDeals, addressSearch, minPrice, maxPrice, minCoc, minCashFlow, maxArv, ownerFinanceOnly, sortBy, sortOrder]);
+  }, [allDeals, addressSearch, minPrice, maxPrice, maxArv, ownerFinanceOnly, sortBy, sortOrder]);
 
   // Stats for filtered deals
   const stats = useMemo(() => {
-    const withCashFlow = filteredDeals.filter(d => d.cashFlow);
-    const avgCoc = withCashFlow.length > 0
-      ? withCashFlow.reduce((sum, d) => sum + (d.cashFlow?.cocReturn || 0), 0) / withCashFlow.length
+    const avgDiscount = filteredDeals.length > 0
+      ? filteredDeals.reduce((sum, d) => sum + (d.discount || 0), 0) / filteredDeals.length
       : 0;
-    const avgCashFlow = withCashFlow.length > 0
-      ? withCashFlow.reduce((sum, d) => sum + (d.cashFlow?.monthlyCashFlow || 0), 0) / withCashFlow.length
+    const avgPrice = filteredDeals.length > 0
+      ? filteredDeals.reduce((sum, d) => sum + (d.price || 0), 0) / filteredDeals.length
       : 0;
-    const positiveCashFlow = withCashFlow.filter(d => (d.cashFlow?.monthlyCashFlow || 0) > 0).length;
 
-    return { total: filteredDeals.length, avgCoc, avgCashFlow, positiveCashFlow };
+    return { total: filteredDeals.length, avgDiscount, avgPrice };
   }, [filteredDeals]);
 
   const handleSort = (field: SortField) => {
@@ -368,7 +344,7 @@ export default function CashDealsPage() {
       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
     } else {
       setSortBy(field);
-      const descFields = ['discount', 'monthlyCashFlow', 'cocReturn', 'rentEstimate'];
+      const descFields = ['discount', 'rentEstimate'];
       setSortOrder(descFields.includes(field) ? 'desc' : 'asc');
     }
   };
@@ -380,13 +356,11 @@ export default function CashDealsPage() {
     setRadius(0);
     setMinPrice('');
     setMaxPrice('');
-    setMinCoc('');
-    setMinCashFlow('');
     setMaxArv('');
     setOwnerFinanceOnly(false);
     setActiveQuickFilter('allDeals');
-    setSortBy('cocReturn');
-    setSortOrder('desc');
+    setSortBy('price');
+    setSortOrder('asc');
     router.replace(pathname, { scroll: false });
   };
 
@@ -488,16 +462,12 @@ export default function CashDealsPage() {
                   <div className="text-xs text-slate-400">Matches</div>
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-blue-400">{stats.avgCoc.toFixed(1)}%</div>
-                  <div className="text-xs text-slate-400">Avg CoC</div>
+                  <div className="text-2xl font-bold text-blue-400">${Math.round(stats.avgDiscount / 1000)}K</div>
+                  <div className="text-xs text-slate-400">Avg Discount</div>
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-green-400">${Math.round(stats.avgCashFlow)}</div>
-                  <div className="text-xs text-slate-400">Avg Cash Flow</div>
-                </div>
-                <div>
-                  <div className="text-2xl font-bold text-yellow-400">{stats.positiveCashFlow}</div>
-                  <div className="text-xs text-slate-400">Positive CF</div>
+                  <div className="text-2xl font-bold text-green-400">${Math.round(stats.avgPrice / 1000)}K</div>
+                  <div className="text-xs text-slate-400">Avg Price</div>
                 </div>
               </div>
             </div>
@@ -642,7 +612,7 @@ export default function CashDealsPage() {
           {/* Advanced Filters Panel */}
           {showAdvanced && (
             <div className="bg-slate-800 rounded-lg border border-slate-700 p-4 mb-4">
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {/* Price Range */}
                 <div>
                   <label className="block text-xs font-medium text-slate-400 mb-1">Min Price</label>
@@ -665,27 +635,6 @@ export default function CashDealsPage() {
                   />
                 </div>
 
-                {/* Returns */}
-                <div>
-                  <label className="block text-xs font-medium text-slate-400 mb-1">Min CoC %</label>
-                  <input
-                    type="number"
-                    value={minCoc}
-                    onChange={(e) => { setMinCoc(e.target.value ? parseFloat(e.target.value) : ''); setActiveQuickFilter('allDeals'); }}
-                    placeholder="0%"
-                    className="bg-slate-700 border border-slate-600 rounded px-2 py-1.5 w-full text-sm text-white placeholder-slate-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-slate-400 mb-1">Min Cash Flow</label>
-                  <input
-                    type="number"
-                    value={minCashFlow}
-                    onChange={(e) => { setMinCashFlow(e.target.value ? parseInt(e.target.value) : ''); setActiveQuickFilter('allDeals'); }}
-                    placeholder="$0/mo"
-                    className="bg-slate-700 border border-slate-600 rounded px-2 py-1.5 w-full text-sm text-white placeholder-slate-500"
-                  />
-                </div>
                 <div>
                   <label className="block text-xs font-medium text-slate-400 mb-1">Max % ARV</label>
                   <input
@@ -748,8 +697,7 @@ export default function CashDealsPage() {
                       <th className="px-3 py-3 text-left text-slate-300 text-xs font-semibold">Location</th>
                       <SortHeader field="price" label="Price" />
                       <SortHeader field="percentOfArv" label="% ARV" />
-                      <SortHeader field="cocReturn" label="CoC %" />
-                      <SortHeader field="monthlyCashFlow" label="Cash Flow" />
+                      <SortHeader field="discount" label="Discount" />
                       <SortHeader field="rentEstimate" label="Rent" />
                       <th className="px-3 py-3 text-left text-slate-300 text-xs font-semibold">Specs</th>
                       <th className="px-3 py-3 text-left text-slate-300 text-xs font-semibold w-16"></th>
@@ -757,7 +705,7 @@ export default function CashDealsPage() {
                   </thead>
                   <tbody className="divide-y divide-slate-700">
                     {filteredDeals.map((deal, idx) => {
-                      const isTopDeal = (deal.cashFlow?.cocReturn || 0) >= 20 || (deal.cashFlow?.monthlyCashFlow || 0) >= 500;
+                      const isTopDeal = deal.percentOfArv <= 70; // Great deal = 70% or less of ARV
                       const isSelected = selectedDeals.has(deal.id);
                       return (
                         <tr
@@ -823,7 +771,7 @@ export default function CashDealsPage() {
                           <td className="px-3 py-2">
                             <div className="font-semibold text-white">${deal.price?.toLocaleString()}</div>
                             <div className="text-xs text-slate-400">
-                              ${((deal.cashFlow?.downPayment || deal.price * 0.1) / 1000).toFixed(0)}K down
+                              ARV: ${deal.arv?.toLocaleString() || '-'}
                             </div>
                           </td>
                           <td className="px-3 py-2">
@@ -836,34 +784,13 @@ export default function CashDealsPage() {
                             </span>
                           </td>
                           <td className="px-3 py-2">
-                            {deal.cashFlow ? (
-                              <span className={`font-bold text-lg ${
-                                deal.cashFlow.cocReturn >= 20 ? 'text-green-400' :
-                                deal.cashFlow.cocReturn >= 10 ? 'text-emerald-400' :
-                                deal.cashFlow.cocReturn > 0 ? 'text-yellow-400' :
-                                'text-red-400'
-                              }`}>
-                                {deal.cashFlow.cocReturn}%
-                              </span>
-                            ) : (
-                              <span className="text-slate-500">-</span>
-                            )}
-                          </td>
-                          <td className="px-3 py-2">
-                            {deal.cashFlow ? (
-                              <div>
-                                <span className={`font-bold ${
-                                  deal.cashFlow.monthlyCashFlow >= 300 ? 'text-green-400' :
-                                  deal.cashFlow.monthlyCashFlow > 0 ? 'text-emerald-400' :
-                                  'text-red-400'
-                                }`}>
-                                  ${deal.cashFlow.monthlyCashFlow?.toLocaleString()}
-                                </span>
-                                <span className="text-slate-400 text-xs">/mo</span>
-                              </div>
-                            ) : (
-                              <span className="text-slate-500">-</span>
-                            )}
+                            <span className={`font-bold text-lg ${
+                              deal.discount >= 100000 ? 'text-green-400' :
+                              deal.discount >= 50000 ? 'text-emerald-400' :
+                              'text-yellow-400'
+                            }`}>
+                              ${(deal.discount / 1000).toFixed(0)}K
+                            </span>
                           </td>
                           <td className="px-3 py-2">
                             {deal.rentEstimate > 0 ? (

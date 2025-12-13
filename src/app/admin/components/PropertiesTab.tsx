@@ -300,12 +300,6 @@ export default function PropertiesTab({ setEditingProperty, setEditForm }: Prope
               <th scope="col" className="hidden lg:table-cell px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Details
               </th>
-              <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 bg-green-50" onClick={() => handleSort('monthlyCashFlow' as any)}>
-                Cash Flow {sortField === 'monthlyCashFlow' && (sortDirection === 'asc' ? '↑' : '↓')}
-              </th>
-              <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 bg-green-50" onClick={() => handleSort('cocReturn' as any)}>
-                CoC % {sortField === 'cocReturn' && (sortDirection === 'asc' ? '↑' : '↓')}
-              </th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
@@ -453,49 +447,6 @@ export default function PropertiesTab({ setEditingProperty, setEditForm }: Prope
                     {property.squareFeet?.toLocaleString() || 'N/A'} sqft
                     {(property as any).yearBuilt && ` • ${(property as any).yearBuilt}`}
                   </div>
-                </td>
-                <td className="px-3 py-4 whitespace-nowrap bg-green-50">
-                  {(property as any).cashFlow ? (
-                    <div>
-                      <div className={`text-sm font-medium ${(property as any).cashFlow.monthlyCashFlow > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        ${(property as any).cashFlow.monthlyCashFlow?.toLocaleString()}/mo
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        ${(property as any).cashFlow.annualCashFlow?.toLocaleString()}/yr
-                      </div>
-                      {(property as any).cashFlow.usedEstimatedTax && (
-                        <div className="text-xs text-orange-500" title="Tax estimated at 1.2% of price">
-                          ~tax est
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div>
-                      <span className="text-xs text-yellow-600">
-                        {(property as any).missingFields?.length > 0
-                          ? `Missing: ${(property as any).missingFields.join(', ')}`
-                          : 'No data'}
-                      </span>
-                    </div>
-                  )}
-                </td>
-                <td className="px-3 py-4 whitespace-nowrap bg-green-50">
-                  {(property as any).cashFlow ? (
-                    <div>
-                      <div className={`text-sm font-bold ${
-                        (property as any).cashFlow.cocReturn > 10 ? 'text-green-600' :
-                        (property as any).cashFlow.cocReturn > 0 ? 'text-yellow-600' :
-                        'text-red-600'
-                      }`}>
-                        {(property as any).cashFlow.cocReturn}%
-                      </div>
-                      {(property as any).cashFlow.usedEstimatedTax && (
-                        <div className="text-xs text-orange-500">~</div>
-                      )}
-                    </div>
-                  ) : (
-                    <span className="text-xs text-gray-400">-</span>
-                  )}
                 </td>
               </tr>
             ))}

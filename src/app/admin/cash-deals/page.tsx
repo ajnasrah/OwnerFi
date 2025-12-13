@@ -3,18 +3,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 
-interface CashFlowData {
-  downPayment: number;
-  monthlyMortgage: number;
-  monthlyInsurance: number;
-  monthlyTax: number;
-  monthlyHoa: number;
-  monthlyMgmt: number;
-  monthlyExpenses: number;
-  monthlyCashFlow: number;
-  annualCashFlow: number;
-  cocReturn: number;
-}
 
 interface CashDeal {
   id: string;
@@ -35,8 +23,6 @@ interface CashDeal {
   rentEstimate: number;
   annualTax: number;
   monthlyHoa: number;
-  missingFields: string[];
-  cashFlow: CashFlowData | null;
   ownerFinanceVerified?: boolean;
   monthlyPayment?: number;
   downPaymentAmount?: number;
@@ -47,7 +33,7 @@ interface CashDeal {
   sentToGHL?: string;
 }
 
-type SortField = 'percentOfArv' | 'price' | 'arv' | 'discount' | 'monthlyCashFlow' | 'cocReturn' | 'rentEstimate';
+type SortField = 'percentOfArv' | 'price' | 'arv' | 'discount' | 'rentEstimate';
 
 // Global max price cap - applies to ALL tabs
 const GLOBAL_MAX_PRICE = 300000;

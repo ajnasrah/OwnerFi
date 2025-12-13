@@ -1,10 +1,24 @@
-import { db } from '../src/lib/firebase';
-import { collection, query, where, getDocs } from 'firebase/firestore';
-import { getAllPhoneFormats } from '../src/lib/phone-utils';
+import { initializeApp, getApps, cert } from 'firebase-admin/app';
+import { getFirestore } from 'firebase-admin/firestore';
+import * as dotenv from 'dotenv';
+
+dotenv.config({ path: '.env.local' });
+
+if (!getApps().length) {
+  initializeApp({
+    credential: cert({
+      projectId: process.env.FIREBASE_PROJECT_ID!,
+      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL!
+    })
+  });
+}
+
+const db = getFirestore();
 
 async function checkUser() {
   const phone = '9018319661';
-  const formats = getAllPhoneFormats(phone);
+  const formats = ['+19018319661', '9018319661', '19018319661', '(901) 831-9661'];
 
   console.log('Checking for phone formats:', formats);
   console.log('---');
@@ -13,8 +27,7 @@ async function checkUser() {
   console.log('🔍 Checking USERS collection:');
   let foundInUsers = false;
   for (const format of formats) {
-    const q = query(collection(db!, 'users'), where('phone', '==', format));
-    const docs = await getDocs(q);
+    const docs = await db.collection('users').where('phone', '==', format).get();
     if (!docs.empty) {
       foundInUsers = true;
       docs.forEach(doc => {
@@ -33,12 +46,11 @@ async function checkUser() {
     console.log('  ❌ No users found with this phone!');
   }
 
-  // Check buyers collection
-  console.log('\n🔍 Checking BUYERS collection:');
+  // Check buyerProfiles collection
+  console.log('\n🔍 Checking BUYERPROFILES collection:');
   let foundInBuyers = false;
   for (const format of formats) {
-    const q = query(collection(db!, 'buyers'), where('phone', '==', format));
-    const docs = await getDocs(q);
+    const docs = await db.collection('buyerProfiles').where('phone', '==', format).get();
     if (!docs.empty) {
       foundInBuyers = true;
       docs.forEach(doc => {
@@ -53,7 +65,7 @@ async function checkUser() {
     }
   }
   if (!foundInBuyers) {
-    console.log('  ❌ No buyers found with this phone!');
+    console.log('  ❌ No buyerProfiles found with this phone!');
   }
 
   process.exit(0);

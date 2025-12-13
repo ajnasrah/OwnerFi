@@ -20,7 +20,6 @@ import { db } from '@/lib/firebase';
 import { logError, logInfo } from '@/lib/logger';
 import { ExtendedSession } from '@/types/session';
 import { autoCleanPropertyData } from '@/lib/property-auto-cleanup';
-import { calculateCashFlow, getMissingCashFlowFields } from '@/lib/cash-flow-calculator';
 import { getCitiesWithinRadiusComprehensive, getCityCoordinatesComprehensive } from '@/lib/comprehensive-cities';
 
 // Simple in-memory cache for properties (5 min TTL)
@@ -44,21 +43,6 @@ function haversineDistance(lat1: number, lng1: number, lat2: number, lng2: numbe
 function mapPropertyFields(doc: any) {
   const data = doc.data();
   const price = data.price || data.listPrice || 0;
-  const rentEstimate = data.rentEstimate || data.rentalEstimate || data.rentZestimate || 0;
-  const annualTax = data.annualTaxAmount || data.taxAmount || 0;
-  const monthlyHoa = data.hoa || data.hoaFees || 0;
-
-  // Track missing fields using shared utility
-  const missingFields = getMissingCashFlowFields(data);
-
-  // Calculate cash flow if we have price and rent using shared calculator
-  let cashFlow = null;
-  if (price > 0 && rentEstimate > 0) {
-    cashFlow = calculateCashFlow(
-      { price, rentEstimate, annualTax, monthlyHoa },
-      !annualTax // Use estimated tax if actual tax is missing
-    );
-  }
 
   return {
     id: doc.id,
@@ -108,12 +92,9 @@ function mapPropertyFields(doc: any) {
     source: data.source || null,
     agentConfirmedOwnerFinance: data.agentConfirmedOwnerFinance || false,
     originalQueueId: data.originalQueueId || null,
-    // Cash flow fields (admin only)
-    rentEstimate,
-    annualTax,
-    monthlyHoa,
-    missingFields,
-    cashFlow,
+    // Coordinates for radius search
+    latitude: data.latitude || null,
+    longitude: data.longitude || null,
   };
 }
 

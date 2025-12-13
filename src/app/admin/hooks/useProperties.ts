@@ -3,15 +3,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 
-export interface CashFlowData {
-  downPayment: number;
-  monthlyMortgage: number;
-  monthlyExpenses: number;
-  monthlyCashFlow: number;
-  annualCashFlow: number;
-  cocReturn: number;
-  usedEstimatedTax?: boolean;
-}
 
 export interface AdminProperty {
   id: string;
@@ -46,12 +37,6 @@ export interface AdminProperty {
   sentToGHL?: string;
   source?: string;
   agentConfirmedOwnerFinance?: boolean;
-  // Cash flow fields
-  rentEstimate?: number;
-  annualTax?: number;
-  monthlyHoa?: number;
-  missingFields?: string[];
-  cashFlow?: CashFlowData | null;
   // Agent contact info
   agentName?: string | null;
   agentPhone?: string | null;
@@ -61,7 +46,7 @@ export interface AdminProperty {
   longitude?: number;
 }
 
-type SortField = 'address' | 'city' | 'state' | 'listPrice' | 'bedrooms' | 'downPaymentAmount' | 'monthlyPayment' | 'monthlyCashFlow' | 'cocReturn';
+type SortField = 'address' | 'city' | 'state' | 'listPrice' | 'bedrooms' | 'downPaymentAmount' | 'monthlyPayment';
 
 // US States list
 const US_STATES = [
@@ -171,14 +156,7 @@ export function useProperties() {
   const handleSort = useCallback((field: SortField) => {
     const newDirection = sortField === field && sortDirection === 'asc' ? 'desc' : 'asc';
     setSortField(field);
-
-    // Default to desc for cash flow fields (higher is better)
-    if ((field === 'monthlyCashFlow' || field === 'cocReturn') && sortField !== field) {
-      setSortDirection('desc');
-    } else {
-      setSortDirection(newDirection);
-    }
-
+    setSortDirection(newDirection);
     updateURL({ sortBy: field, sortOrder: newDirection });
   }, [sortField, sortDirection, updateURL]);
 
@@ -230,14 +208,6 @@ export function useProperties() {
           case 'monthlyPayment':
             aValue = a.monthlyPayment ?? 0;
             bValue = b.monthlyPayment ?? 0;
-            break;
-          case 'monthlyCashFlow':
-            aValue = a.cashFlow?.monthlyCashFlow ?? -Infinity;
-            bValue = b.cashFlow?.monthlyCashFlow ?? -Infinity;
-            break;
-          case 'cocReturn':
-            aValue = a.cashFlow?.cocReturn ?? -Infinity;
-            bValue = b.cashFlow?.cocReturn ?? -Infinity;
             break;
         }
 

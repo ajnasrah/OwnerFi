@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
-import { collection, query, where, getCountFromServer } from 'firebase/firestore';
+import { collection, query, where, getCountFromServer, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { ExtendedSession } from '@/types/session';
 
@@ -36,20 +36,33 @@ export async function GET() {
     // This only counts documents, doesn't load them into memory
     // FIXED: Count from correct collections:
     // - Properties: both 'properties' (isActive=true) AND 'zillow_imports' (ownerFinanceVerified=true)
-    // - Buyers: buyerProfiles collection (only buyers with completed profiles are shown)
+    // - Buyers: Count buyers with BOTH a user record (role='buyer') AND a buyerProfile
+    //   This matches the actual buyer list display logic in /api/admin/buyers
     // - Realtors: users with role='realtor'
     // - Disputes: leadDisputes collection
-    const [propertiesCount, zillowCount, buyersCount, realtorsCount, disputesCount] = await Promise.all([
+    const [propertiesCount, zillowCount, buyerUsersSnapshot, buyerProfilesSnapshot, realtorsCount, disputesCount] = await Promise.all([
       getCountFromServer(query(collection(db, 'properties'), where('isActive', '==', true))),
       getCountFromServer(query(collection(db, 'zillow_imports'), where('ownerFinanceVerified', '==', true))),
-      getCountFromServer(collection(db, 'buyerProfiles')),
+      getDocs(query(collection(db, 'users'), where('role', '==', 'buyer'))),
+      getDocs(collection(db, 'buyerProfiles')),
       getCountFromServer(query(collection(db, 'users'), where('role', '==', 'realtor'))),
       getCountFromServer(query(collection(db, 'leadDisputes'), where('status', '==', 'pending')))
     ]);
 
+    // Count only buyers that have BOTH a user record AND a buyerProfile
+    // This prevents orphaned profiles from inflating the count
+    const buyerUserIds = new Set(buyerUsersSnapshot.docs.map(doc => doc.id));
+    let validBuyerCount = 0;
+    buyerProfilesSnapshot.docs.forEach(doc => {
+      const data = doc.data();
+      if (data.userId && buyerUserIds.has(data.userId)) {
+        validBuyerCount++;
+      }
+    });
+
     const stats = {
       totalProperties: propertiesCount.data().count + zillowCount.data().count,
-      totalBuyers: buyersCount.data().count,
+      totalBuyers: validBuyerCount,
       totalRealtors: realtorsCount.data().count,
       pendingDisputes: disputesCount.data().count
     };

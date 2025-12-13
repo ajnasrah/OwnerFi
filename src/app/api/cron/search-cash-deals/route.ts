@@ -27,31 +27,53 @@ const db = getFirestore();
  * Schedule: Mon/Thu at 10 AM (1 hour after owner finance search)
  */
 
+// Helper to build proper Zillow search URLs
+function buildZillowSearchUrl(mapBounds: { west: number; east: number; south: number; north: number }, priceMax: number = 500000): string {
+  const searchQueryState = {
+    pagination: {},
+    isMapVisible: true,
+    mapBounds,
+    filterState: {
+      sort: { value: 'globalrelevanceex' },
+      auc: { value: false },
+      fore: { value: false },
+      price: { min: 50000, max: priceMax },
+      beds: { min: 2 },
+      baths: { min: 1 },
+      apa: { value: false },
+      manu: { value: false },
+      doz: { value: '7' }
+    },
+    isListVisible: true
+  };
+  return 'https://www.zillow.com/homes/for_sale/?searchQueryState=' + encodeURIComponent(JSON.stringify(searchQueryState));
+}
+
 // Search URLs for different markets - focus on areas with cash deals
 const CASH_DEAL_SEARCHES = [
   {
-    name: 'Texas Metro - Price Cuts',
-    // Dallas, Houston, San Antonio, Austin - sorted by price cuts
-    url: 'https://www.zillow.com/homes/for_sale/?searchQueryState=%7B%22pagination%22%3A%7B%7D%2C%22isMapVisible%22%3Atrue%2C%22mapBounds%22%3A%7B%22west%22%3A-106.65%2C%22east%22%3A-93.51%2C%22south%22%3A25.84%2C%22north%22%3A36.5%7D%2C%22filterState%22%3A%7B%22sort%22%3A%7B%22value%22%3A%22priced%22%7D%2C%22auc%22%3A%7B%22value%22%3Afalse%7D%2C%22fore%22%3A%7B%22value%22%3Afalse%7D%2C%22price%22%3A%7B%22min%22%3A50000%2C%22max%22%3A500000%7D%2C%22beds%22%3A%7B%22min%22%3A2%7D%2C%22baths%22%3A%7B%22min%22%3A1%7D%2C%22apa%22%3A%7B%22value%22%3Afalse%7D%2C%22manu%22%3A%7B%22value%22%3Afalse%7D%2C%22doz%22%3A%7B%22value%22%3A%227%22%7D%2C%22rs%22%3A%7B%22value%22%3Atrue%7D%7D%2C%22isListVisible%22%3Atrue%7D',
-    maxResults: 200,
+    name: 'Texas',
+    // Dallas, Houston, San Antonio, Austin
+    url: buildZillowSearchUrl({ west: -106.65, east: -93.51, south: 25.84, north: 36.5 }),
+    maxResults: 1000,
   },
   {
-    name: 'Southeast - Price Cuts',
+    name: 'Southeast',
     // Florida, Georgia, Tennessee, North Carolina
-    url: 'https://www.zillow.com/homes/for_sale/?searchQueryState=%7B%22pagination%22%3A%7B%7D%2C%22isMapVisible%22%3Atrue%2C%22mapBounds%22%3A%7B%22west%22%3A-90.31%2C%22east%22%3A-75.46%2C%22south%22%3A24.52%2C%22north%22%3A36.59%7D%2C%22filterState%22%3A%7B%22sort%22%3A%7B%22value%22%3A%22priced%22%7D%2C%22auc%22%3A%7B%22value%22%3Afalse%7D%2C%22fore%22%3A%7B%22value%22%3Afalse%7D%2C%22price%22%3A%7B%22min%22%3A50000%2C%22max%22%3A500000%7D%2C%22beds%22%3A%7B%22min%22%3A2%7D%2C%22baths%22%3A%7B%22min%22%3A1%7D%2C%22apa%22%3A%7B%22value%22%3Afalse%7D%2C%22manu%22%3A%7B%22value%22%3Afalse%7D%2C%22doz%22%3A%7B%22value%22%3A%227%22%7D%2C%22rs%22%3A%7B%22value%22%3Atrue%7D%7D%2C%22isListVisible%22%3Atrue%7D',
-    maxResults: 200,
+    url: buildZillowSearchUrl({ west: -90.31, east: -75.46, south: 24.52, north: 36.59 }),
+    maxResults: 1000,
   },
   {
-    name: 'Midwest - Price Cuts',
+    name: 'Midwest',
     // Ohio, Indiana, Michigan, Illinois
-    url: 'https://www.zillow.com/homes/for_sale/?searchQueryState=%7B%22pagination%22%3A%7B%7D%2C%22isMapVisible%22%3Atrue%2C%22mapBounds%22%3A%7B%22west%22%3A-91.51%2C%22east%22%3A-80.52%2C%22south%22%3A36.97%2C%22north%22%3A45.02%7D%2C%22filterState%22%3A%7B%22sort%22%3A%7B%22value%22%3A%22priced%22%7D%2C%22auc%22%3A%7B%22value%22%3Afalse%7D%2C%22fore%22%3A%7B%22value%22%3Afalse%7D%2C%22price%22%3A%7B%22min%22%3A50000%2C%22max%22%3A400000%7D%2C%22beds%22%3A%7B%22min%22%3A2%7D%2C%22baths%22%3A%7B%22min%22%3A1%7D%2C%22apa%22%3A%7B%22value%22%3Afalse%7D%2C%22manu%22%3A%7B%22value%22%3Afalse%7D%2C%22doz%22%3A%7B%22value%22%3A%227%22%7D%2C%22rs%22%3A%7B%22value%22%3Atrue%7D%7D%2C%22isListVisible%22%3Atrue%7D',
-    maxResults: 200,
+    url: buildZillowSearchUrl({ west: -91.51, east: -80.52, south: 36.97, north: 45.02 }, 400000),
+    maxResults: 1000,
   },
 ];
 
 const SEARCH_CONFIG = {
-  mode: 'map' as const,  // MAP mode respects maxResults limit!
-  hardLimit: 1000, // SAFETY: Abort if more than this many results per search
+  mode: 'pagination' as const,
+  hardLimit: 2000, // SAFETY: Abort if more than this many results per search
 };
 
 /**

@@ -29,9 +29,16 @@ export default function PropertiesTab({ setEditingProperty, setEditForm }: Prope
     fetchProperties,
     cityFilter,
     setCityFilter,
+    stateFilter,
+    setStateFilter,
+    radius,
+    setRadius,
+    allStates,
+    clearAllFilters,
   } = useProperties();
 
   const [sendingToGHL, setSendingToGHL] = useState(false);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   // Send selected properties to GHL
   const handleSendToGHL = async () => {
@@ -89,13 +96,44 @@ export default function PropertiesTab({ setEditingProperty, setEditForm }: Prope
     );
   }
 
+  // Bulk delete handler
+  const handleBulkDelete = async () => {
+    if (selectedProperties.length === 0) return;
+    if (!confirm(`Delete ${selectedProperties.length} selected properties? This cannot be undone.`)) return;
+
+    setBulkDeleting(true);
+    try {
+      const response = await fetch('/api/admin/properties/bulk-delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: selectedProperties }),
+      });
+
+      const result = await response.json();
+
+      if (result.error) {
+        alert(`Error: ${result.error}`);
+      } else {
+        alert(`Successfully deleted ${result.deleted} properties`);
+        setSelectedProperties([]);
+        fetchProperties(undefined);
+      }
+    } catch (error) {
+      alert('Failed to delete properties');
+      console.error('Bulk delete error:', error);
+    } finally {
+      setBulkDeleting(false);
+    }
+  };
+
   return (
     <div className="bg-white shadow rounded-lg">
       {/* Search and Filter */}
       <div className="px-4 py-5 sm:p-6 border-b border-gray-200">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
-          <div className="flex-1 flex items-center space-x-3">
-            <div className="relative flex-1 max-w-xs">
+        <div className="flex flex-col space-y-3">
+          {/* Location Search Row */}
+          <div className="flex flex-wrap items-end gap-3">
+            <div className="relative flex-1 min-w-[150px] max-w-xs">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -106,93 +144,123 @@ export default function PropertiesTab({ setEditingProperty, setEditForm }: Prope
                 placeholder="Search address..."
                 value={addressSearch}
                 onChange={(e) => setAddressSearch(e.target.value)}
-                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
               />
             </div>
-            <div className="relative max-w-xs">
+            <div className="min-w-[120px] max-w-[150px]">
               <input
                 type="text"
-                placeholder="Filter by city..."
+                placeholder="City..."
                 value={cityFilter}
                 onChange={(e) => setCityFilter(e.target.value)}
-                className="block w-full px-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                className="block w-full px-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
               />
             </div>
-          </div>
-          <div className="flex items-center space-x-3">
-            <span className="text-sm text-gray-700">
-              {filteredProperties.length} properties
-            </span>
-            <button
-              onClick={async () => {
-                try {
-                  const response = await fetch('/api/admin/properties/export');
-                  if (!response.ok) {
-                    throw new Error('Export failed');
-                  }
-                  const blob = await response.blob();
-                  const url = window.URL.createObjectURL(blob);
-                  const a = document.createElement('a');
-                  a.href = url;
-                  a.download = `properties_export_${new Date().toISOString().split('T')[0]}.xlsx`;
-                  document.body.appendChild(a);
-                  a.click();
-                  window.URL.revokeObjectURL(url);
-                  document.body.removeChild(a);
-                } catch (error) {
-                  alert('Failed to export properties');
-                  console.error('Export error:', error);
-                }
-              }}
-              className="inline-flex items-center px-3 py-2 border border-gray-300 text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-            >
-              <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              Export to Excel
-            </button>
-            {selectedProperties.length > 0 && (
-              <>
-                <button
-                  onClick={handleSendToGHL}
-                  disabled={sendingToGHL}
-                  className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
-                >
-                  {sendingToGHL ? (
-                    <>
-                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      Sending...
-                    </>
-                  ) : (
-                    <>Send {selectedProperties.length} to GHL</>
-                  )}
-                </button>
-                <button
-                  onClick={async () => {
-                    if (confirm(`Delete ${selectedProperties.length} selected properties?`)) {
-                      try {
-                        // Delete each selected property
-                        for (const propertyId of selectedProperties) {
-                          await fetch(`/api/admin/properties/${propertyId}`, { method: 'DELETE' });
-                        }
-                        setSelectedProperties([]);
-                        fetchProperties(undefined, false);
-                        alert(`Successfully deleted ${selectedProperties.length} properties`);
-                      } catch (error) {
-                        alert('Failed to delete some properties');
-                        console.error('Delete error:', error);
-                      }
-                    }
-                  }}
-                  className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                >
-                  Delete {selectedProperties.length}
-                </button>
-              </>
+            <div className="w-[90px]">
+              <select
+                value={stateFilter}
+                onChange={(e) => setStateFilter(e.target.value)}
+                className="block w-full px-2 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+              >
+                <option value="">All States</option>
+                {allStates.map(state => (
+                  <option key={state} value={state}>{state}</option>
+                ))}
+              </select>
+            </div>
+            <div className="w-[110px]">
+              <select
+                value={radius}
+                onChange={(e) => setRadius(parseInt(e.target.value))}
+                className="block w-full px-2 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+              >
+                <option value="0">Exact city</option>
+                <option value="10">10 miles</option>
+                <option value="25">25 miles</option>
+                <option value="50">50 miles</option>
+                <option value="100">100 miles</option>
+              </select>
+            </div>
+            {(addressSearch || cityFilter || stateFilter || radius > 0) && (
+              <button
+                onClick={clearAllFilters}
+                className="px-3 py-2 text-sm text-gray-500 hover:text-gray-700"
+              >
+                Clear
+              </button>
             )}
+          </div>
+
+          {/* Actions Row */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <span className="text-sm text-gray-700">
+                {filteredProperties.length} properties
+              </span>
+              {cityFilter && radius > 0 && (
+                <span className="text-xs text-gray-500">
+                  (within {radius}mi of {cityFilter})
+                </span>
+              )}
+            </div>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={async () => {
+                  try {
+                    const response = await fetch('/api/admin/properties/export');
+                    if (!response.ok) {
+                      throw new Error('Export failed');
+                    }
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `properties_export_${new Date().toISOString().split('T')[0]}.xlsx`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                  } catch (error) {
+                    alert('Failed to export properties');
+                    console.error('Export error:', error);
+                  }
+                }}
+                className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              >
+                <svg className="mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Export
+              </button>
+              {selectedProperties.length > 0 && (
+                <>
+                  <button
+                    onClick={handleSendToGHL}
+                    disabled={sendingToGHL}
+                    className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
+                  >
+                    {sendingToGHL ? (
+                      <>
+                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Sending...
+                      </>
+                    ) : (
+                      <>Send {selectedProperties.length} to GHL</>
+                    )}
+                  </button>
+                  <button
+                    onClick={handleBulkDelete}
+                    disabled={bulkDeleting}
+                    className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
+                  >
+                    {bulkDeleting ? 'Deleting...' : `Delete ${selectedProperties.length}`}
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </div>

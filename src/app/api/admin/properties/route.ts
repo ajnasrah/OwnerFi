@@ -20,96 +20,44 @@ import { db } from '@/lib/firebase';
 import { logError, logInfo } from '@/lib/logger';
 import { ExtendedSession } from '@/types/session';
 import { autoCleanPropertyData } from '@/lib/property-auto-cleanup';
+import { calculateCashFlow, getMissingCashFlowFields } from '@/lib/cash-flow-calculator';
+import { getCitiesWithinRadiusComprehensive, getCityCoordinatesComprehensive } from '@/lib/comprehensive-cities';
 
-// Simple in-memory cache for total count (5 min TTL)
-let cachedCount: { value: number; timestamp: number } | null = null;
+// Simple in-memory cache for properties (5 min TTL)
+let propertiesCache: { data: any[]; timestamp: number; key: string } | null = null;
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
-// Calculate monthly mortgage payment
-function calculateMonthlyMortgage(loanAmount: number, annualRate: number, years: number): number {
-  const monthlyRate = annualRate / 12;
-  const numPayments = years * 12;
-  if (monthlyRate === 0) return loanAmount / numPayments;
-  const x = Math.pow(1 + monthlyRate, numPayments);
-  return loanAmount * (monthlyRate * x) / (x - 1);
-}
-
-// Calculate cash flow analysis for admin view
-// Uses standard real estate investor assumptions
-function calculateCashFlow(price: number, rentEstimate: number, annualTax: number, monthlyHoa: number, usedEstimatedTax: boolean = false) {
-  // Financing assumptions
-  const DOWN_PAYMENT_PERCENT = 0.10;
-  const CLOSING_COSTS_PERCENT = 0.03; // 3% closing costs
-  const INTEREST_RATE = 0.06;
-  const LOAN_TERM_YEARS = 20;
-
-  // Operating expense rates
-  const INSURANCE_RATE = 0.01; // 1% of price annually
-  const PROPERTY_MGMT_RATE = 0.10; // 10% of rent
-  const VACANCY_RATE = 0.08; // 8% vacancy allowance
-  const MAINTENANCE_RATE = 0.05; // 5% of rent for repairs
-  const CAPEX_RATE = 0.05; // 5% of rent for capital expenditures (roof, HVAC, etc)
-
-  // Estimate tax as 1.2% of price if not provided (US average is ~1.1%)
-  const ESTIMATED_TAX_RATE = 0.012;
-
-  // Use estimated tax if actual tax is missing
-  const effectiveTax = annualTax > 0 ? annualTax : (usedEstimatedTax ? price * ESTIMATED_TAX_RATE : 0);
-
-  // Investment calculation (includes closing costs for accurate CoC)
-  const downPayment = price * DOWN_PAYMENT_PERCENT;
-  const closingCosts = price * CLOSING_COSTS_PERCENT;
-  const totalInvestment = downPayment + closingCosts;
-
-  const loanAmount = price - downPayment;
-  const monthlyMortgage = calculateMonthlyMortgage(loanAmount, INTEREST_RATE, LOAN_TERM_YEARS);
-  const monthlyInsurance = (price * INSURANCE_RATE) / 12;
-  const monthlyTax = effectiveTax / 12;
-  const monthlyMgmt = rentEstimate * PROPERTY_MGMT_RATE;
-
-  // Additional operating expenses that investors always account for
-  const monthlyVacancy = rentEstimate * VACANCY_RATE;
-  const monthlyMaintenance = rentEstimate * MAINTENANCE_RATE;
-  const monthlyCapex = rentEstimate * CAPEX_RATE;
-
-  const monthlyExpenses = monthlyMortgage + monthlyInsurance + monthlyTax + monthlyHoa + monthlyMgmt + monthlyVacancy + monthlyMaintenance + monthlyCapex;
-  const monthlyCashFlow = rentEstimate - monthlyExpenses;
-  const annualCashFlow = monthlyCashFlow * 12;
-
-  // CoC uses total investment (down payment + closing costs)
-  const cocReturn = totalInvestment > 0 ? (annualCashFlow / totalInvestment) * 100 : 0;
-
-  return {
-    downPayment: Math.round(downPayment),
-    totalInvestment: Math.round(totalInvestment),
-    monthlyMortgage: Math.round(monthlyMortgage),
-    monthlyExpenses: Math.round(monthlyExpenses),
-    monthlyCashFlow: Math.round(monthlyCashFlow),
-    annualCashFlow: Math.round(annualCashFlow),
-    cocReturn: Math.round(cocReturn * 10) / 10,
-    usedEstimatedTax,
-  };
+// Calculate distance between two points using Haversine formula (returns miles)
+function haversineDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 3959; // Earth's radius in miles
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
 }
 
 // Fast field mapper - only essential fields
 function mapPropertyFields(doc: any) {
   const data = doc.data();
   const price = data.price || data.listPrice || 0;
-  const rentEstimate = data.rentEstimate || 0;
-  const annualTax = data.annualTaxAmount || 0;
-  const monthlyHoa = data.hoa || 0;
+  const rentEstimate = data.rentEstimate || data.rentalEstimate || data.rentZestimate || 0;
+  const annualTax = data.annualTaxAmount || data.taxAmount || 0;
+  const monthlyHoa = data.hoa || data.hoaFees || 0;
 
-  // Track missing fields
-  const missingFields: string[] = [];
-  if (!rentEstimate) missingFields.push('rent');
-  if (!annualTax) missingFields.push('tax');
+  // Track missing fields using shared utility
+  const missingFields = getMissingCashFlowFields(data);
 
-  // Calculate cash flow if we have price and rent
-  // Use estimated tax (1.2% of price) when actual tax is missing
+  // Calculate cash flow if we have price and rent using shared calculator
   let cashFlow = null;
   if (price > 0 && rentEstimate > 0) {
-    const useEstimatedTax = !annualTax;
-    cashFlow = calculateCashFlow(price, rentEstimate, annualTax, monthlyHoa, useEstimatedTax);
+    cashFlow = calculateCashFlow(
+      { price, rentEstimate, annualTax, monthlyHoa },
+      !annualTax // Use estimated tax if actual tax is missing
+    );
   }
 
   return {
@@ -169,7 +117,7 @@ function mapPropertyFields(doc: any) {
   };
 }
 
-// Get all properties for admin management
+// Get all properties for admin management with optional filtering
 export async function GET(request: NextRequest) {
   try {
     if (!db) {
@@ -193,6 +141,9 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status') || 'all';
     const countOnly = searchParams.get('countOnly') === 'true';
+    const city = searchParams.get('city')?.toLowerCase();
+    const state = searchParams.get('state')?.toUpperCase();
+    const radius = parseInt(searchParams.get('radius') || '0');
 
     // Fetch from BOTH collections - zillow_imports AND properties
     const zillowCollection = collection(db, 'zillow_imports');
@@ -251,19 +202,64 @@ export async function GET(request: NextRequest) {
     const ghlProperties = propertiesSnapshot.docs.map(mapPropertyFields);
 
     // Combine and deduplicate (in case same property exists in both)
-    const allProperties = [...zillowProperties, ...ghlProperties];
-    const uniqueProperties = Array.from(
+    let allProperties = [...zillowProperties, ...ghlProperties];
+    let uniqueProperties = Array.from(
       new Map(allProperties.map(p => [p.id, p])).values()
     );
+
+    // Apply location filtering (city/state/radius)
+    if (city) {
+      const searchState = state || '';
+
+      // Get center city coordinates for radius search
+      const centerCoords = getCityCoordinatesComprehensive(city, searchState);
+
+      if (centerCoords && radius > 0) {
+        // RADIUS SEARCH: Search across ALL states within radius
+        const nearbyCities = getCitiesWithinRadiusComprehensive(city, searchState, radius);
+        const cityNames = new Set(nearbyCities.map(c => c.name.toLowerCase()));
+        cityNames.add(city.toLowerCase());
+
+        const statesInRadius = new Set(nearbyCities.map(c => c.state));
+        if (searchState) statesInRadius.add(searchState);
+        console.log(`[properties] Radius search: ${city} + ${radius}mi includes states: ${[...statesInRadius].join(', ')}`);
+
+        uniqueProperties = uniqueProperties.filter((prop: any) => {
+          // If property has coordinates, use actual distance calculation
+          if (prop.latitude && prop.longitude) {
+            const dist = haversineDistance(centerCoords.lat, centerCoords.lng, prop.latitude, prop.longitude);
+            return dist <= radius;
+          }
+          // Fallback: Check if city name matches any city in radius
+          return cityNames.has(prop.city?.toLowerCase());
+        });
+      } else {
+        // No radius - filter by exact city match AND state if provided
+        uniqueProperties = uniqueProperties.filter((prop: any) => {
+          const cityMatch = prop.city?.toLowerCase().includes(city);
+          const stateMatch = state ? prop.state === state : true;
+          return cityMatch && stateMatch;
+        });
+      }
+    } else if (state) {
+      // No city search, just state filter
+      uniqueProperties = uniqueProperties.filter((prop: any) => prop.state === state);
+    }
+
+    // Collect unique states for dropdown
+    const allStates = new Set<string>();
+    uniqueProperties.forEach(p => p.state && allStates.add(p.state));
+    const states = [...allStates].sort();
 
     // Return all properties with caching headers
     const response = NextResponse.json({
       properties: uniqueProperties,
       count: uniqueProperties.length,
       total: uniqueProperties.length,
+      states,
       hasMore: false,
       nextCursor: null,
-      showing: `Showing all ${uniqueProperties.length} properties (${zillowProperties.length} from Zillow, ${ghlProperties.length} from GHL)`
+      showing: `Showing ${uniqueProperties.length} properties${city ? ` near ${city}` : ''}${state ? ` in ${state}` : ''}`
     });
     // PERF: Cache for 30s client-side, 2 min CDN, allows stale for 5 min while revalidating
     response.headers.set('Cache-Control', 'private, max-age=30, stale-while-revalidate=300');

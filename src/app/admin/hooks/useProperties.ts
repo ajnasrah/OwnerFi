@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 
 export interface CashFlowData {
   downPayment: number;
@@ -9,6 +10,7 @@ export interface CashFlowData {
   monthlyCashFlow: number;
   annualCashFlow: number;
   cocReturn: number;
+  usedEstimatedTax?: boolean;
 }
 
 export interface AdminProperty {
@@ -41,8 +43,10 @@ export interface AdminProperty {
   ownerFinanceVerified?: boolean;
   estimatedValue?: number;
   description?: string;
-  sentToGHL?: string; // ISO timestamp when sent to GHL
-  // Cash flow fields (admin only)
+  sentToGHL?: string;
+  source?: string;
+  agentConfirmedOwnerFinance?: boolean;
+  // Cash flow fields
   rentEstimate?: number;
   annualTax?: number;
   monthlyHoa?: number;
@@ -52,30 +56,91 @@ export interface AdminProperty {
   agentName?: string | null;
   agentPhone?: string | null;
   agentEmail?: string | null;
+  // Coordinates for radius search
+  latitude?: number;
+  longitude?: number;
 }
 
+type SortField = 'address' | 'city' | 'state' | 'listPrice' | 'bedrooms' | 'downPaymentAmount' | 'monthlyPayment' | 'monthlyCashFlow' | 'cocReturn';
+
+// US States list
+const US_STATES = [
+  'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
+  'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD',
+  'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ',
+  'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC',
+  'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'
+];
+
 export function useProperties() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  // Initialize state from URL params
   const [properties, setProperties] = useState<AdminProperty[]>([]);
+  const [allStates, setAllStates] = useState<string[]>(US_STATES);
   const [loading, setLoading] = useState(false);
   const [selectedProperties, setSelectedProperties] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(75);
-  const [addressSearch, setAddressSearch] = useState('');
-  const [cityFilter, setCityFilter] = useState('');
-  const [sortField, setSortField] = useState<'address' | 'city' | 'state' | 'listPrice' | 'bedrooms' | 'downPaymentAmount' | 'monthlyPayment' | 'monthlyCashFlow' | 'cocReturn' | null>('address');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
-  // Fetch properties from API
-  const fetchProperties = useCallback(async (limit?: number, resetPage: boolean = true) => {
+  // Search/filter state - initialized from URL
+  const [addressSearch, setAddressSearch] = useState(searchParams.get('address') || '');
+  const [cityFilter, setCityFilter] = useState(searchParams.get('city') || '');
+  const [stateFilter, setStateFilter] = useState(searchParams.get('state') || '');
+  const [radius, setRadius] = useState(parseInt(searchParams.get('radius') || '0'));
+
+  // Sort state
+  const [sortField, setSortField] = useState<SortField>((searchParams.get('sortBy') as SortField) || 'address');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>((searchParams.get('sortOrder') as 'asc' | 'desc') || 'asc');
+
+  // Update URL when filters change
+  const updateURL = useCallback((updates: Record<string, string | number>) => {
+    const params = new URLSearchParams(searchParams.toString());
+
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value && value !== '' && value !== 0) {
+        params.set(key, String(value));
+      } else {
+        params.delete(key);
+      }
+    });
+
+    // Use replace to avoid adding to history for every keystroke
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  }, [searchParams, pathname, router]);
+
+  // Fetch properties from API with server-side filtering
+  const fetchProperties = useCallback(async (options?: {
+    city?: string;
+    state?: string;
+    radius?: number;
+    resetPage?: boolean;
+  }) => {
     setLoading(true);
     try {
-      const url = limit ? `/api/admin/properties?limit=${limit}` : '/api/admin/properties';
+      const params = new URLSearchParams();
+
+      // Use passed options or current state
+      const city = options?.city ?? cityFilter;
+      const state = options?.state ?? stateFilter;
+      const rad = options?.radius ?? radius;
+
+      if (city) params.set('city', city);
+      if (state) params.set('state', state);
+      if (rad > 0) params.set('radius', String(rad));
+
+      const url = `/api/admin/properties?${params.toString()}`;
       const response = await fetch(url);
       const data = await response.json();
 
       if (data.properties) {
         setProperties(data.properties);
-        if (resetPage) {
+        if (data.states) {
+          setAllStates(data.states);
+        }
+        if (options?.resetPage !== false) {
           setCurrentPage(1);
         }
       }
@@ -84,42 +149,50 @@ export function useProperties() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [cityFilter, stateFilter, radius]);
 
   // Load properties on mount
   useEffect(() => {
-    fetchProperties();
-  }, [fetchProperties]);
+    fetchProperties({ resetPage: true });
+  }, []);
+
+  // Refetch when server-side filters change
+  useEffect(() => {
+    // Debounce city search
+    const timer = setTimeout(() => {
+      fetchProperties({ city: cityFilter, state: stateFilter, radius, resetPage: true });
+      updateURL({ city: cityFilter, state: stateFilter, radius });
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [cityFilter, stateFilter, radius]);
 
   // Sort handler
-  const handleSort = useCallback((field: 'address' | 'city' | 'state' | 'listPrice' | 'bedrooms' | 'downPaymentAmount' | 'monthlyPayment' | 'monthlyCashFlow' | 'cocReturn') => {
+  const handleSort = useCallback((field: SortField) => {
     const newDirection = sortField === field && sortDirection === 'asc' ? 'desc' : 'asc';
     setSortField(field);
+
     // Default to desc for cash flow fields (higher is better)
     if ((field === 'monthlyCashFlow' || field === 'cocReturn') && sortField !== field) {
       setSortDirection('desc');
     } else {
       setSortDirection(newDirection);
     }
-  }, [sortField, sortDirection]);
 
-  // Memoized filtered properties
+    updateURL({ sortBy: field, sortOrder: newDirection });
+  }, [sortField, sortDirection, updateURL]);
+
+  // Memoized filtered properties (client-side address filtering)
   const filteredProperties = useMemo(() => {
     let filteredProps = properties;
 
-    // Apply address search filter
+    // Apply address search filter (client-side for instant feedback)
     if (addressSearch.trim()) {
       const searchTerm = addressSearch.toLowerCase();
       filteredProps = filteredProps.filter(property =>
-        property.address?.toLowerCase().includes(searchTerm)
-      );
-    }
-
-    // Apply city filter
-    if (cityFilter.trim()) {
-      const cityTerm = cityFilter.toLowerCase();
-      filteredProps = filteredProps.filter(property =>
-        property.city?.toLowerCase().includes(cityTerm)
+        property.address?.toLowerCase().includes(searchTerm) ||
+        property.fullAddress?.toLowerCase().includes(searchTerm) ||
+        property.streetAddress?.toLowerCase().includes(searchTerm)
       );
     }
 
@@ -181,7 +254,7 @@ export function useProperties() {
     }
 
     return filteredProps;
-  }, [properties, addressSearch, cityFilter, sortField, sortDirection]);
+  }, [properties, addressSearch, sortField, sortDirection]);
 
   // Memoized paginated properties
   const paginatedProperties = useMemo(() => {
@@ -214,15 +287,36 @@ export function useProperties() {
     setSelectedProperties(prev => prev.filter(id => !pageIds.includes(id)));
   }, [paginatedProperties]);
 
+  // Clear all filters
+  const clearAllFilters = useCallback(() => {
+    setAddressSearch('');
+    setCityFilter('');
+    setStateFilter('');
+    setRadius(0);
+    setSortField('address');
+    setSortDirection('asc');
+    setCurrentPage(1);
+    router.replace(pathname, { scroll: false });
+  }, [pathname, router]);
+
+  // Setters that update URL
+  const setAddressSearchWithURL = useCallback((value: string) => {
+    setAddressSearch(value);
+    updateURL({ address: value });
+  }, [updateURL]);
+
   return {
     // State
     properties,
+    allStates,
     loading,
     selectedProperties,
     currentPage,
     itemsPerPage,
     addressSearch,
     cityFilter,
+    stateFilter,
+    radius,
     sortField,
     sortDirection,
 
@@ -233,13 +327,16 @@ export function useProperties() {
 
     // Actions
     fetchProperties,
-    setAddressSearch,
+    setAddressSearch: setAddressSearchWithURL,
     setCityFilter,
+    setStateFilter,
+    setRadius,
     setCurrentPage,
     handleSort,
     togglePropertySelection,
     selectAll,
     deselectAll,
     setSelectedProperties,
+    clearAllFilters,
   };
 }

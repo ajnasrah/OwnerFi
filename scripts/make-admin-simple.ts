@@ -1,4 +1,5 @@
 import { unifiedDb } from '../src/lib/unified-db';
+import { FirebaseDB } from '../src/lib/firebase-db';
 
 async function makeAdmin(phoneOrEmail: string) {
   try {
@@ -26,8 +27,8 @@ async function makeAdmin(phoneOrEmail: string) {
       return;
     }
 
-    // Update to admin
-    await unifiedDb.users.update(user.id, { role: 'admin' });
+    // Update to admin (with automatic buyer profile cleanup)
+    await FirebaseDB.changeUserRole(user.id, 'admin', user.role);
 
     console.log('✅ Made admin successfully!');
 

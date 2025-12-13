@@ -346,6 +346,57 @@ export class FirebaseDB {
     });
   }
 
+  // Helper: Clean up buyer profile when user role changes away from 'buyer'
+  // This prevents orphaned buyerProfiles from inflating admin dashboard counts
+  static async cleanupBuyerProfileOnRoleChange(userId: string): Promise<boolean> {
+    if (!FirebaseDB.checkFirebase()) {
+      throw new Error('Database not available');
+    }
+
+    // Find and delete the buyer's profile
+    const profiles = await this.queryDocuments<BuyerProfile>(
+      COLLECTIONS.BUYER_PROFILES,
+      [{ field: 'userId', operator: '==', value: userId }]
+    );
+
+    if (profiles.length === 0) {
+      return false; // No profile to clean up
+    }
+
+    // Delete all profiles for this user (should typically be just one)
+    for (const profile of profiles) {
+      await this.deleteDocument(COLLECTIONS.BUYER_PROFILES, profile.id);
+      console.log(`🧹 Deleted buyerProfile ${profile.id} for user ${userId} (role changed)`);
+    }
+
+    return true;
+  }
+
+  // Helper: Change user role with automatic profile cleanup
+  static async changeUserRole(
+    userId: string,
+    newRole: 'admin' | 'realtor' | 'buyer' | 'pending',
+    currentRole?: string
+  ): Promise<void> {
+    if (!FirebaseDB.checkFirebase()) {
+      throw new Error('Database not available');
+    }
+
+    // If we don't know the current role, fetch it
+    if (!currentRole) {
+      const user = await this.findUserById(userId);
+      currentRole = user?.role;
+    }
+
+    // Clean up buyer profile if changing away from buyer role
+    if (currentRole === 'buyer' && newRole !== 'buyer') {
+      await this.cleanupBuyerProfileOnRoleChange(userId);
+    }
+
+    // Update the user's role
+    await this.updateDocument(COLLECTIONS.USERS, userId, { role: newRole });
+  }
+
   // Helper: Clean up orphaned data
   static async cleanupOrphanedData(): Promise<{
     usersWithoutProfiles: string[];
@@ -380,14 +431,16 @@ export class FirebaseDB {
 }
 
 // Export convenience methods
-export const { 
-  createUser, 
-  findUserByEmail, 
-  createBuyerProfile, 
-  createRealtorProfile, 
-  findBuyerByUserId, 
-  findRealtorByUserId, 
-  createUserWithProfile, 
-  purchaseLeadAtomic, 
-  cleanupOrphanedData
+export const {
+  createUser,
+  findUserByEmail,
+  createBuyerProfile,
+  createRealtorProfile,
+  findBuyerByUserId,
+  findRealtorByUserId,
+  createUserWithProfile,
+  purchaseLeadAtomic,
+  cleanupOrphanedData,
+  cleanupBuyerProfileOnRoleChange,
+  changeUserRole
 } = FirebaseDB;

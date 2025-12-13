@@ -238,6 +238,25 @@ export async function GET(request: Request) {
         }
       });
 
+      // Deduplicate by ZPID - prefer zillow_imports (owner finance) over cash_houses
+      const seenZpids = new Map<string, any>();
+      for (const deal of allDeals) {
+        if (!deal.zpid) {
+          // No ZPID, keep it (use doc id as fallback key)
+          seenZpids.set(deal.id, deal);
+        } else if (!seenZpids.has(deal.zpid)) {
+          // First time seeing this ZPID
+          seenZpids.set(deal.zpid, deal);
+        } else {
+          // Duplicate ZPID - prefer zillow_imports source
+          const existing = seenZpids.get(deal.zpid);
+          if (deal.source === 'zillow_imports' && existing.source !== 'zillow_imports') {
+            seenZpids.set(deal.zpid, deal);
+          }
+        }
+      }
+      allDeals = Array.from(seenZpids.values());
+
       // Filter out properties without price or ARV
       allDeals = allDeals.filter((deal: any) => deal.price > 0 && deal.arv > 0);
 

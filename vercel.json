@@ -84,10 +84,6 @@
     {
       "path": "/api/cron/generate-blog",
       "schedule": "0 11 * * *"
-    },
-    {
-      "path": "/api/cron/fetch-social-trends",
-      "schedule": "0 8,14,20 * * *"
     }
   ],
   "functions": {
@@ -161,9 +157,6 @@
       "maxDuration": 300
     },
     "src/app/api/cron/search-cash-deals/route.ts": {
-      "maxDuration": 300
-    },
-    "src/app/api/cron/fetch-social-trends/route.ts": {
       "maxDuration": 300
     },
     "src/app/api/workers/process-video/route.ts": {

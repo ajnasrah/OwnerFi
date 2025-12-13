@@ -93,12 +93,9 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Update to admin
+    // Update to admin (with automatic buyer profile cleanup)
     console.log('\n🔧 Updating user to admin...');
-    await FirebaseDB.updateDocument('users', userId, {
-      role: 'admin',
-      updatedAt: new Date()
-    });
+    await FirebaseDB.changeUserRole(userId, 'admin', userDoc.role);
 
     console.log('✅ Successfully updated user to admin!');
 

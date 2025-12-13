@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 
 interface CashFlowData {
   downPayment: number;
@@ -66,19 +67,24 @@ const QUICK_FILTERS = {
 type QuickFilterKey = keyof typeof QUICK_FILTERS;
 
 export default function CashDealsPage() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
   const [allDeals, setAllDeals] = useState<CashDeal[]>([]);
   const [loading, setLoading] = useState(true);
   const [states, setStates] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  // Location filters (server-side)
-  const [citySearch, setCitySearch] = useState('');
-  const [stateFilter, setStateFilter] = useState('');
-  const [radius, setRadius] = useState(0);
+  // Location filters (server-side) - initialize from URL
+  const [addressSearch, setAddressSearch] = useState(searchParams.get('address') || '');
+  const [citySearch, setCitySearch] = useState(searchParams.get('city') || '');
+  const [stateFilter, setStateFilter] = useState(searchParams.get('state') || '');
+  const [radius, setRadius] = useState(parseInt(searchParams.get('radius') || '0'));
 
   // Sort controls
-  const [sortBy, setSortBy] = useState<SortField>('cocReturn');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [sortBy, setSortBy] = useState<SortField>((searchParams.get('sortBy') as SortField) || 'cocReturn');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>((searchParams.get('sortOrder') as 'asc' | 'desc') || 'desc');
 
   // Advanced filters (client-side for instant filtering)
   const [minPrice, setMinPrice] = useState<number | ''>('');
@@ -95,6 +101,19 @@ export default function CashDealsPage() {
   const [deleting, setDeleting] = useState(false);
   const [sendingToGHL, setSendingToGHL] = useState(false);
   const [exporting, setExporting] = useState(false);
+
+  // Update URL when filters change
+  const updateURL = (updates: Record<string, string | number>) => {
+    const params = new URLSearchParams(searchParams.toString());
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value && value !== '' && value !== 0) {
+        params.set(key, String(value));
+      } else {
+        params.delete(key);
+      }
+    });
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  };
 
   // Export filtered deals to CSV
   const exportFilteredDeals = () => {
@@ -267,6 +286,8 @@ export default function CashDealsPage() {
 
   useEffect(() => {
     fetchDeals();
+    // Update URL when server-side filters change
+    updateURL({ city: citySearch, state: stateFilter, radius });
   }, [stateFilter, citySearch, radius]);
 
   // Apply default Owner Finance filter on mount
@@ -305,6 +326,14 @@ export default function CashDealsPage() {
     // GLOBAL: Always filter out properties over $300K
     result = result.filter(d => d.price <= GLOBAL_MAX_PRICE);
 
+    // Address search filter (client-side for instant feedback)
+    if (addressSearch.trim()) {
+      const searchTerm = addressSearch.toLowerCase();
+      result = result.filter(d =>
+        d.address?.toLowerCase().includes(searchTerm)
+      );
+    }
+
     // Owner Finance filter
     if (ownerFinanceOnly) result = result.filter(d => d.ownerFinanceVerified === true);
 
@@ -331,7 +360,7 @@ export default function CashDealsPage() {
     });
 
     return result;
-  }, [allDeals, minPrice, maxPrice, minCoc, minCashFlow, maxArv, ownerFinanceOnly, sortBy, sortOrder]);
+  }, [allDeals, addressSearch, minPrice, maxPrice, minCoc, minCashFlow, maxArv, ownerFinanceOnly, sortBy, sortOrder]);
 
   // Stats for filtered deals
   const stats = useMemo(() => {
@@ -359,6 +388,7 @@ export default function CashDealsPage() {
   };
 
   const clearAllFilters = () => {
+    setAddressSearch('');
     setCitySearch('');
     setStateFilter('');
     setRadius(0);
@@ -371,6 +401,7 @@ export default function CashDealsPage() {
     setActiveQuickFilter('allDeals');
     setSortBy('cocReturn');
     setSortOrder('desc');
+    router.replace(pathname, { scroll: false });
   };
 
   // Bulk delete selected deals
@@ -489,13 +520,31 @@ export default function CashDealsPage() {
           {/* Location Search Bar */}
           <div className="bg-slate-800 rounded-lg border border-slate-700 p-3 mb-4">
             <div className="flex flex-wrap items-end gap-3">
-              <div className="flex-1 min-w-[150px]">
+              <div className="flex-1 min-w-[180px]">
+                <label className="block text-xs font-medium text-slate-400 mb-1">Address</label>
+                <div className="relative">
+                  <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                  <input
+                    type="text"
+                    value={addressSearch}
+                    onChange={(e) => {
+                      setAddressSearch(e.target.value);
+                      updateURL({ address: e.target.value });
+                    }}
+                    placeholder="Search by address..."
+                    className="bg-slate-700 border border-slate-600 rounded pl-9 pr-3 py-2 w-full text-sm text-white placeholder-slate-500 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                  />
+                </div>
+              </div>
+              <div className="min-w-[130px]">
                 <label className="block text-xs font-medium text-slate-400 mb-1">City</label>
                 <input
                   type="text"
                   value={citySearch}
                   onChange={(e) => setCitySearch(e.target.value)}
-                  placeholder="Enter city name..."
+                  placeholder="City name..."
                   className="bg-slate-700 border border-slate-600 rounded px-3 py-2 w-full text-sm text-white placeholder-slate-500 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
                 />
               </div>
@@ -526,9 +575,15 @@ export default function CashDealsPage() {
                   <option value="100">100 miles</option>
                 </select>
               </div>
-              {(citySearch || stateFilter || radius > 0) && (
+              {(addressSearch || citySearch || stateFilter || radius > 0) && (
                 <button
-                  onClick={() => { setCitySearch(''); setStateFilter(''); setRadius(0); }}
+                  onClick={() => {
+                    setAddressSearch('');
+                    setCitySearch('');
+                    setStateFilter('');
+                    setRadius(0);
+                    router.replace(pathname, { scroll: false });
+                  }}
                   className="px-3 py-2 text-sm text-slate-400 hover:text-white"
                 >
                   Clear

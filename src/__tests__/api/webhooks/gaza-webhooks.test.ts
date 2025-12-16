@@ -53,7 +53,7 @@ jest.mock('@/lib/late-api', () => ({
   })),
 }));
 
-jest.mock('@/lib/submagic', () => ({
+jest.mock('@/lib/submagic-client', () => ({
   submitToSubmagic: jest.fn(() => Promise.resolve({
     projectId: 'test-submagic-project-id',
     status: 'processing',

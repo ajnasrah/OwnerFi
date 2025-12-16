@@ -20,11 +20,16 @@ export const TIMEOUTS = {
   // External API timeouts
   EXTERNAL_API: 30_000, // 30 seconds
   HEYGEN_API: 30_000,
-  SUBMAGIC_API: 30_000,
+  SUBMAGIC_API: 60_000, // 60 seconds - exports can take longer for large videos
   LATE_API: 300_000, // 300 seconds (5 min) - Late needs time to upload large videos (50+ MB) to 6+ platforms
   OPENAI_API: 60_000, // 60 seconds for AI generation
   RSS_FETCH: 30_000, // 30 seconds for RSS feed fetching
   WEB_SCRAPE: 15_000, // 15 seconds for web scraping full articles
+
+  // Video download/upload timeouts
+  VIDEO_DOWNLOAD: 300_000, // 5 minutes for large video downloads
+  VIDEO_UPLOAD: 300_000, // 5 minutes for large video uploads
+  R2_UPLOAD: 300_000, // 5 minutes for R2 storage uploads
 
   // Polling timeouts
   HEYGEN_POLL: 45_000, // 45 seconds per poll
@@ -191,7 +196,10 @@ export const PLATFORMS = {
     'facebook',
     'linkedin',
     'threads',
-    'twitter'
+    'twitter',
+    'bluesky',
+    'pinterest',
+    'reddit'
   ] as const,
 
   // Default posting platforms
@@ -211,7 +219,7 @@ export const ERROR_MESSAGES = {
   API_UNAVAILABLE: 'External API is currently unavailable.',
 
   // Validation errors
-  INVALID_BRAND: 'Invalid brand specified. Must be: carz, ownerfi, or podcast',
+  INVALID_BRAND: 'Invalid brand specified. Must be one of: carz, ownerfi, podcast, benefit, property, property-spanish, vassdistro, abdullah, personal, gaza',
   INVALID_PLATFORM: 'Invalid platform specified.',
   MISSING_REQUIRED_FIELD: 'Missing required field in request.',
 
@@ -272,6 +280,13 @@ export const YOUTUBE_CATEGORIES = {
   CARZ: 'AUTOS_VEHICLES',
   OWNERFI: 'NEWS_POLITICS',
   PODCAST: 'NEWS_POLITICS',
+  BENEFIT: 'HOWTO_STYLE',
+  PROPERTY: 'HOWTO_STYLE',
+  'PROPERTY-SPANISH': 'HOWTO_STYLE',
+  VASSDISTRO: 'MUSIC',
+  ABDULLAH: 'PEOPLE_BLOGS',
+  PERSONAL: 'PEOPLE_BLOGS',
+  GAZA: 'NEWS_POLITICS',
 } as const;
 
 // ============================================================================

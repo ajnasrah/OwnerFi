@@ -119,50 +119,69 @@ export async function createVideoProcessingTask(
 
 /**
  * Fallback mechanism when Cloud Tasks is not available
- * Actually processes the video inline instead of fire-and-forget
+ * Calls the worker API endpoint directly via fetch with retry logic
  */
 async function fallbackToDirectFetch(payload: TaskPayload): Promise<{ taskName: string; scheduleTime: Date }> {
-  console.log(`⚠️  Cloud Tasks unavailable - processing video inline for ${payload.brand}/${payload.workflowId}`);
+  console.log(`⚠️  Cloud Tasks unavailable - calling worker API for ${payload.brand}/${payload.workflowId}`);
 
-  // Import and run video processing directly instead of fire-and-forget fetch
-  try {
-    const { processVideoForWorkflow } = await import('./video-processing');
+  // Call the worker API endpoint directly
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ||
+                  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
+  const workerUrl = `${baseUrl}/api/workers/process-video`;
+  const secret = process.env.CLOUD_TASKS_SECRET || process.env.CRON_SECRET;
 
-    // Run in background but don't block webhook response
-    // Use setTimeout to allow webhook to respond first
-    setTimeout(async () => {
+  // Retry with exponential backoff (non-blocking but with error tracking)
+  const maxRetries = 3;
+  let lastError: Error | undefined;
+
+  // Use setImmediate-style async to not block webhook response
+  (async () => {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        console.log(`🎬 [INLINE] Starting video processing for ${payload.workflowId}`);
-        await processVideoForWorkflow(payload.brand, payload.workflowId, payload.videoUrl);
-        console.log(`✅ [INLINE] Video processing completed for ${payload.workflowId}`);
-      } catch (error) {
-        console.error(`❌ [INLINE] Video processing failed for ${payload.workflowId}:`, error);
+        // Add timeout to prevent hanging
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
+
+        const response = await fetch(workerUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Cloud-Tasks-Worker': secret || '',
+          },
+          body: JSON.stringify(payload),
+          signal: controller.signal,
+        });
+
+        clearTimeout(timeoutId);
+
+        if (response.ok) {
+          console.log(`✅ [FALLBACK] Worker API called successfully for ${payload.workflowId} (attempt ${attempt})`);
+          return; // Success, exit retry loop
+        }
+
+        lastError = new Error(`HTTP ${response.status}: ${response.statusText}`);
+        console.warn(`⚠️  [FALLBACK] Worker API returned ${response.status} for ${payload.workflowId} (attempt ${attempt})`);
+
+      } catch (err) {
+        lastError = err instanceof Error ? err : new Error(String(err));
+        console.error(`❌ [FALLBACK] Worker API call failed for ${payload.workflowId} (attempt ${attempt}):`, lastError.message);
       }
-    }, 100);
 
-  } catch (importError) {
-    console.error(`❌ Failed to import video-processing module:`, importError);
+      // Wait before retry with jitter (except on last attempt)
+      if (attempt < maxRetries) {
+        const baseDelay = Math.pow(2, attempt) * 1000; // 2s, 4s
+        const jitter = Math.random() * 1000; // 0-1s jitter
+        await new Promise(resolve => setTimeout(resolve, baseDelay + jitter));
+      }
+    }
 
-    // Ultimate fallback - just do a fetch
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ||
-                    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
-    const workerUrl = `${baseUrl}/api/workers/process-video`;
-    const secret = process.env.CLOUD_TASKS_SECRET || process.env.CRON_SECRET;
-
-    fetch(workerUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Cloud-Tasks-Worker': secret || '',
-      },
-      body: JSON.stringify(payload),
-    }).catch((err) => {
-      console.error(`❌ Fallback fetch also failed:`, err);
-    });
-  }
+    // All retries failed - log critical error
+    console.error(`🚨 [FALLBACK CRITICAL] All ${maxRetries} attempts failed for ${payload.workflowId}:`, lastError?.message);
+    console.error(`   Workflow may be stuck - manual intervention required`);
+  })();
 
   return {
-    taskName: 'inline-processing',
+    taskName: 'inline-processing-with-retry',
     scheduleTime: new Date(),
   };
 }

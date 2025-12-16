@@ -13,7 +13,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withCronLock } from '@/lib/cron-lock';
 
 const CRON_SECRET = process.env.CRON_SECRET;
-export const maxDuration = 60; // 1 minute (webhook-based, no long polling)
+export const maxDuration = 300; // 5 minutes - processes multiple brands sequentially
 
 export async function GET(request: NextRequest) {
   const startTime = Date.now();

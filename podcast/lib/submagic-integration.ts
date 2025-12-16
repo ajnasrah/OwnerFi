@@ -1,6 +1,5 @@
 // Submagic API Integration for Podcast Captions & Clip Generation
-import { readFileSync } from 'fs';
-import { join } from 'path';
+// Note: fs and path imports removed - not currently used
 
 interface SubmagicRequest {
   video_url: string;

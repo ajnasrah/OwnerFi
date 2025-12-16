@@ -34,13 +34,13 @@ interface PodcastScript {
 export class ScriptGenerator {
   private openai: OpenAI;
   private guestProfiles: any;
-  private hostProfile: HostProfile;
+  private _hostProfile: HostProfile;
   private configLoaded: boolean = false;
 
   constructor(apiKey: string) {
     this.openai = new OpenAI({ apiKey });
     this.guestProfiles = {};
-    this.hostProfile = { name: 'Abdullah' }; // Default
+    this._hostProfile = { name: 'Abdullah' }; // Default
   }
 
   /**
@@ -60,7 +60,7 @@ export class ScriptGenerator {
       }
 
       this.guestProfiles = config.profiles;
-      this.hostProfile = config.host;
+      this._hostProfile = config.host;
       this.configLoaded = true;
 
       console.log('✅ Loaded podcast profiles from Firestore');
@@ -73,7 +73,7 @@ export class ScriptGenerator {
         const configPath = join(process.cwd(), 'podcast', 'config', 'guest-profiles.json');
         const config = JSON.parse(readFileSync(configPath, 'utf-8'));
         this.guestProfiles = config.profiles;
-        this.hostProfile = config.host;
+        this._hostProfile = config.host;
         this.configLoaded = true;
         console.log('⚠️  Loaded podcast profiles from local file (fallback)');
       } catch (fallbackError) {

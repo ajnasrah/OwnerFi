@@ -199,7 +199,7 @@ export async function GET(request: Request) {
     const radius = parseInt(searchParams.get('radius') || '0');
     const sortBy = searchParams.get('sortBy') || 'percentOfArv';
     const sortOrder = searchParams.get('sortOrder') || 'asc';
-    const limit = parseInt(searchParams.get('limit') || '100');
+    const limit = parseInt(searchParams.get('limit') || '2000');
     const collection = searchParams.get('collection');
 
     // Simple cache - fetch ALL data once and filter in memory (avoids index requirements)
@@ -257,8 +257,8 @@ export async function GET(request: Request) {
       }
       allDeals = Array.from(seenZpids.values());
 
-      // Filter out properties without price or ARV
-      allDeals = allDeals.filter((deal: any) => deal.price > 0 && deal.arv > 0);
+      // Filter out properties without price (ARV is optional - not all properties have Zestimate)
+      allDeals = allDeals.filter((deal: any) => deal.price > 0);
 
       // Update cache
       dealsCache = { data: [...allDeals], timestamp: now, key: cacheKey };

@@ -97,18 +97,52 @@ export const GLOBAL_RULES = {
     },
   },
 
-  // Compliance Rules
+  // Compliance Rules (v2 - BLOCK/WARN/ALLOW system)
   compliance: {
-    banned: [
-      'Guaranteed approval',
-      'Lock it in now',
-      'Investment advice',
-      'Will go up in value',
-      'Get rich quick',
-      'Overnight success',
-      'Passive income while you sleep',
-      'Financial advice',
+    // HARD BLOCK - Never appear, must be rewritten
+    hardBlock: [
+      'guaranteed approval',
+      'instant approval',
+      'no credit check',
+      'everyone qualifies',
+      'we ensure',
+      'we promise',
+      'approved today',
+      'you should',
+      'we recommend',
+      'we advise',
     ],
+    // SOFT WARN - Allowed but avoid if possible
+    softWarn: [
+      'best',
+      'top',
+      'perfect',
+      'ultimate',
+      'act now',
+      "don't miss out",
+      'you need',
+    ],
+    // ALWAYS ALLOWED - Core business terms, never flag
+    alwaysAllowed: [
+      'family',
+      'children',
+      'investment',
+      'equity',
+      'profit',
+      'cash flow',
+      'seller financing',
+      'owner financing',
+      'rent-to-own',
+      'down payment',
+      'monthly payment',
+    ],
+    // AUTO-REWRITES - Replace automatically instead of failing
+    autoRewrites: {
+      'no bank': 'no traditional mortgage',
+      'skip the bank': 'outside traditional lending',
+      'without banks': 'direct-to-seller terms',
+      'avoid banks': 'alternative to traditional lending',
+    },
     required: [
       'Prices and terms may change anytime', // For property content
     ],
@@ -295,8 +329,18 @@ ${Object.entries(global.scriptRules.structure).map(([k, v]) => `* ${v}`).join('\
 ${config.specialRules.map(r => `✅ ${r}`).join('\n')}
 ${brand.includes('ownerfi') ? `✅ ${global.ownerfiMandatoryCTA}` : ''}
 
-### COMPLIANCE (BANNED):
-${global.compliance.banned.map(b => `❌ ${b}`).join('\n')}
+### COMPLIANCE:
+**HARD BLOCK (never use):**
+${global.compliance.hardBlock.map(b => `❌ ${b}`).join('\n')}
+
+**SOFT WARN (allowed but avoid):**
+${global.compliance.softWarn.map(b => `⚠️ ${b}`).join('\n')}
+
+**ALWAYS ALLOWED (core terms - never flag):**
+${global.compliance.alwaysAllowed.map(b => `✅ ${b}`).join('\n')}
+
+**AUTO-REWRITE these phrases:**
+${Object.entries(global.compliance.autoRewrites).map(([k, v]) => `"${k}" → "${v}"`).join('\n')}
 
 ### CTA POOL (rotate randomly):
 ${ctaPool.map(c => `* "${c}"`).join('\n')}
@@ -516,17 +560,32 @@ All brands must use the **Universal Caption Formula**:
 
 ---
 
-# ⚖️ COMPLIANCE RULES (GLOBAL)
+# ⚖️ COMPLIANCE RULES (GLOBAL - v2)
 
-**BANNED (All Brands):**
-❌ "Guaranteed approval"
-❌ "Lock it in now"
-❌ "Investment advice"
-❌ "Will go up in value"
-❌ "Get rich quick"
-❌ "Overnight success"
-❌ "Passive income while you sleep"
-❌ Financial/legal/medical advice
+## 🚫 HARD BLOCK (NEVER APPEAR - Auto-rewrite if generated)
+❌ "guaranteed approval"
+❌ "instant approval"
+❌ "no credit check"
+❌ "everyone qualifies"
+❌ "we ensure / we promise"
+❌ "approved today"
+❌ "you should / we recommend / we advise"
+
+## ⚠️ SOFT WARN (Allowed but avoid if possible)
+⚠️ "best", "top", "perfect", "ultimate"
+⚠️ "act now", "don't miss out", "you need"
+⚠️ Excess hype or urgency language
+
+## ✅ ALWAYS ALLOWED (Core business terms - NEVER flag)
+✅ family, children
+✅ investment, equity, profit, cash flow
+✅ seller financing, owner financing, rent-to-own
+✅ down payment, monthly payment, terms
+
+## 🔁 AUTO-REWRITES (Replace instead of failing)
+"no bank" → "no traditional mortgage"
+"skip the bank" → "outside traditional lending"
+"without banks" → "direct-to-seller terms"
 
 **MANDATORY (OwnerFi Brands):**
 ✅ "Prices and terms may change anytime."

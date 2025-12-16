@@ -88,11 +88,12 @@ export interface HeyGenAgent {
 
 export const SCALE_PRESETS = {
   // For vertical social media videos (9:16)
+  // Based on guide: Talking Photos 1.3-1.5, Upper-body 1.2-1.4, Full-body 0.8-1.0
   vertical: {
-    talkingPhoto: 2.0,      // Larger scale for better visibility
-    talkingPhotoLarge: 2.0, // Larger scale for better visibility
-    upperBody: 2.0,         // Larger scale for better visibility
-    fullBody: 2.0,          // Larger scale for better visibility
+    talkingPhoto: 1.4,      // Good visibility without cutting off head
+    talkingPhotoLarge: 1.5, // Slightly larger for emphasis
+    upperBody: 1.3,         // Upper body visible with good framing
+    fullBody: 0.9,          // Full body visible in frame
   },
   // For horizontal videos (16:9)
   horizontal: {
@@ -177,6 +178,7 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
       scale: SCALE_PRESETS.vertical.upperBody,
       talkingStyle: 'expressive',
       hasBuiltInBackground: true, // Studio avatar with built-in background
+      offsetY: 50, // Move avatar down to keep head in frame
     },
     voice: {
       voiceId: '35659e86ce244d8389d525a9648d9c4a', // Carter Lee
@@ -198,6 +200,7 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
       scale: SCALE_PRESETS.vertical.upperBody,
       talkingStyle: 'expressive',
       hasBuiltInBackground: true, // Studio avatar with built-in background
+      offsetY: 50, // Move avatar down to keep head in frame
     },
     voice: {
       voiceId: 'f38a635bee7a4d1f9b0a654a31d050d2', // Chill Brian
@@ -223,6 +226,7 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
       scale: SCALE_PRESETS.vertical.upperBody,
       talkingStyle: 'expressive',
       hasBuiltInBackground: true, // Studio avatar with built-in background
+      offsetY: 50, // Move avatar down to keep head in frame
     },
     voice: {
       voiceId: 'dc491816e53f46eaa466740fbfec09bb', // Adventure Alex - Excited
@@ -244,6 +248,7 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
       scale: SCALE_PRESETS.vertical.upperBody,
       talkingStyle: 'expressive',
       hasBuiltInBackground: true, // Studio avatar with built-in background
+      offsetY: 50, // Move avatar down to keep head in frame
     },
     voice: {
       voiceId: '42d00d4aac5441279d8536cd6b52c53c', // Hope
@@ -329,6 +334,7 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
       scale: SCALE_PRESETS.vertical.upperBody,
       talkingStyle: 'expressive',
       hasBuiltInBackground: true,
+      offsetY: 50, // Move avatar down to keep head in frame
     },
     voice: {
       voiceId: '42d00d4aac5441279d8536cd6b52c53c', // Hope
@@ -349,6 +355,7 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
       scale: SCALE_PRESETS.vertical.upperBody,
       talkingStyle: 'expressive',
       hasBuiltInBackground: true,
+      offsetY: 50, // Move avatar down to keep head in frame
     },
     voice: {
       voiceId: 'f38a635bee7a4d1f9b0a654a31d050d2', // Chill Brian
@@ -369,6 +376,7 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
       scale: SCALE_PRESETS.vertical.upperBody,
       talkingStyle: 'expressive',
       hasBuiltInBackground: true,
+      offsetY: 50, // Move avatar down to keep head in frame
     },
     voice: {
       voiceId: 'dc491816e53f46eaa466740fbfec09bb', // Adventure Alex
@@ -393,6 +401,7 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
       scale: SCALE_PRESETS.vertical.upperBody,
       talkingStyle: 'stable', // Stable for serious news delivery
       hasBuiltInBackground: true, // Studio avatar with built-in background
+      offsetY: 50, // Move avatar down to keep head in frame
     },
     voice: {
       voiceId: 'f38a635bee7a4d1f9b0a654a31d050d2', // Chill Brian
@@ -415,6 +424,7 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
       scale: SCALE_PRESETS.vertical.upperBody,
       talkingStyle: 'stable', // Stable for serious news delivery
       hasBuiltInBackground: true, // Studio avatar with built-in background
+      offsetY: 50, // Move avatar down to keep head in frame
     },
     voice: {
       voiceId: '42d00d4aac5441279d8536cd6b52c53c', // Hope
@@ -437,6 +447,7 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
       scale: SCALE_PRESETS.vertical.upperBody,
       talkingStyle: 'expressive', // Slightly more expressive for urgent news
       hasBuiltInBackground: true, // Studio avatar with built-in background
+      offsetY: 50, // Move avatar down to keep head in frame
     },
     voice: {
       voiceId: '35659e86ce244d8389d525a9648d9c4a', // Carter Lee
@@ -459,6 +470,7 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
       scale: SCALE_PRESETS.vertical.upperBody,
       talkingStyle: 'expressive',
       hasBuiltInBackground: true, // Studio avatar with built-in background
+      offsetY: 50, // Move avatar down to keep head in frame
     },
     voice: {
       voiceId: 'dc491816e53f46eaa466740fbfec09bb', // Adventure Alex

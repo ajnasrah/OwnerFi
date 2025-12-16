@@ -252,6 +252,7 @@ export class PodcastVideoGenerator {
    * Generate individual clips for each Q&A
    * DEPRECATED: Use generateCompleteVideo instead for 90% cost savings
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private async generateIndividualClips(
     script: PodcastScript,
     guest: any,
@@ -419,6 +420,7 @@ export class PodcastVideoGenerator {
   /**
    * Stitch clips together using FFmpeg
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private async stitchClips(
     clips: VideoClip[],
     outputDir: string,

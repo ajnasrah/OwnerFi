@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ApifyClient } from 'apify-client';
 import { initializeApp, cert, getApps } from 'firebase-admin/app';
-import { getFirestore } from 'firebase-admin/firestore';
+import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { transformApifyProperty, validatePropertyData } from '@/lib/property-transform';
 import { detectNeedsWork, getMatchingKeywords } from '@/lib/property-needs-work-detector';
 
@@ -131,7 +131,7 @@ export async function GET(request: NextRequest) {
           status: 'failed',
           failedAt: new Date(),
           failureReason: errorMsg,
-          retryCount: getFirestore.FieldValue.increment(1),
+          retryCount: FieldValue.increment(1),
         });
       });
       await failBatch.commit();
@@ -316,7 +316,7 @@ export async function GET(request: NextRequest) {
           status: 'failed',
           failedAt: new Date(),
           failureReason: 'No properties could be transformed',
-          retryCount: getFirestore.FieldValue.increment(1),
+          retryCount: FieldValue.increment(1),
         });
       });
       await failBatch.commit();

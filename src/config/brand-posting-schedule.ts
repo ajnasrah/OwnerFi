@@ -108,6 +108,33 @@ export const BRAND_POSTING_CONFIGS: Record<Brand, BrandPostingConfig> = {
     spreadAcrossDays: false,
     usePlatformSpecificTiming: true,
   },
+
+  'property-spanish': {
+    brand: 'property-spanish',
+    postsPerDay: 1,
+    description: 'Spanish property videos - posted as properties are added',
+    topPerformingHours: [14], // 2 PM CST - good time for real estate browsing
+    spreadAcrossDays: false,
+    usePlatformSpecificTiming: true,
+  },
+
+  personal: {
+    brand: 'personal',
+    postsPerDay: 1,
+    description: 'Personal brand content - 1 post/day',
+    topPerformingHours: [12], // 12 PM CST
+    spreadAcrossDays: false,
+    usePlatformSpecificTiming: true,
+  },
+
+  gaza: {
+    brand: 'gaza',
+    postsPerDay: 3,
+    description: 'Gaza humanitarian news - 3 posts/day at peak news times',
+    topPerformingHours: [8, 14, 20], // 8 AM, 2 PM, 8 PM CST - peak news consumption times
+    spreadAcrossDays: false,
+    usePlatformSpecificTiming: true,
+  },
 };
 
 /**

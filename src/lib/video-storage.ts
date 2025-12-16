@@ -327,7 +327,14 @@ export async function uploadSubmagicVideo(
     throw new Error('Failed to download video - no response received');
   }
 
-  const arrayBuffer = await response.arrayBuffer();
+  // CRITICAL: Wrap arrayBuffer() in timeout to prevent hanging on slow/stalled downloads
+  console.log('   ⏳ Reading response body...');
+  const arrayBufferPromise = response.arrayBuffer();
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    setTimeout(() => reject(new Error('Timeout reading video response body (5 minutes exceeded)')), 5 * 60 * 1000);
+  });
+
+  const arrayBuffer = await Promise.race([arrayBufferPromise, timeoutPromise]);
   const buffer = Buffer.from(arrayBuffer);
   const sizeInMB = (buffer.length / 1024 / 1024).toFixed(2);
 

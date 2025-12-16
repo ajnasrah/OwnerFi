@@ -35,7 +35,7 @@
     "cheerio": "^1.1.2",
     "cities.json": "^1.1.50",
     "critters": "^0.0.23",
-    "firebase": "^12.2.1",
+    "firebase": "^11.2.0",
     "firebase-admin": "^13.5.0",
     "framer-motion": "^12.23.22",
     "googleapis": "^162.0.0",

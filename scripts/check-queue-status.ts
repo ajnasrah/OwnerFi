@@ -1,7 +1,6 @@
-import { initializeApp, cert, getApps } from 'firebase-admin/app';
+import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import * as dotenv from 'dotenv';
-
 dotenv.config({ path: '.env.local' });
 
 if (!getApps().length) {
@@ -9,61 +8,93 @@ if (!getApps().length) {
     credential: cert({
       projectId: process.env.FIREBASE_PROJECT_ID!,
       privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL!,
-    }),
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL!
+    })
   });
 }
 
 const db = getFirestore();
 
-async function main() {
-  console.log('🔍 Checking Queue Status\n');
-  console.log('═══════════════════════════════════════════════════════════\n');
+async function check() {
+  // Check scraper queue status
+  const [pending, failed, processing, completed] = await Promise.all([
+    db.collection('scraper_queue').where('status', '==', 'pending').count().get(),
+    db.collection('scraper_queue').where('status', '==', 'failed').count().get(),
+    db.collection('scraper_queue').where('status', '==', 'processing').count().get(),
+    db.collection('scraper_queue').where('status', '==', 'completed').count().get()
+  ]);
 
-  // Check queue status
-  const pending = await db.collection('scraper_queue').where('status', '==', 'pending').get();
-  const processing = await db.collection('scraper_queue').where('status', '==', 'processing').get();
-  const completed = await db.collection('scraper_queue').where('status', '==', 'completed').get();
-  const failed = await db.collection('scraper_queue').where('status', '==', 'failed').get();
+  console.log('=== ZILLOW SCRAPER QUEUE ===');
+  console.log('Pending:', pending.data().count);
+  console.log('Processing:', processing.data().count);
+  console.log('Completed:', completed.data().count);
+  console.log('Failed:', failed.data().count);
 
-  console.log('📊 Queue Status:');
-  console.log(`   Pending:    ${pending.size}`);
-  console.log(`   Processing: ${processing.size}`);
-  console.log(`   Completed:  ${completed.size}`);
-  console.log(`   Failed:     ${failed.size}\n`);
+  // Check cash deals queue
+  const [cashPending, cashFailed, cashProcessing, cashCompleted] = await Promise.all([
+    db.collection('cash_deals_queue').where('status', '==', 'pending').count().get(),
+    db.collection('cash_deals_queue').where('status', '==', 'failed').count().get(),
+    db.collection('cash_deals_queue').where('status', '==', 'processing').count().get(),
+    db.collection('cash_deals_queue').where('status', '==', 'completed').count().get()
+  ]);
 
-  // Check how many from test_search_scraper source
-  const testSearchScraper = await db
-    .collection('scraper_queue')
-    .where('source', '==', 'test_search_scraper')
+  console.log('\n=== CASH DEALS QUEUE ===');
+  console.log('Pending:', cashPending.data().count);
+  console.log('Processing:', cashProcessing.data().count);
+  console.log('Completed:', cashCompleted.data().count);
+  console.log('Failed:', cashFailed.data().count);
+
+  // Get recent failed items from zillow scraper
+  const recentFailed = await db.collection('scraper_queue')
+    .where('status', '==', 'failed')
+    .limit(10)
     .get();
 
-  console.log(`📋 Items from search scraper test: ${testSearchScraper.size}\n`);
-
-  // Group by status
-  const byStatus: any = {};
-  testSearchScraper.docs.forEach(doc => {
-    const status = doc.data().status;
-    byStatus[status] = (byStatus[status] || 0) + 1;
-  });
-
-  console.log('   Breakdown:');
-  Object.entries(byStatus).forEach(([status, count]) => {
-    console.log(`     ${status}: ${count}`);
-  });
-
-  console.log('\n═══════════════════════════════════════════════════════════\n');
-
-  console.log('💡 EXPLANATION:\n');
-  console.log('   The queue processor processes 25 items at a time (batch limit)');
-  console.log(`   You have ${pending.size} pending items`);
-  console.log(`   This requires ${Math.ceil(pending.size / 25)} more runs to process all\n`);
-
-  if (pending.size > 0) {
-    console.log('🚀 Want to process the remaining items?');
-    console.log('   Run: npx tsx scripts/trigger-queue-processor.ts\n');
-    console.log(`   Or run it ${Math.ceil(pending.size / 25)} times to process all pending items\n`);
+  if (recentFailed.docs.length > 0) {
+    console.log('\n=== RECENT ZILLOW FAILURES ===');
+    recentFailed.docs.slice(0, 5).forEach(doc => {
+      const d = doc.data();
+      console.log('URL:', d.url?.substring(0, 70));
+      console.log('Error:', d.error || d.errorMessage || 'No error message');
+      console.log('Retry count:', d.retryCount || 0);
+      console.log('---');
+    });
   }
-}
 
-main().catch(console.error);
+  // Get recent failed items from cash deals
+  const cashRecentFailed = await db.collection('cash_deals_queue')
+    .where('status', '==', 'failed')
+    .limit(10)
+    .get();
+
+  if (cashRecentFailed.docs.length > 0) {
+    console.log('\n=== RECENT CASH DEALS FAILURES ===');
+    cashRecentFailed.docs.slice(0, 5).forEach(doc => {
+      const d = doc.data();
+      console.log('URL:', d.url?.substring(0, 70));
+      console.log('Error:', d.error || d.errorMessage || 'No error message');
+      console.log('Retry count:', d.retryCount || 0);
+      console.log('---');
+    });
+  }
+
+  // Check if there are stuck processing items
+  const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
+  const stuckProcessing = await db.collection('scraper_queue')
+    .where('status', '==', 'processing')
+    .get();
+
+  const stuckItems = stuckProcessing.docs.filter(doc => {
+    const d = doc.data();
+    const startedAt = d.startedAt?.toDate?.() || d.updatedAt?.toDate?.();
+    return startedAt && startedAt < tenMinutesAgo;
+  });
+
+  if (stuckItems.length > 0) {
+    console.log('\n=== STUCK PROCESSING (>10 min) ===');
+    console.log('Count:', stuckItems.length);
+  }
+
+  process.exit(0);
+}
+check();

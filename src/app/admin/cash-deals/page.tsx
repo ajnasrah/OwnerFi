@@ -243,7 +243,7 @@ export default function CashDealsPage() {
       if (radius > 0) params.set('radius', String(radius));
       params.set('sortBy', sortBy);
       params.set('sortOrder', sortOrder);
-      params.set('limit', '500'); // Fetch more for client-side filtering
+      params.set('limit', '2000'); // Fetch all for client-side filtering
 
       const res = await fetch(`/api/admin/cash-deals?${params}`);
       const data = await res.json();

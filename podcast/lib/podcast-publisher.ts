@@ -14,6 +14,7 @@ interface PodcastMetadata {
   }>;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 interface PublishingStrategy {
   longForm: {
     platforms: ('youtube' | 'facebook')[];

@@ -15,12 +15,11 @@ function getGoogleDriveClient() {
     throw new Error('Google Drive credentials not configured. Check GOOGLE_DRIVE_CLIENT_EMAIL and GOOGLE_DRIVE_PRIVATE_KEY');
   }
 
-  const auth = new google.auth.JWT(
-    credentials.client_email,
-    undefined,
-    credentials.private_key,
-    ['https://www.googleapis.com/auth/drive.file']
-  );
+  const auth = new google.auth.JWT({
+    email: credentials.client_email,
+    key: credentials.private_key,
+    scopes: ['https://www.googleapis.com/auth/drive.file']
+  });
 
   return google.drive({ version: 'v3', auth });
 }

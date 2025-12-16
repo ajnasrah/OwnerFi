@@ -52,20 +52,53 @@ interface IndustryRule {
 
 // ==================== COMPLIANCE RULES BY BRAND ====================
 
-const LEGAL_ADVICE_PATTERNS: ProhibitedPhrase[] = [
+// ==================== HARD BLOCK (CRITICAL - MUST REWRITE) ====================
+const HARD_BLOCK_PATTERNS: ProhibitedPhrase[] = [
   {
-    pattern: /\b(you should|you must|legally required|tax benefit|tax advantage|consult|advise|recommend)\b/gi,
-    type: 'legal_advice',
-    severity: 'critical',
-    explanation: 'Provides legal/tax advice without proper disclaimers or licensing',
-    suggestion: 'Use "consider", "may want to", "could explore" instead of directive language'
-  },
-  {
-    pattern: /\b(guaranteed|promise|ensure|certain|definitely will|100%|no risk)\b/gi,
+    pattern: /\b(guaranteed approval|instant approval|approved today)\b/gi,
     type: 'false_claims',
     severity: 'critical',
-    explanation: 'Makes unverifiable guarantees prohibited by FTC',
-    suggestion: 'Use "potential", "possible", "may", "could" instead of absolute promises'
+    explanation: 'False approval guarantees - illegal in lending/real estate',
+    suggestion: 'Remove approval guarantees entirely'
+  },
+  {
+    pattern: /\b(no credit check|everyone qualifies|bad credit okay|anyone can qualify)\b/gi,
+    type: 'false_claims',
+    severity: 'critical',
+    explanation: 'False qualification claims - illegal in lending/real estate',
+    suggestion: 'State actual qualification criteria or remove claim'
+  },
+  {
+    pattern: /\b(we ensure|we promise|we guarantee)\b/gi,
+    type: 'false_claims',
+    severity: 'critical',
+    explanation: 'Company guarantee language prohibited by FTC',
+    suggestion: 'Remove guarantee language entirely'
+  },
+  {
+    pattern: /\b(you should|we recommend|we advise|our advice)\b/gi,
+    type: 'legal_advice',
+    severity: 'critical',
+    explanation: 'Provides advice without proper licensing',
+    suggestion: 'Use "consider", "may want to", "could explore" instead'
+  }
+]
+
+// ==================== SOFT WARN (ALLOWED BUT AVOID) ====================
+const SOFT_WARN_PATTERNS: ProhibitedPhrase[] = [
+  {
+    pattern: /\b(best|top|perfect|ultimate|#1|leading)\b/gi,
+    type: 'false_claims',
+    severity: 'warning',
+    explanation: 'Superlative claims - allowed if natural, but avoid if possible',
+    suggestion: 'Consider using "one of", "among the" for stronger compliance'
+  },
+  {
+    pattern: /\b(act now|don't miss out|you need|hurry|urgent|limited time)\b/gi,
+    type: 'pushy_tactics',
+    severity: 'warning',
+    explanation: 'Urgency language - allowed but avoid being pushy',
+    suggestion: 'Focus on educational value rather than urgency'
   },
   {
     pattern: /\b(this is not legal advice|I am not a lawyer|consult an attorney)\b/gi,
@@ -76,21 +109,10 @@ const LEGAL_ADVICE_PATTERNS: ProhibitedPhrase[] = [
   }
 ]
 
+// Legacy pattern arrays for backwards compatibility
+const LEGAL_ADVICE_PATTERNS: ProhibitedPhrase[] = HARD_BLOCK_PATTERNS.filter(p => p.type === 'legal_advice')
+
 const PUSHY_TACTICS_PATTERNS: ProhibitedPhrase[] = [
-  {
-    pattern: /\b(act now|limited time|don't miss out|last chance|hurry|urgent|expires soon|today only)\b/gi,
-    type: 'pushy_tactics',
-    severity: 'error',
-    explanation: 'Creates false urgency or high-pressure sales tactics',
-    suggestion: 'Focus on educational value rather than urgency'
-  },
-  {
-    pattern: /\b(you need|you have to|you must act|don't wait|call now|buy now)\b/gi,
-    type: 'pushy_tactics',
-    severity: 'error',
-    explanation: 'Too aggressive and directive - violates soft-sell approach',
-    suggestion: 'Use "you might", "consider", "explore" to sound consultative'
-  },
   {
     pattern: /\b(once in a lifetime|unbelievable|too good to be true|secret|exclusive offer)\b/gi,
     type: 'pushy_tactics',
@@ -101,20 +123,6 @@ const PUSHY_TACTICS_PATTERNS: ProhibitedPhrase[] = [
 ]
 
 const FALSE_CLAIMS_PATTERNS: ProhibitedPhrase[] = [
-  {
-    pattern: /\b(best|#1|top|leading|fastest|easiest|perfect|ultimate|only)\b/gi,
-    type: 'false_claims',
-    severity: 'error',
-    explanation: 'Superlative claims require substantiation per FTC guidelines',
-    suggestion: 'Use "one of", "among the", or remove superlatives entirely'
-  },
-  {
-    pattern: /\b(no credit check|bad credit okay|guaranteed approval|anyone can qualify)\b/gi,
-    type: 'false_claims',
-    severity: 'critical',
-    explanation: 'False financial claims - illegal in lending/real estate',
-    suggestion: 'State actual qualification criteria or remove claim'
-  },
   {
     pattern: /\b(proven|scientifically proven|clinically tested|doctor recommended)\b/gi,
     type: 'false_claims',
@@ -129,32 +137,36 @@ const FALSE_CLAIMS_PATTERNS: ProhibitedPhrase[] = [
 const OWNERFI_RULES: IndustryRule[] = [
   {
     name: 'Fair Housing Compliance',
-    description: 'No discriminatory language regarding race, religion, family status, etc.',
+    description: 'No discriminatory language regarding race, religion, etc.',
     validator: (script: string) => {
-      const violations = /\b(family|kids|children|church|christian|muslim|single|married|perfect for couples)\b/gi
+      // Only block actual discriminatory terms - family/children are ALLOWED for property descriptions
+      const violations = /\b(church nearby|christian community|muslim neighborhood|whites only|no minorities)\b/gi
       return !violations.test(script)
     },
-    errorMessage: 'Script may violate Fair Housing Act - avoid describing ideal tenant/buyer demographics'
-  },
-  {
-    name: 'Financial Advice Disclaimer',
-    description: 'Real estate investment content needs disclaimers',
-    validator: (script: string) => {
-      const investmentTalk = /\b(investment|profit|return|equity|appreciation|cash flow)\b/gi
-      return !investmentTalk.test(script)
-    },
-    errorMessage: 'Investment language detected - add "Not financial advice" disclaimer to caption'
-  },
-  {
-    name: 'Owner Financing Disclosure',
-    description: 'Must not misrepresent financing terms',
-    validator: (script: string) => {
-      const misleading = /\b(no bank|skip the bank|avoid banks|no mortgage|easier than mortgage)\b/gi
-      return !misleading.test(script)
-    },
-    errorMessage: 'Misleading financing claims - owner financing still requires contracts and due diligence'
+    errorMessage: 'Script may violate Fair Housing Act - avoid discriminatory demographic language'
   }
+  // REMOVED: Financial Advice Disclaimer rule - "investment", "cash flow", "equity" are core business terms
+  // REMOVED: Owner Financing Disclosure rule - handled by auto-rewrite instead
 ]
+
+// ==================== AUTO-REWRITE RULES (OWNERFI) ====================
+// These phrases are automatically rewritten instead of failing compliance
+const OWNERFI_AUTO_REWRITES: { pattern: RegExp; replacement: string }[] = [
+  { pattern: /\bno bank\b/gi, replacement: 'no traditional mortgage' },
+  { pattern: /\bskip the bank\b/gi, replacement: 'outside traditional lending' },
+  { pattern: /\bwithout banks\b/gi, replacement: 'direct-to-seller terms' },
+  { pattern: /\bavoid banks\b/gi, replacement: 'alternative to traditional lending' },
+  { pattern: /\bno mortgage\b/gi, replacement: 'no traditional mortgage' }
+]
+
+// Apply auto-rewrites to script content
+export function applyOwnerFiRewrites(text: string): string {
+  let result = text
+  for (const rewrite of OWNERFI_AUTO_REWRITES) {
+    result = result.replace(rewrite.pattern, rewrite.replacement)
+  }
+  return result
+}
 
 const VASSDISTRO_RULES: IndustryRule[] = [
   {
@@ -234,13 +246,14 @@ export function getComplianceRules(brand: Brand): ComplianceRules {
   const baseRules: ComplianceRules = {
     brand,
     prohibitedPhrases: [
-      ...LEGAL_ADVICE_PATTERNS,
-      ...PUSHY_TACTICS_PATTERNS,
-      ...FALSE_CLAIMS_PATTERNS
+      ...HARD_BLOCK_PATTERNS,      // Critical - must fail
+      ...SOFT_WARN_PATTERNS,       // Warnings only - won't fail
+      ...PUSHY_TACTICS_PATTERNS,   // Scam language warnings
+      ...FALSE_CLAIMS_PATTERNS     // Scientific claims only
     ],
     requiredDisclaimers: [],
     industryRules: [],
-    maxPushyScore: 30 // Base threshold
+    maxPushyScore: 50 // Increased threshold - less strict
   }
 
   // Add brand-specific rules
@@ -250,8 +263,8 @@ export function getComplianceRules(brand: Brand): ComplianceRules {
     case 'property-spanish':
     case 'benefit':
       baseRules.industryRules = OWNERFI_RULES
-      baseRules.requiredDisclaimers = ['Not legal or financial advice. Consult professionals before making real estate decisions.']
-      baseRules.maxPushyScore = 20 // Very conservative for real estate
+      baseRules.requiredDisclaimers = ['Prices and terms may change anytime. Not legal or financial advice.']
+      baseRules.maxPushyScore = 50 // Relaxed - allow more marketing flexibility
       break
 
     case 'vassdistro':
@@ -293,15 +306,26 @@ export async function checkScriptCompliance(
   const violations: ComplianceViolation[] = []
   let pushyScore = 0
 
-  // Check prohibited phrases
+  // Apply auto-rewrites for OwnerFi brands BEFORE checking compliance
+  let processedScript = script
+  let processedCaption = caption
+  let processedTitle = title
+
+  if (['ownerfi', 'property', 'property-spanish', 'benefit'].includes(brand)) {
+    processedScript = applyOwnerFiRewrites(script)
+    processedCaption = applyOwnerFiRewrites(caption)
+    processedTitle = applyOwnerFiRewrites(title)
+  }
+
+  // Check prohibited phrases (use processed versions with auto-rewrites applied)
   for (const phrase of rules.prohibitedPhrases) {
     const pattern = typeof phrase.pattern === 'string'
       ? new RegExp(phrase.pattern, 'gi')
       : phrase.pattern
 
-    const scriptMatches = script.match(pattern)
-    const captionMatches = caption.match(pattern)
-    const titleMatches = title.match(pattern)
+    const scriptMatches = processedScript.match(pattern)
+    const captionMatches = processedCaption.match(pattern)
+    const titleMatches = processedTitle.match(pattern)
 
     const allMatches = [
       ...(scriptMatches || []),
@@ -315,7 +339,7 @@ export async function checkScriptCompliance(
           type: phrase.type,
           severity: phrase.severity,
           phrase: match,
-          context: extractContext(script, match),
+          context: extractContext(processedScript, match),
           explanation: phrase.explanation,
           suggestion: phrase.suggestion
         })
@@ -328,14 +352,14 @@ export async function checkScriptCompliance(
     }
   }
 
-  // Check industry-specific rules
+  // Check industry-specific rules (use processed versions)
   for (const rule of rules.industryRules) {
-    if (!rule.validator(script, caption)) {
+    if (!rule.validator(processedScript, processedCaption)) {
       violations.push({
         type: 'industry_specific',
         severity: 'critical',
         phrase: rule.name,
-        context: script.substring(0, 100) + '...',
+        context: processedScript.substring(0, 100) + '...',
         explanation: rule.errorMessage,
         suggestion: rule.description
       })

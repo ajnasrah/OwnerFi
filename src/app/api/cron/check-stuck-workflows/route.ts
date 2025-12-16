@@ -1007,7 +1007,14 @@ async function checkPostingWorkflows() {
         const data = workflowDoc.data();
         const workflowId = workflowDoc.id;
         const videoUrl = data.finalVideoUrl;
-        const stuckMinutes = Math.round((Date.now() - (data.updatedAt || data.createdAt || 0)) / 60000);
+
+        // CRITICAL FIX: Skip workflows with no valid timestamp to avoid false positives
+        const timestamp = data.updatedAt || data.createdAt;
+        if (!timestamp || timestamp <= 0) {
+          console.log(`   ⚠️  ${workflowId}: No valid timestamp - skipping`);
+          continue;
+        }
+        const stuckMinutes = Math.round((Date.now() - timestamp) / 60000);
 
         // Only retry if stuck > 10 minutes
         if (stuckMinutes < 10) continue;

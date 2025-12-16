@@ -24,7 +24,7 @@ jest.mock('@/lib/brand-utils', () => ({
   getBrandWebhookUrl: jest.fn(() => 'https://test.com/api/webhooks/heygen/gaza'),
 }));
 
-jest.mock('./agent-selector', () => ({
+jest.mock('@/lib/agent-selector', () => ({
   selectAgent: jest.fn(),
 }));
 
@@ -94,7 +94,8 @@ describe('GazaVideoGenerator', () => {
     });
 
     it('should reject script with undefined placeholder', () => {
-      const result = validateScript(generator, 'This is a test script with undefined placeholder here making it long enough.');
+      // Script must be at least 15 words to pass the length check before placeholder check
+      const result = validateScript(generator, 'This is a test script with undefined placeholder here making it long enough to pass the word count requirement check.');
       expect(result.valid).toBe(false);
       expect(result.reason).toContain('invalid placeholders');
     });
@@ -124,7 +125,7 @@ describe('GazaVideoGenerator', () => {
 
       expect(script).toContain('Breaking news from Gaza');
       expect(script).toContain('Humanitarian Crisis in Gaza Worsens');
-      expect(script).toContain('Donate');
+      expect(script).toContain('spread awareness');
     });
   });
 

@@ -189,11 +189,29 @@ export async function checkHeyGenQuota(
   } catch (error) {
     console.error('❌ Error checking HeyGen quota:', error);
 
-    // In case of error checking quota, allow the request but log the error
-    // This prevents quota check failures from blocking video generation
+    // SECURITY: Only allow bypass for specific transient errors, not all errors
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const isTransientError =
+      errorMessage.includes('timeout') ||
+      errorMessage.includes('ETIMEDOUT') ||
+      errorMessage.includes('network') ||
+      errorMessage.includes('ECONNRESET') ||
+      errorMessage.includes('fetch failed');
+
+    if (isTransientError) {
+      console.warn('⚠️  Transient error checking quota - allowing request with caution');
+      console.warn('   Reason: Network/timeout error, likely temporary');
+      return {
+        allowed: true,
+        reason: `Quota check failed (transient error) - proceeding with caution: ${errorMessage}`,
+      };
+    }
+
+    // For non-transient errors (auth, invalid API key, etc.), block the request
+    console.error('🚫 Non-transient quota check error - blocking request to prevent overspend');
     return {
-      allowed: true,
-      reason: 'Quota check failed - proceeding with caution',
+      allowed: false,
+      reason: `Quota check failed with non-transient error: ${errorMessage}`,
     };
   }
 }

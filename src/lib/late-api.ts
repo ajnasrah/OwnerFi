@@ -360,16 +360,19 @@ export async function postToLate(request: LatePostRequest): Promise<LatePostResp
           }
 
           // Add scheduling or queue
+          // IMPORTANT: Use consistent timezone (America/Chicago / CST) for all scheduling
+          const effectiveTimezone = timezone || 'America/Chicago';
+
           if (request.useQueue) {
             // Use Late.so's built-in queue - set queuedFromProfile AND timezone
             requestBody.queuedFromProfile = profileId;
-            requestBody.timezone = timezone || 'America/Chicago'; // CST timezone for queue
+            requestBody.timezone = effectiveTimezone;
             console.log(`   Adding to Late.so queue for profile: ${profileId} (timezone: ${requestBody.timezone})`);
           } else if (scheduleTime) {
             // Explicit schedule time provided
             requestBody.scheduledFor = scheduleTime;
-            requestBody.timezone = timezone || 'America/New_York';
-            console.log(`   Scheduling for: ${scheduleTime} (${timezone})`);
+            requestBody.timezone = effectiveTimezone;
+            console.log(`   Scheduling for: ${scheduleTime} (${effectiveTimezone})`);
           } else {
             // Immediate posting
             requestBody.publishNow = true;
@@ -581,7 +584,7 @@ export async function getQueueSchedule(brand: 'carz' | 'ownerfi' | 'podcast' | '
 export async function setQueueSchedule(
   brand: 'carz' | 'ownerfi' | 'podcast' | 'property' | 'vassdistro' | 'benefit',
   slots: { dayOfWeek: number; time: string }[],
-  timezone: string = 'America/New_York',
+  timezone: string = 'America/Chicago', // CST - consistent with brand posting schedule
   reshuffleExisting: boolean = false
 ): Promise<any> {
   const profileId = getProfileId(brand);

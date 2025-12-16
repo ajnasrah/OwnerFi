@@ -327,8 +327,10 @@ async function retryOperation<T>(
       console.error(`   ❌ ${operationName} attempt ${attempt} failed:`, lastError.message);
 
       if (attempt < maxRetries) {
-        const backoffMs = Math.min(1000 * Math.pow(2, attempt), 10000); // Max 10s
-        console.log(`   ⏳ Retrying in ${backoffMs / 1000}s...`);
+        // Add jitter to prevent thundering herd (0-1 second random delay)
+        const jitter = Math.random() * 1000;
+        const backoffMs = Math.min(1000 * Math.pow(2, attempt), 10000) + jitter; // Max 10s + jitter
+        console.log(`   ⏳ Retrying in ${(backoffMs / 1000).toFixed(1)}s...`);
         await new Promise(resolve => setTimeout(resolve, backoffMs));
       }
     }

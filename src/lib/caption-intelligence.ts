@@ -129,7 +129,7 @@ Example 4 (Cars/EV):
 
 export interface CaptionRequest {
   topic: string;
-  brand: 'ownerfi' | 'carz' | 'podcast' | 'property' | 'vassdistro' | 'benefit';
+  brand: 'ownerfi' | 'carz' | 'podcast' | 'property' | 'property-spanish' | 'vassdistro' | 'benefit' | 'abdullah' | 'personal' | 'gaza';
   script?: string; // Optional full script for context
   platform?: 'youtube' | 'instagram' | 'both'; // Default: both
 }
@@ -163,6 +163,10 @@ const BRAND_CONTEXT: Record<string, { focus: string; hashtags: string[] }> = {
     focus: 'Property investment, real estate deals, property management',
     hashtags: ['realestate', 'property', 'investment', 'passiveincome', 'realestateinvesting']
   },
+  'property-spanish': {
+    focus: 'Propiedades, financiamiento de dueño, inversión inmobiliaria',
+    hashtags: ['propiedades', 'bienesinmuebles', 'casapropia', 'financiamiento', 'inversion', 'inmobiliario']
+  },
   podcast: {
     focus: 'Expert interviews, educational content, advice',
     hashtags: ['podcast', 'interview', 'expertadvice', 'education']
@@ -172,8 +176,20 @@ const BRAND_CONTEXT: Record<string, { focus: string; hashtags: string[] }> = {
     hashtags: ['business', 'distribution', 'logistics', 'commerce']
   },
   benefit: {
-    focus: 'Benefits, financial services',
-    hashtags: ['benefits', 'finance', 'money']
+    focus: 'Benefits of owner financing, buyer and seller advantages',
+    hashtags: ['ownerfinance', 'homebuyer', 'realestate', 'benefits', 'finance', 'homeownership']
+  },
+  abdullah: {
+    focus: 'Personal brand, entrepreneurship, business insights',
+    hashtags: ['entrepreneur', 'business', 'success', 'motivation', 'leadership']
+  },
+  personal: {
+    focus: 'Personal content, lifestyle, thoughts',
+    hashtags: ['personal', 'lifestyle', 'thoughts', 'daily']
+  },
+  gaza: {
+    focus: 'Gaza humanitarian news, Palestine, humanitarian crisis coverage',
+    hashtags: ['Gaza', 'Palestine', 'Humanitarian', 'News', 'FreePalestine', 'HumanitarianCrisis', 'MiddleEast']
   }
 };
 

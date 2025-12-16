@@ -5,7 +5,7 @@
  * Uses Firestore to track processed webhook IDs with TTL.
  */
 
-import { db } from './firebase-admin';
+import { getAdminDb } from './firebase-admin';
 
 const IDEMPOTENCY_COLLECTION = 'webhook_idempotency';
 const IDEMPOTENCY_TTL_HOURS = 24; // Keep records for 24 hours
@@ -67,6 +67,11 @@ export async function isWebhookProcessed(
   requestBody?: any
 ): Promise<{ processed: boolean; previousResponse?: any }> {
   try {
+    const db = await getAdminDb();
+    if (!db) {
+      console.warn('⚠️  Firebase Admin not initialized - skipping idempotency check');
+      return { processed: false };
+    }
     const key = generateIdempotencyKey(service, webhookId, brand);
     const doc = await db.collection(IDEMPOTENCY_COLLECTION).doc(key).get();
 
@@ -79,7 +84,7 @@ export async function isWebhookProcessed(
     // Check if record has expired
     if (Date.now() > record.expiresAt) {
       // Clean up expired record
-      await db.collection(IDEMPOTENCY_COLLECTION).doc(key).delete();
+      await db!.collection(IDEMPOTENCY_COLLECTION).doc(key).delete();
       return { processed: false };
     }
 
@@ -124,6 +129,11 @@ export async function markWebhookProcessed(
   response?: any
 ): Promise<boolean> {
   try {
+    const db = await getAdminDb();
+    if (!db) {
+      console.warn('⚠️  Firebase Admin not initialized - skipping idempotency mark');
+      return false;
+    }
     const key = generateIdempotencyKey(service, webhookId, brand);
     const now = Date.now();
     const expiresAt = now + (IDEMPOTENCY_TTL_HOURS * 60 * 60 * 1000);
@@ -157,6 +167,11 @@ export async function markWebhookProcessed(
  */
 export async function cleanupExpiredIdempotencyRecords(): Promise<number> {
   try {
+    const db = await getAdminDb();
+    if (!db) {
+      console.warn('⚠️  Firebase Admin not initialized - skipping cleanup');
+      return 0;
+    }
     const now = Date.now();
 
     const snapshot = await db
@@ -202,6 +217,11 @@ export async function getIdempotencyStats(
   newestRecord: number;
 }> {
   try {
+    const db = await getAdminDb();
+    if (!db) {
+      console.warn('⚠️  Firebase Admin not initialized');
+      return { total: 0, byService: {}, byBrand: {}, oldestRecord: 0, newestRecord: 0 };
+    }
     let query: any = db.collection(IDEMPOTENCY_COLLECTION);
 
     if (service) {
@@ -260,6 +280,11 @@ export async function deleteIdempotencyRecord(
   brand?: string
 ): Promise<boolean> {
   try {
+    const db = await getAdminDb();
+    if (!db) {
+      console.warn('⚠️  Firebase Admin not initialized - skipping delete');
+      return false;
+    }
     const key = generateIdempotencyKey(service, webhookId, brand);
     await db.collection(IDEMPOTENCY_COLLECTION).doc(key).delete();
     console.log(`🗑️  Deleted idempotency record: ${key}`);

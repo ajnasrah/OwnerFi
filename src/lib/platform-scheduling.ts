@@ -165,17 +165,21 @@ export async function postToMultiplePlatformGroupsWithOffset(
 
     try {
       // Post to this platform group
+      // NOTE: When useQueue=true, Late.so manages scheduling via its queue system
+      // Do NOT pass scheduleTime when using queue - it would be ignored anyway
+      // and creates confusing code. Let the queue determine optimal timing.
       const result = await postToLate({
         videoUrl,
         caption,
         title,
         hashtags: options?.hashtags,
         platforms: group.platforms as any[],
-        scheduleTime, // Scheduled for optimal time + offset
+        // scheduleTime intentionally omitted - queue handles timing
         useQueue: true, // Use GetLate's queue system
         brand,
         firstComment: options?.firstComment,
         postTypes: options?.postTypes,
+        timezone: 'America/Chicago', // CST timezone for queue
       });
 
       results.push({ group, result });

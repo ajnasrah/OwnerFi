@@ -162,7 +162,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const response = await fetch(
+    // Use fetchWithTimeout to prevent hanging on slow API responses
+    const response = await fetchWithTimeout(
       `https://api.heygen.com/v1/video_status.get?video_id=${videoId}`,
       {
         method: 'GET',
@@ -170,7 +171,8 @@ export async function GET(request: NextRequest) {
           'accept': 'application/json',
           'x-api-key': HEYGEN_API_KEY,
         },
-      }
+      },
+      ServiceTimeouts.HEYGEN // 60 second timeout
     );
 
     if (!response.ok) {

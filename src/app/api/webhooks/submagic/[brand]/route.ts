@@ -60,6 +60,29 @@ export async function POST(request: NextRequest, context: RouteContext) {
       }, { status: 400 });
     }
 
+    // IDEMPOTENCY CHECK - Prevent duplicate processing (CRITICAL for cost/duplicate posts)
+    const { isWebhookProcessed, markWebhookProcessed } = await import('@/lib/webhook-idempotency');
+
+    if (!submagicProjectId) {
+      console.error(`❌ [${brandConfig.displayName}] CRITICAL: Missing projectId - cannot ensure idempotency`);
+      return NextResponse.json({
+        success: false,
+        brand,
+        message: 'Missing projectId - required for idempotency',
+      }, { status: 400 });
+    }
+
+    const idempotencyCheck = await isWebhookProcessed('submagic', submagicProjectId, brand, body);
+
+    if (idempotencyCheck.processed) {
+      console.log(`⚠️  [${brandConfig.displayName}] Submagic webhook already processed, returning cached response`);
+      return NextResponse.json(idempotencyCheck.previousResponse || {
+        success: true,
+        brand,
+        message: 'Already processed',
+      });
+    }
+
     // Find workflow in brand-specific collection (NO sequential lookups!)
     const workflowResult = await getWorkflowBySubmagicId(brand, submagicProjectId);
 
@@ -195,14 +218,19 @@ export async function POST(request: NextRequest, context: RouteContext) {
       const duration = Date.now() - startTime;
       console.log(`⏱️  [${brandConfig.displayName}] Webhook acknowledged in ${duration}ms`);
 
-      return NextResponse.json({
+      const response = {
         success: true,
         brand,
         projectId: submagicProjectId,
         workflow_id: workflowId,
         message: 'Video processing queued',
         processing_time_ms: duration,
-      });
+      };
+
+      // Mark webhook as processed for idempotency (prevents duplicate video processing)
+      await markWebhookProcessed('submagic', submagicProjectId!, brand, body, response);
+
+      return NextResponse.json(response);
     }
 
     // Handle failure

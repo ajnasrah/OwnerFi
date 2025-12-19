@@ -2,9 +2,19 @@
 
 import { useState } from 'react';
 
+interface Property {
+  fullAddress?: string;
+  price?: number;
+  bedrooms?: number;
+  bathrooms?: number;
+  squareFoot?: number;
+  agentPhoneNumber?: string;
+  streetAddress?: string;
+}
+
 interface UploadResult {
   success: boolean;
-  property?: any;
+  property?: Property;
   error?: string;
 }
 
@@ -12,7 +22,7 @@ export default function ManualUploadPage() {
   const [zillowUrl, setZillowUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<UploadResult | null>(null);
-  const [uploadHistory, setUploadHistory] = useState<any[]>([]);
+  const [uploadHistory, setUploadHistory] = useState<Property[]>([]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,8 +57,8 @@ export default function ManualUploadPage() {
       } else {
         setResult({ success: false, error: data.error || 'Upload failed' });
       }
-    } catch (error: any) {
-      setResult({ success: false, error: error.message || 'Network error' });
+    } catch (error) {
+      setResult({ success: false, error: error instanceof Error ? error.message : 'Network error' });
     } finally {
       setLoading(false);
     }

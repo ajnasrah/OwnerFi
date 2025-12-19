@@ -4,13 +4,11 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { ExtendedSession, isExtendedSession } from '@/types/session';
+import { isExtendedSession } from '@/types/session';
 import Tutorial from '@/components/dashboard/Tutorial';
 import { PropertySwiper2 } from '@/components/ui/PropertySwiper2';
 import { FilterUpgradeModal } from '@/components/FilterUpgradeModal';
 import { useFilterUpgradePrompt } from '@/hooks/useFilterUpgradePrompt';
-// import { CashDeals } from '@/components/dashboard/CashDeals'; // Hidden for now
-
 import { PropertyListing } from '@/lib/property-schema';
 import { BuyerDashboardView } from '@/lib/view-models';
 import { OWNER_FINANCING_FACTS, SAFE_UI_LABELS } from '@/lib/legal-disclaimers';
@@ -39,6 +37,13 @@ interface Property extends Partial<PropertyListing> {
   matchReason?: string;
   resultType?: 'direct' | 'nearby' | 'liked';
   isLiked?: boolean;
+  dealType?: 'owner_finance' | 'cash_deal';
+  percentOfArv?: number;
+  discount?: number;
+  arv?: number;
+  yearBuilt?: number;
+  zestimate?: number;
+  rentEstimate?: number;
 }
 
 // Owner Financing Facts are now imported from legal-disclaimers.ts
@@ -54,8 +59,6 @@ export default function Dashboard() {
   const [likedProperties, setLikedProperties] = useState<string[]>([]);
   const [showTutorial, setShowTutorial] = useState(false);
   const [currentFact, setCurrentFact] = useState('');
-  const [isInvestor, setIsInvestor] = useState(false);
-  // const [activeTab, setActiveTab] = useState<'owner-finance' | 'cash-deals'>('owner-finance'); // Hidden for now
 
   // Filter upgrade prompt for old users
   const { shouldShow: shouldShowFilterUpgrade, dismissPrompt: dismissFilterUpgrade } = useFilterUpgradePrompt(profile);
@@ -79,6 +82,7 @@ export default function Dashboard() {
     if (status === 'authenticated') {
       loadData();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status]);
 
   const loadData = async () => {
@@ -106,27 +110,70 @@ export default function Dashboard() {
         firstName: profileData.profile.firstName,
         lastName: profileData.profile.lastName,
         phone: profileData.profile.phone,
-        city: profileData.profile.preferredCity || profileData.profile.city,
-        state: profileData.profile.preferredState || profileData.profile.state || 'TX',
+        city: profileData.profile.preferredCity || profileData.profile.city || 'Memphis',
+        state: profileData.profile.preferredState || profileData.profile.state || 'TN',
         likedProperties: profileData.profile.likedPropertyIds || profileData.profile.likedProperties || [],
       };
 
       setProfile(dashboardProfile);
       setLikedProperties(dashboardProfile.likedProperties || []);
 
-      // Check if user is an investor
+      // Check if user is an investor (for cash deals)
       console.log('🔍 [DASHBOARD] Profile isInvestor:', profileData.profile.isInvestor);
-      if (profileData.profile.isInvestor) {
-        setIsInvestor(true);
-        console.log('✅ [DASHBOARD] User is an investor - showing tabs');
-      }
 
       const propertiesRes = await fetch(
         `/api/buyer/properties?city=${encodeURIComponent(dashboardProfile.city)}&state=${encodeURIComponent(dashboardProfile.state)}`
       );
       const propertiesData = await propertiesRes.json();
 
-      setProperties(propertiesData.properties || []);
+      // Mark owner finance properties
+      const ownerFinanceProps = (propertiesData.properties || []).map((p: Property) => ({
+        ...p,
+        dealType: 'owner_finance' as const,
+      }));
+
+      // Fetch cash deals for investor users
+      let allProperties = ownerFinanceProps;
+      if (profileData.profile.isInvestor) {
+        try {
+          const cashDealsRes = await fetch('/api/buyer/cash-deals');
+          const cashDealsData = await cashDealsRes.json();
+
+          if (cashDealsData.deals?.length > 0) {
+            // Convert cash deals to Property format
+            const cashDealProps: Property[] = cashDealsData.deals.map((deal: { id: string; address: string; city: string; state: string; zipcode?: string; beds: number; baths: number; sqft?: number; price?: number; imgSrc?: string; percentOfArv?: number; discount?: number; arv?: number; description?: string; yearBuilt?: number; propertyType?: string }) => ({
+              id: deal.id,
+              address: deal.address,
+              city: deal.city,
+              state: deal.state,
+              zipCode: deal.zipcode,
+              bedrooms: deal.beds,
+              bathrooms: deal.baths,
+              squareFeet: deal.sqft,
+              listPrice: deal.price,
+              imageUrl: deal.imgSrc,
+              dealType: 'cash_deal' as const,
+              percentOfArv: deal.percentOfArv,
+              discount: deal.discount,
+              arv: deal.arv,
+              // Additional details
+              description: deal.description,
+              yearBuilt: deal.yearBuilt,
+              propertyType: deal.propertyType,
+            }));
+
+            // Merge: owner finance first, then cash deals
+            // Filter out any duplicates by id
+            const existingIds = new Set(ownerFinanceProps.map((p: Property) => p.id));
+            const uniqueCashDeals = cashDealProps.filter(p => !existingIds.has(p.id));
+            allProperties = [...ownerFinanceProps, ...uniqueCashDeals];
+          }
+        } catch (err) {
+          console.error('Failed to fetch cash deals:', err);
+        }
+      }
+
+      setProperties(allProperties);
 
       // Check if tutorial should be shown - ONLY for first time users
       const tutorialCompleted = localStorage.getItem('buyerTutorialCompleted');
@@ -162,7 +209,7 @@ export default function Dashboard() {
         bathrooms: property.bathrooms,
         squareFeet: property.squareFeet,
         city: property.city,
-        source: (property as any).source || 'curated',
+        source: ((property as Record<string, unknown>).source as string | undefined) || 'curated',
       } : undefined;
 
       const response = await fetch('/api/buyer/like-property', {
@@ -233,6 +280,7 @@ export default function Dashboard() {
       balloonPayment: property.balloonPayment,
       balloonYears: property.balloonYears,
       imageUrls: property.imageUrls || [],
+      imageUrl: ((property as Record<string, unknown>).imageUrl as string | undefined) || '',
       propertyType: (property.propertyType as PropertyListing['propertyType']) || 'single-family',
       description: property.description || '',
       status: 'active' as const,
@@ -242,7 +290,16 @@ export default function Dashboard() {
       priority: 1,
       featured: false,
       source: 'manual' as const,
-    };
+      // Cash deal fields (passed through for badge display)
+      dealType: property.dealType,
+      percentOfArv: property.percentOfArv,
+      discount: property.discount,
+      arv: property.arv,
+      yearBuilt: property.yearBuilt,
+      // Third-party estimates (from Zillow - unverified)
+      zestimate: property.zestimate,
+      rentEstimate: property.rentEstimate,
+    } as PropertyListing;
   }, []);
 
   // PERF: Memoize converted properties to avoid mapping on every render
@@ -270,7 +327,7 @@ export default function Dashboard() {
         bathrooms: property.bathrooms,
         squareFeet: property.squareFeet,
         city: property.city,
-        source: (property as any).source || 'curated',
+        source: ((property as Record<string, unknown>).source as string | undefined) || 'curated',
       };
 
       const response = await fetch('/api/buyer/pass-property', {
@@ -284,17 +341,20 @@ export default function Dashboard() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to pass property');
+        const errorData = await response.json().catch(() => ({}));
+        console.error('API error:', response.status, errorData);
+        throw new Error(errorData.error || errorData.message || `Failed to pass property (${response.status})`);
       }
 
       console.log(`✅ Passed property ${property.id}`);
     } catch (error) {
-      console.error('❌ Failed to pass property:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('❌ Failed to pass property:', errorMessage);
 
       // Revert the optimistic update
       setProperties(prev => [...prev, property as Property]);
 
-      alert('Failed to skip property. Please try again.');
+      alert(`Failed to skip property: ${errorMessage}`);
     }
   }, []);
 
@@ -445,34 +505,10 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Tab Navigation Bar - Hidden for now, Cash Deals only available in certain cities
-          {isInvestor && (
-            <div className="flex mt-3 h-2 rounded-full overflow-hidden bg-slate-700/50">
-              <button
-                onClick={() => setActiveTab('owner-finance')}
-                className={`flex-1 transition-all ${
-                  activeTab === 'owner-finance'
-                    ? 'bg-emerald-500'
-                    : 'bg-transparent hover:bg-emerald-500/30'
-                }`}
-                title="Owner Finance Properties"
-              />
-              <button
-                onClick={() => setActiveTab('cash-deals')}
-                className={`flex-1 transition-all ${
-                  activeTab === 'cash-deals'
-                    ? 'bg-yellow-500'
-                    : 'bg-transparent hover:bg-yellow-500/30'
-                }`}
-                title="Cash Deals"
-              />
-            </div>
-          )}
-          */}
         </div>
       </div>
 
-      {/* Content - Always show PropertySwiper (Cash Deals tab hidden for now) */}
+      {/* Content - PropertySwiper shows both owner finance and cash deals */}
       <PropertySwiper2
         properties={propertyListings}
         onLike={handleLikeProperty}

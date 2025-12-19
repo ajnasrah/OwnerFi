@@ -44,7 +44,7 @@ async function getSubmagicTranscript(projectId: string): Promise<string | null> 
     // Extract words and combine into transcript
     if (data.words && Array.isArray(data.words)) {
       const transcript = data.words
-        .map((w: any) => w.word || '')
+        .map((w: { word?: string }) => w.word || '')
         .join(' ')
         .trim();
 

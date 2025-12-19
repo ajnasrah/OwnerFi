@@ -112,7 +112,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   return GET(request);
 }
 
@@ -755,7 +755,7 @@ async function checkSubMagicWorkflows() {
 
           if (status === 'completed' || status === 'done' || status === 'ready') {
             // Check if download URL exists, if not trigger export
-            let finalDownloadUrl = downloadUrl;
+            const finalDownloadUrl = downloadUrl;
 
             if (!finalDownloadUrl) {
               console.log(`   ⚠️  Complete but no download URL - triggering export...`);
@@ -871,7 +871,7 @@ async function checkSubMagicWorkflows() {
 
         if (status === 'completed' || status === 'done' || status === 'ready') {
           // Check if download URL exists, if not trigger export
-          let finalDownloadUrl = downloadUrl;
+          const finalDownloadUrl = downloadUrl;
 
           if (!finalDownloadUrl) {
             console.log(`   ⚠️  Complete but no download URL - triggering export...`);

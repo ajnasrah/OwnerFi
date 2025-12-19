@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { LegalDisclaimers, TCPADisclosure, InvestmentDisclosure } from './LegalDisclaimers';
 
 interface LegalFooterProps {
@@ -45,9 +46,9 @@ export function LegalFooter({
         {/* Contact and Legal */}
         <div className="text-center pt-4 border-t border-slate-700">
           <div className="flex justify-center gap-6 text-xs text-slate-400 mb-2">
-            <a href="/terms" className="hover:text-white transition-colors">Terms of Service</a>
-            <a href="/privacy" className="hover:text-white transition-colors">Privacy Policy</a>
-            <a href="/how-owner-finance-works" className="hover:text-white transition-colors">Legal Disclaimers</a>
+            <Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
+            <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
+            <Link href="/how-owner-finance-works" className="hover:text-white transition-colors">Legal Disclaimers</Link>
             <a href="mailto:support@ownerfi.ai" className="hover:text-white transition-colors">Legal Contact</a>
           </div>
           <p className="text-xs text-slate-500">

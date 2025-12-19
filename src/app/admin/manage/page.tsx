@@ -3,12 +3,12 @@
 import { useState, useEffect, useCallback, useMemo, lazy, Suspense } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { LeadDispute } from '@/lib/firebase-models';
 import { PropertyListing } from '@/lib/property-schema';
 import Image from 'next/image';
 import { calculatePropertyFinancials } from '@/lib/property-calculations';
 import { useDropzone } from 'react-dropzone';
-import { PropertySwiper2 } from '@/components/ui/PropertySwiper2';
 import { convertToDirectImageUrl } from '../lib/image-utils';
 
 // Lazy load tab components
@@ -71,7 +71,7 @@ interface Stats {
 export default function AdminDashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'overview' | 'properties' | 'upload' | 'disputes' | 'contacts' | 'buyers' | 'realtors' | 'social' | 'buyer-preview' | 'cash-houses'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'properties' | 'upload' | 'disputes' | 'contacts' | 'buyers' | 'realtors' | 'social'>('overview');
 
   // Stats
   const [stats, setStats] = useState<Stats>({
@@ -96,9 +96,9 @@ export default function AdminDashboard() {
   // Upload state
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [uploadResult, setUploadResult] = useState<any>(null);
+  const [uploadResult, setUploadResult] = useState<{ success: boolean; message: string; count?: number } | null>(null);
   const [uploadMode, setUploadMode] = useState<'csv' | 'manual' | 'scraper' | 'new-properties'>('csv');
-  const [manualPropertyData, setManualPropertyData] = useState<any>({
+  const [manualPropertyData, setManualPropertyData] = useState<Partial<AdminProperty>>({
     propertyType: 'single-family',
     status: 'active',
     isActive: true,
@@ -171,9 +171,9 @@ export default function AdminDashboard() {
         } else {
           throw new Error(data.error || 'Failed');
         }
-      } catch (error: any) {
+      } catch (error) {
         setQuickResults(prev => prev.map((r, idx) =>
-          idx === i ? { ...r, status: 'error', message: error.message } : r
+          idx === i ? { ...r, status: 'error', message: error instanceof Error ? error.message : 'Unknown error' } : r
         ));
       }
 
@@ -187,17 +187,36 @@ export default function AdminDashboard() {
   };
 
   // New Properties state (zillow_imports collection)
-  const [newPropertiesData, setNewPropertiesData] = useState<any[]>([]);
+  interface NewProperty {
+    id: string;
+    url?: string;
+    streetAddress?: string;
+    fullAddress?: string;
+    city?: string;
+    state?: string;
+    price?: number;
+    bedrooms?: number;
+    bathrooms?: number;
+    squareFeet?: number;
+  }
+  const [newPropertiesData, setNewPropertiesData] = useState<NewProperty[]>([]);
   const [loadingNewProperties, setLoadingNewProperties] = useState(false);
   const [exportingGHL, setExportingGHL] = useState(false);
   const [sendingToGHL, setSendingToGHL] = useState(false);
-  const [ghlSendResult, setGhlSendResult] = useState<any>(null);
+  const [ghlSendResult, setGhlSendResult] = useState<{ success: boolean; message: string } | null>(null);
 
   // Disputes state
   const [disputes, setDisputes] = useState<LeadDispute[]>([]);
 
   // Contacts state
-  const [contacts, setContacts] = useState<any[]>([]);
+  interface Contact {
+    id: string;
+    name?: string;
+    email?: string;
+    message?: string;
+    createdAt?: unknown;
+  }
+  const [contacts, setContacts] = useState<Contact[]>([]);
   const [loadingContacts, setLoadingContacts] = useState(false);
 
   // Buyers and Realtors state
@@ -215,93 +234,8 @@ export default function AdminDashboard() {
   // Edit modal state
   const [editForm, setEditForm] = useState<Partial<AdminProperty>>({});
 
-  // Buyer Preview state
-  const [previewProperties, setPreviewProperties] = useState<AdminProperty[]>([]);
-  const [previewCurrentIndex, setPreviewCurrentIndex] = useState(0);
-  const [loadingPreview, setLoadingPreview] = useState(false);
+  // Edit modal state - extra fields
   const [newImageUrl, setNewImageUrl] = useState('');
-
-  // Cash Houses state
-  const [cashHouses, setCashHouses] = useState<any[]>([]);
-  const [loadingCashHouses, setLoadingCashHouses] = useState(false);
-  const [cashHousesFilter, setCashHousesFilter] = useState<'all' | 'discount' | 'needs_work' | 'owner_finance'>('all');
-  const [selectedCashHouses, setSelectedCashHouses] = useState<Set<string>>(new Set());
-  const [cashHousesSortBy, setCashHousesSortBy] = useState<'newest' | 'discount_asc' | 'discount_desc' | 'arv_pct_asc' | 'arv_pct_desc'>('arv_pct_asc');
-  const [cashHousesCitySearch, setCashHousesCitySearch] = useState('');
-
-  // Fetch cash houses when tab becomes active
-  useEffect(() => {
-    if (activeTab === 'cash-houses' && cashHouses.length === 0) {
-      fetchCashHouses();
-    }
-  }, [activeTab]);
-
-  const fetchCashHouses = async () => {
-    setLoadingCashHouses(true);
-    try {
-      const res = await fetch('/api/admin/cash-deals?limit=200');
-      const data = await res.json();
-
-      if (data.error) {
-        console.error('API error:', data.error);
-        return;
-      }
-
-      const houses = (data.deals || []).map((deal: any) => {
-        // Parse street address from full address (remove city, state, zip)
-        const fullAddr = deal.address || '';
-        const streetAddress = fullAddr.split(',')[0] || deal.streetAddress || fullAddr;
-
-        return {
-          ...deal,
-          // Map fields from API format to UI format
-          streetAddress,
-          fullAddress: fullAddr || deal.fullAddress,
-          zipCode: deal.zipcode || deal.zipCode,
-          firstPropertyImage: deal.imgSrc || deal.firstPropertyImage,
-          estimate: deal.arv || deal.estimate,
-          eightyPercentOfZestimate: deal.arv ? Math.round(deal.arv * 0.8) : deal.eightyPercentOfZestimate,
-          discountPercentage: deal.discount || deal.discountPercentage,
-          bedrooms: deal.beds || deal.bedrooms,
-          bathrooms: deal.baths || deal.bathrooms,
-          squareFoot: deal.sqft || deal.squareFoot,
-        };
-      });
-
-      setCashHouses(houses);
-    } catch (error) {
-      console.error('Failed to fetch cash houses:', error);
-    } finally {
-      setLoadingCashHouses(false);
-    }
-  };
-
-  const deleteCashHouses = async (ids: string[]) => {
-    if (ids.length === 0) return;
-
-    if (!confirm(`Delete ${ids.length} propert${ids.length === 1 ? 'y' : 'ies'}? This cannot be undone.`)) {
-      return;
-    }
-
-    try {
-      const { doc, deleteDoc } = await import('firebase/firestore');
-      const { db } = await import('@/lib/firebase');
-
-      // Delete in batches
-      for (const id of ids) {
-        await deleteDoc(doc(db, 'cash_houses', id));
-      }
-
-      // Update UI
-      setCashHouses(prev => prev.filter(h => !ids.includes(h.id)));
-      setSelectedCashHouses(new Set());
-
-      alert(`Deleted ${ids.length} propert${ids.length === 1 ? 'y' : 'ies'} successfully!`);
-    } catch (error) {
-      console.error('Failed to delete cash houses:', error);
-      alert('Failed to delete properties');
-    }
-  };
 
   // Auth check
   useEffect(() => {
@@ -520,22 +454,6 @@ export default function AdminDashboard() {
     setSelectedBuyers([]);
   }, [cityFilter, stateFilter, buyers]);
 
-  const fetchPreviewProperties = async () => {
-    setLoadingPreview(true);
-    try {
-      const response = await fetch('/api/admin/properties?limit=1000');
-      const data = await response.json();
-      if (data.properties) {
-        setPreviewProperties(data.properties);
-        setPreviewCurrentIndex(0);
-      }
-    } catch (error) {
-      console.error('Failed to fetch preview properties:', error);
-    } finally {
-      setLoadingPreview(false);
-    }
-  };
-
   // Load data when tab changes
   useEffect(() => {
     if (activeTab === 'properties') {
@@ -548,47 +466,8 @@ export default function AdminDashboard() {
       fetchBuyers();
     } else if (activeTab === 'realtors') {
       fetchRealtors();
-    } else if (activeTab === 'buyer-preview') {
-      fetchPreviewProperties();
     }
   }, [activeTab]);
-
-  // Handle Escape key to exit buyer preview
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && activeTab === 'buyer-preview') {
-        setActiveTab('overview');
-      }
-    };
-
-    window.addEventListener('keydown', handleEscape);
-    return () => window.removeEventListener('keydown', handleEscape);
-  }, [activeTab]);
-
-  // Ensure preview index stays within bounds
-  useEffect(() => {
-    if (previewProperties.length > 0 && previewCurrentIndex >= previewProperties.length) {
-      setPreviewCurrentIndex(0);
-    }
-  }, [previewProperties, previewCurrentIndex]);
-
-  // Handle arrow keys for navigation in buyer preview
-  useEffect(() => {
-    if (activeTab !== 'buyer-preview' || previewProperties.length === 0) return undefined;
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowLeft') {
-        e.preventDefault();
-        setPreviewCurrentIndex((prev) => (prev - 1 + previewProperties.length) % previewProperties.length);
-      } else if (e.key === 'ArrowRight') {
-        e.preventDefault();
-        setPreviewCurrentIndex((prev) => (prev + 1) % previewProperties.length);
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeTab, previewProperties.length]);
 
   // Fetch new properties when switching to new-properties tab
   useEffect(() => {
@@ -878,10 +757,10 @@ export default function AdminDashboard() {
       // Poll for job status
       pollJobStatus(data.batchJobId);
 
-    } catch (error: any) {
+    } catch (error) {
       setScraperProgress({
         status: 'error',
-        message: error.message || 'Failed to upload files',
+        message: error instanceof Error ? error.message : 'Failed to upload files',
       });
     }
   }, []);
@@ -932,9 +811,9 @@ export default function AdminDashboard() {
     <div className="h-screen overflow-hidden bg-slate-900 flex flex-col md:flex-row">
       {/* Mobile Dropdown Navigation */}
       <div className="md:hidden bg-slate-800 border-b border-slate-700 p-4">
-        <a href="/admin" className="text-emerald-400 hover:text-emerald-300 text-sm mb-2 inline-flex items-center gap-1">
+        <Link href="/admin" className="text-emerald-400 hover:text-emerald-300 text-sm mb-2 inline-flex items-center gap-1">
           ← Back to Hub
-        </a>
+        </Link>
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center space-x-2">
             <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg flex items-center justify-center">
@@ -954,14 +833,12 @@ export default function AdminDashboard() {
         </div>
         <select
           value={activeTab}
-          onChange={(e) => setActiveTab(e.target.value as any)}
+          onChange={(e) => setActiveTab(e.target.value as 'overview' | 'properties' | 'upload' | 'disputes' | 'contacts' | 'buyers' | 'realtors' | 'social')}
           className="w-full px-4 py-2 border border-slate-600 rounded-lg bg-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
         >
           <option value="overview">📊 Overview</option>
           <option value="properties">🏠 Properties {stats.totalProperties > 0 ? `(${stats.totalProperties})` : ''}</option>
-          <option value="buyer-preview">👁️ Buyer Preview</option>
           <option value="upload">📤 Upload</option>
-          <option value="cash-houses">💰 Cash Houses {cashHouses.length > 0 ? `(${cashHouses.length})` : ''}</option>
           <option value="buyers">👤 Buyers {stats.totalBuyers > 0 ? `(${stats.totalBuyers})` : ''}</option>
           <option value="realtors">🏢 Realtors {stats.totalRealtors > 0 ? `(${stats.totalRealtors})` : ''}</option>
           <option value="disputes">⚖️ Disputes {stats.pendingDisputes > 0 ? `(${stats.pendingDisputes})` : ''}</option>
@@ -974,9 +851,9 @@ export default function AdminDashboard() {
       <div className="hidden md:flex w-64 lg:w-72 bg-slate-800 shadow-xl border-r border-slate-700 flex-shrink-0 relative flex-col h-screen">
         {/* Logo Section */}
         <div className="p-6 border-b border-slate-700 flex-shrink-0">
-          <a href="/admin" className="text-emerald-400 hover:text-emerald-300 text-sm mb-2 inline-flex items-center gap-1">
+          <Link href="/admin" className="text-emerald-400 hover:text-emerald-300 text-sm mb-2 inline-flex items-center gap-1">
             ← Back to Hub
-          </a>
+          </Link>
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
               <div className="w-5 h-5 bg-slate-800 rounded-md"></div>
@@ -993,9 +870,7 @@ export default function AdminDashboard() {
           {[
             { key: 'overview', label: 'Overview', icon: '📊', count: null },
             { key: 'properties', label: 'Properties', icon: '🏠', count: stats.totalProperties },
-            { key: 'buyer-preview', label: 'Buyer Preview', icon: '👁️', count: null },
             { key: 'upload', label: 'Upload', icon: '📤', count: null },
-            { key: 'cash-houses', label: 'Cash Houses', icon: '💰', count: cashHouses.length || null },
             { key: 'buyers', label: 'Buyers', icon: '👤', count: stats.totalBuyers },
             { key: 'realtors', label: 'Realtors', icon: '🏢', count: stats.totalRealtors },
             { key: 'disputes', label: 'Disputes', icon: '⚖️', count: stats.pendingDisputes },
@@ -1035,20 +910,20 @@ export default function AdminDashboard() {
           <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider px-4 mb-2">
             Dashboards
           </div>
-          <a
+          <Link
             href="/admin/analytics"
             className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-left transition-all duration-200 text-slate-300 hover:bg-slate-700 hover:text-white"
           >
             <span className="text-lg">📈</span>
             <span className="font-medium">Analytics</span>
-          </a>
-          <a
+          </Link>
+          <Link
             href="/admin/costs"
             className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-left transition-all duration-200 text-slate-300 hover:bg-slate-700 hover:text-white"
           >
             <span className="text-lg">💰</span>
             <span className="font-medium">Cost Tracking</span>
-          </a>
+          </Link>
         </div>
 
         {/* User Section */}
@@ -1075,7 +950,6 @@ export default function AdminDashboard() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col w-full">
         {/* Top Header */}
-        {activeTab !== 'buyer-preview' && (
         <header className="bg-slate-800 shadow-sm border-b border-slate-700 px-4 md:px-6 lg:px-8 py-4 md:py-6">
           <div className="flex items-center justify-between">
             <div>
@@ -1083,7 +957,6 @@ export default function AdminDashboard() {
                 {activeTab === 'overview' && 'Dashboard Overview'}
                 {activeTab === 'properties' && 'Property Management'}
                 {activeTab === 'upload' && 'Upload Properties'}
-                {activeTab === 'cash-houses' && 'Cash Houses (80% ARV Deals)'}
                 {activeTab === 'buyers' && 'Buyer Management'}
                 {activeTab === 'realtors' && 'Realtor Management'}
                 {activeTab === 'disputes' && 'Dispute Resolution'}
@@ -1124,7 +997,6 @@ export default function AdminDashboard() {
             )}
           </div>
         </header>
-        )}
 
         {/* Content Area */}
         <main className="flex-1 p-4 md:p-6 lg:p-8 pb-20 md:pb-8 bg-slate-900 md:overflow-y-auto w-full">
@@ -1281,7 +1153,7 @@ export default function AdminDashboard() {
                       </div>
                     </button>
 
-                    <a
+                    <Link
                       href="/admin/analytics"
                       className="relative group bg-slate-700 p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-blue-500 rounded-lg hover:bg-slate-600 transition-colors"
                     >
@@ -1296,9 +1168,9 @@ export default function AdminDashboard() {
                         <h3 className="text-lg font-medium text-white">Analytics Dashboard</h3>
                         <p className="mt-2 text-sm text-slate-400">View social media performance insights</p>
                       </div>
-                    </a>
+                    </Link>
 
-                    <a
+                    <Link
                       href="/admin/costs"
                       className="relative group bg-slate-700 p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-green-500 rounded-lg hover:bg-slate-600 transition-colors"
                     >
@@ -1313,7 +1185,7 @@ export default function AdminDashboard() {
                         <h3 className="text-lg font-medium text-white">Cost Dashboard</h3>
                         <p className="mt-2 text-sm text-slate-400">Track API costs and budget usage</p>
                       </div>
-                    </a>
+                    </Link>
                   </div>
                 </div>
               </div>
@@ -2370,7 +2242,7 @@ export default function AdminDashboard() {
                     {/* Table Body */}
                     <tbody className="bg-slate-800 divide-y divide-gray-200">
                       {[...filteredBuyers].sort((a, b) => {
-                        let aVal: any, bVal: any;
+                        let aVal: string | number, bVal: string | number;
                         switch (buyerSortField) {
                           case 'name':
                             aVal = (a.firstName && a.lastName ? `${a.firstName} ${a.lastName}` : a.email).toLowerCase();
@@ -2694,404 +2566,6 @@ export default function AdminDashboard() {
             </div>
           )}
 
-          {/* Cash Houses Tab */}
-          {activeTab === 'cash-houses' && (
-            <div className="bg-slate-800 shadow rounded-lg">
-              <div className="px-4 py-5 sm:p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <div>
-                    <div className="flex items-center gap-3">
-                      <h3 className="text-lg leading-6 font-medium text-white">Cash Houses - Investor Opportunities</h3>
-                      <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-emerald-600/20 text-emerald-400 border border-emerald-600/30">
-                        Under $300K
-                      </span>
-                    </div>
-                    <p className="mt-1 text-sm text-slate-400">Properties for investors: discounted deals, owner finance, and fixer-uppers</p>
-                  </div>
-                  <button
-                    onClick={fetchCashHouses}
-                    disabled={loadingCashHouses}
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:bg-slate-600"
-                  >
-                    {loadingCashHouses ? 'Loading...' : 'Refresh'}
-                  </button>
-                </div>
-
-                {/* Filter Tabs */}
-                <div className="border-b border-slate-700 mb-6">
-                  <nav className="-mb-px flex space-x-8" aria-label="Tabs">
-                    {[
-                      { key: 'all', label: 'All Properties', icon: '🏘️' },
-                      { key: 'discount', label: 'Discount Deals', icon: '💰' },
-                      { key: 'owner_finance', label: 'Owner Finance', icon: '🏠' },
-                      { key: 'needs_work', label: 'Best Deals (<50%)', icon: '🔥' },
-                    ].map((filter) => (
-                      <button
-                        key={filter.key}
-                        onClick={() => setCashHousesFilter(filter.key as any)}
-                        className={`${
-                          cashHousesFilter === filter.key
-                            ? 'border-indigo-500 text-emerald-400'
-                            : 'border-transparent text-slate-400 hover:text-slate-300 hover:border-slate-600'
-                        } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2`}
-                      >
-                        <span>{filter.icon}</span>
-                        <span>{filter.label}</span>
-                      </button>
-                    ))}
-                  </nav>
-                </div>
-
-                {/* Search, Sort and Bulk Actions */}
-                <div className="flex items-center justify-between mb-4 flex-wrap gap-4">
-                  <div className="flex items-center gap-4 flex-wrap">
-                    {/* City Search */}
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="text"
-                        placeholder="Search city..."
-                        value={cashHousesCitySearch}
-                        onChange={(e) => setCashHousesCitySearch(e.target.value)}
-                        className="rounded-md border-slate-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm px-3 py-1.5 w-40"
-                      />
-                      {cashHousesCitySearch && (
-                        <button
-                          onClick={() => setCashHousesCitySearch('')}
-                          className="text-slate-400 hover:text-gray-600 text-sm"
-                        >
-                          Clear
-                        </button>
-                      )}
-                    </div>
-                    {/* Sort */}
-                    <label className="text-sm font-medium text-slate-300">
-                      Sort by:
-                      <select
-                        value={cashHousesSortBy}
-                        onChange={(e) => setCashHousesSortBy(e.target.value as any)}
-                        className="ml-2 rounded-md border-slate-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
-                      >
-                        <option value="arv_pct_asc">Lowest % of ARV</option>
-                        <option value="arv_pct_desc">Highest % of ARV</option>
-                        <option value="discount_desc">Highest Discount %</option>
-                        <option value="discount_asc">Lowest Discount %</option>
-                        <option value="newest">Newest First</option>
-                      </select>
-                    </label>
-                  </div>
-                  {selectedCashHouses.size > 0 && (
-                    <button
-                      onClick={() => deleteCashHouses(Array.from(selectedCashHouses))}
-                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                    >
-                      Delete Selected ({selectedCashHouses.size})
-                    </button>
-                  )}
-                </div>
-
-                {loadingCashHouses ? (
-                  <div className="flex items-center justify-center h-64">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-400"></div>
-                  </div>
-                ) : (() => {
-                  // Filter cash houses based on selected filter and city search
-                  // GLOBAL: Max $300K asking price for all Cash Houses
-                  const MAX_ASKING_PRICE = 300000;
-
-                  let filteredHouses = cashHouses.filter(house => {
-                    // Always filter out properties over $300K
-                    if (house.price > MAX_ASKING_PRICE) return false;
-
-                    // City search filter (case-insensitive, partial match)
-                    if (cashHousesCitySearch) {
-                      const searchLower = cashHousesCitySearch.toLowerCase();
-                      const cityMatch = house.city?.toLowerCase().includes(searchLower);
-                      const stateMatch = house.state?.toLowerCase().includes(searchLower);
-                      if (!cityMatch && !stateMatch) return false;
-                    }
-
-                    if (cashHousesFilter === 'all') return true;
-                    const pctOfArv = house.percentOfArv || (house.estimate ? (house.price / house.estimate) * 100 : 100);
-                    const isOwnerFinance = house.ownerFinanceVerified || house.source?.includes('zillow');
-                    // Discount Deals: From cash scraper (not owner finance)
-                    if (cashHousesFilter === 'discount') {
-                      return !isOwnerFinance && pctOfArv < 80;
-                    }
-                    // Owner Finance: Verified owner finance properties
-                    if (cashHousesFilter === 'owner_finance') {
-                      return isOwnerFinance;
-                    }
-                    // Best Deals: Under 50% of ARV (any source)
-                    if (cashHousesFilter === 'needs_work') {
-                      return pctOfArv < 50 && pctOfArv > 0;
-                    }
-                    return true;
-                  });
-
-                  // Sort houses
-                  if (cashHousesSortBy === 'arv_pct_asc') {
-                    // Lowest % of ARV first (best deals)
-                    filteredHouses = [...filteredHouses].sort((a, b) => {
-                      const aPercent = a.percentOfArv || (a.estimate ? (a.price / a.estimate) * 100 : 100);
-                      const bPercent = b.percentOfArv || (b.estimate ? (b.price / b.estimate) * 100 : 100);
-                      return aPercent - bPercent;
-                    });
-                  } else if (cashHousesSortBy === 'arv_pct_desc') {
-                    // Highest % of ARV first
-                    filteredHouses = [...filteredHouses].sort((a, b) => {
-                      const aPercent = a.percentOfArv || (a.estimate ? (a.price / a.estimate) * 100 : 100);
-                      const bPercent = b.percentOfArv || (b.estimate ? (b.price / b.estimate) * 100 : 100);
-                      return bPercent - aPercent;
-                    });
-                  } else if (cashHousesSortBy === 'discount_desc') {
-                    filteredHouses = [...filteredHouses].sort((a, b) =>
-                      (b.discountPercentage || 0) - (a.discountPercentage || 0)
-                    );
-                  } else if (cashHousesSortBy === 'discount_asc') {
-                    filteredHouses = [...filteredHouses].sort((a, b) =>
-                      (a.discountPercentage || 0) - (b.discountPercentage || 0)
-                    );
-                  }
-                  // 'newest' keeps original order from API
-
-                  const allSelected = filteredHouses.length > 0 && filteredHouses.every(h => selectedCashHouses.has(h.id));
-
-                  return filteredHouses.length === 0 ? (
-                    <div className="bg-slate-700 rounded-lg p-8 text-center">
-                      <svg className="mx-auto h-12 w-12 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                      </svg>
-                      <h3 className="mt-2 text-sm font-medium text-white">No Properties Found</h3>
-                      <p className="mt-1 text-sm text-slate-400">
-                        {cashHousesCitySearch && `No properties found in "${cashHousesCitySearch}"`}
-                        {!cashHousesCitySearch && cashHousesFilter === 'all' && 'No properties in queue. Run the scraper to add deals.'}
-                        {!cashHousesCitySearch && cashHousesFilter === 'discount' && 'No discount deals found (under 80% ARV, non-owner finance)'}
-                        {!cashHousesCitySearch && cashHousesFilter === 'owner_finance' && 'No owner finance properties found'}
-                        {!cashHousesCitySearch && cashHousesFilter === 'needs_work' && 'No best deals found (under 50% of ARV)'}
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="overflow-x-auto">
-                      <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-slate-700">
-                          <tr>
-                            <th className="px-3 py-3 text-left">
-                              <input
-                                type="checkbox"
-                                checked={allSelected}
-                                onChange={(e) => {
-                                  if (e.target.checked) {
-                                    setSelectedCashHouses(new Set(filteredHouses.map(h => h.id)));
-                                  } else {
-                                    setSelectedCashHouses(new Set());
-                                  }
-                                }}
-                                className="h-4 w-4 text-emerald-400 focus:ring-indigo-500 border-slate-600 rounded"
-                              />
-                            </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Property</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Price</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Zestimate / 80%</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Discount %</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Cash Flow</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">CoC %</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Type</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Details</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody className="bg-slate-800 divide-y divide-gray-200">
-                          {filteredHouses.map((house) => {
-                            const isSelected = selectedCashHouses.has(house.id);
-                            const discountPct = house.discountPercentage || 0;
-                            const isDiscount = discountPct > 0;
-                            return (
-                          <tr key={house.id} className={`hover:bg-slate-700 ${isSelected ? 'bg-emerald-900/30' : ''}`}>
-                            <td className="px-3 py-4">
-                              <input
-                                type="checkbox"
-                                checked={isSelected}
-                                onChange={(e) => {
-                                  const newSelected = new Set(selectedCashHouses);
-                                  if (e.target.checked) {
-                                    newSelected.add(house.id);
-                                  } else {
-                                    newSelected.delete(house.id);
-                                  }
-                                  setSelectedCashHouses(newSelected);
-                                }}
-                                className="h-4 w-4 text-emerald-400 focus:ring-indigo-500 border-slate-600 rounded"
-                              />
-                            </td>
-                            <td className="px-6 py-4">
-                              <div className="flex items-center">
-                                {house.firstPropertyImage && (
-                                  <div className="flex-shrink-0 h-16 w-16 mr-3">
-                                    <img
-                                      src={house.firstPropertyImage}
-                                      alt={house.fullAddress}
-                                      className="h-16 w-16 rounded object-cover"
-                                    />
-                                  </div>
-                                )}
-                                <div>
-                                  <div className="text-sm font-medium text-white">{house.streetAddress}</div>
-                                  <div className="text-sm text-slate-400">{house.city}, {house.state} {house.zipCode}</div>
-                                  <div className="text-xs text-slate-400">ZPID: {house.zpid}</div>
-                                </div>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm font-semibold text-green-600">
-                                ${house.price?.toLocaleString() || 'N/A'}
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm text-white">
-                                ${house.estimate?.toLocaleString() || 'N/A'}
-                              </div>
-                              <div className="text-xs text-slate-400">
-                                80% = ${house.eightyPercentOfZestimate?.toLocaleString() || 'N/A'}
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              {isDiscount ? (
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                  ✅ {discountPct.toFixed(1)}% DISCOUNT
-                                </span>
-                              ) : (
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                  ⚠️ {Math.abs(discountPct).toFixed(1)}% PREMIUM
-                                </span>
-                              )}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              {house.cashFlow ? (
-                                <div>
-                                  <span className={`font-semibold ${house.cashFlow.monthlyCashFlow > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                    ${house.cashFlow.monthlyCashFlow?.toLocaleString()}/mo
-                                  </span>
-                                  <div className="text-xs text-slate-400">
-                                    ${house.cashFlow.annualCashFlow?.toLocaleString()}/yr
-                                  </div>
-                                </div>
-                              ) : (
-                                <span className="text-slate-400 text-sm">-</span>
-                              )}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              {house.cashFlow ? (
-                                <span className={`font-semibold ${house.cashFlow.cocReturn > 10 ? 'text-green-600' : house.cashFlow.cocReturn > 0 ? 'text-yellow-600' : 'text-red-600'}`}>
-                                  {house.cashFlow.cocReturn}%
-                                </span>
-                              ) : (
-                                <span className="text-slate-400 text-sm">-</span>
-                              )}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="space-y-1">
-                                {house.dealType === 'discount' && (
-                                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                    💰 Discount
-                                  </span>
-                                )}
-                                {house.dealType === 'needs_work' && (
-                                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                                    🔨 Needs Work
-                                  </span>
-                                )}
-                                {house.dealType === 'owner_finance' && (
-                                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                                    🏠 Owner Finance
-                                  </span>
-                                )}
-                                {house.needsWork && house.needsWorkKeywords && house.needsWorkKeywords.length > 0 && (
-                                  <div className="text-xs text-slate-400 mt-1">
-                                    {house.needsWorkKeywords.slice(0, 3).join(', ')}
-                                    {house.needsWorkKeywords.length > 3 && '...'}
-                                  </div>
-                                )}
-                                {house.source && (
-                                  <div className="text-xs text-slate-400">
-                                    {house.source === 'zillow_scraper' && 'Zillow'}
-                                    {house.source === 'cash_deals_scraper' && 'Cash'}
-                                  </div>
-                                )}
-                              </div>
-                            </td>
-                            <td className="px-6 py-4">
-                              <div className="text-sm text-white">
-                                {house.bedrooms} bed | {house.bathrooms} bath
-                              </div>
-                              <div className="text-xs text-slate-400">
-                                {house.squareFoot?.toLocaleString() || 'N/A'} sqft
-                              </div>
-                              {house.agentPhoneNumber && (
-                                <div className="text-xs text-emerald-400 mt-1">
-                                  📞 {house.agentPhoneNumber}
-                                </div>
-                              )}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm">
-                              <a
-                                href={house.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-emerald-400 hover:text-emerald-300 font-medium"
-                              >
-                                View on Zillow →
-                              </a>
-                            </td>
-                          </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                      <div className="px-6 py-4 bg-slate-700 border-t border-slate-700">
-                        <p className="text-sm text-slate-400">
-                          Showing {filteredHouses.length} of {cashHouses.length} total properties
-                          {cashHousesFilter !== 'all' && (
-                            <span className="ml-2 text-emerald-400 font-medium">
-                              ({cashHousesFilter === 'discount' && 'Discount Deals'}
-                              {cashHousesFilter === 'needs_work' && 'Needs Work'}
-                              {cashHousesFilter === 'owner_finance' && 'Owner Finance'})
-                            </span>
-                          )}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })()}
-              </div>
-            </div>
-          )}
-
-
-          {/* Buyer Preview Tab */}
-          {activeTab === 'buyer-preview' && (
-            <div className="fixed inset-0 z-50 left-0">
-              {/* Exit Button */}
-              <button
-                onClick={() => setActiveTab('overview')}
-                className="fixed top-4 left-4 z-header px-4 py-2 bg-slate-800/90 hover:bg-slate-700 text-white rounded-xl transition-colors font-semibold text-sm shadow-lg backdrop-blur-sm flex items-center gap-2"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
-                Exit Preview
-              </button>
-
-              {/* PropertySwiper2 Component - Modern Swiper with Optimized Performance */}
-              <PropertySwiper2
-                properties={previewProperties}
-                onLike={() => {}} // Dummy handler for preview
-                onPass={() => {}} // Dummy handler for preview
-                favorites={[]}
-                passedIds={[]}
-                isLoading={loadingPreview}
-              />
-            </div>
-          )}
         </main>
       </div>
 

@@ -154,7 +154,7 @@ export async function POST(request: NextRequest) {
         const propertyType = homeTypeMap[row['homeType']] || 'single-family';
 
         // Calculate missing financial fields BEFORE validation
-        let calculatedFinancials = calculateMissingFinancials({
+        const calculatedFinancials = calculateMissingFinancials({
           listPrice,
           monthlyPayment,
           downPaymentAmount,

@@ -15,7 +15,7 @@ interface PropertyCardProps {
   isPriority?: boolean; // Only true for the currently visible card
 }
 
-export const PropertyCard = React.memo(function PropertyCard({ property, onLike, onPass, isFavorited, style, isPriority = false }: PropertyCardProps) {
+export const PropertyCard = React.memo(function PropertyCard({ property, isFavorited, style, isPriority = false }: PropertyCardProps) {
   const [imageLoading, setImageLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
@@ -24,14 +24,20 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
 
   // ONLY use first image - no gallery
   const currentImage = useMemo(() => {
-    const propertyAny = property as any;
+    const propertyRecord = property as Record<string, unknown>;
     const imageUrl =
-      propertyAny.imageUrl ||
-      propertyAny.firstPropertyImage ||
+      (propertyRecord.imageUrl as string | undefined) ||
+      (propertyRecord.firstPropertyImage as string | undefined) ||
+      (propertyRecord.imgSrc as string | undefined) ||
       property.imageUrls?.[0] ||
-      propertyAny.propertyImages?.[0] ||
-      propertyAny.zillowImageUrl ||
-      propertyAny.images?.[0];
+      (propertyRecord.propertyImages as string[] | undefined)?.[0] ||
+      (propertyRecord.zillowImageUrl as string | undefined) ||
+      (propertyRecord.images as string[] | undefined)?.[0];
+
+    // Debug: log image resolution
+    if (typeof window !== 'undefined') {
+      console.log('[PropertyCard] Image for', property.address, ':', imageUrl ? imageUrl.substring(0, 80) : 'NONE');
+    }
 
     if (!imageUrl || typeof imageUrl !== 'string' || imageUrl.trim() === '' || imageError) {
       return '/placeholder-house.jpg';
@@ -99,25 +105,41 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
         <div className="absolute top-0 left-0 right-0 p-3 flex items-start justify-between z-10">
           {/* Left Side Badges */}
           <div className="flex gap-2 flex-wrap">
-            {/* Financing Type Badge - Dynamic based on detected keywords */}
-            {(() => {
-              const financingType = (property as any).financingType || (property as any).financingTypeLabel || 'Owner Finance';
-              const badgeConfig: Record<string, { bg: string; icon: string }> = {
-                'Owner Finance': { bg: 'bg-emerald-600', icon: '💰' },
-                'Seller Finance': { bg: 'bg-blue-600', icon: '🤝' },
-                'Rent to Own': { bg: 'bg-purple-600', icon: '🏠' },
-                'Contract for Deed': { bg: 'bg-orange-600', icon: '📜' },
-                'Assumable Loan': { bg: 'bg-teal-600', icon: '🔄' },
-                'Creative Financing': { bg: 'bg-yellow-600', icon: '💡' },
-              };
-              const config = badgeConfig[financingType] || badgeConfig['Owner Finance'];
-              return (
-                <div className={`${config.bg} backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg flex items-center gap-1.5`}>
-                  <span className="text-sm">{config.icon}</span>
-                  <span>{financingType}</span>
-                </div>
-              );
-            })()}
+            {/* Cash Deal Badge - for properties below ARV (show instead of financing type) */}
+            {(property as Record<string, unknown>).dealType === 'cash_deal' ? (
+              <div className="bg-yellow-500 backdrop-blur-sm text-black px-3 py-1.5 rounded-full text-xs font-bold shadow-lg flex items-center gap-1.5">
+                <span className="text-sm">💵</span>
+                <span>Cash Deal {(property as Record<string, unknown>).percentOfArv ? `• ${(property as Record<string, unknown>).percentOfArv}% of Zest` : ''}</span>
+              </div>
+            ) : (
+              /* Financing Type Badge - Dynamic based on detected keywords */
+              (() => {
+                const propertyRecord = property as Record<string, unknown>;
+                const financingType = (propertyRecord.financingType as string | undefined) || (propertyRecord.financingTypeLabel as string | undefined) || 'Owner Finance';
+                const badgeConfig: Record<string, { bg: string; icon: string }> = {
+                  'Owner Finance': { bg: 'bg-emerald-600', icon: '💰' },
+                  'Seller Finance': { bg: 'bg-blue-600', icon: '🤝' },
+                  'Rent to Own': { bg: 'bg-purple-600', icon: '🏠' },
+                  'Contract for Deed': { bg: 'bg-orange-600', icon: '📜' },
+                  'Assumable Loan': { bg: 'bg-teal-600', icon: '🔄' },
+                  'Creative Financing': { bg: 'bg-yellow-600', icon: '💡' },
+                };
+                const config = badgeConfig[financingType] || badgeConfig['Owner Finance'];
+                return (
+                  <div className={`${config.bg} backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg flex items-center gap-1.5`}>
+                    <span className="text-sm">{config.icon}</span>
+                    <span>{financingType}</span>
+                  </div>
+                );
+              })()
+            )}
+            {/* Agent Verified Badge - for GHL imported properties */}
+            {((property as Record<string, unknown>).source === 'gohighlevel' || (property as Record<string, unknown>).manuallyVerified === true) && (
+              <div className="bg-amber-500 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg flex items-center gap-1.5">
+                <span className="text-sm">✓</span>
+                <span>Agent Verified</span>
+              </div>
+            )}
           </div>
 
           {/* Favorite Badge */}
@@ -208,7 +230,7 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
                   <div className="flex-1">
                     <h2 className="text-sm font-bold text-slate-900 leading-tight">
                       {(() => {
-                        const streetAddr = (property as any).streetAddress || property.address || '';
+                        const streetAddr = ((property as Record<string, unknown>).streetAddress as string | undefined) || property.address || '';
                         // Extract just the street address (before city/state/zip)
                         const parts = streetAddr.split(',');
                         return parts[0]?.trim() || streetAddr;
@@ -264,37 +286,43 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
                 <div className="space-y-4 pt-2 border-t border-slate-200">
 
                   {/* Third-Party Value Estimates */}
-                  {(property.estimatedValue || property.rentZestimate) && (
-                    <div className="bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200 rounded-2xl p-4">
-                      <h3 className="font-bold text-purple-900 mb-1 flex items-center gap-2 text-sm">
-                        <span>📊</span>
-                        <span>Market Estimates</span>
-                      </h3>
-                      <p className="text-[9px] text-purple-700 mb-3 leading-tight bg-purple-100 rounded-lg p-2">
-                        ⚠️ These estimates are provided by third-party data sources (Zillow). OwnerFi does not calculate or verify these values. Use for reference only.
-                      </p>
-                      <div className="grid grid-cols-2 gap-3">
-                        {property.estimatedValue && property.estimatedValue > 0 && (
-                          <div className="bg-white/60 rounded-xl p-3">
-                            <div className="text-xs text-purple-700 mb-1">Est. Home Value</div>
-                            <div className="text-xl font-black text-purple-900">
-                              ${property.estimatedValue.toLocaleString()}
+                  {(() => {
+                    const propertyRecord = property as Record<string, unknown>;
+                    const zest = (propertyRecord.zestimate as number | undefined) || property.estimatedValue;
+                    const rent = (propertyRecord.rentEstimate as number | undefined) || property.rentZestimate;
+                    if (!zest && !rent) return null;
+                    return (
+                      <div className="bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200 rounded-2xl p-4">
+                        <h3 className="font-bold text-purple-900 mb-1 flex items-center gap-2 text-sm">
+                          <span>📊</span>
+                          <span>Market Estimates</span>
+                        </h3>
+                        <p className="text-[9px] text-purple-700 mb-3 leading-tight bg-purple-100 rounded-lg p-2">
+                          ⚠️ These estimates are provided by third-party data sources (Zillow). OwnerFi does not calculate or verify these values. Use for reference only.
+                        </p>
+                        <div className="grid grid-cols-2 gap-3">
+                          {zest && zest > 0 && (
+                            <div className="bg-white/60 rounded-xl p-3">
+                              <div className="text-xs text-purple-700 mb-1">Zestimate®</div>
+                              <div className="text-xl font-black text-purple-900">
+                                ${zest.toLocaleString()}
+                              </div>
+                              <div className="text-[9px] text-purple-600">Zillow estimate - not verified</div>
                             </div>
-                            <div className="text-[9px] text-purple-600">Third-party estimate</div>
-                          </div>
-                        )}
-                        {property.rentZestimate && property.rentZestimate > 0 && (
-                          <div className="bg-white/60 rounded-xl p-3">
-                            <div className="text-xs text-purple-700 mb-1">Est. Monthly Rent</div>
-                            <div className="text-xl font-black text-purple-900">
-                              ${property.rentZestimate.toLocaleString()}/mo
+                          )}
+                          {rent && rent > 0 && (
+                            <div className="bg-white/60 rounded-xl p-3">
+                              <div className="text-xs text-purple-700 mb-1">Rent Zestimate®</div>
+                              <div className="text-xl font-black text-purple-900">
+                                ${rent.toLocaleString()}/mo
+                              </div>
+                              <div className="text-[9px] text-purple-600">Zillow estimate - not verified</div>
                             </div>
-                            <div className="text-[9px] text-purple-600">Third-party estimate</div>
-                          </div>
-                        )}
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    );
+                  })()}
 
                   {/* Property Details Grid */}
                   <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200">
@@ -308,7 +336,7 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
                         <div className="text-slate-500 text-xs">Property Type</div>
                         <div className="font-bold text-slate-900">
                           {(() => {
-                            const homeType = (property as any).homeType || property.propertyType || 'Single Family';
+                            const homeType = ((property as Record<string, unknown>).homeType as string | undefined) || property.propertyType || 'Single Family';
                             const types: Record<string, string> = {
                               'SINGLE_FAMILY': 'Single Family',
                               'single-family': 'Single Family',
@@ -524,7 +552,7 @@ export const PropertyCard = React.memo(function PropertyCard({ property, onLike,
                     <button
                       onClick={() => {
                         const message = `I'm interested in the property at ${property.address}, ${property.city}, ${property.state}. Found through OwnerFi.`;
-                        const phone = property.agentPhone || (property as any).phone || '+1234567890';
+                        const phone = property.agentPhone || ((property as Record<string, unknown>).phone as string | undefined) || '+1234567890';
                         window.open(`sms:${phone}&body=${encodeURIComponent(message)}`, '_self');
                       }}
                       className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white py-2.5 px-3 rounded-xl font-bold text-sm shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-95 transition-all"

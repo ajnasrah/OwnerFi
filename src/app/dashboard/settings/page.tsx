@@ -12,6 +12,7 @@ export default function BuyerSettings() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [resettingPassed, setResettingPassed] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
@@ -93,6 +94,34 @@ export default function BuyerSettings() {
     }
   };
 
+
+  // Reset all passed/skipped properties
+  const handleResetPassed = async () => {
+    if (!confirm('Are you sure you want to reset all skipped properties? This will show you all properties again.')) {
+      return;
+    }
+
+    setResettingPassed(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const response = await fetch('/api/buyer/pass-property', {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to reset passed properties');
+      }
+
+      setSuccess('All skipped properties have been reset. Refresh the dashboard to see all properties.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to reset passed properties');
+    } finally {
+      setResettingPassed(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -500,6 +529,37 @@ export default function BuyerSettings() {
             )}
           </button>
         </form>
+
+        {/* Reset Skipped Properties Card - Outside the form */}
+        <div className="mt-3 bg-gradient-to-br from-amber-900/20 to-amber-800/10 border border-amber-500/30 rounded-xl p-4 backdrop-blur-xl shadow-lg">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-lg">🔄</span>
+            <h2 className="text-base font-bold text-white">Reset Skipped Properties</h2>
+          </div>
+          <p className="text-xs text-slate-400 mb-3">
+            If you&apos;ve skipped too many properties and want to see them again, click the button below.
+          </p>
+          <button
+            type="button"
+            onClick={handleResetPassed}
+            disabled={resettingPassed}
+            className="w-full bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-white py-2.5 px-4 rounded-lg font-semibold text-sm transition-all duration-300 hover:scale-[1.01] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+          >
+            {resettingPassed ? (
+              <span className="flex items-center justify-center gap-2">
+                <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                <span>Resetting...</span>
+              </span>
+            ) : (
+              <span className="flex items-center justify-center gap-2">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                <span>Reset All Skipped Properties</span>
+              </span>
+            )}
+          </button>
+        </div>
       </main>
     </div>
   );

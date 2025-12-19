@@ -4,6 +4,7 @@
  */
 
 import YouTubeAnalyticsDashboard from '@/components/YouTubeAnalyticsDashboard';
+import Link from 'next/link';
 
 export const metadata = {
   title: 'YouTube Analytics | Admin',
@@ -28,12 +29,12 @@ export default function YouTubeAnalyticsPage() {
 
           {/* Back to Admin */}
           <div className="mt-8">
-            <a
+            <Link
               href="/admin"
               className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700"
             >
               ← Back to Admin Dashboard
-            </a>
+            </Link>
           </div>
         </div>
       </div>

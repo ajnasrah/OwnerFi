@@ -4,6 +4,7 @@
  * Uses YouTube Data API v3 for direct uploads
  */
 
+import { Readable } from 'stream';
 import { google } from 'googleapis';
 import { fetchWithTimeout, TIMEOUTS } from './api-utils';
 
@@ -166,7 +167,12 @@ export async function uploadToYouTube(options: YouTubeUploadOptions): Promise<Yo
     // Prepare video metadata
     const categoryId = getCategoryId(options.category);
 
-    const snippet: any = {
+    const snippet: {
+      title: string;
+      description: string;
+      categoryId: string;
+      tags?: string[];
+    } = {
       title: options.title.substring(0, 100), // YouTube max 100 chars
       description: options.description.substring(0, 5000), // YouTube max 5000 chars
       categoryId,
@@ -185,7 +191,7 @@ export async function uploadToYouTube(options: YouTubeUploadOptions): Promise<Yo
 
     if (options.useSchedule) {
       // Auto-pick next available slot from brand schedule
-      const { getNextScheduledTime, markSlotUsed } = await import('./youtube-schedule');
+      const { getNextScheduledTime } = await import('./youtube-schedule');
       const nextSlot = getNextScheduledTime(options.brand);
 
       if (nextSlot) {
@@ -202,7 +208,11 @@ export async function uploadToYouTube(options: YouTubeUploadOptions): Promise<Yo
     }
 
     // If scheduling, must use 'private' initially, then YouTube publishes at publishAt
-    const status: any = {
+    const status: {
+      privacyStatus: 'public' | 'unlisted' | 'private';
+      selfDeclaredMadeForKids: boolean;
+      publishAt?: string;
+    } = {
       privacyStatus: publishAt ? 'private' : (options.privacy || 'public'),
       selfDeclaredMadeForKids: options.madeForKids || false,
     };
@@ -231,7 +241,7 @@ export async function uploadToYouTube(options: YouTubeUploadOptions): Promise<Yo
         status,
       },
       media: {
-        body: require('stream').Readable.from(videoBuffer),
+        body: Readable.from(videoBuffer),
       },
     });
 

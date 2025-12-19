@@ -139,6 +139,7 @@ export function useProperties() {
   // Load properties on mount
   useEffect(() => {
     fetchProperties({ resetPage: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Refetch when server-side filters change
@@ -150,6 +151,7 @@ export function useProperties() {
     }, 300);
 
     return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cityFilter, stateFilter, radius]);
 
   // Sort handler

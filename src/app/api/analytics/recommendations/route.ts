@@ -252,7 +252,7 @@ function calculateHealth(stats: BrandAnalytics): 'excellent' | 'good' | 'fair' |
  * GET /api/analytics/recommendations
  * Returns workflow analytics and actionable recommendations
  */
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // Fetch stats for both brands
     const [carzStats, ownerfiStats] = await Promise.all([

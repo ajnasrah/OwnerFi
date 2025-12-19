@@ -1,5 +1,5 @@
 // Checkpoint Manager - Save progress and enable recovery
-import { writeFileSync, readFileSync, existsSync, mkdirSync } from 'fs';
+import { writeFileSync, readFileSync, existsSync, mkdirSync, unlinkSync, readdirSync } from 'fs';
 import { join } from 'path';
 
 export interface CheckpointData {
@@ -7,11 +7,11 @@ export interface CheckpointData {
   timestamp: string;
   step: 'script' | 'video' | 'submagic' | 'publish' | 'completed';
   data: {
-    script?: any;
+    script?: Record<string, unknown>;
     videoUrl?: string;
     videoId?: string;
-    clips?: any[];
-    publishResult?: any;
+    clips?: Record<string, unknown>[];
+    publishResult?: Record<string, unknown>;
   };
   error?: string;
   retries?: number;
@@ -94,8 +94,7 @@ export class CheckpointManager {
     const filePath = join(this.checkpointDir, `episode-${episodeNumber}.json`);
 
     if (existsSync(filePath)) {
-      const fs = require('fs');
-      fs.unlinkSync(filePath);
+      unlinkSync(filePath);
       console.log(`🗑️  Checkpoint deleted: Episode ${episodeNumber}`);
     }
   }
@@ -104,8 +103,7 @@ export class CheckpointManager {
    * Get all incomplete episodes
    */
   getIncompleteEpisodes(): CheckpointData[] {
-    const fs = require('fs');
-    const files = fs.readdirSync(this.checkpointDir).filter((f: string) => f.endsWith('.json'));
+    const files = readdirSync(this.checkpointDir).filter((f: string) => f.endsWith('.json'));
 
     const incomplete: CheckpointData[] = [];
 
@@ -130,10 +128,10 @@ export class CheckpointManager {
   async resumeEpisode(
     checkpoint: CheckpointData,
     handlers: {
-      onScript?: (checkpoint: CheckpointData) => Promise<any>;
-      onVideo?: (checkpoint: CheckpointData) => Promise<any>;
-      onSubmagic?: (checkpoint: CheckpointData) => Promise<any>;
-      onPublish?: (checkpoint: CheckpointData) => Promise<any>;
+      onScript?: (checkpoint: CheckpointData) => Promise<void>;
+      onVideo?: (checkpoint: CheckpointData) => Promise<void>;
+      onSubmagic?: (checkpoint: CheckpointData) => Promise<void>;
+      onPublish?: (checkpoint: CheckpointData) => Promise<void>;
     }
   ): Promise<{ success: boolean; error?: string }> {
     if (!this.canRetry(checkpoint)) {

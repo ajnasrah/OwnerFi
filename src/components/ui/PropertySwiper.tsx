@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect, memo, useCallback } from 'react';
+import React, { useState, useRef, useEffect, memo } from 'react';
 import { Button } from './Button';
 import Image from 'next/image';
 
@@ -21,7 +21,6 @@ export const PropertyListingSwiper = memo(function PropertyListingSwiper({ prope
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showToast, setShowToast] = useState<{ type: 'saved' | 'deleted'; show: boolean }>({ type: 'saved', show: false });
   const [buttonPressed, setButtonPressed] = useState<'like' | 'pass' | null>(null);
-  const [imageIndex, setImageIndex] = useState(0);
   const [imageLoading, setImageLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);

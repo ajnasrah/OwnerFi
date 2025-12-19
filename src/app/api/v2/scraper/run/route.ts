@@ -1,0 +1,502 @@
+/**
+ * Unified Scraper v2 - Main Cron Endpoint
+ *
+ * SCHEDULE: Daily at 9 AM and 9 PM
+ *
+ * TWO SEARCHES:
+ * 1. Owner Finance (Nationwide) - keyword filtered
+ * 2. Cash Deals (Regional AR/TN) - price/condition filtered
+ *
+ * ALL properties from BOTH searches:
+ * - Run through BOTH filters (owner finance + cash deal)
+ * - Save to SINGLE 'properties' collection with dealTypes array
+ * - dealTypes: ['owner_finance', 'cash_deal'] - can have one or both
+ *
+ * COLLECTION: 'properties' (unified)
+ * - Document ID: zpid_${zpid}
+ * - isOwnerFinance: boolean
+ * - isCashDeal: boolean
+ * - dealTypes: string[]
+ *
+ * GHL webhook is DISABLED - properties managed in unified collection
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
+import { getFirebaseAdmin } from '@/lib/scraper-v2/firebase-admin';
+import { runSearchScraper, runDetailScraper, type ScrapedProperty } from '@/lib/scraper-v2/apify-client';
+import { SEARCH_CONFIGS, SAFETY_LIMITS } from '@/lib/scraper-v2/search-config';
+import {
+  runUnifiedFilter,
+  logFilterResult,
+  calculateFilterStats,
+  logFilterStats,
+  FilterResult,
+} from '@/lib/scraper-v2/unified-filter';
+import {
+  transformProperty,
+  validateProperty,
+  createUnifiedPropertyDoc,
+} from '@/lib/scraper-v2/property-transformer';
+import { withScraperLock } from '@/lib/scraper-v2/cron-lock';
+import { indexPropertiesBatch } from '@/lib/typesense/sync';
+import { UnifiedProperty } from '@/lib/unified-property-schema';
+
+// Allow long-running requests (Vercel)
+export const maxDuration = 600; // 10 minutes
+
+interface ScraperMetrics {
+  startTime: number;
+  searchesRun: number;
+  totalPropertiesFound: number;
+  propertiesBySearch: Record<string, number>;
+  transformSucceeded: number;
+  transformFailed: number;
+  validationFailed: number;
+  duplicatesSkipped: number;
+  // Unified collection metrics
+  savedToProperties: number;
+  savedAsOwnerFinance: number;
+  savedAsCashDeal: number;
+  savedAsBoth: number;
+  filteredOut: number;
+  indexedToTypesense: number;
+  typesenseFailed: number;
+  errors: Array<{ zpid?: number; address?: string; error: string; stage: string }>;
+}
+
+export async function GET(request: NextRequest) {
+  // Verify cron authorization
+  const authHeader = request.headers.get('authorization');
+  const cronSecret = process.env.CRON_SECRET;
+
+  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+    const isVercelCron = request.headers.get('x-vercel-cron') === '1';
+    if (!isVercelCron) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+  }
+
+  // Use lock to prevent concurrent execution
+  const { result, locked } = await withScraperLock('unified-scraper-v2', async () => {
+    return runUnifiedScraper();
+  });
+
+  if (locked) {
+    return NextResponse.json({
+      success: false,
+      skipped: true,
+      message: 'Another scraper instance is currently running',
+    });
+  }
+
+  if (result.success) {
+    return NextResponse.json(result);
+  } else {
+    return NextResponse.json(result, { status: 500 });
+  }
+}
+
+async function runUnifiedScraper(): Promise<{
+  success: boolean;
+  duration: string;
+  metrics: ScraperMetrics;
+  message: string;
+  error?: string;
+}> {
+  const metrics: ScraperMetrics = {
+    startTime: Date.now(),
+    searchesRun: 0,
+    totalPropertiesFound: 0,
+    propertiesBySearch: {},
+    transformSucceeded: 0,
+    transformFailed: 0,
+    validationFailed: 0,
+    duplicatesSkipped: 0,
+    // Unified collection metrics
+    savedToProperties: 0,
+    savedAsOwnerFinance: 0,
+    savedAsCashDeal: 0,
+    savedAsBoth: 0,
+    filteredOut: 0,
+    indexedToTypesense: 0,
+    typesenseFailed: 0,
+    errors: [],
+  };
+
+  // Collect properties for Typesense indexing
+  const typesenseProperties: UnifiedProperty[] = [];
+
+  try {
+    console.log('\n' + '='.repeat(60));
+    console.log('UNIFIED SCRAPER v2 - STARTING');
+    console.log('='.repeat(60));
+    console.log(`Time: ${new Date().toISOString()}`);
+    console.log(`Searches to run: ${SEARCH_CONFIGS.length}`);
+
+    // Get Firebase
+    const { db } = getFirebaseAdmin();
+
+    // ===== STEP 1: RUN SEARCHES =====
+    console.log('\n[STEP 1] Running Apify searches...');
+
+    // Track properties by search for GHL routing
+    const propertiesBySearchId: Map<string, ScrapedProperty[]> = new Map();
+    const allProperties: ScrapedProperty[] = [];
+
+    for (const config of SEARCH_CONFIGS) {
+      console.log(`\n[SEARCH] ${config.name}`);
+      console.log(`  URL: ${config.url.substring(0, 80)}...`);
+      console.log(`  Max items: ${config.maxItems}`);
+      console.log(`  Send to GHL: ${config.sendToGHL}`);
+
+      try {
+        // Run search scraper
+        const searchResults = await runSearchScraper([config.url], {
+          maxResults: config.maxItems,
+          mode: 'pagination',
+        });
+
+        console.log(`  Found: ${searchResults.length} properties`);
+        metrics.propertiesBySearch[config.id] = searchResults.length;
+
+        // Store for GHL routing
+        propertiesBySearchId.set(config.id, searchResults);
+        allProperties.push(...searchResults);
+        metrics.searchesRun++;
+      } catch (searchError: any) {
+        console.error(`  ERROR: ${searchError.message}`);
+        metrics.errors.push({ error: searchError.message, stage: `search-${config.id}` });
+      }
+    }
+
+    metrics.totalPropertiesFound = allProperties.length;
+    console.log(`\n[SEARCH] Total properties found: ${allProperties.length}`);
+
+    if (allProperties.length === 0) {
+      return {
+        success: true,
+        duration: getDuration(metrics.startTime),
+        metrics,
+        message: 'No properties found in any search',
+      };
+    }
+
+    // Safety check
+    if (allProperties.length > SAFETY_LIMITS.maxTotalItems) {
+      console.error(`[SAFETY] Found ${allProperties.length} properties, exceeds limit ${SAFETY_LIMITS.maxTotalItems}`);
+      return {
+        success: false,
+        duration: getDuration(metrics.startTime),
+        metrics,
+        message: 'Safety limit exceeded',
+        error: `Found ${allProperties.length} properties, exceeds safety limit`,
+      };
+    }
+
+    // ===== STEP 2: GET PROPERTY DETAILS =====
+    console.log('\n[STEP 2] Getting property details...');
+
+    const propertyUrls = allProperties
+      .map((p: any) => p.detailUrl || p.url)
+      .filter((url: string) => url && url.includes('zillow.com'));
+
+    console.log(`Valid property URLs: ${propertyUrls.length}`);
+
+    // Limit detail scraping to control costs
+    const MAX_DETAIL_URLS = 500;
+    const urlsToProcess = propertyUrls.slice(0, MAX_DETAIL_URLS);
+
+    if (propertyUrls.length > MAX_DETAIL_URLS) {
+      console.log(`[LIMIT] Processing first ${MAX_DETAIL_URLS} of ${propertyUrls.length} properties`);
+    }
+
+    let detailedProperties: ScrapedProperty[] = [];
+
+    if (urlsToProcess.length > 0) {
+      try {
+        detailedProperties = await runDetailScraper(urlsToProcess, { timeoutSecs: 300 });
+        console.log(`[DETAILS] Got ${detailedProperties.length} detailed properties`);
+      } catch (detailError: any) {
+        console.error(`[DETAILS] Error: ${detailError.message}`);
+        // Fall back to search results without details
+        detailedProperties = allProperties.slice(0, MAX_DETAIL_URLS);
+      }
+    }
+
+    // MERGE: Copy images from search results to detail results
+    // Detail scraper doesn't return images, but search scraper does
+    const searchByZpid = new Map<string, any>();
+    for (const item of allProperties) {
+      if (item.zpid) {
+        searchByZpid.set(String(item.zpid), item);
+      }
+    }
+
+    let imagesMerged = 0;
+    for (const prop of detailedProperties) {
+      if (!prop.imgSrc && prop.zpid) {
+        const searchItem = searchByZpid.get(String(prop.zpid));
+        if (searchItem?.imgSrc) {
+          prop.imgSrc = searchItem.imgSrc;
+          imagesMerged++;
+        }
+      }
+    }
+    console.log(`[IMAGES] Merged ${imagesMerged} images from search results`);
+
+    // ===== STEP 3: DEDUPLICATE (Check unified 'properties' collection) =====
+    console.log('\n[STEP 3] Checking for duplicates in properties collection...');
+
+    const zpids = detailedProperties
+      .map(p => p.zpid)
+      .filter((zpid): zpid is number | string => zpid !== undefined && zpid !== null)
+      .map(zpid => (typeof zpid === 'string' ? parseInt(zpid, 10) : zpid));
+
+    const uniqueZpids = [...new Set(zpids)];
+    console.log(`Unique ZPIDs to check: ${uniqueZpids.length}`);
+
+    // Check unified properties collection by document ID (zpid_${zpid})
+    const existingZpids = new Set<number>();
+
+    for (let i = 0; i < uniqueZpids.length; i += 10) {
+      const batch = uniqueZpids.slice(i, i + 10);
+      if (batch.length === 0) continue;
+
+      // Check by document ID pattern zpid_${zpid}
+      const docIds = batch.map(z => `zpid_${z}`);
+      const docRefs = docIds.map(id => db.collection('properties').doc(id));
+
+      const snapshots = await db.getAll(...docRefs);
+      snapshots.forEach((snap, idx) => {
+        if (snap.exists) {
+          existingZpids.add(batch[idx]);
+        }
+      });
+    }
+
+    console.log(`Found existing in properties: ${existingZpids.size}`);
+
+    // ===== STEP 4: TRANSFORM, FILTER, AND SAVE TO UNIFIED COLLECTION =====
+    console.log('\n[STEP 4] Processing properties (saving to unified collection)...');
+
+    const filterResults: FilterResult[] = [];
+    let propertiesBatch = db.batch();
+    let batchCount = 0;
+    const BATCH_LIMIT = 400;
+
+    for (const raw of detailedProperties) {
+      try {
+        // Transform
+        const property = transformProperty(raw, 'scraper-v2', 'unified');
+        metrics.transformSucceeded++;
+
+        // Validate
+        const validation = validateProperty(property);
+        if (!validation.valid) {
+          metrics.validationFailed++;
+          metrics.errors.push({
+            zpid: property.zpid,
+            address: property.fullAddress,
+            error: validation.reason || 'Validation failed',
+            stage: 'validation',
+          });
+          continue;
+        }
+
+        // Run unified filter (BOTH filters on every property)
+        const filterResult = runUnifiedFilter(
+          property.description,
+          property.price,
+          property.estimate
+        );
+        filterResults.push(filterResult);
+
+        // Log result
+        logFilterResult(property.fullAddress, filterResult, property.price, property.estimate);
+
+        // Skip if no filters passed (neither owner finance nor cash deal)
+        if (!filterResult.shouldSave) {
+          metrics.filteredOut++;
+          continue;
+        }
+
+        // Check if already exists in properties collection
+        const zpid = property.zpid;
+        if (existingZpids.has(zpid)) {
+          metrics.duplicatesSkipped++;
+          continue;
+        }
+
+        // Save to unified 'properties' collection with zpid_${zpid} as doc ID
+        const docId = `zpid_${zpid}`;
+        const docRef = db.collection('properties').doc(docId);
+        const docData = createUnifiedPropertyDoc(property, filterResult);
+        propertiesBatch.set(docRef, docData, { merge: true });
+        batchCount++;
+        existingZpids.add(zpid);
+
+        // Update metrics based on deal types
+        metrics.savedToProperties++;
+        if (filterResult.isOwnerFinance && filterResult.isCashDeal) {
+          metrics.savedAsBoth++;
+        }
+        if (filterResult.isOwnerFinance) {
+          metrics.savedAsOwnerFinance++;
+        }
+        if (filterResult.isCashDeal) {
+          metrics.savedAsCashDeal++;
+        }
+
+        // Collect for Typesense indexing
+        const propertyId = String(zpid);
+        typesenseProperties.push({
+          id: propertyId,
+          zpid: propertyId,
+          address: property.streetAddress || property.fullAddress || '',
+          city: property.city || '',
+          state: property.state || '',
+          zipCode: property.zipCode || '',
+          latitude: property.latitude,
+          longitude: property.longitude,
+          propertyType: (property.homeType || 'other') as any,
+          bedrooms: property.bedrooms || 0,
+          bathrooms: property.bathrooms || 0,
+          squareFeet: property.squareFoot,
+          yearBuilt: property.yearBuilt,
+          listPrice: property.price || 0,
+          zestimate: property.estimate,
+          dealType: filterResult.isOwnerFinance && filterResult.isCashDeal
+            ? 'both'
+            : filterResult.isOwnerFinance ? 'owner_finance' : 'cash_deal',
+          status: 'active',
+          isActive: true,
+          nearbyCities: property.nearbyCities || [],
+          ownerFinance: filterResult.isOwnerFinance ? {
+            verified: true,
+            financingType: 'owner_finance' as const,
+            primaryKeyword: filterResult.primaryOwnerFinanceKeyword || 'owner financing',
+            matchedKeywords: filterResult.ownerFinanceKeywords || [],
+            monthlyPayment: (property as any).monthlyPayment,
+            downPaymentAmount: (property as any).downPaymentAmount,
+          } : undefined,
+          cashDeal: filterResult.isCashDeal ? {
+            reason: filterResult.cashDealReason || 'discount',
+            discountPercent: filterResult.discountPercentage,
+            needsWork: filterResult.needsWork,
+            needsWorkKeywords: filterResult.needsWorkKeywords,
+          } : undefined,
+          source: {
+            type: 'scraper',
+            provider: 'apify',
+            importedAt: new Date().toISOString(),
+          },
+          verification: {
+            autoVerified: true,
+            manuallyVerified: false,
+            needsReview: false,
+          },
+          images: {
+            primary: property.firstPropertyImage || '',
+            gallery: property.propertyImages || [],
+          },
+          description: property.description || '',
+          contact: {
+            agentName: property.agentName,
+            agentPhone: property.agentPhoneNumber,
+          },
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        } as UnifiedProperty);
+
+        // Commit batch if needed
+        if (batchCount >= BATCH_LIMIT) {
+          await propertiesBatch.commit();
+          console.log(`[BATCH] Committed ${batchCount} to properties`);
+          propertiesBatch = db.batch();
+          batchCount = 0;
+        }
+      } catch (error) {
+        metrics.transformFailed++;
+        metrics.errors.push({
+          zpid: raw.zpid as number,
+          error: error.message,
+          stage: 'transform',
+        });
+      }
+    }
+
+    // Commit remaining batch
+    if (batchCount > 0) {
+      await propertiesBatch.commit();
+      console.log(`[BATCH] Committed final ${batchCount} to properties`);
+    }
+
+    // ===== STEP 5: INDEX TO TYPESENSE =====
+    console.log('\n[STEP 5] Indexing properties to Typesense...');
+
+    if (typesenseProperties.length > 0) {
+      try {
+        const typesenseResult = await indexPropertiesBatch(typesenseProperties, { batchSize: 100 });
+        metrics.indexedToTypesense = typesenseResult.success;
+        metrics.typesenseFailed = typesenseResult.failed;
+        console.log(`[Typesense] Indexed: ${typesenseResult.success}, Failed: ${typesenseResult.failed}`);
+      } catch (error) {
+        console.error('[Typesense] Indexing failed:', error.message);
+        metrics.typesenseFailed = typesenseProperties.length;
+        metrics.errors.push({ error: error.message, stage: 'typesense' });
+      }
+    } else {
+      console.log('[Typesense] No new properties to index');
+    }
+
+    // ===== STEP 6: LOG STATISTICS =====
+    // NOTE: GHL webhook disabled - all properties now go to unified 'properties' collection
+    const filterStats = calculateFilterStats(filterResults);
+    logFilterStats(filterStats);
+
+    const duration = getDuration(metrics.startTime);
+
+    console.log('\n' + '='.repeat(60));
+    console.log('UNIFIED SCRAPER v2 - COMPLETE');
+    console.log('='.repeat(60));
+    console.log(`Duration: ${duration}`);
+    console.log(`Properties Found: ${metrics.totalPropertiesFound}`);
+    console.log(`  - Owner Finance search: ${metrics.propertiesBySearch['owner-finance-nationwide'] || 0}`);
+    console.log(`  - Cash Deals Regional: ${metrics.propertiesBySearch['cash-deals-regional'] || 0}`);
+    console.log(`Transform Succeeded: ${metrics.transformSucceeded}`);
+    console.log(`Transform Failed: ${metrics.transformFailed}`);
+    console.log(`Validation Failed: ${metrics.validationFailed}`);
+    console.log(`Duplicates Skipped: ${metrics.duplicatesSkipped}`);
+    console.log(`Filtered Out: ${metrics.filteredOut}`);
+    console.log(`Saved to properties: ${metrics.savedToProperties}`);
+    console.log(`  - Owner Finance: ${metrics.savedAsOwnerFinance}`);
+    console.log(`  - Cash Deal: ${metrics.savedAsCashDeal}`);
+    console.log(`  - Both: ${metrics.savedAsBoth}`);
+    console.log(`Indexed to Typesense: ${metrics.indexedToTypesense}`);
+    console.log(`Typesense Failed: ${metrics.typesenseFailed}`);
+    console.log(`Errors: ${metrics.errors.length}`);
+    console.log('='.repeat(60) + '\n');
+
+    return {
+      success: true,
+      duration,
+      metrics,
+      message: `Scraped ${metrics.totalPropertiesFound} properties. Saved ${metrics.savedToProperties} to properties collection (${metrics.savedAsOwnerFinance} owner finance, ${metrics.savedAsCashDeal} cash deal, ${metrics.savedAsBoth} both). Indexed ${metrics.indexedToTypesense} to Typesense.`,
+    };
+  } catch (error) {
+    console.error('[SCRAPER] Fatal error:', error);
+    metrics.errors.push({ error: error.message, stage: 'fatal' });
+
+    return {
+      success: false,
+      duration: getDuration(metrics.startTime),
+      metrics,
+      message: 'Scraper failed with fatal error',
+      error: error.message,
+    };
+  }
+}
+
+function getDuration(startTime: number): string {
+  return ((Date.now() - startTime) / 1000).toFixed(2) + 's';
+}

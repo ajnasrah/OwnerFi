@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ApifyClient } from 'apify-client';
 import { getFirestore } from 'firebase-admin/firestore';
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
-import { transformApifyProperty } from '@/lib/property-transform';
+import { transformProperty } from '@/lib/scraper-v2/property-transformer';
+import { indexRawFirestoreProperty } from '@/lib/typesense/sync';
 
 // Initialize Firebase Admin
 if (!getApps().length) {
@@ -23,7 +24,7 @@ const db = getFirestore();
  * Scrapes a single Zillow property and adds it to database
  * - Bypasses filters (manually verified by outreach team)
  * - Marks as "manuallyVerified: true"
- * - Adds to zillow_imports collection
+ * - Adds to unified 'properties' collection
  */
 export async function POST(request: NextRequest) {
   try {
@@ -39,8 +40,8 @@ export async function POST(request: NextRequest) {
 
     console.log(`📥 Manual upload requested for: ${zillowUrl}`);
 
-    // Check if property already exists
-    const urlSnapshot = await db.collection('zillow_imports')
+    // Check if property already exists in unified properties collection
+    const urlSnapshot = await db.collection('properties')
       .where('url', '==', zillowUrl)
       .limit(1)
       .get();
@@ -88,16 +89,22 @@ export async function POST(request: NextRequest) {
     const apifyData = items[0];
     console.log('✅ Property scraped successfully');
 
-    // Transform property data
-    const propertyData = transformApifyProperty(apifyData, 'manual-upload');
+    // Transform property data using v2 transformer
+    const propertyData = transformProperty(apifyData as any, 'manual-upload', 'manual');
 
     // Detect financing type from description
     const { detectFinancingType } = await import('@/lib/financing-type-detector');
     const financingTypeResult = detectFinancingType(propertyData.description);
 
-    // Add manual verification flags
+    // Add manual verification flags and unified collection structure
     const enhancedPropertyData = {
       ...propertyData,
+
+      // UNIFIED COLLECTION FIELDS - Required for unified properties collection
+      dealTypes: ['owner_finance'], // Manual uploads are owner finance by default
+      isOwnerFinance: true,
+      isCashDeal: false, // Can be upgraded later if qualifies
+      isActive: true,
 
       // Financing Type Status (based on keyword detection)
       financingType: financingTypeResult.financingType || 'Owner Finance', // Default to Owner Finance for manual uploads
@@ -142,14 +149,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Add to database
+    // Add to unified properties collection
+    // Use zpid_ prefix for document ID to match migration pattern
     const docId = enhancedPropertyData.zpid
-      ? String(enhancedPropertyData.zpid)
-      : db.collection('zillow_imports').doc().id;
+      ? `zpid_${String(enhancedPropertyData.zpid)}`
+      : `manual_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-    await db.collection('zillow_imports').doc(docId).set(enhancedPropertyData);
+    await db.collection('properties').doc(docId).set(enhancedPropertyData);
 
     console.log(`✅ Property added to database: ${docId}`);
+
+    // Sync to Typesense for fast search
+    try {
+      await indexRawFirestoreProperty(docId, enhancedPropertyData, 'properties');
+      console.log(`✅ Property synced to Typesense: ${docId}`);
+    } catch (typesenseError) {
+      console.warn(`⚠️ Typesense sync failed (property still saved to Firestore):`, typesenseError);
+    }
 
     // Return success with property data
     return NextResponse.json({
@@ -161,7 +177,7 @@ export async function POST(request: NextRequest) {
       message: 'Property added successfully',
     });
 
-  } catch (error: any) {
+  } catch (error) {
     console.error('❌ Manual upload error:', error);
 
     return NextResponse.json(
@@ -189,8 +205,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Check if property exists
-    const snapshot = await db.collection('zillow_imports')
+    // Check if property exists in unified collection
+    const snapshot = await db.collection('properties')
       .where('url', '==', zillowUrl)
       .limit(1)
       .get();
@@ -207,9 +223,11 @@ export async function GET(request: NextRequest) {
       exists: true,
       property,
       isManuallyVerified: property.manuallyVerified || false,
+      isOwnerFinance: property.isOwnerFinance || false,
+      isCashDeal: property.isCashDeal || false,
     });
 
-  } catch (error: any) {
+  } catch (error) {
     console.error('❌ Check error:', error);
     return NextResponse.json(
       { error: error.message },

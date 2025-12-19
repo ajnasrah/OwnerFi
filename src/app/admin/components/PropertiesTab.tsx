@@ -78,7 +78,7 @@ export default function PropertiesTab({ setEditingProperty, setEditForm }: Prope
         }
         alert(message);
         setSelectedProperties([]);
-        fetchProperties(undefined, false); // Refresh to show updated GHL status
+        fetchProperties({ resetPage: false }); // Refresh to show updated GHL status
       }
     } catch (error) {
       alert('Failed to send properties to GHL');
@@ -345,7 +345,7 @@ export default function PropertiesTab({ setEditingProperty, setEditForm }: Prope
                       onClick={async () => {
                         if (confirm('Delete this property?')) {
                           await fetch(`/api/admin/properties/${property.id}`, { method: 'DELETE' });
-                          fetchProperties(undefined, false);
+                          fetchProperties({ resetPage: false });
                         }
                       }}
                       className="text-red-600 hover:text-red-900"

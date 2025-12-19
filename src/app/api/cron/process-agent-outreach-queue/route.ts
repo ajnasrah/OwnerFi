@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
+import { indexRawFirestoreProperty } from '@/lib/typesense/sync';
 
 // Initialize Firebase Admin
 if (!getApps().length) {
@@ -32,7 +33,19 @@ const BATCH_SIZE = 50; // Increased to handle nationwide volume (~300 properties
 const GHL_WEBHOOK_URL = process.env.GHL_AGENT_OUTREACH_WEBHOOK_URL ||
   'https://services.leadconnectorhq.com/hooks/YOUR_WEBHOOK_HERE';
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
+  // ===== GHL OUTREACH DISABLED =====
+  // This system is temporarily disabled while we migrate to unified properties collection
+  // All properties now go to single 'properties' collection with dealTypes array
+  console.log('🚫 [AGENT OUTREACH QUEUE] Disabled - GHL outreach program paused');
+  return NextResponse.json({
+    success: false,
+    disabled: true,
+    message: 'GHL agent outreach queue processor is temporarily disabled. Properties are now managed in unified collection.',
+  });
+
+  // Original implementation below (disabled)
+  /*
   console.log('🔄 [AGENT OUTREACH QUEUE] Starting queue processor');
 
   const startTime = Date.now();
@@ -202,25 +215,26 @@ export async function GET(request: NextRequest) {
           dealType: property.dealType,
         });
 
-        // Save cash deals to cash_houses collection for admin dashboard
+        // Save cash deals to unified properties collection
         if (property.dealType === 'cash_deal') {
-          // Check if already exists in cash_houses
-          const existingCashHouse = await db
-            .collection('cash_houses')
+          // Check if already exists in unified properties collection
+          const existingProperty = await db
+            .collection('properties')
             .where('zpid', '==', property.zpid)
             .limit(1)
             .get();
 
-          if (existingCashHouse.empty) {
+          if (existingProperty.empty) {
             // Get image from rawData
             const imgSrc = property.rawData?.hiResImageLink || property.rawData?.imgSrc || null;
 
-            await db.collection('cash_houses').add({
+            const propertyData = {
               // Property info
               zpid: property.zpid,
               url: property.url,
               fullAddress: property.address,
               streetAddress: property.address,
+              address: property.address,
               city: property.city,
               state: property.state,
               zipCode: property.zipCode,
@@ -239,30 +253,58 @@ export async function GET(request: NextRequest) {
 
               // Image
               imgSrc,
+              firstPropertyImage: imgSrc,
 
               // Agent info
               agentName: property.agentName,
               agentPhoneNumber: property.agentPhone,
               agentEmail: property.agentEmail || null,
 
-              // Tracking
+              // Tracking - unified collection fields
               source: 'agent_outreach_system',
-              dealType: 'cash_deal',
+              isCashDeal: true,
+              isOwnerFinance: false,
+              dealTypes: ['cash_deal'],
+              isActive: true,
               importedAt: new Date(),
+              createdAt: new Date(),
               ghlOpportunityId: ghlResponse.opportunityId || null,
 
               // Status
               homeStatus: 'FOR_SALE',
-            });
-            console.log(`   💰 Saved to cash_houses: ${property.address} (${discountPercent}% discount)`);
+            };
+
+            const propertyRef = await db.collection('properties').doc(`zpid_${property.zpid}`).set(propertyData);
+            console.log(`   💰 Saved to properties: ${property.address} (${discountPercent}% discount)`);
+
+            // Sync to Typesense
+            try {
+              await indexRawFirestoreProperty(`zpid_${property.zpid}`, propertyData, 'properties');
+              console.log(`   🔍 Synced to Typesense: ${propertyData.address}`);
+            } catch (typesenseErr: any) {
+              console.error(`   ⚠️ Typesense sync failed: ${typesenseErr.message}`);
+            }
+          } else {
+            // Update existing property to mark as cash deal if not already
+            const existingDoc = existingProperty.docs[0];
+            const existingData = existingDoc.data();
+            if (!existingData.isCashDeal) {
+              await existingDoc.ref.update({
+                isCashDeal: true,
+                dealTypes: [...(existingData.dealTypes || []), 'cash_deal'].filter((v: string, i: number, a: string[]) => a.indexOf(v) === i),
+                updatedAt: new Date(),
+              });
+              console.log(`   💰 Updated existing property as cash deal: ${property.address}`);
+            }
           }
         }
 
         sent++;
         console.log(`   ✅ Sent: ${property.address}`);
 
-      } catch (error: any) {
-        console.error(`   ❌ Error sending ${property.address}:`, error.message);
+      } catch (error) {
+        const failedProperty = doc.data();
+        console.error(`   ❌ Error sending ${failedProperty.address}:`, error.message);
 
         // Update with error
         await doc.ref.update({
@@ -275,7 +317,7 @@ export async function GET(request: NextRequest) {
 
         errors++;
         errorDetails.push({
-          address: property.address,
+          address: failedProperty.address,
           error: error.message,
         });
       }
@@ -303,7 +345,7 @@ export async function GET(request: NextRequest) {
       errorDetails: errors > 0 ? errorDetails : undefined,
     });
 
-  } catch (error: any) {
+  } catch (error) {
     console.error('❌ [AGENT OUTREACH QUEUE] Critical error:', error);
 
     return NextResponse.json(
@@ -314,4 +356,5 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
+  */
 }

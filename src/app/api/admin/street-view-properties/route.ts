@@ -8,7 +8,7 @@ import { ExtendedSession } from '@/types/session';
 /**
  * Get all properties using Google Street View images
  */
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     if (!db) {
       return NextResponse.json(

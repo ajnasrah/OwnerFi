@@ -4,7 +4,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getPodcastConfig } from '@/lib/feed-store-firestore';
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const config = await getPodcastConfig();
 

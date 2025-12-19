@@ -59,14 +59,8 @@ export async function POST(request: NextRequest) {
 
     for (const propertyId of propertyIds) {
       try {
-        // Try zillow_imports first, then properties collection
-        let doc = await db.collection('zillow_imports').doc(propertyId).get();
-        let collection = 'zillow_imports';
-
-        if (!doc.exists) {
-          doc = await db.collection('properties').doc(propertyId).get();
-          collection = 'properties';
-        }
+        // Look up in unified properties collection
+        const doc = await db.collection('properties').doc(propertyId).get();
 
         if (!doc.exists) {
           results.failed++;
@@ -143,14 +137,14 @@ export async function POST(request: NextRequest) {
 
         // Mark property as sent to GHL
         const sentTimestamp = new Date().toISOString();
-        await db.collection(collection).doc(propertyId).update({
+        await db.collection('properties').doc(propertyId).update({
           sentToGHL: sentTimestamp,
         });
 
         results.sent++;
         console.log(`   ✅ Sent: ${ghlPayload.propertyAddress}`);
 
-      } catch (error: any) {
+      } catch (error) {
         results.failed++;
         results.errors.push({ id: propertyId, error: error.message });
         console.error(`   ❌ Failed ${propertyId}:`, error.message);
@@ -168,7 +162,7 @@ export async function POST(request: NextRequest) {
       errors: results.errors.length > 0 ? results.errors : undefined,
     });
 
-  } catch (error: any) {
+  } catch (error) {
     console.error('❌ [SEND TO GHL] Error:', error);
     return NextResponse.json(
       { error: error.message },

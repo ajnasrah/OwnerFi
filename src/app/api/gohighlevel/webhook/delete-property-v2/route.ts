@@ -194,8 +194,8 @@ export async function POST(request: NextRequest) {
     // Prefer firebase_id, fall back to opportunityId
     const propertyId = firebaseId || opportunityId;
 
-    // Determine which collection to use
-    const targetCollection = firebaseId ? 'zillow_imports' : 'properties';
+    // All properties are now in unified 'properties' collection
+    const targetCollection = 'properties';
 
     logInfo('Delete request extracted IDs', {
       action: 'delete_ids_extracted',
@@ -296,9 +296,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Batch deletion with limit
-    // Support both firebase_ids and propertyIds
+    // Support both firebase_ids and propertyIds - all go to unified properties collection
     const batchIds = payload.firebase_ids || payload.firebaseIds || payload.propertyIds;
-    const batchCollection = (payload.firebase_ids || payload.firebaseIds) ? 'zillow_imports' : 'properties';
+    const batchCollection = 'properties';
 
     if (batchIds && Array.isArray(batchIds)) {
       // Limit batch size
@@ -395,8 +395,8 @@ export async function POST(request: NextRequest) {
       });
 
       try {
-        // Use zillow_imports by default for query-based deletions
-        const queryCollection = 'zillow_imports';
+        // Use unified properties collection for query-based deletions
+        const queryCollection = 'properties';
         const q = query(
           collection(db, queryCollection),
           where(field, '==', value)

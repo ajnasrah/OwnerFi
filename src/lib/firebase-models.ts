@@ -279,6 +279,70 @@ export interface SystemLog {
   createdAt: Timestamp;
 }
 
+// Referral Agreement - Auto-filled when realtor accepts a lead
+export interface ReferralAgreement {
+  id: string;
+  agreementNumber: string;           // e.g., "RA-2024-001234"
+
+  // Parties
+  realtorUserId: string;
+  buyerId: string;
+
+  // Realtor details (auto-filled)
+  realtorName: string;
+  realtorEmail: string;
+  realtorPhone: string;
+  realtorCompany?: string;
+  realtorLicenseNumber?: string;
+  realtorLicenseState?: string;
+  realtorAddress?: string;
+
+  // Buyer/Lead details (auto-filled)
+  buyerFirstName: string;
+  buyerLastName: string;
+  buyerEmail: string;
+  buyerPhone: string;
+  buyerCity: string;
+  buyerState: string;
+
+  // Agreement terms
+  referralFeePercent: number;        // Referral fee percentage (e.g., 30)
+  agreementTermDays: number;         // How long the agreement is valid (e.g., 180 days)
+  effectiveDate: Timestamp;
+  expirationDate: Timestamp;
+
+  // Status tracking
+  status: 'pending' | 'signed' | 'expired' | 'voided' | 'completed';
+
+  // Signature (simple MVP approach)
+  signedAt?: Timestamp;
+  signatureTypedName?: string;       // Realtor types their name
+  signatureCheckbox: boolean;        // "I agree" checkbox
+  signatureIpAddress?: string;
+  signatureUserAgent?: string;
+
+  // After signing - lead info released
+  leadInfoReleased: boolean;
+  leadReleasedAt?: Timestamp;
+
+  // Outcome tracking
+  propertyPurchased?: boolean;
+  purchasePrice?: number;
+  commissionEarned?: number;
+  closingDate?: Timestamp;
+
+  // Timestamps
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+// Helper to generate agreement number
+export function generateAgreementNumber(): string {
+  const year = new Date().getFullYear();
+  const random = Math.random().toString(36).substring(2, 8).toUpperCase();
+  return `RA-${year}-${random}`;
+}
+
 // Firestore collection names (consistent across the app)
 export const COLLECTIONS = {
   USERS: 'users',
@@ -290,7 +354,8 @@ export const COLLECTIONS = {
   PROPERTY_MATCHES: 'propertyMatches',
   REALTOR_SUBSCRIPTIONS: 'realtorSubscriptions',
   TRANSACTIONS: 'transactions',
-  SYSTEM_LOGS: 'systemLogs'
+  SYSTEM_LOGS: 'systemLogs',
+  REFERRAL_AGREEMENTS: 'referralAgreements'
 } as const;
 
 // Type guards for runtime validation

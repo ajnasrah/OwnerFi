@@ -175,9 +175,22 @@ async function fallbackToDirectFetch(payload: TaskPayload): Promise<{ taskName: 
       }
     }
 
-    // All retries failed - log critical error
+    // All retries failed - CRITICAL: Mark workflow as failed to prevent it from being stuck
     console.error(`🚨 [FALLBACK CRITICAL] All ${maxRetries} attempts failed for ${payload.workflowId}:`, lastError?.message);
-    console.error(`   Workflow may be stuck - manual intervention required`);
+
+    // Update workflow status to failed so it can be recovered
+    try {
+      const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
+      await updateWorkflowStatus(payload.workflowId, payload.brand as any, {
+        status: 'failed',
+        error: `Cloud Tasks fallback failed after ${maxRetries} attempts: ${lastError?.message}`,
+        failedAt: Date.now(),
+        retryable: true, // Mark as retryable so recovery cron can pick it up
+      } as any);
+      console.log(`📝 [FALLBACK] Marked workflow ${payload.workflowId} as failed (retryable)`);
+    } catch (updateError) {
+      console.error(`❌ [FALLBACK] Failed to update workflow status:`, updateError);
+    }
   })();
 
   return {

@@ -9,6 +9,7 @@ import { PropertyListing } from '@/lib/property-schema';
 import { analyzePropertyImageAsync } from '@/lib/image-quality-analyzer';
 import { autoCleanPropertyData } from '@/lib/property-auto-cleanup';
 import { calculatePropertyFinancials } from '@/lib/property-calculations';
+import { indexRawFirestoreProperty } from '@/lib/typesense/sync';
 
 /**
  * Create a new property manually via admin form
@@ -23,7 +24,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Admin access control
-    const session = await // eslint-disable-line @typescript-eslint/no-explicit-any
+    const session = await  
     getServerSession(authOptions as any) as ExtendedSession | null;
 
     if (!session?.user || (session as ExtendedSession).user.role !== 'admin') {
@@ -181,6 +182,14 @@ export async function POST(request: NextRequest) {
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     });
+
+    // Sync to Typesense for fast search
+    try {
+      await indexRawFirestoreProperty(propertyId, propertyData, 'properties');
+      console.log(`✅ Property synced to Typesense: ${propertyId}`);
+    } catch (typesenseError) {
+      console.warn(`⚠️ Typesense sync failed (property still saved to Firestore):`, typesenseError);
+    }
 
     logInfo('Manual property created', {
       action: 'admin_manual_property_create',

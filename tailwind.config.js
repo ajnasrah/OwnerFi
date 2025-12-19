@@ -28,13 +28,28 @@ module.exports = {
           800: '#1e40af',
           900: '#1e3a8a',
           950: '#172554',
-        }
+        },
+        // Accent colors for UI components
+        accent: {
+          primary: '#1e40af',      // Deep blue (primary actions)
+          hover: '#1e3a8a',        // Darker blue on hover
+          light: '#bfdbfe',        // Light blue for subtle backgrounds
+          warm: '#f59e0b',         // Amber/orange for secondary actions
+          'warm-hover': '#d97706', // Darker amber on hover
+          orange: '#f59e0b',       // Orange for required indicators
+        },
+        // Surface colors for backgrounds
+        surface: {
+          bg: '#ffffff',           // White background
+          dark: '#0f172a',         // Dark slate background
+        },
       },
       fontFamily: {
         sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
       },
       boxShadow: {
         light: '0 1px 3px 0 rgb(0 0 0 / 0.1)',
+        medium: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
         xs: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
         sm: '0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)',
         base: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',

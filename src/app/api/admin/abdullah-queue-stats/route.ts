@@ -10,7 +10,7 @@ import { collection, query, where, orderBy, limit, getDocs, Timestamp } from 'fi
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // Get queue stats
     const queueRef = collection(db, 'abdullah_content_queue');

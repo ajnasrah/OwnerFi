@@ -52,9 +52,12 @@ interface PassPropertyRequest {
 }
 
 export async function POST(request: NextRequest) {
-  // Standardized authentication
-  const authResult = await requireRole(request, 'buyer');
-  if ('error' in authResult) return authResult.error;
+  // Standardized authentication - allow buyers, realtors, and admins to pass properties
+  const authResult = await requireRole(request, ['buyer', 'realtor', 'admin']);
+  if ('error' in authResult) {
+    console.error('[pass-property] Auth failed - user not authenticated or wrong role');
+    return authResult.error;
+  }
   const { session } = authResult;
 
   // Standardized body parsing
@@ -79,49 +82,79 @@ export async function POST(request: NextRequest) {
       return ErrorResponses.serviceUnavailable('Database not available');
     }
 
-    // Get buyer profile
-    const profilesQuery = query(
+    // Get user profile (buyer or realtor)
+    // First try buyerProfiles, then realtorProfiles
+    let profileRef: ReturnType<typeof doc> | null = null;
+    let profileId: string = '';
+
+    const buyerProfilesQuery = query(
       collection(db, 'buyerProfiles'),
       where('userId', '==', session.user.id)
     );
-    const snapshot = await getDocs(profilesQuery);
+    const buyerSnapshot = await getDocs(buyerProfilesQuery);
 
-    if (snapshot.empty) {
-      return ErrorResponses.notFound('Buyer profile');
+    if (!buyerSnapshot.empty) {
+      profileRef = buyerSnapshot.docs[0].ref;
+      profileId = buyerSnapshot.docs[0].id;
+    } else {
+      // Try realtor profile
+      const realtorProfilesQuery = query(
+        collection(db, 'realtorProfiles'),
+        where('userId', '==', session.user.id)
+      );
+      const realtorSnapshot = await getDocs(realtorProfilesQuery);
+
+      if (!realtorSnapshot.empty) {
+        profileRef = realtorSnapshot.docs[0].ref;
+        profileId = realtorSnapshot.docs[0].id;
+      }
     }
 
-    const buyerId = snapshot.docs[0].id;
-    const profile = snapshot.docs[0].data();
+    if (!profileRef) {
+      console.error(`[pass-property] No profile found for user ${session.user.id}`);
+      return ErrorResponses.notFound('User profile');
+    }
+
+    const buyerId = profileId; // Keep variable name for compatibility
 
     if (action === 'pass') {
       // 1. Add to quick lookup array (for fast filtering in properties API)
-      await updateDoc(snapshot.docs[0].ref, {
+      await updateDoc(profileRef, {
         passedPropertyIds: arrayUnion(propertyId),
         updatedAt: serverTimestamp()
       });
 
       // 2. Store detailed interaction in subcollection (for ML and algorithm improvements)
       const interactionId = `${propertyId}_${Date.now()}`;
-      const interaction: PropertyInteraction = {
-        propertyId,
-        timestamp: serverTimestamp() as any, // Firestore will convert to Timestamp
-        passReason: passReason || null,
-        context: propertyContext ? {
-          // Property details
+
+      // Build context object, filtering out undefined values
+      const context = propertyContext ? Object.fromEntries(
+        Object.entries({
           monthlyPayment: propertyContext.monthlyPayment,
           downPayment: propertyContext.downPayment,
           bedrooms: propertyContext.bedrooms,
           bathrooms: propertyContext.bathrooms,
           squareFeet: propertyContext.squareFeet,
           city: propertyContext.city,
-
           source: propertyContext.source || 'curated',
-        } : undefined,
+        }).filter(([, v]) => v !== undefined)
+      ) : undefined;
+
+      const interaction: PropertyInteraction = {
+        propertyId,
+        timestamp: serverTimestamp() as any,
+        passReason: passReason || null,
+        context: context && Object.keys(context).length > 0 ? context : undefined,
       };
+
+      // Filter out undefined from top level too
+      const cleanInteraction = Object.fromEntries(
+        Object.entries(interaction).filter(([, v]) => v !== undefined)
+      );
 
       await setDoc(
         doc(db, 'propertyInteractions', buyerId, 'passed', interactionId),
-        interaction
+        cleanInteraction
       );
 
       console.log(`✅ [PASS] User ${buyerId} passed property ${propertyId} (reason: ${passReason || 'not specified'})`);
@@ -129,7 +162,7 @@ export async function POST(request: NextRequest) {
     } else if (action === 'unpass') {
       // Remove from quick lookup array
       // Note: We don't delete the detailed interaction (keep for ML training data)
-      await updateDoc(snapshot.docs[0].ref, {
+      await updateDoc(profileRef, {
         passedPropertyIds: arrayRemove(propertyId),
         updatedAt: serverTimestamp()
       });
@@ -150,5 +183,70 @@ export async function POST(request: NextRequest) {
       action
     });
     return ErrorResponses.databaseError('Failed to update property preference', error);
+  }
+}
+
+// DELETE endpoint to clear all passed properties
+export async function DELETE(request: NextRequest) {
+  // Standardized authentication
+  const authResult = await requireRole(request, ['buyer', 'realtor', 'admin']);
+  if ('error' in authResult) {
+    return authResult.error;
+  }
+  const { session } = authResult;
+
+  try {
+    if (!db) {
+      return ErrorResponses.serviceUnavailable('Database not available');
+    }
+
+    // Get user profile (buyer or realtor)
+    let profileRef: ReturnType<typeof doc> | null = null;
+    let profileId: string = '';
+
+    const buyerProfilesQuery = query(
+      collection(db, 'buyerProfiles'),
+      where('userId', '==', session.user.id)
+    );
+    const buyerSnapshot = await getDocs(buyerProfilesQuery);
+
+    if (!buyerSnapshot.empty) {
+      profileRef = buyerSnapshot.docs[0].ref;
+      profileId = buyerSnapshot.docs[0].id;
+    } else {
+      // Try realtor profile
+      const realtorProfilesQuery = query(
+        collection(db, 'realtorProfiles'),
+        where('userId', '==', session.user.id)
+      );
+      const realtorSnapshot = await getDocs(realtorProfilesQuery);
+
+      if (!realtorSnapshot.empty) {
+        profileRef = realtorSnapshot.docs[0].ref;
+        profileId = realtorSnapshot.docs[0].id;
+      }
+    }
+
+    if (!profileRef) {
+      return ErrorResponses.notFound('User profile');
+    }
+
+    // Clear all passed properties
+    await updateDoc(profileRef, {
+      passedPropertyIds: [],
+      updatedAt: serverTimestamp()
+    });
+
+    console.log(`✅ [CLEAR-PASSED] User ${profileId} cleared all passed properties`);
+
+    return createSuccessResponse({
+      message: 'All passed properties cleared successfully'
+    });
+
+  } catch (error) {
+    logError('DELETE /api/buyer/pass-property', error, {
+      userId: session.user.id
+    });
+    return ErrorResponses.databaseError('Failed to clear passed properties', error);
   }
 }

@@ -38,9 +38,9 @@ export async function GET(request: Request) {
     const filterWorkflows = (snapshot: any) => {
       let docs = snapshot.docs;
       if (!includeHistory) {
-        docs = docs.filter((doc: any) => activeStatuses.includes(doc.data().status)).slice(0, 20);
+        docs = docs.filter((doc: Record<string, unknown>) => activeStatuses.includes(doc.data().status)).slice(0, 20);
       }
-      return docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
+      return docs.map((doc: Record<string, unknown>) => ({ id: doc.id, ...doc.data() }));
     };
 
     const carzWorkflows = filterWorkflows(carzSnapshot);

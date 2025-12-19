@@ -105,14 +105,14 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Batch check in imports
+    // Batch check in unified properties collection
     for (let i = 0; i < uniqueUrls.length; i += 10) {
       const batch = uniqueUrls.slice(i, i + 10);
-      const importsSnap = await db.collection('zillow_imports')
+      const propertiesSnap = await db.collection('properties')
         .where('url', 'in', batch)
         .select()
         .get();
-      importsSnap.docs.forEach(doc => {
+      propertiesSnap.docs.forEach(doc => {
         const data = doc.data();
         if (data.url) existingInImports.add(data.url);
       });
@@ -188,7 +188,7 @@ export async function POST(request: NextRequest) {
       message: `Added ${newUrls.length} URLs to scraper queue`,
     });
 
-  } catch (error: any) {
+  } catch (error) {
     console.error('Bulk upload error:', error);
     return NextResponse.json(
       { error: error.message || 'Failed to process file' },

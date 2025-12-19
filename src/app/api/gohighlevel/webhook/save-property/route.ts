@@ -10,6 +10,7 @@ import { logError, logInfo, logWarn } from '@/lib/logger';
 import { queueNearbyCitiesForProperty } from '@/lib/property-enhancement';
 import { autoCleanPropertyData } from '@/lib/property-auto-cleanup';
 import { sanitizeDescription } from '@/lib/description-sanitizer';
+import { indexRawFirestoreProperty } from '@/lib/typesense/sync';
 import crypto from 'crypto';
 
 const GHL_WEBHOOK_SECRET = process.env.GHL_WEBHOOK_SECRET || '';
@@ -697,6 +698,17 @@ export async function POST(request: NextRequest) {
           console.error('Error triggering auto-add to queue:', error);
           // Don't fail property creation if queue add fails
         }
+      }
+
+      // 🔍 INDEX TO TYPESENSE: Make property searchable immediately (non-blocking)
+      try {
+        console.log(`🔍 Indexing property ${propertyId} to Typesense for search`);
+        indexRawFirestoreProperty(propertyId, propertyData, 'properties').catch(err => {
+          console.error('Failed to index property to Typesense:', err);
+        });
+      } catch (error) {
+        console.error('Error triggering Typesense indexing:', error);
+        // Don't fail property creation if indexing fails
       }
 
       // 🎯 AUTO-MATCH: Trigger matching for new properties (non-blocking)

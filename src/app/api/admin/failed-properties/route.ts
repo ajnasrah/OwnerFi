@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Admin access control
-    const session = await // eslint-disable-line @typescript-eslint/no-explicit-any
+    const session = await  
     getServerSession(authOptions as any) as ExtendedSession | null;
 
     if (!session?.user || (session as ExtendedSession).user.role !== 'admin') {
@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Filter properties based on failure type
-    let failedProperties = [];
+    const failedProperties = [];
 
     if (filterType === 'withdrawn' || filterType === 'all') {
       // Properties with status 'withdrawn' or 'expired'

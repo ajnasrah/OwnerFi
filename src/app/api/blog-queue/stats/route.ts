@@ -8,7 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Brand } from '@/config/constants';
 import { getBlogQueueStats } from '@/lib/blog-queue';
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const brands: Brand[] = ['ownerfi', 'carz', 'abdullah', 'vassdistro'];
 

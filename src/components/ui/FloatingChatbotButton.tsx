@@ -79,6 +79,7 @@ export default function FloatingChatbotButton({ onClick }: FloatingChatbotButton
       clearTimeout(hideTimer);
       clearInterval(interval);
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

@@ -39,6 +39,18 @@ const SEARCH_CONFIG = {
 };
 
 export async function GET(request: NextRequest) {
+  // ===== GHL OUTREACH DISABLED =====
+  // This system is temporarily disabled while we migrate to unified properties collection
+  // All properties now go to single 'properties' collection with dealTypes array
+  console.log('🚫 [AGENT OUTREACH SCRAPER] Disabled - GHL outreach program paused');
+  return NextResponse.json({
+    success: false,
+    disabled: true,
+    message: 'GHL agent outreach scraper is temporarily disabled. Properties are now managed in unified collection.',
+  });
+
+  // Original implementation below (disabled)
+  /*
   const startTime = Date.now();
   console.log('🏡 [AGENT OUTREACH SCRAPER] Starting...');
 
@@ -80,16 +92,14 @@ export async function GET(request: NextRequest) {
     // OPTIMIZATION: Pre-fetch ALL existing ZPIDs in ONE query per collection
     console.log(`📊 Pre-fetching existing ZPIDs...`);
 
-    const [existingQueueDocs, existingImportsDocs, existingCashDocs] = await Promise.all([
+    const [existingQueueDocs, existingPropertiesDocs] = await Promise.all([
       db.collection('agent_outreach_queue').select('zpid').get(),
-      db.collection('zillow_imports').select('zpid').get(),
-      db.collection('cash_deals').select('zpid').get(),
+      db.collection('properties').select('zpid').get(),
     ]);
 
     const existingZpids = new Set<string>();
     existingQueueDocs.docs.forEach(doc => existingZpids.add(doc.data().zpid));
-    existingImportsDocs.docs.forEach(doc => existingZpids.add(doc.data().zpid));
-    existingCashDocs.docs.forEach(doc => existingZpids.add(doc.data().zpid));
+    existingPropertiesDocs.docs.forEach(doc => existingZpids.add(String(doc.data().zpid)));
 
     console.log(`   Existing ZPIDs in system: ${existingZpids.size}`);
 
@@ -116,6 +126,27 @@ export async function GET(request: NextRequest) {
     });
     const { items: detailItems } = await client.dataset(detailRun.defaultDatasetId).listItems();
     console.log(`   Got ${detailItems.length} detailed properties`);
+
+    // MERGE: Copy images from search results to detail results
+    // Detail scraper doesn't return images, but search scraper does
+    const searchByZpid = new Map<string, any>();
+    for (const item of searchItems as any[]) {
+      if (item.zpid) {
+        searchByZpid.set(String(item.zpid), item);
+      }
+    }
+
+    let imagesMerged = 0;
+    for (const prop of detailItems as any[]) {
+      if (!prop.imgSrc && prop.zpid) {
+        const searchItem = searchByZpid.get(String(prop.zpid));
+        if (searchItem?.imgSrc) {
+          prop.imgSrc = searchItem.imgSrc;
+          imagesMerged++;
+        }
+      }
+    }
+    console.log(`   Merged ${imagesMerged} images from search results`);
 
     // Process results
     const stats = {
@@ -211,7 +242,7 @@ export async function GET(request: NextRequest) {
           state,
           description: description.substring(0, 2000),
           filterResult: 'negative_keywords',
-          matchedKeywords: negativeResult.matchedKeywords,
+          matchedKeywords: negativeResult.matches,
           reason: 'Property has negative keywords (no owner financing, cash only, etc)',
           expiresAt,
           createdAt: new Date(),
@@ -336,11 +367,12 @@ export async function GET(request: NextRequest) {
       message: `Added ${stats.added} properties to agent outreach queue, stored ${stats.failedStored} failed properties for analysis`,
     });
 
-  } catch (error: any) {
+  } catch (error) {
     console.error('❌ [AGENT OUTREACH SCRAPER] Error:', error);
     return NextResponse.json({
       error: error.message,
       duration: `${((Date.now() - startTime) / 1000).toFixed(2)}s`,
     }, { status: 500 });
   }
+  */
 }

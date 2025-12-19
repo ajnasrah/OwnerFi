@@ -51,28 +51,25 @@ export interface RealtorData {
   lastName: string;
   phone: string;
   email: string;
-  
+
   // Service area (Google-validated)
   serviceArea: ServiceArea;
-  
+
   // Business info
   company?: string;
   licenseNumber?: string;
-  
+
   // System fields
   isActive: boolean;
   profileComplete: boolean;
-  
-  // Trial and credits
+
+  // Credits for purchasing additional leads
   credits: number;
-  isOnTrial: boolean;
-  trialStartDate: Timestamp;
-  trialEndDate: Timestamp;
-  
+
   // Stripe integration
   stripeCustomerId?: string;
   stripeSubscriptionId?: string;
-  
+
   // Timestamps
   createdAt: Timestamp;
   updatedAt: Timestamp;
@@ -139,7 +136,7 @@ export interface RealtorRegistrationResponse {
 
 // Helper functions for realtor data
 export class RealtorDataHelper {
-  
+
   // Create new realtor data structure
   static createRealtorData(
     firstName: string,
@@ -151,9 +148,7 @@ export class RealtorDataHelper {
     licenseNumber?: string
   ): RealtorData {
     const now = Timestamp.now();
-    const trialEndDate = new Date();
-    trialEndDate.setDate(trialEndDate.getDate() + 7); // 7-day trial
-    
+
     return {
       firstName,
       lastName,
@@ -164,47 +159,26 @@ export class RealtorDataHelper {
       licenseNumber,
       isActive: true,
       profileComplete: true,
-      credits: 3, // 3 free trial credits
-      isOnTrial: true,
-      trialStartDate: now,
-      trialEndDate: Timestamp.fromDate(trialEndDate),
+      credits: 0, // Start with 0 credits (free tier = 3 pending agreements)
       createdAt: now,
       updatedAt: now
     };
   }
-  
-  // Check if realtor trial is active
-  static isTrialActive(realtorData: RealtorData): boolean {
-    if (!realtorData.isOnTrial) return false;
-    const now = new Date();
-    const trialEnd = realtorData.trialEndDate.toDate();
-    return now < trialEnd;
-  }
-  
-  // Get days remaining in trial
-  static getTrialDaysRemaining(realtorData: { isOnTrial?: boolean; trialEndDate?: { toDate: () => Date } }): number {
-    if (!realtorData.isOnTrial) return 0;
-    const now = new Date();
-    const trialEnd = realtorData.trialEndDate.toDate();
-    const diffTime = trialEnd.getTime() - now.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return Math.max(0, diffDays);
-  }
-  
+
   // Get all cities served (primary + nearby)
   static getAllCitiesServed(realtorData: { serviceArea: { primaryCity: ValidatedCity; nearbyCities: ValidatedCity[] } }): ValidatedCity[] {
     return [realtorData.serviceArea.primaryCity, ...realtorData.serviceArea.nearbyCities];
   }
-  
+
   // Check if realtor serves a specific city
   static servesCity(realtorData: RealtorData, cityName: string, stateCode: string): boolean {
     const allCities = this.getAllCitiesServed(realtorData);
-    return allCities.some(city => 
-      city.name.toLowerCase() === cityName.toLowerCase() && 
+    return allCities.some(city =>
+      city.name.toLowerCase() === cityName.toLowerCase() &&
       city.stateCode === stateCode
     );
   }
-  
+
   // Update realtor timestamp
   static updateTimestamp(realtorData: RealtorData): RealtorData {
     return {
@@ -241,8 +215,7 @@ export function formatPhone(phone: string): string {
 // Constants
 export const REALTOR_CONSTANTS = {
   SERVICE_RADIUS_MILES: 30,
-  TRIAL_DAYS: 7,
-  TRIAL_CREDITS: 3,
-  MAX_NEARBY_CITIES: 50, // Limit to prevent data bloat
+  FREE_PENDING_LIMIT: 3,    // Free tier: 3 pending agreements at a time
+  MAX_NEARBY_CITIES: 50,    // Limit to prevent data bloat
   GOOGLE_PLACES_MAX_RESULTS: 5
 } as const;

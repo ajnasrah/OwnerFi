@@ -6,66 +6,13 @@ import {
   query,
   getDocs,
   where,
-  doc,
-  deleteDoc
+  doc
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { logError } from '@/lib/logger';
 import { ExtendedSession } from '@/types/session';
 import { BuyerAdminView, firestoreToBuyerProfile, toBuyerAdminView } from '@/lib/view-models';
 import { convertTimestampToDate } from '@/lib/firebase-models';
-import { getCitiesWithinRadiusWithExpansion } from '@/lib/comprehensive-cities';
-
-// Property filter interface matching buyer profile fields
-interface BuyerFilters {
-  minBedrooms?: number;
-  maxBedrooms?: number;
-  minBathrooms?: number;
-  maxBathrooms?: number;
-  minSquareFeet?: number;
-  maxSquareFeet?: number;
-  minPrice?: number;
-  maxPrice?: number;
-}
-
-// Helper function to check if property matches buyer's filters
-// Matches the logic in /api/buyer/properties/route.ts
-function matchesPropertyFilters(property: any, filters: BuyerFilters): boolean {
-  // Bedrooms filter
-  if (filters.minBedrooms !== undefined && property.bedrooms < filters.minBedrooms) {
-    return false;
-  }
-  if (filters.maxBedrooms !== undefined && property.bedrooms > filters.maxBedrooms) {
-    return false;
-  }
-
-  // Bathrooms filter
-  if (filters.minBathrooms !== undefined && property.bathrooms < filters.minBathrooms) {
-    return false;
-  }
-  if (filters.maxBathrooms !== undefined && property.bathrooms > filters.maxBathrooms) {
-    return false;
-  }
-
-  // Square feet filter
-  if (filters.minSquareFeet !== undefined && property.squareFeet && property.squareFeet < filters.minSquareFeet) {
-    return false;
-  }
-  if (filters.maxSquareFeet !== undefined && property.squareFeet && property.squareFeet > filters.maxSquareFeet) {
-    return false;
-  }
-
-  // Asking price filter
-  const askingPrice = property.listPrice || property.price;
-  if (filters.minPrice !== undefined && askingPrice && askingPrice < filters.minPrice) {
-    return false;
-  }
-  if (filters.maxPrice !== undefined && askingPrice && askingPrice > filters.maxPrice) {
-    return false;
-  }
-
-  return true;
-}
 
 // Helper function to calculate distance between two coordinates (Haversine formula)
 function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
@@ -120,8 +67,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const session = await getServerSession(authOptions as any) as ExtendedSession | null;
+    const session = await getServerSession(authOptions as typeof authOptions) as ExtendedSession | null;
 
     if (!session?.user || (session as ExtendedSession).user.role !== 'admin') {
       return NextResponse.json(
@@ -188,173 +134,9 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    // 🆕 EFFICIENT MATCHING LOGIC: Use pre-computed filters + optimized queries
-    // Instead of loading ALL properties, we query by state and use pre-computed nearby cities
-    const matchedCountsMap = new Map<string, number>();
-    const likedCountsMap = new Map<string, number>();
-
-    // Group buyers by state to batch property queries
-    // No budget requirement - count properties based on whatever filters buyer has set
-    const buyersByState = new Map<string, any[]>();
-    buyerProfilesMap.forEach((buyerProfile, userId) => {
-      const state = buyerProfile.preferredState || buyerProfile.state;
-      if (!state) {
-        matchedCountsMap.set(userId, 0);
-        return;
-      }
-
-      if (!buyersByState.has(state)) {
-        buyersByState.set(state, []);
-      }
-      buyersByState.get(state)!.push({ userId, profile: buyerProfile });
-    });
-
-    // Query properties by state (much more efficient than querying all)
-    const statePropertyQueries = Array.from(buyersByState.keys()).map(async (state) => {
-      const stateQuery = query(
-        collection(db, 'properties'),
-        where('state', '==', state),
-        where('isActive', '==', true)
-      );
-
-      const zillowQuery = query(
-        collection(db, 'zillow_imports'),
-        where('state', '==', state),
-        where('ownerFinanceVerified', '==', true)
-      );
-
-      const [propertiesSnapshot, zillowSnapshot] = await Promise.all([
-        getDocs(stateQuery),
-        getDocs(zillowQuery)
-      ]);
-
-      const stateProperties = [
-        ...propertiesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })),
-        ...zillowSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
-      ];
-
-      return { state, properties: stateProperties };
-    });
-
-    const statePropertiesResults = await Promise.all(statePropertyQueries);
-    const propertiesByState = new Map(
-      statePropertiesResults.map(r => [r.state, r.properties])
-    );
-
-    // Cache for city radius calculations (avoid recalculating for buyers in same city)
-    const cityRadiusCache = new Map<string, Set<string>>();
-
-    // Calculate matches for each buyer using their filters
-    // Matches the logic in /api/buyer/properties/route.ts
-    buyerProfilesMap.forEach((buyerProfile, userId) => {
-      const state = buyerProfile.preferredState || buyerProfile.state;
-      if (!state) {
-        matchedCountsMap.set(userId, 0);
-        return;
-      }
-
-      const stateProperties = propertiesByState.get(state) || [];
-      if (stateProperties.length === 0) {
-        matchedCountsMap.set(userId, 0);
-        return;
-      }
-
-      // Get nearby cities - use pre-computed filter or calculate on-the-fly as fallback
-      let nearbyCityNames: Set<string>;
-      if (buyerProfile.filter?.nearbyCities && buyerProfile.filter.nearbyCities.length > 0) {
-        // Use pre-computed nearby cities (fast path)
-        nearbyCityNames = new Set(
-          buyerProfile.filter.nearbyCities.map((c: string) => c.toLowerCase())
-        );
-      } else {
-        // Fallback: Calculate on-the-fly if no filter exists (with caching)
-        const searchCity = buyerProfile.preferredCity || buyerProfile.city;
-        if (searchCity) {
-          const cacheKey = `${searchCity.toLowerCase()}_${state}`;
-          if (cityRadiusCache.has(cacheKey)) {
-            // Use cached result
-            nearbyCityNames = cityRadiusCache.get(cacheKey)!;
-          } else {
-            // Calculate and cache (with automatic radius expansion: 30mi → 60mi → 120mi)
-            const { cities: nearbyCitiesList } = getCitiesWithinRadiusWithExpansion(searchCity, state, 30, 5);
-            nearbyCityNames = new Set(
-              nearbyCitiesList.map(city => city.name.toLowerCase())
-            );
-            cityRadiusCache.set(cacheKey, nearbyCityNames);
-          }
-        } else {
-          // No city specified - show all properties in state
-          nearbyCityNames = new Set();
-        }
-      }
-
-      // Extract buyer's property filters (whatever they've set)
-      const buyerFilters: BuyerFilters = {
-        minBedrooms: buyerProfile.minBedrooms,
-        maxBedrooms: buyerProfile.maxBedrooms,
-        minBathrooms: buyerProfile.minBathrooms,
-        maxBathrooms: buyerProfile.maxBathrooms,
-        minSquareFeet: buyerProfile.minSquareFeet,
-        maxSquareFeet: buyerProfile.maxSquareFeet,
-        minPrice: buyerProfile.minPrice,
-        maxPrice: buyerProfile.maxPrice,
-      };
-
-      // Count matching properties (same logic as buyer properties API)
-      const matchCount = stateProperties.filter((property: any) => {
-        const propCity = property.city?.split(',')[0].trim().toLowerCase();
-
-        // Location filter: Must be in buyer's search area
-        if (nearbyCityNames.size > 0 && propCity) {
-          // Check for exact match OR partial match (e.g., "Iowa" matches "Iowa Park")
-          const hasMatch = nearbyCityNames.has(propCity) ||
-            Array.from(nearbyCityNames).some(buyerCity =>
-              propCity.startsWith(buyerCity + ' ') || // "iowa park" starts with "iowa "
-              propCity.includes(' ' + buyerCity) ||   // contains " iowa"
-              buyerCity.startsWith(propCity + ' ') || // buyer's "iowa park" matches property "iowa"
-              buyerCity.includes(' ' + propCity)
-            );
-          if (!hasMatch) {
-            return false; // Property not in buyer's radius
-          }
-        }
-
-        // Apply property filters (beds, baths, sqft, price)
-        if (!matchesPropertyFilters(property, buyerFilters)) {
-          return false;
-        }
-
-        return true;
-      }).length;
-
-      matchedCountsMap.set(userId, matchCount);
-    });
-
-    // Get liked counts from BOTH sources:
-    // 1. likedPropertyIds array in buyerProfiles (current system)
-    // 2. likedProperties collection (legacy system - some buyers may have data here)
-    const allUserIds = Array.from(buyerProfilesMap.keys());
-
-    // Query legacy likedProperties collection for all buyers in parallel
-    const likedPropertiesPromises = allUserIds.map(async (userId) => {
-      const likedQuery = query(
-        collection(db, 'likedProperties'),
-        where('buyerId', '==', userId)
-      );
-      const snapshot = await getDocs(likedQuery);
-      return { userId, count: snapshot.size };
-    });
-
-    const legacyLikedResults = await Promise.all(likedPropertiesPromises);
-    const legacyLikedMap = new Map(legacyLikedResults.map(r => [r.userId, r.count]));
-
-    // Calculate liked counts combining both sources (deduplicated by taking max)
-    buyerProfilesMap.forEach((buyerProfile, userId) => {
-      const arrayCount = buyerProfile.likedPropertyIds?.length || 0;
-      const legacyCount = legacyLikedMap.get(userId) || 0;
-      // Use the higher count since they may have different data
-      likedCountsMap.set(userId, Math.max(arrayCount, legacyCount));
-    });
+    // FAST MODE: Skip expensive calculations for admin table
+    // Matched/liked counts come from pre-computed arrays in buyerProfile
+    // This eliminates N+1 queries and property matching calculations
 
     const buyers: BuyerAdminView[] = [];
     const buyersWithDistance: Array<BuyerAdminView & { distance?: number }> = [];
@@ -372,11 +154,9 @@ export async function GET(request: NextRequest) {
 
       if (!buyerProfile) continue; // Skip users without buyer profiles
 
-      // Get matched properties count from pre-computed map (no query here!)
-      const matchedPropertiesCount = matchedCountsMap.get(userDoc.id) || 0;
-
-      // Get liked properties count from pre-computed map (combines both collections)
-      const likedPropertiesCount = likedCountsMap.get(userDoc.id) || 0;
+      // FAST: Use pre-computed arrays from buyerProfile (no N+1 queries!)
+      const matchedPropertiesCount = buyerProfile.matchedPropertyIds?.length || 0;
+      const likedPropertiesCount = buyerProfile.likedPropertyIds?.length || 0;
 
       const buyer = toBuyerAdminView(buyerProfile, {
         matchedPropertiesCount,
@@ -425,11 +205,11 @@ export async function GET(request: NextRequest) {
       // Sort by creation date (newest first)
       filteredBuyers.sort((a, b) => {
         const dateA = a.createdAt && typeof a.createdAt === 'object' && 'toDate' in a.createdAt
-          ? (a.createdAt as any).toDate().getTime()
-          : new Date(a.createdAt as any).getTime();
+          ? (a.createdAt as { toDate: () => Date }).toDate().getTime()
+          : new Date(a.createdAt as string | number).getTime();
         const dateB = b.createdAt && typeof b.createdAt === 'object' && 'toDate' in b.createdAt
-          ? (b.createdAt as any).toDate().getTime()
-          : new Date(b.createdAt as any).getTime();
+          ? (b.createdAt as { toDate: () => Date }).toDate().getTime()
+          : new Date(b.createdAt as string | number).getTime();
         return dateB - dateA;
       });
     }
@@ -471,8 +251,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const session = await getServerSession(authOptions as any) as ExtendedSession | null;
+    const session = await getServerSession(authOptions as typeof authOptions) as ExtendedSession | null;
 
     if (!session?.user || (session as ExtendedSession).user.role !== 'admin') {
       return NextResponse.json(

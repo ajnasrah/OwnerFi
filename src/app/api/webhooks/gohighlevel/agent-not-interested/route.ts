@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
       status: 'agent_no',
     });
 
-  } catch (error: any) {
+  } catch (error) {
     console.error('❌ [AGENT NOT INTERESTED] Error:', error);
 
     return NextResponse.json(

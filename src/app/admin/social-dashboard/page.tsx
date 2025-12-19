@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import WorkflowRecoveryButtons from '@/components/WorkflowRecoveryButtons';
 import AnalyticsDashboard from '@/components/AnalyticsDashboard';
 import YouTubeAnalyticsDashboard from '@/components/YouTubeAnalyticsDashboard';
@@ -33,15 +34,15 @@ interface SchedulerStatus {
   queue: {
     carz: {
       pending: number;
-      items: any[];
+      items: Array<{ id: string; [key: string]: unknown }>;
     };
     ownerfi: {
       pending: number;
-      items: any[];
+      items: Array<{ id: string; [key: string]: unknown }>;
     };
     vassdistro?: {
       pending: number;
-      items: any[];
+      items: Array<{ id: string; [key: string]: unknown }>;
     };
   };
   stats?: {
@@ -271,7 +272,13 @@ export default function SocialMediaDashboard() {
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [copiedRecId, setCopiedRecId] = useState<string | null>(null);
   const [refreshingAnalytics, setRefreshingAnalytics] = useState(false);
-  const [abdullahQueueStats, setAbdullahQueueStats] = useState<any>(null);
+  interface AbdullahQueueStats {
+    total: number;
+    pending: number;
+    processing: number;
+    nextItems: Array<{ id: string; [key: string]: unknown }>;
+  }
+  const [abdullahQueueStats, setAbdullahQueueStats] = useState<AbdullahQueueStats | null>(null);
   const [recentScripts, setRecentScripts] = useState<Array<{
     id: string;
     title: string;
@@ -871,9 +878,9 @@ ${script.caption}`;
       <div className="flex-1 overflow-y-auto p-6">
         <div className="max-w-7xl mx-auto">
         {/* Back to Hub */}
-        <a href="/admin" className="text-emerald-400 hover:text-emerald-300 mb-4 inline-flex items-center gap-1">
+        <Link href="/admin" className="text-emerald-400 hover:text-emerald-300 mb-4 inline-flex items-center gap-1">
           ← Back to Admin Hub
-        </a>
+        </Link>
 
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">
@@ -881,13 +888,13 @@ ${script.caption}`;
             <h1 className="text-3xl font-bold text-white">Social Media Automation</h1>
             <p className="text-slate-400 mt-1">Monitor and control viral video generation</p>
           </div>
-          <a
+          <Link
             href="/admin/ab-tests"
             className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all shadow-lg"
           >
             <span className="text-xl">🧪</span>
             <span>A/B Testing</span>
-          </a>
+          </Link>
         </div>
 
         {/* Sub-navigation Tabs - Scrollable on mobile */}
@@ -2368,7 +2375,7 @@ ${script.caption}`;
                 <div className="mb-6 pb-6 border-b border-slate-200">
                   <h4 className="text-sm font-semibold text-white mb-3">Upcoming Videos</h4>
                   <div className="space-y-2">
-                    {abdullahQueueStats.nextItems.map((item: any, index: number) => (
+                    {abdullahQueueStats.nextItems.map((item, index: number) => (
                       <div key={item.id} className="flex items-center justify-between bg-slate-700/50 rounded-lg p-3">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-full bg-purple-100 text-purple-700 font-bold flex items-center justify-center text-sm">

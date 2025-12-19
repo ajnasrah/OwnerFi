@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getAdminDb } from '@/lib/firebase-admin';
+import { getTypesenseSearchClient, TYPESENSE_COLLECTIONS } from '@/lib/typesense/client';
 import { getCitiesWithinRadiusComprehensive, getCityCoordinatesComprehensive } from '@/lib/comprehensive-cities';
 
 // Cache for states list (refresh every 5 minutes)
@@ -7,8 +8,48 @@ let statesCache: { states: string[]; timestamp: number } | null = null;
 const STATES_CACHE_TTL = 5 * 60 * 1000;
 
 // Cache for deals data (refresh every 5 minutes - increased from 2min for better performance)
+interface NormalizedProperty {
+  id: string;
+  address: string;
+  streetAddress: string;
+  city: string;
+  state: string;
+  zipcode: string;
+  latitude: number | null;
+  longitude: number | null;
+  price: number;
+  arv: number;
+  percentOfArv: number | null;
+  discount: number | null;
+  beds: number;
+  baths: number;
+  sqft: number;
+  imgSrc: string;
+  url: string;
+  zpid: string;
+  source: string;
+  status?: string;
+  addedAt?: unknown;
+  ownerFinanceVerified?: boolean;
+  matchedKeywords?: string[];
+  financingType?: string;
+  description?: string;
+  monthlyPayment?: number;
+  downPaymentAmount?: number;
+  downPaymentPercent?: number;
+  interestRate?: number;
+  termYears?: number;
+  balloonYears?: number;
+  rentEstimate: number;
+  annualTax: number;
+  monthlyHoa: number;
+  missingFields: string[];
+  cashFlow: unknown;
+  sentToGHL: unknown;
+}
+
 interface DealsCache {
-  data: any[];
+  data: NormalizedProperty[];
   timestamp: number;
   key: string;
 }
@@ -107,14 +148,15 @@ function calculateCashFlow(price: number, rentEstimate: number, annualTax: numbe
 }
 
 // Normalize data from different collections to a common format
-function normalizeProperty(doc: FirebaseFirestore.DocumentSnapshot, source: string): any {
+function normalizeProperty(doc: FirebaseFirestore.DocumentSnapshot, source: string): NormalizedProperty {
   const data = doc.data() || {};
 
   // Calculate percentOfArv if not present
   const price = data.price || data.listPrice || 0;
   const arv = data.arv || data.estimate || data.zestimate || 0;
-  const percentOfArv = data.percentOfArv || (arv > 0 ? Math.round((price / arv) * 100 * 10) / 10 : 100);
-  const discount = data.discount || (arv > 0 ? Math.round((1 - price / arv) * 100 * 10) / 10 : 0);
+  // Use stored percentOfArv, or calculate from ARV if available, otherwise null (not 100!)
+  const percentOfArv = data.percentOfArv ?? (arv > 0 ? Math.round((price / arv) * 100 * 10) / 10 : null);
+  const discount = data.discount ?? (arv > 0 ? Math.round((1 - price / arv) * 100 * 10) / 10 : null);
 
   // Cash flow inputs - check multiple field names
   const rentEstimate = data.rentEstimate || data.rentalEstimate || data.rentZestimate || data.rentCastEstimate || 0;
@@ -166,7 +208,7 @@ function normalizeProperty(doc: FirebaseFirestore.DocumentSnapshot, source: stri
     source: data.source || source,
     status: data.status || data.homeStatus,
     addedAt: data.addedAt || data.importedAt || data.scrapedAt,
-    // Owner finance fields (from zillow_imports)
+    // Owner finance fields
     ownerFinanceVerified: data.ownerFinanceVerified,
     matchedKeywords: data.matchedKeywords,
     financingType: data.financingType,
@@ -189,6 +231,161 @@ function normalizeProperty(doc: FirebaseFirestore.DocumentSnapshot, source: stri
   };
 }
 
+// Try Typesense search first (fast)
+async function searchWithTypesense(params: {
+  city?: string;
+  state?: string;
+  radius?: number;
+  sortBy: string;
+  sortOrder: string;
+  limit: number;
+  collection?: string;
+}): Promise<{ deals: NormalizedProperty[]; states: string[] } | null> {
+  const client = getTypesenseSearchClient();
+  if (!client) return null;
+
+  try {
+    const filters: string[] = ['isActive:=true'];
+
+    // Geo search if city + radius provided
+    if (params.city && params.radius && params.radius > 0) {
+      const centerCoords = getCityCoordinatesComprehensive(params.city, params.state || '');
+      if (centerCoords) {
+        // Use Typesense geo filter - much faster than Firestore
+        filters.push(`location:(${centerCoords.lat}, ${centerCoords.lng}, ${params.radius} mi)`);
+        // Don't filter by state when doing radius search (for tri-state areas)
+      } else if (params.state) {
+        // No coordinates found, fall back to state filter
+        filters.push(`state:=${params.state}`);
+      }
+    } else if (params.state) {
+      // No radius, just filter by state
+      filters.push(`state:=${params.state}`);
+    }
+
+    // Deal type filter based on collection
+    if (params.collection === 'cash_houses') {
+      filters.push('dealType:=[cash_deal, both]');
+    } else if (params.collection === 'zillow_imports') {
+      filters.push('dealType:=[owner_finance, both]');
+    }
+    // No collection filter = show all deal types
+
+    // Map sort fields
+    const sortFieldMap: Record<string, string> = {
+      'percentOfArv': 'listPrice:asc', // Approximate - sort by price
+      'price': 'listPrice',
+      'discount': 'listPrice:asc',
+      'rentEstimate': 'listPrice:asc',
+    };
+    const sortField = sortFieldMap[params.sortBy] || 'listPrice:asc';
+    const sortDirection = params.sortOrder === 'desc' ? ':desc' : ':asc';
+    const sortBy = sortField.includes(':') ? sortField : `${sortField}${sortDirection}`;
+
+    // When doing geo/radius search, use '*' to search all and rely on geo filter
+    // This ensures surrounding cities within the radius are included
+    const hasGeoFilter = params.city && params.radius && params.radius > 0 &&
+      getCityCoordinatesComprehensive(params.city, params.state || '');
+    const searchQuery = hasGeoFilter ? '*' : (params.city || '*');
+
+    const result = await client.collections(TYPESENSE_COLLECTIONS.PROPERTIES)
+      .documents()
+      .search({
+        q: searchQuery,
+        query_by: 'city,address,nearbyCities',
+        filter_by: filters.join(' && '),
+        sort_by: sortBy,
+        per_page: Math.min(params.limit, 250), // Typesense max per page
+        facet_by: 'state',
+      });
+
+    // Transform Typesense results to match expected format
+    const deals = (result.hits || []).map((hit: Record<string, unknown>) => {
+      const doc = hit.document;
+      const price = doc.listPrice || 0;
+      // ARV is zestimate - DON'T fall back to price (that would make %ARV = 100%)
+      const arv = doc.zestimate || 0;
+
+      // Use stored discountPercent if available, otherwise calculate
+      // discountPercent in Typesense is (arv - price) / arv * 100 (positive = below ARV)
+      let percentOfArv: number | null = null;
+      let discount: number = 0;
+
+      if (doc.discountPercent !== undefined && doc.discountPercent !== null) {
+        // discountPercent is stored as (arv - price) / arv * 100
+        // So percentOfArv = 100 - discountPercent
+        percentOfArv = Math.round((100 - doc.discountPercent) * 10) / 10;
+        discount = doc.discountPercent;
+      } else if (arv > 0) {
+        // Calculate from ARV
+        percentOfArv = Math.round((price / arv) * 100 * 10) / 10;
+        discount = Math.round((1 - price / arv) * 100 * 10) / 10;
+      }
+      // If no ARV data, percentOfArv stays null (will show as "N/A" in UI)
+
+      return {
+        id: doc.id,
+        address: doc.address || '',
+        streetAddress: doc.address || '',
+        city: doc.city || '',
+        state: doc.state || '',
+        zipcode: doc.zipCode || '',
+        latitude: doc.location?.[0] || null,
+        longitude: doc.location?.[1] || null,
+        price,
+        arv,
+        percentOfArv,
+        discount,
+        beds: doc.bedrooms || 0,
+        baths: doc.bathrooms || 0,
+        sqft: doc.squareFeet || 0,
+        imgSrc: doc.primaryImage || '',
+        url: doc.url || `https://www.zillow.com/homedetails/${doc.id}_zpid/`,
+        zpid: doc.zpid || doc.id,
+        source: doc.dealType === 'owner_finance' ? 'zillow_imports' : doc.dealType === 'cash_deal' ? 'cash_houses' : 'both',
+        ownerFinanceVerified: doc.dealType === 'owner_finance' || doc.dealType === 'both',
+        // Cash flow fields - now indexed in Typesense
+        rentEstimate: doc.rentEstimate || 0,
+        annualTax: doc.annualTaxAmount || 0,
+        monthlyHoa: doc.monthlyHoa || 0,
+        // Status fields
+        status: doc.homeStatus || null,
+        daysOnZillow: doc.daysOnZillow || null,
+        // These are still calculated on-demand if needed
+        cashFlow: null,
+        sentToGHL: null,
+      };
+    });
+
+    // Deduplicate by address + city + state (same property in multiple collections)
+    const seen = new Map<string, NormalizedProperty>();
+    for (const deal of deals) {
+      const key = `${deal.address?.toLowerCase()}_${deal.city?.toLowerCase()}_${deal.state}`;
+      if (!seen.has(key)) {
+        seen.set(key, deal);
+      } else {
+        // Prefer owner_finance or both over cash_deal
+        const existing = seen.get(key);
+        if (deal.ownerFinanceVerified && !existing.ownerFinanceVerified) {
+          seen.set(key, deal);
+        }
+      }
+    }
+    const deduplicatedDeals = Array.from(seen.values());
+
+    // Extract states from facets
+    const stateFacet = result.facet_counts?.find((f: Record<string, unknown>) => f.field_name === 'state');
+    const states = stateFacet?.counts.map((c: Record<string, unknown>) => c.value).sort() || [];
+
+    console.log(`[cash-deals] Typesense returned ${deals.length} deals, ${deduplicatedDeals.length} after dedup`);
+    return { deals: deduplicatedDeals, states };
+
+  } catch (error) {
+    console.warn('[cash-deals] Typesense search failed:', error);
+    return null;
+  }
+}
+
 export async function GET(request: Request) {
   try {
     const startTime = Date.now();
@@ -200,12 +397,42 @@ export async function GET(request: Request) {
     const sortBy = searchParams.get('sortBy') || 'percentOfArv';
     const sortOrder = searchParams.get('sortOrder') || 'asc';
     const limit = parseInt(searchParams.get('limit') || '2000');
-    const collection = searchParams.get('collection');
+    const collectionFilter = searchParams.get('collection');
 
-    // Simple cache - fetch ALL data once and filter in memory (avoids index requirements)
+    // Try Typesense first for fast results (including geo/radius searches)
+    const typesenseResult = await searchWithTypesense({
+      city,
+      state,
+      radius,
+      sortBy,
+      sortOrder,
+      limit,
+      collection: collectionFilter || undefined,
+    });
+
+    if (typesenseResult) {
+      // Use states from Typesense facets, or cached states
+      let states = typesenseResult.states;
+      if (states.length === 0 && statesCache && Date.now() - statesCache.timestamp < STATES_CACHE_TTL) {
+        states = statesCache.states;
+      } else if (states.length > 0) {
+        statesCache = { states, timestamp: Date.now() };
+      }
+
+      console.log(`[cash-deals] Typesense: ${typesenseResult.deals.length} deals in ${Date.now() - startTime}ms`);
+      return NextResponse.json({
+        deals: typesenseResult.deals,
+        total: typesenseResult.deals.length,
+        states,
+        engine: 'typesense',
+      });
+    }
+
+    // Fallback to Firestore with caching (for radius searches or if Typesense fails)
+    // NOW: Query single unified 'properties' collection - investors see ALL properties
     const cacheKey = 'all_deals';
 
-    let allDeals: any[] = [];
+    let allDeals: NormalizedProperty[] = [];
     const now = Date.now();
 
     if (dealsCache && dealsCache.key === cacheKey && (now - dealsCache.timestamp) < DEALS_CACHE_TTL) {
@@ -213,61 +440,49 @@ export async function GET(request: Request) {
       allDeals = [...dealsCache.data];
       console.log(`[cash-deals] Using cached data (${allDeals.length} deals)`);
     } else {
-      // Fetch fresh data from both collections
+      // Fetch fresh data from unified properties collection
       const db = await getAdminDb();
       if (!db) {
         return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
       }
 
-      // Fetch from both collections in parallel - NO filters to avoid index requirements
-      const [cashSnapshot, zillowSnapshot] = await Promise.all([
-        db.collection('cash_houses').get(),
-        db.collection('zillow_imports').get()
-      ]);
+      // Fetch ALL properties from unified collection (investors see everything)
+      const propertiesSnapshot = await db.collection('properties').get();
 
-      // Process cash_houses
-      cashSnapshot.docs.forEach(doc => {
-        allDeals.push(normalizeProperty(doc, 'cash_houses'));
-      });
-
-      // Process zillow_imports - only owner finance verified
-      zillowSnapshot.docs.forEach(doc => {
+      // Process properties - normalize for display
+      propertiesSnapshot.docs.forEach(doc => {
         const data = doc.data();
-        if (data.ownerFinanceVerified === true) {
-          allDeals.push(normalizeProperty(doc, 'zillow_imports'));
+        // Skip if not active
+        if (data.isActive === false) return;
+
+        // Determine source tag for display (based on dealTypes)
+        let source = 'unified';
+        if (data.isOwnerFinance && data.isCashDeal) {
+          source = 'both';
+        } else if (data.isOwnerFinance) {
+          source = 'owner_finance';
+        } else if (data.isCashDeal) {
+          source = 'cash_deal';
         }
+
+        allDeals.push(normalizeProperty(doc, source));
       });
 
-      // Deduplicate by ZPID - prefer zillow_imports (owner finance) over cash_houses
-      const seenZpids = new Map<string, any>();
-      for (const deal of allDeals) {
-        if (!deal.zpid) {
-          // No ZPID, keep it (use doc id as fallback key)
-          seenZpids.set(deal.id, deal);
-        } else if (!seenZpids.has(deal.zpid)) {
-          // First time seeing this ZPID
-          seenZpids.set(deal.zpid, deal);
-        } else {
-          // Duplicate ZPID - prefer zillow_imports source
-          const existing = seenZpids.get(deal.zpid);
-          if (deal.source === 'zillow_imports' && existing.source !== 'zillow_imports') {
-            seenZpids.set(deal.zpid, deal);
-          }
-        }
-      }
-      allDeals = Array.from(seenZpids.values());
-
-      // Filter out properties without price (ARV is optional - not all properties have Zestimate)
-      allDeals = allDeals.filter((deal: any) => deal.price > 0);
+      // Filter out properties without price
+      allDeals = allDeals.filter((deal: NormalizedProperty) => deal.price > 0);
 
       // Update cache
       dealsCache = { data: [...allDeals], timestamp: now, key: cacheKey };
-      console.log(`[cash-deals] Fetched and cached ${allDeals.length} deals in ${Date.now() - startTime}ms`);
+      console.log(`[cash-deals] Fetched and cached ${allDeals.length} deals from unified collection in ${Date.now() - startTime}ms`);
     }
 
-    // Apply collection filter in memory
-    if (collection) {
-      allDeals = allDeals.filter((deal: any) => deal.source === collection);
+    // Apply collection/dealType filter in memory (for backwards compatibility)
+    if (collectionFilter) {
+      if (collectionFilter === 'cash_houses') {
+        allDeals = allDeals.filter((deal: NormalizedProperty) => deal.source === 'cash_deal' || deal.source === 'both');
+      } else if (collectionFilter === 'zillow_imports') {
+        allDeals = allDeals.filter((deal: NormalizedProperty) => deal.source === 'owner_finance' || deal.source === 'both');
+      }
     }
 
     // Filter by city/radius - use coordinates when available for accuracy
@@ -290,7 +505,7 @@ export async function GET(request: Request) {
         if (searchState) statesInRadius.add(searchState);
         console.log(`[cash-deals] Radius search: ${city} + ${radius}mi includes states: ${[...statesInRadius].join(', ')}`);
 
-        allDeals = allDeals.filter((deal: any) => {
+        allDeals = allDeals.filter((deal: NormalizedProperty) => {
           // If property has coordinates, use actual distance calculation
           if (deal.latitude && deal.longitude) {
             const dist = haversineDistance(centerCoords.lat, centerCoords.lng, deal.latitude, deal.longitude);
@@ -301,7 +516,7 @@ export async function GET(request: Request) {
         });
       } else {
         // No radius - filter by exact city match AND state if provided
-        allDeals = allDeals.filter((deal: any) => {
+        allDeals = allDeals.filter((deal: NormalizedProperty) => {
           const cityMatch = deal.city?.toLowerCase().includes(city);
           const stateMatch = state ? deal.state === state : true;
           return cityMatch && stateMatch;
@@ -309,11 +524,11 @@ export async function GET(request: Request) {
       }
     } else if (state) {
       // No city search, just state filter
-      allDeals = allDeals.filter((deal: any) => deal.state === state);
+      allDeals = allDeals.filter((deal: NormalizedProperty) => deal.state === state);
     }
 
     // Sort - handle nested cashFlow fields
-    allDeals.sort((a: any, b: any) => {
+    allDeals.sort((a: NormalizedProperty, b: NormalizedProperty) => {
       let aVal, bVal;
 
       // Handle cash flow sorting
@@ -353,13 +568,14 @@ export async function GET(request: Request) {
       total,
       states
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error fetching cash deals:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
-// DELETE - Bulk delete cash deals
+// DELETE - Bulk delete properties from unified collection
 export async function DELETE(request: Request) {
   try {
     const db = await getAdminDb();
@@ -372,38 +588,33 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'No IDs provided' }, { status: 400 });
     }
 
-    console.log(`[cash-deals] Deleting ${ids.length} properties...`);
+    console.log(`[cash-deals] Deleting ${ids.length} properties from unified collection...`);
 
     let deleted = 0;
     const batch = db.batch();
 
     for (const id of ids) {
-      // Try to delete from both collections
-      const cashHouseRef = db.collection('cash_houses').doc(id);
-      const zillowRef = db.collection('zillow_imports').doc(id);
+      // Delete from unified properties collection
+      const propertyRef = db.collection('properties').doc(id);
+      const propertyDoc = await propertyRef.get();
 
-      // Check which collection has the doc
-      const [cashDoc, zillowDoc] = await Promise.all([
-        cashHouseRef.get(),
-        zillowRef.get()
-      ]);
-
-      if (cashDoc.exists) {
-        batch.delete(cashHouseRef);
-        deleted++;
-      }
-      if (zillowDoc.exists) {
-        batch.delete(zillowRef);
+      if (propertyDoc.exists) {
+        batch.delete(propertyRef);
         deleted++;
       }
     }
 
     await batch.commit();
+
+    // Invalidate cache
+    dealsCache = null;
+
     console.log(`[cash-deals] Deleted ${deleted} properties`);
 
     return NextResponse.json({ deleted, success: true });
-  } catch (error: any) {
-    console.error('Error deleting cash deals:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error) {
+    console.error('Error deleting properties:', error);
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

@@ -19,7 +19,7 @@ function getStripe() {
   });
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   const stripe = getStripe();
   try {
     const session = await getSessionWithRole('realtor');

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getTypesenseSearchClient, TYPESENSE_COLLECTIONS } from '@/lib/typesense/client';
 import {
   collection,
   query,
@@ -9,6 +10,14 @@ import {
 import { db } from '@/lib/firebase';
 import { rateLimit } from '@/lib/rate-limiter';
 
+/**
+ * /api/properties - Get owner finance properties
+ *
+ * Uses Typesense for fast search with Firestore fallback.
+ * This endpoint returns owner_finance properties only (for backward compatibility).
+ *
+ * For full search with filters, use /api/search/properties instead.
+ */
 export async function GET(request: NextRequest) {
   try {
     // Rate limiting: 100 requests per minute per IP
@@ -31,6 +40,48 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    const { searchParams } = new URL(request.url);
+    const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 100);
+
+    // Try Typesense first for speed
+    const typesenseClient = getTypesenseSearchClient();
+
+    if (typesenseClient) {
+      try {
+        const result = await typesenseClient.collections(TYPESENSE_COLLECTIONS.PROPERTIES)
+          .documents()
+          .search({
+            q: '*',
+            query_by: 'address,city',
+            filter_by: 'isActive:=true && dealType:=[owner_finance, both]',
+            sort_by: 'createdAt:desc',
+            per_page: limit
+          });
+
+        const properties = result.hits?.map(hit => {
+          const doc = hit.document as Record<string, unknown>;
+          return {
+            id: doc.id,
+            ...doc,
+            imageUrl: doc.primaryImage || '',
+            imageUrls: [],
+            address: doc.address,
+            squareFeet: doc.squareFeet,
+            listPrice: doc.listPrice,
+          };
+        }) || [];
+
+        return NextResponse.json({
+          properties,
+          count: properties.length,
+          engine: 'typesense'
+        });
+      } catch (typesenseError) {
+        console.warn('[/api/properties] Typesense error, falling back to Firestore:', typesenseError);
+      }
+    }
+
+    // Fallback to Firestore - use unified properties collection
     if (!db) {
       return NextResponse.json(
         { error: 'Database not available' },
@@ -38,15 +89,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { searchParams } = new URL(request.url);
-    const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 100); // Cap at 100 for performance
-
-    // Fetch properties from zillow_imports collection (where all owner finance properties are stored)
-    // Note: Removed orderBy to avoid requiring composite index
-    // Properties will be sorted client-side if needed
     const propertiesQuery = query(
-      collection(db, 'zillow_imports'),
-      where('ownerFinanceVerified', '==', true),
+      collection(db, 'properties'),
+      where('isActive', '==', true),
+      where('isOwnerFinance', '==', true),
       firestoreLimit(limit)
     );
 
@@ -56,29 +102,26 @@ export async function GET(request: NextRequest) {
       return {
         id: doc.id,
         ...data,
-        // Convert Firestore timestamps to readable format
-        foundAt: data.foundAt?.toDate?.()?.toISOString() || data.foundAt,
-        createdAt: data.foundAt?.toDate?.()?.toISOString() || data.foundAt,
-        updatedAt: data.foundAt?.toDate?.()?.toISOString() || data.foundAt,
-        // Ensure image fields are mapped correctly for PropertyCard
+        foundAt: data.createdAt?.toDate?.()?.toISOString() || data.createdAt,
+        createdAt: data.createdAt?.toDate?.()?.toISOString() || data.createdAt,
+        updatedAt: data.updatedAt?.toDate?.()?.toISOString() || data.updatedAt,
         imageUrl: data.firstPropertyImage || data.imageUrl,
-        imageUrls: data.propertyImages || data.imageUrls || [],
-        // Map field names for compatibility
-        address: data.streetAddress || data.fullAddress,
-        squareFeet: data.squareFoot || data.squareFeet,
-        listPrice: data.price || data.listPrice,
+        imageUrls: data.imageUrls || [],
+        address: data.address || data.streetAddress || data.fullAddress,
+        squareFeet: data.squareFeet || data.squareFoot,
+        listPrice: data.listPrice || data.price,
       };
     })
-    // Sort by foundAt client-side (newest first)
     .sort((a: any, b: any) => {
-      const dateA = new Date(a.foundAt || 0).getTime();
-      const dateB = new Date(b.foundAt || 0).getTime();
+      const dateA = new Date(a.createdAt || 0).getTime();
+      const dateB = new Date(b.createdAt || 0).getTime();
       return dateB - dateA;
     });
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       properties,
-      count: properties.length 
+      count: properties.length,
+      engine: 'firestore'
     });
 
   } catch (error) {

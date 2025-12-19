@@ -16,7 +16,7 @@ export async function GET(
     }
 
     // Try both brands to find the workflow
-    let result = await getWorkflowById(id);
+    const result = await getWorkflowById(id);
 
     if (!result) {
       return NextResponse.json(

@@ -4,6 +4,7 @@
  */
 
 import PlatformAnalyticsDashboard from '@/components/PlatformAnalyticsDashboard';
+import Link from 'next/link';
 
 export const metadata = {
   title: 'Platform Analytics | Admin',
@@ -15,7 +16,7 @@ export default function AnalyticsDashboardPage() {
     <div className="h-screen overflow-hidden bg-slate-900 flex flex-col">
       <div className="flex-1 overflow-y-auto p-6">
         <div className="max-w-7xl mx-auto">
-        <a href="/admin" className="text-emerald-400 hover:text-emerald-300 text-sm mb-4 inline-block">← Back to Admin</a>
+        <Link href="/admin" className="text-emerald-400 hover:text-emerald-300 text-sm mb-4 inline-block">← Back to Admin</Link>
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-white mb-2">📊 Platform Analytics Dashboard</h1>

@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
 
 interface CashDeal {
   id: string;
@@ -63,8 +65,8 @@ export function CashDeals() {
         setDeals(data.deals || []);
         setFilters(data.filters || null);
       }
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unknown error');
       setDeals([]);
     }
     setLoading(false);
@@ -104,12 +106,12 @@ export function CashDeals() {
         <div className="text-center">
           <div className="text-4xl mb-4">📍</div>
           <p className="text-slate-300">{message}</p>
-          <a
+          <Link
             href="/dashboard/settings"
             className="mt-4 inline-block px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700"
           >
             Update Profile
-          </a>
+          </Link>
         </div>
       </div>
     );
@@ -140,14 +142,14 @@ export function CashDeals() {
       {/* Disclaimer */}
       <div className="bg-yellow-900/20 border border-yellow-600/30 rounded-lg p-3 mb-4">
         <p className="text-yellow-200/80 text-xs leading-relaxed">
-          <span className="font-semibold">Disclaimer:</span> All ARV and property values shown are third-party estimates. We are not appraisers and do not know the actual value of these properties. Always conduct your own due diligence.
+          <span className="font-semibold">Disclaimer:</span> All Zestimate and property values shown are third-party estimates from Zillow. We are not appraisers and do not know the actual value of these properties. Always conduct your own due diligence.
         </p>
       </div>
 
       {/* Header */}
       <div className="mb-4">
         <p className="text-slate-400 text-sm">
-          {deals.length} cash deal{deals.length !== 1 ? 's' : ''} under 80% ARV
+          {deals.length} cash deal{deals.length !== 1 ? 's' : ''} under 80% Zestimate
           {filters?.city && (
             <span> near <span className="text-emerald-400">{filters.city}</span></span>
           )}
@@ -170,6 +172,7 @@ export function CashDeals() {
             {/* Image */}
             <div className="relative h-40">
               {deal.imgSrc ? (
+                // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={deal.imgSrc}
                   alt={deal.address}
@@ -182,7 +185,7 @@ export function CashDeals() {
               )}
               {/* Discount Badge */}
               <div className="absolute top-2 left-2 bg-emerald-600 text-white px-2 py-1 rounded-lg text-sm font-bold">
-                {deal.percentOfArv}% of ARV
+                {deal.percentOfArv != null ? `${deal.percentOfArv}% of Zestimate` : 'No Estimate'}
               </div>
             </div>
 
@@ -194,7 +197,7 @@ export function CashDeals() {
                   ${deal.price.toLocaleString()}
                 </div>
                 <div className="text-emerald-400 font-semibold">
-                  ${deal.discount.toLocaleString()} below ARV
+                  {deal.discount > 0 ? `$${deal.discount.toLocaleString()} below Zest` : ''}
                 </div>
               </div>
 
@@ -222,15 +225,15 @@ export function CashDeals() {
                 </div>
               </div>
 
-              {/* ARV Info */}
+              {/* Zestimate Info */}
               <div className="mt-3 pt-3 border-t border-slate-700 flex justify-between text-sm">
                 <div>
-                  <span className="text-slate-400">ARV: </span>
-                  <span className="text-white font-medium">${deal.arv.toLocaleString()}</span>
+                  <span className="text-slate-400">Zestimate: </span>
+                  <span className="text-white font-medium">{deal.arv > 0 ? `$${deal.arv.toLocaleString()}` : 'N/A'}</span>
                 </div>
                 <div>
                   <span className="text-slate-400">Equity: </span>
-                  <span className="text-emerald-400 font-bold">{100 - deal.percentOfArv}%</span>
+                  <span className="text-emerald-400 font-bold">{deal.percentOfArv != null ? `${100 - deal.percentOfArv}%` : 'N/A'}</span>
                 </div>
               </div>
             </div>

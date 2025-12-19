@@ -32,6 +32,7 @@ export default function BlogAdminPage() {
 
   useEffect(() => {
     fetchPosts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedBrand]);
 
   async function fetchPosts() {
@@ -172,10 +173,10 @@ export default function BlogAdminPage() {
                     </td>
                     <td className="px-6 py-4 text-sm text-slate-400">
                       {(() => {
-                        const ts = (post.publishedAt || post.createdAt) as any;
+                        const ts = (post.publishedAt || post.createdAt) as unknown;
                         if (!ts) return 'N/A';
-                        if (typeof ts === 'object' && typeof ts._seconds === 'number') return new Date(ts._seconds * 1000).toLocaleDateString();
-                        const date = new Date(ts);
+                        if (typeof ts === 'object' && ts !== null && '_seconds' in ts && typeof (ts as { _seconds: number })._seconds === 'number') return new Date((ts as { _seconds: number })._seconds * 1000).toLocaleDateString();
+                        const date = new Date(ts as string | number);
                         return isNaN(date.getTime()) ? 'N/A' : date.toLocaleDateString();
                       })()}
                     </td>

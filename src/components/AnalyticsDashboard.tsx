@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 
 interface PerformanceData {
   timeSeries: Array<{
@@ -79,6 +80,7 @@ export default function AnalyticsDashboard() {
 
   useEffect(() => {
     loadAnalytics();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedBrand, days]);
 
   const loadAnalytics = async () => {
@@ -177,12 +179,12 @@ export default function AnalyticsDashboard() {
           </div>
 
           <div className="mt-4">
-            <a
+            <Link
               href="/admin/social-dashboard"
               className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 inline-block"
             >
               View Social Media Dashboard
-            </a>
+            </Link>
           </div>
         </div>
       </div>
@@ -272,7 +274,7 @@ export default function AnalyticsDashboard() {
             ].map(tab => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
+                onClick={() => setActiveTab(tab.id as 'overview' | 'timing' | 'content' | 'platforms')}
                 className={`py-4 px-3 border-b-2 font-medium text-sm ${
                   activeTab === tab.id
                     ? 'border-blue-500 text-blue-600'

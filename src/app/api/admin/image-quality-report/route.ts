@@ -8,7 +8,7 @@ import path from 'path';
 /**
  * Get the image quality analysis report
  */
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // Admin access control
     const session = await // eslint-disable-next-line @typescript-eslint/no-explicit-any

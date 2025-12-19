@@ -167,137 +167,93 @@ export async function POST(request: NextRequest) {
     if (response === 'yes') {
       console.log('✅ [AGENT RESPONSE WEBHOOK] Agent said YES');
 
-      // Route based on deal type
-      if (property.dealType === 'potential_owner_finance') {
-        // Add to zillow_imports for display on website
-        console.log('   → Routing to zillow_imports (owner finance)');
+      // Detect financing type from description
+      const { detectFinancingType } = await import('@/lib/financing-type-detector');
+      const descriptionText = sanitizeDescription(property.rawData?.description || '');
+      const financingTypeResult = detectFinancingType(descriptionText);
 
-        // Detect financing type from description (or default to Owner Finance since agent confirmed)
-        const { detectFinancingType } = await import('@/lib/financing-type-detector');
-        const descriptionText = sanitizeDescription(property.rawData?.description || '');
-        const financingTypeResult = detectFinancingType(descriptionText);
+      const isOwnerFinance = property.dealType === 'potential_owner_finance';
+      const isCashDeal = property.dealType === 'cash_deal';
 
-        await db.collection('zillow_imports').add({
-          // Core identifiers
-          zpid: property.zpid,
-          url: property.url,
+      const discountPercent = property.priceToZestimateRatio
+        ? Math.round((1 - property.priceToZestimateRatio) * 100)
+        : 0;
 
-          // Address
-          address: property.address || '',
-          streetAddress: property.address || '',
-          fullAddress: `${property.address}, ${property.city}, ${property.state} ${property.zipCode}`,
-          city: property.city || '',
-          state: property.state || '',
-          zipCode: property.zipCode || '',
+      // Add to unified properties collection
+      console.log(`   → Routing to properties (${isOwnerFinance ? 'owner_finance' : 'cash_deal'})`);
 
-          // Pricing
-          price: property.price || 0,
-          listPrice: property.price || 0,
-          zestimate: property.zestimate || null,
+      await db.collection('properties').doc(`zpid_${property.zpid}`).set({
+        // Core identifiers
+        zpid: property.zpid,
+        url: property.url,
 
-          // Property details
-          bedrooms: property.beds || 0,
-          bathrooms: property.baths || 0,
-          livingArea: property.squareFeet || 0,
-          homeType: property.propertyType || 'SINGLE_FAMILY',
-          homeStatus: 'FOR_SALE',
+        // Address
+        address: property.address || '',
+        streetAddress: property.address || '',
+        fullAddress: `${property.address}, ${property.city}, ${property.state} ${property.zipCode}`,
+        city: property.city || '',
+        state: property.state || '',
+        zipCode: property.zipCode || '',
 
-          // Agent info
-          agentName: property.agentName,
-          agentPhoneNumber: property.agentPhone,
-          agentEmail: property.agentEmail || null,
+        // Pricing
+        price: property.price || 0,
+        listPrice: property.price || 0,
+        zestimate: property.zestimate || null,
+        priceToZestimateRatio: property.priceToZestimateRatio || 0,
+        discountPercent: isCashDeal ? discountPercent : null,
 
-          // Description
-          description: descriptionText,
+        // Property details
+        bedrooms: property.beds || 0,
+        bathrooms: property.baths || 0,
+        squareFoot: property.squareFeet || 0,
+        homeType: property.propertyType || 'SINGLE_FAMILY',
+        homeStatus: 'FOR_SALE',
 
-          // Financing Type Status (agent confirmed = default to Owner Finance if no keywords detected)
+        // Agent info
+        agentName: property.agentName,
+        agentPhoneNumber: property.agentPhone,
+        agentEmail: property.agentEmail || null,
+
+        // Description
+        description: descriptionText,
+
+        // Financing Type Status (for owner finance)
+        ...(isOwnerFinance && {
           financingType: financingTypeResult.financingType || 'Owner Finance',
           allFinancingTypes: financingTypeResult.allTypes.length > 0 ? financingTypeResult.allTypes : ['Owner Finance'],
           financingTypeLabel: financingTypeResult.displayLabel || 'Owner Finance',
-
-          // Source tracking
-          source: 'agent_outreach',
-          agentConfirmedOwnerFinance: true,
-          agentConfirmedAt: new Date(),
-          agentNote: agentNote || null,
-          originalQueueId: firebaseId,
-
-          // CRITICAL: These flags make the property visible to buyers
           ownerFinanceVerified: true,
-          isActive: true,
+          agentConfirmedOwnerFinance: true,
+        }),
 
-          // Metadata
-          importedAt: new Date(),
-          lastStatusCheck: new Date(),
-          lastScrapedAt: new Date(),
-
-          // Full raw data for reference
-          rawData: property.rawData || null,
-        });
-
-        console.log('   ✅ Added to zillow_imports');
-      }
-      else if (property.dealType === 'cash_deal') {
-        // Add to cash_deals collection
-        console.log('   → Routing to cash_deals');
-
-        const discountPercent = property.priceToZestimateRatio
-          ? Math.round((1 - property.priceToZestimateRatio) * 100)
-          : 0;
-
-        await db.collection('cash_deals').add({
-          // Core identifiers
-          zpid: property.zpid,
-          url: property.url,
-
-          // Address
-          address: property.address || '',
-          streetAddress: property.address || '',
-          fullAddress: `${property.address}, ${property.city}, ${property.state} ${property.zipCode}`,
-          city: property.city || '',
-          state: property.state || '',
-          zipCode: property.zipCode || '',
-
-          // Pricing - THIS IS THE KEY DIFFERENCE
-          price: property.price || 0,
-          listPrice: property.price || 0,
-          zestimate: property.zestimate || 0,
-          priceToZestimateRatio: property.priceToZestimateRatio || 0,
-          discountPercent: discountPercent, // e.g., 25 = 25% below market
-
-          // Property details
-          bedrooms: property.beds || 0,
-          bathrooms: property.baths || 0,
-          livingArea: property.squareFeet || 0,
-          homeType: property.propertyType || 'SINGLE_FAMILY',
-          homeStatus: 'FOR_SALE',
-
-          // Agent info
-          agentName: property.agentName,
-          agentPhoneNumber: property.agentPhone,
-          agentEmail: property.agentEmail || null,
-
-          // Description
-          description: sanitizeDescription(property.rawData?.description || ''),
-
-          // Source tracking
-          source: 'agent_outreach',
+        // Cash deal fields
+        ...(isCashDeal && {
           agentConfirmedMotivated: true,
-          agentConfirmedAt: new Date(),
-          agentNote: agentNote || null,
-          originalQueueId: firebaseId,
+        }),
 
-          // Metadata
-          importedAt: new Date(),
-          lastStatusCheck: new Date(),
-          lastScrapedAt: new Date(),
+        // Unified collection flags
+        isOwnerFinance,
+        isCashDeal,
+        dealTypes: isOwnerFinance ? ['owner_finance'] : ['cash_deal'],
+        isActive: true,
 
-          // Full raw data for reference
-          rawData: property.rawData || null,
-        });
+        // Source tracking
+        source: 'agent_outreach',
+        agentConfirmedAt: new Date(),
+        agentNote: agentNote || null,
+        originalQueueId: firebaseId,
 
-        console.log('   ✅ Added to cash_deals');
-      }
+        // Metadata
+        importedAt: new Date(),
+        createdAt: new Date(),
+        lastStatusCheck: new Date(),
+        lastScrapedAt: new Date(),
+
+        // Full raw data for reference
+        rawData: property.rawData || null,
+      });
+
+      console.log('   ✅ Added to properties');
 
       // Update agent_outreach_queue
       await docRef.update({
@@ -305,7 +261,7 @@ export async function POST(request: NextRequest) {
         agentResponse: 'yes',
         agentResponseAt: new Date(),
         agentNote: agentNote || null,
-        routedTo: property.dealType === 'potential_owner_finance' ? 'zillow_imports' : 'cash_deals',
+        routedTo: 'properties',
         updatedAt: new Date(),
       });
 
@@ -332,12 +288,10 @@ export async function POST(request: NextRequest) {
       message: 'Agent response processed successfully',
       firebaseId,
       response,
-      routedTo: response === 'yes'
-        ? (property.dealType === 'potential_owner_finance' ? 'zillow_imports' : 'cash_deals')
-        : 'rejected'
+      routedTo: response === 'yes' ? 'properties' : 'rejected'
     });
 
-  } catch (error: any) {
+  } catch (error) {
     console.error('❌ [AGENT RESPONSE WEBHOOK] Error:', error);
 
     return NextResponse.json(

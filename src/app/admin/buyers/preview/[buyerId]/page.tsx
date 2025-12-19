@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { ExtendedSession } from '@/types/session';
 import Tutorial from '@/components/dashboard/Tutorial';
 import { PropertySwiper2 } from '@/components/ui/PropertySwiper2';
 import { PropertyListing } from '@/lib/property-schema';
@@ -78,16 +77,17 @@ export default function BuyerPreview() {
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/');
-    } else if (status === 'authenticated' && (session?.user as any)?.role !== 'admin') {
+    } else if (status === 'authenticated' && (session?.user as { role?: string })?.role !== 'admin') {
       router.push('/');
     }
   }, [status, session, router]);
 
   // Load buyer data
   useEffect(() => {
-    if (status === 'authenticated' && (session?.user as any)?.role === 'admin') {
+    if (status === 'authenticated' && (session?.user as { role?: string })?.role === 'admin') {
       loadBuyerData();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, session, buyerId]);
 
   const loadBuyerData = async () => {
@@ -255,7 +255,7 @@ export default function BuyerPreview() {
   };
 
   // Handler for passing a property (no action needed for preview)
-  const handlePassProperty = (property: PropertyListing) => {
+  const handlePassProperty = (_property: PropertyListing) => {
     // Just move to next property - no server call needed
   };
 

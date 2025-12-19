@@ -34,15 +34,15 @@ export async function GET() {
 
     // Use getCountFromServer - much more efficient than loading all docs
     // This only counts documents, doesn't load them into memory
-    // FIXED: Count from correct collections:
-    // - Properties: both 'properties' (isActive=true) AND 'zillow_imports' (ownerFinanceVerified=true)
+    // UNIFIED COLLECTION: All properties now in single 'properties' collection
+    // - Properties: 'properties' collection (isActive=true)
     // - Buyers: Count buyers with BOTH a user record (role='buyer') AND a buyerProfile
-    //   This matches the actual buyer list display logic in /api/admin/buyers
     // - Realtors: users with role='realtor'
     // - Disputes: leadDisputes collection
-    const [propertiesCount, zillowCount, buyerUsersSnapshot, buyerProfilesSnapshot, realtorsCount, disputesCount] = await Promise.all([
+    const [propertiesCount, ownerFinanceCount, cashDealCount, buyerUsersSnapshot, buyerProfilesSnapshot, realtorsCount, disputesCount] = await Promise.all([
       getCountFromServer(query(collection(db, 'properties'), where('isActive', '==', true))),
-      getCountFromServer(query(collection(db, 'zillow_imports'), where('ownerFinanceVerified', '==', true))),
+      getCountFromServer(query(collection(db, 'properties'), where('isActive', '==', true), where('isOwnerFinance', '==', true))),
+      getCountFromServer(query(collection(db, 'properties'), where('isActive', '==', true), where('isCashDeal', '==', true))),
       getDocs(query(collection(db, 'users'), where('role', '==', 'buyer'))),
       getDocs(collection(db, 'buyerProfiles')),
       getCountFromServer(query(collection(db, 'users'), where('role', '==', 'realtor'))),
@@ -61,7 +61,9 @@ export async function GET() {
     });
 
     const stats = {
-      totalProperties: propertiesCount.data().count + zillowCount.data().count,
+      totalProperties: propertiesCount.data().count,
+      ownerFinanceProperties: ownerFinanceCount.data().count,
+      cashDealProperties: cashDealCount.data().count,
       totalBuyers: validBuyerCount,
       totalRealtors: realtorsCount.data().count,
       pendingDisputes: disputesCount.data().count

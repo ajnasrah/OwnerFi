@@ -7,24 +7,16 @@ import {
   getDocs,
   doc,
   updateDoc,
-  deleteDoc,
   where,
-  orderBy,
   limit as firestoreLimit,
-  startAfter,
   getCountFromServer,
-  getAggregateFromServer,
-  count
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { logError, logInfo } from '@/lib/logger';
 import { ExtendedSession } from '@/types/session';
 import { autoCleanPropertyData } from '@/lib/property-auto-cleanup';
 import { getCitiesWithinRadiusComprehensive, getCityCoordinatesComprehensive } from '@/lib/comprehensive-cities';
-
-// Simple in-memory cache for properties (5 min TTL)
-let propertiesCache: { data: any[]; timestamp: number; key: string } | null = null;
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+import { getTypesenseSearchClient, TYPESENSE_COLLECTIONS } from '@/lib/typesense/client';
 
 // Calculate distance between two points using Haversine formula (returns miles)
 function haversineDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
@@ -40,7 +32,7 @@ function haversineDistance(lat1: number, lng1: number, lat2: number, lng2: numbe
 }
 
 // Fast field mapper - only essential fields
-function mapPropertyFields(doc: any) {
+function mapPropertyFields(doc: FirebaseFirestore.QueryDocumentSnapshot) {
   const data = doc.data();
   const price = data.price || data.listPrice || 0;
 
@@ -75,7 +67,7 @@ function mapPropertyFields(doc: any) {
     // Admin panel compatibility - use streetAddress (just the street, not full address with city/state/zip)
     address: data.streetAddress || data.fullAddress || data.address,
     squareFeet: data.squareFoot || data.squareFeet,
-    imageUrl: data.firstPropertyImage || data.imageUrl,
+    imageUrl: data.firstPropertyImage || data.imgSrc || data.imageUrl,
     imageUrls: data.propertyImages || data.imageUrls || [],
     zillowImageUrl: data.firstPropertyImage || data.zillowImageUrl,
     listPrice: price,
@@ -98,6 +90,131 @@ function mapPropertyFields(doc: any) {
   };
 }
 
+// ============================================
+// TYPESENSE SEARCH (Fast Path)
+// ============================================
+interface TypesenseSearchParams {
+  city?: string;
+  state?: string;
+  radius?: number;
+  page?: number;
+  limit?: number;
+}
+
+async function searchWithTypesense(params: TypesenseSearchParams): Promise<{
+  properties: Record<string, unknown>[];
+  total: number;
+  states: string[];
+  engine: 'typesense';
+} | null> {
+  const client = getTypesenseSearchClient();
+  if (!client) return null;
+
+  try {
+    const filters: string[] = ['isActive:=true'];
+    const limit = params.limit || 200;
+    const page = params.page || 1;
+
+    // State filter
+    if (params.state) {
+      filters.push(`state:=${params.state}`);
+    }
+
+    // Geo search if city + radius provided
+    let searchQuery = '*';
+    if (params.city) {
+      const centerCoords = getCityCoordinatesComprehensive(params.city, params.state || '');
+      if (centerCoords && params.radius && params.radius > 0) {
+        // Use geo radius filter
+        filters.push(`location:(${centerCoords.lat}, ${centerCoords.lng}, ${params.radius} mi)`);
+      } else {
+        // Text search by city name
+        searchQuery = params.city;
+      }
+    }
+
+    const result = await client.collections(TYPESENSE_COLLECTIONS.PROPERTIES)
+      .documents()
+      .search({
+        q: searchQuery,
+        query_by: 'city,address,nearbyCities',
+        filter_by: filters.join(' && '),
+        sort_by: 'createdAt:desc',
+        page,
+        per_page: limit,
+        facet_by: 'state',
+      });
+
+    // Extract unique states from facets
+    const states: string[] = [];
+    if (result.facet_counts) {
+      const stateFacet = result.facet_counts.find(f => f.field_name === 'state');
+      if (stateFacet) {
+        states.push(...stateFacet.counts.map(c => c.value).sort());
+      }
+    }
+
+    // Transform results to match expected format
+    const properties = (result.hits || []).map((hit: Record<string, unknown>) => {
+      const doc = hit.document;
+      return {
+        id: doc.id,
+        fullAddress: `${doc.address}, ${doc.city}, ${doc.state} ${doc.zipCode}`,
+        streetAddress: doc.address,
+        city: doc.city,
+        state: doc.state,
+        zipCode: doc.zipCode,
+        price: doc.listPrice,
+        squareFoot: doc.squareFeet,
+        bedrooms: doc.bedrooms,
+        bathrooms: doc.bathrooms,
+        lotSquareFoot: doc.lotSquareFeet,
+        homeType: doc.propertyType,
+        ownerFinanceVerified: doc.ownerFinanceVerified,
+        status: doc.homeStatus,
+        firstPropertyImage: doc.primaryImage,
+        propertyImages: doc.galleryImages || [],
+        foundAt: doc.createdAt ? new Date(doc.createdAt).toISOString() : null,
+        monthlyPayment: doc.monthlyPayment || null,
+        downPaymentAmount: doc.downPaymentAmount || null,
+        downPaymentPercent: doc.downPaymentPercent || null,
+        interestRate: doc.interestRate || null,
+        termYears: doc.termYears || null,
+        balloonYears: doc.balloonYears || null,
+        address: doc.address,
+        squareFeet: doc.squareFeet,
+        imageUrl: doc.primaryImage,
+        imageUrls: doc.galleryImages || [],
+        zillowImageUrl: doc.primaryImage,
+        listPrice: doc.listPrice,
+        description: doc.description || '',
+        primaryKeyword: doc.ownerFinanceKeywords?.[0] || null,
+        matchedKeywords: doc.ownerFinanceKeywords || [],
+        agentName: doc.agentName || null,
+        agentPhone: doc.agentPhone || null,
+        agentEmail: doc.agentEmail || null,
+        source: doc.sourceType || null,
+        agentConfirmedOwnerFinance: doc.manuallyVerified || false,
+        latitude: doc.location?.[0] || null,
+        longitude: doc.location?.[1] || null,
+        estimatedValue: doc.zestimate || null,
+      };
+    });
+
+    console.log(`[admin/properties] Typesense: ${properties.length} results in ${result.search_time_ms}ms`);
+
+    return {
+      properties,
+      total: result.found || 0,
+      states,
+      engine: 'typesense',
+    };
+  } catch (error) {
+    console.warn('[admin/properties] Typesense search failed:', error);
+    return null;
+  }
+}
+
 // Get all properties for admin management with optional filtering
 export async function GET(request: NextRequest) {
   try {
@@ -109,8 +226,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Admin access control
-    const session = await // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    getServerSession(authOptions as any) as ExtendedSession | null;
+    const session = await getServerSession(authOptions as typeof authOptions) as ExtendedSession | null;
 
     if (!session?.user || (session as ExtendedSession).user.role !== 'admin') {
       return NextResponse.json(
@@ -125,68 +241,82 @@ export async function GET(request: NextRequest) {
     const city = searchParams.get('city')?.toLowerCase();
     const state = searchParams.get('state')?.toUpperCase();
     const radius = parseInt(searchParams.get('radius') || '0');
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = Math.min(parseInt(searchParams.get('limit') || '200'), 500);
 
-    // Fetch from BOTH collections - zillow_imports AND properties
-    const zillowCollection = collection(db, 'zillow_imports');
+    // Fetch from unified properties collection only
     const propertiesCollection = collection(db, 'properties');
 
     // FAST PATH: Count-only mode for stats
     if (countOnly) {
-      const [zillowCount, propertiesCount] = await Promise.all([
-        getCountFromServer(query(zillowCollection, where('ownerFinanceVerified', '==', true))),
-        getCountFromServer(query(propertiesCollection, where('isActive', '==', true)))
-      ]);
-      const total = zillowCount.data().count + propertiesCount.data().count;
+      const propertiesCount = await getCountFromServer(query(propertiesCollection, where('isActive', '==', true)));
       return NextResponse.json({
         properties: [],
         count: 0,
-        total: total,
+        total: propertiesCount.data().count,
         hasMore: false
       });
     }
 
-    let zillowConstraints: any[] = [
-      where('ownerFinanceVerified', '==', true),
-      orderBy('foundAt', 'desc')
+    // ===== TRY TYPESENSE FIRST (FAST PATH) =====
+    const typesenseResult = await searchWithTypesense({
+      city,
+      state,
+      radius,
+      page,
+      limit,
+    });
+
+    // If Typesense is available (result not null), use it even if 0 results
+    // Only fall back to Firestore if Typesense FAILS (returns null)
+    if (typesenseResult !== null) {
+      const response = NextResponse.json({
+        properties: typesenseResult.properties,
+        count: typesenseResult.properties.length,
+        total: typesenseResult.total,
+        states: typesenseResult.states.length > 0 ? typesenseResult.states : undefined,
+        hasMore: typesenseResult.total > page * limit,
+        page,
+        limit,
+        engine: 'typesense',
+        showing: typesenseResult.properties.length > 0
+          ? `Showing ${typesenseResult.properties.length} of ${typesenseResult.total} properties${city ? ` near ${city}` : ''}${state ? ` in ${state}` : ''}`
+          : `No properties found${city ? ` near ${city}` : ''}${state ? ` in ${state}` : ''}`
+      });
+      response.headers.set('Cache-Control', 'private, max-age=30, stale-while-revalidate=300');
+      return response;
+    }
+
+    // ===== FIRESTORE FALLBACK (only when Typesense is unavailable) =====
+    console.log('[admin/properties] Typesense unavailable, falling back to Firestore');
+
+    let propertiesConstraints: unknown[] = [
+      where('isActive', '==', true),
+      firestoreLimit(limit)
     ];
 
-    // Note: Removed orderBy to avoid requiring composite index (only 5-10 properties typically)
-    let propertiesConstraints: any[] = [
-      where('isActive', '==', true)
-    ];
-
-    // Filter by status if specified (only for zillow_imports)
+    // Filter by status if specified
     if (status !== 'all') {
       if (status === 'null') {
-        zillowConstraints = [
-          where('ownerFinanceVerified', '==', true),
+        propertiesConstraints = [
+          where('isActive', '==', true),
           where('status', '==', null),
-          orderBy('foundAt', 'desc')
+          firestoreLimit(limit)
         ];
       } else {
-        zillowConstraints = [
-          where('ownerFinanceVerified', '==', true),
+        propertiesConstraints = [
+          where('isActive', '==', true),
           where('status', '==', status),
-          orderBy('foundAt', 'desc')
+          firestoreLimit(limit)
         ];
       }
     }
 
-    // Execute BOTH queries in parallel
-    const [zillowSnapshot, propertiesSnapshot] = await Promise.all([
-      getDocs(query(zillowCollection, ...zillowConstraints)),
-      getDocs(query(propertiesCollection, ...propertiesConstraints))
-    ]);
+    // Execute query on unified properties collection
+    const propertiesSnapshot = await getDocs(query(propertiesCollection, ...propertiesConstraints));
 
-    // Map both collections
-    const zillowProperties = zillowSnapshot.docs.map(mapPropertyFields);
-    const ghlProperties = propertiesSnapshot.docs.map(mapPropertyFields);
-
-    // Combine and deduplicate (in case same property exists in both)
-    let allProperties = [...zillowProperties, ...ghlProperties];
-    let uniqueProperties = Array.from(
-      new Map(allProperties.map(p => [p.id, p])).values()
-    );
+    // Map properties
+    let uniqueProperties = propertiesSnapshot.docs.map(mapPropertyFields);
 
     // Apply location filtering (city/state/radius)
     if (city) {
@@ -205,7 +335,7 @@ export async function GET(request: NextRequest) {
         if (searchState) statesInRadius.add(searchState);
         console.log(`[properties] Radius search: ${city} + ${radius}mi includes states: ${[...statesInRadius].join(', ')}`);
 
-        uniqueProperties = uniqueProperties.filter((prop: any) => {
+        uniqueProperties = uniqueProperties.filter((prop: Record<string, unknown>) => {
           // If property has coordinates, use actual distance calculation
           if (prop.latitude && prop.longitude) {
             const dist = haversineDistance(centerCoords.lat, centerCoords.lng, prop.latitude, prop.longitude);
@@ -216,7 +346,7 @@ export async function GET(request: NextRequest) {
         });
       } else {
         // No radius - filter by exact city match AND state if provided
-        uniqueProperties = uniqueProperties.filter((prop: any) => {
+        uniqueProperties = uniqueProperties.filter((prop: Record<string, unknown>) => {
           const cityMatch = prop.city?.toLowerCase().includes(city);
           const stateMatch = state ? prop.state === state : true;
           return cityMatch && stateMatch;
@@ -224,7 +354,7 @@ export async function GET(request: NextRequest) {
       }
     } else if (state) {
       // No city search, just state filter
-      uniqueProperties = uniqueProperties.filter((prop: any) => prop.state === state);
+      uniqueProperties = uniqueProperties.filter((prop: Record<string, unknown>) => prop.state === state);
     }
 
     // Collect unique states for dropdown
@@ -239,7 +369,9 @@ export async function GET(request: NextRequest) {
       total: uniqueProperties.length,
       states,
       hasMore: false,
-      nextCursor: null,
+      page,
+      limit,
+      engine: 'firestore',
       showing: `Showing ${uniqueProperties.length} properties${city ? ` near ${city}` : ''}${state ? ` in ${state}` : ''}`
     });
     // PERF: Cache for 30s client-side, 2 min CDN, allows stale for 5 min while revalidating
@@ -306,8 +438,8 @@ export async function PUT(request: NextRequest) {
       if (cleanedData.zillowImageUrl) updates.zillowImageUrl = cleanedData.zillowImageUrl;
     }
 
-    // Update property in Firebase (zillow_imports collection)
-    await updateDoc(doc(db, 'zillow_imports', propertyId), {
+    // Update property in Firebase (unified properties collection)
+    await updateDoc(doc(db, 'properties', propertyId), {
       ...updates,
       updatedAt: new Date()
     });
@@ -367,8 +499,13 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Completely delete the property from Firebase (zillow_imports collection)
-    await deleteDoc(doc(db, 'zillow_imports', propertyId));
+    // Mark property as inactive in Firebase (unified properties collection)
+    // We don't actually delete to preserve history - just mark inactive
+    await updateDoc(doc(db, 'properties', propertyId), {
+      isActive: false,
+      deletedAt: new Date(),
+      deletedBy: 'admin'
+    });
 
     await logInfo('Property deleted by admin', {
       action: 'admin_property_delete',

@@ -5,51 +5,66 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, updateDoc, doc, query, where } from 'firebase/firestore';
+import { withCronLock } from '@/lib/cron-lock';
 
 export const maxDuration = 60;
 
 const REFILL_THRESHOLD = 15; // Refill if fewer than 15 unprocessed articles with score >= 70
 
 export async function GET(request: NextRequest) {
-  try {
-    // Verify cron secret
-    const authHeader = request.headers.get('authorization');
-    const userAgent = request.headers.get('user-agent');
-    const cronSecret = process.env.CRON_SECRET || 'dev-secret';
-    const isVercelCron = userAgent === 'vercel-cron/1.0';
+  // Verify cron secret first (before acquiring lock)
+  const authHeader = request.headers.get('authorization');
+  const userAgent = request.headers.get('user-agent');
+  const cronSecret = process.env.CRON_SECRET || 'dev-secret';
+  const isVercelCron = userAgent === 'vercel-cron/1.0';
 
-    if (!isVercelCron && authHeader !== `Bearer ${cronSecret}`) {
-      console.warn('⚠️  Unauthorized cron request');
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!isVercelCron && authHeader !== `Bearer ${cronSecret}`) {
+    console.warn('⚠️  Unauthorized cron request');
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  // Use cron lock to prevent concurrent execution
+  const result = await withCronLock('refill-articles', async () => {
+    try {
+      if (!db) {
+        return NextResponse.json({ error: 'Firebase not initialized' }, { status: 500 });
+      }
+
+      console.log('🔄 Starting article refill check at', new Date().toISOString());
+
+      const results = {
+        carz: await refillBrand('carz'),
+        ownerfi: await refillBrand('ownerfi'),
+        vassdistro: await refillBrand('vassdistro')
+      };
+
+      console.log('✅ Article refill check complete:', results);
+
+      return NextResponse.json({
+        success: true,
+        timestamp: new Date().toISOString(),
+        results
+      });
+
+    } catch (error) {
+      console.error('❌ Article refill error:', error);
+      return NextResponse.json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      }, { status: 500 });
     }
+  });
 
-    if (!db) {
-      return NextResponse.json({ error: 'Firebase not initialized' }, { status: 500 });
-    }
-
-    console.log('🔄 Starting article refill check at', new Date().toISOString());
-
-    const results = {
-      carz: await refillBrand('carz'),
-      ownerfi: await refillBrand('ownerfi'),
-      vassdistro: await refillBrand('vassdistro')
-    };
-
-    console.log('✅ Article refill check complete:', results);
-
-    return NextResponse.json({
-      success: true,
-      timestamp: new Date().toISOString(),
-      results
-    });
-
-  } catch (error) {
-    console.error('❌ Article refill error:', error);
+  // If lock wasn't acquired, return early
+  if (result === null) {
     return NextResponse.json({
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 });
+      message: 'Another instance is already running',
+      skipped: true
+    }, { status: 200 });
   }
+
+  return result;
 }
 
 async function refillBrand(brand: 'carz' | 'ownerfi' | 'vassdistro') {

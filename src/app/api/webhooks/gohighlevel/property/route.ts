@@ -482,10 +482,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 11. Process property - check correct collection based on ID type
-    // If we have firebase_id, update zillow_imports collection
-    // Otherwise, use legacy properties collection
-    const targetCollection = firebaseId ? 'zillow_imports' : 'properties';
+    // 11. Process property - all properties now use unified collection
+    const targetCollection = 'properties';
 
     // Check if property exists
     let isUpdate = false;
@@ -629,42 +627,60 @@ export async function POST(request: NextRequest) {
     const zestimate = parseNumberField(payload.zestimate);
     const rentZestimate = parseNumberField(payload.rentZestimate);
 
-    // Prepare property data
+    // Prepare property data - preserve existing scraped data when updating
+    const existing = existingPropertyData || {};
+
     const propertyData: any = {
       id: propertyId,
       opportunityId: payload.opportunityId,
       opportunityName: payload.opportunityName || formattedAddress,
-      address: formattedAddress,
-      city: normalizedCity,
-      state: normalizedState,
-      zipCode: payload.zipCode?.trim() || '',
-      price: price,
-      listPrice: price,
-      bedrooms: bedrooms,
-      beds: bedrooms,
-      bathrooms: bathrooms,
-      baths: bathrooms,
-      squareFeet: squareFeet,
-      yearBuilt: yearBuilt || 0,
-      lotSize: normalizeLotSize(payload.lotSizes || ''),
-      propertyType,
-      description: sanitizeDescription(payload.description),
-      estimatedValue: zestimate > 0 ? zestimate : undefined,
-      rentZestimate: rentZestimate > 0 ? rentZestimate : undefined,
-      monthlyPayment: calculatedMonthlyPayment,
-      downPaymentAmount,
-      downPaymentPercent,
-      interestRate: calculatedInterestRate,
-      termYears,
-      balloonYears: balloonYears > 0 ? balloonYears : null,
+      address: formattedAddress || existing.address || existing.streetAddress,
+      city: normalizedCity || existing.city,
+      state: normalizedState || existing.state,
+      zipCode: payload.zipCode?.trim() || existing.zipCode || existing.zipcode || '',
+      price: price || existing.price || existing.listPrice,
+      listPrice: price || existing.listPrice || existing.price,
+      // Preserve scraped property details if GHL doesn't provide them
+      bedrooms: bedrooms || existing.bedrooms || existing.beds || 0,
+      beds: bedrooms || existing.beds || existing.bedrooms || 0,
+      bathrooms: bathrooms || existing.bathrooms || existing.baths || 0,
+      baths: bathrooms || existing.baths || existing.bathrooms || 0,
+      squareFeet: squareFeet || existing.squareFeet || existing.livingArea || 0,
+      yearBuilt: yearBuilt || existing.yearBuilt || 0,
+      lotSize: normalizeLotSize(payload.lotSizes || '') || existing.lotSize || 0,
+      propertyType: propertyType || existing.propertyType || existing.homeType || 'single-family',
+      description: sanitizeDescription(payload.description) || existing.description || '',
+      // Preserve zestimate/estimates from scraped data
+      estimatedValue: zestimate > 0 ? zestimate : (existing.estimatedValue || existing.zestimate || existing.estimate || undefined),
+      zestimate: zestimate > 0 ? zestimate : (existing.zestimate || existing.estimate || existing.estimatedValue || undefined),
+      rentZestimate: rentZestimate > 0 ? rentZestimate : (existing.rentZestimate || existing.rentEstimate || undefined),
+      // Financial details from GHL
+      monthlyPayment: calculatedMonthlyPayment || existing.monthlyPayment,
+      downPaymentAmount: downPaymentAmount || existing.downPaymentAmount,
+      downPaymentPercent: downPaymentPercent || existing.downPaymentPercent,
+      interestRate: calculatedInterestRate || existing.interestRate,
+      termYears: termYears || existing.termYears,
+      balloonYears: balloonYears > 0 ? balloonYears : (existing.balloonYears || null),
       balloonPayment: null,
-      imageUrls: imageUrl ? [imageUrl] : [],
+      // CRITICAL: Preserve scraped image if GHL doesn't provide one
+      imageUrls: imageUrl ? [imageUrl] : (existing.imageUrls || (existing.imgSrc ? [existing.imgSrc] : [])),
+      imgSrc: imageUrl || existing.imgSrc || existing.firstPropertyImage || '',
+      firstPropertyImage: imageUrl || existing.firstPropertyImage || existing.imgSrc || '',
+      // Preserve additional scraped fields
+      zpid: existing.zpid,
+      latitude: existing.latitude,
+      longitude: existing.longitude,
+      homeStatus: existing.homeStatus,
+      daysOnZillow: existing.daysOnZillow,
+      // Mark as verified by agent via GHL
       source: 'gohighlevel',
       status: 'active',
       isActive: true,
+      ownerFinanceVerified: true, // Agent verified via GHL
+      dealType: 'owner_finance',  // Mark as owner finance deal
       featured: false,
       priority: 1,
-      nearbyCities: [],
+      nearbyCities: existing.nearbyCities || [],
       updatedAt: serverTimestamp(),
       lastUpdated: new Date().toISOString()
     };
@@ -770,7 +786,7 @@ export async function POST(request: NextRequest) {
       Object.entries(propertyData).filter(([_, value]) => value !== undefined)
     );
 
-    // Save to database (zillow_imports if firebase_id, otherwise properties)
+    // Save to database (unified properties collection)
     try {
       await setDoc(
         doc(db, targetCollection, propertyId),
@@ -817,6 +833,17 @@ export async function POST(request: NextRequest) {
           processingTimeMs: Date.now() - requestStartTime
         }
       });
+
+      // Index to Typesense for search
+      try {
+        const { indexRawFirestoreProperty } = await import('@/lib/typesense/sync');
+        console.log(`🔍 Indexing property ${propertyId} to Typesense`);
+        indexRawFirestoreProperty(propertyId, cleanPropertyData, targetCollection).catch(err => {
+          console.error('Failed to index property to Typesense:', err);
+        });
+      } catch (error) {
+        console.error('Error triggering Typesense indexing:', error);
+      }
 
       // Auto-add to rotation queue
       if (propertyData.status === 'active' && propertyData.isActive && propertyData.imageUrls && propertyData.imageUrls.length > 0) {

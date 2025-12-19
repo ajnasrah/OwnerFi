@@ -7,7 +7,7 @@ import { rateAndCleanupArticles } from '@/lib/feed-store-firestore';
 
 export const maxDuration = 300; // 5 minutes
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     if (!db) {
       return NextResponse.json({ error: 'Firebase not initialized' }, { status: 500 });

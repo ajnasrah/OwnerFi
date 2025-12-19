@@ -4,6 +4,7 @@
  */
 
 import CostDashboard from '@/components/CostDashboard';
+import Link from 'next/link';
 
 export const metadata = {
   title: 'Cost Dashboard | Admin',
@@ -28,12 +29,12 @@ export default function CostDashboardPage() {
 
         {/* Back to Admin */}
         <div className="mt-8">
-          <a
+          <Link
             href="/admin"
             className="inline-flex items-center gap-2 text-blue-400 hover:text-blue-300"
           >
             ← Back to Admin Dashboard
-          </a>
+          </Link>
         </div>
         </div>
       </div>

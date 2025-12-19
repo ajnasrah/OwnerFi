@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
     // Get filtered agents
     const brandAgents = getAgentsForBrand(brand);
     const primaryAgent = getPrimaryAgentForBrand(brand);
-    const languageAgents = language ? getAgentsByLanguage(language, brand) : null;
+    // const languageAgents = language ? getAgentsByLanguage(language, brand) : null;
 
     // Get usage stats
     const stats = await getAgentStats(brand);

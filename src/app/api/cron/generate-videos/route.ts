@@ -83,7 +83,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   return GET(request);
 }
 
@@ -255,47 +255,53 @@ async function generateGazaVideo() {
 
     console.log(`   ✅ Article: "${article.title.substring(0, 50)}..."`);
 
-    // Create workflow entry
-    const workflowId = `gaza-${Date.now()}`;
-    await addWorkflowToQueue({
-      id: workflowId,
-      articleId: article.id,
-      brand: brand as any,
-      status: 'pending',
-      articleTitle: article.title,
-      createdAt: Date.now(),
-      updatedAt: Date.now()
-    });
+    // Create workflow entry using correct function signature
+    // Use date-based articleId for deduplication (not timestamp)
+    const todayStr = new Date().toISOString().split('T')[0];
+    const articleId = `gaza_${article.id}_${todayStr}`;
+
+    let queueItem;
+    try {
+      queueItem = await addWorkflowToQueue(
+        articleId,
+        article.title,
+        brand as any
+      );
+    } catch (queueError) {
+      if (queueError instanceof Error && queueError.message.includes('Duplicate workflow blocked')) {
+        console.warn(`   ⚠️  ${queueError.message}`);
+        return { success: false, error: 'Duplicate workflow', skipped: true };
+      }
+      throw queueError;
+    }
+
+    const workflowId = queueItem.id;
 
     // Generate video using Gaza-specific generator
     console.log(`   🎬 Generating Gaza video...`);
-    const apiKey = process.env.HEYGEN_API_KEY;
-    if (!apiKey) {
-      throw new Error('HEYGEN_API_KEY not configured');
-    }
 
-    const generator = createGazaVideoGenerator(apiKey);
-    const brandConfig = getBrandConfig(brand);
+    const generator = createGazaVideoGenerator();
 
-    const result = await generator.generateVideo({
-      id: article.id,
-      title: article.title,
-      content: article.content || article.description,
-      link: article.link,
-      description: article.description
-    }, {
-      webhookUrl: brandConfig.webhookUrl,
+    // generateVideo signature: (article, workflowId, backgroundImageUrl?, agentOptions?)
+    const result = await generator.generateVideo(
+      {
+        id: article.id,
+        title: article.title,
+        content: article.content || article.description,
+        link: article.link,
+        description: article.description
+      },
       workflowId,
-      agentOptions: {
-        mood: 'sad',
-        topic: 'humanitarian'
-      }
-    });
+      undefined, // backgroundImageUrl
+      { mood: 'sad' } // agentOptions
+    );
 
-    if (result.success && result.videoId) {
-      await updateWorkflowStatus(workflowId, brand as any, 'heygen_processing', {
-        heygenVideoId: result.videoId,
-        statusChangedAt: Date.now()
+    // Result type: { videoId: string; agentId: string; script: string }
+    if (result.videoId) {
+      // FIX: Correct function signature - status is inside updates object
+      await updateWorkflowStatus(workflowId, brand as any, {
+        status: 'heygen_processing',
+        heygenVideoId: result.videoId
       });
 
       console.log(`   ✅ Video generation started: ${result.videoId}`);
@@ -306,14 +312,16 @@ async function generateGazaVideo() {
         article: article.title.substring(0, 60)
       };
     } else {
-      await updateWorkflowStatus(workflowId, brand as any, 'failed', {
-        error: result.error || 'Video generation failed'
+      // FIX: Correct function signature - status is inside updates object
+      await updateWorkflowStatus(workflowId, brand as any, {
+        status: 'failed',
+        error: 'Video generation failed - no videoId returned'
       });
 
-      console.error(`   ❌ Video generation failed: ${result.error}`);
+      console.error(`   ❌ Video generation failed: no videoId returned`);
       return {
         success: false,
-        error: result.error || 'Video generation failed'
+        error: 'Video generation failed - no videoId returned'
       };
     }
 

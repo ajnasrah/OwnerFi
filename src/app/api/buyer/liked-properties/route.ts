@@ -99,7 +99,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Get property details for liked properties from BOTH collections
+    // Get property details for liked properties from unified properties collection
     const allProperties: any[] = [];
 
     console.log('🔍 [LIKED-PROPERTIES] Fetching property details for IDs:', likedPropertyIds);
@@ -110,42 +110,31 @@ export async function GET(request: NextRequest) {
 
       console.log('🔍 [LIKED-PROPERTIES] Querying batch:', batch);
 
-      // Query both properties and zillow_imports collections
-      const [propertiesSnapshot, zillowSnapshot] = await Promise.all([
-        getDocs(query(collection(db, 'properties'), where(documentId(), 'in', batch))),
-        getDocs(query(collection(db, 'zillow_imports'), where(documentId(), 'in', batch)))
-      ]);
+      // Query unified properties collection
+      const propertiesSnapshot = await getDocs(
+        query(collection(db, 'properties'), where(documentId(), 'in', batch))
+      );
 
       console.log('📊 [LIKED-PROPERTIES] Query results:', {
-        propertiesFound: propertiesSnapshot.docs.length,
-        zillowFound: zillowSnapshot.docs.length
+        propertiesFound: propertiesSnapshot.docs.length
       });
 
-      const batchProperties = [
-        ...propertiesSnapshot.docs.map(doc => ({
+      const batchProperties = propertiesSnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
           id: doc.id,
-          ...doc.data(),
+          ...data,
+          // Normalize fields for compatibility
+          address: data.address || data.streetAddress || data.fullAddress,
+          city: data.city,
+          state: data.state,
+          zipCode: data.zipCode || data.zipcode,
+          listPrice: data.listPrice || data.price,
+          imageUrl: data.firstPropertyImage || data.imgSrc || data.imageUrl,
           isLiked: true,
-          source: 'curated'
-        })),
-        ...zillowSnapshot.docs.map(doc => {
-          const data = doc.data();
-          // Normalize zillow fields to standard property schema
-          return {
-            id: doc.id,
-            ...data,
-            // Map zillow fields to standard fields
-            address: data.streetAddress || data.address,
-            city: data.city,
-            state: data.state,
-            zipCode: data.zipcode || data.zipCode,
-            listPrice: data.price || data.listPrice,
-            imageUrl: data.imgSrc || data.imageUrl,
-            isLiked: true,
-            source: 'zillow'
-          };
-        })
-      ];
+          source: data.isOwnerFinance ? 'owner_finance' : data.isCashDeal ? 'cash_deal' : 'curated'
+        };
+      });
 
       allProperties.push(...batchProperties);
     }

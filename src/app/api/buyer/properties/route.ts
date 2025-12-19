@@ -14,6 +14,7 @@ import { getCitiesWithinRadiusWithExpansion } from '@/lib/comprehensive-cities';
 import { checkDatabaseAvailable, applyRateLimit, getClientIp } from '@/lib/api-guards';
 import { requireAuth } from '@/lib/auth-helpers';
 import { ErrorResponses, createSuccessResponse, logError } from '@/lib/api-error-handler';
+import { getTypesenseSearchClient, TYPESENSE_COLLECTIONS } from '@/lib/typesense/client';
 
 /**
  * BUYER PROPERTY API WITH NEARBY CITIES
@@ -25,7 +26,118 @@ import { ErrorResponses, createSuccessResponse, logError } from '@/lib/api-error
  * LOGIC: When buyer searches "Houston", we:
  * - Get list of cities within 30 miles of Houston (Pearland, Sugarland, etc.)
  * - Show properties located IN those nearby cities
+ *
+ * Uses Typesense for fast search with Firestore fallback.
  */
+
+// Search properties using Typesense (fast path)
+async function searchWithTypesense(params: {
+  city: string;
+  state: string;
+  buyerFilters: {
+    minBedrooms?: number;
+    maxBedrooms?: number;
+    minBathrooms?: number;
+    maxBathrooms?: number;
+    minPrice?: number;
+    maxPrice?: number;
+  };
+  limit: number;
+}): Promise<Array<PropertyListing & { id: string; source: string }> | null> {
+  const client = getTypesenseSearchClient();
+  if (!client) return null;
+
+  try {
+    const filters: string[] = [
+      'isActive:=true',
+      `state:=${params.state}`,
+      'dealType:=[owner_finance, both]', // Buyers see owner finance deals
+    ];
+
+    // Apply buyer preference filters
+    if (params.buyerFilters.minBedrooms !== undefined) {
+      filters.push(`bedrooms:>=${params.buyerFilters.minBedrooms}`);
+    }
+    if (params.buyerFilters.maxBedrooms !== undefined) {
+      filters.push(`bedrooms:<=${params.buyerFilters.maxBedrooms}`);
+    }
+    if (params.buyerFilters.minBathrooms !== undefined) {
+      filters.push(`bathrooms:>=${params.buyerFilters.minBathrooms}`);
+    }
+    if (params.buyerFilters.maxBathrooms !== undefined) {
+      filters.push(`bathrooms:<=${params.buyerFilters.maxBathrooms}`);
+    }
+    if (params.buyerFilters.minPrice !== undefined) {
+      filters.push(`listPrice:>=${params.buyerFilters.minPrice}`);
+    }
+    if (params.buyerFilters.maxPrice !== undefined) {
+      filters.push(`listPrice:<=${params.buyerFilters.maxPrice}`);
+    }
+
+    const result = await client.collections(TYPESENSE_COLLECTIONS.PROPERTIES)
+      .documents()
+      .search({
+        q: params.city,
+        query_by: 'city,nearbyCities,address',
+        filter_by: filters.join(' && '),
+        sort_by: 'monthlyPayment:asc,listPrice:asc',
+        per_page: Math.min(params.limit, 250),
+        include_fields: 'id,address,city,state,zipCode,bedrooms,bathrooms,squareFeet,yearBuilt,listPrice,monthlyPayment,downPaymentAmount,propertyType,primaryImage,nearbyCities,ownerFinanceKeywords,financingType,description,sourceType,manuallyVerified,zestimate,rentEstimate',
+      });
+
+    // Debug: log first result to see what fields are returned
+    if (result.hits && result.hits.length > 0) {
+      const firstDoc = (result.hits[0] as any).document;
+      console.log('[buyer/properties] First doc fields:', Object.keys(firstDoc));
+      console.log('[buyer/properties] First doc primaryImage:', firstDoc.primaryImage);
+    }
+
+    // Transform Typesense results to PropertyListing format
+    const properties = (result.hits || []).map((hit: Record<string, unknown>) => {
+      const doc = hit.document;
+      // Get image from multiple possible fields
+      const imageUrl = doc.primaryImage || doc.imgSrc || doc.firstPropertyImage || doc.imageUrl || '';
+      return {
+        id: doc.id,
+        address: doc.address || '',
+        streetAddress: doc.address || '',
+        city: doc.city || '',
+        state: doc.state || '',
+        zipCode: doc.zipCode || '',
+        bedrooms: doc.bedrooms || 0,
+        bathrooms: doc.bathrooms || 0,
+        squareFeet: doc.squareFeet,
+        yearBuilt: doc.yearBuilt,
+        listPrice: doc.listPrice || 0,
+        monthlyPayment: doc.monthlyPayment,
+        downPaymentAmount: doc.downPaymentAmount,
+        propertyType: doc.propertyType || 'other',
+        // Include ALL image fields for PropertyCard compatibility
+        imageUrl,
+        imgSrc: imageUrl,
+        firstPropertyImage: imageUrl,
+        description: doc.description || '',
+        isActive: true,
+        source: doc.sourceType || 'typesense',
+        manuallyVerified: doc.manuallyVerified || false,
+        nearbyCities: doc.nearbyCities || [],
+        ownerFinanceKeyword: doc.ownerFinanceKeywords?.[0] || 'Owner Financing',
+        matchedKeywords: doc.ownerFinanceKeywords || [],
+        financingType: doc.financingType || 'Owner Finance',
+        // Third-party estimates (from Zillow)
+        zestimate: doc.zestimate || null,
+        rentEstimate: doc.rentEstimate || null,
+      } as PropertyListing & { id: string; source: string; manuallyVerified?: boolean; zestimate?: number; rentEstimate?: number };
+    });
+
+    console.log(`[buyer/properties] Typesense returned ${properties.length} properties`);
+    return properties;
+
+  } catch (error) {
+    console.warn('[buyer/properties] Typesense search failed:', error);
+    return null;
+  }
+}
 
 export async function GET(request: NextRequest) {
   // Standardized authentication
@@ -72,17 +184,36 @@ export async function GET(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Get buyer's liked properties AND pre-computed filter
+    // Get user's liked/passed properties AND pre-computed filter
+    // Check buyerProfiles first, then realtorProfiles for realtors viewing the buyer dashboard
+    let likedPropertyIds: string[] = [];
+    let passedPropertyIds: string[] = [];
+    let nearbyCityNames = new Set<string>();
+    let profile: any = null;
+
     const buyerProfileQuery = query(
       collection(db, 'buyerProfiles'),
       where('userId', '==', session.user.id)
     );
     const buyerSnapshot = await getDocs(buyerProfileQuery);
-    let likedPropertyIds: string[] = [];
-    let passedPropertyIds: string[] = [];
-    let nearbyCityNames = new Set<string>();
 
-    // Property filter preferences from buyer profile
+    if (!buyerSnapshot.empty) {
+      profile = buyerSnapshot.docs[0].data();
+      console.log(`📋 [buyer-search] Using buyerProfile for user ${session.user.id}`);
+    } else {
+      // Fallback to realtor profile if no buyer profile exists
+      const realtorProfileQuery = query(
+        collection(db, 'realtorProfiles'),
+        where('userId', '==', session.user.id)
+      );
+      const realtorSnapshot = await getDocs(realtorProfileQuery);
+      if (!realtorSnapshot.empty) {
+        profile = realtorSnapshot.docs[0].data();
+        console.log(`📋 [buyer-search] Using realtorProfile for user ${session.user.id}`);
+      }
+    }
+
+    // Property filter preferences from profile
     let buyerFilters = {
       minBedrooms: undefined as number | undefined,
       maxBedrooms: undefined as number | undefined,
@@ -94,10 +225,16 @@ export async function GET(request: NextRequest) {
       maxPrice: undefined as number | undefined,
     };
 
-    if (!buyerSnapshot.empty) {
-      const profile = buyerSnapshot.docs[0].data();
+    if (profile) {
       likedPropertyIds = profile.likedProperties || profile.likedPropertyIds || [];
       passedPropertyIds = profile.passedPropertyIds || [];
+
+      console.log(`📋 [buyer-search] User has ${passedPropertyIds.length} passed properties, ${likedPropertyIds.length} liked properties`);
+      if (passedPropertyIds.length > 0 && passedPropertyIds.length < 10) {
+        console.log(`📋 [buyer-search] Passed IDs: ${passedPropertyIds.join(', ')}`);
+      } else if (passedPropertyIds.length >= 10) {
+        console.log(`📋 [buyer-search] First 5 passed IDs: ${passedPropertyIds.slice(0, 5).join(', ')}...`);
+      }
 
       // Extract property filter preferences
       buyerFilters = {
@@ -141,90 +278,128 @@ export async function GET(request: NextRequest) {
       console.error(`❌ [BUYER SEARCH] WARNING: No nearby cities found! Properties will only show from exact city match.`);
     }
 
-    // ===== QUERY PROPERTIES FROM TWO SOURCES =====
-    // OPTIMIZATION: Use array-contains on nearbyCities for fast geo filtering
-    // This avoids fetching all properties and filtering in memory
+    // ===== TRY TYPESENSE FIRST (FAST PATH) =====
+    const typesenseResults = await searchWithTypesense({
+      city: searchCity,
+      state: searchState,
+      buyerFilters,
+      limit: pageSize * 3, // Fetch extra for filtering
+    });
+
+    // If Typesense returns results, use them
+    if (typesenseResults && typesenseResults.length > 0) {
+      // Filter out passed properties (unless includePassed is true)
+      const filteredResults = includePassed
+        ? typesenseResults
+        : typesenseResults.filter(p => !passedPropertyIds.includes(p.id));
+
+      console.log(`📊 [buyer-search] Typesense: ${typesenseResults.length} total, ${filteredResults.length} after filtering passed, ${passedPropertyIds.length} passed IDs`);
+
+      // Mark liked properties
+      const processedResults = filteredResults.map(property => {
+        const isLiked = likedPropertyIds.includes(property.id);
+        const propCityLower = property.city?.toLowerCase() || '';
+        const isInSearchCity = propCityLower === searchCity.toLowerCase();
+
+        return {
+          ...property,
+          resultType: isLiked ? 'liked' : isInSearchCity ? 'direct' : 'nearby',
+          displayTag: isLiked ? '❤️ Liked' : isInSearchCity ? `In ${searchCity}` : 'Nearby',
+          sortOrder: isLiked ? 0 : isInSearchCity ? 1 : 2,
+          matchReason: isLiked
+            ? `Previously liked`
+            : isInSearchCity
+            ? `Located in ${searchCity}`
+            : `Near ${searchCity} (in ${property.city})`,
+          isLiked,
+        };
+      });
+
+      // Sort: liked first, then direct, then nearby
+      processedResults.sort((a, b) => {
+        if (a.sortOrder !== b.sortOrder) return a.sortOrder - b.sortOrder;
+        const aPayment = a.monthlyPayment || 999999;
+        const bPayment = b.monthlyPayment || 999999;
+        return aPayment - bPayment;
+      });
+
+      // Apply pagination
+      const totalResults = processedResults.length;
+      const startIndex = (page - 1) * pageSize;
+      const paginatedResults = processedResults.slice(startIndex, startIndex + pageSize);
+      const hasMore = startIndex + pageSize < totalResults;
+
+      console.log(`✅ [buyer-search] Typesense fast path: ${paginatedResults.length} results (page ${page})`);
+
+      return NextResponse.json({
+        properties: paginatedResults,
+        total: totalResults,
+        page,
+        pageSize,
+        hasMore,
+        totalPages: Math.ceil(totalResults / pageSize),
+        breakdown: {
+          liked: processedResults.filter(p => p.resultType === 'liked').length,
+          direct: processedResults.filter(p => p.resultType === 'direct').length,
+          nearby: processedResults.filter(p => p.resultType === 'nearby').length,
+          totalLikedIncluded: processedResults.filter(p => p.isLiked).length,
+          totalPropertiesInDB: typesenseResults.length,
+        },
+        searchCriteria: { city: searchCity, state: searchState },
+        engine: 'typesense',
+      });
+    }
+
+    // ===== FALLBACK TO FIRESTORE (UNIFIED COLLECTION) =====
+    console.log(`⚠️  [buyer-search] Typesense returned no results, falling back to Firestore`);
+
+    // ===== QUERY FROM UNIFIED PROPERTIES COLLECTION =====
+    // All properties are now in single 'properties' collection with isOwnerFinance flag
+    // Buyers see only owner finance properties (isOwnerFinance = true)
 
     // PAGINATION: Limit initial queries to reduce bandwidth and improve performance
     const fetchLimit = Math.min(pageSize * 3, 300); // Fetch 3x pageSize, max 300
 
-    // Build queries - use array-contains if buyer's city is in property's nearbyCities
-    // This means: "Find properties whose nearbyCities array contains the buyer's search city"
-    // Which finds properties that are NEAR the buyer's search city
-
-    // 1. Curated properties - DIRECT matches (property IS in search city)
+    // 1. DIRECT matches - owner finance properties in search state
     const propertiesDirectQuery = query(
       collection(db, 'properties'),
       where('isActive', '==', true),
+      where('isOwnerFinance', '==', true),
       where('state', '==', searchState),
       orderBy('monthlyPayment', 'asc'),
       limit(fetchLimit)
     );
 
-    // 2. Curated properties - NEARBY matches (buyer's city is in property's nearbyCities)
+    // 2. NEARBY matches - owner finance properties where buyer's city is in property's nearbyCities
     const propertiesNearbyQuery = query(
       collection(db, 'properties'),
       where('isActive', '==', true),
+      where('isOwnerFinance', '==', true),
       where('nearbyCities', 'array-contains', searchCity),
       limit(fetchLimit)
     );
 
-    // 3. Zillow scraped properties - DIRECT matches
-    const zillowDirectQuery = query(
-      collection(db, 'zillow_imports'),
-      where('state', '==', searchState),
-      where('ownerFinanceVerified', '==', true),
-      limit(fetchLimit)
-    );
-
-    // 4. Zillow scraped properties - NEARBY matches
-    const zillowNearbyQuery = query(
-      collection(db, 'zillow_imports'),
-      where('ownerFinanceVerified', '==', true),
-      where('nearbyCities', 'array-contains', searchCity),
-      limit(fetchLimit)
-    );
-
-    // Execute ALL queries in parallel for maximum performance
-    const [propertiesDirectSnapshot, propertiesNearbySnapshot, zillowDirectSnapshot, zillowNearbySnapshot] = await Promise.all([
+    // Execute queries in parallel
+    const [propertiesDirectSnapshot, propertiesNearbySnapshot] = await Promise.all([
       getDocs(propertiesDirectQuery),
-      getDocs(propertiesNearbyQuery),
-      getDocs(zillowDirectQuery),
-      getDocs(zillowNearbyQuery)
+      getDocs(propertiesNearbyQuery)
     ]);
 
-    // Merge snapshots (dedupe by ID)
+    // Merge and dedupe by ID
     const propertiesMap = new Map();
     propertiesDirectSnapshot.docs.forEach(doc => propertiesMap.set(doc.id, doc));
     propertiesNearbySnapshot.docs.forEach(doc => propertiesMap.set(doc.id, doc));
-    const propertiesSnapshot = { docs: Array.from(propertiesMap.values()) };
 
-    const zillowMap = new Map();
-    zillowDirectSnapshot.docs.forEach(doc => zillowMap.set(doc.id, doc));
-    zillowNearbySnapshot.docs.forEach(doc => zillowMap.set(doc.id, doc));
-    const zillowSnapshot = { docs: Array.from(zillowMap.values()) };
+    console.log(`📊 [buyer-search] Query results: ${propertiesMap.size} properties (direct: ${propertiesDirectSnapshot.size}, nearby: ${propertiesNearbySnapshot.size})`);
 
-    console.log(`📊 [buyer-search] Query results: ${propertiesSnapshot.docs.length} curated, ${zillowSnapshot.docs.length} zillow`);
-
-    // Combine results from both sources
-    const curatedProperties = propertiesSnapshot.docs.map(doc => {
+    // Transform to PropertyListing format
+    const allFetchedProperties = Array.from(propertiesMap.values()).map(doc => {
       const data = doc.data();
       return {
         id: doc.id,
         ...data,
-        description: data.description || '', // Explicitly include description
-        source: 'curated' // Tag for UI
-      } as PropertyListing & { id: string; source: string };
-    });
-
-    const zillowProperties = zillowSnapshot.docs.map(doc => {
-      const data = doc.data();
-      return {
-        id: doc.id,
-        ...data,
-        source: 'zillow',
-        // Field mapping for UI compatibility (Zillow fields -> PropertyListing schema)
-        // Use streetAddress for display, fullAddress only for complete address
+        source: 'unified',
+        // Field mapping for UI compatibility
         address: data.streetAddress || data.address?.split(',')[0]?.trim() || data.fullAddress?.split(',')[0]?.trim(),
         streetAddress: data.streetAddress || data.address?.split(',')[0]?.trim() || data.fullAddress?.split(',')[0]?.trim(),
         fullAddress: data.fullAddress || `${data.streetAddress || data.address}, ${data.city}, ${data.state} ${data.zipCode || data.zipcode}`,
@@ -233,10 +408,9 @@ export async function GET(request: NextRequest) {
         listPrice: data.price || data.listPrice,
         termYears: data.loanTermYears || data.termYears,
         propertyType: data.homeType || data.buildingType || data.propertyType,
-        imageUrl: data.firstPropertyImage || data.imageUrl,
+        imageUrl: data.firstPropertyImage || data.imgSrc || data.imageUrl,
         imageUrls: data.propertyImages || data.imageUrls || [],
-        description: data.description || '', // Explicitly include description
-        // Property details mapping
+        description: data.description || '',
         bedrooms: data.bedrooms || 0,
         bathrooms: data.bathrooms || 0,
         yearBuilt: data.yearBuilt || null,
@@ -249,28 +423,21 @@ export async function GET(request: NextRequest) {
         appliances: data.appliances || [],
         neighborhood: data.neighborhood || data.subdivision || null,
         daysOnMarket: data.daysOnZillow || null,
-        // Contact info mapping
         agentPhone: data.agentPhoneNumber || data.brokerPhoneNumber || null,
         agentName: data.agentName || data.brokerName || null,
         agentEmail: data.agentEmail || null,
-        // Market estimates mapping (zillow field names -> PropertyListing schema)
         estimatedValue: data.estimate || data.zestimate || null,
         rentZestimate: data.rentEstimate || data.rentZestimate || null,
         pricePerSqFt: data.price && data.squareFoot ? Math.round(data.price / data.squareFoot) : null,
-        // HOA mapping (convert number to object structure)
         hoa: data.hoa ? { hasHOA: true, monthlyFee: data.hoa } : null,
-        // Taxes mapping (convert number to object structure)
         taxes: data.annualTaxAmount ? { annualAmount: data.annualTaxAmount } : null,
-        // Calculate down payment percentage if not provided
         downPaymentPercent: data.downPaymentPercent || (data.downPaymentAmount && data.price ?
           Math.round((data.downPaymentAmount / data.price) * 100) : null),
-        // Owner finance keywords for display
         ownerFinanceKeyword: data.primaryKeyword || data.matchedKeywords?.[0] || 'Owner Financing',
         matchedKeywords: data.matchedKeywords || [],
-        // NO CALCULATIONS OR ASSUMPTIONS - Only use data from GHL/agent
-        monthlyPayment: data.monthlyPayment || null, // TBD if not provided
-        downPaymentAmount: data.downPaymentAmount || null, // TBD if not provided
-        isActive: data.status !== 'sold' && data.status !== 'pending',
+        monthlyPayment: data.monthlyPayment || null,
+        downPaymentAmount: data.downPaymentAmount || null,
+        isActive: data.isActive !== false && data.status !== 'sold' && data.status !== 'pending',
       } as PropertyListing & {
         id: string;
         source: string;
@@ -279,9 +446,8 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    // 🆕 Combine and filter out passed properties FIRST (before any processing)
-    // UNLESS includePassed=true is specified
-    const allPropertiesBeforeFilter = [...curatedProperties, ...zillowProperties];
+    // Filter out passed properties (unless includePassed=true)
+    const allPropertiesBeforeFilter = allFetchedProperties;
     const allProperties = includePassed
       ? allPropertiesBeforeFilter // Show all properties including passed ones
       : allPropertiesBeforeFilter.filter(p => !passedPropertyIds.includes(p.id)); // Filter out passed
@@ -439,7 +605,7 @@ export async function GET(request: NextRequest) {
 
       let displayTag = '❤️ Liked';
       let matchReason = 'Previously liked';
-      let sortOrder = 0; // Highest priority for liked
+      const sortOrder = 0; // Highest priority for liked
 
       if (isInSearchCity) {
         displayTag = '❤️ Liked';

@@ -33,7 +33,7 @@ interface PodcastScript {
 
 export class ScriptGenerator {
   private openai: OpenAI;
-  private guestProfiles: any;
+  private guestProfiles: Record<string, GuestProfile>;
   private _hostProfile: HostProfile;
   private configLoaded: boolean = false;
 
@@ -76,7 +76,7 @@ export class ScriptGenerator {
         this._hostProfile = config.host;
         this.configLoaded = true;
         console.log('⚠️  Loaded podcast profiles from local file (fallback)');
-      } catch (fallbackError) {
+      } catch {
         console.error('❌ Failed to load profiles from both Firestore and local file');
         throw new Error('Could not load podcast profiles');
       }
@@ -88,14 +88,14 @@ export class ScriptGenerator {
    */
   selectRandomGuest(excludeRecent: string[] = []): GuestProfile {
     const availableGuests = Object.values(this.guestProfiles).filter(
-      (guest: any) => guest.enabled !== false && !excludeRecent.includes(guest.id)
-    ) as GuestProfile[];
+      (guest) => (guest as GuestProfile & { enabled?: boolean }).enabled !== false && !excludeRecent.includes(guest.id)
+    );
 
     if (availableGuests.length === 0) {
       // If all guests used recently, pick from all enabled guests
       const allEnabled = Object.values(this.guestProfiles).filter(
-        (guest: any) => guest.enabled !== false
-      ) as GuestProfile[];
+        (guest) => (guest as GuestProfile & { enabled?: boolean }).enabled !== false
+      );
 
       if (allEnabled.length === 0) {
         throw new Error('No enabled guests available');

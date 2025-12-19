@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 interface Article {
   id: string;
@@ -59,6 +60,7 @@ export default function ArticlesPage() {
       return () => clearInterval(interval);
     }
     return undefined;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authStatus, session]);
 
   const loadArticles = async () => {
@@ -73,13 +75,14 @@ export default function ArticlesPage() {
     }
   };
 
-  const formatDate = (timestamp: any) => {
+  const formatDate = (timestamp: unknown) => {
     if (!timestamp) return 'N/A';
     // Handle Firestore timestamp with _seconds
-    if (typeof timestamp === 'object' && typeof timestamp._seconds === 'number') {
-      timestamp = timestamp._seconds * 1000;
+    let finalTimestamp = timestamp;
+    if (typeof timestamp === 'object' && timestamp !== null && '_seconds' in timestamp && typeof (timestamp as { _seconds: number })._seconds === 'number') {
+      finalTimestamp = (timestamp as { _seconds: number })._seconds * 1000;
     }
-    const date = new Date(timestamp);
+    const date = new Date(finalTimestamp as string | number);
     if (isNaN(date.getTime())) return 'N/A';
     return date.toLocaleDateString('en-US', {
       month: 'short',
@@ -225,7 +228,7 @@ export default function ArticlesPage() {
     <div className="h-screen overflow-hidden bg-slate-900 flex flex-col">
       <div className="flex-1 overflow-y-auto p-6">
         <div className="max-w-7xl mx-auto">
-        <a href="/admin" className="text-emerald-400 hover:text-emerald-300 text-sm mb-4 inline-block">← Back to Admin</a>
+        <Link href="/admin" className="text-emerald-400 hover:text-emerald-300 text-sm mb-4 inline-block">← Back to Admin</Link>
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-white">Article Management</h1>
@@ -241,7 +244,7 @@ export default function ArticlesPage() {
           ].map((tab) => (
             <button
               key={tab.key}
-              onClick={() => setActiveBrand(tab.key as any)}
+              onClick={() => setActiveBrand(tab.key as 'carz' | 'ownerfi' | 'vassdistro')}
               className={`flex items-center space-x-2 px-6 py-3 rounded-xl font-medium transition-all ${
                 activeBrand === tab.key
                   ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg'
@@ -262,7 +265,7 @@ export default function ArticlesPage() {
           ].map((tab) => (
             <button
               key={tab.key}
-              onClick={() => setActiveView(tab.key as any)}
+              onClick={() => setActiveView(tab.key as 'queue' | 'unprocessed')}
               className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                 activeView === tab.key
                   ? 'bg-emerald-600 text-white'

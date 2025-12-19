@@ -541,7 +541,7 @@ function mapRowToProperty(
   // Calculate monthly payment ONLY if not provided
   // If monthly payment is provided, use it as-is (may include taxes/insurance)
   let calculatedMonthlyPayment = monthlyPayment;
-  let finalTermYears = termYears || 20; // Use provided term or default to 20 years
+  const finalTermYears = termYears || 20; // Use provided term or default to 20 years
 
   if (!calculatedMonthlyPayment && interestRate && downPaymentAmount && price && finalTermYears) {
     // Only calculate if monthly payment was NOT provided
@@ -635,7 +635,7 @@ function generateFailureCSV(headers: string[], failedRows: FailedRow[]): string 
   const simpleHeaders = ['Row', 'Address', 'City', 'State', 'Zip', 'Price', 'Reason'];
 
   // Helper function to properly escape CSV fields
-  const escapeCSVField = (field: any): string => {
+  const escapeCSVField = (field: unknown): string => {
     if (field === null || field === undefined) {
       return '';
     }

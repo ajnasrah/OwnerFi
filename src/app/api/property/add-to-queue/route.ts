@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
           state: property.state
         });
 
-      } catch (error: any) {
+      } catch (error) {
         if (error.message?.includes('already in queue')) {
           console.log(`⏭️  Property ${id} already in queue`);
           results.skipped++;

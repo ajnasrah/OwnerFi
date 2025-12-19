@@ -106,7 +106,7 @@ export async function getStuckSubmagicJobs(brands?: string[]): Promise<any[]> {
   const db = getFirestore();
 
   // Find workflows stuck in submagic_processing
-  let query = db.collection('workflows')
+  const query = db.collection('workflows')
     .where('currentStage', '==', 'submagic_processing')
     .orderBy('lastUpdated', 'desc')
     .limit(100);

@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const options: any = { daysApart };
+    const options: Record<string, unknown> = { daysApart };
     if (startDate) {
       options.startDate = new Date(startDate);
     }

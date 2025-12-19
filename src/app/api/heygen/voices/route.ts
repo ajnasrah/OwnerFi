@@ -7,7 +7,7 @@ const HEYGEN_API_URL = 'https://api.heygen.com/v2/voices';
 let cache: { data: any; timestamp: number } | null = null;
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   // Check cache first
   if (cache && Date.now() - cache.timestamp < CACHE_DURATION) {
     console.log('Returning cached voices data');

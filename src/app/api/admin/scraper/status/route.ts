@@ -107,7 +107,7 @@ export async function GET(request: NextRequest) {
       progress,
     });
 
-  } catch (error: any) {
+  } catch (error) {
     console.error('Status check error:', error);
     return NextResponse.json(
       { error: error.message || 'Failed to get status' },

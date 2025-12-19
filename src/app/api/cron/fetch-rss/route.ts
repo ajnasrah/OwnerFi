@@ -7,27 +7,30 @@ import { db } from '@/lib/firebase';
 import { getAllFeedSources } from '@/lib/feed-store-firestore';
 import { processFeedSources } from '@/lib/rss-fetcher';
 import { getFeedsToFetch } from '@/config/feed-sources';
+import { withCronLock } from '@/lib/cron-lock';
 
 export const maxDuration = 300; // 5 minutes timeout
 
 export async function GET(request: NextRequest) {
-  try {
-    // Verify cron secret (Vercel Cron adds this header)
-    const authHeader = request.headers.get('authorization');
-    const userAgent = request.headers.get('user-agent');
-    const cronSecret = process.env.CRON_SECRET || 'dev-secret';
-    const isVercelCron = userAgent === 'vercel-cron/1.0';
+  // Verify cron secret first (before acquiring lock)
+  const authHeader = request.headers.get('authorization');
+  const userAgent = request.headers.get('user-agent');
+  const cronSecret = process.env.CRON_SECRET || 'dev-secret';
+  const isVercelCron = userAgent === 'vercel-cron/1.0';
 
-    if (!isVercelCron && authHeader !== `Bearer ${cronSecret}`) {
-      console.warn('⚠️  Unauthorized cron request');
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+  if (!isVercelCron && authHeader !== `Bearer ${cronSecret}`) {
+    console.warn('⚠️  Unauthorized cron request');
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
-    if (!db) {
-      return NextResponse.json({ error: 'Firebase not initialized' }, { status: 500 });
-    }
+  // Use cron lock to prevent concurrent execution
+  const result = await withCronLock('fetch-rss', async () => {
+    try {
+      if (!db) {
+        return NextResponse.json({ error: 'Firebase not initialized' }, { status: 500 });
+      }
 
-    console.log('🚀 Starting daily RSS fetch at', new Date().toISOString());
+      console.log('🚀 Starting daily RSS fetch at', new Date().toISOString());
 
     // Get all feed sources from Firestore
     const allFeeds = await getAllFeedSources();
@@ -76,14 +79,26 @@ export async function GET(request: NextRequest) {
       brandCounts
     });
 
-  } catch (error) {
-    console.error('❌ RSS fetch error:', error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
-      },
-      { status: 500 }
-    );
+    } catch (error) {
+      console.error('❌ RSS fetch error:', error);
+      return NextResponse.json(
+        {
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error'
+        },
+        { status: 500 }
+      );
+    }
+  }); // End withCronLock
+
+  // If lock wasn't acquired, return early
+  if (result === null) {
+    return NextResponse.json({
+      success: false,
+      message: 'Another instance is already running',
+      skipped: true
+    }, { status: 200 });
   }
+
+  return result;
 }

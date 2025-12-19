@@ -20,7 +20,7 @@ export interface ErrorLogEntry {
   severity: 'low' | 'medium' | 'high' | 'critical';
   message: string;
   stack?: string;
-  context?: Record<string, any>;
+  context?: Record<string, unknown>;
   workflowId?: string;
   userId?: string;
   timestamp: number;
@@ -41,7 +41,7 @@ export async function logBrandError(options: {
   severity: ErrorLogEntry['severity'];
   message: string;
   error?: Error;
-  context?: Record<string, any>;
+  context?: Record<string, unknown>;
   workflowId?: string;
   userId?: string;
 }): Promise<string> {
@@ -110,6 +110,7 @@ export async function getErrorLogs(filters?: {
   limit?: number;
 }): Promise<ErrorLogEntry[]> {
   try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let query: any = db.collection(ERROR_LOG_COLLECTION);
 
     // Apply filters
@@ -150,10 +151,10 @@ export async function getErrorLogs(filters?: {
 
     const snapshot = await query.get();
 
-    return snapshot.docs.map((doc: any) => ({
+    return snapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
-    }));
+    } as ErrorLogEntry));
   } catch (error) {
     console.error('Failed to get error logs:', error);
     return [];
@@ -177,6 +178,7 @@ export async function getErrorStats(brand?: Brand): Promise<{
   last7Days: number;
 }> {
   try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let query: any = db.collection(ERROR_LOG_COLLECTION);
 
     if (brand) {
@@ -184,7 +186,7 @@ export async function getErrorStats(brand?: Brand): Promise<{
     }
 
     const snapshot = await query.get();
-    const logs = snapshot.docs.map((doc: any) => doc.data() as ErrorLogEntry);
+    const logs = snapshot.docs.map((doc) => doc.data() as ErrorLogEntry);
 
     const now = Date.now();
     const day = 24 * 60 * 60 * 1000;
@@ -264,7 +266,7 @@ export async function cleanupOldErrorLogs(): Promise<number> {
     }
 
     const batch = db.batch();
-    snapshot.docs.forEach((doc: any) => {
+    snapshot.docs.forEach((doc) => {
       batch.delete(doc.ref);
     });
 
@@ -285,7 +287,7 @@ export const BrandLogger = {
   /**
    * Log API error
    */
-  apiError: (brand: Brand, service: ErrorLogEntry['service'], message: string, error?: Error, context?: Record<string, any>) => {
+  apiError: (brand: Brand, service: ErrorLogEntry['service'], message: string, error?: Error, context?: Record<string, unknown>) => {
     return logBrandError({
       brand,
       service,
@@ -300,7 +302,7 @@ export const BrandLogger = {
   /**
    * Log webhook error
    */
-  webhookError: (brand: Brand, service: ErrorLogEntry['service'], message: string, error?: Error, context?: Record<string, any>) => {
+  webhookError: (brand: Brand, service: ErrorLogEntry['service'], message: string, error?: Error, context?: Record<string, unknown>) => {
     return logBrandError({
       brand,
       service,
@@ -315,7 +317,7 @@ export const BrandLogger = {
   /**
    * Log workflow error
    */
-  workflowError: (brand: Brand, workflowId: string, message: string, error?: Error, context?: Record<string, any>) => {
+  workflowError: (brand: Brand, workflowId: string, message: string, error?: Error, context?: Record<string, unknown>) => {
     return logBrandError({
       brand,
       service: 'general',
@@ -331,7 +333,7 @@ export const BrandLogger = {
   /**
    * Log critical error
    */
-  critical: (brand: Brand, service: ErrorLogEntry['service'], message: string, error?: Error, context?: Record<string, any>) => {
+  critical: (brand: Brand, service: ErrorLogEntry['service'], message: string, error?: Error, context?: Record<string, unknown>) => {
     return logBrandError({
       brand,
       service,

@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export const maxDuration = 60;
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // Import rotation queue functions
     const { getPropertyRotationStats } = await import('@/lib/feed-store-firestore');

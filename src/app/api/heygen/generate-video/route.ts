@@ -28,7 +28,7 @@ interface HeyGenRequest {
   offset?: { x: number; y: number };
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   try {
     // Check API key configuration
     if (!HEYGEN_API_KEY) {

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 
 export default function ManualAddCredits() {
   const [email, setEmail] = useState('');
@@ -80,9 +81,9 @@ export default function ManualAddCredits() {
             </p>
           )}
         </div>
-        
+
         <div className="mt-6 text-center">
-          <a href="/admin" className="text-gray-600 hover:text-gray-800">← Back to Admin</a>
+          <Link href="/admin" className="text-gray-600 hover:text-gray-800">← Back to Admin</Link>
         </div>
       </div>
     </div>

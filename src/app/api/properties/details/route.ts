@@ -33,13 +33,13 @@ export async function GET(request: NextRequest) {
 
     // Firestore 'in' query has a limit of 10, so batch if needed
     const properties = [];
-    
+
     for (let i = 0; i < propertyIds.length; i += 10) {
       const batch = propertyIds.slice(i, i + 10);
-      
-      // Query from zillow_imports collection (where all owner finance properties are stored)
+
+      // Query from unified properties collection
       const batchQuery = query(
-        collection(db, 'zillow_imports'),
+        collection(db, 'properties'),
         where(documentId(), 'in', batch)
       );
 
@@ -50,18 +50,18 @@ export async function GET(request: NextRequest) {
           id: doc.id,
           ...data,
           // Convert timestamps and map fields for compatibility
-          foundAt: data.foundAt?.toDate?.()?.toISOString() || data.foundAt,
-          createdAt: data.foundAt?.toDate?.()?.toISOString() || data.foundAt,
-          updatedAt: data.foundAt?.toDate?.()?.toISOString() || data.foundAt,
+          foundAt: data.createdAt?.toDate?.()?.toISOString() || data.createdAt,
+          createdAt: data.createdAt?.toDate?.()?.toISOString() || data.createdAt,
+          updatedAt: data.updatedAt?.toDate?.()?.toISOString() || data.updatedAt,
           // Map field names for compatibility
           imageUrl: data.firstPropertyImage || data.imageUrl,
-          imageUrls: data.propertyImages || data.imageUrls || [],
-          address: data.streetAddress || data.fullAddress || data.address,
-          squareFeet: data.squareFoot || data.squareFeet,
-          listPrice: data.price || data.listPrice,
+          imageUrls: data.imageUrls || [],
+          address: data.address || data.streetAddress || data.fullAddress,
+          squareFeet: data.squareFeet || data.squareFoot,
+          listPrice: data.listPrice || data.price,
         };
       });
-      
+
       properties.push(...batchProperties);
     }
 

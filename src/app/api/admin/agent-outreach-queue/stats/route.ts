@@ -23,10 +23,10 @@ const db = getFirestore();
  *
  * Returns real-time stats about the agent outreach queue
  */
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // Admin access control
-    const session = await getServerSession(authOptions as any) as ExtendedSession | null;
+    const session = await getServerSession(authOptions as typeof authOptions) as ExtendedSession | null;
 
     if (!session?.user || (session as ExtendedSession).user.role !== 'admin') {
       return NextResponse.json(
@@ -221,13 +221,14 @@ export async function GET(request: NextRequest) {
       timestamp: new Date().toISOString(),
     });
 
-  } catch (error: any) {
+  } catch (error) {
     console.error('❌ [ADMIN] Error fetching stats:', error);
+    const message = error instanceof Error ? error.message : 'Unknown error';
 
     return NextResponse.json(
       {
         error: 'Failed to fetch queue stats',
-        message: error.message
+        message
       },
       { status: 500 }
     );

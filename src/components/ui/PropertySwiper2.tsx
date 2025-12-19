@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, memo, useMemo } from 'react';
+import Link from 'next/link';
 import { PropertyListing } from '@/lib/property-schema';
 import { PropertyCard } from './PropertyCard';
 
@@ -26,8 +27,8 @@ export const PropertySwiper2 = memo(function PropertySwiper2({
   const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
-  const [showAction, setShowAction] = useState<'like' | 'pass' | null>(null);
   const [animating, setAnimating] = useState(false);
+  const [showAction, setShowAction] = useState<'like' | 'pass' | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // PERF: Convert passedIds to Set for O(1) lookup instead of O(n) includes()
@@ -39,12 +40,10 @@ export const PropertySwiper2 = memo(function PropertySwiper2({
     [properties, passedIdsSet]
   );
   const currentProperty = visibleProperties[currentIndex];
-  const nextProperty = visibleProperties[currentIndex + 1];
 
   // Reset state when index changes
   useEffect(() => {
     setDragOffset({ x: 0, y: 0 });
-    setShowAction(null);
     setAnimating(false);
   }, [currentIndex]);
 
@@ -231,14 +230,14 @@ export const PropertySwiper2 = memo(function PropertySwiper2({
             ALL CAUGHT UP!
           </h2>
           <p className="text-slate-300 text-lg mb-8 leading-relaxed">
-            You've viewed all available properties. Check back soon for new listings, or adjust your search criteria.
+            You&apos;ve viewed all available properties. Check back soon for new listings, or adjust your search criteria.
           </p>
-          <a
+          <Link
             href="/dashboard/settings"
             className="inline-block bg-gradient-to-r from-emerald-500 to-blue-500 text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all"
           >
             Adjust Search Settings
-          </a>
+          </Link>
         </div>
       </div>
     );

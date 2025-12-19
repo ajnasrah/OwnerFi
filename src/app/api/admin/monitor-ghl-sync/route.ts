@@ -27,7 +27,7 @@ interface SyncStatus {
  * Monitor GHL → Firestore sync status
  * GET /api/admin/monitor-ghl-sync
  */
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     if (!GHL_API_KEY || !GHL_LOCATION_ID) {
       return NextResponse.json(

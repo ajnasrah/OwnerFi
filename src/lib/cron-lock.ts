@@ -1,10 +1,13 @@
 /**
  * Cron Job Locking Mechanism
  * Prevents concurrent execution of the same cron job using Firestore
+ *
+ * CRITICAL: Uses Firestore transactions for atomic lock acquisition
+ * to prevent race conditions where two processes acquire the lock simultaneously.
  */
 
 import { db } from './firebase';
-import { doc, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, deleteDoc, runTransaction } from 'firebase/firestore';
 
 const LOCK_COLLECTION = 'cron_locks';
 const LOCK_TTL_MS = 10 * 60 * 1000; // 10 minutes (increased from 5 to prevent expiration during long-running crons)
@@ -26,50 +29,65 @@ function generateInstanceId(): string {
 }
 
 /**
- * Attempt to acquire a lock for a cron job
+ * Attempt to acquire a lock for a cron job using atomic transaction
  * Returns the instanceId if successful, null if lock is held by another process
+ *
+ * CRITICAL: Uses Firestore transaction to prevent race conditions where
+ * two processes both see no lock and both proceed to acquire it.
  */
 export async function acquireCronLock(cronName: string): Promise<string | null> {
   if (!db) {
-    console.warn('⚠️  Firebase not initialized, skipping lock (allowing execution)');
-    return generateInstanceId(); // Allow execution if Firebase unavailable
+    console.warn('⚠️  Firebase not initialized, skipping lock (blocking execution for safety)');
+    return null; // DON'T allow execution if Firebase unavailable - could cause duplicates
   }
 
   const lockRef = doc(db, LOCK_COLLECTION, cronName);
   const instanceId = generateInstanceId();
 
   try {
-    // Check if lock exists and is still valid
-    const lockDoc = await getDoc(lockRef);
+    // Use transaction for ATOMIC read-then-write operation
+    // This prevents race conditions where two processes both see no lock
+    const acquired = await runTransaction(db, async (transaction) => {
+      const lockDoc = await transaction.get(lockRef);
+      const now = Date.now();
 
-    if (lockDoc.exists()) {
-      const existingLock = lockDoc.data() as CronLock;
+      if (lockDoc.exists()) {
+        const existingLock = lockDoc.data() as CronLock;
 
-      // Check if lock has expired
-      if (existingLock.expiresAt > Date.now()) {
-        console.log(`🔒 Cron "${cronName}" is locked by instance ${existingLock.instanceId}`);
-        return null; // Lock is held by another process
+        // Check if lock has expired
+        if (existingLock.expiresAt > now) {
+          console.log(`🔒 Cron "${cronName}" is locked by instance ${existingLock.instanceId}`);
+          console.log(`   Lock expires in ${Math.round((existingLock.expiresAt - now) / 1000)}s`);
+          return false; // Lock is held by another process
+        }
+
+        console.log(`♻️  Existing lock for "${cronName}" has expired, acquiring new lock`);
       }
 
-      console.log(`♻️  Existing lock for "${cronName}" has expired, acquiring new lock`);
+      // Acquire lock atomically within the transaction
+      const lock: CronLock = {
+        cronName,
+        acquiredAt: now,
+        expiresAt: now + LOCK_TTL_MS,
+        instanceId
+      };
+
+      transaction.set(lockRef, lock);
+      return true;
+    });
+
+    if (acquired) {
+      console.log(`✅ Acquired lock for cron "${cronName}" (instance: ${instanceId})`);
+      return instanceId;
+    } else {
+      return null;
     }
 
-    // Acquire lock
-    const lock: CronLock = {
-      cronName,
-      acquiredAt: Date.now(),
-      expiresAt: Date.now() + LOCK_TTL_MS,
-      instanceId
-    };
-
-    await setDoc(lockRef, lock);
-    console.log(`✅ Acquired lock for cron "${cronName}" (instance: ${instanceId})`);
-
-    return instanceId;
   } catch (error) {
     console.error(`❌ Error acquiring lock for "${cronName}":`, error);
-    // If lock acquisition fails, allow execution to prevent blocking
-    return instanceId;
+    // CRITICAL: Do NOT allow execution on error - could cause duplicates
+    // Better to skip a cron run than to run duplicates
+    return null;
   }
 }
 

@@ -1,6 +1,5 @@
 import { MetadataRoute } from 'next'
-import { db } from '@/lib/firebase'
-import { collection, getDocs, query, where } from 'firebase/firestore'
+import { getAllPropertiesForSitemap } from '@/lib/property-seo'
 
 // This function runs on every request to generate a fresh sitemap
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -97,38 +96,27 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }))
 
-  // Fetch all active properties from Firebase
+  // Fetch all active properties from ALL collections (properties, zillow_imports, cash_houses)
   let propertyPages: MetadataRoute.Sitemap = []
 
   try {
-    const propertiesRef = collection(db, 'properties')
-    const activePropertiesQuery = query(propertiesRef, where('isActive', '==', true))
-    const snapshot = await getDocs(activePropertiesQuery)
+    // Get properties from all collections via property-seo library
+    const allProperties = await getAllPropertiesForSitemap()
 
-    propertyPages = snapshot.docs.map(doc => {
-      const property = doc.data()
-      // Create SEO-friendly URL from address
-      const addressSlug = property.address
-        ?.toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-+|-+$/g, '') || doc.id
+    propertyPages = allProperties.map(prop => ({
+      url: `${baseUrl}/property/${prop.slug}`,
+      lastModified: prop.lastModified,
+      changeFrequency: 'weekly' as const,
+      priority: 0.8,
+    }))
 
-      return {
-        url: `${baseUrl}/property/${addressSlug}-${doc.id}`,
-        lastModified: property.lastUpdated ? new Date(property.lastUpdated) : new Date(),
-        changeFrequency: 'weekly' as const,
-        priority: 0.8,
-      }
-    })
-
-    // Also create location-based pages for better SEO
+    // Collect unique cities and states for dynamic location pages
     const cities = new Set<string>()
     const states = new Set<string>()
 
-    snapshot.docs.forEach(doc => {
-      const property = doc.data()
-      if (property.city) cities.add(property.city.toLowerCase())
-      if (property.state) states.add(property.state.toLowerCase())
+    allProperties.forEach(prop => {
+      if (prop.city) cities.add(prop.city.toLowerCase())
+      if (prop.state) states.add(prop.state.toLowerCase())
     })
 
     // Add dynamic city pages from properties
@@ -146,6 +134,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'daily' as const,
       priority: 0.6,
     }))
+
+    console.log(`[Sitemap] Generated ${propertyPages.length} property URLs from all collections`)
 
     // Combine all pages
     return [...staticPages, ...keywordPages, ...statePages, ...cityPages, ...propertyPages, ...dynamicCityPages, ...dynamicStatePages]

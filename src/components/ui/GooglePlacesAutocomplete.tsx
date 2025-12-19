@@ -29,10 +29,11 @@ export function GooglePlacesAutocomplete({
   const [mapsLoaded, setMapsLoaded] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   
-  // Check if Google Maps API key is available
-  const hasGoogleMapsKey = typeof window !== 'undefined' && process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+  // Check if Google Maps API key is available - unused but kept for future use
+  // const hasGoogleMapsKey = typeof window !== 'undefined' && process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     const initAutocomplete = () => {
       try {
         if (!inputRef.current || !window.google?.maps?.places) {
@@ -84,8 +85,8 @@ export function GooglePlacesAutocomplete({
                 });
               });
             }
-          } catch (error) {
-            
+          } catch {
+            // Error silently handled
           }
         });
 
@@ -94,8 +95,7 @@ export function GooglePlacesAutocomplete({
             google.maps.event.removeListener(listener);
           }
         };
-      } catch (error) {
-        
+      } catch {
         setMapsLoadError(true);
         setIsLoading(false);
       }

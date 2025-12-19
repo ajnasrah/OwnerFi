@@ -25,6 +25,10 @@ interface UnifiedPostOptions {
   youtubeMadeForKids?: boolean;
   youtubePrivacy?: 'public' | 'unlisted' | 'private';
   youtubeUseSchedule?: boolean; // If true, use schedule slots for YouTube
+
+  // Idempotency - skip if already posted
+  existingYoutubeVideoId?: string; // If set, skip YouTube upload
+  existingLatePostId?: string; // If set, skip Late.dev posting
 }
 
 interface UnifiedPostResult {
@@ -72,91 +76,113 @@ export async function postToAllPlatforms(options: UnifiedPostOptions): Promise<U
 
   // Step 1: Upload to YouTube via DIRECT API (only once)
   if (hasYouTube) {
-    console.log(`\n📺 Step 1: Uploading to YouTube (direct API)...`);
-
-    try {
-      const youtubeResult = await postVideoToYouTube(
-        options.videoUrl,
-        options.title,
-        options.caption,
-        options.brand,
-        {
-          tags: options.hashtags,
-          category: options.youtubeCategory,
-          privacy: options.youtubePrivacy || 'public',
-          madeForKids: options.youtubeMadeForKids || false,
-          isShort: true,
-          useSchedule: options.youtubeUseSchedule,
-        }
-      );
-
-      result.youtube = youtubeResult;
-
-      if (youtubeResult.success) {
-        console.log(`✅ YouTube upload successful!`);
-        console.log(`   Video ID: ${youtubeResult.videoId}`);
-        if (youtubeResult.scheduledAt) {
-          console.log(`   📅 Scheduled for: ${youtubeResult.scheduledAt}`);
-        }
-        result.totalPublished++;
-      } else {
-        console.error(`❌ YouTube upload failed: ${youtubeResult.error}`);
-        result.errors.push(`YouTube: ${youtubeResult.error}`);
-      }
-    } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
-      console.error(`❌ YouTube upload error:`, error);
+    // IDEMPOTENCY CHECK: Skip if already uploaded
+    if (options.existingYoutubeVideoId) {
+      console.log(`\n📺 Step 1: YouTube SKIPPED - already uploaded (${options.existingYoutubeVideoId})`);
       result.youtube = {
-        success: false,
-        error: errorMsg,
+        success: true,
+        videoId: options.existingYoutubeVideoId,
+        videoUrl: `https://youtube.com/shorts/${options.existingYoutubeVideoId}`,
       };
-      result.errors.push(`YouTube: ${errorMsg}`);
+      result.totalPublished++;
+    } else {
+      console.log(`\n📺 Step 1: Uploading to YouTube (direct API)...`);
+
+      try {
+        const youtubeResult = await postVideoToYouTube(
+          options.videoUrl,
+          options.title,
+          options.caption,
+          options.brand,
+          {
+            tags: options.hashtags,
+            category: options.youtubeCategory,
+            privacy: options.youtubePrivacy || 'public',
+            madeForKids: options.youtubeMadeForKids || false,
+            isShort: true,
+            useSchedule: options.youtubeUseSchedule,
+          }
+        );
+
+        result.youtube = youtubeResult;
+
+        if (youtubeResult.success) {
+          console.log(`✅ YouTube upload successful!`);
+          console.log(`   Video ID: ${youtubeResult.videoId}`);
+          if (youtubeResult.scheduledAt) {
+            console.log(`   📅 Scheduled for: ${youtubeResult.scheduledAt}`);
+          }
+          result.totalPublished++;
+        } else {
+          console.error(`❌ YouTube upload failed: ${youtubeResult.error}`);
+          result.errors.push(`YouTube: ${youtubeResult.error}`);
+        }
+      } catch (error) {
+        const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+        console.error(`❌ YouTube upload error:`, error);
+        result.youtube = {
+          success: false,
+          error: errorMsg,
+        };
+        result.errors.push(`YouTube: ${errorMsg}`);
+      }
     }
   }
 
   // Step 2: Post to other platforms via Late.dev (NOT YouTube)
   if (latePlatforms.length > 0) {
-    console.log(`\n📱 Step 2: Posting to Late.dev...`);
-    console.log(`   Platforms: ${latePlatforms.join(', ')}`);
-
-    try {
-      const lateResult = await postToLate({
-        videoUrl: options.videoUrl,
-        caption: options.caption,
-        title: options.title,
+    // IDEMPOTENCY CHECK: Skip if already posted
+    if (options.existingLatePostId) {
+      console.log(`\n📱 Step 2: Late.dev SKIPPED - already posted (${options.existingLatePostId})`);
+      result.otherPlatforms = {
+        success: true,
+        postId: options.existingLatePostId,
         platforms: latePlatforms,
-        brand: options.brand,
-        hashtags: options.hashtags,
-        useQueue: options.useQueue,
-        timezone: options.timezone,
-        firstComment: options.firstComment,
-      });
-
-      result.otherPlatforms = {
-        success: lateResult.success,
-        postId: lateResult.postId,
-        platforms: lateResult.platforms,
-        error: lateResult.error,
       };
+      result.totalPublished += latePlatforms.length;
+    } else {
+      console.log(`\n📱 Step 2: Posting to Late.dev...`);
+      console.log(`   Platforms: ${latePlatforms.join(', ')}`);
 
-      if (lateResult.success) {
-        const publishedCount = lateResult.platforms?.length || 0;
-        console.log(`✅ Late.dev posting successful!`);
-        console.log(`   Post ID: ${lateResult.postId}`);
-        console.log(`   Platforms queued: ${publishedCount}`);
-        result.totalPublished += publishedCount;
-      } else {
-        console.error(`❌ Late.dev posting failed: ${lateResult.error}`);
-        result.errors.push(`Late.dev: ${lateResult.error}`);
+      try {
+        const lateResult = await postToLate({
+          videoUrl: options.videoUrl,
+          caption: options.caption,
+          title: options.title,
+          platforms: latePlatforms,
+          brand: options.brand,
+          hashtags: options.hashtags,
+          useQueue: options.useQueue,
+          timezone: options.timezone,
+          firstComment: options.firstComment,
+        });
+
+        result.otherPlatforms = {
+          success: lateResult.success,
+          postId: lateResult.postId,
+          platforms: lateResult.platforms,
+          error: lateResult.error,
+        };
+
+        if (lateResult.success) {
+          const publishedCount = lateResult.platforms?.length || 0;
+          console.log(`✅ Late.dev posting successful!`);
+          console.log(`   Post ID: ${lateResult.postId}`);
+          console.log(`   Platforms queued: ${publishedCount}`);
+          result.totalPublished += publishedCount;
+        } else {
+          console.error(`❌ Late.dev posting failed: ${lateResult.error}`);
+          result.errors.push(`Late.dev: ${lateResult.error}`);
+        }
+      } catch (error) {
+        const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+        console.error(`❌ Late.dev posting error:`, error);
+        result.otherPlatforms = {
+          success: false,
+          error: errorMsg,
+        };
+        result.errors.push(`Late.dev: ${errorMsg}`);
       }
-    } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
-      console.error(`❌ Late.dev posting error:`, error);
-      result.otherPlatforms = {
-        success: false,
-        error: errorMsg,
-      };
-      result.errors.push(`Late.dev: ${errorMsg}`);
     }
   }
 

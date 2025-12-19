@@ -131,6 +131,19 @@ export async function POST(request: NextRequest, context: RouteContext) {
       }, { status: 404 });
     }
 
+    // DUPLICATE CHECK: Skip if workflow already past heygen_processing stage
+    const alreadyProcessedStatuses = ['submagic_processing', 'video_processing', 'posting', 'completed'];
+    if (alreadyProcessedStatuses.includes(workflow.status)) {
+      console.warn(`⚠️  [${brandConfig.displayName}] Workflow ${workflowId} already in ${workflow.status} - skipping HeyGen webhook`);
+      return NextResponse.json({
+        success: true,
+        brand,
+        workflow_id: workflowId,
+        message: `Workflow already in ${workflow.status} status - duplicate webhook ignored`,
+        status: workflow.status,
+      });
+    }
+
     // Handle video generation success
     if (event_type === 'avatar_video.success' && event_data.url) {
       console.log(`✅ [${brandConfig.displayName}] HeyGen video completed!`);
@@ -307,12 +320,18 @@ async function getWorkflowForBrand(
 
 /**
  * Update workflow for specific brand
+ * CRITICAL: Also updates dedup document when status changes to prevent duplicate processing
  */
 async function updateWorkflowForBrand(
   brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit' | 'property' | 'property-spanish' | 'vassdistro' | 'abdullah' | 'gaza',
   workflowId: string,
   updates: Record<string, any>
 ): Promise<void> {
+  // Filter out undefined values - Firestore doesn't accept undefined
+  const cleanUpdates = Object.fromEntries(
+    Object.entries(updates).filter(([, v]) => v !== undefined)
+  );
+
   const { getAdminDb } = await import('@/lib/firebase-admin');
   const adminDb = await getAdminDb();
 
@@ -320,10 +339,37 @@ async function updateWorkflowForBrand(
     ? 'propertyShowcaseWorkflows'
     : `${brand}_workflow_queue`;
 
+  // Get the workflow first to extract articleId for dedup doc update
+  const workflowDoc = await adminDb.collection(collectionName).doc(workflowId).get();
+  const workflowData = workflowDoc.data();
+
   await adminDb.collection(collectionName).doc(workflowId).update({
-    ...updates,
+    ...cleanUpdates,
     updatedAt: Date.now()
   });
+
+  // CRITICAL: If status is being updated, also update the dedup document
+  // This ensures the dedup check reflects current workflow state
+  if (updates.status && workflowData?.articleId && workflowData?.createdAt) {
+    try {
+      const createdDate = new Date(workflowData.createdAt).toISOString().split('T')[0];
+      const dedupKey = `dedup_${workflowData.articleId}_${createdDate}`;
+      const dedupRef = adminDb.collection(collectionName).doc(dedupKey);
+
+      // Check if dedup doc exists before updating
+      const dedupDoc = await dedupRef.get();
+      if (dedupDoc.exists) {
+        await dedupRef.update({
+          status: updates.status,
+          updatedAt: Date.now()
+        });
+        console.log(`   ✅ Updated dedup doc ${dedupKey} with status: ${updates.status}`);
+      }
+    } catch (dedupError) {
+      // Log but don't fail - dedup update is best-effort
+      console.warn(`   ⚠️  Failed to update dedup doc:`, dedupError);
+    }
+  }
 }
 
 /**

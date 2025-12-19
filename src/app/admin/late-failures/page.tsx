@@ -40,6 +40,7 @@ export default function LateFailuresPage() {
 
   useEffect(() => {
     fetchFailures();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedBrand, selectedStatus, days]);
 
   const fetchFailures = async () => {
@@ -264,11 +265,11 @@ export default function LateFailuresPage() {
                         </span>
                         <span className="text-sm text-gray-500">
                           {(() => {
-                            const ts = failure.timestamp as any;
+                            const ts = failure.timestamp as unknown;
                             if (!ts) return 'N/A';
-                            if (typeof ts === 'object' && typeof ts._seconds === 'number') return new Date(ts._seconds * 1000).toLocaleString();
-                            if (typeof ts === 'object' && typeof ts.seconds === 'number') return new Date(ts.seconds * 1000).toLocaleString();
-                            const date = new Date(ts);
+                            if (typeof ts === 'object' && ts !== null && '_seconds' in ts && typeof (ts as { _seconds: number })._seconds === 'number') return new Date((ts as { _seconds: number })._seconds * 1000).toLocaleString();
+                            if (typeof ts === 'object' && ts !== null && 'seconds' in ts && typeof (ts as { seconds: number }).seconds === 'number') return new Date((ts as { seconds: number }).seconds * 1000).toLocaleString();
+                            const date = new Date(ts as string | number);
                             return isNaN(date.getTime()) ? 'N/A' : date.toLocaleString();
                           })()}
                         </span>

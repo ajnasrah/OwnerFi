@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Parse request body (optional - allows manual override of schedule)
-    let body: any = {};
+    let body: unknown = {};
     try {
       body = await request.json();
     } catch (error) {
@@ -88,11 +88,32 @@ export async function POST(request: NextRequest) {
 
       try {
         // Create workflow queue item
-        const queueItem = await addWorkflowToQueue(
-          `abdullah_daily_${Date.now()}_${i}`, // Unique article ID
-          video.title,
-          'abdullah'
-        );
+        // CRITICAL: Use date-based articleId for proper deduplication
+        // Format: abdullah_{theme}_{date}_{videoIndex} prevents same video being created twice
+        const today = date.toISOString().split('T')[0]; // YYYY-MM-DD format
+        const articleId = `abdullah_${video.theme}_${today}_${i}`;
+
+        let queueItem;
+        try {
+          queueItem = await addWorkflowToQueue(
+            articleId,
+            video.title,
+            'abdullah'
+          );
+        } catch (queueError) {
+          // Check if this is a duplicate workflow error (expected behavior)
+          if (queueError instanceof Error && queueError.message.includes('Duplicate workflow blocked')) {
+            console.warn(`   ⚠️  ${queueError.message}`);
+            workflowResults.push({
+              theme: video.theme,
+              title: video.title,
+              error: 'Duplicate workflow - already processed today',
+              status: 'skipped'
+            });
+            continue; // Skip to next video
+          }
+          throw queueError; // Re-throw other errors
+        }
 
         const workflowId = queueItem.id;
         console.log(`   📋 Workflow ID: ${workflowId}`);
@@ -288,6 +309,6 @@ async function generateAbdullahHeyGenVideo(
 }
 
 // Support GET for manual triggering/testing
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   return POST(request);
 }

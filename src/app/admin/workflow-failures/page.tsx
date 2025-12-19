@@ -3,6 +3,12 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
+interface FirestoreTimestamp {
+  _seconds: number;
+  _nanoseconds?: number;
+  seconds?: number;
+}
+
 interface LateFailure {
   id: string;
   brand: string;
@@ -10,7 +16,7 @@ interface LateFailure {
   failedPlatforms?: string[];
   caption: string;
   error: string;
-  timestamp: string;
+  timestamp: string | FirestoreTimestamp;
   status: string;
 }
 
@@ -32,6 +38,7 @@ export default function WorkflowFailuresPage() {
 
   useEffect(() => {
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchData = async () => {
@@ -75,7 +82,7 @@ export default function WorkflowFailuresPage() {
     <div className="h-screen overflow-hidden bg-slate-900 flex flex-col">
       <div className="flex-1 overflow-y-auto p-6">
         <div className="max-w-7xl mx-auto">
-        <a href="/admin" className="text-emerald-400 hover:text-emerald-300 text-sm mb-4 inline-block">← Back to Admin</a>
+        <Link href="/admin" className="text-emerald-400 hover:text-emerald-300 text-sm mb-4 inline-block">← Back to Admin</Link>
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
@@ -220,10 +227,10 @@ export default function WorkflowFailuresPage() {
                               </span>
                               <span className="text-sm text-slate-400">
                                 {(() => {
-                                  const ts = failure.timestamp as any;
+                                  const ts = failure.timestamp;
                                   if (!ts) return 'N/A';
-                                  if (typeof ts === 'object' && typeof ts._seconds === 'number') return new Date(ts._seconds * 1000).toLocaleString();
-                                  if (typeof ts === 'object' && typeof ts.seconds === 'number') return new Date(ts.seconds * 1000).toLocaleString();
+                                  if (typeof ts === 'object' && '_seconds' in ts && typeof ts._seconds === 'number') return new Date(ts._seconds * 1000).toLocaleString();
+                                  if (typeof ts === 'object' && 'seconds' in ts && typeof ts.seconds === 'number') return new Date(ts.seconds * 1000).toLocaleString();
                                   const date = new Date(ts);
                                   return isNaN(date.getTime()) ? 'N/A' : date.toLocaleString();
                                 })()}

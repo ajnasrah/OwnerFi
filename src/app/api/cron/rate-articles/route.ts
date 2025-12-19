@@ -6,53 +6,68 @@ import { db } from '@/lib/firebase';
 import { collection, query, where, getDocs, updateDoc, doc, deleteDoc } from 'firebase/firestore';
 import { getCollectionName } from '@/lib/feed-store-firestore';
 import { evaluateArticlesBatch } from '@/lib/article-quality-filter';
+import { withCronLock } from '@/lib/cron-lock';
 
 export const maxDuration = 300; // 5 minutes timeout
 
 export async function GET(request: NextRequest) {
-  try {
-    // Verify cron secret or Vercel cron User-Agent
-    const authHeader = request.headers.get('authorization');
-    const userAgent = request.headers.get('user-agent');
-    const cronSecret = process.env.CRON_SECRET || 'dev-secret';
-    const isVercelCron = userAgent === 'vercel-cron/1.0';
+  // Verify cron secret first (before acquiring lock)
+  const authHeader = request.headers.get('authorization');
+  const userAgent = request.headers.get('user-agent');
+  const cronSecret = process.env.CRON_SECRET || 'dev-secret';
+  const isVercelCron = userAgent === 'vercel-cron/1.0';
 
-    if (!isVercelCron && authHeader !== `Bearer ${cronSecret}`) {
-      console.warn('⚠️  Unauthorized cron request');
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    if (!db) {
-      return NextResponse.json({ error: 'Firebase not initialized' }, { status: 500 });
-    }
-
-    console.log('🚀 Starting daily article rating at', new Date().toISOString());
-
-    const results = {
-      carz: await rateAndMergeBrand('carz'),
-      ownerfi: await rateAndMergeBrand('ownerfi'),
-      vassdistro: await rateAndMergeBrand('vassdistro'),
-      gaza: await rateAndMergeBrand('gaza')
-    };
-
-    console.log('✅ Article rating complete:', results);
-
-    return NextResponse.json({
-      success: true,
-      timestamp: new Date().toISOString(),
-      results
-    });
-
-  } catch (error) {
-    console.error('❌ Article rating error:', error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
-      },
-      { status: 500 }
-    );
+  if (!isVercelCron && authHeader !== `Bearer ${cronSecret}`) {
+    console.warn('⚠️  Unauthorized cron request');
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
+
+  // Use cron lock to prevent concurrent execution
+  const result = await withCronLock('rate-articles', async () => {
+    try {
+      if (!db) {
+        return NextResponse.json({ error: 'Firebase not initialized' }, { status: 500 });
+      }
+
+      console.log('🚀 Starting daily article rating at', new Date().toISOString());
+
+      const results = {
+        carz: await rateAndMergeBrand('carz'),
+        ownerfi: await rateAndMergeBrand('ownerfi'),
+        vassdistro: await rateAndMergeBrand('vassdistro'),
+        gaza: await rateAndMergeBrand('gaza')
+      };
+
+      console.log('✅ Article rating complete:', results);
+
+      return NextResponse.json({
+        success: true,
+        timestamp: new Date().toISOString(),
+        results
+      });
+
+    } catch (error) {
+      console.error('❌ Article rating error:', error);
+      return NextResponse.json(
+        {
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error'
+        },
+        { status: 500 }
+      );
+    }
+  }); // End withCronLock
+
+  // If lock wasn't acquired, return early
+  if (result === null) {
+    return NextResponse.json({
+      success: false,
+      message: 'Another instance is already running',
+      skipped: true
+    }, { status: 200 });
+  }
+
+  return result;
 }
 
 async function rateAndMergeBrand(brand: 'carz' | 'ownerfi' | 'vassdistro' | 'gaza') {

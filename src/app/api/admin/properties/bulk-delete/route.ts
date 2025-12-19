@@ -7,7 +7,7 @@ import { ExtendedSession } from '@/types/session';
 
 /**
  * POST /api/admin/properties/bulk-delete
- * Bulk delete properties from zillow_imports and properties collections
+ * Bulk delete (mark as inactive) properties from unified properties collection
  */
 export async function POST(request: NextRequest) {
   try {
@@ -37,32 +37,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(`[properties/bulk-delete] Deleting ${ids.length} properties...`);
+    console.log(`[properties/bulk-delete] Marking ${ids.length} properties as inactive...`);
 
     let deleted = 0;
     const batch = db.batch();
 
     for (const id of ids) {
-      // Try to delete from both collections
-      const zillowRef = db.collection('zillow_imports').doc(id);
       const propertiesRef = db.collection('properties').doc(id);
+      const doc = await propertiesRef.get();
 
-      // Check which collection has the doc
-      const [zillowDoc, propertiesDoc] = await Promise.all([
-        zillowRef.get(),
-        propertiesRef.get()
-      ]);
-
-      if (zillowDoc.exists) {
-        batch.delete(zillowRef);
+      if (doc.exists) {
+        // Mark as inactive instead of hard delete to preserve history
+        batch.update(propertiesRef, {
+          isActive: false,
+          deletedAt: new Date(),
+          deletedBy: 'admin_bulk_delete',
+        });
         deleted++;
-      }
-      if (propertiesDoc.exists) {
-        batch.delete(propertiesRef);
-        // Only increment if not already counted from zillow_imports
-        if (!zillowDoc.exists) {
-          deleted++;
-        }
       }
     }
 
@@ -73,7 +64,7 @@ export async function POST(request: NextRequest) {
       metadata: { count: deleted, requestedIds: ids.length }
     });
 
-    console.log(`[properties/bulk-delete] Deleted ${deleted} properties`);
+    console.log(`[properties/bulk-delete] Marked ${deleted} properties as inactive`);
 
     return NextResponse.json({
       success: true,

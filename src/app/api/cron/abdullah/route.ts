@@ -8,6 +8,7 @@ import { generateSingleAbdullahScript, buildAbdullahVideoRequestWithAgent } from
 import { addWorkflowToQueue, updateWorkflowStatus } from '@/lib/feed-store-firestore';
 import { circuitBreakers, fetchWithTimeout, TIMEOUTS } from '@/lib/api-utils';
 import { getBrandWebhookUrl } from '@/lib/brand-utils';
+import { withCronLock } from '@/lib/cron-lock';
 
 const CRON_SECRET = process.env.CRON_SECRET;
 const HEYGEN_API_KEY = process.env.HEYGEN_API_KEY;
@@ -29,16 +30,19 @@ export async function GET(request: NextRequest) {
   console.log(`Time: ${new Date().toISOString()}`);
   console.log('='.repeat(60) + '\n');
 
-  try {
-    // Verify authorization
-    const authHeader = request.headers.get('authorization');
-    const userAgent = request.headers.get('user-agent');
-    const isVercelCron = userAgent === 'vercel-cron/1.0';
+  // Verify authorization first (before acquiring lock)
+  const authHeader = request.headers.get('authorization');
+  const userAgent = request.headers.get('user-agent');
+  const isVercelCron = userAgent === 'vercel-cron/1.0';
 
-    if (CRON_SECRET && authHeader !== `Bearer ${CRON_SECRET}` && !isVercelCron) {
-      console.error('❌ Authorization failed');
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+  if (CRON_SECRET && authHeader !== `Bearer ${CRON_SECRET}` && !isVercelCron) {
+    console.error('❌ Authorization failed');
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  // Use cron lock to prevent concurrent execution
+  const result = await withCronLock('abdullah-cron', async () => {
+    try {
 
     // Validate API keys
     if (!OPENAI_API_KEY) {
@@ -83,12 +87,35 @@ export async function GET(request: NextRequest) {
     console.log();
 
     // Step 2: Create workflow queue item
+    // IMPORTANT: Use date-based articleId (not timestamp) for deduplication
+    // This prevents creating duplicate videos if cron runs multiple times in same hour
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+    const articleId = `abdullah_${theme}_${today}_${closestHour}h`;
+
     console.log('📝 Step 2: Creating workflow...');
-    const queueItem = await addWorkflowToQueue(
-      `abdullah_${theme}_${Date.now()}`,
-      script.title,
-      'abdullah'
-    );
+    console.log(`   Article ID: ${articleId} (dedup key)`);
+
+    let queueItem;
+    try {
+      queueItem = await addWorkflowToQueue(
+        articleId,
+        script.title,
+        'abdullah'
+      );
+    } catch (queueError) {
+      // Handle duplicate workflow error gracefully
+      if (queueError instanceof Error && queueError.message.includes('Duplicate workflow blocked')) {
+        console.warn(`⚠️  ${queueError.message}`);
+        return NextResponse.json({
+          success: false,
+          error: 'Duplicate workflow',
+          message: queueError.message,
+          theme,
+          articleId
+        }, { status: 409 }); // 409 Conflict
+      }
+      throw queueError; // Re-throw other errors
+    }
 
     const workflowId = queueItem.id;
     console.log(`   Workflow ID: ${workflowId}`);
@@ -204,10 +231,22 @@ export async function GET(request: NextRequest) {
       },
       { status: 500 }
     );
+    }
+  }); // End withCronLock
+
+  // If lock wasn't acquired, return early
+  if (result === null) {
+    return NextResponse.json({
+      success: false,
+      message: 'Another instance is already running',
+      skipped: true
+    }, { status: 200 });
   }
+
+  return result;
 }
 
 // Support POST for manual triggering
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   return GET(request);
 }

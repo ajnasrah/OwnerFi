@@ -97,7 +97,7 @@ async function getOptimizationInsights(brand?: string, days: number = 30) {
 
   // Group by platform
   const platformData = new Map<string, any[]>();
-  snapshot.forEach((doc: any) => {
+  snapshot.forEach((doc: Record<string, unknown>) => {
     const data = doc.data();
     const platform = data.platform;
     if (!platformData.has(platform)) platformData.set(platform, []);

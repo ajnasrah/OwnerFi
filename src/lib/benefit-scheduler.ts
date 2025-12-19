@@ -17,7 +17,7 @@ export interface DailyState {
   date: string; // YYYY-MM-DD in UTC
   videosGenerated: number;
   recentBenefitIds: string[]; // Last 5 used
-  lastUpdated: any; // Firestore timestamp
+  lastUpdated: number; // Timestamp
 }
 
 export class BenefitScheduler {

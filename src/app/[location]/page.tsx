@@ -105,7 +105,7 @@ async function getLocationData(locationSlug: string): Promise<LocationData | nul
 
       // Get unique cities in this state
       const cities = new Set<string>()
-      snapshot.docs.forEach((doc: any) => {
+      snapshot.docs.forEach((doc: FirebaseFirestore.QueryDocumentSnapshot) => {
         const data = doc.data()
         if (data.city) cities.add(data.city)
       })
@@ -156,7 +156,7 @@ async function getLocationData(locationSlug: string): Promise<LocationData | nul
           .where('isActive', '==', true)
           .get()
 
-        stateSnapshot.docs.forEach((doc: any) => {
+        stateSnapshot.docs.forEach((doc: FirebaseFirestore.QueryDocumentSnapshot) => {
           const data = doc.data()
           if (data.city && data.city !== cityName) {
             nearbyCities.add(data.city)
@@ -462,7 +462,7 @@ export default async function LocationPage({ params }: { params: Promise<{ locat
                 {locationData.displayName} Owner Financing FAQs
               </h2>
               <div className="space-y-6">
-                {generateFAQSchema(locationData)["mainEntity"].map((faq: any, i: number) => (
+                {generateFAQSchema(locationData)["mainEntity"].map((faq: { name: string; acceptedAnswer: { text: string } }, i: number) => (
                   <div key={i} className="bg-slate-900/50 rounded-xl p-6 border border-slate-700/50">
                     <h3 className="text-xl font-semibold text-white mb-3">{faq.name}</h3>
                     <p className="text-slate-300">{faq.acceptedAnswer.text}</p>

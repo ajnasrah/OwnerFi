@@ -5,7 +5,7 @@ import { authOptions } from '@/lib/auth';
 import { getAllFeedSources } from '@/lib/feed-store-firestore';
 import { processFeedSource } from '@/lib/rss-fetcher';
 
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   try {
     // Verify admin session
     const session = await getServerSession(authOptions as any);

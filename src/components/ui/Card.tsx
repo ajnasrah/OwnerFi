@@ -27,9 +27,10 @@ interface CardImageProps {
 export function CardImage({ src, alt, placeholder, className = '' }: CardImageProps) {
   if (src) {
     return (
-      <img 
-        src={src} 
-        alt={alt || ''} 
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={src}
+        alt={alt || ''}
         className={`w-full h-48 object-cover rounded-lg mb-4 ${className}`}
       />
     );

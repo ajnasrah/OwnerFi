@@ -5,6 +5,11 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
+interface FirestoreTimestamp {
+  _seconds: number;
+  _nanoseconds?: number;
+}
+
 interface Realtor {
   id: string;
   email: string;
@@ -14,7 +19,7 @@ interface Realtor {
   company?: string;
   licenseNumber?: string;
   state?: string;
-  createdAt: string;
+  createdAt: string | FirestoreTimestamp;
 }
 
 export default function AdminRealtors() {
@@ -28,12 +33,13 @@ export default function AdminRealtors() {
 
   useEffect(() => {
     if (status === 'loading') return;
-    if (status === 'unauthenticated' || (session?.user as any)?.role !== 'admin') {
+    if (status === 'unauthenticated' || (session?.user as { role?: string })?.role !== 'admin') {
       router.push('/');
     } else {
       loadRealtors();
     }
-  }, [status, session, router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status, session]);
 
   const loadRealtors = async () => {
     try {
@@ -202,9 +208,9 @@ export default function AdminRealtors() {
                     <td className="p-3 text-slate-300">
                       {(() => {
                         if (!realtor.createdAt) return 'N/A';
-                        const ts = realtor.createdAt as any;
+                        const ts = realtor.createdAt;
                         // Handle serialized Firestore timestamp { _seconds, _nanoseconds }
-                        if (typeof ts === 'object' && typeof ts._seconds === 'number') {
+                        if (typeof ts === 'object' && '_seconds' in ts && typeof ts._seconds === 'number') {
                           return new Date(ts._seconds * 1000).toLocaleDateString();
                         }
                         // Handle ISO string or other date formats

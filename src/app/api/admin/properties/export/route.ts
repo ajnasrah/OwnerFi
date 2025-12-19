@@ -8,7 +8,7 @@ import { ExtendedSession } from '@/types/session';
 import * as XLSX from 'xlsx';
 
 // Export all properties to Excel
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     if (!db) {
       return NextResponse.json(
@@ -28,21 +28,22 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Fetch ALL properties from zillow_imports where ownerFinanceVerified = true
+    // Fetch ALL active owner finance properties from unified properties collection
     console.log('[EXPORT] Starting property export...');
 
     const propertiesQuery = query(
-      collection(db, 'zillow_imports'),
-      where('ownerFinanceVerified', '==', true),
-      orderBy('foundAt', 'desc')
+      collection(db, 'properties'),
+      where('isActive', '==', true),
+      where('isOwnerFinance', '==', true),
+      orderBy('createdAt', 'desc')
     );
 
-    console.log('[EXPORT] Querying zillow_imports collection...');
+    console.log('[EXPORT] Querying properties collection...');
     const propertiesSnapshot = await getDocs(propertiesQuery);
     console.log(`[EXPORT] Found ${propertiesSnapshot.docs.length} properties`);
 
     if (propertiesSnapshot.empty) {
-      console.log('[EXPORT] No properties found in zillow_imports');
+      console.log('[EXPORT] No properties found');
       return NextResponse.json(
         { error: 'No properties found to export' },
         { status: 404 }
@@ -55,7 +56,7 @@ export async function GET(request: NextRequest) {
         id: doc.id,
         ...data,
         // Convert Firestore timestamps
-        foundAt: data.foundAt?.toDate?.()?.toISOString() || data.foundAt,
+        foundAt: data.createdAt?.toDate?.()?.toISOString() || data.createdAt,
         verifiedAt: data.verifiedAt?.toDate?.()?.toISOString() || data.verifiedAt,
         soldAt: data.soldAt?.toDate?.()?.toISOString() || data.soldAt,
         importedAt: data.importedAt?.toDate?.()?.toISOString() || data.importedAt,
@@ -65,7 +66,7 @@ export async function GET(request: NextRequest) {
 
     console.log(`[EXPORT] Formatted ${properties.length} properties for Excel`);
 
-    // Format data for Excel - using zillow_imports schema
+    // Format data for Excel
     const excelData = properties.map(property => {
       const prop = property as any;
       return {

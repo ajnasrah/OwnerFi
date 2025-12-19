@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
+import Link from 'next/link';
 
 interface UploadProgress {
   status: 'idle' | 'uploading' | 'scraping' | 'complete' | 'error';
@@ -73,9 +74,9 @@ export default function ScraperPage() {
         } else {
           throw new Error(data.error || 'Failed');
         }
-      } catch (error: any) {
+      } catch (error) {
         setQuickResults(prev => prev.map((r, idx) =>
-          idx === i ? { ...r, status: 'error', message: error.message } : r
+          idx === i ? { ...r, status: 'error', message: error instanceof Error ? error.message : 'Unknown error' } : r
         ));
       }
 
@@ -135,10 +136,10 @@ export default function ScraperPage() {
       // Poll for job status
       pollJobStatus(data.jobId);
 
-    } catch (error: any) {
+    } catch (error) {
       setProgress({
         status: 'error',
-        message: error.message || 'Failed to upload file',
+        message: error instanceof Error ? error.message : 'Failed to upload file',
       });
     }
   }, []);
@@ -191,7 +192,7 @@ export default function ScraperPage() {
     <div className="h-screen overflow-hidden bg-slate-900 flex flex-col">
       <div className="flex-1 overflow-y-auto p-6">
         <div className="max-w-4xl mx-auto">
-      <a href="/admin" className="text-emerald-400 hover:text-emerald-300 text-sm mb-4 inline-block">← Back to Admin</a>
+      <Link href="/admin" className="text-emerald-400 hover:text-emerald-300 text-sm mb-4 inline-block">← Back to Admin</Link>
       <h1 className="text-3xl font-bold mb-2 text-white">Zillow Property Scraper</h1>
       <p className="text-slate-400 mb-8">
         Add Zillow URLs to queue for scraping and GHL agent outreach

@@ -7,6 +7,9 @@ import { FirebaseDB } from '@/lib/firebase-db';
 import { RealtorDataHelper, ValidatedCity } from '@/lib/realtor-models';
 import { logError, logInfo } from '@/lib/logger';
 
+// Constants
+const FREE_PENDING_LIMIT = 3;
+
 interface LeadData {
   id: string;
   firstName: string;
@@ -53,8 +56,6 @@ interface DashboardData {
     firstName: string;
     lastName: string;
     credits: number;
-    isOnTrial: boolean;
-    trialDaysRemaining: number;
     serviceArea: {
       primaryCity: string;
       totalCitiesServed: number;
@@ -119,7 +120,6 @@ export async function GET() {
       firstName: user.realtorData?.firstName || profile?.firstName || 'Realtor',
       lastName: user.realtorData?.lastName || profile?.lastName || '',
       credits: user.realtorData?.credits || 0,
-      isOnTrial: user.realtorData?.isOnTrial || false,
       serviceArea: {
         primaryCity: { name: serviceCity, state: serviceState },
         nearbyCities: [] // Can be extended later
@@ -135,11 +135,6 @@ export async function GET() {
     // Get transaction history
     const transactions = await getTransactionHistory(session.user.id);
 
-    // Calculate trial days remaining
-    const trialDaysRemaining = user.realtorData
-      ? RealtorDataHelper.getTrialDaysRemaining(user.realtorData)
-      : 14; // Default trial period
-
     const dashboardData: DashboardData = {
       availableLeads,
       ownedBuyers,
@@ -148,8 +143,6 @@ export async function GET() {
         firstName: realtorData.firstName,
         lastName: realtorData.lastName,
         credits: realtorData.credits,
-        isOnTrial: realtorData.isOnTrial,
-        trialDaysRemaining,
         serviceArea: {
           primaryCity: serviceCity,
           totalCitiesServed: 1 // Just using buyer profile city for now

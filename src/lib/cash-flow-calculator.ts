@@ -33,7 +33,7 @@ function calculateMonthlyMortgage(loanAmount: number, annualRate: number, years:
 }
 
 // Check which fields are missing for cash flow calculation
-export function getMissingCashFlowFields(data: any): string[] {
+export function getMissingCashFlowFields(data: Record<string, unknown>): string[] {
   const missing: string[] = [];
 
   const price = data.price || data.listPrice || 0;

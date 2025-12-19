@@ -153,13 +153,27 @@ export async function POST(request: NextRequest) {
     if (article.id && !resumeWorkflowId) {
       const { addWorkflowToQueue } = await import('@/lib/feed-store-firestore');
 
-      const queueItem = await addWorkflowToQueue(
-        article.id,
-        article.title,
-        brand as 'carz' | 'ownerfi' | 'vassdistro'
-      );
-      workflowId = queueItem.id;
-      console.log(`📋 Added to workflow queue: ${workflowId}`);
+      try {
+        const queueItem = await addWorkflowToQueue(
+          article.id,
+          article.title,
+          brand as 'carz' | 'ownerfi' | 'vassdistro'
+        );
+        workflowId = queueItem.id;
+        console.log(`📋 Added to workflow queue: ${workflowId}`);
+      } catch (queueError) {
+        // Handle duplicate workflow error gracefully
+        if (queueError instanceof Error && queueError.message.includes('Duplicate workflow blocked')) {
+          console.warn(`⚠️  ${queueError.message}`);
+          return NextResponse.json({
+            success: false,
+            error: 'Duplicate workflow',
+            message: queueError.message,
+            article: { id: article.id, title: article.title }
+          }, { status: 409 }); // 409 Conflict
+        }
+        throw queueError; // Re-throw other errors
+      }
     }
     // If resuming, workflowId was already set in Step 1
 

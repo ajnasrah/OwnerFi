@@ -9,7 +9,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Brand } from '@/config/constants';
-import { CONTENT_PILLARS, BLOG_TEMPLATES, BlogSection } from '@/lib/blog-models';
+import { CONTENT_PILLARS, BlogSection } from '@/lib/blog-models';
 
 export default function CreateBlogPage() {
   const router = useRouter();
@@ -33,9 +33,9 @@ export default function CreateBlogPage() {
 
   const brands: Brand[] = ['ownerfi', 'carz', 'abdullah', 'vassdistro'];
 
-  const updateSection = (index: number, field: keyof BlogSection, value: any) => {
+  const updateSection = (index: number, field: keyof BlogSection, value: string) => {
     const newSections = [...sections];
-    (newSections[index] as any)[field] = value;
+    newSections[index][field] = value as never;
     setSections(newSections);
   };
 
@@ -286,7 +286,7 @@ export default function CreateBlogPage() {
 
             <select
               value={status}
-              onChange={(e) => setStatus(e.target.value as any)}
+              onChange={(e) => setStatus(e.target.value as 'draft' | 'published')}
               className="px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
             >
               <option value="draft">Save as Draft</option>

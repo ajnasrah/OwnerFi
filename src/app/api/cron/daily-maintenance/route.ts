@@ -196,9 +196,8 @@ async function enhancePropertyImages() {
     }
 
     const BATCH_SIZE = 1000; // Process more per run
-    const stats = {
-      cashHouses: { total: 0, upgraded: 0 },
-      zillowImports: { total: 0, upgraded: 0 }
+    const stats: { properties: { total: number; upgraded: number } } = {
+      properties: { total: 0, upgraded: 0 }
     };
     let totalErrors = 0;
 
@@ -327,26 +326,17 @@ async function enhancePropertyImages() {
     }
 
     // ============================================
-    // 1. Process cash_houses collection
+    // 1. Process unified properties collection
     // ============================================
-    console.log('\n   🏠 Processing cash_houses...');
-    const cashResult = await processCollection('cash_houses', ['imgSrc', 'imageUrl', 'image', 'thumbnail']);
-    stats.cashHouses = { total: cashResult.total, upgraded: cashResult.upgraded };
-    totalErrors += cashResult.errors;
-    console.log(`   ✅ cash_houses: ${cashResult.upgraded}/${cashResult.total} upgraded`);
-
-    // ============================================
-    // 2. Process zillow_imports collection
-    // ============================================
-    console.log('\n   📋 Processing zillow_imports...');
-    const zillowResult = await processCollection('zillow_imports', ['imgSrc', 'imageUrl', 'firstPropertyImage', 'image', 'thumbnail']);
-    stats.zillowImports = { total: zillowResult.total, upgraded: zillowResult.upgraded };
-    totalErrors += zillowResult.errors;
-    console.log(`   ✅ zillow_imports: ${zillowResult.upgraded}/${zillowResult.total} upgraded`);
+    console.log('\n   🏠 Processing properties (unified collection)...');
+    const propertiesResult = await processCollection('properties', ['imgSrc', 'imageUrl', 'firstPropertyImage', 'image', 'thumbnail']);
+    stats.properties = { total: propertiesResult.total, upgraded: propertiesResult.upgraded };
+    totalErrors += propertiesResult.errors;
+    console.log(`   ✅ properties: ${propertiesResult.upgraded}/${propertiesResult.total} upgraded`);
 
     // Summary
-    const totalUpgraded = stats.cashHouses.upgraded + stats.zillowImports.upgraded;
-    const totalProcessed = stats.cashHouses.total + stats.zillowImports.total;
+    const totalUpgraded = stats.properties.upgraded;
+    const totalProcessed = stats.properties.total;
 
     console.log(`\n   📊 Total: ${totalUpgraded} images upgraded, ${totalProcessed} processed`);
 

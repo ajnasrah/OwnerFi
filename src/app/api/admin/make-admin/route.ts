@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
       }
     });
 
-  } catch (error: any) {
+  } catch (error) {
     console.error('❌ Error:', error);
 
     return NextResponse.json(

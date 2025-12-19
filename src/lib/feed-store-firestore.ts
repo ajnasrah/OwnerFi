@@ -116,8 +116,8 @@ export function getCollectionName(type: 'FEEDS' | 'ARTICLES' | 'WORKFLOW_QUEUE',
 }
 
 // Helper to remove undefined values from objects (Firestore doesn't allow undefined)
-function removeUndefined<T extends Record<string, any>>(obj: T): Partial<T> {
-  const result: Record<string, any> = {};
+function removeUndefined<T extends Record<string, unknown>>(obj: T): Partial<T> {
+  const result: Record<string, unknown> = {};
   for (const key in obj) {
     if (obj[key] !== undefined) {
       result[key] = obj[key];
@@ -354,10 +354,11 @@ export async function getAndLockArticle(category: Brand): Promise<Article | null
       });
 
       // Log what type of content we locked
-      const isSocialTrend = (lockedArticle as any).source === 'social_trends';
-      const platform = (lockedArticle as any).platform || 'rss';
+      const articleData = lockedArticle as Article & { source?: string; platform?: string; engagementScore?: number };
+      const isSocialTrend = articleData.source === 'social_trends';
+      const platform = articleData.platform || 'rss';
       const score = isSocialTrend
-        ? (lockedArticle as any).engagementScore || 0
+        ? articleData.engagementScore || 0
         : lockedArticle.qualityScore || 0;
 
       if (isSocialTrend) {
@@ -451,6 +452,16 @@ export async function getWorkflowsCreatedToday(brand: Brand): Promise<WorkflowQu
   return querySnapshot.docs.map(doc => doc.data() as WorkflowQueueItem);
 }
 
+/**
+ * Add a workflow to the queue with ATOMIC deduplication.
+ *
+ * CRITICAL: Uses Firestore transaction to atomically check for existing workflow
+ * AND create new one. This prevents race conditions where two processes both
+ * pass the deduplication check and create duplicate workflows.
+ *
+ * @returns The workflow item (newly created)
+ * @throws Error if a duplicate workflow exists (non-failed status)
+ */
 export async function addWorkflowToQueue(
   articleId: string,
   articleTitle: string,
@@ -459,22 +470,76 @@ export async function addWorkflowToQueue(
 ): Promise<WorkflowQueueItem> {
   if (!db) throw new Error('Firebase not initialized');
 
-  const queueItem: WorkflowQueueItem = {
-    id: `wf_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
-    articleId,
-    articleTitle,
-    brand,
-    status: 'pending',
-    retryCount: 0,
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-    ...(videoIndex !== undefined && { videoIndex }), // Only include if defined (Firestore doesn't allow undefined)
-  };
-
   const collectionName = getCollectionName('WORKFLOW_QUEUE', brand);
-  await setDoc(doc(db, collectionName, queueItem.id), queueItem);
-  console.log(`✅ Added workflow to queue: ${queueItem.id} (${brand}, videoIndex: ${videoIndex})`);
-  return queueItem;
+  const twentyFourHoursAgo = Date.now() - (24 * 60 * 60 * 1000);
+
+  // Generate workflow ID upfront so we can use it in transaction
+  const workflowId = `wf_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
+
+  // Use a dedicated deduplication document to ensure atomicity
+  // Key is based on articleId + date to allow same article after 24h
+  const dedupKey = `dedup_${articleId}_${new Date().toISOString().split('T')[0]}`;
+  const dedupRef = doc(db, collectionName, dedupKey);
+  const workflowRef = doc(db, collectionName, workflowId);
+
+  try {
+    const queueItem = await runTransaction(db, async (transaction) => {
+      // Check deduplication document
+      const dedupDoc = await transaction.get(dedupRef);
+
+      if (dedupDoc.exists()) {
+        const dedupData = dedupDoc.data();
+        const existingWorkflowId = dedupData.workflowId;
+        const existingStatus = dedupData.status;
+        const createdAt = dedupData.createdAt;
+
+        // Only block if within 24 hours AND not failed
+        if (createdAt >= twentyFourHoursAgo && existingStatus !== 'failed') {
+          throw new Error(`Duplicate workflow blocked: Article ${articleId} already has workflow ${existingWorkflowId} (status: ${existingStatus})`);
+        }
+
+        // If failed or older than 24h, allow retry
+        console.log(`♻️  Previous workflow for article ${articleId} was ${existingStatus}, allowing retry`);
+      }
+
+      const now = Date.now();
+      const item: WorkflowQueueItem = {
+        id: workflowId,
+        articleId,
+        articleTitle,
+        brand,
+        status: 'pending',
+        retryCount: 0,
+        createdAt: now,
+        updatedAt: now,
+        ...(videoIndex !== undefined && { videoIndex }),
+      };
+
+      // Create/update deduplication document (tracks latest workflow for this articleId)
+      transaction.set(dedupRef, {
+        articleId,
+        workflowId,
+        status: 'pending',
+        createdAt: now,
+      });
+
+      // Create workflow document
+      transaction.set(workflowRef, item);
+
+      return item;
+    });
+
+    console.log(`✅ Added workflow to queue: ${queueItem.id} (${brand}, videoIndex: ${videoIndex})`);
+    return queueItem;
+
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('Duplicate workflow blocked')) {
+      console.warn(`⚠️  ${error.message}`);
+      throw error; // Re-throw duplicate error for caller to handle
+    }
+    console.error(`❌ Failed to add workflow to queue:`, error);
+    throw error;
+  }
 }
 
 export async function updateWorkflowStatus(
@@ -487,7 +552,7 @@ export async function updateWorkflowStatus(
   const collectionName = getCollectionName('WORKFLOW_QUEUE', brand);
 
   // Prepare update data
-  const updateData: any = { ...updates };
+  const updateData: Record<string, unknown> = { ...updates };
 
   // Always update statusChangedAt when status changes
   if (updates.status) {
@@ -512,6 +577,35 @@ export async function updateWorkflowStatus(
 
   const cleanData = removeUndefined(updateData);
   await updateDoc(doc(db, collectionName, workflowId), cleanData);
+
+  // CRITICAL: Also update dedup document when status changes
+  // This ensures the dedup check reflects current workflow state
+  if (updates.status) {
+    try {
+      // Get the workflow to find its articleId
+      const workflowDoc = await getDoc(doc(db, collectionName, workflowId));
+      if (workflowDoc.exists()) {
+        const workflow = workflowDoc.data();
+        const articleId = workflow.articleId;
+
+        if (articleId) {
+          // Update the dedup document with new status
+          const dedupKey = `dedup_${articleId}_${new Date(workflow.createdAt).toISOString().split('T')[0]}`;
+          const dedupRef = doc(db, collectionName, dedupKey);
+
+          await updateDoc(dedupRef, {
+            status: updates.status,
+            updatedAt: Date.now(),
+          }).catch(() => {
+            // Dedup doc might not exist for older workflows, ignore error
+          });
+        }
+      }
+    } catch (error) {
+      // Don't fail the main update if dedup update fails
+      console.warn(`⚠️  Failed to update dedup document for workflow ${workflowId}:`, error);
+    }
+  }
 }
 
 export async function getWorkflowQueueStats(category?: Brand) {
@@ -975,10 +1069,10 @@ export async function findWorkflowBySubmagicId(submagicProjectId: string): Promi
     const snapshot = await getDocs(q);
 
     if (!snapshot.empty) {
-      const docData = snapshot.docs[0].data() as WorkflowQueueItem;
+      const docData = snapshot.docs[0].data() as WorkflowQueueItem & { caption?: string; title?: string };
       return {
         workflowId: snapshot.docs[0].id,
-        workflow: docData as any,
+        workflow: docData,
         brand
       };
     }
@@ -1181,7 +1275,7 @@ export async function findBenefitByHeyGenId(heygenVideoId: string): Promise<{
 // This searches across all workflow types (articles, podcasts, benefits)
 export async function findWorkflowByCallbackId(callbackId: string): Promise<{
   workflowId: string;
-  workflow: any;
+  workflow: WorkflowQueueItem | PodcastWorkflowItem | BenefitWorkflowItem;
   type: 'article' | 'podcast' | 'benefit';
   brand?: Brand;
 } | null> {
@@ -1543,7 +1637,7 @@ export async function addToPropertyRotationQueue(propertyId: string): Promise<vo
     throw new Error(`Property ${propertyId} not found`);
   }
 
-  const property = propertyDoc.data() as any;
+  const property = propertyDoc.data() as { imageUrls?: string[] };
 
   // Validate property has images
   if (!property.imageUrls || property.imageUrls.length === 0) {
@@ -1709,7 +1803,7 @@ export async function getPropertyRotationStats(): Promise<{
 /**
  * Get property video workflow by ID
  */
-export async function getPropertyVideoById(workflowId: string): Promise<any | null> {
+export async function getPropertyVideoById(workflowId: string): Promise<Record<string, unknown> | null> {
   if (!db) return null;
 
   const docSnap = await getDoc(doc(db, 'property_videos', workflowId));
@@ -1728,12 +1822,12 @@ export async function getPropertyVideoById(workflowId: string): Promise<any | nu
  */
 export async function updatePropertyVideo(
   workflowId: string,
-  updates: Record<string, any>
+  updates: Record<string, unknown>
 ): Promise<void> {
   if (!db) throw new Error('Firebase not initialized');
 
   // Prepare update data
-  const updateData: any = { ...updates };
+  const updateData: Record<string, unknown> = { ...updates };
 
   // Always update statusChangedAt when status changes
   if (updates.status) {
@@ -1770,7 +1864,7 @@ export async function updatePropertyVideo(
 
       if (propertyId) {
         // Map status to workflowStatus.stage for properties collection
-        const propertyUpdates: Record<string, any> = {};
+        const propertyUpdates: Record<string, unknown> = {};
 
         if (updates.status) {
           // Map internal statuses to UI-friendly stages
@@ -1827,7 +1921,7 @@ export async function updatePropertyVideo(
  */
 export async function findPropertyVideoBySubmagicId(submagicProjectId: string): Promise<{
   workflowId: string;
-  workflow: any;
+  workflow: Record<string, unknown>;
 } | null> {
   if (!db) throw new Error('Firebase not initialized');
 

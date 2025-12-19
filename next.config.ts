@@ -2,6 +2,16 @@ import type { NextConfig } from "next";
 import path from "path";
 
 const nextConfig: NextConfig = {
+  // Redirect old /shared URLs to new SEO-friendly /property URLs
+  async redirects() {
+    return [
+      {
+        source: '/shared/:propertyId',
+        destination: '/property/:propertyId',
+        permanent: true, // 301 redirect for SEO
+      },
+    ];
+  },
   images: {
     remotePatterns: [
       {

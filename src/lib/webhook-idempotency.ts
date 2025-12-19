@@ -5,6 +5,7 @@
  * Uses Firestore to track processed webhook IDs with TTL.
  */
 
+import crypto from 'crypto';
 import { getAdminDb } from './firebase-admin';
 
 const IDEMPOTENCY_COLLECTION = 'webhook_idempotency';
@@ -18,7 +19,7 @@ export interface IdempotencyRecord {
   processedAt: number;
   expiresAt: number;
   requestHash: string;
-  response?: any;
+  response?: unknown;
 }
 
 /**
@@ -45,8 +46,7 @@ export function generateIdempotencyKey(
  * @param body - Request body
  * @returns SHA-256 hash
  */
-function hashRequest(body: any): string {
-  const crypto = require('crypto');
+function hashRequest(body: unknown): string {
   const bodyString = typeof body === 'string' ? body : JSON.stringify(body);
   return crypto.createHash('sha256').update(bodyString).digest('hex');
 }
@@ -64,8 +64,8 @@ export async function isWebhookProcessed(
   service: 'heygen' | 'submagic' | 'stripe' | 'gohighlevel',
   webhookId: string,
   brand?: string,
-  requestBody?: any
-): Promise<{ processed: boolean; previousResponse?: any }> {
+  requestBody?: unknown
+): Promise<{ processed: boolean; previousResponse?: unknown }> {
   try {
     const db = await getAdminDb();
     if (!db) {
@@ -106,8 +106,10 @@ export async function isWebhookProcessed(
     };
   } catch (error) {
     console.error('Error checking webhook idempotency:', error);
-    // On error, allow processing (fail open)
-    return { processed: false };
+    // CRITICAL: Fail CLOSED to prevent duplicates - better to skip than double-process
+    // If Firebase is down, we'd rather miss a webhook than create duplicate posts
+    console.warn('⚠️  Idempotency check failed - blocking processing to prevent duplicates');
+    return { processed: true, previousResponse: { error: 'Idempotency check failed - blocked for safety' } };
   }
 }
 
@@ -125,8 +127,8 @@ export async function markWebhookProcessed(
   service: 'heygen' | 'submagic' | 'stripe' | 'gohighlevel',
   webhookId: string,
   brand?: string,
-  requestBody?: any,
-  response?: any
+  requestBody?: unknown,
+  response?: unknown
 ): Promise<boolean> {
   try {
     const db = await getAdminDb();
@@ -185,7 +187,7 @@ export async function cleanupExpiredIdempotencyRecords(): Promise<number> {
     }
 
     const batch = db.batch();
-    snapshot.docs.forEach((doc: any) => {
+    snapshot.docs.forEach((doc) => {
       batch.delete(doc.ref);
     });
 
@@ -222,6 +224,7 @@ export async function getIdempotencyStats(
       console.warn('⚠️  Firebase Admin not initialized');
       return { total: 0, byService: {}, byBrand: {}, oldestRecord: 0, newestRecord: 0 };
     }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let query: any = db.collection(IDEMPOTENCY_COLLECTION);
 
     if (service) {
@@ -233,7 +236,7 @@ export async function getIdempotencyStats(
     }
 
     const snapshot = await query.get();
-    const records = snapshot.docs.map((doc: any) => doc.data() as IdempotencyRecord);
+    const records = snapshot.docs.map((doc) => doc.data() as IdempotencyRecord);
 
     const stats = {
       total: records.length,

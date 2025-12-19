@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import Link from 'next/link';
 
 
 interface CashDeal {
@@ -33,7 +34,7 @@ interface CashDeal {
   sentToGHL?: string;
 }
 
-type SortField = 'percentOfArv' | 'price' | 'arv' | 'discount' | 'rentEstimate';
+type SortField = 'percentOfArv' | 'price' | 'zestimate' | 'discount' | 'rentEstimate';
 
 // Global max price cap - applies to ALL tabs
 const GLOBAL_MAX_PRICE = 300000;
@@ -41,7 +42,7 @@ const GLOBAL_MAX_PRICE = 300000;
 // Quick filter presets for investors (all within $300K cap)
 const QUICK_FILTERS = {
   ownerFinance: { label: 'Owner Finance', icon: '🏠', sortBy: 'percentOfArv' as SortField, sortOrder: 'asc' as const, ownerFinanceOnly: true },
-  discountDeals: { label: 'Under 80% ARV', icon: '!', sortBy: 'percentOfArv' as SortField, sortOrder: 'asc' as const, maxArv: 80 },
+  discountDeals: { label: 'Under 80% Zestimate', icon: '!', sortBy: 'percentOfArv' as SortField, sortOrder: 'asc' as const, maxArv: 80 },
   under100k: { label: 'Under $100K', icon: '<', sortBy: 'price' as SortField, sortOrder: 'asc' as const, maxPrice: 100000 },
   midRange: { label: '$100K-$200K', icon: '~', sortBy: 'price' as SortField, sortOrder: 'asc' as const, minPrice: 100000, maxPrice: 200000 },
   highEnd: { label: '$200K-$300K', icon: '+', sortBy: 'price' as SortField, sortOrder: 'asc' as const, minPrice: 200000, maxPrice: 300000 },
@@ -113,8 +114,8 @@ export default function CashDealsPage() {
         'State',
         'Zip',
         'Price',
-        'ARV (Zestimate)',
-        '% ARV',
+        'Zestimate',
+        '% of Zestimate',
         'Discount %',
         'Beds',
         'Baths',
@@ -255,9 +256,9 @@ export default function CashDealsPage() {
         setAllDeals(data.deals || []);
         if (data.states) setStates(data.states);
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error fetching deals:', err);
-      setError(err.message || 'Failed to fetch deals');
+      setError(err instanceof Error ? err.message : 'Failed to fetch deals');
     }
     setLoading(false);
   };
@@ -266,6 +267,7 @@ export default function CashDealsPage() {
     fetchDeals();
     // Update URL when server-side filters change
     updateURL({ city: citySearch, state: stateFilter, radius });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stateFilter, citySearch, radius]);
 
   // Apply default Owner Finance filter on mount
@@ -318,8 +320,8 @@ export default function CashDealsPage() {
 
     // Sort
     result.sort((a, b) => {
-      const aVal = (a as any)[sortBy] ?? (sortOrder === 'asc' ? Infinity : -Infinity);
-      const bVal = (b as any)[sortBy] ?? (sortOrder === 'asc' ? Infinity : -Infinity);
+      const aVal = a[sortBy] ?? (sortOrder === 'asc' ? Infinity : -Infinity);
+      const bVal = b[sortBy] ?? (sortOrder === 'asc' ? Infinity : -Infinity);
       return sortOrder === 'asc' ? aVal - bVal : bVal - aVal;
     });
 
@@ -385,8 +387,8 @@ export default function CashDealsPage() {
         setSelectedDeals(new Set());
         alert(`Deleted ${data.deleted} propert${data.deleted === 1 ? 'y' : 'ies'} successfully!`);
       }
-    } catch (err: any) {
-      alert(`Failed to delete: ${err.message}`);
+    } catch (err) {
+      alert(`Failed to delete: ${err instanceof Error ? err.message : 'Unknown error'}`);
     }
     setDeleting(false);
   };
@@ -413,21 +415,6 @@ export default function CashDealsPage() {
     }
   };
 
-  const SortHeader = ({ field, label }: { field: SortField; label: string }) => (
-    <th
-      className="px-3 py-3 text-left cursor-pointer hover:bg-slate-600 select-none text-slate-300 text-xs font-semibold"
-      onClick={() => handleSort(field)}
-    >
-      <div className="flex items-center gap-1">
-        {label}
-        {sortBy === field && (
-          <span className="text-emerald-400 text-sm">
-            {sortOrder === 'asc' ? '↑' : '↓'}
-          </span>
-        )}
-      </div>
-    </th>
-  );
 
   return (
     <div className="h-screen overflow-hidden bg-slate-900 flex flex-col">
@@ -436,7 +423,7 @@ export default function CashDealsPage() {
           {/* Header with Stats */}
           <div className="flex justify-between items-start mb-4">
             <div>
-              <a href="/admin" className="text-emerald-400 hover:text-emerald-300 text-sm mb-1 inline-block">← Back</a>
+              <Link href="/admin" className="text-emerald-400 hover:text-emerald-300 text-sm mb-1 inline-block">← Back</Link>
               <div className="flex items-center gap-3">
                 <h1 className="text-2xl font-bold text-white">Cash Deals Finder</h1>
                 <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-emerald-600/20 text-emerald-400 border border-emerald-600/30">
@@ -548,7 +535,7 @@ export default function CashDealsPage() {
             </div>
             {citySearch && radius > 0 && (
               <p className="text-xs text-slate-400 mt-2">
-                Searching within {radius} miles of "{citySearch}"
+                Searching within {radius} miles of &quot;{citySearch}&quot;
               </p>
             )}
           </div>
@@ -636,7 +623,7 @@ export default function CashDealsPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-400 mb-1">Max % ARV</label>
+                  <label className="block text-xs font-medium text-slate-400 mb-1">Max % Zestimate</label>
                   <input
                     type="number"
                     value={maxArv}
@@ -685,7 +672,8 @@ export default function CashDealsPage() {
                 <table className="w-full">
                   <thead className="bg-slate-700 border-b border-slate-600">
                     <tr>
-                      <th className="px-3 py-3 text-left text-slate-300 text-xs font-semibold w-10">
+                      <th className="px-1.5 py-2 text-left text-slate-300 text-xs font-semibold w-10"></th>
+                      <th className="px-1.5 py-2 text-left text-slate-300 text-xs font-semibold w-8">
                         <input
                           type="checkbox"
                           checked={selectedDeals.size === filteredDeals.length && filteredDeals.length > 0}
@@ -693,18 +681,15 @@ export default function CashDealsPage() {
                           className="w-4 h-4 rounded border-slate-500 bg-slate-600 text-emerald-500 focus:ring-emerald-500"
                         />
                       </th>
-                      <th className="px-3 py-3 text-left text-slate-300 text-xs font-semibold">Property</th>
-                      <th className="px-3 py-3 text-left text-slate-300 text-xs font-semibold">Location</th>
-                      <SortHeader field="price" label="Price" />
-                      <SortHeader field="percentOfArv" label="% ARV" />
-                      <SortHeader field="discount" label="Discount" />
-                      <SortHeader field="rentEstimate" label="Rent" />
-                      <th className="px-3 py-3 text-left text-slate-300 text-xs font-semibold">Specs</th>
-                      <th className="px-3 py-3 text-left text-slate-300 text-xs font-semibold w-16"></th>
+                      <th className="px-1.5 py-2 text-left text-slate-300 text-xs font-semibold">Property</th>
+                      <th className="px-1.5 py-2 text-left text-slate-300 text-xs font-semibold">Location</th>
+                      <th className="px-1.5 py-2 text-left text-slate-300 text-xs font-semibold cursor-pointer hover:text-emerald-400" onClick={() => handleSort('price')}>Price {sortBy === 'price' && (sortOrder === 'asc' ? '↑' : '↓')}</th>
+                      <th className="px-1.5 py-2 text-left text-slate-300 text-xs font-semibold cursor-pointer hover:text-emerald-400" onClick={() => handleSort('percentOfArv')}>%Zest {sortBy === 'percentOfArv' && (sortOrder === 'asc' ? '↑' : '↓')}</th>
+                      <th className="px-1.5 py-2 text-left text-slate-300 text-xs font-semibold">Specs</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-700">
-                    {filteredDeals.map((deal, idx) => {
+                    {filteredDeals.map((deal) => {
                       const isTopDeal = deal.percentOfArv <= 70; // Great deal = 70% or less of ARV
                       const isSelected = selectedDeals.has(deal.id);
                       return (
@@ -712,7 +697,10 @@ export default function CashDealsPage() {
                           key={deal.id}
                           className={`hover:bg-slate-700/50 ${isTopDeal ? 'bg-emerald-900/20' : ''} ${isSelected ? 'bg-red-900/20' : ''}`}
                         >
-                          <td className="px-3 py-2">
+                          <td className="px-1.5 py-2">
+                            <a href={deal.url} target="_blank" rel="noopener noreferrer" className="text-emerald-400 hover:text-emerald-300 text-sm font-medium">View</a>
+                          </td>
+                          <td className="px-1.5 py-2">
                             <input
                               type="checkbox"
                               checked={isSelected}
@@ -720,10 +708,11 @@ export default function CashDealsPage() {
                               className="w-4 h-4 rounded border-slate-500 bg-slate-600 text-emerald-500 focus:ring-emerald-500"
                             />
                           </td>
-                          <td className="px-3 py-2">
+                          <td className="px-1.5 py-2">
                             <div className="flex items-center gap-2">
                               <div className="w-12 h-9 flex-shrink-0 rounded overflow-hidden bg-slate-700">
                                 {deal.imgSrc ? (
+                                  // eslint-disable-next-line @next/next/no-img-element
                                   <img
                                     src={deal.imgSrc}
                                     alt=""
@@ -738,80 +727,33 @@ export default function CashDealsPage() {
                                 )}
                               </div>
                               <div className="min-w-0">
-                                <div className="text-sm font-medium truncate max-w-[180px] text-white">
-                                  {deal.address}
-                                </div>
+                                <div className="text-sm font-medium truncate max-w-[160px] text-white">{deal.address}</div>
                                 <div className="flex gap-1 mt-0.5">
-                                  {isTopDeal && (
-                                    <span className="inline-block px-1 py-0.5 text-[10px] font-bold bg-emerald-600 text-white rounded">
-                                      TOP DEAL
-                                    </span>
-                                  )}
-                                  {deal.ownerFinanceVerified && (
-                                    <span className="inline-block px-1 py-0.5 text-[10px] font-semibold bg-blue-600 text-white rounded">
-                                      OF
-                                    </span>
-                                  )}
-                                  {deal.sentToGHL && (
-                                    <span
-                                      className="inline-block px-1 py-0.5 text-[10px] font-semibold bg-green-600 text-white rounded"
-                                      title={`Sent to GHL: ${new Date(deal.sentToGHL).toLocaleString()}`}
-                                    >
-                                      GHL
-                                    </span>
-                                  )}
+                                  {isTopDeal && <span className="px-1 py-0.5 text-[10px] font-bold bg-emerald-600 text-white rounded">TOP</span>}
+                                  {deal.ownerFinanceVerified && <span className="px-1 py-0.5 text-[10px] font-semibold bg-blue-600 text-white rounded">OF</span>}
+                                  {deal.sentToGHL && <span className="px-1 py-0.5 text-[10px] font-semibold bg-green-600 text-white rounded">GHL</span>}
                                 </div>
                               </div>
                             </div>
                           </td>
-                          <td className="px-3 py-2">
-                            <div className="text-sm text-white">{deal.city}</div>
-                            <div className="text-xs text-slate-400">{deal.state}</div>
+                          <td className="px-1.5 py-2">
+                            <div className="text-sm text-white">{deal.city}, {deal.state}</div>
+                            <div className="text-xs text-slate-400">{deal.zipcode}</div>
                           </td>
-                          <td className="px-3 py-2">
+                          <td className="px-1.5 py-2">
                             <div className="font-semibold text-white">${deal.price?.toLocaleString()}</div>
-                            <div className="text-xs text-slate-400">
-                              ARV: ${deal.arv?.toLocaleString() || '-'}
-                            </div>
+                            <div className="text-xs text-slate-400">Zest: {deal.arv > 0 ? `$${deal.arv?.toLocaleString()}` : 'N/A'}</div>
                           </td>
-                          <td className="px-3 py-2">
-                            <span className={`font-bold text-lg ${
-                              deal.percentOfArv < 50 ? 'text-green-400' :
-                              deal.percentOfArv < 60 ? 'text-yellow-400' :
-                              'text-orange-400'
-                            }`}>
-                              {deal.percentOfArv}%
-                            </span>
+                          <td className="px-1.5 py-2">
+                            {deal.percentOfArv != null ? (
+                              <span className={`font-bold text-lg ${deal.percentOfArv < 50 ? 'text-green-400' : deal.percentOfArv < 60 ? 'text-yellow-400' : 'text-orange-400'}`}>
+                                {deal.percentOfArv}%
+                              </span>
+                            ) : <span className="text-slate-500">N/A</span>}
                           </td>
-                          <td className="px-3 py-2">
-                            <span className={`font-bold text-lg ${
-                              deal.discount >= 100000 ? 'text-green-400' :
-                              deal.discount >= 50000 ? 'text-emerald-400' :
-                              'text-yellow-400'
-                            }`}>
-                              ${(deal.discount / 1000).toFixed(0)}K
-                            </span>
-                          </td>
-                          <td className="px-3 py-2">
-                            {deal.rentEstimate > 0 ? (
-                              <div className="text-sm text-white">${deal.rentEstimate?.toLocaleString()}</div>
-                            ) : (
-                              <span className="text-slate-500">-</span>
-                            )}
-                          </td>
-                          <td className="px-3 py-2 text-xs text-slate-300">
+                          <td className="px-1.5 py-2 text-xs text-slate-300">
                             {deal.beds}bd/{deal.baths}ba
                             {deal.sqft > 0 && <div className="text-slate-400">{deal.sqft.toLocaleString()}sf</div>}
-                          </td>
-                          <td className="px-3 py-2">
-                            <a
-                              href={deal.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-emerald-400 hover:text-emerald-300 text-sm font-medium"
-                            >
-                              View
-                            </a>
                           </td>
                         </tr>
                       );

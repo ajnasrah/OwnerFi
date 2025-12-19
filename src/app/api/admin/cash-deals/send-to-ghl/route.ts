@@ -59,14 +59,8 @@ export async function POST(request: NextRequest) {
 
     for (const dealId of dealIds) {
       try {
-        // Try cash_houses first, then zillow_imports
-        let doc = await db.collection('cash_houses').doc(dealId).get();
-        let collection = 'cash_houses';
-
-        if (!doc.exists) {
-          doc = await db.collection('zillow_imports').doc(dealId).get();
-          collection = 'zillow_imports';
-        }
+        // Look up in unified properties collection
+        const doc = await db.collection('properties').doc(dealId).get();
 
         if (!doc.exists) {
           results.failed++;
@@ -143,14 +137,14 @@ export async function POST(request: NextRequest) {
 
         // Mark deal as sent to GHL
         const sentTimestamp = new Date().toISOString();
-        await db.collection(collection).doc(dealId).update({
+        await db.collection('properties').doc(dealId).update({
           sentToGHL: sentTimestamp,
         });
 
         results.sent++;
         console.log(`   ✅ Sent: ${ghlPayload.propertyAddress}`);
 
-      } catch (error: any) {
+      } catch (error) {
         results.failed++;
         results.errors.push({ id: dealId, error: error.message });
         console.error(`   ❌ Failed ${dealId}:`, error.message);
@@ -168,7 +162,7 @@ export async function POST(request: NextRequest) {
       errors: results.errors.length > 0 ? results.errors : undefined,
     });
 
-  } catch (error: any) {
+  } catch (error) {
     console.error('❌ [CASH DEALS -> GHL] Error:', error);
     return NextResponse.json(
       { error: error.message },

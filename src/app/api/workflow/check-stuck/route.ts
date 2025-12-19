@@ -113,7 +113,7 @@ export async function GET() {
           }
         }
 
-      } catch (error: any) {
+      } catch (error) {
         console.error(`Error checking workflow ${workflowId}:`, error.message);
         results.errors.push(`${workflowId}: ${error.message}`);
 
@@ -136,7 +136,7 @@ export async function GET() {
       ...results
     });
 
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error checking stuck workflows:', error);
 
     return NextResponse.json({

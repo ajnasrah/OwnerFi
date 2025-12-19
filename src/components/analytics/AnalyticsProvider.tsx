@@ -23,8 +23,8 @@ interface EventData {
 // GTM/GA4 tracking
 export function trackEvent(event: AnalyticsEvent, data?: EventData) {
   // Google Analytics 4 via dataLayer
-  if (typeof window !== 'undefined' && (window as any).dataLayer) {
-    (window as any).dataLayer.push({
+  if (typeof window !== 'undefined' && (window as { dataLayer?: Array<Record<string, unknown>> }).dataLayer) {
+    (window as { dataLayer: Array<Record<string, unknown>> }).dataLayer.push({
       event: event,
       ...data,
       timestamp: new Date().toISOString(),
@@ -32,15 +32,15 @@ export function trackEvent(event: AnalyticsEvent, data?: EventData) {
   }
 
   // Meta Pixel
-  if (typeof window !== 'undefined' && (window as any).fbq) {
+  if (typeof window !== 'undefined' && (window as { fbq?: (action: string, eventName: string, data?: EventData) => void }).fbq) {
     const fbEvent = event === 'lead_submit' ? 'Lead' : 'trackCustom';
-    (window as any).fbq(fbEvent, event, data);
+    (window as { fbq: (action: string, eventName: string, data?: EventData) => void }).fbq(fbEvent, event, data);
   }
 
   // TikTok Pixel
-  if (typeof window !== 'undefined' && (window as any).ttq) {
+  if (typeof window !== 'undefined' && (window as { ttq?: { track: (action: string, data?: EventData) => void } }).ttq) {
     const ttqEvent = event === 'lead_submit' ? 'SubmitForm' : 'track';
-    (window as any).ttq.track(ttqEvent, data);
+    (window as { ttq: { track: (action: string, data?: EventData) => void } }).ttq.track(ttqEvent, data);
   }
 
   console.log('Analytics Event:', event, data);

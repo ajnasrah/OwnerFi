@@ -49,7 +49,7 @@ export async function DELETE(request: NextRequest) {
       articleId,
       brand
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error deleting article:', error);
     return NextResponse.json(
       { error: 'Failed to delete article', details: error.message },

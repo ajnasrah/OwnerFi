@@ -96,7 +96,7 @@ console.log('\n━'.repeat(80));
 console.log('\n🏠 Testing Properties:\n');
 
 let correctPredictions = 0;
-let totalProperties = properties.length;
+const totalProperties = properties.length;
 const visibleProperties: any[] = [];
 const hiddenProperties: any[] = [];
 

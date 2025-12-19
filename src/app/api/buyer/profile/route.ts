@@ -164,7 +164,9 @@ export async function GET() {
     console.log('✅ [BUYER PROFILE GET] Profile found:', {
       profileId: profile.id,
       hasCity: !!profileData.city || !!profileData.preferredCity,
-      profileComplete: profileData.profileComplete
+      profileComplete: profileData.profileComplete,
+      isInvestor: profileData.isInvestor,
+      isRealtor: profileData.isRealtor
     });
 
     return NextResponse.json({ profile });

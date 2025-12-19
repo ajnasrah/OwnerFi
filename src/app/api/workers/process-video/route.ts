@@ -72,13 +72,26 @@ export async function POST(request: NextRequest) {
       }, { status: 404 });
     }
 
-    // Check if already processed
-    if (workflow.status === 'completed') {
-      console.log(`✅ Workflow already completed, skipping`);
+    // Check if already processed or in a terminal/processing state
+    const skipStatuses = ['completed', 'posting', 'video_processing'];
+    if (skipStatuses.includes(workflow.status)) {
+      console.log(`✅ Workflow already in ${workflow.status} status, skipping to prevent duplicates`);
       return NextResponse.json({
         success: true,
-        message: 'Already completed',
-        workflowId
+        message: `Already in ${workflow.status} status`,
+        workflowId,
+        status: workflow.status
+      });
+    }
+
+    // Additional check: If workflow has a latePostId, it was already posted
+    if (workflow.latePostId) {
+      console.log(`✅ Workflow already has latePostId ${workflow.latePostId}, skipping`);
+      return NextResponse.json({
+        success: true,
+        message: 'Already posted to Late',
+        workflowId,
+        latePostId: workflow.latePostId
       });
     }
 
@@ -117,18 +130,14 @@ export async function POST(request: NextRequest) {
 
       console.log(`✅ Video uploaded to R2: ${publicVideoUrl}`);
 
-      // CRITICAL: Save video URL IMMEDIATELY before changing status
+      // CRITICAL: Save video URL AND update status in SINGLE atomic operation
+      // This prevents inconsistent state if one succeeds and other fails
       await updateWorkflowForBrand(brand, workflowId, {
         finalVideoUrl: publicVideoUrl,
         uploadCompletedAt: Date.now(),
-      });
-      console.log(`💾 Video URL saved to workflow`);
-
-      // Step 3: Update status to "posting"
-      await updateWorkflowForBrand(brand, workflowId, {
         status: 'posting',
       });
-      console.log(`📝 Status set to "posting"`);
+      console.log(`💾 Video URL saved and status set to "posting"`);
 
       // Step 4: Get caption and title
       let caption: string;
@@ -197,6 +206,17 @@ export async function POST(request: NextRequest) {
         // Use unified posting to bypass Late.dev quota for YouTube
         const { postToAllPlatforms, getYouTubeCategoryForBrand } = await import('@/lib/unified-posting');
 
+        // IDEMPOTENCY: Pass existing IDs to prevent duplicate uploads/posts on retry
+        const existingYoutubeVideoId = workflow.youtubeVideoId;
+        const existingLatePostId = workflow.latePostId;
+
+        if (existingYoutubeVideoId) {
+          console.log(`   ⚠️  YouTube already uploaded: ${existingYoutubeVideoId} (will skip)`);
+        }
+        if (existingLatePostId) {
+          console.log(`   ⚠️  Late.dev already posted: ${existingLatePostId} (will skip)`);
+        }
+
         const unifiedResult = await retryOperation(
           () => postToAllPlatforms({
             videoUrl: publicVideoUrl,
@@ -209,6 +229,9 @@ export async function POST(request: NextRequest) {
             youtubeCategory: getYouTubeCategoryForBrand(brand),
             youtubePrivacy: 'public',
             youtubeMadeForKids: false,
+            // Idempotency - skip if already posted
+            existingYoutubeVideoId,
+            existingLatePostId,
           }),
           3, // max retries
           'Unified posting'
@@ -240,13 +263,15 @@ export async function POST(request: NextRequest) {
           console.log(`   Scheduled for: ${postResult.scheduledFor}`);
         }
 
-        // Mark as completed - store BOTH IDs
-        await updateWorkflowForBrand(brand, workflowId, {
+        // Mark as completed - store IDs (filter out undefined values for Firestore)
+        const completionUpdate: Record<string, any> = {
           status: 'completed',
-          latePostId: postResult.postId,
-          youtubeVideoId: postResult.youtubeVideoId,
           completedAt: Date.now(),
-        });
+        };
+        if (postResult.postId) completionUpdate.latePostId = postResult.postId;
+        if (postResult.youtubeVideoId) completionUpdate.youtubeVideoId = postResult.youtubeVideoId;
+
+        await updateWorkflowForBrand(brand, workflowId, completionUpdate);
 
         // Delete from Google Drive if this is a personal video (user preference)
         if (brand === 'personal' && workflow.fileId) {
@@ -379,33 +404,38 @@ async function updateWorkflowForBrand(
   workflowId: string,
   updates: Record<string, any>
 ): Promise<void> {
+  // Filter out undefined values - Firestore doesn't accept undefined
+  const cleanUpdates = Object.fromEntries(
+    Object.entries(updates).filter(([, v]) => v !== undefined)
+  );
+
   if (brand === 'property') {
     const { updatePropertyVideo } = await import('@/lib/feed-store-firestore');
-    await updatePropertyVideo(workflowId, updates);
+    await updatePropertyVideo(workflowId, cleanUpdates);
   } else if (brand === 'abdullah') {
     const { db } = await import('@/lib/firebase');
     const { doc, updateDoc } = await import('firebase/firestore');
     await updateDoc(doc(db, 'abdullah_workflow_queue', workflowId), {
-      ...updates,
+      ...cleanUpdates,
       updatedAt: Date.now()
     });
   } else if (brand === 'personal') {
     const { db } = await import('@/lib/firebase');
     const { doc, updateDoc } = await import('firebase/firestore');
     await updateDoc(doc(db, 'personal_workflow_queue', workflowId), {
-      ...updates,
+      ...cleanUpdates,
       updatedAt: Date.now()
     });
   } else if (brand === 'gaza') {
     const { getAdminDb } = await import('@/lib/firebase-admin');
     const adminDb = await getAdminDb();
     await adminDb.collection('gaza_workflow_queue').doc(workflowId).update({
-      ...updates,
+      ...cleanUpdates,
       updatedAt: Date.now()
     });
   } else {
     const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
-    await updateWorkflowStatus(workflowId, brand, updates);
+    await updateWorkflowStatus(workflowId, brand, cleanUpdates);
   }
 }
 

@@ -118,52 +118,115 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      const buyerId = `buyer_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
-      const buyerData = {
-        id: buyerId,
-        userId: newUser.id,
-        firstName,
-        lastName,
-        email: email.toLowerCase().trim(),
-        phone: normalizedPhone,
+      // Check for existing buyerProfile by phone or userId
+      const { collection, query, where, getDocs, updateDoc } = await import('firebase/firestore');
+      let existingBuyerProfile: { id: string; ref: ReturnType<typeof doc> } | null = null;
 
-        // Location - filled from signup form
-        preferredCity: city || '',
-        preferredState: state || '',
-        city: city || '',
-        state: state || '',
-        searchRadius: 25,
+      // Try to find existing profile by phone
+      const phoneQuery = query(
+        collection(db, 'buyerProfiles'),
+        where('phone', '==', normalizedPhone)
+      );
+      const phoneSnapshot = await getDocs(phoneQuery);
 
-        // User type flags
-        isInvestor: isInvestor === true,
+      if (!phoneSnapshot.empty) {
+        existingBuyerProfile = {
+          id: phoneSnapshot.docs[0].id,
+          ref: phoneSnapshot.docs[0].ref
+        };
+        console.log(`🔍 [SIGNUP-PHONE] Found existing buyerProfile by phone: ${existingBuyerProfile.id}`);
+      } else {
+        // Try by userId
+        const userQuery = query(
+          collection(db, 'buyerProfiles'),
+          where('userId', '==', newUser.id)
+        );
+        const userSnapshot = await getDocs(userQuery);
 
-        // Communication preferences
-        languages: ['English'],
-        emailNotifications: true,
-        smsNotifications: true,
+        if (!userSnapshot.empty) {
+          existingBuyerProfile = {
+            id: userSnapshot.docs[0].id,
+            ref: userSnapshot.docs[0].ref
+          };
+          console.log(`🔍 [SIGNUP-PHONE] Found existing buyerProfile by userId: ${existingBuyerProfile.id}`);
+        }
+      }
 
-        // System fields - mark complete if city/state provided
-        profileComplete: !!(city && state),
-        isActive: true,
+      let buyerId: string;
 
-        // Property interaction arrays
-        matchedPropertyIds: [],
-        likedPropertyIds: [],
-        passedPropertyIds: [],
+      if (existingBuyerProfile) {
+        // UPDATE existing profile with new data (including isInvestor)
+        buyerId = existingBuyerProfile.id;
+        console.log(`🔄 [SIGNUP-PHONE] Updating existing buyerProfile: ${buyerId}, isInvestor: ${isInvestor}`);
 
-        // Lead selling fields - make buyers available for realtors immediately
-        isAvailableForPurchase: true,
-        leadPrice: 1,
+        await updateDoc(existingBuyerProfile.ref, {
+          userId: newUser.id,
+          firstName,
+          lastName,
+          email: email.toLowerCase().trim(),
+          phone: normalizedPhone,
+          preferredCity: city || '',
+          preferredState: state || '',
+          city: city || '',
+          state: state || '',
+          isInvestor: isInvestor === true,
+          profileComplete: !!(city && state),
+          updatedAt: serverTimestamp()
+        });
 
-        // Activity tracking
-        lastActiveAt: serverTimestamp(),
+        console.log(`✅ [SIGNUP-PHONE] Updated buyerProfile with isInvestor: ${isInvestor}`);
+      } else {
+        // CREATE new profile
+        buyerId = `buyer_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
+        console.log(`✨ [SIGNUP-PHONE] Creating new buyerProfile: ${buyerId}, isInvestor: ${isInvestor}`);
 
-        // Metadata
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
-      };
+        const buyerData = {
+          id: buyerId,
+          userId: newUser.id,
+          firstName,
+          lastName,
+          email: email.toLowerCase().trim(),
+          phone: normalizedPhone,
 
-      await setDoc(doc(db, 'buyerProfiles', buyerId), buyerData);
+          // Location - filled from signup form
+          preferredCity: city || '',
+          preferredState: state || '',
+          city: city || '',
+          state: state || '',
+          searchRadius: 25,
+
+          // User type flags
+          isInvestor: isInvestor === true,
+
+          // Communication preferences
+          languages: ['English'],
+          emailNotifications: true,
+          smsNotifications: true,
+
+          // System fields - mark complete if city/state provided
+          profileComplete: !!(city && state),
+          isActive: true,
+
+          // Property interaction arrays
+          matchedPropertyIds: [],
+          likedPropertyIds: [],
+          passedPropertyIds: [],
+
+          // Lead selling fields - make buyers available for realtors immediately
+          isAvailableForPurchase: true,
+          leadPrice: 1,
+
+          // Activity tracking
+          lastActiveAt: serverTimestamp(),
+
+          // Metadata
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        };
+
+        await setDoc(doc(db, 'buyerProfiles', buyerId), buyerData);
+        console.log(`✅ [SIGNUP-PHONE] Created new buyerProfile`);
+      }
 
       // 🚀 Generate nearby cities filter and sync to GHL in background (non-blocking)
       if (city && state) {

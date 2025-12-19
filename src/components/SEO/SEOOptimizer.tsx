@@ -1,26 +1,20 @@
-import { Metadata } from 'next';
-import { JsonLd, RealEstateWebsiteSchema, WebPageSchema, BreadcrumbSchema } from './JsonLd';
-import { SEOFooter } from './InternalLinks';
+import { JsonLd, WebPageSchema, BreadcrumbSchema } from './JsonLd';
 
 // Comprehensive SEO optimization for any page
 interface SEOOptimizerProps {
   title: string;
   description: string;
-  keywords?: string;
   canonical?: string;
   breadcrumbs?: Array<{ name: string; url: string }>;
   structuredData?: object;
-  noIndex?: boolean;
 }
 
 export function SEOOptimizer({
   title,
   description,
-  keywords,
   canonical,
   breadcrumbs,
   structuredData,
-  noIndex = false
 }: SEOOptimizerProps) {
   return (
     <>

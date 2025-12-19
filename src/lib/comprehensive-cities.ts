@@ -65,19 +65,62 @@ function normalizeCityName(name: string): string {
     .trim();
 }
 
+// Well-known cities with duplicates - default to the most famous/populous one
+// This map is used when state is not provided
+const FAMOUS_CITY_DEFAULTS: Record<string, string> = {
+  'memphis': 'TN',
+  'dallas': 'TX',
+  'houston': 'TX',
+  'atlanta': 'GA',
+  'miami': 'FL',
+  'orlando': 'FL',
+  'tampa': 'FL',
+  'phoenix': 'AZ',
+  'denver': 'CO',
+  'seattle': 'WA',
+  'portland': 'OR',
+  'nashville': 'TN',
+  'austin': 'TX',
+  'san antonio': 'TX',
+  'jacksonville': 'FL',
+  'columbus': 'OH',
+  'charlotte': 'NC',
+  'indianapolis': 'IN',
+  'detroit': 'MI',
+  'kansas city': 'MO',
+  'st. louis': 'MO',
+  'saint louis': 'MO',
+  'springfield': 'MO', // Most populous Springfield
+  'richmond': 'VA',
+  'birmingham': 'AL',
+  'little rock': 'AR',
+};
+
 /**
  * Find city with fuzzy matching for common variations
+ * If state is not provided, searches all US cities and returns the most likely match
+ * Uses FAMOUS_CITY_DEFAULTS to prioritize well-known cities
  */
 function findCityFuzzy(cityName: string, state: string): City | null {
-  const stateCities = usCities.filter(c => c.state === state);
+  // If state is not provided, check if this is a famous city with a default state
+  let effectiveState = state;
+  if (!state) {
+    const normalized = cityName.toLowerCase().trim();
+    if (FAMOUS_CITY_DEFAULTS[normalized]) {
+      effectiveState = FAMOUS_CITY_DEFAULTS[normalized];
+    }
+  }
+
+  // If state is provided (or defaulted), filter to that state; otherwise search all cities
+  const searchPool = effectiveState ? usCities.filter(c => c.state === effectiveState) : usCities;
   const normalizedInput = normalizeCityName(cityName);
 
-  // 1. Try exact match first
-  let match = stateCities.find(c => c.name.toLowerCase() === cityName.toLowerCase());
+  // 1. Try exact match first (prioritize if state is provided)
+  let match = searchPool.find(c => c.name.toLowerCase() === cityName.toLowerCase());
   if (match) return match;
 
   // 2. Try normalized match
-  match = stateCities.find(c => normalizeCityName(c.name) === normalizedInput);
+  match = searchPool.find(c => normalizeCityName(c.name) === normalizedInput);
   if (match) return match;
 
   // 3. Try with/without common suffixes (Beach, City, Park, Heights, etc.)
@@ -85,7 +128,7 @@ function findCityFuzzy(cityName: string, state: string): City | null {
 
   // Try adding suffixes
   for (const suffix of suffixes) {
-    match = stateCities.find(c =>
+    match = searchPool.find(c =>
       normalizeCityName(c.name) === `${normalizedInput} ${suffix}`
     );
     if (match) return match;
@@ -95,13 +138,13 @@ function findCityFuzzy(cityName: string, state: string): City | null {
   for (const suffix of suffixes) {
     if (normalizedInput.endsWith(` ${suffix}`)) {
       const withoutSuffix = normalizedInput.replace(new RegExp(` ${suffix}$`), '');
-      match = stateCities.find(c => normalizeCityName(c.name) === withoutSuffix);
+      match = searchPool.find(c => normalizeCityName(c.name) === withoutSuffix);
       if (match) return match;
     }
   }
 
   // 4. Try partial match (input starts with city name or vice versa)
-  match = stateCities.find(c => {
+  match = searchPool.find(c => {
     const normalizedDbName = normalizeCityName(c.name);
     return normalizedDbName.startsWith(normalizedInput) || normalizedInput.startsWith(normalizedDbName);
   });
@@ -138,6 +181,7 @@ export function getCityCoordinatesComprehensive(cityName: string, state: string)
 /**
  * FAST: Get all cities within radius using comprehensive database
  * NO EXTERNAL API CALLS - Pure JavaScript calculation
+ * IMPORTANT: Searches ALL states within radius (for tri-state areas like Memphis)
  */
 export function getCitiesWithinRadiusComprehensive(
   centerCity: string,
@@ -150,9 +194,8 @@ export function getCitiesWithinRadiusComprehensive(
     return [];
   }
 
-  // Calculate distances to all cities in the same state
+  // Calculate distances to ALL US cities (not just same state - for tri-state areas)
   const nearbyCities = usCities
-    .filter(city => city.state === centerState) // Same state only
     .map(city => ({
       ...city,
       distance: calculateDistance(centerCoords.lat, centerCoords.lng, city.lat, city.lng)

@@ -155,7 +155,7 @@ export async function getLateAccounts(profileId: string): Promise<any[]> {
       throw new Error(`Late API error: ${response.status} - ${errorText}`);
     }
 
-    let accountsData = await response.json();
+    const accountsData = await response.json();
 
     // Handle different response formats - Late API may return array or object with accounts wrapper
     const accounts = Array.isArray(accountsData) ? accountsData :
@@ -170,6 +170,26 @@ export async function getLateAccounts(profileId: string): Promise<any[]> {
   }
 }
 
+// In-memory cache to prevent duplicate posts (belt-and-suspenders approach)
+// Key: hash of videoUrl+caption, Value: timestamp of last post
+const recentPostsCache = new Map<string, number>();
+const POST_DEDUP_WINDOW_MS = 10 * 60 * 1000; // 10 minutes
+
+/**
+ * Generate a simple hash for deduplication
+ */
+function generatePostHash(videoUrl: string, caption: string): string {
+  // Use first 100 chars of caption + video URL for hash
+  const key = `${videoUrl}|${caption.substring(0, 100)}`;
+  let hash = 0;
+  for (let i = 0; i < key.length; i++) {
+    const char = key.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32-bit integer
+  }
+  return hash.toString(36);
+}
+
 /**
  * Post content to Late for publishing to social media
  */
@@ -182,6 +202,34 @@ export async function postToLate(request: LatePostRequest): Promise<LatePostResp
       success: false,
       error: 'Late API key not configured (LATE_API_KEY)'
     };
+  }
+
+  // DEDUPLICATION CHECK: Prevent posting same video+caption within 10 minutes
+  if (request.videoUrl) {
+    const postHash = generatePostHash(request.videoUrl, request.caption);
+    const lastPostTime = recentPostsCache.get(postHash);
+
+    if (lastPostTime && (Date.now() - lastPostTime) < POST_DEDUP_WINDOW_MS) {
+      const minutesAgo = Math.round((Date.now() - lastPostTime) / 60000);
+      console.warn(`⚠️  DUPLICATE POST BLOCKED: Same video+caption was posted ${minutesAgo} minutes ago`);
+      console.warn(`   Video URL: ${request.videoUrl.substring(0, 60)}...`);
+      console.warn(`   Caption: ${request.caption.substring(0, 60)}...`);
+      return {
+        success: false,
+        error: `Duplicate post blocked: Same content was posted ${minutesAgo} minutes ago`
+      };
+    }
+
+    // Clean up old entries from cache (keep it from growing indefinitely)
+    const now = Date.now();
+    for (const [key, time] of recentPostsCache.entries()) {
+      if (now - time > POST_DEDUP_WINDOW_MS) {
+        recentPostsCache.delete(key);
+      }
+    }
+
+    // Add to cache BEFORE posting (optimistic - will be accurate after successful post)
+    recentPostsCache.set(postHash, now);
   }
 
   // Get profile ID for brand
@@ -210,8 +258,8 @@ export async function postToLate(request: LatePostRequest): Promise<LatePostResp
   try {
     // If useQueue is true, we'll use Late.so's built-in queue (no explicit scheduleTime)
     // Otherwise, use the provided scheduleTime
-    let scheduleTime = request.useQueue ? undefined : request.scheduleTime;
-    let timezone = request.timezone;
+    const scheduleTime = request.useQueue ? undefined : request.scheduleTime;
+    const timezone = request.timezone;
 
     if (request.useQueue) {
       console.log(`📅 Using Late.so's built-in queue for ${request.brand} (no explicit schedule time)`);

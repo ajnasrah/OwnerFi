@@ -15,7 +15,7 @@ export interface WebhookDLQEntry {
   url: string;
   method: string;
   headers: Record<string, string>;
-  body?: any;
+  body?: unknown;
   error: string;
   stack?: string;
   timestamp: number;
@@ -67,6 +67,7 @@ export async function getDLQEntries(filters?: {
   startAfter?: number;
 }): Promise<WebhookDLQEntry[]> {
   try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let query: any = db.collection(DLQ_COLLECTION);
 
     // Apply filters
@@ -95,10 +96,10 @@ export async function getDLQEntries(filters?: {
 
     const snapshot = await query.get();
 
-    return snapshot.docs.map((doc: any) => ({
+    return snapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
-    }));
+    } as WebhookDLQEntry));
   } catch (error) {
     console.error('Failed to get DLQ entries:', error);
     return [];
@@ -206,7 +207,7 @@ export async function cleanupOldDLQEntries(): Promise<number> {
     }
 
     const batch = db.batch();
-    snapshot.docs.forEach((doc: any) => {
+    snapshot.docs.forEach((doc) => {
       batch.delete(doc.ref);
     });
 
@@ -234,6 +235,7 @@ export async function getDLQStats(brand?: string): Promise<{
   byBrand: Record<string, number>;
 }> {
   try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let query: any = db.collection(DLQ_COLLECTION);
 
     if (brand) {
@@ -241,19 +243,19 @@ export async function getDLQStats(brand?: string): Promise<{
     }
 
     const snapshot = await query.get();
-    const entries = snapshot.docs.map((doc: any) => doc.data());
+    const entries = snapshot.docs.map((doc) => doc.data() as WebhookDLQEntry);
 
     const stats = {
       total: entries.length,
-      unresolved: entries.filter((e: any) => !e.resolved).length,
-      resolved: entries.filter((e: any) => e.resolved).length,
-      retried: entries.filter((e: any) => e.retried).length,
+      unresolved: entries.filter((e) => !e.resolved).length,
+      resolved: entries.filter((e) => e.resolved).length,
+      retried: entries.filter((e) => e.retried).length,
       byService: {} as Record<string, number>,
       byBrand: {} as Record<string, number>,
     };
 
     // Count by service
-    entries.forEach((entry: any) => {
+    entries.forEach((entry) => {
       const service = entry.service || 'unknown';
       stats.byService[service] = (stats.byService[service] || 0) + 1;
 

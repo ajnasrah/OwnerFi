@@ -19,6 +19,7 @@ import { generateBlogContent } from '@/lib/blog-ai-generator';
 import { getBlogCollection, BlogPost, generateSlug } from '@/lib/blog-models';
 import { generateSocialImagesFromBlog, generateOGImageUrl } from '@/lib/blog-og-generator';
 import { autoScheduleBlogToSocial } from '@/lib/blog-to-social';
+import { withCronLock } from '@/lib/cron-lock';
 
 export const runtime = 'nodejs';
 export const maxDuration = 300; // 5 minutes
@@ -219,17 +220,19 @@ async function processBrandBlog(brand: Brand): Promise<{
  * Main cron handler
  */
 export async function GET(request: NextRequest) {
-  // Verify cron secret
+  // Verify cron secret first (before acquiring lock)
   const authHeader = request.headers.get('authorization');
   if (authHeader !== `Bearer ${CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  console.log('🕐 Blog Generation Cron Started');
-  console.log(`   Time: ${new Date().toLocaleString('en-US', { timeZone: 'America/Chicago' })} CST`);
+  // Use cron lock to prevent concurrent execution
+  const result = await withCronLock('generate-blog', async () => {
+    console.log('🕐 Blog Generation Cron Started');
+    console.log(`   Time: ${new Date().toLocaleString('en-US', { timeZone: 'America/Chicago' })} CST`);
 
-  const brands: Brand[] = ['ownerfi', 'carz', 'abdullah', 'vassdistro'];
-  const results: Record<string, any> = {};
+    const brands: Brand[] = ['ownerfi', 'carz', 'abdullah', 'vassdistro'];
+    const results: Record<string, any> = {};
 
   // Process each brand sequentially
   for (const brand of brands) {
@@ -259,20 +262,32 @@ export async function GET(request: NextRequest) {
   const failed = Object.values(results).filter((r: any) => !r.success && !r.skipped).length;
   const skipped = Object.values(results).filter((r: any) => r.skipped).length;
 
-  console.log(`\n✅ Cron Complete`);
-  console.log(`   Successful: ${successful}`);
-  console.log(`   Failed: ${failed}`);
-  console.log(`   Skipped: ${skipped}`);
+    console.log(`\n✅ Cron Complete`);
+    console.log(`   Successful: ${successful}`);
+    console.log(`   Failed: ${failed}`);
+    console.log(`   Skipped: ${skipped}`);
 
-  return NextResponse.json({
-    success: true,
-    timestamp: new Date().toISOString(),
-    results,
-    summary: {
-      successful,
-      failed,
-      skipped,
-      total: brands.length,
-    },
-  });
+    return NextResponse.json({
+      success: true,
+      timestamp: new Date().toISOString(),
+      results,
+      summary: {
+        successful,
+        failed,
+        skipped,
+        total: brands.length,
+      },
+    });
+  }); // End withCronLock
+
+  // If lock wasn't acquired, return early
+  if (result === null) {
+    return NextResponse.json({
+      success: false,
+      message: 'Another instance is already running',
+      skipped: true
+    }, { status: 200 });
+  }
+
+  return result;
 }

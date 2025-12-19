@@ -6,7 +6,7 @@ import { db } from '@/lib/firebase';
 import { logError, logInfo } from '@/lib/logger';
 import { ExtendedSession } from '@/types/session';
 
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   try {
     if (!db) {
       return NextResponse.json(

@@ -332,18 +332,16 @@ export default function HomePageClient() {
       <LanguageToggle currentLanguage={language} onLanguageChange={setLanguage} />
 
       {/* Chatbot Components */}
-      {isChatbotOpen && (
+      {isChatbotOpen ? (
         <Chatbot
           isOpen={isChatbotOpen}
           onClose={() => setIsChatbotOpen(false)}
         />
+      ) : (
+        <FloatingChatbotButton
+          onClick={() => setIsChatbotOpen(true)}
+        />
       )}
-      <FloatingChatbotButton
-        onClick={() => {
-          console.log('Chatbot button clicked, current state:', isChatbotOpen)
-          setIsChatbotOpen(!isChatbotOpen)
-        }}
-      />
     </>
   )
 }

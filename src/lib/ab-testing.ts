@@ -227,8 +227,8 @@ export async function updateTestResultMetrics(
   let totalViews = 0;
   let totalEngagements = 0;
 
-  Object.values(updatedMetrics).forEach((platformMetric: any) => {
-    if (platformMetric) {
+  Object.values(updatedMetrics).forEach((platformMetric) => {
+    if (platformMetric && typeof platformMetric === 'object' && 'views' in platformMetric) {
       totalViews += platformMetric.views || 0;
       totalEngagements += (platformMetric.likes || 0) +
                           (platformMetric.comments || 0) +

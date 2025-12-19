@@ -49,7 +49,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     // OR: { id: "uuid", status: "completed", media_url: "url", ... }
     submagicProjectId = body.projectId || body.id;
     const status = body.status;
-    let downloadUrl = body.downloadUrl || body.directUrl || body.media_url || body.mediaUrl || body.video_url || body.videoUrl || body.download_url;
+    const downloadUrl = body.downloadUrl || body.directUrl || body.media_url || body.mediaUrl || body.video_url || body.videoUrl || body.download_url;
 
     if (!submagicProjectId) {
       console.warn(`⚠️ [${brandConfig.displayName}] Missing projectId in webhook`);
@@ -101,6 +101,33 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     console.log(`   Workflow ID: ${workflowId}`);
     console.log(`   Status: ${status}`);
+
+    // DUPLICATE CHECK: Skip if workflow already past submagic stage or completed
+    const alreadyProcessedStatuses = ['posting', 'completed'];
+    if (alreadyProcessedStatuses.includes(workflow.status)) {
+      console.warn(`⚠️  [${brandConfig.displayName}] Workflow ${workflowId} already in ${workflow.status} - skipping Submagic webhook`);
+      return NextResponse.json({
+        success: true,
+        brand,
+        projectId: submagicProjectId,
+        workflow_id: workflowId,
+        message: `Workflow already in ${workflow.status} status - duplicate webhook ignored`,
+        status: workflow.status,
+      });
+    }
+
+    // Also check if we already have a latePostId (already posted)
+    if (workflow.latePostId) {
+      console.warn(`⚠️  [${brandConfig.displayName}] Workflow ${workflowId} already has latePostId - skipping Submagic webhook`);
+      return NextResponse.json({
+        success: true,
+        brand,
+        projectId: submagicProjectId,
+        workflow_id: workflowId,
+        message: 'Workflow already posted to Late - duplicate webhook ignored',
+        latePostId: workflow.latePostId,
+      });
+    }
 
     // Handle completion
     if (status === 'completed' || status === 'done' || status === 'ready') {
@@ -350,40 +377,98 @@ async function getWorkflowBySubmagicId(
 
 /**
  * Update workflow for specific brand
+ * CRITICAL: Also updates dedup document when status changes to prevent duplicate processing
  */
 async function updateWorkflowForBrand(
   brand: 'carz' | 'ownerfi' | 'property' | 'property-spanish' | 'vassdistro' | 'abdullah' | 'personal' | 'gaza',
   workflowId: string,
   updates: Record<string, any>
 ): Promise<void> {
+  // Filter out undefined values - Firestore doesn't accept undefined
+  const cleanUpdates = Object.fromEntries(
+    Object.entries(updates).filter(([, v]) => v !== undefined)
+  );
+
+  // Helper to update dedup doc for non-RSS brands
+  const updateDedupDoc = async (collectionName: string, workflowData: any) => {
+    if (updates.status && workflowData?.articleId && workflowData?.createdAt) {
+      try {
+        const { getAdminDb } = await import('@/lib/firebase-admin');
+        const adminDb = await getAdminDb();
+        const createdDate = new Date(workflowData.createdAt).toISOString().split('T')[0];
+        const dedupKey = `dedup_${workflowData.articleId}_${createdDate}`;
+        const dedupRef = adminDb.collection(collectionName).doc(dedupKey);
+
+        const dedupDoc = await dedupRef.get();
+        if (dedupDoc.exists) {
+          await dedupRef.update({
+            status: updates.status,
+            updatedAt: Date.now()
+          });
+          console.log(`   ✅ Updated dedup doc ${dedupKey} with status: ${updates.status}`);
+        }
+      } catch (dedupError) {
+        console.warn(`   ⚠️  Failed to update dedup doc:`, dedupError);
+      }
+    }
+  };
+
   if (brand === 'property' || brand === 'property-spanish') {
     // Use NEW propertyShowcaseWorkflows collection
     const { updatePropertyWorkflow } = await import('@/lib/property-workflow');
-    await updatePropertyWorkflow(workflowId, updates);
+    await updatePropertyWorkflow(workflowId, cleanUpdates);
   } else if (brand === 'abdullah') {
     const { db } = await import('@/lib/firebase');
-    const { doc, updateDoc } = await import('firebase/firestore');
-    await updateDoc(doc(db, 'abdullah_workflow_queue', workflowId), {
-      ...updates,
+    const { doc, updateDoc, getDoc } = await import('firebase/firestore');
+    const collectionName = 'abdullah_workflow_queue';
+
+    // Get workflow data for dedup update
+    const workflowDoc = await getDoc(doc(db, collectionName, workflowId));
+    const workflowData = workflowDoc.data();
+
+    await updateDoc(doc(db, collectionName, workflowId), {
+      ...cleanUpdates,
       updatedAt: Date.now()
     });
+
+    // Update dedup doc
+    await updateDedupDoc(collectionName, workflowData);
   } else if (brand === 'personal') {
     const { getAdminDb } = await import('@/lib/firebase-admin');
     const adminDb = await getAdminDb();
-    await adminDb.collection('personal_workflow_queue').doc(workflowId).update({
-      ...updates,
+    const collectionName = 'personal_workflow_queue';
+
+    // Get workflow data for dedup update
+    const workflowDoc = await adminDb.collection(collectionName).doc(workflowId).get();
+    const workflowData = workflowDoc.data();
+
+    await adminDb.collection(collectionName).doc(workflowId).update({
+      ...cleanUpdates,
       updatedAt: Date.now()
     });
+
+    // Update dedup doc
+    await updateDedupDoc(collectionName, workflowData);
   } else if (brand === 'gaza') {
     const { getAdminDb } = await import('@/lib/firebase-admin');
     const adminDb = await getAdminDb();
-    await adminDb.collection('gaza_workflow_queue').doc(workflowId).update({
-      ...updates,
+    const collectionName = 'gaza_workflow_queue';
+
+    // Get workflow data for dedup update
+    const workflowDoc = await adminDb.collection(collectionName).doc(workflowId).get();
+    const workflowData = workflowDoc.data();
+
+    await adminDb.collection(collectionName).doc(workflowId).update({
+      ...cleanUpdates,
       updatedAt: Date.now()
     });
+
+    // Update dedup doc
+    await updateDedupDoc(collectionName, workflowData);
   } else {
+    // For carz, ownerfi, vassdistro - uses updateWorkflowStatus which handles dedup docs
     const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
-    await updateWorkflowStatus(workflowId, brand, updates);
+    await updateWorkflowStatus(workflowId, brand, cleanUpdates);
   }
 }
 

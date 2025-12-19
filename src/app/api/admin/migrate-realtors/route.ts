@@ -145,7 +145,7 @@ export async function POST(request: NextRequest) {
           await new Promise(resolve => setTimeout(resolve, 100));
         }
 
-      } catch (error: any) {
+      } catch (error) {
         console.error(`  ❌ Error processing user:`, error);
         stats.errors++;
         stats.processed.push({
@@ -178,7 +178,7 @@ export async function POST(request: NextRequest) {
       details: stats.processed
     });
 
-  } catch (error: any) {
+  } catch (error) {
     console.error('\n❌ MIGRATION FAILED:', error);
 
     return NextResponse.json(

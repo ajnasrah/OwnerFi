@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { ExtendedSession, isExtendedSession } from '@/types/session';
+import Link from 'next/link';
 
 interface WebhookLog {
   id: string;
@@ -67,8 +67,7 @@ export default function GoHighLevelLogsPage() {
       router.push('/auth');
     } else if (
       status === 'authenticated' &&
-      isExtendedSession(session as unknown as ExtendedSession) &&
-      (session as unknown as ExtendedSession)?.user?.role !== 'admin'
+      (session?.user as { role?: string })?.role !== 'admin'
     ) {
       router.push('/');
     }
@@ -78,12 +77,12 @@ export default function GoHighLevelLogsPage() {
   useEffect(() => {
     if (
       status === 'authenticated' &&
-      isExtendedSession(session as unknown as ExtendedSession) &&
-      (session as unknown as ExtendedSession)?.user?.role === 'admin'
+      (session?.user as { role?: string })?.role === 'admin'
     ) {
       loadLogs();
       loadTestData();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, session]);
 
   const loadLogs = async () => {
@@ -174,7 +173,7 @@ export default function GoHighLevelLogsPage() {
     <div className="h-screen overflow-hidden bg-slate-900 flex flex-col">
       <div className="flex-1 overflow-y-auto p-6">
         <div className="max-w-7xl mx-auto">
-        <a href="/admin" className="text-emerald-400 hover:text-emerald-300 text-sm mb-4 inline-block">← Back to Admin</a>
+        <Link href="/admin" className="text-emerald-400 hover:text-emerald-300 text-sm mb-4 inline-block">← Back to Admin</Link>
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
@@ -335,11 +334,11 @@ export default function GoHighLevelLogsPage() {
                       </td>
                       <td className="px-4 py-3 text-sm text-slate-400">
                         {(() => {
-                          const ts = log.createdAt as any;
+                          const ts = log.createdAt as unknown;
                           if (!ts) return 'N/A';
-                          if (typeof ts === 'object' && typeof ts._seconds === 'number') return new Date(ts._seconds * 1000).toLocaleString();
-                          if (typeof ts === 'object' && typeof ts.seconds === 'number') return new Date(ts.seconds * 1000).toLocaleString();
-                          const date = new Date(ts);
+                          if (typeof ts === 'object' && ts !== null && '_seconds' in ts && typeof (ts as { _seconds: number })._seconds === 'number') return new Date((ts as { _seconds: number })._seconds * 1000).toLocaleString();
+                          if (typeof ts === 'object' && ts !== null && 'seconds' in ts && typeof (ts as { seconds: number }).seconds === 'number') return new Date((ts as { seconds: number }).seconds * 1000).toLocaleString();
+                          const date = new Date(ts as string | number);
                           return isNaN(date.getTime()) ? 'N/A' : date.toLocaleString();
                         })()}
                       </td>

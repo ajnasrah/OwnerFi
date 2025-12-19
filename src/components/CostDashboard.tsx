@@ -32,14 +32,14 @@ interface CostDashboardData {
       [service: string]: { units: number; costUSD: number };
     };
     byBrand: {
-      [brand: string]: any;
+      [brand: string]: { total: number };
     };
     total: number;
   };
   budgets: {
-    heygen: any;
-    submagic: any;
-    openai: any;
+    heygen: { used: number; limit: number; percentage: number; nearLimit: boolean; accountQuota: { remaining: number; percentage: number } };
+    submagic: { used: number; limit: number; percentage: number; nearLimit: boolean };
+    openai: { used: number; limit: number; percentage: number; nearLimit: boolean };
   };
   recentActivity: Array<{
     brand: string;
@@ -48,7 +48,7 @@ interface CostDashboardData {
     costUSD: number;
     timestamp: number;
   }>;
-  config: any;
+  config: { alertThresholds: { warning: number; critical: number } };
 }
 
 export default function CostDashboard() {
@@ -294,7 +294,7 @@ export default function CostDashboard() {
         <div className="bg-gray-800 p-6 rounded-lg">
           <h3 className="text-lg font-semibold text-white mb-4">Monthly Cost by Service</h3>
           <div className="space-y-3">
-            {Object.entries(breakdown.byService).map(([service, data]: [string, any]) => (
+            {Object.entries(breakdown.byService).map(([service, data]) => (
               <div key={service} className="flex justify-between items-center">
                 <span className="text-gray-300 capitalize">{service}</span>
                 <div className="text-right">
@@ -316,7 +316,7 @@ export default function CostDashboard() {
         <div className="bg-gray-800 p-6 rounded-lg">
           <h3 className="text-lg font-semibold text-white mb-4">Monthly Cost by Brand</h3>
           <div className="space-y-3">
-            {Object.entries(breakdown.byBrand).map(([brand, data]: [string, any]) => (
+            {Object.entries(breakdown.byBrand).map(([brand, data]) => (
               <div key={brand} className="flex justify-between items-center">
                 <span className="text-gray-300 capitalize">{brand}</span>
                 <div className="text-white font-medium">${data.total.toFixed(2)}</div>

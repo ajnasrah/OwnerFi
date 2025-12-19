@@ -5,7 +5,7 @@ import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/firebase';
 import { collection, query, where, getDocs, orderBy, limit as firestoreLimit } from 'firebase/firestore';
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // Verify admin session
     const session = await getServerSession(authOptions as any);

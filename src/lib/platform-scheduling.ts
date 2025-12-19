@@ -54,7 +54,7 @@ export function getPlatformGroups(brand: Brand): PlatformGroup[] {
   ];
 
   // Brand-specific customizations
-  let groups = [...baseGroups];
+  const groups = [...baseGroups];
 
   // VassDistro: B2B vape industry - shift evening earlier (business owners home at 5 PM)
   if (brand === 'vassdistro') {

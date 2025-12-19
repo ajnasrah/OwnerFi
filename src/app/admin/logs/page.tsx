@@ -3,8 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { Header } from '@/components/ui/Header';
-import { Footer } from '@/components/ui/Footer';
+import Link from 'next/link';
 import { collection, query, orderBy, limit, getDocs, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
@@ -115,7 +114,8 @@ export default function AdminLogsPage() {
     if (status === 'authenticated') {
       fetchLogs();
     }
-  }, [status, filter]); // eslint-disable-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status, filter]);
 
   if (status === 'loading') {
     return (
@@ -132,7 +132,7 @@ export default function AdminLogsPage() {
     <div className="h-screen overflow-hidden bg-slate-900 flex flex-col">
       <div className="flex-1 overflow-y-auto p-6">
         <div className="max-w-6xl mx-auto">
-          <a href="/admin" className="text-emerald-400 hover:text-emerald-300 text-sm mb-4 inline-block">← Back to Admin</a>
+          <Link href="/admin" className="text-emerald-400 hover:text-emerald-300 text-sm mb-4 inline-block">← Back to Admin</Link>
           <div className="flex items-center justify-between mb-8">
             <div>
               <h1 className="text-3xl font-bold text-white mb-2">System Logs</h1>
@@ -176,12 +176,12 @@ export default function AdminLogsPage() {
                         </span>
                         <span className="ml-2 text-sm text-slate-500">
                           {(() => {
-                            const ts = log.createdAt as any;
+                            const ts = log.createdAt as unknown;
                             if (!ts) return 'Unknown time';
-                            if (typeof ts?.toDate === 'function') return ts.toDate().toLocaleString();
-                            if (typeof ts === 'object' && typeof ts._seconds === 'number') return new Date(ts._seconds * 1000).toLocaleString();
-                            if (typeof ts === 'object' && typeof ts.seconds === 'number') return new Date(ts.seconds * 1000).toLocaleString();
-                            const date = new Date(ts);
+                            if (typeof ts === 'object' && ts !== null && 'toDate' in ts && typeof (ts as { toDate: () => Date }).toDate === 'function') return (ts as { toDate: () => Date }).toDate().toLocaleString();
+                            if (typeof ts === 'object' && ts !== null && '_seconds' in ts && typeof (ts as { _seconds: number })._seconds === 'number') return new Date((ts as { _seconds: number })._seconds * 1000).toLocaleString();
+                            if (typeof ts === 'object' && ts !== null && 'seconds' in ts && typeof (ts as { seconds: number }).seconds === 'number') return new Date((ts as { seconds: number }).seconds * 1000).toLocaleString();
+                            const date = new Date(ts as string | number);
                             return isNaN(date.getTime()) ? 'Unknown time' : date.toLocaleString();
                           })()}
                         </span>
@@ -236,12 +236,12 @@ export default function AdminLogsPage() {
                       </div>
                       <span className="text-xs text-red-400">
                         {(() => {
-                          const ts = log.createdAt as any;
+                          const ts = log.createdAt as unknown;
                           if (!ts) return 'Unknown time';
-                          if (typeof ts?.toDate === 'function') return ts.toDate().toLocaleString();
-                          if (typeof ts === 'object' && typeof ts._seconds === 'number') return new Date(ts._seconds * 1000).toLocaleString();
-                          if (typeof ts === 'object' && typeof ts.seconds === 'number') return new Date(ts.seconds * 1000).toLocaleString();
-                          const date = new Date(ts);
+                          if (typeof ts === 'object' && ts !== null && 'toDate' in ts && typeof (ts as { toDate: () => Date }).toDate === 'function') return (ts as { toDate: () => Date }).toDate().toLocaleString();
+                          if (typeof ts === 'object' && ts !== null && '_seconds' in ts && typeof (ts as { _seconds: number })._seconds === 'number') return new Date((ts as { _seconds: number })._seconds * 1000).toLocaleString();
+                          if (typeof ts === 'object' && ts !== null && 'seconds' in ts && typeof (ts as { seconds: number }).seconds === 'number') return new Date((ts as { seconds: number }).seconds * 1000).toLocaleString();
+                          const date = new Date(ts as string | number);
                           return isNaN(date.getTime()) ? 'Unknown time' : date.toLocaleString();
                         })()}
                       </span>
@@ -312,12 +312,12 @@ export default function AdminLogsPage() {
                         </div>
                         <span className="text-xs text-slate-400">
                           {(() => {
-                            const ts = log.createdAt as any;
+                            const ts = log.createdAt as unknown;
                             if (!ts) return 'Unknown time';
-                            if (typeof ts?.toDate === 'function') return ts.toDate().toLocaleString();
-                            if (typeof ts === 'object' && typeof ts._seconds === 'number') return new Date(ts._seconds * 1000).toLocaleString();
-                            if (typeof ts === 'object' && typeof ts.seconds === 'number') return new Date(ts.seconds * 1000).toLocaleString();
-                            const date = new Date(ts);
+                            if (typeof ts === 'object' && ts !== null && 'toDate' in ts && typeof (ts as { toDate: () => Date }).toDate === 'function') return (ts as { toDate: () => Date }).toDate().toLocaleString();
+                            if (typeof ts === 'object' && ts !== null && '_seconds' in ts && typeof (ts as { _seconds: number })._seconds === 'number') return new Date((ts as { _seconds: number })._seconds * 1000).toLocaleString();
+                            if (typeof ts === 'object' && ts !== null && 'seconds' in ts && typeof (ts as { seconds: number }).seconds === 'number') return new Date((ts as { seconds: number }).seconds * 1000).toLocaleString();
+                            const date = new Date(ts as string | number);
                             return isNaN(date.getTime()) ? 'Unknown time' : date.toLocaleString();
                           })()}
                         </span>

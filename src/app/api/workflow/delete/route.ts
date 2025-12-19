@@ -59,7 +59,7 @@ export async function DELETE(request: NextRequest) {
       workflowId,
       brand
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error deleting workflow:', error);
     return NextResponse.json(
       { error: 'Failed to delete workflow', details: error.message },

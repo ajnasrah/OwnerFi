@@ -51,7 +51,7 @@ async function searchWithTypesense(params: {
     const filters: string[] = [
       'isActive:=true',
       `state:=${params.state}`,
-      'dealType:=[owner_finance, both]', // Buyers see owner finance deals
+      'isOwnerFinance:=true', // Buyers see owner finance deals
     ];
 
     // Apply buyer preference filters

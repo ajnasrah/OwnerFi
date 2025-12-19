@@ -125,7 +125,7 @@ async function searchCashDealsTypesense(
     'isActive:=true',
     `state:=${state}`,
     `listPrice:<=${maxPrice}`,
-    'dealType:=[cash_deal, both]',
+    'isCashDeal:=true',
   ];
 
   const result = await client.collections(TYPESENSE_COLLECTIONS.PROPERTIES)

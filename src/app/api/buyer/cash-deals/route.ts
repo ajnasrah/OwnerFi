@@ -120,14 +120,12 @@ async function searchCashDealsTypesense(
   maxPrice: number,
   radius: number
 ): Promise<CashDeal[]> {
-  // Build filter: cash deals OR properties that need work (investor specials)
-  // Include properties with: dealType cash_deal/both OR needsWork=true
+  // Build filter: only cash deals (properties < 80% ARV)
   const filters = [
     'isActive:=true',
     `state:=${state}`,
     `listPrice:<=${maxPrice}`,
-    // Cash deals OR investor/fixer properties
-    '(dealType:=[cash_deal, both] || needsWork:=true)',
+    'dealType:=[cash_deal, both]',
   ];
 
   const result = await client.collections(TYPESENSE_COLLECTIONS.PROPERTIES)
@@ -171,8 +169,8 @@ async function searchCashDealsTypesense(
       needsWork,
     };
   }).filter((deal: CashDeal) => {
-    // Show if: under 80% ARV OR has investor keywords (needsWork)
-    return deal.percentOfArv <= 80 || (deal as CashDeal & { needsWork?: boolean }).needsWork;
+    // Only show properties under 80% ARV
+    return deal.percentOfArv <= 80;
   });
 }
 
@@ -184,7 +182,7 @@ async function searchCashDealsFirestore(
   if (!db) return [];
 
   try {
-    // Query 1: Cash deals
+    // Query: Only cash deals (properties < 80% ARV)
     const cashQuery = query(
       collection(db, 'properties'),
       where('isActive', '==', true),
@@ -192,18 +190,7 @@ async function searchCashDealsFirestore(
       where('state', '==', state)
     );
 
-    // Query 2: Properties that need work (investor specials, fixers, etc.)
-    const needsWorkQuery = query(
-      collection(db, 'properties'),
-      where('isActive', '==', true),
-      where('needsWork', '==', true),
-      where('state', '==', state)
-    );
-
-    const [cashSnapshot, needsWorkSnapshot] = await Promise.all([
-      getDocs(cashQuery),
-      getDocs(needsWorkQuery)
-    ]);
+    const cashSnapshot = await getDocs(cashQuery);
 
     // Merge results, deduping by ID
     const seenIds = new Set<string>();
@@ -224,8 +211,8 @@ async function searchCashDealsFirestore(
       // Calculate ARV percentage
       const percentOfArv = arv > 0 ? Math.round((price / arv) * 100) : 100;
 
-      // Include if: under 80% ARV OR has investor keywords
-      if (percentOfArv > 80 && !needsWork) return;
+      // Only include if under 80% ARV
+      if (percentOfArv > 80) return;
 
       const discount = arv > 0 ? arv - price : 0;
 
@@ -259,7 +246,6 @@ async function searchCashDealsFirestore(
     };
 
     cashSnapshot.docs.forEach(processDoc);
-    needsWorkSnapshot.docs.forEach(processDoc);
 
     // Sort by price ascending
     deals.sort((a, b) => a.price - b.price);

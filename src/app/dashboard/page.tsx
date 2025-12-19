@@ -118,19 +118,13 @@ export default function Dashboard() {
       setProfile(dashboardProfile);
       setLikedProperties(dashboardProfile.likedProperties || []);
 
-      // Check if user is an investor or realtor (for cash deals)
-      console.log('🔍 [DASHBOARD] Profile isInvestor:', profileData.profile.isInvestor, 'role:', profileData.profile.role);
+      // Check if user is an investor (for cash deals)
+      console.log('🔍 [DASHBOARD] Profile isInvestor:', profileData.profile.isInvestor);
 
       const propertiesRes = await fetch(
         `/api/buyer/properties?city=${encodeURIComponent(dashboardProfile.city)}&state=${encodeURIComponent(dashboardProfile.state)}`
       );
       const propertiesData = await propertiesRes.json();
-
-      console.log('🏠 [DASHBOARD] Owner finance API response:', {
-        status: propertiesRes.status,
-        count: propertiesData.properties?.length || 0,
-        error: propertiesData.error || null,
-      });
 
       // Mark owner finance properties
       const ownerFinanceProps = (propertiesData.properties || []).map((p: Property) => ({
@@ -138,10 +132,9 @@ export default function Dashboard() {
         dealType: 'owner_finance' as const,
       }));
 
-      // Fetch cash deals for investor users and realtors
+      // Fetch cash deals for investor users
       let allProperties = ownerFinanceProps;
-      const isInvestorOrRealtor = profileData.profile.isInvestor || profileData.profile.role === 'realtor';
-      if (isInvestorOrRealtor) {
+      if (profileData.profile.isInvestor) {
         try {
           const cashDealsRes = await fetch('/api/buyer/cash-deals');
           const cashDealsData = await cashDealsRes.json();
@@ -174,22 +167,11 @@ export default function Dashboard() {
             const existingIds = new Set(ownerFinanceProps.map((p: Property) => p.id));
             const uniqueCashDeals = cashDealProps.filter(p => !existingIds.has(p.id));
             allProperties = [...ownerFinanceProps, ...uniqueCashDeals];
-
-            console.log('💰 [DASHBOARD] Cash deals merged:', {
-              cashDealsTotal: cashDealProps.length,
-              uniqueAdded: uniqueCashDeals.length,
-              finalTotal: allProperties.length,
-            });
           }
         } catch (err) {
           console.error('Failed to fetch cash deals:', err);
         }
       }
-
-      console.log('📊 [DASHBOARD] Final properties:', {
-        ownerFinance: ownerFinanceProps.length,
-        total: allProperties.length,
-      });
 
       setProperties(allProperties);
 

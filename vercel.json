@@ -67,7 +67,7 @@
     },
     {
       "path": "/api/v2/scraper/run",
-      "schedule": "0 12 * * *"
+      "schedule": "0 9,21 * * *"
     }
   ],
   "functions": {

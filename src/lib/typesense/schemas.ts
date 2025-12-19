@@ -64,8 +64,6 @@ export const propertiesSchema: CollectionSchema = {
 
     // Boolean filters
     { name: 'isActive', type: 'bool', facet: true },
-    { name: 'isOwnerFinance', type: 'bool', facet: true, optional: true },
-    { name: 'isCashDeal', type: 'bool', facet: true, optional: true },
     { name: 'ownerFinanceVerified', type: 'bool', optional: true },
     { name: 'needsWork', type: 'bool', optional: true },
     { name: 'manuallyVerified', type: 'bool', optional: true },

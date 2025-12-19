@@ -42,8 +42,6 @@ export interface TypesensePropertyDocument {
   daysOnZillow?: number;
   // Status
   isActive: boolean;
-  isOwnerFinance?: boolean;
-  isCashDeal?: boolean;
   ownerFinanceVerified?: boolean;
   needsWork?: boolean;
   manuallyVerified?: boolean;
@@ -134,8 +132,6 @@ export function transformPropertyForTypesense(
     discountPercent: property.cashDeal?.discountPercent || undefined,
 
     isActive: property.isActive,
-    isOwnerFinance: property.dealType === 'owner_finance' || property.dealType === 'both' || !!property.ownerFinance?.verified,
-    isCashDeal: property.dealType === 'cash_deal' || property.dealType === 'both' || !!property.cashDeal,
     ownerFinanceVerified: property.ownerFinance?.verified || undefined,
     needsWork: property.cashDeal?.needsWork || undefined,
     manuallyVerified: property.verification?.manuallyVerified || undefined,
@@ -402,7 +398,7 @@ export async function indexRawFirestoreProperty(
       discountPercent: data.discountPercentage || data.discount || undefined,
       percentOfArv,
       // Cash flow / rental fields
-      rentEstimate: typeof data.rentEstimate === 'number' ? data.rentEstimate : (typeof data.rentZestimate === 'number' ? data.rentZestimate : undefined),
+      rentEstimate: data.rentEstimate || data.rentZestimate || undefined,
       annualTaxAmount: data.annualTaxAmount || data.taxAmount || undefined,
       propertyTaxRate: data.propertyTaxRate || undefined,
       monthlyHoa: data.hoa || data.hoaFees || undefined,
@@ -410,8 +406,6 @@ export async function indexRawFirestoreProperty(
       daysOnZillow: data.daysOnZillow || undefined,
       // Status
       isActive: data.isActive !== false && data.status !== 'inactive',
-      isOwnerFinance,
-      isCashDeal,
       ownerFinanceVerified: data.ownerFinanceVerified || false,
       needsWork: data.needsWork || false,
       manuallyVerified: data.manuallyVerified || false,

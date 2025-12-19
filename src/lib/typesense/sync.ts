@@ -42,6 +42,8 @@ export interface TypesensePropertyDocument {
   daysOnZillow?: number;
   // Status
   isActive: boolean;
+  isOwnerFinance?: boolean;
+  isCashDeal?: boolean;
   ownerFinanceVerified?: boolean;
   needsWork?: boolean;
   manuallyVerified?: boolean;
@@ -406,6 +408,8 @@ export async function indexRawFirestoreProperty(
       daysOnZillow: data.daysOnZillow || undefined,
       // Status
       isActive: data.isActive !== false && data.status !== 'inactive',
+      isOwnerFinance,
+      isCashDeal,
       ownerFinanceVerified: data.ownerFinanceVerified || false,
       needsWork: data.needsWork || false,
       manuallyVerified: data.manuallyVerified || false,

@@ -400,7 +400,7 @@ export async function indexRawFirestoreProperty(
       discountPercent: data.discountPercentage || data.discount || undefined,
       percentOfArv,
       // Cash flow / rental fields
-      rentEstimate: data.rentEstimate || data.rentZestimate || undefined,
+      rentEstimate: typeof data.rentEstimate === 'number' ? data.rentEstimate : (typeof data.rentZestimate === 'number' ? data.rentZestimate : undefined),
       annualTaxAmount: data.annualTaxAmount || data.taxAmount || undefined,
       propertyTaxRate: data.propertyTaxRate || undefined,
       monthlyHoa: data.hoa || data.hoaFees || undefined,

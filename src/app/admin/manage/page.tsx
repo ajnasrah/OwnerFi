@@ -152,7 +152,7 @@ export default function AdminDashboard() {
       ));
 
       try {
-        const response = await fetch('/api/scraper/add-to-queue', {
+        const response = await fetch('/api/v2/scraper/add', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ url }),
@@ -160,16 +160,26 @@ export default function AdminDashboard() {
 
         const data = await response.json();
 
-        if (data.alreadyExists) {
+        if (!data.success) {
+          throw new Error(data.error || 'Failed');
+        }
+
+        // Check results from v2 endpoint
+        const result = data.results?.[0];
+        if (result?.skipped && result?.skipReason?.includes('Duplicate')) {
           setQuickResults(prev => prev.map((r, idx) =>
-            idx === i ? { ...r, status: 'exists', message: data.message } : r
+            idx === i ? { ...r, status: 'exists', message: result.skipReason } : r
           ));
-        } else if (data.success) {
+        } else if (result?.skipped) {
           setQuickResults(prev => prev.map((r, idx) =>
-            idx === i ? { ...r, status: 'added', message: 'Added to queue' } : r
+            idx === i ? { ...r, status: 'error', message: result.skipReason || 'Skipped' } : r
+          ));
+        } else if (result?.savedTo?.length > 0) {
+          setQuickResults(prev => prev.map((r, idx) =>
+            idx === i ? { ...r, status: 'added', message: `Added as ${result.savedTo.join(', ')}` } : r
           ));
         } else {
-          throw new Error(data.error || 'Failed');
+          throw new Error(result?.error || 'No results returned');
         }
       } catch (error) {
         setQuickResults(prev => prev.map((r, idx) =>

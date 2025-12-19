@@ -14,14 +14,6 @@
   },
   "crons": [
     {
-      "path": "/api/cron/run-search-scraper",
-      "schedule": "0 11 * * *"
-    },
-    {
-      "path": "/api/cron/process-scraper-queue",
-      "schedule": "0 * * * *"
-    },
-    {
       "path": "/api/cron/run-agent-outreach-scraper",
       "schedule": "0 11 * * *"
     },
@@ -30,16 +22,8 @@
       "schedule": "0 8,16,0 * * *"
     },
     {
-      "path": "/api/cron/search-cash-deals",
-      "schedule": "0 10 * * 1,4"
-    },
-    {
-      "path": "/api/cron/process-cash-deals-queue",
-      "schedule": "30 */2 * * *"
-    },
-    {
       "path": "/api/cron/refresh-zillow-status",
-      "schedule": "0 * * * *"
+      "schedule": "*/30 * * * *"
     },
     {
       "path": "/api/cron/generate-videos",
@@ -78,25 +62,19 @@
       "schedule": "0 9,12,15,18,21 * * *"
     },
     {
-      "path": "/api/cron/sync-property-queue-new",
-      "schedule": "0 */6 * * *"
-    },
-    {
       "path": "/api/cron/generate-blog",
       "schedule": "0 11 * * *"
+    },
+    {
+      "path": "/api/v2/scraper/run",
+      "schedule": "0 9,21 * * *"
     }
   ],
   "functions": {
-    "src/app/api/cron/process-scraper-queue/route.ts": {
-      "maxDuration": 300
-    },
     "src/app/api/admin/upload-properties-v4/route.ts": {
       "maxDuration": 300
     },
     "src/app/api/process-video/route.ts": {
-      "maxDuration": 300
-    },
-    "app/api/podcast/generate/route.ts": {
       "maxDuration": 300
     },
     "src/app/api/cron/fetch-rss/route.ts": {
@@ -120,20 +98,8 @@
     "src/app/api/property/video-cron-spanish/route.ts": {
       "maxDuration": 60
     },
-    "src/app/api/property/generate-video/route.ts": {
-      "maxDuration": 60
-    },
-    "src/app/api/benefit/workflow/retry/route.ts": {
-      "maxDuration": 60
-    },
     "src/app/api/cron/abdullah/route.ts": {
       "maxDuration": 60
-    },
-    "src/app/api/cron/gaza/route.ts": {
-      "maxDuration": 60
-    },
-    "src/app/api/cron/sync-property-queue-new/route.ts": {
-      "maxDuration": 300
     },
     "src/app/api/cron/check-google-drive/route.ts": {
       "maxDuration": 300
@@ -144,19 +110,10 @@
     "src/app/api/cron/refresh-zillow-status/route.ts": {
       "maxDuration": 300
     },
-    "src/app/api/cron/run-search-scraper/route.ts": {
-      "maxDuration": 300
-    },
     "src/app/api/cron/run-agent-outreach-scraper/route.ts": {
       "maxDuration": 300
     },
     "src/app/api/cron/process-agent-outreach-queue/route.ts": {
-      "maxDuration": 300
-    },
-    "src/app/api/cron/process-cash-deals-queue/route.ts": {
-      "maxDuration": 300
-    },
-    "src/app/api/cron/search-cash-deals/route.ts": {
       "maxDuration": 300
     },
     "src/app/api/workers/process-video/route.ts": {
@@ -167,6 +124,12 @@
     },
     "src/app/api/webhooks/heygen/[brand]/route.ts": {
       "maxDuration": 60
+    },
+    "src/app/api/v2/scraper/run/route.ts": {
+      "maxDuration": 600
+    },
+    "src/app/api/v2/scraper/add/route.ts": {
+      "maxDuration": 120
     }
   },
   "headers": [

@@ -418,8 +418,8 @@ export default function CashDealsPage() {
 
   return (
     <div className="h-screen overflow-hidden bg-slate-900 flex flex-col">
-      <div className="flex-1 overflow-y-auto p-4">
-        <div className="max-w-[1600px] mx-auto">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden p-4">
+        <div className="max-w-[1600px] mx-auto overflow-x-hidden">
           {/* Header with Stats */}
           <div className="flex justify-between items-start mb-4">
             <div>
@@ -668,11 +668,11 @@ export default function CashDealsPage() {
             </div>
           ) : (
             <div className="bg-slate-800 rounded-lg border border-slate-700 overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full">
+              <div className="overflow-x-auto overscroll-x-contain touch-pan-x">
+                <table className="w-full min-w-[600px]">
                   <thead className="bg-slate-700 border-b border-slate-600">
                     <tr>
-                      <th className="px-1.5 py-2 text-left text-slate-300 text-xs font-semibold w-10"></th>
+                      <th className="px-2 py-2 text-left text-slate-300 text-xs font-semibold w-20"></th>
                       <th className="px-1.5 py-2 text-left text-slate-300 text-xs font-semibold w-8">
                         <input
                           type="checkbox"
@@ -697,8 +697,15 @@ export default function CashDealsPage() {
                           key={deal.id}
                           className={`hover:bg-slate-700/50 ${isTopDeal ? 'bg-emerald-900/20' : ''} ${isSelected ? 'bg-red-900/20' : ''}`}
                         >
-                          <td className="px-1.5 py-2">
-                            <a href={deal.url} target="_blank" rel="noopener noreferrer" className="text-emerald-400 hover:text-emerald-300 text-sm font-medium">View</a>
+                          <td className="px-2 py-2">
+                            <a
+                              href={deal.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center justify-center px-3 py-2 min-w-[60px] min-h-[44px] bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors touch-manipulation"
+                            >
+                              View
+                            </a>
                           </td>
                           <td className="px-1.5 py-2">
                             <input

@@ -118,8 +118,8 @@ export default function Dashboard() {
       setProfile(dashboardProfile);
       setLikedProperties(dashboardProfile.likedProperties || []);
 
-      // Check if user is an investor (for cash deals)
-      console.log('🔍 [DASHBOARD] Profile isInvestor:', profileData.profile.isInvestor);
+      // Check if user is an investor or realtor (for cash deals)
+      console.log('🔍 [DASHBOARD] Profile isInvestor:', profileData.profile.isInvestor, 'role:', profileData.profile.role);
 
       const propertiesRes = await fetch(
         `/api/buyer/properties?city=${encodeURIComponent(dashboardProfile.city)}&state=${encodeURIComponent(dashboardProfile.state)}`
@@ -132,9 +132,10 @@ export default function Dashboard() {
         dealType: 'owner_finance' as const,
       }));
 
-      // Fetch cash deals for investor users
+      // Fetch cash deals for investor users and realtors
       let allProperties = ownerFinanceProps;
-      if (profileData.profile.isInvestor) {
+      const isInvestorOrRealtor = profileData.profile.isInvestor || profileData.profile.role === 'realtor';
+      if (isInvestorOrRealtor) {
         try {
           const cashDealsRes = await fetch('/api/buyer/cash-deals');
           const cashDealsData = await cashDealsRes.json();

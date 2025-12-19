@@ -118,62 +118,18 @@ export default function Dashboard() {
       setProfile(dashboardProfile);
       setLikedProperties(dashboardProfile.likedProperties || []);
 
-      // Check if user is an investor (for cash deals)
-      console.log('🔍 [DASHBOARD] Profile isInvestor:', profileData.profile.isInvestor);
-
       const propertiesRes = await fetch(
         `/api/buyer/properties?city=${encodeURIComponent(dashboardProfile.city)}&state=${encodeURIComponent(dashboardProfile.state)}`
       );
       const propertiesData = await propertiesRes.json();
 
-      // Mark owner finance properties
+      // Show only owner finance properties
       const ownerFinanceProps = (propertiesData.properties || []).map((p: Property) => ({
         ...p,
         dealType: 'owner_finance' as const,
       }));
 
-      // Fetch cash deals for investor users
-      let allProperties = ownerFinanceProps;
-      if (profileData.profile.isInvestor) {
-        try {
-          const cashDealsRes = await fetch('/api/buyer/cash-deals');
-          const cashDealsData = await cashDealsRes.json();
-
-          if (cashDealsData.deals?.length > 0) {
-            // Convert cash deals to Property format
-            const cashDealProps: Property[] = cashDealsData.deals.map((deal: { id: string; address: string; city: string; state: string; zipcode?: string; beds: number; baths: number; sqft?: number; price?: number; imgSrc?: string; percentOfArv?: number; discount?: number; arv?: number; description?: string; yearBuilt?: number; propertyType?: string }) => ({
-              id: deal.id,
-              address: deal.address,
-              city: deal.city,
-              state: deal.state,
-              zipCode: deal.zipcode,
-              bedrooms: deal.beds,
-              bathrooms: deal.baths,
-              squareFeet: deal.sqft,
-              listPrice: deal.price,
-              imageUrl: deal.imgSrc,
-              dealType: 'cash_deal' as const,
-              percentOfArv: deal.percentOfArv,
-              discount: deal.discount,
-              arv: deal.arv,
-              // Additional details
-              description: deal.description,
-              yearBuilt: deal.yearBuilt,
-              propertyType: deal.propertyType,
-            }));
-
-            // Merge: owner finance first, then cash deals
-            // Filter out any duplicates by id
-            const existingIds = new Set(ownerFinanceProps.map((p: Property) => p.id));
-            const uniqueCashDeals = cashDealProps.filter(p => !existingIds.has(p.id));
-            allProperties = [...ownerFinanceProps, ...uniqueCashDeals];
-          }
-        } catch (err) {
-          console.error('Failed to fetch cash deals:', err);
-        }
-      }
-
-      setProperties(allProperties);
+      setProperties(ownerFinanceProps);
 
       // Check if tutorial should be shown - ONLY for first time users
       const tutorialCompleted = localStorage.getItem('buyerTutorialCompleted');

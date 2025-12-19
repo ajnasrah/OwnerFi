@@ -134,6 +134,8 @@ export function transformPropertyForTypesense(
     discountPercent: property.cashDeal?.discountPercent || undefined,
 
     isActive: property.isActive,
+    isOwnerFinance: property.dealType === 'owner_finance' || property.dealType === 'both' || !!property.ownerFinance?.verified,
+    isCashDeal: property.dealType === 'cash_deal' || property.dealType === 'both' || !!property.cashDeal,
     ownerFinanceVerified: property.ownerFinance?.verified || undefined,
     needsWork: property.cashDeal?.needsWork || undefined,
     manuallyVerified: property.verification?.manuallyVerified || undefined,

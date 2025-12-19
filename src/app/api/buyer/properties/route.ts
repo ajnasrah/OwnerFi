@@ -48,6 +48,8 @@ async function searchWithTypesense(params: {
   if (!client) return null;
 
   try {
+    console.log('[buyer/properties] Starting Typesense search:', { city: params.city, state: params.state });
+
     const filters: string[] = [
       'isActive:=true',
       `state:=${params.state}`,

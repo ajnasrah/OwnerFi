@@ -118,10 +118,19 @@ export default function Dashboard() {
       setProfile(dashboardProfile);
       setLikedProperties(dashboardProfile.likedProperties || []);
 
+      console.log('🔍 [DASHBOARD] Fetching properties for:', dashboardProfile.city, dashboardProfile.state);
+
       const propertiesRes = await fetch(
         `/api/buyer/properties?city=${encodeURIComponent(dashboardProfile.city)}&state=${encodeURIComponent(dashboardProfile.state)}`
       );
       const propertiesData = await propertiesRes.json();
+
+      console.log('🏠 [DASHBOARD] Properties API response:', {
+        status: propertiesRes.status,
+        count: propertiesData.properties?.length || 0,
+        error: propertiesData.error || null,
+        firstProperty: propertiesData.properties?.[0]?.address || 'none'
+      });
 
       // Show only owner finance properties
       const ownerFinanceProps = (propertiesData.properties || []).map((p: Property) => ({

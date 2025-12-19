@@ -48,6 +48,8 @@ async function searchWithTypesense(params: {
   if (!client) return null;
 
   try {
+    console.log('[buyer/properties] Typesense search starting:', { city: params.city, state: params.state });
+
     const filters: string[] = [
       'isActive:=true',
       `state:=${params.state}`,
@@ -134,7 +136,8 @@ async function searchWithTypesense(params: {
     return properties;
 
   } catch (error) {
-    console.warn('[buyer/properties] Typesense search failed:', error);
+    console.error('[buyer/properties] Typesense search FAILED:', error);
+    console.error('[buyer/properties] Error details:', JSON.stringify(error, null, 2));
     return null;
   }
 }
@@ -351,7 +354,7 @@ export async function GET(request: NextRequest) {
     }
 
     // ===== FALLBACK TO FIRESTORE (UNIFIED COLLECTION) =====
-    console.log(`⚠️  [buyer-search] Typesense returned no results, falling back to Firestore`);
+    console.log(`⚠️  [buyer-search] Typesense returned ${typesenseResults?.length || 0} results, falling back to Firestore`);
 
     // ===== QUERY FROM UNIFIED PROPERTIES COLLECTION =====
     // All properties are now in single 'properties' collection with isOwnerFinance flag

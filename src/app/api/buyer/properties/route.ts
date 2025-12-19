@@ -356,36 +356,44 @@ export async function GET(request: NextRequest) {
     console.log(`⚠️  [buyer-search] Typesense returned no results, falling back to Firestore`);
 
     // ===== QUERY FROM UNIFIED PROPERTIES COLLECTION =====
-    // All properties are now in single 'properties' collection with isOwnerFinance flag
-    // Buyers see only owner finance properties (isOwnerFinance = true)
+    // Use simpler query without composite index requirement
 
     // PAGINATION: Limit initial queries to reduce bandwidth and improve performance
     const fetchLimit = Math.min(pageSize * 3, 300); // Fetch 3x pageSize, max 300
 
-    // 1. DIRECT matches - owner finance properties in search state
-    const propertiesDirectQuery = query(
-      collection(db, 'properties'),
-      where('isActive', '==', true),
-      where('isOwnerFinance', '==', true),
-      where('state', '==', searchState),
-      orderBy('monthlyPayment', 'asc'),
-      limit(fetchLimit)
-    );
+    let propertiesDirectSnapshot;
+    let propertiesNearbySnapshot;
 
-    // 2. NEARBY matches - owner finance properties where buyer's city is in property's nearbyCities
-    const propertiesNearbyQuery = query(
-      collection(db, 'properties'),
-      where('isActive', '==', true),
-      where('isOwnerFinance', '==', true),
-      where('nearbyCities', 'array-contains', searchCity),
-      limit(fetchLimit)
-    );
+    try {
+      // 1. DIRECT matches - owner finance properties in search state (simpler query)
+      const propertiesDirectQuery = query(
+        collection(db, 'properties'),
+        where('isActive', '==', true),
+        where('state', '==', searchState),
+        limit(fetchLimit)
+      );
 
-    // Execute queries in parallel
-    const [propertiesDirectSnapshot, propertiesNearbySnapshot] = await Promise.all([
-      getDocs(propertiesDirectQuery),
-      getDocs(propertiesNearbyQuery)
-    ]);
+      // 2. NEARBY matches - owner finance properties where buyer's city is in property's nearbyCities
+      const propertiesNearbyQuery = query(
+        collection(db, 'properties'),
+        where('isActive', '==', true),
+        where('nearbyCities', 'array-contains', searchCity),
+        limit(fetchLimit)
+      );
+
+      // Execute queries in parallel
+      [propertiesDirectSnapshot, propertiesNearbySnapshot] = await Promise.all([
+        getDocs(propertiesDirectQuery),
+        getDocs(propertiesNearbyQuery)
+      ]);
+    } catch (firestoreError) {
+      console.error('[buyer-search] Firestore query failed:', firestoreError);
+      return NextResponse.json({
+        properties: [],
+        total: 0,
+        error: 'Database query failed'
+      });
+    }
 
     // Merge and dedupe by ID
     const propertiesMap = new Map();

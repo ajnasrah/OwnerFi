@@ -126,6 +126,12 @@ export default function Dashboard() {
       );
       const propertiesData = await propertiesRes.json();
 
+      console.log('🏠 [DASHBOARD] Owner finance API response:', {
+        status: propertiesRes.status,
+        count: propertiesData.properties?.length || 0,
+        error: propertiesData.error || null,
+      });
+
       // Mark owner finance properties
       const ownerFinanceProps = (propertiesData.properties || []).map((p: Property) => ({
         ...p,
@@ -168,11 +174,22 @@ export default function Dashboard() {
             const existingIds = new Set(ownerFinanceProps.map((p: Property) => p.id));
             const uniqueCashDeals = cashDealProps.filter(p => !existingIds.has(p.id));
             allProperties = [...ownerFinanceProps, ...uniqueCashDeals];
+
+            console.log('💰 [DASHBOARD] Cash deals merged:', {
+              cashDealsTotal: cashDealProps.length,
+              uniqueAdded: uniqueCashDeals.length,
+              finalTotal: allProperties.length,
+            });
           }
         } catch (err) {
           console.error('Failed to fetch cash deals:', err);
         }
       }
+
+      console.log('📊 [DASHBOARD] Final properties:', {
+        ownerFinance: ownerFinanceProps.length,
+        total: allProperties.length,
+      });
 
       setProperties(allProperties);
 

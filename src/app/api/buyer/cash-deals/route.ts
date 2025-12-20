@@ -251,7 +251,7 @@ async function searchCashDealsFirestore(
         beds: (data.bedrooms as number) || (data.beds as number) || 0,
         baths: (data.bathrooms as number) || (data.baths as number) || 0,
         sqft: (data.squareFoot as number) || (data.squareFeet as number) || (data.sqft as number) || 0,
-        imgSrc: (data.firstPropertyImage as string) || (data.imgSrc as string) || (data.imageUrl as string) || '',
+        imgSrc: (data.primaryImage as string) || (data.firstPropertyImage as string) || (data.imgSrc as string) || (data.imageUrl as string) || '',
         url: (data.url as string) || (data.hdpUrl as string) || `https://www.zillow.com/homedetails/${doc.id}_zpid/`,
         needsWork,
         needsWorkKeywords: (data.needsWorkKeywords as string[]) || [],

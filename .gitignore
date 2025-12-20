@@ -77,3 +77,7 @@ apify-output/
 scraper-output/
 .DS_Store
 VERCEL_ENV_VARIABLES.md
+
+# Firebase Functions
+functions/node_modules/
+functions/lib/

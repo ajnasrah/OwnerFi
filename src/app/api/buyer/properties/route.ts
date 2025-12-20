@@ -420,7 +420,7 @@ export async function GET(request: NextRequest) {
         listPrice: data.price || data.listPrice,
         termYears: data.loanTermYears || data.termYears,
         propertyType: data.homeType || data.buildingType || data.propertyType,
-        imageUrl: data.firstPropertyImage || data.imgSrc || data.imageUrl,
+        imageUrl: data.primaryImage || data.firstPropertyImage || data.imgSrc || data.imageUrl,
         imageUrls: data.propertyImages || data.imageUrls || [],
         description: data.description || '',
         bedrooms: data.bedrooms || 0,

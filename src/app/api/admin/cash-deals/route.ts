@@ -201,7 +201,7 @@ function normalizeProperty(doc: FirebaseFirestore.DocumentSnapshot, source: stri
     baths: data.baths || data.bathrooms,
     sqft: data.sqft || data.squareFoot,
     // Images
-    imgSrc: data.imgSrc || data.firstPropertyImage || data.imageUrl || (data.imageUrls?.[0]),
+    imgSrc: data.primaryImage || data.imgSrc || data.firstPropertyImage || data.imageUrl || (data.imageUrls?.[0]),
     // Metadata
     url: data.url || data.hdpUrl,
     zpid: data.zpid,

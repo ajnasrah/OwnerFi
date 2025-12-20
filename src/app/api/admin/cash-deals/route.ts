@@ -203,8 +203,8 @@ function normalizeProperty(doc: FirebaseFirestore.DocumentSnapshot, source: stri
     // Images
     imgSrc: data.primaryImage || data.imgSrc || data.firstPropertyImage || data.imageUrl || (data.imageUrls?.[0]),
     // Metadata
-    url: data.url || data.hdpUrl,
-    zpid: data.zpid,
+    url: data.url || data.hdpUrl || `https://www.zillow.com/homedetails/${doc.id}_zpid/`,
+    zpid: data.zpid || doc.id,
     source: data.source || source,
     status: data.status || data.homeStatus,
     addedAt: data.addedAt || data.importedAt || data.scrapedAt,

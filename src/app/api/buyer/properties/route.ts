@@ -365,10 +365,11 @@ export async function GET(request: NextRequest) {
     let propertiesNearbySnapshot;
 
     try {
-      // 1. DIRECT matches - owner finance properties in search state (simpler query)
+      // 1. DIRECT matches - owner finance properties in search state
       const propertiesDirectQuery = query(
         collection(db, 'properties'),
         where('isActive', '==', true),
+        where('isOwnerFinance', '==', true),
         where('state', '==', searchState),
         limit(fetchLimit)
       );
@@ -377,6 +378,7 @@ export async function GET(request: NextRequest) {
       const propertiesNearbyQuery = query(
         collection(db, 'properties'),
         where('isActive', '==', true),
+        where('isOwnerFinance', '==', true),
         where('nearbyCities', 'array-contains', searchCity),
         limit(fetchLimit)
       );

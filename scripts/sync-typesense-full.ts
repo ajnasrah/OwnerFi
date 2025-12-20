@@ -1,10 +1,9 @@
 #!/usr/bin/env tsx
 /**
- * Full Typesense Sync Script (v2 - Fixed)
+ * Full Typesense Sync Script (v3 - Unified Properties Collection)
  *
- * Syncs all properties from Firestore to Typesense with proper deduplication.
- * Properties existing in both zillow_imports AND cash_houses are merged
- * into dealType: 'both'.
+ * Syncs all properties from the unified 'properties' Firestore collection to Typesense.
+ * Uses isOwnerFinance and isCashDeal flags to determine dealType.
  */
 
 import * as dotenv from 'dotenv';
@@ -61,6 +60,12 @@ interface TypesenseDoc {
   monthlyPayment?: number;
   downPaymentAmount?: number;
   zpid?: string;
+  zestimate?: number;
+  rentEstimate?: number;
+  percentOfArv?: number;
+  needsWork?: boolean;
+  manuallyVerified?: boolean;
+  sourceType?: string;
 }
 
 interface RawPropertyData {
@@ -87,6 +92,7 @@ interface RawPropertyData {
   firstPropertyImage?: string;
   imgSrc?: string;
   imageUrl?: string;
+  primaryImage?: string;
   importedAt?: FirebaseFirestore.Timestamp;
   createdAt?: FirebaseFirestore.Timestamp;
   nearbyCities?: string[];
@@ -94,31 +100,29 @@ interface RawPropertyData {
   monthlyPayment?: number;
   downPaymentAmount?: number;
   status?: string;
+  isActive?: boolean;
+  isOwnerFinance?: boolean;
+  isCashDeal?: boolean;
+  dealTypes?: string[];
   ownerFinanceVerified?: boolean;
-  zpid?: string;
-}
-
-/**
- * Create a normalized dedup key from address + city + state
- */
-function createDedupKey(address: string, city: string, state: string): string {
-  return `${address}|${city}|${state}`
-    .toLowerCase()
-    .replace(/[^a-z0-9|]/g, '')
-    .trim();
+  manuallyVerified?: boolean;
+  zpid?: string | number;
+  zestimate?: number;
+  estimate?: number;
+  rentEstimate?: number;
+  rentZestimate?: number;
+  percentOfArv?: number;
+  needsWork?: boolean;
+  source?: string;
 }
 
 /**
  * Transform Firestore doc to Typesense doc
  */
-function transformDoc(
-  docId: string,
-  data: RawPropertyData,
-  dealType: 'owner_finance' | 'cash_deal'
-): TypesenseDoc | null {
+function transformDoc(docId: string, data: RawPropertyData): TypesenseDoc | null {
   // Skip inactive/sold properties
-  if (data.status === 'sold' || data.status === 'off_market') return null;
-  if (dealType === 'owner_finance' && data.ownerFinanceVerified === false) return null;
+  if (data.isActive === false) return null;
+  if (data.status === 'sold' || data.status === 'off_market' || data.status === 'inactive') return null;
 
   const address = data.streetAddress || data.address?.split(',')[0]?.trim() || '';
   const city = data.city || '';
@@ -127,16 +131,42 @@ function transformDoc(
   // Skip if missing essential location data
   if (!address || !city || !state) return null;
 
+  // Determine dealType from flags
+  let dealType: 'owner_finance' | 'cash_deal' | 'both' = 'owner_finance';
+  const isOwnerFinance = data.isOwnerFinance === true;
+  const isCashDeal = data.isCashDeal === true;
+
+  if (isOwnerFinance && isCashDeal) {
+    dealType = 'both';
+  } else if (isCashDeal) {
+    dealType = 'cash_deal';
+  } else if (isOwnerFinance) {
+    dealType = 'owner_finance';
+  } else {
+    // If neither flag is set, skip (shouldn't happen in unified collection)
+    return null;
+  }
+
   const lat = data.latitude || data.lat;
   const lng = data.longitude || data.lng;
 
-  // Use importedAt, fallback to createdAt, then use a default timestamp (not 0)
-  // Typesense requires valid timestamps for sorting
-  const timestamp = data.importedAt?.toMillis?.() || data.createdAt?.toMillis?.() || Date.now();
+  // Use createdAt, fallback to importedAt, then use current time
+  const timestamp = data.createdAt?.toMillis?.() || data.importedAt?.toMillis?.() || Date.now();
+
+  // Calculate percentOfArv if not set
+  const zestimate = data.zestimate || data.estimate || 0;
+  const price = data.price || data.listPrice || 0;
+  const percentOfArv = data.percentOfArv || (zestimate > 0 ? Math.round((price / zestimate) * 100) : undefined);
+
+  // Ensure rentEstimate is a number
+  let rentEstimate = data.rentEstimate || data.rentZestimate;
+  if (typeof rentEstimate === 'string') {
+    rentEstimate = parseInt(rentEstimate, 10) || undefined;
+  }
 
   return {
     id: docId,
-    zpid: data.zpid ? String(data.zpid) : undefined, // Ensure zpid is a string
+    zpid: data.zpid ? String(data.zpid) : undefined,
     address,
     city,
     state,
@@ -144,94 +174,26 @@ function transformDoc(
     description: data.description || '',
     location: lat && lng ? [lat, lng] : undefined,
     dealType,
-    listPrice: data.price || data.listPrice || 0,
+    listPrice: price,
     bedrooms: data.bedrooms || 0,
     bathrooms: data.bathrooms || 0,
     squareFeet: data.squareFoot || data.squareFeet,
     yearBuilt: data.yearBuilt,
     isActive: true,
     propertyType: data.homeType || data.propertyType || 'single-family',
-    primaryImage: data.firstPropertyImage || data.imgSrc || data.imageUrl || '',
+    primaryImage: data.primaryImage || data.firstPropertyImage || data.imgSrc || data.imageUrl || '',
     createdAt: timestamp,
     nearbyCities: data.nearbyCities || [],
     ownerFinanceKeywords: data.matchedKeywords || [],
     monthlyPayment: data.monthlyPayment,
     downPaymentAmount: data.downPaymentAmount,
+    zestimate: zestimate || undefined,
+    rentEstimate,
+    percentOfArv,
+    needsWork: data.needsWork,
+    manuallyVerified: data.manuallyVerified,
+    sourceType: data.source,
   };
-}
-
-/**
- * Merge two property records (when same property exists in both collections)
- */
-function mergeProperties(existing: TypesenseDoc, incoming: TypesenseDoc): TypesenseDoc {
-  return {
-    ...existing,
-    // Use dealType 'both' when found in both collections
-    dealType: 'both',
-    // Keep the better data (non-empty values)
-    zipCode: existing.zipCode || incoming.zipCode,
-    description: existing.description || incoming.description,
-    location: existing.location || incoming.location,
-    squareFeet: existing.squareFeet || incoming.squareFeet,
-    yearBuilt: existing.yearBuilt || incoming.yearBuilt,
-    primaryImage: existing.primaryImage || incoming.primaryImage,
-    // Use earliest timestamp
-    createdAt: Math.min(existing.createdAt || Infinity, incoming.createdAt || Infinity) || Date.now(),
-    // Merge arrays
-    nearbyCities: [...new Set([...(existing.nearbyCities || []), ...(incoming.nearbyCities || [])])],
-    ownerFinanceKeywords: [...new Set([...(existing.ownerFinanceKeywords || []), ...(incoming.ownerFinanceKeywords || [])])],
-    // Keep owner finance specific fields if available
-    monthlyPayment: existing.monthlyPayment || incoming.monthlyPayment,
-    downPaymentAmount: existing.downPaymentAmount || incoming.downPaymentAmount,
-  };
-}
-
-async function loadCollection(
-  collectionName: string,
-  dealType: 'owner_finance' | 'cash_deal'
-): Promise<Map<string, TypesenseDoc>> {
-  console.log(`\n📦 Loading ${collectionName}...`);
-
-  const snapshot = await db.collection(collectionName).get();
-  console.log(`   Found ${snapshot.size} documents`);
-
-  const docs = new Map<string, TypesenseDoc>();
-  let skipped = 0;
-
-  for (const doc of snapshot.docs) {
-    const data = doc.data() as RawPropertyData;
-    const transformed = transformDoc(doc.id, data, dealType);
-
-    if (!transformed) {
-      skipped++;
-      continue;
-    }
-
-    // Create dedup key from address
-    const dedupKey = createDedupKey(transformed.address, transformed.city, transformed.state);
-
-    // Also check by ZPID if available
-    const zpidKey = data.zpid ? `zpid:${data.zpid}` : null;
-
-    // Check for existing by address key
-    if (docs.has(dedupKey)) {
-      // Duplicate within same collection - keep the one with better data
-      const existing = docs.get(dedupKey)!;
-      if (transformed.createdAt > existing.createdAt) {
-        docs.set(dedupKey, transformed);
-      }
-    } else {
-      docs.set(dedupKey, transformed);
-    }
-
-    // Also index by ZPID for cross-collection dedup
-    if (zpidKey && !docs.has(zpidKey)) {
-      docs.set(zpidKey, transformed);
-    }
-  }
-
-  console.log(`   Valid: ${docs.size}, Skipped: ${skipped}`);
-  return docs;
 }
 
 async function syncToTypesense(docs: TypesenseDoc[]): Promise<{ success: number; failed: number }> {
@@ -257,7 +219,6 @@ async function syncToTypesense(docs: TypesenseDoc[]): Promise<{ success: number;
         } else {
           failed++;
           if (errors.length < 10) {
-            // Include the document that failed for debugging
             const failedDoc = batch[j];
             errors.push(`${result.error} | Doc: ${failedDoc?.address}, ${failedDoc?.city}`);
           }
@@ -272,18 +233,6 @@ async function syncToTypesense(docs: TypesenseDoc[]): Promise<{ success: number;
     } catch (error: unknown) {
       const errorMsg = error instanceof Error ? error.message : 'Unknown error';
       console.error(`\n   Batch error: ${errorMsg}`);
-
-      // Try to get more details from importResults
-      if (error && typeof error === 'object' && 'importResults' in error) {
-        const importResults = (error as { importResults: Array<{ success: boolean; error?: string }> }).importResults;
-        for (let j = 0; j < Math.min(importResults.length, 3); j++) {
-          if (!importResults[j].success) {
-            const failedDoc = batch[j];
-            console.error(`     Failed doc ${j}: ${importResults[j].error} | ${failedDoc?.address}`);
-          }
-        }
-      }
-
       failed += batch.length;
     }
   }
@@ -300,48 +249,43 @@ async function syncToTypesense(docs: TypesenseDoc[]): Promise<{ success: number;
 
 async function main() {
   console.log('='.repeat(60));
-  console.log('TYPESENSE FULL SYNC (v2 - With Deduplication)');
+  console.log('TYPESENSE FULL SYNC (v3 - Unified Properties Collection)');
   console.log('='.repeat(60));
 
-  // Step 1: Load both collections
-  const ownerFinanceProps = await loadCollection('zillow_imports', 'owner_finance');
-  const cashDealProps = await loadCollection('cash_houses', 'cash_deal');
+  // Step 1: Load all properties from unified collection
+  console.log('\n📦 Loading properties collection...');
 
-  // Step 2: Merge collections with deduplication
-  console.log('\n🔄 Merging and deduplicating...');
+  const snapshot = await db.collection('properties').get();
+  console.log(`   Found ${snapshot.size} documents`);
 
-  const merged = new Map<string, TypesenseDoc>();
-  let duplicatesFound = 0;
+  const docs: TypesenseDoc[] = [];
+  let skipped = 0;
+  let ownerFinanceCount = 0;
+  let cashDealCount = 0;
+  let bothCount = 0;
 
-  // Add all owner finance properties first
-  for (const [key, doc] of ownerFinanceProps) {
-    if (!key.startsWith('zpid:')) { // Skip ZPID keys, use address keys
-      merged.set(key, doc);
+  for (const doc of snapshot.docs) {
+    const data = doc.data() as RawPropertyData;
+    const transformed = transformDoc(doc.id, data);
+
+    if (!transformed) {
+      skipped++;
+      continue;
     }
+
+    docs.push(transformed);
+
+    if (transformed.dealType === 'owner_finance') ownerFinanceCount++;
+    else if (transformed.dealType === 'cash_deal') cashDealCount++;
+    else if (transformed.dealType === 'both') bothCount++;
   }
 
-  // Merge in cash deal properties
-  for (const [key, doc] of cashDealProps) {
-    if (key.startsWith('zpid:')) continue; // Skip ZPID keys
+  console.log(`   Valid: ${docs.length}, Skipped: ${skipped}`);
+  console.log(`   Owner Finance: ${ownerFinanceCount}`);
+  console.log(`   Cash Deal: ${cashDealCount}`);
+  console.log(`   Both: ${bothCount}`);
 
-    if (merged.has(key)) {
-      // Property exists in both collections - merge!
-      const existing = merged.get(key)!;
-      merged.set(key, mergeProperties(existing, doc));
-      duplicatesFound++;
-    } else {
-      merged.set(key, doc);
-    }
-  }
-
-  const uniqueDocs = Array.from(merged.values());
-
-  console.log(`   Owner Finance: ${ownerFinanceProps.size}`);
-  console.log(`   Cash Deals: ${cashDealProps.size}`);
-  console.log(`   Duplicates merged: ${duplicatesFound}`);
-  console.log(`   Final unique: ${uniqueDocs.length}`);
-
-  // Step 3: Recreate Typesense collection
+  // Step 2: Recreate Typesense collection
   console.log('\n📝 Recreating Typesense collection...');
 
   try {
@@ -377,6 +321,12 @@ async function main() {
         { name: 'monthlyPayment', type: 'int32', optional: true },
         { name: 'downPaymentAmount', type: 'int32', optional: true },
         { name: 'zpid', type: 'string', optional: true },
+        { name: 'zestimate', type: 'int32', optional: true },
+        { name: 'rentEstimate', type: 'int32', optional: true },
+        { name: 'percentOfArv', type: 'float', optional: true },
+        { name: 'needsWork', type: 'bool', optional: true },
+        { name: 'manuallyVerified', type: 'bool', optional: true },
+        { name: 'sourceType', type: 'string', facet: true, optional: true },
       ],
       default_sorting_field: 'createdAt'
     });
@@ -387,19 +337,12 @@ async function main() {
     process.exit(1);
   }
 
-  // Step 4: Sync to Typesense
+  // Step 3: Sync to Typesense
   console.log('\n📤 Uploading to Typesense...');
-  const result = await syncToTypesense(uniqueDocs);
+  const result = await syncToTypesense(docs);
 
-  // Step 5: Verify
+  // Step 4: Verify
   const collection = await typesense.collections('properties').retrieve();
-
-  // Stats breakdown
-  const dealTypeStats = {
-    owner_finance: uniqueDocs.filter(d => d.dealType === 'owner_finance').length,
-    cash_deal: uniqueDocs.filter(d => d.dealType === 'cash_deal').length,
-    both: uniqueDocs.filter(d => d.dealType === 'both').length,
-  };
 
   console.log('\n' + '='.repeat(60));
   console.log('SYNC COMPLETE');
@@ -408,9 +351,9 @@ async function main() {
   console.log(`❌ Failed: ${result.failed}`);
   console.log(`📊 Total in Typesense: ${collection.num_documents}`);
   console.log('\nBy Deal Type:');
-  console.log(`   owner_finance: ${dealTypeStats.owner_finance}`);
-  console.log(`   cash_deal: ${dealTypeStats.cash_deal}`);
-  console.log(`   both: ${dealTypeStats.both}`);
+  console.log(`   owner_finance: ${ownerFinanceCount}`);
+  console.log(`   cash_deal: ${cashDealCount}`);
+  console.log(`   both: ${bothCount}`);
   console.log('='.repeat(60));
 }
 

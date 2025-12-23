@@ -25,13 +25,19 @@ export default function AuthPage() {
   const [error, setError] = useState('');
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
 
-  // Initialize reCAPTCHA on mount
+  // Initialize reCAPTCHA on mount - only once
   useEffect(() => {
-    const recaptchaContainer = document.getElementById('recaptcha-container');
-    if (recaptchaContainer && !recaptchaContainer.hasChildNodes()) {
-      setupRecaptcha('recaptcha-container');
+    // Only initialize if we're on phone step and haven't already set up
+    if (step === 'phone' && mode === 'phone' && !(window as any).recaptchaVerifier) {
+      const recaptchaContainer = document.getElementById('recaptcha-container');
+      if (recaptchaContainer && !recaptchaContainer.hasChildNodes()) {
+        const verifier = setupRecaptcha('recaptcha-container');
+        if (verifier) {
+          (window as any).recaptchaVerifier = verifier;
+        }
+      }
     }
-  }, []);
+  }, [step, mode]);
 
   const handlePhoneSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -235,8 +241,12 @@ export default function AuthPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
-      {/* reCAPTCHA container - visible for Safari, invisible for others */}
-      <div id="recaptcha-container" className="flex justify-center mb-4"></div>
+      {/* reCAPTCHA container - only show during phone entry step, hidden during code verification */}
+      <div
+        id="recaptcha-container"
+        className="flex justify-center mb-4"
+        style={{ display: step === 'phone' && mode === 'phone' ? 'flex' : 'none' }}
+      ></div>
 
       <div className="w-full max-w-md">
         {/* Header */}

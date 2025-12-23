@@ -203,8 +203,14 @@ function normalizeProperty(doc: FirebaseFirestore.DocumentSnapshot, source: stri
     // Images
     imgSrc: data.primaryImage || data.imgSrc || data.firstPropertyImage || data.imageUrl || (data.imageUrls?.[0]),
     // Metadata
-    // Build Zillow URL: prefer stored url, then hdpUrl, then construct from address
-    url: data.url || data.hdpUrl || (() => {
+    // Build Zillow URL: ensure full URL (stored urls may be relative paths)
+    url: (() => {
+      const storedUrl = data.url || data.hdpUrl || '';
+      // If stored URL exists, ensure it's a full URL
+      if (storedUrl) {
+        return storedUrl.startsWith('http') ? storedUrl : `https://www.zillow.com${storedUrl.startsWith('/') ? '' : '/'}${storedUrl}`;
+      }
+      // Fallback: construct from address
       const zpid = doc.id.replace('zpid_', '');
       const address = (data.streetAddress || data.address || '').replace(/[^a-zA-Z0-9]+/g, '-');
       const city = (data.city || '').replace(/[^a-zA-Z0-9]+/g, '-');

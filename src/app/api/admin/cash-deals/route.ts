@@ -7,7 +7,7 @@ import { getCitiesWithinRadiusComprehensive, getCityCoordinatesComprehensive } f
 let statesCache: { states: string[]; timestamp: number } | null = null;
 const STATES_CACHE_TTL = 5 * 60 * 1000;
 
-// Cache for deals data (refresh every 5 minutes - increased from 2min for better performance)
+// Cache for deals data (refresh every 2 minutes)
 interface NormalizedProperty {
   id: string;
   address: string;
@@ -54,7 +54,7 @@ interface DealsCache {
   key: string;
 }
 let dealsCache: DealsCache | null = null;
-const DEALS_CACHE_TTL = 5 * 60 * 1000;
+const DEALS_CACHE_TTL = 2 * 60 * 1000; // 2 minutes
 
 // Calculate distance between two points using Haversine formula (returns miles)
 function haversineDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {

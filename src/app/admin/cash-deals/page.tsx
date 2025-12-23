@@ -36,7 +36,7 @@ interface CashDeal {
 
 type SortField = 'percentOfArv' | 'price' | 'zestimate' | 'discount' | 'rentEstimate';
 
-// Global max price cap - applies to ALL tabs
+// Global max price cap - only applies to cash deals, NOT owner finance
 const GLOBAL_MAX_PRICE = 300000;
 
 // Quick filter presets for investors (all within $300K cap)
@@ -299,8 +299,10 @@ export default function CashDealsPage() {
   const filteredDeals = useMemo(() => {
     let result = [...allDeals];
 
-    // GLOBAL: Always filter out properties over $300K
-    result = result.filter(d => d.price <= GLOBAL_MAX_PRICE);
+    // Apply $300K cap ONLY for cash deals, NOT for owner finance
+    if (!ownerFinanceOnly) {
+      result = result.filter(d => d.price <= GLOBAL_MAX_PRICE);
+    }
 
     // Address search filter (client-side for instant feedback)
     if (addressSearch.trim()) {
@@ -426,9 +428,11 @@ export default function CashDealsPage() {
               <Link href="/admin" className="text-emerald-400 hover:text-emerald-300 text-sm mb-1 inline-block">← Back</Link>
               <div className="flex items-center gap-3">
                 <h1 className="text-2xl font-bold text-white">Cash Deals Finder</h1>
-                <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-emerald-600/20 text-emerald-400 border border-emerald-600/30">
-                  Under $300K
-                </span>
+                {!ownerFinanceOnly && (
+                  <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-emerald-600/20 text-emerald-400 border border-emerald-600/30">
+                    Under $300K
+                  </span>
+                )}
               </div>
             </div>
             <div className="flex items-center gap-6">

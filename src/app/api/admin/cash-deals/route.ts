@@ -209,8 +209,8 @@ function normalizeProperty(doc: FirebaseFirestore.DocumentSnapshot, source: stri
     source: data.source || source,
     status: data.status || data.homeStatus,
     addedAt: data.addedAt || data.importedAt || data.scrapedAt,
-    // Owner finance fields
-    ownerFinanceVerified: data.ownerFinanceVerified,
+    // Owner finance fields - check both old and new field names
+    ownerFinanceVerified: data.isOwnerFinance || data.ownerFinanceVerified || false,
     matchedKeywords: data.matchedKeywords,
     financingType: data.financingType,
     description: data.description,

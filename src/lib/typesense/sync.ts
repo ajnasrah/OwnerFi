@@ -120,7 +120,14 @@ export function transformPropertyForTypesense(
       ? [property.latitude, property.longitude]
       : undefined,
 
-    dealType: property.dealType,
+    // Derive dealType from isOwnerFinance/isCashDeal flags
+    dealType: (property as any).isOwnerFinance && (property as any).isCashDeal
+      ? 'both'
+      : (property as any).isOwnerFinance
+        ? 'owner_finance'
+        : (property as any).isCashDeal
+          ? 'cash_deal'
+          : property.dealType || 'unknown',
     listPrice: property.listPrice || 0,
     monthlyPayment: property.ownerFinance?.monthlyPayment || undefined,
     downPaymentAmount: property.ownerFinance?.downPaymentAmount || undefined,
@@ -131,9 +138,9 @@ export function transformPropertyForTypesense(
     zestimate: property.zestimate || undefined,
     discountPercent: property.cashDeal?.discountPercent || undefined,
 
-    isActive: property.isActive,
-    ownerFinanceVerified: property.ownerFinance?.verified || undefined,
-    needsWork: property.cashDeal?.needsWork || undefined,
+    isActive: property.isActive !== false, // Default to true if not set
+    ownerFinanceVerified: (property as any).isOwnerFinance || property.ownerFinance?.verified || false,
+    needsWork: (property as any).needsWork || property.cashDeal?.needsWork || false,
     manuallyVerified: property.verification?.manuallyVerified || undefined,
 
     sourceType: property.source?.type || undefined,

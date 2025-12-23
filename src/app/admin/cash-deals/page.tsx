@@ -738,7 +738,29 @@ export default function CashDealsPage() {
                                 )}
                               </div>
                               <div className="min-w-0">
-                                <div className="text-sm font-medium truncate max-w-[160px] text-white">{deal.address}</div>
+                                <div className="flex items-center gap-1">
+                                  <div className="text-sm font-medium truncate max-w-[160px] text-white">{deal.address}</div>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      const fullAddress = `${deal.address}, ${deal.city}, ${deal.state} ${deal.zipcode}`;
+                                      navigator.clipboard.writeText(fullAddress);
+                                      const btn = e.currentTarget;
+                                      btn.textContent = '✓';
+                                      btn.classList.add('text-green-400');
+                                      setTimeout(() => {
+                                        btn.innerHTML = '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>';
+                                        btn.classList.remove('text-green-400');
+                                      }, 1000);
+                                    }}
+                                    className="p-1 text-slate-400 hover:text-white rounded hover:bg-slate-600 transition-colors"
+                                    title="Copy full address"
+                                  >
+                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                    </svg>
+                                  </button>
+                                </div>
                                 <div className="flex gap-1 mt-0.5">
                                   {isTopDeal && <span className="px-1 py-0.5 text-[10px] font-bold bg-emerald-600 text-white rounded">TOP</span>}
                                   {deal.ownerFinanceVerified && <span className="px-1 py-0.5 text-[10px] font-semibold bg-blue-600 text-white rounded">OF</span>}

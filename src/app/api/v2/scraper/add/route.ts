@@ -2,14 +2,15 @@
  * Unified Scraper v2 - Manual Property Add Endpoint
  *
  * Used by:
+ * - Admin quick add (realtors manually confirm owner finance)
  * - Chrome extension / bookmarklet
  * - Manual property submission
  *
  * WHAT IT DOES:
  * 1. Accepts Zillow property URL(s)
  * 2. Immediately scrapes full details via Apify
- * 3. Runs BOTH filters (owner finance + cash deal)
- * 4. Saves to unified 'properties' collection with dealTypes array
+ * 3. If forceOwnerFinance=true (default for manual adds): ALWAYS saves as owner finance
+ * 4. Otherwise: Runs filters and only saves if passes
  *
  * COLLECTION: 'properties' (unified)
  * - Document ID: zpid_${zpid}
@@ -23,7 +24,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getFirebaseAdmin } from '@/lib/scraper-v2/firebase-admin';
 import { runDetailScraper } from '@/lib/scraper-v2/apify-client';
-import { runUnifiedFilter, logFilterResult } from '@/lib/scraper-v2/unified-filter';
+import { runUnifiedFilter, logFilterResult, FilterResult } from '@/lib/scraper-v2/unified-filter';
 import {
   transformProperty,
   validateProperty,
@@ -44,7 +45,7 @@ export async function OPTIONS() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { url, urls } = body;
+    const { url, urls, forceOwnerFinance = true } = body; // Default to true for manual adds
 
     // Support single URL or array of URLs
     const urlsToProcess: string[] = urls || (url ? [url] : []);
@@ -151,30 +152,6 @@ export async function POST(request: NextRequest) {
           continue;
         }
 
-        // Run unified filter (BOTH filters on every property)
-        const filterResult = runUnifiedFilter(
-          property.description,
-          property.price,
-          property.estimate
-        );
-
-        logFilterResult(property.fullAddress, filterResult, property.price, property.estimate);
-
-        const savedTo: string[] = [];
-
-        // Skip if no filters passed
-        if (!filterResult.shouldSave) {
-          results.push({
-            url: property.url,
-            zpid: property.zpid,
-            address: property.fullAddress,
-            savedTo: [],
-            skipped: true,
-            skipReason: 'No filters passed (not owner finance or cash deal)',
-          });
-          continue;
-        }
-
         // Check if already exists in properties collection
         if (existingZpids.has(property.zpid)) {
           console.log(`[ADD] Duplicate in properties: ${property.zpid}`);
@@ -189,14 +166,63 @@ export async function POST(request: NextRequest) {
           continue;
         }
 
+        const savedTo: string[] = [];
+        let filterResult: FilterResult;
+
+        if (forceOwnerFinance) {
+          // MANUAL ADD: Always save as owner finance (realtor confirmed)
+          console.log(`[ADD] Force owner finance mode - saving ${property.fullAddress}`);
+
+          // Create a manual override filter result
+          filterResult = {
+            passesOwnerFinance: true,
+            ownerFinanceKeywords: ['manually_added'],
+            primaryOwnerFinanceKeyword: 'manually_added',
+            financingType: { financingType: 'owner_finance', allTypes: ['owner_finance'], displayLabel: 'Owner Finance' },
+            passesCashDeal: false,
+            needsWork: false,
+            needsWorkKeywords: [],
+            dealTypes: ['owner_finance'] as ('owner_finance' | 'cash_deal')[],
+            isOwnerFinance: true,
+            isCashDeal: false,
+            shouldSave: true,
+            shouldSaveToZillowImports: true,
+            shouldSaveToCashHouses: false,
+            targetCollections: ['zillow_imports'] as ('zillow_imports' | 'cash_houses')[],
+          };
+          savedTo.push('owner_finance');
+        } else {
+          // AUTOMATED SCRAPER: Run unified filter
+          filterResult = runUnifiedFilter(
+            property.description,
+            property.price,
+            property.estimate
+          );
+
+          logFilterResult(property.fullAddress, filterResult, property.price, property.estimate);
+
+          // Skip if no filters passed
+          if (!filterResult.shouldSave) {
+            results.push({
+              url: property.url,
+              zpid: property.zpid,
+              address: property.fullAddress,
+              savedTo: [],
+              skipped: true,
+              skipReason: 'No filters passed (not owner finance or cash deal)',
+            });
+            continue;
+          }
+
+          // Track what types it saved as
+          if (filterResult.isOwnerFinance) savedTo.push('owner_finance');
+          if (filterResult.isCashDeal) savedTo.push('cash_deal');
+        }
+
         // Save to unified 'properties' collection with zpid_${zpid} as doc ID
         const docId = `zpid_${property.zpid}`;
         const docRef = db.collection('properties').doc(docId);
         await docRef.set(createUnifiedPropertyDoc(property, filterResult), { merge: true });
-
-        // Track what types it saved as
-        if (filterResult.isOwnerFinance) savedTo.push('owner_finance');
-        if (filterResult.isCashDeal) savedTo.push('cash_deal');
         existingZpids.add(property.zpid);
 
         results.push({

@@ -92,9 +92,12 @@ export const NEEDS_WORK_KEYWORDS = [
   'cosmetic repairs',
   'outdated',
   'original condition',
-  'dated',
   'dated kitchen',
   'dated bathrooms',
+  'dated interior',
+  'dated finishes',
+  'very dated',
+  'extremely dated',
   'deferred maintenance',
   'hvac issues',
   'needs hvac',
@@ -172,8 +175,6 @@ export const NEEDS_WORK_KEYWORDS = [
   'endless possibilities',
   'blank canvas',
   'opportunity knocks',
-  'rare opportunity',
-  'unique opportunity',
 ];
 
 /**

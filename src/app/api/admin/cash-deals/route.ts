@@ -203,8 +203,16 @@ function normalizeProperty(doc: FirebaseFirestore.DocumentSnapshot, source: stri
     // Images
     imgSrc: data.primaryImage || data.imgSrc || data.firstPropertyImage || data.imageUrl || (data.imageUrls?.[0]),
     // Metadata
-    // Extract zpid from doc.id (format: "zpid_12345" or just "12345")
-    url: data.url || data.hdpUrl || `https://www.zillow.com/homedetails/${doc.id.replace('zpid_', '')}_zpid/`,
+    // Build Zillow URL: prefer stored url, then hdpUrl, then construct from address
+    url: data.url || data.hdpUrl || (() => {
+      const zpid = doc.id.replace('zpid_', '');
+      const address = (data.streetAddress || data.address || '').replace(/[^a-zA-Z0-9]+/g, '-');
+      const city = (data.city || '').replace(/[^a-zA-Z0-9]+/g, '-');
+      const state = data.state || '';
+      const zip = data.zipCode || data.zipcode || '';
+      const slug = `${address}-${city}-${state}-${zip}`.replace(/-+/g, '-').replace(/^-|-$/g, '');
+      return `https://www.zillow.com/homedetails/${slug}/${zpid}_zpid/`;
+    })(),
     zpid: data.zpid || doc.id,
     source: data.source || source,
     status: data.status || data.homeStatus,
@@ -341,7 +349,15 @@ async function searchWithTypesense(params: {
         baths: doc.bathrooms || 0,
         sqft: doc.squareFeet || 0,
         imgSrc: doc.primaryImage || '',
-        url: doc.url || `https://www.zillow.com/homedetails/${String(doc.id).replace('zpid_', '')}_zpid/`,
+        url: doc.url || (() => {
+          const zpid = String(doc.id).replace('zpid_', '');
+          const address = (doc.address || '').replace(/[^a-zA-Z0-9]+/g, '-');
+          const city = (doc.city || '').replace(/[^a-zA-Z0-9]+/g, '-');
+          const state = doc.state || '';
+          const zip = doc.zipCode || '';
+          const slug = `${address}-${city}-${state}-${zip}`.replace(/-+/g, '-').replace(/^-|-$/g, '');
+          return `https://www.zillow.com/homedetails/${slug}/${zpid}_zpid/`;
+        })(),
         zpid: doc.zpid || doc.id,
         source: doc.dealType === 'owner_finance' ? 'zillow_imports' : doc.dealType === 'cash_deal' ? 'cash_houses' : 'both',
         ownerFinanceVerified: doc.dealType === 'owner_finance' || doc.dealType === 'both',

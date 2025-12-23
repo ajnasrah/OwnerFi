@@ -12,7 +12,16 @@ import { normalizePhone as normalizePhoneUtil, isValidPhone as isValidPhoneUtil 
 export const formatPhoneNumber = normalizePhoneUtil;
 export const isValidPhoneNumber = isValidPhoneUtil;
 
+// Detect Safari browser
+function isSafari(): boolean {
+  if (typeof window === 'undefined') return false;
+  const ua = window.navigator.userAgent;
+  const isSafariBrowser = ua.includes('Safari') && !ua.includes('Chrome') && !ua.includes('Chromium');
+  return isSafariBrowser;
+}
+
 // Initialize reCAPTCHA verifier
+// Uses visible reCAPTCHA for Safari (invisible doesn't work due to ITP)
 export function setupRecaptcha(containerId: string): RecaptchaVerifier | null {
   if (!auth) {
     console.error('Firebase Auth not initialized');
@@ -20,8 +29,11 @@ export function setupRecaptcha(containerId: string): RecaptchaVerifier | null {
   }
 
   try {
+    const useSafariMode = isSafari();
+    console.log(`[reCAPTCHA] Setting up in ${useSafariMode ? 'VISIBLE (Safari)' : 'INVISIBLE'} mode`);
+
     const recaptchaVerifier = new RecaptchaVerifier(auth, containerId, {
-      size: 'invisible',
+      size: useSafariMode ? 'normal' : 'invisible',
       callback: () => {
         // reCAPTCHA solved - allow user to proceed
         console.log('reCAPTCHA verified');

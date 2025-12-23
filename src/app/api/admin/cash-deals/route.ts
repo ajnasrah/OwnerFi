@@ -203,7 +203,8 @@ function normalizeProperty(doc: FirebaseFirestore.DocumentSnapshot, source: stri
     // Images
     imgSrc: data.primaryImage || data.imgSrc || data.firstPropertyImage || data.imageUrl || (data.imageUrls?.[0]),
     // Metadata
-    url: data.url || data.hdpUrl || `https://www.zillow.com/homedetails/${doc.id}_zpid/`,
+    // Extract zpid from doc.id (format: "zpid_12345" or just "12345")
+    url: data.url || data.hdpUrl || `https://www.zillow.com/homedetails/${doc.id.replace('zpid_', '')}_zpid/`,
     zpid: data.zpid || doc.id,
     source: data.source || source,
     status: data.status || data.homeStatus,
@@ -340,7 +341,7 @@ async function searchWithTypesense(params: {
         baths: doc.bathrooms || 0,
         sqft: doc.squareFeet || 0,
         imgSrc: doc.primaryImage || '',
-        url: doc.url || `https://www.zillow.com/homedetails/${doc.id}_zpid/`,
+        url: doc.url || `https://www.zillow.com/homedetails/${String(doc.id).replace('zpid_', '')}_zpid/`,
         zpid: doc.zpid || doc.id,
         source: doc.dealType === 'owner_finance' ? 'zillow_imports' : doc.dealType === 'cash_deal' ? 'cash_houses' : 'both',
         ownerFinanceVerified: doc.dealType === 'owner_finance' || doc.dealType === 'both',

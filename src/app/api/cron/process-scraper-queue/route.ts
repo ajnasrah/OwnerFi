@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ApifyClient } from 'apify-client';
 import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
-import { transformApifyProperty, validatePropertyData } from '@/lib/property-transform';
+import { transformProperty, validateProperty } from '@/lib/scraper-v2/property-transformer';
 
 // Initialize Firebase Admin
 if (!getApps().length) {
@@ -185,11 +185,11 @@ export async function GET(request: NextRequest) {
     for (const item of items) {
       try {
         // Transform property
-        const propertyData = transformApifyProperty(item, 'apify-zillow');
+        const propertyData = transformProperty(item, 'scraper-queue', 'apify-zillow');
         metrics.transformSucceeded++;
 
         // Validate property data
-        const validation = validatePropertyData(propertyData);
+        const validation = validateProperty(propertyData);
         if (!validation.valid) {
           metrics.validationFailed++;
           metrics.errors.push({

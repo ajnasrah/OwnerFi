@@ -274,6 +274,7 @@ export function transformProperty(
 
 /**
  * Validate that a property has minimum required data
+ * Also filters out rentals, sold, and other non-FOR_SALE listings
  */
 export function validateProperty(property: TransformedProperty): {
   valid: boolean;
@@ -288,6 +289,13 @@ export function validateProperty(property: TransformedProperty): {
   if (!property.city || !property.state) {
     return { valid: false, reason: 'Missing city or state' };
   }
+
+  // Reject non-FOR_SALE listings (rentals, sold, pending, etc.)
+  const status = property.homeStatus?.toUpperCase();
+  if (status && status !== 'FOR_SALE') {
+    return { valid: false, reason: `Not for sale (status: ${status})` };
+  }
+
   return { valid: true };
 }
 

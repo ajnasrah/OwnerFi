@@ -315,7 +315,15 @@ async function searchWithTypesense(params: {
       });
 
     // Transform Typesense results to match expected format
-    const deals = (result.hits || []).map((hit: Record<string, unknown>) => {
+    // Filter out non-FOR_SALE properties (PENDING, SOLD, FOR_RENT, etc)
+    const validHits = (result.hits || []).filter((hit: Record<string, unknown>) => {
+      const doc = hit.document;
+      const status = (doc.homeStatus || '').toString().toUpperCase();
+      // Only include FOR_SALE or empty status (assumed active)
+      return !status || status === 'FOR_SALE';
+    });
+
+    const deals = validHits.map((hit: Record<string, unknown>) => {
       const doc = hit.document;
       const price = doc.listPrice || 0;
       // ARV is zestimate - DON'T fall back to price (that would make %ARV = 100%)
@@ -477,6 +485,10 @@ export async function GET(request: Request) {
         const data = doc.data();
         // Skip if not active
         if (data.isActive === false) return;
+
+        // Skip non-FOR_SALE properties (PENDING, SOLD, FOR_RENT, etc)
+        const homeStatus = (data.homeStatus || '').toString().toUpperCase();
+        if (homeStatus && homeStatus !== 'FOR_SALE') return;
 
         // Determine source tag for display (based on dealTypes)
         let source = 'unified';

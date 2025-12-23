@@ -79,6 +79,10 @@ export default function CashDealsPage() {
   const [activeQuickFilter, setActiveQuickFilter] = useState<QuickFilterKey>('ownerFinance');
   const [showAdvanced, setShowAdvanced] = useState(false);
 
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 50;
+
   // Bulk selection for delete
   const [selectedDeals, setSelectedDeals] = useState<Set<string>>(new Set());
   const [deleting, setDeleting] = useState(false);
@@ -330,6 +334,18 @@ export default function CashDealsPage() {
     return result;
   }, [allDeals, addressSearch, minPrice, maxPrice, maxArv, ownerFinanceOnly, sortBy, sortOrder]);
 
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [addressSearch, citySearch, stateFilter, minPrice, maxPrice, maxArv, ownerFinanceOnly, sortBy, sortOrder]);
+
+  // Paginated deals
+  const totalPages = Math.ceil(filteredDeals.length / ITEMS_PER_PAGE);
+  const paginatedDeals = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredDeals.slice(start, start + ITEMS_PER_PAGE);
+  }, [filteredDeals, currentPage]);
+
   // Stats for filtered deals
   const stats = useMemo(() => {
     const avgDiscount = filteredDeals.length > 0
@@ -408,12 +424,25 @@ export default function CashDealsPage() {
     });
   };
 
-  // Select/deselect all visible deals
+  // Select/deselect all visible deals (current page only)
   const toggleSelectAll = () => {
-    if (selectedDeals.size === filteredDeals.length) {
-      setSelectedDeals(new Set());
+    const currentPageIds = new Set(paginatedDeals.map(d => d.id));
+    const allOnPageSelected = paginatedDeals.every(d => selectedDeals.has(d.id));
+
+    if (allOnPageSelected) {
+      // Deselect all on current page
+      setSelectedDeals(prev => {
+        const newSet = new Set(prev);
+        paginatedDeals.forEach(d => newSet.delete(d.id));
+        return newSet;
+      });
     } else {
-      setSelectedDeals(new Set(filteredDeals.map(d => d.id)));
+      // Select all on current page
+      setSelectedDeals(prev => {
+        const newSet = new Set(prev);
+        paginatedDeals.forEach(d => newSet.add(d.id));
+        return newSet;
+      });
     }
   };
 
@@ -680,7 +709,7 @@ export default function CashDealsPage() {
                       <th className="px-1.5 py-2 text-left text-slate-300 text-xs font-semibold w-8">
                         <input
                           type="checkbox"
-                          checked={selectedDeals.size === filteredDeals.length && filteredDeals.length > 0}
+                          checked={paginatedDeals.length > 0 && paginatedDeals.every(d => selectedDeals.has(d.id))}
                           onChange={toggleSelectAll}
                           className="w-4 h-4 rounded border-slate-500 bg-slate-600 text-emerald-500 focus:ring-emerald-500"
                         />
@@ -693,7 +722,7 @@ export default function CashDealsPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-700">
-                    {filteredDeals.map((deal) => {
+                    {paginatedDeals.map((deal) => {
                       const isTopDeal = deal.percentOfArv <= 70; // Great deal = 70% or less of ARV
                       const isSelected = selectedDeals.has(deal.id);
                       return (
@@ -794,6 +823,48 @@ export default function CashDealsPage() {
                   </tbody>
                 </table>
               </div>
+
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between px-4 py-3 bg-slate-700/50 border-t border-slate-600">
+                  <div className="text-sm text-slate-400">
+                    Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1}-{Math.min(currentPage * ITEMS_PER_PAGE, filteredDeals.length)} of {filteredDeals.length}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setCurrentPage(1)}
+                      disabled={currentPage === 1}
+                      className="px-2 py-1 text-sm bg-slate-600 hover:bg-slate-500 text-white rounded disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      First
+                    </button>
+                    <button
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                      className="px-3 py-1 text-sm bg-slate-600 hover:bg-slate-500 text-white rounded disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      Prev
+                    </button>
+                    <span className="px-3 py-1 text-sm text-white bg-emerald-600 rounded">
+                      {currentPage} / {totalPages}
+                    </span>
+                    <button
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      disabled={currentPage === totalPages}
+                      className="px-3 py-1 text-sm bg-slate-600 hover:bg-slate-500 text-white rounded disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      Next
+                    </button>
+                    <button
+                      onClick={() => setCurrentPage(totalPages)}
+                      disabled={currentPage === totalPages}
+                      className="px-2 py-1 text-sm bg-slate-600 hover:bg-slate-500 text-white rounded disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      Last
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

@@ -270,8 +270,16 @@ export async function GET(request: NextRequest) {
 
     console.log(`🚀 Starting Apify scraper for ${toProcess.length} properties...`);
 
+    // Normalize URLs - ensure they have the full Zillow domain
+    const normalizeZillowUrl = (url: string): string => {
+      if (!url) return '';
+      if (url.startsWith('http')) return url;
+      // Handle relative URLs like "/homedetails/..."
+      return `https://www.zillow.com${url.startsWith('/') ? '' : '/'}${url}`;
+    };
+
     const run = await client.actor(actorId).call({
-      startUrls: toProcess.map(p => ({ url: p.url })),
+      startUrls: toProcess.map(p => ({ url: normalizeZillowUrl(p.url) })),
     });
 
     const { items } = await client.dataset(run.defaultDatasetId).listItems({

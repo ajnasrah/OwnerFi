@@ -46,6 +46,7 @@ interface NormalizedProperty {
   missingFields: string[];
   cashFlow: unknown;
   sentToGHL: unknown;
+  reviewedAt: string | null;
 }
 
 interface DealsCache {
@@ -243,6 +244,8 @@ function normalizeProperty(doc: FirebaseFirestore.DocumentSnapshot, source: stri
     cashFlow: cashFlowData,
     // GHL tracking
     sentToGHL: data.sentToGHL || null,
+    // Reviewed tracking
+    reviewedAt: data.reviewedAt?.toDate?.()?.toISOString() || data.reviewedAt || null,
   };
 }
 
@@ -385,6 +388,7 @@ async function searchWithTypesense(params: {
         // These are still calculated on-demand if needed
         cashFlow: null,
         sentToGHL: null,
+        reviewedAt: null, // Not stored in Typesense, will need to check Firestore
       };
     });
 
@@ -649,6 +653,44 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ deleted, success: true });
   } catch (error) {
     console.error('Error deleting properties:', error);
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}
+
+// PATCH - Mark property as reviewed
+export async function PATCH(request: Request) {
+  try {
+    const db = await getAdminDb();
+    if (!db) {
+      return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
+    }
+
+    const { id, reviewed } = await request.json();
+    if (!id) {
+      return NextResponse.json({ error: 'No ID provided' }, { status: 400 });
+    }
+
+    const propertyRef = db.collection('properties').doc(id);
+    const propertyDoc = await propertyRef.get();
+
+    if (!propertyDoc.exists) {
+      return NextResponse.json({ error: 'Property not found' }, { status: 404 });
+    }
+
+    await propertyRef.update({
+      reviewedAt: reviewed ? new Date() : null,
+      updatedAt: new Date(),
+    });
+
+    // Invalidate cache
+    dealsCache = null;
+
+    console.log(`[cash-deals] Marked property ${id} as ${reviewed ? 'reviewed' : 'not reviewed'}`);
+
+    return NextResponse.json({ success: true, reviewed });
+  } catch (error) {
+    console.error('Error updating property:', error);
     const message = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json({ error: message }, { status: 500 });
   }

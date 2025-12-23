@@ -32,6 +32,7 @@ interface CashDeal {
   termYears?: number;
   balloonYears?: number;
   sentToGHL?: string;
+  reviewedAt?: string | null;
 }
 
 type SortField = 'percentOfArv' | 'price' | 'zestimate' | 'discount' | 'rentEstimate';
@@ -424,6 +425,32 @@ export default function CashDealsPage() {
     });
   };
 
+  // Mark property as reviewed when View is clicked
+  const handleViewClick = async (deal: CashDeal) => {
+    // Open the URL in a new tab
+    window.open(deal.url, '_blank');
+
+    // Mark as reviewed if not already
+    if (!deal.reviewedAt) {
+      try {
+        const res = await fetch('/api/admin/cash-deals', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: deal.id, reviewed: true }),
+        });
+
+        if (res.ok) {
+          // Update local state
+          setAllDeals(prev => prev.map(d =>
+            d.id === deal.id ? { ...d, reviewedAt: new Date().toISOString() } : d
+          ));
+        }
+      } catch (error) {
+        console.error('Failed to mark as reviewed:', error);
+      }
+    }
+  };
+
   // Select/deselect all visible deals (current page only)
   const toggleSelectAll = () => {
     const currentPageIds = new Set(paginatedDeals.map(d => d.id));
@@ -719,6 +746,7 @@ export default function CashDealsPage() {
                       <th className="px-1.5 py-2 text-left text-slate-300 text-xs font-semibold cursor-pointer hover:text-emerald-400" onClick={() => handleSort('price')}>Price {sortBy === 'price' && (sortOrder === 'asc' ? '↑' : '↓')}</th>
                       <th className="px-1.5 py-2 text-left text-slate-300 text-xs font-semibold cursor-pointer hover:text-emerald-400" onClick={() => handleSort('percentOfArv')}>%Zest {sortBy === 'percentOfArv' && (sortOrder === 'asc' ? '↑' : '↓')}</th>
                       <th className="px-1.5 py-2 text-left text-slate-300 text-xs font-semibold">Specs</th>
+                      <th className="px-1.5 py-2 text-center text-slate-300 text-xs font-semibold w-16">Seen</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-700">
@@ -731,14 +759,16 @@ export default function CashDealsPage() {
                           className={`hover:bg-slate-700/50 ${isTopDeal ? 'bg-emerald-900/20' : ''} ${isSelected ? 'bg-red-900/20' : ''}`}
                         >
                           <td className="px-2 py-2">
-                            <a
-                              href={deal.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center justify-center px-3 py-2 min-w-[60px] min-h-[44px] bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors touch-manipulation"
+                            <button
+                              onClick={() => handleViewClick(deal)}
+                              className={`inline-flex items-center justify-center px-3 py-2 min-w-[60px] min-h-[44px] text-white text-sm font-medium rounded-lg transition-colors touch-manipulation ${
+                                deal.reviewedAt
+                                  ? 'bg-slate-600 hover:bg-slate-500'
+                                  : 'bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700'
+                              }`}
                             >
                               View
-                            </a>
+                            </button>
                           </td>
                           <td className="px-1.5 py-2">
                             <input
@@ -816,6 +846,15 @@ export default function CashDealsPage() {
                           <td className="px-1.5 py-2 text-xs text-slate-300">
                             {deal.beds}bd/{deal.baths}ba
                             {deal.sqft > 0 && <div className="text-slate-400">{deal.sqft.toLocaleString()}sf</div>}
+                          </td>
+                          <td className="px-1.5 py-2 text-center">
+                            {deal.reviewedAt ? (
+                              <span className="text-green-400 text-lg" title={`Reviewed ${new Date(deal.reviewedAt).toLocaleDateString()}`}>
+                                ✓
+                              </span>
+                            ) : (
+                              <span className="text-slate-600 text-lg">—</span>
+                            )}
                           </td>
                         </tr>
                       );

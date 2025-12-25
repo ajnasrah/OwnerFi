@@ -32,40 +32,45 @@ export const authOptions = {
       async authorize(credentials) {
         // Phone-based authentication (no password) - uses unifiedDb (admin SDK), not client db
         if (credentials?.phone && !credentials?.password) {
-          const phone = credentials.phone as string;
+          try {
+            const phone = credentials.phone as string;
 
-          console.log('🔐 [AUTH] Phone login attempt:', phone);
+            console.log('🔐 [AUTH] Phone login attempt:', phone);
 
-          // Normalize phone to E.164 format
-          const normalizedPhone = normalizePhone(phone);
-          console.log('🔐 [AUTH] Normalized phone:', normalizedPhone);
+            // Normalize phone to E.164 format
+            const normalizedPhone = normalizePhone(phone);
+            console.log('🔐 [AUTH] Normalized phone:', normalizedPhone);
 
-          // Use unified DB method - it tries all formats automatically
-          const user = await unifiedDb.users.findByPhone(normalizedPhone);
+            // Use unified DB method - it tries all formats automatically
+            const user = await unifiedDb.users.findByPhone(normalizedPhone);
 
-          if (!user) {
-            console.log('❌ [AUTH] User not found for phone:', normalizedPhone);
+            if (!user) {
+              console.log('❌ [AUTH] User not found for phone:', normalizedPhone);
+              return null;
+            }
+
+            // Check if phone is in admin list
+            const isAdminPhone = ADMIN_PHONES.includes(normalizedPhone);
+            const effectiveRole = isAdminPhone ? 'admin' : user.role;
+
+            console.log('✅ [AUTH] User found:', {
+              id: user.id,
+              role: effectiveRole,
+              email: user.email,
+              isAdminPhone
+            });
+
+            return {
+              id: user.id,
+              email: user.email,
+              name: user.name,
+              phone: user.phone,
+              role: effectiveRole,
+            };
+          } catch (error) {
+            console.error('❌ [AUTH] Phone auth error:', error);
             return null;
           }
-
-          // Check if phone is in admin list
-          const isAdminPhone = ADMIN_PHONES.includes(normalizedPhone);
-          const effectiveRole = isAdminPhone ? 'admin' : user.role;
-
-          console.log('✅ [AUTH] User found:', {
-            id: user.id,
-            role: effectiveRole,
-            email: user.email,
-            isAdminPhone
-          });
-
-          return {
-            id: user.id,
-            email: user.email,
-            name: user.name,
-            phone: user.phone,
-            role: effectiveRole,
-          };
         }
 
         // Email/password authentication (legacy support) - requires client db

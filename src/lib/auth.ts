@@ -30,11 +30,7 @@ export const authOptions = {
         isSignUp: { label: 'Is Sign Up', type: 'text' }
       },
       async authorize(credentials) {
-        if (!db) {
-          return null;
-        }
-
-        // Phone-based authentication (no password)
+        // Phone-based authentication (no password) - uses unifiedDb (admin SDK), not client db
         if (credentials?.phone && !credentials?.password) {
           const phone = credentials.phone as string;
 
@@ -72,8 +68,13 @@ export const authOptions = {
           };
         }
 
-        // Email/password authentication (legacy support)
+        // Email/password authentication (legacy support) - requires client db
         if (credentials?.email && credentials?.password) {
+          if (!db) {
+            console.error('❌ [AUTH] Firebase client db not initialized for email auth');
+            return null;
+          }
+
           const email = credentials.email as string;
           const password = credentials.password as string;
 

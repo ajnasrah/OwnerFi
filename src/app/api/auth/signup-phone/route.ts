@@ -270,22 +270,23 @@ export async function POST(request: NextRequest) {
 
       // Sync to GHL in background (non-blocking)
       const { syncBuyerToGHL } = await import('@/lib/gohighlevel-api');
+      const buyerEmail = email.toLowerCase().trim();
       syncBuyerToGHL({
         id: buyerId,
         userId: newUser.id,
         firstName,
         lastName,
-        email: buyerData.email,
-        phone: buyerData.phone,
-        city: buyerData.city,
-        state: buyerData.state,
-        searchRadius: buyerData.searchRadius,
-        languages: buyerData.languages
+        email: buyerEmail,
+        phone: normalizedPhone,
+        city: city || '',
+        state: state || '',
+        searchRadius: 25,
+        languages: ['English']
       }).then(result => {
         if (result.success) {
           logInfo('New buyer synced to GoHighLevel on phone signup', {
             action: 'buyer_phone_signup_ghl_sync',
-            metadata: { buyerId, email: buyerData.email }
+            metadata: { buyerId, email: buyerEmail }
           });
         } else {
           logError('Failed to sync new buyer to GoHighLevel', {

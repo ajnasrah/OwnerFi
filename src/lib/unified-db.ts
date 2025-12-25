@@ -50,7 +50,9 @@ export const unifiedDb = {
       if (!firebaseDb) {
         throw new Error('Firebase not initialized - missing environment variables');
       }
-      const usersQuery = query(collection(firebaseDb, 'users'), where('email', '==', email));
+      // Normalize email to lowercase for consistent matching
+      const normalizedEmail = email.toLowerCase().trim();
+      const usersQuery = query(collection(firebaseDb, 'users'), where('email', '==', normalizedEmail));
       const userDocs = await getDocs(usersQuery);
       return userDocs.empty ? null : { id: userDocs.docs[0].id, ...userDocs.docs[0].data() } as User & { id: string };
     },
@@ -272,7 +274,9 @@ export const unifiedDb = {
       if (!firebaseDb) {
         throw new Error('Firebase not initialized - missing environment variables');
       }
-      const agentsQuery = query(collection(firebaseDb, 'agents'), where('email', '==', email));
+      // Normalize email to lowercase for consistent matching
+      const normalizedEmail = email.toLowerCase().trim();
+      const agentsQuery = query(collection(firebaseDb, 'agents'), where('email', '==', normalizedEmail));
       const agentDocs = await getDocs(agentsQuery);
       return agentDocs.empty ? null : { id: agentDocs.docs[0].id, ...agentDocs.docs[0].data() } as RealtorProfile & { id: string };
     },

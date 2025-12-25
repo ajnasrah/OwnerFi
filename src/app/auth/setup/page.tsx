@@ -2,13 +2,16 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { signIn } from 'next-auth/react';
+import { signIn, useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { GooglePlacesAutocomplete } from '@/components/ui/GooglePlacesAutocomplete';
+import { isExtendedSession } from '@/types/session';
 
 export default function AuthSetup() {
   const router = useRouter();
+  const { data: session, status } = useSession();
   const [verifiedPhone, setVerifiedPhone] = useState('');
+  const [isExistingUser, setIsExistingUser] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -28,15 +31,46 @@ export default function AuthSetup() {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
 
   useEffect(() => {
-    // Get verified phone from session storage
+    // First check session storage for verified phone (new signup flow)
     const phone = sessionStorage.getItem('verified_phone');
-    if (!phone) {
-      // No verified phone - redirect back to auth
-      router.push('/auth');
+    if (phone) {
+      setVerifiedPhone(phone);
       return;
     }
-    setVerifiedPhone(phone);
-  }, [router]);
+
+    // If no verified phone in storage, check if user is authenticated
+    // This handles the case where user has account but no profile (partial signup)
+    if (status === 'authenticated' && isExtendedSession(session)) {
+      const sessionPhone = session.user.phone;
+      if (sessionPhone) {
+        console.log('🔄 [SETUP] User authenticated but needs profile setup, using session phone');
+        setVerifiedPhone(sessionPhone);
+        setIsExistingUser(true);
+        // Pre-fill email if available
+        if (session.user.email) {
+          setFormData(prev => ({ ...prev, email: session.user.email || '' }));
+        }
+        // Pre-fill name if available
+        if (session.user.name) {
+          const nameParts = session.user.name.split(' ');
+          setFormData(prev => ({
+            ...prev,
+            firstName: nameParts[0] || '',
+            lastName: nameParts.slice(1).join(' ') || ''
+          }));
+        }
+        return;
+      }
+    }
+
+    // If loading session, wait
+    if (status === 'loading') {
+      return;
+    }
+
+    // No verified phone and not authenticated with phone - redirect to auth
+    router.push('/auth');
+  }, [router, session, status]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -112,7 +146,27 @@ export default function AuthSetup() {
         return;
       }
 
-      // Sign in the user
+      // If user is already authenticated (existing user completing profile), skip signIn
+      if (isExistingUser) {
+        console.log('🔐 [SETUP] User already authenticated, skipping signIn');
+
+        // Clear session storage
+        sessionStorage.removeItem('verified_phone');
+        const sharedPropertyId = sessionStorage.getItem('shared_property_id');
+        sessionStorage.removeItem('shared_property_id');
+
+        // Redirect based on role
+        if (formData.isRealtor) {
+          router.push('/realtor-dashboard');
+        } else if (sharedPropertyId) {
+          router.push(`/dashboard?likeProperty=${sharedPropertyId}`);
+        } else {
+          router.push('/dashboard');
+        }
+        return;
+      }
+
+      // Sign in the user (new users only)
       const signInResult = await signIn('credentials', {
         phone: verifiedPhone,
         redirect: false,

@@ -26,6 +26,7 @@ export const PropertyCard = React.memo(function PropertyCard({ property, isFavor
   const currentImage = useMemo(() => {
     const propertyRecord = property as Record<string, unknown>;
     const imageUrl =
+      (propertyRecord.primaryImage as string | undefined) ||
       (propertyRecord.imageUrl as string | undefined) ||
       (propertyRecord.firstPropertyImage as string | undefined) ||
       (propertyRecord.imgSrc as string | undefined) ||

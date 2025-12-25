@@ -55,8 +55,15 @@ export async function POST(request: NextRequest) {
     console.log(`📱 [SIGNUP-PHONE] Phone normalized: ${phone} → ${normalizedPhone}`);
 
     // 🔄 CHECK FOR EXISTING USER: Don't create duplicates!
-    const existingEmailUser = await unifiedDb.users.findByEmail(email.toLowerCase());
-    const existingPhoneUser = await unifiedDb.users.findByPhone(normalizedPhone);
+    console.log('🔍 [SIGNUP-PHONE] Step 1: Checking for existing user...');
+    let existingEmailUser, existingPhoneUser;
+    try {
+      existingEmailUser = await unifiedDb.users.findByEmail(email.toLowerCase());
+      existingPhoneUser = await unifiedDb.users.findByPhone(normalizedPhone);
+    } catch (findError: any) {
+      console.error('❌ [SIGNUP-PHONE] Error finding existing user:', findError.message);
+      throw findError;
+    }
 
     console.log(`🔍 [SIGNUP-PHONE] Checking for existing user:`, {
       email: email.toLowerCase(),
@@ -96,22 +103,29 @@ export async function POST(request: NextRequest) {
       console.log('✅ [SIGNUP-PHONE] Updated existing user account');
     } else {
       // No existing user - create new one
-      console.log('✅ [SIGNUP-PHONE] No existing user - creating new account');
+      console.log('✅ [SIGNUP-PHONE] Step 2: No existing user - creating new account');
 
-      newUser = await unifiedDb.users.create({
-        name: `${firstName} ${lastName}`.trim(),
-        email: email.toLowerCase().trim(),
-        phone: normalizedPhone,
-        role,
-        password: '' // Empty password for phone-auth users
-      });
-
-      console.log('✅ [SIGNUP-PHONE] Created new user account:', newUser.id);
+      try {
+        newUser = await unifiedDb.users.create({
+          name: `${firstName} ${lastName}`.trim(),
+          email: email.toLowerCase().trim(),
+          phone: normalizedPhone,
+          role,
+          password: '' // Empty password for phone-auth users
+        });
+        console.log('✅ [SIGNUP-PHONE] Created new user account:', newUser.id);
+      } catch (createError: any) {
+        console.error('❌ [SIGNUP-PHONE] Failed to create user:', createError.message);
+        throw createError;
+      }
     }
 
     // Create role-specific profile
+    console.log('📝 [SIGNUP-PHONE] Step 3: Creating role-specific profile for:', role);
+
     if (role === 'buyer') {
       if (!db) {
+        console.error('❌ [SIGNUP-PHONE] Firebase client db is null!');
         return NextResponse.json(
           { error: 'Database not initialized' },
           { status: 500 }
@@ -224,8 +238,13 @@ export async function POST(request: NextRequest) {
           updatedAt: serverTimestamp()
         };
 
-        await setDoc(doc(db, 'buyerProfiles', buyerId), buyerData);
-        console.log(`✅ [SIGNUP-PHONE] Created new buyerProfile`);
+        try {
+          await setDoc(doc(db, 'buyerProfiles', buyerId), buyerData);
+          console.log(`✅ [SIGNUP-PHONE] Created new buyerProfile: ${buyerId}`);
+        } catch (profileError: any) {
+          console.error('❌ [SIGNUP-PHONE] Failed to create buyerProfile:', profileError.message);
+          throw profileError;
+        }
       }
 
       // 🚀 Generate nearby cities filter and sync to GHL in background (non-blocking)
@@ -428,14 +447,20 @@ export async function POST(request: NextRequest) {
       { status: 400 }
     );
 
-  } catch (error) {
+  } catch (error: any) {
+    const errorMessage = error?.message || error?.toString() || 'Unknown error';
+    const errorStack = error?.stack || '';
+
+    console.error('❌ [SIGNUP-PHONE] Error:', errorMessage);
+    console.error('❌ [SIGNUP-PHONE] Stack:', errorStack);
+
     await logError('Failed to create account via phone auth', {
-      action: 'phone_signup_error'
+      action: 'phone_signup_error',
+      metadata: { errorMessage, errorStack: errorStack.substring(0, 500) }
     }, error as Error);
 
-    console.error('Phone signup error:', error);
     return NextResponse.json(
-      { error: 'Failed to create account. Please try again.' },
+      { error: `Failed to create account: ${errorMessage}` },
       { status: 500 }
     );
   }

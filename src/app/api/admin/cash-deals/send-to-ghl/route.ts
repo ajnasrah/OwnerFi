@@ -15,10 +15,11 @@ if (!getApps().length) {
 
 const db = getFirestore();
 
+// GHL Webhook for regional properties (agent outreach)
 const GHL_WEBHOOK_URL = process.env.GHL_CASH_DEAL_WEBHOOK_URL ||
   process.env.GHL_PROPERTY_SEND_WEBHOOK_URL ||
   process.env.GHL_AGENT_OUTREACH_WEBHOOK_URL ||
-  '';
+  'https://services.leadconnectorhq.com/hooks/U2B5lSlWrVBgVxHNq5AH/webhook-trigger/f13ea8d2-a22c-4365-9156-759d18147d4a';
 
 /**
  * Send selected cash deals to GHL webhook

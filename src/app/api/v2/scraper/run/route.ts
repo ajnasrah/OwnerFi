@@ -1,7 +1,7 @@
 /**
  * Unified Scraper v2 - Main Cron Endpoint
  *
- * SCHEDULE: Daily at 9 AM and 9 PM
+ * SCHEDULE: Daily at 9 PM
  *
  * TWO SEARCHES:
  * 1. Owner Finance (Nationwide) - keyword filtered
@@ -18,7 +18,9 @@
  * - isCashDeal: boolean
  * - dealTypes: string[]
  *
- * GHL webhook is DISABLED - properties managed in unified collection
+ * GHL WEBHOOK: ENABLED for regional properties
+ * - All regional (AR/TN) properties are sent to GHL to find more owner finance deals
+ * - Tracks sentToGHL field to avoid duplicate sends
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -40,6 +42,7 @@ import {
 import { withScraperLock } from '@/lib/scraper-v2/cron-lock';
 import { indexPropertiesBatch } from '@/lib/typesense/sync';
 import { UnifiedProperty } from '@/lib/unified-property-schema';
+import { sendBatchToGHLWebhook, toGHLPayload } from '@/lib/scraper-v2/ghl-webhook';
 
 // Allow long-running requests (Vercel)
 export const maxDuration = 600; // 10 minutes
@@ -61,6 +64,8 @@ interface ScraperMetrics {
   filteredOut: number;
   indexedToTypesense: number;
   typesenseFailed: number;
+  sentToGHL: number;
+  ghlFailed: number;
   errors: Array<{ zpid?: number; address?: string; error: string; stage: string }>;
 }
 
@@ -120,11 +125,34 @@ async function runUnifiedScraper(): Promise<{
     filteredOut: 0,
     indexedToTypesense: 0,
     typesenseFailed: 0,
+    sentToGHL: 0,
+    ghlFailed: 0,
     errors: [],
   };
 
   // Collect properties for Typesense indexing
   const typesenseProperties: UnifiedProperty[] = [];
+
+  // Collect properties for GHL webhook (regional properties)
+  const ghlProperties: Array<{
+    zpid: number;
+    fullAddress?: string;
+    streetAddress?: string;
+    city?: string;
+    state?: string;
+    zipCode?: string;
+    price?: number;
+    estimate?: number;
+    bedrooms?: number;
+    bathrooms?: number;
+    livingArea?: number;
+    yearBuilt?: number;
+    homeType?: string;
+    description?: string;
+    zillowUrl?: string;
+    imgSrc?: string;
+    firstPropertyImage?: string;
+  }> = [];
 
   try {
     console.log('\n' + '='.repeat(60));
@@ -171,6 +199,14 @@ async function runUnifiedScraper(): Promise<{
 
     metrics.totalPropertiesFound = allProperties.length;
     console.log(`\n[SEARCH] Total properties found: ${allProperties.length}`);
+
+    // Track which ZPIDs came from regional search (for GHL)
+    const regionalZpids = new Set<number>();
+    const regionalProperties = propertiesBySearchId.get('cash-deals-regional') || [];
+    regionalProperties.forEach(p => {
+      if (p.zpid) regionalZpids.add(typeof p.zpid === 'string' ? parseInt(p.zpid, 10) : p.zpid);
+    });
+    console.log(`[REGIONAL] ${regionalZpids.size} properties from regional search (will send to GHL)`);
 
     if (allProperties.length === 0) {
       return {
@@ -331,6 +367,15 @@ async function runUnifiedScraper(): Promise<{
         const docId = `zpid_${zpid}`;
         const docRef = db.collection('properties').doc(docId);
         const docData = createUnifiedPropertyDoc(property, filterResult);
+
+        // Check if this is a regional property (for GHL)
+        const isRegionalProperty = regionalZpids.has(zpid);
+
+        // Add GHL tracking field
+        (docData as any).sentToGHL = isRegionalProperty; // Will be sent after save
+        (docData as any).sentToGHLAt = isRegionalProperty ? new Date() : null;
+        (docData as any).isRegional = isRegionalProperty;
+
         propertiesBatch.set(docRef, docData, { merge: true });
         batchCount++;
         existingZpids.add(zpid);
@@ -345,6 +390,29 @@ async function runUnifiedScraper(): Promise<{
         }
         if (filterResult.isCashDeal) {
           metrics.savedAsCashDeal++;
+        }
+
+        // Collect regional properties for GHL webhook
+        if (isRegionalProperty) {
+          ghlProperties.push({
+            zpid,
+            fullAddress: property.fullAddress,
+            streetAddress: property.streetAddress,
+            city: property.city,
+            state: property.state,
+            zipCode: property.zipCode,
+            price: property.price,
+            estimate: property.estimate,
+            bedrooms: property.bedrooms,
+            bathrooms: property.bathrooms,
+            livingArea: property.squareFoot,
+            yearBuilt: property.yearBuilt,
+            homeType: property.homeType,
+            description: property.description,
+            zillowUrl: property.url,
+            imgSrc: property.firstPropertyImage,
+            firstPropertyImage: property.firstPropertyImage,
+          });
         }
 
         // Collect for Typesense indexing
@@ -449,8 +517,31 @@ async function runUnifiedScraper(): Promise<{
       console.log('[Typesense] No new properties to index');
     }
 
-    // ===== STEP 6: LOG STATISTICS =====
-    // NOTE: GHL webhook disabled - all properties now go to unified 'properties' collection
+    // ===== STEP 6: SEND REGIONAL PROPERTIES TO GHL =====
+    console.log('\n[STEP 6] Sending regional properties to GHL webhook...');
+
+    if (ghlProperties.length > 0) {
+      try {
+        const ghlPayloads = ghlProperties.map(p => toGHLPayload(p));
+        const ghlResult = await sendBatchToGHLWebhook(ghlPayloads, {
+          delayMs: 100,
+          onProgress: (sent, total) => {
+            console.log(`[GHL] Progress: ${sent}/${total}`);
+          },
+        });
+        metrics.sentToGHL = ghlResult.sent;
+        metrics.ghlFailed = ghlResult.failed;
+        console.log(`[GHL] Sent: ${ghlResult.sent}, Failed: ${ghlResult.failed}`);
+      } catch (error: any) {
+        console.error('[GHL] Webhook failed:', error.message);
+        metrics.ghlFailed = ghlProperties.length;
+        metrics.errors.push({ error: error.message, stage: 'ghl-webhook' });
+      }
+    } else {
+      console.log('[GHL] No regional properties to send');
+    }
+
+    // ===== STEP 7: LOG STATISTICS =====
     const filterStats = calculateFilterStats(filterResults);
     logFilterStats(filterStats);
 
@@ -474,6 +565,8 @@ async function runUnifiedScraper(): Promise<{
     console.log(`  - Both: ${metrics.savedAsBoth}`);
     console.log(`Indexed to Typesense: ${metrics.indexedToTypesense}`);
     console.log(`Typesense Failed: ${metrics.typesenseFailed}`);
+    console.log(`Sent to GHL: ${metrics.sentToGHL}`);
+    console.log(`GHL Failed: ${metrics.ghlFailed}`);
     console.log(`Errors: ${metrics.errors.length}`);
     console.log('='.repeat(60) + '\n');
 
@@ -481,7 +574,7 @@ async function runUnifiedScraper(): Promise<{
       success: true,
       duration,
       metrics,
-      message: `Scraped ${metrics.totalPropertiesFound} properties. Saved ${metrics.savedToProperties} to properties collection (${metrics.savedAsOwnerFinance} owner finance, ${metrics.savedAsCashDeal} cash deal, ${metrics.savedAsBoth} both). Indexed ${metrics.indexedToTypesense} to Typesense.`,
+      message: `Scraped ${metrics.totalPropertiesFound} properties. Saved ${metrics.savedToProperties} to properties collection (${metrics.savedAsOwnerFinance} owner finance, ${metrics.savedAsCashDeal} cash deal, ${metrics.savedAsBoth} both). Indexed ${metrics.indexedToTypesense} to Typesense. Sent ${metrics.sentToGHL} regional properties to GHL.`,
     };
   } catch (error) {
     console.error('[SCRAPER] Fatal error:', error);

@@ -1,9 +1,7 @@
 import {
   RecaptchaVerifier,
   signInWithPhoneNumber,
-  ConfirmationResult,
-  PhoneAuthProvider,
-  signInWithCredential
+  ConfirmationResult
 } from 'firebase/auth';
 import { auth } from './firebase';
 import { normalizePhone as normalizePhoneUtil, isValidPhone as isValidPhoneUtil } from './phone-utils';
@@ -12,16 +10,8 @@ import { normalizePhone as normalizePhoneUtil, isValidPhone as isValidPhoneUtil 
 export const formatPhoneNumber = normalizePhoneUtil;
 export const isValidPhoneNumber = isValidPhoneUtil;
 
-// Detect Safari browser
-function isSafari(): boolean {
-  if (typeof window === 'undefined') return false;
-  const ua = window.navigator.userAgent;
-  const isSafariBrowser = ua.includes('Safari') && !ua.includes('Chrome') && !ua.includes('Chromium');
-  return isSafariBrowser;
-}
-
 // Initialize reCAPTCHA verifier
-// Uses visible reCAPTCHA for Safari (invisible doesn't work due to ITP)
+// Uses compact size for better mobile experience, works everywhere including in-app browsers
 export function setupRecaptcha(containerId: string): RecaptchaVerifier | null {
   if (!auth) {
     console.error('Firebase Auth not initialized');
@@ -29,13 +19,9 @@ export function setupRecaptcha(containerId: string): RecaptchaVerifier | null {
   }
 
   try {
-    const useSafariMode = isSafari();
-    console.log(`[reCAPTCHA] Setting up in ${useSafariMode ? 'VISIBLE (Safari)' : 'INVISIBLE'} mode`);
-
     const recaptchaVerifier = new RecaptchaVerifier(auth, containerId, {
-      size: useSafariMode ? 'normal' : 'invisible',
+      size: 'compact', // Compact size for mobile-friendly display
       callback: () => {
-        // reCAPTCHA solved - allow user to proceed
         console.log('reCAPTCHA verified');
       },
       'expired-callback': () => {

@@ -72,8 +72,10 @@ export async function POST(request: NextRequest) {
       }, { status: 404 });
     }
 
-    // Check if already processed or in a terminal/processing state
-    const skipStatuses = ['completed', 'posting', 'video_processing'];
+    // Check if already processed or in a terminal state
+    // NOTE: Do NOT skip 'video_processing' - that's the status set by Submagic webhook
+    // BEFORE calling this worker. Skipping it caused workflows to get stuck forever.
+    const skipStatuses = ['completed', 'posting'];
     if (skipStatuses.includes(workflow.status)) {
       console.log(`✅ Workflow already in ${workflow.status} status, skipping to prevent duplicates`);
       return NextResponse.json({

@@ -246,7 +246,7 @@ export async function markArticleProcessed(id: string, category: Brand, workflow
 // Get and lock article for processing (atomic operation to prevent race conditions)
 // PRIORITY ORDER:
 // 1. Social trends (TikTok, Twitter, Reddit, Google Trends) - what's viral RIGHT NOW
-// 2. High quality RSS articles (qualityScore >= 50)
+// 2. High quality RSS articles (qualityScore >= 30)
 // Uses Firestore transactions to ensure only one process can lock each article
 export async function getAndLockArticle(category: Brand): Promise<Article | null> {
   if (!db) return null;
@@ -298,7 +298,8 @@ export async function getAndLockArticle(category: Brand): Promise<Article | null
   }
 
   // PRIORITY 2: High quality RSS articles (fallback)
-  const threshold = 50;
+  // Lowered from 50 to 30 to ensure articles get processed
+  const threshold = 30;
   const sortedRssArticles = rssArticles
     .filter(a => typeof a.qualityScore === 'number' && a.qualityScore >= threshold)
     .sort((a, b) => (b.qualityScore || 0) - (a.qualityScore || 0));

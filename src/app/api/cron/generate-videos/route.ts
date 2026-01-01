@@ -107,7 +107,7 @@ async function generateArticleVideos() {
     console.log(`\n📂 Checking ${brand} articles...`);
 
     try {
-      // CRITICAL FIX: Check for quality articles (qualityScore >= 50) before triggering workflow
+      // CRITICAL FIX: Check for quality articles (qualityScore >= 30) before triggering workflow
       // This prevents wasting API calls on brands with no quality content
       const collectionName = getCollectionName('ARTICLES', brand);
 
@@ -121,7 +121,7 @@ async function generateArticleVideos() {
         continue;
       }
 
-      // Get unprocessed articles with quality score >= 50 (in-memory filter)
+      // Get unprocessed articles with quality score >= 30 (in-memory filter)
       const q = query(
         collection(db, collectionName),
         where('processed', '==', false),
@@ -131,12 +131,13 @@ async function generateArticleVideos() {
       const snapshot = await getDocs(q);
       const articles = snapshot.docs.map(doc => doc.data());
 
-      // Filter for quality articles (score >= 50)
+      // Filter for quality articles (score >= 30)
+      // Lowered from 50 to 30 because articles weren't being processed
       const qualityArticles = articles.filter((a: any) =>
-        typeof a.qualityScore === 'number' && a.qualityScore >= 50
+        typeof a.qualityScore === 'number' && a.qualityScore >= 30
       );
 
-      console.log(`   Found ${articles.length} unprocessed, ${qualityArticles.length} quality (score >= 50)`);
+      console.log(`   Found ${articles.length} unprocessed, ${qualityArticles.length} quality (score >= 30)`);
 
       if (qualityArticles.length === 0) {
         console.log(`   ⏭️  No quality articles available - skipping`);
@@ -144,7 +145,7 @@ async function generateArticleVideos() {
           brand,
           success: false,
           skipped: true,
-          message: 'No quality articles available (need score >= 50)'
+          message: 'No quality articles available (need score >= 30)'
         });
         continue;
       }

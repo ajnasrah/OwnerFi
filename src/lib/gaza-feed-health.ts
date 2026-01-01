@@ -248,9 +248,10 @@ export async function getAvailableArticleCount(): Promise<number> {
       .get();
 
     // Filter by quality score in memory (to avoid index)
+    // Lowered from 50 to 30 to ensure articles get processed
     const highQualityCount = snapshot.docs.filter(doc => {
       const data = doc.data();
-      return typeof data.qualityScore === 'number' && data.qualityScore >= 50;
+      return typeof data.qualityScore === 'number' && data.qualityScore >= 30;
     }).length;
 
     return highQualityCount;

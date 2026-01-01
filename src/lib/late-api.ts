@@ -26,7 +26,7 @@ export interface LatePostRequest {
   hashtags?: string[];
   platforms: ('instagram' | 'tiktok' | 'youtube' | 'facebook' | 'linkedin' | 'threads' | 'twitter' | 'pinterest' | 'reddit' | 'bluesky')[];
   scheduleTime?: string; // ISO 8601 format, or omit for immediate posting
-  brand: 'carz' | 'ownerfi' | 'podcast' | 'property' | 'property-spanish' | 'vassdistro' | 'benefit' | 'abdullah' | 'personal' | 'gaza';
+  brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza';
   postTypes?: {
     instagram?: 'reel' | 'story' | 'feed'; // Added 'feed' for image posts
     facebook?: 'feed' | 'story';
@@ -34,6 +34,7 @@ export interface LatePostRequest {
   useQueue?: boolean; // If true, automatically get next queue slot and mark as queued
   timezone?: string; // Timezone for scheduling (used with queue)
   firstComment?: string; // First comment to auto-post (boosts engagement + adds extra hashtags)
+  strictMode?: boolean; // If true, fail if ANY requested platforms are missing (default: false - continues with available)
 }
 
 export interface LatePostResponse {
@@ -59,25 +60,21 @@ export interface LateProfile {
 /**
  * Get profile ID for a brand
  */
-function getProfileId(brand: 'carz' | 'ownerfi' | 'podcast' | 'property' | 'property-spanish' | 'vassdistro' | 'benefit' | 'abdullah' | 'personal' | 'gaza'): string | null {
+function getProfileId(brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza'): string | null {
   switch (brand) {
     case 'ownerfi':
-    case 'property': // Property videos use OwnerFi profile
-    case 'property-spanish': // Spanish property videos also use OwnerFi profile
     case 'benefit': // Benefit videos also use OwnerFi profile
       return getLateOwnerfiProfileId() || null;
     case 'carz':
       return getLateCarzProfileId() || null;
-    case 'podcast':
-      return getLatePodcastProfileId() || null;
-    case 'vassdistro':
-      return getLateVassDistroProfileId() || null;
     case 'abdullah':
       return getLateAbdullahProfileId() || null;
     case 'personal':
       return getLatePersonalProfileId() || null;
     case 'gaza':
       return getLateGazaProfileId() || null;
+    default:
+      return null;
   }
 }
 
@@ -238,10 +235,6 @@ export async function postToLate(request: LatePostRequest): Promise<LatePostResp
     const brandNameMap: Record<string, string> = {
       'carz': 'Carz',
       'ownerfi': 'OwnerFi',
-      'podcast': 'Podcast',
-      'property': 'Property',
-      'property-spanish': 'Property (Spanish)',
-      'vassdistro': 'VassDistro',
       'benefit': 'Benefit',
       'abdullah': 'Abdullah',
       'personal': 'Personal',
@@ -300,6 +293,16 @@ export async function postToLate(request: LatePostRequest): Promise<LatePostResp
         };
       }
 
+      // STRICT MODE: If enabled, fail if ANY platforms are missing
+      if (request.strictMode) {
+        console.error(`🚫 STRICT MODE: Failing post because ${missingPlatforms.length} platform(s) missing`);
+        return {
+          success: false,
+          error: `Strict mode enabled: ${errorMsg}`,
+          skippedPlatforms: missingPlatforms
+        };
+      }
+
       // If SOME platforms are missing, log warning and continue with available platforms
       console.warn(`⚠️  Continuing with ${platformAccounts.length}/${request.platforms.length} platforms (skipped: ${missingPlatforms.join(', ')})`);
     }
@@ -307,10 +310,10 @@ export async function postToLate(request: LatePostRequest): Promise<LatePostResp
     const brandNameMap: Record<string, string> = {
       'carz': 'Carz',
       'ownerfi': 'OwnerFi',
-      'podcast': 'Podcast',
-      'property': 'Property',
-      'vassdistro': 'VassDistro',
-      'abdullah': 'Abdullah'
+      'benefit': 'Benefit',
+      'abdullah': 'Abdullah',
+      'personal': 'Personal',
+      'gaza': 'Gaza'
     };
     const brandName = brandNameMap[request.brand] || request.brand;
     console.log(`📤 Posting to Late (${brandName})...`);

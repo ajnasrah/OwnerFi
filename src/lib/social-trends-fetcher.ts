@@ -6,6 +6,44 @@ import { fetchWithTimeout, retry, TIMEOUTS } from './api-utils';
 import { ApifyClient } from 'apify-client';
 
 // ============================================================================
+// APIFY CACHE - Reduce costs by caching results for 4 hours
+// ============================================================================
+const APIFY_CACHE_DURATION_MS = 4 * 60 * 60 * 1000; // 4 hours
+
+interface CacheEntry {
+  data: SocialTrend[];
+  fetchedAt: number;
+}
+
+// In-memory cache (persists for duration of serverless function, cleared between invocations)
+// For longer persistence, this could be moved to Firestore/Redis
+const apifyCache: Map<string, CacheEntry> = new Map();
+
+/**
+ * Get cached Apify results if still fresh
+ */
+function getCachedApifyResults(cacheKey: string): SocialTrend[] | null {
+  const cached = apifyCache.get(cacheKey);
+  if (cached && (Date.now() - cached.fetchedAt) < APIFY_CACHE_DURATION_MS) {
+    const ageMinutes = Math.round((Date.now() - cached.fetchedAt) / 60000);
+    console.log(`📦 [CACHE HIT] Using cached ${cacheKey} results (${ageMinutes}min old, ${cached.data.length} items)`);
+    return cached.data;
+  }
+  return null;
+}
+
+/**
+ * Store Apify results in cache
+ */
+function setCachedApifyResults(cacheKey: string, data: SocialTrend[]): void {
+  apifyCache.set(cacheKey, {
+    data,
+    fetchedAt: Date.now()
+  });
+  console.log(`💾 [CACHE SET] Stored ${cacheKey} results (${data.length} items, valid for 4 hours)`);
+}
+
+// ============================================================================
 // TYPES
 // ============================================================================
 
@@ -284,6 +322,11 @@ export async function fetchTikTokTrends(
   brand: 'ownerfi' | 'carz' | 'vassdistro' | 'gaza',
   country: string = 'US'
 ): Promise<SocialTrend[]> {
+  // Check cache first to reduce Apify costs
+  const cacheKey = `tiktok_${brand}_${country}`;
+  const cached = getCachedApifyResults(cacheKey);
+  if (cached) return cached;
+
   const apiKey = process.env.APIFY_API_KEY;
 
   if (!apiKey) {
@@ -291,7 +334,7 @@ export async function fetchTikTokTrends(
     return [];
   }
 
-  console.log(`🎵 [TikTok] Fetching trends for ${brand} in ${country}...`);
+  console.log(`🎵 [TikTok] Fetching trends for ${brand} in ${country}... (cache miss, calling Apify)`);
 
   try {
     const client = new ApifyClient({ token: apiKey });
@@ -371,6 +414,10 @@ export async function fetchTikTokTrends(
     }
 
     console.log(`✅ [TikTok] Found ${trends.length} relevant trends for ${brand}`);
+
+    // Cache results to avoid repeated Apify calls
+    setCachedApifyResults(cacheKey, trends);
+
     return trends;
 
   } catch (error) {
@@ -391,6 +438,11 @@ export async function fetchTwitterTrends(
   brand: 'ownerfi' | 'carz' | 'vassdistro' | 'gaza',
   country: string = 'US'
 ): Promise<SocialTrend[]> {
+  // Check cache first to reduce Apify costs
+  const cacheKey = `twitter_${brand}_${country}`;
+  const cached = getCachedApifyResults(cacheKey);
+  if (cached) return cached;
+
   const apiKey = process.env.APIFY_API_KEY;
 
   if (!apiKey) {
@@ -398,7 +450,7 @@ export async function fetchTwitterTrends(
     return [];
   }
 
-  console.log(`🐦 [Twitter] Fetching trends for ${brand} in ${country}...`);
+  console.log(`🐦 [Twitter] Fetching trends for ${brand} in ${country}... (cache miss, calling Apify)`);
 
   try {
     const client = new ApifyClient({ token: apiKey });
@@ -463,6 +515,10 @@ export async function fetchTwitterTrends(
     }
 
     console.log(`✅ [Twitter] Found ${trends.length} relevant trends for ${brand}`);
+
+    // Cache results to avoid repeated Apify calls
+    setCachedApifyResults(cacheKey, trends);
+
     return trends;
 
   } catch (error) {

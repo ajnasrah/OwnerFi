@@ -26,6 +26,21 @@ export const maxDuration = 300; // 5 minutes (max needed for SubMagic + posting 
 const BRAND_PROCESSING_TIMEOUT_MS = 45_000; // 45 seconds per brand (conservative)
 const PARALLEL_QUERY_BATCH_SIZE = 9; // Process all 9 brands in parallel
 
+// ============================================================================
+// WORKFLOW TIMEOUT CONFIGURATION
+// Auto-fail workflows stuck longer than these durations (in minutes)
+// ============================================================================
+const MAX_STAGE_DURATION_MINUTES = {
+  pending: 30,              // 30 min - should start quickly or fail
+  heygen_processing: 20,    // 20 min - HeyGen usually completes in 5-10 min
+  submagic_processing: 25,  // 25 min - Submagic usually completes in 10-15 min
+  video_processing: 15,     // 15 min - video processing should be quick
+  posting: 10,              // 10 min - posting to Late should be fast
+} as const;
+
+// Max retry attempts before permanent failure
+const MAX_RETRY_ATTEMPTS = 3;
+
 export async function GET(request: NextRequest) {
   try {
     // Verify authorization
@@ -86,6 +101,13 @@ export async function GET(request: NextRequest) {
       const postingResults = await checkPostingWorkflows();
       results.posting = postingResults;
 
+      // 5. AUTO-FAIL timed out workflows (new reliability feature)
+      console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('5️⃣  AUTO-FAILING TIMED OUT WORKFLOWS');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+      const timeoutResults = await autoFailTimedOutWorkflows();
+      (results as any).timedOut = timeoutResults;
+
       console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       console.log('✅ [STUCK-WORKFLOWS] Complete');
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
@@ -95,6 +117,7 @@ export async function GET(request: NextRequest) {
       console.log(`   HeyGen: ${results.heygen.advanced}/${results.heygen.checked} advanced`);
       console.log(`   SubMagic: ${results.submagic.completed}/${results.submagic.checked} completed`);
       console.log(`   Posting: ${results.posting.retried}/${results.posting.checked} retried`);
+      console.log(`   Timed Out: ${timeoutResults.failed}/${timeoutResults.checked} auto-failed`);
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
       return NextResponse.json({
@@ -1083,4 +1106,103 @@ async function checkPostingWorkflows() {
   }
 
   return { checked, retried, failed };
+}
+
+// ============================================================================
+// 5. AUTO-FAIL TIMED OUT WORKFLOWS
+// Workflows stuck beyond MAX_STAGE_DURATION_MINUTES get auto-failed
+// This prevents workflows from being stuck indefinitely
+// ============================================================================
+
+async function autoFailTimedOutWorkflows() {
+  const { db } = await import('@/lib/firebase');
+  const { collection, getDocs, query, where, limit: firestoreLimit, updateDoc, doc } = await import('firebase/firestore');
+  const { getAllBrandIds } = await import('@/lib/brand-utils');
+
+  if (!db) {
+    console.error('❌ Firebase not initialized');
+    return { checked: 0, failed: 0, requeued: 0 };
+  }
+
+  let checked = 0;
+  let failed = 0;
+  let requeued = 0;
+
+  // Check all brands
+  const brands = [...getAllBrandIds()];
+  const statuses = ['heygen_processing', 'submagic_processing', 'video_processing', 'posting'] as const;
+
+  for (const brand of brands) {
+    const collectionName = `${brand}_workflow_queue`;
+
+    for (const status of statuses) {
+      try {
+        const maxMinutes = MAX_STAGE_DURATION_MINUTES[status as keyof typeof MAX_STAGE_DURATION_MINUTES];
+        if (!maxMinutes) continue;
+
+        const q = query(
+          collection(db, collectionName),
+          where('status', '==', status),
+          firestoreLimit(20)
+        );
+
+        const snapshot = await getDocs(q);
+
+        for (const workflowDoc of snapshot.docs) {
+          const data = workflowDoc.data();
+          const workflowId = workflowDoc.id;
+
+          // Use statusChangedAt if available, otherwise fall back to updatedAt or createdAt
+          const timestamp = data.statusChangedAt || data.updatedAt || data.createdAt;
+          if (!timestamp || timestamp <= 0) continue;
+
+          const stuckMinutes = Math.round((Date.now() - timestamp) / 60000);
+          checked++;
+
+          // Check if exceeded max duration
+          if (stuckMinutes > maxMinutes) {
+            const retryCount = data.retryCount || 0;
+
+            console.log(`   ⏰ ${brand}/${workflowId}: ${status} for ${stuckMinutes}min (max: ${maxMinutes}min)`);
+            console.log(`      Retry count: ${retryCount}/${MAX_RETRY_ATTEMPTS}`);
+
+            if (retryCount >= MAX_RETRY_ATTEMPTS) {
+              // Permanently fail - exceeded max retries
+              await updateDoc(doc(db, collectionName, workflowId), {
+                status: 'failed',
+                error: `Timed out in ${status} after ${stuckMinutes} minutes. Max retries (${MAX_RETRY_ATTEMPTS}) exceeded.`,
+                failedAt: Date.now(),
+                updatedAt: Date.now()
+              });
+
+              console.log(`      ❌ PERMANENTLY FAILED (max retries exceeded)`);
+              failed++;
+            } else {
+              // Requeue for retry - reset to pending with incremented retry count
+              await updateDoc(doc(db, collectionName, workflowId), {
+                status: 'pending',
+                error: `Auto-requeued: Timed out in ${status} after ${stuckMinutes} minutes`,
+                retryCount: retryCount + 1,
+                lastRetryAt: Date.now(),
+                statusChangedAt: Date.now(),
+                updatedAt: Date.now()
+              });
+
+              console.log(`      🔄 REQUEUED for retry (attempt ${retryCount + 1}/${MAX_RETRY_ATTEMPTS})`);
+              requeued++;
+            }
+          }
+        }
+      } catch (err) {
+        console.error(`   ❌ Error checking ${brand}/${status}:`, err);
+      }
+    }
+  }
+
+  console.log(`\n📊 Timeout check complete:`);
+  console.log(`   Checked: ${checked} workflows`);
+  console.log(`   Requeued: ${requeued} for retry`);
+  console.log(`   Failed: ${failed} permanently`);
+
+  return { checked, failed, requeued };
 }

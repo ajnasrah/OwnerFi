@@ -2,11 +2,15 @@
  * CONSOLIDATED Video Generation Cron
  *
  * Generates article videos for brands with RSS feeds:
- * - carz, ownerfi, vassdistro, abdullah, personal
+ * - carz, ownerfi, abdullah, personal, gaza
  *
- * NOTE: podcast and benefit brands have been deprecated and removed.
+ * NOTE: podcast, benefit, vassdistro, property brands have been deprecated.
  *
- * Schedule: 0 9,12,15,18,21 * * * (5 times daily at 9am, 12pm, 3pm, 6pm, 9pm CST)
+ * Schedule: 0 8,12,19 * * * (3 times daily at 8am, 12pm, 7pm CST)
+ * Optimal times based on platform analytics:
+ * - 8 AM: LinkedIn/Twitter morning peak
+ * - 12 PM: Universal lunch peak (all platforms)
+ * - 7 PM: Evening prime time (Instagram/TikTok/YouTube)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -98,8 +102,8 @@ async function generateArticleVideos() {
   const { POST: startWorkflow } = await import('@/app/api/workflow/complete-viral/route');
 
   // Brands with RSS feed-based article generation
-  // NOTE: podcast, benefit, property, property-spanish have been deprecated
-  const articleBrands = ['carz', 'ownerfi', 'vassdistro', 'abdullah', 'personal'] as const;
+  // NOTE: podcast, benefit, vassdistro, property, property-spanish have been deprecated
+  const articleBrands = ['carz', 'ownerfi', 'abdullah', 'personal'] as const;
 
   const results = [];
 

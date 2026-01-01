@@ -27,7 +27,7 @@
     },
     {
       "path": "/api/cron/generate-videos",
-      "schedule": "0 9,12,15,18,21 * * *"
+      "schedule": "0 8,12,19 * * *"
     },
     {
       "path": "/api/cron/fetch-rss",
@@ -39,7 +39,7 @@
     },
     {
       "path": "/api/benefit/cron",
-      "schedule": "20 9,12,15,18,21 * * *"
+      "schedule": "20 8,12,19 * * *"
     },
     {
       "path": "/api/cron/check-google-drive",
@@ -59,7 +59,7 @@
     },
     {
       "path": "/api/cron/abdullah",
-      "schedule": "0 9,12,15,18,21 * * *"
+      "schedule": "0 8,12,19 * * *"
     },
     {
       "path": "/api/cron/generate-blog",

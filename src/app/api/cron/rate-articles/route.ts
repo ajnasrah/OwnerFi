@@ -34,7 +34,6 @@ export async function GET(request: NextRequest) {
       const results = {
         carz: await rateAndMergeBrand('carz'),
         ownerfi: await rateAndMergeBrand('ownerfi'),
-        vassdistro: await rateAndMergeBrand('vassdistro'),
         gaza: await rateAndMergeBrand('gaza')
       };
 
@@ -70,7 +69,7 @@ export async function GET(request: NextRequest) {
   return result;
 }
 
-async function rateAndMergeBrand(brand: 'carz' | 'ownerfi' | 'vassdistro' | 'gaza') {
+async function rateAndMergeBrand(brand: 'carz' | 'ownerfi' | 'gaza') {
   console.log(`🤖 [${brand}] Starting rating process...`);
 
   const collectionName = getCollectionName('ARTICLES', brand);

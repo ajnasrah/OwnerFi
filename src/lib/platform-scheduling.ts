@@ -56,12 +56,6 @@ export function getPlatformGroups(brand: Brand): PlatformGroup[] {
   // Brand-specific customizations
   const groups = [...baseGroups];
 
-  // VassDistro: B2B vape industry - shift evening earlier (business owners home at 5 PM)
-  if (brand === 'vassdistro') {
-    groups[2].hourCST = 17; // 5 PM instead of 7 PM
-    groups[2].description = 'B2B audience - business owners ending workday';
-  }
-
   // Abdullah: Include Twitter and Threads
   if (brand === 'abdullah') {
     groups[0].platforms = ['linkedin', 'twitter'];

@@ -7,22 +7,20 @@ import { getAdminDb } from '@/lib/firebase-admin';
  * Collects analytics from Firebase workflows and saves to workflow_analytics collection
  *
  * Body:
- * - brand: carz|ownerfi|podcast|vassdistro|abdullah (optional)
+ * - brand: carz|ownerfi|benefit|abdullah|personal|gaza (optional)
  * - days: number of days to sync (default: 7)
  */
 
 function getWorkflowCollection(brand: string) {
-  if (brand === 'podcast') return 'podcast_workflows';
-  if (brand === 'property' || brand === 'property-spanish') return 'propertyShowcaseWorkflows';
   if (brand === 'benefit') return 'benefit_workflow_queue';
-  return 'workflows';
+  return `${brand}_workflow_queue`;
 }
 
 function getContentType(brand: string, workflow: any) {
-  if (brand === 'podcast') return 'podcast';
   if (brand === 'abdullah') return 'abdullah';
+  if (brand === 'gaza') return 'gaza';
+  if (brand === 'personal') return 'personal';
   if (workflow.contentType === 'benefit') return 'benefit';
-  if (workflow.address) return 'property';
   return 'viral';
 }
 
@@ -43,7 +41,7 @@ export async function POST(request: NextRequest) {
       }, { status: 500 });
     }
 
-    const brands = brand ? [brand] : ['carz', 'ownerfi', 'podcast', 'vassdistro', 'abdullah'];
+    const brands = brand ? [brand] : ['carz', 'ownerfi', 'benefit', 'abdullah', 'personal', 'gaza'];
     let totalSynced = 0;
 
     for (const currentBrand of brands) {

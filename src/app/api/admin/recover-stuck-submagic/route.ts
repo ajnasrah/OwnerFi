@@ -27,14 +27,12 @@ export async function GET(request: NextRequest) {
     }
 
     const collections: Record<string, string> = {
-      benefit: 'benefit_workflow_queue',
-      property: 'propertyShowcaseWorkflows',
-      'property-spanish': 'propertyShowcaseWorkflows',
       carz: 'carz_workflow_queue',
       ownerfi: 'ownerfi_workflow_queue',
-      podcast: 'podcast_workflow_queue',
-      vassdistro: 'vassdistro_workflow_queue',
-      abdullah: 'abdullah_workflow_queue'
+      benefit: 'benefit_workflow_queue',
+      abdullah: 'abdullah_workflow_queue',
+      personal: 'personal_workflow_queue',
+      gaza: 'gaza_workflow_queue'
     };
 
     const brandsToCheck = brand === 'all' ? Object.keys(collections) : [brand];

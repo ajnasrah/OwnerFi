@@ -14,7 +14,7 @@ interface UnifiedPostOptions {
   caption: string;
   title: string;
   platforms: ('instagram' | 'tiktok' | 'youtube' | 'facebook' | 'linkedin' | 'threads' | 'twitter')[];
-  brand: 'carz' | 'ownerfi' | 'podcast' | 'property' | 'property-spanish' | 'vassdistro' | 'benefit' | 'abdullah' | 'personal' | 'gaza';
+  brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza';
   hashtags?: string[];
   useQueue?: boolean;
   timezone?: string;
@@ -207,13 +207,9 @@ export function getYouTubeCategoryForBrand(brand: string): string {
   const categoryMap: Record<string, string> = {
     'carz': 'Autos & Vehicles',
     'ownerfi': 'Howto & Style',
-    'property': 'Howto & Style',
-    'property-spanish': 'Howto & Style',
-    'podcast': 'Education',
     'benefit': 'Howto & Style',
     'abdullah': 'People & Blogs',
     'personal': 'People & Blogs',
-    'vassdistro': 'People & Blogs',
     'gaza': 'News & Politics',
   };
 

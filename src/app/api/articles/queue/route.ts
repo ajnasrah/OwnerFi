@@ -42,7 +42,7 @@ export async function GET(_request: NextRequest) {
     // Fetch unprocessed articles for all brands
     const carzArticles: Article[] = [];
     const ownerfiArticles: Article[] = [];
-    const vassdistroArticles: Article[] = [];
+    const gazaArticles: Article[] = [];
 
     // Get Carz articles (all, not just unprocessed)
     const carzQuery = query(
@@ -94,17 +94,17 @@ export async function GET(_request: NextRequest) {
       });
     });
 
-    // Get Vass Distro articles (all, not just unprocessed)
-    const vassdistroQuery = query(
-      collection(db, 'vassdistro_articles'),
+    // Get Gaza articles (all, not just unprocessed)
+    const gazaQuery = query(
+      collection(db, 'gaza_articles'),
       orderBy('pubDate', 'desc'),
       firestoreLimit(100)
     );
 
-    const vassdistroSnapshot = await getDocs(vassdistroQuery);
-    vassdistroSnapshot.docs.forEach(doc => {
+    const gazaSnapshot = await getDocs(gazaQuery);
+    gazaSnapshot.docs.forEach(doc => {
       const data = doc.data();
-      vassdistroArticles.push({
+      gazaArticles.push({
         id: doc.id,
         title: data.title || '',
         description: data.description || '',
@@ -139,7 +139,7 @@ export async function GET(_request: NextRequest) {
       articles: {
         carz: sortArticles(carzArticles),
         ownerfi: sortArticles(ownerfiArticles),
-        vassdistro: sortArticles(vassdistroArticles)
+        gaza: sortArticles(gazaArticles)
       },
       timestamp: new Date().toISOString()
     });

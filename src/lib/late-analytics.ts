@@ -53,7 +53,7 @@ interface VideoPerformanceMetrics {
   workflowId: string;
   latePostId?: string;
   brand: string;
-  contentType: 'viral' | 'benefit' | 'property' | 'podcast' | 'abdullah';
+  contentType: 'viral' | 'benefit' | 'abdullah' | 'personal' | 'gaza';
   variant?: '15sec' | '30sec';
 
   // Timing
@@ -144,7 +144,7 @@ export async function fetchLatePostAnalytics(postId: string): Promise<LatePostAn
  * Fetch all posts for a profile (with date range)
  */
 export async function fetchProfilePosts(
-  brand: 'carz' | 'ownerfi' | 'podcast' | 'vassdistro' | 'abdullah',
+  brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza',
   startDate?: Date,
   endDate?: Date
 ): Promise<LatePostAnalytics[]> {
@@ -157,9 +157,10 @@ export async function fetchProfilePosts(
   const profileIdMap: Record<string, string | undefined> = {
     'carz': process.env.LATE_CARZ_PROFILE_ID,
     'ownerfi': process.env.LATE_OWNERFI_PROFILE_ID,
-    'podcast': process.env.LATE_PODCAST_PROFILE_ID,
-    'vassdistro': process.env.LATE_VASSDISTRO_PROFILE_ID,
+    'benefit': process.env.LATE_BENEFIT_PROFILE_ID,
     'abdullah': process.env.LATE_ABDULLAH_PROFILE_ID,
+    'personal': process.env.LATE_PERSONAL_PROFILE_ID,
+    'gaza': process.env.LATE_GAZA_PROFILE_ID,
   };
 
   const profileId = profileIdMap[brand];
@@ -291,15 +292,15 @@ async function processPostAnalytics(
       : undefined;
 
     // Determine content type
-    let contentType: 'viral' | 'benefit' | 'property' | 'podcast' | 'abdullah' = 'viral';
+    let contentType: 'viral' | 'benefit' | 'abdullah' | 'personal' | 'gaza' = 'viral';
     if (brand === 'benefit' || workflowData.audience) {
       contentType = 'benefit';
-    } else if (brand === 'property' || workflowData.propertyId) {
-      contentType = 'property';
-    } else if (brand === 'podcast') {
-      contentType = 'podcast';
     } else if (brand === 'abdullah') {
       contentType = 'abdullah';
+    } else if (brand === 'personal') {
+      contentType = 'personal';
+    } else if (brand === 'gaza') {
+      contentType = 'gaza';
     }
 
     // Build metrics object (filter out undefined values)
@@ -432,15 +433,15 @@ export async function syncLateAnalyticsToFirestore(
       : undefined;
 
     // Determine content type
-    let contentType: 'viral' | 'benefit' | 'property' | 'podcast' | 'abdullah' = 'viral';
+    let contentType: 'viral' | 'benefit' | 'abdullah' | 'personal' | 'gaza' = 'viral';
     if (brand === 'benefit' || workflowData.audience) {
       contentType = 'benefit';
-    } else if (brand === 'property' || workflowData.propertyId) {
-      contentType = 'property';
-    } else if (brand === 'podcast') {
-      contentType = 'podcast';
     } else if (brand === 'abdullah') {
       contentType = 'abdullah';
+    } else if (brand === 'personal') {
+      contentType = 'personal';
+    } else if (brand === 'gaza') {
+      contentType = 'gaza';
     }
 
     // Build metrics object
@@ -496,21 +497,19 @@ function getWorkflowCollection(brand: string): string {
   const collectionMap: Record<string, string> = {
     'carz': 'carz_workflow_queue',
     'ownerfi': 'ownerfi_workflow_queue',
-    'podcast': 'podcast_workflow_queue',
     'benefit': 'benefit_workflow_queue',
-    'property': 'propertyShowcaseWorkflows',
-    'property-spanish': 'propertyShowcaseWorkflows',
-    'vassdistro': 'vassdistro_workflow_queue',
     'abdullah': 'abdullah_workflow_queue',
+    'personal': 'personal_workflow_queue',
+    'gaza': 'gaza_workflow_queue',
   };
-  return collectionMap[brand] || 'workflow_queue';
+  return collectionMap[brand] || `${brand}_workflow_queue`;
 }
 
 /**
  * Sync all recent posts for a brand (last 7 days)
  */
 export async function syncBrandAnalytics(
-  brand: 'carz' | 'ownerfi' | 'podcast' | 'vassdistro' | 'abdullah',
+  brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza',
   days: number = 7
 ): Promise<void> {
   console.log(`📊 Syncing ${brand} analytics for last ${days} days...`);
@@ -561,12 +560,13 @@ export async function syncBrandAnalytics(
  * Sync analytics for all brands
  */
 export async function syncAllBrandAnalytics(days: number = 7): Promise<void> {
-  const brands: Array<'carz' | 'ownerfi' | 'podcast' | 'vassdistro' | 'abdullah'> = [
+  const brands: Array<'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza'> = [
     'carz',
     'ownerfi',
-    'podcast',
-    'vassdistro',
-    'abdullah'
+    'benefit',
+    'abdullah',
+    'personal',
+    'gaza'
   ];
 
   for (const brand of brands) {

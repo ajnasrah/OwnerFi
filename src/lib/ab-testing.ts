@@ -69,7 +69,7 @@ export interface ABTest {
   name: string;
   description: string;
   type: TestVariationType;
-  brand: 'carz' | 'ownerfi' | 'podcast';
+  brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza';
 
   // Test configuration
   variants: ABTestVariant[];
@@ -94,7 +94,7 @@ export interface ABTestResult {
   testId: string;
   variantId: string;
   workflowId: string;
-  brand: 'carz' | 'ownerfi' | 'podcast';
+  brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza';
 
   // What was posted
   videoUrl: string;
@@ -146,7 +146,7 @@ export async function createABTest(test: Omit<ABTest, 'id' | 'createdAt' | 'upda
  * Returns null if no active test
  */
 export async function getActiveTest(
-  brand: 'carz' | 'ownerfi' | 'podcast',
+  brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza',
   type: TestVariationType
 ): Promise<ABTest | null> {
   if (!db) throw new Error('Firebase not initialized');
@@ -382,7 +382,7 @@ export async function completeTest(testId: string): Promise<void> {
 /**
  * Get all A/B tests for a brand
  */
-export async function getTestsForBrand(brand: 'carz' | 'ownerfi' | 'podcast'): Promise<ABTest[]> {
+export async function getTestsForBrand(brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza'): Promise<ABTest[]> {
   if (!db) throw new Error('Firebase not initialized');
 
   const q = query(
@@ -398,7 +398,7 @@ export async function getTestsForBrand(brand: 'carz' | 'ownerfi' | 'podcast'): P
 /**
  * Example: Create a hook testing experiment
  */
-export async function createHookTest(brand: 'carz' | 'ownerfi' | 'podcast'): Promise<string> {
+export async function createHookTest(brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza'): Promise<string> {
   return createABTest({
     name: 'Hook Style Test - Question vs Statement',
     description: 'Test whether question-based hooks or statement-based hooks perform better',
@@ -429,7 +429,7 @@ export async function createHookTest(brand: 'carz' | 'ownerfi' | 'podcast'): Pro
 /**
  * Example: Create a caption style test
  */
-export async function createCaptionTest(brand: 'carz' | 'ownerfi' | 'podcast'): Promise<string> {
+export async function createCaptionTest(brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza'): Promise<string> {
   return createABTest({
     name: 'Caption Style Test - Short vs Detailed',
     description: 'Test whether short punchy captions or detailed informative captions drive more engagement',
@@ -458,7 +458,7 @@ export async function createCaptionTest(brand: 'carz' | 'ownerfi' | 'podcast'): 
 /**
  * Example: Create a posting time test
  */
-export async function createPostingTimeTest(brand: 'carz' | 'ownerfi' | 'podcast'): Promise<string> {
+export async function createPostingTimeTest(brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza'): Promise<string> {
   return createABTest({
     name: 'Posting Time Test - Morning vs Evening',
     description: 'Test optimal posting time for maximum engagement',

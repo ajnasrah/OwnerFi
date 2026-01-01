@@ -33,7 +33,7 @@ export function validateBrand(brand: unknown): Brand {
 
   if (!isBrand(normalizedBrand)) {
     throw new Error(
-      `Invalid brand: "${brand}". Must be one of: carz, ownerfi, podcast, benefit, property, property-spanish, vassdistro, abdullah, personal, gaza`
+      `Invalid brand: "${brand}". Must be one of: carz, ownerfi, benefit, abdullah, personal, gaza`
     );
   }
 
@@ -55,16 +55,11 @@ export function parseBrand(value: unknown): Brand | null {
 
 /**
  * Extract brand from workflow ID
- * Workflow IDs follow format: wf_<brand>_<timestamp>_<random> or podcast_<timestamp>_<random>
+ * Workflow IDs follow format: wf_<brand>_<timestamp>_<random>
  * @param workflowId - Workflow identifier
  * @returns Brand if identifiable, null otherwise
  */
 export function extractBrandFromWorkflowId(workflowId: string): Brand | null {
-  // Check for podcast workflow
-  if (workflowId.startsWith('podcast_')) {
-    return 'podcast';
-  }
-
   // Check for social media workflows with brand prefix
   if (workflowId.startsWith('wf_')) {
     const parts = workflowId.split('_');
@@ -88,11 +83,6 @@ export function extractBrandFromWorkflowId(workflowId: string): Brand | null {
 export function generateWorkflowId(brand: Brand, prefix: string = 'wf'): string {
   const timestamp = Date.now();
   const random = Math.random().toString(36).substring(2, 10);
-
-  if (brand === 'podcast') {
-    return `podcast_${timestamp}_${random}`;
-  }
-
   return `${prefix}_${brand}_${timestamp}_${random}`;
 }
 
@@ -304,7 +294,7 @@ export function validateBrands(brands: unknown[]): Brand[] {
  * @returns Array of valid brand IDs
  */
 export function getAllBrandIds(): Brand[] {
-  return ['carz', 'ownerfi', 'podcast', 'benefit', 'property', 'property-spanish', 'vassdistro', 'abdullah', 'personal', 'gaza'];
+  return ['carz', 'ownerfi', 'benefit', 'abdullah', 'personal', 'gaza'];
 }
 
 /**
@@ -335,15 +325,10 @@ export function sanitizeBrandInput(input: string): Brand | null {
     'carzinc': 'carz',
     'ownerfi': 'ownerfi',
     'owner': 'ownerfi',
-    'podcast': 'podcast',
-    'podcasts': 'podcast',
     'benefit': 'benefit',
     'benefits': 'benefit',
-    'property': 'property',
-    'properties': 'property',
-    'vassdistro': 'vassdistro',
-    'vass': 'vassdistro',
     'abdullah': 'abdullah',
+    'personal': 'personal',
     'gaza': 'gaza',
     'palestine': 'gaza',
     'freepalestine': 'gaza',

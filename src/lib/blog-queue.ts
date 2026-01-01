@@ -69,19 +69,6 @@ export const BLOG_TOPIC_TEMPLATES = {
     "5 Books That Actually Changed How I Think About Money",
     "The Difference Between Being Busy and Being Productive",
   ],
-  vassdistro: [
-    // Vape Industry Education (B2B tips)
-    "5 Inventory Management Mistakes New Vape Stores Make",
-    "How to Price Products to Stay Competitive in Your Market",
-    "Understanding Wholesale Margins in the Vape Industry",
-    "5 Ways to Reduce Shrinkage and Theft in Your Vape Store",
-    "How to Read Industry Trends Before Your Competitors",
-    "What New Regulations Mean for Vape Store Owners",
-    "5 Customer Service Tips That Increase Repeat Business",
-    "How to Manage Supplier Relationships for Better Pricing",
-    "Why Some Vape Products Sell Better Than Others",
-    "5 Financial Metrics Every Vape Store Owner Should Track",
-  ],
 } as const;
 
 /**
@@ -191,12 +178,6 @@ export async function populateBlogQueue(
         pillar = 'entrepreneurship';
       } else if (topicLower.includes('automation') || topicLower.includes('tools')) {
         pillar = 'systems-automation';
-      }
-    } else if (brand === 'vassdistro') {
-      if (topicLower.includes('regulation') || topicLower.includes('trend')) {
-        pillar = 'industry-news';
-      } else if (topicLower.includes('tip') || topicLower.includes('manage') || topicLower.includes('customer')) {
-        pillar = 'b2b-tips';
       }
     }
 

@@ -56,14 +56,14 @@ export async function GET(request: NextRequest) {
     const brandCounts = {
       carz: feedsToFetch.filter(f => f.category === 'carz').length,
       ownerfi: feedsToFetch.filter(f => f.category === 'ownerfi').length,
-      vassdistro: feedsToFetch.filter(f => f.category === 'vassdistro').length
+      gaza: feedsToFetch.filter(f => f.category === 'gaza').length
     };
 
     console.log('✅ RSS fetch complete');
     console.log(`   Processed: ${result.totalProcessed} feeds`);
     console.log(`   New articles: ${result.totalNewArticles}`);
     console.log(`   Errors: ${result.errors.length}`);
-    console.log(`   By brand: Carz (${brandCounts.carz}), OwnerFi (${brandCounts.ownerfi}), VassDistro (${brandCounts.vassdistro})`);
+    console.log(`   By brand: Carz (${brandCounts.carz}), OwnerFi (${brandCounts.ownerfi}), Gaza (${brandCounts.gaza})`);
 
     if (result.errors.length > 0) {
       console.error('❌ Errors:', result.errors);

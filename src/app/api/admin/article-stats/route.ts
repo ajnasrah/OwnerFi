@@ -13,7 +13,10 @@ export async function GET(_request: NextRequest) {
     const brands = [
       { name: 'ownerfi', collection: 'ownerfi_articles' },
       { name: 'carz', collection: 'carz_articles' },
-      { name: 'vassdistro', collection: 'vassdistro_articles' }
+      { name: 'benefit', collection: 'benefit_articles' },
+      { name: 'abdullah', collection: 'abdullah_articles' },
+      { name: 'personal', collection: 'personal_articles' },
+      { name: 'gaza', collection: 'gaza_articles' }
     ];
 
     const stats: any = {};

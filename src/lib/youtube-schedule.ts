@@ -5,7 +5,7 @@
  * When uploading, the system picks the next available slot.
  */
 
-export type YouTubeBrand = 'carz' | 'ownerfi' | 'podcast' | 'property' | 'property-spanish' | 'vassdistro' | 'benefit' | 'abdullah' | 'personal' | 'gaza';
+export type YouTubeBrand = 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza';
 
 // Time slots in 24-hour format (CST)
 // Format: [hour, minute]
@@ -35,39 +35,6 @@ const BRAND_SCHEDULES: Record<YouTubeBrand, BrandSchedule> = {
     ],
   },
 
-  // Property videos use same schedule as ownerfi
-  property: {
-    timezone: 'America/Chicago',
-    slots: [
-      [6, 0],
-      [8, 0],
-      [10, 0],
-      [12, 0],
-      [14, 0],
-      [16, 0],
-      [18, 0],
-      [19, 30],
-      [21, 0],
-      [22, 30],
-    ],
-  },
-
-  'property-spanish': {
-    timezone: 'America/Chicago',
-    slots: [
-      [6, 0],
-      [8, 0],
-      [10, 0],
-      [12, 0],
-      [14, 0],
-      [16, 0],
-      [18, 0],
-      [19, 30],
-      [21, 0],
-      [22, 30],
-    ],
-  },
-
   // Benefit videos use same schedule as ownerfi
   benefit: {
     timezone: 'America/Chicago',
@@ -85,42 +52,25 @@ const BRAND_SCHEDULES: Record<YouTubeBrand, BrandSchedule> = {
     ],
   },
 
-  // Abdullah — 10 Posts Per Day (Personal + Podcast)
+  // Abdullah — 10 Posts Per Day (Personal brand)
   abdullah: {
     timezone: 'America/Chicago',
     slots: [
       [5, 30],  // 5:30 AM - Wake up motivation
       [7, 0],   // 7:00 AM - Morning mindset
       [9, 0],   // 9:00 AM - Business tip
-      [11, 0],  // 11:00 AM - Podcast clip
+      [11, 0],  // 11:00 AM - Content clip
       [13, 0],  // 1:00 PM - Lunch story
       [15, 0],  // 3:00 PM - Afternoon energy
       [17, 0],  // 5:00 PM - Money talk
       [19, 0],  // 7:00 PM - Evening reflection
-      [21, 0],  // 9:00 PM - Podcast clip
+      [21, 0],  // 9:00 PM - Content clip
       [23, 0],  // 11:00 PM - Night owl motivation
     ],
   },
 
   // Personal brand uses same schedule as abdullah
   personal: {
-    timezone: 'America/Chicago',
-    slots: [
-      [5, 30],
-      [7, 0],
-      [9, 0],
-      [11, 0],
-      [13, 0],
-      [15, 0],
-      [17, 0],
-      [19, 0],
-      [21, 0],
-      [23, 0],
-    ],
-  },
-
-  // Podcast uses same schedule as abdullah
-  podcast: {
     timezone: 'America/Chicago',
     slots: [
       [5, 30],
@@ -145,18 +95,6 @@ const BRAND_SCHEDULES: Record<YouTubeBrand, BrandSchedule> = {
       [16, 0],  // 4:00 PM - Afternoon tip
       [19, 0],  // 7:00 PM - Evening industry news
       [21, 30], // 9:30 PM - Late night trick
-    ],
-  },
-
-  // Vass Distro — 5 Posts Per Day
-  vassdistro: {
-    timezone: 'America/Chicago',
-    slots: [
-      [8, 0],   // 8:00 AM - Morning compliance alert
-      [11, 0],  // 11:00 AM - Industry news
-      [14, 0],  // 2:00 PM - Regulation update
-      [17, 0],  // 5:00 PM - End of day supply chain
-      [20, 0],  // 8:00 PM - Evening recap
     ],
   },
 

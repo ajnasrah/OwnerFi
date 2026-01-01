@@ -24,10 +24,7 @@ export async function POST(request: NextRequest) {
 
     // Get workflow data based on brand type
     let workflow;
-    if (validatedBrand === 'podcast') {
-      const { getPodcastWorkflowById } = await import('@/lib/feed-store-firestore');
-      workflow = await getPodcastWorkflowById(workflowId);
-    } else if (validatedBrand === 'benefit') {
+    if (validatedBrand === 'benefit') {
       const { getBenefitWorkflowById } = await import('@/lib/feed-store-firestore');
       workflow = await getBenefitWorkflowById(workflowId);
     } else {
@@ -139,15 +136,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Update workflow based on brand type
-    if (validatedBrand === 'podcast') {
-      const { updatePodcastWorkflow } = await import('@/lib/feed-store-firestore');
-      await updatePodcastWorkflow(workflowId, {
-        status: 'submagic_processing',
-        submagicVideoId: projectId,
-        submagicProjectId: projectId,
-        error: null // Clear previous error
-      });
-    } else if (validatedBrand === 'benefit') {
+    if (validatedBrand === 'benefit') {
       const { updateBenefitWorkflow } = await import('@/lib/feed-store-firestore');
       await updateBenefitWorkflow(workflowId, {
         status: 'submagic_processing',

@@ -7,8 +7,7 @@
  * 3. check-stuck-submagic (submagic_processing status)
  * 4. check-stuck-posting (posting + video_processing status)
  *
- * Checks ALL 8 brands: carz, ownerfi, vassdistro, benefit, abdullah, personal, property, property-spanish
- * Plus: podcast_workflow_queue, propertyShowcaseWorkflows
+ * Checks ALL 6 brands: carz, ownerfi, benefit, abdullah, personal, gaza
  *
  * Schedule: every 30 minutes during active hours (14-23, 0-4 CST)
  * Previously: 4 crons × 34 runs/day = 136 invocations/day
@@ -24,7 +23,7 @@ export const maxDuration = 300; // 5 minutes (max needed for SubMagic + posting 
 
 // Performance: Brand-level timeout to prevent one slow brand from blocking others
 const BRAND_PROCESSING_TIMEOUT_MS = 45_000; // 45 seconds per brand (conservative)
-const PARALLEL_QUERY_BATCH_SIZE = 9; // Process all 9 brands in parallel
+const PARALLEL_QUERY_BATCH_SIZE = 6; // Process all 6 brands in parallel
 
 // ============================================================================
 // WORKFLOW TIMEOUT CONFIGURATION
@@ -66,13 +65,6 @@ export async function GET(request: NextRequest) {
         posting: { checked: 0, retried: 0, failed: 0 }
       };
 
-      // 0. Check script_generation workflows (podcast only, ~5-10s)
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log('0️⃣  CHECKING SCRIPT GENERATION (PODCAST)');
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
-      const scriptResults = await checkScriptGenerationWorkflows();
-      results.scriptGeneration = scriptResults;
-
       // 1. Check pending workflows (fastest ~10-30s)
       console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       console.log('1️⃣  CHECKING PENDING WORKFLOWS');
@@ -112,7 +104,6 @@ export async function GET(request: NextRequest) {
       console.log('✅ [STUCK-WORKFLOWS] Complete');
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       console.log(`📊 Summary:`);
-      console.log(`   Script Generation: ${results.scriptGeneration.deleted}/${results.scriptGeneration.checked} deleted`);
       console.log(`   Pending: ${results.pending.started}/${results.pending.checked} started`);
       console.log(`   HeyGen: ${results.heygen.advanced}/${results.heygen.checked} advanced`);
       console.log(`   SubMagic: ${results.submagic.completed}/${results.submagic.checked} completed`);
@@ -173,71 +164,6 @@ async function withBrandTimeout<T>(
 }
 
 // ============================================================================
-// 0. CHECK SCRIPT GENERATION WORKFLOWS (PODCAST ONLY)
-// ============================================================================
-
-/**
- * Checks for podcast workflows stuck in script_generation status
- * These workflows have a generated script but failed when calling HeyGen API
- * Solution: Delete them - system will regenerate new episodes automatically
- */
-async function checkScriptGenerationWorkflows() {
-  const { db } = await import('@/lib/firebase');
-  const { collection, getDocs, query, where, limit: firestoreLimit, deleteDoc, doc } = await import('firebase/firestore');
-
-  if (!db) {
-    console.error('❌ Firebase not initialized');
-    return { checked: 0, deleted: 0, failed: 0 };
-  }
-
-  let checked = 0;
-  let deleted = 0;
-  let failed = 0;
-
-  try {
-    console.log(`📂 Checking podcast_workflow_queue...`);
-
-    const q = query(
-      collection(db, 'podcast_workflow_queue'),
-      where('status', '==', 'script_generation'),
-      firestoreLimit(10)
-    );
-
-    const snapshot = await getDocs(q);
-    console.log(`   Found ${snapshot.size} in script_generation`);
-    checked = snapshot.size;
-
-    for (const workflowDoc of snapshot.docs) {
-      const data = workflowDoc.data();
-      const workflowId = workflowDoc.id;
-      const ageMinutes = Math.round((Date.now() - (data.createdAt || 0)) / 60000);
-
-      // Only delete if stuck > 30 minutes (HeyGen call should complete quickly)
-      if (ageMinutes > 30) {
-        console.log(`   📄 ${workflowId}: Episode #${data.episodeNumber} - stuck ${ageMinutes}min`);
-        console.log(`      Guest: ${data.guestName || 'Unknown'}`);
-        console.log(`      Deleting (will be regenerated)...`);
-
-        try {
-          await deleteDoc(doc(db, 'podcast_workflow_queue', workflowId));
-          console.log(`      ✅ Deleted`);
-          deleted++;
-        } catch (error) {
-          console.error(`      ❌ Error deleting:`, error);
-          failed++;
-        }
-      } else {
-        console.log(`   ⏭️  ${workflowId}: Only ${ageMinutes}min old - skipping`);
-      }
-    }
-  } catch (err) {
-    console.error(`   ❌ Error querying podcast:`, err);
-  }
-
-  return { checked, deleted, failed };
-}
-
-// ============================================================================
 // 1. CHECK PENDING WORKFLOWS
 // ============================================================================
 
@@ -251,8 +177,8 @@ async function checkPendingWorkflows() {
     return { checked: 0, started: 0, failed: 0 };
   }
 
-  // Check all 8 brands + podcast
-  const brands = [...getAllBrandIds(), 'podcast'];
+  // Check all 6 brands
+  const brands = [...getAllBrandIds()];
 
   // PARALLEL: Query all brands simultaneously (2-3x faster!)
   const brandResults = await Promise.all(
@@ -376,8 +302,8 @@ async function checkHeyGenWorkflows() {
   let advanced = 0;
   let failed = 0;
 
-  // Check all brands + podcast
-  const brands = [...getAllBrandIds(), 'podcast'];
+  // Check all 6 brands
+  const brands = [...getAllBrandIds()];
 
   for (const brand of brands) {
     try {
@@ -439,9 +365,9 @@ async function checkHeyGenWorkflows() {
               .replace(/&nbsp;/g, " ")
               .substring(0, 50);
 
-            // Brand-specific B-roll settings
-            const shouldUseBrolls = brand !== 'property' && brand !== 'podcast';
-            const brollPercentage = shouldUseBrolls ? 75 : 0;
+            // B-roll settings (enabled for all brands)
+            const shouldUseBrolls = true;
+            const brollPercentage = 75;
 
             const submagicResponse = await fetch('https://api.submagic.co/v1/projects', {
               method: 'POST',
@@ -543,8 +469,8 @@ async function checkHeyGenWorkflows() {
             .replace(/&nbsp;/g, " ")
             .substring(0, 50);
 
-          const shouldUseBrolls = brand !== 'property' && brand !== 'podcast';
-          const brollPercentage = shouldUseBrolls ? 75 : 0;
+          const shouldUseBrolls = true;
+          const brollPercentage = 75;
 
           const submagicResponse = await fetch('https://api.submagic.co/v1/projects', {
             method: 'POST',
@@ -589,125 +515,6 @@ async function checkHeyGenWorkflows() {
     }
   }
 
-  // Also check propertyShowcaseWorkflows (new unified collection)
-  try {
-    console.log(`\n📂 Checking propertyShowcaseWorkflows...`);
-    const q = query(
-      collection(db, 'propertyShowcaseWorkflows'),
-      where('status', '==', 'heygen_processing'),
-      firestoreLimit(10)
-    );
-    const snapshot = await getDocs(q);
-    console.log(`   Found ${snapshot.size} property video HeyGen processing`);
-    checked += snapshot.size;
-
-    for (const workflowDoc of snapshot.docs) {
-      const data = workflowDoc.data();
-      const workflowId = workflowDoc.id;
-      const videoId = data.heygenVideoId;
-
-      if (!videoId) continue;
-
-      try {
-        const heygenResponse = await fetch(
-          `https://api.heygen.com/v1/video_status.get?video_id=${videoId}`,
-          { headers: { 'x-api-key': HEYGEN_API_KEY } }
-        );
-
-        if (!heygenResponse.ok) continue;
-
-        const heygenData = await heygenResponse.json();
-        const status = heygenData.data?.status;
-        const videoUrl = heygenData.data?.video_url;
-
-        console.log(`   📹 ${workflowId}: ${status}`);
-
-        if (status === 'completed' && videoUrl) {
-          // Upload to R2
-          const publicHeygenUrl = await downloadAndUploadToR2(
-            videoUrl,
-            HEYGEN_API_KEY,
-            `heygen-videos/${workflowId}.mp4`
-          );
-
-          // Send to SubMagic
-          const webhookUrl = `${baseUrl}/api/webhooks/submagic/property`;
-
-          const title = (data.propertyAddress || data.title || `Property ${workflowId}`)
-            .replace(/&#8217;/g, "'")
-            .replace(/&#8216;/g, "'")
-            .replace(/&#8211;/g, "-")
-            .replace(/&#8212;/g, "-")
-            .replace(/&amp;/g, "&")
-            .replace(/&quot;/g, '"')
-            .replace(/&lt;/g, "<")
-            .replace(/&gt;/g, ">")
-            .replace(/&nbsp;/g, " ")
-            .substring(0, 50);
-
-          // Property videos: NO brolls (they're real estate videos)
-          const submagicResponse = await fetch('https://api.submagic.co/v1/projects', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'x-api-key': SUBMAGIC_API_KEY
-            },
-            body: JSON.stringify({
-              title,
-              language: 'en',
-              videoUrl: publicHeygenUrl,
-              templateName: 'Hormozi 2',
-              magicBrolls: false,
-              magicBrollsPercentage: 0,
-              magicZooms: true,
-              webhookUrl
-            })
-          });
-
-          if (submagicResponse.ok) {
-            const submagicData = await submagicResponse.json();
-            const projectId = submagicData.id || submagicData.project_id || submagicData.projectId;
-
-            await updateDoc(doc(db, 'propertyShowcaseWorkflows', workflowId), {
-              status: 'submagic_processing',
-              submagicVideoId: projectId,
-              heygenVideoUrl: publicHeygenUrl,
-              updatedAt: Date.now()
-            });
-
-            console.log(`   ✅ ${workflowId}: Advanced to SubMagic (ID: ${projectId})`);
-            advanced++;
-          } else {
-            // CRITICAL FIX: Log SubMagic API failures for property videos
-            const errorText = await submagicResponse.text().catch(() => 'Unable to read error');
-            console.error(`   ❌ ${workflowId}: SubMagic API failed (${submagicResponse.status}): ${errorText}`);
-
-            await updateDoc(doc(db, 'propertyShowcaseWorkflows', workflowId), {
-              status: 'failed',
-              error: `SubMagic API error: ${submagicResponse.status} - ${errorText}`,
-              heygenVideoUrl: publicHeygenUrl,
-              updatedAt: Date.now()
-            });
-            failed++;
-          }
-        } else if (status === 'failed') {
-          await updateDoc(doc(db, 'propertyShowcaseWorkflows', workflowId), {
-            status: 'failed',
-            error: 'HeyGen failed',
-            updatedAt: Date.now()
-          });
-          console.log(`   ❌ ${workflowId}: Failed`);
-          failed++;
-        }
-      } catch (error) {
-        console.error(`   ❌ ${workflowId}:`, error);
-        failed++;
-      }
-    }
-  } catch (err) {
-    console.error(`   ❌ Error querying propertyShowcaseWorkflows:`, err);
-  }
-
   return { checked, advanced, failed };
 }
 
@@ -737,8 +544,8 @@ async function checkSubMagicWorkflows() {
   let completed = 0;
   let failed = 0;
 
-  // Check all brands + podcast
-  const brands = [...getAllBrandIds(), 'podcast'];
+  // Check all 6 brands
+  const brands = [...getAllBrandIds()];
 
   for (const brand of brands) {
     try {
@@ -858,120 +665,6 @@ async function checkSubMagicWorkflows() {
     }
   }
 
-  // CRITICAL FIX: Also check propertyShowcaseWorkflows collection
-  try {
-    console.log(`\n📂 Checking propertyShowcaseWorkflows...`);
-    const q = query(
-      collection(db, 'propertyShowcaseWorkflows'),
-      where('status', '==', 'submagic_processing'),
-      firestoreLimit(15)
-    );
-
-    const snapshot = await getDocs(q);
-    console.log(`   Found ${snapshot.size} property video SubMagic processing`);
-    checked += snapshot.size;
-
-    for (const workflowDoc of snapshot.docs) {
-      const data = workflowDoc.data();
-      const workflowId = workflowDoc.id;
-      const projectId = data.submagicVideoId;
-
-      if (!projectId) continue;
-
-      try {
-        const submagicResponse = await fetch(
-          `https://api.submagic.co/v1/projects/${projectId}`,
-          { headers: { 'x-api-key': SUBMAGIC_API_KEY } }
-        );
-
-        if (!submagicResponse.ok) continue;
-
-        const submagicData = await submagicResponse.json();
-        const status = submagicData.status;
-        const downloadUrl = submagicData.media_url || submagicData.video_url || submagicData.downloadUrl || submagicData.download_url;
-
-        console.log(`   🎬 ${workflowId}: ${status}`);
-
-        if (status === 'completed' || status === 'done' || status === 'ready') {
-          // Check if download URL exists, if not trigger export
-          const finalDownloadUrl = downloadUrl;
-
-          if (!finalDownloadUrl) {
-            console.log(`   ⚠️  Complete but no download URL - triggering export...`);
-
-            try {
-              const exportResponse = await fetch(`https://api.submagic.co/v1/projects/${projectId}/export`, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'x-api-key': SUBMAGIC_API_KEY
-                }
-              });
-
-              if (exportResponse.ok) {
-                console.log(`   ✅ Export triggered - video will be ready soon`);
-                continue;
-              } else {
-                const exportError = await exportResponse.text();
-                console.error(`   ❌ Export trigger failed:`, exportError);
-                continue;
-              }
-            } catch (exportError) {
-              console.error(`   ❌ Error triggering export:`, exportError);
-              continue;
-            }
-          }
-
-          // Upload to R2
-          const publicVideoUrl = await uploadSubmagicVideo(finalDownloadUrl);
-
-          // Update to posting
-          await updateDoc(doc(db, 'propertyShowcaseWorkflows', workflowId), {
-            status: 'posting',
-            finalVideoUrl: publicVideoUrl,
-            retryCount: (data.retryCount || 0) + 1,
-            updatedAt: Date.now()
-          });
-
-          // Post to Late
-          const postResult = await postToLate({
-            videoUrl: publicVideoUrl,
-            caption: data.caption || 'New owner finance property for sale! 🏡',
-            title: data.title || 'Property For Sale',
-            platforms: data.platforms || ['instagram', 'tiktok', 'youtube'],
-            useQueue: true,
-            brand: 'property' as any
-          });
-
-          if (postResult.success) {
-            await updateDoc(doc(db, 'propertyShowcaseWorkflows', workflowId), {
-              status: 'completed',
-              latePostId: postResult.postId,
-              completedAt: Date.now(),
-              updatedAt: Date.now()
-            });
-
-            console.log(`   ✅ ${workflowId}: Completed`);
-            completed++;
-          }
-        } else if (status === 'failed' || status === 'error') {
-          await updateDoc(doc(db, 'propertyShowcaseWorkflows', workflowId), {
-            status: 'failed',
-            error: 'SubMagic failed',
-            updatedAt: Date.now()
-          });
-          console.log(`   ❌ ${workflowId}: Failed`);
-          failed++;
-        }
-      } catch (error) {
-        console.error(`   ❌ ${workflowId}:`, error);
-        failed++;
-      }
-    }
-  } catch (err) {
-    console.error(`   ❌ Error querying propertyShowcaseWorkflows:`, err);
-  }
-
   return { checked, completed, failed };
 }
 
@@ -994,8 +687,8 @@ async function checkPostingWorkflows() {
   let retried = 0;
   let failed = 0;
 
-  // Check all brands + podcast
-  const brands = [...getAllBrandIds(), 'podcast'];
+  // Check all 6 brands
+  const brands = [...getAllBrandIds()];
 
   for (const brand of brands) {
     try {

@@ -1,6 +1,6 @@
 // RSS Feed Source Configuration - VERIFIED WORKING FEEDS 2025
 // All feeds tested and verified with excellent content quality
-// Total: 38 enabled feeds (VassDistro: 9, OwnerFi: 19, Carz: 10)
+// Total: 38 enabled feeds (OwnerFi: 19, Carz: 10, Gaza: 6)
 
 import { addFeedSource as addFeedSourceFirestore, type FeedSource, getAllFeedSources } from '@/lib/feed-store-firestore';
 
@@ -368,156 +368,6 @@ export const CARZ_FEEDS: Omit<FeedSource, 'articlesProcessed'>[] = [
 ];
 
 /**
- * VASS DISTRO FEEDS (16 working feeds - 1000-10000 chars avg)
- */
-export const VASSDISTRO_FEEDS: Omit<FeedSource, 'articlesProcessed'>[] = [
-  {
-    id: 'vassdistro-tobacco-reporter',
-    name: 'Tobacco Reporter - Vapor News',
-    url: 'https://tobaccoreporter.com/feed/',
-    category: 'vassdistro',
-    subcategory: 'market',
-    enabled: true,
-    fetchInterval: 120
-  },
-  {
-    id: 'vassdistro-tobacco-journal',
-    name: 'Tobacco Journal International',
-    url: 'https://www.tobaccojournal.com/feed/',
-    category: 'vassdistro',
-    subcategory: 'trade',
-    enabled: true,
-    fetchInterval: 120
-  },
-  {
-    id: 'vassdistro-ukvia-news',
-    name: 'UKVIA - Industry Association',
-    url: 'https://ukvia.co.uk/feed/',
-    category: 'vassdistro',
-    subcategory: 'regulations',
-    enabled: true,
-    fetchInterval: 120
-  },
-  {
-    id: 'vassdistro-vapouround',
-    name: 'Vapouround Magazine - Industry Updates',
-    url: 'https://vapouround.co.uk/feed/',
-    category: 'vassdistro',
-    subcategory: 'trade',
-    enabled: true,
-    fetchInterval: 60
-  },
-  {
-    id: 'vassdistro-ecigclick',
-    name: 'Ecigclick - Product News',
-    url: 'https://ecigclick.co.uk/feed/',
-    category: 'vassdistro',
-    subcategory: 'products',
-    enabled: true,
-    fetchInterval: 120
-  },
-  {
-    id: 'vassdistro-vape-beat',
-    name: 'Vape Beat - Industry Trends',
-    url: 'https://vapebeat.com/feed/',
-    category: 'vassdistro',
-    subcategory: 'products',
-    enabled: true,
-    fetchInterval: 120
-  },
-  {
-    id: 'vassdistro-vaping360',
-    name: 'Vaping360 - Global Vape News',
-    url: 'https://vaping360.com/feed/',
-    category: 'vassdistro',
-    subcategory: 'market',
-    enabled: false,
-    fetchInterval: 60
-  },
-  {
-    id: 'vassdistro-vapingpost',
-    name: 'Vaping Post - Breaking News',
-    url: 'https://www.vapingpost.com/feed/',
-    category: 'vassdistro',
-    subcategory: 'market',
-    enabled: true,
-    fetchInterval: 60
-  },
-  {
-    id: 'vassdistro-ashtray-blog',
-    name: 'Ashtray Blog - ECigaretteDirect',
-    url: 'https://www.ecigarettedirect.co.uk/ashtray-blog/feed',
-    category: 'vassdistro',
-    subcategory: 'products',
-    enabled: false,
-    fetchInterval: 120
-  },
-  {
-    id: 'vassdistro-planetofthevapes',
-    name: 'Planet of the Vapes - Reviews & News',
-    url: 'https://www.planetofthevapes.co.uk/news/vaping-news/feed',
-    category: 'vassdistro',
-    subcategory: 'products',
-    enabled: false,
-    fetchInterval: 120
-  },
-  {
-    id: 'vassdistro-vapeclub',
-    name: 'Vape Club - Industry News',
-    url: 'https://www.vapeclub.co.uk/vape-news/feed',
-    category: 'vassdistro',
-    subcategory: 'market',
-    enabled: false,
-    fetchInterval: 120
-  },
-  {
-    id: 'vassdistro-ecigintelligence',
-    name: 'ECigIntelligence - Industry Analysis',
-    url: 'https://ecigintelligence.com/feed/',
-    category: 'vassdistro',
-    subcategory: 'trade',
-    enabled: false,
-    fetchInterval: 120
-  },
-  {
-    id: 'vassdistro-vapestaff',
-    name: 'VapeStaff - Business & Regulations',
-    url: 'https://vapestaff.com/feed/',
-    category: 'vassdistro',
-    subcategory: 'trade',
-    enabled: true,
-    fetchInterval: 120
-  },
-  {
-    id: 'vassdistro-vapebusiness',
-    name: 'Vape Business - Trade News',
-    url: 'https://vapebusiness.com/feed/',
-    category: 'vassdistro',
-    subcategory: 'trade',
-    enabled: false,
-    fetchInterval: 120
-  },
-  {
-    id: 'vassdistro-vaperanks',
-    name: 'Vape Ranks - Product Reviews',
-    url: 'https://vaperanks.com/feed/',
-    category: 'vassdistro',
-    subcategory: 'products',
-    enabled: true,
-    fetchInterval: 120
-  },
-  {
-    id: 'vassdistro-vapeactive',
-    name: 'Vape Active - Health & Science',
-    url: 'https://www.vapeactive.com/blog/feed/',
-    category: 'vassdistro',
-    subcategory: 'market',
-    enabled: false,
-    fetchInterval: 120
-  }
-];
-
-/**
  * GAZA FEEDS (6 working feeds - Pro-Palestine humanitarian news sources)
  * Focus: Gaza humanitarian crisis, Palestine news, relief efforts
  */
@@ -604,12 +454,6 @@ export async function initializeFeedSources() {
     totalCount++;
   }
 
-  // Add Vass Distro feeds
-  for (const feed of VASSDISTRO_FEEDS) {
-    await addFeedSourceFirestore(feed);
-    totalCount++;
-  }
-
   // Add Gaza feeds
   for (const feed of GAZA_FEEDS) {
     await addFeedSourceFirestore(feed);
@@ -618,7 +462,6 @@ export async function initializeFeedSources() {
 
   console.log(`\n✅ Initialized ${CARZ_FEEDS.length} Carz feeds - expanded coverage with major EV news sources`);
   console.log(`✅ Initialized ${OWNERFI_FEEDS.length} OwnerFi feeds - comprehensive real estate & mortgage coverage`);
-  console.log(`✅ Initialized ${VASSDISTRO_FEEDS.length} Vass Distro feeds - global vaping industry sources`);
   console.log(`✅ Initialized ${GAZA_FEEDS.length} Gaza feeds - pro-Palestine humanitarian news sources`);
   console.log(`📊 Total: ${totalCount} feed sources (TESTED & VERIFIED 2025)\n`);
 }

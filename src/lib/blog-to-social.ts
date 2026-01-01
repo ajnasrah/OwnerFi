@@ -234,12 +234,17 @@ function getBrandPlatformPriority(brand: Brand): SocialPlatform[] {
       return ['instagram', 'facebook', 'linkedin', 'threads'];
 
     case 'abdullah':
+    case 'personal':
       // Personal brand: Instagram (lifestyle), LinkedIn (professional), Twitter (thoughts)
       return ['instagram', 'linkedin', 'twitter', 'threads', 'facebook'];
 
-    case 'vassdistro':
-      // B2B vape: LinkedIn (B2B), Instagram (visual products), Facebook (groups)
-      return ['linkedin', 'instagram', 'facebook', 'twitter', 'threads'];
+    case 'benefit':
+      // Benefit content: Instagram (visual), Facebook (community), LinkedIn
+      return ['instagram', 'facebook', 'linkedin', 'threads'];
+
+    case 'gaza':
+      // Gaza humanitarian: Twitter (news), Instagram, Facebook
+      return ['twitter', 'instagram', 'facebook', 'linkedin', 'threads'];
 
     default:
       return ['instagram', 'facebook', 'linkedin', 'twitter', 'threads'];

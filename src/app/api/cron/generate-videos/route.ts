@@ -4,7 +4,7 @@
  * Generates article videos for brands with RSS feeds:
  * - carz, ownerfi, abdullah, personal, gaza
  *
- * NOTE: podcast, benefit, vassdistro, property brands have been deprecated.
+ * Active brands: carz, ownerfi, abdullah, personal, gaza
  *
  * Schedule: 0 8,12,19 * * * (3 times daily at 8am, 12pm, 7pm CST)
  * Optimal times based on platform analytics:
@@ -102,7 +102,7 @@ async function generateArticleVideos() {
   const { POST: startWorkflow } = await import('@/app/api/workflow/complete-viral/route');
 
   // Brands with RSS feed-based article generation
-  // NOTE: podcast, benefit, vassdistro, property, property-spanish have been deprecated
+  // Active article brands with RSS feeds
   const articleBrands = ['carz', 'ownerfi', 'abdullah', 'personal'] as const;
 
   const results = [];

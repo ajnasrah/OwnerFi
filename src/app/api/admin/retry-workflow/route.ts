@@ -17,7 +17,7 @@ import { getBrandWebhookUrl } from '@/lib/brand-utils';
  *
  * Body:
  * - workflowId: Workflow ID to retry
- * - brand: Brand (carz, ownerfi, podcast)
+ * - brand: Brand (carz, ownerfi, benefit, abdullah, personal, gaza)
  * - stage: Stage to retry from (heygen, submagic, posting)
  */
 export async function POST(request: NextRequest) {
@@ -225,25 +225,15 @@ async function retryPosting(
   }
 
   // Update workflow status
-  const { updateWorkflowStatus, updatePodcastWorkflow } = await import('@/lib/feed-store-firestore');
+  const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
 
-  if (brand === 'podcast') {
-    await updatePodcastWorkflow(workflowId, {
-      status: 'completed',
-      latePostId: postResult.postId,
-      error: null,
-      completedAt: Date.now(),
-      retryCount: (workflow.retryCount || 0) + 1,
-    });
-  } else {
-    await updateWorkflowStatus(workflowId, brand, {
-      status: 'completed',
-      latePostId: postResult.postId,
-      error: null,
-      completedAt: Date.now(),
-      retryCount: (workflow.retryCount || 0) + 1,
-    });
-  }
+  await updateWorkflowStatus(workflowId, brand, {
+    status: 'completed',
+    latePostId: postResult.postId,
+    error: null,
+    completedAt: Date.now(),
+    retryCount: (workflow.retryCount || 0) + 1,
+  });
 
   return NextResponse.json({
     success: true,

@@ -26,13 +26,11 @@ export async function GET(request: NextRequest) {
 
     // Brands to check
     const brands = brand === 'all'
-      ? ['carz', 'ownerfi', 'vassdistro', 'benefit', 'abdullah', 'personal', 'podcast']
+      ? ['carz', 'ownerfi', 'benefit', 'abdullah', 'personal', 'gaza']
       : [brand];
 
     for (const b of brands) {
-      const collectionName = b === 'podcast' ? 'podcast_workflow_queue' :
-                            b === 'property' || b === 'property-spanish' ? 'propertyShowcaseWorkflows' :
-                            `${b}_workflow_queue`;
+      const collectionName = `${b}_workflow_queue`;
 
       let query = adminDb.collection(collectionName);
 

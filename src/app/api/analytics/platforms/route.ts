@@ -8,7 +8,7 @@ import { getAdminDb } from '@/lib/firebase-admin';
  * Returns platform-specific performance analytics with optimization insights
  *
  * Query params:
- * - brand: carz|ownerfi|podcast|vassdistro|abdullah (optional)
+ * - brand: carz|ownerfi|benefit|abdullah|personal|gaza (optional)
  * - days: number of days to analyze (default: 7)
  */
 export async function GET(request: NextRequest) {

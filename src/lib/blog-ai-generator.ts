@@ -44,11 +44,13 @@ function getBrandTone(brand: Brand): 'professional' | 'casual' | 'educational' {
   switch (brand) {
     case 'ownerfi':
     case 'carz':
+    case 'benefit':
       return 'professional';
     case 'abdullah':
+    case 'personal':
       return 'casual';
-    case 'vassdistro':
-      return 'professional';
+    case 'gaza':
+      return 'educational';
     default:
       return 'educational';
   }
@@ -65,8 +67,12 @@ function getBrandContext(brand: Brand): string {
       return 'Carz Inc is a wholesale car dealership. We share insider tips about car buying, auction secrets, and how wholesale pricing really works. Our audience includes car buyers looking to save money and people interested in car flipping as a side hustle.';
     case 'abdullah':
       return 'Abdullah is a real estate and car entrepreneur who runs multiple businesses using automation and AI. His audience wants real talk about money, entrepreneurship, deal-making, and building businesses without a traditional W-2 job.';
-    case 'vassdistro':
-      return 'Vass Distro is a B2B vape wholesale company serving vape store owners. We provide industry news, business growth tips, and product guides for retail vape shops.';
+    case 'benefit':
+      return 'Benefit content focuses on emotional benefits of homeownership for renters considering owner financing.';
+    case 'personal':
+      return 'Personal brand content featuring authentic stories and experiences.';
+    case 'gaza':
+      return 'Gaza humanitarian news coverage providing updates on the humanitarian situation in Gaza.';
     default:
       return '';
   }
@@ -224,13 +230,15 @@ Format your response as JSON:
     const estimatedReadTime = Math.ceil(totalWords / 250);
 
     // Determine author
-    const authors = {
+    const authors: Record<string, string> = {
       ownerfi: 'OwnerFi Team',
       carz: 'Carz Inc Team',
       abdullah: 'Abdullah',
-      vassdistro: 'Vass Distro',
+      benefit: 'OwnerFi Team',
+      personal: 'Abdullah',
+      gaza: 'Gaza Relief Team',
     };
-    const author = authors[brand as keyof typeof authors] || `${brand} Team`;
+    const author = authors[brand] || `${brand} Team`;
 
     const result: BlogGenerationResult = {
       title: generated.title,

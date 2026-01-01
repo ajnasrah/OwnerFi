@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
       const results = {
         carz: await refillBrand('carz'),
         ownerfi: await refillBrand('ownerfi'),
-        vassdistro: await refillBrand('vassdistro')
+        gaza: await refillBrand('gaza')
       };
 
       console.log('✅ Article refill check complete:', results);
@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
   return result;
 }
 
-async function refillBrand(brand: 'carz' | 'ownerfi' | 'vassdistro') {
+async function refillBrand(brand: 'carz' | 'ownerfi' | 'gaza') {
   const collectionName = `${brand}_articles`;
 
   console.log(`\n🔍 [${brand}] Checking article queue...`);

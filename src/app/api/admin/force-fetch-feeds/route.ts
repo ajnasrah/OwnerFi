@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { brand } = body; // 'ownerfi', 'carz', or 'vassdistro'
+    const { brand } = body; // 'ownerfi', 'carz', or 'gaza'
 
     console.log(`🚀 Force fetching ${brand} feeds...`);
 

@@ -478,7 +478,7 @@ async function updateWorkflowForBrand(
     // Update dedup doc
     await updateDedupDoc(collectionName, workflowData);
   } else {
-    // For carz, ownerfi, vassdistro - uses updateWorkflowStatus which handles dedup docs
+    // Uses updateWorkflowStatus which handles dedup docs
     const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
     await updateWorkflowStatus(workflowId, brand, cleanUpdates);
   }

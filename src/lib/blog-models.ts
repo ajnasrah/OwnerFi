@@ -18,8 +18,9 @@ export type ContentPillar = {
   ownerfi: 'owner-finance-101' | 'deal-breakdowns' | 'market-money' | 'agent-playbooks';
   carz: 'dealer-secrets' | 'behind-auction' | 'financing-credit' | 'flipping-cars';
   abdullah: 'real-talk-money' | 'entrepreneurship' | 'systems-automation' | 'mindset';
-  vassdistro: 'industry-news' | 'b2b-tips' | 'product-guides' | 'business-growth';
-  // Add more brands as needed
+  benefit: 'seller-benefits' | 'buyer-benefits' | 'owner-finance-101';
+  personal: 'lifestyle' | 'business' | 'mindset';
+  gaza: 'humanitarian-news' | 'relief-updates' | 'donation-drives';
 };
 
 /**
@@ -179,12 +180,10 @@ export const BLOG_TEMPLATES: Record<Brand, BlogTemplate[]> = {
       ],
     },
   ],
-  // Add templates for other brands
-  vassdistro: [],
+  // Other brands don't have templates yet
   benefit: [],
-  property: [],
-  podcast: [],
   personal: [],
+  gaza: [],
 } as const;
 
 /**
@@ -209,17 +208,21 @@ export const CONTENT_PILLARS: Record<Brand, Array<{ id: string; label: string; d
     { id: 'systems-automation', label: 'Systems & Automation', description: 'How to run multiple businesses' },
     { id: 'mindset', label: 'Mindset From the Trenches', description: 'Real stories, no fluff' },
   ],
-  vassdistro: [
-    { id: 'industry-news', label: 'Industry News', description: 'Vape industry updates' },
-    { id: 'b2b-tips', label: 'B2B Tips', description: 'Running a successful vape store' },
-    { id: 'product-guides', label: 'Product Guides', description: 'Product reviews and guides' },
-    { id: 'business-growth', label: 'Business Growth', description: 'Growing your vape business' },
+  benefit: [
+    { id: 'seller-benefits', label: 'Seller Benefits', description: 'Benefits of selling with owner financing' },
+    { id: 'buyer-benefits', label: 'Buyer Benefits', description: 'Benefits of buying with owner financing' },
+    { id: 'owner-finance-101', label: 'Owner Finance 101', description: 'Educational content about owner financing' },
   ],
-  // Other brands don't have blogs yet
-  benefit: [],
-  property: [],
-  podcast: [],
-  personal: [],
+  personal: [
+    { id: 'lifestyle', label: 'Lifestyle', description: 'Personal lifestyle content' },
+    { id: 'business', label: 'Business', description: 'Business insights and updates' },
+    { id: 'mindset', label: 'Mindset', description: 'Mindset and motivation content' },
+  ],
+  gaza: [
+    { id: 'humanitarian-news', label: 'Humanitarian News', description: 'Gaza humanitarian crisis updates' },
+    { id: 'relief-updates', label: 'Relief Updates', description: 'Relief organization updates' },
+    { id: 'donation-drives', label: 'Donation Drives', description: 'Donation campaigns and drives' },
+  ],
 };
 
 /**

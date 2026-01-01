@@ -129,7 +129,7 @@ Example 4 (Cars/EV):
 
 export interface CaptionRequest {
   topic: string;
-  brand: 'ownerfi' | 'carz' | 'podcast' | 'property' | 'property-spanish' | 'vassdistro' | 'benefit' | 'abdullah' | 'personal' | 'gaza';
+  brand: 'ownerfi' | 'carz' | 'benefit' | 'abdullah' | 'personal' | 'gaza';
   script?: string; // Optional full script for context
   platform?: 'youtube' | 'instagram' | 'both'; // Default: both
 }
@@ -158,22 +158,6 @@ const BRAND_CONTEXT: Record<string, { focus: string; hashtags: string[] }> = {
   carz: {
     focus: 'Electric vehicles, car news, EV technology, dealer tactics, car buying',
     hashtags: ['ElectricVehicles', 'EVNews', 'Tesla', 'CarBuying', 'AutoNews', 'GreenEnergy', 'EVLife', 'SelfDriving']
-  },
-  property: {
-    focus: 'Property investment, real estate deals, property management',
-    hashtags: ['realestate', 'property', 'investment', 'passiveincome', 'realestateinvesting']
-  },
-  'property-spanish': {
-    focus: 'Propiedades, financiamiento de dueño, inversión inmobiliaria',
-    hashtags: ['propiedades', 'bienesinmuebles', 'casapropia', 'financiamiento', 'inversion', 'inmobiliario']
-  },
-  podcast: {
-    focus: 'Expert interviews, educational content, advice',
-    hashtags: ['podcast', 'interview', 'expertadvice', 'education']
-  },
-  vassdistro: {
-    focus: 'Distribution, business, logistics',
-    hashtags: ['business', 'distribution', 'logistics', 'commerce']
   },
   benefit: {
     focus: 'Benefits of owner financing, buyer and seller advantages',

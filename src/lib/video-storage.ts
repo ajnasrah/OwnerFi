@@ -450,8 +450,7 @@ export async function uploadSubmagicVideo(
     // Parse brand from fileName path (format: viral-videos/carz-timestamp-random.mp4)
     let brand: string = 'ownerfi'; // default
     if (fileName.includes('carz-')) brand = 'carz';
-    else if (fileName.includes('vassdistro-')) brand = 'vassdistro';
-    else if (fileName.includes('podcast-')) brand = 'podcast';
+    else if (fileName.includes('gaza-')) brand = 'gaza';
 
     await trackCost(
       brand,

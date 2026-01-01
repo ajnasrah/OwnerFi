@@ -33,12 +33,26 @@ export const BRAND_COLORS = {
     text: '#ffffff',
     accent: '#818cf8', // indigo-400
   },
-  vassdistro: {
+  benefit: {
     primary: '#8b5cf6', // violet-500
     secondary: '#ec4899', // pink-500
     background: '#18181b', // zinc-900
     text: '#ffffff',
     accent: '#a78bfa', // violet-400
+  },
+  personal: {
+    primary: '#f59e0b', // amber-500
+    secondary: '#6366f1', // indigo-500
+    background: '#1e293b', // slate-800
+    text: '#ffffff',
+    accent: '#fbbf24', // amber-400
+  },
+  gaza: {
+    primary: '#dc2626', // red-600
+    secondary: '#16a34a', // green-600
+    background: '#0f172a', // slate-900
+    text: '#ffffff',
+    accent: '#ef4444', // red-500
   },
   // Default for other brands
   default: {
@@ -275,7 +289,9 @@ export function generateSocialCaption(
     ownerfi: '#OwnerFinancing #RealEstate #Homeownership #OwnerFi #AlternativeFinancing',
     carz: '#Cars #Automotive #CarBuying #CarzInc #UsedCars',
     abdullah: '#Entrepreneurship #RealEstate #Business #PersonalGrowth #Abdullah',
-    vassdistro: '#Vape #Wholesale #VapeBusiness #VassDistro #B2B',
+    benefit: '#Homeownership #OwnerFinancing #RentNoMore #RealEstate #BuyNotRent',
+    personal: '#PersonalGrowth #Lifestyle #Motivation #Success #Mindset',
+    gaza: '#Gaza #Palestine #Humanitarian #HumanRights #Peace',
   };
 
   const brandHashtags = hashtags[brand as keyof typeof hashtags] || '#Business';

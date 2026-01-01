@@ -153,7 +153,7 @@ export function getPlatformRecommendations(contentType: string): string[] {
     platforms.push('instagram', 'tiktok'); // Visual platforms
   }
 
-  if (contentType === 'property' || contentType === 'benefit') {
+  if (contentType === 'ownerfi' || contentType === 'benefit') {
     platforms.push('facebook', 'linkedin'); // Professional networks
   }
 

@@ -12,7 +12,7 @@ import { getAdminDb } from '@/lib/firebase-admin';
  * - Progress over time
  *
  * Query params:
- * - brand: carz|ownerfi|podcast|vassdistro|abdullah (optional, defaults to all)
+ * - brand: carz|ownerfi|benefit|abdullah|personal|gaza (optional, defaults to all)
  * - days: number of days to analyze (default: 7)
  * - groupBy: hour|day|week (for time series)
  */

@@ -20,7 +20,7 @@ export interface QualityScore {
 export async function evaluateArticleQuality(
   title: string,
   content: string,
-  category: 'carz' | 'ownerfi' | 'vassdistro' | 'gaza'
+  category: 'carz' | 'ownerfi' | 'gaza'
 ): Promise<QualityScore> {
   // Pre-check: Reject articles with insufficient content BEFORE calling OpenAI
   const contentLength = content?.trim().length || 0;
@@ -115,7 +115,7 @@ export async function evaluateArticleQuality(
 /**
  * Build the AI prompt for quality evaluation
  */
-function buildQualityPrompt(title: string, content: string, category: 'carz' | 'ownerfi' | 'vassdistro' | 'gaza'): {
+function buildQualityPrompt(title: string, content: string, category: 'carz' | 'ownerfi' | 'gaza'): {
   system: string;
   user: string;
 } {
@@ -179,29 +179,6 @@ function buildQualityPrompt(title: string, content: string, category: 'carz' | '
        - Pure brand advertisements disguised as news
        - Luxury cars they can't afford
        - Overly technical deep-dives on obscure models`
-    : category === 'vassdistro'
-    ? `This is for a VASS DISTRO channel targeting vape shop owners and distributors (30-40 year old entrepreneurs).
-
-       TARGET AUDIENCE:
-       - Vape shop owners managing margins and inventory
-       - Distributors looking for competitive advantages
-       - Concerned about regulations impacting their business
-       - Need actionable wholesale/B2B insights
-       - Want insider info to stay profitable
-
-       GOOD CONTENT (will watch & enjoy):
-       - FDA regulations affecting inventory/sales
-       - New wholesale price drops, margin opportunities
-       - Brand approvals/bans with business impact
-       - Market trends affecting retail demand
-       - Supplier advantages, bulk deal alerts
-       - Compliance tips to avoid fines
-
-       BAD CONTENT (will scroll past):
-       - Consumer vaping tips (not B2B)
-       - Generic health debates
-       - Individual product reviews (not wholesale-focused)
-       - Content irrelevant to shop owners/distributors`
     : `This is for an OWNERFI video channel targeting 30-year-old adults navigating homeownership and housing decisions.
 
        TARGET AUDIENCE (30-year-olds):
@@ -335,7 +312,7 @@ function parseQualityResponse(response: string): QualityScore {
  * @param maxConcurrent - Number of concurrent API calls (default: 3, recommended: 10 for batch jobs)
  */
 export async function evaluateArticlesBatch(
-  articles: Array<{ title: string; content: string; category: 'carz' | 'ownerfi' | 'vassdistro' | 'gaza' }>,
+  articles: Array<{ title: string; content: string; category: 'carz' | 'ownerfi' | 'gaza' }>,
   maxConcurrent: number = 15 // PERFORMANCE FIX: Increased from 3 to 15 for 5x faster processing
 ): Promise<QualityScore[]> {
   const results: QualityScore[] = [];

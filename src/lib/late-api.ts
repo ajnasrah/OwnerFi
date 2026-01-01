@@ -12,10 +12,9 @@ const LATE_BASE_URL = 'https://getlate.dev/api/v1';
 const getLateApiKey = () => process.env.LATE_API_KEY?.trim();
 const getLateOwnerfiProfileId = () => process.env.LATE_OWNERFI_PROFILE_ID?.trim();
 const getLateCarzProfileId = () => process.env.LATE_CARZ_PROFILE_ID?.trim();
-const getLatePodcastProfileId = () => process.env.LATE_PODCAST_PROFILE_ID?.trim();
-const getLateVassDistroProfileId = () => process.env.LATE_VASSDISTRO_PROFILE_ID?.trim();
 const getLateAbdullahProfileId = () => process.env.LATE_ABDULLAH_PROFILE_ID?.trim();
 const getLatePersonalProfileId = () => process.env.LATE_PERSONAL_PROFILE_ID?.trim();
+const getLateBenefitProfileId = () => process.env.LATE_BENEFIT_PROFILE_ID?.trim();
 const getLateGazaProfileId = () => process.env.LATE_GAZA_PROFILE_ID?.trim();
 
 export interface LatePostRequest {
@@ -63,8 +62,9 @@ export interface LateProfile {
 function getProfileId(brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza'): string | null {
   switch (brand) {
     case 'ownerfi':
-    case 'benefit': // Benefit videos also use OwnerFi profile
       return getLateOwnerfiProfileId() || null;
+    case 'benefit':
+      return getLateBenefitProfileId() || getLateOwnerfiProfileId() || null; // Fallback to OwnerFi if no benefit profile
     case 'carz':
       return getLateCarzProfileId() || null;
     case 'abdullah':
@@ -363,10 +363,10 @@ export async function postToLate(request: LatePostRequest): Promise<LatePostResp
               let category = 'People & Blogs'; // Default
               if (request.brand === 'carz') {
                 category = 'Autos & Vehicles';
-              } else if (request.brand === 'ownerfi') {
+              } else if (request.brand === 'ownerfi' || request.brand === 'benefit') {
                 category = 'Howto & Style'; // Best fit for real estate content
-              } else if (request.brand === 'podcast') {
-                category = 'Education'; // Podcast content
+              } else if (request.brand === 'gaza') {
+                category = 'News & Politics'; // Gaza humanitarian news
               }
 
               platformConfig.platformSpecificData = {
@@ -562,7 +562,7 @@ export async function postToLate(request: LatePostRequest): Promise<LatePostResp
 /**
  * Get the next available queue slot for a profile
  */
-export async function getNextQueueSlot(brand: 'carz' | 'ownerfi' | 'podcast' | 'property' | 'vassdistro' | 'benefit' | 'abdullah'): Promise<{ nextSlot: string; timezone: string } | null> {
+export async function getNextQueueSlot(brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza'): Promise<{ nextSlot: string; timezone: string } | null> {
   const profileId = getProfileId(brand);
   const LATE_API_KEY = getLateApiKey();
   if (!profileId || !LATE_API_KEY) {
@@ -602,7 +602,7 @@ export async function getNextQueueSlot(brand: 'carz' | 'ownerfi' | 'podcast' | '
 /**
  * Get queue schedule for a profile
  */
-export async function getQueueSchedule(brand: 'carz' | 'ownerfi' | 'podcast' | 'property' | 'vassdistro' | 'benefit'): Promise<any> {
+export async function getQueueSchedule(brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza'): Promise<any> {
   const profileId = getProfileId(brand);
   const LATE_API_KEY = getLateApiKey();
   if (!profileId || !LATE_API_KEY) {
@@ -633,7 +633,7 @@ export async function getQueueSchedule(brand: 'carz' | 'ownerfi' | 'podcast' | '
  * Set or update queue schedule for a profile
  */
 export async function setQueueSchedule(
-  brand: 'carz' | 'ownerfi' | 'podcast' | 'property' | 'vassdistro' | 'benefit',
+  brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza',
   slots: { dayOfWeek: number; time: string }[],
   timezone: string = 'America/Chicago', // CST - consistent with brand posting schedule
   reshuffleExisting: boolean = false
@@ -685,7 +685,7 @@ export async function scheduleVideoPost(
   title: string,
   platforms: ('instagram' | 'tiktok' | 'youtube' | 'facebook' | 'linkedin' | 'threads' | 'twitter')[] | any[],
   delay: 'immediate' | '1hour' | '2hours' | '4hours' | 'optimal' = 'immediate',
-  brand: 'carz' | 'ownerfi' | 'podcast' | 'property' | 'vassdistro' | 'benefit' | 'abdullah' = 'ownerfi',
+  brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza' = 'ownerfi',
   firstComment?: string // Optional first comment for engagement boost
 ): Promise<LatePostResponse> {
   // Extract hashtags from caption

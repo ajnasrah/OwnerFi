@@ -25,7 +25,7 @@ import { validateBrand } from '@/lib/brand-utils';
  * GET - List DLQ entries
  *
  * Query params:
- * - brand: Filter by brand (carz, ownerfi, podcast)
+ * - brand: Filter by brand (carz, ownerfi, benefit, abdullah, personal, gaza)
  * - service: Filter by service (heygen, submagic, etc.)
  * - resolved: Filter by resolved status (true/false)
  * - limit: Limit number of results
@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
     const recentParam = searchParams.get('recent');
 
     // Validate brand if provided
-    if (brand && !['carz', 'ownerfi', 'podcast'].includes(brand)) {
+    if (brand && !['carz', 'ownerfi', 'benefit', 'abdullah', 'personal', 'gaza'].includes(brand)) {
       return NextResponse.json(
         { success: false, error: 'Invalid brand' },
         { status: 400 }

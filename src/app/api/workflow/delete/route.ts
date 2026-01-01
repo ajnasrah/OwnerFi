@@ -29,19 +29,17 @@ export async function DELETE(request: NextRequest) {
     const collectionMap: Record<string, string> = {
       'carz': 'carz_workflow_queue',
       'ownerfi': 'ownerfi_workflow_queue',
-      'podcast': 'podcast_workflow_queue',
       'benefit': 'benefit_workflow_queue',
-      'property': 'propertyShowcaseWorkflows',
-      'property-spanish': 'propertyShowcaseWorkflows',
-      'vassdistro': 'vassdistro_workflow_queue',
       'abdullah': 'abdullah_workflow_queue',
+      'personal': 'personal_workflow_queue',
+      'gaza': 'gaza_workflow_queue',
     };
 
     const collectionName = collectionMap[brand];
 
     if (!collectionName) {
       return NextResponse.json(
-        { error: `Invalid brand: "${brand}". Must be one of: carz, ownerfi, podcast, benefit, property, vassdistro, abdullah` },
+        { error: `Invalid brand: "${brand}". Must be one of: carz, ownerfi, benefit, abdullah, personal, gaza` },
         { status: 400 }
       );
     }

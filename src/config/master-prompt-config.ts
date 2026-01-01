@@ -63,10 +63,17 @@ export const GLOBAL_RULES = {
       'Follow Abdullah to stay sharp.',
       'Follow Abdullah — new drops daily.',
     ],
-    vassdistro: [
-      'Follow Vass Distro for daily updates.',
-      'Follow Vass Distro to learn the real game.',
-      'Follow Vass Distro — new updates every day.',
+    benefit: [
+      'Follow Owner-Fy for daily updates.',
+      'Follow Owner-Fy to learn the real game.',
+    ],
+    personal: [
+      'Follow for more real talk.',
+      'Follow for daily mindset shifts.',
+    ],
+    gaza: [
+      'Follow for Gaza updates.',
+      'Share to spread awareness.',
     ],
   },
 
@@ -161,7 +168,7 @@ export const GLOBAL_RULES = {
 // BRAND-SPECIFIC CONFIGURATIONS
 // =====================================================
 
-export type BrandKey = 'ownerfi_viral' | 'ownerfi_benefit' | 'ownerfi_property' | 'carz' | 'abdullah' | 'abdullah_podcast' | 'vassdistro';
+export type BrandKey = 'ownerfi_viral' | 'ownerfi_benefit' | 'carz' | 'abdullah' | 'personal' | 'gaza';
 
 export interface BrandConfig {
   name: string;
@@ -202,21 +209,6 @@ export const BRAND_CONFIGS: Record<BrandKey, BrandConfig> = {
     ],
   },
 
-  ownerfi_property: {
-    name: 'OwnerFi Property Showcase',
-    voice: 'Abdullah',
-    avatarId: 'd33fe3abc2914faa88309c3bdb9f47f4',
-    purpose: 'Generate 30-sec Deal Explainer and 15-sec Deal Drop using actual property data',
-    audience: 'Active property seekers in specific cities',
-    hashtags: ['#OwnerFi', '#OwnerFinance', '#HomeOwnership', '#RealEstate'],
-    specialRules: [
-      'Naturally integrate: price, beds, baths, sqft, city, payment, highlight',
-      'ALWAYS include: "Prices and terms may change anytime."',
-      'ALWAYS include OwnerFi CTA',
-      'Use property background images',
-    ],
-  },
-
   carz: {
     name: 'Carz Inc Viral',
     voice: 'Abdullah',
@@ -246,33 +238,32 @@ export const BRAND_CONFIGS: Record<BrandKey, BrandConfig> = {
     ],
   },
 
-  abdullah_podcast: {
-    name: 'Abdullah Podcast Shorts',
+  personal: {
+    name: 'Personal Brand',
     voice: 'Abdullah',
     avatarId: 'd33fe3abc2914faa88309c3bdb9f47f4',
-    purpose: 'Q&A micro-clips that feel like real conversations',
-    audience: 'Podcast listeners, mindset seekers',
-    hashtags: ['#Podcast', '#Mindset', '#Entrepreneurship'],
+    purpose: 'Personal stories, authentic moments, and real-life experiences',
+    audience: 'General audience, personal growth seekers',
+    hashtags: ['#PersonalGrowth', '#RealTalk', '#Lifestyle', '#Motivation'],
     specialRules: [
-      'Under 30 sec',
-      '5th–8th grade reading level',
-      'No advice, no instructions',
-      'Q&A format only',
+      'Authentic, unfiltered tone',
+      'Personal stories and lessons',
+      'Relatable experiences',
     ],
   },
 
-  vassdistro: {
-    name: 'Vass Distro Viral',
-    voice: 'NOT Abdullah', // Only brand without Abdullah avatar
+  gaza: {
+    name: 'Gaza Humanitarian News',
+    voice: 'Narrator',
     avatarId: null,
-    purpose: 'B2B vape wholesale industry secrets',
-    audience: 'Independent vape shop owners, distributors, wholesalers',
-    hashtags: ['#VapeWholesale', '#B2BDeals', '#VapeIndustry', '#VapeShops', '#ProfitHack'],
+    purpose: 'Humanitarian news updates about Gaza and Palestine',
+    audience: 'People following the Gaza humanitarian crisis',
+    hashtags: ['#Gaza', '#Palestine', '#Humanitarian', '#HumanRights', '#Peace'],
     specialRules: [
-      'Raw, street-smart, insider tone',
-      'Shop-owner-to-shop-owner feel',
-      'Focus on margins, regulations, supplier advantages',
-      'NO Abdullah avatar',
+      'Factual, respectful tone',
+      'Focus on humanitarian aspects',
+      'No political commentary',
+      'Compassionate delivery',
     ],
   },
 };
@@ -370,10 +361,6 @@ export function getOwnerFiBenefitPrompt(): string {
   return getMasterSystemPrompt('ownerfi_benefit');
 }
 
-export function getOwnerFiPropertyPrompt(): string {
-  return getMasterSystemPrompt('ownerfi_property');
-}
-
 export function getCarzViralPrompt(): string {
   return getMasterSystemPrompt('carz');
 }
@@ -382,12 +369,12 @@ export function getAbdullahPrompt(): string {
   return getMasterSystemPrompt('abdullah');
 }
 
-export function getAbdullahPodcastPrompt(): string {
-  return getMasterSystemPrompt('abdullah_podcast');
+export function getPersonalPrompt(): string {
+  return getMasterSystemPrompt('personal');
 }
 
-export function getVassDistroViralPrompt(): string {
-  return getMasterSystemPrompt('vassdistro');
+export function getGazaPrompt(): string {
+  return getMasterSystemPrompt('gaza');
 }
 
 // =====================================================
@@ -438,10 +425,20 @@ export const TOP_HOOKS = {
     'The #1 thing separating 6-figure deals from small ones...',
     'Everyone\'s chasing clients. I let them come to me...',
   ],
-  vassdistro: [
-    'Vape shops are losing 20% margins — here\'s why.',
-    'This new regulation just flipped the wholesale game.',
-    'Most stores are stuck with bad distributors and don\'t even know it.',
+  benefit: [
+    'Imagine owning your home with no bank approval needed...',
+    'What if your rent payment became a mortgage payment?',
+    'Your landlord doesn\'t want you to know this option exists.',
+  ],
+  personal: [
+    'Here\'s something I wish I knew earlier...',
+    'Nobody talks about this but...',
+    'Real talk — this changed everything for me.',
+  ],
+  gaza: [
+    'Breaking: The latest on Gaza humanitarian efforts...',
+    'Here\'s what you need to know about the situation in Gaza...',
+    'Updates from the ground in Gaza...',
   ],
 };
 

@@ -370,13 +370,10 @@ async function retryOperation<T>(
  * Get workflow for specific brand
  */
 async function getWorkflowForBrand(
-  brand: 'carz' | 'ownerfi' | 'property' | 'vassdistro' | 'abdullah' | 'personal' | 'gaza',
+  brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza',
   workflowId: string
 ): Promise<any | null> {
-  if (brand === 'property') {
-    const { getPropertyVideoById } = await import('@/lib/feed-store-firestore');
-    return await getPropertyVideoById(workflowId);
-  } else if (brand === 'abdullah') {
+  if (brand === 'abdullah') {
     const { db } = await import('@/lib/firebase');
     const { doc, getDoc } = await import('firebase/firestore');
     const docSnap = await getDoc(doc(db, 'abdullah_workflow_queue', workflowId));
@@ -402,7 +399,7 @@ async function getWorkflowForBrand(
  * Update workflow for specific brand
  */
 async function updateWorkflowForBrand(
-  brand: 'carz' | 'ownerfi' | 'property' | 'vassdistro' | 'abdullah' | 'personal' | 'gaza',
+  brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza',
   workflowId: string,
   updates: Record<string, any>
 ): Promise<void> {
@@ -411,10 +408,7 @@ async function updateWorkflowForBrand(
     Object.entries(updates).filter(([, v]) => v !== undefined)
   );
 
-  if (brand === 'property') {
-    const { updatePropertyVideo } = await import('@/lib/feed-store-firestore');
-    await updatePropertyVideo(workflowId, cleanUpdates);
-  } else if (brand === 'abdullah') {
+  if (brand === 'abdullah') {
     const { db } = await import('@/lib/firebase');
     const { doc, updateDoc } = await import('firebase/firestore');
     await updateDoc(doc(db, 'abdullah_workflow_queue', workflowId), {
@@ -488,18 +482,12 @@ async function getCaptionAndTitle(
   let caption: string;
   let title: string;
 
-  if (brand === 'property') {
-    caption = workflow.caption || 'New owner finance property for sale! 🏡';
-    title = workflow.title || 'Property For Sale';
-  } else if (brand === 'ownerfi') {
+  if (brand === 'ownerfi') {
     caption = workflow.caption || workflow.articleTitle || 'Discover owner financing opportunities! 🏡';
     title = workflow.title || workflow.articleTitle || 'Owner Finance News';
   } else if (brand === 'carz') {
     caption = workflow.caption || workflow.articleTitle || 'Electric vehicle news and updates! ⚡';
     title = workflow.title || workflow.articleTitle || 'EV News';
-  } else if (brand === 'vassdistro') {
-    caption = workflow.caption || workflow.articleTitle || 'Check out this vape industry update! 🔥';
-    title = workflow.title || workflow.articleTitle || 'Industry Update';
   } else {
     caption = workflow.caption || workflow.articleTitle || 'Check out this video! 🔥';
     title = workflow.title || workflow.articleTitle || 'Viral Video';

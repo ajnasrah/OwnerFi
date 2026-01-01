@@ -83,20 +83,15 @@ const COLLECTIONS = {
     ARTICLES: 'ownerfi_articles',
     WORKFLOW_QUEUE: 'ownerfi_workflow_queue',
   },
-  VASSDISTRO: {
-    FEEDS: 'vassdistro_rss_feeds',
-    ARTICLES: 'vassdistro_articles',
-    WORKFLOW_QUEUE: 'vassdistro_workflow_queue',
-  },
-  PODCAST: {
-    WORKFLOW_QUEUE: 'podcast_workflow_queue',
-  },
   BENEFIT: {
     WORKFLOW_QUEUE: 'benefit_workflow_queue',
   },
   ABDULLAH: {
     CONTENT: 'abdullah_daily_content',
     WORKFLOW_QUEUE: 'abdullah_workflow_queue',
+  },
+  PERSONAL: {
+    WORKFLOW_QUEUE: 'personal_workflow_queue',
   },
   GAZA: {
     FEEDS: 'gaza_rss_feeds',
@@ -155,11 +150,9 @@ export async function getAllFeedSources(category?: Brand): Promise<FeedSource[]>
     // Get from all collections
     const carzSnapshot = await getDocs(collection(db, COLLECTIONS.CARZ.FEEDS));
     const ownerfiSnapshot = await getDocs(collection(db, COLLECTIONS.OWNERFI.FEEDS));
-    const vassdistroSnapshot = await getDocs(collection(db, COLLECTIONS.VASSDISTRO.FEEDS));
     const gazaSnapshot = await getDocs(collection(db, COLLECTIONS.GAZA.FEEDS));
     carzSnapshot.docs.forEach(doc => sources.push(doc.data() as FeedSource));
     ownerfiSnapshot.docs.forEach(doc => sources.push(doc.data() as FeedSource));
-    vassdistroSnapshot.docs.forEach(doc => sources.push(doc.data() as FeedSource));
     gazaSnapshot.docs.forEach(doc => sources.push(doc.data() as FeedSource));
   }
 
@@ -735,23 +728,23 @@ export async function cleanupProcessedArticles(olderThanDays: number = 7): Promi
 export async function rateAndCleanupArticles(keepTopN: number = 10): Promise<{
   carz: { rated: number; kept: number; deleted: number };
   ownerfi: { rated: number; kept: number; deleted: number };
-  vassdistro: { rated: number; kept: number; deleted: number };
+  gaza: { rated: number; kept: number; deleted: number };
 }> {
   if (!db) return {
     carz: { rated: 0, kept: 0, deleted: 0 },
     ownerfi: { rated: 0, kept: 0, deleted: 0 },
-    vassdistro: { rated: 0, kept: 0, deleted: 0 }
+    gaza: { rated: 0, kept: 0, deleted: 0 }
   };
 
-  const results = {
+  const results: Record<string, { rated: number; kept: number; deleted: number }> = {
     carz: { rated: 0, kept: 0, deleted: 0 },
     ownerfi: { rated: 0, kept: 0, deleted: 0 },
-    vassdistro: { rated: 0, kept: 0, deleted: 0 }
+    gaza: { rated: 0, kept: 0, deleted: 0 }
   };
 
   const { evaluateArticlesBatch } = await import('./article-quality-filter');
 
-  for (const cat of ['carz', 'ownerfi', 'benefit', 'abdullah', 'personal', 'gaza'] as const) {
+  for (const cat of ['carz', 'ownerfi', 'gaza'] as const) {
     const collectionName = getCollectionName('ARTICLES', cat);
 
     // Get ALL unprocessed articles
@@ -815,14 +808,20 @@ export async function rateAndCleanupArticles(keepTopN: number = 10): Promise<{
       }
     }
 
-    results[cat] = {
-      rated: articles.length,
-      kept: articlesToKeep.length,
-      deleted: articlesToDelete.length
-    };
+    if (results[cat]) {
+      results[cat] = {
+        rated: articles.length,
+        kept: articlesToKeep.length,
+        deleted: articlesToDelete.length
+      };
+    }
   }
 
-  return results;
+  return results as {
+    carz: { rated: number; kept: number; deleted: number };
+    ownerfi: { rated: number; kept: number; deleted: number };
+    gaza: { rated: number; kept: number; deleted: number };
+  };
 }
 
 // Statistics
@@ -1248,11 +1247,11 @@ export async function findBenefitByHeyGenId(heygenVideoId: string): Promise<{
 }
 
 // Find workflow by callback_id (used by HeyGen webhook)
-// This searches across all workflow types (articles, podcasts, benefits)
+// This searches across all workflow types (articles, benefits)
 export async function findWorkflowByCallbackId(callbackId: string): Promise<{
   workflowId: string;
-  workflow: WorkflowQueueItem | PodcastWorkflowItem | BenefitWorkflowItem;
-  type: 'article' | 'podcast' | 'benefit';
+  workflow: WorkflowQueueItem | BenefitWorkflowItem;
+  type: 'article' | 'benefit';
   brand?: Brand;
 } | null> {
   if (!db) return null;
@@ -1267,18 +1266,8 @@ export async function findWorkflowByCallbackId(callbackId: string): Promise<{
     };
   }
 
-  // Check podcast workflows
-  const podcastWorkflow = await getPodcastWorkflowById(callbackId);
-  if (podcastWorkflow) {
-    return {
-      workflowId: callbackId,
-      workflow: podcastWorkflow,
-      type: 'podcast'
-    };
-  }
-
-  // Check article workflows (carz and ownerfi)
-  for (const brand of ['carz', 'ownerfi'] as const) {
+  // Check article workflows (all brands)
+  for (const brand of ['carz', 'ownerfi', 'benefit', 'abdullah', 'personal', 'gaza'] as const) {
     const collectionName = getCollectionName('WORKFLOW_QUEUE', brand);
     const docSnap = await getDoc(doc(db, collectionName, callbackId));
 

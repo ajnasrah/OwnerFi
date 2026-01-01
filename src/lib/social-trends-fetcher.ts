@@ -64,7 +64,7 @@ export interface SocialTrend {
   hashtags: string[];
   trending_rank?: number;
   velocity?: string;  // "rising", "hot", "exploding"
-  category: 'ownerfi' | 'carz' | 'vassdistro' | 'gaza' | 'general';
+  category: 'ownerfi' | 'carz' | 'gaza' | 'general';
   fetchedAt: number;
   pubDate: number;
 }
@@ -95,11 +95,6 @@ const BRAND_KEYWORDS: Record<string, string[]> = {
     'hybrid', 'rivian', 'lucid', 'ford', 'chevrolet', 'toyota', 'honda',
     'car maintenance', 'car insurance', 'gas prices', 'car recall'
   ],
-  vassdistro: [
-    'vape', 'vaping', 'e-cigarette', 'nicotine', 'fda', 'tobacco',
-    'disposable vape', 'vape ban', 'vape shop', 'wholesale vape',
-    'juul', 'puff bar', 'elf bar', 'vape regulation', 'pmta'
-  ],
   gaza: [
     'gaza', 'palestine', 'humanitarian', 'ceasefire', 'relief',
     'middle east', 'rafah', 'west bank', 'unrwa', 'aid'
@@ -118,9 +113,6 @@ const BRAND_SUBREDDITS: Record<string, string[]> = {
   carz: [
     'cars', 'electricvehicles', 'teslamotors', 'whatcarshouldIbuy',
     'askcarsales', 'Cartalk', 'MechanicAdvice', 'cybertruck'
-  ],
-  vassdistro: [
-    'Vaping', 'electronic_cigarette', 'Vaping101', 'VapePorn'
   ],
   gaza: [
     'Palestine', 'worldnews', 'news'
@@ -233,7 +225,7 @@ function parseTrafficNumber(traffic: string): number {
  * Reddit API is FREE with reasonable rate limits
  */
 export async function fetchRedditTrends(
-  brand: 'ownerfi' | 'carz' | 'vassdistro' | 'gaza',
+  brand: 'ownerfi' | 'carz' | 'gaza',
   sortBy: 'hot' | 'rising' | 'top' = 'hot',
   timeframe: 'hour' | 'day' | 'week' = 'day'
 ): Promise<SocialTrend[]> {
@@ -319,7 +311,7 @@ export async function fetchRedditTrends(
  * Actor: clockworks/tiktok-trends-scraper
  */
 export async function fetchTikTokTrends(
-  brand: 'ownerfi' | 'carz' | 'vassdistro' | 'gaza',
+  brand: 'ownerfi' | 'carz' | 'gaza',
   country: string = 'US'
 ): Promise<SocialTrend[]> {
   // Check cache first to reduce Apify costs
@@ -435,7 +427,7 @@ export async function fetchTikTokTrends(
  * Actor: easyapi/twitter-trending-topics-scraper
  */
 export async function fetchTwitterTrends(
-  brand: 'ownerfi' | 'carz' | 'vassdistro' | 'gaza',
+  brand: 'ownerfi' | 'carz' | 'gaza',
   country: string = 'US'
 ): Promise<SocialTrend[]> {
   // Check cache first to reduce Apify costs
@@ -536,7 +528,7 @@ export async function fetchTwitterTrends(
  * This is the main function to call
  */
 export async function fetchAllSocialTrends(
-  brand: 'ownerfi' | 'carz' | 'vassdistro' | 'gaza',
+  brand: 'ownerfi' | 'carz' | 'gaza',
   options?: {
     includeGoogle?: boolean;
     includeReddit?: boolean;
@@ -606,12 +598,12 @@ export async function fetchAllSocialTrends(
 // HELPER FUNCTIONS
 // ============================================================================
 
-function detectCategory(text: string): 'ownerfi' | 'carz' | 'vassdistro' | 'gaza' | 'general' {
+function detectCategory(text: string): 'ownerfi' | 'carz' | 'gaza' | 'general' {
   const lowerText = text.toLowerCase();
 
   for (const [brand, keywords] of Object.entries(BRAND_KEYWORDS)) {
     if (keywords.some(kw => lowerText.includes(kw.toLowerCase()))) {
-      return brand as 'ownerfi' | 'carz' | 'vassdistro' | 'gaza';
+      return brand as 'ownerfi' | 'carz' | 'gaza';
     }
   }
 

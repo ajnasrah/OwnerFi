@@ -6,7 +6,7 @@ export async function DELETE(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const articleId = searchParams.get('articleId');
-    const brand = searchParams.get('brand') as 'carz' | 'ownerfi' | 'podcast';
+    const brand = searchParams.get('brand') as 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza';
 
     console.log('Delete article request:', { articleId, brand });
 
@@ -17,9 +17,9 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    if (brand !== 'carz' && brand !== 'ownerfi' && brand !== 'podcast') {
+    if (!['carz', 'ownerfi', 'benefit', 'abdullah', 'personal', 'gaza'].includes(brand)) {
       return NextResponse.json(
-        { error: 'Invalid brand. Must be "carz", "ownerfi", or "podcast"' },
+        { error: 'Invalid brand. Must be one of: carz, ownerfi, benefit, abdullah, personal, gaza' },
         { status: 400 }
       );
     }
@@ -33,9 +33,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Get the collection name for the specific brand
-    const collectionName = brand === 'carz' ? 'carz_articles' :
-                          brand === 'ownerfi' ? 'ownerfi_articles' :
-                          'podcast_articles';
+    const collectionName = `${brand}_articles`;
     console.log('Deleting from collection:', collectionName);
 
     // Delete the article document from Firestore

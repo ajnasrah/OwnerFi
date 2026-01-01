@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
       // NEW WORKFLOW MODE: Get and lock best article from feed
       console.log('📰 Step 1: Fetching and locking best article from RSS...');
       const { getAndLockArticle } = await import('@/lib/feed-store-firestore');
-      article = await getAndLockArticle(brand as 'carz' | 'ownerfi' | 'vassdistro');
+      article = await getAndLockArticle(brand as 'carz' | 'ownerfi');
 
       if (!article) {
         return NextResponse.json(
@@ -139,7 +139,7 @@ export async function POST(request: NextRequest) {
 
       // Mark article as processed so it's not retried
       const { markArticleProcessed } = await import('@/lib/feed-store-firestore');
-      await markArticleProcessed(article.id, brand as 'carz' | 'ownerfi' | 'vassdistro', undefined, 'Content too short');
+      await markArticleProcessed(article.id, brand as 'carz' | 'ownerfi', undefined, 'Content too short');
 
       return NextResponse.json({
         success: false,
@@ -157,7 +157,7 @@ export async function POST(request: NextRequest) {
         const queueItem = await addWorkflowToQueue(
           article.id,
           article.title,
-          brand as 'carz' | 'ownerfi' | 'vassdistro'
+          brand as 'carz' | 'ownerfi'
         );
         workflowId = queueItem.id;
         console.log(`📋 Added to workflow queue: ${workflowId}`);
@@ -188,7 +188,7 @@ export async function POST(request: NextRequest) {
     try {
       captionData = await generateCaptionAndComment({
         topic: article.title,
-        brand: brand as 'ownerfi' | 'carz' | 'podcast' | 'property' | 'vassdistro' | 'benefit',
+        brand: brand as 'ownerfi' | 'carz' | 'benefit' | 'abdullah' | 'personal' | 'gaza',
         script: scriptContent.script,
         platform: 'both' // Works for both YouTube and Instagram
       });
@@ -220,7 +220,7 @@ export async function POST(request: NextRequest) {
     // This prevents workflows from being stuck in heygen_processing without a video ID
 
     // Select agent for this video using round-robin rotation
-    // All article brands (carz, ownerfi, vassdistro) share the same agent pool
+    // All article brands (carz, ownerfi) share the same agent pool
     const agent = await selectAgent(brand as any, {
       mode: 'round-robin',
       language: 'en',
@@ -229,7 +229,7 @@ export async function POST(request: NextRequest) {
 
     // Build HeyGen request with webhook URL
     const { getBrandWebhookUrl } = await import('@/lib/brand-utils');
-    const webhookUrl = getBrandWebhookUrl(brand as 'carz' | 'ownerfi' | 'vassdistro', 'heygen');
+    const webhookUrl = getBrandWebhookUrl(brand as 'carz' | 'ownerfi', 'heygen');
 
     let heygenRequest: any;
     let agentId = 'legacy';
@@ -279,9 +279,7 @@ export async function POST(request: NextRequest) {
       console.warn('⚠️  No agent available, using legacy config');
 
       // Legacy defaults with CORRECT scale (1.4 for talking photos in vertical videos)
-      const defaultAvatarId = brand === 'vassdistro'
-        ? '6764a52c1b734750a0fba6ab6caa9cd9'
-        : 'd33fe3abc2914faa88309c3bdb9f47f4';
+      const defaultAvatarId = 'd33fe3abc2914faa88309c3bdb9f47f4';
       const defaultVoiceId = '9070a6c2dbd54c10bb111dc8c655bff7';
 
       heygenRequest = {
@@ -313,7 +311,7 @@ export async function POST(request: NextRequest) {
     // Use the heygen-client function that includes cost tracking
     const videoResult = await generateHeyGenVideoWithTracking(
       heygenRequest,
-      brand as 'carz' | 'ownerfi' | 'vassdistro',
+      brand as 'carz' | 'ownerfi',
       workflowId
     );
 
@@ -408,7 +406,7 @@ export async function POST(request: NextRequest) {
     if (workflowId && brand) {
       try {
         const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
-        await updateWorkflowStatus(workflowId, brand as 'carz' | 'ownerfi' | 'vassdistro', {
+        await updateWorkflowStatus(workflowId, brand as 'carz' | 'ownerfi', {
           status: 'failed',
           error: error instanceof Error ? error.message : 'Unknown error'
         });
@@ -464,101 +462,6 @@ async function getBestArticle(brand: string): Promise<{ id: string; title: strin
 
 // Helper: Sanitize user content to prevent prompt injection
 // Brand-specific prompts
-function getVassDistroPrompt(): string {
-  return `You are a VIRAL CONTENT MACHINE for Vass Distro — we help vape shop owners find the best wholesale deals, stay ahead of market changes, and protect their profits.
-
-Your ONLY job: Create fast-paced, scroll-stopping videos (under 30 seconds) that make vape business owners go, "Wait… what?"
-
-AUDIENCE:
-Independent vape shop owners, distributors, wholesalers — people who care about:
-• Margins & profit per SKU
-• Regulation updates
-• New products & brand drops
-• Supplier advantages
-• Retail growth hacks
-
-SCRIPT PSYCHOLOGY:
-- First 2 seconds: Pattern interrupt (bold claim or shock)
-- Next 8 seconds: Curiosity gap (the insider hook)
-- Next 15 seconds: Value bomb (news + takeaway)
-- Final 5 seconds: Soft call-to-action
-
-VIRAL FORMULA: Hook → Pain → Truth → Proof → Action
-
-VOICE & TONE:
-- Raw. Real. Street-smart.
-- Talking shop owner to shop owner.
-- No fluff, no corporate talk, no scripts.
-- Think: "insider sharing a secret over coffee."
-
-BANNED PHRASES:
-❌ "Let me tell you…"
-❌ "Today I'm going to…"
-❌ "Welcome back…"
-❌ "If you think about it…"
-
-POWER WORDS (use these):
-✅ FACT, SECRET, TRUTH, EXPOSED, HIDDEN, WHOLESALE, PROFIT, MARGIN, REAL, REGULATION, UPDATE, DROP, TREND, DEALER
-
-SCRIPT STRUCTURE (30 seconds max / ≈ 70–80 words):
-
-[0–2 sec] HOOK: Pattern interrupt
-"Vape shops are losing 20% margins — here's why."
-"This new regulation just flipped the wholesale game."
-
-[2–10 sec] PAIN / CURIOSITY: Build tension
-"Most stores are stuck with bad distributors and don't even know it."
-
-[10–25 sec] VALUE BOMB / PROOF: Drop the insight from the RSS article
-"The truth: distributors are cutting prices to clear inventory before Q4 — smart shops are stacking now."
-
-[25–30 sec] CTA:
-"Follow Vass Distro for insider wholesale updates that keep you profitable."
-
-[30 sec] CALL TO ACTION (MANDATORY):
-Always end every script with a short, natural call to action that sounds like a real person — not an ad.
-Use one of these variations at random for freshness:
-"Follow Vass Distro for daily updates."
-"Follow Vass Distro to learn the real game."
-"Follow Vass Distro — new updates every day."
-"Follow Vass Distro and don't get played again."
-"Follow Vass Distro to see what's really happening."
-"Follow Vass Distro for more insights like this."
-"Follow Vass Distro to stay ahead of the game."
-Keep it under 8 words when possible. Never add extra hashtags or filler after it.
-
-RULES:
-- Write ONLY what the person says directly to camera - no scene descriptions, no cuts, no directions
-- Written as a CONTENT CREATOR sharing insights - NOT impersonating the article's author
-- NO stage directions, NO camera directions, NO scene descriptions
-
-CAPTION RULES:
-- First line: Hook that matches video
-- 2 sentences max + 1 takeaway line
-- Conversational & confident
-- End with 3–5 hashtags
-Example: #VapeWholesale #B2BDeals #VapeIndustry #VapeShops #ProfitHack
-
-RSS ARTICLE USAGE:
-Use the provided RSS article summary as your source.
-Pull ONE key insight or stat and reframe it as an insider secret or alert for vape business owners.
-Never quote directly; paraphrase naturally with authority.
-
-FORMAT:
-SCRIPT: [the exact words the AI avatar will speak - nothing else]
-
-TITLE: [30-40 characters MAXIMUM including emojis - MUST be under 50 chars - attention-grabbing headline]
-
-CAPTION: [2-3 sentences + 3-5 hashtags at the end]
-
-EXAMPLE OUTPUT:
-SCRIPT: "Vape shops are bleeding margins right now. The FDA just approved three new brands, but most wholesalers aren't telling you which ones have the best profit potential. Here's what the smart shops know: Brand X is dropping next week with 40% margins. Stock up now before everyone catches on. Follow Vass Distro for the insider edge."
-
-TITLE: 💨 New FDA Approvals = Profit 📈
-
-CAPTION: New FDA approvals just dropped and most vape shops are missing the profit window. Smart owners are already stocking up on the high-margin winners. Stay ahead of the game. #VapeWholesale #VapeIndustry #B2BDeals #VapeShops #ProfitMargins`;
-}
-
 function getCarzPrompt(): string {
   return `You are a VIRAL CONTENT MACHINE for Carz Inc — wholesale cars with real-world deals for real people in Tennessee.
 Your only mission: create 30-second reels that hit hard, feel local, and make people stop scrolling.
@@ -823,9 +726,7 @@ async function generateViralContent(content: string, brand: string): Promise<{ s
 
     // Get brand-specific prompt
     let systemPrompt: string;
-    if (brand === 'vassdistro') {
-      systemPrompt = getVassDistroPrompt() + complianceWarning;
-    } else if (brand === 'carz') {
+    if (brand === 'carz') {
       systemPrompt = getCarzPrompt() + complianceWarning;
     } else {
       systemPrompt = getOwnerFiPrompt() + complianceWarning;
@@ -882,7 +783,7 @@ async function generateViralContent(content: string, brand: string): Promise<{ s
   const totalCost = inputCost + outputCost;
 
   await trackCost(
-    brand as 'carz' | 'ownerfi' | 'vassdistro',
+    brand as 'carz' | 'ownerfi',
     'openai',
     'script_generation',
     totalTokens,

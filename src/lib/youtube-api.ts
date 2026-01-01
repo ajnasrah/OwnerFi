@@ -25,7 +25,7 @@ interface YouTubeUploadOptions {
   privacy?: 'public' | 'unlisted' | 'private';
   madeForKids?: boolean;
   isShort?: boolean;
-  brand: 'carz' | 'ownerfi' | 'podcast' | 'property' | 'property-spanish' | 'vassdistro' | 'benefit' | 'abdullah' | 'personal' | 'gaza';
+  brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza';
   // Scheduling options
   publishAt?: string; // ISO 8601 datetime for scheduled publishing
   useSchedule?: boolean; // If true, auto-pick next available slot from brand schedule
@@ -323,7 +323,7 @@ export async function postVideoToYouTube(
   videoUrl: string,
   title: string,
   description: string,
-  brand: 'carz' | 'ownerfi' | 'podcast' | 'property' | 'property-spanish' | 'vassdistro' | 'benefit' | 'abdullah' | 'personal' | 'gaza',
+  brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza',
   options?: {
     tags?: string[];
     category?: string;

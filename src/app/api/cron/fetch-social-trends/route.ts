@@ -33,7 +33,7 @@ const CRON_SECRET = process.env.CRON_SECRET;
 export const maxDuration = 300; // 5 minutes
 
 // Brands to fetch trends for
-const BRANDS = ['ownerfi', 'carz', 'vassdistro', 'gaza'] as const;
+const BRANDS = ['ownerfi', 'carz', 'gaza'] as const;
 
 export async function GET(request: NextRequest) {
   try {

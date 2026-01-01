@@ -168,35 +168,6 @@ export function applyOwnerFiRewrites(text: string): string {
   return result
 }
 
-const VASSDISTRO_RULES: IndustryRule[] = [
-  {
-    name: 'Age Restriction Compliance',
-    description: 'No targeting minors or youth appeal',
-    validator: (script: string, caption: string) => {
-      const youthAppeal = /\b(cool|fun|trendy|young|kids|teen|school|college|party)\b/gi
-      return !youthAppeal.test(script) && !youthAppeal.test(caption)
-    },
-    errorMessage: 'Youth-oriented language prohibited in tobacco marketing - FDA violation'
-  },
-  {
-    name: 'Health Claims Prohibition',
-    description: 'Cannot make health or cessation claims',
-    validator: (script: string) => {
-      const healthClaims = /\b(healthy|safer|quit smoking|stop smoking|healthier alternative|harm reduction)\b/gi
-      return !healthClaims.test(script)
-    },
-    errorMessage: 'Health claims prohibited for vape products - severe FDA violation'
-  },
-  {
-    name: 'B2B Only Language',
-    description: 'Must clarify this is B2B wholesale, not consumer sales',
-    validator: (script: string) => {
-      const consumerLanguage = /\b(buy now|shop|order yours|get yours|for you)\b/gi
-      return !consumerLanguage.test(script)
-    },
-    errorMessage: 'Sounds like consumer marketing - clarify this is B2B wholesale only'
-  }
-]
 
 const ABDULLAH_RULES: IndustryRule[] = [
   {
@@ -259,18 +230,10 @@ export function getComplianceRules(brand: Brand): ComplianceRules {
   // Add brand-specific rules
   switch (brand) {
     case 'ownerfi':
-    case 'property':
-    case 'property-spanish':
     case 'benefit':
       baseRules.industryRules = OWNERFI_RULES
       baseRules.requiredDisclaimers = ['Prices and terms may change anytime. Not legal or financial advice.']
       baseRules.maxPushyScore = 50 // Relaxed - allow more marketing flexibility
-      break
-
-    case 'vassdistro':
-      baseRules.industryRules = VASSDISTRO_RULES
-      baseRules.requiredDisclaimers = ['B2B Wholesale Only. Must be 21+ and licensed retailer to purchase.']
-      baseRules.maxPushyScore = 25 // Conservative for regulated tobacco
       break
 
     case 'abdullah':
@@ -285,8 +248,8 @@ export function getComplianceRules(brand: Brand): ComplianceRules {
       baseRules.maxPushyScore = 40 // More flexible for wholesale
       break
 
-    case 'podcast':
     case 'personal':
+    case 'gaza':
       baseRules.maxPushyScore = 50 // Most flexible for educational/entertainment
       break
   }
@@ -311,7 +274,7 @@ export async function checkScriptCompliance(
   let processedCaption = caption
   let processedTitle = title
 
-  if (['ownerfi', 'property', 'property-spanish', 'benefit'].includes(brand)) {
+  if (['ownerfi', 'benefit'].includes(brand)) {
     processedScript = applyOwnerFiRewrites(script)
     processedCaption = applyOwnerFiRewrites(caption)
     processedTitle = applyOwnerFiRewrites(title)

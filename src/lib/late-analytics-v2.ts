@@ -245,7 +245,7 @@ export async function fetchLateAnalytics(params: {
  * Stores detailed metrics per platform for analysis
  */
 export async function syncPlatformAnalytics(
-  brand: 'carz' | 'ownerfi' | 'podcast' | 'vassdistro' | 'abdullah',
+  brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza',
   days: number = 7
 ): Promise<void> {
   console.log(`📊 Syncing ${brand} platform analytics for last ${days} days...`);
@@ -259,9 +259,10 @@ export async function syncPlatformAnalytics(
   const profileIdMap: Record<string, string | undefined> = {
     'carz': process.env.LATE_CARZ_PROFILE_ID,
     'ownerfi': process.env.LATE_OWNERFI_PROFILE_ID,
-    'podcast': process.env.LATE_PODCAST_PROFILE_ID,
-    'vassdistro': process.env.LATE_VASSDISTRO_PROFILE_ID,
+    'benefit': process.env.LATE_BENEFIT_PROFILE_ID,
     'abdullah': process.env.LATE_ABDULLAH_PROFILE_ID,
+    'personal': process.env.LATE_PERSONAL_PROFILE_ID,
+    'gaza': process.env.LATE_GAZA_PROFILE_ID,
   };
 
   const profileId = profileIdMap[brand];
@@ -595,12 +596,13 @@ function generateOverallRecommendations(sortedPlatforms: Array<[string, Platform
  * Sync all brands platform analytics
  */
 export async function syncAllBrandsPlatformAnalytics(days: number = 7): Promise<void> {
-  const brands: Array<'carz' | 'ownerfi' | 'podcast' | 'vassdistro' | 'abdullah'> = [
+  const brands: Array<'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza'> = [
     'ownerfi',
     'carz',
-    'podcast',
-    'vassdistro',
-    'abdullah'
+    'benefit',
+    'abdullah',
+    'personal',
+    'gaza'
   ];
 
   for (const brand of brands) {

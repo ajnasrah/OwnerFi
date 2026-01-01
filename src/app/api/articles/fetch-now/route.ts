@@ -23,14 +23,14 @@ export async function POST(_request: NextRequest) {
     // Get all feed sources
     let feedSources = await getAllFeedSources();
 
-    // Auto-initialize Vass Distro feeds if they don't exist
-    const hasVassdistroFeeds = feedSources.some(f => f.category === 'vassdistro');
-    if (!hasVassdistroFeeds) {
-      console.log('⚙️  Vass Distro feeds not found - auto-initializing...');
-      const { VASSDISTRO_FEEDS } = await import('@/config/feed-sources');
+    // Auto-initialize Gaza feeds if they don't exist
+    const hasGazaFeeds = feedSources.some(f => f.category === 'gaza');
+    if (!hasGazaFeeds) {
+      console.log('⚙️  Gaza feeds not found - auto-initializing...');
+      const { GAZA_FEEDS } = await import('@/config/feed-sources');
       const { addFeedSource } = await import('@/lib/feed-store-firestore');
 
-      for (const feed of VASSDISTRO_FEEDS) {
+      for (const feed of GAZA_FEEDS) {
         try {
           await addFeedSource(feed);
           console.log(`✅ Initialized feed: ${feed.name}`);

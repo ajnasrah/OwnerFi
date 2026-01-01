@@ -8,6 +8,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { Brand } from '@/config/constants';
 import { validateBrand } from '@/lib/brand-utils';
 import { getBrandWebhookUrl } from '@/lib/brand-utils';
 
@@ -94,17 +95,12 @@ export async function POST(request: NextRequest) {
  * Get workflow for retry (supports both social media and podcast)
  */
 async function getWorkflowForRetry(
-  brand: 'carz' | 'ownerfi' | 'podcast',
+  brand: Brand,
   workflowId: string
 ): Promise<any | null> {
-  if (brand === 'podcast') {
-    const { getPodcastWorkflowById } = await import('@/lib/feed-store-firestore');
-    return await getPodcastWorkflowById(workflowId);
-  } else {
-    const { getWorkflowById } = await import('@/lib/feed-store-firestore');
-    const result = await getWorkflowById(workflowId);
-    return result?.workflow || null;
-  }
+  const { getWorkflowById } = await import('@/lib/feed-store-firestore');
+  const result = await getWorkflowById(workflowId);
+  return result?.workflow || null;
 }
 
 /**
@@ -130,31 +126,19 @@ function determineRetryStage(status: string): string {
  * Retry from HeyGen stage
  */
 async function retryHeyGen(
-  brand: 'carz' | 'ownerfi' | 'podcast',
+  brand: Brand,
   workflowId: string,
   workflow: any
 ): Promise<NextResponse> {
   console.log(`   Retrying from HeyGen stage...`);
 
-  // TODO: Re-trigger HeyGen video generation
-  // This would require regenerating the script and calling HeyGen API again
-  // For now, we'll just reset the status
+  const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
 
-  const { updateWorkflowStatus, updatePodcastWorkflow } = await import('@/lib/feed-store-firestore');
-
-  if (brand === 'podcast') {
-    await updatePodcastWorkflow(workflowId, {
-      status: 'pending',
-      error: null,
-      retryCount: (workflow.retryCount || 0) + 1,
-    });
-  } else {
-    await updateWorkflowStatus(workflowId, brand, {
-      status: 'pending',
-      error: null,
-      retryCount: (workflow.retryCount || 0) + 1,
-    });
-  }
+  await updateWorkflowStatus(workflowId, brand, {
+    status: 'pending',
+    error: null,
+    retryCount: (workflow.retryCount || 0) + 1,
+  });
 
   return NextResponse.json({
     success: true,
@@ -168,7 +152,7 @@ async function retryHeyGen(
  * Retry from Submagic stage
  */
 async function retrySubmagic(
-  brand: 'carz' | 'ownerfi' | 'podcast',
+  brand: Brand,
   workflowId: string,
   workflow: any
 ): Promise<NextResponse> {
@@ -181,25 +165,13 @@ async function retrySubmagic(
     );
   }
 
-  // Re-trigger Submagic processing
-  // This would call the Submagic API again with the existing HeyGen video
-  // For now, we'll just reset the status
+  const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
 
-  const { updateWorkflowStatus, updatePodcastWorkflow } = await import('@/lib/feed-store-firestore');
-
-  if (brand === 'podcast') {
-    await updatePodcastWorkflow(workflowId, {
-      status: 'heygen_processing',
-      error: null,
-      retryCount: (workflow.retryCount || 0) + 1,
-    });
-  } else {
-    await updateWorkflowStatus(workflowId, brand, {
-      status: 'heygen_processing',
-      error: null,
-      retryCount: (workflow.retryCount || 0) + 1,
-    });
-  }
+  await updateWorkflowStatus(workflowId, brand, {
+    status: 'heygen_processing',
+    error: null,
+    retryCount: (workflow.retryCount || 0) + 1,
+  });
 
   return NextResponse.json({
     success: true,
@@ -213,7 +185,7 @@ async function retrySubmagic(
  * Retry from posting stage
  */
 async function retryPosting(
-  brand: 'carz' | 'ownerfi' | 'podcast',
+  brand: Brand,
   workflowId: string,
   workflow: any
 ): Promise<NextResponse> {

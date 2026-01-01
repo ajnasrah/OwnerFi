@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Build per-brand metrics
-    const brands: Brand[] = brand ? [brand] : ['carz', 'ownerfi', 'podcast'];
+    const brands: Brand[] = brand ? [brand] : ['carz', 'ownerfi', 'benefit', 'abdullah', 'personal', 'gaza'];
     const brandMetrics = await Promise.all(
       brands.map(async (b) => {
         const brandDLQ = await getDLQStats(b);

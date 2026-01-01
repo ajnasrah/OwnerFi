@@ -130,8 +130,8 @@ export const CARZ_CONFIG: BrandConfig = {
 
   scheduling: {
     timezone: 'America/Chicago', // Memphis, TN is in Central Time
-    postingHours: [9, 12, 15, 18, 21],
-    maxPostsPerDay: 5,
+    postingHours: [8, 12, 19],
+    maxPostsPerDay: 3,
   },
 
   features: {
@@ -181,8 +181,8 @@ export const OWNERFI_CONFIG: BrandConfig = {
 
   scheduling: {
     timezone: 'America/New_York',
-    postingHours: [9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23], // 15 slots/day
-    maxPostsPerDay: 15, // 5 viral + 5 benefits + 5 properties (flexible)
+    postingHours: [8, 12, 19],
+    maxPostsPerDay: 3,
   },
 
   features: {
@@ -192,54 +192,6 @@ export const OWNERFI_CONFIG: BrandConfig = {
   },
 };
 
-/**
- * Podcast Brand Configuration
- */
-export const PODCAST_CONFIG: BrandConfig = {
-  id: 'podcast',
-  displayName: 'Podcast',
-
-  lateProfileId: process.env.LATE_PODCAST_PROFILE_ID || '',
-
-  platforms: {
-    default: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'threads'],
-    all: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'threads', 'twitter', 'bluesky'],
-    excludeFromDefault: [], // All platforms enabled
-  },
-
-  webhooks: {
-    heygen: `${BASE_URL}/api/webhooks/heygen/podcast`,
-    submagic: `${BASE_URL}/api/webhooks/submagic/podcast`,
-  },
-
-  content: {
-    youtubeCategory: 'NEWS_POLITICS',
-    defaultHashtags: ['#podcast', '#education', '#interview', '#learning', '#knowledge'],
-    captionStyle: 'educational',
-  },
-
-  collections: {
-    workflows: 'podcast_workflow_queue',
-  },
-
-  rateLimits: {
-    lateAPI: 50,  // 50 posts per hour (lower for podcast)
-    heygen: 20,   // 20 video generations per hour
-    submagic: 240, // 4 per minute = 240 per hour
-  },
-
-  scheduling: {
-    timezone: 'America/Chicago', // Podcast uses Central Time
-    postingHours: [9, 12, 15, 18, 21],
-    maxPostsPerDay: 5, // 5 episodes per day
-  },
-
-  features: {
-    autoPosting: true,
-    abTesting: false, // Podcast doesn't use A/B testing
-    analytics: true,
-  },
-};
 
 /**
  * Benefit Videos Brand Configuration
@@ -280,8 +232,8 @@ export const BENEFIT_CONFIG: BrandConfig = {
 
   scheduling: {
     timezone: 'America/Chicago', // Central Time (CDT)
-    postingHours: [9, 12, 15, 18, 21], // Offset by 20 min from viral
-    maxPostsPerDay: 5, // 5 benefit videos per day
+    postingHours: [8, 12, 19],
+    maxPostsPerDay: 3,
   },
 
   features: {
@@ -291,158 +243,6 @@ export const BENEFIT_CONFIG: BrandConfig = {
   },
 };
 
-/**
- * Property Videos Brand Configuration
- * For automated property showcase videos (15-sec format)
- */
-export const PROPERTY_CONFIG: BrandConfig = {
-  id: 'property',
-  displayName: 'Property Showcase',
-
-  lateProfileId: process.env.LATE_OWNERFI_PROFILE_ID || '', // Uses OwnerFi's Late profile
-
-  platforms: {
-    default: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'threads'],
-    all: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'threads', 'twitter', 'bluesky', 'pinterest', 'reddit'],
-    excludeFromDefault: [], // All platforms enabled
-  },
-
-  webhooks: {
-    heygen: `${BASE_URL}/api/webhooks/heygen/property`,
-    submagic: `${BASE_URL}/api/webhooks/submagic/property`,
-  },
-
-  content: {
-    youtubeCategory: 'NEWS_POLITICS',
-    defaultHashtags: ['#OwnerFinancing', '#RealEstate', '#PropertyForSale', '#HomeForSale', '#OwnerFi'],
-    captionStyle: 'professional',
-  },
-
-  collections: {
-    workflows: 'propertyShowcaseWorkflows', // NEW unified system
-  },
-
-  rateLimits: {
-    lateAPI: 50,  // 50 posts per hour
-    heygen: 20,   // 20 video generations per hour
-    submagic: 240, // 4 per minute = 240 per hour
-  },
-
-  scheduling: {
-    timezone: 'America/New_York', // Eastern Time
-    postingHours: [9, 12, 15, 18, 21], // Offset by 40 min from viral
-    maxPostsPerDay: 5, // 1 per cron run × 5 runs = 5 per day
-  },
-
-  features: {
-    autoPosting: true,
-    abTesting: false, // No A/B testing - just 15-sec
-    analytics: true,
-  },
-};
-
-/**
- * Property Videos Brand Configuration (Spanish)
- * For automated property showcase videos in Spanish (15-sec format)
- * Uses same property queue as English version
- */
-export const PROPERTY_SPANISH_CONFIG: BrandConfig = {
-  id: 'property-spanish',
-  displayName: 'Property Showcase (Spanish)',
-
-  lateProfileId: process.env.LATE_OWNERFI_PROFILE_ID || '', // Uses OwnerFi's Late profile
-
-  platforms: {
-    default: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'threads'],
-    all: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'threads', 'twitter', 'bluesky', 'pinterest', 'reddit'],
-    excludeFromDefault: [], // All platforms enabled
-  },
-
-  webhooks: {
-    heygen: `${BASE_URL}/api/webhooks/heygen/property-spanish`,
-    submagic: `${BASE_URL}/api/webhooks/submagic/property-spanish`,
-  },
-
-  content: {
-    youtubeCategory: 'NEWS_POLITICS',
-    defaultHashtags: ['#FinanciamientoPorElDueño', '#BienesRaices', '#PropiedadEnVenta', '#CasaEnVenta', '#OwnerFi'],
-    captionStyle: 'professional',
-  },
-
-  collections: {
-    workflows: 'propertyShowcaseWorkflows', // NEW unified system (shared with English)
-  },
-
-  rateLimits: {
-    lateAPI: 50,  // 50 posts per hour
-    heygen: 20,   // 20 video generations per hour
-    submagic: 240, // 4 per minute = 240 per hour
-  },
-
-  scheduling: {
-    timezone: 'America/New_York', // Eastern Time
-    postingHours: [10, 13, 16, 19, 22], // Offset by 1 hour from English version
-    maxPostsPerDay: 5, // 1 per cron run × 5 runs = 5 per day
-  },
-
-  features: {
-    autoPosting: true,
-    abTesting: false, // No A/B testing - just 15-sec
-    analytics: true,
-  },
-};
-
-/**
- * Vass Distro Brand Configuration
- * For B2B vape wholesale industry content targeting vape store owners
- */
-export const VASSDISTRO_CONFIG: BrandConfig = {
-  id: 'vassdistro',
-  displayName: 'Vass Distro',
-
-  lateProfileId: process.env.LATE_VASSDISTRO_PROFILE_ID || '',
-
-  platforms: {
-    default: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'threads'],
-    all: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'threads', 'twitter', 'bluesky'],
-    excludeFromDefault: [], // All platforms enabled
-  },
-
-  webhooks: {
-    heygen: `${BASE_URL}/api/webhooks/heygen/vassdistro`,
-    submagic: `${BASE_URL}/api/webhooks/submagic/vassdistro`,
-  },
-
-  content: {
-    youtubeCategory: 'NEWS_POLITICS',
-    defaultHashtags: ['#vape', '#vapewholesale', '#vapestore', '#vapebusiness', '#vassdistro'],
-    captionStyle: 'professional',
-  },
-
-  collections: {
-    feeds: 'vassdistro_rss_feeds',
-    articles: 'vassdistro_articles',
-    workflows: 'vassdistro_workflow_queue',
-  },
-
-  rateLimits: {
-    lateAPI: 50,  // 50 posts per hour
-    heygen: 20,   // 20 video generations per hour
-    submagic: 240, // 4 per minute = 240 per hour
-  },
-
-  scheduling: {
-    timezone: 'America/New_York',
-    postingHours: [8, 11, 14, 17, 20], // 5 posts per day - B2B optimized times
-    maxPostsPerDay: 5,
-  },
-
-  features: {
-    autoPosting: true,
-    abTesting: false,
-    analytics: true,
-  },
-};
 
 /**
  * Abdullah Personal Brand Configuration
@@ -483,8 +283,8 @@ export const ABDULLAH_CONFIG: BrandConfig = {
 
   scheduling: {
     timezone: 'America/Chicago', // Central Time (CDT)
-    postingHours: [9, 12, 15, 18, 21], // 5 posts per day staggered throughout day
-    maxPostsPerDay: 5, // 5 daily videos
+    postingHours: [8, 12, 19],
+    maxPostsPerDay: 3,
   },
 
   features: {
@@ -531,8 +331,8 @@ export const PERSONAL_CONFIG: BrandConfig = {
 
   scheduling: {
     timezone: 'America/Chicago', // CST
-    postingHours: [11, 14, 19, 20] as const, // 11am, 2pm, 7pm, 8pm CST (optimal times)
-    maxPostsPerDay: 10,
+    postingHours: [8, 12, 19] as const,
+    maxPostsPerDay: 3,
   },
 
   features: {
@@ -583,8 +383,8 @@ export const GAZA_CONFIG: BrandConfig = {
 
   scheduling: {
     timezone: 'America/Chicago',
-    postingHours: [9, 12, 15, 18, 21],
-    maxPostsPerDay: 5,
+    postingHours: [8, 12, 19],
+    maxPostsPerDay: 3,
   },
 
   features: {
@@ -601,11 +401,7 @@ export const GAZA_CONFIG: BrandConfig = {
 export const BRAND_CONFIGS: Record<Brand, BrandConfig> = {
   carz: CARZ_CONFIG,
   ownerfi: OWNERFI_CONFIG,
-  podcast: PODCAST_CONFIG,
   benefit: BENEFIT_CONFIG,
-  property: PROPERTY_CONFIG,
-  'property-spanish': PROPERTY_SPANISH_CONFIG,
-  vassdistro: VASSDISTRO_CONFIG,
   abdullah: ABDULLAH_CONFIG,
   personal: PERSONAL_CONFIG,
   gaza: GAZA_CONFIG,
@@ -620,7 +416,7 @@ export const BRAND_CONFIGS: Record<Brand, BrandConfig> = {
 export function getBrandConfig(brand: Brand): BrandConfig {
   const config = BRAND_CONFIGS[brand];
   if (!config) {
-    throw new Error(`Invalid brand: ${brand}. Must be one of: carz, ownerfi, podcast, benefit, property, property-spanish, vassdistro, abdullah, personal, gaza`);
+    throw new Error(`Invalid brand: ${brand}. Must be one of: carz, ownerfi, benefit, abdullah, personal, gaza`);
   }
   return config;
 }
@@ -715,11 +511,7 @@ export function validateAllBrandConfigs(): Record<Brand, { valid: boolean; error
   return {
     carz: validateBrandConfig('carz'),
     ownerfi: validateBrandConfig('ownerfi'),
-    podcast: validateBrandConfig('podcast'),
     benefit: validateBrandConfig('benefit'),
-    property: validateBrandConfig('property'),
-    'property-spanish': validateBrandConfig('property-spanish'),
-    vassdistro: validateBrandConfig('vassdistro'),
     abdullah: validateBrandConfig('abdullah'),
     personal: validateBrandConfig('personal'),
     gaza: validateBrandConfig('gaza'),

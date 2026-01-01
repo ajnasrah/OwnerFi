@@ -35,94 +35,53 @@ export interface BrandPostingConfig {
 /**
  * Brand posting configuration
  *
- * Strategy Options:
- * 1. Same Day Multi-Time: Post to different platforms at different times SAME day
- *    - Set sameDaySlots: [10, 14, 18] for 10 AM, 2 PM, 6 PM
- *    - Good for: High-volume content that shouldn't spam same platforms
- *
- * 2. Multi-Day Spread: Post to ALL platforms but spread across days
- *    - Set useDayOffset: true
- *    - Each post hits all platforms (8 AM, 1 PM, 7 PM) but on different days
- *    - Good for: Quality content you want maximum reach on
+ * All brands post 3x/day at optimal cross-platform times:
+ * - 8 AM CST: LinkedIn/Twitter morning peak
+ * - 12 PM CST: Universal lunch peak (all platforms)
+ * - 7 PM CST: Evening prime time (Instagram/TikTok/YouTube)
  */
 export const BRAND_POSTING_CONFIGS: Record<Brand, BrandPostingConfig> = {
   carz: {
     brand: 'carz',
-    postsPerDay: 5,
-    description: 'Automotive content - 5 posts/day at top performing times',
-    topPerformingHours: [8, 12, 15, 18, 21], // 8 AM, 12 PM, 3 PM, 6 PM, 9 PM CST
-    spreadAcrossDays: false, // All 5 posts same day at different hours
-    usePlatformSpecificTiming: true, // Use 8AM=LinkedIn, 1PM=FB/YT, 7PM=IG/TikTok for each hour
+    postsPerDay: 3,
+    description: 'Automotive content - 3 posts/day at optimal times',
+    topPerformingHours: [8, 12, 19], // 8 AM, 12 PM, 7 PM CST
+    spreadAcrossDays: false,
+    usePlatformSpecificTiming: true,
   },
 
   ownerfi: {
     brand: 'ownerfi',
-    postsPerDay: 5,
-    description: 'Real estate content - 5 posts/day at top performing times',
-    topPerformingHours: [8, 12, 15, 18, 21], // 8 AM, 12 PM, 3 PM, 6 PM, 9 PM CST
-    spreadAcrossDays: false, // All 5 posts same day
-    usePlatformSpecificTiming: true,
-  },
-
-  podcast: {
-    brand: 'podcast',
-    postsPerDay: 5,
-    description: 'Podcast episodes - 5 posts/day at top performing times',
-    topPerformingHours: [8, 12, 15, 18, 21], // 8 AM, 12 PM, 3 PM, 6 PM, 9 PM CST
-    spreadAcrossDays: false, // All 5 posts same day
+    postsPerDay: 3,
+    description: 'Real estate content - 3 posts/day at optimal times',
+    topPerformingHours: [8, 12, 19], // 8 AM, 12 PM, 7 PM CST
+    spreadAcrossDays: false,
     usePlatformSpecificTiming: true,
   },
 
   benefit: {
     brand: 'benefit',
-    postsPerDay: 5,
-    description: 'Owner finance benefits - 5 posts/day at top performing times',
-    topPerformingHours: [9, 12, 15, 18, 21], // 9 AM, 12 PM, 3 PM, 6 PM, 9 PM CST (offset by 20 min in cron)
-    spreadAcrossDays: false, // All 5 posts same day
+    postsPerDay: 3,
+    description: 'Owner finance benefits - 3 posts/day at optimal times',
+    topPerformingHours: [8, 12, 19], // 8 AM, 12 PM, 7 PM CST
+    spreadAcrossDays: false,
     usePlatformSpecificTiming: true,
   },
 
   abdullah: {
     brand: 'abdullah',
-    postsPerDay: 5,
-    description: 'Personal brand - 5 posts/day at top performing times',
-    topPerformingHours: [8, 12, 15, 18, 21], // 8 AM, 12 PM, 3 PM, 6 PM, 9 PM CST
-    spreadAcrossDays: false, // All 5 posts same day
-    usePlatformSpecificTiming: true,
-  },
-
-  vassdistro: {
-    brand: 'vassdistro',
-    postsPerDay: 1,
-    description: 'B2B vape distribution - 1 post/day at 10 AM',
-    topPerformingHours: [10], // 10 AM CST
-    spreadAcrossDays: false,
-    usePlatformSpecificTiming: true,
-  },
-
-  property: {
-    brand: 'property',
-    postsPerDay: 1,
-    description: 'Individual property videos - posted as properties are added',
-    topPerformingHours: [14], // 2 PM CST - good time for real estate browsing
-    spreadAcrossDays: false,
-    usePlatformSpecificTiming: true,
-  },
-
-  'property-spanish': {
-    brand: 'property-spanish',
-    postsPerDay: 1,
-    description: 'Spanish property videos - posted as properties are added',
-    topPerformingHours: [14], // 2 PM CST - good time for real estate browsing
+    postsPerDay: 3,
+    description: 'Personal brand - 3 posts/day at optimal times',
+    topPerformingHours: [8, 12, 19], // 8 AM, 12 PM, 7 PM CST
     spreadAcrossDays: false,
     usePlatformSpecificTiming: true,
   },
 
   personal: {
     brand: 'personal',
-    postsPerDay: 1,
-    description: 'Personal brand content - 1 post/day',
-    topPerformingHours: [12], // 12 PM CST
+    postsPerDay: 3,
+    description: 'Personal videos - 3 posts/day at optimal times',
+    topPerformingHours: [8, 12, 19], // 8 AM, 12 PM, 7 PM CST
     spreadAcrossDays: false,
     usePlatformSpecificTiming: true,
   },
@@ -130,8 +89,8 @@ export const BRAND_POSTING_CONFIGS: Record<Brand, BrandPostingConfig> = {
   gaza: {
     brand: 'gaza',
     postsPerDay: 3,
-    description: 'Gaza humanitarian news - 3 posts/day at peak news times',
-    topPerformingHours: [8, 14, 20], // 8 AM, 2 PM, 8 PM CST - peak news consumption times
+    description: 'Gaza humanitarian news - 3 posts/day at optimal times',
+    topPerformingHours: [8, 12, 19], // 8 AM, 12 PM, 7 PM CST
     spreadAcrossDays: false,
     usePlatformSpecificTiming: true,
   },

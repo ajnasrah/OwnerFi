@@ -179,7 +179,7 @@ export const WORKFLOW = {
 // ============================================================================
 
 export const BRANDS = {
-  VALID_BRANDS: ['carz', 'ownerfi', 'podcast', 'benefit', 'property', 'property-spanish', 'vassdistro', 'abdullah', 'personal', 'gaza'] as const,
+  VALID_BRANDS: ['carz', 'ownerfi', 'benefit', 'abdullah', 'personal', 'gaza'] as const,
 } as const;
 
 export type Brand = typeof BRANDS.VALID_BRANDS[number];
@@ -219,7 +219,7 @@ export const ERROR_MESSAGES = {
   API_UNAVAILABLE: 'External API is currently unavailable.',
 
   // Validation errors
-  INVALID_BRAND: 'Invalid brand specified. Must be one of: carz, ownerfi, podcast, benefit, property, property-spanish, vassdistro, abdullah, personal, gaza',
+  INVALID_BRAND: 'Invalid brand specified. Must be one of: carz, ownerfi, benefit, abdullah, personal, gaza',
   INVALID_PLATFORM: 'Invalid platform specified.',
   MISSING_REQUIRED_FIELD: 'Missing required field in request.',
 
@@ -279,11 +279,7 @@ export const LOGGING = {
 export const YOUTUBE_CATEGORIES = {
   CARZ: 'AUTOS_VEHICLES',
   OWNERFI: 'NEWS_POLITICS',
-  PODCAST: 'NEWS_POLITICS',
   BENEFIT: 'HOWTO_STYLE',
-  PROPERTY: 'HOWTO_STYLE',
-  'PROPERTY-SPANISH': 'HOWTO_STYLE',
-  VASSDISTRO: 'MUSIC',
   ABDULLAH: 'PEOPLE_BLOGS',
   PERSONAL: 'PEOPLE_BLOGS',
   GAZA: 'NEWS_POLITICS',

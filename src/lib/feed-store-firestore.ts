@@ -248,23 +248,26 @@ export async function markArticleProcessed(id: string, category: Brand, workflow
 // 1. Social trends (TikTok, Twitter, Reddit, Google Trends) - what's viral RIGHT NOW
 // 2. High quality RSS articles (qualityScore >= 30)
 // Uses Firestore transactions to ensure only one process can lock each article
+//
+// OPTIMIZATION: Reduced from 100 to 25 candidates, limited lock attempts to 10
+// to prevent runaway Firestore operations (was causing up to 200 ops worst case)
 export async function getAndLockArticle(category: Brand): Promise<Article | null> {
   if (!db) return null;
 
   const collectionName = getCollectionName('ARTICLES', category);
+  const MAX_LOCK_ATTEMPTS = 10; // Prevent runaway operations
 
-  // Get all unprocessed articles (no orderBy to avoid index requirement)
+  // Fetch smaller batch - we don't need 100, just enough good candidates
   const q = query(
     collection(db, collectionName),
     where('processed', '==', false),
-    firestoreLimit(100) // Get more to have good selection
+    firestoreLimit(25)
   );
 
   const snapshot = await getDocs(q);
 
   if (snapshot.empty) {
     console.log(`⚠️  No unprocessed articles available for ${category}`);
-    console.log(`   Collection: ${collectionName}`);
     return null;
   }
 
@@ -278,9 +281,7 @@ export async function getAndLockArticle(category: Brand): Promise<Article | null
   const socialTrends = articles.filter(a => a.source === 'social_trends');
   const rssArticles = articles.filter(a => a.source !== 'social_trends');
 
-  console.log(`📊 [${category}] Found ${articles.length} unprocessed articles`);
-  console.log(`   🔥 Social trends: ${socialTrends.length}`);
-  console.log(`   📰 RSS articles: ${rssArticles.length}`);
+  console.log(`📊 [${category}] Found ${articles.length} unprocessed (${socialTrends.length} trends, ${rssArticles.length} RSS)`);
 
   // PRIORITY 1: Social trends (sorted by engagement score)
   // These are ALREADY proven viral - use them first!
@@ -292,93 +293,67 @@ export async function getAndLockArticle(category: Brand): Promise<Article | null
     })
     .sort((a, b) => (b.engagementScore || 0) - (a.engagementScore || 0));
 
-  if (sortedSocialTrends.length > 0) {
-    console.log(`🔥 [${category}] Prioritizing ${sortedSocialTrends.length} social trends!`);
-    console.log(`   Top trend: [${sortedSocialTrends[0].platform}] ${sortedSocialTrends[0].title?.substring(0, 50)}...`);
-  }
-
   // PRIORITY 2: High quality RSS articles (fallback)
-  // Lowered from 50 to 30 to ensure articles get processed
   const threshold = 30;
   const sortedRssArticles = rssArticles
     .filter(a => typeof a.qualityScore === 'number' && a.qualityScore >= threshold)
     .sort((a, b) => (b.qualityScore || 0) - (a.qualityScore || 0));
 
-  // Combine: social trends first, then RSS
-  const prioritizedArticles = [...sortedSocialTrends, ...sortedRssArticles];
-
-  console.log(`✅ [${category}] Total eligible: ${prioritizedArticles.length} (${sortedSocialTrends.length} trends + ${sortedRssArticles.length} RSS)`);
+  // Combine: social trends first, then RSS - limit to MAX_LOCK_ATTEMPTS candidates
+  const prioritizedArticles = [...sortedSocialTrends, ...sortedRssArticles].slice(0, MAX_LOCK_ATTEMPTS);
 
   if (prioritizedArticles.length === 0) {
-    console.log(`⚠️  No eligible articles available for ${category}`);
-    console.log(`   Reasons:`);
-    console.log(`     - Social trends (< 48hrs old): ${sortedSocialTrends.length}`);
-    console.log(`     - RSS with score >= ${threshold}: ${sortedRssArticles.length}`);
-    console.log(`     - Total unprocessed: ${articles.length}`);
+    console.log(`⚠️  No eligible articles for ${category} (need score >= ${threshold} or recent trends)`);
     return null;
   }
 
+  console.log(`   Attempting to lock from ${prioritizedArticles.length} candidates...`);
+
   // Try to lock articles in order (social trends first, then highest quality RSS)
-  // Use transaction to ensure atomic read-write (prevents race conditions)
+  let lockAttempts = 0;
   for (const candidate of prioritizedArticles) {
+    lockAttempts++;
     try {
       // ✅ ATOMIC OPERATION: Read + Write in single transaction
-      // This ensures only ONE process can lock each article, even if multiple processes
-      // are trying to lock at the exact same time
       const lockedArticle = await runTransaction(db, async (transaction) => {
         const articleRef = doc(db, collectionName, candidate.id);
         const freshDoc = await transaction.get(articleRef);
 
-        // Check if article still exists and is still unprocessed
-        // (another process might have locked it between our initial query and now)
         if (!freshDoc.exists()) {
           throw new Error('Article no longer exists');
         }
 
         const freshData = freshDoc.data();
         if (freshData.processed === true) {
-          throw new Error('Article already locked by another process');
+          throw new Error('Already locked');
         }
 
-        // Lock it atomically - transaction ensures this write only happens
-        // if no other process has modified the document since we read it
+        // Lock it atomically
         transaction.update(articleRef, {
           processed: true,
           processedAt: Date.now(),
           processingStartedAt: Date.now()
         });
 
-        return {
-          id: freshDoc.id,
-          ...freshData
-        } as Article;
+        return { id: freshDoc.id, ...freshData } as Article;
       });
 
       // Log what type of content we locked
       const articleData = lockedArticle as Article & { source?: string; platform?: string; engagementScore?: number };
       const isSocialTrend = articleData.source === 'social_trends';
       const platform = articleData.platform || 'rss';
-      const score = isSocialTrend
-        ? articleData.engagementScore || 0
-        : lockedArticle.qualityScore || 0;
+      const score = isSocialTrend ? articleData.engagementScore || 0 : lockedArticle.qualityScore || 0;
 
-      if (isSocialTrend) {
-        console.log(`🔥 Locked SOCIAL TREND [${platform}] (engagement: ${score}): ${lockedArticle.title.substring(0, 60)}...`);
-      } else {
-        console.log(`📰 Locked RSS article (quality: ${score}): ${lockedArticle.title.substring(0, 60)}...`);
-      }
+      console.log(`✅ Locked ${isSocialTrend ? `TREND [${platform}]` : 'RSS'} (score: ${score}) after ${lockAttempts} attempt(s): "${lockedArticle.title.substring(0, 50)}..."`);
       return lockedArticle;
 
-    } catch (error) {
-      // Article was already locked by another process, try next one in the list
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.log(`⚠️  Could not lock article "${candidate.title.substring(0, 40)}..." (${errorMessage}), trying next...`);
+    } catch {
+      // Article was already locked, try next one
       continue;
     }
   }
 
-  // All high-quality articles were already locked by other processes
-  console.log(`⚠️  All high-quality articles already locked for ${category}`);
+  console.log(`⚠️  All ${lockAttempts} candidates were locked for ${category}`);
   return null;
 }
 
@@ -776,7 +751,7 @@ export async function rateAndCleanupArticles(keepTopN: number = 10): Promise<{
 
   const { evaluateArticlesBatch } = await import('./article-quality-filter');
 
-  for (const cat of ['carz', 'ownerfi', 'vassdistro'] as const) {
+  for (const cat of ['carz', 'ownerfi', 'benefit', 'abdullah', 'personal', 'gaza'] as const) {
     const collectionName = getCollectionName('ARTICLES', cat);
 
     // Get ALL unprocessed articles
@@ -1118,7 +1093,7 @@ export async function getWorkflowById(workflowId: string): Promise<{
   if (!db) return null;
 
   // Try to find in all brand workflow queues
-  for (const brand of ['carz', 'ownerfi', 'vassdistro'] as const) {
+  for (const brand of ['carz', 'ownerfi', 'benefit', 'abdullah', 'personal', 'gaza'] as const) {
     const collectionName = getCollectionName('WORKFLOW_QUEUE', brand);
     const docSnap = await getDoc(doc(db, collectionName, workflowId));
 

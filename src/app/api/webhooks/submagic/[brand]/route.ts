@@ -5,7 +5,7 @@
  * Each brand has its own isolated webhook endpoint to prevent failures from affecting other brands.
  *
  * Route: /api/webhooks/submagic/[brand]
- * Brands: carz, ownerfi, vassdistro, property, property-spanish, abdullah, personal, gaza
+ * Brands: carz, ownerfi, benefit, abdullah, personal, gaza
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -13,13 +13,10 @@ import { postToLate } from '@/lib/late-api';
 import { circuitBreakers, fetchWithTimeout, TIMEOUTS } from '@/lib/api-utils';
 import {
   validateBrand,
-  buildErrorContext,
-  createBrandError,
   getBrandPlatforms,
   getBrandStoragePath,
 } from '@/lib/brand-utils';
 import { getBrandConfig } from '@/config/brand-configs';
-import { postToMultiplePlatformGroups, getScheduleDescription } from '@/lib/platform-scheduling';
 
 interface RouteContext {
   params: Promise<{
@@ -138,11 +135,36 @@ export async function POST(request: NextRequest, context: RouteContext) {
       if (!downloadUrl) {
         console.log(`   📤 No download URL - triggering export to generate final video...`);
 
+        // EXPORT IDEMPOTENCY CHECK - Prevent duplicate export triggers
+        // If we've already triggered export for this project, skip
+        if (workflow.exportTriggeredAt) {
+          const timeSinceExport = Date.now() - workflow.exportTriggeredAt;
+          const fiveMinutesMs = 5 * 60 * 1000;
+
+          if (timeSinceExport < fiveMinutesMs) {
+            console.log(`⚠️  [${brandConfig.displayName}] Export already triggered ${Math.round(timeSinceExport / 1000)}s ago - skipping duplicate`);
+            return NextResponse.json({
+              success: true,
+              brand,
+              projectId: submagicProjectId,
+              workflow_id: workflowId,
+              message: 'Export already triggered - waiting for completion',
+            });
+          }
+          console.log(`   Previous export was ${Math.round(timeSinceExport / 1000)}s ago - allowing retry`);
+        }
+
         // Call /export endpoint to generate the final video
         const SUBMAGIC_API_KEY = process.env.SUBMAGIC_API_KEY;
         if (!SUBMAGIC_API_KEY) {
           throw new Error('Submagic API key not configured');
         }
+
+        // Mark export as triggered BEFORE calling API (prevents race conditions)
+        await updateWorkflowForBrand(brand, workflowId, {
+          exportTriggeredAt: Date.now(),
+          status: 'exporting',
+        });
 
         // Retry logic for export trigger (max 3 attempts)
         let exportResponse;
@@ -306,7 +328,8 @@ export async function POST(request: NextRequest, context: RouteContext) {
     console.error('❌ Error processing Submagic webhook:', error);
 
     // Log to DLQ for later analysis
-    await logToDeadLetterQueue('submagic', context.params.brand, request, error);
+    const params = await context.params;
+    await logToDeadLetterQueue('submagic', params.brand, request, error);
 
     return NextResponse.json({
       success: false,
@@ -321,20 +344,13 @@ export async function POST(request: NextRequest, context: RouteContext) {
  * Get workflow by Submagic project ID for specific brand
  */
 async function getWorkflowBySubmagicId(
-  brand: 'carz' | 'ownerfi' | 'property' | 'property-spanish' | 'vassdistro' | 'abdullah' | 'personal' | 'gaza',
+  brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza',
   submagicProjectId: string
 ): Promise<{ workflowId: string; workflow: any } | null> {
   const { getAdminDb } = await import('@/lib/firebase-admin');
   const adminDb = await getAdminDb();
 
-  // Property brands use NEW propertyShowcaseWorkflows collection
-  if (brand === 'property' || brand === 'property-spanish') {
-    const { getPropertyWorkflowBySubmagicId } = await import('@/lib/property-workflow');
-    const result = await getPropertyWorkflowBySubmagicId(submagicProjectId);
-    return result;
-  }
-
-  // Other brands use their respective collections
+  // Brands use their respective collections
   let collectionName: string;
   if (brand === 'abdullah') {
     collectionName = 'abdullah_workflow_queue';
@@ -380,7 +396,7 @@ async function getWorkflowBySubmagicId(
  * CRITICAL: Also updates dedup document when status changes to prevent duplicate processing
  */
 async function updateWorkflowForBrand(
-  brand: 'carz' | 'ownerfi' | 'property' | 'property-spanish' | 'vassdistro' | 'abdullah' | 'personal' | 'gaza',
+  brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza',
   workflowId: string,
   updates: Record<string, any>
 ): Promise<void> {
@@ -413,11 +429,7 @@ async function updateWorkflowForBrand(
     }
   };
 
-  if (brand === 'property' || brand === 'property-spanish') {
-    // Use NEW propertyShowcaseWorkflows collection
-    const { updatePropertyWorkflow } = await import('@/lib/property-workflow');
-    await updatePropertyWorkflow(workflowId, cleanUpdates);
-  } else if (brand === 'abdullah') {
+  if (brand === 'abdullah') {
     const { db } = await import('@/lib/firebase');
     const { doc, updateDoc, getDoc } = await import('firebase/firestore');
     const collectionName = 'abdullah_workflow_queue';
@@ -510,7 +522,7 @@ async function fetchVideoUrlFromSubmagic(submagicProjectId: string): Promise<str
  * Process video upload to R2 and post to Late
  */
 async function processVideoAndPost(
-  brand: 'carz' | 'ownerfi' | 'property' | 'vassdistro' | 'abdullah' | 'personal' | 'gaza',
+  brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza',
   workflowId: string,
   workflow: any,
   videoUrl: string
@@ -543,23 +555,21 @@ async function processVideoAndPost(
     let caption: string;
     let title: string;
 
-    if (brand === 'property') {
-      caption = workflow.caption || 'New owner finance property for sale! 🏡';
-      title = workflow.title || 'Property For Sale';
-    } else if (brand === 'ownerfi') {
-      caption = workflow.caption || workflow.articleTitle || 'Discover owner financing opportunities! 🏡';
+    if (brand === 'ownerfi') {
+      caption = workflow.caption || workflow.articleTitle || 'Discover owner financing opportunities!';
       title = workflow.title || workflow.articleTitle || 'Owner Finance News';
     } else if (brand === 'carz') {
-      caption = workflow.caption || workflow.articleTitle || 'Electric vehicle news and updates! ⚡';
+      caption = workflow.caption || workflow.articleTitle || 'Electric vehicle news and updates!';
       title = workflow.title || workflow.articleTitle || 'EV News';
-    } else if (brand === 'vassdistro') {
-      caption = workflow.caption || workflow.articleTitle || 'Check out this vape industry update! 🔥';
-      title = workflow.title || workflow.articleTitle || 'Vape Industry News';
+    } else if (brand === 'benefit') {
+      caption = workflow.caption || workflow.articleTitle || 'Maximize your benefits!';
+      title = workflow.title || workflow.articleTitle || 'Benefits Update';
     } else if (brand === 'gaza') {
       caption = workflow.caption || workflow.articleTitle || 'Breaking news from Gaza. Help families in need.';
       title = workflow.title || workflow.articleTitle || 'Gaza News Update';
     } else {
-      caption = workflow.caption || workflow.articleTitle || 'Check out this video! 🔥';
+      // abdullah, personal, etc.
+      caption = workflow.caption || workflow.articleTitle || 'Check out this video!';
       title = workflow.title || workflow.articleTitle || 'Viral Video';
     }
 
@@ -617,13 +627,14 @@ async function processVideoAndPost(
  * Send failure alert for brand
  */
 async function sendFailureAlert(
-  brand: 'carz' | 'ownerfi' | 'property' | 'vassdistro' | 'personal' | 'gaza' | 'abdullah',
+  brand: 'carz' | 'ownerfi' | 'benefit' | 'personal' | 'gaza' | 'abdullah',
   workflowId: string,
   workflow: any,
   reason: string
 ): Promise<void> {
   try {
-    if (brand !== 'property' && brand !== 'gaza' && brand !== 'personal') {
+    // Skip alerts for gaza and personal (they have their own alerting)
+    if (brand !== 'gaza' && brand !== 'personal') {
       const { alertWorkflowFailure } = await import('@/lib/error-monitoring');
       await alertWorkflowFailure(
         brand,

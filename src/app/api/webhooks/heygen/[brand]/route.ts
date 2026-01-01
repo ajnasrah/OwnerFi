@@ -5,12 +5,12 @@
  * Each brand has its own isolated webhook endpoint to prevent failures from affecting other brands.
  *
  * Route: /api/webhooks/heygen/[brand]
- * Brands: carz, ownerfi, podcast, vassdistro, benefit, property, property-spanish, abdullah, gaza
+ * Brands: carz, ownerfi, benefit, abdullah, personal, gaza
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { validateBrand, buildErrorContext, createBrandError, getBrandWebhookUrl } from '@/lib/brand-utils';
-import { getBrandConfig, Brand } from '@/config/brand-configs';
+import { validateBrand, createBrandError } from '@/lib/brand-utils';
+import { getBrandConfig } from '@/config/brand-configs';
 
 // Handle OPTIONS for HeyGen webhook validation (required)
 export async function OPTIONS() {
@@ -122,7 +122,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     if (!workflow) {
       console.error(`❌ [${brandConfig.displayName}] CRITICAL: No workflow found for callback_id: ${workflowId}`);
-      console.error(`❌ [${brandConfig.displayName}] Brand: ${brand}, Collection: ${brand === 'property' || brand === 'property-spanish' ? 'propertyShowcaseWorkflows' : `${brand}_workflow_queue`}`);
+      console.error(`❌ [${brandConfig.displayName}] Brand: ${brand}, Collection: ${brand}_workflow_queue`);
       return NextResponse.json({
         success: false,
         brand,
@@ -274,7 +274,8 @@ export async function POST(request: NextRequest, context: RouteContext) {
     console.error('❌ Error processing HeyGen webhook:', error);
 
     // Log to DLQ for later analysis
-    await logToDeadLetterQueue('heygen', context.params.brand, request, error);
+    const params = await context.params;
+    await logToDeadLetterQueue('heygen', params.brand, request, error);
 
     return NextResponse.json({
       success: false,
@@ -288,34 +289,16 @@ export async function POST(request: NextRequest, context: RouteContext) {
  * Get workflow for specific brand (NO sequential lookups)
  */
 async function getWorkflowForBrand(
-  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit' | 'property' | 'property-spanish' | 'vassdistro' | 'abdullah' | 'gaza',
+  brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza',
   workflowId: string
 ): Promise<any | null> {
   const { getAdminDb } = await import('@/lib/firebase-admin');
   const adminDb = await getAdminDb();
 
-  if (brand === 'podcast') {
-    const docSnap = await adminDb.collection('podcast_workflow_queue').doc(workflowId).get();
-    return docSnap.exists ? docSnap.data() : null;
-  } else if (brand === 'benefit') {
-    const docSnap = await adminDb.collection('benefit_workflow_queue').doc(workflowId).get();
-    return docSnap.exists ? docSnap.data() : null;
-  } else if (brand === 'property' || brand === 'property-spanish') {
-    // Both property and property-spanish use the same collection (NEW: propertyShowcaseWorkflows)
-    const docSnap = await adminDb.collection('propertyShowcaseWorkflows').doc(workflowId).get();
-    return docSnap.exists ? docSnap.data() : null;
-  } else if (brand === 'abdullah') {
-    const docSnap = await adminDb.collection('abdullah_workflow_queue').doc(workflowId).get();
-    return docSnap.exists ? docSnap.data() : null;
-  } else if (brand === 'gaza') {
-    const docSnap = await adminDb.collection('gaza_workflow_queue').doc(workflowId).get();
-    return docSnap.exists ? docSnap.data() : null;
-  } else {
-    // For carz, ownerfi, vassdistro
-    const collectionName = `${brand}_workflow_queue`;
-    const docSnap = await adminDb.collection(collectionName).doc(workflowId).get();
-    return docSnap.exists ? docSnap.data() : null;
-  }
+  // All brands use standard ${brand}_workflow_queue pattern
+  const collectionName = `${brand}_workflow_queue`;
+  const docSnap = await adminDb.collection(collectionName).doc(workflowId).get();
+  return docSnap.exists ? docSnap.data() : null;
 }
 
 /**
@@ -323,7 +306,7 @@ async function getWorkflowForBrand(
  * CRITICAL: Also updates dedup document when status changes to prevent duplicate processing
  */
 async function updateWorkflowForBrand(
-  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit' | 'property' | 'property-spanish' | 'vassdistro' | 'abdullah' | 'gaza',
+  brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza',
   workflowId: string,
   updates: Record<string, any>
 ): Promise<void> {
@@ -335,9 +318,7 @@ async function updateWorkflowForBrand(
   const { getAdminDb } = await import('@/lib/firebase-admin');
   const adminDb = await getAdminDb();
 
-  const collectionName = (brand === 'property' || brand === 'property-spanish')
-    ? 'propertyShowcaseWorkflows'
-    : `${brand}_workflow_queue`;
+  const collectionName = `${brand}_workflow_queue`;
 
   // Get the workflow first to extract articleId for dedup doc update
   const workflowDoc = await adminDb.collection(collectionName).doc(workflowId).get();
@@ -376,7 +357,7 @@ async function updateWorkflowForBrand(
  * Trigger Submagic processing with brand-specific webhook
  */
 async function triggerSubmagicProcessing(
-  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit' | 'property' | 'property-spanish' | 'vassdistro' | 'abdullah' | 'gaza',
+  brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza',
   workflowId: string,
   heygenVideoUrl: string,
   workflow: any
@@ -447,16 +428,42 @@ async function triggerSubmagicProcessing(
     // Full Submagic optimization with brand-specific features
     const submagicConfig: any = {
       title,
-      language: brand === 'property-spanish' ? 'es' : 'en', // Spanish for property-spanish, English for others
-      videoUrl: heygenVideoUrl, // ⚡ Send HeyGen URL directly (not R2 URL)
+      language: 'en', // English for all brands
+      videoUrl: heygenVideoUrl, // Send HeyGen URL directly (not R2 URL)
       webhookUrl: submagicWebhookUrl, // Brand-specific webhook
       templateName: 'Hormozi 2', // Professional captions style
-      magicZooms: true, // Auto zoom on important moments (enabled for ALL brands)
-      magicBrolls: brand !== 'property' && brand !== 'property-spanish' && brand !== 'podcast', // B-rolls DISABLED for property, property-spanish and podcast
-      magicBrollsPercentage: (brand !== 'property' && brand !== 'property-spanish' && brand !== 'podcast') ? 75 : 0, // 0% for property/podcast, 75% for others
-      removeSilencePace: (brand !== 'property' && brand !== 'property-spanish') ? 'fast' : 'natural', // Natural pace for property (keep most of script), fast for others
-      removeBadTakes: brand !== 'property' && brand !== 'property-spanish', // OFF for property (keep all content)
+      magicZooms: true, // Auto zoom on important moments
+      magicBrolls: true, // B-rolls enabled
+      magicBrollsPercentage: 75, // 75% B-roll coverage
+      removeSilencePace: 'fast', // Fast pace for viral content
+      removeBadTakes: true, // Remove bad takes
     };
+
+    // Budget check before Submagic API call
+    try {
+      const { canAfford } = await import('@/lib/cost-tracker');
+      const budgetCheck = await canAfford('submagic', 1);
+
+      if (!budgetCheck.allowed) {
+        console.error(`🚫 [${brandConfig.displayName}] Submagic budget exceeded: ${budgetCheck.reason}`);
+
+        await updateWorkflowForBrand(brand, workflowId, {
+          status: 'budget_exceeded',
+          error: budgetCheck.reason,
+          heygenVideoUrl: heygenVideoUrl, // Save HeyGen URL for retry when budget resets
+        });
+
+        // Don't throw - just skip Submagic. The workflow can be retried when budget resets.
+        return;
+      }
+
+      if (budgetCheck.status.nearLimit) {
+        console.warn(`⚠️  [${brandConfig.displayName}] Submagic budget at ${budgetCheck.status.percentage.toFixed(1)}%`);
+      }
+    } catch (budgetError) {
+      console.warn(`⚠️  [${brandConfig.displayName}] Budget check failed, proceeding anyway:`, budgetError);
+      // Don't block if budget check fails - cost tracking is non-critical
+    }
 
     console.log(`📤 [${brandConfig.displayName}] Sending Submagic request:`);
     console.log(`   Video URL: ${heygenVideoUrl}`);
@@ -538,7 +545,7 @@ async function triggerSubmagicProcessing(
     await updateWorkflowForBrand(brand, workflowId, {
       status: 'submagic_processing',
       submagicVideoId: projectId,
-      submagicProjectId: projectId, // For podcast compatibility
+      submagicProjectId: projectId,
     });
 
     // NOTE: We do NOT call /export here!
@@ -569,13 +576,14 @@ async function triggerSubmagicProcessing(
  * Send failure alert for brand
  */
 async function sendFailureAlert(
-  brand: 'carz' | 'ownerfi' | 'podcast' | 'benefit' | 'property' | 'property-spanish' | 'vassdistro' | 'abdullah' | 'gaza',
+  brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza',
   workflowId: string,
   workflow: any,
   reason: string
 ): Promise<void> {
   try {
-    if (brand !== 'podcast' && brand !== 'benefit' && brand !== 'gaza') {
+    // Skip alerts for benefit, personal, and gaza (they have their own alerting)
+    if (brand !== 'benefit' && brand !== 'gaza' && brand !== 'personal') {
       const { alertWorkflowFailure } = await import('@/lib/error-monitoring');
       await alertWorkflowFailure(
         brand,

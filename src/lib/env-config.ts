@@ -99,9 +99,10 @@ export const apiKeys = {
 export const lateProfiles = {
   get carz() { return optionalEnv('LATE_CARZ_PROFILE_ID'); },
   get ownerfi() { return optionalEnv('LATE_OWNERFI_PROFILE_ID'); },
-  get podcast() { return optionalEnv('LATE_PODCAST_PROFILE_ID'); },
-  get vassdistro() { return optionalEnv('LATE_VASSDISTRO_PROFILE_ID'); },
+  get benefit() { return optionalEnv('LATE_BENEFIT_PROFILE_ID'); },
   get abdullah() { return optionalEnv('LATE_ABDULLAH_PROFILE_ID'); },
+  get personal() { return optionalEnv('LATE_PERSONAL_PROFILE_ID'); },
+  get gaza() { return optionalEnv('LATE_GAZA_PROFILE_ID'); },
 };
 
 // Firebase Configuration

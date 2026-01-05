@@ -9,7 +9,7 @@ import { BenefitPoint } from '@/lib/benefit-content';
 import { circuitBreakers, fetchWithTimeout, TIMEOUTS } from '@/lib/api-utils';
 import { getBrandWebhookUrl } from '@/lib/brand-utils';
 import { checkScriptCompliance, appendDisclaimers, ComplianceCheckResult } from './compliance-checker';
-import { Brand } from '@/config/brand-configs';
+import { Brand } from '@/config/constants';
 import { selectAgent, AgentSelectionOptions } from './agent-selector';
 import {
   HeyGenAgent,
@@ -20,9 +20,6 @@ import {
 } from '@/config/heygen-agents';
 
 const HEYGEN_API_URL = 'https://api.heygen.com/v2/video/generate';
-
-// Default background color for benefit videos (green for buyers)
-const DEFAULT_BACKGROUND_COLOR = '#059669';
 
 // Legacy config for backward compatibility (will be replaced by agent system)
 const AVATAR_CONFIG = {
@@ -409,19 +406,16 @@ Disclaimer: "Educational only. No financing guarantees."`;
     // Build voice config from agent with the script
     const voiceConfig = buildVoiceConfig(agent, script);
 
-    // Build background config - use agent's built-in background if available
-    const backgroundConfig = buildBackgroundConfig(agent, DEFAULT_BACKGROUND_COLOR);
+    // Build background config - use brand-specific green color
+    // ALWAYS provide a background to avoid white backgrounds
+    const backgroundConfig = buildBackgroundConfig('benefit');
 
-    // Build HeyGen API request
+    // Build HeyGen API request with background (always included to prevent white backgrounds)
     const videoInput: any = {
       character: characterConfig,
       voice: voiceConfig,
+      background: backgroundConfig,
     };
-
-    // Only add background for talking photos (not studio avatars with built-in backgrounds)
-    if (backgroundConfig) {
-      videoInput.background = backgroundConfig;
-    }
 
     const request = {
       video_inputs: [videoInput],

@@ -9,7 +9,7 @@ import { CompleteWorkflowRequestSchema, safeParse } from '@/lib/validation-schem
 import { ERROR_MESSAGES } from '@/config/constants';
 import { generateCaptionAndComment } from '@/lib/caption-intelligence';
 import { validateAndFixScript } from '@/lib/compliance-checker';
-import { Brand } from '@/config/brand-configs';
+import { Brand } from '@/config/constants';
 import { selectAgent } from '@/lib/agent-selector';
 import {
   buildCharacterConfig,
@@ -252,19 +252,16 @@ export async function POST(request: NextRequest) {
       const voiceConfig = buildVoiceConfig(agent, content.script);
       voiceConfig.speed = 1.1; // Keep the speed setting
 
-      // Build background config - uses agent's built-in background or fallback color
-      const backgroundConfig = buildBackgroundConfig(agent, '#1a1a2e');
+      // Build background config - uses brand-specific color
+      // ALWAYS provide a background to avoid white backgrounds
+      const backgroundConfig = buildBackgroundConfig(brand as Brand);
 
-      // Build video input
+      // Build video input with background (always included to prevent white backgrounds)
       const videoInput: any = {
         character: characterConfig,
         voice: voiceConfig,
+        background: backgroundConfig,
       };
-
-      // Only add background for talking photos (not studio avatars with built-in backgrounds)
-      if (backgroundConfig) {
-        videoInput.background = backgroundConfig;
-      }
 
       heygenRequest = {
         video_inputs: [videoInput],

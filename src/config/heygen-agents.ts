@@ -645,25 +645,114 @@ export function buildVoiceConfig(agent: HeyGenAgent, inputText: string) {
   return config;
 }
 
+// ============================================================================
+// Brand Background Colors
+// ============================================================================
+
 /**
- * Build HeyGen video request background config from agent
- * Returns undefined if agent has built-in background (studio avatars)
- * Returns a color background config if agent needs explicit background (talking photos)
+ * Brand-specific background colors
+ * These are used when no image/video background is provided
+ */
+export const BRAND_BACKGROUND_COLORS: Record<Brand, string> = {
+  ownerfi: '#1a1a2e',      // Dark blue (professional real estate)
+  carz: '#0f172a',         // Dark slate (automotive)
+  benefit: '#059669',      // Green (positive/benefits)
+  abdullah: '#18181b',     // Near black (personal brand)
+  gaza: '#1f2937',         // Dark gray (serious news)
+  personal: '#1e1b4b',     // Indigo (personal)
+};
+
+/**
+ * Background configuration options
+ */
+export interface BackgroundOptions {
+  type?: 'color' | 'image' | 'video';
+  color?: string;           // Hex color for color backgrounds
+  imageUrl?: string;        // URL for image backgrounds
+  imageAssetId?: string;    // HeyGen asset ID for image backgrounds
+  videoUrl?: string;        // URL for video backgrounds
+  videoAssetId?: string;    // HeyGen asset ID for video backgrounds
+  playStyle?: 'fit_to_scene' | 'freeze' | 'loop' | 'full_video';  // For video backgrounds
+}
+
+/**
+ * Background config returned to HeyGen API
+ */
+export type BackgroundConfig =
+  | { type: 'color'; value: string }
+  | { type: 'image'; url: string }
+  | { type: 'image'; image_asset_id: string }
+  | { type: 'video'; url: string; play_style: string }
+  | { type: 'video'; video_asset_id: string; play_style: string };
+
+/**
+ * Build HeyGen video request background config
+ *
+ * ALWAYS returns a background config to prevent white/empty backgrounds.
+ * Priority: video > image > color
+ *
+ * @param brand - Brand to get default color for
+ * @param options - Optional background customization
+ * @returns Background config for HeyGen API
  */
 export function buildBackgroundConfig(
-  agent: HeyGenAgent,
-  fallbackColor: string = '#1a1a2e'
-): { type: 'color'; value: string } | undefined {
-  // Studio avatars have built-in backgrounds - don't specify a background
-  if (agent.avatar.hasBuiltInBackground) {
-    return undefined;
+  brand: Brand,
+  options: BackgroundOptions = {}
+): BackgroundConfig {
+  const {
+    type,
+    color,
+    imageUrl,
+    imageAssetId,
+    videoUrl,
+    videoAssetId,
+    playStyle = 'loop',
+  } = options;
+
+  // Explicit type override
+  if (type === 'video' && (videoUrl || videoAssetId)) {
+    if (videoAssetId) {
+      return { type: 'video', video_asset_id: videoAssetId, play_style: playStyle };
+    }
+    return { type: 'video', url: videoUrl!, play_style: playStyle };
   }
 
-  // Talking photos need an explicit background
-  return {
-    type: 'color',
-    value: fallbackColor
-  };
+  if (type === 'image' && (imageUrl || imageAssetId)) {
+    if (imageAssetId) {
+      return { type: 'image', image_asset_id: imageAssetId };
+    }
+    return { type: 'image', url: imageUrl! };
+  }
+
+  // Auto-detect from provided options (priority: video > image > color)
+  if (videoUrl) {
+    return { type: 'video', url: videoUrl, play_style: playStyle };
+  }
+  if (videoAssetId) {
+    return { type: 'video', video_asset_id: videoAssetId, play_style: playStyle };
+  }
+  if (imageUrl) {
+    return { type: 'image', url: imageUrl };
+  }
+  if (imageAssetId) {
+    return { type: 'image', image_asset_id: imageAssetId };
+  }
+
+  // Default to brand color (ALWAYS returns a color - never undefined)
+  const brandColor = color || BRAND_BACKGROUND_COLORS[brand] || '#1a1a2e';
+  return { type: 'color', value: brandColor };
+}
+
+/**
+ * @deprecated Use buildBackgroundConfig(brand, options) instead
+ * Legacy function for backwards compatibility
+ */
+export function buildBackgroundConfigLegacy(
+  _agent: HeyGenAgent,
+  fallbackColor: string = '#1a1a2e'
+): BackgroundConfig {
+  // Always return a color background now
+  return { type: 'color', value: fallbackColor };
 }
 
 // ============================================================================
@@ -673,6 +762,7 @@ export function buildBackgroundConfig(
 export default {
   HEYGEN_AGENTS,
   SCALE_PRESETS,
+  BRAND_BACKGROUND_COLORS,
   getAgentsForBrand,
   getPrimaryAgentForBrand,
   getAgentsByLanguage,
@@ -683,4 +773,5 @@ export default {
   buildCharacterConfig,
   buildVoiceConfig,
   buildBackgroundConfig,
+  buildBackgroundConfigLegacy,
 };

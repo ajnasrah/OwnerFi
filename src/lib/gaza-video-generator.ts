@@ -23,9 +23,6 @@ import { Article } from '@/lib/feed-store-firestore';
 
 const HEYGEN_API_URL = 'https://api.heygen.com/v2/video/generate';
 
-// Default dark/somber background color for Gaza content
-const DEFAULT_BACKGROUND_COLOR = '#1a1a2e'; // Dark blue-black for serious news
-
 // Donation URL placeholder - disabled for now, will be enabled later
 // const DONATION_URL = process.env.GAZA_DONATION_URL || 'link in bio';
 const DONATION_CTA_ENABLED = false; // Set to true when ready to add donation CTAs
@@ -311,33 +308,21 @@ Return ONLY the script text - no labels, brackets, or formatting. Just the spoke
     const voiceConfig = buildVoiceConfig(agent, script);
 
     // Build background config
-    // For Gaza: use article image if available, otherwise use agent's built-in background or dark color
-    let backgroundConfig: any = undefined;
-    if (backgroundImageUrl) {
-      // Use article screenshot as background
-      backgroundConfig = {
-        type: 'image',
-        url: backgroundImageUrl,
-        fit: 'cover' as const,
-      };
-    } else {
-      // Use agent's built-in background (for studio avatars) or fallback color (for talking photos)
-      backgroundConfig = buildBackgroundConfig(agent, DEFAULT_BACKGROUND_COLOR);
-    }
+    // For Gaza: use article image if available, otherwise use brand color
+    // ALWAYS provide a background to avoid white backgrounds
+    const backgroundConfig = backgroundImageUrl
+      ? buildBackgroundConfig('gaza', { imageUrl: backgroundImageUrl })
+      : buildBackgroundConfig('gaza');
 
     // Get webhook URL for Gaza
     const webhookUrl = getBrandWebhookUrl('gaza', 'heygen');
 
-    // Build video input
+    // Build video input with background (always included to prevent white backgrounds)
     const videoInput: any = {
       character: characterConfig,
       voice: voiceConfig,
+      background: backgroundConfig,
     };
-
-    // Only add background if needed (not for studio avatars with built-in backgrounds)
-    if (backgroundConfig) {
-      videoInput.background = backgroundConfig;
-    }
 
     // Build complete request
     const request = {

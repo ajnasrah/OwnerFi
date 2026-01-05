@@ -8,7 +8,6 @@
 import { validateAndFixScript } from './compliance-checker';
 import { selectAgent, AgentSelectionOptions } from './agent-selector';
 import {
-  HeyGenAgent,
   buildCharacterConfig,
   buildVoiceConfig,
   buildBackgroundConfig,
@@ -350,19 +349,16 @@ export async function buildAbdullahVideoRequestWithAgent(
   // Build voice config from agent with the script
   const voiceConfig = buildVoiceConfig(agent, video.script);
 
-  // Abdullah videos use solid color background or agent's built-in background
-  const backgroundConfig = buildBackgroundConfig(agent, '#1a1a2e'); // Dark background
+  // Abdullah videos use brand-specific dark background
+  // ALWAYS provide a background to avoid white backgrounds
+  const backgroundConfig = buildBackgroundConfig('abdullah');
 
-  // Build request
+  // Build request with background (always included to prevent white backgrounds)
   const videoInput: any = {
     character: characterConfig,
     voice: voiceConfig,
+    background: backgroundConfig,
   };
-
-  // Only add background for talking photos (not studio avatars with built-in backgrounds)
-  if (backgroundConfig) {
-    videoInput.background = backgroundConfig;
-  }
 
   const request = {
     video_inputs: [videoInput],

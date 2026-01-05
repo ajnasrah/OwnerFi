@@ -18,6 +18,7 @@ import { Brand } from './constants';
 
 export type VoiceEmotion = 'Excited' | 'Friendly' | 'Serious' | 'Soothing' | 'Broadcaster';
 export type TalkingStyle = 'stable' | 'expressive';
+export type AvatarStyle = 'normal' | 'circle' | 'closeUp';
 export type AvatarType = 'avatar' | 'talking_photo';
 export type VoiceLanguage = 'en' | 'es' | 'both';
 
@@ -30,6 +31,7 @@ export interface HeyGenAgentVoiceConfig {
 export interface HeyGenAgentAvatarConfig {
   avatarId: string;
   avatarType: AvatarType;
+  avatarStyle?: AvatarStyle;  // 'normal' | 'circle' | 'closeUp' - framing style
   scale?: number;          // 0.5 - 2.0, default 1.0 (for talking photos, use ~1.4 for vertical videos)
   talkingStyle?: TalkingStyle;  // Only for 'avatar' type, not 'talking_photo'
   offsetX?: number;        // Horizontal offset in pixels
@@ -615,6 +617,11 @@ export function buildCharacterConfig(agent: HeyGenAgent, videoDimension: 'vertic
     }
   }
 
+  // Add avatar_style for framing (normal, circle, closeUp)
+  if (agent.avatar.avatarStyle) {
+    baseConfig.avatar_style = agent.avatar.avatarStyle;
+  }
+
   // Add offset if specified
   if (agent.avatar.offsetX !== undefined) {
     baseConfig.offset_x = agent.avatar.offsetX;
@@ -661,6 +668,50 @@ export const BRAND_BACKGROUND_COLORS: Record<Brand, string> = {
   gaza: '#1f2937',         // Dark gray (serious news)
   personal: '#1e1b4b',     // Indigo (personal)
 };
+
+// ============================================================================
+// Brand Motion Prompts (for Avatar IV API)
+// ============================================================================
+
+/**
+ * Brand-specific motion prompts for more engaging avatar movements
+ * Used with Avatar IV API's custom_motion_prompt parameter
+ *
+ * Formula: [Body part] + [Action] + [Emotion/intensity]
+ * Keep prompts under two short clauses for best stability
+ */
+export const BRAND_MOTION_PROMPTS: Record<Brand, string> = {
+  ownerfi: 'Avatar gestures confidently while explaining, nods when making key points',
+  carz: 'Avatar uses enthusiastic hand gestures, smiles warmly when discussing deals',
+  benefit: 'Avatar nods warmly with open palm gestures, leans in slightly when emphasizing benefits',
+  abdullah: 'Avatar gestures naturally with conviction, points forward when sharing insights',
+  gaza: 'Avatar maintains composed expression with subtle head movements, speaks with gravity',
+  personal: 'Avatar expresses warmly with natural hand movements, smiles genuinely',
+};
+
+/**
+ * Get motion prompt for a brand
+ * Can be customized based on content type
+ */
+export function getMotionPrompt(brand: Brand, contentType?: 'news' | 'educational' | 'promotional' | 'personal'): string {
+  // For news content, use more subdued motion
+  if (contentType === 'news' || brand === 'gaza') {
+    return 'Avatar speaks with composed authority, subtle nods for emphasis';
+  }
+
+  // For educational content, use teaching gestures
+  if (contentType === 'educational') {
+    return 'Avatar explains with clear hand gestures, nods encouragingly';
+  }
+
+  // For promotional content, use energetic gestures
+  if (contentType === 'promotional') {
+    return 'Avatar gestures enthusiastically, smiles and points when highlighting benefits';
+  }
+
+  // Default to brand-specific prompt
+  return BRAND_MOTION_PROMPTS[brand] || BRAND_MOTION_PROMPTS.personal;
+}
 
 /**
  * Background configuration options
@@ -763,6 +814,7 @@ export default {
   HEYGEN_AGENTS,
   SCALE_PRESETS,
   BRAND_BACKGROUND_COLORS,
+  BRAND_MOTION_PROMPTS,
   getAgentsForBrand,
   getPrimaryAgentForBrand,
   getAgentsByLanguage,
@@ -774,4 +826,5 @@ export default {
   buildVoiceConfig,
   buildBackgroundConfig,
   buildBackgroundConfigLegacy,
+  getMotionPrompt,
 };

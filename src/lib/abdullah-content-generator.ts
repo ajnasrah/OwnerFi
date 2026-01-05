@@ -11,7 +11,13 @@ import {
   buildCharacterConfig,
   buildVoiceConfig,
   buildBackgroundConfig,
+  getMotionPrompt,
 } from '@/config/heygen-agents';
+import {
+  uploadHeyGenAsset,
+  generateAvatarIVVideo,
+  AvatarIVVideoRequest,
+} from './heygen-client';
 
 export interface AbdullahVideo {
   theme: string;
@@ -371,10 +377,137 @@ export async function buildAbdullahVideoRequestWithAgent(
   return { request, agentId: agent.id };
 }
 
+// ============================================================================
+// Avatar IV Support (More Expressive Videos with Hand Gestures)
+// ============================================================================
+
+// Abdullah's photo URL for Avatar IV (can be overridden)
+const ABDULLAH_PHOTO_URL = process.env.ABDULLAH_AVATAR_PHOTO_URL ||
+  'https://files2.heygen.ai/avatar/v3/d33fe3abc2914faa88309c3bdb9f47f4/full/2.2/preview_target.webp';
+
+// Cached image key to avoid re-uploading
+let cachedImageKey: string | null = null;
+
+/**
+ * Generate Abdullah video using Avatar IV API
+ *
+ * Avatar IV produces more engaging videos with:
+ * - Natural hand gestures from motion prompts
+ * - Micro-expressions and head movements
+ * - Better lip sync
+ *
+ * @param video - The video script content
+ * @param workflowId - Workflow ID for tracking
+ * @param options - Optional configuration
+ * @returns Video ID and success status
+ */
+export async function generateAbdullahAvatarIVVideo(
+  video: AbdullahVideoScript | AbdullahVideo,
+  workflowId: string,
+  options?: {
+    imageUrl?: string;        // Override photo URL
+    imageKey?: string;        // Pre-uploaded image key (skips upload)
+    voiceId?: string;         // Override voice ID
+    motionPrompt?: string;    // Custom motion prompt
+    contentType?: 'news' | 'educational' | 'promotional' | 'personal';
+  }
+): Promise<{ success: boolean; videoId?: string; error?: string }> {
+  try {
+    console.log(`🎬 [abdullah] Generating Avatar IV video with hand gestures...`);
+
+    // 1. Get or upload image key
+    let imageKey = options?.imageKey || cachedImageKey;
+
+    if (!imageKey) {
+      const imageUrl = options?.imageUrl || ABDULLAH_PHOTO_URL;
+      console.log(`📤 [abdullah] Uploading photo for Avatar IV...`);
+
+      const uploadResult = await uploadHeyGenAsset(imageUrl, 'abdullah');
+
+      if (!uploadResult.success || !uploadResult.image_key) {
+        console.error(`❌ Failed to upload image: ${uploadResult.error}`);
+        return { success: false, error: `Image upload failed: ${uploadResult.error}` };
+      }
+
+      imageKey = uploadResult.image_key;
+      cachedImageKey = imageKey; // Cache for future use
+      console.log(`✅ [abdullah] Image uploaded: ${imageKey}`);
+    }
+
+    // 2. Get motion prompt based on content
+    const contentType = options?.contentType || detectContentType(video.theme);
+    const motionPrompt = options?.motionPrompt || getMotionPrompt('abdullah', contentType);
+
+    console.log(`   🎭 Motion: ${motionPrompt.substring(0, 50)}...`);
+    console.log(`   📝 Script: ${video.script.substring(0, 50)}...`);
+
+    // 3. Build Avatar IV request
+    const request: AvatarIVVideoRequest = {
+      image_key: imageKey,
+      video_title: video.title || 'Abdullah Video',
+      script: video.script,
+      voice_id: options?.voiceId || '9070a6c2dbd54c10bb111dc8c655bff7', // Abdullah's voice
+      custom_motion_prompt: motionPrompt,
+      enhance_custom_motion_prompt: true,
+      dimension: { width: 1080, height: 1920 },
+      callback_id: workflowId,
+    };
+
+    // 4. Generate video
+    const result = await generateAvatarIVVideo(request, 'abdullah', workflowId);
+
+    if (!result.success) {
+      console.error(`❌ Avatar IV generation failed: ${result.error}`);
+      return { success: false, error: result.error };
+    }
+
+    console.log(`✅ [abdullah] Avatar IV video created: ${result.video_id}`);
+
+    return {
+      success: true,
+      videoId: result.video_id,
+    };
+
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+    console.error(`❌ Avatar IV generation error: ${errorMsg}`);
+    return { success: false, error: errorMsg };
+  }
+}
+
+/**
+ * Detect content type from theme for motion prompt selection
+ */
+function detectContentType(theme: string): 'news' | 'educational' | 'promotional' | 'personal' {
+  const themeLC = theme.toLowerCase();
+
+  if (themeLC.includes('business') || themeLC.includes('money') || themeLC.includes('deal')) {
+    return 'promotional';
+  }
+  if (themeLC.includes('mindset') || themeLC.includes('freedom')) {
+    return 'educational';
+  }
+  if (themeLC.includes('story')) {
+    return 'personal';
+  }
+
+  return 'promotional'; // Default for Abdullah's content
+}
+
+/**
+ * Clear cached image key (useful if photo changes)
+ */
+export function clearAbdullahImageCache(): void {
+  cachedImageKey = null;
+  console.log('🗑️  Abdullah image cache cleared');
+}
+
 export default {
   generateAbdullahDailyContent,
   generateSingleAbdullahScript,
   validateAbdullahScript,
   buildAbdullahVideoRequest,
   buildAbdullahVideoRequestWithAgent,
+  generateAbdullahAvatarIVVideo,
+  clearAbdullahImageCache,
 };

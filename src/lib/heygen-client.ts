@@ -82,6 +82,37 @@ export interface HeyGenVideoResponse {
 }
 
 // ============================================================================
+// Avatar IV Types (for more expressive videos with hand gestures)
+// ============================================================================
+
+export interface AvatarIVVideoRequest {
+  image_key: string;              // From Upload Asset API
+  video_title?: string;
+  script: string;                 // Text the avatar will speak
+  voice_id: string;               // From List Voices API
+  audio_url?: string;             // Alternative: custom audio URL
+  audio_asset_id?: string;        // Alternative: HeyGen audio asset
+  custom_motion_prompt?: string;  // Describe gestures/expressions
+  enhance_custom_motion_prompt?: boolean;  // Let AI refine motion
+  dimension?: {
+    width: number;
+    height: number;
+  };
+  callback_id?: string;
+  callback_url?: string;
+}
+
+export interface AvatarIVVideoResponse {
+  success: boolean;
+  video_id?: string;
+  error?: string;
+  data?: {
+    video_id: string;
+    [key: string]: any;
+  };
+}
+
+// ============================================================================
 // Quota Checking
 // ============================================================================
 
@@ -332,6 +363,203 @@ export async function generateHeyGenVideo(
   }
 }
 
+// ============================================================================
+// Avatar IV Video Generation (More Expressive with Hand Gestures)
+// ============================================================================
+
+/**
+ * Upload an image asset to HeyGen for Avatar IV
+ * Returns the image_key needed for Avatar IV video generation
+ */
+export async function uploadHeyGenAsset(
+  imageUrl: string,
+  brand: Brand
+): Promise<{ success: boolean; image_key?: string; error?: string }> {
+  try {
+    console.log(`📤 [${brand}] Uploading image to HeyGen...`);
+
+    const response = await circuitBreakers.heygen.execute(async () => {
+      return await fetchWithTimeout(
+        `${HEYGEN_API_BASE}/v2/asset`,
+        {
+          method: 'POST',
+          headers: {
+            'accept': 'application/json',
+            'content-type': 'application/json',
+            'x-api-key': apiKeys.heygen,
+          },
+          body: JSON.stringify({
+            url: imageUrl,
+            type: 'image',
+          }),
+        },
+        TIMEOUTS.HEYGEN_API
+      );
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const errorMsg = errorData.message || errorData.error || `HTTP ${response.status}`;
+      console.error(`❌ HeyGen asset upload error: ${errorMsg}`);
+      return { success: false, error: errorMsg };
+    }
+
+    const data = await response.json();
+    const imageKey = data.data?.id || data.id;
+
+    if (!imageKey) {
+      console.error('❌ HeyGen asset upload response missing id:', JSON.stringify(data));
+      return { success: false, error: 'Asset upload response missing id' };
+    }
+
+    console.log(`✅ [${brand}] HeyGen asset uploaded: ${imageKey}`);
+    return { success: true, image_key: imageKey };
+
+  } catch (error) {
+    console.error('❌ Error uploading HeyGen asset:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+}
+
+/**
+ * Generate video with Avatar IV API (more expressive with hand gestures)
+ *
+ * Avatar IV produces more natural, engaging videos with:
+ * - Natural hand gestures
+ * - Micro-expressions
+ * - Head tilts and movements
+ * - Better lip sync
+ *
+ * Note: Avatar IV has different credit costs (2:1 ratio with motion prompts)
+ */
+export async function generateAvatarIVVideo(
+  request: AvatarIVVideoRequest,
+  brand: Brand,
+  workflowId?: string
+): Promise<AvatarIVVideoResponse> {
+  try {
+    // 1. Check quota and budget BEFORE generating
+    const quotaCheck = await checkHeyGenQuota(1, brand);
+
+    if (!quotaCheck.allowed) {
+      console.error(`❌ [${brand}] HeyGen quota check FAILED for Avatar IV`);
+      console.error(`   Reason: ${quotaCheck.reason}`);
+
+      return {
+        success: false,
+        error: `HeyGen quota insufficient: ${quotaCheck.reason}`,
+      };
+    }
+
+    console.log(`✓ [${brand}] HeyGen quota check passed for Avatar IV`);
+
+    // 2. Build the request
+    const apiRequest: Record<string, any> = {
+      image_key: request.image_key,
+      script: request.script,
+      voice_id: request.voice_id,
+    };
+
+    // Optional fields
+    if (request.video_title) apiRequest.video_title = request.video_title;
+    if (request.audio_url) apiRequest.audio_url = request.audio_url;
+    if (request.audio_asset_id) apiRequest.audio_asset_id = request.audio_asset_id;
+    if (request.callback_id) apiRequest.callback_id = request.callback_id;
+    if (request.callback_url) apiRequest.callback_url = request.callback_url;
+
+    // Motion prompts for hand gestures and expressions
+    if (request.custom_motion_prompt) {
+      apiRequest.custom_motion_prompt = request.custom_motion_prompt;
+      // Default to true to let AI enhance the motion
+      apiRequest.enhance_custom_motion_prompt = request.enhance_custom_motion_prompt ?? true;
+    }
+
+    // Dimension (default to vertical for social media)
+    apiRequest.dimension = request.dimension || { width: 1080, height: 1920 };
+
+    console.log(`🎬 [${brand}] Generating Avatar IV video with motion prompts...`);
+    if (request.custom_motion_prompt) {
+      console.log(`   Motion: ${request.custom_motion_prompt.substring(0, 50)}...`);
+    }
+
+    // 3. Call Avatar IV API
+    const response = await circuitBreakers.heygen.execute(async () => {
+      return await fetchWithTimeout(
+        `${HEYGEN_API_BASE}/v2/video/av4/generate`,
+        {
+          method: 'POST',
+          headers: {
+            'accept': 'application/json',
+            'content-type': 'application/json',
+            'x-api-key': apiKeys.heygen,
+          },
+          body: JSON.stringify(apiRequest),
+        },
+        TIMEOUTS.HEYGEN_API
+      );
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const errorMsg = errorData.message || errorData.error || `HTTP ${response.status}`;
+      console.error(`❌ Avatar IV API error: ${errorMsg}`);
+
+      return {
+        success: false,
+        error: `Avatar IV API error: ${errorMsg}`,
+      };
+    }
+
+    const data = await response.json();
+    const videoId = data.data?.video_id || data.video_id;
+
+    if (!videoId) {
+      console.error('❌ Avatar IV response missing video_id:', JSON.stringify(data));
+      return {
+        success: false,
+        error: 'Avatar IV response missing video_id',
+      };
+    }
+
+    console.log(`✅ [${brand}] Avatar IV video created: ${videoId}`);
+
+    // 4. Track the cost (Avatar IV may have different costs)
+    const cost = calculateHeyGenCost(1);
+    await trackCost(
+      brand,
+      'heygen',
+      'avatar_iv_generation',
+      1,
+      cost,
+      workflowId,
+      {
+        video_id: videoId,
+        dimensions: apiRequest.dimension,
+        has_motion_prompt: !!request.custom_motion_prompt,
+      }
+    );
+
+    // 5. Check for budget alerts
+    await checkAndAlert('heygen', 'daily');
+
+    return {
+      success: true,
+      video_id: videoId,
+      data,
+    };
+
+  } catch (error) {
+    console.error('❌ Error generating Avatar IV video:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+}
+
 /**
  * Get HeyGen video status
  * This is free (doesn't consume credits) but we track the call for monitoring
@@ -442,6 +670,8 @@ export default {
   getHeyGenQuota,
   checkHeyGenQuota,
   generateHeyGenVideo,
+  generateAvatarIVVideo,
+  uploadHeyGenAsset,
   getHeyGenVideoStatus,
   getHeyGenAvatars,
   getHeyGenVoices,

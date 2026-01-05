@@ -30,22 +30,11 @@ const db = getFirestore();
  */
 
 const BATCH_SIZE = 50; // Increased to handle nationwide volume (~300 properties/day)
+const MAX_RETRIES = 3; // Max retry attempts for failed sends
 const GHL_WEBHOOK_URL = process.env.GHL_AGENT_OUTREACH_WEBHOOK_URL ||
-  'https://services.leadconnectorhq.com/hooks/YOUR_WEBHOOK_HERE';
+  'https://services.leadconnectorhq.com/hooks/U2B5lSlWrVBgVxHNq5AH/webhook-trigger/f13ea8d2-a22c-4365-9156-759d18147d4a';
 
-export async function GET(_request: NextRequest) {
-  // ===== GHL OUTREACH DISABLED =====
-  // This system is temporarily disabled while we migrate to unified properties collection
-  // All properties now go to single 'properties' collection with dealTypes array
-  console.log('🚫 [AGENT OUTREACH QUEUE] Disabled - GHL outreach program paused');
-  return NextResponse.json({
-    success: false,
-    disabled: true,
-    message: 'GHL agent outreach queue processor is temporarily disabled. Properties are now managed in unified collection.',
-  });
-
-  // Original implementation below (disabled)
-  /*
+export async function GET(request: NextRequest) {
   console.log('🔄 [AGENT OUTREACH QUEUE] Starting queue processor');
 
   const startTime = Date.now();
@@ -99,19 +88,41 @@ export async function GET(_request: NextRequest) {
       .limit(BATCH_SIZE)
       .get();
 
-    if (pending.empty) {
-      console.log('✅ [AGENT OUTREACH QUEUE] No pending items in queue');
+    // Also get failed items that can be retried (retryCount < MAX_RETRIES)
+    const retryable = await db
+      .collection('agent_outreach_queue')
+      .where('status', '==', 'failed')
+      .where('retryCount', '<', MAX_RETRIES)
+      .orderBy('retryCount', 'asc')
+      .orderBy('addedAt', 'asc')
+      .limit(Math.max(0, BATCH_SIZE - pending.size))
+      .get();
+
+    // Combine pending and retryable
+    const allDocs = [...pending.docs, ...retryable.docs];
+
+    if (allDocs.length === 0) {
+      console.log('✅ [AGENT OUTREACH QUEUE] No pending or retryable items in queue');
       return NextResponse.json({
         success: true,
         message: 'Queue empty'
       });
     }
 
-    console.log(`📋 [AGENT OUTREACH QUEUE] Processing batch of ${pending.size} properties`);
+    console.log(`📋 [AGENT OUTREACH QUEUE] Found ${pending.size} pending + ${retryable.size} retryable = ${allDocs.length} total`);
+
+    // Log to cron_logs
+    await db.collection('cron_logs').add({
+      cron: 'process-agent-outreach-queue',
+      status: 'started',
+      pendingCount: pending.size,
+      retryableCount: retryable.size,
+      timestamp: new Date(),
+    });
 
     // Mark all as processing
     const processingBatch = db.batch();
-    pending.docs.forEach(doc => {
+    allDocs.forEach(doc => {
       processingBatch.update(doc.ref, {
         status: 'processing',
         processingStartedAt: new Date(),
@@ -123,9 +134,11 @@ export async function GET(_request: NextRequest) {
     // Send each property to GHL
     let sent = 0;
     let errors = 0;
+    let retried = 0;
     const errorDetails: Array<{ address: string; error: string }> = [];
 
-    for (const doc of pending.docs) {
+    for (const doc of allDocs) {
+      const isRetry = doc.data().status === 'failed' || (doc.data().retryCount || 0) > 0;
       try {
         const property = doc.data();
 
@@ -300,7 +313,8 @@ export async function GET(_request: NextRequest) {
         }
 
         sent++;
-        console.log(`   ✅ Sent: ${property.address}`);
+        if (isRetry) retried++;
+        console.log(`   ✅ Sent${isRetry ? ' (retry)' : ''}: ${property.address}`);
 
       } catch (error) {
         const failedProperty = doc.data();
@@ -326,7 +340,7 @@ export async function GET(_request: NextRequest) {
     const duration = ((Date.now() - startTime) / 1000).toFixed(2);
 
     console.log(`\n✅ [AGENT OUTREACH QUEUE] Batch complete in ${duration}s:`);
-    console.log(`   ✅ Sent to GHL: ${sent}`);
+    console.log(`   ✅ Sent to GHL: ${sent} (${retried} retries)`);
     console.log(`   ❌ Errors: ${errors}`);
 
     if (errors > 0) {
@@ -336,11 +350,25 @@ export async function GET(_request: NextRequest) {
       });
     }
 
+    // Log completion to cron_logs
+    await db.collection('cron_logs').add({
+      cron: 'process-agent-outreach-queue',
+      status: 'completed',
+      duration: `${duration}s`,
+      batchSize: allDocs.length,
+      sent,
+      retried,
+      errors,
+      errorDetails: errors > 0 ? errorDetails : undefined,
+      timestamp: new Date(),
+    });
+
     return NextResponse.json({
       success: true,
       duration: `${duration}s`,
-      batchSize: pending.size,
+      batchSize: allDocs.length,
       sent,
+      retried,
       errors,
       errorDetails: errors > 0 ? errorDetails : undefined,
     });
@@ -356,5 +384,4 @@ export async function GET(_request: NextRequest) {
       { status: 500 }
     );
   }
-  */
 }

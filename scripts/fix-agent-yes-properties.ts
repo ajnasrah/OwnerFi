@@ -2,6 +2,7 @@ import * as dotenv from 'dotenv';
 import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { sanitizeDescription } from '../src/lib/description-sanitizer';
+import { indexRawFirestoreProperty } from '../src/lib/typesense/sync';
 
 dotenv.config({ path: '.env.local' });
 
@@ -22,6 +23,7 @@ const DRY_RUN = !process.argv.includes('--live');
 async function fixAgentYesProperties() {
   console.log('=== FIX AGENT YES PROPERTIES ===\n');
   console.log(`Mode: ${DRY_RUN ? '🔍 DRY RUN' : '⚠️  LIVE - MAKING CHANGES'}\n`);
+  console.log('Target: unified "properties" collection\n');
 
   // Get all agent_yes properties from queue
   const agentYesSnapshot = await db
@@ -35,25 +37,23 @@ async function fixAgentYesProperties() {
   let imported = 0;
   let skipped = 0;
   let errors = 0;
+  let typesenseSynced = 0;
 
   for (const doc of agentYesSnapshot.docs) {
     const data = doc.data();
     const zpid = data.zpid;
+    const docId = `zpid_${zpid}`;
 
     try {
-      // Check if this zpid exists in zillow_imports
-      const zillowSnapshot = await db
-        .collection('zillow_imports')
-        .where('zpid', '==', zpid)
-        .limit(1)
-        .get();
+      // Check if this zpid exists in unified properties collection
+      const existingDoc = await db.collection('properties').doc(docId).get();
 
-      if (!zillowSnapshot.empty) {
-        // Property exists - just need to set ownerFinanceVerified
-        const zillowDoc = zillowSnapshot.docs[0];
-        const zillowData = zillowDoc.data();
+      if (existingDoc.exists) {
+        // Property exists - check if already verified
+        const existingData = existingDoc.data()!;
 
-        if (zillowData.ownerFinanceVerified === true) {
+        if (existingData.ownerFinanceVerified === true) {
+          console.log(`⏭️  Skipping (already verified): ${data.address}`);
           skipped++;
           continue;
         }
@@ -61,24 +61,38 @@ async function fixAgentYesProperties() {
         console.log(`📝 Updating: ${data.address}`);
 
         if (!DRY_RUN) {
-          await zillowDoc.ref.update({
+          await existingDoc.ref.update({
             ownerFinanceVerified: true,
+            isOwnerFinance: true,
             isActive: true,
             agentConfirmedOwnerFinance: true,
+            dealTypes: [...new Set([...(existingData.dealTypes || []), 'owner_finance'])],
+            source: 'agent_outreach',
             updatedAt: new Date(),
           });
+
+          // Sync to Typesense
+          try {
+            const updatedDoc = await db.collection('properties').doc(docId).get();
+            await indexRawFirestoreProperty(docId, updatedDoc.data()!, 'properties');
+            typesenseSynced++;
+          } catch (e) {
+            console.log(`   ⚠️ Typesense sync failed`);
+          }
         }
 
         updated++;
       } else {
-        // Property doesn't exist - need to import it
+        // Property doesn't exist - import it
         console.log(`📥 Importing: ${data.address}`);
 
         if (!DRY_RUN) {
-          // Import to zillow_imports with proper flags
           const descriptionText = sanitizeDescription(data.rawData?.description || '');
 
-          await db.collection('zillow_imports').add({
+          // Get image from rawData
+          const imgSrc = data.rawData?.hiResImageLink || data.rawData?.imgSrc || null;
+
+          const propertyData = {
             // Core identifiers
             zpid: data.zpid,
             url: data.url,
@@ -95,13 +109,18 @@ async function fixAgentYesProperties() {
             price: data.price || 0,
             listPrice: data.price || 0,
             zestimate: data.zestimate || null,
+            priceToZestimateRatio: data.priceToZestimateRatio || null,
 
             // Property details
             bedrooms: data.beds || 0,
             bathrooms: data.baths || 0,
-            livingArea: data.squareFeet || 0,
+            squareFoot: data.squareFeet || 0,
             homeType: data.propertyType || 'SINGLE_FAMILY',
             homeStatus: 'FOR_SALE',
+
+            // Images
+            imgSrc,
+            firstPropertyImage: imgSrc,
 
             // Agent info
             agentName: data.agentName,
@@ -116,24 +135,46 @@ async function fixAgentYesProperties() {
             allFinancingTypes: ['Owner Finance'],
             financingTypeLabel: 'Owner Finance',
 
+            // CRITICAL FLAGS - unified collection schema
+            ownerFinanceVerified: true,
+            isOwnerFinance: true,
+            isCashDeal: false,
+            dealTypes: ['owner_finance'],
+            isActive: true,
+            agentConfirmedOwnerFinance: true,
+
             // Source tracking
             source: 'agent_outreach',
-            agentConfirmedOwnerFinance: true,
-            agentConfirmedAt: data.agentResponseAt || new Date(),
+            agentConfirmedAt: data.agentResponseAt?.toDate?.() || new Date(),
             agentNote: data.agentNote || null,
             originalQueueId: doc.id,
 
-            // CRITICAL FLAGS
-            ownerFinanceVerified: true,
-            isActive: true,
-
             // Metadata
             importedAt: new Date(),
+            createdAt: new Date(),
             lastStatusCheck: new Date(),
             lastScrapedAt: new Date(),
 
             // Full raw data for reference
             rawData: data.rawData || null,
+          };
+
+          // Save to unified properties collection
+          await db.collection('properties').doc(docId).set(propertyData);
+
+          // Sync to Typesense
+          try {
+            await indexRawFirestoreProperty(docId, propertyData, 'properties');
+            typesenseSynced++;
+            console.log(`   ✅ Synced to Typesense`);
+          } catch (e) {
+            console.log(`   ⚠️ Typesense sync failed`);
+          }
+
+          // Update queue to mark as properly routed
+          await doc.ref.update({
+            routedTo: 'properties',
+            routedAt: new Date(),
           });
         }
 
@@ -147,7 +188,8 @@ async function fixAgentYesProperties() {
 
   console.log('\n=== RESULTS ===\n');
   console.log(`Updated (set ownerFinanceVerified=true): ${updated}`);
-  console.log(`Imported (new to zillow_imports): ${imported}`);
+  console.log(`Imported (new to properties): ${imported}`);
+  console.log(`Synced to Typesense: ${typesenseSynced}`);
   console.log(`Skipped (already verified): ${skipped}`);
   console.log(`Errors: ${errors}`);
   console.log(`Total processed: ${updated + imported + skipped + errors}`);

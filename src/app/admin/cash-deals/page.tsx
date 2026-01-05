@@ -823,7 +823,6 @@ export default function CashDealsPage() {
                                 <div className="flex gap-1 mt-0.5">
                                   {isTopDeal && <span className="px-1 py-0.5 text-[10px] font-bold bg-emerald-600 text-white rounded">TOP</span>}
                                   {deal.ownerFinanceVerified && <span className="px-1 py-0.5 text-[10px] font-semibold bg-blue-600 text-white rounded">OF</span>}
-                                  {deal.sentToGHL && !deal.ownerFinanceVerified && <span className="px-1 py-0.5 text-[10px] font-semibold bg-yellow-600 text-white rounded">PENDING</span>}
                                 </div>
                               </div>
                             </div>

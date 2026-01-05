@@ -43,6 +43,8 @@ import { withScraperLock } from '@/lib/scraper-v2/cron-lock';
 import { indexPropertiesBatch } from '@/lib/typesense/sync';
 import { UnifiedProperty } from '@/lib/unified-property-schema';
 import { sendBatchToGHLWebhook, toGHLPayload } from '@/lib/scraper-v2/ghl-webhook';
+import { alertSystemError } from '@/lib/error-monitoring';
+import { sendCashDealAlerts, CashDealAlert } from '@/lib/abdullah-cash-deal-alert';
 
 // Allow long-running requests (Vercel)
 export const maxDuration = 600; // 10 minutes
@@ -82,17 +84,24 @@ export async function GET(request: NextRequest) {
   }
 
   // Use lock to prevent concurrent execution
-  const { result, locked } = await withScraperLock('unified-scraper-v2', async () => {
+  const lockResult = await withScraperLock('unified-scraper-v2', async () => {
     return runUnifiedScraper();
   });
 
-  if (locked) {
+  if (lockResult.locked) {
+    const message = lockResult.error
+      ? `Lock system error: ${lockResult.error}`
+      : 'Another scraper instance is currently running';
+
     return NextResponse.json({
       success: false,
       skipped: true,
-      message: 'Another scraper instance is currently running',
-    });
+      message,
+      error: lockResult.error,
+    }, { status: lockResult.error ? 503 : 200 });
   }
+
+  const { result } = lockResult;
 
   if (result.success) {
     return NextResponse.json(result);
@@ -153,6 +162,9 @@ async function runUnifiedScraper(): Promise<{
     imgSrc?: string;
     firstPropertyImage?: string;
   }> = [];
+
+  // Collect cash deals under 80% for Abdullah's SMS alerts
+  const abdullahCashDeals: CashDealAlert[] = [];
 
   try {
     console.log('\n' + '='.repeat(60));
@@ -229,38 +241,11 @@ async function runUnifiedScraper(): Promise<{
       };
     }
 
-    // ===== STEP 2: GET PROPERTY DETAILS =====
-    console.log('\n[STEP 2] Getting property details...');
+    // ===== STEP 2: CHECK DUPLICATES FIRST (before expensive detail scraping) =====
+    // This saves Apify credits by not fetching details for properties we already have
+    console.log('\n[STEP 2] Checking for duplicates BEFORE detail scraping...');
 
-    const propertyUrls = allProperties
-      .map((p: any) => p.detailUrl || p.url)
-      .filter((url: string) => url && url.includes('zillow.com'));
-
-    console.log(`Valid property URLs: ${propertyUrls.length}`);
-
-    // Limit detail scraping to control costs
-    const MAX_DETAIL_URLS = 500;
-    const urlsToProcess = propertyUrls.slice(0, MAX_DETAIL_URLS);
-
-    if (propertyUrls.length > MAX_DETAIL_URLS) {
-      console.log(`[LIMIT] Processing first ${MAX_DETAIL_URLS} of ${propertyUrls.length} properties`);
-    }
-
-    let detailedProperties: ScrapedProperty[] = [];
-
-    if (urlsToProcess.length > 0) {
-      try {
-        detailedProperties = await runDetailScraper(urlsToProcess, { timeoutSecs: 300 });
-        console.log(`[DETAILS] Got ${detailedProperties.length} detailed properties`);
-      } catch (detailError: any) {
-        console.error(`[DETAILS] Error: ${detailError.message}`);
-        // Fall back to search results without details
-        detailedProperties = allProperties.slice(0, MAX_DETAIL_URLS);
-      }
-    }
-
-    // MERGE: Copy images from search results to detail results
-    // Detail scraper doesn't return images, but search scraper does
+    // Build map of search results by ZPID for later image merging
     const searchByZpid = new Map<string, any>();
     for (const item of allProperties) {
       if (item.zpid) {
@@ -268,37 +253,23 @@ async function runUnifiedScraper(): Promise<{
       }
     }
 
-    let imagesMerged = 0;
-    for (const prop of detailedProperties) {
-      if (!prop.imgSrc && prop.zpid) {
-        const searchItem = searchByZpid.get(String(prop.zpid));
-        if (searchItem?.imgSrc) {
-          prop.imgSrc = searchItem.imgSrc;
-          imagesMerged++;
-        }
-      }
-    }
-    console.log(`[IMAGES] Merged ${imagesMerged} images from search results`);
-
-    // ===== STEP 3: DEDUPLICATE (Check unified 'properties' collection) =====
-    console.log('\n[STEP 3] Checking for duplicates in properties collection...');
-
-    const zpids = detailedProperties
+    // Extract ZPIDs from search results
+    const searchZpids = allProperties
       .map(p => p.zpid)
       .filter((zpid): zpid is number | string => zpid !== undefined && zpid !== null)
       .map(zpid => (typeof zpid === 'string' ? parseInt(zpid, 10) : zpid));
 
-    const uniqueZpids = [...new Set(zpids)];
-    console.log(`Unique ZPIDs to check: ${uniqueZpids.length}`);
+    const uniqueSearchZpids = [...new Set(searchZpids)];
+    console.log(`Unique ZPIDs from search: ${uniqueSearchZpids.length}`);
 
     // Check unified properties collection by document ID (zpid_${zpid})
     const existingZpids = new Set<number>();
 
-    for (let i = 0; i < uniqueZpids.length; i += 10) {
-      const batch = uniqueZpids.slice(i, i + 10);
+    // Use batch size of 100 (Firebase getAll limit) for efficiency
+    for (let i = 0; i < uniqueSearchZpids.length; i += 100) {
+      const batch = uniqueSearchZpids.slice(i, i + 100);
       if (batch.length === 0) continue;
 
-      // Check by document ID pattern zpid_${zpid}
       const docIds = batch.map(z => `zpid_${z}`);
       const docRefs = docIds.map(id => db.collection('properties').doc(id));
 
@@ -311,6 +282,67 @@ async function runUnifiedScraper(): Promise<{
     }
 
     console.log(`Found existing in properties: ${existingZpids.size}`);
+    metrics.duplicatesSkipped = existingZpids.size;
+
+    // Filter to only NEW properties (not in database)
+    const newProperties = allProperties.filter(p => {
+      const zpid = typeof p.zpid === 'string' ? parseInt(p.zpid, 10) : p.zpid;
+      return zpid && !existingZpids.has(zpid);
+    });
+    console.log(`New properties to process: ${newProperties.length}`);
+
+    if (newProperties.length === 0) {
+      return {
+        success: true,
+        duration: getDuration(metrics.startTime),
+        metrics,
+        message: `All ${allProperties.length} properties already exist in database`,
+      };
+    }
+
+    // ===== STEP 3: GET PROPERTY DETAILS (only for NEW properties) =====
+    console.log('\n[STEP 3] Getting property details for NEW properties only...');
+
+    const propertyUrls = newProperties
+      .map((p: any) => p.detailUrl || p.url)
+      .filter((url: string) => url && url.includes('zillow.com'));
+
+    console.log(`Valid property URLs to fetch: ${propertyUrls.length}`);
+
+    // Limit detail scraping to control costs
+    const MAX_DETAIL_URLS = 500;
+    const urlsToProcess = propertyUrls.slice(0, MAX_DETAIL_URLS);
+
+    if (propertyUrls.length > MAX_DETAIL_URLS) {
+      console.log(`[LIMIT] Processing first ${MAX_DETAIL_URLS} of ${propertyUrls.length} new properties`);
+    }
+
+    let detailedProperties: ScrapedProperty[] = [];
+
+    if (urlsToProcess.length > 0) {
+      try {
+        detailedProperties = await runDetailScraper(urlsToProcess, { timeoutSecs: 300 });
+        console.log(`[DETAILS] Got ${detailedProperties.length} detailed properties`);
+      } catch (detailError: any) {
+        console.error(`[DETAILS] Error: ${detailError.message}`);
+        // Fall back to search results without details
+        detailedProperties = newProperties.slice(0, MAX_DETAIL_URLS);
+      }
+    }
+
+    // MERGE: Copy images from search results to detail results
+    // Detail scraper doesn't return images, but search scraper does
+    let imagesMerged = 0;
+    for (const prop of detailedProperties) {
+      if (!prop.imgSrc && prop.zpid) {
+        const searchItem = searchByZpid.get(String(prop.zpid));
+        if (searchItem?.imgSrc) {
+          prop.imgSrc = searchItem.imgSrc;
+          imagesMerged++;
+        }
+      }
+    }
+    console.log(`[IMAGES] Merged ${imagesMerged} images from search results`);
 
     // ===== STEP 4: TRANSFORM, FILTER, AND SAVE TO UNIFIED COLLECTION =====
     console.log('\n[STEP 4] Processing properties (saving to unified collection)...');
@@ -356,12 +388,8 @@ async function runUnifiedScraper(): Promise<{
           continue;
         }
 
-        // Check if already exists in properties collection
+        // NOTE: Duplicates already filtered in Step 2 before detail scraping
         const zpid = property.zpid;
-        if (existingZpids.has(zpid)) {
-          metrics.duplicatesSkipped++;
-          continue;
-        }
 
         // Save to unified 'properties' collection with zpid_${zpid} as doc ID
         const docId = `zpid_${zpid}`;
@@ -390,6 +418,16 @@ async function runUnifiedScraper(): Promise<{
         }
         if (filterResult.isCashDeal) {
           metrics.savedAsCashDeal++;
+
+          // Collect for Abdullah's SMS alerts (cash deals under 80% zestimate)
+          if (property.price && property.estimate) {
+            abdullahCashDeals.push({
+              streetAddress: property.streetAddress || property.fullAddress || '',
+              askingPrice: property.price,
+              zestimate: property.estimate,
+              zillowLink: property.url || `https://www.zillow.com/homedetails/${zpid}_zpid/`,
+            });
+          }
         }
 
         // Collect regional properties for GHL webhook
@@ -512,6 +550,12 @@ async function runUnifiedScraper(): Promise<{
         console.error('[Typesense] Indexing failed:', error.message);
         metrics.typesenseFailed = typesenseProperties.length;
         metrics.errors.push({ error: error.message, stage: 'typesense' });
+
+        // Alert if all indexing failed
+        await alertSystemError('Typesense Indexing Failed', error.message, {
+          propertiesAttempted: typesenseProperties.length,
+          stage: 'typesense',
+        });
       }
     } else {
       console.log('[Typesense] No new properties to index');
@@ -536,12 +580,32 @@ async function runUnifiedScraper(): Promise<{
         console.error('[GHL] Webhook failed:', error.message);
         metrics.ghlFailed = ghlProperties.length;
         metrics.errors.push({ error: error.message, stage: 'ghl-webhook' });
+
+        // Alert if GHL webhook completely failed
+        await alertSystemError('GHL Webhook Failed', error.message, {
+          propertiesAttempted: ghlProperties.length,
+          stage: 'ghl-webhook',
+        });
       }
     } else {
       console.log('[GHL] No regional properties to send');
     }
 
-    // ===== STEP 7: LOG STATISTICS =====
+    // ===== STEP 7: SEND ABDULLAH'S CASH DEAL SMS ALERTS =====
+    console.log('\n[STEP 7] Sending Abdullah cash deal alerts...');
+
+    if (abdullahCashDeals.length > 0) {
+      try {
+        const alertResult = await sendCashDealAlerts(abdullahCashDeals);
+        console.log(`[ABDULLAH] Sent ${alertResult.sent} alerts, ${alertResult.failed} failed`);
+      } catch (error: any) {
+        console.error('[ABDULLAH] Alert failed:', error.message);
+      }
+    } else {
+      console.log('[ABDULLAH] No cash deals under 80% to alert');
+    }
+
+    // ===== STEP 8: LOG STATISTICS =====
     const filterStats = calculateFilterStats(filterResults);
     logFilterStats(filterStats);
 
@@ -579,6 +643,14 @@ async function runUnifiedScraper(): Promise<{
   } catch (error) {
     console.error('[SCRAPER] Fatal error:', error);
     metrics.errors.push({ error: error.message, stage: 'fatal' });
+
+    // Alert admin via Slack
+    await alertSystemError('Unified Scraper v2 Failed', error.message, {
+      duration: getDuration(metrics.startTime),
+      propertiesFound: metrics.totalPropertiesFound,
+      errorCount: metrics.errors.length,
+      stage: 'fatal',
+    });
 
     return {
       success: false,

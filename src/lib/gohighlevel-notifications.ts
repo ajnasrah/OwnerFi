@@ -6,6 +6,7 @@
 
 import { BuyerProfile } from './firebase-models';
 import { PropertyListing } from './property-schema';
+import { fetchWithTimeout, ServiceTimeouts } from './fetch-with-timeout';
 
 interface PropertyMatchNotificationOptions {
   buyer: BuyerProfile;
@@ -84,12 +85,15 @@ export async function sendPropertyMatchNotification(
     console.log(`[GoHighLevel] Sending notification for property ${property.id} to buyer ${buyer.id}`);
 
     // Call our internal webhook endpoint
-    const response = await fetch(`${baseUrl}/api/webhooks/gohighlevel/property-match`, {
+    const response = await fetchWithTimeout(`${baseUrl}/api/webhooks/gohighlevel/property-match`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(payload),
+      timeout: ServiceTimeouts.GHL,
+      retries: 2,
+      retryDelay: 1000,
     });
 
     const result = await response.json();

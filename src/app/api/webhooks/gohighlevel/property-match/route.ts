@@ -21,6 +21,8 @@ import {
   getDoc,
 } from 'firebase/firestore';
 import { getSafeDb } from '@/lib/firebase-safe';
+import { formatPropertyMatchSMS } from '@/lib/sms-templates';
+import { fetchWithTimeout, ServiceTimeouts } from '@/lib/fetch-with-timeout';
 
 interface PropertyMatchWebhookPayload {
   // Buyer Information
@@ -125,19 +127,19 @@ export async function POST(request: NextRequest) {
       }, { status: 500 });
     }
 
-    // Format message for GoHighLevel
-    const smsMessage = `🏠 New Property Match!
-
-Hi ${payload.buyerFirstName}! We found a home for you in ${payload.propertyCity}, ${payload.propertyState}:
-
-📍 ${payload.propertyAddress}
-🛏️ ${payload.bedrooms} bed, ${payload.bathrooms} bath
-💰 $${payload.listPrice.toLocaleString()} list price
-💵 $${payload.monthlyPayment}/mo, $${payload.downPaymentAmount.toLocaleString()} down
-
-View it now: ${payload.dashboardUrl}
-
-Reply STOP to unsubscribe`;
+    // Format message for GoHighLevel using shared template
+    const smsMessage = formatPropertyMatchSMS({
+      buyerFirstName: payload.buyerFirstName,
+      propertyAddress: payload.propertyAddress,
+      propertyCity: payload.propertyCity,
+      propertyState: payload.propertyState,
+      bedrooms: payload.bedrooms,
+      bathrooms: payload.bathrooms,
+      listPrice: payload.listPrice,
+      monthlyPayment: payload.monthlyPayment,
+      downPaymentAmount: payload.downPaymentAmount,
+      dashboardUrl: payload.dashboardUrl,
+    });
 
     // Send to GoHighLevel
     const goHighLevelPayload = {
@@ -176,12 +178,15 @@ Reply STOP to unsubscribe`;
 
     console.log(`🚀 [GoHighLevel] Forwarding to: ${goHighLevelWebhookUrl}`);
 
-    const goHighLevelResponse = await fetch(goHighLevelWebhookUrl, {
+    const goHighLevelResponse = await fetchWithTimeout(goHighLevelWebhookUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(goHighLevelPayload),
+      timeout: ServiceTimeouts.GHL,
+      retries: 2,
+      retryDelay: 1000,
     });
 
     const responseData = await goHighLevelResponse.json().catch(() => null);

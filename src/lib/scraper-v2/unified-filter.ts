@@ -2,15 +2,20 @@
  * Unified Property Filter v2
  *
  * Runs BOTH filters on EVERY property:
- * 1. Owner Finance Filter → zillow_imports
- * 2. Cash Deal Filter (80% Zestimate OR needs work) → cash_houses
+ * 1. Owner Finance Filter → properties with isOwnerFinance=true
+ * 2. Cash Deal Filter (price < 80% Zestimate) → properties with isCashDeal=true
  *
- * A single property can match BOTH filters and be saved to BOTH collections.
+ * IMPORTANT (Jan 2026):
+ * - Cash deals now REQUIRE actual discount (< 80% zestimate)
+ * - "needsWork" is metadata only, NOT a standalone qualifier
+ * - This prevents false positives from keyword matching
+ *
+ * A single property can match BOTH filters.
  */
 
 import { hasStrictOwnerFinancing } from '../owner-financing-filter-strict';
 import { hasNegativeKeywords } from '../negative-keywords';
-import { detectNeedsWork, getMatchingKeywords } from '../property-needs-work-detector';
+import { detectNeedsWorkWithKeywords } from '../property-needs-work-detector';
 import { detectFinancingType, FinancingTypeResult } from '../financing-type-detector';
 
 export interface FilterResult {
@@ -59,8 +64,10 @@ export function runUnifiedFilter(
   const passesOwnerFinance = ownerFinanceResult.passes && !negativeResult.hasNegative;
 
   // ===== CASH DEAL FILTER =====
-  const needsWork = detectNeedsWork(description);
-  const needsWorkKeywords = needsWork ? getMatchingKeywords(description) : [];
+  // Use combined function for single-pass efficiency (avoids scanning description twice)
+  const needsWorkResult = detectNeedsWorkWithKeywords(description);
+  const needsWork = needsWorkResult.needsWork;
+  const needsWorkKeywords = needsWorkResult.matchedKeywords;
 
   // Calculate discount percentage
   let discountPercentage: number | undefined;
@@ -73,19 +80,16 @@ export function runUnifiedFilter(
     meetsDiscountCriteria = price < eightyPercentOfZestimate;
   }
 
-  // Cash deal passes if: (price < 80% Zestimate) OR (needs work)
-  const passesCashDeal = meetsDiscountCriteria || needsWork;
+  // Cash deal passes if: price < 80% Zestimate (actual discount required)
+  // needsWork is now metadata only, not a standalone qualifier
+  // This prevents false positives from keyword matching alone
+  const passesCashDeal = meetsDiscountCriteria;
 
   // Determine cash deal reason
   let cashDealReason: 'discount' | 'needs_work' | 'both' | undefined;
   if (passesCashDeal) {
-    if (meetsDiscountCriteria && needsWork) {
-      cashDealReason = 'both';
-    } else if (meetsDiscountCriteria) {
-      cashDealReason = 'discount';
-    } else {
-      cashDealReason = 'needs_work';
-    }
+    // Only set reason if it actually passes (has discount)
+    cashDealReason = needsWork ? 'both' : 'discount';
   }
 
   // ===== DETERMINE DEAL TYPES (UNIFIED) =====

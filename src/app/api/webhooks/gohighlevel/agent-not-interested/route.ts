@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
+import crypto from 'crypto';
 
 // Initialize Firebase Admin
 if (!getApps().length) {
@@ -14,6 +15,60 @@ if (!getApps().length) {
 }
 
 const db = getFirestore();
+
+// Webhook secret for security
+const GHL_WEBHOOK_SECRET = process.env.GHL_WEBHOOK_SECRET;
+
+/**
+ * Verify webhook signature using HMAC SHA-256
+ */
+function verifyWebhookSignature(
+  payload: string,
+  signature: string | null
+): { valid: boolean; reason?: string } {
+  if (!GHL_WEBHOOK_SECRET) {
+    return {
+      valid: false,
+      reason: 'Server configuration error: GHL_WEBHOOK_SECRET not set'
+    };
+  }
+
+  if (!signature) {
+    return {
+      valid: false,
+      reason: 'Missing webhook signature header'
+    };
+  }
+
+  try {
+    const expectedSignature = crypto
+      .createHmac('sha256', GHL_WEBHOOK_SECRET)
+      .update(payload)
+      .digest('hex');
+
+    // Try multiple signature formats
+    const validFormats = [
+      signature === expectedSignature,
+      signature === `sha256=${expectedSignature}`,
+      signature.replace(/^sha256=/, '') === expectedSignature,
+    ];
+
+    if (validFormats.some(valid => valid)) {
+      return { valid: true };
+    }
+
+    return {
+      valid: false,
+      reason: 'Signature mismatch - invalid authentication'
+    };
+  } catch (error) {
+    console.error('Error verifying webhook signature', error);
+    return {
+      valid: false,
+      reason: 'Signature verification error'
+    };
+  }
+}
 
 /**
  * Webhook: Mark Agent as Not Interested
@@ -34,7 +89,26 @@ export async function POST(request: NextRequest) {
   console.log('📨 [AGENT NOT INTERESTED] Received webhook');
 
   try {
-    const body = await request.json();
+    // Read raw body for signature verification
+    const rawBody = await request.text();
+    const body = JSON.parse(rawBody);
+
+    // Check for signature in header OR body (GHL sends in body)
+    const signature = request.headers.get('x-webhook-signature') ||
+                     request.headers.get('x-ghl-signature') ||
+                     body['x-webhook-signature'] ||
+                     body['x-webhook-sig'] ||
+                     body['GHL_WEBHOOK'];
+
+    // Verify webhook signature
+    const verification = verifyWebhookSignature(rawBody, signature);
+    if (!verification.valid) {
+      console.error('❌ [AGENT NOT INTERESTED] Invalid signature:', verification.reason);
+      return NextResponse.json(
+        { error: 'Unauthorized', reason: verification.reason },
+        { status: 401 }
+      );
+    }
     const { firebaseId, note } = body;
 
     console.log(`   firebaseId: ${firebaseId}`);

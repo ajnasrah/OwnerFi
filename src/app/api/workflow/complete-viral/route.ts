@@ -27,7 +27,7 @@ import { generateHeyGenVideo as generateHeyGenVideoWithTracking } from '@/lib/he
 
 export async function POST(request: NextRequest) {
   let workflowId: string | undefined; // Declare at function scope so catch block can access it
-  let brand: string | undefined; // Declare at function scope so catch block can access it
+  let brand: Brand | undefined; // Declare at function scope so catch block can access it
 
   try {
     // Parse and validate request body

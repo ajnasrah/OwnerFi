@@ -52,7 +52,9 @@ export async function acquireCronLock(cronName: string): Promise<string | null> 
     return instanceId;
   } catch (error) {
     console.error(`[LOCK] Error acquiring lock for "${cronName}":`, error);
-    return instanceId; // Allow execution on error
+    // Fail-fast: Don't allow execution if lock system fails
+    // This prevents concurrent execution and duplicate data
+    throw new Error(`Failed to acquire cron lock for "${cronName}": ${error}`);
   }
 }
 
@@ -79,8 +81,17 @@ export async function releaseCronLock(cronName: string, instanceId: string): Pro
 export async function withScraperLock<T>(
   cronName: string,
   fn: () => Promise<T>
-): Promise<{ result: T; locked: false } | { result: null; locked: true }> {
-  const instanceId = await acquireCronLock(cronName);
+): Promise<{ result: T; locked: false } | { result: null; locked: true; error?: string }> {
+  let instanceId: string | null;
+
+  try {
+    instanceId = await acquireCronLock(cronName);
+  } catch (error: any) {
+    // Lock system failure - return locked with error message
+    // This prevents concurrent execution when we can't verify lock status
+    console.error(`[LOCK] Lock system failed for "${cronName}":`, error.message);
+    return { result: null, locked: true, error: error.message };
+  }
 
   if (!instanceId) {
     return { result: null, locked: true };

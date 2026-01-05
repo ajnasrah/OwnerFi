@@ -138,5 +138,6 @@ export const ServiceTimeouts = {
   GOOGLE_MAPS: 10000,   // 10 seconds for geocoding
   OPENAI: 60000,        // 60 seconds for AI generation
   FIREBASE: 30000,      // 30 seconds for database operations
+  GHL: 15000,           // 15 seconds for GoHighLevel webhooks
   DEFAULT: 30000,       // 30 seconds default
 };

@@ -3,39 +3,46 @@
  * Used for filtering investor/cash deal properties
  */
 
+/**
+ * STRICT keywords that indicate a property genuinely needs work.
+ *
+ * REMOVED false positives (Jan 2026):
+ * - "repair/repairs" - too generic, matches "repairs completed"
+ * - "outdated" - matches "no longer outdated"
+ * - "vacant/rental property/income property/cash flow/section 8" - rental indicators, not condition
+ * - "priced to sell/price reduced/price drop" - normal marketing
+ * - "great bones/good bones/solid bones/hidden gem" - positive descriptors
+ * - "flip/investment opportunity/great investment" - investment indicators
+ * - "auction/quick close/fast close" - transaction type, not condition
+ * - Generic "potential" phrases - too broad
+ */
 export const NEEDS_WORK_KEYWORDS = [
-  // Explicit fixer keywords
-  'handyman',
+  // Explicit fixer keywords (HIGH CONFIDENCE)
   'handyman special',
   'investor special',
   'investors only',
   'investor only',
-  'as is',
-  'as-is',
-  'fixer',
   'fixer upper',
   'fixer-upper',
   'fixerupper',
-  'tlc',
-  't.l.c',
   'needs tlc',
   'little tlc',
   'some tlc',
 
-  // Renovation/repair keywords (specific phrases to avoid false positives)
+  // As-is indicators (HIGH CONFIDENCE)
+  'sold as is',
+  'selling as is',
+  'being sold as is',
+  'as is where is',
+
+  // Renovation keywords (SPECIFIC PHRASES ONLY)
   'needs renovation',
   'needs to be renovated',
-  'rehab',
   'needs rehab',
   'rehab project',
-  'restoration project',
-  'restore',
-  'restoration needed',
   'needs restoration',
   'needs remodel',
   'needs remodeling',
-  'repair',
-  'repairs',
   'needs work',
   'needs repairs',
   'needs updating',
@@ -47,37 +54,22 @@ export const NEEDS_WORK_KEYWORDS = [
   'gut renovation',
   'gut rehab',
 
-  // Condition keywords
+  // Distress indicators (HIGH CONFIDENCE)
   'distressed',
-  'estate sale',
-  'probate sale',
-  'probate',
   'foreclosure',
   'pre-foreclosure',
   'reo',
   'bank owned',
   'bank-owned',
   'short sale',
-  'motivated seller',
-  'highly motivated',
-  'very motivated',
   'cash only',
   'cash buyers only',
-  'cash preferred',
-  'sold as is',
-  'selling as is',
-  'being sold as is',
-  'where is',
-  'as is where is',
 
-  // Specific issues
-  'foundation work',
+  // Structural/major issues (HIGH CONFIDENCE)
   'foundation issues',
   'foundation problems',
   'structural issues',
-  'structural work',
-  'roof repair',
-  'roof replacement',
+  'structural damage',
   'needs roof',
   'needs new roof',
   'roof issues',
@@ -86,18 +78,6 @@ export const NEEDS_WORK_KEYWORDS = [
   'smoke damage',
   'mold',
   'termite damage',
-  'cosmetic work',
-  'needs cosmetic',
-  'cosmetic updates needed',
-  'cosmetic repairs',
-  'outdated',
-  'original condition',
-  'dated kitchen',
-  'dated bathrooms',
-  'dated interior',
-  'dated finishes',
-  'very dated',
-  'extremely dated',
   'deferred maintenance',
   'hvac issues',
   'needs hvac',
@@ -106,81 +86,53 @@ export const NEEDS_WORK_KEYWORDS = [
   'needs electrical',
   'needs plumbing',
 
-  // Investment keywords
-  'flip',
-  'flip opportunity',
-  'flipping opportunity',
-  'investment opportunity',
-  'investor opportunity',
-  'great investment',
-  'investment property',
-  'wholesale',
+  // Investor-focused phrases (SPECIFIC)
   'wholesale deal',
-  'bring your tools',
   'bring your contractor',
-  'bring your vision',
-  'bring your ideas',
   'sweat equity',
-  'profit potential',
-  'great potential',
-  'tons of potential',
-  'lot of potential',
   'arv',
   'after repair value',
-  'below market',
   'below arv',
-  'under market',
-  'quick sale',
-  'must sell',
-  'must sell fast',
-  'priced to sell',
-  'priced to sell fast',
-  'priced below',
-  'price reduced',
-  'reduced price',
-  'price drop',
-  'make offer',
-  'all offers considered',
-  'bring all offers',
-
-  // Vacancy/rental keywords that indicate distress
-  'vacant',
-  'vacant property',
-  'currently vacant',
-  'tenant occupied',
-  'section 8',
-  'rental property',
-  'income property',
-  'cash flow',
-
-  // Auction/urgency keywords
-  'auction',
-  'absolute auction',
-  'no reserve',
-  'deadline',
-  'time sensitive',
-  'urgent sale',
-  'immediate sale',
-  'quick close',
-  'fast close',
-  'flexible closing',
-
-  // Diamond in the rough keywords
-  'diamond in the rough',
-  'hidden gem',
-  'great bones',
-  'good bones',
-  'solid bones',
-  'loads of potential',
-  'endless possibilities',
-  'blank canvas',
-  'opportunity knocks',
 ];
+
+/**
+ * Combined detection result - avoids scanning description twice
+ */
+export interface NeedsWorkResult {
+  needsWork: boolean;
+  matchedKeywords: string[];
+}
+
+/**
+ * Detect if property needs work AND get matching keywords in a single pass
+ * This is more efficient than calling detectNeedsWork() and getMatchingKeywords() separately
+ * @param description - Property description text
+ * @returns Object with needsWork boolean and array of matched keywords
+ */
+export function detectNeedsWorkWithKeywords(description: string | null | undefined): NeedsWorkResult {
+  if (!description) return { needsWork: false, matchedKeywords: [] };
+
+  const lowerDescription = description.toLowerCase();
+  const matchedKeywords: string[] = [];
+
+  // Single pass through keywords
+  for (const keyword of NEEDS_WORK_KEYWORDS) {
+    if (lowerDescription.includes(keyword.toLowerCase())) {
+      matchedKeywords.push(keyword);
+    }
+  }
+
+  return {
+    needsWork: matchedKeywords.length > 0,
+    matchedKeywords,
+  };
+}
 
 /**
  * Check if property description contains "needs work" keywords
  * @param description - Property description text
  * @returns true if property likely needs work
+ * @deprecated Use detectNeedsWorkWithKeywords() for better performance
  */
 export function detectNeedsWork(description: string | null | undefined): boolean {
   if (!description) return false;
@@ -197,6 +149,7 @@ export function detectNeedsWork(description: string | null | undefined): boolean
  * Get all matching keywords found in description
  * @param description - Property description text
  * @returns Array of keywords that were found
+ * @deprecated Use detectNeedsWorkWithKeywords() for better performance
  */
 export function getMatchingKeywords(description: string | null | undefined): string[] {
   if (!description) return [];

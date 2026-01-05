@@ -136,13 +136,17 @@ export async function getDLQEntry(entryId: string): Promise<WebhookDLQEntry | nu
  */
 export async function markDLQRetried(entryId: string): Promise<boolean> {
   try {
+    // Get current retry count first to avoid operator precedence bug
+    const doc = await db.collection(DLQ_COLLECTION).doc(entryId).get();
+    const currentRetryCount = doc.data()?.retryCount || 0;
+
     await db.collection(DLQ_COLLECTION).doc(entryId).update({
       retried: true,
       retriedAt: Date.now(),
-      retryCount: (await db.collection(DLQ_COLLECTION).doc(entryId).get()).data()?.retryCount || 0 + 1,
+      retryCount: currentRetryCount + 1,
     });
 
-    console.log(`✅ Marked DLQ entry ${entryId} as retried`);
+    console.log(`✅ Marked DLQ entry ${entryId} as retried (attempt ${currentRetryCount + 1})`);
     return true;
   } catch (error) {
     console.error('Failed to mark DLQ entry as retried:', error);

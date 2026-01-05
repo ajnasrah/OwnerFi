@@ -39,18 +39,6 @@ const SEARCH_CONFIG = {
 };
 
 export async function GET(request: NextRequest) {
-  // ===== GHL OUTREACH DISABLED =====
-  // This system is temporarily disabled while we migrate to unified properties collection
-  // All properties now go to single 'properties' collection with dealTypes array
-  console.log('🚫 [AGENT OUTREACH SCRAPER] Disabled - GHL outreach program paused');
-  return NextResponse.json({
-    success: false,
-    disabled: true,
-    message: 'GHL agent outreach scraper is temporarily disabled. Properties are now managed in unified collection.',
-  });
-
-  // Original implementation below (disabled)
-  /*
   const startTime = Date.now();
   console.log('🏡 [AGENT OUTREACH SCRAPER] Starting...');
 
@@ -63,6 +51,13 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    // Log start to cron_logs
+    await db.collection('cron_logs').add({
+      cron: 'run-agent-outreach-scraper',
+      status: 'started',
+      timestamp: new Date(),
+    });
+
     const apiKey = process.env.APIFY_API_KEY;
     if (!apiKey) throw new Error('APIFY_API_KEY not found');
 
@@ -349,6 +344,26 @@ export async function GET(request: NextRequest) {
     console.log(`   - Negative keywords: ${stats.negativeKeywords}`);
     console.log(`   Stored for analysis: ${stats.failedStored} (expires in 7 days)`);
 
+    // Log completion to cron_logs
+    await db.collection('cron_logs').add({
+      cron: 'run-agent-outreach-scraper',
+      status: 'completed',
+      duration: `${duration}s`,
+      propertiesFromSearch: searchItems.length,
+      propertiesDetailed: stats.total,
+      addedToQueue: stats.added,
+      stats: {
+        cashDeals: stats.cashDeals,
+        potentialOwnerFinance: stats.potentialOwnerFinance,
+      },
+      skipped: {
+        noAgent: stats.noAgent,
+        hasOwnerFinance: stats.hasOwnerFinance,
+        negativeKeywords: stats.negativeKeywords,
+      },
+      timestamp: new Date(),
+    });
+
     return NextResponse.json({
       success: true,
       duration: `${duration}s`,
@@ -374,5 +389,4 @@ export async function GET(request: NextRequest) {
       duration: `${((Date.now() - startTime) / 1000).toFixed(2)}s`,
     }, { status: 500 });
   }
-  */
 }

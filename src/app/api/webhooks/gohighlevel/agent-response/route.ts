@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { sanitizeDescription } from '@/lib/description-sanitizer';
+import { indexRawFirestoreProperty } from '@/lib/typesense/sync';
 import crypto from 'crypto';
 
 // Initialize Firebase Admin
@@ -52,7 +53,6 @@ function verifyWebhookSignature(
       signature === expectedSignature,
       signature === `sha256=${expectedSignature}`,
       signature.replace(/^sha256=/, '') === expectedSignature,
-      signature === GHL_WEBHOOK_SECRET // Raw secret (some systems do this)
     ];
 
     if (validFormats.some(valid => valid)) {
@@ -76,9 +76,8 @@ function verifyWebhookSignature(
  * Webhook: Agent Response Handler
  *
  * Receives agent YES/NO responses from GoHighLevel
- * Routes properties to appropriate collections:
- * - Owner Finance YES → zillow_imports (displays on website)
- * - Cash Deal YES → cash_deals (for cash buyers)
+ * Routes properties to unified 'properties' collection:
+ * - YES → properties collection with ownerFinanceVerified=true or isCashDeal=true
  * - NO → marks as rejected in agent_outreach_queue
  *
  * Expected payload from GHL:
@@ -254,6 +253,18 @@ export async function POST(request: NextRequest) {
       });
 
       console.log('   ✅ Added to properties');
+
+      // Sync to Typesense for search
+      try {
+        const propertyDoc = await db.collection('properties').doc(`zpid_${property.zpid}`).get();
+        if (propertyDoc.exists) {
+          await indexRawFirestoreProperty(`zpid_${property.zpid}`, propertyDoc.data()!, 'properties');
+          console.log('   ✅ Synced to Typesense');
+        }
+      } catch (typesenseErr: unknown) {
+        const errMsg = typesenseErr instanceof Error ? typesenseErr.message : 'Unknown error';
+        console.error(`   ⚠️ Typesense sync failed: ${errMsg}`);
+      }
 
       // Update agent_outreach_queue
       await docRef.update({

@@ -11,6 +11,7 @@ import { queueNearbyCitiesForProperty } from '@/lib/property-enhancement';
 import { autoCleanPropertyData } from '@/lib/property-auto-cleanup';
 import { sanitizeDescription } from '@/lib/description-sanitizer';
 import { validatePropertyFinancials, type PropertyFinancialData } from '@/lib/property-validation';
+import { formatPropertyMatchSMS } from '@/lib/sms-templates';
 import crypto from 'crypto';
 
 // SECURITY: Webhook secret is REQUIRED - no bypass allowed
@@ -916,18 +917,18 @@ export async function POST(request: NextRequest) {
             if (ghlWebhookUrl) {
               for (const buyer of matchedBuyers) {
                 try {
-                  const smsMessage = `🏠 New Property Match!
-
-Hi ${buyer.firstName}! We found a home for you in ${cleanPropertyData.city}, ${cleanPropertyData.state}:
-
-📍 ${cleanPropertyData.address}
-🛏️ ${cleanPropertyData.bedrooms} bed, ${cleanPropertyData.bathrooms} bath
-💰 $${cleanPropertyData.price?.toLocaleString()} list price
-💵 $${cleanPropertyData.monthlyPayment}/mo, $${cleanPropertyData.downPaymentAmount?.toLocaleString()} down
-
-View it now: https://ownerfi.ai/dashboard
-
-Reply STOP to unsubscribe`;
+                  // Use shared SMS template
+                  const smsMessage = formatPropertyMatchSMS({
+                    buyerFirstName: buyer.firstName,
+                    propertyAddress: cleanPropertyData.address,
+                    propertyCity: cleanPropertyData.city,
+                    propertyState: cleanPropertyData.state,
+                    bedrooms: cleanPropertyData.bedrooms || 0,
+                    bathrooms: cleanPropertyData.bathrooms || 0,
+                    listPrice: cleanPropertyData.price || 0,
+                    monthlyPayment: cleanPropertyData.monthlyPayment || 0,
+                    downPaymentAmount: cleanPropertyData.downPaymentAmount || 0,
+                  });
 
                   await fetch(ghlWebhookUrl, {
                     method: 'POST',

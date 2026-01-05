@@ -42,13 +42,22 @@ export interface HeyGenVideoRequest {
       avatar_style?: string;
       talking_style?: string;
       scale?: number;
+      offset_x?: number;
+      offset_y?: number;
     };
     voice: {
       type: 'text';
       input_text: string;
       voice_id: string;
       speed?: number;
+      emotion?: string;
     };
+    background?:
+      | { type: 'color'; value: string }
+      | { type: 'image'; url: string }
+      | { type: 'image'; image_asset_id: string }
+      | { type: 'video'; url: string; play_style: string }
+      | { type: 'video'; video_asset_id: string; play_style: string };
   }>;
   caption?: boolean;
   dimension: {
@@ -56,8 +65,10 @@ export interface HeyGenVideoRequest {
     height: number;
   };
   test?: boolean;
+  title?: string;
   webhook_url?: string;
   callback_id?: string;
+  callback_url?: string;
 }
 
 export interface HeyGenVideoResponse {

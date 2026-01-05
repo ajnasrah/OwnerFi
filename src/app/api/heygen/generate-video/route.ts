@@ -28,7 +28,7 @@ interface HeyGenRequest {
   offset?: { x: number; y: number };
 }
 
-export async function POST(_request: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
     // Check API key configuration
     if (!HEYGEN_API_KEY) {
@@ -60,6 +60,7 @@ export async function POST(_request: NextRequest) {
     const test = body.test !== undefined ? body.test : false;
 
     // Build the HeyGen API request
+    // Always include background to prevent white backgrounds
     const heygenRequest = {
       video_inputs: [
         {
@@ -77,6 +78,10 @@ export async function POST(_request: NextRequest) {
             input_text: body.input_text,
             voice_id: body.voice_id,
             speed: speed
+          },
+          background: {
+            type: 'color',
+            value: '#1a1a2e' // Dark blue fallback
           }
         }
       ],
@@ -171,8 +176,8 @@ export async function GET(request: NextRequest) {
           'accept': 'application/json',
           'x-api-key': HEYGEN_API_KEY,
         },
-      },
-      ServiceTimeouts.HEYGEN // 60 second timeout
+        timeout: ServiceTimeouts.HEYGEN // 60 second timeout
+      }
     );
 
     if (!response.ok) {

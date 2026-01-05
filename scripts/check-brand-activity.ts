@@ -38,16 +38,10 @@ async function checkBrandActivity() {
       lateProfileId: process.env.LATE_CARZ_PROFILE_ID
     },
     {
-      name: 'VASSDISTRO',
-      workflow: 'vassdistro_workflow_queue',
-      articles: 'vassdistro_articles',
-      lateProfileId: process.env.LATE_VASSDISTRO_PROFILE_ID
-    },
-    {
-      name: 'PODCAST',
-      workflow: 'podcast_workflow_queue',
-      articles: 'podcast_articles',
-      lateProfileId: process.env.LATE_PODCAST_PROFILE_ID
+      name: 'OWNERFI',
+      workflow: 'ownerfi_workflow_queue',
+      articles: 'ownerfi_articles',
+      lateProfileId: process.env.LATE_OWNERFI_PROFILE_ID
     },
     {
       name: 'ABDULLAH',
@@ -56,12 +50,13 @@ async function checkBrandActivity() {
     },
     {
       name: 'BENEFIT',
-      workflow: 'benefit_workflow_queue'
+      workflow: 'benefit_workflow_queue',
+      lateProfileId: process.env.LATE_BENEFIT_PROFILE_ID
     },
     {
-      name: 'PROPERTY',
-      workflow: 'property_workflow_queue',
-      lateProfileId: process.env.LATE_PROPERTY_PROFILE_ID
+      name: 'GAZA',
+      workflow: 'gaza_workflow_queue',
+      lateProfileId: process.env.LATE_GAZA_PROFILE_ID
     }
   ];
 

@@ -2,7 +2,7 @@
 /**
  * Deploy Missing Firestore Indexes
  *
- * Creates the missing composite indexes for vassdistro_workflow_queue and abdullah_workflow_queue
+ * Creates missing composite indexes for workflow queues
  * using the Firestore Admin API
  */
 
@@ -112,14 +112,14 @@ async function main() {
   // Create the missing indexes
   const indexesToCreate = [
     {
-      collectionGroup: 'vassdistro_workflow_queue',
+      collectionGroup: 'abdullah_workflow_queue',
       fields: [
         { fieldPath: 'status', order: 'ASCENDING' },
         { fieldPath: 'createdAt', order: 'DESCENDING' }
       ]
     },
     {
-      collectionGroup: 'abdullah_workflow_queue',
+      collectionGroup: 'gaza_workflow_queue',
       fields: [
         { fieldPath: 'status', order: 'ASCENDING' },
         { fieldPath: 'createdAt', order: 'DESCENDING' }

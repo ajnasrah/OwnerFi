@@ -7,7 +7,7 @@ import { collection, getDocs, query, where, limit as firestoreLimit } from 'fire
 const HEYGEN_API_KEY = process.env.HEYGEN_API_KEY;
 
 async function checkHeyGenVideos() {
-  const brands = ['ownerfi', 'carz', 'vassdistro', 'benefit', 'property', 'abdullah', 'personal'];
+  const brands = ['ownerfi', 'carz', 'benefit', 'abdullah', 'personal', 'gaza'];
 
   console.log('\n🔍 Checking HeyGen video statuses...\n');
 

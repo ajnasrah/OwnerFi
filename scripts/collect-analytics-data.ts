@@ -27,7 +27,7 @@ async function main() {
   const daysArg = args.find(arg => arg.startsWith('--days='));
   const allFlag = args.includes('--all');
 
-  const brand = brandArg?.split('=')[1] as 'carz' | 'ownerfi' | 'podcast' | 'vassdistro' | 'abdullah';
+  const brand = brandArg?.split('=')[1] as 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'gaza';
   const days = daysArg ? parseInt(daysArg.split('=')[1]) : 7;
 
   console.log('📊 Analytics Data Collection\n');

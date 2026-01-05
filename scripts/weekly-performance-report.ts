@@ -380,7 +380,7 @@ async function main() {
   const args = process.argv.slice(2);
   const brandArg = args.find(arg => !arg.startsWith('--'));
 
-  const validBrands = ['ownerfi', 'carz', 'podcast', 'vassdistro', 'abdullah'];
+  const validBrands = ['ownerfi', 'carz', 'benefit', 'abdullah', 'gaza'];
   const brand = brandArg && validBrands.includes(brandArg) ? brandArg : undefined;
 
   if (brand) {

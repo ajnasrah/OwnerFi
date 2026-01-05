@@ -32,7 +32,7 @@ async function retryFailedWorkflows() {
   const failedWorkflows: any[] = [];
 
   // Check all brand collections
-  const brands = ['carz', 'ownerfi', 'vassdistro', 'benefit', 'abdullah', 'podcast'];
+  const brands = ['carz', 'ownerfi', 'benefit', 'abdullah', 'gaza'];
 
   for (const brand of brands) {
     const collectionName = brand === 'podcast' ? 'podcast_workflow_queue' : `${brand}_workflow_queue`;

@@ -20,7 +20,7 @@ if (!getApps().length) {
 const db = getFirestore();
 
 async function check() {
-  const brands = ['carz', 'ownerfi', 'vassdistro', 'abdullah', 'gaza'];
+  const brands = ['carz', 'ownerfi', 'benefit', 'abdullah', 'gaza'];
 
   for (const brand of brands) {
     console.log(`\n=== ${brand.toUpperCase()} ===`);

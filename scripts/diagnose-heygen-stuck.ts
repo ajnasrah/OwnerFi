@@ -60,11 +60,9 @@ async function diagnoseStuckWorkflows() {
   const collections = [
     { name: 'carz_workflow_queue', brand: 'carz' },
     { name: 'ownerfi_workflow_queue', brand: 'ownerfi' },
-    { name: 'vassdistro_workflow_queue', brand: 'vassdistro' },
-    { name: 'podcast_workflow_queue', brand: 'podcast' },
     { name: 'benefit_workflow_queue', brand: 'benefit' },
     { name: 'abdullah_workflow_queue', brand: 'abdullah' },
-    { name: 'propertyShowcaseWorkflows', brand: 'property/property-spanish' },
+    { name: 'gaza_workflow_queue', brand: 'gaza' },
   ];
 
   console.log('📊 Checking all collections for HeyGen issues...\n');

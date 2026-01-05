@@ -26,7 +26,7 @@ const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://ownerfi.ai';
 async function recoverStuckWorkflows() {
   console.log('\n=== RECOVERING STUCK video_processing WORKFLOWS ===\n');
 
-  const brands = ['carz', 'ownerfi', 'vassdistro', 'abdullah', 'personal', 'gaza'];
+  const brands = ['carz', 'ownerfi', 'benefit', 'abdullah', 'personal', 'gaza'];
   let totalRecovered = 0;
   let totalFailed = 0;
 

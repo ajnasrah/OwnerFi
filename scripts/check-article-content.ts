@@ -22,7 +22,7 @@ const db = getFirestore();
 async function checkArticles() {
   console.log('\n=== CHECKING ARTICLE CONTENT QUALITY ===\n');
 
-  const brands = ['carz', 'ownerfi', 'vassdistro', 'gaza'];
+  const brands = ['carz', 'ownerfi', 'benefit', 'abdullah', 'gaza'];
 
   for (const brand of brands) {
     console.log(`\n📱 ${brand.toUpperCase()}:`);

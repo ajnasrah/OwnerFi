@@ -82,7 +82,7 @@ async function generateWeeklyReport(brand?: string): Promise<WeeklyReport[]> {
   const now = new Date();
   const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
-  const brands = brand ? [brand] : ['carz', 'ownerfi', 'podcast', 'vassdistro', 'abdullah'];
+  const brands = brand ? [brand] : ['carz', 'ownerfi', 'benefit', 'abdullah', 'gaza'];
   const reports: WeeklyReport[] = [];
 
   for (const currentBrand of brands) {

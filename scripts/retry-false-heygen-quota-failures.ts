@@ -16,7 +16,7 @@ if (!getApps().length) {
 }
 
 const db = getFirestore();
-const BRANDS = ['carz', 'ownerfi', 'vassdistro'];
+const BRANDS = ['carz', 'ownerfi', 'benefit', 'abdullah', 'gaza'];
 
 async function main() {
   console.log('🔍 Finding false HeyGen quota failures...\n');

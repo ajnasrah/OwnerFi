@@ -41,7 +41,7 @@ async function createIndexes() {
   console.log('='.repeat(70));
   console.log('\n🔗 Create these indexes at:');
   console.log('   https://console.firebase.google.com/project/ownerfi-95aa0/firestore/indexes\n');
-  console.log('Or use Firebase CLI after fixing the vassdistro_articles conflict:');
+  console.log('Or use Firebase CLI:');
   console.log('   firebase deploy --only firestore:indexes\n');
 }
 

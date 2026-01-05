@@ -40,7 +40,7 @@ async function checkStuckSubmagicVideos() {
     process.exit(1);
   }
 
-  const brands = ['carz', 'ownerfi', 'vassdistro', 'benefit', 'abdullah', 'personal', 'property', 'podcast'];
+  const brands = ['carz', 'ownerfi', 'benefit', 'abdullah', 'personal', 'gaza'];
   const stuckVideos: StuckVideo[] = [];
 
   console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');

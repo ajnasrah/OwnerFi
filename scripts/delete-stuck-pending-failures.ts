@@ -36,12 +36,13 @@ interface Workflow {
 async function deleteStuckPendingFailures() {
   console.log('🔍 Searching for failed stuck pending workflows...\n');
 
-  // Check vassdistro specifically since it's a tobacco/vape workflow
+  // Check all brand workflow queues
   const collections = [
-    { name: 'vassdistro_workflow_queue', brand: 'vassdistro' },
     { name: 'carz_workflow_queue', brand: 'carz' },
     { name: 'ownerfi_workflow_queue', brand: 'ownerfi' },
-    { name: 'podcast_workflow_queue', brand: 'podcast' },
+    { name: 'benefit_workflow_queue', brand: 'benefit' },
+    { name: 'abdullah_workflow_queue', brand: 'abdullah' },
+    { name: 'gaza_workflow_queue', brand: 'gaza' },
   ];
 
   let totalDeleted = 0;

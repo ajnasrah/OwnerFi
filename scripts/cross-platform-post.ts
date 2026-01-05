@@ -24,7 +24,7 @@ import { getAdminDb } from '../src/lib/firebase-admin';
 config({ path: resolve(process.cwd(), '.env.local') });
 
 interface PostConfig {
-  brand: 'carz' | 'ownerfi' | 'podcast' | 'vassdistro' | 'abdullah';
+  brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'gaza';
   videoUrl: string;
   topic: string;
   scheduleTime?: string; // ISO 8601, or auto-schedule based on analytics
@@ -280,7 +280,7 @@ Usage:
   npx tsx scripts/cross-platform-post.ts --brand <brand> --video <url> --topic "<topic>" [options]
 
 Required Arguments:
-  --brand <brand>       Brand name (carz, ownerfi, podcast, vassdistro, abdullah)
+  --brand <brand>       Brand name (carz, ownerfi, benefit, abdullah, gaza)
   --video <url>         Video URL
   --topic "<topic>"     Topic/description for caption generation
 

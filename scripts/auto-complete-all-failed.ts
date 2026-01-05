@@ -47,10 +47,9 @@ interface FailedWorkflow {
 const COLLECTIONS = [
   { name: 'ownerfi_workflow_queue', brand: 'ownerfi' },
   { name: 'carz_workflow_queue', brand: 'carz' },
-  { name: 'vassdistro_workflow_queue', brand: 'vassdistro' },
   { name: 'benefit_workflow_queue', brand: 'benefit' },
-  { name: 'property_videos', brand: 'property' },
   { name: 'abdullah_workflow_queue', brand: 'abdullah' },
+  { name: 'gaza_workflow_queue', brand: 'gaza' },
 ];
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://ownerfi.ai';

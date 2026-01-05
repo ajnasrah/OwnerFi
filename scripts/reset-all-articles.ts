@@ -3,13 +3,13 @@
 
 import { db } from '../src/lib/firebase';
 import { collection, getDocs, deleteDoc, writeBatch, doc } from 'firebase/firestore';
-import { OWNERFI_FEEDS, CARZ_FEEDS, VASSDISTRO_FEEDS } from '../src/config/feed-sources';
+import { OWNERFI_FEEDS, CARZ_FEEDS } from '../src/config/feed-sources';
 import { processFeedSource } from '../src/lib/rss-fetcher';
 
 async function deleteAllArticles() {
   console.log('🗑️  Deleting all articles from database...\n');
 
-  const brands = ['ownerfi', 'carz', 'vassdistro'];
+  const brands = ['ownerfi', 'carz'];
   let totalDeleted = 0;
 
   for (const brand of brands) {

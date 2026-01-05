@@ -22,7 +22,7 @@ const db = getFirestore();
 async function checkSocialMediaStop() {
   console.log('\n=== WHY DID SOCIAL MEDIA STOP ON DEC 18TH? ===\n');
 
-  const brands = ['carz', 'ownerfi', 'vassdistro', 'abdullah', 'personal', 'gaza'];
+  const brands = ['carz', 'ownerfi', 'benefit', 'abdullah', 'personal', 'gaza'];
 
   for (const brand of brands) {
     console.log(`\n📱 ${brand.toUpperCase()}:`);

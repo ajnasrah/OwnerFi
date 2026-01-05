@@ -61,8 +61,7 @@ echo ""
 # 3. 1298 Gideons Dr Sw Atlanta
 # This is clearly a property video
 
-# 4. BAT Pauses Vuse One Vape Launch
-# This is vassdistro brand
+# 4. (removed - deprecated brand)
 
 # 5-6. From Broke to CEO (abdullah brand)
 

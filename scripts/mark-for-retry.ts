@@ -23,7 +23,7 @@ const db = getFirestore();
 async function markForRetry() {
   console.log('\n=== MARKING STUCK WORKFLOWS FOR RETRY ===\n');
 
-  const brands = ['carz', 'ownerfi', 'vassdistro', 'abdullah', 'personal', 'gaza'];
+  const brands = ['carz', 'ownerfi', 'benefit', 'abdullah', 'personal', 'gaza'];
   let totalMarked = 0;
 
   for (const brand of brands) {

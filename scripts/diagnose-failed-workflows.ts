@@ -26,11 +26,9 @@ interface Workflow {
 const COLLECTIONS = [
   { name: 'ownerfi_workflow_queue', brand: 'ownerfi' },
   { name: 'carz_workflow_queue', brand: 'carz' },
-  { name: 'vassdistro_workflow_queue', brand: 'vassdistro' },
   { name: 'benefit_workflow_queue', brand: 'benefit' },
-  { name: 'property_videos', brand: 'property' },
-  { name: 'podcast_workflow_queue', brand: 'podcast' },
   { name: 'abdullah_workflow_queue', brand: 'abdullah' },
+  { name: 'gaza_workflow_queue', brand: 'gaza' },
 ];
 
 async function diagnoseFailedWorkflows() {

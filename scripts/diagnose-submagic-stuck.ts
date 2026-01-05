@@ -6,7 +6,7 @@
 
 import { getAdminDb } from '../src/lib/firebase-admin';
 
-const brands = ['carz', 'ownerfi', 'vassdistro', 'benefit', 'abdullah', 'personal', 'property'];
+const brands = ['carz', 'ownerfi', 'benefit', 'abdullah', 'personal', 'gaza'];
 
 async function checkSubMagicStatus(projectId: string, SUBMAGIC_API_KEY: string) {
   try {

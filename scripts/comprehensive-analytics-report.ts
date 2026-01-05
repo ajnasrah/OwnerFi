@@ -279,7 +279,7 @@ async function main() {
   console.log('═'.repeat(100));
   console.log('');
 
-  const brands = ['carz', 'podcast', 'abdullah', 'ownerfi', 'vassdistro'];
+  const brands = ['carz', 'benefit', 'abdullah', 'ownerfi', 'gaza'];
   const reports: BrandReport[] = [];
 
   for (const brand of brands) {

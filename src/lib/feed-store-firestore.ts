@@ -44,11 +44,16 @@ export interface WorkflowQueueItem {
   id: string;
   articleId: string;
   brand: Brand;
-  status: 'pending' | 'heygen_processing' | 'submagic_processing' | 'posting' | 'completed' | 'failed';
+  status: 'pending' | 'heygen_processing' | 'submagic_processing' | 'posting' | 'completed' | 'failed' | 'video_processing_failed';
   articleTitle: string;
   workflowId?: string;
   heygenVideoId?: string;
+  heygenVideoUrl?: string;      // Direct HeyGen video URL (before R2 upload)
+  heygenVideoR2Url?: string;    // Video URL after R2 upload
   submagicVideoId?: string;
+  submagicProjectId?: string;   // Submagic project ID
+  submagicDownloadUrl?: string; // Submagic download URL
+  submagicSkipped?: boolean;    // True if Submagic processing was skipped
   latePostId?: string; // Late API post ID (replaced Metricool)
   finalVideoUrl?: string; // Completed video URL from R2
   caption?: string; // Store for webhooks
@@ -899,81 +904,6 @@ export async function getStats(category?: Brand) {
   };
 }
 
-// Podcast Workflow Management
-export interface PodcastWorkflowItem {
-  id: string;
-  episodeNumber: number;
-  episodeTitle: string;
-  guestName: string;
-  topic: string;
-  status: 'script_generation' | 'heygen_processing' | 'submagic_processing' | 'publishing' | 'completed' | 'failed';
-  heygenVideoId?: string;
-  submagicProjectId?: string;
-  finalVideoUrl?: string;
-  latePostId?: string; // Late API post ID (replaced Metricool)
-  error?: string;
-  createdAt: number;
-  updatedAt: number;
-  completedAt?: number;
-}
-
-export async function addPodcastWorkflow(episodeNumber: number, episodeTitle: string): Promise<PodcastWorkflowItem> {
-  if (!db) throw new Error('Firebase not initialized');
-
-  const queueItem: PodcastWorkflowItem = {
-    id: `podcast_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
-    episodeNumber,
-    episodeTitle,
-    guestName: '',
-    topic: '',
-    status: 'script_generation',
-    createdAt: Date.now(),
-    updatedAt: Date.now()
-  };
-
-  await setDoc(doc(db, COLLECTIONS.PODCAST.WORKFLOW_QUEUE, queueItem.id), queueItem);
-  console.log(`✅ Added podcast workflow: ${queueItem.id} - Episode #${episodeNumber}`);
-  return queueItem;
-}
-
-export async function updatePodcastWorkflow(
-  workflowId: string,
-  updates: Partial<PodcastWorkflowItem>
-): Promise<void> {
-  if (!db) return;
-
-  const cleanData = removeUndefined({
-    ...updates,
-    updatedAt: Date.now()
-  });
-  await updateDoc(doc(db, COLLECTIONS.PODCAST.WORKFLOW_QUEUE, workflowId), cleanData);
-}
-
-export async function getPodcastWorkflows(limit: number = 20): Promise<PodcastWorkflowItem[]> {
-  if (!db) return [];
-
-  // Simplified query: just get all recent workflows and filter in memory
-  // This avoids needing a composite index
-  const q = query(
-    collection(db, COLLECTIONS.PODCAST.WORKFLOW_QUEUE),
-    orderBy('createdAt', 'desc'),
-    firestoreLimit(limit * 2) // Get more to account for filtering
-  );
-
-  try {
-    const snapshot = await getDocs(q);
-    const allWorkflows = snapshot.docs.map(doc => doc.data() as PodcastWorkflowItem);
-
-    // Filter in memory for active workflows
-    return allWorkflows
-      .filter(w => ['script_generation', 'heygen_processing', 'submagic_processing', 'publishing'].includes(w.status))
-      .slice(0, limit);
-  } catch (error) {
-    console.error('❌ Error fetching podcast workflows:', error);
-    return [];
-  }
-}
-
 // Retry Failed Workflows
 export async function getRetryableWorkflows(brand: Brand, maxRetries: number = 3): Promise<WorkflowQueueItem[]> {
   if (!db) return [];
@@ -1057,33 +987,6 @@ export async function findWorkflowBySubmagicId(submagicProjectId: string): Promi
   return null;
 }
 
-// Find podcast workflow by Submagic project ID (for webhook handling)
-export async function findPodcastBySubmagicId(submagicProjectId: string): Promise<{
-  workflowId: string;
-  workflow: PodcastWorkflowItem;
-} | null> {
-  if (!db) return null;
-
-  const q = query(
-    collection(db, COLLECTIONS.PODCAST.WORKFLOW_QUEUE),
-    where('submagicProjectId', '==', submagicProjectId),
-    firestoreLimit(1)
-  );
-
-  const snapshot = await getDocs(q);
-
-  if (!snapshot.empty) {
-    const docData = snapshot.docs[0].data() as PodcastWorkflowItem;
-    return {
-      workflowId: snapshot.docs[0].id,
-      workflow: docData
-    };
-  }
-
-  console.log(`⚠️  No podcast workflow found with Submagic ID: ${submagicProjectId}`);
-  return null;
-}
-
 // Get workflow by ID (for webhook handling)
 export async function getWorkflowById(workflowId: string): Promise<{
   workflow: WorkflowQueueItem;
@@ -1108,20 +1011,6 @@ export async function getWorkflowById(workflowId: string): Promise<{
   return null;
 }
 
-// Get podcast workflow by ID (for webhook handling)
-export async function getPodcastWorkflowById(workflowId: string): Promise<PodcastWorkflowItem | null> {
-  if (!db) return null;
-
-  const docSnap = await getDoc(doc(db, COLLECTIONS.PODCAST.WORKFLOW_QUEUE, workflowId));
-
-  if (docSnap.exists()) {
-    return docSnap.data() as PodcastWorkflowItem;
-  }
-
-  console.log(`⚠️  No podcast workflow found with ID: ${workflowId}`);
-  return null;
-}
-
 // ====== BENEFIT VIDEO WORKFLOW MANAGEMENT ======
 
 export interface BenefitWorkflowItem {
@@ -1129,8 +1018,11 @@ export interface BenefitWorkflowItem {
   benefitId: string;
   audience: 'seller' | 'buyer';
   benefitTitle: string;
-  status: 'heygen_processing' | 'submagic_processing' | 'posting' | 'completed' | 'failed';
+  status: 'pending' | 'heygen_processing' | 'submagic_processing' | 'posting' | 'completed' | 'failed' | 'video_processing_failed';
   heygenVideoId?: string;
+  heygenVideoUrl?: string;
+  heygenVideoR2Url?: string;
+  submagicVideoId?: string;     // Submagic video/project ID (same as submagicProjectId)
   submagicProjectId?: string;
   finalVideoUrl?: string;
   latePostId?: string; // Late API post ID

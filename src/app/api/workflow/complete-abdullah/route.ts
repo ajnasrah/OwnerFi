@@ -37,17 +37,23 @@ export async function POST(request: NextRequest) {
     }
 
     // Parse request body (optional - allows manual override of schedule)
-    let body: unknown = {};
+    interface RequestBody {
+      platforms?: string[];
+      schedule?: 'staggered' | 'immediate';
+      date?: string;
+      count?: string | number;
+    }
+    let body: RequestBody = {};
     try {
-      body = await request.json();
-    } catch (error) {
+      body = await request.json() as RequestBody;
+    } catch {
       // No body is fine - use defaults
     }
 
     const platforms = body.platforms || ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin'];
     const schedule = body.schedule || 'staggered'; // 'staggered' or 'immediate'
     const date = body.date ? new Date(body.date) : new Date();
-    const count = body.count !== undefined ? parseInt(body.count, 10) : 5; // Default to 5 videos
+    const count = body.count !== undefined ? parseInt(String(body.count), 10) : 5; // Default to 5 videos
 
     console.log(`📋 Configuration:`);
     console.log(`   Date: ${date.toLocaleDateString()}`);
@@ -310,5 +316,5 @@ async function generateAbdullahHeyGenVideo(
 
 // Support GET for manual triggering/testing
 export async function GET(_request: NextRequest) {
-  return POST(request);
+  return POST(_request);
 }

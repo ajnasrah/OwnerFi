@@ -298,7 +298,7 @@ async function generateGazaVideo() {
       },
       workflowId,
       undefined, // backgroundImageUrl
-      { mood: 'sad' } // agentOptions
+      {} // agentOptions - Gaza uses default settings
     );
 
     // Result type: { videoId: string; agentId: string; script: string }

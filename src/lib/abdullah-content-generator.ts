@@ -20,7 +20,7 @@ import {
 } from './heygen-client';
 
 export interface AbdullahVideo {
-  theme: string;
+  theme: 'mindset' | 'business' | 'money' | 'freedom' | 'story';
   script: string;
   title: string;
   caption: string;

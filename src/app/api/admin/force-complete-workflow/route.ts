@@ -43,8 +43,8 @@ export async function POST(request: NextRequest) {
 
     // Step 1: Download video from Submagic and upload to R2
     console.log(`   ☁️  Uploading video to R2...`);
-    const { downloadAndUploadVideoToR2 } = await import('@/lib/video-storage');
-    const r2Url = await downloadAndUploadVideoToR2(
+    const { downloadAndUploadToR2 } = await import('@/lib/video-storage');
+    const r2Url = await downloadAndUploadToR2(
       videoUrl,
       `videos/${workflowId}.mp4`
     );
@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
     // Update workflow with R2 URL
     await updateWorkflowStatus(workflowId, validatedBrand, {
       submagicDownloadUrl: videoUrl,
-      finalVideoR2Url: r2Url,
+      finalVideoUrl: r2Url,
       status: 'posting'
     });
 
@@ -63,13 +63,13 @@ export async function POST(request: NextRequest) {
 
     const caption = workflow.caption || workflow.articleTitle || 'Check this out!';
     const title = workflow.title || workflow.articleTitle || 'Check this out!';
-    const platforms = getBrandPlatforms(validatedBrand);
+    const platforms = [...getBrandPlatforms(validatedBrand)] as ('instagram' | 'tiktok' | 'youtube' | 'facebook' | 'linkedin' | 'threads' | 'twitter' | 'pinterest' | 'reddit' | 'bluesky')[];
 
     const lateResponse = await postToLate({
       videoUrl: r2Url,
       caption: caption,
       title: title,
-      platforms: platforms,
+      platforms,
       brand: validatedBrand,
       useQueue: true, // ✅ Use GetLate's queue system
       timezone: 'America/Chicago'

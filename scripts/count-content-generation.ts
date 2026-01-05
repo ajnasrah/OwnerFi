@@ -42,7 +42,7 @@ async function main() {
   console.log('═'.repeat(100));
   console.log('\nAnalyzing last 30 days of posts to determine actual content production capacity...\n');
 
-  const brands = ['carz', 'podcast', 'abdullah'];
+  const brands = ['carz', 'ownerfi', 'benefit', 'abdullah', 'gaza'];
   const results = [];
 
   for (const brand of brands) {

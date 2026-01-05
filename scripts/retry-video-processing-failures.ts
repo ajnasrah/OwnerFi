@@ -35,7 +35,7 @@ async function retryFailedWorkflows() {
   const brands = ['carz', 'ownerfi', 'benefit', 'abdullah', 'gaza'];
 
   for (const brand of brands) {
-    const collectionName = brand === 'podcast' ? 'podcast_workflow_queue' : `${brand}_workflow_queue`;
+    const collectionName = `${brand}_workflow_queue`;
 
     console.log(`📂 Checking ${collectionName}...`);
 

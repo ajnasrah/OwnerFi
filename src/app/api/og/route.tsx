@@ -31,7 +31,9 @@ export async function GET(request: NextRequest) {
       ownerfi: 'OwnerFi',
       carz: 'Carz Inc',
       abdullah: 'Abdullah',
-      vassdistro: 'Vass Distro',
+      benefit: 'Benefit',
+      personal: 'Personal',
+      gaza: 'Gaza Relief',
     };
     const brandName = brandNames[brand] || brand.charAt(0).toUpperCase() + brand.slice(1);
     const brandInitial = brand[0].toUpperCase();

@@ -16,7 +16,6 @@ interface SchedulerStatus {
       maxVideosPerDay: {
         carz: number;
         ownerfi: number;
-        vassdistro?: number;
       };
     };
   };
@@ -24,12 +23,10 @@ interface SchedulerStatus {
     total: number;
     carz: number;
     ownerfi: number;
-    vassdistro?: number;
   };
   articles?: {
     carz: number;
     ownerfi: number;
-    vassdistro?: number;
   };
   queue: {
     carz: {
@@ -37,10 +34,6 @@ interface SchedulerStatus {
       items: Array<{ id: string; [key: string]: unknown }>;
     };
     ownerfi: {
-      pending: number;
-      items: Array<{ id: string; [key: string]: unknown }>;
-    };
-    vassdistro?: {
       pending: number;
       items: Array<{ id: string; [key: string]: unknown }>;
     };
@@ -64,15 +57,6 @@ interface SchedulerStatus {
       queuePending: number;
       queueProcessing: number;
     };
-    vassdistro?: {
-      totalFeeds: number;
-      activeFeeds: number;
-      totalArticles: number;
-      unprocessedArticles: number;
-      videosGenerated: number;
-      queuePending: number;
-      queueProcessing: number;
-    };
   };
   results?: Array<{
     brand: string;
@@ -87,7 +71,7 @@ interface WorkflowLog {
   id: string;
   articleId: string;
   articleTitle: string;
-  brand: 'carz' | 'ownerfi' | 'vassdistro' | 'abdullah';
+  brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'gaza';
   status: 'pending' | 'heygen_processing' | 'submagic_processing' | 'posting' | 'completed' | 'failed';
   heygenVideoId?: string;
   submagicVideoId?: string;
@@ -104,32 +88,9 @@ interface WorkflowLogs {
   workflows: {
     carz: WorkflowLog[];
     ownerfi: WorkflowLog[];
-    vassdistro?: WorkflowLog[];
     abdullah?: WorkflowLog[];
+    gaza?: WorkflowLog[];
   };
-  timestamp: string;
-}
-
-interface PodcastWorkflowLog {
-  id: string;
-  episodeNumber: number;
-  episodeTitle: string;
-  guestName: string;
-  topic: string;
-  status: 'script_generation' | 'heygen_processing' | 'submagic_processing' | 'posting' | 'publishing' | 'completed' | 'failed'; // Support both 'posting' and 'publishing' for backwards compatibility
-  heygenVideoId?: string;
-  submagicProjectId?: string;
-  finalVideoUrl?: string;
-  latePostId?: string; // Changed from metricoolPostId
-  metricoolPostId?: string; // Keep for backwards compatibility with old workflows
-  error?: string;
-  createdAt: number;
-  updatedAt: number;
-}
-
-interface PodcastWorkflowLogs {
-  success: boolean;
-  workflows: PodcastWorkflowLog[];
   timestamp: string;
 }
 
@@ -151,30 +112,6 @@ interface BenefitWorkflowLog {
 interface BenefitWorkflowLogs {
   success: boolean;
   workflows: BenefitWorkflowLog[];
-  timestamp: string;
-}
-
-interface PropertyWorkflowLog {
-  id: string;
-  propertyId: string;
-  variant: '15sec' | '30sec';
-  address: string;
-  city: string;
-  state: string;
-  downPayment: number;
-  monthlyPayment: number;
-  status: 'queued' | 'heygen_processing' | 'submagic_processing' | 'posting' | 'completed' | 'failed';
-  heygenVideoId?: string;
-  submagicProjectId?: string;
-  latePostId?: string;
-  error?: string;
-  createdAt: number;
-  updatedAt: number;
-}
-
-interface PropertyWorkflowLogs {
-  success: boolean;
-  workflows: PropertyWorkflowLog[];
   timestamp: string;
 }
 
@@ -218,7 +155,6 @@ interface AnalyticsData {
   brands: {
     carz: BrandAnalytics;
     ownerfi: BrandAnalytics;
-    vassdistro?: BrandAnalytics;
   };
   recommendations: Recommendation[];
   overallHealth: 'excellent' | 'good' | 'fair' | 'poor';
@@ -249,23 +185,13 @@ interface BrandAnalytics {
 export default function SocialMediaDashboard() {
   const { data: session, status: authStatus } = useSession();
   const router = useRouter();
-  const [activeSubTab, setActiveSubTab] = useState<'carz' | 'ownerfi' | 'vassdistro' | 'ownerfi-benefits' | 'ownerfi-properties' | 'ownerfi-properties-spanish' | 'abdullah' | 'abdullah-podcast' | 'gaza' | 'analytics' | 'youtube-analytics'>('carz');
+  const [activeSubTab, setActiveSubTab] = useState<'carz' | 'ownerfi' | 'ownerfi-benefits' | 'abdullah' | 'abdullah-podcast' | 'gaza' | 'analytics' | 'youtube-analytics'>('carz');
   const [status, setStatus] = useState<SchedulerStatus | null>(null);
   const [workflows, setWorkflows] = useState<WorkflowLogs | null>(null);
-  const [podcastWorkflows, setPodcastWorkflows] = useState<PodcastWorkflowLogs | null>(null);
   const [benefitWorkflows, setBenefitWorkflows] = useState<BenefitWorkflowLogs | null>(null);
-  const [propertyWorkflows, setPropertyWorkflows] = useState<PropertyWorkflowLogs | null>(null);
-  const [propertyStats, setPropertyStats] = useState<PropertyQueueStats | null>(null);
-  const [spanishPropertyWorkflows, setSpanishPropertyWorkflows] = useState<PropertyWorkflowLogs | null>(null);
-  const [spanishPropertyStats, setSpanishPropertyStats] = useState<PropertyQueueStats | null>(null);
-  const [guestProfiles, setGuestProfiles] = useState<GuestProfile[]>([]);
-  const [editingProfile, setEditingProfile] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [triggeringViral, setTriggeringViral] = useState(false);
-  const [triggeringPodcast, setTriggeringPodcast] = useState(false);
   const [triggeringBenefit, setTriggeringBenefit] = useState(false);
-  const [triggeringProperty, setTriggeringProperty] = useState(false);
-  const [triggeringSpanishProperty, setTriggeringSpanishProperty] = useState(false);
   const [triggeringAbdullah, setTriggeringAbdullah] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [deletingWorkflow, setDeletingWorkflow] = useState<string | null>(null);
@@ -321,13 +247,7 @@ export default function SocialMediaDashboard() {
       // Initial load
       loadStatus();
       loadWorkflows();
-      loadPodcastWorkflows();
       loadBenefitWorkflows();
-      loadPropertyWorkflows();
-      loadPropertyStats();
-      loadSpanishPropertyWorkflows();
-      loadSpanishPropertyStats();
-      loadGuestProfiles();
       loadAnalytics();
       loadAbdullahQueueStats();
       loadRecentScripts();
@@ -340,17 +260,12 @@ export default function SocialMediaDashboard() {
 
         // Workflows: every 30s (tick 1, 2, 3, ...)
         loadWorkflows();
-        loadPodcastWorkflows();
         loadBenefitWorkflows();
-        loadPropertyWorkflows();
-        loadSpanishPropertyWorkflows();
         loadAbdullahQueueStats();
 
         // Status & Stats: every 60s (tick 2, 4, 6, ...)
         if (tickCount % 2 === 0) {
           loadStatus();
-          loadPropertyStats();
-          loadSpanishPropertyStats();
           loadRecentScripts();
         }
 
@@ -381,17 +296,6 @@ export default function SocialMediaDashboard() {
     }
   };
 
-  const loadPodcastWorkflows = async () => {
-    try {
-      const url = showHistory ? '/api/podcast/workflow/logs?history=true' : '/api/podcast/workflow/logs';
-      const response = await fetch(url);
-      const data = await response.json();
-      setPodcastWorkflows(data);
-    } catch (error) {
-      console.error('Failed to load podcast workflows:', error);
-    }
-  };
-
   const loadBenefitWorkflows = async () => {
     try {
       const url = showHistory ? '/api/benefit/workflow/logs?history=true' : '/api/benefit/workflow/logs';
@@ -400,96 +304,6 @@ export default function SocialMediaDashboard() {
       setBenefitWorkflows(data);
     } catch (error) {
       console.error('Failed to load benefit workflows:', error);
-    }
-  };
-
-  const loadPropertyWorkflows = async () => {
-    try {
-      const url = showHistory ? '/api/property/workflows/logs?history=true' : '/api/property/workflows/logs';
-      const response = await fetch(url);
-      const data = await response.json();
-
-      // Only set workflows if the response was successful and has workflows array
-      if (data.success && Array.isArray(data.workflows)) {
-        setPropertyWorkflows(data);
-      } else {
-        console.error('Property workflows API error:', data.error || 'Unknown error');
-        setPropertyWorkflows({ success: false, workflows: [], timestamp: new Date().toISOString() });
-      }
-    } catch (error) {
-      console.error('Failed to load property workflows:', error);
-      setPropertyWorkflows({ success: false, workflows: [], timestamp: new Date().toISOString() });
-    }
-  };
-
-  const loadPropertyStats = async () => {
-    try {
-      const response = await fetch('/api/property/populate-queue');
-      const data = await response.json();
-      if (data.success && data.stats) {
-        setPropertyStats({
-          total: data.stats.total || 0,
-          queued: data.stats.queued || 0,
-          processing: data.stats.processing || 0,
-          nextProperty: data.stats.nextProperty,
-          rotationDays: data.rotationDays || 0,
-          videosToday: 0 // This will be calculated from workflows
-        });
-      }
-    } catch (error) {
-      console.error('Failed to load property stats:', error);
-    }
-  };
-
-  const loadSpanishPropertyWorkflows = async () => {
-    try {
-      const url = showHistory ? '/api/property/workflows/logs-spanish?history=true' : '/api/property/workflows/logs-spanish';
-      const response = await fetch(url);
-      const data = await response.json();
-
-      // Only set workflows if the response was successful and has workflows array
-      if (data.success && Array.isArray(data.workflows)) {
-        setSpanishPropertyWorkflows(data);
-      } else {
-        console.error('Spanish property workflows API error:', data.error || 'Unknown error');
-        setSpanishPropertyWorkflows({ success: false, workflows: [], timestamp: new Date().toISOString() });
-      }
-    } catch (error) {
-      console.error('Failed to load Spanish property workflows:', error);
-      setSpanishPropertyWorkflows({ success: false, workflows: [], timestamp: new Date().toISOString() });
-    }
-  };
-
-  const loadSpanishPropertyStats = async () => {
-    try {
-      const response = await fetch('/api/property/populate-queue-spanish');
-      const data = await response.json();
-      if (data.success && data.stats) {
-        setSpanishPropertyStats({
-          total: data.stats.total || 0,
-          queued: data.stats.queued || 0,
-          processing: data.stats.processing || 0,
-          nextProperty: data.stats.nextProperty,
-          rotationDays: data.rotationDays || 0,
-          videosToday: 0 // This will be calculated from workflows
-        });
-      }
-    } catch (error) {
-      console.error('Failed to load Spanish property stats:', error);
-    }
-  };
-
-  const loadGuestProfiles = async () => {
-    try {
-      const response = await fetch('/api/podcast/profiles');
-      const data = await response.json();
-      if (data.success && data.profiles) {
-        const profileArray = Object.values(data.profiles) as GuestProfile[];
-        const enabled = profileArray.filter(p => p.enabled);
-        setGuestProfiles(enabled);
-      }
-    } catch (error) {
-      console.error('Failed to load guest profiles:', error);
     }
   };
 
@@ -601,7 +415,7 @@ ${script.caption}`;
     setTriggeringViral(true);
     try {
       // Determine which brand based on active tab
-      const brand = activeSubTab === 'carz' ? 'carz' : activeSubTab === 'vassdistro' ? 'vassdistro' : 'ownerfi';
+      const brand = activeSubTab === 'carz' ? 'carz' : 'ownerfi';
 
       const response = await fetch('/api/workflow/complete-viral', {
         method: 'POST',
@@ -640,19 +454,6 @@ ${script.caption}`;
     }
   };
 
-  const triggerPodcastCron = async () => {
-    setTriggeringPodcast(true);
-    try {
-      const response = await fetch('/api/podcast/cron?force=true', { method: 'POST' });
-      const data = await response.json();
-      alert(data.success ? 'Podcast cron triggered successfully!' : `Error: ${data.error}`);
-    } catch (error) {
-      alert('Failed to trigger podcast cron');
-    } finally {
-      setTriggeringPodcast(false);
-    }
-  };
-
   const triggerBenefitCron = async () => {
     setTriggeringBenefit(true);
     try {
@@ -666,50 +467,6 @@ ${script.caption}`;
       alert('Failed to trigger benefit cron');
     } finally {
       setTriggeringBenefit(false);
-    }
-  };
-
-  const triggerPropertyCron = async () => {
-    setTriggeringProperty(true);
-    try {
-      const response = await fetch('/api/property/video-cron', { method: 'POST' });
-      const data = await response.json();
-      if (data.success) {
-        const message = data.generated > 0
-          ? `Property video cron triggered successfully!\n\nProperty: ${data.property?.address || 'N/A'}\nWorkflow ID: ${data.property?.workflowId || 'N/A'}`
-          : `Property cron ran but no video generated.\n\n${data.message || ''}`;
-        alert(message);
-        loadPropertyWorkflows();
-        loadPropertyStats();
-      } else {
-        alert(`Error: ${data.error}`);
-      }
-    } catch (error) {
-      alert('Failed to trigger property cron');
-    } finally {
-      setTriggeringProperty(false);
-    }
-  };
-
-  const triggerSpanishPropertyCron = async () => {
-    setTriggeringSpanishProperty(true);
-    try {
-      const response = await fetch('/api/property/video-cron-spanish', { method: 'POST' });
-      const data = await response.json();
-      if (data.success) {
-        const message = data.generated > 0
-          ? `Spanish property video cron triggered successfully!\n\nProperty: ${data.property?.address || 'N/A'}\nWorkflow ID: ${data.property?.workflowId || 'N/A'}`
-          : `Spanish property cron ran but no video generated.\n\n${data.message || ''}`;
-        alert(message);
-        loadSpanishPropertyWorkflows();
-        loadSpanishPropertyStats();
-      } else {
-        alert(`Error: ${data.error}`);
-      }
-    } catch (error) {
-      alert('Failed to trigger Spanish property cron');
-    } finally {
-      setTriggeringSpanishProperty(false);
     }
   };
 
@@ -752,7 +509,7 @@ ${script.caption}`;
     }
   };
 
-  const deleteWorkflow = async (workflowId: string, brand: 'carz' | 'ownerfi' | 'vassdistro' | 'podcast' | 'benefit' | 'property' | 'property-spanish' | 'abdullah') => {
+  const deleteWorkflow = async (workflowId: string, brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'gaza') => {
     if (!confirm('Are you sure you want to delete this workflow? This action cannot be undone.')) {
       return;
     }
@@ -766,14 +523,8 @@ ${script.caption}`;
 
       if (data.success) {
         // Refresh workflows list
-        if (brand === 'podcast') {
-          await loadPodcastWorkflows();
-        } else if (brand === 'benefit') {
+        if (brand === 'benefit') {
           await loadBenefitWorkflows();
-        } else if (brand === 'property') {
-          await loadPropertyWorkflows();
-        } else if (brand === 'property-spanish') {
-          await loadSpanishPropertyWorkflows();
         } else {
           await loadWorkflows();
         }
@@ -800,18 +551,6 @@ ${script.caption}`;
     }
   };
 
-  const getPodcastStatusColor = (status: PodcastWorkflowLog['status']) => {
-    switch (status) {
-      case 'script_generation': return 'bg-gray-100 text-gray-700';
-      case 'heygen_processing': return 'bg-blue-100 text-blue-700';
-      case 'submagic_processing': return 'bg-purple-100 text-purple-700';
-      case 'publishing': return 'bg-yellow-100 text-yellow-700';
-      case 'completed': return 'bg-green-100 text-green-700';
-      case 'failed': return 'bg-red-100 text-red-700';
-      default: return 'bg-gray-100 text-gray-700';
-    }
-  };
-
   const getBenefitStatusColor = (status: BenefitWorkflowLog['status']) => {
     switch (status) {
       case 'heygen_processing': return 'bg-blue-100 text-blue-700';
@@ -824,19 +563,7 @@ ${script.caption}`;
     }
   };
 
-  const getPropertyStatusColor = (status: PropertyWorkflowLog['status']) => {
-    switch (status) {
-      case 'heygen_processing': return 'bg-blue-100 text-blue-700';
-      case 'submagic_processing': return 'bg-purple-100 text-purple-700';
-      case 'queued': return 'bg-gray-100 text-gray-700';
-      case 'posting': return 'bg-yellow-100 text-yellow-700';
-      case 'completed': return 'bg-green-100 text-green-700';
-      case 'failed': return 'bg-red-100 text-red-700';
-      default: return 'bg-gray-100 text-gray-700';
-    }
-  };
-
-  const formatStatus = (status: WorkflowLog['status'] | PodcastWorkflowLog['status'] | BenefitWorkflowLog['status'] | PropertyWorkflowLog['status']) => {
+  const formatStatus = (status: WorkflowLog['status'] | BenefitWorkflowLog['status']) => {
     return status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
 
@@ -902,7 +629,6 @@ ${script.caption}`;
           {[
             { key: 'carz', label: 'Carz Inc', icon: '🚗' },
             { key: 'ownerfi', label: 'OwnerFi', icon: '🏠', hasSubtabs: true },
-            { key: 'vassdistro', label: 'Vass Distro', icon: '💨' },
             { key: 'abdullah', label: 'Abdullah', icon: '👤', hasSubtabs: true },
             { key: 'gaza', label: 'Gaza', icon: '🇵🇸' },
             { key: 'analytics', label: 'Analytics', icon: '📊' },
@@ -957,31 +683,11 @@ ${script.caption}`;
             >
               💎 Benefits
             </button>
-            <button
-              onClick={() => setActiveSubTab('ownerfi-properties')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap flex-shrink-0 ${
-                activeSubTab === 'ownerfi-properties'
-                  ? 'bg-emerald-600 text-white'
-                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-              }`}
-            >
-              🏡 Properties
-            </button>
-            <button
-              onClick={() => setActiveSubTab('ownerfi-properties-spanish')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap flex-shrink-0 ${
-                activeSubTab === 'ownerfi-properties-spanish'
-                  ? 'bg-emerald-600 text-white'
-                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-              }`}
-            >
-              🏡 Spanish
-            </button>
           </div>
         )}
 
         {/* Sub-tabs for Abdullah */}
-        {(activeSubTab === 'abdullah' || activeSubTab === 'abdullah-podcast') && (
+        {activeSubTab === 'abdullah' && (
           <div className="flex space-x-2 mb-6 ml-0 md:ml-4 overflow-x-auto pb-2 scrollbar-hide">
             <button
               onClick={() => setActiveSubTab('abdullah')}
@@ -992,16 +698,6 @@ ${script.caption}`;
               }`}
             >
               Daily Content
-            </button>
-            <button
-              onClick={() => setActiveSubTab('abdullah-podcast')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap flex-shrink-0 ${
-                activeSubTab === 'abdullah-podcast'
-                  ? 'bg-emerald-600 text-white'
-                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-              }`}
-            >
-              🎙️ Podcast
             </button>
           </div>
         )}
@@ -1031,7 +727,7 @@ ${script.caption}`;
                   {status?.feeds?.total || 0}
                 </div>
                 <div className="text-xs text-slate-500 mt-1">
-                  {status?.feeds?.carz || 0} Carz • {status?.feeds?.ownerfi || 0} OwnerFi • {status?.feeds?.vassdistro || 0} Vass
+                  {status?.feeds?.carz || 0} Carz • {status?.feeds?.ownerfi || 0} OwnerFi
                 </div>
               </div>
               <div className="w-12 h-12 bg-blue-900/30 rounded-full flex items-center justify-center">
@@ -1048,7 +744,7 @@ ${script.caption}`;
                   {(status?.stats?.carz?.unprocessedArticles || 0) + (status?.stats?.ownerfi?.unprocessedArticles || 0)}
                 </div>
                 <div className="text-xs text-slate-500 mt-1">
-                  {status?.stats?.carz?.unprocessedArticles || 0} Carz • {status?.stats?.ownerfi?.unprocessedArticles || 0} OwnerFi • {status?.stats?.vassdistro?.unprocessedArticles || 0} Vass
+                  {status?.stats?.carz?.unprocessedArticles || 0} Carz • {status?.stats?.ownerfi?.unprocessedArticles || 0} OwnerFi
                 </div>
               </div>
               <div className="w-12 h-12 bg-purple-900/30 rounded-full flex items-center justify-center">
@@ -1369,432 +1065,6 @@ ${script.caption}`;
           </div>
         )}
 
-        {activeSubTab === 'vassdistro' && (
-          <div className="space-y-6">
-            <div className="bg-slate-800 rounded-xl border border-slate-700 p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-white">Vass Distro Status</h3>
-                <button
-                  onClick={triggerCron}
-                  disabled={triggeringViral}
-                  className="px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 disabled:bg-gray-400 transition-colors"
-                >
-                  {triggeringViral ? 'Generating...' : 'Generate Video Now'}
-                </button>
-              </div>
-
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-slate-700/50 rounded-lg p-4">
-                  <div className="text-sm text-slate-400">Daily Limit</div>
-                  <div className="text-2xl font-bold text-white mt-1">
-                    {status?.scheduler?.config?.maxVideosPerDay?.vassdistro || 1}
-                  </div>
-                  <div className="text-xs text-slate-500 mt-1">videos/day</div>
-                </div>
-
-                <div className="bg-slate-700/50 rounded-lg p-4">
-                  <div className="text-sm text-slate-400">Available Articles</div>
-                  <div className="text-2xl font-bold text-white mt-1">
-                    {status?.stats?.vassdistro?.unprocessedArticles || 0}
-                  </div>
-                  <div className="text-xs text-slate-500 mt-1">ready to process</div>
-                </div>
-
-                <div className="bg-slate-700/50 rounded-lg p-4">
-                  <div className="text-sm text-slate-400">In Queue</div>
-                  <div className="text-2xl font-bold text-white mt-1">
-                    {(status?.stats?.vassdistro?.queuePending || 0) + (status?.stats?.vassdistro?.queueProcessing || 0)}
-                  </div>
-                  <div className="text-xs text-slate-500 mt-1">
-                    {status?.stats?.vassdistro?.queueProcessing || 0} processing
-                  </div>
-                </div>
-
-                <div className="bg-slate-700/50 rounded-lg p-4">
-                  <div className="text-sm text-slate-400">RSS Feeds</div>
-                  <div className="text-2xl font-bold text-white mt-1">
-                    {status?.feeds?.vassdistro || 0}
-                  </div>
-                  <div className="text-xs text-slate-500 mt-1">active sources</div>
-                </div>
-              </div>
-
-              <div className="mt-6 pt-6 border-t border-slate-200">
-                <h4 className="text-sm font-semibold text-white mb-3">Publishing Platforms</h4>
-                <div className="flex flex-wrap gap-2">
-                  {['Instagram', 'TikTok', 'YouTube', 'Facebook', 'LinkedIn', 'Threads'].map((platform) => (
-                    <span key={platform} className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
-                      {platform}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              {/* Workflow Logs */}
-              <div className="mt-6 pt-6 border-t border-slate-200">
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-sm font-semibold text-white">Workflows</h4>
-                  <button
-                    onClick={() => setShowHistory(!showHistory)}
-                    className="text-xs px-3 py-1 rounded-full bg-slate-600 hover:bg-slate-500 text-slate-200 font-medium transition-colors"
-                  >
-                    {showHistory ? 'Active Only' : 'Show History'}
-                  </button>
-                </div>
-                {workflows && workflows.workflows && workflows.workflows.vassdistro && workflows.workflows.vassdistro.length > 0 ? (
-                  <div className="space-y-3">
-                    {workflows.workflows.vassdistro.map((workflow) => (
-                      <div key={workflow.id} className="bg-slate-700 border border-slate-600 rounded-lg p-4 hover:border-indigo-400 transition-colors">
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="flex-1">
-                            <div className="font-medium text-white text-sm mb-1" dangerouslySetInnerHTML={{ __html: workflow.articleTitle }} />
-                            <div className="flex items-center gap-2 mt-1">
-                              <div className="text-xs text-slate-500">{formatTimeAgo(workflow.createdAt)}</div>
-                              {workflow.captionTemplate && (
-                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700" title="A/B Test Caption Template">
-                                  🧪 {workflow.captionTemplate.replace(/_/g, ' ')}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(workflow.status)}`}>
-                              {formatStatus(workflow.status)}
-                            </span>
-                            <button
-                              onClick={() => deleteWorkflow(workflow.id, 'vassdistro')}
-                              disabled={deletingWorkflow === workflow.id}
-                              className="text-red-600 hover:text-red-800 hover:bg-red-50 p-2 rounded-lg transition-colors disabled:opacity-50"
-                              title="Delete workflow"
-                            >
-                              {deletingWorkflow === workflow.id ? (
-                                <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24">
-                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
-                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                              ) : (
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
-                              )}
-                            </button>
-                          </div>
-                        </div>
-                        {(workflow.heygenVideoId || workflow.submagicVideoId || workflow.latePostId || workflow.metricoolPostId) && (
-                          <div className="grid grid-cols-3 gap-2 text-xs">
-                            {workflow.heygenVideoId && (
-                              <div>
-                                <div className="text-slate-500 mb-1">HeyGen</div>
-                                <div className="font-mono text-slate-300 truncate">{workflow.heygenVideoId.substring(0, 12)}...</div>
-                              </div>
-                            )}
-                            {workflow.submagicVideoId && (
-                              <div>
-                                <div className="text-slate-500 mb-1">Submagic</div>
-                                <div className="font-mono text-slate-300 truncate">{workflow.submagicVideoId.substring(0, 12)}...</div>
-                              </div>
-                            )}
-                            {(workflow.latePostId || workflow.metricoolPostId) && (
-                              <div>
-                                <div className="text-slate-500 mb-1">GetLate</div>
-                                <div className="font-mono text-slate-300 truncate">{(workflow.latePostId || workflow.metricoolPostId)?.substring(0, 12)}...</div>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                        {workflow.error && (
-                          <div className="mt-3 space-y-2">
-                            <div className="text-xs text-red-700 bg-red-50 border border-red-200 rounded px-3 py-2">
-                              <span className="font-semibold">Error:</span> {workflow.error}
-                            </div>
-                            <WorkflowRecoveryButtons workflow={workflow} onSuccess={loadWorkflows} />
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="bg-slate-700/50 rounded-lg p-8 text-center border border-slate-600">
-                    <div className="text-slate-500 text-sm font-medium">No active workflows</div>
-                    <div className="text-xs text-slate-400 mt-1">Videos will appear here when being processed</div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {activeSubTab === 'abdullah-podcast' && (
-          <div className="space-y-6">
-            <div className="bg-slate-800 rounded-xl border border-slate-700 p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-white">Podcast Status</h3>
-                <button
-                  onClick={triggerPodcastCron}
-                  disabled={triggeringPodcast}
-                  className="px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 disabled:bg-gray-400 transition-colors"
-                >
-                  {triggeringPodcast ? 'Generating...' : 'Generate Episode Now'}
-                </button>
-              </div>
-
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-slate-700/50 rounded-lg p-4">
-                  <div className="text-sm text-slate-400">Post Schedule</div>
-                  <div className="text-lg font-bold text-white mt-1">
-                    Smart Slots
-                  </div>
-                  <div className="text-xs text-slate-500 mt-1">9AM, 12PM, 3PM, 6PM, 9PM CDT</div>
-                </div>
-
-                <div className="bg-slate-700/50 rounded-lg p-4">
-                  <div className="text-sm text-slate-400">Daily Limit</div>
-                  <div className="text-lg font-bold text-white mt-1">
-                    3 episodes
-                  </div>
-                  <div className="text-xs text-slate-500 mt-1">per day</div>
-                </div>
-
-                <div className="bg-slate-700/50 rounded-lg p-4">
-                  <div className="text-sm text-slate-400">Duration</div>
-                  <div className="text-lg font-bold text-white mt-1">
-                    ~3-4 min
-                  </div>
-                  <div className="text-xs text-slate-500 mt-1">per episode</div>
-                </div>
-
-                <div className="bg-slate-700/50 rounded-lg p-4">
-                  <div className="text-sm text-slate-400">Status</div>
-                  <div className="text-lg font-bold text-green-600 mt-1">
-                    Ready
-                  </div>
-                  <div className="text-xs text-slate-500 mt-1">operational</div>
-                </div>
-              </div>
-
-              <div className="mt-6 pt-6 border-t border-slate-200">
-                <h4 className="text-sm font-semibold text-white mb-3">Publishing Platforms</h4>
-                <div className="flex flex-wrap gap-2">
-                  {['YouTube', 'Facebook', 'Instagram Reels', 'TikTok', 'LinkedIn', 'Twitter', 'Threads'].map((platform) => (
-                    <span key={platform} className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
-                      {platform}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              <div className="mt-6 pt-6 border-t border-slate-200">
-                <h4 className="text-sm font-semibold text-white mb-3">Episode Format</h4>
-                <div className="bg-slate-700/50 rounded-lg p-4">
-                  <ul className="text-sm text-slate-300 space-y-2">
-                    <li>• <strong>3 episodes daily</strong> - Posted at optimal engagement times</li>
-                    <li>• Host + AI Guest (HeyGen avatars)</li>
-                    <li>• 2 Q&A pairs (~1.5 minutes each)</li>
-                    <li>• Hormozi 2 caption template (Submagic)</li>
-                    <li>• Smart scheduling: 9 AM, 12 PM, 3 PM, 6 PM, or 9 PM CDT</li>
-                  </ul>
-                </div>
-              </div>
-
-              {/* Guest Profiles */}
-              <div className="mt-6 pt-6 border-t border-slate-200">
-                <h4 className="text-sm font-semibold text-white mb-3">Active Guest Profiles ({guestProfiles.length})</h4>
-                <div className="space-y-3">
-                  {guestProfiles.map((profile) => (
-                    <div key={profile.id} className="bg-slate-700 border border-slate-600 rounded-lg p-4">
-                      {editingProfile === profile.id ? (
-                        <div className="space-y-3">
-                          <div className="grid grid-cols-2 gap-3">
-                            <div>
-                              <label className="text-xs text-slate-400 font-medium">Name</label>
-                              <input
-                                type="text"
-                                defaultValue={profile.name}
-                                onBlur={(e) => {
-                                  if (e.target.value !== profile.name) {
-                                    updateGuestProfile(profile.id, { name: e.target.value });
-                                  }
-                                }}
-                                className="w-full px-2 py-1 text-sm border border-slate-300 rounded mt-1"
-                              />
-                            </div>
-                            <div>
-                              <label className="text-xs text-slate-400 font-medium">Title</label>
-                              <input
-                                type="text"
-                                defaultValue={profile.title}
-                                onBlur={(e) => {
-                                  if (e.target.value !== profile.title) {
-                                    updateGuestProfile(profile.id, { title: e.target.value });
-                                  }
-                                }}
-                                className="w-full px-2 py-1 text-sm border border-slate-300 rounded mt-1"
-                              />
-                            </div>
-                          </div>
-                          <div className="grid grid-cols-2 gap-3">
-                            <div>
-                              <label className="text-xs text-slate-400 font-medium">Avatar ID</label>
-                              <input
-                                type="text"
-                                defaultValue={profile.avatar_id}
-                                onBlur={(e) => {
-                                  if (e.target.value !== profile.avatar_id) {
-                                    updateGuestProfile(profile.id, { avatar_id: e.target.value });
-                                  }
-                                }}
-                                className="w-full px-2 py-1 text-sm border border-slate-300 rounded font-mono mt-1"
-                              />
-                            </div>
-                            <div>
-                              <label className="text-xs text-slate-400 font-medium">Voice ID</label>
-                              <input
-                                type="text"
-                                defaultValue={profile.voice_id}
-                                onBlur={(e) => {
-                                  if (e.target.value !== profile.voice_id) {
-                                    updateGuestProfile(profile.id, { voice_id: e.target.value });
-                                  }
-                                }}
-                                className="w-full px-2 py-1 text-sm border border-slate-300 rounded font-mono mt-1"
-                              />
-                            </div>
-                          </div>
-                          <button
-                            onClick={() => setEditingProfile(null)}
-                            className="text-xs px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
-                          >
-                            Done
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1">
-                            <div className="font-medium text-white text-sm">{profile.name}</div>
-                            <div className="text-xs text-slate-400 mt-1">{profile.title}</div>
-                            <div className="flex gap-4 mt-2 text-xs text-slate-500">
-                              <div>
-                                <span className="font-medium">Avatar:</span> <span className="font-mono">{profile.avatar_id.substring(0, 20)}...</span>
-                              </div>
-                              <div>
-                                <span className="font-medium">Voice:</span> <span className="font-mono">{profile.voice_id.substring(0, 12)}...</span>
-                              </div>
-                            </div>
-                          </div>
-                          <button
-                            onClick={() => setEditingProfile(profile.id)}
-                            className="text-xs px-3 py-1 bg-indigo-100 text-indigo-700 rounded hover:bg-indigo-200 transition-colors"
-                          >
-                            Edit
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                  {guestProfiles.length === 0 && (
-                    <div className="bg-slate-700/50 rounded-lg p-8 text-center border border-slate-600">
-                      <div className="text-slate-500 text-sm font-medium">No guest profiles loaded</div>
-                      <div className="text-xs text-slate-400 mt-1">Check Firestore configuration</div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Podcast Workflow Logs */}
-              <div className="mt-6 pt-6 border-t border-slate-200">
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-sm font-semibold text-white">Workflows</h4>
-                  <button
-                    onClick={() => setShowHistory(!showHistory)}
-                    className="text-xs px-3 py-1 rounded-full bg-slate-600 hover:bg-slate-500 text-slate-200 font-medium transition-colors"
-                  >
-                    {showHistory ? 'Active Only' : 'Show History'}
-                  </button>
-                </div>
-                {podcastWorkflows && podcastWorkflows.workflows && podcastWorkflows.workflows.length > 0 ? (
-                  <div className="space-y-3">
-                    {podcastWorkflows.workflows.map((workflow) => (
-                      <div key={workflow.id} className="bg-slate-700 border border-slate-600 rounded-lg p-4 hover:border-indigo-400 transition-colors">
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="flex-1">
-                            <div className="font-medium text-white text-sm mb-1">
-                              Episode #{workflow.episodeNumber}: {workflow.episodeTitle || 'Generating...'}
-                            </div>
-                            {workflow.guestName && (
-                              <div className="text-xs text-slate-400 mb-1">Guest: {workflow.guestName}</div>
-                            )}
-                            {workflow.topic && (
-                              <div className="text-xs text-slate-400 mb-1">Topic: {workflow.topic}</div>
-                            )}
-                            <div className="text-xs text-slate-500">{formatTimeAgo(workflow.createdAt)}</div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${getPodcastStatusColor(workflow.status)}`}>
-                              {formatStatus(workflow.status)}
-                            </span>
-                            <button
-                              onClick={() => deleteWorkflow(workflow.id, 'podcast')}
-                              disabled={deletingWorkflow === workflow.id}
-                              className="text-red-600 hover:text-red-800 hover:bg-red-50 p-2 rounded-lg transition-colors disabled:opacity-50"
-                              title="Delete workflow"
-                            >
-                              {deletingWorkflow === workflow.id ? (
-                                <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24">
-                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
-                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                              ) : (
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
-                              )}
-                            </button>
-                          </div>
-                        </div>
-                        {(workflow.heygenVideoId || workflow.submagicProjectId || workflow.latePostId || workflow.metricoolPostId) && (
-                          <div className="grid grid-cols-3 gap-2 text-xs">
-                            {workflow.heygenVideoId && (
-                              <div>
-                                <div className="text-slate-500 mb-1">HeyGen</div>
-                                <div className="font-mono text-slate-300 truncate">{workflow.heygenVideoId.substring(0, 12)}...</div>
-                              </div>
-                            )}
-                            {workflow.submagicProjectId && (
-                              <div>
-                                <div className="text-slate-500 mb-1">Submagic</div>
-                                <div className="font-mono text-slate-300 truncate">{workflow.submagicProjectId.substring(0, 12)}...</div>
-                              </div>
-                            )}
-                            {(workflow.latePostId || workflow.metricoolPostId) && (
-                              <div>
-                                <div className="text-slate-500 mb-1">GetLate</div>
-                                <div className="font-mono text-slate-300 truncate">{(workflow.latePostId || workflow.metricoolPostId)?.substring(0, 12)}...</div>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                        {workflow.error && (
-                          <div className="mt-3 space-y-2">
-                            <div className="text-xs text-red-700 bg-red-50 border border-red-200 rounded px-3 py-2">
-                              <span className="font-semibold">Error:</span> {workflow.error}
-                            </div>
-                            <WorkflowRecoveryButtons workflow={workflow} onSuccess={loadWorkflows} />
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="bg-slate-700/50 rounded-lg p-8 text-center border border-slate-600">
-                    <div className="text-slate-500 text-sm font-medium">No active workflows</div>
-                    <div className="text-xs text-slate-400 mt-1">Episodes will appear here when being generated</div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
         {activeSubTab === 'ownerfi-benefits' && (
           <div className="space-y-6">
             <div className="bg-slate-800 rounded-xl border border-slate-700 p-6">
@@ -1952,357 +1222,6 @@ ${script.caption}`;
                   <div className="bg-slate-700/50 rounded-lg p-8 text-center border border-slate-600">
                     <div className="text-slate-500 text-sm font-medium">No active workflows</div>
                     <div className="text-xs text-slate-400 mt-1">Benefit videos will appear here when being generated</div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {activeSubTab === 'ownerfi-properties' && (
-          <div className="space-y-6">
-            <div className="bg-slate-800 rounded-xl border border-slate-700 p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-white">Property Showcase Videos</h3>
-                <button
-                  onClick={triggerPropertyCron}
-                  disabled={triggeringProperty}
-                  className="px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 disabled:bg-gray-400 transition-colors"
-                >
-                  {triggeringProperty ? 'Generating...' : 'Generate Property Video'}
-                </button>
-              </div>
-
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-slate-700/50 rounded-lg p-4">
-                  <div className="text-sm text-slate-400">Rotation Queue Size</div>
-                  <div className="text-2xl font-bold text-white mt-1">
-                    {propertyStats?.total || 0}
-                  </div>
-                  <div className="text-xs text-slate-500 mt-1">properties</div>
-                </div>
-
-                <div className="bg-slate-700/50 rounded-lg p-4">
-                  <div className="text-sm text-slate-400">Videos Today</div>
-                  <div className="text-2xl font-bold text-white mt-1">
-                    {propertyWorkflows?.workflows.filter(w => {
-                      const today = new Date().setHours(0, 0, 0, 0);
-                      return new Date(w.createdAt).setHours(0, 0, 0, 0) === today;
-                    }).length || 0}
-                  </div>
-                  <div className="text-xs text-slate-500 mt-1">generated</div>
-                </div>
-
-                <div className="bg-slate-700/50 rounded-lg p-4">
-                  <div className="text-sm text-slate-400">Next Property</div>
-                  <div className="text-sm font-bold text-white mt-1">
-                    {propertyStats?.nextProperty ? (
-                      <>{propertyStats.nextProperty.address.substring(0, 20)}...</>
-                    ) : (
-                      'N/A'
-                    )}
-                  </div>
-                  <div className="text-xs text-slate-500 mt-1">
-                    {propertyStats?.nextProperty && `${propertyStats.nextProperty.city}, ${propertyStats.nextProperty.state}`}
-                  </div>
-                </div>
-
-                <div className="bg-slate-700/50 rounded-lg p-4">
-                  <div className="text-sm text-slate-400">Rotation Days</div>
-                  <div className="text-2xl font-bold text-white mt-1">
-                    {propertyStats?.rotationDays || 0}
-                  </div>
-                  <div className="text-xs text-slate-500 mt-1">days per cycle</div>
-                </div>
-              </div>
-
-              <div className="mt-6 pt-6 border-t border-slate-200">
-                <h4 className="text-sm font-semibold text-white mb-3">Publishing Platforms</h4>
-                <div className="flex flex-wrap gap-2">
-                  {['Instagram', 'TikTok', 'YouTube', 'Facebook', 'LinkedIn', 'Threads'].map((platform) => (
-                    <span key={platform} className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700">
-                      {platform}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              <div className="mt-6 pt-6 border-t border-slate-200">
-                <h4 className="text-sm font-semibold text-white mb-3">Video Format</h4>
-                <div className="bg-slate-700/50 rounded-lg p-4">
-                  <ul className="text-sm text-slate-300 space-y-2">
-                    <li>• <strong>Property showcase format</strong> - 15-second videos</li>
-                    <li>• Rotating queue of active properties with &lt;$15k down</li>
-                    <li>• Smart rotation (each property shown every {propertyStats?.rotationDays || 0} days)</li>
-                    <li>• Features: address, city, down payment, monthly payment</li>
-                    <li>• HeyGen avatar + Submagic captions</li>
-                    <li>• Automatic queue management and analytics tracking</li>
-                  </ul>
-                </div>
-              </div>
-
-              {/* Property Workflow Logs */}
-              <div className="mt-6 pt-6 border-t border-slate-200">
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-sm font-semibold text-white">Workflows</h4>
-                  <button
-                    onClick={() => setShowHistory(!showHistory)}
-                    className="text-xs px-3 py-1 rounded-full bg-slate-600 hover:bg-slate-500 text-slate-200 font-medium transition-colors"
-                  >
-                    {showHistory ? 'Active Only' : 'Show History'}
-                  </button>
-                </div>
-                {propertyWorkflows && propertyWorkflows.workflows && propertyWorkflows.workflows.length > 0 ? (
-                  <div className="space-y-3">
-                    {propertyWorkflows.workflows.map((workflow) => (
-                      <div key={workflow.id} className="bg-slate-700 border border-slate-600 rounded-lg p-4 hover:border-indigo-400 transition-colors">
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700">
-                                {workflow.variant}
-                              </span>
-                              <div className="font-medium text-white text-sm">{workflow.address}</div>
-                            </div>
-                            <div className="text-xs text-slate-400 mb-1">
-                              {workflow.city}, {workflow.state} • Down: ${workflow.downPayment.toLocaleString()} • Monthly: ${workflow.monthlyPayment.toLocaleString()}
-                            </div>
-                            <div className="text-xs text-slate-500">{formatTimeAgo(workflow.createdAt)}</div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${getPropertyStatusColor(workflow.status)}`}>
-                              {formatStatus(workflow.status)}
-                            </span>
-                            <button
-                              onClick={() => deleteWorkflow(workflow.id, 'property')}
-                              disabled={deletingWorkflow === workflow.id}
-                              className="text-red-600 hover:text-red-800 hover:bg-red-50 p-2 rounded-lg transition-colors disabled:opacity-50"
-                              title="Delete workflow"
-                            >
-                              {deletingWorkflow === workflow.id ? (
-                                <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24">
-                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
-                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                              ) : (
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
-                              )}
-                            </button>
-                          </div>
-                        </div>
-                        {(workflow.heygenVideoId || workflow.submagicProjectId || workflow.latePostId) && (
-                          <div className="grid grid-cols-3 gap-2 text-xs">
-                            {workflow.heygenVideoId && (
-                              <div>
-                                <div className="text-slate-500 mb-1">HeyGen</div>
-                                <div className="font-mono text-slate-300 truncate">{workflow.heygenVideoId.substring(0, 12)}...</div>
-                              </div>
-                            )}
-                            {workflow.submagicProjectId && (
-                              <div>
-                                <div className="text-slate-500 mb-1">Submagic</div>
-                                <div className="font-mono text-slate-300 truncate">{workflow.submagicProjectId.substring(0, 12)}...</div>
-                              </div>
-                            )}
-                            {workflow.latePostId && (
-                              <div>
-                                <div className="text-slate-500 mb-1">GetLate</div>
-                                <div className="font-mono text-slate-300 truncate">{workflow.latePostId.substring(0, 12)}...</div>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                        {workflow.error && (
-                          <div className="mt-3 text-xs text-red-700 bg-red-50 border border-red-200 rounded px-3 py-2">
-                            <span className="font-semibold">Error:</span> {workflow.error}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="bg-slate-700/50 rounded-lg p-8 text-center border border-slate-600">
-                    <div className="text-slate-500 text-sm font-medium">No active workflows</div>
-                    <div className="text-xs text-slate-400 mt-1">Property videos will appear here when being generated</div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {activeSubTab === 'ownerfi-properties-spanish' && (
-          <div className="space-y-6">
-            <div className="bg-slate-800 rounded-xl border border-slate-700 p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-white">Property Showcase Videos (Spanish)</h3>
-                <button
-                  onClick={triggerSpanishPropertyCron}
-                  disabled={triggeringSpanishProperty}
-                  className="px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 disabled:bg-gray-400 transition-colors"
-                >
-                  {triggeringSpanishProperty ? 'Generating...' : 'Generate Spanish Property Video'}
-                </button>
-              </div>
-
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-slate-700/50 rounded-lg p-4">
-                  <div className="text-sm text-slate-400">Rotation Queue Size</div>
-                  <div className="text-2xl font-bold text-white mt-1">
-                    {spanishPropertyStats?.total || 0}
-                  </div>
-                  <div className="text-xs text-slate-500 mt-1">properties</div>
-                </div>
-
-                <div className="bg-slate-700/50 rounded-lg p-4">
-                  <div className="text-sm text-slate-400">Videos Today</div>
-                  <div className="text-2xl font-bold text-white mt-1">
-                    {spanishPropertyWorkflows?.workflows.filter(w => {
-                      const today = new Date().setHours(0, 0, 0, 0);
-                      return new Date(w.createdAt).setHours(0, 0, 0, 0) === today;
-                    }).length || 0}
-                  </div>
-                  <div className="text-xs text-slate-500 mt-1">generated</div>
-                </div>
-
-                <div className="bg-slate-700/50 rounded-lg p-4">
-                  <div className="text-sm text-slate-400">Next Property</div>
-                  <div className="text-sm font-bold text-white mt-1">
-                    {spanishPropertyStats?.nextProperty ? (
-                      <>{spanishPropertyStats.nextProperty.address.substring(0, 20)}...</>
-                    ) : (
-                      'N/A'
-                    )}
-                  </div>
-                  <div className="text-xs text-slate-500 mt-1">
-                    {spanishPropertyStats?.nextProperty && `${spanishPropertyStats.nextProperty.city}, ${spanishPropertyStats.nextProperty.state}`}
-                  </div>
-                </div>
-
-                <div className="bg-slate-700/50 rounded-lg p-4">
-                  <div className="text-sm text-slate-400">Rotation Days</div>
-                  <div className="text-2xl font-bold text-white mt-1">
-                    {spanishPropertyStats?.rotationDays || 0}
-                  </div>
-                  <div className="text-xs text-slate-500 mt-1">days per cycle</div>
-                </div>
-              </div>
-
-              <div className="mt-6 pt-6 border-t border-slate-200">
-                <h4 className="text-sm font-semibold text-white mb-3">Publishing Platforms</h4>
-                <div className="flex flex-wrap gap-2">
-                  {['Instagram', 'TikTok', 'YouTube', 'Facebook', 'LinkedIn', 'Threads'].map((platform) => (
-                    <span key={platform} className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700">
-                      {platform}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              <div className="mt-6 pt-6 border-t border-slate-200">
-                <h4 className="text-sm font-semibold text-white mb-3">Video Format</h4>
-                <div className="bg-slate-700/50 rounded-lg p-4">
-                  <ul className="text-sm text-slate-300 space-y-2">
-                    <li>• <strong>Property showcase format (Spanish)</strong> - 15-second videos</li>
-                    <li>• Rotating queue of active properties with &lt;$15k down</li>
-                    <li>• Smart rotation (each property shown every {spanishPropertyStats?.rotationDays || 0} days)</li>
-                    <li>• Features: address, city, down payment, monthly payment</li>
-                    <li>• HeyGen avatar + Submagic captions (Spanish language)</li>
-                    <li>• Automatic queue management and analytics tracking</li>
-                  </ul>
-                </div>
-              </div>
-
-              {/* Spanish Property Workflow Logs */}
-              <div className="mt-6 pt-6 border-t border-slate-200">
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-sm font-semibold text-white">Workflows</h4>
-                  <button
-                    onClick={() => setShowHistory(!showHistory)}
-                    className="text-xs px-3 py-1 rounded-full bg-slate-600 hover:bg-slate-500 text-slate-200 font-medium transition-colors"
-                  >
-                    {showHistory ? 'Active Only' : 'Show History'}
-                  </button>
-                </div>
-                {spanishPropertyWorkflows && spanishPropertyWorkflows.workflows && spanishPropertyWorkflows.workflows.length > 0 ? (
-                  <div className="space-y-3">
-                    {spanishPropertyWorkflows.workflows.map((workflow) => (
-                      <div key={workflow.id} className="bg-slate-700 border border-slate-600 rounded-lg p-4 hover:border-indigo-400 transition-colors">
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700">
-                                {workflow.variant}
-                              </span>
-                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
-                                ES
-                              </span>
-                              <div className="font-medium text-white text-sm">{workflow.address}</div>
-                            </div>
-                            <div className="text-xs text-slate-400 mb-1">
-                              {workflow.city}, {workflow.state} • Down: ${workflow.downPayment.toLocaleString()} • Monthly: ${workflow.monthlyPayment.toLocaleString()}
-                            </div>
-                            <div className="text-xs text-slate-500">{formatTimeAgo(workflow.createdAt)}</div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${getPropertyStatusColor(workflow.status)}`}>
-                              {formatStatus(workflow.status)}
-                            </span>
-                            <button
-                              onClick={() => deleteWorkflow(workflow.id, 'property-spanish')}
-                              disabled={deletingWorkflow === workflow.id}
-                              className="text-red-600 hover:text-red-800 hover:bg-red-50 p-2 rounded-lg transition-colors disabled:opacity-50"
-                              title="Delete workflow"
-                            >
-                              {deletingWorkflow === workflow.id ? (
-                                <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24">
-                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
-                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                              ) : (
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
-                              )}
-                            </button>
-                          </div>
-                        </div>
-                        {(workflow.heygenVideoId || workflow.submagicProjectId || workflow.latePostId) && (
-                          <div className="grid grid-cols-3 gap-2 text-xs">
-                            {workflow.heygenVideoId && (
-                              <div>
-                                <div className="text-slate-500 mb-1">HeyGen</div>
-                                <div className="font-mono text-slate-300 truncate">{workflow.heygenVideoId.substring(0, 12)}...</div>
-                              </div>
-                            )}
-                            {workflow.submagicProjectId && (
-                              <div>
-                                <div className="text-slate-500 mb-1">Submagic</div>
-                                <div className="font-mono text-slate-300 truncate">{workflow.submagicProjectId.substring(0, 12)}...</div>
-                              </div>
-                            )}
-                            {workflow.latePostId && (
-                              <div>
-                                <div className="text-slate-500 mb-1">GetLate</div>
-                                <div className="font-mono text-slate-300 truncate">{workflow.latePostId.substring(0, 12)}...</div>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                        {workflow.error && (
-                          <div className="mt-3 text-xs text-red-700 bg-red-50 border border-red-200 rounded px-3 py-2">
-                            <span className="font-semibold">Error:</span> {workflow.error}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="bg-slate-700/50 rounded-lg p-8 text-center border border-slate-600">
-                    <div className="text-slate-500 text-sm font-medium">No active workflows</div>
-                    <div className="text-xs text-slate-400 mt-1">Spanish property videos will appear here when being generated</div>
                   </div>
                 )}
               </div>

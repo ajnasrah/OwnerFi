@@ -85,11 +85,9 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     ownerfi: 'OwnerFi',
     carz: 'Carz Inc',
     abdullah: 'Abdullah',
-    vassdistro: 'Vass Distro',
     benefit: 'Owner Finance Benefits',
-    property: 'Property Showcase',
-    podcast: 'Podcast',
     personal: 'Personal',
+    gaza: 'Gaza Relief',
   };
 
   const brandName = brandNames[brand];

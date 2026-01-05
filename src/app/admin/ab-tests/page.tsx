@@ -38,7 +38,7 @@ interface TestResults {
 }
 
 export default function ABTestsPage() {
-  const [selectedBrand, setSelectedBrand] = useState<'carz' | 'ownerfi' | 'podcast'>('carz');
+  const [selectedBrand, setSelectedBrand] = useState<'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'gaza'>('carz');
   const [tests, setTests] = useState<ABTest[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedTest, setSelectedTest] = useState<ABTest | null>(null);
@@ -155,7 +155,7 @@ export default function ABTestsPage() {
 
         {/* Brand Selector */}
         <div className="flex gap-2 mb-6">
-          {(['carz', 'ownerfi', 'podcast'] as const).map((brand) => (
+          {(['carz', 'ownerfi', 'benefit', 'abdullah', 'gaza'] as const).map((brand) => (
             <button
               key={brand}
               onClick={() => setSelectedBrand(brand)}
@@ -165,7 +165,7 @@ export default function ABTestsPage() {
                   : 'bg-white text-slate-600 hover:bg-slate-50'
               }`}
             >
-              {brand === 'carz' ? 'Carz Inc' : brand === 'ownerfi' ? 'OwnerFi' : 'Podcast'}
+              {brand === 'carz' ? 'Carz Inc' : brand === 'ownerfi' ? 'OwnerFi' : brand === 'benefit' ? 'Benefit' : brand === 'abdullah' ? 'Abdullah' : 'Gaza'}
             </button>
           ))}
         </div>

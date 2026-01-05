@@ -177,9 +177,9 @@ export default function PlatformAnalyticsDashboard() {
             >
               <option value="ownerfi">OwnerFi</option>
               <option value="carz">Carz Inc</option>
-              <option value="podcast">Podcast</option>
-              <option value="vassdistro">VassDistro</option>
+              <option value="benefit">Benefit</option>
               <option value="abdullah">Abdullah</option>
+              <option value="gaza">Gaza</option>
             </select>
           </div>
 

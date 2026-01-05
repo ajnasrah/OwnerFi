@@ -24,7 +24,6 @@ interface ArticlesData {
   articles: {
     carz: Article[];
     ownerfi: Article[];
-    vassdistro?: Article[];
   };
   timestamp: string;
 }
@@ -32,7 +31,7 @@ interface ArticlesData {
 export default function ArticlesPage() {
   const { data: session, status: authStatus } = useSession();
   const router = useRouter();
-  const [activeBrand, setActiveBrand] = useState<'carz' | 'ownerfi' | 'vassdistro'>('carz');
+  const [activeBrand, setActiveBrand] = useState<'carz' | 'ownerfi'>('carz');
   const [activeView, setActiveView] = useState<'queue' | 'unprocessed'>('queue');
   const [articles, setArticles] = useState<ArticlesData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -99,7 +98,7 @@ export default function ArticlesPage() {
     return txt.value;
   };
 
-  const deleteArticle = async (articleId: string, brand: 'carz' | 'ownerfi' | 'vassdistro') => {
+  const deleteArticle = async (articleId: string, brand: 'carz' | 'ownerfi') => {
     if (!confirm('Are you sure you want to delete this article? This action cannot be undone.')) {
       return;
     }
@@ -211,7 +210,7 @@ export default function ArticlesPage() {
     );
   }
 
-  const allArticles = activeBrand === 'carz' ? articles?.articles.carz || [] : activeBrand === 'vassdistro' ? articles?.articles.vassdistro || [] : articles?.articles.ownerfi || [];
+  const allArticles = activeBrand === 'carz' ? articles?.articles.carz || [] : articles?.articles.ownerfi || [];
 
 
   // Article Queue: Unprocessed articles with scores >= 50, sorted by score DESC
@@ -239,12 +238,11 @@ export default function ArticlesPage() {
         <div className="flex space-x-2 mb-6">
           {[
             { key: 'carz', label: 'Carz Inc', icon: '🚗' },
-            { key: 'ownerfi', label: 'OwnerFi', icon: '🏠' },
-            { key: 'vassdistro', label: 'Vass Distro', icon: '💨' }
+            { key: 'ownerfi', label: 'OwnerFi', icon: '🏠' }
           ].map((tab) => (
             <button
               key={tab.key}
-              onClick={() => setActiveBrand(tab.key as 'carz' | 'ownerfi' | 'vassdistro')}
+              onClick={() => setActiveBrand(tab.key as 'carz' | 'ownerfi')}
               className={`flex items-center space-x-2 px-6 py-3 rounded-xl font-medium transition-all ${
                 activeBrand === tab.key
                   ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg'

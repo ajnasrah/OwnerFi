@@ -23,22 +23,18 @@ export async function generateMetadata({ params }: BlogListPageProps): Promise<M
     ownerfi: 'Owner Financing Blog - Real Estate Education & Deal Breakdowns',
     carz: 'Car Buying Blog - Dealer Secrets & Industry Insights',
     abdullah: 'Abdullah\'s Blog - Entrepreneurship & Real Talk',
-    vassdistro: 'Vass Distro Blog - Vape Industry News & B2B Tips',
     benefit: 'Owner Finance Benefits Blog',
-    property: 'Property Showcase Blog',
-    podcast: 'Podcast Blog',
     personal: 'Personal Blog',
+    gaza: 'Gaza Humanitarian Updates',
   };
 
   const descriptions: Record<Brand, string> = {
     ownerfi: 'Learn about owner financing, seller financing, and alternative home buying methods. Real deal breakdowns, agent playbooks, and market insights.',
     carz: 'Car buying tips, dealer secrets, auction insights, and car flipping guides from industry insiders.',
     abdullah: 'Real stories about entrepreneurship, real estate investing, and building multiple businesses with automation.',
-    vassdistro: 'Vape industry news, B2B tips for store owners, and wholesale business growth strategies.',
-    benefit: 'Owner Finance Benefits Blog',
-    property: 'Property Showcase Blog',
-    podcast: 'Podcast Blog',
-    personal: 'Personal Blog',
+    benefit: 'Educational content about the benefits of owner financing for buyers and sellers.',
+    personal: 'Personal stories and lifestyle content.',
+    gaza: 'Humanitarian updates and relief information about Gaza.',
   };
 
   return {
@@ -77,11 +73,9 @@ export default async function BlogListPage({ params }: BlogListPageProps) {
     ownerfi: 'OwnerFi',
     carz: 'Carz Inc',
     abdullah: 'Abdullah',
-    vassdistro: 'Vass Distro',
     benefit: 'Owner Finance Benefits',
-    property: 'Property Showcase',
-    podcast: 'Podcast',
     personal: 'Personal',
+    gaza: 'Gaza Relief',
   };
 
   const brandName = brandNames[brand];
@@ -116,7 +110,8 @@ export default async function BlogListPage({ params }: BlogListPageProps) {
             {brand === 'ownerfi' && 'Educational content about owner financing, real deal breakdowns, and market insights.'}
             {brand === 'carz' && 'Car buying tips, dealer secrets, and industry insights from the inside.'}
             {brand === 'abdullah' && 'Real talk about entrepreneurship, investing, and building businesses.'}
-            {brand === 'vassdistro' && 'Vape industry news, B2B tips, and business growth strategies.'}
+            {brand === 'benefit' && 'Educational content about the benefits of owner financing.'}
+            {brand === 'gaza' && 'Humanitarian updates and relief information about Gaza.'}
           </p>
         </div>
 

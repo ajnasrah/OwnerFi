@@ -35,18 +35,40 @@ const GHL_WEBHOOK_URL = process.env.GHL_AGENT_OUTREACH_WEBHOOK_URL ||
   'https://services.leadconnectorhq.com/hooks/U2B5lSlWrVBgVxHNq5AH/webhook-trigger/f13ea8d2-a22c-4365-9156-759d18147d4a';
 
 export async function GET(request: NextRequest) {
-  console.log('🔄 [AGENT OUTREACH QUEUE] Starting queue processor');
-
   const startTime = Date.now();
+
+  // Log immediately to diagnose cron issues
+  console.log('🔄 [AGENT OUTREACH QUEUE] Request received at', new Date().toISOString());
+
+  // Log start to cron_logs FIRST (before auth) to track if cron is being called
+  try {
+    await db.collection('cron_logs').add({
+      cron: 'process-agent-outreach-queue',
+      status: 'request_received',
+      timestamp: new Date(),
+    });
+  } catch (e) {
+    console.error('Failed to log cron start:', e);
+  }
 
   // Security check - only allow cron secret
   const authHeader = request.headers.get('authorization');
   const cronSecret = process.env.CRON_SECRET;
 
   if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
-    console.error('❌ [AGENT OUTREACH QUEUE] Unauthorized request');
+    console.error('❌ [AGENT OUTREACH QUEUE] Unauthorized - cronSecret exists:', !!cronSecret, 'authHeader exists:', !!authHeader);
+    // Log auth failure
+    await db.collection('cron_logs').add({
+      cron: 'process-agent-outreach-queue',
+      status: 'auth_failed',
+      hasCronSecret: !!cronSecret,
+      hasAuthHeader: !!authHeader,
+      timestamp: new Date(),
+    });
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
+
+  console.log('🔄 [AGENT OUTREACH QUEUE] Auth passed, starting processing');
 
   try {
     // Reset stuck processing items (older than 30 minutes)

@@ -169,5 +169,5 @@ export async function GET(request: NextRequest) {
 
 // Support POST for Vercel cron
 export async function POST(_request: NextRequest) {
-  return GET(request);
+  return GET(_request);
 }

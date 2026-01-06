@@ -18,7 +18,6 @@ import {
   addDoc,
   serverTimestamp,
   doc,
-  getDoc,
 } from 'firebase/firestore';
 import { getSafeDb } from '@/lib/firebase-safe';
 import { formatPropertyMatchSMS } from '@/lib/sms-templates';
@@ -64,7 +63,7 @@ interface WebhookLog {
   goHighLevelResponse?: unknown;
   errorMessage?: string;
   sentAt?: string;
-  createdAt: typeof serverTimestamp;
+  createdAt: ReturnType<typeof serverTimestamp>;
   processingTimeMs?: number;
 }
 
@@ -152,7 +151,7 @@ export async function POST(request: NextRequest) {
       buyerName: payload.buyerName,
       buyerFirstName: payload.buyerFirstName,
       buyerLastName: payload.buyerLastName,
-      buyerEmail: payload.buyerEmail,
+      buyerEmail: payload.buyerEmail?.toLowerCase().trim() || '',
       buyerPhone: payload.buyerPhone,
       buyerCity: payload.buyerCity,
       buyerState: payload.buyerState,

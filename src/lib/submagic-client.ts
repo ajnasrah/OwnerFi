@@ -115,12 +115,12 @@ export async function getStuckSubmagicJobs(brands?: string[]): Promise<any[]> {
 
   const workflows = snapshot.docs.map(doc => ({
     id: doc.id,
-    ...doc.data(),
+    ...doc.data() as { brand?: string },
   }));
 
   // Filter by brands if specified
   if (brands && brands.length > 0) {
-    return workflows.filter(w => brands.includes(w.brand));
+    return workflows.filter(w => w.brand && brands.includes(w.brand));
   }
 
   return workflows;

@@ -98,12 +98,9 @@ export async function POST(request: NextRequest) {
     // Parse body
     const body = JSON.parse(rawBody);
 
-    // Check for signature in header OR body (GHL sends in body)
+    // Check for signature in headers only (body signatures are a security risk)
     const signature = request.headers.get('x-webhook-signature') ||
-                     request.headers.get('x-ghl-signature') ||
-                     body['x-webhook-signature'] ||
-                     body['x-webhook-sig'] ||
-                     body['GHL_WEBHOOK'];
+                     request.headers.get('x-ghl-signature');
 
     // Verify webhook signature
     const verification = verifyWebhookSignature(rawBody, signature);
@@ -303,12 +300,13 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('❌ [AGENT RESPONSE WEBHOOK] Error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('❌ [AGENT RESPONSE WEBHOOK] Error:', errorMessage);
 
     return NextResponse.json(
       {
         error: 'Internal server error',
-        message: error.message
+        message: errorMessage
       },
       { status: 500 }
     );

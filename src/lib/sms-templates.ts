@@ -22,16 +22,23 @@ export interface PropertyMatchSMSData {
  * Format SMS message for property match notification
  */
 export function formatPropertyMatchSMS(data: PropertyMatchSMSData): string {
-  const dashboardUrl = data.dashboardUrl || 'https://ownerfi.ai/dashboard';
+  const dashboardUrl = data.dashboardUrl || 'https://ownerfi.com/dashboard';
+
+  // Ensure numbers are valid for display
+  const bedrooms = Math.max(0, data.bedrooms || 0);
+  const bathrooms = Math.max(0, data.bathrooms || 0);
+  const listPrice = Math.max(0, data.listPrice || 0);
+  const monthlyPayment = Math.max(0, data.monthlyPayment || 0);
+  const downPaymentAmount = Math.max(0, data.downPaymentAmount || 0);
 
   return `🏠 New Property Match!
 
 Hi ${data.buyerFirstName}! We found a home for you in ${data.propertyCity}, ${data.propertyState}:
 
 📍 ${data.propertyAddress}
-🛏️ ${data.bedrooms} bed, ${data.bathrooms} bath
-💰 $${data.listPrice.toLocaleString()} list price
-💵 $${data.monthlyPayment}/mo, $${data.downPaymentAmount.toLocaleString()} down
+🛏️ ${bedrooms} bed, ${bathrooms} bath
+💰 $${listPrice.toLocaleString('en-US')} list price
+💵 $${monthlyPayment.toLocaleString('en-US')}/mo, $${downPaymentAmount.toLocaleString('en-US')} down
 
 View it now: ${dashboardUrl}
 

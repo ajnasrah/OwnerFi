@@ -170,12 +170,13 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('❌ [AGENT NOT INTERESTED] Error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('❌ [AGENT NOT INTERESTED] Error:', errorMessage);
 
     return NextResponse.json(
       {
         error: 'Internal server error',
-        message: error.message,
+        message: errorMessage,
       },
       { status: 500 }
     );

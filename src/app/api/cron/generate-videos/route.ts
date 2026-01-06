@@ -103,7 +103,10 @@ async function generateArticleVideos() {
 
   // Brands with RSS feed-based article generation
   // Active article brands with RSS feeds
-  const articleBrands = ['carz', 'ownerfi', 'abdullah', 'personal'] as const;
+  // NOTE: Abdullah is NOT included here - it has its own dedicated cron (/api/cron/abdullah)
+  //       that generates themed content (mindset/business/money/freedom/story)
+  // NOTE: Personal is NOT included - it uses Google Drive uploads, not RSS
+  const articleBrands = ['carz', 'ownerfi'] as const;
 
   const results = [];
 

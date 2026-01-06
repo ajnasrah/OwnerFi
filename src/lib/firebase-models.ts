@@ -70,6 +70,7 @@ export interface BuyerProfile {
   likedPropertyIds: string[];           // Liked properties (unified from both systems)
   passedPropertyIds: string[];          // Passed properties
   viewedPropertyIds?: string[];         // Viewed properties (for analytics)
+  notifiedPropertyIds?: string[];       // Properties buyer was notified about (SMS dedup)
 
   // 🆕 PRE-COMPUTED FILTER (Generated at signup for 100K user scale)
   filter?: {

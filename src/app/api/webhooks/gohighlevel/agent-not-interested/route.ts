@@ -184,7 +184,7 @@ export async function POST(request: NextRequest) {
 }
 
 // Also support GET for testing
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   return NextResponse.json({
     webhook: 'agent-not-interested',
     method: 'POST',

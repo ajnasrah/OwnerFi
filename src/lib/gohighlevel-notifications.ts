@@ -249,7 +249,7 @@ export function shouldNotifyBuyer(
   }
 
   // Check location match
-  const buyerCity = buyer.preferredCity || buyer.city;
+  const _buyerCity = buyer.preferredCity || buyer.city; // Reserved for future city-level filtering
   const buyerState = buyer.preferredState || buyer.state;
 
   if (property.state !== buyerState) {

@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
     const firebaseId = body.firebaseId || body.firebase_id;
     const response = body.response;
     const agentNote = body.agentNote || body.agent_note;
-    const opportunityId = body.opportunityId || body.opportunity_id;
+    const _opportunityId = body.opportunityId || body.opportunity_id;
 
     console.log(`📋 [AGENT RESPONSE WEBHOOK] Processing response for ${firebaseId}`);
     console.log(`   Response: ${response}`);

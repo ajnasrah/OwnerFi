@@ -111,14 +111,19 @@ export async function GET(request: NextRequest) {
       .get();
 
     // Also get failed items that can be retried (retryCount < MAX_RETRIES)
-    const retryable = await db
+    // Simplified query to avoid complex index requirement
+    const retryableQuery = await db
       .collection('agent_outreach_queue')
       .where('status', '==', 'failed')
-      .where('retryCount', '<', MAX_RETRIES)
-      .orderBy('retryCount', 'asc')
-      .orderBy('addedAt', 'asc')
-      .limit(Math.max(0, BATCH_SIZE - pending.size))
+      .limit(BATCH_SIZE)
       .get();
+
+    // Filter in memory to avoid index requirement
+    const retryableDocs = retryableQuery.docs
+      .filter(doc => (doc.data().retryCount || 0) < MAX_RETRIES)
+      .slice(0, Math.max(0, BATCH_SIZE - pending.size));
+
+    const retryable = { docs: retryableDocs, size: retryableDocs.length };
 
     // Combine pending and retryable
     const allDocs = [...pending.docs, ...retryable.docs];

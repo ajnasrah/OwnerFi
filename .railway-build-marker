@@ -1,3 +1,0 @@
-BUILD_TIMESTAMP=2025-10-12T08:31:00Z
-COMMIT_WITH_FIX=c528ab4b
-FIX_DESCRIPTION=Added dynamic='force-dynamic' to src/app/page.tsx to prevent static generation error

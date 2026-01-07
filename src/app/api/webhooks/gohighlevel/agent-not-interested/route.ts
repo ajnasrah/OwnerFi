@@ -104,15 +104,28 @@ export async function POST(request: NextRequest) {
     const rawBody = await request.text();
     const body = JSON.parse(rawBody);
 
+    // DEBUG: Log all body keys to see what GHL is sending
+    console.log('📨 [DEBUG] Body keys:', Object.keys(body));
+    console.log('📨 [DEBUG] Full body:', JSON.stringify(body, null, 2));
+
     // Check for signature in header (HMAC mode)
     const headerSignature = request.headers.get('x-webhook-signature') ||
                            request.headers.get('x-ghl-signature');
 
     // Check for secret in body (simple comparison mode - GHL custom fields)
+    // Try many possible field names GHL might use
     const bodySecret = body['GHL_WEBHOOK'] ||
                       body['x-webhook-signature'] ||
                       body['x-webhook-sig'] ||
-                      body['webhook_secret'];
+                      body['webhook_secret'] ||
+                      body['secret'] ||
+                      body['signature'] ||
+                      body['auth'] ||
+                      body['token'];
+
+    console.log('📨 [DEBUG] Header signature:', headerSignature);
+    console.log('📨 [DEBUG] Body secret found:', bodySecret ? 'YES' : 'NO');
+    console.log('📨 [DEBUG] Expected secret starts with:', process.env.GHL_WEBHOOK_SECRET?.substring(0, 8));
 
     // Verify webhook authentication
     const verification = verifyWebhookAuth(rawBody, headerSignature, bodySecret);
@@ -120,6 +133,7 @@ export async function POST(request: NextRequest) {
       console.error('❌ [AGENT NOT INTERESTED] Invalid auth:', verification.reason);
       console.error('   Header signature present:', !!headerSignature);
       console.error('   Body secret present:', !!bodySecret);
+      console.error('   Body secret value starts with:', bodySecret?.substring(0, 8));
       return NextResponse.json(
         { error: 'Unauthorized', reason: verification.reason },
         { status: 401 }

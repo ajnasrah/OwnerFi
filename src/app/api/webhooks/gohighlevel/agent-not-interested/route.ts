@@ -108,37 +108,37 @@ export async function POST(request: NextRequest) {
     console.log('📨 [DEBUG] Body keys:', Object.keys(body));
     console.log('📨 [DEBUG] Full body:', JSON.stringify(body, null, 2));
 
-    // Check for signature in header (HMAC mode)
-    const headerSignature = request.headers.get('x-webhook-signature') ||
-                           request.headers.get('x-ghl-signature');
-
-    // Check for secret in body (simple comparison mode - GHL custom fields)
-    // Try many possible field names GHL might use
-    const bodySecret = body['GHL_WEBHOOK'] ||
-                      body['x-webhook-signature'] ||
+    // Check for secret in body - try all possible field names
+    const bodySecret = body['x-webhook-signature'] ||
+                      body['GHL_WEBHOOK'] ||
                       body['x-webhook-sig'] ||
                       body['webhook_secret'] ||
                       body['secret'] ||
-                      body['signature'] ||
-                      body['auth'] ||
-                      body['token'];
+                      body['signature'];
 
-    console.log('📨 [DEBUG] Header signature:', headerSignature);
-    console.log('📨 [DEBUG] Body secret found:', bodySecret ? 'YES' : 'NO');
-    console.log('📨 [DEBUG] Expected secret starts with:', process.env.GHL_WEBHOOK_SECRET?.substring(0, 8));
+    const expectedSecret = process.env.GHL_WEBHOOK_SECRET;
 
-    // Verify webhook authentication
-    const verification = verifyWebhookAuth(rawBody, headerSignature, bodySecret);
-    if (!verification.valid) {
-      console.error('❌ [AGENT NOT INTERESTED] Invalid auth:', verification.reason);
-      console.error('   Header signature present:', !!headerSignature);
-      console.error('   Body secret present:', !!bodySecret);
-      console.error('   Body secret value starts with:', bodySecret?.substring(0, 8));
+    console.log('📨 [DEBUG] Body secret found:', bodySecret ? `YES (${bodySecret.length} chars)` : 'NO');
+    console.log('📨 [DEBUG] Body secret value:', bodySecret);
+    console.log('📨 [DEBUG] Expected secret:', expectedSecret);
+    console.log('📨 [DEBUG] Match:', bodySecret === expectedSecret);
+    console.log('📨 [DEBUG] Trimmed match:', bodySecret?.trim() === expectedSecret?.trim());
+
+    // Simple direct comparison - no HMAC needed for GHL
+    const isAuthenticated = bodySecret && expectedSecret &&
+                           (bodySecret === expectedSecret || bodySecret.trim() === expectedSecret.trim());
+
+    if (!isAuthenticated) {
+      console.error('❌ [AGENT NOT INTERESTED] Auth failed');
+      console.error('   Body secret length:', bodySecret?.length);
+      console.error('   Expected length:', expectedSecret?.length);
       return NextResponse.json(
-        { error: 'Unauthorized', reason: verification.reason },
+        { error: 'Unauthorized', reason: 'Signature mismatch - invalid authentication' },
         { status: 401 }
       );
     }
+
+    console.log('✅ [AGENT NOT INTERESTED] Auth passed');
     const { firebaseId, note } = body;
 
     console.log(`   firebaseId: ${firebaseId}`);

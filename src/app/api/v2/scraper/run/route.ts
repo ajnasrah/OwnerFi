@@ -419,8 +419,8 @@ async function runUnifiedScraper(): Promise<{
         if (filterResult.isCashDeal) {
           metrics.savedAsCashDeal++;
 
-          // Collect for Abdullah's SMS alerts (cash deals under 80% zestimate)
-          if (property.price && property.estimate) {
+          // Collect for Abdullah's SMS alerts (regional cash deals under 80% only)
+          if (isRegionalProperty && property.price && property.estimate) {
             abdullahCashDeals.push({
               streetAddress: property.streetAddress || property.fullAddress || '',
               askingPrice: property.price,

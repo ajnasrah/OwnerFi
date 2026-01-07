@@ -20,7 +20,7 @@ interface CashDeal {
   zipcode: string;
   price: number;
   arv: number;
-  percentOfArv: number;
+  percentOfArv: number | null;
   discount: number;
   beds: number;
   baths: number;
@@ -90,8 +90,9 @@ export async function GET(request: NextRequest) {
       console.warn('[buyer/cash-deals] Typesense failed, using Firestore fallback:', error);
     }
 
-    // Fallback to Firestore if Typesense fails
-    if (typesenseError || deals.length === 0) {
+    // Fallback to Firestore ONLY if Typesense actually failed (not for empty results)
+    // Empty results from Typesense are valid - no need to double-query Firestore
+    if (typesenseError) {
       deals = await searchCashDealsFirestore(searchCity, searchState, maxPrice);
     }
 
@@ -118,7 +119,7 @@ async function searchCashDealsTypesense(
   city: string,
   state: string,
   maxPrice: number,
-  radius: number
+  _radius: number // TODO: Implement geo radius search
 ): Promise<CashDeal[]> {
   // Build filter: cash deals OR properties that need work (investor specials)
   // Include properties with: dealType cash_deal/both OR needsWork=true
@@ -143,8 +144,10 @@ async function searchCashDealsTypesense(
   return (result.hits || []).map((hit: Record<string, unknown>) => {
     const doc = hit.document as Record<string, unknown>;
     const price = (doc.listPrice as number) || 0;
-    const arv = (doc.zestimate as number) || (doc.listPrice as number) || 0;
-    const percentOfArv = arv > 0 ? Math.round((price / arv) * 100) : 100;
+    // DON'T fall back to listPrice - that makes percentOfArv = 100% (defeats the purpose)
+    const arv = (doc.zestimate as number) || 0;
+    // If no zestimate, percentOfArv is null (will be filtered out unless needsWork)
+    const percentOfArv = arv > 0 ? Math.round((price / arv) * 100) : null;
     const discount = arv > 0 ? arv - price : 0;
     const needsWork = doc.needsWork === true;
 
@@ -170,9 +173,13 @@ async function searchCashDealsTypesense(
       // Investor flags
       needsWork,
     };
-  }).filter((deal: CashDeal) => {
+  }).filter((deal: CashDeal & { needsWork?: boolean }) => {
     // Show if: under 80% ARV OR has investor keywords (needsWork)
-    return deal.percentOfArv <= 80 || (deal as CashDeal & { needsWork?: boolean }).needsWork;
+    // Properties without zestimate (percentOfArv = null) only show if needsWork is true
+    if (deal.percentOfArv === null) {
+      return deal.needsWork === true;
+    }
+    return deal.percentOfArv <= 80 || deal.needsWork === true;
   });
 }
 
@@ -221,11 +228,16 @@ async function searchCashDealsFirestore(
       // Skip if over max price
       if (price > maxPrice) return;
 
-      // Calculate ARV percentage
-      const percentOfArv = arv > 0 ? Math.round((price / arv) * 100) : 100;
+      // Calculate ARV percentage - use null when no ARV data (matches Typesense behavior)
+      const percentOfArv = arv > 0 ? Math.round((price / arv) * 100) : null;
 
       // Include if: under 80% ARV OR has investor keywords
-      if (percentOfArv > 80 && !needsWork) return;
+      // Properties without zestimate (percentOfArv = null) only show if needsWork is true
+      if (percentOfArv === null) {
+        if (!needsWork) return; // Skip properties with no ARV unless they need work
+      } else if (percentOfArv > 80 && !needsWork) {
+        return; // Skip properties over 80% ARV unless they need work
+      }
 
       const discount = arv > 0 ? arv - price : 0;
 

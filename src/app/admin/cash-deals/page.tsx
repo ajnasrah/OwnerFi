@@ -1,8 +1,18 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
+
+// Debounce hook to prevent excessive API calls
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+  useEffect(() => {
+    const handler = setTimeout(() => setDebouncedValue(value), delay);
+    return () => clearTimeout(handler);
+  }, [value, delay]);
+  return debouncedValue;
+}
 
 
 interface CashDeal {
@@ -13,7 +23,7 @@ interface CashDeal {
   zipcode: string;
   price: number;
   arv: number;
-  percentOfArv: number;
+  percentOfArv: number | null;
   discount: number;
   beds: number;
   baths: number;
@@ -67,6 +77,9 @@ export default function CashDealsPage() {
   const [citySearch, setCitySearch] = useState(searchParams.get('city') || '');
   const [stateFilter, setStateFilter] = useState(searchParams.get('state') || '');
   const [radius, setRadius] = useState(parseInt(searchParams.get('radius') || '0'));
+
+  // Debounce city search to prevent API spam on every keystroke (500ms delay)
+  const debouncedCitySearch = useDebounce(citySearch, 500);
 
   // Sort controls
   const [sortBy, setSortBy] = useState<SortField>((searchParams.get('sortBy') as SortField) || 'price');
@@ -239,12 +252,13 @@ export default function CashDealsPage() {
     }
   };
 
-  const fetchDeals = async () => {
+  const fetchDeals = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
       const params = new URLSearchParams();
-      if (citySearch) params.set('city', citySearch);
+      // Use debounced city search to avoid API spam
+      if (debouncedCitySearch) params.set('city', debouncedCitySearch);
       if (stateFilter) params.set('state', stateFilter);
       if (radius > 0) params.set('radius', String(radius));
       params.set('sortBy', sortBy);
@@ -266,18 +280,25 @@ export default function CashDealsPage() {
       setError(err instanceof Error ? err.message : 'Failed to fetch deals');
     }
     setLoading(false);
-  };
+  }, [debouncedCitySearch, stateFilter, radius, sortBy, sortOrder]);
 
   useEffect(() => {
     fetchDeals();
-    // Update URL when server-side filters change
-    updateURL({ city: citySearch, state: stateFilter, radius });
+    // Update URL when server-side filters change (use debounced city to avoid URL spam)
+    updateURL({ city: debouncedCitySearch, state: stateFilter, radius });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stateFilter, citySearch, radius]);
+  }, [stateFilter, debouncedCitySearch, radius]);
 
-  // Apply default Owner Finance filter on mount
+  // Apply default Owner Finance filter on mount (only if no URL params set)
   useEffect(() => {
-    applyQuickFilter('ownerFinance');
+    // Check if user navigated with existing filter params - don't override
+    const hasExistingFilters = searchParams.get('sortBy') ||
+                               searchParams.get('city') ||
+                               searchParams.get('state');
+    if (!hasExistingFilters) {
+      applyQuickFilter('ownerFinance');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Apply quick filter preset
@@ -323,13 +344,23 @@ export default function CashDealsPage() {
     // Apply client-side filters
     if (minPrice !== '') result = result.filter(d => d.price >= minPrice);
     if (maxPrice !== '') result = result.filter(d => d.price <= maxPrice);
-    if (maxArv !== '') result = result.filter(d => d.percentOfArv <= maxArv);
+    // Only filter by ARV if the deal has a valid percentOfArv (not null)
+    if (maxArv !== '') result = result.filter(d => d.percentOfArv !== null && d.percentOfArv <= maxArv);
 
-    // Sort
+    // Sort - map sortBy field to actual CashDeal property names
+    const sortFieldMap: Record<SortField, keyof CashDeal> = {
+      percentOfArv: 'percentOfArv',
+      price: 'price',
+      zestimate: 'arv', // 'zestimate' maps to 'arv' in CashDeal
+      discount: 'discount',
+      rentEstimate: 'rentEstimate',
+    };
+    const actualField = sortFieldMap[sortBy] || sortBy;
+
     result.sort((a, b) => {
-      const aVal = a[sortBy] ?? (sortOrder === 'asc' ? Infinity : -Infinity);
-      const bVal = b[sortBy] ?? (sortOrder === 'asc' ? Infinity : -Infinity);
-      return sortOrder === 'asc' ? aVal - bVal : bVal - aVal;
+      const aVal = a[actualField] ?? (sortOrder === 'asc' ? Infinity : -Infinity);
+      const bVal = b[actualField] ?? (sortOrder === 'asc' ? Infinity : -Infinity);
+      return sortOrder === 'asc' ? (aVal as number) - (bVal as number) : (bVal as number) - (aVal as number);
     });
 
     return result;
@@ -360,7 +391,7 @@ export default function CashDealsPage() {
   }, [filteredDeals]);
 
   const handleSort = (field: SortField) => {
-    setActiveQuickFilter('allDeals'); // Clear quick filter when manually sorting
+    // Don't reset quick filter when sorting - keep the filter active, just change sort
     if (sortBy === field) {
       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
     } else {
@@ -453,7 +484,6 @@ export default function CashDealsPage() {
 
   // Select/deselect all visible deals (current page only)
   const toggleSelectAll = () => {
-    const currentPageIds = new Set(paginatedDeals.map(d => d.id));
     const allOnPageSelected = paginatedDeals.every(d => selectedDeals.has(d.id));
 
     if (allOnPageSelected) {
@@ -751,7 +781,8 @@ export default function CashDealsPage() {
                   </thead>
                   <tbody className="divide-y divide-slate-700">
                     {paginatedDeals.map((deal) => {
-                      const isTopDeal = deal.percentOfArv <= 70; // Great deal = 70% or less of ARV
+                      // Great deal = 70% or less of ARV (only if percentOfArv is available)
+                      const isTopDeal = deal.percentOfArv !== null && deal.percentOfArv <= 70;
                       const isSelected = selectedDeals.has(deal.id);
                       return (
                         <tr

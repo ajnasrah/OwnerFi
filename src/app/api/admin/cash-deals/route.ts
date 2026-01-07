@@ -1,7 +1,8 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getAdminDb } from '@/lib/firebase-admin';
 import { getTypesenseSearchClient, TYPESENSE_COLLECTIONS } from '@/lib/typesense/client';
 import { getCitiesWithinRadiusComprehensive, getCityCoordinatesComprehensive } from '@/lib/comprehensive-cities';
+import { requireRole } from '@/lib/auth-helpers';
 
 // Cache for states list (refresh every 5 minutes)
 let statesCache: { states: string[]; timestamp: number } | null = null;
@@ -289,16 +290,17 @@ async function searchWithTypesense(params: {
     }
     // No collection filter = show all deal types
 
-    // Map sort fields
+    // Map sort fields - use actual Typesense field names
     const sortFieldMap: Record<string, string> = {
-      'percentOfArv': 'listPrice:asc', // Approximate - sort by price
+      'percentOfArv': 'percentOfArv', // Now indexed in Typesense
       'price': 'listPrice',
-      'discount': 'listPrice:asc',
-      'rentEstimate': 'listPrice:asc',
+      'discount': 'discountPercent',
+      'rentEstimate': 'rentEstimate',
+      'zestimate': 'zestimate',
     };
-    const sortField = sortFieldMap[params.sortBy] || 'listPrice:asc';
+    const sortField = sortFieldMap[params.sortBy] || 'listPrice';
     const sortDirection = params.sortOrder === 'desc' ? ':desc' : ':asc';
-    const sortBy = sortField.includes(':') ? sortField : `${sortField}${sortDirection}`;
+    const sortBy = `${sortField}${sortDirection}`;
 
     // When doing geo/radius search, use '*' to search all and rely on geo filter
     // This ensures surrounding cities within the radius are included
@@ -306,28 +308,55 @@ async function searchWithTypesense(params: {
       getCityCoordinatesComprehensive(params.city, params.state || '');
     const searchQuery = hasGeoFilter ? '*' : (params.city || '*');
 
-    const result = await client.collections(TYPESENSE_COLLECTIONS.PROPERTIES)
-      .documents()
-      .search({
-        q: searchQuery,
-        query_by: 'city,address,nearbyCities',
-        filter_by: filters.join(' && '),
-        sort_by: sortBy,
-        per_page: Math.min(params.limit, 250), // Typesense max per page
-        facet_by: 'state',
-      });
+    // Typesense max per_page is 250, so paginate if we need more
+    const perPage = 250;
+    const totalNeeded = Math.min(params.limit, 2000); // Cap at 2000 for performance
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let allHits: any[] = [];
+    let page = 1;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let facetCounts: any[] | undefined;
+
+    while (allHits.length < totalNeeded) {
+      const result = await client.collections(TYPESENSE_COLLECTIONS.PROPERTIES)
+        .documents()
+        .search({
+          q: searchQuery,
+          query_by: 'city,address,nearbyCities',
+          filter_by: filters.join(' && '),
+          sort_by: sortBy,
+          per_page: perPage,
+          page,
+          facet_by: 'state',
+        });
+
+      const hits = result.hits || [];
+      if (hits.length === 0) break; // No more results
+
+      allHits = allHits.concat(hits);
+      if (!facetCounts) facetCounts = result.facet_counts;
+
+      // If we got less than a full page, we've reached the end
+      if (hits.length < perPage) break;
+      page++;
+
+      // Safety: don't fetch more than 10 pages (2500 results)
+      if (page > 10) break;
+    }
 
     // Transform Typesense results to match expected format
     // Filter out non-FOR_SALE properties (PENDING, SOLD, FOR_RENT, etc)
-    const validHits = (result.hits || []).filter((hit: Record<string, unknown>) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const validHits = allHits.filter((hit: any) => {
       const doc = hit.document;
-      const status = (doc.homeStatus || '').toString().toUpperCase();
+      const status = (doc?.homeStatus || '').toString().toUpperCase();
       // Only include FOR_SALE or empty status (assumed active)
       return !status || status === 'FOR_SALE';
     });
 
-    const deals = validHits.map((hit: Record<string, unknown>) => {
-      const doc = hit.document;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const deals = validHits.map((hit: any) => {
+      const doc = hit.document as Record<string, any>;
       const price = doc.listPrice || 0;
       // ARV is zestimate - DON'T fall back to price (that would make %ARV = 100%)
       const arv = doc.zestimate || 0;
@@ -393,7 +422,8 @@ async function searchWithTypesense(params: {
     });
 
     // Deduplicate by address + city + state (same property in multiple collections)
-    const seen = new Map<string, NormalizedProperty>();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const seen = new Map<string, any>();
     for (const deal of deals) {
       const key = `${deal.address?.toLowerCase()}_${deal.city?.toLowerCase()}_${deal.state}`;
       if (!seen.has(key)) {
@@ -401,18 +431,57 @@ async function searchWithTypesense(params: {
       } else {
         // Prefer owner_finance or both over cash_deal
         const existing = seen.get(key);
-        if (deal.ownerFinanceVerified && !existing.ownerFinanceVerified) {
+        if (deal.ownerFinanceVerified && !existing?.ownerFinanceVerified) {
           seen.set(key, deal);
         }
       }
     }
-    const deduplicatedDeals = Array.from(seen.values());
+    const deduplicatedDeals: NormalizedProperty[] = Array.from(seen.values());
 
     // Extract states from facets
-    const stateFacet = result.facet_counts?.find((f: Record<string, unknown>) => f.field_name === 'state');
-    const states = stateFacet?.counts.map((c: Record<string, unknown>) => c.value).sort() || [];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const stateFacet = facetCounts?.find((f: any) => f.field_name === 'state');
+    const states = stateFacet?.counts?.map((c: { value: string }) => c.value).sort() || [];
 
     console.log(`[cash-deals] Typesense returned ${deals.length} deals, ${deduplicatedDeals.length} after dedup`);
+
+    // Enrich with reviewedAt/sentToGHL from Firestore (these aren't in Typesense)
+    // Only fetch for the deals we're returning to minimize reads
+    if (deduplicatedDeals.length > 0) {
+      try {
+        const db = await getAdminDb();
+        if (db) {
+          const ids = deduplicatedDeals.map(d => d.id);
+          // Firestore getAll is more efficient than individual gets
+          const refs = ids.map(id => db.collection('properties').doc(id));
+          const docs = await db.getAll(...refs);
+
+          const enrichmentMap = new Map<string, { reviewedAt: string | null; sentToGHL: unknown }>();
+          docs.forEach(doc => {
+            if (doc.exists) {
+              const data = doc.data();
+              enrichmentMap.set(doc.id, {
+                reviewedAt: data?.reviewedAt?.toDate?.()?.toISOString() || data?.reviewedAt || null,
+                sentToGHL: data?.sentToGHL || null,
+              });
+            }
+          });
+
+          // Merge enrichment data into deals
+          for (const deal of deduplicatedDeals) {
+            const enrichment = enrichmentMap.get(deal.id);
+            if (enrichment) {
+              deal.reviewedAt = enrichment.reviewedAt;
+              deal.sentToGHL = enrichment.sentToGHL;
+            }
+          }
+        }
+      } catch (enrichError) {
+        console.warn('[cash-deals] Failed to enrich with Firestore data:', enrichError);
+        // Continue without enrichment - non-critical
+      }
+    }
+
     return { deals: deduplicatedDeals, states };
 
   } catch (error) {
@@ -421,7 +490,11 @@ async function searchWithTypesense(params: {
   }
 }
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
+  // Require admin authentication
+  const authResult = await requireRole(request, 'admin');
+  if ('error' in authResult) return authResult.error;
+
   try {
     const startTime = Date.now();
 
@@ -481,14 +554,17 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
       }
 
-      // Fetch ALL properties from unified collection (investors see everything)
-      const propertiesSnapshot = await db.collection('properties').get();
+      // Fetch active properties from unified collection with limit for performance
+      // Use where clause to filter at database level instead of fetching everything
+      const propertiesSnapshot = await db.collection('properties')
+        .where('isActive', '==', true)
+        .limit(5000) // Safety limit - Typesense should handle most requests
+        .get();
 
       // Process properties - normalize for display
+      // Note: isActive filter is applied at database level above
       propertiesSnapshot.docs.forEach(doc => {
         const data = doc.data();
-        // Skip if not active
-        if (data.isActive === false) return;
 
         // Skip non-FOR_SALE properties (PENDING, SOLD, FOR_RENT, etc)
         const homeStatus = (data.homeStatus || '').toString().toUpperCase();
@@ -587,17 +663,21 @@ export async function GET(request: Request) {
     // Limit results
     allDeals = allDeals.slice(0, limit);
 
-    // Get states from cache or from current deals
+    // Get states from cache or from the FULL cached dataset (not filtered results)
     let states: string[] = [];
     if (statesCache && Date.now() - statesCache.timestamp < STATES_CACHE_TTL) {
       states = statesCache.states;
+    } else if (dealsCache?.data) {
+      // Extract states from FULL cached data (before filtering)
+      const allStates = new Set<string>();
+      dealsCache.data.forEach(d => d.state && allStates.add(d.state));
+      states = [...allStates].sort();
+      statesCache = { states, timestamp: Date.now() };
     } else {
-      // Extract states from current deals
+      // Fallback to filtered results if no cache
       const allStates = new Set<string>();
       allDeals.forEach(d => d.state && allStates.add(d.state));
       states = [...allStates].sort();
-      // Update cache
-      statesCache = { states, timestamp: Date.now() };
     }
 
     console.log(`[cash-deals] Fetched ${total} deals in ${Date.now() - startTime}ms`);
@@ -615,7 +695,11 @@ export async function GET(request: Request) {
 }
 
 // DELETE - Bulk delete properties from unified collection
-export async function DELETE(request: Request) {
+export async function DELETE(request: NextRequest) {
+  // Require admin authentication
+  const authResult = await requireRole(request, 'admin');
+  if ('error' in authResult) return authResult.error;
+
   try {
     const db = await getAdminDb();
     if (!db) {
@@ -629,21 +713,15 @@ export async function DELETE(request: Request) {
 
     console.log(`[cash-deals] Deleting ${ids.length} properties from unified collection...`);
 
-    let deleted = 0;
+    // Batch delete without checking existence (more efficient)
+    // Firestore batch delete is idempotent - deleting non-existent docs is a no-op
     const batch = db.batch();
-
     for (const id of ids) {
-      // Delete from unified properties collection
       const propertyRef = db.collection('properties').doc(id);
-      const propertyDoc = await propertyRef.get();
-
-      if (propertyDoc.exists) {
-        batch.delete(propertyRef);
-        deleted++;
-      }
+      batch.delete(propertyRef);
     }
-
     await batch.commit();
+    const deleted = ids.length;
 
     // Invalidate cache
     dealsCache = null;
@@ -659,7 +737,11 @@ export async function DELETE(request: Request) {
 }
 
 // PATCH - Mark property as reviewed
-export async function PATCH(request: Request) {
+export async function PATCH(request: NextRequest) {
+  // Require admin authentication
+  const authResult = await requireRole(request, 'admin');
+  if ('error' in authResult) return authResult.error;
+
   try {
     const db = await getAdminDb();
     if (!db) {

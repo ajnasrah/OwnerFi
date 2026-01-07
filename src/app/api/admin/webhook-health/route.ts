@@ -21,7 +21,7 @@ import { Brand } from '@/config/constants';
  * GET - Get webhook health metrics
  *
  * Query params:
- * - brand: Filter by brand (carz, ownerfi, podcast)
+ * - brand: Filter by brand (carz, ownerfi, benefit, abdullah, personal, gaza)
  * - timeframe: Timeframe for metrics (24h, 7d, 30d)
  */
 export async function GET(request: NextRequest) {

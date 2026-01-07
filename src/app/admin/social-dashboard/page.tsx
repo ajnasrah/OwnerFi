@@ -185,7 +185,7 @@ interface BrandAnalytics {
 export default function SocialMediaDashboard() {
   const { data: session, status: authStatus } = useSession();
   const router = useRouter();
-  const [activeSubTab, setActiveSubTab] = useState<'carz' | 'ownerfi' | 'ownerfi-benefits' | 'abdullah' | 'abdullah-podcast' | 'gaza' | 'analytics' | 'youtube-analytics'>('carz');
+  const [activeSubTab, setActiveSubTab] = useState<'carz' | 'ownerfi' | 'ownerfi-benefits' | 'abdullah' | 'gaza' | 'analytics' | 'youtube-analytics'>('carz');
   const [status, setStatus] = useState<SchedulerStatus | null>(null);
   const [workflows, setWorkflows] = useState<WorkflowLogs | null>(null);
   const [benefitWorkflows, setBenefitWorkflows] = useState<BenefitWorkflowLogs | null>(null);
@@ -649,7 +649,7 @@ ${script.caption}`;
               className={`flex items-center space-x-2 px-6 py-3 rounded-xl font-medium transition-all whitespace-nowrap flex-shrink-0 ${
                 (activeSubTab === tab.key ||
                  (tab.key === 'ownerfi' && activeSubTab.startsWith('ownerfi')) ||
-                 (tab.key === 'abdullah' && (activeSubTab === 'abdullah' || activeSubTab === 'abdullah-podcast')))
+                 (tab.key === 'abdullah' && activeSubTab === 'abdullah'))
                   ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg'
                   : 'bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700'
               }`}
@@ -1133,7 +1133,7 @@ ${script.caption}`;
                     <li>• Smart anti-repetition (avoids last 5 used benefits)</li>
                     <li>• Clear CTA: "Visit ownerfi.ai" in speech + captions</li>
                     <li>• HeyGen avatar + Submagic captions</li>
-                    <li>• Mixed with podcast content on social media</li>
+                    <li>• Posted to OwnerFi social media accounts</li>
                   </ul>
                 </div>
               </div>

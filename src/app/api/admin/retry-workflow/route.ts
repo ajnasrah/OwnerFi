@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
 }
 
 /**
- * Get workflow for retry (supports both social media and podcast)
+ * Get workflow for retry (supports all social media brands)
  */
 async function getWorkflowForRetry(
   brand: Brand,

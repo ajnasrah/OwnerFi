@@ -13,9 +13,9 @@ const getLateApiKey = () => process.env.LATE_API_KEY?.trim();
 const getLateOwnerfiProfileId = () => process.env.LATE_OWNERFI_PROFILE_ID?.trim();
 const getLateCarzProfileId = () => process.env.LATE_CARZ_PROFILE_ID?.trim();
 const getLateAbdullahProfileId = () => process.env.LATE_ABDULLAH_PROFILE_ID?.trim();
-const getLatePersonalProfileId = () => process.env.LATE_PERSONAL_PROFILE_ID?.trim();
-const getLateBenefitProfileId = () => process.env.LATE_BENEFIT_PROFILE_ID?.trim();
 const getLateGazaProfileId = () => process.env.LATE_GAZA_PROFILE_ID?.trim();
+// Note: "personal" brand uses Abdullah's profile (same person)
+// Note: "benefit" brand uses OwnerFi's profile (same channel)
 
 export interface LatePostRequest {
   videoUrl?: string; // For video posts
@@ -58,19 +58,27 @@ export interface LateProfile {
 
 /**
  * Get profile ID for a brand
+ *
+ * Brand → Late Profile mapping:
+ * - carz → Carz profile (dedicated)
+ * - ownerfi → OwnerFi profile (dedicated)
+ * - benefit → OwnerFi profile (same channel)
+ * - abdullah → Abdullah profile (dedicated)
+ * - personal → Abdullah profile (same person, Google Drive uploads)
+ * - gaza → Gaza profile (dedicated)
  */
 function getProfileId(brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza'): string | null {
   switch (brand) {
     case 'ownerfi':
       return getLateOwnerfiProfileId() || null;
     case 'benefit':
-      return getLateBenefitProfileId() || getLateOwnerfiProfileId() || null; // Fallback to OwnerFi if no benefit profile
+      return getLateOwnerfiProfileId() || null; // Benefit posts to OwnerFi's accounts
     case 'carz':
       return getLateCarzProfileId() || null;
     case 'abdullah':
       return getLateAbdullahProfileId() || null;
     case 'personal':
-      return getLatePersonalProfileId() || null;
+      return getLateAbdullahProfileId() || null; // Personal posts to Abdullah's accounts
     case 'gaza':
       return getLateGazaProfileId() || null;
     default:

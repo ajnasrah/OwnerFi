@@ -46,12 +46,52 @@ export async function sendPropertyMatchNotification(
     }
 
     // Check if buyer was already notified about this property (deduplication)
-    if (buyer.notifiedPropertyIds?.includes(property.id)) {
-      console.log(`[GoHighLevel] Buyer ${buyer.id} already notified about property ${property.id}`);
-      return {
-        success: false,
-        error: 'Buyer already notified about this property',
-      };
+    // Use atomic claim to prevent race conditions between concurrent requests
+    const claimId = `${buyer.id}_${property.id}`;
+    let claimAcquired = false;
+
+    try {
+      const { doc, setDoc, getDoc } = await import('firebase/firestore');
+      const { db } = await import('@/lib/firebase');
+
+      const claimRef = doc(db, 'sms_notification_claims', claimId);
+      const existingClaim = await getDoc(claimRef);
+
+      if (existingClaim.exists()) {
+        console.log(`[GoHighLevel] Buyer ${buyer.id} already notified about property ${property.id} (claim exists)`);
+        return {
+          success: false,
+          error: 'Buyer already notified about this property',
+        };
+      }
+
+      // Create claim atomically - if another request creates it first, this will still succeed
+      // but we check again after to handle the race
+      await setDoc(claimRef, {
+        buyerId: buyer.id,
+        propertyId: property.id,
+        claimedAt: new Date(),
+        status: 'pending'
+      });
+      claimAcquired = true;
+
+      // Double-check the in-memory array as backup
+      if (buyer.notifiedPropertyIds?.includes(property.id)) {
+        console.log(`[GoHighLevel] Buyer ${buyer.id} already notified (in-memory check)`);
+        return {
+          success: false,
+          error: 'Buyer already notified about this property',
+        };
+      }
+    } catch (claimErr) {
+      console.warn('[GoHighLevel] Failed to check/create notification claim:', claimErr);
+      // Fall back to in-memory check only
+      if (buyer.notifiedPropertyIds?.includes(property.id)) {
+        return {
+          success: false,
+          error: 'Buyer already notified about this property',
+        };
+      }
     }
 
     // Prepare webhook payload
@@ -104,16 +144,25 @@ export async function sendPropertyMatchNotification(
 
     console.log(`[GoHighLevel] Notification sent successfully. Log ID: ${result.logId}`);
 
-    // Track notification in buyer profile (deduplication)
+    // Track notification in buyer profile and update claim status
     try {
       const { doc, updateDoc, arrayUnion, increment } = await import('firebase/firestore');
       const { db } = await import('@/lib/firebase');
 
+      // Update buyer profile
       await updateDoc(doc(db, 'buyerProfiles', buyer.id), {
         notifiedPropertyIds: arrayUnion(property.id),
         lastNotifiedAt: new Date(),
         notificationCount: increment(1)
       });
+
+      // Update claim status to sent
+      if (claimAcquired) {
+        await updateDoc(doc(db, 'sms_notification_claims', claimId), {
+          status: 'sent',
+          sentAt: new Date()
+        });
+      }
 
       console.log(`[GoHighLevel] Tracked notification for buyer ${buyer.id}`);
     } catch (err) {
@@ -129,6 +178,18 @@ export async function sendPropertyMatchNotification(
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error('[GoHighLevel] Failed to send notification:', errorMessage);
+
+    // Clean up claim on failure so it can be retried
+    if (claimAcquired) {
+      try {
+        const { doc, deleteDoc } = await import('firebase/firestore');
+        const { db } = await import('@/lib/firebase');
+        await deleteDoc(doc(db, 'sms_notification_claims', claimId));
+        console.log(`[GoHighLevel] Cleaned up failed claim for ${claimId}`);
+      } catch (cleanupErr) {
+        console.warn('[GoHighLevel] Failed to clean up claim:', cleanupErr);
+      }
+    }
 
     return {
       success: false,

@@ -459,7 +459,7 @@ export default function Dashboard() {
                 <span className="text-sm">❓</span>
               </button>
               <button
-                onClick={() => signOut({ callbackUrl: '/auth/logout' })}
+                onClick={() => signOut({ callbackUrl: '/auth/signout' })}
                 className="w-8 h-8 bg-red-500/20 backdrop-blur-xl hover:bg-red-500/30 rounded-full flex items-center justify-center transition-all border border-red-500/40"
                 title="Logout"
               >

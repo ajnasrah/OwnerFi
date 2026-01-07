@@ -69,12 +69,11 @@ function verifyWebhookSignature(
       .update(payload)
       .digest('hex');
 
-    // Try multiple signature formats
+    // Try multiple signature formats (HMAC only - never compare raw secret)
     const validFormats = [
       signature === expectedSignature,
       signature === `sha256=${expectedSignature}`,
       signature.replace(/^sha256=/, '') === expectedSignature,
-      signature === GHL_WEBHOOK_SECRET // Raw secret (some systems do this)
     ];
 
     if (validFormats.some(valid => valid)) {

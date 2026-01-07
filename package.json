@@ -11,8 +11,6 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:gaza": "jest --testPathPattern=gaza",
-    "setup-queues": "tsx scripts/setup-late-queues.ts",
-    "view-queues": "tsx scripts/setup-late-queues.ts --view",
     "setup:google-drive": "tsx scripts/setup-google-drive-oauth.ts"
   },
   "dependencies": {

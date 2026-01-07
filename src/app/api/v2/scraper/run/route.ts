@@ -310,7 +310,7 @@ async function runUnifiedScraper(): Promise<{
     console.log(`Valid property URLs to fetch: ${propertyUrls.length}`);
 
     // Limit detail scraping to control costs
-    const MAX_DETAIL_URLS = 500;
+    const MAX_DETAIL_URLS = 2500;
     const urlsToProcess = propertyUrls.slice(0, MAX_DETAIL_URLS);
 
     if (propertyUrls.length > MAX_DETAIL_URLS) {

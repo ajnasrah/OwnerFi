@@ -1,7 +1,7 @@
 /**
  * Unified Search Configuration v2
  *
- * TWO SEARCHES - Run daily at 9 PM:
+ * TWO SEARCHES - Run daily at 12 PM CST (18:00 UTC):
  * 1. Owner Finance Search (nationwide with STRICT keyword filters)
  * 2. Cash Deals Search (regional AR/TN, no keywords)
  *
@@ -11,10 +11,11 @@
  *
  * ONLY Search 2 (Cash Deals Regional) sends to GHL webhook
  *
- * OPTIMIZATIONS (Jan 2026):
- * - Removed false-positive keywords from Search 1 URL (creative/flexible financing, terms available)
- * - Changed doz from 1 to 3 days for better coverage
- * - Keywords now match owner-financing-filter-strict.ts patterns exactly
+ * UPDATED (Jan 7, 2026):
+ * - Changed doz from 3 to 1 day (fresh daily listings only)
+ * - Removed $50K minimum price (now $0)
+ * - Removed 55plus filter
+ * - Keywords match owner-financing-filter-strict.ts patterns exactly
  */
 
 export interface SearchConfig {
@@ -52,29 +53,28 @@ export const GHL_WEBHOOK_URL = 'https://services.leadconnectorhq.com/hooks/U2B5l
 export const SEARCH_CONFIGS: SearchConfig[] = [
   // ===== SEARCH 1: OWNER FINANCE (Nationwide) =====
   // STRICT keyword filter - only high-confidence owner financing terms
-  // doz: 3 days for better weekend coverage
-  // ~60-100 properties per day
+  // doz: 1 day (fresh daily listings only)
   // NO GHL webhook
   {
     id: 'owner-finance-nationwide',
     name: 'Owner Finance - Nationwide',
-    description: 'Nationwide search with strict owner financing keywords (last 3 days)',
-    url: 'https://www.zillow.com/homes/for_sale/?searchQueryState=%7B%22pagination%22%3A%7B%7D%2C%22isMapVisible%22%3Atrue%2C%22mapBounds%22%3A%7B%22west%22%3A-126.59184519322206%2C%22east%22%3A-53.027392068222056%2C%22south%22%3A-18.744904304943347%2C%22north%22%3A61.09292780993076%7D%2C%22mapZoom%22%3A4%2C%22usersSearchTerm%22%3A%22%22%2C%22customRegionId%22%3A%227737068f7fX1-CR1vsn1vnm6xxbg_1d5w1n%22%2C%22filterState%22%3A%7B%22sort%22%3A%7B%22value%22%3A%22globalrelevanceex%22%7D%2C%22auc%22%3A%7B%22value%22%3Afalse%7D%2C%22fore%22%3A%7B%22value%22%3Afalse%7D%2C%22price%22%3A%7B%22min%22%3A50000%2C%22max%22%3A750000%7D%2C%22mp%22%3A%7B%22min%22%3Anull%2C%22max%22%3A3750%7D%2C%22beds%22%3A%7B%22min%22%3A1%2C%22max%22%3Anull%7D%2C%22baths%22%3A%7B%22min%22%3A1%2C%22max%22%3Anull%7D%2C%22apa%22%3A%7B%22value%22%3Afalse%7D%2C%22manu%22%3A%7B%22value%22%3Afalse%7D%2C%2255plus%22%3A%7B%22value%22%3A%22e%22%7D%2C%22doz%22%3A%7B%22value%22%3A%223%22%7D%2C%22att%22%3A%7B%22value%22%3A%22%5C%22owner%20financing%5C%22%20%2C%20%5C%22seller%20financing%5C%22%20%2C%20%5C%22owner%20carry%5C%22%20%2C%20%5C%22seller%20carry%5C%22%20%2C%20%5C%22owner%20terms%5C%22%20%2C%20%5C%22seller%20terms%5C%22%20%2C%20%5C%22rent%20to%20own%5C%22%20%2C%20%5C%22lease%20option%5C%22%20%2C%20%5C%22contract%20for%20deed%5C%22%20%2C%20%5C%22land%20contract%5C%22%20%2C%20%5C%22assumable%20loan%5C%22%20%2C%20%5C%22no%20bank%20needed%5C%22%22%7D%7D%2C%22isListVisible%22%3Atrue%7D',
-    maxItems: 500,
+    description: 'Nationwide search with strict owner financing keywords (last 1 day)',
+    url: 'https://www.zillow.com/homes/for_sale/?searchQueryState=%7B%22pagination%22%3A%7B%7D%2C%22isMapVisible%22%3Atrue%2C%22mapBounds%22%3A%7B%22west%22%3A-167.85649363072204%2C%22east%22%3A-11.762743630722056%2C%22south%22%3A-42.37056114607797%2C%22north%22%3A71.96035173654774%7D%2C%22mapZoom%22%3A4%2C%22usersSearchTerm%22%3A%22%22%2C%22customRegionId%22%3A%227737068f7fX1-CR1vsn1vnm6xxbg_1d5w1n%22%2C%22filterState%22%3A%7B%22sort%22%3A%7B%22value%22%3A%22globalrelevanceex%22%7D%2C%22price%22%3A%7B%22max%22%3A750000%2C%22min%22%3A0%7D%2C%22mp%22%3A%7B%22min%22%3Anull%2C%22max%22%3A3750%7D%2C%22beds%22%3A%7B%22min%22%3A1%2C%22max%22%3Anull%7D%2C%22baths%22%3A%7B%22min%22%3A1%2C%22max%22%3Anull%7D%2C%22doz%22%3A%7B%22value%22%3A%221%22%7D%2C%22att%22%3A%7B%22value%22%3A%22%5C%22owner%20financing%5C%22%20%2C%20%5C%22seller%20financing%5C%22%20%2C%20%5C%22owner%20carry%5C%22%20%2C%20%5C%22seller%20carry%5C%22%20%2C%20%5C%22owner%20terms%5C%22%20%2C%20%5C%22seller%20terms%5C%22%20%2C%20%5C%22rent%20to%20own%5C%22%20%2C%20%5C%22lease%20option%5C%22%20%2C%20%5C%22contract%20for%20deed%5C%22%20%2C%20%5C%22land%20contract%5C%22%20%2C%20%5C%22assumable%20loan%5C%22%20%2C%20%5C%22no%20bank%20needed%5C%22%22%7D%2C%22pmf%22%3A%7B%22value%22%3Atrue%7D%2C%22pf%22%3A%7B%22value%22%3Atrue%7D%7D%2C%22isListVisible%22%3Atrue%7D',
+    maxItems: 2500,
     type: 'owner_finance',
     sendToGHL: false,
   },
 
   // ===== SEARCH 2: CASH DEALS (Regional AR/TN) =====
   // NO keyword filter - searches all listings in region
-  // doz: 3 days for better weekend coverage
+  // doz: 1 day (fresh daily listings only)
   // Sends ALL properties to GHL webhook to find more owner finance deals
   {
     id: 'cash-deals-regional',
     name: 'Cash Deals - Regional (AR/TN)',
-    description: 'Regional search without keywords (last 3 days) - sends to GHL',
-    url: 'https://www.zillow.com/homes/for_sale/?searchQueryState=%7B%22isMapVisible%22%3Atrue%2C%22mapBounds%22%3A%7B%22west%22%3A-92.64805231635005%2C%22east%22%3A-88.4759942108813%2C%22south%22%3A34.04448627074044%2C%22north%22%3A36.477417577203184%7D%2C%22filterState%22%3A%7B%22sort%22%3A%7B%22value%22%3A%22globalrelevanceex%22%7D%2C%22price%22%3A%7B%22max%22%3A500000%2C%22min%22%3A50000%7D%2C%22mf%22%3A%7B%22value%22%3Afalse%7D%2C%22land%22%3A%7B%22value%22%3Afalse%7D%2C%22apa%22%3A%7B%22value%22%3Afalse%7D%2C%22manu%22%3A%7B%22value%22%3Afalse%7D%2C%22fore%22%3A%7B%22value%22%3Afalse%7D%2C%22nc%22%3A%7B%22value%22%3Afalse%7D%2C%22auc%22%3A%7B%22value%22%3Afalse%7D%2C%2255plus%22%3A%7B%22value%22%3A%22e%22%7D%2C%22doz%22%3A%7B%22value%22%3A%223%22%7D%7D%2C%22isListVisible%22%3Atrue%2C%22mapZoom%22%3A9%2C%22customRegionId%22%3A%225f8096924aX1-CR1i1r231i2qe0e_1276cg%22%2C%22pagination%22%3A%7B%7D%2C%22usersSearchTerm%22%3A%22%22%7D',
-    maxItems: 1000,
+    description: 'Regional search without keywords (last 1 day) - sends to GHL',
+    url: 'https://www.zillow.com/homes/for_sale/?searchQueryState=%7B%22isMapVisible%22%3Atrue%2C%22mapBounds%22%3A%7B%22west%22%3A-93.00098810736567%2C%22east%22%3A-88.12305841986567%2C%22south%22%3A33.303923989315145%2C%22north%22%3A37.189660587627294%7D%2C%22mapZoom%22%3A9%2C%22filterState%22%3A%7B%22sort%22%3A%7B%22value%22%3A%22globalrelevanceex%22%7D%2C%22nc%22%3A%7B%22value%22%3Afalse%7D%2C%22price%22%3A%7B%22max%22%3A11000000%2C%22min%22%3A0%7D%2C%2255plus%22%3A%7B%22value%22%3A%22e%22%7D%2C%22doz%22%3A%7B%22value%22%3A%221%22%7D%2C%22mp%22%3A%7B%22max%22%3A55000%7D%2C%22pf%22%3A%7B%22value%22%3Atrue%7D%2C%22pmf%22%3A%7B%22value%22%3Atrue%7D%7D%2C%22isListVisible%22%3Atrue%2C%22customRegionId%22%3A%22f6068695e6X1-CRor2wysttztwe_tcbal%22%2C%22pagination%22%3A%7B%7D%2C%22usersSearchTerm%22%3A%22%22%7D',
+    maxItems: 2500,
     type: 'cash_deals',
     sendToGHL: true,
   },
@@ -106,11 +106,11 @@ export function getGHLConfigs(): SearchConfig[] {
  */
 export const SAFETY_LIMITS = {
   // Hard limit per search to prevent runaway costs
-  maxItemsPerSearch: 2000,
+  maxItemsPerSearch: 2500,
 
-  // Total hard limit across all searches
+  // Total hard limit across all searches (2 searches x 2500 = 5000)
   maxTotalItems: 5000,
 
   // Abort if a single search returns more than this
-  abortThreshold: 3000,
+  abortThreshold: 5000,
 };

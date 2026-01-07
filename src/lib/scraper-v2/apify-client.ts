@@ -144,9 +144,9 @@ export async function runAllInOneScraper(
   }
 
   // STEP 2: Run detail scraper to get full property info
-  // LIMIT: Only process first 500 properties to control costs
+  // LIMIT: Only process first 2500 properties to control costs
   // Increase this limit as needed (each 100 = ~$0.40 in Apify credits)
-  const MAX_DETAIL_URLS = 500;
+  const MAX_DETAIL_URLS = 2500;
   const urlsToProcess = propertyUrls.slice(0, MAX_DETAIL_URLS);
 
   if (propertyUrls.length > MAX_DETAIL_URLS) {

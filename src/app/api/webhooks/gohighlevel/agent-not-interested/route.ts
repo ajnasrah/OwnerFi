@@ -20,11 +20,16 @@ const db = getFirestore();
 const GHL_WEBHOOK_SECRET = process.env.GHL_WEBHOOK_SECRET;
 
 /**
- * Verify webhook signature using HMAC SHA-256
+ * Verify webhook authentication
+ *
+ * Supports two modes:
+ * 1. Simple secret comparison (when GHL sends secret in body as GHL_WEBHOOK field)
+ * 2. HMAC signature verification (when GHL sends computed signature in header)
  */
-function verifyWebhookSignature(
+function verifyWebhookAuth(
   payload: string,
-  signature: string | null
+  headerSignature: string | null,
+  bodySecret: string | null
 ): { valid: boolean; reason?: string } {
   if (!GHL_WEBHOOK_SECRET) {
     return {
@@ -33,41 +38,47 @@ function verifyWebhookSignature(
     };
   }
 
-  if (!signature) {
-    return {
-      valid: false,
-      reason: 'Missing webhook signature header'
-    };
-  }
-
-  try {
-    const expectedSignature = crypto
-      .createHmac('sha256', GHL_WEBHOOK_SECRET)
-      .update(payload)
-      .digest('hex');
-
-    // Try multiple signature formats
-    const validFormats = [
-      signature === expectedSignature,
-      signature === `sha256=${expectedSignature}`,
-      signature.replace(/^sha256=/, '') === expectedSignature,
-    ];
-
-    if (validFormats.some(valid => valid)) {
+  // Mode 1: Simple secret comparison (GHL sends the secret directly in body)
+  if (bodySecret) {
+    if (bodySecret === GHL_WEBHOOK_SECRET) {
       return { valid: true };
     }
+  }
 
+  // Mode 2: HMAC signature verification (GHL sends computed signature in header)
+  if (headerSignature) {
+    try {
+      const expectedSignature = crypto
+        .createHmac('sha256', GHL_WEBHOOK_SECRET)
+        .update(payload)
+        .digest('hex');
+
+      const validFormats = [
+        headerSignature === expectedSignature,
+        headerSignature === `sha256=${expectedSignature}`,
+        headerSignature.replace(/^sha256=/, '') === expectedSignature,
+      ];
+
+      if (validFormats.some(valid => valid)) {
+        return { valid: true };
+      }
+    } catch (error) {
+      console.error('Error verifying webhook signature', error);
+    }
+  }
+
+  // Neither method worked
+  if (!headerSignature && !bodySecret) {
     return {
       valid: false,
-      reason: 'Signature mismatch - invalid authentication'
-    };
-  } catch (error) {
-    console.error('Error verifying webhook signature', error);
-    return {
-      valid: false,
-      reason: 'Signature verification error'
+      reason: 'Missing webhook authentication (no header signature or body secret)'
     };
   }
+
+  return {
+    valid: false,
+    reason: 'Signature mismatch - invalid authentication'
+  };
 }
 
 /**
@@ -93,17 +104,22 @@ export async function POST(request: NextRequest) {
     const rawBody = await request.text();
     const body = JSON.parse(rawBody);
 
-    // Check for signature in header OR body (GHL sends in body)
-    const signature = request.headers.get('x-webhook-signature') ||
-                     request.headers.get('x-ghl-signature') ||
-                     body['x-webhook-signature'] ||
-                     body['x-webhook-sig'] ||
-                     body['GHL_WEBHOOK'];
+    // Check for signature in header (HMAC mode)
+    const headerSignature = request.headers.get('x-webhook-signature') ||
+                           request.headers.get('x-ghl-signature');
 
-    // Verify webhook signature
-    const verification = verifyWebhookSignature(rawBody, signature);
+    // Check for secret in body (simple comparison mode - GHL custom fields)
+    const bodySecret = body['GHL_WEBHOOK'] ||
+                      body['x-webhook-signature'] ||
+                      body['x-webhook-sig'] ||
+                      body['webhook_secret'];
+
+    // Verify webhook authentication
+    const verification = verifyWebhookAuth(rawBody, headerSignature, bodySecret);
     if (!verification.valid) {
-      console.error('❌ [AGENT NOT INTERESTED] Invalid signature:', verification.reason);
+      console.error('❌ [AGENT NOT INTERESTED] Invalid auth:', verification.reason);
+      console.error('   Header signature present:', !!headerSignature);
+      console.error('   Body secret present:', !!bodySecret);
       return NextResponse.json(
         { error: 'Unauthorized', reason: verification.reason },
         { status: 401 }

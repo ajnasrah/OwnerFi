@@ -166,6 +166,19 @@ async function runUnifiedScraper(): Promise<{
   // Collect cash deals under 80% for Abdullah's SMS alerts
   const abdullahCashDeals: CashDealAlert[] = [];
 
+  // Collect owner finance properties for buyer notifications
+  const ownerFinancePropertiesForNotification: Array<{
+    id: string;
+    address: string;
+    city: string;
+    state: string;
+    bedrooms: number;
+    bathrooms: number;
+    listPrice: number;
+    monthlyPayment?: number;
+    downPaymentAmount?: number;
+  }> = [];
+
   try {
     console.log('\n' + '='.repeat(60));
     console.log('UNIFIED SCRAPER v2 - STARTING');
@@ -415,6 +428,19 @@ async function runUnifiedScraper(): Promise<{
         }
         if (filterResult.isOwnerFinance) {
           metrics.savedAsOwnerFinance++;
+
+          // Collect for buyer notifications
+          ownerFinancePropertiesForNotification.push({
+            id: docId,
+            address: property.streetAddress || property.fullAddress || '',
+            city: property.city || '',
+            state: property.state || '',
+            bedrooms: property.bedrooms || 0,
+            bathrooms: property.bathrooms || 0,
+            listPrice: property.price || 0,
+            monthlyPayment: property.monthlyPayment,
+            downPaymentAmount: property.downPaymentAmount,
+          });
         }
         if (filterResult.isCashDeal) {
           metrics.savedAsCashDeal++;
@@ -605,7 +631,45 @@ async function runUnifiedScraper(): Promise<{
       console.log('[ABDULLAH] No cash deals under 80% to alert');
     }
 
-    // ===== STEP 8: LOG STATISTICS =====
+    // ===== STEP 8: TRIGGER BUYER NOTIFICATIONS =====
+    console.log('\n[STEP 8] Triggering buyer notifications for owner finance properties...');
+
+    if (ownerFinancePropertiesForNotification.length > 0) {
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://ownerfi.com';
+      let notificationsSent = 0;
+      let notificationsFailed = 0;
+
+      // Process in batches to avoid overwhelming the system
+      for (const property of ownerFinancePropertiesForNotification) {
+        try {
+          // Fire and forget - call sync-matches for each property
+          fetch(`${baseUrl}/api/properties/sync-matches`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'add',
+              propertyId: property.id,
+              propertyData: property,
+            }),
+          }).catch(err => {
+            console.error(`[NOTIFY] Failed for ${property.id}:`, err.message);
+          });
+          notificationsSent++;
+
+          // Small delay to avoid rate limiting
+          await new Promise(r => setTimeout(r, 50));
+        } catch (error: any) {
+          notificationsFailed++;
+          console.error(`[NOTIFY] Error for ${property.id}:`, error.message);
+        }
+      }
+
+      console.log(`[NOTIFY] Triggered ${notificationsSent} buyer notifications`);
+    } else {
+      console.log('[NOTIFY] No owner finance properties to notify buyers about');
+    }
+
+    // ===== STEP 9: LOG STATISTICS =====
     const filterStats = calculateFilterStats(filterResults);
     logFilterStats(filterStats);
 

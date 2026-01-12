@@ -1,16 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { signIn } from 'next-auth/react';
-import { ConfirmationResult } from 'firebase/auth';
 import Link from 'next/link';
-import {
-  setupRecaptcha,
-  sendVerificationCode,
-  verifyCode
-} from '@/lib/firebase-phone-auth';
-import { isValidPhone } from '@/lib/phone-utils';
+import { isValidPhone, normalizePhone } from '@/lib/phone-utils';
 
 export default function AuthPage() {
   const router = useRouter();
@@ -23,22 +17,8 @@ export default function AuthPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
 
-  // Initialize reCAPTCHA on mount - only once
-  useEffect(() => {
-    // Only initialize if we're on phone step and haven't already set up
-    if (step === 'phone' && mode === 'phone' && !(window as any).recaptchaVerifier) {
-      const recaptchaContainer = document.getElementById('recaptcha-container');
-      if (recaptchaContainer && !recaptchaContainer.hasChildNodes()) {
-        const verifier = setupRecaptcha('recaptcha-container');
-        if (verifier) {
-          (window as any).recaptchaVerifier = verifier;
-        }
-      }
-    }
-  }, [step, mode]);
-
+  // Server-side OTP - works in ALL browsers (Safari, Facebook, iMessage, etc.)
   const handlePhoneSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -51,32 +31,25 @@ export default function AuthPage() {
     }
 
     try {
-      // Set up reCAPTCHA if not already set up
-      let recaptchaVerifier = (window as any).recaptchaVerifier;
+      console.log('📱 Sending verification code to:', phone);
 
-      if (!recaptchaVerifier) {
-        recaptchaVerifier = setupRecaptcha('recaptcha-container');
-        (window as any).recaptchaVerifier = recaptchaVerifier;
-      }
+      // Use server-side OTP (no reCAPTCHA needed!)
+      const response = await fetch('/api/auth/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: normalizePhone(phone) })
+      });
 
-      if (!recaptchaVerifier) {
-        setError('Failed to initialize verification. Please refresh and try again.');
-        setLoading(false);
-        return;
-      }
+      const result = await response.json();
 
-      // Send verification code
-      const result = await sendVerificationCode(phone, recaptchaVerifier);
-
-      if (result.success && result.confirmationResult) {
-        setConfirmationResult(result.confirmationResult);
+      if (response.ok && result.success) {
         setStep('code');
       } else {
-        setError(result.error || 'Failed to send code');
+        setError(result.error || 'Failed to send code. Please try again.');
       }
     } catch (err: any) {
       console.error('Phone verification error:', err);
-      setError(err.message || 'Failed to send verification code');
+      setError(err.message || 'Failed to send verification code. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -87,12 +60,6 @@ export default function AuthPage() {
     setLoading(true);
     setError('');
 
-    if (!confirmationResult) {
-      setError('Verification session expired. Please start over.');
-      setLoading(false);
-      return;
-    }
-
     if (code.length !== 6) {
       setError('Please enter the 6-digit code');
       setLoading(false);
@@ -100,16 +67,22 @@ export default function AuthPage() {
     }
 
     try {
-      // Verify the code
-      const result = await verifyCode(confirmationResult, code);
+      // Verify the code via server-side API
+      const verifyResponse = await fetch('/api/auth/verify-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: normalizePhone(phone), code })
+      });
 
-      if (!result.success || !result.phoneNumber) {
-        setError(result.error || 'Invalid code');
+      const verifyResult = await verifyResponse.json();
+
+      if (!verifyResponse.ok || !verifyResult.success) {
+        setError(verifyResult.error || 'Invalid code');
         setLoading(false);
         return;
       }
 
-      const verifiedPhone = result.phoneNumber;
+      const verifiedPhone = verifyResult.phone;
 
       // Check if user exists in database
       console.log('🔍 [AUTH-PAGE] Checking if user exists for phone:', verifiedPhone);
@@ -175,27 +148,10 @@ export default function AuthPage() {
     }
   };
 
-  const handleResendCode = async () => {
+  const handleResendCode = () => {
     setCode('');
     setError('');
     setStep('phone');
-    setConfirmationResult(null);
-
-    // Reset the reCAPTCHA verifier so a fresh one is created
-    if ((window as any).recaptchaVerifier) {
-      try {
-        (window as any).recaptchaVerifier.clear();
-      } catch (e) {
-        // Ignore clear errors
-      }
-      (window as any).recaptchaVerifier = null;
-    }
-
-    // Clear the reCAPTCHA container and recreate
-    const container = document.getElementById('recaptcha-container');
-    if (container) {
-      container.innerHTML = '';
-    }
   };
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
@@ -347,12 +303,6 @@ export default function AuthPage() {
                   We'll send you a verification code via SMS
                 </p>
               </div>
-
-              {/* reCAPTCHA - compact size for mobile */}
-              <div
-                id="recaptcha-container"
-                className="flex justify-center"
-              ></div>
 
               <button
                 type="submit"

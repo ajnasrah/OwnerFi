@@ -9,6 +9,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import crypto from 'crypto';
 import { postToLate } from '@/lib/late-api';
 import { circuitBreakers, fetchWithTimeout, TIMEOUTS } from '@/lib/api-utils';
 import {
@@ -17,6 +18,57 @@ import {
   getBrandStoragePath,
 } from '@/lib/brand-utils';
 import { getBrandConfig } from '@/config/brand-configs';
+
+// Webhook secret for signature validation
+const SUBMAGIC_WEBHOOK_SECRET = process.env.SUBMAGIC_WEBHOOK_SECRET;
+
+/**
+ * Verify Submagic webhook signature
+ * Supports multiple signature formats for compatibility
+ */
+function verifyWebhookSignature(payload: string, signature: string | null): boolean {
+  if (!SUBMAGIC_WEBHOOK_SECRET) {
+    // In development, warn but allow (for local testing)
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('⚠️ [SECURITY] SUBMAGIC_WEBHOOK_SECRET not set - skipping validation in dev');
+      return true;
+    }
+    // In production, require the secret
+    console.error('❌ [SECURITY] SUBMAGIC_WEBHOOK_SECRET not configured');
+    return false;
+  }
+
+  if (!signature) {
+    console.warn('⚠️ [SECURITY] No signature provided in webhook request');
+    return false;
+  }
+
+  // Try different signature formats that Submagic might use
+  // Format 1: raw HMAC signature
+  const expectedSignature = crypto
+    .createHmac('sha256', SUBMAGIC_WEBHOOK_SECRET)
+    .update(payload)
+    .digest('hex');
+
+  // Direct comparison (timing-safe)
+  try {
+    const signatureBuffer = Buffer.from(signature.replace(/^sha256=/, ''), 'hex');
+    const expectedBuffer = Buffer.from(expectedSignature, 'hex');
+
+    if (signatureBuffer.length === expectedBuffer.length) {
+      return crypto.timingSafeEqual(signatureBuffer, expectedBuffer);
+    }
+  } catch {
+    // If buffer conversion fails, fall back to string comparison for simple secret match
+  }
+
+  // Format 2: Simple shared secret (some services just pass the secret)
+  if (signature === SUBMAGIC_WEBHOOK_SECRET) {
+    return true;
+  }
+
+  return false;
+}
 
 interface RouteContext {
   params: Promise<{
@@ -30,15 +82,29 @@ export async function POST(request: NextRequest, context: RouteContext) {
   let submagicProjectId: string | undefined;
 
   try {
+    // SECURITY: Verify webhook signature first
+    const rawBody = await request.text();
+    const signature = request.headers.get('x-webhook-signature') ||
+                      request.headers.get('x-submagic-signature') ||
+                      request.headers.get('x-signature');
+
+    if (!verifyWebhookSignature(rawBody, signature)) {
+      console.error('❌ [SECURITY] Submagic webhook signature verification failed');
+      return NextResponse.json(
+        { error: 'Unauthorized - invalid signature' },
+        { status: 401 }
+      );
+    }
+
+    // Parse the body we already read
+    const body = JSON.parse(rawBody);
+
     // Validate brand from URL path
     const { brand: brandParam } = await context.params;
     const brand = validateBrand(brandParam);
     const brandConfig = getBrandConfig(brand);
 
-    console.log(`🔔 [${brandConfig.displayName}] Submagic webhook received`);
-
-    // Parse request body
-    const body = await request.json();
+    console.log(`🔔 [${brandConfig.displayName}] Submagic webhook received (signature verified)`);
     console.log(`   Payload:`, JSON.stringify(body, null, 2));
 
     // Extract Submagic webhook data

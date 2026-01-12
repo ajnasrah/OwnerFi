@@ -15,8 +15,14 @@ export async function GET(request: NextRequest) {
   // Verify cron secret first (before acquiring lock)
   const authHeader = request.headers.get('authorization');
   const userAgent = request.headers.get('user-agent');
-  const cronSecret = process.env.CRON_SECRET || 'dev-secret';
+  const cronSecret = process.env.CRON_SECRET;
   const isVercelCron = userAgent === 'vercel-cron/1.0';
+
+  // SECURITY: Require CRON_SECRET to be configured (no defaults)
+  if (!cronSecret) {
+    console.error('❌ CRON_SECRET not configured');
+    return NextResponse.json({ error: 'Server misconfigured' }, { status: 500 });
+  }
 
   if (!isVercelCron && authHeader !== `Bearer ${cronSecret}`) {
     console.warn('⚠️  Unauthorized cron request');

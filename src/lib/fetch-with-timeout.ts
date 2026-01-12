@@ -112,20 +112,58 @@ export async function fetchWithRetry(
 ): Promise<Response> {
   const {
     retryOn = [408, 429, 500, 502, 503, 504],
+    retries = 3,
+    retryDelay = 1000,
+    onRetry,
     ...fetchOptions
   } = options;
 
-  const response = await fetchWithTimeout(url, {
-    ...fetchOptions,
-    retries: 0, // We handle retries ourselves
-  });
+  let lastError: Error | null = null;
+  let lastResponse: Response | null = null;
 
-  // Check if we should retry based on status code
-  if (retryOn.includes(response.status) && (fetchOptions.retries || 0) > 0) {
-    return fetchWithTimeout(url, fetchOptions);
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    // If this is a retry, wait before attempting with exponential backoff
+    if (attempt > 0) {
+      const delay = retryDelay * Math.pow(2, attempt - 1);
+      console.log(`🔄 [FETCH] Retry ${attempt}/${retries} for ${url} after ${delay}ms`);
+      onRetry?.(attempt, lastError || new Error(`Status ${lastResponse?.status}`));
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+
+    try {
+      const response = await fetchWithTimeout(url, {
+        ...fetchOptions,
+        retries: 0, // Don't use fetchWithTimeout's internal retry for this
+      });
+
+      // Check if status code is retryable
+      if (retryOn.includes(response.status)) {
+        lastResponse = response;
+        if (attempt < retries) {
+          console.warn(`⚠️ [FETCH] Got status ${response.status}, will retry`);
+          continue; // Retry
+        }
+      }
+
+      return response;
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+
+      // Retry on timeout and network errors
+      if (attempt < retries) {
+        continue;
+      }
+
+      throw lastError;
+    }
   }
 
-  return response;
+  // Return last response if we exhausted retries on status codes
+  if (lastResponse) {
+    return lastResponse;
+  }
+
+  throw lastError || new Error('Unknown error in fetchWithRetry');
 }
 
 /**

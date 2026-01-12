@@ -1,9 +1,13 @@
 // GoHighLevel API Integration
 import { logError, logInfo } from './logger';
+import { fetchWithTimeout, ServiceTimeouts } from './fetch-with-timeout';
 
 const GHL_API_KEY = process.env.GHL_API_KEY || '';
 const GHL_LOCATION_ID = process.env.GHL_LOCATION_ID || '';
 const GHL_API_BASE = 'https://services.leadconnectorhq.com';
+
+// Use consistent timeout for all GHL API calls
+const GHL_TIMEOUT = ServiceTimeouts.GHL;
 
 // Required environment variables:
 // - GHL_API_KEY: Your GoHighLevel API key
@@ -96,14 +100,17 @@ export async function syncPropertyToGHL(property: PropertyData): Promise<{ succe
         metadata: { opportunityId: existingOpportunity.id, propertyId: property.id }
       });
 
-      response = await fetch(`${GHL_API_BASE}/opportunities/${existingOpportunity.id}`, {
+      response = await fetchWithTimeout(`${GHL_API_BASE}/opportunities/${existingOpportunity.id}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${GHL_API_KEY}`,
           'Content-Type': 'application/json',
           'Version': '2021-07-28'
         },
-        body: JSON.stringify(opportunityData)
+        body: JSON.stringify(opportunityData),
+        timeout: GHL_TIMEOUT,
+        retries: 2,
+        retryDelay: 1000,
       });
     } else {
       // Create new opportunity
@@ -112,14 +119,17 @@ export async function syncPropertyToGHL(property: PropertyData): Promise<{ succe
         metadata: { propertyId: property.id }
       });
 
-      response = await fetch(`${GHL_API_BASE}/opportunities`, {
+      response = await fetchWithTimeout(`${GHL_API_BASE}/opportunities`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${GHL_API_KEY}`,
           'Content-Type': 'application/json',
           'Version': '2021-07-28'
         },
-        body: JSON.stringify(opportunityData)
+        body: JSON.stringify(opportunityData),
+        timeout: GHL_TIMEOUT,
+        retries: 2,
+        retryDelay: 1000,
       });
     }
 
@@ -157,12 +167,13 @@ export async function syncPropertyToGHL(property: PropertyData): Promise<{ succe
 async function findOpportunityByPropertyId(propertyId: string): Promise<{ id: string } | null> {
   try {
     // Search for opportunity with matching property_id custom field
-    const response = await fetch(`${GHL_API_BASE}/opportunities/search?locationId=${GHL_LOCATION_ID}&property_id=${propertyId}`, {
+    const response = await fetchWithTimeout(`${GHL_API_BASE}/opportunities/search?locationId=${GHL_LOCATION_ID}&property_id=${propertyId}`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${GHL_API_KEY}`,
         'Version': '2021-07-28'
-      }
+      },
+      timeout: GHL_TIMEOUT,
     });
 
     if (!response.ok) {

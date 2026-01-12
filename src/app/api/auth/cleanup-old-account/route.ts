@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { collection, query, where, getDocs, deleteDoc, doc } from 'firebase/firestore';
+import { collection, query, where, getDocs, deleteDoc, doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { logInfo, logError } from '@/lib/logger';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 
 /**
  * Deletes an old email/password account after user creates new phone-only account
@@ -10,9 +12,20 @@ import { logInfo, logError } from '@/lib/logger';
  * - BuyerProfile (if exists)
  * - RealtorData (nested in user doc, so auto-deleted)
  * - Any other user-linked data
+ *
+ * SECURITY: Requires authenticated session and ownership verification
  */
 export async function POST(request: NextRequest) {
   try {
+    // SECURITY: Verify user is authenticated
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: 'Unauthorized - must be logged in' },
+        { status: 401 }
+      );
+    }
+
     const { oldAccountId, newAccountId } = await request.json();
 
     if (!oldAccountId || !newAccountId) {
@@ -22,6 +35,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // SECURITY: Verify the newAccountId matches the logged-in user
+    if (session.user.id !== newAccountId) {
+      await logError('Unauthorized cleanup attempt - user ID mismatch', {
+        action: 'cleanup_old_account_unauthorized',
+        userId: session.user.id,
+        metadata: { attemptedNewAccountId: newAccountId, oldAccountId }
+      });
+      return NextResponse.json(
+        { error: 'Unauthorized - can only cleanup your own accounts' },
+        { status: 403 }
+      );
+    }
+
+    // SECURITY: Verify the old account shares the same email or phone as the new account
     if (!db) {
       return NextResponse.json(
         { error: 'Database not initialized' },
@@ -29,9 +56,41 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const oldAccountDoc = await getDoc(doc(db, 'users', oldAccountId));
+    const newAccountDoc = await getDoc(doc(db, 'users', newAccountId));
+
+    if (!oldAccountDoc.exists() || !newAccountDoc.exists()) {
+      return NextResponse.json(
+        { error: 'Account not found' },
+        { status: 404 }
+      );
+    }
+
+    const oldData = oldAccountDoc.data();
+    const newData = newAccountDoc.data();
+
+    // Verify accounts are linked by email or phone
+    const emailMatch = oldData.email && newData.email &&
+      oldData.email.toLowerCase() === newData.email.toLowerCase();
+    const phoneMatch = oldData.phone && newData.phone &&
+      oldData.phone === newData.phone;
+
+    if (!emailMatch && !phoneMatch) {
+      await logError('Unauthorized cleanup attempt - accounts not linked', {
+        action: 'cleanup_old_account_not_linked',
+        userId: session.user.id,
+        metadata: { oldAccountId, newAccountId }
+      });
+      return NextResponse.json(
+        { error: 'Unauthorized - accounts must share email or phone' },
+        { status: 403 }
+      );
+    }
+
     console.log('🗑️ [CLEANUP-OLD-ACCOUNT] Starting cleanup:', {
       oldAccountId,
-      newAccountId
+      newAccountId,
+      requestedBy: session.user.id
     });
 
     // 1. Find and delete old buyer profile (if exists)

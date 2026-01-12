@@ -154,7 +154,7 @@ async function cleanupVideos() {
         'Video Cleanup',
         `High error rate: ${result.errors} videos failed to delete`,
         { deleted: result.deleted, errors: result.errors }
-      ).catch(() => {});
+      ).catch((err) => console.warn('Failed to send alert:', err));
     }
 
     return {
@@ -171,7 +171,7 @@ async function cleanupVideos() {
       'Video Cleanup',
       error instanceof Error ? error.message : 'Unknown error',
       { error: String(error) }
-    ).catch(() => {});
+    ).catch((err) => console.warn('Failed to send alert:', err));
 
     return {
       success: false,
@@ -346,7 +346,7 @@ async function enhancePropertyImages() {
         'Image Enhancement',
         `High error rate: ${totalErrors} properties failed`,
         { totalUpgraded, totalErrors }
-      ).catch(() => {});
+      ).catch((err) => console.warn('Failed to send alert:', err));
     }
 
     return {
@@ -364,7 +364,7 @@ async function enhancePropertyImages() {
       'Image Enhancement',
       error instanceof Error ? error.message : 'Unknown error',
       { error: String(error) }
-    ).catch(() => {});
+    ).catch((err) => console.warn('Failed to send alert:', err));
 
     return {
       success: false,
@@ -478,7 +478,7 @@ async function cleanupQueueItems() {
         'Queue Cleanup',
         `High error rate: ${totalErrors} items failed to delete`,
         { deleted: totalDeleted, errors: totalErrors }
-      ).catch(() => {});
+      ).catch((err) => console.warn('Failed to send alert:', err));
     }
 
     return {
@@ -504,7 +504,7 @@ async function cleanupQueueItems() {
       'Queue Cleanup',
       error instanceof Error ? error.message : 'Unknown error',
       { error: String(error) }
-    ).catch(() => {});
+    ).catch((err) => console.warn('Failed to send alert:', err));
 
     return {
       success: false,

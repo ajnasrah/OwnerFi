@@ -1,5 +1,5 @@
 // Admin endpoint to manually trigger RSS fetch
-// No auth required - for testing/manual triggering
+// Protected by CRON_SECRET
 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
@@ -7,10 +7,25 @@ import { getAllFeedSources } from '@/lib/feed-store-firestore';
 import { processFeedSources } from '@/lib/rss-fetcher';
 import { getFeedsToFetch } from '@/config/feed-sources';
 
+const CRON_SECRET = process.env.CRON_SECRET;
+
 export const maxDuration = 300; // 5 minutes
 
-export async function GET(_request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
+    // SECURITY: Verify CRON_SECRET
+    const authHeader = request.headers.get('authorization');
+    const isVercelCron = request.headers.get('user-agent') === 'vercel-cron/1.0';
+
+    if (!CRON_SECRET) {
+      console.error('❌ CRON_SECRET not configured');
+      return NextResponse.json({ error: 'Server misconfigured' }, { status: 500 });
+    }
+
+    if (authHeader !== `Bearer ${CRON_SECRET}` && !isVercelCron) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     if (!db) {
       return NextResponse.json({ error: 'Firebase not initialized' }, { status: 500 });
     }

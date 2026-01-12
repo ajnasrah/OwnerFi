@@ -1,30 +1,43 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { 
-  doc, 
-  setDoc, 
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/lib/auth';
+import { ExtendedSession } from '@/types/session';
+import {
+  doc,
+  setDoc,
   updateDoc,
-  collection, 
-  query, 
-  where, 
+  collection,
+  query,
+  where,
   getDocs,
-  serverTimestamp 
+  serverTimestamp
 } from 'firebase/firestore';
 import { getSafeDb } from '@/lib/firebase-safe';
 import { firestoreHelpers } from '@/lib/firestore';
 
 /**
  * CLEAN PROPERTY ACTIONS API
- * 
+ *
  * Handles: like, pass, undo_like, undo_pass
  * Updates both propertyMatches status and creates action history
  */
 
 export async function POST(request: NextRequest) {
   try {
+    // SECURITY: Verify user is authenticated
+    const session = await getServerSession(authOptions as unknown as Parameters<typeof getServerSession>[0]) as ExtendedSession | null;
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const db = getSafeDb();
-    const { buyerId, propertyId, action } = await request.json();
-    
-    if (!buyerId || !propertyId || !action) {
+    const { propertyId, action } = await request.json();
+
+    // SECURITY: Use buyerId from session, NOT from request body
+    // This prevents IDOR where users could act on behalf of other buyers
+    const buyerId = session.user.id;
+
+    if (!propertyId || !action) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 

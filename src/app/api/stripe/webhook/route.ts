@@ -84,21 +84,38 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const { customer, subscription, metadata, mode } = session;
   const { userId, userEmail, creditPackId, credits } = metadata || {};
 
+  // CRITICAL: Don't silently fail - customer paid but we can't process
   if (!userId || !creditPackId) {
-    return;
+    console.error('❌ [STRIPE] CRITICAL: Missing required metadata in checkout session', {
+      sessionId: session.id,
+      hasUserId: !!userId,
+      hasCreditPackId: !!creditPackId,
+      metadata
+    });
+    throw new Error(`Missing required metadata: userId=${userId}, creditPackId=${creditPackId}. Session: ${session.id}`);
   }
 
   // Validate credit package
   const creditPackage = CREDIT_PACKAGES[creditPackId as keyof typeof CREDIT_PACKAGES];
   if (!creditPackage) {
-    return;
+    console.error('❌ [STRIPE] CRITICAL: Invalid credit package ID', {
+      sessionId: session.id,
+      creditPackId,
+      validPackages: Object.keys(CREDIT_PACKAGES)
+    });
+    throw new Error(`Invalid credit package: ${creditPackId}. Session: ${session.id}`);
   }
 
   try {
     // Get current user data
     const userData = await FirebaseDB.getDocument('users', userId);
     if (!userData) {
-      return;
+      console.error('❌ [STRIPE] CRITICAL: User not found for credit purchase', {
+        sessionId: session.id,
+        userId,
+        creditPackId
+      });
+      throw new Error(`User not found: ${userId}. Session: ${session.id}`);
     }
 
     // Add credits to realtor account using new system

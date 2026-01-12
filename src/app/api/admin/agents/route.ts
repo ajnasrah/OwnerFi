@@ -3,7 +3,7 @@
  *
  * Endpoints for managing and monitoring HeyGen agents:
  * - GET: List all agents with usage stats
- * - POST: Preview agent selection / reset usage
+ * - POST: Preview agent selection / reset usage / fetch previews
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -20,6 +20,7 @@ import {
   previewAgentSelection,
   resetAgentUsage,
 } from '@/lib/agent-selector';
+import { getHeyGenAvatars } from '@/lib/heygen-client';
 import { Brand } from '@/config/constants';
 
 // Verify admin access
@@ -190,9 +191,56 @@ export async function POST(request: NextRequest) {
         });
       }
 
+      case 'fetch-previews': {
+        // Fetch all avatars from HeyGen API and return their preview URLs
+        const avatars = await getHeyGenAvatars();
+
+        // Map our agent avatar IDs to HeyGen preview URLs
+        const agentAvatarIds = HEYGEN_AGENTS.map(a => a.avatar.avatarId);
+
+        // Find matching avatars and their preview URLs
+        const previewUrls: Record<string, { avatarId: string; previewUrl: string | null }> = {};
+
+        for (const agent of HEYGEN_AGENTS) {
+          const matchingAvatar = avatars.find((a: any) =>
+            a.avatar_id === agent.avatar.avatarId ||
+            a.avatar_name === agent.avatar.avatarId
+          );
+
+          previewUrls[agent.id] = {
+            avatarId: agent.avatar.avatarId,
+            previewUrl: matchingAvatar?.preview_image_url || matchingAvatar?.thumbnail_url || null,
+          };
+        }
+
+        // Also return agents missing preview URLs
+        const agentsMissingPreviews = HEYGEN_AGENTS.filter(a =>
+          a.isActive && !a.previewImageUrl
+        ).map(a => ({
+          id: a.id,
+          name: a.name,
+          avatarId: a.avatar.avatarId,
+          foundPreview: previewUrls[a.id]?.previewUrl,
+        }));
+
+        return NextResponse.json({
+          action: 'fetch-previews',
+          totalAvatarsFromHeyGen: avatars.length,
+          agentsMissingPreviews,
+          allPreviews: previewUrls,
+          // Raw HeyGen avatar data for debugging
+          heygenAvatars: avatars.slice(0, 20).map((a: any) => ({
+            avatar_id: a.avatar_id,
+            avatar_name: a.avatar_name,
+            preview_image_url: a.preview_image_url,
+            thumbnail_url: a.thumbnail_url,
+          })),
+        });
+      }
+
       default:
         return NextResponse.json(
-          { error: `Unknown action: ${action}. Valid actions: preview, reset, select` },
+          { error: `Unknown action: ${action}. Valid actions: preview, reset, select, fetch-previews` },
           { status: 400 }
         );
     }

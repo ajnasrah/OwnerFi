@@ -4,9 +4,60 @@ import { db } from '@/lib/firebase';
 import { unifiedDb } from '@/lib/unified-db';
 import { logInfo, logError } from '@/lib/logger';
 import { normalizePhone, isValidPhone } from '@/lib/phone-utils';
+import { generateBuyerFilter } from '@/lib/buyer-filter-service';
+
+// Simple in-memory rate limiter with cleanup
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
+const RATE_LIMIT_MAX = 5; // 5 signup attempts per minute per IP (stricter than check-phone)
+let lastCleanup = Date.now();
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+
+  // Cleanup old entries periodically
+  if (now - lastCleanup > RATE_LIMIT_WINDOW * 2) {
+    for (const [key, value] of rateLimitMap.entries()) {
+      if (now > value.resetTime) {
+        rateLimitMap.delete(key);
+      }
+    }
+    lastCleanup = now;
+  }
+
+  const entry = rateLimitMap.get(ip);
+
+  if (!entry || now > entry.resetTime) {
+    rateLimitMap.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
+    return true;
+  }
+
+  if (entry.count >= RATE_LIMIT_MAX) {
+    return false;
+  }
+
+  entry.count++;
+  return true;
+}
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0] ||
+               request.headers.get('x-real-ip') ||
+               'unknown';
+
+    if (!checkRateLimit(ip)) {
+      console.warn(`🚫 [SIGNUP-PHONE] Rate limit exceeded for IP: ${ip}`);
+      await logError('Signup rate limit exceeded', {
+        action: 'signup_phone_rate_limit',
+        metadata: { ip }
+      });
+      return NextResponse.json(
+        { error: 'Too many signup attempts. Please try again later.' },
+        { status: 429 }
+      );
+    }
     const body = await request.json();
     const {
       phone,
@@ -74,33 +125,61 @@ export async function POST(request: NextRequest) {
 
     let newUser: { id: string };
 
-    // If user exists by email OR phone, UPDATE them instead of creating new account
-    if (existingEmailUser || existingPhoneUser) {
-      // Use whichever account we found (prefer email match)
-      const existingUser = existingEmailUser || existingPhoneUser!;
-
-      console.log(`🔄 [SIGNUP-PHONE] User already exists - UPDATING existing account:`, {
-        userId: existingUser.id,
-        email: existingUser.email,
-        phone: existingUser.phone,
-        hasPassword: !!existingUser.password
+    // SECURITY: If user already exists, don't allow modification via signup
+    // Users should use the login flow instead
+    if (existingPhoneUser) {
+      console.log(`⚠️ [SIGNUP-PHONE] User already exists with this phone - should login instead:`, {
+        userId: existingPhoneUser.id,
+        phone: existingPhoneUser.phone
       });
 
-      // Update existing user to add phone and migrate to phone-auth
+      // Return the existing user ID so they can log in
+      return NextResponse.json({
+        success: true,
+        message: 'Account already exists - logged in',
+        userId: existingPhoneUser.id,
+        role: existingPhoneUser.role,
+        existingAccount: true
+      });
+    }
+
+    if (existingEmailUser) {
+      // Email exists but phone doesn't match - security issue
+      // Don't allow attacker to hijack account via different phone
+      if (existingEmailUser.phone && existingEmailUser.phone !== normalizedPhone) {
+        console.log(`🚫 [SIGNUP-PHONE] Email exists with different phone - blocking:`, {
+          userId: existingEmailUser.id,
+          existingPhone: existingEmailUser.phone?.substring(0, 5) + '****',
+          attemptedPhone: normalizedPhone.substring(0, 5) + '****'
+        });
+
+        await logError('Signup attempt with existing email but different phone', {
+          action: 'signup_phone_email_hijack_attempt',
+          metadata: { email: email.toLowerCase() }
+        });
+
+        return NextResponse.json(
+          { error: 'An account with this email already exists. Please use your original phone number or contact support.' },
+          { status: 409 }
+        );
+      }
+
+      // Email exists, no phone set yet - allow linking (migration from password auth)
+      console.log(`🔄 [SIGNUP-PHONE] Linking phone to existing email account:`, {
+        userId: existingEmailUser.id,
+        email: existingEmailUser.email
+      });
+
       const { FirebaseDB } = await import('@/lib/firebase-db');
-      await FirebaseDB.updateDocument('users', existingUser.id, {
-        name: `${firstName} ${lastName}`.trim(),
-        email: email.toLowerCase().trim(),
+      await FirebaseDB.updateDocument('users', existingEmailUser.id, {
         phone: normalizedPhone,
-        role, // Update role if needed
-        // Keep password if they have one (allows dual auth)
         updatedAt: Timestamp.now(),
         migratedToPhoneAuth: true,
         migratedAt: Timestamp.now()
       });
 
-      newUser = { id: existingUser.id };
-      console.log('✅ [SIGNUP-PHONE] Updated existing user account');
+      newUser = { id: existingEmailUser.id };
+      console.log('✅ [SIGNUP-PHONE] Linked phone to existing account');
     } else {
       // No existing user - create new one
       console.log('✅ [SIGNUP-PHONE] Step 2: No existing user - creating new account');
@@ -194,6 +273,17 @@ export async function POST(request: NextRequest) {
         buyerId = `buyer_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
         console.log(`✨ [SIGNUP-PHONE] Creating new buyerProfile: ${buyerId}, isInvestor: ${isInvestor}`);
 
+        // Generate filter BEFORE creating profile (not in background)
+        let filter = undefined;
+        if (city && state) {
+          try {
+            filter = await generateBuyerFilter(city, state, 30);
+            console.log(`✅ [SIGNUP-PHONE] Generated filter with ${filter.nearbyCitiesCount} nearby cities for ${city}, ${state}`);
+          } catch (filterError) {
+            console.error('⚠️ [SIGNUP-PHONE] Failed to generate filter, continuing without:', filterError);
+          }
+        }
+
         const buyerData = {
           id: buyerId,
           userId: newUser.id,
@@ -208,6 +298,9 @@ export async function POST(request: NextRequest) {
           city: city || '',
           state: state || '',
           searchRadius: 25,
+
+          // Pre-computed nearby cities filter
+          ...(filter && { filter }),
 
           // User type flags
           isInvestor: isInvestor === true,
@@ -245,27 +338,6 @@ export async function POST(request: NextRequest) {
           console.error('❌ [SIGNUP-PHONE] Failed to create buyerProfile:', profileError.message);
           throw profileError;
         }
-      }
-
-      // 🚀 Generate nearby cities filter and sync to GHL in background (non-blocking)
-      if (city && state) {
-        // Don't await - run in background
-        (async () => {
-          try {
-            const { generateBuyerFilter } = await import('@/lib/buyer-filter-service');
-            const filter = await generateBuyerFilter(city, state, 30);
-
-            // Update buyer profile with nearby cities filter
-            const { FirebaseDB } = await import('@/lib/firebase-db');
-            await FirebaseDB.updateDocument('buyerProfiles', buyerId, {
-              filter: filter
-            });
-
-            console.log(`✅ [SIGNUP-PHONE] Generated filter with ${filter.nearbyCitiesCount} nearby cities for ${city}, ${state}`);
-          } catch (error) {
-            console.error('⚠️ [SIGNUP-PHONE] Failed to generate nearby cities filter:', error);
-          }
-        })();
       }
 
       // Sync to GHL in background (non-blocking)
@@ -362,6 +434,18 @@ export async function POST(request: NextRequest) {
 
       // 🆕 ALSO CREATE BUYER PROFILE - Realtors use buyer dashboard
       const buyerId = `buyer_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
+
+      // Generate filter BEFORE creating profile (not in background)
+      let realtorFilter = undefined;
+      if (city && state) {
+        try {
+          realtorFilter = await generateBuyerFilter(city, state, 30);
+          console.log(`✅ [SIGNUP-PHONE] Generated filter with ${realtorFilter.nearbyCitiesCount} nearby cities for realtor in ${city}, ${state}`);
+        } catch (filterError) {
+          console.error('⚠️ [SIGNUP-PHONE] Failed to generate filter for realtor, continuing without:', filterError);
+        }
+      }
+
       const buyerData = {
         id: buyerId,
         userId: newUser.id,
@@ -376,6 +460,9 @@ export async function POST(request: NextRequest) {
         city: city || '',
         state: state || '',
         searchRadius: 25,
+
+        // Pre-computed nearby cities filter
+        ...(realtorFilter && { filter: realtorFilter }),
 
         // User type flags
         isInvestor: isInvestor === true,
@@ -409,26 +496,6 @@ export async function POST(request: NextRequest) {
 
       await setDoc(doc(db, 'buyerProfiles', buyerId), buyerData);
 
-      // 🚀 Generate nearby cities filter in background (non-blocking)
-      if (city && state) {
-        // Don't await - run in background
-        (async () => {
-          try {
-            const { generateBuyerFilter } = await import('@/lib/buyer-filter-service');
-            const filter = await generateBuyerFilter(city, state, 30);
-
-            // Update buyer profile with nearby cities filter
-            await FirebaseDB.updateDocument('buyerProfiles', buyerId, {
-              filter: filter
-            });
-
-            console.log(`✅ [SIGNUP-PHONE] Generated filter with ${filter.nearbyCitiesCount} nearby cities for realtor in ${city}, ${state}`);
-          } catch (error) {
-            console.error('⚠️ [SIGNUP-PHONE] Failed to generate nearby cities filter for realtor:', error);
-          }
-        })();
-      }
-
       await logInfo('Created new realtor account via phone auth (with buyer profile)', {
         action: 'realtor_phone_signup',
         userId: newUser.id,
@@ -452,6 +519,7 @@ export async function POST(request: NextRequest) {
     const errorMessage = error?.message || error?.toString() || 'Unknown error';
     const errorStack = error?.stack || '';
 
+    // Log full error details server-side for debugging
     console.error('❌ [SIGNUP-PHONE] Error:', errorMessage);
     console.error('❌ [SIGNUP-PHONE] Stack:', errorStack);
 
@@ -460,8 +528,10 @@ export async function POST(request: NextRequest) {
       metadata: { errorMessage, errorStack: errorStack.substring(0, 500) }
     }, error as Error);
 
+    // SECURITY: Don't expose internal error details to clients
+    // Return generic error message to prevent information disclosure
     return NextResponse.json(
-      { error: `Failed to create account: ${errorMessage}` },
+      { error: 'Failed to create account. Please try again or contact support.' },
       { status: 500 }
     );
   }

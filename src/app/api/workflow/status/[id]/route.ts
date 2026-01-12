@@ -1,11 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/lib/auth';
+import { ExtendedSession } from '@/types/session';
 import { getWorkflowById } from '@/lib/feed-store-firestore';
 
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // SECURITY: Verify admin authentication
+    // Workflows are internal operations - only admins should access
+    const session = await getServerSession(authOptions as unknown as Parameters<typeof getServerSession>[0]) as ExtendedSession;
+    if (!session?.user || session.user.role !== 'admin') {
+      return NextResponse.json(
+        { error: 'Unauthorized - admin access required' },
+        { status: 403 }
+      );
+    }
+
     const { id } = await params;
 
     if (!id) {

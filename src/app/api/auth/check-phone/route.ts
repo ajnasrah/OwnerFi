@@ -2,8 +2,55 @@ import { NextRequest, NextResponse } from 'next/server';
 import { unifiedDb } from '@/lib/unified-db';
 import { normalizePhone, isValidPhone } from '@/lib/phone-utils';
 
+// Simple in-memory rate limiter with cleanup
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
+const RATE_LIMIT_MAX = 10; // 10 requests per minute per IP
+let lastCleanup = Date.now();
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+
+  // Cleanup old entries periodically
+  if (now - lastCleanup > RATE_LIMIT_WINDOW * 2) {
+    for (const [key, value] of rateLimitMap.entries()) {
+      if (now > value.resetTime) {
+        rateLimitMap.delete(key);
+      }
+    }
+    lastCleanup = now;
+  }
+
+  const entry = rateLimitMap.get(ip);
+
+  if (!entry || now > entry.resetTime) {
+    rateLimitMap.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
+    return true;
+  }
+
+  if (entry.count >= RATE_LIMIT_MAX) {
+    return false;
+  }
+
+  entry.count++;
+  return true;
+}
+
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0] ||
+               request.headers.get('x-real-ip') ||
+               'unknown';
+
+    if (!checkRateLimit(ip)) {
+      console.warn(`🚫 [CHECK-PHONE] Rate limit exceeded for IP: ${ip}`);
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again later.' },
+        { status: 429 }
+      );
+    }
+
     const { phone } = await request.json();
 
     if (!phone) {

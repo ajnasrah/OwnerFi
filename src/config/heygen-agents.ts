@@ -64,6 +64,14 @@ export interface HeyGenAgent {
   // Preview URLs (from HeyGen API)
   previewImageUrl?: string;
   previewVideoUrl?: string;
+
+  // Avatar IV settings (for more expressive videos with gestures)
+  avatarIV?: {
+    photoUrl: string;           // Photo URL for Avatar IV (can be same as previewImageUrl)
+    imageKey?: string;          // Cached HeyGen asset ID (set after first upload)
+    motionPrompt?: string;      // Default motion prompt for this agent
+    enabled: boolean;           // Whether to use Avatar IV for this agent
+  };
 }
 
 // ============================================================================
@@ -94,7 +102,7 @@ export const SCALE_PRESETS = {
   vertical: {
     talkingPhoto: 1.4,      // Good visibility without cutting off head
     talkingPhotoLarge: 1.5, // Slightly larger for emphasis
-    upperBody: 1.3,         // Upper body visible with good framing
+    upperBody: 1.6,         // Upper body zoomed in (increased from 1.3)
     fullBody: 0.9,          // Full body visible in frame
   },
   // For horizontal videos (16:9)
@@ -135,7 +143,7 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
     },
     voice: {
       voiceId: '9070a6c2dbd54c10bb111dc8c655bff7',
-      speed: 1.0,
+      speed: 1.1,
       emotion: 'Excited', // Use excited emotion for engaging content
     },
     voiceLanguage: 'en',
@@ -157,7 +165,7 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
     },
     voice: {
       voiceId: '33e77b383694491db3160af5a9f9e0ab', // Abdullah voice clone
-      speed: 1.0,
+      speed: 1.1,
       emotion: 'Excited', // Changed to Excited for engaging content
     },
     voiceLanguage: 'en',
@@ -184,13 +192,18 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
     },
     voice: {
       voiceId: '35659e86ce244d8389d525a9648d9c4a', // Carter Lee
-      speed: 1.0,
+      speed: 1.1,
       emotion: 'Excited',
     },
     voiceLanguage: 'en',
     brands: ['ownerfi', 'carz', 'benefit', 'personal', 'abdullah'],
     isActive: true,
     previewImageUrl: 'https://files2.heygen.ai/avatar/v3/17ad4b824e5a47e8b4f61e6a9cd346e7_62180/preview_target.webp',
+    avatarIV: {
+      photoUrl: 'https://files2.heygen.ai/avatar/v3/17ad4b824e5a47e8b4f61e6a9cd346e7_62180/preview_target.webp',
+      motionPrompt: 'Avatar nods warmly, smiles when making key points', // Keep under 2 clauses
+      enabled: true,
+    },
   },
   {
     id: 'adrian-blue-sweater',
@@ -206,13 +219,18 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
     },
     voice: {
       voiceId: 'f38a635bee7a4d1f9b0a654a31d050d2', // Chill Brian
-      speed: 1.0,
+      speed: 1.1,
       emotion: 'Excited', // Changed to Excited for engaging content
     },
     voiceLanguage: 'en',
     brands: ['ownerfi', 'carz', 'benefit', 'personal', 'abdullah'],
     isActive: true,
     previewImageUrl: 'https://files2.heygen.ai/avatar/v3/3e3d8f2231e44f73af86ff2f68b7649a_14947/preview_talk_4.webp',
+    avatarIV: {
+      photoUrl: 'https://files2.heygen.ai/avatar/v3/3e3d8f2231e44f73af86ff2f68b7649a_14947/preview_talk_4.webp',
+      motionPrompt: 'Avatar tilts head and gestures naturally', // Keep under 2 clauses
+      enabled: true,
+    },
   },
 
   // ========================================
@@ -232,13 +250,18 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
     },
     voice: {
       voiceId: 'dc491816e53f46eaa466740fbfec09bb', // Adventure Alex - Excited
-      speed: 1.0,
+      speed: 1.1,
       emotion: 'Excited',
     },
     voiceLanguage: 'en',
     brands: ['ownerfi', 'carz', 'benefit', 'personal', 'abdullah'],
     isActive: true,
     previewImageUrl: 'https://files2.heygen.ai/avatar/v3/1ad51ab9fee24ae88af067206e14a1d8_44250/preview_target.webp',
+    avatarIV: {
+      photoUrl: 'https://files2.heygen.ai/avatar/v3/1ad51ab9fee24ae88af067206e14a1d8_44250/preview_target.webp',
+      motionPrompt: 'Avatar smiles brightly, uses open palm gestures', // Keep under 2 clauses
+      enabled: true,
+    },
   },
   {
     id: 'adriana-biztalk',
@@ -254,13 +277,18 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
     },
     voice: {
       voiceId: '42d00d4aac5441279d8536cd6b52c53c', // Hope
-      speed: 1.0,
+      speed: 1.1,
       emotion: 'Excited', // Changed to Excited for engaging content
     },
     voiceLanguage: 'en',
     brands: ['ownerfi', 'carz', 'benefit', 'personal', 'abdullah'],
     isActive: true,
     previewImageUrl: 'https://files2.heygen.ai/avatar/v3/c3d1baaebbe84752b7a473373c6cd385_42780/preview_target.webp',
+    avatarIV: {
+      photoUrl: 'https://files2.heygen.ai/avatar/v3/c3d1baaebbe84752b7a473373c6cd385_42780/preview_target.webp',
+      motionPrompt: 'Avatar nods confidently, gestures when emphasizing', // Keep under 2 clauses
+      enabled: true,
+    },
   },
 
   // ========================================
@@ -279,7 +307,7 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
     },
     voice: {
       voiceId: 'f38a635bee7a4d1f9b0a654a31d050d2', // Chill Brian
-      speed: 1.0,
+      speed: 1.1,
       emotion: 'Friendly',
     },
     voiceLanguage: 'en',
@@ -299,7 +327,7 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
     },
     voice: {
       voiceId: 'dc491816e53f46eaa466740fbfec09bb', // Adventure Alex
-      speed: 1.0,
+      speed: 1.1,
       emotion: 'Excited',
     },
     voiceLanguage: 'en',
@@ -319,7 +347,7 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
     },
     voice: {
       voiceId: '35659e86ce244d8389d525a9648d9c4a', // Carter Lee
-      speed: 1.0,
+      speed: 1.1,
       emotion: 'Excited',
     },
     voiceLanguage: 'en',
@@ -340,12 +368,17 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
     },
     voice: {
       voiceId: '42d00d4aac5441279d8536cd6b52c53c', // Hope
-      speed: 1.0,
+      speed: 1.1,
       emotion: 'Friendly',
     },
     voiceLanguage: 'en',
     brands: ['ownerfi', 'carz', 'benefit', 'personal', 'abdullah'],
     isActive: true,
+    avatarIV: {
+      photoUrl: '', // TODO: Get photo URL from HeyGen
+      motionPrompt: 'Avatar smiles warmly, nods encouragingly',
+      enabled: false, // Disabled until we have a photo URL
+    },
   },
   {
     id: 'tyler-hoodie',
@@ -361,12 +394,17 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
     },
     voice: {
       voiceId: 'f38a635bee7a4d1f9b0a654a31d050d2', // Chill Brian
-      speed: 1.0,
+      speed: 1.1,
       emotion: 'Excited',
     },
     voiceLanguage: 'en',
     brands: ['ownerfi', 'carz', 'benefit', 'personal', 'abdullah'],
     isActive: true,
+    avatarIV: {
+      photoUrl: '', // TODO: Get photo URL from HeyGen
+      motionPrompt: 'Avatar smiles casually, uses friendly gestures',
+      enabled: false, // Disabled until we have a photo URL
+    },
   },
   {
     id: 'anna-teacher',
@@ -382,12 +420,17 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
     },
     voice: {
       voiceId: 'dc491816e53f46eaa466740fbfec09bb', // Adventure Alex
-      speed: 1.0,
+      speed: 1.1,
       emotion: 'Friendly',
     },
     voiceLanguage: 'en',
     brands: ['ownerfi', 'carz', 'benefit', 'personal', 'abdullah'],
     isActive: true,
+    avatarIV: {
+      photoUrl: '', // TODO: Get photo URL from HeyGen
+      motionPrompt: 'Avatar explains with teaching gestures, nods warmly',
+      enabled: false, // Disabled until we have a photo URL
+    },
   },
 
   // ========================================
@@ -407,7 +450,7 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
     },
     voice: {
       voiceId: 'f38a635bee7a4d1f9b0a654a31d050d2', // Chill Brian
-      speed: 0.95, // Slightly slower for serious tone
+      speed: 1.1,
       emotion: 'Serious', // Serious emotion for humanitarian content
     },
     voiceLanguage: 'en',
@@ -430,7 +473,7 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
     },
     voice: {
       voiceId: '42d00d4aac5441279d8536cd6b52c53c', // Hope
-      speed: 0.95,
+      speed: 1.1,
       emotion: 'Soothing', // Soothing emotion for empathetic delivery
     },
     voiceLanguage: 'en',
@@ -453,7 +496,7 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
     },
     voice: {
       voiceId: '35659e86ce244d8389d525a9648d9c4a', // Carter Lee
-      speed: 1.0,
+      speed: 1.1,
       emotion: 'Serious', // Serious for news correspondent
     },
     voiceLanguage: 'en',
@@ -476,7 +519,7 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
     },
     voice: {
       voiceId: 'dc491816e53f46eaa466740fbfec09bb', // Adventure Alex
-      speed: 0.95,
+      speed: 1.1,
       emotion: 'Soothing', // Soothing for humanitarian stories
     },
     voiceLanguage: 'en',
@@ -502,7 +545,7 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
     voice: {
       // Will need to get a Spanish voice ID - placeholder for now
       voiceId: '9070a6c2dbd54c10bb111dc8c655bff7', // TODO: Replace with Spanish voice
-      speed: 1.0,
+      speed: 1.1,
       emotion: 'Excited',
     },
     voiceLanguage: 'es',
@@ -641,7 +684,7 @@ export function buildVoiceConfig(agent: HeyGenAgent, inputText: string) {
     type: 'text',
     voice_id: agent.voice.voiceId,
     input_text: inputText,
-    speed: agent.voice.speed || 1.0,
+    speed: agent.voice.speed || 1.1,
   };
 
   // Add emotion if specified

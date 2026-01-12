@@ -104,10 +104,6 @@ export async function POST(request: NextRequest) {
     const rawBody = await request.text();
     const body = JSON.parse(rawBody);
 
-    // DEBUG: Log all body keys to see what GHL is sending
-    console.log('📨 [DEBUG] Body keys:', Object.keys(body));
-    console.log('📨 [DEBUG] Full body:', JSON.stringify(body, null, 2));
-
     // Check for secret in body - try all possible field names
     const bodySecret = body['x-webhook-signature'] ||
                       body['GHL_WEBHOOK'] ||
@@ -118,22 +114,14 @@ export async function POST(request: NextRequest) {
 
     const expectedSecret = process.env.GHL_WEBHOOK_SECRET;
 
-    console.log('📨 [DEBUG] Body secret found:', bodySecret ? `YES (${bodySecret.length} chars)` : 'NO');
-    console.log('📨 [DEBUG] Body secret value:', bodySecret);
-    console.log('📨 [DEBUG] Expected secret:', expectedSecret);
-    console.log('📨 [DEBUG] Match:', bodySecret === expectedSecret);
-    console.log('📨 [DEBUG] Trimmed match:', bodySecret?.trim() === expectedSecret?.trim());
-
-    // Simple direct comparison - no HMAC needed for GHL
+    // SECURITY: Simple direct comparison - no debug logging of secrets
     const isAuthenticated = bodySecret && expectedSecret &&
                            (bodySecret === expectedSecret || bodySecret.trim() === expectedSecret.trim());
 
     if (!isAuthenticated) {
-      console.error('❌ [AGENT NOT INTERESTED] Auth failed');
-      console.error('   Body secret length:', bodySecret?.length);
-      console.error('   Expected length:', expectedSecret?.length);
+      console.error('❌ [AGENT NOT INTERESTED] Auth failed - invalid or missing secret');
       return NextResponse.json(
-        { error: 'Unauthorized', reason: 'Signature mismatch - invalid authentication' },
+        { error: 'Unauthorized' },
         { status: 401 }
       );
     }

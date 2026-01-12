@@ -14,8 +14,8 @@ import { unifiedDb } from './unified-db';
 import { normalizePhone } from './phone-utils';
 // NextAuthOptions type doesn't exist in newer versions, use a generic type
 
-// Phone numbers that always get admin access
-const ADMIN_PHONES = ['+19018319661', '+19018319662'];
+// Phone numbers that always get admin access (from environment variable)
+const ADMIN_PHONES = (process.env.ADMIN_PHONE_NUMBERS || '').split(',').filter(Boolean).map(p => p.trim());
 
 export const authOptions = {
   providers: [

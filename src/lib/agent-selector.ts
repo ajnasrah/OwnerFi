@@ -284,16 +284,22 @@ export async function selectAgent(
     );
 
     if (expressiveAgents.length > 0) {
+      // Pick the expressive agent used longest ago (true round-robin)
+      // expressiveAgents is already sorted by lastUsedAt ascending, so first one is oldest
       const selected = expressiveAgents[0].agent;
-      console.log(`   ✅ Round-robin selected (expressive preferred): ${selected.name} (used ${lowestCount} times)`);
+      console.log(`   ✅ Round-robin selected (expressive preferred): ${selected.name} (used ${lowestCount} times, ${expressiveAgents.length} eligible)`);
       await incrementAgentUsage(selected.id, brand);
       return selected;
     }
   }
 
   // Select agent with lowest usage
-  const selected = agentsWithUsage[0].agent;
-  console.log(`   ✅ Round-robin selected: ${selected.name} (used ${agentsWithUsage[0].usageCount} times)`);
+  // Pick the one used longest ago for true round-robin (already sorted by lastUsedAt)
+  const lowestCount = agentsWithUsage[0].usageCount;
+  const lowestCountAgents = agentsWithUsage.filter(a => a.usageCount === lowestCount);
+  // lowestCountAgents inherits sort order from agentsWithUsage (sorted by lastUsedAt for same count)
+  const selected = lowestCountAgents[0].agent;
+  console.log(`   ✅ Round-robin selected: ${selected.name} (used ${lowestCount} times, ${lowestCountAgents.length} eligible)`);
   await incrementAgentUsage(selected.id, brand);
   return selected;
 }

@@ -46,18 +46,37 @@ export async function sendPropertyMatchNotification(
     }
 
     // Check if buyer was already notified about this property (deduplication)
-    // Use atomic claim to prevent race conditions between concurrent requests
+    // Use Firestore transaction for atomic claim to prevent race conditions
     const claimId = `${buyer.id}_${property.id}`;
     let claimAcquired = false;
 
     try {
-      const { doc, setDoc, getDoc } = await import('firebase/firestore');
+      const { doc, runTransaction } = await import('firebase/firestore');
       const { db } = await import('@/lib/firebase');
 
       const claimRef = doc(db, 'sms_notification_claims', claimId);
-      const existingClaim = await getDoc(claimRef);
 
-      if (existingClaim.exists()) {
+      // Use transaction for atomic read-then-write to prevent race conditions
+      const claimResult = await runTransaction(db, async (transaction) => {
+        const claimDoc = await transaction.get(claimRef);
+
+        if (claimDoc.exists()) {
+          // Claim already exists - another request got there first
+          return { alreadyClaimed: true };
+        }
+
+        // Create claim atomically within transaction
+        transaction.set(claimRef, {
+          buyerId: buyer.id,
+          propertyId: property.id,
+          claimedAt: new Date(),
+          status: 'pending'
+        });
+
+        return { alreadyClaimed: false };
+      });
+
+      if (claimResult.alreadyClaimed) {
         console.log(`[GoHighLevel] Buyer ${buyer.id} already notified about property ${property.id} (claim exists)`);
         return {
           success: false,
@@ -65,14 +84,6 @@ export async function sendPropertyMatchNotification(
         };
       }
 
-      // Create claim atomically - if another request creates it first, this will still succeed
-      // but we check again after to handle the race
-      await setDoc(claimRef, {
-        buyerId: buyer.id,
-        propertyId: property.id,
-        claimedAt: new Date(),
-        status: 'pending'
-      });
       claimAcquired = true;
 
       // Double-check the in-memory array as backup

@@ -4,7 +4,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSessionWithRole } from '@/lib/auth-utils';
 import { FirebaseDB } from '@/lib/firebase-db';
-import { Timestamp } from 'firebase/firestore';
+import { Timestamp, doc, collection, runTransaction } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import { logError, logInfo } from '@/lib/logger';
 
 interface PurchaseLeadRequest {
@@ -100,7 +101,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if this realtor has already purchased this lead
+    // Check if this realtor has already purchased this lead (pre-check before transaction)
     const existingPurchase = await FirebaseDB.queryDocuments(
       'leadPurchases',
       [
@@ -116,63 +117,111 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // ATOMIC TRANSACTION: Deduct credit and create purchase record
+    // ATOMIC TRANSACTION: All operations must succeed or none will
+    // This prevents race conditions where:
+    // - Two requests could both see sufficient credits and deduct
+    // - Two requests could both purchase the same lead
+    if (!db) {
+      return NextResponse.json(
+        { error: 'Database not available' },
+        { status: 500 }
+      );
+    }
+
     const now = Timestamp.now();
-    const newCredits = user.realtorData.credits - 1;
+    const userId = session.user.id;
 
-    // Create lead purchase record
-    const purchaseData = {
-      realtorUserId: session.user.id,
-      buyerId: leadId,
-      buyerName: `${buyer.firstName} ${buyer.lastName}`,
-      buyerCity: buyer.preferredCity || buyer.city,  // Use either field for compatibility
-      buyerState: buyer.preferredState || buyer.state, // Use either field for compatibility
-      creditsCost: 1,
-      purchasePrice: 8, // Internal cost tracking
-      status: 'purchased',
-      purchasedAt: now,
-      createdAt: now
-    };
+    const result = await runTransaction(db, async (transaction) => {
+      // Re-read user document inside transaction for consistency
+      const userRef = doc(db, 'users', userId);
+      const userSnap = await transaction.get(userRef);
 
-    const purchaseId = await FirebaseDB.createDocument('leadPurchases', purchaseData);
+      if (!userSnap.exists()) {
+        throw new Error('User not found');
+      }
 
-    // Update realtor credits in user document
-    const updatedRealtorData = {
-      ...user.realtorData,
-      credits: newCredits,
-      updatedAt: now
-    };
+      const freshUserData = userSnap.data() as {
+        role: string;
+        realtorData?: { credits: number; [key: string]: unknown };
+      };
 
-    await FirebaseDB.updateDocument('users', session.user.id, {
-      realtorData: updatedRealtorData,
-      updatedAt: now
-    });
+      if (!freshUserData.realtorData) {
+        throw new Error('Realtor profile not found');
+      }
 
-    // Create transaction record
-    const transactionData = {
-      realtorUserId: session.user.id,
-      type: 'lead_purchase',
-      description: `Purchased lead: ${buyer.firstName} ${buyer.lastName}`,
-      creditsChange: -1,
-      runningBalance: newCredits,
-      relatedId: purchaseId,
-      details: {
+      // Re-check credits inside transaction
+      if (freshUserData.realtorData.credits < 1) {
+        throw new Error('Insufficient credits');
+      }
+
+      // Re-check buyer availability inside transaction
+      const buyerRef = doc(db, 'buyerProfiles', leadId);
+      const buyerSnap = await transaction.get(buyerRef);
+
+      if (!buyerSnap.exists()) {
+        throw new Error('Buyer not found');
+      }
+
+      const freshBuyerData = buyerSnap.data();
+      if (freshBuyerData.isAvailableForPurchase === false) {
+        throw new Error('Lead no longer available');
+      }
+
+      const newCredits = freshUserData.realtorData.credits - 1;
+
+      // Generate IDs for new documents
+      const purchaseRef = doc(collection(db, 'leadPurchases'));
+      const transactionRef = doc(collection(db, 'realtorTransactions'));
+
+      // Create purchase record
+      const purchaseData = {
+        realtorUserId: userId,
+        buyerId: leadId,
         buyerName: `${buyer.firstName} ${buyer.lastName}`,
-        buyerCity: buyer.preferredCity,
-        purchasePrice: 8
-      },
-      createdAt: now
-    };
+        buyerCity: buyer.preferredCity || buyer.city,
+        buyerState: buyer.preferredState || buyer.state,
+        creditsCost: 1,
+        purchasePrice: 8,
+        status: 'purchased',
+        purchasedAt: now,
+        createdAt: now
+      };
 
-    await FirebaseDB.createDocument('realtorTransactions', transactionData);
+      // Create transaction record
+      const transactionData = {
+        realtorUserId: userId,
+        type: 'lead_purchase',
+        description: `Purchased lead: ${buyer.firstName} ${buyer.lastName}`,
+        creditsChange: -1,
+        runningBalance: newCredits,
+        relatedId: purchaseRef.id,
+        details: {
+          buyerName: `${buyer.firstName} ${buyer.lastName}`,
+          buyerCity: buyer.preferredCity,
+          purchasePrice: 8
+        },
+        createdAt: now
+      };
 
-    // Mark buyer as purchased in consolidated system
-    await FirebaseDB.updateDocument('buyerProfiles', leadId, {
-      isAvailableForPurchase: false,
-      purchasedBy: session.user.id,
-      purchasedAt: now,
-      updatedAt: now
+      // All writes happen atomically
+      transaction.set(purchaseRef, purchaseData);
+      transaction.set(transactionRef, transactionData);
+      transaction.update(userRef, {
+        'realtorData.credits': newCredits,
+        'realtorData.updatedAt': now,
+        updatedAt: now
+      });
+      transaction.update(buyerRef, {
+        isAvailableForPurchase: false,
+        purchasedBy: userId,
+        purchasedAt: now,
+        updatedAt: now
+      });
+
+      return { purchaseId: purchaseRef.id, newCredits };
     });
+
+    const { newCredits } = result;
 
     // Log successful purchase
     await logInfo('Lead purchased successfully', {
@@ -202,6 +251,28 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(response);
 
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+
+    // Handle specific transaction errors with user-friendly messages
+    if (errorMessage === 'Insufficient credits') {
+      return NextResponse.json(
+        { error: 'Insufficient credits. Please purchase more credits to continue.' },
+        { status: 400 }
+      );
+    }
+    if (errorMessage === 'Lead no longer available') {
+      return NextResponse.json(
+        { error: 'This lead has already been purchased by another realtor.' },
+        { status: 409 }
+      );
+    }
+    if (errorMessage === 'Buyer not found' || errorMessage === 'User not found') {
+      return NextResponse.json(
+        { error: errorMessage },
+        { status: 404 }
+      );
+    }
+
     await logError('Lead purchase failed', {
       action: 'lead_purchase_error'
     }, error as Error);

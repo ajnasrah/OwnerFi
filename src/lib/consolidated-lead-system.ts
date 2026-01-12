@@ -4,6 +4,7 @@
 import { FirebaseDB } from './firebase-db';
 import { BuyerProfile } from './firebase-models';
 import { Timestamp } from 'firebase/firestore';
+import { generateBuyerFilter } from './buyer-filter-service';
 
 export interface LeadMatch {
   id: string;                    // buyerProfile id
@@ -46,6 +47,17 @@ export class ConsolidatedLeadSystem {
    */
   static async findAvailableLeads(realtorProfile: RealtorMatchProfile, limit = 50): Promise<LeadMatch[]> {
     try {
+      console.log(`\n🔍 [LEAD MATCHING] ===== Starting Lead Search =====`);
+      console.log(`   Realtor cities: ${realtorProfile.cities.join(', ')}`);
+      console.log(`   Realtor state: "${realtorProfile.state}"`);
+      console.log(`   Realtor languages: ${realtorProfile.languages.join(', ')}`);
+
+      // Check for invalid state
+      if (!realtorProfile.state || realtorProfile.state === 'Not set' || realtorProfile.state === 'Unknown') {
+        console.log(`   ❌ Invalid state "${realtorProfile.state}" - realtor profile may be incomplete`);
+        console.log(`🔍 [LEAD MATCHING] ===== End Lead Search (no valid state) =====\n`);
+        return [];
+      }
 
       // 🚀 PERFORMANCE: Limit query to most recent buyers (last 100)
       // Filter by state at database level to reduce processing
@@ -55,6 +67,13 @@ export class ConsolidatedLeadSystem {
         { field: 'profileComplete', operator: '==', value: true },
         { field: 'preferredState', operator: '==', value: realtorProfile.state }
       ], 100); // Limit to 100 most recent leads
+
+      console.log(`   Query returned: ${availableBuyers.length} buyers with state="${realtorProfile.state}"`);
+      if (availableBuyers.length > 0) {
+        console.log(`   Sample buyers: ${availableBuyers.slice(0, 3).map(b => `${b.firstName} in ${b.preferredCity}`).join(', ')}`);
+      } else {
+        console.log(`   ⚠️ No buyers found in state "${realtorProfile.state}" with isAvailableForPurchase=true, isActive=true, profileComplete=true`);
+      }
 
       // Get all user IDs with realtor role to filter them out
       const realtorUsers = await FirebaseDB.queryDocuments('users', [
@@ -98,10 +117,17 @@ export class ConsolidatedLeadSystem {
       // Sort by match score (highest first)
       matches.sort((a, b) => b.matchScore - a.matchScore);
 
+      console.log(`   Final matches: ${matches.length} buyers`);
+      if (matches.length === 0 && availableBuyers.length > 0) {
+        console.log(`   ⚠️ Had ${availableBuyers.length} buyers but none matched cities: ${realtorProfile.cities.slice(0, 5).join(', ')}`);
+      }
+      console.log(`🔍 [LEAD MATCHING] ===== End Lead Search =====\n`);
+
       // Return top matches only
       return matches.slice(0, limit);
-      
-    } catch {
+
+    } catch (error) {
+      console.error(`❌ [LEAD MATCHING] Error:`, error);
       return [];
     }
   }
@@ -273,15 +299,24 @@ export class ConsolidatedLeadSystem {
       const cityParts = data.city.split(',');
       const city = cityParts[0]?.trim();
       const state = cityParts[1]?.trim() || 'TX';
-      
-      
+
+      // Generate filter BEFORE creating profile
+      let filter = undefined;
+      if (city && state) {
+        try {
+          filter = await generateBuyerFilter(city, state, 30);
+        } catch (filterError) {
+          console.error('⚠️ [ConsolidatedLeadSystem] Failed to generate filter:', filterError);
+        }
+      }
+
       const profileData: Omit<BuyerProfile, 'id' | 'createdAt' | 'updatedAt'> = {
         userId: data.userId,
         firstName: data.firstName,
         lastName: data.lastName,
         email: data.email,
         phone: data.phone,
-        
+
         // Location
         preferredCity: city,
         preferredState: state,
@@ -289,30 +324,33 @@ export class ConsolidatedLeadSystem {
         state: state,                  // API compatibility
         searchRadius: 25,
 
+        // Pre-computed nearby cities filter
+        ...(filter && { filter }),
+
         // Defaults
         languages: data.languages || ['English'],
         emailNotifications: true,
         smsNotifications: true,
         profileComplete: true,
         isActive: true,
-        
+
         // Arrays
         matchedPropertyIds: [],
         likedPropertyIds: [],
         passedPropertyIds: [],
-        
+
         // Lead selling
         isAvailableForPurchase: true,
         leadPrice: 1,
-        
+
         // Activity
         lastActiveAt: Timestamp.now()
       };
-      
+
       const profile = await FirebaseDB.createDocument<BuyerProfile>('buyerProfiles', profileData);
-      
+
       return profile.id;
-      
+
     } catch (error) {
       throw error;
     }

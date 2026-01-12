@@ -11,27 +11,37 @@ export const formatPhoneNumber = normalizePhoneUtil;
 export const isValidPhoneNumber = isValidPhoneUtil;
 
 // Initialize reCAPTCHA verifier
-// Uses compact size for better mobile experience, works everywhere including in-app browsers
-export function setupRecaptcha(containerId: string): RecaptchaVerifier | null {
+// Uses invisible reCAPTCHA for better mobile experience
+export async function setupRecaptcha(containerId: string): Promise<RecaptchaVerifier | null> {
   if (!auth) {
-    console.error('Firebase Auth not initialized');
+    console.error('❌ Firebase Auth not initialized');
     return null;
   }
 
   try {
+    // Clear any existing reCAPTCHA first
+    const container = document.getElementById(containerId);
+    if (container) {
+      container.innerHTML = '';
+    }
+
     const recaptchaVerifier = new RecaptchaVerifier(auth, containerId, {
-      size: 'compact', // Compact size for mobile-friendly display
+      size: 'invisible', // Invisible reCAPTCHA - works better on mobile
       callback: () => {
-        console.log('reCAPTCHA verified');
+        console.log('✅ reCAPTCHA verified');
       },
       'expired-callback': () => {
-        console.log('reCAPTCHA expired');
+        console.log('⚠️ reCAPTCHA expired - will refresh');
       }
     });
 
+    // Pre-render the reCAPTCHA (important for invisible mode)
+    await recaptchaVerifier.render();
+    console.log('✅ reCAPTCHA rendered successfully');
+
     return recaptchaVerifier;
   } catch (error) {
-    console.error('Error setting up reCAPTCHA:', error);
+    console.error('❌ Error setting up reCAPTCHA:', error);
     return null;
   }
 }
@@ -55,7 +65,9 @@ export async function sendVerificationCode(
       confirmationResult
     };
   } catch (error: any) {
-    console.error('Error sending verification code:', error);
+    console.error('❌ [FIREBASE-PHONE-AUTH] Error sending verification code:', error);
+    console.error('❌ [FIREBASE-PHONE-AUTH] Error code:', error.code);
+    console.error('❌ [FIREBASE-PHONE-AUTH] Error message:', error.message);
 
     let errorMessage = 'Failed to send verification code';
     if (error.code === 'auth/invalid-phone-number') {
@@ -64,6 +76,14 @@ export async function sendVerificationCode(
       errorMessage = 'Too many attempts. Please try again later';
     } else if (error.code === 'auth/quota-exceeded') {
       errorMessage = 'SMS quota exceeded. Please try again later';
+    } else if (error.code === 'auth/captcha-check-failed') {
+      errorMessage = 'reCAPTCHA verification failed. Please refresh and try again';
+    } else if (error.code === 'auth/missing-phone-number') {
+      errorMessage = 'Phone number is missing';
+    } else if (error.code === 'auth/operation-not-allowed') {
+      errorMessage = 'Phone authentication is not enabled';
+    } else if (error.message) {
+      errorMessage = error.message;
     }
 
     return { success: false, error: errorMessage };

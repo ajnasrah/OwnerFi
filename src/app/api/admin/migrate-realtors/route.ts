@@ -192,26 +192,5 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Also support GET with CRON_SECRET query param for easier browser testing
-export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  const secret = searchParams.get('secret');
-  const cronSecret = process.env.CRON_SECRET;
-
-  if (!cronSecret || secret !== cronSecret) {
-    return NextResponse.json(
-      { error: 'Unauthorized - Invalid or missing secret' },
-      { status: 401 }
-    );
-  }
-
-  // Call POST handler with mock request
-  const mockRequest = new NextRequest(request.url, {
-    method: 'POST',
-    headers: new Headers({
-      'authorization': `Bearer ${cronSecret}`
-    })
-  });
-
-  return POST(mockRequest);
-}
+// SECURITY: GET handler removed
+// Passing secrets via query params is insecure - use POST with Authorization header

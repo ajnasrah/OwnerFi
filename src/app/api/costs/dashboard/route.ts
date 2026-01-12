@@ -4,6 +4,9 @@
  */
 
 import { NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/lib/auth';
+import { ExtendedSession } from '@/types/session';
 import {
   getTotalDailyCosts,
   getTotalMonthlyCosts,
@@ -31,6 +34,15 @@ try {
 
 export async function GET() {
   try {
+    // SECURITY: Verify admin authentication
+    const session = await getServerSession(authOptions as unknown as Parameters<typeof getServerSession>[0]) as ExtendedSession;
+    if (!session?.user || session.user.role !== 'admin') {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized - admin access required' },
+        { status: 403 }
+      );
+    }
+
     // Check if Firebase is initialized
     if (!db) {
       console.error('❌ Firebase not initialized in cost dashboard API');

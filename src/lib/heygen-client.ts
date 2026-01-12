@@ -90,9 +90,10 @@ export interface AvatarIVVideoRequest {
   video_title?: string;
   script: string;                 // Text the avatar will speak
   voice_id: string;               // From List Voices API
+  voice_speed?: number;           // Voice speed 0.5-1.5 (default 1.0)
   audio_url?: string;             // Alternative: custom audio URL
   audio_asset_id?: string;        // Alternative: HeyGen audio asset
-  custom_motion_prompt?: string;  // Describe gestures/expressions
+  custom_motion_prompt?: string;  // Describe gestures/expressions (keep under 2 clauses)
   enhance_custom_motion_prompt?: boolean;  // Let AI refine motion
   dimension?: {
     width: number;
@@ -367,15 +368,89 @@ export async function generateHeyGenVideo(
 // Avatar IV Video Generation (More Expressive with Hand Gestures)
 // ============================================================================
 
+// ============================================================================
+// Image Key Caching (Firestore Admin SDK)
+// ============================================================================
+
+import { getAdminDb } from './firebase-admin';
+import { createHash } from 'crypto';
+
+const IMAGE_KEY_CACHE_COLLECTION = 'heygen_image_keys';
+
 /**
- * Upload an image asset to HeyGen for Avatar IV
+ * Generate a unique hash for a URL (collision-resistant)
+ */
+function hashUrl(url: string): string {
+  return createHash('sha256').update(url).digest('hex').substring(0, 40);
+}
+
+/**
+ * Get cached image_key from Firestore
+ */
+async function getCachedImageKey(photoUrl: string): Promise<string | null> {
+  try {
+    const db = await getAdminDb();
+    if (!db) return null;
+
+    const urlHash = hashUrl(photoUrl);
+    const docRef = db.collection(IMAGE_KEY_CACHE_COLLECTION).doc(urlHash);
+    const docSnap = await docRef.get();
+
+    if (docSnap.exists) {
+      const data = docSnap.data();
+      // Check if cache is still valid (7 days - image_keys don't expire quickly)
+      const cacheAge = Date.now() - (data?.cachedAt || 0);
+      if (cacheAge < 7 * 24 * 60 * 60 * 1000) {
+        console.log(`   💾 Using cached image_key for ${photoUrl.substring(0, 50)}...`);
+        return data?.imageKey || null;
+      }
+    }
+    return null;
+  } catch (error) {
+    console.warn('⚠️ Error reading image_key cache:', error);
+    return null;
+  }
+}
+
+/**
+ * Cache image_key in Firestore
+ */
+async function cacheImageKey(photoUrl: string, imageKey: string): Promise<void> {
+  try {
+    const db = await getAdminDb();
+    if (!db) return;
+
+    const urlHash = hashUrl(photoUrl);
+    const docRef = db.collection(IMAGE_KEY_CACHE_COLLECTION).doc(urlHash);
+
+    await docRef.set({
+      photoUrl,
+      imageKey,
+      cachedAt: Date.now(),
+    });
+
+    console.log(`   💾 Cached image_key for future use`);
+  } catch (error) {
+    console.warn('⚠️ Error caching image_key:', error);
+  }
+}
+
+/**
+ * Upload an image asset to HeyGen for Avatar IV (with caching)
  * Returns the image_key needed for Avatar IV video generation
+ * Checks cache first to avoid re-uploading the same image
  */
 export async function uploadHeyGenAsset(
   imageUrl: string,
   brand: Brand
-): Promise<{ success: boolean; image_key?: string; error?: string }> {
+): Promise<{ success: boolean; image_key?: string; error?: string; cached?: boolean }> {
   try {
+    // Check cache first
+    const cachedKey = await getCachedImageKey(imageUrl);
+    if (cachedKey) {
+      return { success: true, image_key: cachedKey, cached: true };
+    }
+
     console.log(`📤 [${brand}] Uploading image to HeyGen...`);
 
     const response = await circuitBreakers.heygen.execute(async () => {
@@ -413,7 +488,11 @@ export async function uploadHeyGenAsset(
     }
 
     console.log(`✅ [${brand}] HeyGen asset uploaded: ${imageKey}`);
-    return { success: true, image_key: imageKey };
+
+    // Cache for future use
+    await cacheImageKey(imageUrl, imageKey);
+
+    return { success: true, image_key: imageKey, cached: false };
 
   } catch (error) {
     console.error('❌ Error uploading HeyGen asset:', error);
@@ -465,12 +544,13 @@ export async function generateAvatarIVVideo(
 
     // Optional fields
     if (request.video_title) apiRequest.video_title = request.video_title;
+    if (request.voice_speed) apiRequest.voice_speed = request.voice_speed; // Voice speed 0.5-1.5
     if (request.audio_url) apiRequest.audio_url = request.audio_url;
     if (request.audio_asset_id) apiRequest.audio_asset_id = request.audio_asset_id;
     if (request.callback_id) apiRequest.callback_id = request.callback_id;
     if (request.callback_url) apiRequest.callback_url = request.callback_url;
 
-    // Motion prompts for hand gestures and expressions
+    // Motion prompts for hand gestures and expressions (keep under 2 clauses for best results)
     if (request.custom_motion_prompt) {
       apiRequest.custom_motion_prompt = request.custom_motion_prompt;
       // Default to true to let AI enhance the motion

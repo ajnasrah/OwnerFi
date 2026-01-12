@@ -5,6 +5,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/lib/auth';
+import { ExtendedSession } from '@/types/session';
 import { getFirestore } from '@/lib/firebase-admin';
 import { BlogPost, getBlogCollection, generateSlug, generateMetaDescription, extractKeywords, BlogSection } from '@/lib/blog-models';
 import { generateSocialImagesFromBlog, generateOGImageUrl } from '@/lib/blog-og-generator';
@@ -12,6 +15,15 @@ import { Brand } from '@/config/constants';
 
 export async function POST(request: NextRequest) {
   try {
+    // SECURITY: Verify admin authentication
+    const session = await getServerSession(authOptions as unknown as Parameters<typeof getServerSession>[0]) as ExtendedSession;
+    if (!session?.user || session.user.role !== 'admin') {
+      return NextResponse.json(
+        { error: 'Unauthorized - admin access required' },
+        { status: 403 }
+      );
+    }
+
     const body = await request.json();
 
     const {

@@ -6,6 +6,7 @@ import { getSessionWithRole } from '@/lib/auth-utils';
 import { FirebaseDB } from '@/lib/firebase-db';
 import { RealtorDataHelper, ValidatedCity } from '@/lib/realtor-models';
 import { logError, logInfo } from '@/lib/logger';
+import { getCitiesWithinRadiusComprehensive } from '@/lib/comprehensive-cities';
 
 // Constants
 const FREE_PENDING_LIMIT = 3;
@@ -115,6 +116,26 @@ export async function GET() {
     const serviceCity = profile?.preferredCity || 'Not set';
     const serviceState = profile?.preferredState || 'Not set';
 
+    console.log(`\n📊 [REALTOR DASHBOARD] ===== Loading Dashboard =====`);
+    console.log(`   User ID: ${session.user.id}`);
+    console.log(`   Profile found: ${profile ? 'YES' : 'NO'}`);
+    console.log(`   Raw preferredCity: "${profile?.preferredCity}"`);
+    console.log(`   Raw preferredState: "${profile?.preferredState}"`);
+    console.log(`   Service city: "${serviceCity}"`);
+    console.log(`   Service state: "${serviceState}"`);
+
+    // Get nearby cities from buyer profile's pre-computed filter
+    let nearbyCities: string[] = (profile as any)?.filter?.nearbyCities || [];
+    console.log(`   Filter nearbyCities count: ${nearbyCities.length}`);
+
+    // Fallback: compute nearby cities if filter is empty but we have a valid city
+    if (nearbyCities.length === 0 && serviceCity !== 'Not set' && serviceState !== 'Not set') {
+      console.log(`⚠️ [REALTOR DASHBOARD] No filter found for ${serviceCity}, ${serviceState} - computing nearby cities`);
+      const computedCities = getCitiesWithinRadiusComprehensive(serviceCity, serviceState, 30);
+      nearbyCities = computedCities.map(c => c.name);
+      console.log(`✅ [REALTOR DASHBOARD] Computed ${nearbyCities.length} nearby cities for ${serviceCity}`);
+    }
+
     // Create simplified realtor data structure
     const realtorData = {
       firstName: user.realtorData?.firstName || profile?.firstName || 'Realtor',
@@ -122,7 +143,7 @@ export async function GET() {
       credits: user.realtorData?.credits || 0,
       serviceArea: {
         primaryCity: { name: serviceCity, state: serviceState },
-        nearbyCities: [] // Can be extended later
+        nearbyCities: nearbyCities // Use pre-computed nearby cities from filter
       }
     };
 
@@ -145,7 +166,7 @@ export async function GET() {
         credits: realtorData.credits,
         serviceArea: {
           primaryCity: serviceCity,
-          totalCitiesServed: 1 // Just using buyer profile city for now
+          totalCitiesServed: nearbyCities.length || 1
         }
       }
     };
@@ -159,7 +180,8 @@ export async function GET() {
         transactionCount: transactions.length,
         credits: realtorData.credits,
         serviceCity,
-        serviceState
+        serviceState,
+        nearbyCitiesCount: nearbyCities.length
       }
     });
 

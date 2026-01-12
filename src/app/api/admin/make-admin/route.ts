@@ -126,36 +126,9 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Also support GET with query params
-export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  const secret = searchParams.get('secret');
-  const phone = searchParams.get('phone');
-  const cronSecret = process.env.CRON_SECRET;
-
-  if (!cronSecret || secret !== cronSecret) {
-    return NextResponse.json(
-      { error: 'Unauthorized - Invalid or missing secret' },
-      { status: 401 }
-    );
-  }
-
-  if (!phone) {
-    return NextResponse.json(
-      { error: 'Phone number required in query params' },
-      { status: 400 }
-    );
-  }
-
-  // Call POST handler
-  const mockRequest = new NextRequest(request.url, {
-    method: 'POST',
-    headers: new Headers({
-      'authorization': `Bearer ${cronSecret}`,
-      'content-type': 'application/json'
-    }),
-    body: JSON.stringify({ phone })
-  });
-
-  return POST(mockRequest);
-}
+// SECURITY: GET handler removed
+// Passing secrets via query params is insecure because:
+// 1. Query params are logged in server access logs
+// 2. Query params can leak via Referer headers
+// 3. Query params appear in browser history
+// Use POST with Authorization header instead

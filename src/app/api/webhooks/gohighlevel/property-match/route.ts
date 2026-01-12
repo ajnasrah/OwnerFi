@@ -10,6 +10,8 @@
  * 4. GoHighLevel workflow triggers SMS to the buyer
  *
  * Route: POST /api/webhooks/gohighlevel/property-match
+ *
+ * SECURITY: Requires webhook signature validation
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -22,6 +24,48 @@ import {
 import { getSafeDb } from '@/lib/firebase-safe';
 import { formatPropertyMatchSMS } from '@/lib/sms-templates';
 import { fetchWithTimeout, ServiceTimeouts } from '@/lib/fetch-with-timeout';
+import crypto from 'crypto';
+
+// Webhook secret for signature validation
+const WEBHOOK_SECRET = process.env.PROPERTY_MATCH_WEBHOOK_SECRET;
+
+/**
+ * Verify webhook signature using HMAC-SHA256
+ */
+function verifyWebhookSignature(payload: string, signature: string | null): boolean {
+  if (!WEBHOOK_SECRET) {
+    // In development, allow requests without signature if secret not configured
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('⚠️ [SECURITY] PROPERTY_MATCH_WEBHOOK_SECRET not set - skipping signature validation in dev');
+      return true;
+    }
+    return false;
+  }
+
+  if (!signature) {
+    return false;
+  }
+
+  // Support multiple signature formats
+  const signatureValue = signature.startsWith('sha256=')
+    ? signature.slice(7)
+    : signature;
+
+  const expectedSignature = crypto
+    .createHmac('sha256', WEBHOOK_SECRET)
+    .update(payload)
+    .digest('hex');
+
+  // Use timing-safe comparison to prevent timing attacks
+  try {
+    return crypto.timingSafeEqual(
+      Buffer.from(signatureValue, 'hex'),
+      Buffer.from(expectedSignature, 'hex')
+    );
+  } catch {
+    return false;
+  }
+}
 
 interface PropertyMatchWebhookPayload {
   // Buyer Information
@@ -74,8 +118,23 @@ export async function POST(request: NextRequest) {
   try {
     console.log('🔔 [GoHighLevel] Property match webhook received');
 
+    // Get raw body for signature validation
+    const rawBody = await request.text();
+    const signature = request.headers.get('x-webhook-signature') ||
+                      request.headers.get('x-hub-signature-256') ||
+                      request.headers.get('x-signature');
+
+    // SECURITY: Verify webhook signature
+    if (!verifyWebhookSignature(rawBody, signature)) {
+      console.error('🚫 [SECURITY] Invalid webhook signature');
+      return NextResponse.json(
+        { error: 'Invalid webhook signature' },
+        { status: 401 }
+      );
+    }
+
     // Parse request body
-    const payload: PropertyMatchWebhookPayload = await request.json();
+    const payload: PropertyMatchWebhookPayload = JSON.parse(rawBody);
 
     // Validate required fields
     const requiredFields = ['buyerId', 'propertyId', 'buyerName', 'buyerPhone', 'buyerEmail', 'buyerCity', 'propertyAddress', 'propertyCity'];
@@ -242,9 +301,23 @@ async function updateWebhookLog(logId: string, updates: Partial<WebhookLog>) {
   }
 }
 
-// GET endpoint to retrieve webhook logs
+// GET endpoint to retrieve webhook logs (admin only)
 export async function GET(request: NextRequest) {
   try {
+    // SECURITY: Require admin authentication to view webhook logs
+    const { getServerSession } = await import('next-auth/next');
+    const { authOptions } = await import('@/lib/auth');
+
+    const session = await getServerSession(authOptions as unknown as Parameters<typeof getServerSession>[0]);
+    const userRole = (session as { user?: { role?: string } })?.user?.role;
+
+    if (!session?.user || userRole !== 'admin') {
+      return NextResponse.json(
+        { error: 'Unauthorized - admin access required' },
+        { status: 403 }
+      );
+    }
+
     const db = getSafeDb();
     const { searchParams } = new URL(request.url);
 

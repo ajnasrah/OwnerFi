@@ -23,7 +23,11 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const SUBMAGIC_API_KEY = process.env.SUBMAGIC_API_KEY;
 
 // Import HeyGen client with cost tracking
-import { generateHeyGenVideo as generateHeyGenVideoWithTracking } from '@/lib/heygen-client';
+import {
+  generateHeyGenVideo as generateHeyGenVideoWithTracking,
+  generateAvatarIVVideo,
+  uploadHeyGenAsset
+} from '@/lib/heygen-client';
 
 export async function POST(request: NextRequest) {
   let workflowId: string | undefined; // Declare at function scope so catch block can access it
@@ -234,6 +238,8 @@ export async function POST(request: NextRequest) {
     let heygenRequest: any;
     let agentId = 'legacy';
 
+    let videoResult: { success: boolean; video_id?: string; error?: string };
+
     if (agent) {
       // Use agent system with proper scale and background
       console.log(`   🤖 Selected agent: ${agent.name} (${agent.id})`);
@@ -245,32 +251,85 @@ export async function POST(request: NextRequest) {
 
       agentId = agent.id;
 
-      // Build character config from agent (uses SCALE_PRESETS for proper sizing)
-      const characterConfig = buildCharacterConfig(agent, 'vertical');
+      // Check if Avatar IV is enabled for more expressive videos
+      const useAvatarIV = agent.avatarIV?.enabled && agent.avatarIV?.photoUrl;
 
-      // Build voice config from agent with the script
-      const voiceConfig = buildVoiceConfig(agent, content.script);
-      voiceConfig.speed = 1.1; // Keep the speed setting
+      if (useAvatarIV) {
+        // Use Avatar IV API for expressive videos with gestures
+        console.log(`   ✨ Using Avatar IV for expressive video with motion prompts`);
+        console.log(`   🎬 Motion: ${agent.avatarIV!.motionPrompt?.substring(0, 50)}...`);
 
-      // Build background config - uses brand-specific color
-      // ALWAYS provide a background to avoid white backgrounds
-      const backgroundConfig = buildBackgroundConfig(brand as Brand);
+        // Upload photo to get image_key
+        const uploadResult = await uploadHeyGenAsset(agent.avatarIV!.photoUrl, brand as Brand);
 
-      // Build video input with background (always included to prevent white backgrounds)
-      const videoInput: any = {
-        character: characterConfig,
-        voice: voiceConfig,
-        background: backgroundConfig,
-      };
+        if (uploadResult.success && uploadResult.image_key) {
+          // Generate with Avatar IV API
+          videoResult = await generateAvatarIVVideo(
+            {
+              image_key: uploadResult.image_key,
+              script: content.script,
+              voice_id: agent.voice.voiceId,
+              voice_speed: agent.voice.speed || 1.1, // Use agent's speed setting
+              custom_motion_prompt: agent.avatarIV!.motionPrompt,
+              enhance_custom_motion_prompt: true,
+              dimension: { width: 1080, height: 1920 },
+              callback_id: workflowId,
+              callback_url: webhookUrl,
+            },
+            brand as Brand,
+            workflowId
+          );
 
-      heygenRequest = {
-        video_inputs: [videoInput],
-        caption: false,
-        dimension: { width: 1080, height: 1920 },
-        test: false,
-        webhook_url: webhookUrl,
-        callback_id: workflowId
-      };
+          if (videoResult.success) {
+            console.log(`   ✅ Avatar IV video created successfully`);
+          } else {
+            console.warn(`   ⚠️ Avatar IV failed, falling back to V2 API: ${videoResult.error}`);
+          }
+        } else {
+          console.warn(`   ⚠️ Photo upload failed, falling back to V2 API: ${uploadResult.error}`);
+          videoResult = { success: false, error: uploadResult.error };
+        }
+
+        // Fall back to V2 if Avatar IV fails
+        if (!videoResult.success) {
+          console.log(`   🔄 Falling back to V2 API...`);
+        }
+      }
+
+      // Use V2 API if Avatar IV not enabled or failed
+      if (!useAvatarIV || !videoResult!.success) {
+        // Build character config from agent (uses SCALE_PRESETS for proper sizing)
+        const characterConfig = buildCharacterConfig(agent, 'vertical');
+
+        // Build voice config from agent with the script (uses agent's speed setting)
+        const voiceConfig = buildVoiceConfig(agent, content.script);
+
+        // Build background config - uses brand-specific color
+        // ALWAYS provide a background to avoid white backgrounds
+        const backgroundConfig = buildBackgroundConfig(brand as Brand);
+
+        // Build video input with background (always included to prevent white backgrounds)
+        const videoInput: any = {
+          character: characterConfig,
+          voice: voiceConfig,
+          background: backgroundConfig,
+        };
+
+        heygenRequest = {
+          video_inputs: [videoInput],
+          caption: false,
+          dimension: { width: 1080, height: 1920 },
+          test: false,
+          webhook_url: webhookUrl,
+          callback_id: workflowId
+        };
+
+        videoResult = await generateHeyGenVideoWithTracking(
+          heygenRequest,
+          brand as 'carz' | 'ownerfi',
+          workflowId
+        );
+      }
     } else {
       // Fallback to legacy config if no agent available
       console.warn('⚠️  No agent available, using legacy config');
@@ -303,14 +362,13 @@ export async function POST(request: NextRequest) {
         webhook_url: webhookUrl,
         callback_id: workflowId
       };
-    }
 
-    // Use the heygen-client function that includes cost tracking
-    const videoResult = await generateHeyGenVideoWithTracking(
-      heygenRequest,
-      brand as 'carz' | 'ownerfi',
-      workflowId
-    );
+      videoResult = await generateHeyGenVideoWithTracking(
+        heygenRequest,
+        brand as 'carz' | 'ownerfi',
+        workflowId
+      );
+    }
 
     if (!videoResult.success || !videoResult.video_id) {
       // Update workflow status to 'failed'

@@ -4,8 +4,12 @@
 import { GooglePlace, ValidatedCity, ServiceArea, REALTOR_CONSTANTS } from './realtor-models';
 import { Timestamp } from 'firebase/firestore';
 
-// Google Places API configuration
-const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY || 'AIzaSyCelger3EPc8GzTOQq7-cv6tUeVh_XN9jE';
+// Google Places API configuration - MUST be set in environment
+const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY;
+
+if (!GOOGLE_PLACES_API_KEY) {
+  console.error('CRITICAL: GOOGLE_PLACES_API_KEY environment variable is not set');
+}
 
 export class GooglePlacesService {
   
@@ -239,33 +243,58 @@ export function validateCityQuery(query: string): { isValid: boolean; error?: st
   return { isValid: true };
 }
 
-// Rate limiting helper (simple in-memory implementation)
+// Rate limiting helper with automatic cleanup to prevent memory leaks
 class RateLimiter {
   private requests: Map<string, number[]> = new Map();
-  
+  private lastCleanup: number = Date.now();
+  private readonly CLEANUP_INTERVAL = 5 * 60 * 1000; // Clean up every 5 minutes
+  private readonly MAX_ENTRIES = 10000; // Maximum entries before forced cleanup
+
   // Allow max 10 requests per minute per IP
   canMakeRequest(identifier: string, maxRequests: number = 10, windowMinutes: number = 1): boolean {
     const now = Date.now();
     const windowMs = windowMinutes * 60 * 1000;
-    
+
+    // Periodic cleanup to prevent memory leaks
+    if (now - this.lastCleanup > this.CLEANUP_INTERVAL || this.requests.size > this.MAX_ENTRIES) {
+      this.cleanup(windowMs);
+    }
+
     if (!this.requests.has(identifier)) {
       this.requests.set(identifier, []);
     }
-    
+
     const requests = this.requests.get(identifier)!;
-    
+
     // Remove old requests outside the window
     const validRequests = requests.filter(timestamp => now - timestamp < windowMs);
-    
+
     if (validRequests.length >= maxRequests) {
       return false;
     }
-    
+
     // Add current request
     validRequests.push(now);
     this.requests.set(identifier, validRequests);
-    
+
     return true;
+  }
+
+  // Clean up stale entries to prevent memory leaks
+  private cleanup(windowMs: number): void {
+    const now = Date.now();
+    this.lastCleanup = now;
+
+    for (const [identifier, timestamps] of this.requests.entries()) {
+      const validTimestamps = timestamps.filter(ts => now - ts < windowMs);
+      if (validTimestamps.length === 0) {
+        this.requests.delete(identifier);
+      } else {
+        this.requests.set(identifier, validTimestamps);
+      }
+    }
+
+    console.log(`[RateLimiter] Cleanup complete. ${this.requests.size} active entries.`);
   }
 }
 

@@ -42,23 +42,45 @@ export async function GET(
 
     // Get file metadata
     const [metadata] = await file.getMetadata();
+    const fileSize = parseInt(metadata.size || '0');
 
-    // Stream the file
-    const stream = file.createReadStream();
-    const chunks: Uint8Array[] = [];
-
-    for await (const chunk of stream) {
-      chunks.push(chunk);
+    // SECURITY: Limit file size to prevent memory exhaustion (500MB max)
+    const MAX_FILE_SIZE = 500 * 1024 * 1024; // 500MB
+    if (fileSize > MAX_FILE_SIZE) {
+      console.error(`Video too large: ${fileSize} bytes (max ${MAX_FILE_SIZE})`);
+      return NextResponse.json(
+        { error: 'Video file too large' },
+        { status: 413 }
+      );
     }
 
-    const buffer = Buffer.concat(chunks);
+    // Stream the file directly using ReadableStream to avoid memory issues
+    const nodeStream = file.createReadStream();
 
-    // Return video with proper headers
-    return new NextResponse(buffer, {
+    // Convert Node.js stream to Web ReadableStream for efficient streaming
+    const webStream = new ReadableStream({
+      start(controller) {
+        nodeStream.on('data', (chunk: Buffer) => {
+          controller.enqueue(new Uint8Array(chunk));
+        });
+        nodeStream.on('end', () => {
+          controller.close();
+        });
+        nodeStream.on('error', (err) => {
+          controller.error(err);
+        });
+      },
+      cancel() {
+        nodeStream.destroy();
+      }
+    });
+
+    // Return video with proper headers using streaming response
+    return new NextResponse(webStream, {
       status: 200,
       headers: {
         'Content-Type': metadata.contentType || 'video/mp4',
-        'Content-Length': buffer.length.toString(),
+        'Content-Length': fileSize.toString(),
         'Cache-Control': 'public, max-age=31536000, immutable', // 1 year cache
         'Access-Control-Allow-Origin': '*',
       },

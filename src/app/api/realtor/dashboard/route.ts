@@ -64,8 +64,14 @@ interface DashboardData {
   };
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    // Parse search params
+    const { searchParams } = new URL(request.url);
+    const searchQuery = searchParams.get('search')?.toLowerCase() || '';
+    const cityFilter = searchParams.get('city')?.toLowerCase() || '';
+    const statusFilter = searchParams.get('status') || 'all'; // all, available, pending, accepted
+
     // Enforce realtor role only
     const session = await getSessionWithRole('realtor');
 
@@ -148,7 +154,7 @@ export async function GET() {
     };
 
     // Get available buyer leads using buyer profile city
-    const availableLeads = await getMatchedBuyerLeads(realtorData);
+    const availableLeads = await getMatchedBuyerLeads(realtorData, { searchQuery, cityFilter });
 
     // Get owned buyers (purchased by this realtor)
     const ownedBuyers = await getOwnedBuyers(session.user.id);
@@ -382,7 +388,7 @@ async function getMatchedBuyerLeads(realtorData: {
     nearbyCities?: Array<{ name?: string } | string>;
   };
   serviceCities?: string[];
-}): Promise<Array<{
+}, filters?: { searchQuery?: string; cityFilter?: string }): Promise<Array<{
   id: string;
   firstName: string;
   lastName: string;
@@ -429,11 +435,11 @@ async function getMatchedBuyerLeads(realtorData: {
     };
     
     
-    // Get matches from consolidated system
-    const leads = await ConsolidatedLeadSystem.findAvailableLeads(realtorProfile);
-    
+    // Get matches from consolidated system (increased limit from 50 to 200)
+    const leads = await ConsolidatedLeadSystem.findAvailableLeads(realtorProfile, 200);
+
     // Convert Timestamp to Date for compatibility
-    const convertedLeads = leads.map((lead: {
+    let convertedLeads = leads.map((lead: {
       id: string;
       firstName: string;
       lastName: string;
@@ -451,7 +457,25 @@ async function getMatchedBuyerLeads(realtorData: {
       ...lead,
       createdAt: lead.createdAt?.toDate ? lead.createdAt.toDate() : new Date()
     }));
-    
+
+    // Apply search filter (name)
+    if (filters?.searchQuery) {
+      const query = filters.searchQuery.toLowerCase();
+      convertedLeads = convertedLeads.filter(lead =>
+        lead.firstName.toLowerCase().includes(query) ||
+        lead.lastName.toLowerCase().includes(query) ||
+        `${lead.firstName} ${lead.lastName}`.toLowerCase().includes(query)
+      );
+    }
+
+    // Apply city filter
+    if (filters?.cityFilter) {
+      const cityQuery = filters.cityFilter.toLowerCase();
+      convertedLeads = convertedLeads.filter(lead =>
+        lead.city.toLowerCase().includes(cityQuery)
+      );
+    }
+
     return convertedLeads;
     
   } catch (error) {

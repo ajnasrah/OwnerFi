@@ -59,14 +59,14 @@ export class ConsolidatedLeadSystem {
         return [];
       }
 
-      // 🚀 PERFORMANCE: Limit query to most recent buyers (last 100)
+      // 🚀 PERFORMANCE: Increased limit to 500 to ensure we don't miss qualified leads
       // Filter by state at database level to reduce processing
       const availableBuyers = await FirebaseDB.queryDocuments<BuyerProfile>('buyerProfiles', [
         { field: 'isAvailableForPurchase', operator: '==', value: true },
         { field: 'isActive', operator: '==', value: true },
         { field: 'profileComplete', operator: '==', value: true },
         { field: 'preferredState', operator: '==', value: realtorProfile.state }
-      ], 100); // Limit to 100 most recent leads
+      ], 500); // Increased from 100 to 500
 
       console.log(`   Query returned: ${availableBuyers.length} buyers with state="${realtorProfile.state}"`);
       if (availableBuyers.length > 0) {

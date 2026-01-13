@@ -15,6 +15,9 @@ interface BuyerLead {
   city: string;
   state: string;
   matchPercentage?: number;
+  matchScore?: number;
+  matchReasons?: string[];
+  likedPropertiesCount?: number;
   createdAt: string;
 }
 
@@ -111,6 +114,10 @@ export default function RealtorDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  // Search and filter state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [cityFilter, setCityFilter] = useState('');
+
   // Agreement modal state
   const [agreementModal, setAgreementModal] = useState<AgreementModalState>({
     isOpen: false,
@@ -157,10 +164,15 @@ export default function RealtorDashboard() {
     }
   }, [status, session]);
 
-  const loadDashboardData = async () => {
+  const loadDashboardData = async (search?: string, city?: string) => {
     try {
       setLoading(true);
-      const response = await fetch('/api/realtor/dashboard');
+      const params = new URLSearchParams();
+      if (search) params.set('search', search);
+      if (city) params.set('city', city);
+
+      const url = `/api/realtor/dashboard${params.toString() ? `?${params.toString()}` : ''}`;
+      const response = await fetch(url);
       const data = await response.json();
 
       if (data.error) {
@@ -174,6 +186,16 @@ export default function RealtorDashboard() {
       setLoading(false);
     }
   };
+
+  // Debounced search
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (status === 'authenticated') {
+        loadDashboardData(searchQuery, cityFilter);
+      }
+    }, 300);
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery, cityFilter, status]);
 
   const loadAgreements = async () => {
     try {
@@ -386,7 +408,7 @@ export default function RealtorDashboard() {
   const pendingAgreements = agreements.filter(a => a.status === 'pending');
 
   return (
-    <div className="min-h-screen bg-slate-900">
+    <div className="min-h-screen bg-slate-900 overflow-y-auto pb-20">
       {/* Header */}
       <header className="bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50">
         <div className="px-4 py-3 flex items-center justify-between">
@@ -485,6 +507,38 @@ export default function RealtorDashboard() {
           {/* Available Leads Tab */}
           {activeTab === 'available' && (
             <div>
+              {/* Search and Filter Bar */}
+              <div className="mb-6 flex flex-col sm:flex-row gap-3">
+                <div className="flex-1 relative">
+                  <input
+                    type="text"
+                    placeholder="Search by name..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full bg-slate-700/50 border border-slate-600 rounded-lg pl-10 pr-4 py-3 text-white placeholder-slate-400 focus:border-emerald-500 focus:outline-none"
+                  />
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">🔍</span>
+                </div>
+                <div className="sm:w-48 relative">
+                  <input
+                    type="text"
+                    placeholder="Filter by city..."
+                    value={cityFilter}
+                    onChange={(e) => setCityFilter(e.target.value)}
+                    className="w-full bg-slate-700/50 border border-slate-600 rounded-lg pl-10 pr-4 py-3 text-white placeholder-slate-400 focus:border-emerald-500 focus:outline-none"
+                  />
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">📍</span>
+                </div>
+                {(searchQuery || cityFilter) && (
+                  <button
+                    onClick={() => { setSearchQuery(''); setCityFilter(''); }}
+                    className="px-4 py-3 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg transition-colors text-sm"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+
               {/* Pending Limit Status Banner */}
               {(() => {
                 const FREE_LIMIT = 3;
@@ -547,21 +601,66 @@ export default function RealtorDashboard() {
                     const hasCredits = (dashboardData.realtorData.credits || 0) > 0;
                     const atLimit = pendingCount >= FREE_LIMIT && !hasCredits;
 
+                    // Check if this lead has a pending agreement
+                    const hasPendingAgreement = pendingAgreements.some(
+                      a => a.buyerFirstName === lead.firstName && a.buyerLastName === lead.lastName
+                    );
+
+                    // Check if this lead has a signed agreement
+                    const hasSignedAgreement = signedAgreements.some(
+                      a => a.buyerFirstName === lead.firstName && a.buyerLastName === lead.lastName
+                    );
+
+                    // Determine status
+                    let statusLabel = 'Available';
+                    let statusColor = 'bg-emerald-500/20 text-emerald-400';
+                    if (hasSignedAgreement) {
+                      statusLabel = 'Accepted';
+                      statusColor = 'bg-blue-500/20 text-blue-400';
+                    } else if (hasPendingAgreement) {
+                      statusLabel = 'Pending';
+                      statusColor = 'bg-yellow-500/20 text-yellow-400';
+                    }
+
                     return (
-                      <div key={lead.id} className="bg-slate-800/50 border border-slate-700/50 rounded-lg p-4">
+                      <div key={lead.id} className={`bg-slate-800/50 border rounded-lg p-4 ${
+                        hasSignedAgreement ? 'border-blue-500/30' :
+                        hasPendingAgreement ? 'border-yellow-500/30' :
+                        'border-slate-700/50'
+                      }`}>
                         <div className="flex items-start justify-between mb-3">
                           <div>
                             <h4 className="text-white font-bold text-lg">
                               {lead.firstName} {lead.lastName}
                             </h4>
                             <p className="text-slate-400 text-sm">{lead.city}, {lead.state}</p>
+                            {lead.matchScore && (
+                              <p className="text-emerald-400 text-xs mt-1">
+                                {lead.matchScore}% match
+                                {lead.likedPropertiesCount ? ` • ${lead.likedPropertiesCount} liked` : ''}
+                              </p>
+                            )}
                           </div>
-                          <span className="bg-emerald-500/20 text-emerald-400 px-2 py-1 rounded text-xs font-medium">
-                            New Lead
+                          <span className={`${statusColor} px-2 py-1 rounded text-xs font-medium`}>
+                            {statusLabel}
                           </span>
                         </div>
 
-                        {atLimit ? (
+                        {hasSignedAgreement ? (
+                          <button
+                            onClick={() => setActiveTab('agreements')}
+                            className="w-full bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 py-2 px-4 rounded-lg font-medium transition-colors"
+                          >
+                            View Agreement
+                          </button>
+                        ) : hasPendingAgreement ? (
+                          <button
+                            onClick={() => setActiveTab('agreements')}
+                            className="w-full bg-yellow-500 hover:bg-yellow-600 text-black py-2 px-4 rounded-lg font-medium transition-colors"
+                          >
+                            Complete Signature
+                          </button>
+                        ) : atLimit ? (
                           <Link
                             href="/buy-credits"
                             className="w-full bg-yellow-500 hover:bg-yellow-600 text-black py-2 px-4 rounded-lg font-medium transition-colors block text-center"

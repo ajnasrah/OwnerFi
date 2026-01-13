@@ -43,6 +43,11 @@ function verifyWebhookSignature(
   }
 
   try {
+    // Check if GoHighLevel is sending the raw secret as the signature
+    if (signature === GHL_WEBHOOK_SECRET) {
+      return { valid: true };
+    }
+
     const expectedSignature = crypto
       .createHmac('sha256', GHL_WEBHOOK_SECRET)
       .update(payload)

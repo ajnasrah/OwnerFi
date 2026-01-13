@@ -209,6 +209,7 @@ export async function GET(request: NextRequest) {
         console.log(`   📤 Sending to GHL: ${property.address} (${property.dealType})`);
 
         // Send to GHL webhook
+        console.log(`   📤 GHL Webhook URL: ${GHL_WEBHOOK_URL.substring(0, 60)}...`);
         const response = await fetch(GHL_WEBHOOK_URL, {
           method: 'POST',
           headers: {
@@ -217,11 +218,19 @@ export async function GET(request: NextRequest) {
           body: JSON.stringify(ghlPayload),
         });
 
+        const responseText = await response.text();
+        console.log(`   📥 GHL Response: ${response.status} - ${responseText.substring(0, 200)}`);
+
         if (!response.ok) {
-          throw new Error(`GHL returned ${response.status}: ${await response.text()}`);
+          throw new Error(`GHL returned ${response.status}: ${responseText}`);
         }
 
-        const ghlResponse = await response.json();
+        let ghlResponse: any = {};
+        try {
+          ghlResponse = JSON.parse(responseText);
+        } catch (e) {
+          console.log(`   ⚠️ GHL response is not JSON: ${responseText.substring(0, 100)}`);
+        }
 
         // Update status to sent_to_ghl
         await doc.ref.update({

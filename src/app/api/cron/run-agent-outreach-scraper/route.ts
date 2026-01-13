@@ -40,15 +40,36 @@ const SEARCH_CONFIG = {
 
 export async function GET(request: NextRequest) {
   const startTime = Date.now();
-  console.log('🏡 [AGENT OUTREACH SCRAPER] Starting...');
+  console.log('🏡 [AGENT OUTREACH SCRAPER] Starting at', new Date().toISOString());
 
   // Security check
   const authHeader = request.headers.get('authorization');
   const cronSecret = process.env.CRON_SECRET;
 
+  // Log request received BEFORE auth check
+  try {
+    await db.collection('cron_logs').add({
+      cron: 'run-agent-outreach-scraper',
+      status: 'request_received',
+      timestamp: new Date(),
+      hasAuthHeader: !!authHeader,
+      hasCronSecret: !!cronSecret,
+    });
+  } catch (e) {
+    console.error('Failed to log request received:', e);
+  }
+
   if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+    console.error('❌ [AGENT OUTREACH SCRAPER] Unauthorized');
+    await db.collection('cron_logs').add({
+      cron: 'run-agent-outreach-scraper',
+      status: 'auth_failed',
+      timestamp: new Date(),
+    });
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
+
+  console.log('✅ [AGENT OUTREACH SCRAPER] Auth passed');
 
   try {
     // Log start to cron_logs
@@ -384,6 +405,17 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('❌ [AGENT OUTREACH SCRAPER] Error:', error);
+
+    // Log error to cron_logs
+    await db.collection('cron_logs').add({
+      cron: 'run-agent-outreach-scraper',
+      status: 'error',
+      error: error.message,
+      stack: error.stack?.substring(0, 500),
+      duration: `${((Date.now() - startTime) / 1000).toFixed(2)}s`,
+      timestamp: new Date(),
+    });
+
     return NextResponse.json({
       error: error.message,
       duration: `${((Date.now() - startTime) / 1000).toFixed(2)}s`,

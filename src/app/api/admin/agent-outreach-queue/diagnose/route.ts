@@ -68,45 +68,59 @@ export async function GET(request: NextRequest) {
       .count()
       .get();
 
-    // 4. Recent cron logs for both scrapers
-    const [scraperLogs, queueLogs] = await Promise.all([
-      db.collection('cron_logs')
+    // 4. Recent cron logs for both scrapers (simplified query without orderBy to avoid index)
+    let recentScraperLogs: any[] = [];
+    let recentQueueLogs: any[] = [];
+
+    try {
+      const scraperLogs = await db.collection('cron_logs')
         .where('cron', '==', 'run-agent-outreach-scraper')
-        .orderBy('timestamp', 'desc')
-        .limit(10)
-        .get(),
-      db.collection('cron_logs')
+        .limit(20)
+        .get();
+
+      recentScraperLogs = scraperLogs.docs
+        .map(doc => {
+          const data = doc.data();
+          return {
+            status: data.status,
+            timestamp: data.timestamp?.toDate?.()?.toISOString() || data.timestamp,
+            duration: data.duration,
+            propertiesFromSearch: data.propertiesFromSearch,
+            addedToQueue: data.addedToQueue,
+            skipped: data.skipped,
+            error: data.error,
+          };
+        })
+        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+        .slice(0, 10);
+    } catch (e) {
+      console.error('Error fetching scraper logs:', e);
+    }
+
+    try {
+      const queueLogs = await db.collection('cron_logs')
         .where('cron', '==', 'process-agent-outreach-queue')
-        .orderBy('timestamp', 'desc')
-        .limit(10)
-        .get(),
-    ]);
+        .limit(20)
+        .get();
 
-    const recentScraperLogs = scraperLogs.docs.map(doc => {
-      const data = doc.data();
-      return {
-        status: data.status,
-        timestamp: data.timestamp?.toDate?.()?.toISOString() || data.timestamp,
-        duration: data.duration,
-        propertiesFromSearch: data.propertiesFromSearch,
-        addedToQueue: data.addedToQueue,
-        skipped: data.skipped,
-        error: data.error,
-      };
-    });
-
-    const recentQueueLogs = queueLogs.docs.map(doc => {
-      const data = doc.data();
-      return {
-        status: data.status,
-        timestamp: data.timestamp?.toDate?.()?.toISOString() || data.timestamp,
-        duration: data.duration,
-        batchSize: data.batchSize,
-        sent: data.sent,
-        errors: data.errors,
-        errorDetails: data.errorDetails,
-      };
-    });
+      recentQueueLogs = queueLogs.docs
+        .map(doc => {
+          const data = doc.data();
+          return {
+            status: data.status,
+            timestamp: data.timestamp?.toDate?.()?.toISOString() || data.timestamp,
+            duration: data.duration,
+            batchSize: data.batchSize,
+            sent: data.sent,
+            errors: data.errors,
+            errorDetails: data.errorDetails,
+          };
+        })
+        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+        .slice(0, 10);
+    } catch (e) {
+      console.error('Error fetching queue logs:', e);
+    }
 
     // 5. Sample pending items (first 5)
     const pendingSample = await db.collection('agent_outreach_queue')

@@ -185,16 +185,27 @@ export async function POST(request: NextRequest) {
           'Same-day optimal posting'
         );
 
-        // Convert to postResult format
+        // Convert to postResult format - now includes YouTube from direct API
+        const platformsList = result.posts.map(p => p.platform);
+        if (result.youtube?.success) {
+          platformsList.push('youtube');
+        }
+
         postResult = {
           success: result.success,
           postId: result.posts.length > 0 ? result.posts[0].result.postId : undefined,
+          youtubeVideoId: result.youtube?.videoId, // Capture YouTube video ID
           scheduledFor: result.posts.length > 0 ? result.posts[0].scheduledFor : undefined,
-          platforms: result.posts.map(p => p.platform),
+          platforms: platformsList,
           error: result.errors.length > 0 ? result.errors.join(', ') : undefined
         };
 
         console.log(`✅ Scheduled ${result.totalPosts} platform posts at optimal times`);
+        if (result.youtube?.success) {
+          console.log(`   YouTube: Direct API ✅ (${result.youtube.videoId})`);
+        } else if (result.youtube) {
+          console.log(`   YouTube: Direct API ❌ (${result.youtube.error})`);
+        }
         result.posts.forEach(p => {
           const hour = p.scheduledHour > 12 ? p.scheduledHour - 12 : p.scheduledHour;
           const ampm = p.scheduledHour >= 12 ? 'PM' : 'AM';

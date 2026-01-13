@@ -131,7 +131,7 @@ export function SEOFooter() {
               <li><Link href="/about" className="hover:text-blue-400">About Us</Link></li>
               <li><Link href="/contact" className="hover:text-blue-400">Contact</Link></li>
               <li><Link href="/how-owner-finance-works" className="hover:text-blue-400">How It Works</Link></li>
-              <li><Link href="/realtor" className="hover:text-blue-400">For Realtors</Link></li>
+              <li><Link href="/realtor-dashboard" className="hover:text-blue-400">For Realtors</Link></li>
             </ul>
           </div>
 

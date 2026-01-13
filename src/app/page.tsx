@@ -739,7 +739,7 @@ export default async function HomePage() {
                 <ul className="space-y-2">
                   <li><Link href="/about" className="text-slate-400 hover:text-white transition-colors">About Us</Link></li>
                   <li><Link href="/contact" className="text-slate-400 hover:text-white transition-colors">Contact</Link></li>
-                  <li><Link href="/realtor" className="text-slate-400 hover:text-white transition-colors">For Realtors</Link></li>
+                  <li><Link href="/realtor-dashboard" className="text-slate-400 hover:text-white transition-colors">For Realtors</Link></li>
                   <li><SmartCTAButton className="text-slate-400 hover:text-white transition-colors text-left">Get Started</SmartCTAButton></li>
                 </ul>
               </div>

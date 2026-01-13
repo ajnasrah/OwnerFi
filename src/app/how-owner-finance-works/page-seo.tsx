@@ -212,7 +212,7 @@ export default function HowOwnerFinanceWorks() {
               <Link href="/contact" className="text-blue-400 hover:text-blue-300">
                 → Contact Our Team
               </Link>
-              <Link href="/realtor" className="text-blue-400 hover:text-blue-300">
+              <Link href="/realtor-dashboard" className="text-blue-400 hover:text-blue-300">
                 → For Real Estate Agents
               </Link>
             </div>

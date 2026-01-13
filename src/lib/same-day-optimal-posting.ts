@@ -1,13 +1,16 @@
 /**
  * Same-Day Optimal Platform Posting
  *
- * Posts to each platform at its top performing hour TODAY using Late's queue.
- * Each platform gets a separate post scheduled for its optimal time.
+ * Posts to each platform at its top performing hour TODAY.
+ * - YouTube: Direct API (bypasses Late.dev quota limits)
+ * - Other platforms: Late's queue system
  */
 
 import { Brand } from '@/config/constants';
 import { getBrandPlatforms } from '@/lib/brand-utils';
 import { postToLate, LatePostRequest, LatePostResponse } from '@/lib/late-api';
+import { postVideoToYouTube, type YouTubeUploadResult } from '@/lib/youtube-api';
+import { getYouTubeCategoryForBrand } from '@/lib/unified-posting';
 import { PLATFORM_OPTIMAL_HOURS } from '@/config/platform-optimal-times';
 
 type Platform = 'instagram' | 'tiktok' | 'youtube' | 'facebook' | 'linkedin' | 'twitter' | 'threads';
@@ -48,7 +51,7 @@ function getTodayAtHour(hour: number): Date {
  * Creates separate posts for each platform at their best performing hours:
  * - Instagram: 7 PM CST (peak engagement)
  * - TikTok: 7 PM CST (prime evening)
- * - YouTube: 8 PM CST (prime viewing)
+ * - YouTube: 8 PM CST (prime viewing) - via DIRECT API (not Late.dev)
  *
  * @param videoUrl - URL of the video to post
  * @param caption - Post caption
@@ -69,10 +72,21 @@ export async function postVideoSameDayOptimal(
     scheduledHour: number;
     result: LatePostResponse;
   }>;
+  youtube?: {
+    success: boolean;
+    videoId?: string;
+    videoUrl?: string;
+    error?: string;
+  };
   totalPosts: number;
   errors: string[];
 }> {
   const brandPlatforms = getBrandPlatforms(brand, false) as Platform[];
+
+  // Separate YouTube from other platforms - YouTube uses direct API
+  const hasYouTube = brandPlatforms.includes('youtube');
+  const latePlatforms = brandPlatforms.filter(p => p !== 'youtube');
+
   const allPosts: Array<{
     platform: string;
     scheduledFor: string;
@@ -80,57 +94,102 @@ export async function postVideoSameDayOptimal(
     result: LatePostResponse;
   }> = [];
   const errors: string[] = [];
+  let youtubeResult: YouTubeUploadResult | undefined;
 
-  console.log(`📅 Scheduling same-day optimal posts for ${brand} to ${brandPlatforms.length} platforms`);
+  console.log(`📅 Scheduling same-day optimal posts for ${brand}`);
+  console.log(`   YouTube (direct API): ${hasYouTube ? 'YES' : 'NO'}`);
+  console.log(`   Late.dev platforms: ${latePlatforms.join(', ') || 'none'}`);
 
-  // Post to each platform at its optimal hour
-  for (const platform of brandPlatforms) {
-    const optimalHour = getBestHourForPlatform(platform);
-    const scheduledTime = getTodayAtHour(optimalHour);
-    const scheduledFor = scheduledTime.toISOString();
-
-    const displayHour = optimalHour > 12 ? optimalHour - 12 : optimalHour;
-    const ampm = optimalHour >= 12 ? 'PM' : 'AM';
-
-    console.log(`📱 ${platform.toUpperCase()}: ${displayHour} ${ampm} CST`);
-    console.log(`   Scheduled for: ${scheduledFor}`);
+  // Step 1: Post to YouTube via DIRECT API (bypasses Late.dev)
+  if (hasYouTube) {
+    console.log(`\n📺 Step 1: Uploading to YouTube (direct API)...`);
 
     try {
-      const result = await postToLate({
+      youtubeResult = await postVideoToYouTube(
         videoUrl,
-        caption,
         title,
-        brand,
-        platforms: [platform],
-        scheduleTime: scheduledFor,
-        useQueue: true, // ✅ Use GetLate's queue system
-        timezone: 'America/Chicago'
-      });
+        caption,
+        brand as any,
+        {
+          category: getYouTubeCategoryForBrand(brand),
+          privacy: 'public',
+          madeForKids: false,
+          isShort: true,
+        }
+      );
 
-      if (result.success) {
-        allPosts.push({
-          platform,
-          scheduledFor,
-          scheduledHour: optimalHour,
-          result
-        });
-        console.log(`   ✅ Scheduled successfully`);
+      if (youtubeResult.success) {
+        console.log(`   ✅ YouTube upload successful!`);
+        console.log(`   Video ID: ${youtubeResult.videoId}`);
       } else {
-        const errorMsg = `${platform}: ${result.error}`;
+        const errorMsg = `YouTube: ${youtubeResult.error}`;
         errors.push(errorMsg);
-        console.error(`   ❌ Failed: ${result.error}`);
+        console.error(`   ❌ YouTube failed: ${youtubeResult.error}`);
       }
     } catch (error) {
-      const errorMsg = `${platform}: ${error instanceof Error ? error.message : 'Unknown error'}`;
+      const errorMsg = `YouTube: ${error instanceof Error ? error.message : 'Unknown error'}`;
       errors.push(errorMsg);
-      console.error(`   ❌ Error:`, error);
+      console.error(`   ❌ YouTube error:`, error);
+      youtubeResult = { success: false, error: errorMsg };
     }
   }
 
-  const success = allPosts.length > 0;
+  // Step 2: Post to other platforms via Late.dev at their optimal hours
+  if (latePlatforms.length > 0) {
+    console.log(`\n📱 Step 2: Scheduling ${latePlatforms.length} platforms via Late.dev...`);
+
+    for (const platform of latePlatforms) {
+      const optimalHour = getBestHourForPlatform(platform);
+      const scheduledTime = getTodayAtHour(optimalHour);
+      const scheduledFor = scheduledTime.toISOString();
+
+      const displayHour = optimalHour > 12 ? optimalHour - 12 : optimalHour;
+      const ampm = optimalHour >= 12 ? 'PM' : 'AM';
+
+      console.log(`   ${platform.toUpperCase()}: ${displayHour} ${ampm} CST`);
+
+      try {
+        const result = await postToLate({
+          videoUrl,
+          caption,
+          title,
+          brand,
+          platforms: [platform],
+          scheduleTime: scheduledFor,
+          useQueue: true,
+          timezone: 'America/Chicago'
+        });
+
+        if (result.success) {
+          allPosts.push({
+            platform,
+            scheduledFor,
+            scheduledHour: optimalHour,
+            result
+          });
+          console.log(`      ✅ Scheduled successfully`);
+        } else {
+          const errorMsg = `${platform}: ${result.error}`;
+          errors.push(errorMsg);
+          console.error(`      ❌ Failed: ${result.error}`);
+        }
+      } catch (error) {
+        const errorMsg = `${platform}: ${error instanceof Error ? error.message : 'Unknown error'}`;
+        errors.push(errorMsg);
+        console.error(`      ❌ Error:`, error);
+      }
+    }
+  }
+
+  // Calculate total successful posts
+  const youtubeSuccess = youtubeResult?.success ? 1 : 0;
+  const totalPosts = allPosts.length + youtubeSuccess;
+  const success = totalPosts > 0;
 
   console.log(`\n📊 Results:`);
-  console.log(`   Total scheduled: ${allPosts.length}/${brandPlatforms.length}`);
+  console.log(`   YouTube: ${youtubeResult?.success ? `✅ (${youtubeResult.videoId})` : hasYouTube ? '❌' : 'N/A'}`);
+  console.log(`   Late.dev: ${allPosts.length}/${latePlatforms.length} platforms`);
+  console.log(`   Total successful: ${totalPosts}`);
   if (errors.length > 0) {
     console.log(`   Errors: ${errors.length}`);
   }
@@ -138,7 +197,13 @@ export async function postVideoSameDayOptimal(
   return {
     success,
     posts: allPosts,
-    totalPosts: allPosts.length,
+    youtube: youtubeResult ? {
+      success: youtubeResult.success,
+      videoId: youtubeResult.videoId,
+      videoUrl: youtubeResult.videoUrl,
+      error: youtubeResult.error,
+    } : undefined,
+    totalPosts,
     errors
   };
 }

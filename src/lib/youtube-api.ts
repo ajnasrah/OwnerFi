@@ -40,13 +40,29 @@ interface YouTubeUploadResult {
 }
 
 /**
+ * Map brand to YouTube account brand
+ * Some brands share YouTube accounts:
+ * - personal → uses Abdullah's YouTube account
+ * - benefit → uses OwnerFi's YouTube account
+ */
+function getYouTubeAccountBrand(brand: string): string {
+  const brandMapping: Record<string, string> = {
+    'personal': 'abdullah',  // Personal videos use Abdullah's YouTube
+    'benefit': 'ownerfi',    // Benefit videos use OwnerFi's YouTube
+  };
+  return brandMapping[brand.toLowerCase()] || brand;
+}
+
+/**
  * Get YouTube credentials for a brand
  * Supports both shared credentials (recommended) and brand-specific credentials
  */
 function getYouTubeCredentials(brand: string): YouTubeCredentials | null {
-  const brandUpper = brand.toUpperCase();
+  // Map to actual YouTube account brand (personal→abdullah, benefit→ownerfi)
+  const youtubeAccountBrand = getYouTubeAccountBrand(brand);
+  const brandUpper = youtubeAccountBrand.toUpperCase();
 
-  console.log(`🔍 [YouTube] Getting credentials for ${brand}...`);
+  console.log(`🔍 [YouTube] Getting credentials for ${brand}${brand !== youtubeAccountBrand ? ` (using ${youtubeAccountBrand}'s account)` : ''}...`);
 
   // Try shared credentials first (recommended setup)
   // Trim to remove any trailing newlines or whitespace from env vars

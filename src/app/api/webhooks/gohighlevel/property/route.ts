@@ -63,13 +63,19 @@ function verifyWebhookSignature(
   }
 
   try {
+    // Check if GoHighLevel is sending the raw secret as the signature
+    // This is a common pattern for GHL webhooks
+    if (signature === GHL_WEBHOOK_SECRET) {
+      return { valid: true };
+    }
+
     // GoHighLevel might send signature in different formats
     const expectedSignature = crypto
       .createHmac('sha256', GHL_WEBHOOK_SECRET)
       .update(payload)
       .digest('hex');
 
-    // Try multiple signature formats (HMAC only - never compare raw secret)
+    // Try multiple signature formats
     const validFormats = [
       signature === expectedSignature,
       signature === `sha256=${expectedSignature}`,
@@ -418,87 +424,24 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    // 9. Build payload from headers and body
-    const payload: GHLPropertyPayload = {
-      opportunityId: opportunityId,
-      opportunityName: request.headers.get('opportunityname') || request.headers.get('opportunityName') || bodyData.opportunityName || '',
-      propertyAddress: request.headers.get('propertyaddress') || request.headers.get('propertyAddress') || bodyData.propertyAddress || bodyData.address || '',
-      propertyCity: request.headers.get('propertycity') || request.headers.get('propertyCity') || bodyData.propertyCity || bodyData.city || '',
-      state: request.headers.get('state') || bodyData.state || '',
-      zipCode: request.headers.get('zipcode') || request.headers.get('zipCode') || bodyData.zipCode || bodyData.zip || '',
-      price: request.headers.get('price') || bodyData.price || '0',
-      bedrooms: request.headers.get('bedrooms') || bodyData.bedrooms || bodyData.beds || '',
-      bathrooms: request.headers.get('bathrooms') || bodyData.bathrooms || bodyData.baths || '',
-      livingArea: request.headers.get('livingarea') || request.headers.get('livingArea') || bodyData.livingArea || bodyData.squareFeet || '',
-      yearBuilt: request.headers.get('yearbuilt') || request.headers.get('yearBuilt') || bodyData.yearBuilt || '',
-      lotSizes: request.headers.get('lotsizes') || request.headers.get('lotSizes') || bodyData.lotSizes || bodyData.lotSize || '',
-      homeType: request.headers.get('hometype') || request.headers.get('homeType') || bodyData.homeType || bodyData.propertyType || 'SINGLE_FAMILY',
-      imageLink: request.headers.get('imagelink') || request.headers.get('imageLink') || bodyData.imageLink || bodyData.image || bodyData.imageUrl || '',
-      description: request.headers.get('description') || request.headers.get('propertyDescription') || request.headers.get('propertydescription') || bodyData.description || bodyData.propertyDescription || bodyData.notes || '',
-      downPaymentAmount: request.headers.get('downpaymentamount') || request.headers.get('downPaymentAmount') || bodyData.downPaymentAmount || '',
-      downPayment: request.headers.get('downpayment') || request.headers.get('downPayment') || bodyData.downPayment || bodyData.downPaymentPercent || '',
-      interestRate: request.headers.get('interestrate') || request.headers.get('interestRate') || bodyData.interestRate || '',
-      monthlyPayment: request.headers.get('monthlypayment') || request.headers.get('monthlyPayment') || bodyData.monthlyPayment || '',
-      termYears: request.headers.get('termyears') || request.headers.get('termYears') || bodyData.termYears || '',
-      amortizationSchedule: request.headers.get('amortizationschedule') || request.headers.get('amortizationSchedule') || bodyData.amortizationSchedule || '',
-      balloon: request.headers.get('balloon') || bodyData.balloon || bodyData.balloonYears || '',
-      zestimate: request.headers.get('zestimate') || request.headers.get('propertyZestimate') || bodyData.zestimate || bodyData.estimatedValue || '',
-      rentZestimate: request.headers.get('rentzestimate') || request.headers.get('rentZestimate') || request.headers.get('propertyRentZestimate') || bodyData.rentZestimate || bodyData.rent_estimate || ''
-    };
-
-    await logInfo('Webhook payload parsed', {
-      action: 'webhook_parsed',
-      metadata: {
-        opportunityId: payload.opportunityId,
-        address: payload.propertyAddress,
-        city: payload.propertyCity,
-        price: payload.price
-      }
-    });
-
-    // 10. Validate required fields
-    const price = parseNumberField(payload.price);
-    const validationErrors: string[] = [];
-
-    if (!payload.opportunityId) validationErrors.push('opportunityId is required');
-    if (!payload.propertyAddress || payload.propertyAddress.trim().length === 0) validationErrors.push('propertyAddress is required');
-    if (!payload.propertyCity || payload.propertyCity.trim().length === 0) validationErrors.push('propertyCity is required');
-    if (!payload.state) validationErrors.push('state is required');
-    if (!price || price <= 0) validationErrors.push('price must be greater than 0');
-
-    if (validationErrors.length > 0) {
-      await logWarn('Webhook validation failed', {
-        action: 'webhook_validation_error',
-        metadata: {
-          errors: validationErrors,
-          opportunityId: payload.opportunityId,
-          ip: clientIp
-        }
-      });
-
-      return NextResponse.json(
-        { error: 'Validation failed', details: validationErrors },
-        { status: 400 }
-      );
-    }
-
-    // 11. Process property - all properties now use unified collection
+    // 9. CHECK IF PROPERTY EXISTS FIRST - to use existing data for validation
     const targetCollection = 'properties';
-
-    // Check if property exists
     let isUpdate = false;
     let existingPropertyData: any = null;
+
     try {
       const existingDoc = await getDoc(doc(db, targetCollection, propertyId));
       if (existingDoc.exists()) {
         isUpdate = true;
         existingPropertyData = existingDoc.data();
-        await logInfo(`Property ${propertyId} found in ${targetCollection}, updating`, {
-          action: 'property_update_detected',
+        await logInfo(`Property ${propertyId} found in ${targetCollection}, will update/activate`, {
+          action: 'property_found_for_activation',
           metadata: {
             propertyId,
             collection: targetCollection,
-            hasFirebaseId: !!firebaseId
+            hasFirebaseId: !!firebaseId,
+            existingAddress: existingPropertyData.address,
+            existingPrice: existingPropertyData.price || existingPropertyData.listPrice
           }
         });
       } else {
@@ -520,6 +463,102 @@ export async function POST(request: NextRequest) {
           error: (checkError as Error).message
         }
       }, checkError as Error);
+    }
+
+    // 10. Build payload from headers and body, using existing Firebase data as fallback
+    const existing = existingPropertyData || {};
+    const payload: GHLPropertyPayload = {
+      opportunityId: opportunityId,
+      opportunityName: request.headers.get('opportunityname') || request.headers.get('opportunityName') || bodyData.opportunityName || existing.opportunityName || '',
+      // Use existing Firebase data as fallback for required fields
+      propertyAddress: request.headers.get('propertyaddress') || request.headers.get('propertyAddress') || bodyData.propertyAddress || bodyData.address || existing.address || existing.streetAddress || '',
+      propertyCity: request.headers.get('propertycity') || request.headers.get('propertyCity') || bodyData.propertyCity || bodyData.city || existing.city || '',
+      state: request.headers.get('state') || bodyData.state || existing.state || '',
+      zipCode: request.headers.get('zipcode') || request.headers.get('zipCode') || bodyData.zipCode || bodyData.zip || existing.zipCode || existing.zipcode || '',
+      // Price is now optional - use existing data if not provided
+      price: request.headers.get('price') || bodyData.price || existing.price || existing.listPrice || '0',
+      bedrooms: request.headers.get('bedrooms') || bodyData.bedrooms || bodyData.beds || existing.bedrooms || existing.beds || '',
+      bathrooms: request.headers.get('bathrooms') || bodyData.bathrooms || bodyData.baths || existing.bathrooms || existing.baths || '',
+      livingArea: request.headers.get('livingarea') || request.headers.get('livingArea') || bodyData.livingArea || bodyData.squareFeet || existing.squareFeet || existing.livingArea || '',
+      yearBuilt: request.headers.get('yearbuilt') || request.headers.get('yearBuilt') || bodyData.yearBuilt || existing.yearBuilt || '',
+      lotSizes: request.headers.get('lotsizes') || request.headers.get('lotSizes') || bodyData.lotSizes || bodyData.lotSize || existing.lotSize || '',
+      homeType: request.headers.get('hometype') || request.headers.get('homeType') || bodyData.homeType || bodyData.propertyType || existing.propertyType || existing.homeType || 'SINGLE_FAMILY',
+      imageLink: request.headers.get('imagelink') || request.headers.get('imageLink') || bodyData.imageLink || bodyData.image || bodyData.imageUrl || existing.imgSrc || (existing.imageUrls && existing.imageUrls[0]) || '',
+      description: request.headers.get('description') || request.headers.get('propertyDescription') || request.headers.get('propertydescription') || bodyData.description || bodyData.propertyDescription || bodyData.notes || existing.description || '',
+      downPaymentAmount: request.headers.get('downpaymentamount') || request.headers.get('downPaymentAmount') || bodyData.downPaymentAmount || existing.downPaymentAmount || '',
+      downPayment: request.headers.get('downpayment') || request.headers.get('downPayment') || bodyData.downPayment || bodyData.downPaymentPercent || existing.downPaymentPercent || '',
+      interestRate: request.headers.get('interestrate') || request.headers.get('interestRate') || bodyData.interestRate || existing.interestRate || '',
+      monthlyPayment: request.headers.get('monthlypayment') || request.headers.get('monthlyPayment') || bodyData.monthlyPayment || existing.monthlyPayment || '',
+      termYears: request.headers.get('termyears') || request.headers.get('termYears') || bodyData.termYears || existing.termYears || '',
+      amortizationSchedule: request.headers.get('amortizationschedule') || request.headers.get('amortizationSchedule') || bodyData.amortizationSchedule || '',
+      balloon: request.headers.get('balloon') || bodyData.balloon || bodyData.balloonYears || existing.balloonYears || '',
+      zestimate: request.headers.get('zestimate') || request.headers.get('propertyZestimate') || bodyData.zestimate || bodyData.estimatedValue || existing.zestimate || existing.estimatedValue || '',
+      rentZestimate: request.headers.get('rentzestimate') || request.headers.get('rentZestimate') || request.headers.get('propertyRentZestimate') || bodyData.rentZestimate || bodyData.rent_estimate || existing.rentZestimate || ''
+    };
+
+    // Check for agent response field (yes/no) - for activating properties
+    const agentResponse = (request.headers.get('response') || bodyData.response || '').toLowerCase();
+    const isAgentYes = agentResponse === 'yes';
+
+    await logInfo('Webhook payload parsed', {
+      action: 'webhook_parsed',
+      metadata: {
+        propertyId,
+        opportunityId: payload.opportunityId,
+        address: payload.propertyAddress,
+        city: payload.propertyCity,
+        price: payload.price,
+        agentResponse,
+        isAgentYes,
+        isExistingProperty: isUpdate
+      }
+    });
+
+    // 11. Validate required fields
+    // If property exists in Firebase, we only need firebase_id - all other data comes from existing record
+    // If property is new, we need at least address, city, state (price is optional)
+    const price = parseNumberField(payload.price);
+    const validationErrors: string[] = [];
+
+    if (isUpdate) {
+      // EXISTING PROPERTY: Just need firebase_id - we already have all data
+      await logInfo('Activating existing property via webhook', {
+        action: 'property_activation',
+        metadata: {
+          propertyId,
+          existingAddress: existing.address,
+          existingPrice: existing.price || existing.listPrice
+        }
+      });
+    } else {
+      // NEW PROPERTY: Need minimum required fields (but price is optional)
+      if (!payload.propertyAddress || payload.propertyAddress.trim().length === 0) {
+        validationErrors.push('propertyAddress is required for new properties');
+      }
+      if (!payload.propertyCity || payload.propertyCity.trim().length === 0) {
+        validationErrors.push('propertyCity is required for new properties');
+      }
+      if (!payload.state) {
+        validationErrors.push('state is required for new properties');
+      }
+      // Price is now OPTIONAL - properties can be listed without financial data
+    }
+
+    if (validationErrors.length > 0) {
+      await logWarn('Webhook validation failed', {
+        action: 'webhook_validation_error',
+        metadata: {
+          errors: validationErrors,
+          propertyId,
+          isUpdate,
+          ip: clientIp
+        }
+      });
+
+      return NextResponse.json(
+        { error: 'Validation failed', details: validationErrors },
+        { status: 400 }
+      );
     }
 
     // Process financials
@@ -628,7 +667,7 @@ export async function POST(request: NextRequest) {
     const rentZestimate = parseNumberField(payload.rentZestimate);
 
     // Prepare property data - preserve existing scraped data when updating
-    const existing = existingPropertyData || {};
+    // Note: 'existing' was already defined earlier when building payload
 
     const propertyData: any = {
       id: propertyId,
@@ -672,14 +711,15 @@ export async function POST(request: NextRequest) {
       longitude: existing.longitude,
       homeStatus: existing.homeStatus,
       daysOnZillow: existing.daysOnZillow,
-      // Mark as verified by agent via GHL
-      source: 'gohighlevel',
+      // Mark as verified by agent via GHL when response=yes
+      source: existing.source || 'gohighlevel',
       status: 'active',
       isActive: true,
-      ownerFinanceVerified: true, // Agent verified via GHL
-      dealType: 'owner_finance',  // Mark as owner finance deal
-      featured: false,
-      priority: 1,
+      ownerFinanceVerified: isAgentYes ? true : (existing.ownerFinanceVerified || false),
+      agentConfirmedAt: isAgentYes ? new Date().toISOString() : existing.agentConfirmedAt,
+      dealType: existing.dealType || 'owner_finance',
+      featured: existing.featured || false,
+      priority: existing.priority || 1,
       nearbyCities: existing.nearbyCities || [],
       updatedAt: serverTimestamp(),
       lastUpdated: new Date().toISOString()

@@ -1,10 +1,11 @@
 /**
  * Move "Interested" properties from agent_outreach_queue to properties collection
- * (Same as agent-response webhook when agent says YES)
+ * AND sync to Typesense for search
  */
 
 import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
+import { indexRawFirestoreProperty } from '../src/lib/typesense/sync';
 import * as dotenv from 'dotenv';
 
 dotenv.config({ path: '.env.local' });
@@ -115,6 +116,16 @@ async function activate() {
       agentResponseAt: new Date(),
       routedTo: 'properties',
     });
+
+    // Sync to Typesense for search
+    try {
+      const propDoc = await db.collection('properties').doc(`zpid_${p.zpid}`).get();
+      if (propDoc.exists) {
+        await indexRawFirestoreProperty(`zpid_${p.zpid}`, propDoc.data()!, 'properties');
+      }
+    } catch (e) {
+      console.log(`   ⚠️ Typesense sync failed`);
+    }
 
     console.log(`✅ ${p.address}, ${p.city} ${p.state}`);
     success++;

@@ -101,6 +101,8 @@ export async function GET(request: NextRequest) {
 
     // Get property details for liked properties from unified properties collection
     const allProperties: any[] = [];
+    const foundPropertyIds = new Set<string>();
+    const orphanedIds: string[] = [];
 
     console.log('🔍 [LIKED-PROPERTIES] Fetching property details for IDs:', likedPropertyIds);
 
@@ -121,16 +123,30 @@ export async function GET(request: NextRequest) {
 
       const batchProperties = propertiesSnapshot.docs.map(doc => {
         const data = doc.data();
+        foundPropertyIds.add(doc.id);
+
+        // Validate required fields exist
+        const address = data.address || data.streetAddress || data.fullAddress || '';
+        const listPrice = data.listPrice || data.price || 0;
+
+        // Skip properties with missing critical data
+        if (!address || !listPrice) {
+          console.warn(`⚠️ [LIKED-PROPERTIES] Property ${doc.id} has missing data:`, {
+            address: !!address,
+            listPrice: !!listPrice
+          });
+        }
+
         return {
           id: doc.id,
           ...data,
           // Normalize fields for compatibility
-          address: data.address || data.streetAddress || data.fullAddress,
-          city: data.city,
-          state: data.state,
-          zipCode: data.zipCode || data.zipcode,
-          listPrice: data.listPrice || data.price,
-          imageUrl: data.firstPropertyImage || data.imgSrc || data.imageUrl,
+          address: address || 'Address unavailable',
+          city: data.city || 'Unknown',
+          state: data.state || '',
+          zipCode: data.zipCode || data.zipcode || '',
+          listPrice: listPrice,
+          imageUrl: data.firstPropertyImage || data.imgSrc || data.imageUrl || null,
           isLiked: true,
           source: data.isOwnerFinance ? 'owner_finance' : data.isCashDeal ? 'cash_deal' : 'curated'
         };
@@ -139,12 +155,35 @@ export async function GET(request: NextRequest) {
       allProperties.push(...batchProperties);
     }
 
-    console.log('✅ [LIKED-PROPERTIES] Returning', allProperties.length, 'properties');
+    // Find orphaned IDs (liked but no longer exist in properties collection)
+    for (const id of likedPropertyIds) {
+      if (!foundPropertyIds.has(id)) {
+        orphanedIds.push(id);
+      }
+    }
+
+    // Auto-cleanup orphaned IDs from user's profile
+    if (orphanedIds.length > 0) {
+      console.warn(`🧹 [LIKED-PROPERTIES] Cleaning up ${orphanedIds.length} orphaned property IDs:`, orphanedIds);
+      try {
+        const { updateDoc, arrayRemove } = await import('firebase/firestore');
+        await updateDoc(snapshot.docs[0].ref, {
+          likedPropertyIds: arrayRemove(...orphanedIds),
+          likedProperties: arrayRemove(...orphanedIds),
+        });
+        console.log('✅ [LIKED-PROPERTIES] Orphaned IDs removed from profile');
+      } catch (cleanupError) {
+        console.error('❌ [LIKED-PROPERTIES] Failed to cleanup orphaned IDs:', cleanupError);
+      }
+    }
+
+    console.log('✅ [LIKED-PROPERTIES] Returning', allProperties.length, 'properties (cleaned up', orphanedIds.length, 'orphaned)');
 
     return createSuccessResponse({
       likedProperties: allProperties,
       profile,
-      total: allProperties.length
+      total: allProperties.length,
+      orphanedCleaned: orphanedIds.length, // Number of stale property IDs removed
     });
 
   } catch (error) {

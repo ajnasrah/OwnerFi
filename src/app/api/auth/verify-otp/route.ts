@@ -22,9 +22,10 @@ export async function POST(request: NextRequest) {
     const normalizedPhone = normalizePhone(phone);
 
     // Use Twilio Verify to check the code
-    const twilioSid = process.env.TWILIO_ACCOUNT_SID;
-    const twilioToken = process.env.TWILIO_AUTH_TOKEN;
-    const verifyServiceSid = process.env.TWILIO_VERIFY_SERVICE_SID;
+    // Trim to remove any trailing newlines from env vars
+    const twilioSid = process.env.TWILIO_ACCOUNT_SID?.trim();
+    const twilioToken = process.env.TWILIO_AUTH_TOKEN?.trim();
+    const verifyServiceSid = process.env.TWILIO_VERIFY_SERVICE_SID?.trim();
 
     if (!twilioSid || !twilioToken || !verifyServiceSid) {
       console.error('❌ [OTP] Twilio Verify not configured');

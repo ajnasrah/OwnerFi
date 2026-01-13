@@ -387,7 +387,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Log completion to cron_logs
-    await db.collection('cron_logs').add({
+    const logEntry: any = {
       cron: 'process-agent-outreach-queue',
       status: 'completed',
       duration: `${duration}s`,
@@ -395,19 +395,25 @@ export async function GET(request: NextRequest) {
       sent,
       retried,
       errors,
-      errorDetails: errors > 0 ? errorDetails : undefined,
       timestamp: new Date(),
-    });
+    };
+    if (errors > 0 && errorDetails.length > 0) {
+      logEntry.errorDetails = errorDetails;
+    }
+    await db.collection('cron_logs').add(logEntry);
 
-    return NextResponse.json({
+    const response: any = {
       success: true,
       duration: `${duration}s`,
       batchSize: allDocs.length,
       sent,
       retried,
       errors,
-      errorDetails: errors > 0 ? errorDetails : undefined,
-    });
+    };
+    if (errors > 0 && errorDetails.length > 0) {
+      response.errorDetails = errorDetails;
+    }
+    return NextResponse.json(response);
 
   } catch (error) {
     console.error('❌ [AGENT OUTREACH QUEUE] Critical error:', error);

@@ -49,22 +49,24 @@ function getYouTubeCredentials(brand: string): YouTubeCredentials | null {
   console.log(`🔍 [YouTube] Getting credentials for ${brand}...`);
 
   // Try shared credentials first (recommended setup)
-  let clientId = process.env.YOUTUBE_CLIENT_ID;
-  let clientSecret = process.env.YOUTUBE_CLIENT_SECRET;
+  // Trim to remove any trailing newlines or whitespace from env vars
+  let clientId = process.env.YOUTUBE_CLIENT_ID?.trim();
+  let clientSecret = process.env.YOUTUBE_CLIENT_SECRET?.trim();
 
   console.log(`🔍 [YouTube] Shared CLIENT_ID: ${clientId ? 'SET' : 'MISSING'}`);
   console.log(`🔍 [YouTube] Shared CLIENT_SECRET: ${clientSecret ? 'SET' : 'MISSING'}`);
 
   // Fall back to brand-specific credentials if shared ones don't exist
   if (!clientId || !clientSecret) {
-    clientId = process.env[`YOUTUBE_${brandUpper}_CLIENT_ID`];
-    clientSecret = process.env[`YOUTUBE_${brandUpper}_CLIENT_SECRET`];
+    clientId = process.env[`YOUTUBE_${brandUpper}_CLIENT_ID`]?.trim();
+    clientSecret = process.env[`YOUTUBE_${brandUpper}_CLIENT_SECRET`]?.trim();
     console.log(`🔍 [YouTube] Brand-specific CLIENT_ID: ${clientId ? 'SET' : 'MISSING'}`);
     console.log(`🔍 [YouTube] Brand-specific CLIENT_SECRET: ${clientSecret ? 'SET' : 'MISSING'}`);
   }
 
   // Refresh token is always brand-specific (one per YouTube channel)
-  const refreshToken = process.env[`YOUTUBE_${brandUpper}_REFRESH_TOKEN`];
+  // Trim to remove any trailing newlines or whitespace from env vars
+  const refreshToken = process.env[`YOUTUBE_${brandUpper}_REFRESH_TOKEN`]?.trim();
   console.log(`🔍 [YouTube] ${brandUpper} REFRESH_TOKEN: ${refreshToken ? 'SET (first 20 chars: ' + refreshToken.substring(0, 20) + '...)' : 'MISSING'}`);
 
   if (!clientId || !clientSecret || !refreshToken) {

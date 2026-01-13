@@ -17,17 +17,9 @@ const db = getFirestore();
 
 /**
  * Diagnostic endpoint for Agent Outreach Queue
- *
  * GET /api/admin/agent-outreach-queue/diagnose
- *
- * Returns:
- * - Queue stats (pending, sent, failed counts)
- * - Properties added in last 24h, 7d
- * - Recent cron logs
- * - Sample pending items
  */
 export async function GET(request: NextRequest) {
-  // Simple admin auth
   const authHeader = request.headers.get('authorization');
   const adminSecret = process.env.ADMIN_SECRET_KEY || process.env.CRON_SECRET;
 
@@ -35,12 +27,13 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  try {
-    const now = new Date();
-    const last24h = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-    const last7d = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const results: any = {
+    timestamp: new Date().toISOString(),
+    errors: [],
+  };
 
-    // 1. Get queue stats by status
+  // 1. Queue stats by status (simple queries, no index needed)
+  try {
     const [pendingSnap, processingSnap, sentSnap, failedSnap] = await Promise.all([
       db.collection('agent_outreach_queue').where('status', '==', 'pending').count().get(),
       db.collection('agent_outreach_queue').where('status', '==', 'processing').count().get(),
@@ -48,88 +41,39 @@ export async function GET(request: NextRequest) {
       db.collection('agent_outreach_queue').where('status', '==', 'failed').count().get(),
     ]);
 
-    const queueStats = {
+    results.queueStats = {
       pending: pendingSnap.data().count,
       processing: processingSnap.data().count,
       sent_to_ghl: sentSnap.data().count,
       failed: failedSnap.data().count,
-      total: pendingSnap.data().count + processingSnap.data().count + sentSnap.data().count + failedSnap.data().count,
     };
+    results.queueStats.total = results.queueStats.pending + results.queueStats.processing +
+      results.queueStats.sent_to_ghl + results.queueStats.failed;
+  } catch (e: any) {
+    results.errors.push({ query: 'queueStats', error: e.message });
+  }
 
-    // 2. Properties added in last 24h
-    const added24hSnap = await db.collection('agent_outreach_queue')
+  // 2. Recent items added (last 24h count)
+  try {
+    const last24h = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const added24h = await db.collection('agent_outreach_queue')
       .where('addedAt', '>=', last24h)
       .count()
       .get();
+    results.imports = { last24h: added24h.data().count };
+  } catch (e: any) {
+    results.errors.push({ query: 'imports24h', error: e.message });
+  }
 
-    // 3. Properties added in last 7d
-    const added7dSnap = await db.collection('agent_outreach_queue')
-      .where('addedAt', '>=', last7d)
-      .count()
-      .get();
-
-    // 4. Recent cron logs for both scrapers (simplified query without orderBy to avoid index)
-    let recentScraperLogs: any[] = [];
-    let recentQueueLogs: any[] = [];
-
-    try {
-      const scraperLogs = await db.collection('cron_logs')
-        .where('cron', '==', 'run-agent-outreach-scraper')
-        .limit(20)
-        .get();
-
-      recentScraperLogs = scraperLogs.docs
-        .map(doc => {
-          const data = doc.data();
-          return {
-            status: data.status,
-            timestamp: data.timestamp?.toDate?.()?.toISOString() || data.timestamp,
-            duration: data.duration,
-            propertiesFromSearch: data.propertiesFromSearch,
-            addedToQueue: data.addedToQueue,
-            skipped: data.skipped,
-            error: data.error,
-          };
-        })
-        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-        .slice(0, 10);
-    } catch (e) {
-      console.error('Error fetching scraper logs:', e);
-    }
-
-    try {
-      const queueLogs = await db.collection('cron_logs')
-        .where('cron', '==', 'process-agent-outreach-queue')
-        .limit(20)
-        .get();
-
-      recentQueueLogs = queueLogs.docs
-        .map(doc => {
-          const data = doc.data();
-          return {
-            status: data.status,
-            timestamp: data.timestamp?.toDate?.()?.toISOString() || data.timestamp,
-            duration: data.duration,
-            batchSize: data.batchSize,
-            sent: data.sent,
-            errors: data.errors,
-            errorDetails: data.errorDetails,
-          };
-        })
-        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-        .slice(0, 10);
-    } catch (e) {
-      console.error('Error fetching queue logs:', e);
-    }
-
-    // 5. Sample pending items (first 5)
+  // 3. Sample pending items (needs index but exists)
+  try {
     const pendingSample = await db.collection('agent_outreach_queue')
       .where('status', '==', 'pending')
       .orderBy('addedAt', 'asc')
       .limit(5)
       .get();
 
-    const samplePending = pendingSample.docs.map(doc => {
+    results.samplePending = pendingSample.docs.map(doc => {
       const data = doc.data();
       return {
         id: doc.id,
@@ -138,74 +82,83 @@ export async function GET(request: NextRequest) {
         state: data.state,
         price: data.price,
         dealType: data.dealType,
-        agentPhone: data.agentPhone ? '***' + data.agentPhone.slice(-4) : null,
-        addedAt: data.addedAt?.toDate?.()?.toISOString() || data.addedAt,
+        addedAt: data.addedAt?.toDate?.()?.toISOString(),
       };
     });
+  } catch (e: any) {
+    results.errors.push({ query: 'samplePending', error: e.message });
+  }
 
-    // 6. Sample failed items (first 5)
+  // 4. Sample failed items
+  try {
     const failedSample = await db.collection('agent_outreach_queue')
       .where('status', '==', 'failed')
       .limit(5)
       .get();
 
-    const sampleFailed = failedSample.docs.map(doc => {
+    results.sampleFailed = failedSample.docs.map(doc => {
       const data = doc.data();
       return {
         id: doc.id,
         address: data.address,
         errorMessage: data.errorMessage,
         retryCount: data.retryCount,
-        lastFailedAt: data.lastFailedAt?.toDate?.()?.toISOString() || data.lastFailedAt,
       };
     });
-
-    // 7. Check failed_filter_properties (last 24h)
-    const filteredOut24h = await db.collection('failed_filter_properties')
-      .where('createdAt', '>=', last24h)
-      .count()
-      .get();
-
-    // 8. Get breakdown of why properties were filtered
-    const [hasOFSnap, negativeSnap] = await Promise.all([
-      db.collection('failed_filter_properties')
-        .where('createdAt', '>=', last24h)
-        .where('filterResult', '==', 'has_owner_financing')
-        .count()
-        .get(),
-      db.collection('failed_filter_properties')
-        .where('createdAt', '>=', last24h)
-        .where('filterResult', '==', 'negative_keywords')
-        .count()
-        .get(),
-    ]);
-
-    return NextResponse.json({
-      timestamp: now.toISOString(),
-      queueStats,
-      imports: {
-        last24h: added24hSnap.data().count,
-        last7d: added7dSnap.data().count,
-      },
-      filteredOut: {
-        last24h: filteredOut24h.data().count,
-        breakdown: {
-          hasOwnerFinancing: hasOFSnap.data().count,
-          negativeKeywords: negativeSnap.data().count,
-        },
-      },
-      recentScraperLogs,
-      recentQueueLogs,
-      samplePending,
-      sampleFailed,
-      webhookUrl: process.env.GHL_AGENT_OUTREACH_WEBHOOK_URL || 'https://services.leadconnectorhq.com/hooks/U2B5lSlWrVBgVxHNq5AH/webhook-trigger/f13ea8d2-a22c-4365-9156-759d18147d4a',
-    });
-
-  } catch (error: any) {
-    console.error('Diagnose error:', error);
-    return NextResponse.json({
-      error: error.message,
-      stack: error.stack,
-    }, { status: 500 });
+  } catch (e: any) {
+    results.errors.push({ query: 'sampleFailed', error: e.message });
   }
+
+  // 5. Recent cron logs (no index, just fetch all and filter in memory)
+  try {
+    const allCronLogs = await db.collection('cron_logs').limit(100).get();
+
+    const scraperLogs = allCronLogs.docs
+      .filter(doc => doc.data().cron === 'run-agent-outreach-scraper')
+      .map(doc => {
+        const data = doc.data();
+        return {
+          status: data.status,
+          timestamp: data.timestamp?.toDate?.()?.toISOString(),
+          duration: data.duration,
+          propertiesFromSearch: data.propertiesFromSearch,
+          addedToQueue: data.addedToQueue,
+          error: data.error,
+        };
+      })
+      .sort((a, b) => new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime())
+      .slice(0, 5);
+
+    const queueLogs = allCronLogs.docs
+      .filter(doc => doc.data().cron === 'process-agent-outreach-queue')
+      .map(doc => {
+        const data = doc.data();
+        return {
+          status: data.status,
+          timestamp: data.timestamp?.toDate?.()?.toISOString(),
+          sent: data.sent,
+          errors: data.errors,
+        };
+      })
+      .sort((a, b) => new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime())
+      .slice(0, 5);
+
+    results.recentScraperLogs = scraperLogs;
+    results.recentQueueLogs = queueLogs;
+  } catch (e: any) {
+    results.errors.push({ query: 'cronLogs', error: e.message });
+  }
+
+  // 6. Check total properties collection count
+  try {
+    const totalProperties = await db.collection('properties').count().get();
+    results.totalPropertiesInSystem = totalProperties.data().count;
+  } catch (e: any) {
+    results.errors.push({ query: 'totalProperties', error: e.message });
+  }
+
+  results.webhookUrl = process.env.GHL_AGENT_OUTREACH_WEBHOOK_URL ||
+    'https://services.leadconnectorhq.com/hooks/U2B5lSlWrVBgVxHNq5AH/webhook-trigger/f13ea8d2-a22c-4365-9156-759d18147d4a';
+
+  return NextResponse.json(results);
 }

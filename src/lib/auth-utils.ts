@@ -12,7 +12,7 @@ export async function requireRole(requiredRole: 'buyer' | 'realtor'): Promise<Ex
     if (requiredRole === 'buyer') {
       redirect('/auth');
     } else {
-      redirect('/realtor/signin');
+      redirect('/auth');
     }
   }
   
@@ -21,7 +21,7 @@ export async function requireRole(requiredRole: 'buyer' | 'realtor'): Promise<Ex
     if (session.user.role === 'buyer') {
       redirect('/dashboard');
     } else if (session.user.role === 'realtor') {
-      redirect('/realtor/dashboard');
+      redirect('/realtor-dashboard');
     } else {
       // No role set - redirect to signin
       redirect('/auth');

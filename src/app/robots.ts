@@ -13,7 +13,7 @@ export default function robots(): MetadataRoute.Robots {
           '/api/',
           '/auth/',
           '/_next/',
-          '/realtor/dashboard',
+          '/realtor-dashboard',
           '/dashboard',
         ],
       },

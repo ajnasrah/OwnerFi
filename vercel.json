@@ -164,7 +164,7 @@
           "value": "realtor"
         }
       ],
-      "destination": "/realtor/setup",
+      "destination": "/auth/setup?type=realtor",
       "permanent": false
     }
   ]

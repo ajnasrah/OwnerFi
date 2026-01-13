@@ -230,7 +230,7 @@ export default function SocialMediaDashboard() {
         if (userRole === 'buyer') {
           router.push('/dashboard');
         } else if (userRole === 'realtor') {
-          router.push('/realtor/dashboard');
+          router.push('/realtor-dashboard');
         } else {
           router.push('/auth');
         }

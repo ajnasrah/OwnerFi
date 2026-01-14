@@ -13,14 +13,22 @@ interface FirestoreTimestamp {
 interface Realtor {
   id: string;
   email: string;
+  name?: string;
   firstName?: string;
   lastName?: string;
   phone?: string;
   company?: string;
+  brokerage?: string;
   licenseNumber?: string;
+  city?: string;
   state?: string;
+  credits?: number;
+  pendingAgreements?: number;
+  signedAgreements?: number;
   createdAt: string | FirestoreTimestamp;
 }
+
+type TabFilter = 'all' | 'with-leads' | 'pending' | 'signed';
 
 export default function AdminRealtors() {
   const { data: session, status } = useSession();
@@ -30,6 +38,29 @@ export default function AdminRealtors() {
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
   const [selectAll, setSelectAll] = useState(false);
+  const [activeTab, setActiveTab] = useState<TabFilter>('all');
+
+  // Filter realtors based on active tab
+  const filteredRealtors = realtors.filter(r => {
+    switch (activeTab) {
+      case 'with-leads':
+        return (r.pendingAgreements || 0) > 0 || (r.signedAgreements || 0) > 0;
+      case 'pending':
+        return (r.pendingAgreements || 0) > 0;
+      case 'signed':
+        return (r.signedAgreements || 0) > 0;
+      default:
+        return true;
+    }
+  });
+
+  // Tab counts
+  const tabCounts = {
+    all: realtors.length,
+    'with-leads': realtors.filter(r => (r.pendingAgreements || 0) > 0 || (r.signedAgreements || 0) > 0).length,
+    pending: realtors.filter(r => (r.pendingAgreements || 0) > 0).length,
+    signed: realtors.filter(r => (r.signedAgreements || 0) > 0).length,
+  };
 
   useEffect(() => {
     if (status === 'loading') return;
@@ -64,7 +95,7 @@ export default function AdminRealtors() {
       newSelected.add(realtorId);
     }
     setSelectedRealtors(newSelected);
-    setSelectAll(newSelected.size === realtors.length);
+    setSelectAll(newSelected.size === filteredRealtors.length && filteredRealtors.length > 0);
   };
 
   const handleSelectAll = () => {
@@ -72,7 +103,7 @@ export default function AdminRealtors() {
       setSelectedRealtors(new Set());
       setSelectAll(false);
     } else {
-      const allRealtorIds = new Set(realtors.map(r => r.id));
+      const allRealtorIds = new Set(filteredRealtors.map(r => r.id));
       setSelectedRealtors(allRealtorIds);
       setSelectAll(true);
     }
@@ -123,12 +154,38 @@ export default function AdminRealtors() {
       <div className="flex-1 overflow-y-auto p-6">
         <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-6">
           <Link href="/admin" className="text-emerald-400 hover:text-emerald-300 mb-4 inline-block">
             ← Back to Admin Dashboard
           </Link>
           <h1 className="text-3xl font-bold text-white mb-2">Manage Realtors</h1>
           <p className="text-slate-400">Total: {realtors.length} realtors</p>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex gap-2 mb-6 overflow-x-auto">
+          {[
+            { key: 'all', label: 'All Realtors' },
+            { key: 'with-leads', label: 'With Leads' },
+            { key: 'pending', label: 'Pending Agreements' },
+            { key: 'signed', label: 'Signed Agreements' },
+          ].map(tab => (
+            <button
+              key={tab.key}
+              onClick={() => {
+                setActiveTab(tab.key as TabFilter);
+                setSelectedRealtors(new Set());
+                setSelectAll(false);
+              }}
+              className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-colors ${
+                activeTab === tab.key
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+              }`}
+            >
+              {tab.label} ({tabCounts[tab.key as TabFilter]})
+            </button>
+          ))}
         </div>
 
         {/* Actions Bar */}
@@ -178,14 +235,15 @@ export default function AdminRealtors() {
                   <th className="p-3 text-left">Name</th>
                   <th className="p-3 text-left">Email</th>
                   <th className="p-3 text-left">Phone</th>
-                  <th className="p-3 text-left">Company</th>
-                  <th className="p-3 text-left">License</th>
-                  <th className="p-3 text-left">State</th>
+                  <th className="p-3 text-left">Location</th>
+                  <th className="p-3 text-left">Brokerage</th>
+                  <th className="p-3 text-left text-center">Pending</th>
+                  <th className="p-3 text-left text-center">Signed</th>
                   <th className="p-3 text-left">Joined</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-700">
-                {realtors.map((realtor) => (
+                {filteredRealtors.map((realtor) => (
                   <tr key={realtor.id} className="hover:bg-slate-700/50 transition-colors">
                     <td className="p-3">
                       <input
@@ -196,15 +254,36 @@ export default function AdminRealtors() {
                       />
                     </td>
                     <td className="p-3 text-white">
-                      {realtor.firstName || realtor.lastName
+                      {realtor.name || (realtor.firstName || realtor.lastName
                         ? `${realtor.firstName || ''} ${realtor.lastName || ''}`.trim()
-                        : 'N/A'}
+                        : 'N/A')}
                     </td>
                     <td className="p-3 text-slate-300">{realtor.email}</td>
                     <td className="p-3 text-slate-300">{realtor.phone || 'N/A'}</td>
-                    <td className="p-3 text-slate-300">{realtor.company || 'N/A'}</td>
-                    <td className="p-3 text-slate-300">{realtor.licenseNumber || 'N/A'}</td>
-                    <td className="p-3 text-slate-300">{realtor.state || 'N/A'}</td>
+                    <td className="p-3 text-slate-300">
+                      {realtor.city && realtor.state
+                        ? `${realtor.city}, ${realtor.state}`
+                        : realtor.state || 'N/A'}
+                    </td>
+                    <td className="p-3 text-slate-300">{realtor.brokerage || realtor.company || 'N/A'}</td>
+                    <td className="p-3 text-center">
+                      {(realtor.pendingAgreements || 0) > 0 ? (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-400">
+                          {realtor.pendingAgreements}
+                        </span>
+                      ) : (
+                        <span className="text-slate-500">0</span>
+                      )}
+                    </td>
+                    <td className="p-3 text-center">
+                      {(realtor.signedAgreements || 0) > 0 ? (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/20 text-emerald-400">
+                          {realtor.signedAgreements}
+                        </span>
+                      ) : (
+                        <span className="text-slate-500">0</span>
+                      )}
+                    </td>
                     <td className="p-3 text-slate-300">
                       {(() => {
                         if (!realtor.createdAt) return 'N/A';
@@ -223,9 +302,9 @@ export default function AdminRealtors() {
               </tbody>
             </table>
 
-            {realtors.length === 0 && (
+            {filteredRealtors.length === 0 && (
               <div className="p-8 text-center text-slate-400">
-                No realtors found
+                {activeTab === 'all' ? 'No realtors found' : `No realtors with ${activeTab === 'with-leads' ? 'leads' : activeTab + ' agreements'}`}
               </div>
             )}
           </div>

@@ -23,6 +23,8 @@ interface RealtorStats {
   credits: number;
   availableBuyersCount: number;
   totalLeadsPurchased: number;
+  pendingAgreements: number;
+  signedAgreements: number;
   lastSignIn?: string;
   createdAt?: string;
   isActive?: boolean;
@@ -75,20 +77,22 @@ export async function GET(request: NextRequest) {
     const usersSnapshot = await getDocs(usersQuery);
     const realtorStats: RealtorStats[] = [];
 
-    // OPTIMIZATION: Batch fetch all related data - leadPurchases and buyer profiles in parallel
+    // OPTIMIZATION: Batch fetch all related data - leadPurchases, buyer profiles, and agreements in parallel
     // Note: Consider adding pagination to these queries if collections grow very large
-    const [leadPurchasesSnapshot, buyerProfilesSnapshot] = await Promise.all([
+    const [leadPurchasesSnapshot, buyerProfilesSnapshot, agreementsSnapshot] = await Promise.all([
       getDocs(query(collection(db, 'leadPurchases'))),
       getDocs(query(collection(db, 'buyerProfiles'),
         where('isAvailableForPurchase', '==', true),
         where('isActive', '==', true),
         where('profileComplete', '==', true)
-      ))
+      )),
+      getDocs(query(collection(db, 'referralAgreements')))
     ]);
 
     console.log(`Found ${usersSnapshot.docs.length} users with role 'realtor'`);
     console.log(`Found ${leadPurchasesSnapshot.size} lead purchases in 'leadPurchases' collection`);
     console.log(`Found ${buyerProfilesSnapshot.size} available buyer profiles`);
+    console.log(`Found ${agreementsSnapshot.size} referral agreements`);
 
     // Process lead purchases once - track both purchased buyers and realtor counts
     const purchasedBuyerIds = new Set<string>();
@@ -114,6 +118,26 @@ export async function GET(request: NextRequest) {
     });
 
     console.log(`Found ${purchasedBuyerIds.size} unique purchased buyers`);
+
+    // Process referral agreements - track pending and signed counts per realtor
+    const pendingAgreementsByUserId = new Map<string, number>();
+    const signedAgreementsByUserId = new Map<string, number>();
+
+    agreementsSnapshot.docs.forEach(doc => {
+      const data = doc.data();
+      const realtorUserId = data.realtorUserId;
+
+      if (!realtorUserId) return;
+
+      if (data.status === 'pending') {
+        pendingAgreementsByUserId.set(realtorUserId, (pendingAgreementsByUserId.get(realtorUserId) || 0) + 1);
+      } else if (data.status === 'signed') {
+        signedAgreementsByUserId.set(realtorUserId, (signedAgreementsByUserId.get(realtorUserId) || 0) + 1);
+      }
+    });
+
+    console.log(`Realtors with pending agreements: ${pendingAgreementsByUserId.size}`);
+    console.log(`Realtors with signed agreements: ${signedAgreementsByUserId.size}`);
 
     // Build a map of UNPURCHASED available buyers by state and city
     const availableBuyersByState = new Map<string, number>();
@@ -183,6 +207,8 @@ export async function GET(request: NextRequest) {
           credits: credits,
           availableBuyersCount: availableInArea,
           totalLeadsPurchased: purchaseCount,
+          pendingAgreements: pendingAgreementsByUserId.get(userDoc.id) || 0,
+          signedAgreements: signedAgreementsByUserId.get(userDoc.id) || 0,
           lastSignIn: userData.lastSignIn?.toDate?.()?.toISOString() || userData.lastLoginAt?.toDate?.()?.toISOString(),
           createdAt: userData.createdAt?.toDate?.()?.toISOString() || userData.registeredAt?.toDate?.()?.toISOString(),
           isActive: userData.isActive !== false,

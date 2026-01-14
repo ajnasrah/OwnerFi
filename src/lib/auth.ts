@@ -15,7 +15,19 @@ import { normalizePhone } from './phone-utils';
 // NextAuthOptions type doesn't exist in newer versions, use a generic type
 
 // Phone numbers that always get admin access (from environment variable)
-const ADMIN_PHONES = (process.env.ADMIN_PHONE_NUMBERS || '').split(',').filter(Boolean).map(p => p.trim());
+// Normalize all admin phones to E.164 format for consistent comparison
+const ADMIN_PHONES = (process.env.ADMIN_PHONE_NUMBERS || '')
+  .split(',')
+  .filter(Boolean)
+  .map(p => {
+    try {
+      return normalizePhone(p.trim());
+    } catch {
+      console.warn(`[AUTH] Invalid admin phone number in env: ${p}`);
+      return null;
+    }
+  })
+  .filter((p): p is string => p !== null);
 
 export const authOptions = {
   providers: [

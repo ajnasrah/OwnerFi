@@ -5,6 +5,7 @@ import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { ExtendedSession } from '@/types/session';
 import Link from 'next/link';
+import { trackEvent } from '@/components/analytics/AnalyticsProvider';
 
 interface BuyerLead {
   id: string;
@@ -433,7 +434,10 @@ export default function RealtorDashboard() {
               Settings
             </Link>
             <button
-              onClick={() => signOut({ callbackUrl: '/auth/signout' })}
+              onClick={() => {
+                trackEvent('auth_logout', { method: 'realtor_buyers' });
+                signOut({ callbackUrl: '/auth/signout' });
+              }}
               className="text-slate-400 hover:text-red-400 transition-colors p-1.5"
               title="Logout"
             >

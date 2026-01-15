@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { ExtendedSession, isExtendedSession } from '@/types/session';
 
 import { PropertyListing } from '@/lib/property-schema';
+import { trackEvent } from '@/components/analytics/AnalyticsProvider';
 
 type Property = PropertyListing & {
   isLiked: boolean;
@@ -165,7 +166,10 @@ export default function LikedProperties() {
             </div>
 
             <button
-              onClick={() => signOut({ callbackUrl: '/auth/signout' })}
+              onClick={() => {
+                trackEvent('auth_logout', { method: 'liked_page' });
+                signOut({ callbackUrl: '/auth/signout' });
+              }}
               className="flex flex-col items-center group"
             >
               <div className="w-12 h-12 bg-slate-700/50 hover:bg-red-600/30 rounded-xl flex items-center justify-center transition-all group-hover:scale-110 duration-300">

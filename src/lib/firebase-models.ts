@@ -332,6 +332,23 @@ export interface ReferralAgreement {
   commissionEarned?: number;
   closingDate?: Timestamp;
 
+  // Re-referral fields (Agent A referring to Agent B)
+  isReReferral?: boolean;                    // true if this is a re-referral from another agent
+  originalAgreementId?: string;              // ID of the original OwnerFi agreement
+  referringAgentId?: string;                 // Agent A's user ID (who referred)
+  referringAgentName?: string;
+  referringAgentEmail?: string;
+  referringAgentPhone?: string;
+  referringAgentCompany?: string;
+  referringAgentLicenseNumber?: string;
+  ownerFiCutPercent?: number;                // 30% of what referring agent makes
+
+  // Referral invite (for sharing with Agent B)
+  referralInviteToken?: string;              // Unique token for invite link
+  referralInviteCreatedAt?: Timestamp;
+  referralInviteExpiresAt?: Timestamp;
+  canBeReReferred?: boolean;                 // false if already re-referred (no triple referrals)
+
   // Timestamps
   createdAt: Timestamp;
   updatedAt: Timestamp;

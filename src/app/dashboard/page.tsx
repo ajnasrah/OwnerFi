@@ -12,6 +12,7 @@ import { useFilterUpgradePrompt } from '@/hooks/useFilterUpgradePrompt';
 import { PropertyListing } from '@/lib/property-schema';
 import { BuyerDashboardView } from '@/lib/view-models';
 import { OWNER_FINANCING_FACTS, SAFE_UI_LABELS } from '@/lib/legal-disclaimers';
+import { trackEvent } from '@/components/analytics/AnalyticsProvider';
 
 // Extended Property interface that includes PropertyListing fields
 interface Property extends Partial<PropertyListing> {
@@ -459,7 +460,10 @@ export default function Dashboard() {
                 <span className="text-sm">❓</span>
               </button>
               <button
-                onClick={() => signOut({ callbackUrl: '/auth/signout' })}
+                onClick={() => {
+                  trackEvent('auth_logout', { method: 'dashboard' });
+                  signOut({ callbackUrl: '/auth/signout' });
+                }}
                 className="w-8 h-8 bg-red-500/20 backdrop-blur-xl hover:bg-red-500/30 rounded-full flex items-center justify-center transition-all border border-red-500/40"
                 title="Logout"
               >

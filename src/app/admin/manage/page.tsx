@@ -10,6 +10,7 @@ import Image from 'next/image';
 import { calculatePropertyFinancials } from '@/lib/property-calculations';
 import { useDropzone } from 'react-dropzone';
 import { convertToDirectImageUrl } from '../lib/image-utils';
+import { trackEvent } from '@/components/analytics/AnalyticsProvider';
 
 // Lazy load tab components
 const PropertiesTab = lazy(() => import('../components/PropertiesTab'));
@@ -832,7 +833,7 @@ export default function AdminDashboard() {
             <h1 className="text-lg font-bold text-white">OwnerFi Admin</h1>
           </div>
           <button
-            onClick={() => signOut({ callbackUrl: '/auth/signout' })}
+            onClick={() => { trackEvent('auth_logout', { method: 'admin_manage' }); signOut({ callbackUrl: '/auth/signout' }); }}
             className="text-slate-400 hover:text-red-600"
             title="Sign Out"
           >
@@ -944,7 +945,7 @@ export default function AdminDashboard() {
               <span className="text-sm text-slate-400">System Online</span>
             </div>
             <button
-              onClick={() => signOut({ callbackUrl: '/auth/signout' })}
+              onClick={() => { trackEvent('auth_logout', { method: 'admin_manage_mobile' }); signOut({ callbackUrl: '/auth/signout' }); }}
               className="flex items-center space-x-2 px-3 py-2 text-sm text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
               title="Sign Out"
             >

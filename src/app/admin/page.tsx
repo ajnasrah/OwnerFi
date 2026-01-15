@@ -5,6 +5,7 @@ import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { ExtendedSession } from '@/types/session';
 import Link from 'next/link';
+import { trackEvent } from '@/components/analytics/AnalyticsProvider';
 
 interface Stats {
   totalProperties: number;
@@ -115,7 +116,7 @@ export default function AdminHub() {
           </Link>
           <div className="flex items-center gap-2">
             <span className="text-slate-400 text-sm hidden sm:block">Admin</span>
-            <button onClick={() => signOut({ callbackUrl: '/auth/signout' })} className="text-slate-400 hover:text-red-400 transition-colors p-1.5" title="Logout">
+            <button onClick={() => { trackEvent('auth_logout', { method: 'admin_hub' }); signOut({ callbackUrl: '/auth/signout' }); }} className="text-slate-400 hover:text-red-400 transition-colors p-1.5" title="Logout">
               ⏻
             </button>
           </div>

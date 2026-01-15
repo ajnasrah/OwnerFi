@@ -347,7 +347,14 @@ export interface ReferralAgreement {
   referralInviteToken?: string;              // Unique token for invite link
   referralInviteCreatedAt?: Timestamp;
   referralInviteExpiresAt?: Timestamp;
+  referralInviteFeePercent?: number;         // Fee % Agent A wants to charge Agent B
+  referralInviteAgentBEmail?: string;        // Optional: Agent B's email for invite
   canBeReReferred?: boolean;                 // false if already re-referred (no triple referrals)
+
+  // Re-referral tracking (set when someone accepts)
+  reReferredToAgreementId?: string;          // ID of the new agreement created for Agent B
+  reReferredToAgentId?: string;              // Agent B's user ID (who accepted)
+  reReferredAt?: Timestamp;                  // When the referral was accepted
 
   // Timestamps
   createdAt: Timestamp;

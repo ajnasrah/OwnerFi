@@ -5,6 +5,8 @@ import "./globals.css";
 import { Providers } from './providers';
 import AnalyticsScripts from '@/components/analytics/AnalyticsScripts';
 import AnalyticsProvider from '@/components/analytics/AnalyticsProvider';
+import { Analytics } from '@vercel/analytics/next';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 const inter = Inter({
   variable: "--font-inter",
@@ -192,6 +194,8 @@ export default function RootLayout({
             }}
           />
         )}
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );

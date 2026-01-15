@@ -66,6 +66,26 @@ interface Agreement {
   expirationDate: string;
   signedAt?: string | null;
   createdAt: string;
+  // Re-referral fields
+  isReReferral?: boolean;
+  canBeReReferred?: boolean;
+  referralInviteToken?: string;
+  hasActiveInvite?: boolean;
+  referralInviteFeePercent?: number;
+}
+
+interface ReferralModalState {
+  isOpen: boolean;
+  agreement: Agreement | null;
+  feePercent: number;
+  loading: boolean;
+  success: boolean;
+  inviteUrl: string | null;
+  error: string | null;
+  shareMethod: 'select' | 'email' | 'text' | 'copy';
+  shareEmail: string;
+  sharePhone: string;
+  copied: boolean;
 }
 
 interface DashboardData {
@@ -146,6 +166,21 @@ export default function RealtorDashboard() {
     reason: '',
     description: '',
     submitting: false
+  });
+
+  // Referral modal state (for re-referring leads to other agents)
+  const [referralModal, setReferralModal] = useState<ReferralModalState>({
+    isOpen: false,
+    agreement: null,
+    feePercent: 25,
+    loading: false,
+    success: false,
+    inviteUrl: null,
+    error: null,
+    shareMethod: 'select',
+    shareEmail: '',
+    sharePhone: '',
+    copied: false
   });
 
   // Auth check
@@ -375,6 +410,159 @@ export default function RealtorDashboard() {
     } finally {
       setDisputeModal(prev => ({ ...prev, submitting: false }));
     }
+  };
+
+  // Referral functions (for re-referring leads to other agents)
+  const openReferralModal = (agreement: Agreement) => {
+    // If there's already an active invite, skip to the share drawer
+    if (agreement.hasActiveInvite) {
+      // Fetch the existing invite URL from the API
+      setReferralModal({
+        isOpen: true,
+        agreement,
+        feePercent: agreement.referralInviteFeePercent || 25,
+        loading: true,
+        success: false,
+        inviteUrl: null,
+        error: null,
+        shareMethod: 'select',
+        shareEmail: '',
+        sharePhone: '',
+        copied: false
+      });
+      // Fetch existing invite
+      fetch('/api/realtor/referral/create-invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          agreementId: agreement.id,
+          referralFeePercent: agreement.referralInviteFeePercent || 25
+        })
+      })
+        .then(r => r.json())
+        .then(data => {
+          if (data.success) {
+            setReferralModal(prev => ({
+              ...prev,
+              loading: false,
+              success: true,
+              inviteUrl: data.inviteUrl
+            }));
+          } else {
+            setReferralModal(prev => ({
+              ...prev,
+              loading: false,
+              error: data.error
+            }));
+          }
+        })
+        .catch(() => {
+          setReferralModal(prev => ({
+            ...prev,
+            loading: false,
+            error: 'Failed to load invite link'
+          }));
+        });
+    } else {
+      setReferralModal({
+        isOpen: true,
+        agreement,
+        feePercent: 25,
+        loading: false,
+        success: false,
+        inviteUrl: null,
+        error: null,
+        shareMethod: 'select',
+        shareEmail: '',
+        sharePhone: '',
+        copied: false
+      });
+    }
+  };
+
+  const closeReferralModal = () => {
+    setReferralModal({
+      isOpen: false,
+      agreement: null,
+      feePercent: 25,
+      loading: false,
+      success: false,
+      inviteUrl: null,
+      error: null,
+      shareMethod: 'select',
+      shareEmail: '',
+      sharePhone: '',
+      copied: false
+    });
+  };
+
+  const createReferralInvite = async () => {
+    if (!referralModal.agreement) return;
+
+    setReferralModal(prev => ({ ...prev, loading: true, error: null }));
+
+    try {
+      const response = await fetch('/api/realtor/referral/create-invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          agreementId: referralModal.agreement.id,
+          referralFeePercent: referralModal.feePercent
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setReferralModal(prev => ({
+          ...prev,
+          loading: false,
+          success: true,
+          inviteUrl: result.inviteUrl
+        }));
+        // Refresh agreements to update the UI
+        loadAgreements();
+      } else {
+        setReferralModal(prev => ({
+          ...prev,
+          loading: false,
+          error: result.error || 'Failed to create referral invite'
+        }));
+      }
+    } catch {
+      setReferralModal(prev => ({
+        ...prev,
+        loading: false,
+        error: 'Failed to create referral invite'
+      }));
+    }
+  };
+
+  const copyInviteLink = async () => {
+    if (referralModal.inviteUrl) {
+      await navigator.clipboard.writeText(referralModal.inviteUrl);
+      setReferralModal(prev => ({ ...prev, copied: true }));
+      setTimeout(() => {
+        setReferralModal(prev => ({ ...prev, copied: false }));
+      }, 2000);
+    }
+  };
+
+  const sendShareEmail = () => {
+    if (!referralModal.inviteUrl || !referralModal.shareEmail) return;
+    const subject = encodeURIComponent('Lead Referral from OwnerFi');
+    const body = encodeURIComponent(
+      `I'm referring a buyer lead to you through OwnerFi.\n\nClick this link to view the lead details and accept the referral:\n${referralModal.inviteUrl}\n\nYou'll earn commission when you close this deal!`
+    );
+    window.location.href = `mailto:${referralModal.shareEmail}?subject=${subject}&body=${body}`;
+  };
+
+  const sendShareText = () => {
+    if (!referralModal.inviteUrl || !referralModal.sharePhone) return;
+    const body = encodeURIComponent(
+      `I'm referring a buyer lead to you through OwnerFi. Accept it here: ${referralModal.inviteUrl}`
+    );
+    window.location.href = `sms:${referralModal.sharePhone}?body=${body}`;
   };
 
   if (loading) {
@@ -805,6 +993,31 @@ export default function RealtorDashboard() {
                                 </a>
                               </div>
                             )}
+                            {/* Refer button - only show if not already a re-referral */}
+                            {!agreement.isReReferral && agreement.canBeReReferred !== false && (
+                              <button
+                                onClick={() => openReferralModal(agreement)}
+                                className={`w-full mt-2 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
+                                  agreement.hasActiveInvite
+                                    ? 'bg-purple-500/30 text-purple-300 border border-purple-500/50'
+                                    : 'bg-purple-500/20 hover:bg-purple-500/30 text-purple-400'
+                                }`}
+                              >
+                                {agreement.hasActiveInvite
+                                  ? `View Invite Link (${agreement.referralInviteFeePercent}% fee)`
+                                  : 'Refer to Another Agent'}
+                              </button>
+                            )}
+                            {agreement.isReReferral && (
+                              <div className="mt-2 text-xs text-slate-500 text-center">
+                                This is a referred lead (cannot be re-referred)
+                              </div>
+                            )}
+                            {!agreement.isReReferral && agreement.canBeReReferred === false && (
+                              <div className="mt-2 text-xs text-emerald-500 text-center">
+                                Already referred to another agent
+                              </div>
+                            )}
                           </div>
                         ))}
                       </div>
@@ -1185,6 +1398,272 @@ export default function RealtorDashboard() {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Referral Modal - for re-referring leads to other agents */}
+      {referralModal.isOpen && referralModal.agreement && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-slate-800 border border-slate-700 rounded-xl p-6 max-w-md w-full">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-white">Refer Lead to Another Agent</h3>
+              <button
+                onClick={closeReferralModal}
+                className="text-slate-400 hover:text-white text-xl"
+              >
+                x
+              </button>
+            </div>
+
+            {referralModal.loading ? (
+              /* Loading State */
+              <div className="text-center py-8">
+                <div className="w-10 h-10 border-4 border-purple-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                <p className="text-slate-400">Loading invite...</p>
+              </div>
+            ) : !referralModal.success ? (
+              <>
+                {/* Lead Info */}
+                <div className="mb-6 p-4 bg-slate-700/50 rounded-lg">
+                  <div className="text-white font-medium mb-1">
+                    {referralModal.agreement.buyerFirstName} {referralModal.agreement.buyerLastName}
+                  </div>
+                  <div className="text-slate-400 text-sm">
+                    {referralModal.agreement.buyerCity}, {referralModal.agreement.buyerState}
+                  </div>
+                </div>
+
+                {/* Error */}
+                {referralModal.error && (
+                  <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-400 text-sm">
+                    {referralModal.error}
+                  </div>
+                )}
+
+                {/* Fee Input */}
+                <div className="mb-6">
+                  <label className="block text-white text-sm font-medium mb-2">
+                    Referral Fee Percentage
+                  </label>
+                  <p className="text-slate-400 text-xs mb-3">
+                    This is the percentage of the receiving agent&apos;s commission you&apos;ll receive at closing.
+                  </p>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="number"
+                      min="1"
+                      max="50"
+                      value={referralModal.feePercent}
+                      onChange={(e) => setReferralModal(prev => ({
+                        ...prev,
+                        feePercent: Math.max(1, Math.min(50, parseInt(e.target.value) || 25))
+                      }))}
+                      className="flex-1 bg-slate-700/50 border border-slate-600 rounded-lg p-3 text-white text-center text-xl font-bold"
+                    />
+                    <span className="text-white text-xl font-bold">%</span>
+                  </div>
+                  <div className="mt-2 text-xs text-slate-500">
+                    Common rates: 25% (standard), 30% (premium), 35% (high-value)
+                  </div>
+                </div>
+
+                {/* Fee Breakdown */}
+                <div className="mb-6 p-4 bg-purple-500/10 border border-purple-500/30 rounded-lg">
+                  <h4 className="text-purple-400 font-medium mb-2">Fee Breakdown</h4>
+                  <div className="space-y-1 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">You receive:</span>
+                      <span className="text-white font-medium">{(referralModal.feePercent * 0.7).toFixed(1)}%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">OwnerFi fee (30%):</span>
+                      <span className="text-white font-medium">{(referralModal.feePercent * 0.3).toFixed(1)}%</span>
+                    </div>
+                    <div className="flex justify-between border-t border-slate-600 pt-1 mt-1">
+                      <span className="text-slate-400">Agent B pays:</span>
+                      <span className="text-purple-400 font-medium">{referralModal.feePercent}%</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-3">
+                  <button
+                    onClick={closeReferralModal}
+                    className="flex-1 bg-slate-700 hover:bg-slate-600 text-white py-3 px-4 rounded-lg font-medium transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={createReferralInvite}
+                    disabled={referralModal.loading}
+                    className="flex-1 bg-purple-500 hover:bg-purple-600 text-white py-3 px-4 rounded-lg font-medium transition-colors disabled:opacity-50"
+                  >
+                    {referralModal.loading ? 'Creating...' : 'Create Invite Link'}
+                  </button>
+                </div>
+              </>
+            ) : (
+              /* Success State - Share Drawer */
+              <div>
+                <div className="text-center mb-6">
+                  <div className="w-12 h-12 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <span className="text-2xl text-purple-400">&#10003;</span>
+                  </div>
+                  <h4 className="text-lg font-bold text-white">Share Referral Link</h4>
+                  <p className="text-slate-400 text-sm">
+                    How would you like to share this with the other agent?
+                  </p>
+                </div>
+
+                {/* Share Method Selection */}
+                {referralModal.shareMethod === 'select' && (
+                  <div className="space-y-3">
+                    <button
+                      onClick={() => setReferralModal(prev => ({ ...prev, shareMethod: 'email' }))}
+                      className="w-full flex items-center gap-4 p-4 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 rounded-xl transition-colors"
+                    >
+                      <div className="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center">
+                        <span className="text-xl">&#9993;</span>
+                      </div>
+                      <div className="text-left">
+                        <div className="text-white font-medium">Send via Email</div>
+                        <div className="text-slate-400 text-sm">Enter their email address</div>
+                      </div>
+                    </button>
+
+                    <button
+                      onClick={() => setReferralModal(prev => ({ ...prev, shareMethod: 'text' }))}
+                      className="w-full flex items-center gap-4 p-4 bg-green-500/10 hover:bg-green-500/20 border border-green-500/30 rounded-xl transition-colors"
+                    >
+                      <div className="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center">
+                        <span className="text-xl">&#128172;</span>
+                      </div>
+                      <div className="text-left">
+                        <div className="text-white font-medium">Send via Text</div>
+                        <div className="text-slate-400 text-sm">Enter their phone number</div>
+                      </div>
+                    </button>
+
+                    <button
+                      onClick={() => setReferralModal(prev => ({ ...prev, shareMethod: 'copy' }))}
+                      className="w-full flex items-center gap-4 p-4 bg-slate-700/50 hover:bg-slate-700 border border-slate-600 rounded-xl transition-colors"
+                    >
+                      <div className="w-12 h-12 bg-slate-600 rounded-full flex items-center justify-center">
+                        <span className="text-xl">&#128279;</span>
+                      </div>
+                      <div className="text-left">
+                        <div className="text-white font-medium">Copy Link</div>
+                        <div className="text-slate-400 text-sm">Share it yourself</div>
+                      </div>
+                    </button>
+                  </div>
+                )}
+
+                {/* Email Input */}
+                {referralModal.shareMethod === 'email' && (
+                  <div className="space-y-4">
+                    <button
+                      onClick={() => setReferralModal(prev => ({ ...prev, shareMethod: 'select' }))}
+                      className="text-slate-400 hover:text-white text-sm flex items-center gap-1"
+                    >
+                      &#8592; Back
+                    </button>
+                    <div>
+                      <label className="block text-white text-sm font-medium mb-2">
+                        Agent&apos;s Email Address
+                      </label>
+                      <input
+                        type="email"
+                        value={referralModal.shareEmail}
+                        onChange={(e) => setReferralModal(prev => ({ ...prev, shareEmail: e.target.value }))}
+                        placeholder="agent@example.com"
+                        className="w-full bg-slate-700/50 border border-slate-600 rounded-lg p-3 text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none"
+                        autoFocus
+                      />
+                    </div>
+                    <button
+                      onClick={sendShareEmail}
+                      disabled={!referralModal.shareEmail || !referralModal.shareEmail.includes('@')}
+                      className="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 px-4 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Open Email App
+                    </button>
+                  </div>
+                )}
+
+                {/* Phone Input */}
+                {referralModal.shareMethod === 'text' && (
+                  <div className="space-y-4">
+                    <button
+                      onClick={() => setReferralModal(prev => ({ ...prev, shareMethod: 'select' }))}
+                      className="text-slate-400 hover:text-white text-sm flex items-center gap-1"
+                    >
+                      &#8592; Back
+                    </button>
+                    <div>
+                      <label className="block text-white text-sm font-medium mb-2">
+                        Agent&apos;s Phone Number
+                      </label>
+                      <input
+                        type="tel"
+                        value={referralModal.sharePhone}
+                        onChange={(e) => setReferralModal(prev => ({ ...prev, sharePhone: e.target.value }))}
+                        placeholder="(555) 123-4567"
+                        className="w-full bg-slate-700/50 border border-slate-600 rounded-lg p-3 text-white placeholder-slate-500 focus:border-green-500 focus:outline-none"
+                        autoFocus
+                      />
+                    </div>
+                    <button
+                      onClick={sendShareText}
+                      disabled={!referralModal.sharePhone || referralModal.sharePhone.length < 10}
+                      className="w-full bg-green-500 hover:bg-green-600 text-white py-3 px-4 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Open Messages App
+                    </button>
+                  </div>
+                )}
+
+                {/* Copy Link */}
+                {referralModal.shareMethod === 'copy' && (
+                  <div className="space-y-4">
+                    <button
+                      onClick={() => setReferralModal(prev => ({ ...prev, shareMethod: 'select' }))}
+                      className="text-slate-400 hover:text-white text-sm flex items-center gap-1"
+                    >
+                      &#8592; Back
+                    </button>
+                    <div>
+                      <label className="block text-white text-sm font-medium mb-2">
+                        Referral Link
+                      </label>
+                      <div className="bg-slate-700/50 border border-slate-600 rounded-lg p-3 break-all text-sm text-emerald-400 font-mono">
+                        {referralModal.inviteUrl}
+                      </div>
+                    </div>
+                    <button
+                      onClick={copyInviteLink}
+                      className={`w-full py-3 px-4 rounded-lg font-medium transition-colors ${
+                        referralModal.copied
+                          ? 'bg-emerald-600 text-white'
+                          : 'bg-emerald-500 hover:bg-emerald-600 text-white'
+                      }`}
+                    >
+                      {referralModal.copied ? 'Copied!' : 'Copy to Clipboard'}
+                    </button>
+                  </div>
+                )}
+
+                {/* Done Button */}
+                <button
+                  onClick={closeReferralModal}
+                  className="w-full mt-6 bg-slate-700 hover:bg-slate-600 text-white py-3 px-4 rounded-lg font-medium transition-colors"
+                >
+                  Done
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}

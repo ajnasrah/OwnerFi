@@ -92,7 +92,7 @@ export async function GET(request: NextRequest) {
         receivingRelocationEmail: 'N/A',
 
         // Section 3: Prospect (Buyer)
-        prospectName: `${agreement.buyerFirstName} ${agreement.buyerLastName}`,
+        prospectName: [agreement.buyerFirstName, agreement.buyerLastName].filter(Boolean).join(' ') || 'Unknown',
         referralType: 'buyer',
         prospectAgreedToReferral: true,
 
@@ -101,7 +101,7 @@ export async function GET(request: NextRequest) {
         referralFeePercent: String(agreement.referralFeePercent),
 
         // Contact info (shown if released)
-        prospectCurrentAddress: `${agreement.buyerCity}, ${agreement.buyerState}`,
+        prospectCurrentAddress: [agreement.buyerCity, agreement.buyerState].filter(Boolean).join(', ') || 'Unknown',
         prospectHomePhone: '',
         prospectWorkPhone: '',
         prospectCellPhone: agreement.leadInfoReleased ? (agreement.buyerPhone || '') : '',
@@ -161,7 +161,17 @@ export async function GET(request: NextRequest) {
           effectiveDate: (agreement.effectiveDate as unknown as { toDate: () => Date }).toDate().toISOString(),
           expirationDate: (agreement.expirationDate as unknown as { toDate: () => Date }).toDate().toISOString(),
           signedAt: agreement.signedAt ? (agreement.signedAt as unknown as { toDate: () => Date }).toDate().toISOString() : null,
-          createdAt: (agreement.createdAt as unknown as { toDate: () => Date }).toDate().toISOString()
+          createdAt: (agreement.createdAt as unknown as { toDate: () => Date }).toDate().toISOString(),
+          // Re-referral fields
+          isReReferral: agreement.isReReferral || false,
+          canBeReReferred: agreement.canBeReReferred !== false, // Default to true if not set
+          // Active invite info (for UI to show "View Invite" vs "Create Invite")
+          hasActiveInvite: !!(
+            agreement.referralInviteToken &&
+            agreement.referralInviteExpiresAt &&
+            (agreement.referralInviteExpiresAt as unknown as { toDate: () => Date }).toDate() > new Date()
+          ),
+          referralInviteFeePercent: (agreement as unknown as { referralInviteFeePercent?: number }).referralInviteFeePercent
         };
       })
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());

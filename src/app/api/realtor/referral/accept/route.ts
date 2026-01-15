@@ -28,6 +28,14 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Validate token format (64 hex characters)
+    if (!/^[a-f0-9]{64}$/i.test(token)) {
+      return NextResponse.json(
+        { error: 'Invalid invite link' },
+        { status: 400 }
+      );
+    }
+
     // Find the original agreement by invite token
     const agreements = await FirebaseDB.queryDocuments(
       COLLECTIONS.REFERRAL_AGREEMENTS,
@@ -69,28 +77,40 @@ export async function GET(request: NextRequest) {
         licenseNumber?: string;
         phone?: string;
       };
-    };
+    } | null;
 
     // Return lead preview (masked contact info for non-authenticated users)
+    const maskedLastName = originalAgreement.buyerLastName
+      ? originalAgreement.buyerLastName.charAt(0) + '***'
+      : '***';
+
+    // Build referring agent name safely (handle null agent or empty names)
+    let referringAgentName = 'Agent';
+    if (referringAgentData?.realtorData) {
+      const firstName = referringAgentData.realtorData.firstName?.trim() || '';
+      const lastName = referringAgentData.realtorData.lastName?.trim() || '';
+      if (firstName || lastName) {
+        referringAgentName = `${firstName} ${lastName}`.trim();
+      }
+    }
+
     return NextResponse.json({
       success: true,
       referral: {
         // Lead info (partially masked)
-        buyerFirstName: originalAgreement.buyerFirstName,
-        buyerLastName: originalAgreement.buyerLastName.charAt(0) + '***',
-        buyerCity: originalAgreement.buyerCity,
-        buyerState: originalAgreement.buyerState,
+        buyerFirstName: originalAgreement.buyerFirstName || 'Unknown',
+        buyerLastName: maskedLastName,
+        buyerCity: originalAgreement.buyerCity || 'Unknown',
+        buyerState: originalAgreement.buyerState || '',
         // Referring agent info
-        referringAgentName: referringAgentData?.realtorData
-          ? `${referringAgentData.realtorData.firstName} ${referringAgentData.realtorData.lastName}`
-          : 'Agent',
+        referringAgentName,
         referringAgentCompany: referringAgentData?.realtorData?.company || '',
         // Agreement terms
         referralFeePercent: originalAgreement.referralInviteFeePercent || 25,
         ownerFiCutPercent: OWNERFI_CUT_PERCENT,
         agreementTermDays: DEFAULT_AGREEMENT_TERM_DAYS,
         // Invite status
-        expiresAt: originalAgreement.referralInviteExpiresAt?.toDate().toISOString()
+        expiresAt: originalAgreement.referralInviteExpiresAt?.toDate().toISOString() || null
       }
     });
 
@@ -127,17 +147,34 @@ export async function POST(request: NextRequest) {
       signatureCheckbox
     } = body;
 
-    // Validate required fields
-    if (!token) {
+    // Validate required fields and types
+    if (!token || typeof token !== 'string') {
       return NextResponse.json(
         { error: 'Invite token is required' },
         { status: 400 }
       );
     }
 
-    if (!signatureTypedName || !signatureCheckbox) {
+    // Validate token format (64 hex characters)
+    if (!/^[a-f0-9]{64}$/i.test(token)) {
+      return NextResponse.json(
+        { error: 'Invalid invite token format' },
+        { status: 400 }
+      );
+    }
+
+    if (!signatureTypedName || typeof signatureTypedName !== 'string' || signatureCheckbox !== true) {
       return NextResponse.json(
         { error: 'Signature is required to accept the referral' },
+        { status: 400 }
+      );
+    }
+
+    // Validate signature name is reasonable (at least 2 characters, not just whitespace)
+    const trimmedSignature = signatureTypedName.trim();
+    if (trimmedSignature.length < 2) {
+      return NextResponse.json(
+        { error: 'Please enter your full name to sign the agreement' },
         { status: 400 }
       );
     }
@@ -180,6 +217,43 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check if original agreement has expired (can't refer from expired agreement)
+    if (originalAgreement.expirationDate) {
+      const agreementExpires = (originalAgreement.expirationDate as unknown as { toDate: () => Date }).toDate();
+      if (agreementExpires < new Date()) {
+        return NextResponse.json(
+          { error: 'The original agreement has expired. This referral is no longer valid.' },
+          { status: 410 }
+        );
+      }
+    }
+
+    // Check if this referral was already accepted by someone (race condition prevention)
+    // Note: We found this agreement by token, but if canBeReReferred is false,
+    // someone else already accepted in a race condition scenario
+    if (originalAgreement.canBeReReferred === false) {
+      return NextResponse.json(
+        { error: 'This referral has already been accepted by another agent' },
+        { status: 409 }
+      );
+    }
+
+    // Check if Agent B already has an agreement with this buyer
+    const existingAgreements = await FirebaseDB.queryDocuments(
+      COLLECTIONS.REFERRAL_AGREEMENTS,
+      [
+        { field: 'realtorUserId', operator: '==', value: session.user.id },
+        { field: 'buyerId', operator: '==', value: originalAgreement.buyerId }
+      ]
+    );
+
+    if (existingAgreements.length > 0) {
+      return NextResponse.json(
+        { error: 'You already have an agreement with this buyer' },
+        { status: 400 }
+      );
+    }
+
     // Get Agent B's info from their profile
     const agentBData = await FirebaseDB.getDocument('users', session.user.id);
     const agentB = agentBData as {
@@ -193,9 +267,9 @@ export async function POST(request: NextRequest) {
         licenseState?: string;
         phone?: string;
       };
-    };
+    } | null;
 
-    if (!agentB?.realtorData?.firstName || !agentB?.realtorData?.lastName) {
+    if (!agentB?.realtorData?.firstName?.trim() || !agentB?.realtorData?.lastName?.trim()) {
       return NextResponse.json(
         { error: 'Please complete your realtor profile before accepting referrals' },
         { status: 400 }
@@ -216,7 +290,17 @@ export async function POST(request: NextRequest) {
         licenseNumber?: string;
         phone?: string;
       };
-    };
+    } | null;
+
+    // Build referring agent name safely (handle null agent or empty names)
+    let referringAgentNameForAgreement = originalAgreement.realtorName || 'Agent';
+    if (agentA?.realtorData) {
+      const firstName = agentA.realtorData.firstName?.trim() || '';
+      const lastName = agentA.realtorData.lastName?.trim() || '';
+      if (firstName || lastName) {
+        referringAgentNameForAgreement = `${firstName} ${lastName}`.trim();
+      }
+    }
 
     const now = Timestamp.now();
     const effectiveDate = now;
@@ -233,7 +317,7 @@ export async function POST(request: NextRequest) {
       buyerId: originalAgreement.buyerId,
 
       // Agent B's details (from their profile)
-      realtorName: `${agentB.realtorData.firstName} ${agentB.realtorData.lastName}`,
+      realtorName: `${agentB.realtorData.firstName.trim()} ${agentB.realtorData.lastName.trim()}`,
       realtorEmail: agentB.email,
       realtorPhone: agentB.realtorData.phone || agentB.phone || '',
       realtorCompany: agentB.realtorData.company || '',
@@ -257,10 +341,10 @@ export async function POST(request: NextRequest) {
       // Already signed
       status: 'signed',
       signedAt: now,
-      signatureTypedName,
+      signatureTypedName: trimmedSignature,
       signatureCheckbox: true,
-      signatureIpAddress: request.headers.get('x-forwarded-for') || 'unknown',
-      signatureUserAgent: request.headers.get('user-agent') || 'unknown',
+      signatureIpAddress: (request.headers.get('x-forwarded-for') || 'unknown').split(',')[0].trim() || 'unknown',
+      signatureUserAgent: request.headers.get('user-agent')?.trim() || 'unknown',
 
       // Lead info released since signing
       leadInfoReleased: true,
@@ -270,9 +354,7 @@ export async function POST(request: NextRequest) {
       isReReferral: true,
       originalAgreementId: originalAgreement.id,
       referringAgentId: originalAgreement.realtorUserId,
-      referringAgentName: agentA?.realtorData
-        ? `${agentA.realtorData.firstName} ${agentA.realtorData.lastName}`
-        : originalAgreement.realtorName,
+      referringAgentName: referringAgentNameForAgreement,
       referringAgentEmail: agentA?.email || originalAgreement.realtorEmail,
       referringAgentPhone: agentA?.realtorData?.phone || originalAgreement.realtorPhone,
       referringAgentCompany: agentA?.realtorData?.company || originalAgreement.realtorCompany,
@@ -292,18 +374,13 @@ export async function POST(request: NextRequest) {
       newAgreement
     );
 
-    // Update original agreement to mark it as re-referred
+    // Update original agreement to mark it as re-referred and clear invite token (single update for efficiency)
     await FirebaseDB.updateDocument(COLLECTIONS.REFERRAL_AGREEMENTS, originalAgreement.id, {
       canBeReReferred: false,
       reReferredToAgreementId: createdAgreement.id,
       reReferredToAgentId: agentBUserId,
       reReferredAt: now,
-      updatedAt: now
-    });
-
-    // Clear the invite token so it can't be used again
-    await FirebaseDB.updateDocument(COLLECTIONS.REFERRAL_AGREEMENTS, originalAgreement.id, {
-      referralInviteToken: null,
+      referralInviteToken: null, // Clear so it can't be used again
       updatedAt: now
     });
 

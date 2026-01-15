@@ -101,6 +101,29 @@ export default function RootLayout({
         <link rel="preconnect" href="https://maps.googleapis.com" />
         <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
         <link rel="dns-prefetch" href="https://maps.googleapis.com" />
+
+        {/* Google Analytics 4 - Direct injection for reliability */}
+        {process.env.NEXT_PUBLIC_GA4_ID && (
+          <>
+            <script
+              async
+              src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GA4_ID}`}
+            />
+            <script
+              dangerouslySetInnerHTML={{
+                __html: `
+                  window.dataLayer = window.dataLayer || [];
+                  function gtag(){dataLayer.push(arguments);}
+                  gtag('js', new Date());
+                  gtag('config', '${process.env.NEXT_PUBLIC_GA4_ID}', {
+                    page_path: window.location.pathname,
+                    send_page_view: true
+                  });
+                `
+              }}
+            />
+          </>
+        )}
       </head>
       <body
         className={`${inter.variable} antialiased bg-slate-900 h-full`}

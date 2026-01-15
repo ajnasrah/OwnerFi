@@ -185,6 +185,14 @@ export default function Dashboard() {
       });
 
       if (response.ok) {
+        // Track the like/unlike event
+        trackEvent(isLiked ? 'property_unlike' : 'property_like', {
+          property_id: propertyId,
+          city: property?.city || '',
+          price: property?.listPrice || 0,
+          monthly_payment: property?.monthlyPayment || 0,
+        });
+
         if (isLiked) {
           setLikedProperties(prev => prev.filter(id => id !== propertyId));
         } else {
@@ -282,6 +290,14 @@ export default function Dashboard() {
   // PERF: Memoized handler for passing a property
   const handlePassProperty = useCallback(async (property: PropertyListing) => {
     try {
+      // Track the pass event
+      trackEvent('property_pass', {
+        property_id: property.id,
+        city: property.city || '',
+        price: property.listPrice || 0,
+        monthly_payment: property.monthlyPayment || 0,
+      });
+
       // Optimistic update: remove from UI immediately for smooth transition
       setProperties(prev => prev.filter(p => p.id !== property.id));
 

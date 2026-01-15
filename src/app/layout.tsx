@@ -105,7 +105,9 @@ export default function RootLayout({
       <body
         className={`${inter.variable} antialiased bg-slate-900 h-full`}
       >
-        <AnalyticsScripts />
+        <AnalyticsScripts
+          ga4Id={process.env.NEXT_PUBLIC_GA4_ID}
+        />
         <Providers>
           <AnalyticsProvider>
             <Suspense fallback={<div>Loading...</div>}>

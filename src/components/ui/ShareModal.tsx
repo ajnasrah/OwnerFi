@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { PropertyListing } from '@/lib/property-schema';
+import { trackEvent } from '@/components/analytics/AnalyticsProvider';
 
 interface ShareModalProps {
   property: PropertyListing;
@@ -42,6 +43,7 @@ export function ShareModal({ property, isOpen, onClose }: ShareModalProps) {
   const handleCopyLink = async () => {
     try {
       await navigator.clipboard.writeText(shareUrl);
+      trackEvent('property_share', { property_id: property.id, method: 'copy_link' });
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
@@ -50,18 +52,21 @@ export function ShareModal({ property, isOpen, onClose }: ShareModalProps) {
   };
 
   const handleSmsShare = () => {
+    trackEvent('property_share', { property_id: property.id, method: 'sms' });
     const text = getShareText();
     const smsUrl = `sms:?&body=${encodeURIComponent(text)}`;
     window.open(smsUrl, '_self');
   };
 
   const handleWhatsAppShare = () => {
+    trackEvent('property_share', { property_id: property.id, method: 'whatsapp' });
     const text = getShareText();
     const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
     window.open(whatsappUrl, '_blank');
   };
 
   const handleEmailShare = () => {
+    trackEvent('property_share', { property_id: property.id, method: 'email' });
     const subject = `Check out this property: ${property.address}`;
     const body = getShareText();
     const mailtoUrl = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
@@ -76,6 +81,7 @@ export function ShareModal({ property, isOpen, onClose }: ShareModalProps) {
           text: `Check out this owner-financed property in ${property.city}, ${property.state}!`,
           url: shareUrl,
         });
+        trackEvent('property_share', { property_id: property.id, method: 'native' });
       } catch (err) {
         // User cancelled or error
         console.log('Share cancelled or failed:', err);

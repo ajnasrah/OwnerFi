@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { trackEvent } from '@/components/analytics/AnalyticsProvider';
 
 interface TutorialProps {
   onComplete: () => void;
@@ -37,10 +38,16 @@ const tutorialSteps = [
 
 export default function Tutorial({ onComplete, isVisible }: TutorialProps) {
   const [currentStep, setCurrentStep] = useState(0);
+  const hasTrackedStart = useRef(false);
 
   useEffect(() => {
     if (!isVisible) {
       setCurrentStep(0);
+      hasTrackedStart.current = false;
+    } else if (!hasTrackedStart.current) {
+      // Track tutorial start when it becomes visible
+      hasTrackedStart.current = true;
+      trackEvent('tutorial_start', { total_steps: tutorialSteps.length });
     }
   }, [isVisible]);
 
@@ -48,15 +55,22 @@ export default function Tutorial({ onComplete, isVisible }: TutorialProps) {
     if (currentStep < tutorialSteps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
-      handleComplete();
+      handleComplete(false);
     }
   };
 
   const handleSkip = () => {
-    handleComplete();
+    handleComplete(true);
   };
 
-  const handleComplete = () => {
+  const handleComplete = (skipped: boolean) => {
+    // Track tutorial completion or skip
+    if (skipped) {
+      trackEvent('tutorial_skip', { skipped_at_step: currentStep + 1 });
+    } else {
+      trackEvent('tutorial_complete', { total_steps: tutorialSteps.length });
+    }
+
     // Store completion with timestamp and reset login counter
     localStorage.setItem('buyerTutorialCompleted', 'true');
     localStorage.setItem('tutorialLoginCount', '0');

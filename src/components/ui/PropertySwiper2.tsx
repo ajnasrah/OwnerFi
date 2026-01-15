@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect, memo, useMemo } from 'react';
 import Link from 'next/link';
 import { PropertyListing } from '@/lib/property-schema';
 import { PropertyCard } from './PropertyCard';
+import { trackEvent } from '@/components/analytics/AnalyticsProvider';
 
 interface PropertySwiper2Props {
   properties: PropertyListing[];
@@ -30,6 +31,7 @@ export const PropertySwiper2 = memo(function PropertySwiper2({
   const [animating, setAnimating] = useState(false);
   const [showAction, setShowAction] = useState<'like' | 'pass' | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const hasTrackedFirstSwipe = useRef(false);
 
   // PERF: Convert passedIds to Set for O(1) lookup instead of O(n) includes()
   const passedIdsSet = useMemo(() => new Set(passedIds), [passedIds]);
@@ -149,6 +151,12 @@ export const PropertySwiper2 = memo(function PropertySwiper2({
     if (animating || !currentProperty) return;
     setAnimating(true);
 
+    // Track first swipe/interaction
+    if (!hasTrackedFirstSwipe.current) {
+      hasTrackedFirstSwipe.current = true;
+      trackEvent('swipe_first', { action: 'like' });
+    }
+
     // Call the like callback
     onLike(currentProperty);
 
@@ -159,6 +167,12 @@ export const PropertySwiper2 = memo(function PropertySwiper2({
   const handlePassButton = () => {
     if (animating || !currentProperty) return;
     setAnimating(true);
+
+    // Track first swipe/interaction
+    if (!hasTrackedFirstSwipe.current) {
+      hasTrackedFirstSwipe.current = true;
+      trackEvent('swipe_first', { action: 'pass' });
+    }
 
     // Call the pass callback
     onPass(currentProperty);

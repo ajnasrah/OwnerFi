@@ -30,7 +30,23 @@ export type AnalyticsEvent =
   | 'form_start'
   | 'form_submit'
   | 'form_success'
-  | 'form_error';
+  | 'form_error'
+  // Property engagement tracking
+  | 'property_view'
+  | 'property_like'
+  | 'property_unlike'
+  | 'property_pass'
+  | 'property_share'
+  | 'property_details_click'
+  // Search & filter tracking
+  | 'filter_applied'
+  | 'location_changed'
+  // Tutorial tracking
+  | 'tutorial_start'
+  | 'tutorial_complete'
+  | 'tutorial_skip'
+  // Session engagement
+  | 'session_properties_viewed';
 
 interface EventData {
   [key: string]: string | number | boolean;
@@ -47,19 +63,38 @@ export function trackEvent(event: AnalyticsEvent, data?: EventData) {
     });
   }
 
-  // Meta Pixel
+  // Meta Pixel - use 'track' for standard events, 'trackCustom' for custom
   if (typeof window !== 'undefined' && (window as { fbq?: (action: string, eventName: string, data?: EventData) => void }).fbq) {
-    const fbEvent = event === 'lead_submit' ? 'Lead' : 'trackCustom';
-    (window as { fbq: (action: string, eventName: string, data?: EventData) => void }).fbq(fbEvent, event, data);
+    const fbq = (window as { fbq: (action: string, eventName: string, data?: EventData) => void }).fbq;
+    // Map our events to Meta standard events where applicable
+    if (event === 'lead_submit' || event === 'form_success') {
+      fbq('track', 'Lead', data);
+    } else if (event === 'auth_signup') {
+      fbq('track', 'CompleteRegistration', data);
+    } else {
+      fbq('trackCustom', event, data);
+    }
   }
 
-  // TikTok Pixel
+  // TikTok Pixel - map to TikTok standard events where applicable
   if (typeof window !== 'undefined' && (window as { ttq?: { track: (action: string, data?: EventData) => void } }).ttq) {
-    const ttqEvent = event === 'lead_submit' ? 'SubmitForm' : 'track';
-    (window as { ttq: { track: (action: string, data?: EventData) => void } }).ttq.track(ttqEvent, data);
+    const ttq = (window as { ttq: { track: (action: string, data?: EventData) => void } }).ttq;
+    // Map our events to TikTok standard events where applicable
+    if (event === 'lead_submit' || event === 'form_success') {
+      ttq.track('SubmitForm', data);
+    } else if (event === 'auth_signup') {
+      ttq.track('CompleteRegistration', data);
+    } else if (event === 'page_view') {
+      ttq.track('ViewContent', data);
+    } else {
+      ttq.track(event, data);
+    }
   }
 
-  console.log('Analytics Event:', event, data);
+  // Only log in development
+  if (process.env.NODE_ENV === 'development') {
+    console.log('Analytics Event:', event, data);
+  }
 }
 
 // UTM parameter capture
@@ -102,6 +137,7 @@ export function getStoredUTMParams() {
 // Video tracking helper
 export function setupVideoTracking(videoElement: HTMLVideoElement, videoId: string) {
   const milestones = {
+    play: false,
     25: false,
     50: false,
     95: false,
@@ -125,7 +161,11 @@ export function setupVideoTracking(videoElement: HTMLVideoElement, videoId: stri
   };
 
   const onPlay = () => {
-    trackEvent('video_play', { video_id: videoId });
+    // Only track first play, not resume after pause
+    if (!milestones.play) {
+      milestones.play = true;
+      trackEvent('video_play', { video_id: videoId });
+    }
   };
 
   videoElement.addEventListener('timeupdate', onTimeUpdate);
@@ -201,7 +241,15 @@ export function useFormTracking(formId: string) {
   }, [formId]);
 
   const trackFormSuccess = useCallback((data?: EventData) => {
-    trackEvent('form_success', { form_id: formId, ...data });
+    // Include UTM params on success for attribution
+    const utmParams = getStoredUTMParams();
+    trackEvent('form_success', {
+      form_id: formId,
+      ...data,
+      ...(utmParams.utm_source && { utm_source: utmParams.utm_source }),
+      ...(utmParams.utm_medium && { utm_medium: utmParams.utm_medium }),
+      ...(utmParams.utm_campaign && { utm_campaign: utmParams.utm_campaign }),
+    });
   }, [formId]);
 
   const trackFormError = useCallback((error?: string) => {
@@ -230,6 +278,7 @@ export default function AnalyticsProvider({ children }: { children: React.ReactN
     trackEvent('page_view', {
       page_path: pathname,
       page_search: searchParams?.toString() || '',
+      page_title: typeof document !== 'undefined' ? document.title : '',
     });
   }, [pathname, searchParams]);
 

@@ -102,7 +102,7 @@ export const SCALE_PRESETS = {
   vertical: {
     talkingPhoto: 1.4,      // Good visibility without cutting off head
     talkingPhotoLarge: 1.5, // Slightly larger for emphasis
-    upperBody: 1.6,         // Upper body zoomed in (increased from 1.3)
+    upperBody: 1.2,         // Upper body visible with hands (reduced from 1.6 - was cutting off body)
     fullBody: 0.9,          // Full body visible in frame
   },
   // For horizontal videos (16:9)
@@ -143,8 +143,8 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
     },
     voice: {
       voiceId: '9070a6c2dbd54c10bb111dc8c655bff7',
-      speed: 1.1,
-      emotion: 'Excited', // Use excited emotion for engaging content
+      speed: 1.0, // Natural pace (was 1.1 which sounded robotic)
+      emotion: 'Friendly', // More natural than Excited
     },
     voiceLanguage: 'en',
     brands: ['abdullah'], // Only for Abdullah personal brand, not article videos
@@ -165,8 +165,8 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
     },
     voice: {
       voiceId: '33e77b383694491db3160af5a9f9e0ab', // Abdullah voice clone
-      speed: 1.1,
-      emotion: 'Excited', // Changed to Excited for engaging content
+      speed: 1.0, // Natural pace (was 1.1 which sounded robotic)
+      emotion: 'Friendly', // More natural than Excited
     },
     voiceLanguage: 'en',
     brands: ['abdullah'], // Only for Abdullah personal brand, not article videos
@@ -188,12 +188,12 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
       scale: SCALE_PRESETS.vertical.upperBody,
       talkingStyle: 'expressive',
       hasBuiltInBackground: true, // Studio avatar with built-in background
-      offsetY: 50, // Move avatar down to keep head in frame
+      offsetY: -100, // Move avatar UP to show more body (was +50 which cut off body)
     },
     voice: {
       voiceId: '35659e86ce244d8389d525a9648d9c4a', // Carter Lee
-      speed: 1.1,
-      emotion: 'Excited',
+      speed: 1.0, // Natural pace (was 1.1 which sounded robotic)
+      emotion: 'Friendly', // More natural than Excited
     },
     voiceLanguage: 'en',
     brands: ['ownerfi', 'carz', 'benefit', 'personal', 'abdullah'],
@@ -215,12 +215,12 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
       scale: SCALE_PRESETS.vertical.upperBody,
       talkingStyle: 'expressive',
       hasBuiltInBackground: true, // Studio avatar with built-in background
-      offsetY: 50, // Move avatar down to keep head in frame
+      offsetY: -100, // Move avatar UP to show more body (was +50 which cut off body)
     },
     voice: {
       voiceId: 'f38a635bee7a4d1f9b0a654a31d050d2', // Chill Brian
-      speed: 1.1,
-      emotion: 'Excited', // Changed to Excited for engaging content
+      speed: 1.0, // Natural pace (was 1.1 which sounded robotic)
+      emotion: 'Friendly', // More natural than Excited
     },
     voiceLanguage: 'en',
     brands: ['ownerfi', 'carz', 'benefit', 'personal', 'abdullah'],
@@ -246,12 +246,12 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
       scale: SCALE_PRESETS.vertical.upperBody,
       talkingStyle: 'expressive',
       hasBuiltInBackground: true, // Studio avatar with built-in background
-      offsetY: 50, // Move avatar down to keep head in frame
+      offsetY: -100, // Move avatar UP to show more body (was +50 which cut off body)
     },
     voice: {
       voiceId: 'dc491816e53f46eaa466740fbfec09bb', // Adventure Alex - Excited
-      speed: 1.1,
-      emotion: 'Excited',
+      speed: 1.0, // Natural pace (was 1.1 which sounded robotic)
+      emotion: 'Friendly', // More natural than Excited
     },
     voiceLanguage: 'en',
     brands: ['ownerfi', 'carz', 'benefit', 'personal', 'abdullah'],
@@ -273,12 +273,12 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
       scale: SCALE_PRESETS.vertical.upperBody,
       talkingStyle: 'expressive',
       hasBuiltInBackground: true, // Studio avatar with built-in background
-      offsetY: 50, // Move avatar down to keep head in frame
+      offsetY: -100, // Move avatar UP to show more body (was +50 which cut off body)
     },
     voice: {
       voiceId: '42d00d4aac5441279d8536cd6b52c53c', // Hope
-      speed: 1.1,
-      emotion: 'Excited', // Changed to Excited for engaging content
+      speed: 1.0, // Natural pace (was 1.1 which sounded robotic)
+      emotion: 'Friendly', // More natural than Excited
     },
     voiceLanguage: 'en',
     brands: ['ownerfi', 'carz', 'benefit', 'personal', 'abdullah'],
@@ -327,8 +327,8 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
     },
     voice: {
       voiceId: 'dc491816e53f46eaa466740fbfec09bb', // Adventure Alex
-      speed: 1.1,
-      emotion: 'Excited',
+      speed: 1.0, // Natural pace (was 1.1 which sounded robotic)
+      emotion: 'Friendly', // More natural than Excited
     },
     voiceLanguage: 'en',
     brands: ['ownerfi', 'carz', 'benefit', 'personal', 'abdullah'],
@@ -347,8 +347,8 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
     },
     voice: {
       voiceId: '35659e86ce244d8389d525a9648d9c4a', // Carter Lee
-      speed: 1.1,
-      emotion: 'Excited',
+      speed: 1.0, // Natural pace (was 1.1 which sounded robotic)
+      emotion: 'Friendly', // More natural than Excited
     },
     voiceLanguage: 'en',
     brands: ['ownerfi', 'carz', 'benefit', 'personal', 'abdullah'],
@@ -364,7 +364,7 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
       scale: SCALE_PRESETS.vertical.upperBody,
       talkingStyle: 'expressive',
       hasBuiltInBackground: true,
-      offsetY: 50, // Move avatar down to keep head in frame
+      offsetY: -100, // Move avatar UP to show more body (was +50 which cut off body)
     },
     voice: {
       voiceId: '42d00d4aac5441279d8536cd6b52c53c', // Hope
@@ -390,12 +390,12 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
       scale: SCALE_PRESETS.vertical.upperBody,
       talkingStyle: 'expressive',
       hasBuiltInBackground: true,
-      offsetY: 50, // Move avatar down to keep head in frame
+      offsetY: -100, // Move avatar UP to show more body (was +50 which cut off body)
     },
     voice: {
       voiceId: 'f38a635bee7a4d1f9b0a654a31d050d2', // Chill Brian
-      speed: 1.1,
-      emotion: 'Excited',
+      speed: 1.0, // Natural pace (was 1.1 which sounded robotic)
+      emotion: 'Friendly', // More natural than Excited
     },
     voiceLanguage: 'en',
     brands: ['ownerfi', 'carz', 'benefit', 'personal', 'abdullah'],
@@ -416,7 +416,7 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
       scale: SCALE_PRESETS.vertical.upperBody,
       talkingStyle: 'expressive',
       hasBuiltInBackground: true,
-      offsetY: 50, // Move avatar down to keep head in frame
+      offsetY: -100, // Move avatar UP to show more body (was +50 which cut off body)
     },
     voice: {
       voiceId: 'dc491816e53f46eaa466740fbfec09bb', // Adventure Alex
@@ -446,7 +446,7 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
       scale: SCALE_PRESETS.vertical.upperBody,
       talkingStyle: 'stable', // Stable for serious news delivery
       hasBuiltInBackground: true, // Studio avatar with built-in background
-      offsetY: 50, // Move avatar down to keep head in frame
+      offsetY: -100, // Move avatar UP to show more body (was +50 which cut off body)
     },
     voice: {
       voiceId: 'f38a635bee7a4d1f9b0a654a31d050d2', // Chill Brian
@@ -469,7 +469,7 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
       scale: SCALE_PRESETS.vertical.upperBody,
       talkingStyle: 'stable', // Stable for serious news delivery
       hasBuiltInBackground: true, // Studio avatar with built-in background
-      offsetY: 50, // Move avatar down to keep head in frame
+      offsetY: -100, // Move avatar UP to show more body (was +50 which cut off body)
     },
     voice: {
       voiceId: '42d00d4aac5441279d8536cd6b52c53c', // Hope
@@ -492,7 +492,7 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
       scale: SCALE_PRESETS.vertical.upperBody,
       talkingStyle: 'expressive', // Slightly more expressive for urgent news
       hasBuiltInBackground: true, // Studio avatar with built-in background
-      offsetY: 50, // Move avatar down to keep head in frame
+      offsetY: -100, // Move avatar UP to show more body (was +50 which cut off body)
     },
     voice: {
       voiceId: '35659e86ce244d8389d525a9648d9c4a', // Carter Lee
@@ -515,7 +515,7 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
       scale: SCALE_PRESETS.vertical.upperBody,
       talkingStyle: 'expressive',
       hasBuiltInBackground: true, // Studio avatar with built-in background
-      offsetY: 50, // Move avatar down to keep head in frame
+      offsetY: -100, // Move avatar UP to show more body (was +50 which cut off body)
     },
     voice: {
       voiceId: 'dc491816e53f46eaa466740fbfec09bb', // Adventure Alex
@@ -545,8 +545,8 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
     voice: {
       // Will need to get a Spanish voice ID - placeholder for now
       voiceId: '9070a6c2dbd54c10bb111dc8c655bff7', // TODO: Replace with Spanish voice
-      speed: 1.1,
-      emotion: 'Excited',
+      speed: 1.0, // Natural pace (was 1.1 which sounded robotic)
+      emotion: 'Friendly', // More natural than Excited
     },
     voiceLanguage: 'es',
     brands: ['ownerfi'],

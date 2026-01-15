@@ -68,6 +68,10 @@
     {
       "path": "/api/v2/scraper/run",
       "schedule": "0 18 * * *"
+    },
+    {
+      "path": "/api/cron/monthly-realtor-credits",
+      "schedule": "0 0 1 * *"
     }
   ],
   "functions": {
@@ -130,6 +134,9 @@
     },
     "src/app/api/v2/scraper/add/route.ts": {
       "maxDuration": 120
+    },
+    "src/app/api/cron/monthly-realtor-credits/route.ts": {
+      "maxDuration": 300
     }
   },
   "headers": [

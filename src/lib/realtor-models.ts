@@ -159,7 +159,7 @@ export class RealtorDataHelper {
       licenseNumber,
       isActive: true,
       profileComplete: true,
-      credits: 0, // Start with 0 credits (free tier = 3 pending agreements)
+      credits: 1, // Start with 1 free credit (+ free tier = 3 pending agreements)
       createdAt: now,
       updatedAt: now
     };

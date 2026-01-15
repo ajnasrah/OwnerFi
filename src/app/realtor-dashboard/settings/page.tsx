@@ -7,6 +7,7 @@ import { ExtendedSession } from '@/types/session';
 import { getCitiesWithinRadiusComprehensive } from '@/lib/comprehensive-cities';
 import { GooglePlacesAutocomplete } from '@/components/ui/GooglePlacesAutocomplete';
 import Link from 'next/link';
+import { useFormTracking } from '@/components/analytics/AnalyticsProvider';
 
 export default function RealtorSettings() {
   const router = useRouter();
@@ -20,6 +21,9 @@ export default function RealtorSettings() {
   const [sessionCheckPaused, setSessionCheckPaused] = useState(false);
   const [currentSavedCities, setCurrentSavedCities] = useState<string[]>([]);
   const [loadingCurrentCities, setLoadingCurrentCities] = useState(true);
+
+  // Form tracking
+  const { trackFormStart, trackFormSubmit, trackFormSuccess, trackFormError } = useFormTracking('realtor_settings');
 
   // Auth check with session-safe handling
   useEffect(() => {
@@ -104,6 +108,7 @@ export default function RealtorSettings() {
   }
 
   const handleCitySearch = () => {
+    trackFormStart();
     if (!targetCity.trim()) {
       setError('Please enter a target city');
       setSuccessMessage('');
@@ -152,11 +157,13 @@ export default function RealtorSettings() {
   const handleSave = async () => {
     if (selectedCities.size === 0) {
       setError('Please select at least one city');
+      trackFormError('no_cities_selected');
       return;
     }
 
     setLoading(true);
     setError('');
+    trackFormSubmit();
 
     try {
       const response = await fetch('/api/realtor/profile', {
@@ -170,6 +177,7 @@ export default function RealtorSettings() {
       });
 
       if (response.ok) {
+        trackFormSuccess({ cities_count: selectedCities.size });
         // Refresh the current cities list
         await fetchCurrentCities();
         // Clear the new cities selection
@@ -183,9 +191,11 @@ export default function RealtorSettings() {
         }, 1500);
       } else {
         setError('Failed to save settings');
+        trackFormError('save_failed');
       }
     } catch {
       setError('Failed to save settings');
+      trackFormError('save_failed');
     } finally {
       setLoading(false);
     }

@@ -132,9 +132,11 @@ export default function BuyerSettings() {
     setSaving(true);
     setError('');
     setSuccess('');
+    trackFormSubmit();
 
     if (!formData.city) {
       setError('Please enter a search location');
+      trackFormError('missing_location');
       setSaving(false);
       return;
     }
@@ -179,7 +181,9 @@ export default function BuyerSettings() {
       const data = await response.json();
       if (data.error) {
         setError(data.error);
+        trackFormError(data.error);
       } else {
+        trackFormSuccess({ city: formData.city });
         setSuccess('Preferences updated successfully!');
 
         // Redirect back to dashboard immediately
@@ -187,6 +191,7 @@ export default function BuyerSettings() {
       }
     } catch {
       setError('Failed to save preferences');
+      trackFormError('save_failed');
     } finally {
       setSaving(false);
     }
@@ -250,7 +255,10 @@ export default function BuyerSettings() {
                 <span className="text-lg">❤️</span>
               </Link>
               <button
-                onClick={() => signOut({ callbackUrl: '/auth/signout' })}
+                onClick={() => {
+                  trackEvent('auth_logout', { method: 'settings_button' });
+                  signOut({ callbackUrl: '/auth/signout' });
+                }}
                 className="w-9 h-9 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-xl flex items-center justify-center transition-all duration-200 hover:scale-105 group"
                 title="Sign Out"
               >
@@ -337,6 +345,7 @@ export default function BuyerSettings() {
                   type="checkbox"
                   checked={formData.isRealtor}
                   onChange={(e) => setFormData(prev => ({ ...prev, isRealtor: e.target.checked }))}
+                  onFocus={trackFormStart}
                   className="w-5 h-5 text-emerald-500 bg-slate-700 border-slate-600 rounded focus:ring-emerald-400 cursor-pointer"
                 />
                 <div className="flex-1">

@@ -1,8 +1,10 @@
+'use client';
 
 import Link from 'next/link';
 import { useSession, signOut } from 'next-auth/react';
 import { Button } from './Button';
 import { ExtendedSession } from '@/types/session';
+import { trackEvent } from '@/components/analytics/AnalyticsProvider';
 
 interface HeaderProps {
   className?: string;
@@ -47,7 +49,10 @@ export function Header({ className = '' }: HeaderProps) {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => signOut({ callbackUrl: '/auth/signout' })}
+                  onClick={() => {
+                    trackEvent('auth_logout', { method: 'header_button' });
+                    signOut({ callbackUrl: '/auth/signout' });
+                  }}
                   className="font-bold text-slate-300 hover:text-white px-4 py-2 rounded-xl hover:bg-slate-700/50 transition-all duration-300"
                 >
                   SIGN OUT

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useFormTracking } from '@/components/analytics/AnalyticsProvider';
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -15,10 +16,14 @@ export default function ContactPage() {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
 
+  // Form tracking
+  const { trackFormStart, trackFormSubmit, trackFormSuccess, trackFormError, resetFormTracking } = useFormTracking('contact');
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
+    trackFormSubmit();
 
     try {
       const response = await fetch('/api/contact', {
@@ -33,10 +38,13 @@ export default function ContactPage() {
         throw new Error(data.error || 'Failed to submit');
       }
 
+      trackFormSuccess({ subject: formData.subject });
       setSuccess(true);
       setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong');
+      const errorMessage = err instanceof Error ? err.message : 'Something went wrong';
+      trackFormError(errorMessage);
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -84,7 +92,10 @@ export default function ContactPage() {
                 <h3 className="text-xl font-bold text-white mb-2">Message Sent!</h3>
                 <p className="text-slate-300 mb-6">We'll get back to you within 24 hours.</p>
                 <button
-                  onClick={() => setSuccess(false)}
+                  onClick={() => {
+                    setSuccess(false);
+                    resetFormTracking();
+                  }}
                   className="text-emerald-400 hover:text-emerald-300 font-medium"
                 >
                   Send another message
@@ -105,6 +116,7 @@ export default function ContactPage() {
                     required
                     value={formData.name}
                     onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                    onFocus={trackFormStart}
                     className="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-white placeholder-slate-500"
                     placeholder="Your name"
                   />

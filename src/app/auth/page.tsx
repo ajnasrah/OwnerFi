@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 import Link from 'next/link';
 import { isValidPhone, normalizePhone } from '@/lib/phone-utils';
+import { trackEvent, useFormTracking } from '@/components/analytics/AnalyticsProvider';
 
 export default function AuthPage() {
   const router = useRouter();
@@ -17,6 +18,9 @@ export default function AuthPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Form tracking
+  const { trackFormStart, trackFormSubmit, trackFormSuccess, trackFormError } = useFormTracking('auth');
 
   // Server-side OTP - works in ALL browsers (Safari, Facebook, iMessage, etc.)
   const handlePhoneSubmit = async (e: React.FormEvent) => {
@@ -43,6 +47,7 @@ export default function AuthPage() {
       const result = await response.json();
 
       if (response.ok && result.success) {
+        trackEvent('auth_otp_sent', { method: 'phone' });
         setStep('code');
       } else {
         setError(result.error || 'Failed to send code. Please try again.');
@@ -78,10 +83,12 @@ export default function AuthPage() {
 
       if (!verifyResponse.ok || !verifyResult.success) {
         setError(verifyResult.error || 'Invalid code');
+        trackFormError('invalid_otp');
         setLoading(false);
         return;
       }
 
+      trackEvent('auth_otp_verified', { method: 'phone' });
       const verifiedPhone = verifyResult.phone;
 
       // Check if user exists in database
@@ -105,6 +112,9 @@ export default function AuthPage() {
         console.log('🔐 [AUTH-PAGE] signIn result:', signInResult);
 
         if (signInResult?.ok) {
+          trackEvent('auth_login', { method: 'phone', role: checkData.role || 'buyer' });
+          trackFormSuccess({ method: 'phone' });
+
           // Check for shared property to auto-like
           const sharedPropertyId = sessionStorage.getItem('shared_property_id');
           sessionStorage.removeItem('shared_property_id');
@@ -132,6 +142,7 @@ export default function AuthPage() {
           router.push(redirectTo);
         } else {
           setError('Failed to sign in. Please try again.');
+          trackFormError('login_failed');
           setLoading(false);
         }
       } else {
@@ -166,6 +177,7 @@ export default function AuthPage() {
     }
 
     try {
+      trackFormSubmit();
       const signInResult = await signIn('credentials', {
         email,
         password,
@@ -173,10 +185,13 @@ export default function AuthPage() {
       });
 
       if (signInResult?.ok) {
+        trackEvent('auth_login', { method: 'email' });
+        trackFormSuccess({ method: 'email' });
         const redirectTo = searchParams?.get('callbackUrl') || '/dashboard';
         router.push(redirectTo);
       } else {
         setError('Invalid email or password');
+        trackFormError('invalid_credentials');
       }
     } catch (err: any) {
       console.error('Email sign-in error:', err);
@@ -294,6 +309,7 @@ export default function AuthPage() {
                   inputMode="tel"
                   value={formatPhoneDisplay(phone)}
                   onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
+                  onFocus={trackFormStart}
                   placeholder="(555) 123-4567"
                   maxLength={14}
                   required

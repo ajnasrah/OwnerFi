@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { ExtendedSession } from '@/types/session';
 import Link from 'next/link';
 import { GooglePlacesAutocomplete } from '@/components/ui/GooglePlacesAutocomplete';
+import { trackEvent, useFormTracking } from '@/components/analytics/AnalyticsProvider';
 
 export default function BuyerSettings() {
   const { data: session, status } = useSession();
@@ -32,6 +33,9 @@ export default function BuyerSettings() {
     minPrice: '',
     maxPrice: '',
   });
+
+  // Form tracking
+  const { trackFormStart, trackFormSubmit, trackFormSuccess, trackFormError } = useFormTracking('buyer_settings');
 
   useEffect(() => {
     if (status === 'unauthenticated') {

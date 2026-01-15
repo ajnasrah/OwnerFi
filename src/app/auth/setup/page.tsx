@@ -6,6 +6,7 @@ import { signIn, useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { GooglePlacesAutocomplete } from '@/components/ui/GooglePlacesAutocomplete';
 import { isExtendedSession } from '@/types/session';
+import { trackEvent, useFormTracking } from '@/components/analytics/AnalyticsProvider';
 
 export default function AuthSetup() {
   const router = useRouter();
@@ -29,6 +30,9 @@ export default function AuthSetup() {
   });
 
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+
+  // Form tracking
+  const { trackFormStart, trackFormSubmit, trackFormSuccess, trackFormError } = useFormTracking('signup');
 
   useEffect(() => {
     // First check session storage for verified phone (new signup flow)
@@ -76,6 +80,7 @@ export default function AuthSetup() {
     e.preventDefault();
     setLoading(true);
     setError('');
+    trackFormSubmit();
 
     if (!agreedToTerms) {
       setError('You must agree to the Terms, Privacy Policy, and consent to receive text messages');
@@ -142,9 +147,18 @@ export default function AuthSetup() {
 
       if (!response.ok || data.error) {
         setError(data.error || 'Failed to create account');
+        trackFormError(data.error || 'signup_failed');
         setLoading(false);
         return;
       }
+
+      // Track successful signup
+      trackEvent('auth_signup', {
+        role,
+        is_investor: formData.isInvestor,
+        method: 'phone'
+      });
+      trackFormSuccess({ role });
 
       // If user is already authenticated (existing user completing profile), skip signIn
       if (isExistingUser) {
@@ -240,6 +254,7 @@ export default function AuthSetup() {
                   required
                   value={formData.firstName}
                   onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
+                  onFocus={trackFormStart}
                   className="w-full px-3 py-2.5 bg-slate-900/50 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-white placeholder-slate-500"
                   placeholder="John"
                 />

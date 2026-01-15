@@ -134,6 +134,7 @@ export class ConsolidatedLeadSystem {
   
   /**
    * Calculate match score between buyer and realtor
+   * Matching is now STATE-LEVEL (not city-level) to maximize lead visibility
    */
   private static calculateMatch(buyer: BuyerProfile, realtor: RealtorMatchProfile): {
     isMatch: boolean;
@@ -142,55 +143,60 @@ export class ConsolidatedLeadSystem {
   } {
     let score = 0;
     const reasons: string[] = [];
-    
-    // Geographic match (required) - Does realtor serve buyer's city?
+
+    // State match is already enforced at the database query level
+    // All buyers passed here are in the same state as the realtor
     const buyerCity = buyer.preferredCity || buyer.city || '';
+    const buyerState = buyer.preferredState || buyer.state || '';
+
+    // Base score for state match (always true at this point)
+    score += 40;
+    reasons.push(`Same state: ${buyerState}`);
+
+    // Bonus for city match (buyer is in realtor's service area)
     const realtorCities = realtor.cities.map(c => c.toLowerCase());
     const cityMatch = realtorCities.includes(buyerCity.toLowerCase());
-    
-    if (!cityMatch) {
-      return { isMatch: false, score: 0, reasons: ['No geographic overlap'] };
+
+    if (cityMatch) {
+      score += 20;
+      reasons.push(`In service area: ${buyerCity}`);
+    } else {
+      reasons.push(`Outside service area: ${buyerCity}`);
     }
-    
-    score += 50;
-    reasons.push(`Serves ${buyerCity}`);
-    
-    // Language match (required) - At least 1 common language
+
+    // Language match (bonus, not required)
     const buyerLanguages = buyer.languages || ['English'];
-    const languageMatch = buyerLanguages.some(lang => 
+    const languageMatch = buyerLanguages.some(lang =>
       realtor.languages.map(rl => rl.toLowerCase()).includes(lang.toLowerCase())
     );
-    
-    if (!languageMatch) {
-      return { isMatch: false, score: 0, reasons: ['No language match'] };
+
+    if (languageMatch) {
+      score += 20;
+      const commonLangs = buyerLanguages.filter(lang =>
+        realtor.languages.map(rl => rl.toLowerCase()).includes(lang.toLowerCase())
+      );
+      reasons.push(`Common languages: ${commonLangs.join(', ')}`);
     }
-    
-    score += 50;
-    const commonLangs = buyerLanguages.filter(lang => 
-      realtor.languages.map(rl => rl.toLowerCase()).includes(lang.toLowerCase())
-    );
-    reasons.push(`Common languages: ${commonLangs.join(', ')}`);
-    
-    // Bonus scoring
-    
+
     // Activity bonus - Buyer has liked properties
     if (buyer.likedPropertyIds && buyer.likedPropertyIds.length > 0) {
       score += 10;
       reasons.push(`Active buyer (${buyer.likedPropertyIds.length} liked properties)`);
     }
-    
+
     // Recent activity bonus
     if (buyer.lastActiveAt) {
       const daysSinceActive = (Date.now() - buyer.lastActiveAt.toMillis()) / (1000 * 60 * 60 * 24);
       if (daysSinceActive <= 7) {
-        score += 15;
+        score += 10;
         reasons.push('Active within last week');
       } else if (daysSinceActive <= 30) {
         score += 5;
         reasons.push('Active within last month');
       }
     }
-    
+
+    // All buyers in the same state are now a match
     return {
       isMatch: true,
       score: Math.min(score, 100), // Cap at 100

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 
 // Analytics event types
@@ -14,7 +14,23 @@ export type AnalyticsEvent =
   | 'lead_submit'
   | 'calc_used'
   | 'cta_click'
-  | 'page_view';
+  | 'page_view'
+  // Scroll tracking
+  | 'scroll_25'
+  | 'scroll_50'
+  | 'scroll_75'
+  | 'scroll_90'
+  // Auth tracking
+  | 'auth_otp_sent'
+  | 'auth_otp_verified'
+  | 'auth_login'
+  | 'auth_signup'
+  | 'auth_logout'
+  // Form tracking
+  | 'form_start'
+  | 'form_submit'
+  | 'form_success'
+  | 'form_error';
 
 interface EventData {
   [key: string]: string | number | boolean;
@@ -121,6 +137,90 @@ export function setupVideoTracking(videoElement: HTMLVideoElement, videoId: stri
   };
 }
 
+// Scroll depth tracking helper
+export function setupScrollTracking(pageId?: string) {
+  if (typeof window === 'undefined') return () => {};
+
+  const milestones = { 25: false, 50: false, 75: false, 90: false };
+  let ticking = false;
+
+  const checkScrollDepth = () => {
+    const scrollTop = window.scrollY;
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+
+    if (docHeight <= 0) return;
+
+    const scrollPercent = (scrollTop / docHeight) * 100;
+    const data = pageId ? { page_id: pageId } : {};
+
+    if (scrollPercent >= 25 && !milestones[25]) {
+      milestones[25] = true;
+      trackEvent('scroll_25', { ...data, depth: 25 });
+    }
+    if (scrollPercent >= 50 && !milestones[50]) {
+      milestones[50] = true;
+      trackEvent('scroll_50', { ...data, depth: 50 });
+    }
+    if (scrollPercent >= 75 && !milestones[75]) {
+      milestones[75] = true;
+      trackEvent('scroll_75', { ...data, depth: 75 });
+    }
+    if (scrollPercent >= 90 && !milestones[90]) {
+      milestones[90] = true;
+      trackEvent('scroll_90', { ...data, depth: 90 });
+    }
+  };
+
+  const onScroll = () => {
+    if (!ticking) {
+      window.requestAnimationFrame(() => {
+        checkScrollDepth();
+        ticking = false;
+      });
+      ticking = true;
+    }
+  };
+
+  window.addEventListener('scroll', onScroll, { passive: true });
+  return () => window.removeEventListener('scroll', onScroll);
+}
+
+// Form tracking hook
+export function useFormTracking(formId: string) {
+  const hasStarted = useRef(false);
+
+  const trackFormStart = useCallback(() => {
+    if (!hasStarted.current) {
+      hasStarted.current = true;
+      trackEvent('form_start', { form_id: formId });
+    }
+  }, [formId]);
+
+  const trackFormSubmit = useCallback(() => {
+    trackEvent('form_submit', { form_id: formId });
+  }, [formId]);
+
+  const trackFormSuccess = useCallback((data?: EventData) => {
+    trackEvent('form_success', { form_id: formId, ...data });
+  }, [formId]);
+
+  const trackFormError = useCallback((error?: string) => {
+    trackEvent('form_error', { form_id: formId, error: error || 'unknown' });
+  }, [formId]);
+
+  const resetFormTracking = useCallback(() => {
+    hasStarted.current = false;
+  }, []);
+
+  return {
+    trackFormStart,
+    trackFormSubmit,
+    trackFormSuccess,
+    trackFormError,
+    resetFormTracking,
+  };
+}
+
 export default function AnalyticsProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -137,6 +237,12 @@ export default function AnalyticsProvider({ children }: { children: React.ReactN
   useEffect(() => {
     storeUTMParams();
   }, [searchParams]);
+
+  // Set up global scroll depth tracking (resets on page change)
+  useEffect(() => {
+    const cleanup = setupScrollTracking(pathname);
+    return cleanup;
+  }, [pathname]);
 
   // Set up global click tracking for CTA buttons
   useEffect(() => {

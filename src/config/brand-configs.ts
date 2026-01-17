@@ -353,8 +353,10 @@ export const GAZA_CONFIG: BrandConfig = {
   lateProfileId: process.env.LATE_GAZA_PROFILE_ID || '',
 
   platforms: {
-    default: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'threads', 'twitter'],
-    all: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'threads', 'twitter', 'bluesky'],
+    // Only include platforms actually connected to CryptoGaza profile
+    // Missing: youtube, facebook, linkedin, twitter (disconnected)
+    default: ['instagram', 'tiktok', 'threads', 'bluesky'],
+    all: ['instagram', 'tiktok', 'threads', 'bluesky'],
     excludeFromDefault: [],
   },
 

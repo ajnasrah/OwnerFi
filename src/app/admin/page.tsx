@@ -81,6 +81,13 @@ export default function AdminHub() {
       color: 'emerald',
     },
     {
+      href: '/admin/cre-analysis',
+      icon: '🏢',
+      title: 'CRE Analysis',
+      description: 'Commercial RE market analysis',
+      color: 'cyan',
+    },
+    {
       href: '/admin/social-dashboard',
       icon: '📱',
       title: 'Social Media',
@@ -101,7 +108,8 @@ export default function AdminHub() {
     emerald: { border: 'hover:border-emerald-500/50', shadow: 'hover:shadow-emerald-500/10', text: 'text-emerald-400', bg: 'from-emerald-400 to-emerald-600' },
     purple: { border: 'hover:border-purple-500/50', shadow: 'hover:shadow-purple-500/10', text: 'text-purple-400', bg: 'from-purple-400 to-purple-600' },
     pink: { border: 'hover:border-pink-500/50', shadow: 'hover:shadow-pink-500/10', text: 'text-pink-400', bg: 'from-pink-400 to-pink-600' },
-    yellow: { border: 'hover:border-yellow-500/50', shadow: 'hover:shadow-yellow-500/10', text: 'text-yellow-400', bg: 'from-yellow-400 to-yellow-600' }
+    yellow: { border: 'hover:border-yellow-500/50', shadow: 'hover:shadow-yellow-500/10', text: 'text-yellow-400', bg: 'from-yellow-400 to-yellow-600' },
+    cyan: { border: 'hover:border-cyan-500/50', shadow: 'hover:shadow-cyan-500/10', text: 'text-cyan-400', bg: 'from-cyan-400 to-cyan-600' }
   };
 
   return (

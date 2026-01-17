@@ -1,5 +1,6 @@
 import { MetadataRoute } from 'next'
 import { getAllPropertiesForSitemap } from '@/lib/property-seo'
+import { STATE_DATA, generateCitySlug } from '@/lib/realtor-cities-data'
 
 // This function runs on every request to generate a fresh sitemap
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -37,6 +38,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(),
       changeFrequency: 'yearly',
       priority: 0.3,
+    },
+    // Realtor pages
+    {
+      url: `${baseUrl}/for-realtors`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.9,
+    },
+    {
+      url: `${baseUrl}/for-realtors/sample-agreement`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.7,
     },
   ]
 
@@ -96,6 +110,27 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }))
 
+  // Buyer leads pages for realtors - all states
+  const buyerLeadsStatePages: MetadataRoute.Sitemap = Object.values(STATE_DATA).map(state => ({
+    url: `${baseUrl}/buyer-leads/${state.slug}`,
+    lastModified: new Date(),
+    changeFrequency: 'weekly' as const,
+    priority: 0.8,
+  }))
+
+  // Buyer leads pages for realtors - all cities (1000+)
+  const buyerLeadsCityPages: MetadataRoute.Sitemap = []
+  for (const stateData of Object.values(STATE_DATA)) {
+    for (const cityName of stateData.cities) {
+      buyerLeadsCityPages.push({
+        url: `${baseUrl}/buyer-leads/${generateCitySlug(cityName)}`,
+        lastModified: new Date(),
+        changeFrequency: 'weekly' as const,
+        priority: 0.7,
+      })
+    }
+  }
+
   // Fetch all active properties from ALL collections (properties, zillow_imports, cash_houses)
   let propertyPages: MetadataRoute.Sitemap = []
 
@@ -136,12 +171,31 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }))
 
     console.log(`[Sitemap] Generated ${propertyPages.length} property URLs from all collections`)
+    console.log(`[Sitemap] Generated ${buyerLeadsStatePages.length} buyer leads state pages`)
+    console.log(`[Sitemap] Generated ${buyerLeadsCityPages.length} buyer leads city pages`)
 
     // Combine all pages
-    return [...staticPages, ...keywordPages, ...statePages, ...cityPages, ...propertyPages, ...dynamicCityPages, ...dynamicStatePages]
+    return [
+      ...staticPages,
+      ...keywordPages,
+      ...statePages,
+      ...cityPages,
+      ...buyerLeadsStatePages,
+      ...buyerLeadsCityPages,
+      ...propertyPages,
+      ...dynamicCityPages,
+      ...dynamicStatePages
+    ]
   } catch (error) {
     console.error('Error generating sitemap:', error)
     // Return at least static pages and keyword pages if database fails
-    return [...staticPages, ...keywordPages, ...statePages, ...cityPages]
+    return [
+      ...staticPages,
+      ...keywordPages,
+      ...statePages,
+      ...cityPages,
+      ...buyerLeadsStatePages,
+      ...buyerLeadsCityPages
+    ]
   }
 }

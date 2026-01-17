@@ -60,6 +60,12 @@ export function Header({ className = '' }: HeaderProps) {
               </>
             ) : (
               <>
+                <Link
+                  href="/for-realtors"
+                  className="hidden sm:block text-slate-300 hover:text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                >
+                  For Realtors
+                </Link>
                 <Button
                   variant="primary"
                   size="sm"

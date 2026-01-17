@@ -197,9 +197,15 @@ export default async function HomePage() {
               <div className="flex items-center gap-4">
                 <Link
                   href="/how-owner-finance-works"
-                  className="hidden sm:block text-slate-300 hover:text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                  className="text-slate-300 hover:text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
                 >
                   How It Works
+                </Link>
+                <Link
+                  href="/for-realtors"
+                  className="text-slate-300 hover:text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                >
+                  For Realtors
                 </Link>
                 {session ? (
                   <Link
@@ -739,7 +745,7 @@ export default async function HomePage() {
                 <ul className="space-y-2">
                   <li><Link href="/about" className="text-slate-400 hover:text-white transition-colors">About Us</Link></li>
                   <li><Link href="/contact" className="text-slate-400 hover:text-white transition-colors">Contact</Link></li>
-                  <li><Link href="/realtor-dashboard" className="text-slate-400 hover:text-white transition-colors">For Realtors</Link></li>
+                  <li><Link href="/for-realtors" className="text-slate-400 hover:text-white transition-colors">For Realtors</Link></li>
                   <li><SmartCTAButton className="text-slate-400 hover:text-white transition-colors text-left">Get Started</SmartCTAButton></li>
                 </ul>
               </div>
@@ -753,7 +759,7 @@ export default async function HomePage() {
 
             <div className="border-t border-slate-800 pt-8">
               <p className="text-center text-slate-400 text-sm">
-                © 2024 OwnerFi. All rights reserved. |
+                © {new Date().getFullYear()} OwnerFi. All rights reserved. |
                 <Link href="/terms" className="hover:text-white ml-2">Terms</Link> |
                 <Link href="/privacy" className="hover:text-white ml-2">Privacy</Link> |
                 <Link href="/tcpa-compliance" className="hover:text-white ml-2">TCPA Compliance</Link>

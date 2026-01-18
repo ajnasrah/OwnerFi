@@ -392,12 +392,16 @@ export default function ForRealtorsPage() {
 
                 <div className="bg-white rounded-xl p-6 text-slate-900">
                   <div className="text-center mb-4">
-                    <div className="text-2xl font-bold text-slate-800">eXp</div>
-                    <div className="text-xs tracking-widest text-slate-600">R E A L T Y</div>
+                    <div className="flex items-center justify-center gap-2">
+                      <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-lg flex items-center justify-center">
+                        <span className="text-white font-bold text-sm">O</span>
+                      </div>
+                      <span className="text-xl font-bold text-slate-800">OwnerFi</span>
+                    </div>
                   </div>
                   <div className="text-center font-bold text-lg mb-4">REFERRAL AGREEMENT</div>
                   <div className="text-xs text-slate-600 space-y-2">
-                    <p><strong>1. REFERRING COMPANY:</strong> eXp Realty / OwnerFi</p>
+                    <p><strong>1. REFERRING COMPANY:</strong> OwnerFi</p>
                     <p><strong>2. RECEIVING COMPANY:</strong> [Your Brokerage]</p>
                     <p><strong>3. PROSPECT:</strong> [Buyer Name] - Buyer Referral</p>
                     <p><strong>4. REFERRAL FEE:</strong> 30% of commission at closing</p>

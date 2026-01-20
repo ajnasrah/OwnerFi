@@ -27,25 +27,27 @@ import { isWebhookProcessed, markWebhookProcessed } from '@/lib/webhook-idempote
 import { getAllPhoneFormats } from '@/lib/phone-utils';
 import crypto from 'crypto';
 
-// Webhook secret for signature validation
+// Webhook secret for signature validation (optional - GHL doesn't send signatures by default)
 const WEBHOOK_SECRET = process.env.GHL_BUYER_OPTOUT_WEBHOOK_SECRET || process.env.GHL_WEBHOOK_SECRET;
 
 /**
  * Verify webhook signature using HMAC-SHA256
+ * Note: GHL doesn't send signatures by default, so we allow requests without signatures
  */
 function verifyWebhookSignature(payload: string, signature: string | null): boolean {
+  // If no secret configured, allow all requests (GHL doesn't sign webhooks by default)
   if (!WEBHOOK_SECRET) {
-    if (process.env.NODE_ENV === 'development') {
-      console.warn('⚠️ [SECURITY] GHL_BUYER_OPTOUT_WEBHOOK_SECRET not set - skipping signature validation in dev');
-      return true;
-    }
-    return false;
+    console.log('ℹ️ [GHL Buyer Opt-Out] No webhook secret configured - skipping signature validation');
+    return true;
   }
 
+  // If secret is configured but no signature sent, still allow (GHL compatibility)
   if (!signature) {
-    return false;
+    console.log('ℹ️ [GHL Buyer Opt-Out] No signature header - allowing request (GHL compatibility)');
+    return true;
   }
 
+  // If both secret and signature present, validate
   const signatureValue = signature.startsWith('sha256=')
     ? signature.slice(7)
     : signature;

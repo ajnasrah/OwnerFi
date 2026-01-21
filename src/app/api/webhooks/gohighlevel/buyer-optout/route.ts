@@ -216,35 +216,39 @@ export async function POST(request: NextRequest) {
     const optOutReason = payload.status || payload.reason || 'stop_contacting';
 
     // Update buyer profile to mark as unavailable
-    await db.collection('buyerProfiles').doc(buyerDoc.id).update({
+    const updateData: Record<string, unknown> = {
       isAvailableForPurchase: false,
       isActive: false,
       optedOutAt: new Date(),
       optOutReason,
-      optOutStatus: payload.status || null,
       optOutSource: 'ghl_webhook',
-      ghlContactId: payload.contactId || null,
       updatedAt: new Date(),
-    });
+    };
+    if (payload.status) updateData.optOutStatus = payload.status;
+    if (payload.contactId) updateData.ghlContactId = payload.contactId;
+
+    await db.collection('buyerProfiles').doc(buyerDoc.id).update(updateData);
 
     console.log(`✅ [GHL Buyer Opt-Out] Marked buyer ${buyerDoc.id} as unavailable`);
 
     // Log the opt-out event
-    await db.collection('buyerOptOutLogs').add({
+    const logData: Record<string, unknown> = {
       buyerId: buyerDoc.id,
       buyerName,
-      buyerPhone: buyerData?.phone || payload.phone,
-      buyerEmail: buyerData?.email || payload.email,
+      buyerPhone: buyerData?.phone || payload.phone || null,
+      buyerEmail: buyerData?.email || payload.email || null,
       reason: optOutReason,
-      status: payload.status || null,
-      ghlContactId: payload.contactId,
       lookupMethod,
       previousStatus: {
-        isAvailableForPurchase: buyerData?.isAvailableForPurchase,
-        isActive: buyerData?.isActive,
+        isAvailableForPurchase: buyerData?.isAvailableForPurchase ?? null,
+        isActive: buyerData?.isActive ?? null,
       },
       createdAt: new Date(),
-    });
+    };
+    if (payload.status) logData.status = payload.status;
+    if (payload.contactId) logData.ghlContactId = payload.contactId;
+
+    await db.collection('buyerOptOutLogs').add(logData);
 
     // Mark webhook as processed
     const response = {

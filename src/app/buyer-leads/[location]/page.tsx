@@ -13,7 +13,7 @@ export async function generateMetadata({ params }: { params: Promise<{ location:
   if (!locationData) {
     return {
       title: 'Buyer Leads for Realtors | OwnerFi',
-      description: 'Get pre-qualified buyer leads in your area.',
+      description: 'Get pre-screened buyer leads in your area.',
     }
   }
 
@@ -29,8 +29,8 @@ export async function generateMetadata({ params }: { params: Promise<{ location:
     : `Buyer Leads ${cityData.name} ${cityData.stateCode} | Real Estate Agent Leads | OwnerFi`
 
   const description = isState
-    ? `Get pre-qualified buyer leads in ${locationName}. Join OwnerFi's realtor referral network. 1 free lead per month, only pay 30% at closing.`
-    : `Real estate buyer leads in ${fullLocation}. Pre-qualified buyers looking for homes. Free to join, 30% referral fee at closing only.`
+    ? `Get pre-screened buyer leads in ${locationName}. Join OwnerFi's realtor referral network. 1 free lead per month, only pay 30% at closing.`
+    : `Real estate buyer leads in ${fullLocation}. Pre-screened buyers looking for homes. Free to join, 30% referral fee at closing only.`
 
   const keywords = isState
     ? `buyer leads ${locationName.toLowerCase()}, real estate leads ${locationName.toLowerCase()}, realtor referrals ${locationName.toLowerCase()}, agent leads ${stateData.code}, buyer referral program ${locationName.toLowerCase()}`
@@ -63,11 +63,11 @@ function generateFAQSchema(locationName: string, isState: boolean) {
   const faqs = [
     {
       question: `How do I get buyer leads in ${locationName}?`,
-      answer: `Join OwnerFi's realtor referral network for free. Set ${locationName} as your service area and start receiving pre-qualified buyer leads. You get 1 free lead per month and only pay a 30% referral fee when deals close.`
+      answer: `Join OwnerFi's realtor referral network for free. Set ${locationName} as your service area and start receiving pre-screened buyer leads. You get 1 free lead per month and only pay a 30% referral fee when deals close.`
     },
     {
       question: `What types of buyer leads are available in ${locationName}?`,
-      answer: `OwnerFi provides pre-qualified buyers interested in owner-financed properties in ${locationName}. These buyers have already provided their contact information, location preferences, and budget range through our platform.`
+      answer: `OwnerFi provides pre-screened buyers interested in owner-financed properties in ${locationName}. These buyers have already provided their contact information, location preferences, and budget range through our platform. Note: We do not run credit checks or provide lender-style pre-qualification.`
     },
     {
       question: `How much do buyer leads cost in ${locationName}?`,
@@ -107,7 +107,7 @@ function generateLocalBusinessSchema(locationName: string, slug: string) {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
     "name": `OwnerFi Buyer Leads - ${locationName}`,
-    "description": `Pre-qualified buyer leads for real estate agents in ${locationName}`,
+    "description": `Pre-screened buyer leads for real estate agents in ${locationName}`,
     "url": `https://ownerfi.ai/buyer-leads/${slug}`,
     "areaServed": {
       "@type": "Place",
@@ -244,7 +244,7 @@ export default async function BuyerLeadsLocationPage({ params }: { params: Promi
                 Buyer Leads in <span className="text-emerald-400">{fullLocation}</span>
               </h1>
               <p className="text-xl text-slate-300 max-w-3xl mx-auto mb-8">
-                Get pre-qualified buyer leads in {locationName}. Join OwnerFi&apos;s referral network -
+                Get pre-screened buyer leads in {locationName}. Join OwnerFi&apos;s referral network -
                 1 free lead per month, only pay 30% when deals close.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -340,7 +340,7 @@ export default async function BuyerLeadsLocationPage({ params }: { params: Promi
                 </div>
                 <div className="bg-slate-900/50 rounded-xl p-6 border border-slate-700/50">
                   <div className="text-blue-400 text-2xl mb-3">✅</div>
-                  <h3 className="text-lg font-semibold text-white mb-2">Pre-Qualified Buyers</h3>
+                  <h3 className="text-lg font-semibold text-white mb-2">Pre-Screened Buyers</h3>
                   <p className="text-slate-400 text-sm">All leads have provided contact info, location, and budget preferences.</p>
                 </div>
                 <div className="bg-slate-900/50 rounded-xl p-6 border border-slate-700/50">

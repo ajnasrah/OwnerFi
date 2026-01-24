@@ -235,7 +235,7 @@ export default function ContactPage() {
             <div className="bg-slate-800/30 border border-slate-700/50 rounded-xl p-6">
               <h4 className="text-lg font-bold text-white mb-3">Are You a Realtor?</h4>
               <p className="text-slate-300 text-sm mb-4">
-                Partner with us to access pre-qualified buyers looking for owner-financed properties.
+                Partner with us to access pre-screened buyers looking for owner-financed properties.
               </p>
               <Link
                 href="/auth"

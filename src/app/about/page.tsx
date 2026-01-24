@@ -82,7 +82,7 @@ export default function AboutPage() {
               <ul className="space-y-3 text-slate-300">
                 <li className="flex items-start gap-3">
                   <div className="w-2 h-2 bg-blue-400 rounded-full mt-2 flex-shrink-0"></div>
-                  <span>Access to pre-qualified buyers seeking owner financing</span>
+                  <span>Access to pre-screened buyers seeking owner financing</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <div className="w-2 h-2 bg-blue-400 rounded-full mt-2 flex-shrink-0"></div>

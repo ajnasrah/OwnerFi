@@ -69,7 +69,7 @@ export default async function BadCreditHomeBuying() {
         "name": "What percentage of owner financed homes accept bad credit?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Based on our listings, approximately 30% of properties require no credit check at all, 50% are flexible and work with credit challenges, and only 20% require good credit. This means 80% of our owner financed homes may work with bad credit situations."
+          "text": "Based on general market estimates, approximately 30% of properties may not require traditional credit checks, about 50% may be flexible and work with credit challenges, and around 20% may require good credit. Actual availability varies by market and seller. This is not a guarantee."
         }
       },
       {
@@ -146,8 +146,8 @@ export default async function BadCreditHomeBuying() {
             </h1>
             <p className="text-xl text-slate-700 mb-8">
               Don't let bad credit, poor credit, or no credit stop your homeownership dreams.
-              With owner financing, {totalCount > 0 ? `${totalCount}+ ` : ''}sellers nationwide work with all credit situations.
-              Better than rent to own - get immediate ownership without bank approval.
+              With owner financing, {totalCount > 0 ? `${totalCount}+ ` : ''}properties in Texas, Florida, and Georgia may work with various credit situations.
+              Unlike rent to own, owner financing can offer immediate ownership without traditional bank approval.
             </p>
 
             <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-6 rounded-xl border-2 border-green-300 mb-8">
@@ -172,7 +172,15 @@ export default async function BadCreditHomeBuying() {
                 </div>
               </div>
               <p className="text-sm text-green-700 mt-4 italic">
-                Each property listing shows specific credit requirements set by the seller
+                * These are general market estimates and not guarantees. Each property listing shows specific credit requirements set by the seller. Actual availability varies.
+              </p>
+            </div>
+
+            {/* Owner Financing Qualifier */}
+            <div className="bg-amber-50 border border-amber-300 rounded-xl p-4 mb-6">
+              <p className="text-amber-800 text-sm text-center">
+                <strong>Owner Financing Availability:</strong> Subject to seller approval and verification. Not all properties listed will qualify for or offer owner financing.
+                Financing type must be independently confirmed with the seller or their agent.
               </p>
             </div>
 

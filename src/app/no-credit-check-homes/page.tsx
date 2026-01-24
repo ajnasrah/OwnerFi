@@ -108,10 +108,18 @@ export default function NoCreditCheckHomes() {
               </p>
 
               {/* Important Disclaimer */}
-              <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-6 max-w-3xl mx-auto mb-8">
+              <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-6 max-w-3xl mx-auto mb-4">
                 <p className="text-yellow-200 text-sm">
                   <strong>Important:</strong> Credit requirements vary by property and seller. Some properties require credit checks
                   while others are more flexible. Each seller sets their own criteria. Always verify requirements before applying.
+                </p>
+              </div>
+
+              {/* Owner Financing Qualifier */}
+              <div className="bg-amber-900/30 border border-amber-500/30 rounded-xl p-4 max-w-3xl mx-auto mb-8">
+                <p className="text-amber-200 text-sm text-center">
+                  <strong>Owner Financing Availability:</strong> Subject to seller approval and verification. Not all properties listed will qualify for or offer owner financing.
+                  Financing type must be independently confirmed with the seller or their agent.
                 </p>
               </div>
 
@@ -130,9 +138,12 @@ export default function NoCreditCheckHomes() {
           {/* Credit Requirements Spectrum */}
           <section className="py-16 px-6 bg-slate-800/30">
             <div className="max-w-6xl mx-auto">
-              <h2 className="text-3xl font-bold text-white text-center mb-12">
+              <h2 className="text-3xl font-bold text-white text-center mb-4">
                 Understanding Credit Requirements in Owner Financing
               </h2>
+              <p className="text-slate-400 text-sm text-center mb-12">
+                * Percentages are estimates based on general market trends. Actual availability varies by location and time.
+              </p>
               <div className="grid md:grid-cols-3 gap-8">
                 <div className="bg-gradient-to-br from-green-900/30 to-green-800/30 rounded-xl p-6 border border-green-500/30">
                   <h3 className="text-xl font-bold text-green-400 mb-4">No Credit Check</h3>
@@ -143,7 +154,7 @@ export default function NoCreditCheckHomes() {
                     <li>• Employment verification</li>
                     <li>• No credit report pulled</li>
                   </ul>
-                  <p className="text-green-400 text-sm mt-4">~30% of properties</p>
+                  <p className="text-green-400 text-sm mt-4">~30% of properties*</p>
                 </div>
 
                 <div className="bg-gradient-to-br from-yellow-900/30 to-yellow-800/30 rounded-xl p-6 border border-yellow-500/30">
@@ -155,7 +166,7 @@ export default function NoCreditCheckHomes() {
                     <li>• Accept past issues</li>
                     <li>• Focus on recent history</li>
                   </ul>
-                  <p className="text-yellow-400 text-sm mt-4">~50% of properties</p>
+                  <p className="text-yellow-400 text-sm mt-4">~50% of properties*</p>
                 </div>
 
                 <div className="bg-gradient-to-br from-blue-900/30 to-blue-800/30 rounded-xl p-6 border border-blue-500/30">
@@ -167,7 +178,7 @@ export default function NoCreditCheckHomes() {
                     <li>• Income verification</li>
                     <li>• Lower down payments</li>
                   </ul>
-                  <p className="text-blue-400 text-sm mt-4">~20% of properties</p>
+                  <p className="text-blue-400 text-sm mt-4">~20% of properties*</p>
                 </div>
               </div>
             </div>
@@ -232,9 +243,12 @@ export default function NoCreditCheckHomes() {
           {/* Success Stories */}
           <section className="py-16 px-6 bg-slate-800/30">
             <div className="max-w-6xl mx-auto">
-              <h2 className="text-3xl font-bold text-white text-center mb-12">
-                Real Buyer Situations
+              <h2 className="text-3xl font-bold text-white text-center mb-4">
+                Example Buyer Situations
               </h2>
+              <p className="text-slate-400 text-sm text-center mb-12">
+                * These are illustrative examples of typical buyer situations. Individual results vary and are not guaranteed.
+              </p>
               <div className="grid md:grid-cols-3 gap-6">
                 <div className="bg-slate-900/50 rounded-xl p-6 border border-slate-700/50">
                   <div className="text-2xl mb-3">🏗️</div>

@@ -14,7 +14,7 @@ export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
   title: 'No Bank Needed Homes | Owner Financing & Rent to Own Properties | OwnerFi',
-  description: 'Find homes without bank financing! Browse owner financed properties, rent-to-own homes, seller financing, and creative deals across all 50 states. Bad credit OK, flexible terms.',
+  description: 'Find homes without bank financing! Browse owner financed properties, rent-to-own homes, seller financing, and creative deals in Texas, Florida & Georgia. Bad credit OK, flexible terms.',
   keywords: 'no bank financing, owner financing, rent to own homes, seller financing, buy house without bank, owner financed homes, rent to own properties, creative financing, subject to real estate, lease purchase, contract for deed, bad credit homes, no credit check homes, alternative financing',
 
   openGraph: {
@@ -288,7 +288,7 @@ export default async function HomePage() {
                   </div>
 
                   <div className="absolute -bottom-8 -right-8 bg-slate-800/90 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-4 shadow-2xl z-10 animate-float-delayed">
-                    <div className="text-3xl font-black text-blue-400">50</div>
+                    <div className="text-3xl font-black text-blue-400">3</div>
                     <div className="text-slate-300 text-sm">States</div>
                   </div>
 
@@ -309,6 +309,16 @@ export default async function HomePage() {
               </div>
             </div>
           </section>
+
+          {/* Owner Financing Disclaimer */}
+          <div className="bg-amber-900/30 border-y border-amber-500/30 py-4 px-6">
+            <div className="max-w-4xl mx-auto text-center">
+              <p className="text-amber-200 text-sm">
+                <strong>Important:</strong> Subject to seller approval and verification. Not all properties listed will qualify for or offer owner financing.
+                Financing type must be independently confirmed with the seller or their agent.
+              </p>
+            </div>
+          </div>
 
           {/* Section Divider */}
           <div className="h-px bg-gradient-to-r from-transparent via-slate-700 to-transparent"></div>
@@ -447,7 +457,7 @@ export default async function HomePage() {
                   Real People, Real Homes
                 </h2>
                 <p className="text-base sm:text-lg text-slate-300 max-w-2xl mx-auto" data-translate="testimonials.subtitle">
-                  Join thousands who found their dream home
+                  See what buyers are saying
                 </p>
               </div>
 
@@ -522,18 +532,23 @@ export default async function HomePage() {
                 </div>
               </div>
 
+              {/* Testimonial Disclaimer */}
+              <p className="text-xs text-slate-500 text-center mb-6">
+                * Testimonials reflect individual experiences and may not be typical. Results vary based on individual circumstances.
+              </p>
+
               {/* Trust Stats */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                 <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-6 text-center">
                   <div className="text-4xl font-black text-emerald-400 mb-2">1,000+</div>
-                  <div className="text-slate-300 text-sm" data-translate="testimonials.stat1">Happy Homeowners</div>
+                  <div className="text-slate-300 text-sm" data-translate="testimonials.stat1">Registered Users</div>
                 </div>
                 <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-6 text-center">
                   <div className="text-4xl font-black text-blue-400 mb-2">500+</div>
                   <div className="text-slate-300 text-sm" data-translate="testimonials.stat2">Active Properties</div>
                 </div>
                 <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-6 text-center">
-                  <div className="text-4xl font-black text-purple-400 mb-2">50</div>
+                  <div className="text-4xl font-black text-purple-400 mb-2">3</div>
                   <div className="text-slate-300 text-sm" data-translate="testimonials.stat3">States Covered</div>
                 </div>
                 <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-6 text-center">
@@ -666,9 +681,9 @@ export default async function HomePage() {
 
               {/* Simplified Coverage */}
               <div className="bg-slate-800/30 rounded-2xl p-8 border border-slate-700/50">
-                <h3 className="text-2xl font-bold text-white text-center mb-6" data-translate="locations.nationwideTitle">Available Nationwide</h3>
+                <h3 className="text-2xl font-bold text-white text-center mb-6" data-translate="locations.nationwideTitle">Growing Coverage</h3>
                 <div className="text-center mb-6">
-                  <p className="text-slate-300 mb-4" data-translate="locations.nationwideSubtitle">Properties available in all 50 states</p>
+                  <p className="text-slate-300 mb-4" data-translate="locations.nationwideSubtitle">Currently serving Texas, Florida, and Georgia with more states coming soon</p>
                   <SmartCTAButton className="inline-block bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white py-3 px-8 rounded-xl font-semibold text-lg transition-all duration-300 hover:scale-[1.02] shadow-lg">
                     <span data-translate="locations.viewAllCta">View All Properties →</span>
                   </SmartCTAButton>

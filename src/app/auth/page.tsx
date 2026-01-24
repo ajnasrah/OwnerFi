@@ -316,7 +316,7 @@ export default function AuthPage() {
                   className="w-full px-4 py-4 bg-slate-900/50 border border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-white text-lg placeholder-slate-500 transition-all"
                 />
                 <p className="mt-2 text-xs text-slate-400">
-                  We'll send you a verification code via SMS
+                  By entering your phone number, you consent to receive automated SMS messages from OwnerFi for verification and account updates. Message and data rates may apply.
                 </p>
               </div>
 

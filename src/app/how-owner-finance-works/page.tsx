@@ -196,6 +196,26 @@ export default function HowOwnerFinanceWorks() {
             </ul>
           </div>
 
+          {/* Educational Disclaimer */}
+          <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4 mb-8">
+            <p className="text-yellow-200 text-xs text-center">
+              <strong>Disclaimer:</strong> This content is for educational purposes only and does not constitute legal, financial, or real estate advice.
+              OwnerFi is a lead generation platform, not a licensed real estate broker or lender. Always consult licensed professionals before making real estate decisions.
+              Some jurisdictions limit how much liability can be disclaimed; these terms apply only to the fullest extent permitted by law in your location.
+            </p>
+          </div>
+
+          {/* Owner Financing Availability Disclaimer */}
+          <div className="bg-orange-500/10 border border-orange-500/30 rounded-xl p-6 mb-8">
+            <h3 className="text-orange-300 font-bold text-lg mb-3 text-center">Important: Owner Financing Availability</h3>
+            <p className="text-orange-200 text-sm text-center mb-3">
+              <strong>Listings may or may not be available with owner financing.</strong> Financing type must be independently confirmed with the seller or their agent.
+            </p>
+            <p className="text-orange-200 text-sm text-center">
+              We do not arrange credit, negotiate terms, or present loan offers. Any financing terms are negotiated directly between buyers, sellers, and their licensed professionals.
+            </p>
+          </div>
+
           {/* Content sections would go here - using the CollapsibleFAQ component */}
           <CollapsibleFAQ />
 

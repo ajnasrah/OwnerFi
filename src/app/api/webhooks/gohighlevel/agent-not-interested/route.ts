@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
+import { deletePropertyFromIndex } from '@/lib/typesense/sync';
 import crypto from 'crypto';
 
 // Initialize Firebase Admin
@@ -127,7 +128,10 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('✅ [AGENT NOT INTERESTED] Auth passed');
-    const { firebaseId, note } = body;
+
+    // Accept both camelCase and snake_case (GHL uses snake_case)
+    const firebaseId = body.firebaseId || body.firebase_id;
+    const note = body.note;
 
     console.log(`   firebaseId: ${firebaseId}`);
     if (note) console.log(`   note: ${note}`);
@@ -177,7 +181,42 @@ export async function POST(request: NextRequest) {
       updatedAt: new Date(),
     });
 
-    console.log('✅ [AGENT NOT INTERESTED] Marked as not interested');
+    console.log('✅ [AGENT NOT INTERESTED] Marked as not interested in queue');
+
+    // CRITICAL: Also deactivate the property in the main properties collection
+    // This prevents it from showing on the website as owner finance positive
+    if (property.zpid) {
+      const propertyDocId = `zpid_${property.zpid}`;
+      const propertyRef = db.collection('properties').doc(propertyDocId);
+      const propertyDoc = await propertyRef.get();
+
+      if (propertyDoc.exists) {
+        console.log(`   📦 Found property ${propertyDocId} in properties collection`);
+
+        await propertyRef.update({
+          ownerFinanceVerified: false,
+          agentConfirmedOwnerFinance: false,
+          agentRejectedAt: new Date(),
+          agentRejectionNote: note || 'Marked not interested via GHL',
+          updatedAt: new Date(),
+        });
+
+        console.log('   ✅ Deactivated property in properties collection');
+
+        // Remove from Typesense search index
+        try {
+          await deletePropertyFromIndex(propertyDocId);
+          console.log('   ✅ Removed from Typesense search index');
+        } catch (typesenseErr: unknown) {
+          const errMsg = typesenseErr instanceof Error ? typesenseErr.message : 'Unknown error';
+          console.error(`   ⚠️ Typesense deletion failed: ${errMsg}`);
+        }
+      } else {
+        console.log(`   ℹ️ Property ${propertyDocId} not found in properties collection (may not have been published yet)`);
+      }
+    } else {
+      console.log('   ℹ️ No zpid in queue document - cannot update properties collection');
+    }
 
     return NextResponse.json({
       success: true,

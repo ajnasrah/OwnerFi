@@ -33,9 +33,10 @@ export const metadata: Metadata = {
 function generateLocalBusinessSchema() {
   return {
     "@context": "https://schema.org",
-    "@type": "RealEstateAgent",
-    "name": "OwnerFi Texas",
-    "description": "Owner financed properties marketplace in Texas",
+    "@type": "WebApplication",
+    "name": "OwnerFi - Texas Properties",
+    "description": "Lead generation platform for owner financed properties in Texas",
+    "applicationCategory": "Real Estate",
     "url": "https://ownerfi.ai/owner-financing-texas",
     "areaServed": {
       "@type": "State",
@@ -196,6 +197,14 @@ export default function OwnerFinancingTexas() {
                   <div className="text-slate-300 mt-2">Average Closing</div>
                 </div>
               </div>
+
+              {/* Owner Financing Qualifier */}
+              <div className="bg-amber-900/30 border border-amber-500/30 rounded-xl p-4 mt-8">
+                <p className="text-amber-200 text-sm text-center">
+                  <strong>Important:</strong> Subject to seller approval and verification. Not all properties listed will qualify for or offer owner financing.
+                  Financing type must be independently confirmed with the seller or their agent.
+                </p>
+              </div>
             </div>
           </section>
 
@@ -217,12 +226,12 @@ export default function OwnerFinancingTexas() {
                 </Link>
                 <Link href="/auth">
                   <button className="bg-white/10 backdrop-blur-sm border-2 border-white/30 hover:bg-white/20 text-white py-4 px-8 rounded-xl font-semibold text-lg transition-all duration-300 hover:scale-[1.02]">
-                    Get Pre-Qualified Today
+                    Create Free Account
                   </button>
                 </Link>
               </div>
               <p className="text-sm text-slate-400 mt-6">
-                Join 500+ buyers who found their dream home without traditional financing
+                Explore owner financing options without traditional bank requirements
               </p>
             </div>
           </section>
@@ -324,9 +333,12 @@ export default function OwnerFinancingTexas() {
           {/* Benefits Section */}
           <section className="py-16 px-6">
             <div className="max-w-6xl mx-auto">
-              <h2 className="text-3xl font-bold text-white text-center mb-12">
+              <h2 className="text-3xl font-bold text-white text-center mb-4">
                 Why Choose Owner Financing in Texas?
               </h2>
+              <p className="text-slate-400 text-xs text-center mb-12">
+                * Property values can go up or down. This is educational information only, not investment advice. Consult a licensed professional before making real estate decisions.
+              </p>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                 <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border border-slate-700/50">
                   <div className="text-emerald-400 text-3xl mb-4">🏛️</div>
@@ -340,8 +352,8 @@ export default function OwnerFinancingTexas() {
                 </div>
                 <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border border-slate-700/50">
                   <div className="text-purple-400 text-3xl mb-4">📈</div>
-                  <h3 className="text-xl font-semibold text-white mb-3">Growing Property Values</h3>
-                  <p className="text-slate-300">Texas real estate continues to appreciate, making owner financed properties a smart investment opportunity.</p>
+                  <h3 className="text-xl font-semibold text-white mb-3">Texas Real Estate Market</h3>
+                  <p className="text-slate-300">Texas has a diverse real estate market with various price points and neighborhoods to explore.*</p>
                 </div>
                 <div className="bg-slate-800/50 backdrop-blur rounded-xl p-6 border border-slate-700/50">
                   <div className="text-yellow-400 text-3xl mb-4">⚡</div>
@@ -453,9 +465,10 @@ export default function OwnerFinancingTexas() {
             </div>
             <div className="border-t border-slate-800 pt-8 text-center">
               <p className="text-slate-400 text-sm">
-                © 2024 OwnerFi. All rights reserved. |
+                © {new Date().getFullYear()} OwnerFi. All rights reserved. |
                 <Link href="/terms" className="hover:text-white ml-2">Terms</Link> |
-                <Link href="/privacy" className="hover:text-white ml-2">Privacy</Link>
+                <Link href="/privacy" className="hover:text-white ml-2">Privacy</Link> |
+                <Link href="/creative-finance-disclaimer" className="hover:text-white ml-2">Creative Finance Disclaimer</Link>
               </p>
             </div>
           </div>

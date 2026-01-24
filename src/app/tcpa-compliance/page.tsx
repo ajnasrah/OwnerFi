@@ -14,12 +14,12 @@ export default function TCPACompliance() {
             </div>
             <span className="text-lg font-bold text-white">OwnerFi</span>
           </Link>
-          <button
-            onClick={() => window.close()}
+          <Link
+            href="/"
             className="text-slate-300 hover:text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
           >
-            ← Close
-          </button>
+            ← Back to Home
+          </Link>
         </div>
       </header>
 
@@ -128,12 +128,12 @@ export default function TCPACompliance() {
         {/* Action Buttons */}
         <div className="text-center mt-8">
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button
-              onClick={() => window.close()}
-              className="bg-slate-700 hover:bg-slate-600 text-white py-3 px-8 rounded-xl font-semibold transition-all duration-300"
+            <Link
+              href="/"
+              className="bg-slate-700 hover:bg-slate-600 text-white py-3 px-8 rounded-xl font-semibold transition-all duration-300 text-center"
             >
-              I Have Read This Agreement
-            </button>
+              Return to Home
+            </Link>
             <Link
               href="/terms"
               target="_blank"

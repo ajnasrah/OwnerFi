@@ -5,10 +5,10 @@ import { LegalFooter } from '@/components/ui/LegalFooter'
 
 export const metadata: Metadata = {
   title: 'For Realtors | Get Buyer Leads | OwnerFi Referral Network',
-  description: 'Join OwnerFi\'s realtor referral network. Get pre-qualified buyer leads in your area. 1 free lead per month. Only pay 30% referral fee at closing.',
-  keywords: 'buyer leads for realtors, real estate referrals, realtor lead generation, buyer referral program, real estate agent leads, pre-qualified buyer leads',
+  description: 'Join OwnerFi\'s realtor referral network. Get pre-screened buyer leads in your area. 1 free lead per month. Only pay 30% referral fee at closing.',
+  keywords: 'buyer leads for realtors, real estate referrals, realtor lead generation, buyer referral program, real estate agent leads, pre-screened buyer leads',
   openGraph: {
-    title: 'For Realtors - Get Pre-Qualified Buyer Leads | OwnerFi',
+    title: 'For Realtors - Get Pre-Screened Buyer Leads | OwnerFi',
     description: 'Join OwnerFi\'s referral network. 1 free lead per month. Only pay when you close.',
     url: 'https://ownerfi.ai/for-realtors',
     siteName: 'OwnerFi',
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'For Realtors - Get Buyer Leads | OwnerFi',
-    description: 'Pre-qualified buyer leads delivered to you. Free to join.',
+    description: 'Pre-screened buyer leads delivered to you. Free to join.',
   },
   alternates: {
     canonical: 'https://ownerfi.ai/for-realtors',
@@ -85,7 +85,7 @@ const localBusinessSchema = {
   "@context": "https://schema.org",
   "@type": "RealEstateAgent",
   "name": "OwnerFi Realtor Referral Network",
-  "description": "Pre-qualified buyer leads for real estate agents. Join the OwnerFi referral network.",
+  "description": "Pre-screened buyer leads for real estate agents. Join the OwnerFi referral network. We do not run credit checks or provide lender-style pre-qualification.",
   "url": "https://ownerfi.ai/for-realtors",
   "areaServed": {
     "@type": "Country",
@@ -141,7 +141,7 @@ export default function ForRealtorsPage() {
                   For Real Estate Agents
                 </div>
                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
-                  Get Pre-Qualified Buyer Leads
+                  Get Pre-Screened Buyer Leads
                   <span className="block text-emerald-400">Delivered to You</span>
                 </h1>
                 <p className="text-xl text-slate-300 max-w-3xl mx-auto mb-8">
@@ -183,6 +183,46 @@ export default function ForRealtorsPage() {
                   <div className="text-slate-300 mt-2">Coverage</div>
                 </div>
               </div>
+
+              {/* Pre-Screened Clarification */}
+              <div className="mt-8 bg-blue-900/30 border border-blue-500/30 rounded-xl p-4 text-center">
+                <p className="text-blue-200 text-sm">
+                  <strong>What &quot;Pre-Screened&quot; Means:</strong> We do not run credit checks or provide lender-style pre-qualification.
+                  Pre-screened means buyers have provided their contact information, location preferences, and budget range through our platform.
+                </p>
+              </div>
+            </div>
+          </section>
+
+          {/* Platform Clarification Section */}
+          <section className="py-12 px-6 bg-slate-900/50">
+            <div className="max-w-4xl mx-auto">
+              <h2 className="text-2xl font-bold text-white text-center mb-8">
+                Important Platform Information
+              </h2>
+              <div className="grid md:grid-cols-3 gap-6">
+                <div className="bg-slate-800/50 rounded-xl p-6 border border-slate-700/50">
+                  <div className="text-emerald-400 text-2xl mb-3">📢</div>
+                  <h3 className="text-lg font-semibold text-white mb-2">Marketing Platform</h3>
+                  <p className="text-slate-300 text-sm">
+                    We are a marketing and lead-generation platform. We are <strong>not a real estate brokerage</strong> and do not receive a commission split on your transactions.
+                  </p>
+                </div>
+                <div className="bg-slate-800/50 rounded-xl p-6 border border-slate-700/50">
+                  <div className="text-blue-400 text-2xl mb-3">⚖️</div>
+                  <h3 className="text-lg font-semibold text-white mb-2">State-Specific Restrictions</h3>
+                  <p className="text-slate-300 text-sm">
+                    Referral fee arrangements are subject to state real estate licensing laws. You are responsible for ensuring compliance with your state&apos;s regulations.
+                  </p>
+                </div>
+                <div className="bg-slate-800/50 rounded-xl p-6 border border-slate-700/50">
+                  <div className="text-purple-400 text-2xl mb-3">📝</div>
+                  <h3 className="text-lg font-semibold text-white mb-2">RF-701 Clarification</h3>
+                  <p className="text-slate-300 text-sm">
+                    The RF-701 is executed between licensed real estate agents/brokerages. <strong>OwnerFi is not a party</strong> to the referral agreement and does not provide brokerage services.
+                  </p>
+                </div>
+              </div>
             </div>
           </section>
 
@@ -216,7 +256,7 @@ export default function ForRealtorsPage() {
                     </div>
                     <h3 className="text-xl font-semibold text-white mb-3">Accept Leads</h3>
                     <p className="text-slate-300">
-                      Browse pre-qualified buyers interested in owner-financed homes. Sign the RF-701 referral agreement to accept a lead.
+                      Browse pre-screened buyers interested in owner-financed homes. Sign the RF-701 referral agreement to accept a lead.
                     </p>
                   </div>
                 </div>
@@ -444,7 +484,7 @@ export default function ForRealtorsPage() {
                 Ready to Grow Your Business?
               </h2>
               <p className="text-xl text-slate-300 mb-8">
-                Join OwnerFi&apos;s referral network today. Start receiving pre-qualified buyer leads in your area.
+                Join OwnerFi&apos;s referral network today. Start receiving pre-screened buyer leads in your area.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link
@@ -459,6 +499,78 @@ export default function ForRealtorsPage() {
                 >
                   View Sample Agreement
                 </Link>
+              </div>
+            </div>
+          </section>
+
+          {/* Legal Requirements Section */}
+          <section className="py-12 px-6 bg-slate-900">
+            <div className="max-w-4xl mx-auto">
+              <h3 className="text-lg font-semibold text-white mb-6 text-center">
+                Important Information for Real Estate Agents
+              </h3>
+
+              <div className="grid md:grid-cols-2 gap-6 mb-8">
+                <div className="bg-yellow-900/30 border border-yellow-600/50 rounded-xl p-5">
+                  <h4 className="text-yellow-400 font-semibold mb-3">License Requirements</h4>
+                  <ul className="text-yellow-100/80 text-sm space-y-2">
+                    <li>• You must hold an active real estate license in your state</li>
+                    <li>• You must be affiliated with a licensed brokerage</li>
+                    <li>• Your license must be in good standing</li>
+                    <li>• You must have authority to enter referral agreements</li>
+                  </ul>
+                </div>
+
+                <div className="bg-blue-900/30 border border-blue-600/50 rounded-xl p-5">
+                  <h4 className="text-blue-400 font-semibold mb-3">Digital Signature Notice</h4>
+                  <ul className="text-blue-100/80 text-sm space-y-2">
+                    <li>• Referral agreements are signed electronically</li>
+                    <li>• Digital signatures are legally binding under ESIGN/UETA</li>
+                    <li>• By typing your name, you agree to the referral fee</li>
+                    <li>• Signature data (IP, timestamp) is recorded</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div className="bg-red-900/30 border border-red-600/50 rounded-xl p-5 mb-8">
+                <h4 className="text-red-400 font-semibold mb-3 text-center">Lead Quality Disclaimer</h4>
+                <p className="text-red-100/80 text-sm text-center mb-4">
+                  OwnerFi does not guarantee lead quality, buyer responsiveness, or transaction outcomes.
+                  Leads are provided &quot;as-is&quot; based on buyer-submitted information. You are responsible
+                  for qualifying leads. Not all leads will result in closed transactions. The 30% referral
+                  fee is only due at closing when you receive your commission.
+                </p>
+
+                <div className="border-t border-red-600/30 pt-4 mt-4">
+                  <h5 className="text-red-300 font-semibold mb-2 text-sm">Lead Definition &amp; Replacement Policy</h5>
+                  <p className="text-red-100/70 text-xs mb-2">
+                    A &quot;lead&quot; is defined as contact information (name, phone, email) for a buyer who has expressed interest
+                    in owner-financed properties through our platform. Lead quality depends on buyer-submitted information.
+                  </p>
+                  <p className="text-red-100/70 text-xs mb-2">
+                    <strong>Valid Dispute Reasons (within 14 days):</strong> Invalid/fake contact info, no response after
+                    multiple documented attempts, buyer explicitly not interested, duplicate of existing client,
+                    buyer outside your service area.
+                  </p>
+                  <p className="text-red-100/70 text-xs">
+                    <strong>To Dispute a Lead:</strong> Email <a href="mailto:support@ownerfi.ai" className="text-red-300 underline hover:text-red-200">support@ownerfi.ai</a> with
+                    &quot;LEAD DISPUTE&quot; in subject line, include lead ID and reason.
+                  </p>
+                </div>
+              </div>
+
+              <div className="text-center">
+                <p className="text-slate-400 text-sm mb-4">
+                  By registering, you agree to our{' '}
+                  <Link href="/terms" className="text-emerald-400 hover:text-emerald-300 underline">
+                    Terms of Service
+                  </Link>{' '}
+                  and{' '}
+                  <Link href="/privacy" className="text-emerald-400 hover:text-emerald-300 underline">
+                    Privacy Policy
+                  </Link>
+                  . Please review the &quot;For Real Estate Agents&quot; sections.
+                </p>
               </div>
             </div>
           </section>

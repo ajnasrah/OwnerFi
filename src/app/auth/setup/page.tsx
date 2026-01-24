@@ -403,7 +403,7 @@ export default function AuthSetup() {
                   <Link href="/privacy" className="text-emerald-400 hover:text-emerald-300 font-semibold underline" target="_blank">
                     Privacy Policy
                   </Link>
-                  {', and I consent to receive text messages and calls from OwnerFi and connected realtors. Message rates may apply.'}
+                  {'. I understand that my contact information may be shared with independent licensed real estate agents who are not employees of OwnerFi. I consent to receive text messages and calls from OwnerFi and these third-party agents regarding properties I express interest in. OwnerFi receives a referral fee from agents. Message and data rates may apply.'}
                 </label>
               </div>
             </div>

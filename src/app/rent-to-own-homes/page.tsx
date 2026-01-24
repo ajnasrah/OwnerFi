@@ -5,7 +5,7 @@ import { LegalFooter } from '@/components/ui/LegalFooter'
 
 export const metadata: Metadata = {
   title: 'Rent to Own Homes | Owner Financed Properties | No Bank Needed',
-  description: 'Find rent to own homes and owner financed properties in all 50 states. Skip the bank with seller financing. Bad credit OK, low down payments, flexible terms. 300+ cities available.',
+  description: 'Find rent to own homes and owner financed properties in Texas, Florida & Georgia. Skip the bank with seller financing. Bad credit OK, low down payments, flexible terms.',
   keywords: 'rent to own homes, rent to own houses, lease to own homes, rent to own near me, owner financing, seller financing, no bank financing, bad credit homes, rent to own properties, lease purchase homes, contract for deed, owner will carry',
 
   openGraph: {
@@ -48,7 +48,7 @@ function generateFAQSchema() {
     },
     {
       question: "What states offer rent to own homes?",
-      answer: "OwnerFi has owner financed and rent-to-own properties in 20+ states with over 300 cities, including Texas, Florida, Georgia, California, Arizona, and more."
+      answer: "OwnerFi currently has owner financed and rent-to-own properties in Texas, Florida, and Georgia, with more states coming soon."
     }
   ]
 
@@ -95,26 +95,9 @@ function generateServiceSchema() {
 
 export default function RentToOwnHomes() {
   const states = [
-    { name: 'Texas', count: '500+', slug: 'texas' },
-    { name: 'Florida', count: '400+', slug: 'florida' },
-    { name: 'Georgia', count: '300+', slug: 'georgia' },
-    { name: 'California', count: '250+', slug: 'california' },
-    { name: 'Arizona', count: '200+', slug: 'arizona' },
-    { name: 'North Carolina', count: '180+', slug: 'north-carolina' },
-    { name: 'Tennessee', count: '150+', slug: 'tennessee' },
-    { name: 'Ohio', count: '140+', slug: 'ohio' },
-    { name: 'Michigan', count: '130+', slug: 'michigan' },
-    { name: 'Pennsylvania', count: '120+', slug: 'pennsylvania' },
-    { name: 'Illinois', count: '110+', slug: 'illinois' },
-    { name: 'Indiana', count: '100+', slug: 'indiana' },
-    { name: 'Missouri', count: '90+', slug: 'missouri' },
-    { name: 'Alabama', count: '85+', slug: 'alabama' },
-    { name: 'South Carolina', count: '80+', slug: 'south-carolina' },
-    { name: 'Kentucky', count: '75+', slug: 'kentucky' },
-    { name: 'Louisiana', count: '70+', slug: 'louisiana' },
-    { name: 'Oklahoma', count: '65+', slug: 'oklahoma' },
-    { name: 'Arkansas', count: '60+', slug: 'arkansas' },
-    { name: 'Mississippi', count: '55+', slug: 'mississippi' }
+    { name: 'Texas', count: '200+', slug: 'texas' },
+    { name: 'Florida', count: '150+', slug: 'florida' },
+    { name: 'Georgia', count: '100+', slug: 'georgia' }
   ]
 
   return (
@@ -158,7 +141,7 @@ export default function RentToOwnHomes() {
               </h1>
               <p className="text-xl text-slate-300 max-w-3xl mx-auto mb-8">
                 Skip traditional financing with owner financed and rent-to-own properties.
-                Bad credit OK, low down payments, flexible terms. Over 3,000+ properties in 300 cities across 20 states.
+                Bad credit OK, low down payments, flexible terms. Browse properties in Texas, Florida, and Georgia.
               </p>
 
               {/* Search Bar */}
@@ -180,21 +163,30 @@ export default function RentToOwnHomes() {
               {/* Stats */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
                 <div className="bg-slate-800/50 backdrop-blur rounded-xl p-4 border border-slate-700/50">
-                  <div className="text-3xl font-bold text-emerald-400">3,000+</div>
+                  <div className="text-3xl font-bold text-emerald-400">500+</div>
                   <div className="text-slate-300 text-sm">Properties</div>
                 </div>
                 <div className="bg-slate-800/50 backdrop-blur rounded-xl p-4 border border-slate-700/50">
-                  <div className="text-3xl font-bold text-blue-400">20</div>
+                  <div className="text-3xl font-bold text-blue-400">3</div>
                   <div className="text-slate-300 text-sm">States</div>
                 </div>
                 <div className="bg-slate-800/50 backdrop-blur rounded-xl p-4 border border-slate-700/50">
-                  <div className="text-3xl font-bold text-purple-400">300+</div>
+                  <div className="text-3xl font-bold text-purple-400">50+</div>
                   <div className="text-slate-300 text-sm">Cities</div>
                 </div>
                 <div className="bg-slate-800/50 backdrop-blur rounded-xl p-4 border border-slate-700/50">
-                  <div className="text-3xl font-bold text-yellow-400">3%</div>
-                  <div className="text-slate-300 text-sm">Min Down</div>
+                  <div className="text-3xl font-bold text-yellow-400">5%</div>
+                  <div className="text-slate-300 text-sm">Min Down*</div>
                 </div>
+              </div>
+              <p className="text-xs text-slate-500 text-center mt-4">* Down payment requirements vary by seller</p>
+
+              {/* Owner Financing Qualifier */}
+              <div className="bg-amber-900/30 border border-amber-500/30 rounded-xl p-4 mt-8 max-w-3xl mx-auto">
+                <p className="text-amber-200 text-sm text-center">
+                  <strong>Important:</strong> Subject to seller approval and verification. Not all properties listed will qualify for or offer owner financing.
+                  Financing type must be independently confirmed with the seller or their agent.
+                </p>
               </div>
             </div>
           </section>
@@ -269,10 +261,10 @@ export default function RentToOwnHomes() {
           <section className="py-16 px-6">
             <div className="max-w-6xl mx-auto">
               <h2 className="text-3xl font-bold text-white text-center mb-4">
-                Rent to Own Homes Available in 20+ States
+                Rent to Own Homes Available in Texas, Florida &amp; Georgia
               </h2>
               <p className="text-slate-300 text-center mb-12 max-w-3xl mx-auto">
-                Browse owner financed and rent-to-own properties across the United States.
+                Browse owner financed and rent-to-own properties currently in Texas, Florida, and Georgia, with more states coming soon.
                 Click any state to see available properties.
               </p>
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
@@ -379,7 +371,7 @@ export default function RentToOwnHomes() {
                 </div>
                 <div className="bg-slate-900/50 rounded-xl p-6 border border-slate-700/50">
                   <h3 className="text-xl font-semibold text-white mb-3">What states offer rent to own homes?</h3>
-                  <p className="text-slate-300">OwnerFi has owner financed and rent-to-own properties in 20+ states with over 300 cities, including Texas, Florida, Georgia, California, Arizona, North Carolina, Tennessee, Ohio, and more.</p>
+                  <p className="text-slate-300">OwnerFi currently has owner financed and rent-to-own properties in Texas, Florida, and Georgia, with more states coming soon.</p>
                 </div>
                 <div className="bg-slate-900/50 rounded-xl p-6 border border-slate-700/50">
                   <h3 className="text-xl font-semibold text-white mb-3">How much down payment do I need?</h3>

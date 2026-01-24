@@ -133,7 +133,7 @@ export default function BuyCreditsPage() {
                 </li>
                 <li className="flex items-start gap-2 text-slate-300 text-sm">
                   <span className="text-emerald-400 mt-0.5">✓</span>
-                  <span>Pre-qualified leads</span>
+                  <span>Pre-screened leads</span>
                 </li>
                 <li className="flex items-start gap-2 text-slate-300 text-sm">
                   <span className="text-emerald-400 mt-0.5">✓</span>

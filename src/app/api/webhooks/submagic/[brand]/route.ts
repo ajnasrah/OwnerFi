@@ -59,14 +59,13 @@ function verifyWebhookSignature(payload: string, signature: string | null): bool
       return crypto.timingSafeEqual(signatureBuffer, expectedBuffer);
     }
   } catch {
-    // If buffer conversion fails, fall back to string comparison for simple secret match
+    // Buffer conversion failed - signature format not recognized
+    console.warn('⚠️ [SECURITY] Signature buffer conversion failed');
   }
 
-  // Format 2: Simple shared secret (some services just pass the secret)
-  if (signature === SUBMAGIC_WEBHOOK_SECRET) {
-    return true;
-  }
-
+  // SECURITY: Do NOT fall back to simple string comparison - that's insecure
+  // If HMAC verification fails, the webhook should be rejected
+  console.warn('⚠️ [SECURITY] Webhook signature verification failed - no valid signature format');
   return false;
 }
 

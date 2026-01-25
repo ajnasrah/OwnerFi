@@ -53,7 +53,6 @@ export function LegalFooter({
             <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
             <Link href="/creative-finance-disclaimer" className="hover:text-white transition-colors">Creative Finance Disclaimer</Link>
             <Link href="/tcpa-compliance" className="hover:text-white transition-colors">TCPA Compliance</Link>
-            <a href="mailto:support@ownerfi.ai?subject=DO%20NOT%20SELL/SHARE%20MY%20INFO" className="hover:text-orange-400 transition-colors text-orange-300">Do Not Sell My Info</a>
             <a href="mailto:support@ownerfi.ai" className="hover:text-white transition-colors">Legal Contact</a>
           </div>
           <p className="text-xs text-slate-500">

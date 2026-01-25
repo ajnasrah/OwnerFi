@@ -268,8 +268,17 @@ export async function postToLate(request: LatePostRequest): Promise<LatePostResp
       // We'll just set queuedFromProfile later
     }
 
+    // DEBUG: Log requested platforms
+    console.log(`🔍 [${request.brand}] Requested platforms:`, request.platforms);
+
     // First, get the accounts for this profile to get accountIds
     const accounts = await getLateAccounts(profileId);
+
+    // DEBUG: Log all connected accounts
+    console.log(`🔍 [${request.brand}] Connected accounts from Late API:`);
+    accounts.forEach((acc: any) => {
+      console.log(`   - ${acc.platform}: ${acc.username || acc.displayName || acc._id}`);
+    });
 
     // Map platform names to account IDs
     const missingPlatforms: string[] = [];
@@ -287,6 +296,12 @@ export async function postToLate(request: LatePostRequest): Promise<LatePostResp
         };
       })
       .filter(Boolean) as { platform: string; accountId: string }[];
+
+    // DEBUG: Log which platforms matched
+    console.log(`🔍 [${request.brand}] Matched ${platformAccounts.length} platforms:`, platformAccounts.map(p => p.platform).join(', '));
+    if (missingPlatforms.length > 0) {
+      console.log(`🔍 [${request.brand}] Missing platforms:`, missingPlatforms.join(', '));
+    }
 
     // Check for missing platforms
     if (missingPlatforms.length > 0) {
@@ -701,9 +716,30 @@ export async function scheduleVideoPost(
   const hashtags = caption.match(hashtagRegex) || [];
   const cleanCaption = caption.replace(hashtagRegex, '').trim();
 
-  // ⚠️ ALWAYS use GetLate's queue system for optimal scheduling
-  // The 'delay' parameter is now deprecated - GetLate handles optimal timing
+  // Check if queue should be bypassed (Late.dev queue bug filters out platforms)
+  // Set LATE_BYPASS_QUEUE=true in env to post immediately instead
+  const bypassQueue = process.env.LATE_BYPASS_QUEUE === 'true';
+
+  if (bypassQueue) {
+    console.log(`⚠️  [${brand}] BYPASSING Late queue (LATE_BYPASS_QUEUE=true) - posting immediately`);
+    console.log(`   Platforms: ${(platforms as string[]).join(', ')}`);
+
+    return postToLate({
+      videoUrl,
+      caption: cleanCaption,
+      title,
+      hashtags,
+      platforms: platforms as any,
+      brand,
+      firstComment,
+      useQueue: false, // POST IMMEDIATELY - bypass queue
+      timezone: 'America/Chicago'
+    });
+  }
+
+  // Use GetLate's queue system (note: queue may filter platforms - known issue)
   console.log(`📅 Using GetLate queue for ${brand} (delay parameter "${delay}" ignored - queue handles optimal timing)`);
+  console.log(`   ⚠️  Note: Late.dev queue may not post to all platforms. Set LATE_BYPASS_QUEUE=true to post immediately.`);
 
   return postToLate({
     videoUrl,
@@ -713,7 +749,7 @@ export async function scheduleVideoPost(
     platforms: platforms as any,
     brand,
     firstComment, // Pass through first comment
-    useQueue: true, // ✅ ALWAYS use GetLate's queue system
+    useQueue: true, // Use GetLate's queue system
     timezone: 'America/Chicago' // Use CST timezone
   });
 }

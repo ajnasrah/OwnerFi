@@ -52,9 +52,12 @@ export async function POST(request: NextRequest) {
 
     const body = validation.data;
     brand = body.brand;
-    const platforms = body.platforms;
     const schedule = body.schedule;
     const resumeWorkflowId = body.workflowId;  // Optional: resume existing workflow
+
+    // Use provided platforms or fall back to brand defaults (excluding youtube which uses direct API)
+    const { getBrandPlatforms } = await import('@/lib/brand-utils');
+    const platforms = body.platforms || getBrandPlatforms(brand, false).filter(p => p !== 'youtube');
 
     console.log('🚀 Starting COMPLETE VIRAL VIDEO WORKFLOW');
     console.log(`   Brand: ${brand}`);
@@ -537,8 +540,14 @@ High payments, broken promises, bad credit, repo, etc. Make viewers feel seen.
 [10-20 sec] SECRET OR HACK - Expose a hidden truth:
 Show how smart buyers win ("wholesale not retail," "auction-lane play," "buy before recondition").
 
-[20-27 sec] LOCAL PROOF - Mention Tennessee or real-life story:
-"We just moved 20 cars in Memphis last week."
+[20-27 sec] LOCAL PROOF - Mention Tennessee or real-life story (ROTATE - never use the same line twice):
+Pick ONE at random each time:
+- "A guy in Jackson saved $4,000 doing this last month."
+- "We helped 12 families in Memphis get into cars they actually wanted."
+- "Had a customer in Nashville trade up without adding a payment."
+- "Someone from Knoxville just drove off in a truck worth double what they paid."
+- "A mom in Chattanooga got approved same day — no credit check nonsense."
+- "We moved 15 vehicles in the last 2 weeks — all below market."
 
 [27-30 sec] SOFT CTA - Finish with confidence, not sales:
 "Follow Carz Inc to learn the game."
@@ -593,7 +602,7 @@ TITLE: [Under 40 characters, 1 emoji max - Example: "🚗 Dealer Markup Exposed"
 CAPTION: [First line = Hook. Then 2-3 sentences teasing the truth. End with 3-5 hashtags: #CarzInc #JacksonTN #WholesaleCars #CarDeals #TennesseeRides]
 
 EXAMPLE OUTPUT:
-SCRIPT: "They're charging you more for that car just because you're from Jackson. Dealers add an extra $2,000 to $5,000 in markup — every single time. Here's the secret: buy wholesale, not retail. We just moved 20 cars in Memphis last week at auction prices. Follow Carz Inc to learn the real game. Would you drive this or keep overpaying?"
+SCRIPT: "They're charging you more for that car just because you're from Jackson. Dealers add an extra $2,000 to $5,000 in markup — every single time. Here's the secret: buy wholesale, not retail. A guy in Nashville saved $3,500 last week using this exact method. Follow Carz Inc to learn the real game. Would you drive this or keep overpaying?"
 
 TITLE: 🚗 Dealer Markup in Tennessee?!
 

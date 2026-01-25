@@ -24,7 +24,7 @@ export type PostType = z.infer<typeof PostTypeSchema>;
 export const CompleteWorkflowRequestSchema = z.object({
   workflowId: z.string().optional(),  // Optional: if provided, resume existing workflow instead of creating new one
   brand: BrandSchema,
-  platforms: z.array(PlatformSchema).optional().default(['instagram', 'tiktok', 'youtube']),
+  platforms: z.array(PlatformSchema).optional(),  // If not provided, will use brand's default platforms
   schedule: z.enum(['immediate', '1hour', '2hours', '4hours', 'optimal']).optional().default('immediate'),
   talking_photo_id: z.string().optional(),  // For talking photo avatars (user's face photos)
   avatar_id: z.string().optional(),  // For studio avatars (HeyGen's pre-built avatars with backgrounds)

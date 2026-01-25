@@ -525,7 +525,7 @@ async function checkHeyGenWorkflows() {
 async function checkSubMagicWorkflows() {
   const { db } = await import('@/lib/firebase');
   const { collection, getDocs, query, where, limit: firestoreLimit, updateDoc, doc } = await import('firebase/firestore');
-  const { getAllBrandIds } = await import('@/lib/brand-utils');
+  const { getAllBrandIds, getBrandPlatforms } = await import('@/lib/brand-utils');
   const { uploadSubmagicVideo } = await import('@/lib/video-storage');
   const { postToLate } = await import('@/lib/late-api');
 
@@ -625,12 +625,13 @@ async function checkSubMagicWorkflows() {
               updatedAt: Date.now()
             });
 
-            // Post to Late
+            // Post to Late - use brand's configured platforms (excluding youtube which uses direct API)
+            const brandPlatforms = getBrandPlatforms(brand as any, false).filter(p => p !== 'youtube');
             const postResult = await postToLate({
               videoUrl: publicVideoUrl,
               caption: data.caption || '',
               title: data.title || '',
-              platforms: data.platforms || ['instagram', 'tiktok', 'youtube'],
+              platforms: (data.platforms || brandPlatforms) as any[],
               useQueue: true,
               brand: brand as any
             });
@@ -675,7 +676,7 @@ async function checkSubMagicWorkflows() {
 async function checkPostingWorkflows() {
   const { db } = await import('@/lib/firebase');
   const { collection, getDocs, query, where, limit: firestoreLimit, updateDoc, doc } = await import('firebase/firestore');
-  const { getAllBrandIds } = await import('@/lib/brand-utils');
+  const { getAllBrandIds, getBrandPlatforms } = await import('@/lib/brand-utils');
   const { postToLate } = await import('@/lib/late-api');
 
   if (!db) {
@@ -766,12 +767,13 @@ async function checkPostingWorkflows() {
               failed++;
             }
           } else if (videoUrl) {
-            // Retry Late posting
+            // Retry Late posting - use brand's configured platforms (excluding youtube which uses direct API)
+            const brandPlatforms = getBrandPlatforms(brand as any, false).filter(p => p !== 'youtube');
             const postResult = await postToLate({
               videoUrl,
               caption: data.caption || '',
               title: data.title || '',
-              platforms: data.platforms || ['instagram', 'tiktok', 'youtube'],
+              platforms: (data.platforms || brandPlatforms) as any[],
               useQueue: true,
               brand: brand as any
             });

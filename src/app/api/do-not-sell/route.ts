@@ -5,11 +5,62 @@
  * Marks their buyer profile as unavailable for purchase.
  *
  * Route: POST /api/do-not-sell
+ *
+ * Security: Rate limited to prevent abuse and probing attacks
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminDb } from '@/lib/firebase-admin';
 import { getAllPhoneFormats } from '@/lib/phone-utils';
+
+// Rate limiting configuration
+const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+const MAX_REQUESTS_PER_IP = 5; // Max requests per IP in window
+const MAX_REQUESTS_PER_IDENTIFIER = 3; // Max requests per phone/email in window
+
+// In-memory rate limit stores (cleared on server restart)
+const ipRateLimitStore = new Map<string, { count: number; resetAt: number }>();
+const identifierRateLimitStore = new Map<string, { count: number; resetAt: number }>();
+
+// Clean up expired entries periodically
+function cleanupRateLimitStore(store: Map<string, { count: number; resetAt: number }>) {
+  const now = Date.now();
+  for (const [key, value] of store.entries()) {
+    if (now > value.resetAt) {
+      store.delete(key);
+    }
+  }
+}
+
+// Check and update rate limit
+function checkRateLimit(
+  store: Map<string, { count: number; resetAt: number }>,
+  key: string,
+  maxRequests: number
+): { allowed: boolean; remaining: number; resetAt: number } {
+  const now = Date.now();
+  const existing = store.get(key);
+
+  // Clean up occasionally (1% chance per request)
+  if (Math.random() < 0.01) {
+    cleanupRateLimitStore(store);
+  }
+
+  if (!existing || now > existing.resetAt) {
+    // New window
+    const resetAt = now + RATE_LIMIT_WINDOW_MS;
+    store.set(key, { count: 1, resetAt });
+    return { allowed: true, remaining: maxRequests - 1, resetAt };
+  }
+
+  if (existing.count >= maxRequests) {
+    return { allowed: false, remaining: 0, resetAt: existing.resetAt };
+  }
+
+  // Increment count
+  existing.count++;
+  return { allowed: true, remaining: maxRequests - existing.count, resetAt: existing.resetAt };
+}
 
 interface OptOutRequest {
   phone?: string;
@@ -18,6 +69,33 @@ interface OptOutRequest {
 
 export async function POST(request: NextRequest) {
   try {
+    // Get client IP for rate limiting
+    const forwardedFor = request.headers.get('x-forwarded-for');
+    const clientIp = forwardedFor?.split(',')[0]?.trim() ||
+                     request.headers.get('x-real-ip') ||
+                     'unknown';
+
+    // Check IP rate limit
+    const ipLimit = checkRateLimit(ipRateLimitStore, clientIp, MAX_REQUESTS_PER_IP);
+    if (!ipLimit.allowed) {
+      console.warn(`[Do Not Sell] Rate limit exceeded for IP: ${clientIp}`);
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Too many requests. Please try again later.',
+          retryAfter: Math.ceil((ipLimit.resetAt - Date.now()) / 1000)
+        },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': Math.ceil((ipLimit.resetAt - Date.now()) / 1000).toString(),
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': ipLimit.resetAt.toString()
+          }
+        }
+      );
+    }
+
     const body: OptOutRequest = await request.json();
     const { phone, email } = body;
 
@@ -26,6 +104,30 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { success: false, error: 'Please provide a phone number or email address' },
         { status: 400 }
+      );
+    }
+
+    // Check identifier rate limit (prevents probing specific phone/email)
+    // Normalize: for phone remove non-digits, for email just lowercase
+    const normalizedIdentifier = phone
+      ? phone.replace(/\D/g, '') // Phone: keep only digits
+      : (email || '').toLowerCase().trim(); // Email: lowercase and trim
+    const identifierLimit = checkRateLimit(identifierRateLimitStore, normalizedIdentifier, MAX_REQUESTS_PER_IDENTIFIER);
+    if (!identifierLimit.allowed) {
+      const maskedId = phone ? phone.substring(0, 4) : (email || '').substring(0, 4);
+      console.warn(`[Do Not Sell] Rate limit exceeded for identifier: ${maskedId}***`);
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Too many requests for this phone/email. Please try again later.',
+          retryAfter: Math.ceil((identifierLimit.resetAt - Date.now()) / 1000)
+        },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': Math.ceil((identifierLimit.resetAt - Date.now()) / 1000).toString()
+          }
+        }
       );
     }
 
@@ -87,10 +189,17 @@ export async function POST(request: NextRequest) {
 
     // Check if already opted out
     if (buyerData?.isAvailableForPurchase === false && buyerData?.optedOutAt) {
-      return NextResponse.json({
-        success: true,
-        message: 'Your information is already marked as do not sell'
-      });
+      return NextResponse.json(
+        {
+          success: true,
+          message: 'Your information is already marked as do not sell'
+        },
+        {
+          headers: {
+            'X-RateLimit-Remaining': ipLimit.remaining.toString()
+          }
+        }
+      );
     }
 
     // Update buyer profile to mark as unavailable
@@ -120,10 +229,17 @@ export async function POST(request: NextRequest) {
 
     console.log(`[Do Not Sell] Buyer ${buyerDoc.id} marked as unavailable via ${lookupMethod}`);
 
-    return NextResponse.json({
-      success: true,
-      message: 'Your information has been marked as do not sell'
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        message: 'Your information has been marked as do not sell'
+      },
+      {
+        headers: {
+          'X-RateLimit-Remaining': ipLimit.remaining.toString()
+        }
+      }
+    );
 
   } catch (error) {
     console.error('[Do Not Sell] Error:', error);

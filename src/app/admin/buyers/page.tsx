@@ -50,6 +50,10 @@ export default function AdminBuyers() {
   const [searchRadius, setSearchRadius] = useState(30);
   const [searchState, setSearchState] = useState<string | null>(null);
 
+  // Sort state
+  const [sortBy, setSortBy] = useState<string>('joined');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+
   // Export state
   const [showExportDropdown, setShowExportDropdown] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -88,9 +92,8 @@ export default function AdminBuyers() {
     if (status === 'loading') return;
     if (status === 'unauthenticated' || (session?.user as { role?: string } | undefined)?.role !== 'admin') {
       router.push('/');
-    } else {
-      loadBuyers();
     }
+    // Note: loadBuyers is called by the other useEffect that watches status
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, session, router]);
 
@@ -115,6 +118,12 @@ export default function AdminBuyers() {
         params.append('state', searchState);
       }
 
+      // Add sort parameters
+      if (sortBy) {
+        params.append('sortBy', sortBy);
+        params.append('sortOrder', sortOrder);
+      }
+
       const response = await fetch(`/api/admin/buyers?${params.toString()}`);
       if (response.ok) {
         const data = await response.json();
@@ -130,13 +139,13 @@ export default function AdminBuyers() {
     }
   };
 
-  // Reload buyers when search filters or page changes
+  // Reload buyers when search filters, sort, or page changes
   useEffect(() => {
     if (status === 'authenticated') {
       loadBuyers(currentPage);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchCity, searchRadius, searchState, currentPage, status]);
+  }, [searchCity, searchRadius, searchState, sortBy, sortOrder, currentPage, status]);
 
   // Reset to page 1 when search filters change
   useEffect(() => {
@@ -183,6 +192,45 @@ export default function AdminBuyers() {
     setCurrentPage(newPage);
     setSelectedBuyers(new Set());
     setSelectAll(false);
+  };
+
+  const handleSort = (column: string) => {
+    // Sorting is disabled when location filter is active (results are sorted by distance)
+    if (searchCity) return;
+
+    if (sortBy === column) {
+      // Toggle sort order if clicking the same column
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      // Set new column with default desc order
+      setSortBy(column);
+      setSortOrder('desc');
+    }
+    setCurrentPage(1); // Reset to first page when sorting
+  };
+
+  // Sort indicator component
+  const SortIndicator = ({ column }: { column: string }) => {
+    // When location filter is active, sorting is by distance - hide indicators
+    if (searchCity) {
+      return null;
+    }
+    if (sortBy !== column) {
+      return (
+        <svg className="w-4 h-4 text-slate-500 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+        </svg>
+      );
+    }
+    return sortOrder === 'asc' ? (
+      <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+      </svg>
+    ) : (
+      <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+      </svg>
+    );
   };
 
   // Load all buyers for map view
@@ -254,6 +302,8 @@ export default function AdminBuyers() {
       }
       locationGroups[key].buyers.push({
         name: `${b.firstName || ''} ${b.lastName || ''}`.trim(),
+        city: city,
+        state: state,
         email: b.email || '',
         phone: b.phone || '',
         isAvailable: b.isAvailableForPurchase !== false && !b.purchasedBy
@@ -820,13 +870,83 @@ export default function AdminBuyers() {
                       className="w-5 h-5 rounded border-slate-500 bg-slate-600 text-emerald-500 focus:ring-2 focus:ring-emerald-500 cursor-pointer"
                     />
                   </th>
-                  <th className="p-4 text-left font-semibold uppercase text-xs tracking-wider">Name</th>
-                  <th className="p-4 text-left font-semibold uppercase text-xs tracking-wider">Email</th>
-                  <th className="p-4 text-left font-semibold uppercase text-xs tracking-wider">Phone</th>
-                  <th className="p-4 text-left font-semibold uppercase text-xs tracking-wider">Location</th>
-                  <th className="p-4 text-center font-semibold uppercase text-xs tracking-wider">Matched</th>
-                  <th className="p-4 text-center font-semibold uppercase text-xs tracking-wider">Liked</th>
-                  <th className="p-4 text-left font-semibold uppercase text-xs tracking-wider">Joined</th>
+                  <th
+                    className={`p-4 text-left font-semibold uppercase text-xs tracking-wider select-none transition-colors ${
+                      searchCity ? '' : 'cursor-pointer hover:bg-slate-600/50'
+                    }`}
+                    onClick={() => handleSort('name')}
+                  >
+                    <div className="flex items-center gap-2">
+                      Name
+                      <SortIndicator column="name" />
+                    </div>
+                  </th>
+                  <th
+                    className={`p-4 text-left font-semibold uppercase text-xs tracking-wider select-none transition-colors ${
+                      searchCity ? '' : 'cursor-pointer hover:bg-slate-600/50'
+                    }`}
+                    onClick={() => handleSort('email')}
+                  >
+                    <div className="flex items-center gap-2">
+                      Email
+                      <SortIndicator column="email" />
+                    </div>
+                  </th>
+                  <th
+                    className={`p-4 text-left font-semibold uppercase text-xs tracking-wider select-none transition-colors ${
+                      searchCity ? '' : 'cursor-pointer hover:bg-slate-600/50'
+                    }`}
+                    onClick={() => handleSort('phone')}
+                  >
+                    <div className="flex items-center gap-2">
+                      Phone
+                      <SortIndicator column="phone" />
+                    </div>
+                  </th>
+                  <th
+                    className={`p-4 text-left font-semibold uppercase text-xs tracking-wider select-none transition-colors ${
+                      searchCity ? '' : 'cursor-pointer hover:bg-slate-600/50'
+                    }`}
+                    onClick={() => handleSort('location')}
+                  >
+                    <div className="flex items-center gap-2">
+                      Location
+                      <SortIndicator column="location" />
+                    </div>
+                  </th>
+                  <th
+                    className={`p-4 text-center font-semibold uppercase text-xs tracking-wider select-none transition-colors ${
+                      searchCity ? '' : 'cursor-pointer hover:bg-slate-600/50'
+                    }`}
+                    onClick={() => handleSort('matched')}
+                  >
+                    <div className="flex items-center justify-center gap-2">
+                      Matched
+                      <SortIndicator column="matched" />
+                    </div>
+                  </th>
+                  <th
+                    className={`p-4 text-center font-semibold uppercase text-xs tracking-wider select-none transition-colors ${
+                      searchCity ? '' : 'cursor-pointer hover:bg-slate-600/50'
+                    }`}
+                    onClick={() => handleSort('liked')}
+                  >
+                    <div className="flex items-center justify-center gap-2">
+                      Liked
+                      <SortIndicator column="liked" />
+                    </div>
+                  </th>
+                  <th
+                    className={`p-4 text-left font-semibold uppercase text-xs tracking-wider select-none transition-colors ${
+                      searchCity ? '' : 'cursor-pointer hover:bg-slate-600/50'
+                    }`}
+                    onClick={() => handleSort('joined')}
+                  >
+                    <div className="flex items-center gap-2">
+                      Joined
+                      <SortIndicator column="joined" />
+                    </div>
+                  </th>
                   <th className="p-4 text-left font-semibold uppercase text-xs tracking-wider">Actions</th>
                 </tr>
               </thead>
@@ -929,7 +1049,7 @@ export default function AdminBuyers() {
         {totalPages > 1 && (
           <div className="mt-6 flex items-center justify-between bg-slate-800 rounded-lg p-5 shadow-lg">
             <div className="text-slate-300 font-medium">
-              Showing <span className="text-emerald-400 font-semibold">{((currentPage - 1) * 50) + 1}</span> to <span className="text-emerald-400 font-semibold">{Math.min(currentPage * 50, totalBuyers)}</span> of <span className="text-emerald-400 font-semibold">{totalBuyers}</span> buyers
+              Showing <span className="text-emerald-400 font-semibold">{((currentPage - 1) * 100) + 1}</span> to <span className="text-emerald-400 font-semibold">{Math.min(currentPage * 100, totalBuyers)}</span> of <span className="text-emerald-400 font-semibold">{totalBuyers}</span> buyers
             </div>
 
             <div className="flex gap-2">

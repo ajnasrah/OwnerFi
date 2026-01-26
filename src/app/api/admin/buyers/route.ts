@@ -202,15 +202,71 @@ export async function GET(request: NextRequest) {
       buyersWithDistance.sort((a, b) => (a.distance || 999) - (b.distance || 999));
       filteredBuyers = buyersWithDistance;
     } else {
-      // Sort by creation date (newest first)
+      // Apply custom sorting if provided (only when no location filter)
+      const sortBy = searchParams.get('sortBy') || 'joined';
+      const sortOrder = searchParams.get('sortOrder') || 'desc';
       filteredBuyers.sort((a, b) => {
-        const dateA = a.createdAt && typeof a.createdAt === 'object' && 'toDate' in a.createdAt
-          ? (a.createdAt as { toDate: () => Date }).toDate().getTime()
-          : new Date(a.createdAt as string | number).getTime();
-        const dateB = b.createdAt && typeof b.createdAt === 'object' && 'toDate' in b.createdAt
-          ? (b.createdAt as { toDate: () => Date }).toDate().getTime()
-          : new Date(b.createdAt as string | number).getTime();
-        return dateB - dateA;
+        let valueA: string | number | Date | null = null;
+        let valueB: string | number | Date | null = null;
+
+        switch (sortBy) {
+          case 'name':
+            valueA = `${a.firstName || ''} ${a.lastName || ''}`.trim().toLowerCase();
+            valueB = `${b.firstName || ''} ${b.lastName || ''}`.trim().toLowerCase();
+            break;
+          case 'email':
+            valueA = (a.email || '').toLowerCase();
+            valueB = (b.email || '').toLowerCase();
+            break;
+          case 'phone':
+            valueA = (a.phone || '').toLowerCase();
+            valueB = (b.phone || '').toLowerCase();
+            break;
+          case 'location':
+            valueA = `${a.preferredCity || a.city || ''}, ${a.preferredState || a.state || ''}`.toLowerCase();
+            valueB = `${b.preferredCity || b.city || ''}, ${b.preferredState || b.state || ''}`.toLowerCase();
+            break;
+          case 'matched':
+            valueA = a.matchedPropertiesCount || 0;
+            valueB = b.matchedPropertiesCount || 0;
+            break;
+          case 'liked':
+            valueA = a.likedPropertiesCount || 0;
+            valueB = b.likedPropertiesCount || 0;
+            break;
+          case 'joined':
+          default:
+            const getTime = (val: unknown): number => {
+              if (!val) return 0;
+              if (typeof val === 'object' && val !== null && 'toDate' in val) {
+                return (val as { toDate: () => Date }).toDate().getTime();
+              }
+              return new Date(val as string | number).getTime();
+            };
+            valueA = getTime(a.createdAt);
+            valueB = getTime(b.createdAt);
+            break;
+        }
+
+        // Handle null/empty values - push them to the end
+        // Use strict checks to handle 0 values correctly for numeric fields
+        const isEmptyA = valueA === null || valueA === '' || valueA === undefined;
+        const isEmptyB = valueB === null || valueB === '' || valueB === undefined;
+        if (isEmptyA && !isEmptyB) return sortOrder === 'asc' ? 1 : -1;
+        if (!isEmptyA && isEmptyB) return sortOrder === 'asc' ? -1 : 1;
+        if (isEmptyA && isEmptyB) return 0;
+
+        // Compare values
+        if (typeof valueA === 'number' && typeof valueB === 'number') {
+          return sortOrder === 'asc' ? valueA - valueB : valueB - valueA;
+        }
+
+        // String comparison
+        const strA = String(valueA);
+        const strB = String(valueB);
+        return sortOrder === 'asc'
+          ? strA.localeCompare(strB)
+          : strB.localeCompare(strA);
       });
     }
 

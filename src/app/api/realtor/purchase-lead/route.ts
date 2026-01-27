@@ -117,6 +117,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check for existing pending or signed agreements from ANY realtor
+    const existingAgreements = await FirebaseDB.queryDocuments(
+      'referralAgreements',
+      [
+        { field: 'buyerId', operator: '==', value: leadId },
+        { field: 'status', operator: 'in', value: ['pending', 'signed'] }
+      ]
+    );
+
+    if (existingAgreements.length > 0) {
+      return NextResponse.json(
+        { error: 'This lead has a pending or signed referral agreement and cannot be purchased with credits.' },
+        { status: 409 }
+      );
+    }
+
     // ATOMIC TRANSACTION: All operations must succeed or none will
     // This prevents race conditions where:
     // - Two requests could both see sufficient credits and deduct

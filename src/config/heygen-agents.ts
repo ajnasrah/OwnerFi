@@ -81,41 +81,44 @@ export interface HeyGenAgent {
 /**
  * Scale settings guide for different video dimensions:
  *
+ * IMPORTANT: Characters should be ZOOMED IN to fill the frame
+ * Face and upper chest should be prominent, not distant/small
+ *
  * VERTICAL (1080x1920 - Social Media / Shorts):
- * - Talking Photos: 1.3 - 1.5 (fills frame nicely, head & shoulders visible)
- * - Full-body Avatars: 0.8 - 1.0 (shows full body)
- * - Upper-body Avatars: 1.2 - 1.4 (fills frame)
+ * - Talking Photos: 1.5 - 1.7 (zoomed in - face fills frame)
+ * - Full-body Avatars: 1.0 - 1.2 (zoomed - full body but larger)
+ * - Upper-body Avatars: 1.4 - 1.6 (zoomed in - face and chest prominent)
  *
  * HORIZONTAL (1920x1080 - YouTube / Landscape):
- * - Talking Photos: 1.0 - 1.2 (standard size)
- * - Full-body Avatars: 0.6 - 0.8 (shows full body with background)
- * - Upper-body Avatars: 0.9 - 1.1 (balanced frame)
+ * - Talking Photos: 1.2 - 1.4 (zoomed in for landscape)
+ * - Full-body Avatars: 0.8 - 1.0 (shows full body)
+ * - Upper-body Avatars: 1.1 - 1.3 (upper body fills frame)
  *
  * SQUARE (1080x1080 - Instagram Feed):
- * - Talking Photos: 1.1 - 1.3 (centered nicely)
- * - Upper-body Avatars: 1.0 - 1.2 (fills frame)
+ * - Talking Photos: 1.3 - 1.5 (zoomed in nicely)
+ * - Upper-body Avatars: 1.2 - 1.4 (upper body prominent)
  */
 
 export const SCALE_PRESETS = {
   // For vertical social media videos (9:16)
-  // Based on guide: Talking Photos 1.3-1.5, Upper-body 1.2-1.4, Full-body 0.8-1.0
+  // ZOOMED IN: Character fills frame with face and upper chest visible
   vertical: {
-    talkingPhoto: 1.4,      // Good visibility without cutting off head
-    talkingPhotoLarge: 1.5, // Slightly larger for emphasis
-    upperBody: 1.2,         // Upper body visible with hands (reduced from 1.6 - was cutting off body)
-    fullBody: 0.9,          // Full body visible in frame
+    talkingPhoto: 1.6,      // Zoomed in - face and shoulders fill frame
+    talkingPhotoLarge: 1.7, // Extra zoom for emphasis
+    upperBody: 1.5,         // Zoomed in - face and upper chest visible, fills frame nicely
+    fullBody: 1.1,          // Slightly zoomed - shows full body but larger
   },
   // For horizontal videos (16:9)
   horizontal: {
-    talkingPhoto: 1.1,
-    upperBody: 1.0,
-    fullBody: 0.7,
+    talkingPhoto: 1.3,      // Zoomed in for landscape
+    upperBody: 1.2,         // Upper body fills more of the frame
+    fullBody: 0.9,          // Full body visible
   },
   // For square videos (1:1)
   square: {
-    talkingPhoto: 1.2,
-    upperBody: 1.1,
-    fullBody: 0.8,
+    talkingPhoto: 1.4,      // Zoomed in for square format
+    upperBody: 1.3,         // Upper body prominent
+    fullBody: 1.0,          // Full body visible
   }
 } as const;
 
@@ -188,7 +191,7 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
       scale: SCALE_PRESETS.vertical.upperBody,
       talkingStyle: 'expressive',
       hasBuiltInBackground: true, // Studio avatar with built-in background
-      offsetY: -100, // Move avatar UP to show more body (was +50 which cut off body)
+      offsetY: 0, // Centered - face visible when zoomed in
     },
     voice: {
       voiceId: '35659e86ce244d8389d525a9648d9c4a', // Carter Lee
@@ -215,7 +218,7 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
       scale: SCALE_PRESETS.vertical.upperBody,
       talkingStyle: 'expressive',
       hasBuiltInBackground: true, // Studio avatar with built-in background
-      offsetY: -100, // Move avatar UP to show more body (was +50 which cut off body)
+      offsetY: 0, // Centered - face visible when zoomed in
     },
     voice: {
       voiceId: 'f38a635bee7a4d1f9b0a654a31d050d2', // Chill Brian
@@ -246,7 +249,7 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
       scale: SCALE_PRESETS.vertical.upperBody,
       talkingStyle: 'expressive',
       hasBuiltInBackground: true, // Studio avatar with built-in background
-      offsetY: -100, // Move avatar UP to show more body (was +50 which cut off body)
+      offsetY: 0, // Centered - face visible when zoomed in
     },
     voice: {
       voiceId: 'dc491816e53f46eaa466740fbfec09bb', // Adventure Alex - Excited
@@ -273,7 +276,7 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
       scale: SCALE_PRESETS.vertical.upperBody,
       talkingStyle: 'expressive',
       hasBuiltInBackground: true, // Studio avatar with built-in background
-      offsetY: -100, // Move avatar UP to show more body (was +50 which cut off body)
+      offsetY: 0, // Centered - face visible when zoomed in
     },
     voice: {
       voiceId: '42d00d4aac5441279d8536cd6b52c53c', // Hope
@@ -364,7 +367,7 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
       scale: SCALE_PRESETS.vertical.upperBody,
       talkingStyle: 'expressive',
       hasBuiltInBackground: true,
-      offsetY: -100, // Move avatar UP to show more body (was +50 which cut off body)
+      offsetY: 0, // Centered - face visible when zoomed in
     },
     voice: {
       voiceId: '42d00d4aac5441279d8536cd6b52c53c', // Hope
@@ -390,7 +393,7 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
       scale: SCALE_PRESETS.vertical.upperBody,
       talkingStyle: 'expressive',
       hasBuiltInBackground: true,
-      offsetY: -100, // Move avatar UP to show more body (was +50 which cut off body)
+      offsetY: 0, // Centered - face visible when zoomed in
     },
     voice: {
       voiceId: 'f38a635bee7a4d1f9b0a654a31d050d2', // Chill Brian
@@ -416,7 +419,7 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
       scale: SCALE_PRESETS.vertical.upperBody,
       talkingStyle: 'expressive',
       hasBuiltInBackground: true,
-      offsetY: -100, // Move avatar UP to show more body (was +50 which cut off body)
+      offsetY: 0, // Centered - face visible when zoomed in
     },
     voice: {
       voiceId: 'dc491816e53f46eaa466740fbfec09bb', // Adventure Alex
@@ -446,7 +449,7 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
       scale: SCALE_PRESETS.vertical.upperBody,
       talkingStyle: 'stable', // Stable for serious news delivery
       hasBuiltInBackground: true, // Studio avatar with built-in background
-      offsetY: -100, // Move avatar UP to show more body (was +50 which cut off body)
+      offsetY: 0, // Centered - face visible when zoomed in
     },
     voice: {
       voiceId: 'f38a635bee7a4d1f9b0a654a31d050d2', // Chill Brian
@@ -469,7 +472,7 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
       scale: SCALE_PRESETS.vertical.upperBody,
       talkingStyle: 'stable', // Stable for serious news delivery
       hasBuiltInBackground: true, // Studio avatar with built-in background
-      offsetY: -100, // Move avatar UP to show more body (was +50 which cut off body)
+      offsetY: 0, // Centered - face visible when zoomed in
     },
     voice: {
       voiceId: '42d00d4aac5441279d8536cd6b52c53c', // Hope
@@ -492,7 +495,7 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
       scale: SCALE_PRESETS.vertical.upperBody,
       talkingStyle: 'expressive', // Slightly more expressive for urgent news
       hasBuiltInBackground: true, // Studio avatar with built-in background
-      offsetY: -100, // Move avatar UP to show more body (was +50 which cut off body)
+      offsetY: 0, // Centered - face visible when zoomed in
     },
     voice: {
       voiceId: '35659e86ce244d8389d525a9648d9c4a', // Carter Lee
@@ -515,7 +518,7 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
       scale: SCALE_PRESETS.vertical.upperBody,
       talkingStyle: 'expressive',
       hasBuiltInBackground: true, // Studio avatar with built-in background
-      offsetY: -100, // Move avatar UP to show more body (was +50 which cut off body)
+      offsetY: 0, // Centered - face visible when zoomed in
     },
     voice: {
       voiceId: 'dc491816e53f46eaa466740fbfec09bb', // Adventure Alex

@@ -144,7 +144,10 @@ export async function POST(request: NextRequest) {
     const {
       token,
       signatureTypedName,
-      signatureCheckbox
+      signatureCheckbox,
+      agreeTCPA,
+      agreeCreativeFinance,
+      agreeDataAsIs
     } = body;
 
     // Validate required fields and types
@@ -166,6 +169,28 @@ export async function POST(request: NextRequest) {
     if (!signatureTypedName || typeof signatureTypedName !== 'string' || signatureCheckbox !== true) {
       return NextResponse.json(
         { error: 'Signature is required to accept the referral' },
+        { status: 400 }
+      );
+    }
+
+    // Validate OwnerFi Addendum acknowledgments
+    if (agreeTCPA !== true) {
+      return NextResponse.json(
+        { error: 'You must acknowledge the TCPA Compliance Agreement to proceed' },
+        { status: 400 }
+      );
+    }
+
+    if (agreeCreativeFinance !== true) {
+      return NextResponse.json(
+        { error: 'You must acknowledge the Creative Finance Disclaimer to proceed' },
+        { status: 400 }
+      );
+    }
+
+    if (agreeDataAsIs !== true) {
+      return NextResponse.json(
+        { error: 'You must accept that lead data is provided as-is to proceed' },
         { status: 400 }
       );
     }
@@ -345,6 +370,16 @@ export async function POST(request: NextRequest) {
       signatureCheckbox: true,
       signatureIpAddress: (request.headers.get('x-forwarded-for') || 'unknown').split(',')[0].trim() || 'unknown',
       signatureUserAgent: request.headers.get('user-agent')?.trim() || 'unknown',
+
+      // OwnerFi Addendum Acknowledgments (Sections 8-12)
+      acknowledgeTCPA: true,
+      acknowledgeTCPAAt: now,
+      acknowledgeCreativeFinance: true,
+      acknowledgeCreativeFinanceAt: now,
+      acknowledgeDataAsIs: true,
+      acknowledgeDataAsIsAt: now,
+      acknowledgeIndemnification: true,
+      acknowledgeRESPA: true,
 
       // Lead info released since signing
       leadInfoReleased: true,

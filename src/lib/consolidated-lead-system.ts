@@ -84,10 +84,24 @@ export class ConsolidatedLeadSystem {
       // Score and filter matches
       const matches: LeadMatch[] = [];
 
+      // Reservation expiry time (1 hour)
+      const RESERVATION_EXPIRY_MS = 60 * 60 * 1000;
+      const now = Date.now();
+
       for (const buyer of availableBuyers) {
         // Skip if this buyer profile belongs to a realtor
         if (buyer.userId && realtorUserIds.has(buyer.userId)) {
           continue;
+        }
+
+        // Skip if lead is reserved by another realtor (reservation not expired)
+        const buyerAny = buyer as any;
+        if (buyerAny.reservedBy) {
+          const reservedAt = buyerAny.reservedAt?.toMillis?.() || buyerAny.reservedAt?.getTime?.() || 0;
+          if ((now - reservedAt) < RESERVATION_EXPIRY_MS) {
+            // Reservation is still active, skip this lead
+            continue;
+          }
         }
 
         // Early exit once we have enough matches

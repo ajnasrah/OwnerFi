@@ -122,6 +122,9 @@ interface AgreementModalState {
   } | null;
   typedName: string;
   agreeToTerms: boolean;
+  agreeTCPA: boolean;
+  agreeCreativeFinance: boolean;
+  agreeDataAsIs: boolean;
   error: string | null;
 }
 
@@ -152,6 +155,9 @@ export default function RealtorDashboard() {
     buyerDetails: null,
     typedName: '',
     agreeToTerms: false,
+    agreeTCPA: false,
+    agreeCreativeFinance: false,
+    agreeDataAsIs: false,
     error: null
   });
 
@@ -260,6 +266,9 @@ export default function RealtorDashboard() {
       buyerDetails: null,
       typedName: '',
       agreeToTerms: false,
+      agreeTCPA: false,
+      agreeCreativeFinance: false,
+      agreeDataAsIs: false,
       error: null
     });
 
@@ -299,7 +308,10 @@ export default function RealtorDashboard() {
 
   // Accept Lead Flow - Step 2: Sign Agreement
   const signAgreement = async () => {
-    if (!agreementModal.agreementId || !agreementModal.typedName || !agreementModal.agreeToTerms) {
+    // Validate all required fields including acknowledgments
+    if (!agreementModal.agreementId || !agreementModal.typedName ||
+        !agreementModal.agreeToTerms || !agreementModal.agreeTCPA ||
+        !agreementModal.agreeCreativeFinance || !agreementModal.agreeDataAsIs) {
       return;
     }
 
@@ -312,7 +324,10 @@ export default function RealtorDashboard() {
         body: JSON.stringify({
           agreementId: agreementModal.agreementId,
           typedName: agreementModal.typedName,
-          agreeToTerms: agreementModal.agreeToTerms
+          agreeToTerms: agreementModal.agreeToTerms,
+          agreeTCPA: agreementModal.agreeTCPA,
+          agreeCreativeFinance: agreementModal.agreeCreativeFinance,
+          agreeDataAsIs: agreementModal.agreeDataAsIs
         })
       });
 
@@ -356,6 +371,9 @@ export default function RealtorDashboard() {
       buyerDetails: null,
       typedName: '',
       agreeToTerms: false,
+      agreeTCPA: false,
+      agreeCreativeFinance: false,
+      agreeDataAsIs: false,
       error: null
     });
   };
@@ -924,6 +942,9 @@ export default function RealtorDashboard() {
                                   buyerDetails: null,
                                   typedName: '',
                                   agreeToTerms: false,
+                                  agreeTCPA: false,
+                                  agreeCreativeFinance: false,
+                                  agreeDataAsIs: false,
                                   error: null
                                 });
                                 // Load the agreement details
@@ -1220,6 +1241,42 @@ export default function RealtorDashboard() {
                           I have read and agree to the terms of this Referral Agreement. I understand that by typing my name above and checking this box, I am electronically signing this agreement.
                         </span>
                       </label>
+
+                      <label className="flex items-start gap-3 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={agreementModal.agreeTCPA}
+                          onChange={(e) => setAgreementModal(prev => ({ ...prev, agreeTCPA: e.target.checked }))}
+                          className="mt-1 w-5 h-5 rounded border-slate-600 bg-slate-700 text-emerald-500 focus:ring-emerald-500"
+                        />
+                        <span className="text-slate-300 text-sm">
+                          I acknowledge and agree to OwnerFi&apos;s <a href="/tcpa-compliance" target="_blank" className="text-emerald-400 hover:underline">TCPA Compliance Agreement</a>. I will comply with all telemarketing laws and honor opt-out requests within 24 hours.
+                        </span>
+                      </label>
+
+                      <label className="flex items-start gap-3 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={agreementModal.agreeCreativeFinance}
+                          onChange={(e) => setAgreementModal(prev => ({ ...prev, agreeCreativeFinance: e.target.checked }))}
+                          className="mt-1 w-5 h-5 rounded border-slate-600 bg-slate-700 text-emerald-500 focus:ring-emerald-500"
+                        />
+                        <span className="text-slate-300 text-sm">
+                          I acknowledge OwnerFi&apos;s <a href="/creative-finance-disclaimer" target="_blank" className="text-emerald-400 hover:underline">Creative Finance Disclaimer</a>. I understand referred buyers may seek owner-financed properties and will direct them to verify all data with licensed professionals.
+                        </span>
+                      </label>
+
+                      <label className="flex items-start gap-3 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={agreementModal.agreeDataAsIs}
+                          onChange={(e) => setAgreementModal(prev => ({ ...prev, agreeDataAsIs: e.target.checked }))}
+                          className="mt-1 w-5 h-5 rounded border-slate-600 bg-slate-700 text-emerald-500 focus:ring-emerald-500"
+                        />
+                        <span className="text-slate-300 text-sm">
+                          I accept that lead contact information is provided &quot;as-is&quot; without verification by OwnerFi. I will independently confirm all lead details before proceeding.
+                        </span>
+                      </label>
                     </div>
                   </div>
                 </div>
@@ -1296,7 +1353,7 @@ export default function RealtorDashboard() {
                 </button>
                 <button
                   onClick={signAgreement}
-                  disabled={!agreementModal.typedName || !agreementModal.agreeToTerms}
+                  disabled={!agreementModal.typedName || !agreementModal.agreeToTerms || !agreementModal.agreeTCPA || !agreementModal.agreeCreativeFinance || !agreementModal.agreeDataAsIs}
                   className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white py-3 px-4 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Sign & Accept Lead

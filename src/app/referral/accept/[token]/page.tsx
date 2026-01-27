@@ -46,6 +46,9 @@ export default function AcceptReferralPage() {
   const [accepting, setAccepting] = useState(false);
   const [signatureName, setSignatureName] = useState('');
   const [agreeToTerms, setAgreeToTerms] = useState(false);
+  const [agreeTCPA, setAgreeTCPA] = useState(false);
+  const [agreeCreativeFinance, setAgreeCreativeFinance] = useState(false);
+  const [agreeDataAsIs, setAgreeDataAsIs] = useState(false);
   const [success, setSuccess] = useState(false);
   const [leadDetails, setLeadDetails] = useState<LeadDetails | null>(null);
 
@@ -86,7 +89,22 @@ export default function AcceptReferralPage() {
     }
 
     if (!agreeToTerms) {
-      setError('Please agree to the terms');
+      setError('Please agree to the referral terms');
+      return;
+    }
+
+    if (!agreeTCPA) {
+      setError('Please acknowledge the TCPA Compliance Agreement');
+      return;
+    }
+
+    if (!agreeCreativeFinance) {
+      setError('Please acknowledge the Creative Finance Disclaimer');
+      return;
+    }
+
+    if (!agreeDataAsIs) {
+      setError('Please accept the data as-is terms');
       return;
     }
 
@@ -100,7 +118,10 @@ export default function AcceptReferralPage() {
         body: JSON.stringify({
           token,
           signatureTypedName: signatureName,
-          signatureCheckbox: agreeToTerms
+          signatureCheckbox: agreeToTerms,
+          agreeTCPA,
+          agreeCreativeFinance,
+          agreeDataAsIs
         })
       });
 
@@ -348,13 +369,49 @@ export default function AcceptReferralPage() {
                   of my commission to the referring agent upon closing this transaction.
                 </span>
               </label>
+
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={agreeTCPA}
+                  onChange={(e) => setAgreeTCPA(e.target.checked)}
+                  className="w-5 h-5 mt-0.5 rounded border-slate-600 bg-slate-700 text-emerald-500 focus:ring-emerald-500"
+                />
+                <span className="text-slate-300 text-sm">
+                  I acknowledge and agree to OwnerFi&apos;s <a href="/tcpa-compliance" target="_blank" className="text-emerald-400 hover:underline">TCPA Compliance Agreement</a>. I will comply with all telemarketing laws and honor opt-out requests within 24 hours.
+                </span>
+              </label>
+
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={agreeCreativeFinance}
+                  onChange={(e) => setAgreeCreativeFinance(e.target.checked)}
+                  className="w-5 h-5 mt-0.5 rounded border-slate-600 bg-slate-700 text-emerald-500 focus:ring-emerald-500"
+                />
+                <span className="text-slate-300 text-sm">
+                  I acknowledge OwnerFi&apos;s <a href="/creative-finance-disclaimer" target="_blank" className="text-emerald-400 hover:underline">Creative Finance Disclaimer</a>. I understand referred buyers may seek owner-financed properties and will direct them to verify all data with licensed professionals.
+                </span>
+              </label>
+
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={agreeDataAsIs}
+                  onChange={(e) => setAgreeDataAsIs(e.target.checked)}
+                  className="w-5 h-5 mt-0.5 rounded border-slate-600 bg-slate-700 text-emerald-500 focus:ring-emerald-500"
+                />
+                <span className="text-slate-300 text-sm">
+                  I accept that lead contact information is provided &quot;as-is&quot; without verification by OwnerFi. I will independently confirm all lead details before proceeding.
+                </span>
+              </label>
             </div>
 
             <button
               onClick={handleAccept}
-              disabled={accepting || !signatureName.trim() || !agreeToTerms}
+              disabled={accepting || !signatureName.trim() || !agreeToTerms || !agreeTCPA || !agreeCreativeFinance || !agreeDataAsIs}
               className={`w-full py-3 rounded-lg font-semibold transition-colors ${
-                accepting || !signatureName.trim() || !agreeToTerms
+                accepting || !signatureName.trim() || !agreeToTerms || !agreeTCPA || !agreeCreativeFinance || !agreeDataAsIs
                   ? 'bg-slate-700 text-slate-400 cursor-not-allowed'
                   : 'bg-emerald-600 hover:bg-emerald-700 text-white'
               }`}

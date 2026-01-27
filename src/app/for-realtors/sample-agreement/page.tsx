@@ -19,28 +19,28 @@ export default function SampleAgreementPage() {
     expirationDate: calculateExpirationDate(180),
     timeZone: REFERRING_COMPANY_DEFAULTS.TIME_ZONE,
 
-    // Section 1: Referring Company (OwnerFi/eXp)
-    referringCompanyName: REFERRING_COMPANY_DEFAULTS.COMPANY_NAME,
-    referringCompanyAddress: REFERRING_COMPANY_DEFAULTS.COMPANY_ADDRESS,
-    referringCompanyPhone: REFERRING_COMPANY_DEFAULTS.COMPANY_PHONE,
-    referringCompanyLicense: REFERRING_COMPANY_DEFAULTS.COMPANY_LICENSE,
-    referringCompanyFederalId: REFERRING_COMPANY_DEFAULTS.COMPANY_FEDERAL_ID || 'N/A',
-    referringLicenseeName: REFERRING_COMPANY_DEFAULTS.LICENSEE_NAME,
-    referringLicenseePhone: REFERRING_COMPANY_DEFAULTS.LICENSEE_PHONE,
-    referringLicenseeEmail: REFERRING_COMPANY_DEFAULTS.LICENSEE_EMAIL,
-    referringRelocationDirector: REFERRING_COMPANY_DEFAULTS.RELOCATION_DIRECTOR,
-    referringRelocationEmail: REFERRING_COMPANY_DEFAULTS.RELOCATION_EMAIL,
+    // Section 1: Referring Company (Realtor's Brokerage - prefilled placeholders)
+    referringCompanyName: '[Your Brokerage Name]',
+    referringCompanyAddress: '[Your Office Address]',
+    referringCompanyPhone: '[Your Phone]',
+    referringCompanyLicense: '[Your Firm License #]',
+    referringCompanyFederalId: '[Your Federal ID]',
+    referringLicenseeName: '[Your Name]',
+    referringLicenseePhone: '[Your Phone]',
+    referringLicenseeEmail: '[your.email@example.com]',
+    referringRelocationDirector: 'N/A',
+    referringRelocationEmail: 'N/A',
 
-    // Section 2: Receiving Company (Sample Realtor)
-    receivingCompanyName: '[Your Brokerage Name]',
-    receivingCompanyAddress: '[Your Office Address]',
-    receivingCompanyPhone: '[Your Phone]',
-    receivingCompanyLicense: '[Your Firm License #]',
-    receivingLicenseeName: '[Your Name]',
-    receivingLicenseePhone: '[Your Phone]',
-    receivingLicenseeEmail: '[your.email@example.com]',
-    receivingRelocationDirector: 'N/A',
-    receivingRelocationEmail: 'N/A',
+    // Section 2: Receiving Company / Paying Referral Fee (OwnerFi)
+    receivingCompanyName: REFERRING_COMPANY_DEFAULTS.COMPANY_NAME,
+    receivingCompanyAddress: REFERRING_COMPANY_DEFAULTS.COMPANY_ADDRESS,
+    receivingCompanyPhone: REFERRING_COMPANY_DEFAULTS.COMPANY_PHONE,
+    receivingCompanyLicense: REFERRING_COMPANY_DEFAULTS.COMPANY_LICENSE,
+    receivingLicenseeName: REFERRING_COMPANY_DEFAULTS.LICENSEE_NAME,
+    receivingLicenseePhone: REFERRING_COMPANY_DEFAULTS.LICENSEE_PHONE,
+    receivingLicenseeEmail: REFERRING_COMPANY_DEFAULTS.LICENSEE_EMAIL,
+    receivingRelocationDirector: REFERRING_COMPANY_DEFAULTS.RELOCATION_DIRECTOR,
+    receivingRelocationEmail: REFERRING_COMPANY_DEFAULTS.RELOCATION_EMAIL,
 
     // Section 3: Prospect (Sample Buyer)
     prospectName: 'John D. (Sample Buyer)',
@@ -58,6 +58,7 @@ export default function SampleAgreementPage() {
     prospectCellPhone: '[Released after signing]',
     prospectEmail: '[Released after signing]',
     prospectBestTimeToCall: '[Released after signing]',
+    prospectRemarks: '',
     otherTerms: 'Buyer is interested in owner-financed properties in the Houston, TX area.',
   }
 
@@ -128,6 +129,36 @@ export default function SampleAgreementPage() {
             </div>
           </div>
 
+          {/* OwnerFi Addendum Notice */}
+          <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-6 mb-8">
+            <h2 className="text-lg font-semibold text-red-400 mb-3">OwnerFi Addendum (Sections 8-12)</h2>
+            <p className="text-slate-300 text-sm mb-4">
+              This agreement includes additional liability and compliance provisions. When signing, you&apos;ll acknowledge:
+            </p>
+            <div className="grid md:grid-cols-2 gap-3 text-sm">
+              <div className="flex items-start gap-2">
+                <span className="text-red-400 mt-0.5">✓</span>
+                <span className="text-slate-300"><strong className="text-white">Indemnification</strong> - Hold OwnerFi harmless from claims</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="text-red-400 mt-0.5">✓</span>
+                <span className="text-slate-300"><strong className="text-white">TCPA Compliance</strong> - Follow telemarketing laws</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="text-red-400 mt-0.5">✓</span>
+                <span className="text-slate-300"><strong className="text-white">RESPA Compliance</strong> - No kickbacks or unearned fees</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="text-red-400 mt-0.5">✓</span>
+                <span className="text-slate-300"><strong className="text-white">Creative Finance</strong> - Assume risk, verify independently</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="text-red-400 mt-0.5">✓</span>
+                <span className="text-slate-300"><strong className="text-white">Data As-Is</strong> - Accept unverified lead data</span>
+              </div>
+            </div>
+          </div>
+
           {/* Sample Banner */}
           <div className="bg-yellow-500/20 border border-yellow-500/50 rounded-lg p-4 mb-6 text-center">
             <span className="text-yellow-400 font-medium">
@@ -168,13 +199,23 @@ export default function SampleAgreementPage() {
                 It&apos;s widely recognized and accepted across the real estate industry.
               </p>
               <p>
-                <strong className="text-white">Digital Signing:</strong> When you accept a lead through OwnerFi, you&apos;ll sign this agreement digitally by typing your legal name and checking a confirmation box. The process takes less than 30 seconds.
+                <strong className="text-white">OwnerFi Addendum:</strong> Sections 8-12 include additional liability protections including indemnification,
+                TCPA compliance, RESPA compliance, creative finance acknowledgment, and data disclaimer provisions.
+              </p>
+              <p>
+                <strong className="text-white">Digital Signing:</strong> When you accept a lead through OwnerFi, you&apos;ll sign this agreement digitally
+                by typing your legal name and checking confirmation boxes for the agreement terms, TCPA compliance, creative finance acknowledgment, and data acceptance.
               </p>
               <p>
                 <strong className="text-white">Contact Info Release:</strong> The buyer&apos;s full contact information (phone, email, address) is released to you immediately after you sign the agreement.
               </p>
               <p>
                 <strong className="text-white">No Risk:</strong> If the lead doesn&apos;t close on a home purchase, you owe nothing. The 30% referral fee is only due at closing when you get paid.
+              </p>
+              <p>
+                <strong className="text-white">Related Documents:</strong> By signing, you acknowledge review of our{' '}
+                <a href="/tcpa-compliance" className="text-emerald-400 hover:underline">TCPA Compliance Agreement</a> and{' '}
+                <a href="/creative-finance-disclaimer" className="text-emerald-400 hover:underline">Creative Finance Disclaimer</a>.
               </p>
             </div>
           </div>

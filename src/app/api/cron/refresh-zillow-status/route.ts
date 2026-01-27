@@ -390,10 +390,17 @@ export async function GET(request: NextRequest) {
 
       // Property is still active - check owner financing for owner finance properties
       if (prop.collection === 'properties' && prop.isOwnerFinance) {
+        // Trust manually added properties and agent-confirmed properties
+        // These sources indicate human verification that the property offers owner financing,
+        // even if the Zillow description doesn't contain explicit keywords
+        const manualSources = ['manual-add-v2', 'manual-add', 'admin-upload', 'manual', 'bookmarklet'];
+        const isManuallyAdded = manualSources.includes(prop.source || '');
         const isAgentConfirmed = prop.agentConfirmedOwnerFinance || prop.source === 'agent_outreach';
+        const isTrustedSource = isManuallyAdded || isAgentConfirmed;
+
         const ownerFinanceCheck = hasStrictOwnerFinancing(result.description);
 
-        if (!ownerFinanceCheck.passes && !isAgentConfirmed) {
+        if (!ownerFinanceCheck.passes && !isTrustedSource) {
           // No longer offers owner financing - mark as inactive instead of deleting
           firestoreBatch.update(docRef, {
             isOwnerFinance: false,

@@ -322,6 +322,16 @@ export interface ReferralAgreement {
   signatureIpAddress?: string;
   signatureUserAgent?: string;
 
+  // OwnerFi Addendum Acknowledgments (Sections 8-12)
+  acknowledgeTCPA?: boolean;                // Section 9: TCPA & Contact Compliance
+  acknowledgeTCPAAt?: Timestamp;
+  acknowledgeCreativeFinance?: boolean;     // Section 11: Creative Finance Disclaimer
+  acknowledgeCreativeFinanceAt?: Timestamp;
+  acknowledgeDataAsIs?: boolean;            // Section 12: Data As-Is Acceptance
+  acknowledgeDataAsIsAt?: Timestamp;
+  acknowledgeIndemnification?: boolean;     // Section 8: Indemnification
+  acknowledgeRESPA?: boolean;               // Section 10: RESPA Compliance
+
   // After signing - lead info released
   leadInfoReleased: boolean;
   leadReleasedAt?: Timestamp;

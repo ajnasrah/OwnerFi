@@ -28,7 +28,7 @@ export default function BlogAdminPage() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const brands: Brand[] = ['ownerfi', 'carz', 'abdullah', 'benefit', 'gaza'];
+  const brands: Brand[] = ['ownerfi', 'carz', 'abdullah', 'benefit', 'gaza', 'realtors'];
 
   useEffect(() => {
     fetchPosts();

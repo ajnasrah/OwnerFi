@@ -38,6 +38,7 @@ export async function GET(request: NextRequest) {
 
       console.log('🔄 Starting article refill check at', new Date().toISOString());
 
+      // NOTE: Realtors not included - uses question-based topics, not RSS articles
       const results = {
         carz: await refillBrand('carz'),
         ownerfi: await refillBrand('ownerfi'),

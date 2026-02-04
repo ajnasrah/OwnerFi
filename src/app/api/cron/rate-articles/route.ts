@@ -37,6 +37,7 @@ export async function GET(request: NextRequest) {
 
       console.log('🚀 Starting daily article rating at', new Date().toISOString());
 
+      // NOTE: Realtors not included - uses question-based topics, not RSS articles
       const results = {
         carz: await rateAndMergeBrand('carz'),
         ownerfi: await rateAndMergeBrand('ownerfi'),

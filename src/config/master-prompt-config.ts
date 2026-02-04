@@ -168,7 +168,7 @@ export const GLOBAL_RULES = {
 // BRAND-SPECIFIC CONFIGURATIONS
 // =====================================================
 
-export type BrandKey = 'ownerfi_viral' | 'ownerfi_benefit' | 'carz' | 'abdullah' | 'personal' | 'gaza';
+export type BrandKey = 'ownerfi_viral' | 'ownerfi_benefit' | 'carz' | 'abdullah' | 'personal' | 'gaza' | 'realtors';
 
 export interface BrandConfig {
   name: string;
@@ -264,6 +264,22 @@ export const BRAND_CONFIGS: Record<BrandKey, BrandConfig> = {
       'Focus on humanitarian aspects',
       'No political commentary',
       'Compassionate delivery',
+    ],
+  },
+
+  realtors: {
+    name: 'OwnerFi for Realtors',
+    voice: 'Abdullah',
+    avatarId: 'd33fe3abc2914faa88309c3bdb9f47f4',
+    purpose: 'Question-based educational content targeting real estate agents about owner financing leads',
+    audience: 'Real estate agents, realtors, brokers looking for qualified buyer leads',
+    hashtags: ['#RealEstateAgent', '#RealtorLife', '#OwnerFinancing', '#RealEstateLeads', '#OwnerFi'],
+    specialRules: [
+      'Start every video with a pain-point question',
+      'Position OwnerFi as the solution',
+      'Emphasize: no upfront cost, 30% fee only at closing',
+      'Focus on pre-qualified leads in their service area',
+      'CTA: Sign up free at OwnerFi.ai',
     ],
   },
 };

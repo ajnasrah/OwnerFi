@@ -5,7 +5,7 @@
  * When uploading, the system picks the next available slot.
  */
 
-export type YouTubeBrand = 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza';
+export type YouTubeBrand = 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza' | 'realtors';
 
 // Time slots in 24-hour format (CST)
 // Format: [hour, minute]
@@ -107,6 +107,16 @@ const BRAND_SCHEDULES: Record<YouTubeBrand, BrandSchedule> = {
       [17, 0],  // 5:00 PM - Afternoon spotlight
       [20, 0],  // 8:00 PM - Evening reflection
       [22, 0],  // 10:00 PM - Night awareness
+    ],
+  },
+
+  // Realtors — 3 Posts Per Day (Sub-brand of OwnerFi)
+  realtors: {
+    timezone: 'America/Chicago',
+    slots: [
+      [8, 0],   // 8:00 AM - Morning question
+      [12, 0],  // 12:00 PM - Lunch education
+      [19, 0],  // 7:00 PM - Evening call-to-action
     ],
   },
 };

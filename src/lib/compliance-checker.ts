@@ -231,6 +231,7 @@ export function getComplianceRules(brand: Brand): ComplianceRules {
   switch (brand) {
     case 'ownerfi':
     case 'benefit':
+    case 'realtors':
       baseRules.industryRules = OWNERFI_RULES
       baseRules.requiredDisclaimers = ['Prices and terms may change anytime. Not legal or financial advice.']
       baseRules.maxPushyScore = 50 // Relaxed - allow more marketing flexibility

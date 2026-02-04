@@ -5,7 +5,7 @@
  * Each brand has its own isolated webhook endpoint to prevent failures from affecting other brands.
  *
  * Route: /api/webhooks/heygen/[brand]
- * Brands: carz, ownerfi, benefit, abdullah, personal, gaza
+ * Brands: carz, ownerfi, benefit, abdullah, personal, gaza, realtors
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -289,7 +289,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
  * Get workflow for specific brand (NO sequential lookups)
  */
 async function getWorkflowForBrand(
-  brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza',
+  brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza' | 'realtors',
   workflowId: string
 ): Promise<any | null> {
   const { getAdminDb } = await import('@/lib/firebase-admin');
@@ -306,7 +306,7 @@ async function getWorkflowForBrand(
  * CRITICAL: Also updates dedup document when status changes to prevent duplicate processing
  */
 async function updateWorkflowForBrand(
-  brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza',
+  brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza' | 'realtors',
   workflowId: string,
   updates: Record<string, any>
 ): Promise<void> {
@@ -357,7 +357,7 @@ async function updateWorkflowForBrand(
  * Trigger Submagic processing with brand-specific webhook
  */
 async function triggerSubmagicProcessing(
-  brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza',
+  brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza' | 'realtors',
   workflowId: string,
   heygenVideoUrl: string,
   workflow: any
@@ -576,7 +576,7 @@ async function triggerSubmagicProcessing(
  * Send failure alert for brand
  */
 async function sendFailureAlert(
-  brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza',
+  brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza' | 'realtors',
   workflowId: string,
   workflow: any,
   reason: string

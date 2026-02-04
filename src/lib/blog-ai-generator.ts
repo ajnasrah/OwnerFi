@@ -50,6 +50,7 @@ function getBrandTone(brand: Brand): 'professional' | 'casual' | 'educational' {
     case 'personal':
       return 'casual';
     case 'gaza':
+    case 'realtors':
       return 'educational';
     default:
       return 'educational';
@@ -73,6 +74,8 @@ function getBrandContext(brand: Brand): string {
       return 'Personal brand content featuring authentic stories and experiences.';
     case 'gaza':
       return 'Gaza humanitarian news coverage providing updates on the humanitarian situation in Gaza.';
+    case 'realtors':
+      return 'OwnerFi for Realtors targets real estate agents with educational content about owner financing. We offer pre-screened buyer leads with no upfront cost - agents only pay a 30% referral fee at closing. Our audience is real estate agents looking for qualified buyer leads and wanting to learn about creative financing options.';
     default:
       return '';
   }

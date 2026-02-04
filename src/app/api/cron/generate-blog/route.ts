@@ -231,7 +231,7 @@ export async function GET(request: NextRequest) {
     console.log('🕐 Blog Generation Cron Started');
     console.log(`   Time: ${new Date().toLocaleString('en-US', { timeZone: 'America/Chicago' })} CST`);
 
-    const brands: Brand[] = ['ownerfi', 'carz', 'abdullah'];
+    const brands: Brand[] = ['ownerfi', 'carz', 'abdullah', 'realtors'];
     const results: Record<string, any> = {};
 
   // Process each brand sequentially

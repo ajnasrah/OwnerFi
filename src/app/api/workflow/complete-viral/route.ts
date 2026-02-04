@@ -195,7 +195,7 @@ export async function POST(request: NextRequest) {
     try {
       captionData = await generateCaptionAndComment({
         topic: article.title,
-        brand: brand as 'ownerfi' | 'carz' | 'benefit' | 'abdullah' | 'personal' | 'gaza',
+        brand: brand as 'ownerfi' | 'carz' | 'benefit' | 'abdullah' | 'personal' | 'gaza' | 'realtors',
         script: scriptContent.script,
         platform: 'both' // Works for both YouTube and Instagram
       });

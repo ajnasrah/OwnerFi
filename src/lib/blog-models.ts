@@ -223,6 +223,13 @@ export const CONTENT_PILLARS: Record<Brand, Array<{ id: string; label: string; d
     { id: 'relief-updates', label: 'Relief Updates', description: 'Relief organization updates' },
     { id: 'donation-drives', label: 'Donation Drives', description: 'Donation campaigns and drives' },
   ],
+  realtors: [
+    { id: 'realtor-leads', label: 'Lead Generation', description: 'Getting pre-qualified buyer leads' },
+    { id: 'realtor-income', label: 'Income & Commissions', description: 'Maximizing earnings with referral fees' },
+    { id: 'realtor-efficiency', label: 'Agent Efficiency', description: 'Working smarter with qualified leads' },
+    { id: 'realtor-education', label: 'Owner Finance Education', description: 'Teaching agents about owner financing' },
+    { id: 'realtor-closing', label: 'Closing Strategies', description: 'Closing more deals with creative financing' },
+  ],
 };
 
 /**

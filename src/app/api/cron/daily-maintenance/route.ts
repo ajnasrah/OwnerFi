@@ -636,7 +636,7 @@ async function cleanupWorkflows() {
 // ============================================================================
 
 async function syncYouTubeAnalytics() {
-  const YOUTUBE_BRANDS = ['abdullah', 'ownerfi', 'carz'];
+  const YOUTUBE_BRANDS = ['abdullah', 'ownerfi', 'carz', 'realtors'];
 
   try {
     console.log('📺 Syncing YouTube analytics for all brands...');

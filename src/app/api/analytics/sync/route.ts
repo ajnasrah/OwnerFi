@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
       }, { status: 500 });
     }
 
-    const brands = brand ? [brand] : ['carz', 'ownerfi', 'benefit', 'abdullah', 'personal', 'gaza'];
+    const brands = brand ? [brand] : ['carz', 'ownerfi', 'benefit', 'abdullah', 'personal', 'gaza', 'realtors'];
     let totalSynced = 0;
 
     for (const currentBrand of brands) {

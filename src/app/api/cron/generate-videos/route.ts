@@ -41,7 +41,8 @@ export async function GET(request: NextRequest) {
     return withCronLock('generate-videos', async () => {
       const results = {
         articles: [] as any[],
-        gaza: null as any
+        gaza: null as any,
+        realtors: null as any
       };
 
       // 1. Generate article videos for brands with RSS feeds
@@ -58,6 +59,13 @@ export async function GET(request: NextRequest) {
       const gazaResult = await generateGazaVideo();
       results.gaza = gazaResult;
 
+      // 3. Generate Realtor videos (question-based topics, not RSS)
+      console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('🏠 GENERATING REALTOR VIDEOS');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+      const realtorResult = await generateRealtorVideo();
+      results.realtors = realtorResult;
+
       const duration = Date.now() - startTime;
 
       console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
@@ -66,6 +74,7 @@ export async function GET(request: NextRequest) {
       console.log(`📊 Summary:`);
       console.log(`   Articles: ${results.articles.filter(r => r.success).length}/${results.articles.length} generated`);
       console.log(`   Gaza: ${results.gaza?.success ? '✅' : '⏭️ '} ${results.gaza?.message || results.gaza?.workflowId || 'skipped'}`);
+      console.log(`   Realtors: ${results.realtors?.success ? '✅' : '⏭️ '} ${results.realtors?.message || results.realtors?.workflowId || 'skipped'}`);
       console.log(`   Duration: ${duration}ms`);
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
@@ -106,6 +115,7 @@ async function generateArticleVideos() {
   // NOTE: Abdullah is NOT included here - it has its own dedicated cron (/api/cron/abdullah)
   //       that generates themed content (mindset/business/money/freedom/story)
   // NOTE: Personal is NOT included - it uses Google Drive uploads, not RSS
+  // NOTE: Realtors is handled separately below (uses question-based topics, not RSS)
   const articleBrands = ['carz', 'ownerfi'] as const;
 
   const results = [];
@@ -335,6 +345,179 @@ async function generateGazaVideo() {
 
   } catch (error) {
     console.error(`   ❌ Error generating Gaza video:`, error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
+  }
+}
+
+// ============================================================================
+// 4. GENERATE REALTOR VIDEO (Question-Based Topics - Sub-brand of OwnerFi)
+// ============================================================================
+
+async function generateRealtorVideo() {
+  const { addWorkflowToQueue, updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
+  const { generateRealtorScript, buildRealtorVideoRequestWithAgent, getCategoryForHour } = await import('@/lib/realtor-content-generator');
+  const { getBrandWebhookUrl } = await import('@/lib/brand-utils');
+  const { circuitBreakers, fetchWithTimeout, TIMEOUTS } = await import('@/lib/api-utils');
+
+  const brand = 'realtors';
+  const HEYGEN_API_KEY = process.env.HEYGEN_API_KEY;
+
+  try {
+    // Check daily limit (3 videos per day for realtors)
+    const { getAdminDb } = await import('@/lib/firebase-admin');
+    const adminDb = await getAdminDb();
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const startOfDay = today.getTime();
+
+    const todaySnapshot = await adminDb
+      .collection('realtors_workflow_queue')
+      .where('createdAt', '>=', startOfDay)
+      .get();
+
+    const videosToday = todaySnapshot.size;
+    const maxPerDay = 3;
+
+    console.log(`   Videos generated today: ${videosToday}/${maxPerDay}`);
+
+    if (videosToday >= maxPerDay) {
+      console.log(`   ⏭️  Daily limit reached (${maxPerDay}/day)`);
+      return {
+        success: false,
+        skipped: true,
+        message: `Daily limit reached (${videosToday}/${maxPerDay})`
+      };
+    }
+
+    // Determine category based on current hour (CST)
+    const now = new Date();
+    const cstHour = new Date(now.toLocaleString('en-US', { timeZone: 'America/Chicago' })).getHours();
+    const category = getCategoryForHour(cstHour);
+
+    console.log(`   📅 Current CST hour: ${cstHour}`);
+    console.log(`   🎯 Category: ${category}`);
+
+    // Generate script from topic
+    console.log(`   🤖 Generating realtor script...`);
+    const script = await generateRealtorScript(category);
+
+    console.log(`   ✅ Script generated:`);
+    console.log(`      Topic: ${script.topicId}`);
+    console.log(`      Hook: ${script.hook}`);
+
+    // Create workflow entry with deduplication key
+    const todayStr = new Date().toISOString().split('T')[0];
+    const articleId = `realtors_${script.topicId}_${todayStr}_${cstHour}h`;
+
+    let queueItem;
+    try {
+      queueItem = await addWorkflowToQueue(
+        articleId,
+        script.title,
+        brand as any
+      );
+    } catch (queueError) {
+      if (queueError instanceof Error && queueError.message.includes('Duplicate workflow blocked')) {
+        console.warn(`   ⚠️  ${queueError.message}`);
+        return { success: false, error: 'Duplicate workflow', skipped: true };
+      }
+      throw queueError;
+    }
+
+    const workflowId = queueItem.id;
+    console.log(`   📝 Workflow ID: ${workflowId}`);
+
+    // Update workflow with caption
+    await updateWorkflowStatus(workflowId, brand as any, {
+      caption: script.caption,
+      title: script.title,
+      status: 'heygen_processing'
+    } as any);
+
+    // Build HeyGen request with agent rotation
+    console.log(`   🎥 Sending to HeyGen...`);
+    const webhookUrl = getBrandWebhookUrl('realtors', 'heygen');
+    const { request: videoRequest, agentId } = await buildRealtorVideoRequestWithAgent(script, workflowId);
+
+    const fullRequest = {
+      ...videoRequest,
+      webhook_url: webhookUrl,
+      test: false
+    };
+
+    console.log(`   Webhook: ${webhookUrl}`);
+    console.log(`   Agent: ${agentId}`);
+
+    const response = await circuitBreakers.heygen.execute(async () => {
+      return await fetchWithTimeout(
+        'https://api.heygen.com/v2/video/generate',
+        {
+          method: 'POST',
+          headers: {
+            'accept': 'application/json',
+            'content-type': 'application/json',
+            'x-api-key': HEYGEN_API_KEY!
+          },
+          body: JSON.stringify(fullRequest)
+        },
+        TIMEOUTS.HEYGEN_API
+      );
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`   ❌ HeyGen API error: ${response.status}`);
+      console.error(`   ${errorText}`);
+
+      await updateWorkflowStatus(workflowId, brand as any, {
+        status: 'failed',
+        error: `HeyGen error: ${response.status}`
+      } as any);
+
+      return {
+        success: false,
+        error: `HeyGen API error: ${response.status}`
+      };
+    }
+
+    const data = await response.json();
+
+    if (!data.data || !data.data.video_id) {
+      console.error('   ❌ HeyGen response missing video_id:', data);
+      await updateWorkflowStatus(workflowId, brand as any, {
+        status: 'failed',
+        error: 'HeyGen did not return video_id'
+      } as any);
+      return {
+        success: false,
+        error: 'HeyGen did not return video_id'
+      };
+    }
+
+    const heygenVideoId = data.data.video_id;
+
+    // Update workflow with HeyGen video ID
+    await updateWorkflowStatus(workflowId, brand as any, {
+      heygenVideoId,
+      agentId
+    } as any);
+
+    console.log(`   ✅ Video generation started: ${heygenVideoId}`);
+
+    return {
+      success: true,
+      workflowId,
+      videoId: heygenVideoId,
+      topic: script.topicId,
+      category
+    };
+
+  } catch (error) {
+    console.error(`   ❌ Error generating Realtor video:`, error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error'

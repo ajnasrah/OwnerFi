@@ -179,7 +179,7 @@ export const WORKFLOW = {
 // ============================================================================
 
 export const BRANDS = {
-  VALID_BRANDS: ['carz', 'ownerfi', 'benefit', 'abdullah', 'personal', 'gaza'] as const,
+  VALID_BRANDS: ['carz', 'ownerfi', 'benefit', 'abdullah', 'personal', 'gaza', 'realtors'] as const,
 } as const;
 
 export type Brand = typeof BRANDS.VALID_BRANDS[number];
@@ -219,7 +219,7 @@ export const ERROR_MESSAGES = {
   API_UNAVAILABLE: 'External API is currently unavailable.',
 
   // Validation errors
-  INVALID_BRAND: 'Invalid brand specified. Must be one of: carz, ownerfi, benefit, abdullah, personal, gaza',
+  INVALID_BRAND: 'Invalid brand specified. Must be one of: carz, ownerfi, benefit, abdullah, personal, gaza, realtors',
   INVALID_PLATFORM: 'Invalid platform specified.',
   MISSING_REQUIRED_FIELD: 'Missing required field in request.',
 
@@ -283,6 +283,7 @@ export const YOUTUBE_CATEGORIES = {
   ABDULLAH: 'PEOPLE_BLOGS',
   PERSONAL: 'PEOPLE_BLOGS',
   GAZA: 'NEWS_POLITICS',
+  REALTORS: 'HOWTO_STYLE', // Educational content for real estate agents
 } as const;
 
 // ============================================================================

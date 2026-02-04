@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
 
     // Brands to check
     const brands = brand === 'all'
-      ? ['carz', 'ownerfi', 'benefit', 'abdullah', 'personal', 'gaza']
+      ? ['carz', 'ownerfi', 'benefit', 'abdullah', 'personal', 'gaza', 'realtors']
       : [brand];
 
     for (const b of brands) {

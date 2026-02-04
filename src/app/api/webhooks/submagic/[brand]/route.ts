@@ -5,7 +5,7 @@
  * Each brand has its own isolated webhook endpoint to prevent failures from affecting other brands.
  *
  * Route: /api/webhooks/submagic/[brand]
- * Brands: carz, ownerfi, benefit, abdullah, personal, gaza
+ * Brands: carz, ownerfi, benefit, abdullah, personal, gaza, realtors
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -415,7 +415,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
  * Get workflow by Submagic project ID for specific brand
  */
 async function getWorkflowBySubmagicId(
-  brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza',
+  brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza' | 'realtors',
   submagicProjectId: string
 ): Promise<{ workflowId: string; workflow: any } | null> {
   const { getAdminDb } = await import('@/lib/firebase-admin');
@@ -467,7 +467,7 @@ async function getWorkflowBySubmagicId(
  * CRITICAL: Also updates dedup document when status changes to prevent duplicate processing
  */
 async function updateWorkflowForBrand(
-  brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza',
+  brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza' | 'realtors',
   workflowId: string,
   updates: Record<string, any>
 ): Promise<void> {
@@ -593,7 +593,7 @@ async function fetchVideoUrlFromSubmagic(submagicProjectId: string): Promise<str
  * Process video upload to R2 and post to Late
  */
 async function processVideoAndPost(
-  brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza',
+  brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza' | 'realtors',
   workflowId: string,
   workflow: any,
   videoUrl: string
@@ -698,7 +698,7 @@ async function processVideoAndPost(
  * Send failure alert for brand
  */
 async function sendFailureAlert(
-  brand: 'carz' | 'ownerfi' | 'benefit' | 'personal' | 'gaza' | 'abdullah',
+  brand: 'carz' | 'ownerfi' | 'benefit' | 'personal' | 'gaza' | 'abdullah' | 'realtors',
   workflowId: string,
   workflow: any,
   reason: string

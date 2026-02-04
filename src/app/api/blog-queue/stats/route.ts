@@ -10,7 +10,7 @@ import { getBlogQueueStats } from '@/lib/blog-queue';
 
 export async function GET(_request: NextRequest) {
   try {
-    const brands: Brand[] = ['ownerfi', 'carz', 'abdullah', 'benefit', 'gaza'];
+    const brands: Brand[] = ['ownerfi', 'carz', 'abdullah', 'benefit', 'gaza', 'realtors'];
 
     const stats: Record<string, any> = {};
 

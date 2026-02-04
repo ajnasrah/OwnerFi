@@ -17,7 +17,7 @@ import { getBrandWebhookUrl } from '@/lib/brand-utils';
  *
  * Body:
  * - workflowId: Workflow ID to retry
- * - brand: Brand (carz, ownerfi, benefit, abdullah, personal, gaza)
+ * - brand: Brand (carz, ownerfi, benefit, abdullah, personal, gaza, realtors)
  * - stage: Stage to retry from (heygen, submagic, posting)
  */
 export async function POST(request: NextRequest) {

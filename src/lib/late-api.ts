@@ -25,7 +25,7 @@ export interface LatePostRequest {
   hashtags?: string[];
   platforms: ('instagram' | 'tiktok' | 'youtube' | 'facebook' | 'linkedin' | 'threads' | 'twitter' | 'pinterest' | 'reddit' | 'bluesky')[];
   scheduleTime?: string; // ISO 8601 format, or omit for immediate posting
-  brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza';
+  brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza' | 'realtors';
   postTypes?: {
     instagram?: 'reel' | 'story' | 'feed'; // Added 'feed' for image posts
     facebook?: 'feed' | 'story';
@@ -67,12 +67,14 @@ export interface LateProfile {
  * - personal → Abdullah profile (same person, Google Drive uploads)
  * - gaza → Gaza profile (dedicated)
  */
-function getProfileId(brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza'): string | null {
+function getProfileId(brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza' | 'realtors'): string | null {
   switch (brand) {
     case 'ownerfi':
       return getLateOwnerfiProfileId() || null;
     case 'benefit':
       return getLateOwnerfiProfileId() || null; // Benefit posts to OwnerFi's accounts
+    case 'realtors':
+      return getLateOwnerfiProfileId() || null; // Realtors sub-brand posts to OwnerFi's accounts
     case 'carz':
       return getLateCarzProfileId() || null;
     case 'abdullah':
@@ -246,7 +248,8 @@ export async function postToLate(request: LatePostRequest): Promise<LatePostResp
       'benefit': 'Benefit',
       'abdullah': 'Abdullah',
       'personal': 'Personal',
-      'gaza': 'Gaza'
+      'gaza': 'Gaza',
+      'realtors': 'OwnerFi for Realtors'
     };
     const brandName = brandNameMap[request.brand] || request.brand;
     console.error(`❌ Profile ID not configured for ${brandName}`);
@@ -336,7 +339,8 @@ export async function postToLate(request: LatePostRequest): Promise<LatePostResp
       'benefit': 'Benefit',
       'abdullah': 'Abdullah',
       'personal': 'Personal',
-      'gaza': 'Gaza'
+      'gaza': 'Gaza',
+      'realtors': 'OwnerFi for Realtors'
     };
     const brandName = brandNameMap[request.brand] || request.brand;
     console.log(`📤 Posting to Late (${brandName})...`);
@@ -585,7 +589,7 @@ export async function postToLate(request: LatePostRequest): Promise<LatePostResp
 /**
  * Get the next available queue slot for a profile
  */
-export async function getNextQueueSlot(brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza'): Promise<{ nextSlot: string; timezone: string } | null> {
+export async function getNextQueueSlot(brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza' | 'realtors'): Promise<{ nextSlot: string; timezone: string } | null> {
   const profileId = getProfileId(brand);
   const LATE_API_KEY = getLateApiKey();
   if (!profileId || !LATE_API_KEY) {
@@ -625,7 +629,7 @@ export async function getNextQueueSlot(brand: 'carz' | 'ownerfi' | 'benefit' | '
 /**
  * Get queue schedule for a profile
  */
-export async function getQueueSchedule(brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza'): Promise<any> {
+export async function getQueueSchedule(brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza' | 'realtors'): Promise<any> {
   const profileId = getProfileId(brand);
   const LATE_API_KEY = getLateApiKey();
   if (!profileId || !LATE_API_KEY) {
@@ -656,7 +660,7 @@ export async function getQueueSchedule(brand: 'carz' | 'ownerfi' | 'benefit' | '
  * Set or update queue schedule for a profile
  */
 export async function setQueueSchedule(
-  brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza',
+  brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza' | 'realtors',
   slots: { dayOfWeek: number; time: string }[],
   timezone: string = 'America/Chicago', // CST - consistent with brand posting schedule
   reshuffleExisting: boolean = false
@@ -708,7 +712,7 @@ export async function scheduleVideoPost(
   title: string,
   platforms: ('instagram' | 'tiktok' | 'youtube' | 'facebook' | 'linkedin' | 'threads' | 'twitter')[] | any[],
   delay: 'immediate' | '1hour' | '2hours' | '4hours' | 'optimal' = 'immediate',
-  brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza' = 'ownerfi',
+  brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza' | 'realtors' = 'ownerfi',
   firstComment?: string // Optional first comment for engagement boost
 ): Promise<LatePostResponse> {
   // Extract hashtags from caption

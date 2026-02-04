@@ -94,6 +94,15 @@ export const BRAND_POSTING_CONFIGS: Record<Brand, BrandPostingConfig> = {
     spreadAcrossDays: false,
     usePlatformSpecificTiming: true,
   },
+
+  realtors: {
+    brand: 'realtors',
+    postsPerDay: 3,
+    description: 'Realtor-focused content - 3 question-based videos/day',
+    topPerformingHours: [8, 12, 19], // 8 AM, 12 PM, 7 PM CST
+    spreadAcrossDays: false,
+    usePlatformSpecificTiming: true,
+  },
 };
 
 /**

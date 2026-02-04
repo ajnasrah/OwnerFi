@@ -25,7 +25,7 @@ interface YouTubeUploadOptions {
   privacy?: 'public' | 'unlisted' | 'private';
   madeForKids?: boolean;
   isShort?: boolean;
-  brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza';
+  brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza' | 'realtors';
   // Scheduling options
   publishAt?: string; // ISO 8601 datetime for scheduled publishing
   useSchedule?: boolean; // If true, auto-pick next available slot from brand schedule
@@ -49,6 +49,7 @@ function getYouTubeAccountBrand(brand: string): string {
   const brandMapping: Record<string, string> = {
     'personal': 'abdullah',  // Personal videos use Abdullah's YouTube
     'benefit': 'ownerfi',    // Benefit videos use OwnerFi's YouTube
+    'realtors': 'ownerfi',   // Realtors sub-brand uses OwnerFi's YouTube
   };
   return brandMapping[brand.toLowerCase()] || brand;
 }
@@ -341,7 +342,7 @@ export async function postVideoToYouTube(
   videoUrl: string,
   title: string,
   description: string,
-  brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza',
+  brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza' | 'realtors',
   options?: {
     tags?: string[];
     category?: string;

@@ -7,7 +7,7 @@
  * 3. check-stuck-submagic (submagic_processing status)
  * 4. check-stuck-posting (posting + video_processing status)
  *
- * Checks ALL 6 brands: carz, ownerfi, benefit, abdullah, personal, gaza
+ * Checks ALL 7 brands: carz, ownerfi, benefit, abdullah, personal, gaza, realtors
  *
  * Schedule: every 30 minutes during active hours (14-23, 0-4 CST)
  * Previously: 4 crons × 34 runs/day = 136 invocations/day

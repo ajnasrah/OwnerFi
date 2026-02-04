@@ -129,7 +129,7 @@ Example 4 (Cars/EV):
 
 export interface CaptionRequest {
   topic: string;
-  brand: 'ownerfi' | 'carz' | 'benefit' | 'abdullah' | 'personal' | 'gaza';
+  brand: 'ownerfi' | 'carz' | 'benefit' | 'abdullah' | 'personal' | 'gaza' | 'realtors';
   script?: string; // Optional full script for context
   platform?: 'youtube' | 'instagram' | 'both'; // Default: both
 }

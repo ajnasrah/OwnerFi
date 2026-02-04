@@ -102,6 +102,10 @@ const COLLECTIONS = {
     FEEDS: 'gaza_rss_feeds',
     ARTICLES: 'gaza_articles',
     WORKFLOW_QUEUE: 'gaza_workflow_queue',
+  },
+  REALTORS: {
+    // Realtors uses topic-based content, not RSS feeds
+    WORKFLOW_QUEUE: 'realtors_workflow_queue',
   }
 };
 
@@ -626,7 +630,8 @@ export async function cleanupCompletedWorkflows(olderThanHours: number = 24): Pr
   const cutoffTime = Date.now() - (olderThanHours * 60 * 60 * 1000);
   let cleaned = 0;
 
-  for (const cat of ['carz', 'ownerfi'] as const) {
+  // All brands with workflow queues
+  for (const cat of ['carz', 'ownerfi', 'benefit', 'abdullah', 'personal', 'gaza', 'realtors'] as const) {
     const collectionName = getCollectionName('WORKFLOW_QUEUE', cat);
     const snapshot = await getDocs(query(
       collection(db, collectionName),
@@ -868,8 +873,8 @@ export async function getStats(category?: Brand) {
     ));
     videosGenerated = videoSnapshot.size;
   } else {
-    // Get from both collections
-    for (const cat of ['carz', 'ownerfi'] as const) {
+    // Get from all collections with articles (not realtors - uses topics, not articles)
+    for (const cat of ['carz', 'ownerfi', 'gaza'] as const) {
       const collectionName = getCollectionName('ARTICLES', cat);
       const allSnapshot = await getDocs(collection(db, collectionName));
       totalArticles += allSnapshot.size;
@@ -995,7 +1000,7 @@ export async function getWorkflowById(workflowId: string): Promise<{
   if (!db) return null;
 
   // Try to find in all brand workflow queues
-  for (const brand of ['carz', 'ownerfi', 'benefit', 'abdullah', 'personal', 'gaza'] as const) {
+  for (const brand of ['carz', 'ownerfi', 'benefit', 'abdullah', 'personal', 'gaza', 'realtors'] as const) {
     const collectionName = getCollectionName('WORKFLOW_QUEUE', brand);
     const docSnap = await getDoc(doc(db, collectionName, workflowId));
 
@@ -1159,7 +1164,7 @@ export async function findWorkflowByCallbackId(callbackId: string): Promise<{
   }
 
   // Check article workflows (all brands)
-  for (const brand of ['carz', 'ownerfi', 'benefit', 'abdullah', 'personal', 'gaza'] as const) {
+  for (const brand of ['carz', 'ownerfi', 'benefit', 'abdullah', 'personal', 'gaza', 'realtors'] as const) {
     const collectionName = getCollectionName('WORKFLOW_QUEUE', brand);
     const docSnap = await getDoc(doc(db, collectionName, callbackId));
 

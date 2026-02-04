@@ -71,7 +71,7 @@ interface WorkflowLog {
   id: string;
   articleId: string;
   articleTitle: string;
-  brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'gaza';
+  brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'gaza' | 'realtors';
   status: 'pending' | 'heygen_processing' | 'submagic_processing' | 'posting' | 'completed' | 'failed';
   heygenVideoId?: string;
   submagicVideoId?: string;
@@ -509,7 +509,7 @@ ${script.caption}`;
     }
   };
 
-  const deleteWorkflow = async (workflowId: string, brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'gaza') => {
+  const deleteWorkflow = async (workflowId: string, brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'gaza' | 'realtors') => {
     if (!confirm('Are you sure you want to delete this workflow? This action cannot be undone.')) {
       return;
     }

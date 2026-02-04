@@ -33,13 +33,14 @@ export async function DELETE(request: NextRequest) {
       'abdullah': 'abdullah_workflow_queue',
       'personal': 'personal_workflow_queue',
       'gaza': 'gaza_workflow_queue',
+      'realtors': 'realtors_workflow_queue',
     };
 
     const collectionName = collectionMap[brand];
 
     if (!collectionName) {
       return NextResponse.json(
-        { error: `Invalid brand: "${brand}". Must be one of: carz, ownerfi, benefit, abdullah, personal, gaza` },
+        { error: `Invalid brand: "${brand}". Must be one of: carz, ownerfi, benefit, abdullah, personal, gaza, realtors` },
         { status: 400 }
       );
     }

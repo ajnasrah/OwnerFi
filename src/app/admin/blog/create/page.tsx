@@ -31,7 +31,7 @@ export default function CreateBlogPage() {
   const [status, setStatus] = useState<'draft' | 'published'>('draft');
   const [loading, setLoading] = useState(false);
 
-  const brands: Brand[] = ['ownerfi', 'carz', 'abdullah', 'benefit', 'gaza'];
+  const brands: Brand[] = ['ownerfi', 'carz', 'abdullah', 'benefit', 'gaza', 'realtors'];
 
   const updateSection = (index: number, field: keyof BlogSection, value: string) => {
     const newSections = [...sections];

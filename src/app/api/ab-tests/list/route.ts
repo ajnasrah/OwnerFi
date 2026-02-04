@@ -7,7 +7,7 @@ import { getTestsForBrand } from '@/lib/ab-testing';
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const brand = searchParams.get('brand') as 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza';
+    const brand = searchParams.get('brand') as 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza' | 'realtors';
 
     if (!brand) {
       return NextResponse.json(

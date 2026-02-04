@@ -246,6 +246,10 @@ function getBrandPlatformPriority(brand: Brand): SocialPlatform[] {
       // Gaza humanitarian: Twitter (news), Instagram, Facebook
       return ['twitter', 'instagram', 'facebook', 'linkedin', 'threads'];
 
+    case 'realtors':
+      // Realtors: LinkedIn (professional), Instagram (visual), Facebook (agents)
+      return ['linkedin', 'instagram', 'facebook', 'threads', 'tiktok'];
+
     default:
       return ['instagram', 'facebook', 'linkedin', 'twitter', 'threads'];
   }

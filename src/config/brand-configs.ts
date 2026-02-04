@@ -343,6 +343,65 @@ export const PERSONAL_CONFIG: BrandConfig = {
 };
 
 /**
+ * OwnerFi for Realtors Sub-Brand Configuration
+ * Question-based content targeting real estate agents
+ * Each video starts with a pain point question and positions OwnerFi as the solution
+ */
+export const REALTORS_CONFIG: BrandConfig = {
+  id: 'realtors',
+  displayName: 'OwnerFi for Realtors',
+
+  lateProfileId: process.env.LATE_OWNERFI_PROFILE_ID || '', // Uses OwnerFi's Late profile (sub-brand)
+
+  platforms: {
+    default: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'threads'],
+    all: ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'threads', 'twitter', 'bluesky'],
+    excludeFromDefault: ['twitter', 'bluesky'], // Focus on main platforms for realtors
+  },
+
+  webhooks: {
+    heygen: `${BASE_URL}/api/webhooks/heygen/realtors`,
+    submagic: `${BASE_URL}/api/webhooks/submagic/realtors`,
+  },
+
+  content: {
+    youtubeCategory: 'HOWTO_STYLE', // Educational/How-to content
+    defaultHashtags: [
+      '#RealEstateAgent',
+      '#RealtorLife',
+      '#OwnerFinancing',
+      '#RealEstateLeads',
+      '#OwnerFi',
+      '#RealEstateInvesting',
+      '#AgentTips',
+    ],
+    captionStyle: 'educational',
+  },
+
+  collections: {
+    workflows: 'realtors_workflow_queue',
+  },
+
+  rateLimits: {
+    lateAPI: 50,
+    heygen: 20,
+    submagic: 240,
+  },
+
+  scheduling: {
+    timezone: 'America/Chicago', // Central Time
+    postingHours: [8, 12, 19], // 8 AM, 12 PM, 7 PM CST
+    maxPostsPerDay: 3,
+  },
+
+  features: {
+    autoPosting: true,
+    abTesting: false,
+    analytics: true,
+  },
+};
+
+/**
  * Gaza Relief News Brand Configuration
  * For pro-Gaza humanitarian news content with donation CTAs
  */
@@ -407,6 +466,7 @@ export const BRAND_CONFIGS: Record<Brand, BrandConfig> = {
   abdullah: ABDULLAH_CONFIG,
   personal: PERSONAL_CONFIG,
   gaza: GAZA_CONFIG,
+  realtors: REALTORS_CONFIG,
 } as const;
 
 /**
@@ -418,7 +478,7 @@ export const BRAND_CONFIGS: Record<Brand, BrandConfig> = {
 export function getBrandConfig(brand: Brand): BrandConfig {
   const config = BRAND_CONFIGS[brand];
   if (!config) {
-    throw new Error(`Invalid brand: ${brand}. Must be one of: carz, ownerfi, benefit, abdullah, personal, gaza`);
+    throw new Error(`Invalid brand: ${brand}. Must be one of: carz, ownerfi, benefit, abdullah, personal, gaza, realtors`);
   }
   return config;
 }
@@ -517,5 +577,6 @@ export function validateAllBrandConfigs(): Record<Brand, { valid: boolean; error
     abdullah: validateBrandConfig('abdullah'),
     personal: validateBrandConfig('personal'),
     gaza: validateBrandConfig('gaza'),
+    realtors: validateBrandConfig('realtors'),
   };
 }

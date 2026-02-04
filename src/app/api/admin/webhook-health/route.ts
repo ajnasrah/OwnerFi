@@ -21,7 +21,7 @@ import { Brand } from '@/config/constants';
  * GET - Get webhook health metrics
  *
  * Query params:
- * - brand: Filter by brand (carz, ownerfi, benefit, abdullah, personal, gaza)
+ * - brand: Filter by brand (carz, ownerfi, benefit, abdullah, personal, gaza, realtors)
  * - timeframe: Timeframe for metrics (24h, 7d, 30d)
  */
 export async function GET(request: NextRequest) {
@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Build per-brand metrics
-    const brands: Brand[] = brand ? [brand] : ['carz', 'ownerfi', 'benefit', 'abdullah', 'personal', 'gaza'];
+    const brands: Brand[] = brand ? [brand] : ['carz', 'ownerfi', 'benefit', 'abdullah', 'personal', 'gaza', 'realtors'];
     const brandMetrics = await Promise.all(
       brands.map(async (b) => {
         const brandDLQ = await getDLQStats(b);

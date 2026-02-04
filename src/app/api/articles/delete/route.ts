@@ -6,7 +6,7 @@ export async function DELETE(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const articleId = searchParams.get('articleId');
-    const brand = searchParams.get('brand') as 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza';
+    const brand = searchParams.get('brand') as 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza' | 'realtors';
 
     console.log('Delete article request:', { articleId, brand });
 
@@ -17,9 +17,9 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    if (!['carz', 'ownerfi', 'benefit', 'abdullah', 'personal', 'gaza'].includes(brand)) {
+    if (!['carz', 'ownerfi', 'benefit', 'abdullah', 'personal', 'gaza', 'realtors'].includes(brand)) {
       return NextResponse.json(
-        { error: 'Invalid brand. Must be one of: carz, ownerfi, benefit, abdullah, personal, gaza' },
+        { error: 'Invalid brand. Must be one of: carz, ownerfi, benefit, abdullah, personal, gaza, realtors' },
         { status: 400 }
       );
     }

@@ -144,7 +144,7 @@ export async function fetchLatePostAnalytics(postId: string): Promise<LatePostAn
  * Fetch all posts for a profile (with date range)
  */
 export async function fetchProfilePosts(
-  brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza',
+  brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza' | 'realtors',
   startDate?: Date,
   endDate?: Date
 ): Promise<LatePostAnalytics[]> {
@@ -509,7 +509,7 @@ function getWorkflowCollection(brand: string): string {
  * Sync all recent posts for a brand (last 7 days)
  */
 export async function syncBrandAnalytics(
-  brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza',
+  brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza' | 'realtors',
   days: number = 7
 ): Promise<void> {
   console.log(`📊 Syncing ${brand} analytics for last ${days} days...`);
@@ -560,13 +560,14 @@ export async function syncBrandAnalytics(
  * Sync analytics for all brands
  */
 export async function syncAllBrandAnalytics(days: number = 7): Promise<void> {
-  const brands: Array<'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza'> = [
+  const brands: Array<'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza' | 'realtors'> = [
     'carz',
     'ownerfi',
     'benefit',
     'abdullah',
     'personal',
-    'gaza'
+    'gaza',
+    'realtors'
   ];
 
   for (const brand of brands) {

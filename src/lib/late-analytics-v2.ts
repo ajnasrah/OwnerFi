@@ -245,7 +245,7 @@ export async function fetchLateAnalytics(params: {
  * Stores detailed metrics per platform for analysis
  */
 export async function syncPlatformAnalytics(
-  brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza',
+  brand: 'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza' | 'realtors',
   days: number = 7
 ): Promise<void> {
   console.log(`📊 Syncing ${brand} platform analytics for last ${days} days...`);
@@ -596,13 +596,14 @@ function generateOverallRecommendations(sortedPlatforms: Array<[string, Platform
  * Sync all brands platform analytics
  */
 export async function syncAllBrandsPlatformAnalytics(days: number = 7): Promise<void> {
-  const brands: Array<'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza'> = [
+  const brands: Array<'carz' | 'ownerfi' | 'benefit' | 'abdullah' | 'personal' | 'gaza' | 'realtors'> = [
     'ownerfi',
     'carz',
     'benefit',
     'abdullah',
     'personal',
-    'gaza'
+    'gaza',
+    'realtors'
   ];
 
   for (const brand of brands) {

@@ -541,6 +541,7 @@ Disclaimer: "Educational only. No financing guarantees."`;
             type: 'talking_photo',
             talking_photo_id: AVATAR_CONFIG.talking_photo_id,
             scale: AVATAR_CONFIG.scale,
+            offset_y: 60,
           },
           voice: {
             type: 'text',

@@ -133,8 +133,11 @@ export default function AuthPage() {
           let redirectTo = searchParams?.get('callbackUrl') || '/dashboard';
 
           // Check role from the check-phone response
+          // Investor check comes before realtor — realtors who are also investors see investor dashboard
           if (checkData.role === 'admin') {
             redirectTo = '/admin';
+          } else if (checkData.isInvestor === true) {
+            redirectTo = '/dashboard/investor';
           } else if (checkData.role === 'realtor') {
             redirectTo = '/realtor-dashboard';
           }
@@ -150,6 +153,7 @@ export default function AuthPage() {
         console.log('❌ [AUTH-PAGE] User NOT found, redirecting to setup. checkData:', checkData);
         // Store verified phone in session storage for setup page
         sessionStorage.setItem('verified_phone', verifiedPhone);
+        setLoading(false);
         router.push('/auth/setup');
       }
     } catch (err: any) {
@@ -187,16 +191,51 @@ export default function AuthPage() {
       if (signInResult?.ok) {
         trackEvent('auth_login', { method: 'email' });
         trackFormSuccess({ method: 'email' });
-        const redirectTo = searchParams?.get('callbackUrl') || '/dashboard';
+
+        // Small delay to ensure session is established (matches phone login flow)
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        // Fetch session to determine role-based routing
+        let redirectTo = searchParams?.get('callbackUrl') || '/dashboard';
+        try {
+          const sessionRes = await fetch('/api/auth/session');
+          if (sessionRes.ok) {
+            const sessionData = await sessionRes.json();
+            if (sessionData?.user?.role === 'admin') {
+              redirectTo = '/admin';
+            } else if (sessionData?.user?.role === 'buyer' || sessionData?.user?.role === 'realtor') {
+              // Check if buyer OR realtor is also an investor
+              try {
+                const profileRes = await fetch('/api/buyer/profile');
+                if (profileRes.ok) {
+                  const profileData = await profileRes.json();
+                  if (profileData?.profile?.isInvestor === true) {
+                    redirectTo = '/dashboard/investor';
+                  } else if (sessionData?.user?.role === 'realtor') {
+                    redirectTo = '/realtor-dashboard';
+                  }
+                } else if (sessionData?.user?.role === 'realtor') {
+                  redirectTo = '/realtor-dashboard';
+                }
+              } catch {
+                if (sessionData?.user?.role === 'realtor') {
+                  redirectTo = '/realtor-dashboard';
+                }
+              }
+            }
+          }
+        } catch {
+          // Fall through to default redirect on error
+        }
         router.push(redirectTo);
       } else {
         setError('Invalid email or password');
         trackFormError('invalid_credentials');
+        setLoading(false);
       }
     } catch (err: any) {
       console.error('Email sign-in error:', err);
       setError(err.message || 'Failed to sign in');
-    } finally {
       setLoading(false);
     }
   };

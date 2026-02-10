@@ -130,6 +130,34 @@ export async function POST(request: NextRequest) {
       updatedAt: Timestamp.now()
     });
 
+    // Fire webhook to GHL/LeadConnector (fire-and-forget — never block signup)
+    const GHL_REALTOR_SIGNUP_WEBHOOK_URL = process.env.GHL_REALTOR_SIGNUP_WEBHOOK_URL;
+    if (GHL_REALTOR_SIGNUP_WEBHOOK_URL && !requiresSetup) {
+      fetch(GHL_REALTOR_SIGNUP_WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          event: 'realtor_signup',
+          realtor_id: user.id,
+          first_name: firstName,
+          last_name: lastName,
+          full_name: `${firstName} ${lastName}`.trim(),
+          email,
+          phone: normalizedPhone,
+          company: company || '',
+          license_number: licenseNumber || '',
+          city: serviceArea.primaryCity.name,
+          state: serviceArea.primaryCity.state,
+          state_code: serviceArea.primaryCity.stateCode,
+          source: 'ownerfi_platform',
+          created_at: new Date().toISOString(),
+        }),
+      }).catch(err => logError('[realtor-signup] GHL webhook failed', {
+        action: 'realtor_signup_webhook_error',
+        metadata: { userId: user.id }
+      }, err instanceof Error ? err : new Error(String(err))));
+    }
+
     // Log successful registration
     await logInfo('Realtor registered successfully', {
       action: 'realtor_registration',

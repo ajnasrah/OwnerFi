@@ -191,7 +191,7 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
       scale: SCALE_PRESETS.vertical.upperBody,
       talkingStyle: 'expressive',
       hasBuiltInBackground: true, // Studio avatar with built-in background
-      offsetY: 0, // Centered - face visible when zoomed in
+      offsetY: 60, // Shifted down so head isn't cut off when zoomed in
     },
     voice: {
       voiceId: '35659e86ce244d8389d525a9648d9c4a', // Carter Lee
@@ -218,7 +218,7 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
       scale: SCALE_PRESETS.vertical.upperBody,
       talkingStyle: 'expressive',
       hasBuiltInBackground: true, // Studio avatar with built-in background
-      offsetY: 0, // Centered - face visible when zoomed in
+      offsetY: 60, // Shifted down so head isn't cut off when zoomed in
     },
     voice: {
       voiceId: 'f38a635bee7a4d1f9b0a654a31d050d2', // Chill Brian
@@ -249,10 +249,10 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
       scale: SCALE_PRESETS.vertical.upperBody,
       talkingStyle: 'expressive',
       hasBuiltInBackground: true, // Studio avatar with built-in background
-      offsetY: 0, // Centered - face visible when zoomed in
+      offsetY: 60, // Shifted down so head isn't cut off when zoomed in
     },
     voice: {
-      voiceId: 'dc491816e53f46eaa466740fbfec09bb', // Adventure Alex - Excited
+      voiceId: '3a4114d2ebe542409df872a3323b7574', // Adventure Alex - Friendly (new ID, old dc4918... was removed by HeyGen)
       speed: 1.0, // Natural pace (was 1.1 which sounded robotic)
       emotion: 'Friendly', // More natural than Excited
     },
@@ -276,7 +276,7 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
       scale: SCALE_PRESETS.vertical.upperBody,
       talkingStyle: 'expressive',
       hasBuiltInBackground: true, // Studio avatar with built-in background
-      offsetY: 0, // Centered - face visible when zoomed in
+      offsetY: 60, // Shifted down so head isn't cut off when zoomed in
     },
     voice: {
       voiceId: '42d00d4aac5441279d8536cd6b52c53c', // Hope
@@ -329,7 +329,7 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
       hasBuiltInBackground: true,
     },
     voice: {
-      voiceId: 'dc491816e53f46eaa466740fbfec09bb', // Adventure Alex
+      voiceId: '3a4114d2ebe542409df872a3323b7574', // Adventure Alex - Friendly (new ID, old dc4918... was removed by HeyGen)
       speed: 1.0, // Natural pace (was 1.1 which sounded robotic)
       emotion: 'Friendly', // More natural than Excited
     },
@@ -367,7 +367,7 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
       scale: SCALE_PRESETS.vertical.upperBody,
       talkingStyle: 'expressive',
       hasBuiltInBackground: true,
-      offsetY: 0, // Centered - face visible when zoomed in
+      offsetY: 60, // Shifted down so head isn't cut off when zoomed in
     },
     voice: {
       voiceId: '42d00d4aac5441279d8536cd6b52c53c', // Hope
@@ -393,7 +393,7 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
       scale: SCALE_PRESETS.vertical.upperBody,
       talkingStyle: 'expressive',
       hasBuiltInBackground: true,
-      offsetY: 0, // Centered - face visible when zoomed in
+      offsetY: 60, // Shifted down so head isn't cut off when zoomed in
     },
     voice: {
       voiceId: 'f38a635bee7a4d1f9b0a654a31d050d2', // Chill Brian
@@ -419,10 +419,10 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
       scale: SCALE_PRESETS.vertical.upperBody,
       talkingStyle: 'expressive',
       hasBuiltInBackground: true,
-      offsetY: 0, // Centered - face visible when zoomed in
+      offsetY: 60, // Shifted down so head isn't cut off when zoomed in
     },
     voice: {
-      voiceId: 'dc491816e53f46eaa466740fbfec09bb', // Adventure Alex
+      voiceId: '3a4114d2ebe542409df872a3323b7574', // Adventure Alex - Friendly (new ID, old dc4918... was removed by HeyGen)
       speed: 1.1,
       emotion: 'Friendly',
     },
@@ -449,7 +449,7 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
       scale: SCALE_PRESETS.vertical.upperBody,
       talkingStyle: 'stable', // Stable for serious news delivery
       hasBuiltInBackground: true, // Studio avatar with built-in background
-      offsetY: 0, // Centered - face visible when zoomed in
+      offsetY: 60, // Shifted down so head isn't cut off when zoomed in
     },
     voice: {
       voiceId: 'f38a635bee7a4d1f9b0a654a31d050d2', // Chill Brian
@@ -472,7 +472,7 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
       scale: SCALE_PRESETS.vertical.upperBody,
       talkingStyle: 'stable', // Stable for serious news delivery
       hasBuiltInBackground: true, // Studio avatar with built-in background
-      offsetY: 0, // Centered - face visible when zoomed in
+      offsetY: 60, // Shifted down so head isn't cut off when zoomed in
     },
     voice: {
       voiceId: '42d00d4aac5441279d8536cd6b52c53c', // Hope
@@ -495,7 +495,7 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
       scale: SCALE_PRESETS.vertical.upperBody,
       talkingStyle: 'expressive', // Slightly more expressive for urgent news
       hasBuiltInBackground: true, // Studio avatar with built-in background
-      offsetY: 0, // Centered - face visible when zoomed in
+      offsetY: 60, // Shifted down so head isn't cut off when zoomed in
     },
     voice: {
       voiceId: '35659e86ce244d8389d525a9648d9c4a', // Carter Lee
@@ -518,10 +518,10 @@ export const HEYGEN_AGENTS: HeyGenAgent[] = [
       scale: SCALE_PRESETS.vertical.upperBody,
       talkingStyle: 'expressive',
       hasBuiltInBackground: true, // Studio avatar with built-in background
-      offsetY: 0, // Centered - face visible when zoomed in
+      offsetY: 60, // Shifted down so head isn't cut off when zoomed in
     },
     voice: {
-      voiceId: 'dc491816e53f46eaa466740fbfec09bb', // Adventure Alex
+      voiceId: '3e3193831b9e4e39afabb803696868d4', // Adventure Alex base (new ID, old dc4918... was removed by HeyGen; no Soothing variant available)
       speed: 1.1,
       emotion: 'Soothing', // Soothing for humanitarian stories
     },

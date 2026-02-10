@@ -54,6 +54,11 @@ export interface BuyerProfile {
   maxSquareFeet?: number;
   minPrice?: number;         // Minimum asking price
   maxPrice?: number;         // Maximum asking price
+
+  // User type flags
+  isInvestor?: boolean;                                    // User self-identified as investor
+  isRealtor?: boolean;                                     // User self-identified as realtor
+  dealTypePreference?: 'all' | 'owner_finance' | 'cash_deal'; // Default deal view
   
   // Communication preferences
   languages: string[];       // ['English', 'Spanish']
@@ -71,6 +76,18 @@ export interface BuyerProfile {
   passedPropertyIds: string[];          // Passed properties
   viewedPropertyIds?: string[];         // Viewed properties (for analytics)
   notifiedPropertyIds?: string[];       // Properties buyer was notified about (SMS dedup)
+
+  // Deal Alert Subscription ($5/month investor alerts)
+  dealAlertSubscription?: {
+    status: 'active' | 'canceled' | 'payment_failed';
+    stripeCustomerId?: string;
+    stripeSubscriptionId?: string;
+    subscribedAt?: Timestamp;
+    canceledAt?: Timestamp;
+    currentPeriodEnd?: Timestamp;
+  };
+  arvThreshold?: number;                    // Default 85. Alert for deals under this % of ARV
+  dealAlertNotifiedPropertyIds?: string[];  // Dedup list for deal alert SMS
 
   // 🆕 PRE-COMPUTED FILTER (Generated at signup for 100K user scale)
   filter?: {

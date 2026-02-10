@@ -45,6 +45,7 @@ import { UnifiedProperty } from '@/lib/unified-property-schema';
 import { sendBatchToGHLWebhook, toGHLPayload } from '@/lib/scraper-v2/ghl-webhook';
 import { alertSystemError } from '@/lib/error-monitoring';
 import { sendCashDealAlerts, CashDealAlert } from '@/lib/abdullah-cash-deal-alert';
+import { sendInvestorDealAlerts, InvestorDealInfo } from '@/lib/investor-deal-alerts';
 
 // Allow long-running requests (Vercel)
 export const maxDuration = 600; // 10 minutes
@@ -165,6 +166,9 @@ async function runUnifiedScraper(): Promise<{
 
   // Collect cash deals under 80% for Abdullah's SMS alerts
   const abdullahCashDeals: CashDealAlert[] = [];
+
+  // Collect deals for investor subscriber alerts (nationwide, up to 90% ARV)
+  const investorAlertDeals: InvestorDealInfo[] = [];
 
   // Collect owner finance properties for buyer notifications
   const ownerFinancePropertiesForNotification: Array<{
@@ -454,6 +458,33 @@ async function runUnifiedScraper(): Promise<{
               zillowLink: property.url || `https://www.zillow.com/homedetails/${zpid}_zpid/`,
             });
           }
+
+          // Collect for investor subscriber alerts (nationwide)
+          if (property.price && property.estimate) {
+            investorAlertDeals.push({
+              streetAddress: property.streetAddress || property.fullAddress || '',
+              askingPrice: property.price,
+              zestimate: property.estimate,
+              zillowLink: property.url || `https://www.zillow.com/homedetails/${zpid}_zpid/`,
+              city: property.city,
+              state: property.state,
+            });
+          }
+        }
+
+        // Collect near-deals (80-90% ARV) for investor alerts with higher thresholds
+        if (!filterResult.isCashDeal && property.price && property.estimate && property.estimate > 0) {
+          const pctOfArv = (property.price / property.estimate) * 100;
+          if (pctOfArv < 90) {
+            investorAlertDeals.push({
+              streetAddress: property.streetAddress || property.fullAddress || '',
+              askingPrice: property.price,
+              zestimate: property.estimate,
+              zillowLink: property.url || `https://www.zillow.com/homedetails/${zpid}_zpid/`,
+              city: property.city,
+              state: property.state,
+            });
+          }
         }
 
         // Collect regional properties for GHL webhook
@@ -629,6 +660,20 @@ async function runUnifiedScraper(): Promise<{
       }
     } else {
       console.log('[ABDULLAH] No cash deals under 80% to alert');
+    }
+
+    // ===== STEP 7.5: SEND INVESTOR SUBSCRIBER DEAL ALERTS =====
+    console.log('\n[STEP 7.5] Sending investor subscriber deal alerts...');
+
+    if (investorAlertDeals.length > 0) {
+      try {
+        const investorResult = await sendInvestorDealAlerts(investorAlertDeals);
+        console.log(`[INVESTOR-ALERT] Sent ${investorResult.totalSent} alerts to ${investorResult.subscribersNotified} subscribers, ${investorResult.totalFailed} failed`);
+      } catch (error: any) {
+        console.error('[INVESTOR-ALERT] Alert system failed:', error.message);
+      }
+    } else {
+      console.log('[INVESTOR-ALERT] No deals to alert subscribers about');
     }
 
     // ===== STEP 8: TRIGGER BUYER NOTIFICATIONS =====

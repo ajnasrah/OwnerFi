@@ -174,6 +174,8 @@ export default function AuthSetup() {
           router.push('/realtor-dashboard');
         } else if (sharedPropertyId) {
           router.push(`/dashboard?likeProperty=${sharedPropertyId}`);
+        } else if (formData.isInvestor) {
+          router.push('/dashboard/investor');
         } else {
           router.push('/dashboard');
         }
@@ -202,13 +204,12 @@ export default function AuthSetup() {
         // Redirect based on role - both go straight to their main dashboard now
         if (formData.isRealtor) {
           router.push('/realtor-dashboard');
+        } else if (sharedPropertyId) {
+          router.push(`/dashboard?likeProperty=${sharedPropertyId}`);
+        } else if (formData.isInvestor) {
+          router.push('/dashboard/investor');
         } else {
-          // If coming from shared property, pass it as query param
-          if (sharedPropertyId) {
-            router.push(`/dashboard?likeProperty=${sharedPropertyId}`);
-          } else {
-            router.push('/dashboard');
-          }
+          router.push('/dashboard');
         }
       } else {
         console.error('❌ [SETUP] Sign in failed:', signInResult);

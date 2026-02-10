@@ -23,6 +23,9 @@ export default function BuyerSettings() {
     // User type flags
     isRealtor: false,
     isInvestor: false,
+    // Investor preferences
+    dealTypePreference: 'all' as 'all' | 'owner_finance' | 'cash_deal',
+    arvThreshold: '85',
     // Optional property filters
     minBedrooms: '',
     maxBedrooms: '',
@@ -80,6 +83,9 @@ export default function BuyerSettings() {
           // User type flags
           isRealtor: data.profile.isRealtor || false,
           isInvestor: data.profile.isInvestor || false,
+          // Investor preferences
+          dealTypePreference: data.profile.dealTypePreference || 'all',
+          arvThreshold: data.profile.arvThreshold?.toString() || '85',
           // Optional property filters
           minBedrooms: data.profile.minBedrooms?.toString() || '',
           maxBedrooms: data.profile.maxBedrooms?.toString() || '',
@@ -166,6 +172,9 @@ export default function BuyerSettings() {
           // User type flags
           isRealtor: formData.isRealtor,
           isInvestor: formData.isInvestor,
+          // Investor preferences
+          ...(formData.isInvestor && { dealTypePreference: formData.dealTypePreference }),
+          ...(formData.isInvestor && { arvThreshold: Number(formData.arvThreshold) }),
           // Optional property filters (only send if provided)
           ...(formData.minBedrooms && { minBedrooms: Number(formData.minBedrooms) }),
           ...(formData.maxBedrooms && { maxBedrooms: Number(formData.maxBedrooms) }),
@@ -186,8 +195,8 @@ export default function BuyerSettings() {
         trackFormSuccess({ city: formData.city });
         setSuccess('Preferences updated successfully!');
 
-        // Redirect back to dashboard immediately
-        router.push('/dashboard');
+        // Redirect back to the appropriate dashboard
+        router.push(formData.isInvestor ? '/dashboard/investor' : '/dashboard');
       }
     } catch {
       setError('Failed to save preferences');
@@ -222,7 +231,7 @@ export default function BuyerSettings() {
           <div className="flex items-center justify-between">
             {/* Back Button */}
             <Link
-              href="/dashboard"
+              href={formData.isInvestor ? '/dashboard/investor' : '/dashboard'}
               className="flex items-center gap-2 text-slate-300 hover:text-white transition-all duration-200 group"
             >
               <div className="w-9 h-9 bg-slate-800/50 group-hover:bg-slate-700/50 rounded-xl flex items-center justify-center transition-all duration-200 group-hover:scale-105">
@@ -371,6 +380,68 @@ export default function BuyerSettings() {
                   <p className="text-xs text-slate-400 mt-0.5">Looking to buy properties for investment purposes</p>
                 </div>
               </label>
+
+              {/* Deal Type Preference - shown only for investors */}
+              {formData.isInvestor && (
+                <div className="ml-8 p-3 bg-emerald-900/20 border border-emerald-500/30 rounded-lg">
+                  <label className="block text-xs font-semibold text-slate-300 mb-2">
+                    Default Deal View
+                  </label>
+                  <p className="text-[10px] text-slate-400 mb-2.5">
+                    Choose which deals to show first on your investor dashboard
+                  </p>
+                  <div className="flex gap-2">
+                    {([
+                      { value: 'all', label: 'All Deals' },
+                      { value: 'owner_finance', label: 'Owner Finance' },
+                      { value: 'cash_deal', label: 'Cash Deals' },
+                    ] as const).map(option => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, dealTypePreference: option.value }))}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                          formData.dealTypePreference === option.value
+                            ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/25'
+                            : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* ARV Threshold for Deal Alerts - shown only for investors */}
+              {formData.isInvestor && (
+                <div className="ml-8 mt-3 p-3 bg-emerald-900/20 border border-emerald-500/30 rounded-lg">
+                  <label className="block text-xs font-semibold text-slate-300 mb-2">
+                    Deal Alert ARV Threshold
+                  </label>
+                  <p className="text-[10px] text-slate-400 mb-2">
+                    Get SMS alerts for deals priced below this % of estimated value
+                  </p>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="range"
+                      min="60"
+                      max="90"
+                      step="5"
+                      value={formData.arvThreshold}
+                      onChange={(e) => setFormData(prev => ({ ...prev, arvThreshold: e.target.value }))}
+                      className="flex-1 accent-emerald-500 h-2 bg-slate-700 rounded-lg cursor-pointer"
+                    />
+                    <span className="text-emerald-400 font-bold text-sm w-12 text-right">
+                      {formData.arvThreshold}%
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-[10px] text-slate-500 mt-1 px-1">
+                    <span>60% (Deep discount)</span>
+                    <span>90% (More deals)</span>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 

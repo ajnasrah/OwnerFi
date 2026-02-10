@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { normalizePhone, isValidPhone } from '@/lib/phone-utils';
 
+// Test phone numbers that bypass Twilio in development (use code: 123456)
+const TEST_PHONES = new Set(
+  (process.env.TEST_PHONE_NUMBERS || '').split(',').map(p => p.trim()).filter(Boolean)
+);
+
 export async function POST(request: NextRequest) {
   try {
     const { phone, code } = await request.json();
@@ -20,6 +25,15 @@ export async function POST(request: NextRequest) {
     }
 
     const normalizedPhone = normalizePhone(phone);
+
+    // Dev bypass: accept 123456 for test phone numbers
+    if (process.env.NODE_ENV === 'development' && TEST_PHONES.has(normalizedPhone)) {
+      if (code === '123456') {
+        console.log(`🧪 [OTP] Test phone verified: ${normalizedPhone}`);
+        return NextResponse.json({ success: true, phone: normalizedPhone });
+      }
+      return NextResponse.json({ error: 'Invalid code. Use 123456 for test numbers.' }, { status: 400 });
+    }
 
     // Use Twilio Verify to check the code
     // Trim to remove any trailing newlines from env vars

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { ExtendedSession } from '@/types/session';
@@ -10,6 +10,7 @@ import { trackEvent } from '@/components/analytics/AnalyticsProvider';
 export default function RealtorDashboardHub() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const [isInvestor, setIsInvestor] = useState(false);
 
   // Auth check
   useEffect(() => {
@@ -19,6 +20,19 @@ export default function RealtorDashboardHub() {
       router.push('/');
     }
   }, [status, session, router]);
+
+  // Check if realtor is also an investor
+  useEffect(() => {
+    if (status !== 'authenticated') return;
+    let cancelled = false;
+    fetch('/api/buyer/profile')
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (!cancelled && data?.profile?.isInvestor) setIsInvestor(true);
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [status]);
 
   if (status === 'loading') {
     return (
@@ -116,28 +130,28 @@ export default function RealtorDashboardHub() {
             </div>
           </Link>
 
-          {/* Cash Deals - Hidden for now, only available in certain cities
-          <Link
-            href="/cash-deals"
-            className="group bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-8 hover:border-yellow-500/50 transition-all duration-300 hover:shadow-xl hover:shadow-yellow-500/10 hover:scale-[1.02]"
-          >
-            <div className="text-center">
-              <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center text-4xl group-hover:scale-110 transition-transform">
-                💰
+          {isInvestor && (
+            <Link
+              href="/dashboard/investor"
+              className="group bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-8 hover:border-amber-500/50 transition-all duration-300 hover:shadow-xl hover:shadow-amber-500/10 hover:scale-[1.02]"
+            >
+              <div className="text-center">
+                <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-amber-400 to-amber-600 rounded-full flex items-center justify-center text-4xl group-hover:scale-110 transition-transform">
+                  💰
+                </div>
+                <h2 className="text-2xl font-bold text-white mb-3">
+                  Investor Deals
+                </h2>
+                <p className="text-slate-300 mb-4">
+                  Browse cash deals and owner-financed properties for your portfolio
+                </p>
+                <div className="inline-flex items-center gap-2 text-amber-400 font-semibold">
+                  <span>View Deals</span>
+                  <span className="group-hover:translate-x-1 transition-transform">→</span>
+                </div>
               </div>
-              <h2 className="text-2xl font-bold text-white mb-3">
-                Cash Deals
-              </h2>
-              <p className="text-slate-300 mb-4">
-                Find discounted properties under market value for investors
-              </p>
-              <div className="inline-flex items-center gap-2 text-yellow-400 font-semibold">
-                <span>View Deals</span>
-                <span className="group-hover:translate-x-1 transition-transform">→</span>
-              </div>
-            </div>
-          </Link>
-          */}
+            </Link>
+          )}
 
           {/* Account Settings */}
           <Link

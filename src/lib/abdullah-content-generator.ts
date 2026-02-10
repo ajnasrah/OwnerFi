@@ -303,7 +303,8 @@ export function buildAbdullahVideoRequest(
         type: 'talking_photo',
         talking_photo_id: 'd33fe3abc2914faa88309c3bdb9f47f4', // Abdullah avatar
         scale: 1.6,  // Zoomed in - face fills frame for vertical 9:16 social media videos
-        talking_style: 'expressive'
+        talking_style: 'expressive',
+        offset_y: 60,
       },
       voice: {
         type: 'text',

@@ -226,6 +226,7 @@ export async function POST(request: NextRequest) {
       // User type flags
       isRealtor,
       isInvestor,
+      dealTypePreference,
       // Optional property filters
       minBedrooms,
       maxBedrooms,
@@ -234,7 +235,9 @@ export async function POST(request: NextRequest) {
       minSquareFeet,
       maxSquareFeet,
       minPrice,
-      maxPrice
+      maxPrice,
+      // Deal alert preferences
+      arvThreshold
     } = body;
 
     // Validate required fields
@@ -266,6 +269,13 @@ export async function POST(request: NextRequest) {
       filter = existingProfile?.filter;
     }
 
+    // Normalize phone (normalizePhone throws on empty string, so guard it)
+    const rawPhone = phone || userRecord?.phone || '';
+    let profilePhone = rawPhone;
+    if (rawPhone) {
+      try { profilePhone = normalizePhone(rawPhone); } catch { /* keep raw */ }
+    }
+
     // Consolidated profile structure - includes lead selling fields
     const profileData = {
       userId: session.user.id,
@@ -274,7 +284,7 @@ export async function POST(request: NextRequest) {
       firstName: firstName || userRecord?.name?.split(' ')[0] || '',
       lastName: lastName || userRecord?.name?.split(' ').slice(1).join(' ') || '',
       email: session.user.email!,
-      phone: phone || userRecord?.phone || '',
+      phone: profilePhone,
 
       // Location (both formats for compatibility)
       preferredCity: city,
@@ -286,6 +296,8 @@ export async function POST(request: NextRequest) {
       // User type flags
       ...(isRealtor !== undefined && { isRealtor: isRealtor === true }),
       ...(isInvestor !== undefined && { isInvestor: isInvestor === true }),
+      ...(dealTypePreference !== undefined && ['all', 'owner_finance', 'cash_deal'].includes(dealTypePreference) && { dealTypePreference }),
+      ...(arvThreshold !== undefined && !isNaN(Number(arvThreshold)) && { arvThreshold: Math.min(90, Math.max(60, Number(arvThreshold))) }),
 
       // Property requirements (optional filters)
       ...(minBedrooms !== undefined && { minBedrooms: Number(minBedrooms) }),
@@ -307,7 +319,7 @@ export async function POST(request: NextRequest) {
       isActive: true,
 
       // Property interaction arrays
-      matchedPropertyIds: [],
+      matchedPropertyIds: existingProfile?.matchedPropertyIds || [],
       likedPropertyIds: existingProfile?.likedPropertyIds || [],
       passedPropertyIds: existingProfile?.passedPropertyIds || [],
       viewedPropertyIds: existingProfile?.viewedPropertyIds || [],
@@ -315,15 +327,14 @@ export async function POST(request: NextRequest) {
       // 🆕 Pre-computed filter (for 100K user scale)
       filter,
 
-      // Lead selling fields
-      isAvailableForPurchase: true,
-      leadPrice: 1,
+      // Lead selling fields (preserve existing values on update)
+      isAvailableForPurchase: existingProfile?.isAvailableForPurchase ?? true,
+      leadPrice: existingProfile?.leadPrice ?? 1,
 
       // Activity tracking
       lastActiveAt: serverTimestamp(),
 
       // Metadata
-      createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     };
 
@@ -336,7 +347,8 @@ export async function POST(request: NextRequest) {
       buyerId = `buyer_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       await setDoc(doc(db, 'buyerProfiles', buyerId), {
         ...profileData,
-        id: buyerId
+        id: buyerId,
+        createdAt: serverTimestamp(),
       });
       console.log(`✅ [PROFILE] Created new buyer profile: ${buyerId}`);
     } else {

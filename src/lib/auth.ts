@@ -4,7 +4,10 @@ import {
   collection,
   query,
   where,
-  getDocs
+  getDocs,
+  doc,
+  updateDoc,
+  serverTimestamp
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { ExtendedUser } from '@/types/session';
@@ -72,6 +75,11 @@ export const authOptions = {
               isAdminPhone
             });
 
+            // Update lastSignIn timestamp
+            if (db) {
+              updateDoc(doc(db, 'users', user.id), { lastSignIn: serverTimestamp() }).catch(() => {});
+            }
+
             return {
               id: user.id,
               email: user.email,
@@ -118,6 +126,9 @@ export const authOptions = {
           if (!isPasswordValid) {
             return null;
           }
+
+          // Update lastSignIn timestamp
+          updateDoc(doc(db, 'users', userDoc.id), { lastSignIn: serverTimestamp() }).catch(() => {});
 
           return {
             id: userDoc.id,

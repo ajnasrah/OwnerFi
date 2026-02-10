@@ -234,6 +234,15 @@ export async function GET(request: NextRequest) {
             valueA = a.likedPropertiesCount || 0;
             valueB = b.likedPropertiesCount || 0;
             break;
+          case 'lastSignIn': {
+            const getSignInTime = (val: string | undefined): number => {
+              if (!val) return 0;
+              return new Date(val).getTime();
+            };
+            valueA = getSignInTime(a.lastSignIn);
+            valueB = getSignInTime(b.lastSignIn);
+            break;
+          }
           case 'joined':
           default:
             const getTime = (val: unknown): number => {

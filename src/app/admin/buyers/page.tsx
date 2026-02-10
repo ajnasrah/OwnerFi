@@ -947,6 +947,17 @@ export default function AdminBuyers() {
                       <SortIndicator column="joined" />
                     </div>
                   </th>
+                  <th
+                    className={`p-4 text-left font-semibold uppercase text-xs tracking-wider select-none transition-colors ${
+                      searchCity ? '' : 'cursor-pointer hover:bg-slate-600/50'
+                    }`}
+                    onClick={() => handleSort('lastSignIn')}
+                  >
+                    <div className="flex items-center gap-2">
+                      Last Sign In
+                      <SortIndicator column="lastSignIn" />
+                    </div>
+                  </th>
                   <th className="p-4 text-left font-semibold uppercase text-xs tracking-wider">Actions</th>
                 </tr>
               </thead>
@@ -1011,16 +1022,43 @@ export default function AdminBuyers() {
                       </div>
                     </td>
                     <td className="p-4">
-                      <Link
-                        href={`/admin/buyers/preview/${buyer.id}`}
-                        className="inline-flex items-center gap-1 text-emerald-400 hover:text-emerald-300 font-semibold text-sm transition-colors hover:underline"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                        </svg>
-                        Preview
-                      </Link>
+                      <div className="text-slate-300 text-sm">
+                        {buyer.lastSignIn
+                          ? (() => {
+                              const d = new Date(buyer.lastSignIn);
+                              if (isNaN(d.getTime())) return 'N/A';
+                              const mm = String(d.getMonth() + 1).padStart(2, '0');
+                              const dd = String(d.getDate()).padStart(2, '0');
+                              const yy = String(d.getFullYear()).slice(-2);
+                              return `${mm}/${dd}/${yy}`;
+                            })()
+                          : 'N/A'}
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <div className="flex items-center gap-2">
+                        <Link
+                          href={`/admin/buyers/preview/${buyer.id}`}
+                          className="inline-flex items-center gap-1 text-emerald-400 hover:text-emerald-300 font-semibold text-sm transition-colors hover:underline"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          </svg>
+                          Preview
+                        </Link>
+                        {buyer.isInvestor && (
+                          <Link
+                            href={`/admin/buyers/investor-preview/${buyer.id}`}
+                            className="inline-flex items-center gap-1 text-amber-400 hover:text-amber-300 font-semibold text-sm transition-colors hover:underline"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                            </svg>
+                            Investor
+                          </Link>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}

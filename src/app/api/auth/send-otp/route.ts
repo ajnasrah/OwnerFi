@@ -1,13 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { normalizePhone, isValidPhone } from '@/lib/phone-utils';
 
-// Rate limiting
+// Rate limiting with periodic cleanup
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
 const RATE_LIMIT_MAX = 3; // 3 OTP requests per minute per phone
+let lastCleanup = Date.now();
 
 function checkRateLimit(phone: string): boolean {
   const now = Date.now();
+
+  // Cleanup old entries periodically
+  if (now - lastCleanup > RATE_LIMIT_WINDOW * 2) {
+    for (const [key, value] of rateLimitMap.entries()) {
+      if (now > value.resetTime) rateLimitMap.delete(key);
+    }
+    lastCleanup = now;
+  }
+
   const entry = rateLimitMap.get(phone);
 
   if (!entry || now > entry.resetTime) {
@@ -22,6 +32,11 @@ function checkRateLimit(phone: string): boolean {
   entry.count++;
   return true;
 }
+
+// Test phone numbers that bypass Twilio in development (use code: 123456)
+const TEST_PHONES = new Set(
+  (process.env.TEST_PHONE_NUMBERS || '').split(',').map(p => p.trim()).filter(Boolean)
+);
 
 export async function POST(request: NextRequest) {
   try {
@@ -42,6 +57,12 @@ export async function POST(request: NextRequest) {
         { error: 'Too many attempts. Please wait a minute and try again.' },
         { status: 429 }
       );
+    }
+
+    // Dev bypass: skip Twilio for test phone numbers
+    if (process.env.NODE_ENV === 'development' && TEST_PHONES.has(normalizedPhone)) {
+      console.log(`🧪 [OTP] Test phone bypass — use code 123456 for ${normalizedPhone}`);
+      return NextResponse.json({ success: true, message: 'Verification code sent' });
     }
 
     // Use Twilio Verify (handles carrier compliance automatically)

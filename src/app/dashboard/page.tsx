@@ -87,6 +87,7 @@ export default function Dashboard() {
   }, [status]);
 
   const loadData = async () => {
+    let redirecting = false;
     try {
       setLoading(true);
 
@@ -101,7 +102,15 @@ export default function Dashboard() {
 
       if (!profileData.profile) {
         console.log('🔄 [DASHBOARD] No profile found, redirecting to setup');
+        redirecting = true;
         router.push('/auth/setup');
+        return;
+      }
+
+      // Redirect investors to their dedicated dashboard
+      if (profileData.profile.isInvestor === true) {
+        redirecting = true;
+        router.push('/dashboard/investor');
         return;
       }
 
@@ -157,7 +166,7 @@ export default function Dashboard() {
     } catch {
       // Error loading properties
     } finally {
-      setLoading(false);
+      if (!redirecting) setLoading(false);
     }
   };
 

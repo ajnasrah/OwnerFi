@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { unifiedDb } from '@/lib/unified-db';
-import { normalizePhone, isValidPhone } from '@/lib/phone-utils';
+import { normalizePhone, isValidPhone, getAllPhoneFormats } from '@/lib/phone-utils';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 // Simple in-memory rate limiter with cleanup
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
@@ -90,13 +92,44 @@ export async function POST(request: NextRequest) {
       hasPassword: !!user.password
     });
 
+    // Check if user is an investor (for routing to investor dashboard)
+    // Realtors can also be investors — they get a buyerProfile with isInvestor=true at signup
+    let isInvestor = false;
+    if (db && (user.role === 'buyer' || user.role === 'realtor')) {
+      try {
+        // Try userId first
+        let buyerSnap = await getDocs(query(
+          collection(db, 'buyerProfiles'),
+          where('userId', '==', user.id)
+        ));
+        // Fallback to phone if userId lookup missed (profile may not have userId yet)
+        // Try all phone formats to match profiles stored in any format
+        if (buyerSnap.empty && normalizedPhone) {
+          const phoneFormats = getAllPhoneFormats(normalizedPhone);
+          for (const fmt of phoneFormats) {
+            buyerSnap = await getDocs(query(
+              collection(db, 'buyerProfiles'),
+              where('phone', '==', fmt)
+            ));
+            if (!buyerSnap.empty) break;
+          }
+        }
+        if (!buyerSnap.empty) {
+          isInvestor = buyerSnap.docs[0].data().isInvestor === true;
+        }
+      } catch (e) {
+        console.warn('[CHECK-PHONE] Failed to check investor status:', e);
+      }
+    }
+
     // ✅ USER EXISTS: Return true regardless of whether they have password or not
     // The auth flow will handle signing them in
     return NextResponse.json({
       exists: true,
       role: user.role || 'buyer',
       userId: user.id,
-      hasPassword: !!user.password // Let client know if this is an old account
+      hasPassword: !!user.password, // Let client know if this is an old account
+      isInvestor, // For routing investors to /dashboard/investor
     });
 
   } catch (error) {

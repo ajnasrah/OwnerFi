@@ -23,6 +23,7 @@ export default function LikedProperties() {
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [isInvestor, setIsInvestor] = useState(false);
 
   // Auth check - allow all authenticated users (buyer, admin, realtor)
   useEffect(() => {
@@ -41,6 +42,11 @@ export default function LikedProperties() {
   const loadLikedProperties = async () => {
     try {
       setLoading(true);
+
+      // Check if user is an investor (for back-link routing)
+      fetch('/api/buyer/profile').then(r => r.ok ? r.json() : null).then(data => {
+        if (data?.profile?.isInvestor === true) setIsInvestor(true);
+      }).catch(() => {});
 
       const response = await fetch('/api/buyer/liked-properties');
       const result = await response.json();
@@ -126,7 +132,7 @@ export default function LikedProperties() {
           {/* Mobile Navigation Buttons */}
           <div className="md:hidden flex gap-2">
             <Link
-              href="/dashboard"
+              href={isInvestor ? '/dashboard/investor' : '/dashboard'}
               className="bg-slate-600 hover:bg-slate-500 text-white px-3 py-2 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1"
             >
               <span>←</span>
@@ -143,7 +149,7 @@ export default function LikedProperties() {
 
           <div className="hidden md:flex items-center space-x-6">
             <div className="flex space-x-4">
-              <Link href="/dashboard" className="flex flex-col items-center group">
+              <Link href={isInvestor ? '/dashboard/investor' : '/dashboard'} className="flex flex-col items-center group">
                 <div className="w-12 h-12 bg-slate-700/50 hover:bg-slate-600/50 rounded-xl flex items-center justify-center transition-colors group-hover:scale-110">
                   <span className="text-slate-300 text-xl">🏠</span>
                 </div>
@@ -399,7 +405,7 @@ export default function LikedProperties() {
                 Start browsing and save properties you like to see them here.
               </p>
               <Link
-                href="/dashboard"
+                href={isInvestor ? '/dashboard/investor' : '/dashboard'}
                 className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 rounded-xl font-bold text-lg transition-all duration-300 hover:scale-105 shadow-2xl shadow-emerald-500/25"
               >
                 BROWSE PROPERTIES

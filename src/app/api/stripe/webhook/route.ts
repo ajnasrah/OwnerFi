@@ -82,6 +82,12 @@ export async function POST(request: NextRequest) {
 
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const { customer, subscription, metadata, mode } = session;
+
+  // Route deal alert subscriptions to separate handler
+  if (metadata?.subscriptionType === 'deal_alert') {
+    return handleDealAlertCheckoutCompleted(session);
+  }
+
   const { userId, userEmail, creditPackId, credits } = metadata || {};
 
   // CRITICAL: Don't silently fail - customer paid but we can't process
@@ -175,32 +181,116 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
   // No additional action needed
 }
 
+// --- Deal Alert Subscription Handlers ---
+
+async function handleDealAlertCheckoutCompleted(session: Stripe.Checkout.Session) {
+  const { customer, subscription, metadata } = session;
+  const userId = metadata?.userId;
+
+  if (!userId) {
+    console.error('❌ [STRIPE] CRITICAL: Missing userId in deal alert checkout', { sessionId: session.id });
+    throw new Error(`Missing userId for deal alert checkout. Session: ${session.id}`);
+  }
+
+  try {
+    // Find the buyer profile by userId
+    const buyers = await FirebaseDB.queryDocuments(
+      'buyerProfiles',
+      [{ field: 'userId', operator: '==', value: userId }],
+      1
+    );
+
+    if (buyers.length === 0) {
+      console.error('❌ [STRIPE] CRITICAL: Buyer profile not found for deal alert', { userId });
+      throw new Error(`Buyer profile not found: ${userId}. Session: ${session.id}`);
+    }
+
+    const buyer = buyers[0] as Record<string, unknown>;
+    const subscriptionId = typeof subscription === 'string' ? subscription : (subscription as Stripe.Subscription | null)?.id;
+
+    const updateData: Record<string, unknown> = {
+      dealAlertSubscription: {
+        status: 'active',
+        stripeCustomerId: customer,
+        stripeSubscriptionId: subscriptionId,
+        subscribedAt: new Date(),
+      },
+      updatedAt: new Date(),
+    };
+
+    // Set default ARV threshold if not already set
+    if (!buyer.arvThreshold) {
+      updateData.arvThreshold = 85;
+    }
+
+    await FirebaseDB.updateDocument('buyerProfiles', buyer.id as string, updateData);
+
+    console.log(`✅ [STRIPE] Deal alert subscription activated for buyer ${buyer.id}`);
+  } catch (error) {
+    console.error('❌ [STRIPE] Failed to process deal alert checkout:', error);
+    throw error;
+  }
+}
+
+/**
+ * Helper: Try to find and update a buyer deal alert subscription.
+ * Returns true if found and updated, false if not found.
+ */
+async function tryUpdateBuyerDealAlertSubscription(
+  subscriptionId: string,
+  updateFields: Record<string, unknown>
+): Promise<boolean> {
+  const buyers = await FirebaseDB.queryDocuments(
+    'buyerProfiles',
+    [{ field: 'dealAlertSubscription.stripeSubscriptionId', operator: '==', value: subscriptionId }],
+    1
+  );
+
+  if (buyers.length === 0) return false;
+
+  const buyer = buyers[0] as Record<string, unknown>;
+  const existing = (buyer.dealAlertSubscription || {}) as Record<string, unknown>;
+
+  await FirebaseDB.updateDocument('buyerProfiles', buyer.id as string, {
+    dealAlertSubscription: { ...existing, ...updateFields },
+    updatedAt: new Date(),
+  });
+
+  return true;
+}
+
 async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
   try {
-    // Find user with this subscription ID and update status
-    // TODO: Add Firestore index on 'realtorData.stripeSubscriptionId' for scale
+    // Try realtor subscription first
     const users = await FirebaseDB.queryDocuments(
       'users',
       [{ field: 'realtorData.stripeSubscriptionId', operator: '==', value: subscription.id }],
-      1 // Limit to 1 result since subscription IDs are unique
+      1
     ) as UserWithRealtorData[];
 
-    if (users.length === 0) {
-      // Warning:(`No user found for subscription ${subscription.id}`);
+    if (users.length > 0) {
+      const user = users[0] as UserWithRealtorData;
+      const updatedRealtorData = {
+        ...user.realtorData || {},
+        subscriptionStatus: subscription.status === 'active' ? 'active' : 'canceled',
+        updatedAt: new Date()
+      };
+
+      await FirebaseDB.updateDocument('users', user.id, {
+        realtorData: updatedRealtorData,
+        updatedAt: new Date()
+      });
       return;
     }
 
-    const user = users[0] as UserWithRealtorData;
-    const updatedRealtorData = {
-      ...user.realtorData || {},
-      subscriptionStatus: subscription.status === 'active' ? 'active' : 'canceled',
-      updatedAt: new Date()
-    };
-
-    await FirebaseDB.updateDocument('users', user.id, {
-      realtorData: updatedRealtorData,
-      updatedAt: new Date()
+    // Try buyer deal alert subscription
+    const found = await tryUpdateBuyerDealAlertSubscription(subscription.id, {
+      status: subscription.status === 'active' ? 'active' : 'canceled',
     });
+
+    if (!found) {
+      console.warn(`[STRIPE] No user/buyer found for subscription update ${subscription.id}`);
+    }
   } catch (error) {
     console.error('❌ [STRIPE] Error in handleSubscriptionUpdated:', error);
     throw error; // Re-throw so Stripe retries
@@ -209,31 +299,39 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
 
 async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
   try {
-    // Find user with this subscription ID and update status to canceled
-    // TODO: Add Firestore index on 'realtorData.stripeSubscriptionId' for scale
+    // Try realtor subscription first
     const users = await FirebaseDB.queryDocuments(
       'users',
       [{ field: 'realtorData.stripeSubscriptionId', operator: '==', value: subscription.id }],
-      1 // Limit to 1 result since subscription IDs are unique
+      1
     ) as UserWithRealtorData[];
 
-    if (users.length === 0) {
-      // Warning:(`No user found for subscription deletion ${subscription.id}`);
+    if (users.length > 0) {
+      const user = users[0] as UserWithRealtorData;
+      const updatedRealtorData = {
+        ...user.realtorData || {},
+        subscriptionStatus: 'canceled',
+        stripeSubscriptionId: null,
+        updatedAt: new Date()
+      };
+
+      await FirebaseDB.updateDocument('users', user.id, {
+        realtorData: updatedRealtorData,
+        updatedAt: new Date()
+      });
       return;
     }
 
-    const user = users[0] as UserWithRealtorData;
-    const updatedRealtorData = {
-      ...user.realtorData || {},
-      subscriptionStatus: 'canceled',
+    // Try buyer deal alert subscription
+    const found = await tryUpdateBuyerDealAlertSubscription(subscription.id, {
+      status: 'canceled',
       stripeSubscriptionId: null,
-      updatedAt: new Date()
-    };
-
-    await FirebaseDB.updateDocument('users', user.id, {
-      realtorData: updatedRealtorData,
-      updatedAt: new Date()
+      canceledAt: new Date(),
     });
+
+    if (!found) {
+      console.warn(`[STRIPE] No user/buyer found for subscription deletion ${subscription.id}`);
+    }
   } catch (error) {
     console.error('❌ [STRIPE] Error in handleSubscriptionDeleted:', error);
     throw error; // Re-throw so Stripe retries
@@ -243,63 +341,66 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
 async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
   try {
     const subscriptionId = (invoice as { subscription?: string }).subscription;
-    
+
     if (!subscriptionId) return;
 
-    // Find user with this subscription ID
-    // TODO: Add Firestore index on 'realtorData.stripeSubscriptionId' for scale
+    // Try realtor subscription first
     const users = await FirebaseDB.queryDocuments(
       'users',
       [{ field: 'realtorData.stripeSubscriptionId', operator: '==', value: subscriptionId }],
-      1 // Limit to 1 result since subscription IDs are unique
+      1
     ) as UserWithRealtorData[];
 
-    if (users.length === 0) {
-      // Warning:(`No user found for payment success ${subscriptionId}`);
+    if (users.length > 0) {
+      const user = users[0] as UserWithRealtorData;
+      const realtorData = user.realtorData || {};
+      const creditPackId = (realtorData as Record<string, unknown>).currentPlan as string;
+
+      const creditPackage = CREDIT_PACKAGES[creditPackId as keyof typeof CREDIT_PACKAGES];
+      if (!creditPackage || !creditPackage.recurring) {
+        return;
+      }
+
+      const currentCredits = (realtorData as Record<string, unknown>).credits as number || 0;
+      const newCredits = currentCredits + creditPackage.credits;
+
+      const updatedRealtorData = {
+        ...realtorData,
+        credits: newCredits,
+        lastRenewal: new Date(),
+        updatedAt: new Date()
+      };
+
+      await FirebaseDB.updateDocument('users', user.id, {
+        realtorData: updatedRealtorData,
+        updatedAt: new Date()
+      });
+
+      await FirebaseDB.createDocument('realtorTransactions', {
+        realtorUserId: user.id,
+        type: 'subscription_renewal',
+        description: `Monthly renewal - ${creditPackage.name} - ${creditPackage.credits} credits`,
+        creditsChange: creditPackage.credits,
+        runningBalance: newCredits,
+        stripeInvoiceId: invoice.id,
+        stripeSubscriptionId: subscriptionId,
+        amount: (invoice.amount_paid || 0) / 100,
+        creditPackageId: creditPackId,
+        createdAt: new Date()
+      });
       return;
     }
 
-    const user = users[0] as UserWithRealtorData;
-    const realtorData = user.realtorData || {};
-    const creditPackId = (realtorData as Record<string, unknown>).currentPlan as string;
-    
-    // Find the credit package to get credits
-    const creditPackage = CREDIT_PACKAGES[creditPackId as keyof typeof CREDIT_PACKAGES];
-    if (!creditPackage || !creditPackage.recurring) {
-      return;
+    // Try buyer deal alert subscription (no credits to add, just confirm active)
+    const found = await tryUpdateBuyerDealAlertSubscription(subscriptionId, {
+      status: 'active',
+      currentPeriodEnd: invoice.period_end ? new Date(invoice.period_end * 1000) : null,
+    });
+
+    if (!found) {
+      console.warn(`[STRIPE] No user/buyer found for payment success ${subscriptionId}`);
     }
-
-    // Add monthly credits for recurring subscriptions
-    const currentCredits = (realtorData as Record<string, unknown>).credits as number || 0;
-    const newCredits = currentCredits + creditPackage.credits;
-
-    const updatedRealtorData = {
-      ...realtorData,
-      credits: newCredits,
-      lastRenewal: new Date(),
-      updatedAt: new Date()
-    };
-
-    await FirebaseDB.updateDocument('users', user.id, {
-      realtorData: updatedRealtorData,
-      updatedAt: new Date()
-    });
-
-    // Create renewal transaction record
-    await FirebaseDB.createDocument('realtorTransactions', {
-      realtorUserId: user.id,
-      type: 'subscription_renewal',
-      description: `Monthly renewal - ${creditPackage.name} - ${creditPackage.credits} credits`,
-      creditsChange: creditPackage.credits,
-      runningBalance: newCredits,
-      stripeInvoiceId: invoice.id,
-      stripeSubscriptionId: subscriptionId,
-      amount: (invoice.amount_paid || 0) / 100,
-      creditPackageId: creditPackId,
-      createdAt: new Date()
-    });
   } catch (error) {
-    // CRITICAL: Payment succeeded but credits weren't added - must retry!
     console.error('❌ [STRIPE] Error in handlePaymentSucceeded:', error);
     throw error; // Re-throw so Stripe retries
   }
@@ -308,45 +409,50 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
 async function handlePaymentFailed(invoice: Stripe.Invoice) {
   try {
     const subscriptionId = (invoice as { subscription?: string }).subscription;
-    
+
     if (!subscriptionId) return;
 
-    // Find user with this subscription and update status
-    // TODO: Add Firestore index on 'realtorData.stripeSubscriptionId' for scale
+    // Try realtor subscription first
     const users = await FirebaseDB.queryDocuments(
       'users',
       [{ field: 'realtorData.stripeSubscriptionId', operator: '==', value: subscriptionId }],
-      1 // Limit to 1 result since subscription IDs are unique
+      1
     ) as UserWithRealtorData[];
 
-    if (users.length === 0) {
-      // Warning:(`No user found for payment failure ${subscriptionId}`);
+    if (users.length > 0) {
+      const user = users[0] as UserWithRealtorData;
+      const updatedRealtorData = {
+        ...user.realtorData || {},
+        subscriptionStatus: 'payment_failed',
+        lastPaymentFailed: new Date(),
+        updatedAt: new Date()
+      };
+
+      await FirebaseDB.updateDocument('users', user.id, {
+        realtorData: updatedRealtorData,
+        updatedAt: new Date()
+      });
+
+      await FirebaseDB.createDocument('realtorTransactions', {
+        realtorUserId: user.id,
+        type: 'payment_failed',
+        description: 'Monthly subscription payment failed',
+        stripeInvoiceId: invoice.id,
+        stripeSubscriptionId: subscriptionId,
+        amount: (invoice.amount_due || 0) / 100,
+        createdAt: new Date()
+      });
       return;
     }
 
-    const user = users[0] as UserWithRealtorData;
-    const updatedRealtorData = {
-      ...user.realtorData || {},
-      subscriptionStatus: 'payment_failed',
-      lastPaymentFailed: new Date(),
-      updatedAt: new Date()
-    };
-
-    await FirebaseDB.updateDocument('users', user.id, {
-      realtorData: updatedRealtorData,
-      updatedAt: new Date()
+    // Try buyer deal alert subscription
+    const found = await tryUpdateBuyerDealAlertSubscription(subscriptionId, {
+      status: 'payment_failed',
     });
 
-    // Log the failed payment
-    await FirebaseDB.createDocument('realtorTransactions', {
-      realtorUserId: user.id,
-      type: 'payment_failed',
-      description: 'Monthly subscription payment failed',
-      stripeInvoiceId: invoice.id,
-      stripeSubscriptionId: subscriptionId,
-      amount: (invoice.amount_due || 0) / 100,
-      createdAt: new Date()
-    });
+    if (!found) {
+      console.warn(`[STRIPE] No user/buyer found for payment failure ${subscriptionId}`);
+    }
   } catch (error) {
     console.error('❌ [STRIPE] Error in handlePaymentFailed:', error);
     throw error; // Re-throw so Stripe retries

@@ -110,10 +110,13 @@ export async function POST(_request: NextRequest) {
         });
       }
 
-      return NextResponse.json({ 
+      // In Stripe basil API, current_period_end is on items.data[0]
+      const subJson = JSON.parse(JSON.stringify(canceledSubscription));
+      const periodEnd = subJson?.items?.data?.[0]?.current_period_end as number | undefined;
+      return NextResponse.json({
         success: true,
         message: 'Subscription cancelled successfully. You will retain access until the end of your current billing period.',
-        endsAt: (canceledSubscription as unknown as { current_period_end?: number }).current_period_end ? new Date((canceledSubscription as unknown as { current_period_end: number }).current_period_end * 1000) : null
+        endsAt: periodEnd ? new Date(periodEnd * 1000) : null
       });
 
     } catch (stripeError: unknown) {

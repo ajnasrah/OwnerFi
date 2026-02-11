@@ -4,7 +4,7 @@
  * Logs all administrative actions and sensitive operations for security and compliance.
  */
 
-import { getDb as getAdminDb } from './firebase-admin-init';
+import { getAdminDb } from './firebase-admin';
 
 export enum AuditAction {
   // User Management
@@ -105,7 +105,7 @@ export async function logAuditEvent(
   };
 
   try {
-    const db = getAdminDb();
+    const db = await getAdminDb();
     if (!db) {
       console.error('[Audit] Firebase not initialized, logging to console only');
       console.log('[Audit]', JSON.stringify(logEntry, null, 2));
@@ -264,7 +264,7 @@ export async function getAuditLogs(
     limit?: number;
   } = {}
 ): Promise<AuditLogEntry[]> {
-  const db = getAdminDb();
+  const db = await getAdminDb();
   if (!db) {
     throw new Error('Firebase not initialized');
   }

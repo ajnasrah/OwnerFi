@@ -12,8 +12,8 @@ import {
   getDocs,
   serverTimestamp
 } from 'firebase/firestore';
-import { getSafeDb } from '@/lib/firebase-safe';
-import { firestoreHelpers } from '@/lib/firestore';
+import { getAdminDb } from '@/lib/firebase-admin';
+import { randomUUID } from 'crypto';
 
 /**
  * CLEAN PROPERTY ACTIONS API
@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const db = getSafeDb();
+    const db = await getAdminDb();
     const { propertyId, action } = await request.json();
 
     // SECURITY: Use buyerId from session, NOT from request body
@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Create action history record (immutable event log)
-    const actionId = firestoreHelpers.generateId();
+    const actionId = randomUUID();
     await setDoc(doc(collection(db, 'propertyActions'), actionId), {
       id: actionId,
       buyerId: buyerId,

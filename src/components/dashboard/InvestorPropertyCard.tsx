@@ -8,10 +8,11 @@ interface InvestorPropertyCardProps {
   deal: InvestorDeal;
   isLiked: boolean;
   onToggleLike: () => void;
+  onHide: () => void;
   isPriority?: boolean;
 }
 
-export function InvestorPropertyCard({ deal, isLiked, onToggleLike, isPriority = false }: InvestorPropertyCardProps) {
+export function InvestorPropertyCard({ deal, isLiked, onToggleLike, onHide, isPriority = false }: InvestorPropertyCardProps) {
   const [imageError, setImageError] = useState<Set<number>>(new Set());
   const [imageLoading, setImageLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -88,7 +89,7 @@ export function InvestorPropertyCard({ deal, isLiked, onToggleLike, isPriority =
             <button
               onClick={goPrev}
               aria-label="Previous image"
-              className="absolute left-1.5 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center rounded-full bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70 active:scale-90 z-10"
+              className="absolute left-1.5 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center rounded-full bg-black/50 text-white sm:opacity-0 sm:group-hover:opacity-100 transition-opacity hover:bg-black/70 active:scale-90 z-10"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
@@ -97,7 +98,7 @@ export function InvestorPropertyCard({ deal, isLiked, onToggleLike, isPriority =
             <button
               onClick={goNext}
               aria-label="Next image"
-              className="absolute right-1.5 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center rounded-full bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70 active:scale-90 z-10"
+              className="absolute right-1.5 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center rounded-full bg-black/50 text-white sm:opacity-0 sm:group-hover:opacity-100 transition-opacity hover:bg-black/70 active:scale-90 z-10"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
@@ -187,9 +188,19 @@ export function InvestorPropertyCard({ deal, isLiked, onToggleLike, isPriority =
 
       {/* Info Section */}
       <div className="p-3.5">
-        {/* Address */}
-        <h3 className="text-sm font-semibold text-white truncate">{deal.address}</h3>
-        <p className="text-xs text-slate-400 mt-0.5">{deal.city}, {deal.state} {deal.zipCode}</p>
+        {/* Address + Hide button */}
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0 flex-1">
+            <h3 className="text-sm font-semibold text-white truncate">{deal.address}</h3>
+            <p className="text-xs text-slate-400 mt-0.5">{deal.city}, {deal.state} {deal.zipCode}</p>
+          </div>
+          <button
+            onClick={(e) => { e.stopPropagation(); onHide(); }}
+            className="shrink-0 mt-0.5 px-2 py-1 bg-red-600/20 hover:bg-red-600/40 border border-red-500/30 text-red-400 text-[10px] font-semibold rounded-md transition-all active:scale-95"
+          >
+            Hide
+          </button>
+        </div>
 
         {/* Specs row */}
         <div className="flex items-center gap-3 mt-2.5 text-xs text-slate-300">

@@ -18,7 +18,7 @@ import {
   doc,
   getDoc,
 } from 'firebase/firestore';
-import { getSafeDb } from '@/lib/firebase-safe';
+import { getAdminDb } from '@/lib/firebase-admin';
 import { sendPropertyMatchNotification } from '@/lib/gohighlevel-notifications';
 import { BuyerProfile } from '@/lib/firebase-models';
 import { PropertyListing } from '@/lib/property-schema';
@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const db = getSafeDb();
+    const db = await getAdminDb();
     const { buyerId, propertyId } = await request.json();
 
     if (!buyerId || !propertyId) {
@@ -134,7 +134,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const db = getSafeDb();
+    const db = await getAdminDb();
 
     // Get a few active buyers
     const buyersQuery = query(

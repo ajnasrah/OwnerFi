@@ -283,6 +283,27 @@ export default function InvestorDashboard() {
 
   // Reset page when filters change (handled via wrapper functions below)
 
+  // Hide property (pass)
+  const hideProperty = useCallback(async (dealId: string) => {
+    // Optimistic: remove from UI immediately
+    setDeals(prev => prev.filter(d => d.id !== dealId));
+    setTotalDeals(prev => prev - 1);
+
+    try {
+      const res = await fetch('/api/buyer/pass-property', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ propertyId: dealId, action: 'pass' }),
+      });
+      if (!res.ok) {
+        // Revert on failure — re-fetch deals
+        setFetchKey(k => k + 1);
+      }
+    } catch {
+      setFetchKey(k => k + 1);
+    }
+  }, []);
+
   // Like toggle (with guard against rapid clicks)
   const [likingIds, setLikingIds] = useState<Set<string>>(new Set());
   const toggleLike = useCallback(async (dealId: string) => {
@@ -657,6 +678,7 @@ export default function InvestorDashboard() {
                   deal={deal}
                   isLiked={likedProperties.includes(deal.id)}
                   onToggleLike={() => toggleLike(deal.id)}
+                  onHide={() => hideProperty(deal.id)}
                   isPriority={index < 6}
                 />
               ))}

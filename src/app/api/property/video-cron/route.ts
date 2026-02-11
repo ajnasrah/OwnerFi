@@ -90,7 +90,8 @@ export async function GET(request: NextRequest) {
 
     try {
       // Generate 15-second English video using NEW service
-      const { generatePropertyVideoNew } = await import('@/lib/property-video-service-new');
+      // generatePropertyVideoNew was a stub - video generation uses Synthesia pipeline now
+      const generatePropertyVideoNew = async (_id: string) => ({ success: false as const, error: 'Property video service not implemented', message: 'Use Synthesia video pipeline instead' });
       const result = await generatePropertyVideoNew(workflow.id);
 
       if (result.success) {

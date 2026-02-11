@@ -11,7 +11,7 @@ import {
   limit
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { firestoreHelpers } from '@/lib/firestore';
+import { randomUUID } from 'crypto';
 import { PropertyListing } from '@/lib/property-schema';
 
 /**
@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
 
       // Create match record
       matches.push({
-        id: firestoreHelpers.generateId(),
+        id: randomUUID(),
         buyerId: buyerId,
         propertyId: property.id,
         matchScore: Math.min(100, matchScore),

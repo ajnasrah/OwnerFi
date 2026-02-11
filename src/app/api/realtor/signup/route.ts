@@ -11,7 +11,24 @@ import {
   isValidEmail,
   isValidPhone
 } from '@/lib/realtor-models';
-import { formatPhoneNumber } from '@/lib/firebase-phone-auth'; // ✅ Use E.164 format
+/**
+ * Format phone number to E.164 format (+1XXXXXXXXXX)
+ * Strips all non-digit characters, prepends +1 if missing country code.
+ */
+function formatPhoneNumber(phone: string): string {
+  const digits = phone.replace(/\D/g, '');
+  if (digits.startsWith('1') && digits.length === 11) {
+    return `+${digits}`;
+  }
+  if (digits.length === 10) {
+    return `+1${digits}`;
+  }
+  // Already has country code or international format
+  if (phone.startsWith('+')) {
+    return `+${digits}`;
+  }
+  return `+1${digits}`;
+}
 import { Timestamp } from 'firebase/firestore';
 import { logInfo, logError } from '@/lib/logger';
 

@@ -8,7 +8,7 @@ import {
   updateDoc,
   serverTimestamp
 } from 'firebase/firestore';
-import { getSafeDb } from '@/lib/firebase-safe';
+import { getAdminDb } from '@/lib/firebase-admin';
 import { requireRole, extractActorFromRequest } from '@/lib/auth-helpers';
 import {
   ErrorResponses,
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
 
   try {
     // Find realtor by email
-    const db = getSafeDb();
+    const db = await getAdminDb();
     const usersQuery = query(
       collection(db, 'users'),
       where('email', '==', realtorEmail),

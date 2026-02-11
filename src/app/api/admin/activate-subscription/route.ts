@@ -5,8 +5,8 @@ import {
   setDoc,
   serverTimestamp
 } from 'firebase/firestore';
-import { getSafeDb } from '@/lib/firebase-safe';
-import { firestoreHelpers } from '@/lib/firestore';
+import { getAdminDb } from '@/lib/firebase-admin';
+import { randomUUID } from 'crypto';
 import { requireRole } from '@/lib/auth-helpers';
 
 export async function POST(request: NextRequest) {
@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     const { realtorId, plan, creditsToAdd } = await request.json();
     
     // Update realtor to active subscription
-    const db = getSafeDb();
+    const db = await getAdminDb();
     await updateDoc(doc(db, 'realtors', realtorId), {
       credits: 748 + creditsToAdd, // Keep existing credits plus new ones
       currentPlan: plan,
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
     const periodEnd = new Date();
     periodEnd.setDate(periodEnd.getDate() + 30);
     
-    await setDoc(doc(db, 'realtorSubscriptions', firestoreHelpers.generateId()), {
+    await setDoc(doc(db, 'realtorSubscriptions', randomUUID()), {
       realtorId: realtorId,
       plan: plan,
       status: 'active',
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     });
     
     // Add transaction record
-    await setDoc(doc(db, 'transactions', firestoreHelpers.generateId()), {
+    await setDoc(doc(db, 'transactions', randomUUID()), {
       realtorId: realtorId,
       type: 'subscription_start',
       description: 'Professional Package subscription activated',

@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
-import { doc, setDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { logError, logInfo } from '@/lib/logger';
 import { ExtendedSession } from '@/types/session';
 import { PropertyListing } from '@/lib/property-schema';
-import { analyzePropertyImageAsync } from '@/lib/image-quality-analyzer';
+
 import { autoCleanPropertyData } from '@/lib/property-auto-cleanup';
 import { calculatePropertyFinancials } from '@/lib/property-calculations';
 import { indexRawFirestoreProperty } from '@/lib/typesense/sync';
@@ -195,19 +195,6 @@ export async function POST(request: NextRequest) {
       action: 'admin_manual_property_create',
       metadata: { propertyId, address: body.address }
     });
-
-    // Analyze image quality in background (non-blocking)
-    if (imageUrls.length > 0 && db) {
-      const primaryImage = imageUrls[0];
-      analyzePropertyImageAsync(
-        propertyId,
-        primaryImage,
-        body.address,
-        async (data) => {
-          await updateDoc(doc(db, 'properties', propertyId), data);
-        }
-      );
-    }
 
     // Auto-add to property rotation queue (non-blocking)
     // Only if property is active and has images

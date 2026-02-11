@@ -21,7 +21,7 @@ import {
   serverTimestamp,
   doc,
 } from 'firebase/firestore';
-import { getSafeDb } from '@/lib/firebase-safe';
+import { getAdminDb } from '@/lib/firebase-admin';
 import { formatPropertyMatchSMS } from '@/lib/sms-templates';
 import { fetchWithTimeout, ServiceTimeouts } from '@/lib/fetch-with-timeout';
 import crypto from 'crypto';
@@ -113,7 +113,7 @@ interface WebhookLog {
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
-  const db = getSafeDb();
+  const db = await getAdminDb();
 
   try {
     console.log('🔔 [GoHighLevel] Property match webhook received');
@@ -286,7 +286,7 @@ export async function POST(request: NextRequest) {
 
 // Helper function to update webhook log
 async function updateWebhookLog(logId: string, updates: Partial<WebhookLog>) {
-  const db = getSafeDb();
+  const db = await getAdminDb();
 
   try {
     const logRef = doc(db, 'webhookLogs', logId);
@@ -318,7 +318,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const db = getSafeDb();
+    const db = await getAdminDb();
     const { searchParams } = new URL(request.url);
 
     const buyerId = searchParams.get('buyerId');

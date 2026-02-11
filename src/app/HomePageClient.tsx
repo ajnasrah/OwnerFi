@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Chatbot from '@/components/ui/ChatbotiPhone'
+import Chatbot from '@/components/ui/Chatbot'
 import FloatingChatbotButton from '@/components/ui/FloatingChatbotButton'
 import { LanguageToggle } from '@/components/ui/LanguageToggle'
 import { Language, translations } from '@/lib/translations'

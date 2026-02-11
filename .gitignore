@@ -78,6 +78,11 @@ scraper-output/
 .DS_Store
 VERCEL_ENV_VARIABLES.md
 
+# Log files
+logs/
+firebase-debug.log
+firebase-debug.*.log
+
 # Firebase Functions
 functions/node_modules/
 functions/lib/

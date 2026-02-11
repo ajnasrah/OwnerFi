@@ -10,7 +10,7 @@ import {
   doc, 
   serverTimestamp 
 } from 'firebase/firestore';
-import { getSafeDb } from '@/lib/firebase-safe';
+import { getAdminDb } from '@/lib/firebase-admin';
 import { RealtorProfile } from '@/lib/firebase-models';
 
 function getStripe() {
@@ -32,7 +32,7 @@ export async function POST(_request: NextRequest) {
     }
 
     // Get the realtor's profile to find their subscription
-    const db = getSafeDb();
+    const db = await getAdminDb();
     const realtorsQuery = query(
       collection(db, 'realtors'),
       where('userId', '==', session.user.id!)

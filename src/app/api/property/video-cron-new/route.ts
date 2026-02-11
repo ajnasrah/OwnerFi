@@ -38,7 +38,8 @@ export async function GET(request: NextRequest) {
       syncPropertyQueue
     } = await import('@/lib/property-workflow');
 
-    const { generatePropertyVideoNew } = await import('@/lib/property-video-service-new');
+    // generatePropertyVideoNew was a stub - video generation uses Synthesia pipeline now
+    const generatePropertyVideoNew = async (_id: string) => ({ success: false as const, error: 'Property video service not implemented', message: 'Use Synthesia video pipeline instead' });
 
     // Sync queue with properties database (lightweight operation)
     console.log('🔄 Syncing queue with properties database...');

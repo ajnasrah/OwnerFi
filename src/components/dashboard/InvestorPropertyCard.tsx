@@ -8,7 +8,7 @@ interface InvestorPropertyCardProps {
   deal: InvestorDeal;
   isLiked: boolean;
   onToggleLike: () => void;
-  onHide: () => void;
+  onHide?: () => void;
   isPriority?: boolean;
 }
 
@@ -194,12 +194,14 @@ export function InvestorPropertyCard({ deal, isLiked, onToggleLike, onHide, isPr
             <h3 className="text-sm font-semibold text-white truncate">{deal.address}</h3>
             <p className="text-xs text-slate-400 mt-0.5">{deal.city}, {deal.state} {deal.zipCode}</p>
           </div>
-          <button
-            onClick={(e) => { e.stopPropagation(); onHide(); }}
-            className="shrink-0 mt-0.5 px-2 py-1 bg-red-600/20 hover:bg-red-600/40 border border-red-500/30 text-red-400 text-[10px] font-semibold rounded-md transition-all active:scale-95"
-          >
-            Hide
-          </button>
+          {onHide && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onHide(); }}
+              className="shrink-0 mt-0.5 px-2 py-1 bg-red-600/20 hover:bg-red-600/40 border border-red-500/30 text-red-400 text-[10px] font-semibold rounded-md transition-all active:scale-95"
+            >
+              Hide
+            </button>
+          )}
         </div>
 
         {/* Specs row */}

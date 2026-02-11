@@ -67,6 +67,7 @@ interface FirestoreProperty {
   ownerFinanceVerified?: boolean;
   isCashDeal?: boolean;
   needsWork?: boolean;
+  isLand?: boolean;
   homeStatus?: string;
   source?: string;
   homeType?: string;
@@ -128,7 +129,7 @@ function transformForTypesense(id: string, data: FirestoreProperty) {
     downPaymentPercent: data.downPaymentPercent || undefined,
     bedrooms: data.bedrooms || 0,
     bathrooms: data.bathrooms || 0,
-    squareFeet: data.squareFoot || data.squareFeet || undefined,
+    squareFeet: (data.squareFoot || data.squareFeet) ? Math.round(data.squareFoot || data.squareFeet) : undefined,
     yearBuilt: data.yearBuilt || undefined,
     zestimate: data.estimate || data.zestimate || undefined,
     discountPercent: data.discountPercentage || undefined,
@@ -139,6 +140,7 @@ function transformForTypesense(id: string, data: FirestoreProperty) {
     isActive: data.isActive !== false,
     ownerFinanceVerified: data.isOwnerFinance || data.ownerFinanceVerified || false,
     needsWork: data.needsWork || false,
+    isLand: data.isLand || (data.homeType || data.propertyType || '').toLowerCase() === 'land' || false,
     homeStatus: data.homeStatus || undefined,
     sourceType: data.source || undefined,
     propertyType: data.homeType || data.propertyType || 'other',

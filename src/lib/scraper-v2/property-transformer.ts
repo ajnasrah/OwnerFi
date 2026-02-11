@@ -20,6 +20,48 @@ interface ApifyAddressObj {
   streetAddress?: string;
 }
 
+/**
+ * Normalize Zillow's raw homeType to standardized values.
+ * Zillow sends: SINGLE_FAMILY, TOWNHOUSE, CONDO, MULTI_FAMILY, MANUFACTURED, LOT, VACANT_LAND, APARTMENT, etc.
+ * We normalize to: single-family, townhouse, condo, multi-family, mobile-home, land, other
+ */
+export type NormalizedHomeType = 'single-family' | 'condo' | 'townhouse' | 'mobile-home' | 'multi-family' | 'land' | 'other';
+
+const HOME_TYPE_MAP: Record<string, NormalizedHomeType> = {
+  'SINGLE_FAMILY': 'single-family',
+  'SINGLE FAMILY': 'single-family',
+  'HOUSE': 'single-family',
+  'TOWNHOUSE': 'townhouse',
+  'TOWN_HOUSE': 'townhouse',
+  'CONDO': 'condo',
+  'CONDOMINIUM': 'condo',
+  'COOP': 'condo',
+  'COOPERATIVE': 'condo',
+  'MULTI_FAMILY': 'multi-family',
+  'MULTIFAMILY': 'multi-family',
+  'DUPLEX': 'multi-family',
+  'TRIPLEX': 'multi-family',
+  'QUADRUPLEX': 'multi-family',
+  'APARTMENT': 'multi-family',
+  'MANUFACTURED': 'mobile-home',
+  'MOBILE': 'mobile-home',
+  'MOBILE_HOME': 'mobile-home',
+  'MODULAR': 'mobile-home',
+  'LOT': 'land',
+  'VACANT_LAND': 'land',
+  'LAND': 'land',
+  'LOTS': 'land',
+  'FARM': 'land',
+  'RANCH': 'land',
+};
+
+export function normalizeHomeType(rawHomeType: string | undefined | null): NormalizedHomeType {
+  if (!rawHomeType) return 'other';
+  const upper = rawHomeType.toUpperCase().trim();
+  return HOME_TYPE_MAP[upper] || 'other';
+}
+
+
 export interface TransformedProperty {
   // URLs
   url: string;
@@ -238,7 +280,7 @@ export function transformProperty(
     squareFoot: raw.livingArea || raw.livingAreaValue || raw.squareFoot || 0,
     lotSquareFoot: raw.lotSize || raw.lotAreaValue || 0,
     yearBuilt: raw.yearBuilt || 0,
-    homeType: raw.homeType || raw.propertyType || '',
+    homeType: normalizeHomeType(raw.homeType || raw.propertyType),
     homeStatus: raw.homeStatus || '',
 
     latitude: raw.latitude || 0,
@@ -397,6 +439,9 @@ export function createUnifiedPropertyDoc(
     cashDealReason: filterResult.cashDealReason || null,
     discountPercentage: filterResult.discountPercentage || 0,
     eightyPercentOfZestimate: filterResult.eightyPercentOfZestimate || 0,
+
+    // ===== LAND DETECTION =====
+    isLand: filterResult.isLand || false,
 
     // ===== FINANCING TERMS (initially null - can be updated later) =====
     downPaymentAmount: null,

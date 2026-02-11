@@ -7,6 +7,7 @@
 import { BuyerProfile } from './firebase-models';
 import { PropertyListing } from './property-schema';
 import { fetchWithTimeout, ServiceTimeouts } from './fetch-with-timeout';
+import crypto from 'crypto';
 
 interface PropertyMatchNotificationOptions {
   buyer: BuyerProfile;
@@ -25,7 +26,7 @@ export async function sendPropertyMatchNotification(
   options: PropertyMatchNotificationOptions
 ): Promise<{ success: boolean; logId?: string; error?: string }> {
   try {
-    const { buyer, property, trigger, baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://ownerfi.com' } = options;
+    const { buyer, property, trigger, baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://ownerfi.ai' } = options;
 
     // Validate buyer has phone number
     if (!buyer.phone) {
@@ -135,13 +136,25 @@ export async function sendPropertyMatchNotification(
 
     console.log(`[GoHighLevel] Sending notification for property ${property.id} to buyer ${buyer.id}`);
 
-    // Call our internal webhook endpoint
+    // Call our internal webhook endpoint with HMAC signature
+    const bodyStr = JSON.stringify(payload);
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    const webhookSecret = process.env.PROPERTY_MATCH_WEBHOOK_SECRET;
+    if (webhookSecret) {
+      const signature = crypto
+        .createHmac('sha256', webhookSecret)
+        .update(bodyStr)
+        .digest('hex');
+      headers['x-webhook-signature'] = `sha256=${signature}`;
+    }
+
     const response = await fetchWithTimeout(`${baseUrl}/api/webhooks/gohighlevel/property-match`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload),
+      headers,
+      body: bodyStr,
       timeout: ServiceTimeouts.GHL,
       retries: 2,
       retryDelay: 1000,

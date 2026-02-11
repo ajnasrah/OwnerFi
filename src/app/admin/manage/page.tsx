@@ -807,7 +807,7 @@ export default function AdminDashboard() {
     }
   };
 
-  if (status === 'loading') {
+  if (status !== 'authenticated' || (session?.user as { role?: string })?.role !== 'admin') {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center">
         <div className="text-center">

@@ -169,6 +169,9 @@ export interface UnifiedProperty {
   // Cash Deal Details (populated when dealType includes 'cash_deal')
   cashDeal?: CashDealDetails;
 
+  // Land detection (Zestimate unreliable for land - uses SFR comps)
+  isLand?: boolean;
+
   // Status
   status: 'active' | 'pending' | 'sold' | 'off_market' | 'expired';
   isActive: boolean;

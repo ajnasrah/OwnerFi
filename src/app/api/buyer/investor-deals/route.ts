@@ -39,6 +39,8 @@ export interface InvestorDeal {
   discount?: number;
   arv?: number;
   needsWork?: boolean;
+  // Land detection
+  isLand?: boolean;
   // Common
   yearBuilt?: number;
   propertyType?: string;
@@ -110,6 +112,7 @@ export async function GET(request: NextRequest) {
     const maxPrice = rawMaxPrice !== undefined && isFinite(rawMaxPrice) ? rawMaxPrice : undefined;
     const rawMaxArvPercent = searchParams.get('maxArvPercent') ? Number(searchParams.get('maxArvPercent')) : undefined;
     const maxArvPercent = rawMaxArvPercent !== undefined && isFinite(rawMaxArvPercent) ? rawMaxArvPercent : undefined;
+    const excludeLand = searchParams.get('excludeLand') === 'true';
     const page = Math.max(1, Number(searchParams.get('page') || '1') || 1);
     const pageSize = Math.min(48, Math.max(1, Number(searchParams.get('pageSize') || '24') || 24));
 
@@ -148,6 +151,9 @@ export async function GET(request: NextRequest) {
       allDeals = allDeals.filter(d =>
         d.percentOfArv !== null && d.percentOfArv !== undefined && d.percentOfArv <= maxArvPercent
       );
+    }
+    if (excludeLand) {
+      allDeals = allDeals.filter(d => !d.isLand);
     }
 
     // Count by deal type in single pass (before sorting/pagination)
@@ -246,7 +252,7 @@ async function searchTypesense(
       filter_by: filters.join(' && '),
       sort_by: 'listPrice:asc',
       per_page: 250,
-      include_fields: 'id,address,city,state,zipCode,bedrooms,bathrooms,squareFeet,yearBuilt,listPrice,monthlyPayment,downPaymentAmount,downPaymentPercent,interestRate,termYears,balloonYears,propertyType,primaryImage,galleryImages,dealType,zestimate,rentEstimate,needsWork,percentOfArv',
+      include_fields: 'id,address,city,state,zipCode,bedrooms,bathrooms,squareFeet,yearBuilt,listPrice,monthlyPayment,downPaymentAmount,downPaymentPercent,interestRate,termYears,balloonYears,propertyType,primaryImage,galleryImages,dealType,zestimate,rentEstimate,needsWork,percentOfArv,isLand',
     });
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -313,6 +319,8 @@ async function searchTypesense(
       discount: discount > 0 ? discount : undefined,
       arv: arv > 0 ? arv : undefined,
       needsWork,
+      // Land detection
+      isLand: doc.isLand === true || (doc.propertyType as string || '').toLowerCase() === 'land',
       // Common
       yearBuilt: (doc.yearBuilt as number) || undefined,
       propertyType: (doc.propertyType as string) || undefined,
@@ -445,6 +453,7 @@ async function searchFirestore(
           discount: discount > 0 ? discount : undefined,
           arv: arv > 0 ? arv : undefined,
           needsWork,
+          isLand: data.isLand === true || ((data.homeType as string) || (data.propertyType as string) || '').toLowerCase() === 'land',
           yearBuilt: (data.yearBuilt as number) || undefined,
           propertyType: (data.homeType as string) || (data.propertyType as string) || undefined,
           zestimate: arv > 0 ? arv : undefined,

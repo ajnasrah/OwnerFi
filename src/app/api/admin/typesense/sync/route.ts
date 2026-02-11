@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { indexRawFirestoreProperty } from '@/lib/typesense/sync';
+import { syncAllSchemas } from '@/lib/typesense/schemas';
 
 // Allow up to 5 minutes for large syncs
 export const maxDuration = 300;
@@ -13,7 +14,9 @@ export const maxDuration = 300;
  *
  * Bulk syncs all active properties from Firestore to Typesense.
  * Admin-only. Used when setting up a new Typesense cluster.
- * Processes in parallel batches of 10 for speed.
+ *
+ * Automatically patches the Typesense schema first so any new fields
+ * defined in code are added before data sync begins.
  */
 export { handler as GET, handler as POST };
 
@@ -28,6 +31,16 @@ async function handler(request: NextRequest) {
   }
 
   try {
+    // Step 1: Sync schema — creates missing collections, patches missing fields
+    let schemaResult = null;
+    try {
+      schemaResult = await syncAllSchemas();
+      console.log('[Typesense Sync] Schema sync result:', schemaResult);
+    } catch (schemaError) {
+      console.error('[Typesense Sync] Schema sync failed (continuing with data sync):', schemaError);
+    }
+
+    // Step 2: Sync data
     const snap = await getDocs(query(
       collection(db, 'properties'),
       where('isActive', '==', true)
@@ -59,6 +72,7 @@ async function handler(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
+      schema: schemaResult,
       total,
       indexed,
       failed,

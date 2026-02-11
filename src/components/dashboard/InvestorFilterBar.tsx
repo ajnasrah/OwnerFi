@@ -10,6 +10,8 @@ interface InvestorFilterBarProps {
   sortBy: SortField;
   sortOrder: 'asc' | 'desc';
   onSortChange: (sortBy: SortField, sortOrder: 'asc' | 'desc') => void;
+  excludeLand: boolean;
+  onExcludeLandChange: (exclude: boolean) => void;
   stats: {
     total: number;
     avgPrice: number;
@@ -41,6 +43,8 @@ export function InvestorFilterBar({
   sortBy,
   sortOrder,
   onSortChange,
+  excludeLand,
+  onExcludeLandChange,
   stats,
 }: InvestorFilterBarProps) {
   return (
@@ -77,6 +81,19 @@ export function InvestorFilterBar({
           ))}
         </div>
 
+        {/* Hide Land toggle */}
+        <button
+          onClick={() => onExcludeLandChange(!excludeLand)}
+          aria-pressed={excludeLand}
+          className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${
+            excludeLand
+              ? 'bg-amber-600 text-white shadow-lg shadow-amber-600/25'
+              : 'bg-slate-700/60 text-slate-300 hover:bg-slate-600/60 border border-slate-600/50'
+          }`}
+        >
+          {excludeLand ? 'Land Hidden' : 'Hide Land'}
+        </button>
+
         {/* Sort dropdown */}
         <div className="flex items-center gap-1.5 flex-shrink-0">
           <select
@@ -111,26 +128,28 @@ export function InvestorFilterBar({
 }
 
 // Helper to convert quick filter to API params
-export function getFilterParams(filter: QuickFilter): {
+export function getFilterParams(filter: QuickFilter, excludeLand?: boolean): {
   dealType: DealTypeFilter;
   minPrice?: number;
   maxPrice?: number;
   maxArvPercent?: number;
+  excludeLand?: boolean;
 } {
+  const base = { excludeLand: excludeLand || undefined };
   switch (filter) {
     case 'owner_finance':
-      return { dealType: 'owner_finance' };
+      return { ...base, dealType: 'owner_finance' };
     case 'cash_deal':
-      return { dealType: 'cash_deal' };
+      return { ...base, dealType: 'cash_deal' };
     case 'under80':
-      return { dealType: 'cash_deal', maxArvPercent: 80 };
+      return { ...base, dealType: 'cash_deal', maxArvPercent: 80 };
     case 'under100k':
-      return { dealType: 'all', maxPrice: 100000 };
+      return { ...base, dealType: 'all', maxPrice: 100000 };
     case '100k-200k':
-      return { dealType: 'all', minPrice: 100000, maxPrice: 200000 };
+      return { ...base, dealType: 'all', minPrice: 100000, maxPrice: 200000 };
     case '200k-300k':
-      return { dealType: 'all', minPrice: 200000, maxPrice: 300000 };
+      return { ...base, dealType: 'all', minPrice: 200000, maxPrice: 300000 };
     default:
-      return { dealType: 'all' };
+      return { ...base, dealType: 'all' };
   }
 }

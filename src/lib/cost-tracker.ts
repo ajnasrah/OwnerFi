@@ -48,7 +48,7 @@ export interface CostEntry {
   id: string;
   timestamp: number;
   brand: Brand;
-  service: 'heygen' | 'submagic' | 'late' | 'openai' | 'r2';
+  service: 'heygen' | 'synthesia' | 'submagic' | 'late' | 'openai' | 'r2';
   operation: string; // e.g., 'video_generation', 'caption_processing', 'post_to_social'
   units: number; // Credits or tokens used
   costUSD: number; // Actual cost in USD
@@ -60,6 +60,7 @@ export interface DailyCosts {
   date: string; // YYYY-MM-DD
   brand: Brand;
   heygen: { units: number; costUSD: number };
+  synthesia: { units: number; costUSD: number };
   submagic: { units: number; costUSD: number };
   late: { units: number; costUSD: number };
   openai: { units: number; costUSD: number };
@@ -72,6 +73,7 @@ export interface MonthlyCosts {
   month: string; // YYYY-MM
   brand: Brand;
   heygen: { units: number; costUSD: number };
+  synthesia: { units: number; costUSD: number };
   submagic: { units: number; costUSD: number };
   late: { units: number; costUSD: number };
   openai: { units: number; costUSD: number };
@@ -100,6 +102,14 @@ export interface BudgetStatus {
  */
 export function calculateHeyGenCost(creditCount: number = 1): number {
   return creditCount * costs.costPerUnit.heygenCredit;
+}
+
+/**
+ * Calculate cost for Synthesia video generation
+ * Matched to HeyGen pricing assumption for trial: $0.50 per credit
+ */
+export function calculateSynthesiaCost(creditCount: number = 1): number {
+  return creditCount * costs.costPerUnit.synthesiaCredit;
 }
 
 /**
@@ -160,7 +170,7 @@ function getCurrentMonth(): string {
  */
 export async function trackCost(
   brand: Brand,
-  service: 'heygen' | 'submagic' | 'late' | 'openai' | 'r2',
+  service: CostEntry['service'],
   operation: string,
   units: number,
   costUSD: number,
@@ -221,7 +231,7 @@ export async function trackCost(
  */
 async function updateDailyCosts(
   brand: Brand,
-  service: 'heygen' | 'submagic' | 'late' | 'openai' | 'r2',
+  service: CostEntry['service'],
   units: number,
   costUSD: number
 ): Promise<void> {
@@ -239,6 +249,7 @@ async function updateDailyCosts(
         date,
         brand,
         heygen: { units: 0, costUSD: 0 },
+        synthesia: { units: 0, costUSD: 0 },
         submagic: { units: 0, costUSD: 0 },
         late: { units: 0, costUSD: 0 },
         openai: { units: 0, costUSD: 0 },
@@ -272,7 +283,7 @@ async function updateDailyCosts(
  */
 async function updateMonthlyCosts(
   brand: Brand,
-  service: 'heygen' | 'submagic' | 'late' | 'openai' | 'r2',
+  service: CostEntry['service'],
   units: number,
   costUSD: number
 ): Promise<void> {
@@ -290,6 +301,7 @@ async function updateMonthlyCosts(
         month,
         brand,
         heygen: { units: 0, costUSD: 0 },
+        synthesia: { units: 0, costUSD: 0 },
         submagic: { units: 0, costUSD: 0 },
         late: { units: 0, costUSD: 0 },
         openai: { units: 0, costUSD: 0 },
@@ -631,6 +643,7 @@ export async function getMonthlyBreakdown(): Promise<{
 
   const byService: { [service: string]: { units: number; costUSD: number } } = {
     heygen: { units: 0, costUSD: 0 },
+    synthesia: { units: 0, costUSD: 0 },
     submagic: { units: 0, costUSD: 0 },
     late: { units: 0, costUSD: 0 },
     openai: { units: 0, costUSD: 0 },
@@ -642,6 +655,9 @@ export async function getMonthlyBreakdown(): Promise<{
   Object.values(allCosts).forEach((brandCosts) => {
     byService.heygen.units += brandCosts.heygen.units;
     byService.heygen.costUSD += brandCosts.heygen.costUSD;
+
+    byService.synthesia.units += (brandCosts.synthesia?.units || 0);
+    byService.synthesia.costUSD += (brandCosts.synthesia?.costUSD || 0);
 
     byService.submagic.units += brandCosts.submagic.units;
     byService.submagic.costUSD += brandCosts.submagic.costUSD;
@@ -672,6 +688,7 @@ export async function getMonthlyBreakdown(): Promise<{
 export default {
   // Calculation
   calculateHeyGenCost,
+  calculateSynthesiaCost,
   calculateSubmagicCost,
   calculateOpenAICost,
   calculateR2Cost,

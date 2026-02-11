@@ -589,7 +589,7 @@ ${script.caption}`;
     return `${days}d ago`;
   };
 
-  if (authStatus === 'loading' || loading) {
+  if (authStatus !== 'authenticated' || (session?.user as { role?: string })?.role !== 'admin' || loading) {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">

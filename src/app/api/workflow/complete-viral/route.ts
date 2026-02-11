@@ -17,6 +17,7 @@ import {
   buildBackgroundConfig,
   SCALE_PRESETS
 } from '@/config/heygen-agents';
+import { videoProvider } from '@/lib/env-config';
 
 const HEYGEN_API_KEY = process.env.HEYGEN_API_KEY;
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
@@ -28,6 +29,10 @@ import {
   generateAvatarIVVideo,
   uploadHeyGenAsset
 } from '@/lib/heygen-client';
+
+// Import Synthesia client
+import { generateSynthesiaVideo } from '@/lib/synthesia-client';
+import { getSynthesiaAgentForBrand, buildSynthesiaClipConfig } from '@/config/synthesia-agents';
 
 export async function POST(request: NextRequest) {
   let workflowId: string | undefined; // Declare at function scope so catch block can access it
@@ -219,107 +224,159 @@ export async function POST(request: NextRequest) {
       firstComment: captionData.firstComment
     };
 
-    // Step 3: Generate HeyGen video with agent rotation
-    console.log('🎥 Step 3: Creating HeyGen video with agent rotation...');
+    // Step 3: Generate video with selected provider
+    const activeProvider = videoProvider;
+    console.log(`🎥 Step 3: Creating video with ${activeProvider}...`);
 
     // CRITICAL FIX: DON'T set status to heygen_processing yet
-    // Will set it AFTER we get the video ID from HeyGen API
-    // This prevents workflows from being stuck in heygen_processing without a video ID
+    // Will set it AFTER we get the video ID from the provider API
+    // This prevents workflows from being stuck in processing without a video ID
 
-    // Select agent for this video using round-robin rotation
-    // All article brands (carz, ownerfi) share the same agent pool
-    const agent = await selectAgent(brand as any, {
-      mode: 'round-robin',
-      language: 'en',
-      // Don't require built-in background - we add background for talking photos via buildBackgroundConfig
-    });
-
-    // Build HeyGen request with webhook URL
     const { getBrandWebhookUrl } = await import('@/lib/brand-utils');
-    const webhookUrl = getBrandWebhookUrl(brand as 'carz' | 'ownerfi', 'heygen');
 
     let heygenRequest: any;
     let agentId = 'legacy';
 
     let videoResult: { success: boolean; video_id?: string; error?: string };
 
-    if (agent) {
-      // Use agent system with proper scale and background
-      console.log(`   🤖 Selected agent: ${agent.name} (${agent.id})`);
-      console.log(`   🎭 Avatar: ${agent.avatar.avatarId.substring(0, 20)}...`);
-      console.log(`   🗣️  Voice: ${agent.voice.voiceId.substring(0, 12)}...`);
-      if (agent.voice.emotion) {
-        console.log(`   😊 Emotion: ${agent.voice.emotion}`);
-      }
+    if (activeProvider === 'synthesia') {
+      // ============================================================
+      // SYNTHESIA PATH
+      // ============================================================
+      console.log('   Using Synthesia video provider');
 
-      agentId = agent.id;
+      const synthAgent = getSynthesiaAgentForBrand(brand as Brand);
+      console.log(`   Selected Synthesia agent: ${synthAgent.name} (${synthAgent.id})`);
+      agentId = synthAgent.id;
 
-      // Check if Avatar IV is enabled for more expressive videos
-      const useAvatarIV = agent.avatarIV?.enabled && agent.avatarIV?.photoUrl;
+      const clip = buildSynthesiaClipConfig(synthAgent, content.script);
 
-      if (useAvatarIV) {
-        // Use Avatar IV API for expressive videos with gestures
-        console.log(`   ✨ Using Avatar IV for expressive video with motion prompts`);
-        console.log(`   🎬 Motion: ${agent.avatarIV!.motionPrompt?.substring(0, 50)}...`);
+      videoResult = await generateSynthesiaVideo(
+        {
+          title: content.title,
+          aspectRatio: '9:16',
+          clips: [clip],
+          callbackId: `${brand}:${workflowId}`,
+        },
+        brand as Brand,
+        workflowId
+      );
+    } else {
+      // ============================================================
+      // HEYGEN PATH (default — existing logic unchanged)
+      // ============================================================
 
-        // Upload photo to get image_key
-        const uploadResult = await uploadHeyGenAsset(agent.avatarIV!.photoUrl, brand as Brand);
+      // Select agent for this video using round-robin rotation
+      const agent = await selectAgent(brand as any, {
+        mode: 'round-robin',
+        language: 'en',
+      });
 
-        if (uploadResult.success && uploadResult.image_key) {
-          // Generate with Avatar IV API
-          videoResult = await generateAvatarIVVideo(
-            {
-              image_key: uploadResult.image_key,
-              script: content.script,
-              voice_id: agent.voice.voiceId,
-              voice_speed: agent.voice.speed || 1.1, // Use agent's speed setting
-              custom_motion_prompt: agent.avatarIV!.motionPrompt,
-              enhance_custom_motion_prompt: true,
-              dimension: { width: 1080, height: 1920 },
-              callback_id: workflowId,
-              callback_url: webhookUrl,
-            },
-            brand as Brand,
+      const webhookUrl = getBrandWebhookUrl(brand as 'carz' | 'ownerfi', 'heygen');
+
+      if (agent) {
+        console.log(`   Selected agent: ${agent.name} (${agent.id})`);
+        console.log(`   Avatar: ${agent.avatar.avatarId.substring(0, 20)}...`);
+        console.log(`   Voice: ${agent.voice.voiceId.substring(0, 12)}...`);
+        if (agent.voice.emotion) {
+          console.log(`   Emotion: ${agent.voice.emotion}`);
+        }
+
+        agentId = agent.id;
+
+        // Check if Avatar IV is enabled for more expressive videos
+        const useAvatarIV = agent.avatarIV?.enabled && agent.avatarIV?.photoUrl;
+
+        if (useAvatarIV) {
+          console.log(`   Using Avatar IV for expressive video with motion prompts`);
+          console.log(`   Motion: ${agent.avatarIV!.motionPrompt?.substring(0, 50)}...`);
+
+          const uploadResult = await uploadHeyGenAsset(agent.avatarIV!.photoUrl, brand as Brand);
+
+          if (uploadResult.success && uploadResult.image_key) {
+            videoResult = await generateAvatarIVVideo(
+              {
+                image_key: uploadResult.image_key,
+                script: content.script,
+                voice_id: agent.voice.voiceId,
+                voice_speed: agent.voice.speed || 1.1,
+                custom_motion_prompt: agent.avatarIV!.motionPrompt,
+                enhance_custom_motion_prompt: true,
+                dimension: { width: 1080, height: 1920 },
+                callback_id: workflowId,
+                callback_url: webhookUrl,
+              },
+              brand as Brand,
+              workflowId
+            );
+
+            if (videoResult.success) {
+              console.log(`   Avatar IV video created successfully`);
+            } else {
+              console.warn(`   Avatar IV failed, falling back to V2 API: ${videoResult.error}`);
+            }
+          } else {
+            console.warn(`   Photo upload failed, falling back to V2 API: ${uploadResult.error}`);
+            videoResult = { success: false, error: uploadResult.error };
+          }
+
+          if (!videoResult.success) {
+            console.log(`   Falling back to V2 API...`);
+          }
+        }
+
+        // Use V2 API if Avatar IV not enabled or failed
+        if (!useAvatarIV || !videoResult!.success) {
+          const characterConfig = buildCharacterConfig(agent, 'vertical');
+          const voiceConfig = buildVoiceConfig(agent, content.script);
+          const backgroundConfig = buildBackgroundConfig(brand as Brand);
+
+          const videoInput: any = {
+            character: characterConfig,
+            voice: voiceConfig,
+            background: backgroundConfig,
+          };
+
+          heygenRequest = {
+            video_inputs: [videoInput],
+            caption: false,
+            dimension: { width: 1080, height: 1920 },
+            test: false,
+            webhook_url: webhookUrl,
+            callback_id: workflowId
+          };
+
+          videoResult = await generateHeyGenVideoWithTracking(
+            heygenRequest,
+            brand as 'carz' | 'ownerfi',
             workflowId
           );
-
-          if (videoResult.success) {
-            console.log(`   ✅ Avatar IV video created successfully`);
-          } else {
-            console.warn(`   ⚠️ Avatar IV failed, falling back to V2 API: ${videoResult.error}`);
-          }
-        } else {
-          console.warn(`   ⚠️ Photo upload failed, falling back to V2 API: ${uploadResult.error}`);
-          videoResult = { success: false, error: uploadResult.error };
         }
+      } else {
+        // Fallback to legacy config if no agent available
+        console.warn('No agent available, using legacy config');
 
-        // Fall back to V2 if Avatar IV fails
-        if (!videoResult.success) {
-          console.log(`   🔄 Falling back to V2 API...`);
-        }
-      }
-
-      // Use V2 API if Avatar IV not enabled or failed
-      if (!useAvatarIV || !videoResult!.success) {
-        // Build character config from agent (uses SCALE_PRESETS for proper sizing)
-        const characterConfig = buildCharacterConfig(agent, 'vertical');
-
-        // Build voice config from agent with the script (uses agent's speed setting)
-        const voiceConfig = buildVoiceConfig(agent, content.script);
-
-        // Build background config - uses brand-specific color
-        // ALWAYS provide a background to avoid white backgrounds
-        const backgroundConfig = buildBackgroundConfig(brand as Brand);
-
-        // Build video input with background (always included to prevent white backgrounds)
-        const videoInput: any = {
-          character: characterConfig,
-          voice: voiceConfig,
-          background: backgroundConfig,
-        };
+        const defaultAvatarId = 'd33fe3abc2914faa88309c3bdb9f47f4';
+        const defaultVoiceId = '9070a6c2dbd54c10bb111dc8c655bff7';
 
         heygenRequest = {
-          video_inputs: [videoInput],
+          video_inputs: [{
+            character: {
+              type: 'talking_photo',
+              talking_photo_id: defaultAvatarId,
+              scale: SCALE_PRESETS.vertical.talkingPhoto,
+            },
+            voice: {
+              type: 'text' as const,
+              input_text: content.script,
+              voice_id: defaultVoiceId,
+              speed: 1.1
+            },
+            background: {
+              type: 'color',
+              value: '#1a1a2e'
+            }
+          }],
           caption: false,
           dimension: { width: 1080, height: 1920 },
           test: false,
@@ -333,44 +390,6 @@ export async function POST(request: NextRequest) {
           workflowId
         );
       }
-    } else {
-      // Fallback to legacy config if no agent available
-      console.warn('⚠️  No agent available, using legacy config');
-
-      // Legacy defaults with CORRECT scale (1.4 for talking photos in vertical videos)
-      const defaultAvatarId = 'd33fe3abc2914faa88309c3bdb9f47f4';
-      const defaultVoiceId = '9070a6c2dbd54c10bb111dc8c655bff7';
-
-      heygenRequest = {
-        video_inputs: [{
-          character: {
-            type: 'talking_photo',
-            talking_photo_id: defaultAvatarId,
-            scale: SCALE_PRESETS.vertical.talkingPhoto, // 1.4 - correct scale for vertical videos
-          },
-          voice: {
-            type: 'text' as const,
-            input_text: content.script,
-            voice_id: defaultVoiceId,
-            speed: 1.1
-          },
-          background: {
-            type: 'color',
-            value: '#1a1a2e'
-          }
-        }],
-        caption: false,
-        dimension: { width: 1080, height: 1920 },
-        test: false,
-        webhook_url: webhookUrl,
-        callback_id: workflowId
-      };
-
-      videoResult = await generateHeyGenVideoWithTracking(
-        heygenRequest,
-        brand as 'carz' | 'ownerfi',
-        workflowId
-      );
     }
 
     if (!videoResult.success || !videoResult.video_id) {
@@ -379,31 +398,34 @@ export async function POST(request: NextRequest) {
         const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
         await updateWorkflowStatus(workflowId, brand as 'carz' | 'ownerfi', {
           status: 'failed',
-          error: videoResult.error || 'HeyGen video generation failed'
+          error: videoResult.error || `${activeProvider} video generation failed`
         });
       }
 
       return NextResponse.json(
-        { success: false, error: 'HeyGen video generation failed', details: videoResult.error },
+        { success: false, error: `${activeProvider} video generation failed`, details: videoResult.error },
         { status: 500 }
       );
     }
 
-    console.log(`✅ HeyGen video ID: ${videoResult.video_id}`);
-    console.log(`📋 Workflow ID: ${workflowId}`);
-    console.log(`🎭 Agent used: ${agentId}`);
+    const processingStatus = activeProvider === 'synthesia' ? 'synthesia_processing' : 'heygen_processing';
 
-    // CRITICAL FIX: Update workflow with HeyGen video ID AND status atomically
-    // This ensures we never have heygen_processing without a video ID
+    console.log(`Video ID: ${videoResult.video_id} (${activeProvider})`);
+    console.log(`Workflow ID: ${workflowId}`);
+    console.log(`Agent used: ${agentId}`);
+
+    // Update workflow with video ID AND status atomically
     if (workflowId) {
       const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
+      const videoIdField = activeProvider === 'synthesia' ? 'synthesiaVideoId' : 'heygenVideoId';
       await updateWorkflowStatus(workflowId, brand as 'carz' | 'ownerfi', {
-        heygenVideoId: videoResult.video_id,
-        agentId,  // Track which agent was used for analytics
-        status: 'heygen_processing',  // ✅ Set status HERE after getting video ID
+        [videoIdField]: videoResult.video_id,
+        videoProvider: activeProvider,
+        agentId,
+        status: processingStatus,
         caption: content.caption,
         title: content.title
-      } as any); // Store caption/title so webhooks can use them
+      } as any);
     }
 
     // Check if we're in local development (webhooks won't work)
@@ -430,30 +452,31 @@ export async function POST(request: NextRequest) {
     }
 
     // PRODUCTION: Fire-and-forget with webhooks
-    console.log('🎯 HeyGen video submitted successfully!');
-    console.log('📡 Webhooks will handle:');
-    console.log('   1. HeyGen completion → R2 upload → Submagic');
-    console.log('   2. Submagic completion → R2 upload → Late posting');
+    console.log(`${activeProvider} video submitted successfully!`);
+    console.log('Webhooks will handle:');
+    console.log(`   1. ${activeProvider} completion -> R2 upload -> Submagic`);
+    console.log('   2. Submagic completion -> R2 upload -> Late posting');
     console.log('   3. Monitor progress at /admin/social-dashboard');
 
     return NextResponse.json({
       success: true,
-      message: '🚀 Viral video workflow started! Webhooks will complete the process.',
+      message: `Viral video workflow started with ${activeProvider}! Webhooks will complete the process.`,
       workflow_id: workflowId,
       brand,
+      video_provider: activeProvider,
       article: { title: article.title, link: article.link },
       content: { script: content.script, title: content.title, caption: content.caption },
-      video: { heygen_video_id: videoResult.video_id, status: 'heygen_processing' },
+      video: { video_id: videoResult.video_id, provider: activeProvider, status: processingStatus },
       tracking: {
         workflow_id: workflowId,
         dashboard_url: `https://ownerfi.ai/admin/social-dashboard`,
         status_api: `/api/workflow/logs`
       },
       next_steps: [
-        '⏳ HeyGen is generating the video (webhook will notify when complete)',
-        '⏳ Submagic will add captions and effects (webhook will notify when complete)',
-        '⏳ Video will auto-post to Late (Instagram, TikTok, YouTube, Facebook, LinkedIn, etc.)',
-        '📊 Monitor progress in the admin dashboard'
+        `${activeProvider} is generating the video (webhook will notify when complete)`,
+        'Submagic will add captions and effects (webhook will notify when complete)',
+        'Video will auto-post to Late (Instagram, TikTok, YouTube, Facebook, LinkedIn, etc.)',
+        'Monitor progress in the admin dashboard'
       ]
     });
 

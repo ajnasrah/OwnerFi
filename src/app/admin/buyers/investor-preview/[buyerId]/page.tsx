@@ -45,6 +45,7 @@ export default function InvestorPreview() {
   const [activeFilter, setActiveFilter] = useState<QuickFilter>('all');
   const [sortBy, setSortBy] = useState<SortField>('price');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [excludeLand, setExcludeLand] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const PAGE_SIZE = 24;
 
@@ -102,7 +103,7 @@ export default function InvestorPreview() {
     const fetchDeals = async () => {
       setDealsLoading(true);
       try {
-        const filterParams = getFilterParams(activeFilter);
+        const filterParams = getFilterParams(activeFilter, excludeLand);
         const searchParams = new URLSearchParams({
           dealType: filterParams.dealType,
           sortBy,
@@ -114,6 +115,7 @@ export default function InvestorPreview() {
         if (filterParams.minPrice) searchParams.set('minPrice', String(filterParams.minPrice));
         if (filterParams.maxPrice) searchParams.set('maxPrice', String(filterParams.maxPrice));
         if (filterParams.maxArvPercent) searchParams.set('maxArvPercent', String(filterParams.maxArvPercent));
+        if (filterParams.excludeLand) searchParams.set('excludeLand', 'true');
 
         const res = await fetch(`/api/buyer/investor-deals?${searchParams}`, {
           signal: abortController.signal,
@@ -144,7 +146,7 @@ export default function InvestorPreview() {
 
     fetchDeals();
     return () => abortController.abort();
-  }, [profile, activeFilter, sortBy, sortOrder, currentPage]);
+  }, [profile, activeFilter, sortBy, sortOrder, excludeLand, currentPage]);
 
   // Like toggle - UI only, no server calls (admin preview)
   const toggleLike = useCallback((dealId: string) => {
@@ -247,6 +249,8 @@ export default function InvestorPreview() {
             setSortOrder(newSortOrder);
             setCurrentPage(1);
           }}
+          excludeLand={excludeLand}
+          onExcludeLandChange={(exclude) => { setExcludeLand(exclude); setCurrentPage(1); }}
           stats={stats}
         />
 

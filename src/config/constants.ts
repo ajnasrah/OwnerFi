@@ -20,6 +20,7 @@ export const TIMEOUTS = {
   // External API timeouts
   EXTERNAL_API: 30_000, // 30 seconds
   HEYGEN_API: 30_000,
+  SYNTHESIA_API: 30_000,
   SUBMAGIC_API: 60_000, // 60 seconds - exports can take longer for large videos
   LATE_API: 300_000, // 300 seconds (5 min) - Late needs time to upload large videos (50+ MB) to 6+ platforms
   OPENAI_API: 60_000, // 60 seconds for AI generation

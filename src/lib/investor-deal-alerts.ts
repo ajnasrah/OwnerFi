@@ -18,9 +18,10 @@ export interface InvestorDealInfo {
   streetAddress: string;
   askingPrice: number;
   zestimate: number;
-  zillowLink: string;
+  zpid?: string;
   city?: string;
   state?: string;
+  zipCode?: string;
 }
 
 interface SubscribedBuyer {
@@ -97,6 +98,20 @@ async function sendAlertToSubscriber(
 
   const percentOfArv = Math.round((deal.askingPrice / deal.zestimate) * 100);
 
+  // Build OwnerFi property link
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://ownerfi.ai';
+  const addressSlug = (deal.streetAddress || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  const citySlug = (deal.city || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  const stateSlug = (deal.state || '').toLowerCase().replace(/[^a-z]+/g, '');
+  const slugBase = `${addressSlug}-${citySlug}-${stateSlug}`.replace(/--+/g, '-').replace(/^-+|-+$/g, '');
+  const ownerfiLink = deal.zpid ? `${baseUrl}/property/${slugBase}_${deal.zpid}?ref=deal-alert` : `${baseUrl}/dashboard/investor`;
+
   const payload = {
     phone: buyer.phone,
     firstName: buyer.firstName,
@@ -104,9 +119,10 @@ async function sendAlertToSubscriber(
     askingPrice: deal.askingPrice,
     zestimate: deal.zestimate,
     percentOfZestimate: percentOfArv,
-    zillowLink: deal.zillowLink,
+    ownerfiLink,
     city: deal.city || '',
     state: deal.state || '',
+    zipCode: deal.zipCode || '',
   };
 
   try {
@@ -160,11 +176,11 @@ export async function sendInvestorDealAlerts(
   const { db } = getFirebaseAdmin();
 
   for (const deal of deals) {
+    if (!deal.zestimate || deal.zestimate <= 0) continue;
     const percentOfArv = Math.round((deal.askingPrice / deal.zestimate) * 100);
-    // Generate a stable deal ID from the zillow link or address
-    const zpidMatch = deal.zillowLink?.match(/(\d+)_zpid/)?.[1];
+    // Generate a stable deal ID from zpid or address
     const addrFallback = deal.streetAddress?.replace(/\s+/g, '_');
-    const dealId = zpidMatch || addrFallback;
+    const dealId = deal.zpid || addrFallback;
     if (!dealId) continue; // Skip deals with no identifiable ID
 
     for (const buyer of subscribers) {

@@ -56,6 +56,7 @@ export default function InvestorDashboard() {
   const [activeFilter, setActiveFilter] = useState<QuickFilter>('all');
   const [sortBy, setSortBy] = useState<SortField>('price');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [excludeLand, setExcludeLand] = useState(true); // Default: hide land properties
   const [currentPage, setCurrentPage] = useState(1);
   const PAGE_SIZE = 24;
 
@@ -173,7 +174,7 @@ export default function InvestorDashboard() {
       setDealsLoading(true);
       setDealsError(false);
       try {
-        const filterParams = getFilterParams(activeFilter);
+        const filterParams = getFilterParams(activeFilter, excludeLand);
         const params = new URLSearchParams({
           dealType: filterParams.dealType,
           sortBy,
@@ -184,6 +185,7 @@ export default function InvestorDashboard() {
         if (filterParams.minPrice) params.set('minPrice', String(filterParams.minPrice));
         if (filterParams.maxPrice) params.set('maxPrice', String(filterParams.maxPrice));
         if (filterParams.maxArvPercent) params.set('maxArvPercent', String(filterParams.maxArvPercent));
+        if (filterParams.excludeLand) params.set('excludeLand', 'true');
 
         const res = await fetch(`/api/buyer/investor-deals?${params}`, {
           signal: abortController.signal,
@@ -215,7 +217,7 @@ export default function InvestorDashboard() {
 
     fetchDeals();
     return () => abortController.abort();
-  }, [profile, activeFilter, sortBy, sortOrder, currentPage, fetchKey]);
+  }, [profile, activeFilter, sortBy, sortOrder, excludeLand, currentPage, fetchKey]);
 
   // Reset page when filters change (handled via wrapper functions below)
 
@@ -394,7 +396,11 @@ export default function InvestorDashboard() {
         )}
 
         {/* Deal Alert Subscription Card */}
-        <div className="mb-4 bg-gradient-to-r from-emerald-900/30 to-slate-800/50 border border-emerald-500/30 rounded-xl p-4">
+        <div className={`mb-4 bg-gradient-to-r ${
+          profile?.dealAlertStatus === 'payment_failed'
+            ? 'from-red-900/30 to-slate-800/50 border-red-500/30'
+            : 'from-emerald-900/30 to-slate-800/50 border-emerald-500/30'
+        } border rounded-xl p-4`}>
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-white font-bold text-sm flex items-center gap-2">
@@ -402,11 +408,18 @@ export default function InvestorDashboard() {
                 {profile?.dealAlertStatus === 'active' && (
                   <span className="bg-emerald-500/20 text-emerald-400 text-[10px] px-2 py-0.5 rounded-full font-semibold">ACTIVE</span>
                 )}
+                {profile?.dealAlertStatus === 'payment_failed' && (
+                  <span className="bg-red-500/20 text-red-400 text-[10px] px-2 py-0.5 rounded-full font-semibold">PAYMENT FAILED</span>
+                )}
               </h3>
               <p className="text-slate-400 text-xs mt-0.5">
                 {profile?.dealAlertStatus === 'active'
                   ? `Alerts for deals under ${profile?.arvThreshold || 85}% of ARV`
-                  : 'Get instant SMS alerts when investment deals below your ARV threshold appear'}
+                  : profile?.dealAlertStatus === 'payment_failed'
+                    ? 'Your payment failed. Update your payment method to continue receiving alerts.'
+                    : subscriptionSuccess
+                      ? 'Activating your subscription...'
+                      : 'Get instant SMS alerts when investment deals below your ARV threshold appear'}
               </p>
             </div>
             {profile?.dealAlertStatus === 'active' ? (
@@ -416,6 +429,17 @@ export default function InvestorDashboard() {
               >
                 Manage
               </button>
+            ) : profile?.dealAlertStatus === 'payment_failed' ? (
+              <button
+                onClick={handleManageSubscription}
+                className="px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white text-xs font-semibold rounded-lg transition-all"
+              >
+                Fix Payment
+              </button>
+            ) : subscriptionSuccess ? (
+              <span className="px-3 py-1.5 text-emerald-400 text-xs font-semibold animate-pulse">
+                Activating...
+              </span>
             ) : (
               <button
                 onClick={handleSubscribe}
@@ -439,6 +463,8 @@ export default function InvestorDashboard() {
             setSortOrder(newSortOrder);
             setCurrentPage(1);
           }}
+          excludeLand={excludeLand}
+          onExcludeLandChange={(exclude) => { setExcludeLand(exclude); setCurrentPage(1); }}
           stats={stats}
         />
 

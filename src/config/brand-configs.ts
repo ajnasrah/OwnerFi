@@ -27,6 +27,7 @@ export interface BrandConfig {
   // Webhook URLs (brand-specific isolation)
   webhooks: {
     heygen: string;
+    synthesia: string;
     submagic: string;
   };
 
@@ -107,6 +108,7 @@ export const CARZ_CONFIG: BrandConfig = {
 
   webhooks: {
     heygen: `${BASE_URL}/api/webhooks/heygen/carz`,
+    synthesia: `${BASE_URL}/api/webhooks/synthesia/carz`,
     submagic: `${BASE_URL}/api/webhooks/submagic/carz`,
   },
 
@@ -158,6 +160,7 @@ export const OWNERFI_CONFIG: BrandConfig = {
 
   webhooks: {
     heygen: `${BASE_URL}/api/webhooks/heygen/ownerfi`,
+    synthesia: `${BASE_URL}/api/webhooks/synthesia/ownerfi`,
     submagic: `${BASE_URL}/api/webhooks/submagic/ownerfi`,
   },
 
@@ -211,6 +214,7 @@ export const BENEFIT_CONFIG: BrandConfig = {
 
   webhooks: {
     heygen: `${BASE_URL}/api/webhooks/heygen/benefit`,
+    synthesia: `${BASE_URL}/api/webhooks/synthesia/benefit`,
     submagic: `${BASE_URL}/api/webhooks/submagic/benefit`,
   },
 
@@ -262,6 +266,7 @@ export const ABDULLAH_CONFIG: BrandConfig = {
 
   webhooks: {
     heygen: `${BASE_URL}/api/webhooks/heygen/abdullah`,
+    synthesia: `${BASE_URL}/api/webhooks/synthesia/abdullah`,
     submagic: `${BASE_URL}/api/webhooks/submagic/abdullah`,
   },
 
@@ -310,6 +315,7 @@ export const PERSONAL_CONFIG: BrandConfig = {
 
   webhooks: {
     heygen: `${BASE_URL}/api/webhooks/heygen/personal`, // Not used (no HeyGen for personal videos)
+    synthesia: `${BASE_URL}/api/webhooks/synthesia/personal`,
     submagic: `${BASE_URL}/api/webhooks/submagic/personal`,
   },
 
@@ -361,6 +367,7 @@ export const REALTORS_CONFIG: BrandConfig = {
 
   webhooks: {
     heygen: `${BASE_URL}/api/webhooks/heygen/realtors`,
+    synthesia: `${BASE_URL}/api/webhooks/synthesia/realtors`,
     submagic: `${BASE_URL}/api/webhooks/submagic/realtors`,
   },
 
@@ -421,6 +428,7 @@ export const GAZA_CONFIG: BrandConfig = {
 
   webhooks: {
     heygen: `${BASE_URL}/api/webhooks/heygen/gaza`,
+    synthesia: `${BASE_URL}/api/webhooks/synthesia/gaza`,
     submagic: `${BASE_URL}/api/webhooks/submagic/gaza`,
   },
 

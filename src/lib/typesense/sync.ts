@@ -44,6 +44,7 @@ export interface TypesensePropertyDocument {
   isActive: boolean;
   ownerFinanceVerified?: boolean;
   needsWork?: boolean;
+  isLand?: boolean;
   manuallyVerified?: boolean;
   homeStatus?: string;
   // Metadata
@@ -141,6 +142,7 @@ export function transformPropertyForTypesense(
     isActive: property.isActive !== false, // Default to true if not set
     ownerFinanceVerified: (property as any).isOwnerFinance || property.ownerFinance?.verified || false,
     needsWork: (property as any).needsWork || property.cashDeal?.needsWork || false,
+    isLand: property.isLand || property.propertyType === 'land' || false,
     manuallyVerified: property.verification?.manuallyVerified || undefined,
 
     sourceType: property.source?.type || undefined,
@@ -399,7 +401,7 @@ export async function indexRawFirestoreProperty(
       downPaymentPercent: data.downPaymentPercent || undefined,
       bedrooms: data.bedrooms || data.beds || 0,
       bathrooms: data.bathrooms || data.baths || 0,
-      squareFeet: data.squareFoot || data.squareFeet || data.sqft || undefined,
+      squareFeet: (data.squareFoot || data.squareFeet || data.sqft) ? Math.round(data.squareFoot || data.squareFeet || data.sqft) : undefined,
       yearBuilt: data.yearBuilt || undefined,
       zestimate: zestimate || undefined,
       discountPercent: data.discountPercentage || data.discount || undefined,
@@ -415,6 +417,7 @@ export async function indexRawFirestoreProperty(
       isActive: data.isActive !== false && data.status !== 'inactive',
       ownerFinanceVerified: data.ownerFinanceVerified || false,
       needsWork: data.needsWork || false,
+      isLand: data.isLand || (data.homeType || data.propertyType || '').toLowerCase() === 'land' || false,
       manuallyVerified: data.manuallyVerified || false,
       homeStatus: data.homeStatus || data.status || undefined,
       // Metadata

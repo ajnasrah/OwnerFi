@@ -16,8 +16,12 @@ import crypto from 'crypto';
 import { Brand } from '@/config/constants';
 
 // Get secrets from environment
-const HEYGEN_WEBHOOK_SECRET = process.env.HEYGEN_WEBHOOK_SECRET;
 const SUBMAGIC_WEBHOOK_SECRET = process.env.SUBMAGIC_WEBHOOK_SECRET;
+
+// Brand-to-env-var mapping for HeyGen webhook secrets
+function getHeyGenSecret(brand: string): string | undefined {
+  return process.env[`HEYGEN_WEBHOOK_SECRET_${brand.toUpperCase()}`];
+}
 // ENFORCE verification in production, allow bypass in dev/test only
 const ENFORCE_VERIFICATION = process.env.NODE_ENV === 'production' || process.env.ENFORCE_WEBHOOK_VERIFICATION === 'true';
 
@@ -37,10 +41,13 @@ export function verifyHeyGenWebhook(
     return { valid: true };
   }
 
+  // Get brand-specific secret
+  const webhookSecret = getHeyGenSecret(brand);
+
   // Check if webhook secret is configured FIRST
   // If no secret is set, we can't verify - allow through
-  if (!HEYGEN_WEBHOOK_SECRET) {
-    console.warn('⚠️  HEYGEN_WEBHOOK_SECRET not set - skipping verification');
+  if (!webhookSecret) {
+    console.warn(`⚠️  HEYGEN_WEBHOOK_SECRET_${brand.toUpperCase()} not set - skipping verification`);
     return { valid: true };
   }
 
@@ -54,7 +61,7 @@ export function verifyHeyGenWebhook(
   try {
     // Calculate expected signature
     const expectedSignature = crypto
-      .createHmac('sha256', HEYGEN_WEBHOOK_SECRET)
+      .createHmac('sha256', webhookSecret)
       .update(rawBody)
       .digest('hex');
 

@@ -5,17 +5,17 @@
  * whenever documents are created, updated, or deleted.
  */
 
-import * as functions from 'firebase-functions';
-import * as admin from 'firebase-admin';
+import { onDocumentCreated, onDocumentUpdated, onDocumentDeleted } from 'firebase-functions/v2/firestore';
+import { initializeApp } from 'firebase-admin/app';
 import Typesense from 'typesense';
 
 // Initialize Firebase Admin
-admin.initializeApp();
+initializeApp();
 
 // Get Typesense config from environment
 const typesenseConfig = {
-  host: process.env.TYPESENSE_HOST || functions.config().typesense?.host,
-  apiKey: process.env.TYPESENSE_API_KEY || functions.config().typesense?.api_key,
+  host: process.env.TYPESENSE_HOST || '',
+  apiKey: process.env.TYPESENSE_API_KEY || '',
 };
 
 // Initialize Typesense client
@@ -70,7 +70,7 @@ function transformToTypesense(docId: string, data: FirebaseFirestore.DocumentDat
     listPrice: data.price || data.listPrice || 0,
     bedrooms: data.bedrooms || 0,
     bathrooms: data.bathrooms || 0,
-    squareFeet: data.squareFeet || data.squareFoot || undefined,
+    squareFeet: (data.squareFeet || data.squareFoot) ? Math.round(data.squareFeet || data.squareFoot) : undefined,
     yearBuilt: data.yearBuilt || undefined,
     isActive: data.isActive !== false,
     propertyType: data.homeType || data.propertyType || 'single-family',
@@ -86,6 +86,7 @@ function transformToTypesense(docId: string, data: FirebaseFirestore.DocumentDat
     rentEstimate,
     percentOfArv: data.percentOfArv || undefined,
     needsWork: data.needsWork || undefined,
+    isLand: data.isLand || (data.homeType || data.propertyType || '').toLowerCase() === 'land' || false,
     manuallyVerified: data.manuallyVerified || undefined,
     sourceType: data.source || undefined,
   };
@@ -94,101 +95,95 @@ function transformToTypesense(docId: string, data: FirebaseFirestore.DocumentDat
 /**
  * Sync property to Typesense on CREATE
  */
-export const onPropertyCreate = functions.firestore
-  .document('properties/{propertyId}')
-  .onCreate(async (snapshot, context) => {
-    const client = getTypesenseClient();
-    if (!client) return;
+export const onPropertyCreate = onDocumentCreated('properties/{propertyId}', async (event) => {
+  const client = getTypesenseClient();
+  if (!client || !event.data) return;
 
-    const data = snapshot.data();
-    const docId = context.params.propertyId;
+  const data = event.data.data();
+  const docId = event.params.propertyId;
 
-    // Skip if not active or doesn't have required data
-    if (data.isActive === false) {
-      console.log(`Skipping inactive property: ${docId}`);
-      return;
-    }
+  // Skip if not active or doesn't have required data
+  if (data.isActive === false) {
+    console.log(`Skipping inactive property: ${docId}`);
+    return;
+  }
 
-    // Skip if neither owner finance nor cash deal
-    if (!data.isOwnerFinance && !data.isCashDeal) {
-      console.log(`Skipping property without deal type: ${docId}`);
-      return;
-    }
+  // Skip if neither owner finance nor cash deal
+  if (!data.isOwnerFinance && !data.isCashDeal) {
+    console.log(`Skipping property without deal type: ${docId}`);
+    return;
+  }
 
-    try {
-      const typesenseDoc = transformToTypesense(docId, data);
-      await client.collections('properties').documents().upsert(typesenseDoc);
-      console.log(`Synced new property to Typesense: ${docId}`);
-    } catch (error) {
-      console.error(`Failed to sync property ${docId}:`, error);
-    }
-  });
+  try {
+    const typesenseDoc = transformToTypesense(docId, data);
+    await client.collections('properties').documents().upsert(typesenseDoc);
+    console.log(`Synced new property to Typesense: ${docId}`);
+  } catch (error) {
+    console.error(`Failed to sync property ${docId}:`, error);
+  }
+});
 
 /**
  * Sync property to Typesense on UPDATE
  */
-export const onPropertyUpdate = functions.firestore
-  .document('properties/{propertyId}')
-  .onUpdate(async (change, context) => {
-    const client = getTypesenseClient();
-    if (!client) return;
+export const onPropertyUpdate = onDocumentUpdated('properties/{propertyId}', async (event) => {
+  const client = getTypesenseClient();
+  if (!client || !event.data) return;
 
-    const data = change.after.data();
-    const docId = context.params.propertyId;
+  const data = event.data.after.data();
+  const docId = event.params.propertyId;
 
-    // If property became inactive or sold, delete from Typesense
-    if (data.isActive === false || data.status === 'sold' || data.status === 'inactive') {
-      try {
-        await client.collections('properties').documents(docId).delete();
-        console.log(`Deleted inactive/sold property from Typesense: ${docId}`);
-      } catch (error: any) {
-        if (error.httpStatus !== 404) {
-          console.error(`Failed to delete property ${docId}:`, error);
-        }
-      }
-      return;
-    }
-
-    // Skip if neither owner finance nor cash deal
-    if (!data.isOwnerFinance && !data.isCashDeal) {
-      // Remove from Typesense if it was there
-      try {
-        await client.collections('properties').documents(docId).delete();
-        console.log(`Removed non-deal property from Typesense: ${docId}`);
-      } catch (error: any) {
-        if (error.httpStatus !== 404) {
-          console.error(`Failed to delete property ${docId}:`, error);
-        }
-      }
-      return;
-    }
-
-    try {
-      const typesenseDoc = transformToTypesense(docId, data);
-      await client.collections('properties').documents().upsert(typesenseDoc);
-      console.log(`Updated property in Typesense: ${docId}`);
-    } catch (error) {
-      console.error(`Failed to update property ${docId}:`, error);
-    }
-  });
-
-/**
- * Remove property from Typesense on DELETE
- */
-export const onPropertyDelete = functions.firestore
-  .document('properties/{propertyId}')
-  .onDelete(async (snapshot, context) => {
-    const client = getTypesenseClient();
-    if (!client) return;
-
-    const docId = context.params.propertyId;
-
+  // If property became inactive or sold, delete from Typesense
+  if (data.isActive === false || data.status === 'sold' || data.status === 'inactive') {
     try {
       await client.collections('properties').documents(docId).delete();
-      console.log(`Deleted property from Typesense: ${docId}`);
+      console.log(`Deleted inactive/sold property from Typesense: ${docId}`);
     } catch (error: any) {
       if (error.httpStatus !== 404) {
         console.error(`Failed to delete property ${docId}:`, error);
       }
     }
-  });
+    return;
+  }
+
+  // Skip if neither owner finance nor cash deal
+  if (!data.isOwnerFinance && !data.isCashDeal) {
+    // Remove from Typesense if it was there
+    try {
+      await client.collections('properties').documents(docId).delete();
+      console.log(`Removed non-deal property from Typesense: ${docId}`);
+    } catch (error: any) {
+      if (error.httpStatus !== 404) {
+        console.error(`Failed to delete property ${docId}:`, error);
+      }
+    }
+    return;
+  }
+
+  try {
+    const typesenseDoc = transformToTypesense(docId, data);
+    await client.collections('properties').documents().upsert(typesenseDoc);
+    console.log(`Updated property in Typesense: ${docId}`);
+  } catch (error) {
+    console.error(`Failed to update property ${docId}:`, error);
+  }
+});
+
+/**
+ * Remove property from Typesense on DELETE
+ */
+export const onPropertyDelete = onDocumentDeleted('properties/{propertyId}', async (event) => {
+  const client = getTypesenseClient();
+  if (!client) return;
+
+  const docId = event.params.propertyId;
+
+  try {
+    await client.collections('properties').documents(docId).delete();
+    console.log(`Deleted property from Typesense: ${docId}`);
+  } catch (error: any) {
+    if (error.httpStatus !== 404) {
+      console.error(`Failed to delete property ${docId}:`, error);
+    }
+  }
+});

@@ -13,7 +13,7 @@ const IDEMPOTENCY_TTL_HOURS = 24; // Keep records for 24 hours
 
 export interface IdempotencyRecord {
   id: string;
-  service: 'heygen' | 'submagic' | 'stripe' | 'gohighlevel';
+  service: 'heygen' | 'synthesia' | 'submagic' | 'stripe' | 'gohighlevel';
   brand?: string;
   webhookId: string;
   processedAt: number;
@@ -61,7 +61,7 @@ function hashRequest(body: unknown): string {
  * @returns True if already processed, along with previous response
  */
 export async function isWebhookProcessed(
-  service: 'heygen' | 'submagic' | 'stripe' | 'gohighlevel',
+  service: 'heygen' | 'synthesia' | 'submagic' | 'stripe' | 'gohighlevel',
   webhookId: string,
   brand?: string,
   requestBody?: unknown
@@ -124,7 +124,7 @@ export async function isWebhookProcessed(
  * @returns Success boolean
  */
 export async function markWebhookProcessed(
-  service: 'heygen' | 'submagic' | 'stripe' | 'gohighlevel',
+  service: 'heygen' | 'synthesia' | 'submagic' | 'stripe' | 'gohighlevel',
   webhookId: string,
   brand?: string,
   requestBody?: unknown,

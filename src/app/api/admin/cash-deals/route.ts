@@ -48,6 +48,8 @@ interface NormalizedProperty {
   cashFlow: unknown;
   sentToGHL: unknown;
   reviewedAt: string | null;
+  isLand: boolean;
+  homeType?: string;
 }
 
 interface DealsCache {
@@ -247,6 +249,9 @@ function normalizeProperty(doc: FirebaseFirestore.DocumentSnapshot, source: stri
     sentToGHL: data.sentToGHL || null,
     // Reviewed tracking
     reviewedAt: data.reviewedAt?.toDate?.()?.toISOString() || data.reviewedAt || null,
+    // Land detection
+    isLand: data.isLand || (data.homeType || data.propertyType || '').toLowerCase() === 'land' || false,
+    homeType: data.homeType || data.propertyType || undefined,
   };
 }
 
@@ -418,6 +423,9 @@ async function searchWithTypesense(params: {
         cashFlow: null,
         sentToGHL: null,
         reviewedAt: null, // Not stored in Typesense, will need to check Firestore
+        // Land detection
+        isLand: doc.isLand === true || (doc.propertyType || '').toString().toLowerCase() === 'land' || false,
+        homeType: (doc.propertyType as string) || undefined,
       };
     });
 

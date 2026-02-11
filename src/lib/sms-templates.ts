@@ -22,7 +22,7 @@ export interface PropertyMatchSMSData {
  * Format SMS message for property match notification
  */
 export function formatPropertyMatchSMS(data: PropertyMatchSMSData): string {
-  const dashboardUrl = data.dashboardUrl || 'https://ownerfi.com/dashboard';
+  const dashboardUrl = data.dashboardUrl || 'https://ownerfi.ai/dashboard';
 
   // Ensure numbers are valid for display
   const bedrooms = Math.max(0, data.bedrooms || 0);

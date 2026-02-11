@@ -34,6 +34,8 @@ interface CashDeal {
   // Investor flags
   needsWork?: boolean;
   needsWorkKeywords?: string[];
+  // Land detection
+  isLand?: boolean;
 }
 
 export async function GET(request: NextRequest) {
@@ -66,6 +68,8 @@ export async function GET(request: NextRequest) {
     const searchState = profile.preferredState || profile.state;
     const maxPrice = profile.maxPrice || 300000;
     const searchRadius = profile.searchRadius || 30;
+    const { searchParams } = new URL(request.url);
+    const excludeLand = searchParams.get('excludeLand') === 'true';
 
     if (!searchCity || !searchState) {
       return NextResponse.json({
@@ -94,6 +98,11 @@ export async function GET(request: NextRequest) {
     // Empty results from Typesense are valid - no need to double-query Firestore
     if (typesenseError) {
       deals = await searchCashDealsFirestore(searchCity, searchState, maxPrice);
+    }
+
+    // Filter out land if requested
+    if (excludeLand) {
+      deals = deals.filter(d => !d.isLand);
     }
 
     return NextResponse.json({
@@ -172,6 +181,8 @@ async function searchCashDealsTypesense(
       propertyType: (doc.propertyType as string) || 'SINGLE_FAMILY',
       // Investor flags
       needsWork,
+      // Land detection
+      isLand: doc.isLand === true || ((doc.propertyType as string) || '').toLowerCase() === 'land',
     };
   }).filter((deal: CashDeal & { needsWork?: boolean }) => {
     // Show if: under 80% ARV OR has investor keywords (needsWork)
@@ -267,6 +278,7 @@ async function searchCashDealsFirestore(
         url: (data.url as string) || (data.hdpUrl as string) || `https://www.zillow.com/homedetails/${doc.id}_zpid/`,
         needsWork,
         needsWorkKeywords: (data.needsWorkKeywords as string[]) || [],
+        isLand: data.isLand === true || ((data.homeType as string) || (data.propertyType as string) || '').toLowerCase() === 'land',
       });
     };
 

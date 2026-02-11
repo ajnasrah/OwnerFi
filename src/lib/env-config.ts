@@ -75,6 +75,9 @@ export const apiKeys = {
   // OpenAI - Script Generation
   get openai() { return requireEnv('OPENAI_API_KEY', 'OpenAI GPT script generation API key'); },
 
+  // Synthesia - Video Generation (trial)
+  get synthesia() { return optionalEnv('SYNTHESIA_API_KEY'); },
+
   // ElevenLabs - Voice Synthesis (optional)
   get elevenlabs() { return optionalEnv('ELEVENLABS_API_KEY'); },
 
@@ -213,6 +216,7 @@ export const costs = {
     submagicCredit: 0.25, // $150 / 600 videos = $0.25 per video (correct pricing)
     openaiGpt4oMiniInput: 0.15, // $0.15 per 1M input tokens
     openaiGpt4oMiniOutput: 0.60, // $0.60 per 1M output tokens
+    synthesiaCredit: 0.50, // Match HeyGen pricing assumption for trial
     latePost: 0, // Unlimited at $50/month
     r2StoragePerGB: 0.015, // $0.015 per GB/month
   },
@@ -223,6 +227,9 @@ export const costs = {
     critical: 95, // Critical alert at 95% of budget
   },
 };
+
+// Video Provider Configuration
+export const videoProvider = optionalEnv('VIDEO_PROVIDER', 'heygen') as 'heygen' | 'synthesia';
 
 // Feature Flags
 export const features = {

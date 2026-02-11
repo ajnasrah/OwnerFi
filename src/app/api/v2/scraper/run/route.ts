@@ -392,7 +392,8 @@ async function runUnifiedScraper(): Promise<{
         const filterResult = runUnifiedFilter(
           property.description,
           property.price,
-          property.estimate
+          property.estimate,
+          property.homeType
         );
         filterResults.push(filterResult);
 
@@ -450,7 +451,8 @@ async function runUnifiedScraper(): Promise<{
           metrics.savedAsCashDeal++;
 
           // Collect for Abdullah's SMS alerts (regional cash deals under 80% only)
-          if (isRegionalProperty && property.price && property.estimate) {
+          // Skip land properties - Zestimate is unreliable for land (based on SFR comps)
+          if (isRegionalProperty && property.price && property.estimate && !filterResult.isLand) {
             abdullahCashDeals.push({
               streetAddress: property.streetAddress || property.fullAddress || '',
               askingPrice: property.price,
@@ -460,29 +462,33 @@ async function runUnifiedScraper(): Promise<{
           }
 
           // Collect for investor subscriber alerts (nationwide)
-          if (property.price && property.estimate) {
+          // Skip land properties - Zestimate is unreliable for land (based on SFR comps)
+          if (property.price && property.estimate && !filterResult.isLand) {
             investorAlertDeals.push({
               streetAddress: property.streetAddress || property.fullAddress || '',
               askingPrice: property.price,
               zestimate: property.estimate,
-              zillowLink: property.url || `https://www.zillow.com/homedetails/${zpid}_zpid/`,
+              zpid: String(zpid),
               city: property.city,
               state: property.state,
+              zipCode: property.zipCode || '',
             });
           }
         }
 
         // Collect near-deals (80-90% ARV) for investor alerts with higher thresholds
-        if (!filterResult.isCashDeal && property.price && property.estimate && property.estimate > 0) {
+        // Skip land properties - Zestimate is unreliable for land
+        if (!filterResult.isCashDeal && !filterResult.isLand && property.price && property.estimate && property.estimate > 0) {
           const pctOfArv = (property.price / property.estimate) * 100;
           if (pctOfArv < 90) {
             investorAlertDeals.push({
               streetAddress: property.streetAddress || property.fullAddress || '',
               askingPrice: property.price,
               zestimate: property.estimate,
-              zillowLink: property.url || `https://www.zillow.com/homedetails/${zpid}_zpid/`,
+              zpid: String(zpid),
               city: property.city,
               state: property.state,
+              zipCode: property.zipCode || '',
             });
           }
         }
@@ -522,6 +528,7 @@ async function runUnifiedScraper(): Promise<{
           latitude: property.latitude,
           longitude: property.longitude,
           propertyType: (property.homeType || 'other') as any,
+          isLand: filterResult.isLand || false,
           bedrooms: property.bedrooms || 0,
           bathrooms: property.bathrooms || 0,
           squareFeet: property.squareFoot,
@@ -680,7 +687,7 @@ async function runUnifiedScraper(): Promise<{
     console.log('\n[STEP 8] Triggering buyer notifications for owner finance properties...');
 
     if (ownerFinancePropertiesForNotification.length > 0) {
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://ownerfi.com';
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://ownerfi.ai';
       let notificationsSent = 0;
       let notificationsFailed = 0;
 

@@ -33,6 +33,9 @@ export interface FilterResult {
   needsWork: boolean;
   needsWorkKeywords: string[];
 
+  // Land detection
+  isLand: boolean;
+
   // UNIFIED: Deal types array for single collection
   dealTypes: ('owner_finance' | 'cash_deal')[];
   isOwnerFinance: boolean;
@@ -49,12 +52,16 @@ export interface FilterResult {
 
 /**
  * Run both filters on a property
+ * @param homeType - Normalized home type (e.g. 'land', 'single-family'). Used to flag land properties.
  */
 export function runUnifiedFilter(
   description: string | null | undefined,
   price: number | undefined,
-  zestimate: number | undefined
+  zestimate: number | undefined,
+  homeType?: string
 ): FilterResult {
+  // ===== LAND DETECTION =====
+  const isLand = homeType === 'land';
   // ===== OWNER FINANCE FILTER =====
   const ownerFinanceResult = hasStrictOwnerFinancing(description);
   const negativeResult = hasNegativeKeywords(description);
@@ -125,6 +132,9 @@ export function runUnifiedFilter(
     eightyPercentOfZestimate,
     needsWork,
     needsWorkKeywords,
+
+    // Land detection
+    isLand,
 
     // UNIFIED: New fields for single collection
     dealTypes,

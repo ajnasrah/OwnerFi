@@ -192,7 +192,25 @@ async function handleDealAlertCheckoutCompleted(session: Stripe.Checkout.Session
     throw new Error(`Missing userId for deal alert checkout. Session: ${session.id}`);
   }
 
+  const subscriptionId = typeof subscription === 'string' ? subscription : (subscription as Stripe.Subscription | null)?.id;
+
   try {
+    // Idempotency: skip if already processed
+    if (subscriptionId) {
+      const existing = await FirebaseDB.queryDocuments(
+        'buyerProfiles',
+        [{ field: 'dealAlertSubscription.stripeSubscriptionId', operator: '==', value: subscriptionId }],
+        1
+      );
+      if (existing.length > 0) {
+        const sub = (existing[0] as Record<string, unknown>).dealAlertSubscription as Record<string, unknown> | undefined;
+        if (sub?.status === 'active') {
+          console.log(`[STRIPE] Deal alert checkout already processed for subscription ${subscriptionId}, skipping`);
+          return;
+        }
+      }
+    }
+
     // Find the buyer profile by userId
     const buyers = await FirebaseDB.queryDocuments(
       'buyerProfiles',
@@ -206,7 +224,23 @@ async function handleDealAlertCheckoutCompleted(session: Stripe.Checkout.Session
     }
 
     const buyer = buyers[0] as Record<string, unknown>;
-    const subscriptionId = typeof subscription === 'string' ? subscription : (subscription as Stripe.Subscription | null)?.id;
+
+    // Fetch full subscription to get current_period_end (next billing date)
+    // In Stripe basil API, current_period_end is on items.data[0], not the subscription root
+    const stripe = getStripe();
+    let currentPeriodEnd: Date | null = null;
+    if (subscriptionId) {
+      try {
+        const fullSubscription = await stripe.subscriptions.retrieve(subscriptionId);
+        const subJson = JSON.parse(JSON.stringify(fullSubscription));
+        const periodEnd = subJson?.items?.data?.[0]?.current_period_end as number | undefined;
+        if (periodEnd) {
+          currentPeriodEnd = new Date(periodEnd * 1000);
+        }
+      } catch (e) {
+        console.warn('[STRIPE] Could not retrieve subscription for period end:', e);
+      }
+    }
 
     const updateData: Record<string, unknown> = {
       dealAlertSubscription: {
@@ -214,6 +248,7 @@ async function handleDealAlertCheckoutCompleted(session: Stripe.Checkout.Session
         stripeCustomerId: customer,
         stripeSubscriptionId: subscriptionId,
         subscribedAt: new Date(),
+        ...(currentPeriodEnd && { currentPeriodEnd }),
       },
       updatedAt: new Date(),
     };

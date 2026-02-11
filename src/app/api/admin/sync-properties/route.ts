@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { parse } from 'csv-parse/sync';
 import admin from 'firebase-admin';
 import { validatePropertyFinancials, calculateMissingFinancials } from '@/lib/property-validation';
+import { requireRole } from '@/lib/auth-helpers';
 
 // Initialize Firebase Admin
 if (admin.apps.length === 0) {
@@ -48,6 +49,9 @@ interface CSVRow {
 }
 
 export async function POST(request: NextRequest) {
+  const authResult = await requireRole(request, 'admin');
+  if ('error' in authResult) return authResult.error;
+
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File;

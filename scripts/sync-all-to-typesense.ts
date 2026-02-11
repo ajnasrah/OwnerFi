@@ -12,6 +12,9 @@ const Typesense = require('typesense');
 
 dotenv.config({ path: '.env.local' });
 
+// All raw Zillow homeType values that represent land
+const LAND_TYPES = new Set(['land', 'lot', 'lots', 'vacant_land', 'farm', 'ranch']);
+
 // Initialize Firebase
 admin.initializeApp({
   credential: admin.credential.cert({
@@ -140,7 +143,7 @@ function transformForTypesense(id: string, data: FirestoreProperty) {
     isActive: data.isActive !== false,
     ownerFinanceVerified: data.isOwnerFinance || data.ownerFinanceVerified || false,
     needsWork: data.needsWork || false,
-    isLand: data.isLand || (data.homeType || data.propertyType || '').toLowerCase() === 'land' || false,
+    isLand: data.isLand || LAND_TYPES.has((data.homeType || data.propertyType || '').toLowerCase()) || false,
     homeStatus: data.homeStatus || undefined,
     sourceType: data.source || undefined,
     propertyType: data.homeType || data.propertyType || 'other',

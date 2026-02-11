@@ -9,6 +9,9 @@ import { getTypesenseAdminClient, TYPESENSE_COLLECTIONS } from './client';
 import { UnifiedProperty } from '../unified-property-schema';
 import { Timestamp } from 'firebase/firestore';
 
+// All raw Zillow homeType values that represent land
+const LAND_TYPES = new Set(['land', 'lot', 'lots', 'vacant_land', 'farm', 'ranch']);
+
 // ============================================
 // TRANSFORM PROPERTY FOR TYPESENSE
 // ============================================
@@ -417,7 +420,7 @@ export async function indexRawFirestoreProperty(
       isActive: data.isActive !== false && data.status !== 'inactive',
       ownerFinanceVerified: data.ownerFinanceVerified || false,
       needsWork: data.needsWork || false,
-      isLand: data.isLand || (data.homeType || data.propertyType || '').toLowerCase() === 'land' || false,
+      isLand: data.isLand || LAND_TYPES.has((data.homeType || data.propertyType || '').toLowerCase()) || false,
       manuallyVerified: data.manuallyVerified || false,
       homeStatus: data.homeStatus || data.status || undefined,
       // Metadata

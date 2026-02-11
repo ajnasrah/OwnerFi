@@ -3,8 +3,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, query, where } from 'firebase/firestore';
+import { requireRole } from '@/lib/auth-helpers';
 
-export async function GET(_request: NextRequest) {
+export async function GET(request: NextRequest) {
+  const authResult = await requireRole(request, 'admin');
+  if ('error' in authResult) return authResult.error;
+
   try {
     if (!db) {
       return NextResponse.json({ error: 'Firebase not initialized' }, { status: 500 });

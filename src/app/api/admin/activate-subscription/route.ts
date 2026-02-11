@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { 
+import {
   doc,
   updateDoc,
   setDoc,
@@ -7,8 +7,12 @@ import {
 } from 'firebase/firestore';
 import { getSafeDb } from '@/lib/firebase-safe';
 import { firestoreHelpers } from '@/lib/firestore';
+import { requireRole } from '@/lib/auth-helpers';
 
 export async function POST(request: NextRequest) {
+  const authResult = await requireRole(request, 'admin');
+  if ('error' in authResult) return authResult.error;
+
   try {
     const { realtorId, plan, creditsToAdd } = await request.json();
     

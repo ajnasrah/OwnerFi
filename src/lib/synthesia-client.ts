@@ -3,12 +3,14 @@
  *
  * Mirrors heygen-client.ts pattern for the Synthesia trial.
  *
- * Synthesia API Reference:
+ * Synthesia API Reference (confirmed via live testing):
  * - Create video: POST https://api.synthesia.io/v2/videos
- * - Get video: GET https://api.synthesia.io/v2/videos/{id}
- * - List avatars: GET https://api.synthesia.io/v2/avatars
- * - List voices: GET https://api.synthesia.io/v2/voices
- * - Auth: Authorization: Bearer {API_KEY}
+ * - Get video:    GET  https://api.synthesia.io/v2/videos/{id}
+ * - List videos:  GET  https://api.synthesia.io/v2/videos
+ * - Auth: Authorization: {API_KEY}  (NO "Bearer" prefix)
+ *
+ * Required input fields per clip: avatar, scriptText
+ * Optional: background, avatarSettings.voice (UUID), etc.
  *
  * Webhook delivers:
  * { type: "video.completed", data: { id, status, download, callbackId, duration } }
@@ -31,8 +33,8 @@ const SYNTHESIA_API_BASE = 'https://api.synthesia.io/v2';
 
 export interface SynthesiaClip {
   avatarId: string;
-  voiceId: string;
   scriptText: string;
+  voiceId?: string; // Optional UUID — omit to use avatar's default voice
 }
 
 export interface SynthesiaVideoRequest {
@@ -67,7 +69,7 @@ function getSynthesiaHeaders(): Record<string, string> {
     throw new Error('SYNTHESIA_API_KEY not configured');
   }
   return {
-    'Authorization': `Bearer ${key}`,
+    'Authorization': key,
     'Content-Type': 'application/json',
     'Accept': 'application/json',
   };
@@ -132,26 +134,31 @@ export async function generateSynthesiaVideo(
 
     console.log(`[${brand}] Synthesia quota check passed`);
 
-    // 2. Build API request body (per Synthesia API v2 docs)
-    // voice goes inside avatarSettings, not top-level
-    const apiBody = {
+    // 2. Build API request body
+    // background is required by the API — "default" uses the avatar's built-in background
+    const apiBody: Record<string, unknown> = {
       title: request.title,
-      input: request.clips.map(clip => ({
-        avatar: clip.avatarId,
-        scriptText: clip.scriptText,
-        avatarSettings: {
-          voice: clip.voiceId,
-          horizontalAlign: 'center',
-          scale: 1,
-          style: 'rectangular',
-          seamless: false,
-        },
-      })),
+      input: request.clips.map(clip => {
+        const inputItem: Record<string, unknown> = {
+          avatar: clip.avatarId,
+          scriptText: clip.scriptText,
+          background: 'default',
+        };
+
+        if (clip.voiceId) {
+          inputItem.avatarSettings = { voice: clip.voiceId };
+        }
+
+        return inputItem;
+      }),
       aspectRatio: request.aspectRatio,
       test: false,
       visibility: 'private',
-      ...(request.callbackId ? { callbackId: request.callbackId } : {}),
     };
+
+    if (request.callbackId) {
+      apiBody.callbackId = request.callbackId;
+    }
 
     console.log(`[${brand}] Generating Synthesia video...`);
 
@@ -169,7 +176,7 @@ export async function generateSynthesiaVideo(
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       const errorMsg = errorData.message || errorData.error || `HTTP ${response.status}`;
-      console.error(`Synthesia API error: ${errorMsg}`);
+      console.error(`Synthesia API error: ${errorMsg}`, JSON.stringify(errorData));
       return { success: false, error: `Synthesia API error: ${errorMsg}` };
     }
 
@@ -242,64 +249,6 @@ export async function getSynthesiaVideoStatus(videoId: string): Promise<Synthesi
 }
 
 // ============================================================================
-// Avatars & Voices
-// ============================================================================
-
-/**
- * List available Synthesia avatars
- */
-export async function getSynthesiaAvatars(): Promise<any[]> {
-  try {
-    const response = await fetchWithTimeout(
-      `${SYNTHESIA_API_BASE}/avatars`,
-      {
-        method: 'GET',
-        headers: getSynthesiaHeaders(),
-      },
-      TIMEOUTS.SYNTHESIA_API
-    );
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Synthesia avatars API error: ${response.status} - ${errorText}`);
-    }
-
-    const data = await response.json();
-    return data.avatars || data || [];
-  } catch (error) {
-    console.error('Error fetching Synthesia avatars:', error);
-    return [];
-  }
-}
-
-/**
- * List available Synthesia voices
- */
-export async function getSynthesiaVoices(): Promise<any[]> {
-  try {
-    const response = await fetchWithTimeout(
-      `${SYNTHESIA_API_BASE}/voices`,
-      {
-        method: 'GET',
-        headers: getSynthesiaHeaders(),
-      },
-      TIMEOUTS.SYNTHESIA_API
-    );
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Synthesia voices API error: ${response.status} - ${errorText}`);
-    }
-
-    const data = await response.json();
-    return data.voices || data || [];
-  } catch (error) {
-    console.error('Error fetching Synthesia voices:', error);
-    return [];
-  }
-}
-
-// ============================================================================
 // Exports
 // ============================================================================
 
@@ -307,6 +256,4 @@ export default {
   checkSynthesiaQuota,
   generateSynthesiaVideo,
   getSynthesiaVideoStatus,
-  getSynthesiaAvatars,
-  getSynthesiaVoices,
 };

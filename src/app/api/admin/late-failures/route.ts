@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getFirestore } from 'firebase-admin/firestore';
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
+import { requireRole } from '@/lib/auth-helpers';
 
 // Initialize Firebase Admin
 if (getApps().length === 0) {
@@ -45,6 +46,9 @@ interface LateFailure {
  * GET - Fetch all Late posting failures
  */
 export async function GET(request: NextRequest) {
+  const authResult = await requireRole(request, 'admin');
+  if ('error' in authResult) return authResult.error;
+
   try {
     const { searchParams } = new URL(request.url);
     const brand = searchParams.get('brand');
@@ -135,6 +139,9 @@ export async function GET(request: NextRequest) {
  * POST - Log a new Late posting failure
  */
 export async function POST(request: NextRequest) {
+  const authResult = await requireRole(request, 'admin');
+  if ('error' in authResult) return authResult.error;
+
   try {
     const body = await request.json();
 

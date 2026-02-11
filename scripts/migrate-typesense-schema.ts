@@ -170,8 +170,9 @@ async function backfillIsLand() {
 
   snapshot.docs.forEach((doc: any) => {
     const data = doc.data();
+    const LAND_TYPES = new Set(['land', 'lot', 'lots', 'vacant_land', 'farm', 'ranch']);
     const isLand = data.isLand === true
-      || (data.homeType || data.propertyType || '').toLowerCase() === 'land';
+      || LAND_TYPES.has((data.homeType || data.propertyType || '').toLowerCase());
 
     if (isLand) landCount++;
     updates.push({ id: doc.id, isLand });

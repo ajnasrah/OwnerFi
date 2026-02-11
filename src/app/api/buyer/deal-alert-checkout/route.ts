@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth-helpers';
+import { FirebaseDB } from '@/lib/firebase-db';
 import Stripe from 'stripe';
 
 function getStripe() {
@@ -20,13 +21,39 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
+    // Check for existing active subscription (prevent double-charging)
+    const buyers = await FirebaseDB.queryDocuments(
+      'buyerProfiles',
+      [{ field: 'userId', operator: '==', value: session.user.id }],
+      1
+    );
+
+    let existingCustomerId: string | undefined;
+    if (buyers.length > 0) {
+      const buyer = buyers[0] as Record<string, unknown>;
+      const dealAlertSub = buyer.dealAlertSubscription as Record<string, unknown> | undefined;
+      if (dealAlertSub?.status === 'active') {
+        return NextResponse.json(
+          { error: 'You already have an active deal alert subscription' },
+          { status: 409 }
+        );
+      }
+      // Reuse existing Stripe customer for resubscribe (avoids duplicate customers)
+      existingCustomerId = dealAlertSub?.stripeCustomerId as string | undefined;
+    }
+
     const { successUrl, cancelUrl } = await request.json();
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXTAUTH_URL;
+
+    // Use existing customer ID if available, otherwise use email
+    const customerParams: { customer?: string; customer_email?: string } = existingCustomerId
+      ? { customer: existingCustomerId }
+      : { customer_email: session.user.email };
 
     const checkoutSession = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       mode: 'subscription',
-      customer_email: session.user.email,
+      ...customerParams,
       metadata: {
         userId: session.user.id,
         userEmail: session.user.email,
@@ -47,6 +74,8 @@ export async function POST(request: NextRequest) {
       success_url: successUrl || `${baseUrl}/dashboard/investor?subscription=success`,
       cancel_url: cancelUrl || `${baseUrl}/dashboard/investor?subscription=cancelled`,
     });
+
+    console.log(`[DEAL-ALERT-CHECKOUT] Session created for user ${session.user.id}: ${checkoutSession.id}`);
 
     return NextResponse.json({
       checkoutUrl: checkoutSession.url,

@@ -1,12 +1,16 @@
-import { NextResponse } from 'next/server';
-import { 
-  collection, 
-  query, 
+import { NextRequest, NextResponse } from 'next/server';
+import {
+  collection,
+  query,
   getDocs
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { requireRole } from '@/lib/auth-helpers';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const authResult = await requireRole(request, 'admin');
+  if ('error' in authResult) return authResult.error;
+
   try {
     if (!db) {
       return NextResponse.json(

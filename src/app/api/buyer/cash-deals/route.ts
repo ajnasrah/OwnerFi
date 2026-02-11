@@ -12,6 +12,9 @@ import { ErrorResponses, logError } from '@/lib/api-error-handler';
  * Uses Typesense for fast search with Firestore fallback.
  */
 
+// All raw Zillow homeType values that represent land
+const LAND_TYPES = new Set(['land', 'lot', 'lots', 'vacant_land', 'farm', 'ranch']);
+
 interface CashDeal {
   id: string;
   address: string;
@@ -182,7 +185,7 @@ async function searchCashDealsTypesense(
       // Investor flags
       needsWork,
       // Land detection
-      isLand: doc.isLand === true || ((doc.propertyType as string) || '').toLowerCase() === 'land',
+      isLand: doc.isLand === true || LAND_TYPES.has(((doc.propertyType as string) || '').toLowerCase()),
     };
   }).filter((deal: CashDeal & { needsWork?: boolean }) => {
     // Show if: under 80% ARV OR has investor keywords (needsWork)
@@ -278,7 +281,7 @@ async function searchCashDealsFirestore(
         url: (data.url as string) || (data.hdpUrl as string) || `https://www.zillow.com/homedetails/${doc.id}_zpid/`,
         needsWork,
         needsWorkKeywords: (data.needsWorkKeywords as string[]) || [],
-        isLand: data.isLand === true || ((data.homeType as string) || (data.propertyType as string) || '').toLowerCase() === 'land',
+        isLand: data.isLand === true || LAND_TYPES.has(((data.homeType as string) || (data.propertyType as string) || '').toLowerCase()),
       });
     };
 

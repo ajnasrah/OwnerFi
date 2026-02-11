@@ -8,9 +8,10 @@
  * - Added within the last X minutes
  */
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getAdminDb } from '@/lib/firebase-admin';
 import { getCitiesWithinRadiusComprehensive } from '@/lib/comprehensive-cities';
+import { requireRole } from '@/lib/auth-helpers';
 
 // Memphis surrounding cities within 50 miles
 const MEMPHIS_CITIES = new Set<string>();
@@ -34,7 +35,10 @@ function initMemphisCities() {
 // Track last check time per client (in-memory, resets on deploy)
 const lastCheckTimes = new Map<string, number>();
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
+  const authResult = await requireRole(request, 'admin');
+  if ('error' in authResult) return authResult.error;
+
   try {
     const { searchParams } = new URL(request.url);
     const clientId = searchParams.get('clientId') || 'default';

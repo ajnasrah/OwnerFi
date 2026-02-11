@@ -237,7 +237,9 @@ export async function POST(request: NextRequest) {
       minPrice,
       maxPrice,
       // Deal alert preferences
-      arvThreshold
+      arvThreshold,
+      // Search radius
+      searchRadius: rawSearchRadius
     } = body;
 
     // Validate required fields
@@ -258,11 +260,16 @@ export async function POST(request: NextRequest) {
     const existing = await getDocs(existingQuery);
     const existingProfile = existing.empty ? null : existing.docs[0].data();
 
+    // Compute search radius (use provided value, fallback to existing, default 30)
+    const searchRadius = rawSearchRadius !== undefined
+      ? Math.min(100, Math.max(10, Number(rawSearchRadius) || 30))
+      : existingProfile?.searchRadius || 30;
+
     // 🆕 Generate or update pre-computed filter (only if needed)
     let filter: any; // eslint-disable-line @typescript-eslint/no-explicit-any
-    if (shouldUpdateFilter(city, state, existingProfile?.filter)) {
-      console.log(`🔧 [PROFILE] Generating new filter for ${city}, ${state}`);
-      filter = await generateBuyerFilter(city, state, 30);
+    if (shouldUpdateFilter(city, state, existingProfile?.filter, searchRadius)) {
+      console.log(`🔧 [PROFILE] Generating new filter for ${city}, ${state} (${searchRadius}mi radius)`);
+      filter = await generateBuyerFilter(city, state, searchRadius);
       console.log(`✅ [PROFILE] Filter generated: ${filter.nearbyCitiesCount} nearby cities`);
     } else {
       console.log('✅ [PROFILE] Using existing valid filter');
@@ -291,7 +298,7 @@ export async function POST(request: NextRequest) {
       preferredState: state,
       city: city,                    // API compatibility
       state: state,                  // API compatibility
-      searchRadius: 25,
+      searchRadius,
 
       // User type flags
       ...(isRealtor !== undefined && { isRealtor: isRealtor === true }),

@@ -235,7 +235,8 @@ function generateGeohash(lat: number, lng: number, precision: number = 3): strin
 export function shouldUpdateFilter(
   currentCity: string,
   currentState: string,
-  storedFilter?: BuyerProfile['filter']
+  storedFilter?: BuyerProfile['filter'],
+  requestedRadius?: number,
 ): boolean {
   // No filter exists
   if (!storedFilter || !storedFilter.nearbyCities) {
@@ -249,6 +250,12 @@ export function shouldUpdateFilter(
 
   if (!cityNames.has(searchCityLower)) {
     console.log(`🔄 [FILTER] User moved from ${storedFilter.nearbyCities[0]} to ${currentCity}, needs update`);
+    return true;
+  }
+
+  // Check if radius changed
+  if (requestedRadius && storedFilter.radiusMiles !== requestedRadius) {
+    console.log(`🔄 [FILTER] Radius changed from ${storedFilter.radiusMiles} to ${requestedRadius}, needs update`);
     return true;
   }
 

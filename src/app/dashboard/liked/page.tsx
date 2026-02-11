@@ -371,15 +371,14 @@ export default function LikedProperties() {
                         REMOVE
                       </button>
 
-                      <button
-                        onClick={() => {
-                          const message = `I'm interested in the property at ${property.address}, ${property.city}, ${property.state}. Found through OwnerFi.`;
-                          window.open(`sms:+1234567890&body=${encodeURIComponent(message)}`, '_self');
-                        }}
-                        className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white py-2 px-3 rounded-lg transition-all hover:scale-105 font-bold text-sm"
+                      <a
+                        href={`https://www.zillow.com/homedetails/${property.id}_zpid/`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white py-2 px-3 rounded-lg transition-all hover:scale-105 font-bold text-sm text-center"
                       >
                         CONTACT
-                      </button>
+                      </a>
 
                       <button
                         onClick={() => {

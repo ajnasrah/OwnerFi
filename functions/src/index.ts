@@ -12,6 +12,9 @@ import Typesense from 'typesense';
 // Initialize Firebase Admin
 initializeApp();
 
+// All raw Zillow homeType values that represent land
+const LAND_TYPES = new Set(['land', 'lot', 'lots', 'vacant_land', 'farm', 'ranch']);
+
 // Get Typesense config from environment
 const typesenseConfig = {
   host: process.env.TYPESENSE_HOST || '',
@@ -86,7 +89,7 @@ function transformToTypesense(docId: string, data: FirebaseFirestore.DocumentDat
     rentEstimate,
     percentOfArv: data.percentOfArv || undefined,
     needsWork: data.needsWork || undefined,
-    isLand: data.isLand || (data.homeType || data.propertyType || '').toLowerCase() === 'land' || false,
+    isLand: data.isLand || LAND_TYPES.has((data.homeType || data.propertyType || '').toLowerCase()) || false,
     manuallyVerified: data.manuallyVerified || undefined,
     sourceType: data.source || undefined,
   };

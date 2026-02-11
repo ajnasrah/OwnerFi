@@ -550,13 +550,11 @@ export const PropertyCard = React.memo(function PropertyCard({ property, isFavor
                       </div>
                     </a>
 
-                    <button
-                      onClick={() => {
-                        const message = `I'm interested in the property at ${property.address}, ${property.city}, ${property.state}. Found through OwnerFi.`;
-                        const phone = property.agentPhone || ((property as Record<string, unknown>).phone as string | undefined) || '+1234567890';
-                        window.open(`sms:${phone}&body=${encodeURIComponent(message)}`, '_self');
-                      }}
-                      className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white py-2.5 px-3 rounded-xl font-bold text-sm shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-95 transition-all"
+                    <a
+                      href={property.agentPhone ? `sms:${property.agentPhone}&body=${encodeURIComponent(`I'm interested in the property at ${property.address}, ${property.city}, ${property.state}. Found through OwnerFi.`)}` : `https://www.zillow.com/homedetails/${property.id}_zpid/`}
+                      target={property.agentPhone ? '_self' : '_blank'}
+                      rel={property.agentPhone ? undefined : 'noopener noreferrer'}
+                      className="block w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white py-2.5 px-3 rounded-xl font-bold text-sm shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-95 transition-all"
                       title={AGENT_CONTACT_DISCLAIMER}
                     >
                       <div className="flex items-center justify-center gap-1.5">
@@ -565,7 +563,7 @@ export const PropertyCard = React.memo(function PropertyCard({ property, isFavor
                         </svg>
                         <span>Contact</span>
                       </div>
-                    </button>
+                    </a>
 
                     {/* Share Button */}
                     <button

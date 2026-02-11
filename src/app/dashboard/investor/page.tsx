@@ -23,6 +23,8 @@ interface ProfileData {
   likedPropertyIds?: string[];
   dealAlertStatus?: 'active' | 'canceled' | 'payment_failed';
   arvThreshold?: number;
+  dealAlertSubscribedAt?: string;
+  dealAlertCurrentPeriodEnd?: string;
 }
 
 export default function InvestorDashboard() {
@@ -51,6 +53,7 @@ export default function InvestorDashboard() {
   // Subscription
   const [subscribing, setSubscribing] = useState(false);
   const [subscriptionSuccess, setSubscriptionSuccess] = useState(false);
+  const [canceling, setCanceling] = useState(false);
 
   // Filters
   const [activeFilter, setActiveFilter] = useState<QuickFilter>('all');
@@ -69,20 +72,45 @@ export default function InvestorDashboard() {
 
   // Handle subscription success from Stripe redirect
   useEffect(() => {
-    if (searchParams.get('subscription') === 'success') {
+    const subParam = searchParams.get('subscription');
+    if (subParam === 'success') {
       setSubscriptionSuccess(true);
       // Clean URL
       const url = new URL(window.location.href);
       url.searchParams.delete('subscription');
       window.history.replaceState({}, '', url.toString());
-      // Auto-dismiss after 5 seconds
-      setTimeout(() => setSubscriptionSuccess(false), 5000);
+      // Poll profile until webhook processes (up to 10 seconds)
+      let attempts = 0;
+      const maxAttempts = 5;
+      const pollInterval = setInterval(async () => {
+        attempts++;
+        try {
+          const res = await fetch('/api/buyer/profile');
+          const data = await res.json();
+          if (data.profile?.dealAlertSubscription?.status === 'active' || attempts >= maxAttempts) {
+            clearInterval(pollInterval);
+            loadProfile();
+          }
+        } catch {
+          if (attempts >= maxAttempts) {
+            clearInterval(pollInterval);
+            loadProfile();
+          }
+        }
+      }, 2000);
     }
+    if (subParam === 'cancelled') {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('subscription');
+      window.history.replaceState({}, '', url.toString());
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
   // Subscription handlers
   const handleSubscribe = async () => {
     setSubscribing(true);
+    setError(null);
     try {
       const res = await fetch('/api/buyer/deal-alert-checkout', {
         method: 'POST',
@@ -92,6 +120,11 @@ export default function InvestorDashboard() {
       const data = await res.json();
       if (data.checkoutUrl) {
         window.location.href = data.checkoutUrl;
+      } else if (res.status === 409) {
+        // Already subscribed — reload to show current state
+        loadProfile();
+      } else {
+        setError(data.error || 'Failed to start checkout');
       }
     } catch {
       setError('Failed to start checkout. Please try again.');
@@ -109,6 +142,25 @@ export default function InvestorDashboard() {
       }
     } catch {
       setError('Failed to open billing portal. Please try again.');
+    }
+  };
+
+  const handleCancelSubscription = async () => {
+    if (!confirm('Cancel your Deal Alert SMS subscription? You\'ll stop receiving alerts immediately.')) return;
+    setCanceling(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/buyer/deal-alert-cancel', { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        loadProfile();
+      } else {
+        setError(data.error || 'Failed to cancel subscription');
+      }
+    } catch {
+      setError('Failed to cancel subscription');
+    } finally {
+      setCanceling(false);
     }
   };
 
@@ -148,6 +200,16 @@ export default function InvestorDashboard() {
         dealTypePreference: data.profile.dealTypePreference || 'all',
         likedPropertyIds: data.profile.likedPropertyIds || [],
         dealAlertStatus: data.profile.dealAlertSubscription?.status,
+        dealAlertSubscribedAt: data.profile.dealAlertSubscription?.subscribedAt?._seconds
+          ? new Date(data.profile.dealAlertSubscription.subscribedAt._seconds * 1000).toLocaleDateString()
+          : data.profile.dealAlertSubscription?.subscribedAt
+            ? new Date(data.profile.dealAlertSubscription.subscribedAt).toLocaleDateString()
+            : undefined,
+        dealAlertCurrentPeriodEnd: data.profile.dealAlertSubscription?.currentPeriodEnd?._seconds
+          ? new Date(data.profile.dealAlertSubscription.currentPeriodEnd._seconds * 1000).toLocaleDateString()
+          : data.profile.dealAlertSubscription?.currentPeriodEnd
+            ? new Date(data.profile.dealAlertSubscription.currentPeriodEnd).toLocaleDateString()
+            : undefined,
         arvThreshold: data.profile.arvThreshold,
       };
 
@@ -388,69 +450,133 @@ export default function InvestorDashboard() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-4">
-        {/* Subscription Success Banner */}
-        {subscriptionSuccess && (
-          <div className="mb-4 bg-gradient-to-r from-emerald-900/40 to-emerald-800/20 border border-emerald-500/40 rounded-xl p-3 flex items-center gap-2">
-            <span className="text-emerald-400 text-sm font-semibold">Deal Alert SMS activated! You&apos;ll receive texts when deals match your threshold.</span>
-          </div>
-        )}
-
         {/* Deal Alert Subscription Card */}
-        <div className={`mb-4 bg-gradient-to-r ${
-          profile?.dealAlertStatus === 'payment_failed'
-            ? 'from-red-900/30 to-slate-800/50 border-red-500/30'
-            : 'from-emerald-900/30 to-slate-800/50 border-emerald-500/30'
-        } border rounded-xl p-4`}>
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-white font-bold text-sm flex items-center gap-2">
-                Deal Alert SMS
-                {profile?.dealAlertStatus === 'active' && (
+        {profile?.dealAlertStatus === 'active' ? (
+          /* ── Active subscription ── */
+          <div className="mb-4 bg-gradient-to-r from-emerald-900/30 to-slate-800/50 border border-emerald-500/30 rounded-xl p-4">
+            {subscriptionSuccess && (
+              <div className="mb-3 bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-2.5 flex items-center justify-between">
+                <span className="text-emerald-400 text-xs font-semibold">Deal Alert SMS activated! You&apos;ll receive texts when new deals appear.</span>
+                <button onClick={() => setSubscriptionSuccess(false)} className="text-emerald-400/60 hover:text-emerald-400 text-xs ml-2">✕</button>
+              </div>
+            )}
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <h3 className="text-white font-bold text-sm flex items-center gap-2">
+                  Deal Alert SMS
                   <span className="bg-emerald-500/20 text-emerald-400 text-[10px] px-2 py-0.5 rounded-full font-semibold">ACTIVE</span>
-                )}
-                {profile?.dealAlertStatus === 'payment_failed' && (
-                  <span className="bg-red-500/20 text-red-400 text-[10px] px-2 py-0.5 rounded-full font-semibold">PAYMENT FAILED</span>
-                )}
-              </h3>
-              <p className="text-slate-400 text-xs mt-0.5">
-                {profile?.dealAlertStatus === 'active'
-                  ? `Alerts for deals under ${profile?.arvThreshold || 85}% of ARV`
-                  : profile?.dealAlertStatus === 'payment_failed'
-                    ? 'Your payment failed. Update your payment method to continue receiving alerts.'
-                    : subscriptionSuccess
-                      ? 'Activating your subscription...'
-                      : 'Get instant SMS alerts when investment deals below your ARV threshold appear'}
-              </p>
+                </h3>
+                <p className="text-slate-400 text-xs mt-1">
+                  You&apos;ll get an SMS when deals under <span className="text-white font-medium">{profile?.arvThreshold || 85}% of ARV</span> appear in <span className="text-white font-medium">{profile?.city}</span>.
+                </p>
+                <div className="flex items-center gap-3 mt-2 text-[11px] text-slate-500 flex-wrap">
+                  <span>$5/month</span>
+                  {profile?.dealAlertSubscribedAt && (
+                    <>
+                      <span>·</span>
+                      <span>Since {profile.dealAlertSubscribedAt}</span>
+                    </>
+                  )}
+                  {profile?.dealAlertCurrentPeriodEnd && (
+                    <>
+                      <span>·</span>
+                      <span>Next billing: {profile.dealAlertCurrentPeriodEnd}</span>
+                    </>
+                  )}
+                </div>
+              </div>
+              <div className="flex flex-col items-end gap-1.5 ml-3">
+                <button
+                  onClick={handleManageSubscription}
+                  className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-white text-xs font-semibold rounded-lg transition-all"
+                >
+                  Manage Billing
+                </button>
+                <button
+                  onClick={handleCancelSubscription}
+                  disabled={canceling}
+                  className="text-red-400/70 hover:text-red-400 text-[11px] transition-colors disabled:opacity-50"
+                >
+                  {canceling ? 'Canceling...' : 'Cancel Subscription'}
+                </button>
+              </div>
             </div>
-            {profile?.dealAlertStatus === 'active' ? (
-              <button
-                onClick={handleManageSubscription}
-                className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-white text-xs font-semibold rounded-lg transition-all"
-              >
-                Manage
-              </button>
-            ) : profile?.dealAlertStatus === 'payment_failed' ? (
+          </div>
+        ) : profile?.dealAlertStatus === 'payment_failed' ? (
+          /* ── Payment failed ── */
+          <div className="mb-4 bg-gradient-to-r from-red-900/30 to-slate-800/50 border border-red-500/30 rounded-xl p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-white font-bold text-sm flex items-center gap-2">
+                  Deal Alert SMS
+                  <span className="bg-red-500/20 text-red-400 text-[10px] px-2 py-0.5 rounded-full font-semibold">PAYMENT FAILED</span>
+                </h3>
+                <p className="text-slate-400 text-xs mt-0.5">Your payment failed. Update your payment method to continue receiving alerts.</p>
+              </div>
               <button
                 onClick={handleManageSubscription}
                 className="px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white text-xs font-semibold rounded-lg transition-all"
               >
                 Fix Payment
               </button>
-            ) : subscriptionSuccess ? (
-              <span className="px-3 py-1.5 text-emerald-400 text-xs font-semibold animate-pulse">
-                Activating...
-              </span>
-            ) : (
+            </div>
+          </div>
+        ) : profile?.dealAlertStatus === 'canceled' ? (
+          /* ── Canceled subscription ── */
+          <div className="mb-4 bg-gradient-to-r from-amber-900/20 to-slate-800/50 border border-amber-500/30 rounded-xl p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-white font-bold text-sm flex items-center gap-2">
+                  Deal Alert SMS
+                  <span className="bg-amber-500/20 text-amber-400 text-[10px] px-2 py-0.5 rounded-full font-semibold">CANCELED</span>
+                </h3>
+                <p className="text-slate-400 text-xs mt-0.5">
+                  Your subscription has been canceled. You won&apos;t be charged again.
+                </p>
+                {profile?.dealAlertCurrentPeriodEnd && (
+                  <p className="text-slate-500 text-[11px] mt-1">
+                    Alerts were active until {profile.dealAlertCurrentPeriodEnd}
+                  </p>
+                )}
+              </div>
               <button
                 onClick={handleSubscribe}
                 disabled={subscribing}
                 className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-lg transition-all disabled:opacity-50"
               >
-                {subscribing ? 'Loading...' : '$5/mo'}
+                {subscribing ? 'Loading...' : 'Resubscribe'}
               </button>
-            )}
+            </div>
           </div>
-        </div>
+        ) : (
+          /* ── Not subscribed ── */
+          <div className="mb-4 bg-gradient-to-r from-emerald-900/30 to-slate-800/50 border border-emerald-500/30 rounded-xl p-4">
+            {subscriptionSuccess && (
+              <div className="mb-3 bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-2.5">
+                <span className="text-emerald-400 text-xs font-semibold animate-pulse">Activating your subscription...</span>
+              </div>
+            )}
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-white font-bold text-sm">Deal Alert SMS</h3>
+                <p className="text-slate-400 text-xs mt-0.5">Get instant SMS alerts when investment deals below your ARV threshold appear</p>
+              </div>
+              {subscriptionSuccess ? (
+                <span className="px-3 py-1.5 text-emerald-400 text-xs font-semibold animate-pulse">
+                  Activating...
+                </span>
+              ) : (
+                <button
+                  onClick={handleSubscribe}
+                  disabled={subscribing}
+                  className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-lg transition-all disabled:opacity-50"
+                >
+                  {subscribing ? 'Loading...' : '$5/mo'}
+                </button>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Filter Bar */}
         <InvestorFilterBar

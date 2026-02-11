@@ -26,6 +26,7 @@ export default function BuyerSettings() {
     // Investor preferences
     dealTypePreference: 'all' as 'all' | 'owner_finance' | 'cash_deal',
     arvThreshold: '85',
+    searchRadius: '30',
     // Optional property filters
     minBedrooms: '',
     maxBedrooms: '',
@@ -86,6 +87,7 @@ export default function BuyerSettings() {
           // Investor preferences
           dealTypePreference: data.profile.dealTypePreference || 'all',
           arvThreshold: data.profile.arvThreshold?.toString() || '85',
+          searchRadius: data.profile.searchRadius?.toString() || data.profile.filter?.radiusMiles?.toString() || '30',
           // Optional property filters
           minBedrooms: data.profile.minBedrooms?.toString() || '',
           maxBedrooms: data.profile.maxBedrooms?.toString() || '',
@@ -175,6 +177,7 @@ export default function BuyerSettings() {
           // Investor preferences
           ...(formData.isInvestor && { dealTypePreference: formData.dealTypePreference }),
           ...(formData.isInvestor && { arvThreshold: Number(formData.arvThreshold) }),
+          ...(formData.isInvestor && { searchRadius: Number(formData.searchRadius) }),
           // Optional property filters (only send if provided)
           ...(formData.minBedrooms && { minBedrooms: Number(formData.minBedrooms) }),
           ...(formData.maxBedrooms && { maxBedrooms: Number(formData.maxBedrooms) }),
@@ -439,6 +442,36 @@ export default function BuyerSettings() {
                   <div className="flex justify-between text-[10px] text-slate-500 mt-1 px-1">
                     <span>60% (Deep discount)</span>
                     <span>90% (More deals)</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Search Radius - shown only for investors */}
+              {formData.isInvestor && (
+                <div className="ml-8 mt-3 p-3 bg-emerald-900/20 border border-emerald-500/30 rounded-lg">
+                  <label className="block text-xs font-semibold text-slate-300 mb-2">
+                    Search Radius
+                  </label>
+                  <p className="text-[10px] text-slate-400 mb-2">
+                    How far from your city to search for deals
+                  </p>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="range"
+                      min="10"
+                      max="100"
+                      step="5"
+                      value={formData.searchRadius}
+                      onChange={(e) => setFormData(prev => ({ ...prev, searchRadius: e.target.value }))}
+                      className="flex-1 accent-emerald-500 h-2 bg-slate-700 rounded-lg cursor-pointer"
+                    />
+                    <span className="text-emerald-400 font-bold text-sm w-16 text-right">
+                      {formData.searchRadius} mi
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-[10px] text-slate-500 mt-1 px-1">
+                    <span>10 mi (Nearby)</span>
+                    <span>100 mi (Wide area)</span>
                   </div>
                 </div>
               )}

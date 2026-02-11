@@ -1,150 +1,68 @@
 /**
  * Synthesia Agent Configuration System
  *
- * Mirrors heygen-agents.ts pattern for the Synthesia trial.
- * Manages a pool of Synthesia avatars and voices for video generation.
- *
- * Synthesia API Reference:
- * - 230+ stock avatars available
- * - Aspect ratios: '16:9', '9:16', '1:1'
- * - Voices: multiple languages and styles
+ * 3 avatars rotating across all brands via round-robin.
+ * All confirmed working via live API test (Feb 2026).
+ * Using avatar default voices and default backgrounds.
  */
 
 import { Brand } from './constants';
 
-// ============================================================================
-// Types
-// ============================================================================
-
 export interface SynthesiaAgent {
   id: string;
   name: string;
-  description?: string;
   avatarId: string;
-  voiceId: string;
+  voiceId?: string; // UUID — omit to use avatar's default voice
   brands: Brand[];
   isActive: boolean;
-  isPrimary?: boolean;
-  previewImageUrl?: string;
 }
 
-// ============================================================================
-// Agent Pool Configuration
-// ============================================================================
+const ALL_BRANDS: Brand[] = ['ownerfi', 'carz', 'benefit', 'personal', 'abdullah', 'realtors', 'gaza'];
 
-/**
- * Synthesia agent pool for trial period.
- * Using stock avatars from Synthesia's library.
- * Avatar/voice IDs will need to be populated from GET /api/synthesia/avatars
- * after the API key is configured.
- */
 export const SYNTHESIA_AGENTS: SynthesiaAgent[] = [
   {
-    id: 'synthesia-anna',
-    name: 'Anna (Synthesia)',
-    description: 'Professional female presenter',
-    avatarId: 'anna_costume1_cameraA', // Placeholder - update after browsing avatars
-    voiceId: 'en-US-JennyNeural',
-    brands: ['ownerfi', 'carz', 'benefit', 'personal', 'abdullah', 'realtors'],
-    isActive: true,
-    isPrimary: true,
-  },
-  {
-    id: 'synthesia-james',
-    name: 'James (Synthesia)',
-    description: 'Professional male presenter',
-    avatarId: 'james_costume1_cameraA', // Placeholder - update after browsing avatars
-    voiceId: 'en-US-GuyNeural',
-    brands: ['ownerfi', 'carz', 'benefit', 'personal', 'abdullah', 'realtors'],
+    id: 'synthesia-1',
+    name: 'Synthesia Avatar 1',
+    avatarId: 'a4ec11ca-f2f7-41e7-b9fe-f77b64e94fbe',
+    brands: ALL_BRANDS,
     isActive: true,
   },
   {
-    id: 'synthesia-lisa',
-    name: 'Lisa (Synthesia)',
-    description: 'Casual female presenter',
-    avatarId: 'lisa_costume1_cameraA', // Placeholder - update after browsing avatars
-    voiceId: 'en-US-AriaNeural',
-    brands: ['ownerfi', 'carz', 'benefit', 'personal', 'abdullah', 'realtors'],
+    id: 'synthesia-2',
+    name: 'Synthesia Avatar 2',
+    avatarId: 'b78cab87-5f8b-45d0-8c4b-b96c82c770af',
+    brands: ALL_BRANDS,
     isActive: true,
   },
   {
-    id: 'synthesia-jack',
-    name: 'Jack (Synthesia)',
-    description: 'Casual male presenter',
-    avatarId: 'jack_costume1_cameraA', // Placeholder - update after browsing avatars
-    voiceId: 'en-US-DavisNeural',
-    brands: ['ownerfi', 'carz', 'benefit', 'personal', 'abdullah', 'realtors'],
+    id: 'synthesia-3',
+    name: 'Synthesia Avatar 3',
+    avatarId: '2cd8bfce-6be9-4922-b508-e1194bc49731',
+    brands: ALL_BRANDS,
     isActive: true,
   },
 ];
 
-// ============================================================================
-// Helper Functions
-// ============================================================================
-
-/**
- * Get all active Synthesia agents for a specific brand
- */
-export function getSynthesiaAgentsForBrand(brand: Brand): SynthesiaAgent[] {
-  return SYNTHESIA_AGENTS.filter(agent =>
-    agent.isActive && agent.brands.includes(brand)
-  );
-}
-
-/**
- * Get primary Synthesia agent for a brand
- */
-export function getPrimarySynthesiaAgent(brand: Brand): SynthesiaAgent | undefined {
-  return SYNTHESIA_AGENTS.find(agent =>
-    agent.isActive && agent.brands.includes(brand) && agent.isPrimary
-  );
-}
-
-/**
- * Get a Synthesia agent for a brand (primary or round-robin)
- */
 let roundRobinIndex = 0;
+
 export function getSynthesiaAgentForBrand(brand: Brand): SynthesiaAgent {
-  const agents = getSynthesiaAgentsForBrand(brand);
+  const agents = SYNTHESIA_AGENTS.filter(a => a.isActive && a.brands.includes(brand));
 
   if (agents.length === 0) {
-    // Fallback to first active agent
     const fallback = SYNTHESIA_AGENTS.find(a => a.isActive);
-    if (!fallback) {
-      throw new Error('No active Synthesia agents configured');
-    }
+    if (!fallback) throw new Error('No active Synthesia agents configured');
     return fallback;
   }
 
-  // Round-robin selection
   const agent = agents[roundRobinIndex % agents.length];
   roundRobinIndex++;
   return agent;
 }
 
-/**
- * Get agent by ID
- */
-export function getSynthesiaAgentById(agentId: string): SynthesiaAgent | undefined {
-  return SYNTHESIA_AGENTS.find(agent => agent.id === agentId);
-}
-
-/**
- * Build Synthesia clip config from agent and script
- */
 export function buildSynthesiaClipConfig(agent: SynthesiaAgent, scriptText: string) {
   return {
     avatarId: agent.avatarId,
-    voiceId: agent.voiceId,
     scriptText,
+    ...(agent.voiceId ? { voiceId: agent.voiceId } : {}),
   };
 }
-
-export default {
-  SYNTHESIA_AGENTS,
-  getSynthesiaAgentsForBrand,
-  getPrimarySynthesiaAgent,
-  getSynthesiaAgentForBrand,
-  getSynthesiaAgentById,
-  buildSynthesiaClipConfig,
-};

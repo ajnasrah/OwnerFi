@@ -117,7 +117,7 @@ export default function AdminLogsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, filter]);
 
-  if (status === 'loading') {
+  if (status !== 'authenticated' || (session?.user as { role?: string })?.role !== 'admin') {
     return (
       <div className="h-screen bg-slate-900 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-400"></div>

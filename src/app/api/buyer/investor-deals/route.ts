@@ -13,6 +13,9 @@ import { ErrorResponses, logError } from '@/lib/api-error-handler';
  * Uses Typesense for fast search with Firestore fallback.
  */
 
+// All raw Zillow homeType values that represent land (matches property-transformer.ts HOME_TYPE_MAP)
+const LAND_TYPES = new Set(['land', 'lot', 'lots', 'vacant_land', 'farm', 'ranch']);
+
 export interface InvestorDeal {
   id: string;
   address: string;
@@ -120,10 +123,15 @@ export async function GET(request: NextRequest) {
     let allDeals: InvestorDeal[] = [];
     let typesenseError = null;
 
+    // Use buyer's pre-computed nearby cities for radius-based search
+    const nearbyCities = (profile.filter?.nearbyCities?.length > 0)
+      ? profile.filter.nearbyCities
+      : [searchCity];
+
     try {
       const client = getTypesenseSearchClient();
       if (client) {
-        allDeals = await searchTypesense(client, searchCity, searchState, dealTypeFilter);
+        allDeals = await searchTypesense(client, nearbyCities, searchState, dealTypeFilter);
       } else {
         throw new Error('Typesense not available');
       }
@@ -133,7 +141,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (typesenseError) {
-      allDeals = await searchFirestore(searchCity, searchState, dealTypeFilter);
+      allDeals = await searchFirestore(nearbyCities, searchState, dealTypeFilter);
     }
 
     // Mark liked properties and filter out passed properties (O(1) Set lookups)
@@ -205,7 +213,7 @@ export async function GET(request: NextRequest) {
       totalPages,
       hasMore: startIndex + pageSize < total,
       breakdown,
-      searchCriteria: { city: searchCity, state: searchState },
+      searchCriteria: { city: searchCity, state: searchState, radiusMiles: profile.filter?.radiusMiles || 30, nearbyCitiesCount: nearbyCities.length },
     });
     response.headers.set('Cache-Control', 'private, max-age=60, stale-while-revalidate=120');
     return response;
@@ -220,7 +228,7 @@ export async function GET(request: NextRequest) {
 
 async function searchTypesense(
   client: ReturnType<typeof getTypesenseSearchClient>,
-  city: string,
+  nearbyCities: string[],
   state: string,
   dealTypeFilter: 'all' | 'owner_finance' | 'cash_deal',
 ): Promise<InvestorDeal[]> {
@@ -237,18 +245,25 @@ async function searchTypesense(
       dealTypeClause = '(dealType:=[owner_finance, cash_deal, both] || needsWork:=true)';
   }
 
+  // Build exact city filter from buyer's pre-computed nearby cities
+  // Use backtick quoting for Typesense to handle city names with special chars
+  const escapedCities = nearbyCities.map(c => '`' + c.replace(/`/g, '') + '`');
+  const cityFilter = `city:=[${escapedCities.join(',')}]`;
+
   const filters = [
     'isActive:=true',
     `state:=${state}`,
+    cityFilter,
     dealTypeClause,
+    'isLand:!=true',
   ];
 
   if (!client) throw new Error('Typesense client is null');
   const result = await client.collections(TYPESENSE_COLLECTIONS.PROPERTIES)
     .documents()
     .search({
-      q: city,
-      query_by: 'city,nearbyCities,address',
+      q: '*',
+      query_by: 'city,address',
       filter_by: filters.join(' && '),
       sort_by: 'listPrice:asc',
       per_page: 250,
@@ -320,7 +335,7 @@ async function searchTypesense(
       arv: arv > 0 ? arv : undefined,
       needsWork,
       // Land detection
-      isLand: doc.isLand === true || (doc.propertyType as string || '').toLowerCase() === 'land',
+      isLand: doc.isLand === true || LAND_TYPES.has((doc.propertyType as string || '').toLowerCase()),
       // Common
       yearBuilt: (doc.yearBuilt as number) || undefined,
       propertyType: (doc.propertyType as string) || undefined,
@@ -334,7 +349,7 @@ async function searchTypesense(
 // ─── Firestore Fallback ───────────────────────────────────────────────────────
 
 async function searchFirestore(
-  city: string,
+  nearbyCities: string[],
   state: string,
   dealTypeFilter: 'all' | 'owner_finance' | 'cash_deal',
 ): Promise<InvestorDeal[]> {
@@ -384,7 +399,7 @@ async function searchFirestore(
     // Merge and dedupe
     const seenIds = new Set<string>();
     const deals: InvestorDeal[] = [];
-    const searchCityLower = city.toLowerCase().trim();
+    const nearbyCitiesSet = new Set(nearbyCities.map(c => c.toLowerCase().trim()));
 
     for (const snapshot of snapshots) {
       for (const doc of snapshot.docs) {
@@ -392,6 +407,12 @@ async function searchFirestore(
         seenIds.add(doc.id);
 
         const data = doc.data();
+
+        // Filter out land properties
+        if (data.isLand === true || LAND_TYPES.has(((data.homeType as string) || (data.propertyType as string) || '').toLowerCase())) {
+          continue;
+        }
+
         const price = (data.price as number) || (data.listPrice as number) || 0;
         const arv = (data.estimate as number) || (data.zestimate as number) || 0;
         const percentOfArv = arv > 0 ? Math.round((price / arv) * 100) : null;
@@ -399,11 +420,9 @@ async function searchFirestore(
         const needsWork = data.needsWork === true;
         const isOwnerFinance = data.isOwnerFinance === true;
 
-        // Filter by city (case-insensitive exact match, consistent with Typesense behavior)
+        // Filter by nearby cities (case-insensitive match against buyer's pre-computed list)
         const propCity = ((data.city as string) || '').toLowerCase().trim();
-        const nearbyCities = (data.nearbyCities as string[]) || [];
-        if (propCity !== searchCityLower &&
-            !nearbyCities.some((c: string) => c.toLowerCase().trim() === searchCityLower)) {
+        if (!nearbyCitiesSet.has(propCity)) {
           continue;
         }
 
@@ -453,7 +472,7 @@ async function searchFirestore(
           discount: discount > 0 ? discount : undefined,
           arv: arv > 0 ? arv : undefined,
           needsWork,
-          isLand: data.isLand === true || ((data.homeType as string) || (data.propertyType as string) || '').toLowerCase() === 'land',
+          isLand: data.isLand === true || LAND_TYPES.has(((data.homeType as string) || (data.propertyType as string) || '').toLowerCase()),
           yearBuilt: (data.yearBuilt as number) || undefined,
           propertyType: (data.homeType as string) || (data.propertyType as string) || undefined,
           zestimate: arv > 0 ? arv : undefined,

@@ -4,6 +4,9 @@ import { getTypesenseSearchClient, TYPESENSE_COLLECTIONS } from '@/lib/typesense
 import { getCitiesWithinRadiusComprehensive, getCityCoordinatesComprehensive } from '@/lib/comprehensive-cities';
 import { requireRole } from '@/lib/auth-helpers';
 
+// All raw Zillow homeType values that represent land
+const LAND_TYPES = new Set(['land', 'lot', 'lots', 'vacant_land', 'farm', 'ranch']);
+
 // Cache for states list (refresh every 5 minutes)
 let statesCache: { states: string[]; timestamp: number } | null = null;
 const STATES_CACHE_TTL = 5 * 60 * 1000;
@@ -250,7 +253,7 @@ function normalizeProperty(doc: FirebaseFirestore.DocumentSnapshot, source: stri
     // Reviewed tracking
     reviewedAt: data.reviewedAt?.toDate?.()?.toISOString() || data.reviewedAt || null,
     // Land detection
-    isLand: data.isLand || (data.homeType || data.propertyType || '').toLowerCase() === 'land' || false,
+    isLand: data.isLand || LAND_TYPES.has((data.homeType || data.propertyType || '').toLowerCase()) || false,
     homeType: data.homeType || data.propertyType || undefined,
   };
 }
@@ -424,7 +427,7 @@ async function searchWithTypesense(params: {
         sentToGHL: null,
         reviewedAt: null, // Not stored in Typesense, will need to check Firestore
         // Land detection
-        isLand: doc.isLand === true || (doc.propertyType || '').toString().toLowerCase() === 'land' || false,
+        isLand: doc.isLand === true || LAND_TYPES.has((doc.propertyType || '').toString().toLowerCase()) || false,
         homeType: (doc.propertyType as string) || undefined,
       };
     });

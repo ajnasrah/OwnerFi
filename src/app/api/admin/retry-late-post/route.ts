@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getFirestore } from 'firebase-admin/firestore';
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { postToLate } from '@/lib/late-api';
+import { requireRole } from '@/lib/auth-helpers';
 
 // Initialize Firebase Admin
 if (getApps().length === 0) {
@@ -24,6 +25,9 @@ export const maxDuration = 60;
  * POST - Retry a failed Late post
  */
 export async function POST(request: NextRequest) {
+  const authResult = await requireRole(request, 'admin');
+  if ('error' in authResult) return authResult.error;
+
   try {
     const body = await request.json();
     const { failureId, brand, platforms, caption, videoUrl, scheduleTime } = body;

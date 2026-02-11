@@ -225,7 +225,10 @@ export async function POST(request: NextRequest) {
     };
 
     // Step 3: Generate video with selected provider
-    const activeProvider = videoProvider;
+    // Allow request body to override provider for testing (e.g. "provider": "synthesia")
+    const activeProvider = (rawBody.provider === 'synthesia' || rawBody.provider === 'heygen')
+      ? rawBody.provider
+      : videoProvider;
     console.log(`🎥 Step 3: Creating video with ${activeProvider}...`);
 
     // CRITICAL FIX: DON'T set status to heygen_processing yet

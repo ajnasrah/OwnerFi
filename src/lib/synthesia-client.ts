@@ -135,21 +135,27 @@ export async function generateSynthesiaVideo(
     console.log(`[${brand}] Synthesia quota check passed`);
 
     // 2. Build API request body
-    // background is required by the API — "default" uses the avatar's built-in background
+    // background: "default" uses the avatar's built-in background
+    // avatarSettings: scale 2 + center for proper 9:16 close-up framing
     const apiBody: Record<string, unknown> = {
       title: request.title,
       input: request.clips.map(clip => {
-        const inputItem: Record<string, unknown> = {
-          avatar: clip.avatarId,
-          scriptText: clip.scriptText,
-          background: 'default',
+        const avatarSettings: Record<string, unknown> = {
+          horizontalAlign: 'center',
+          scale: 1.5,
+          style: 'rectangular',
         };
 
         if (clip.voiceId) {
-          inputItem.avatarSettings = { voice: clip.voiceId };
+          avatarSettings.voice = clip.voiceId;
         }
 
-        return inputItem;
+        return {
+          avatar: clip.avatarId,
+          scriptText: clip.scriptText,
+          background: 'default',
+          avatarSettings,
+        };
       }),
       aspectRatio: request.aspectRatio,
       test: false,

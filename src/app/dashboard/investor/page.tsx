@@ -8,6 +8,7 @@ import { InvestorPropertyCard } from '@/components/dashboard/InvestorPropertyCar
 import { InvestorFilterBar, getFilterParams } from '@/components/dashboard/InvestorFilterBar';
 import { trackEvent } from '@/components/analytics/AnalyticsProvider';
 import type { InvestorDeal } from '@/app/api/buyer/investor-deals/route';
+import { ExtendedSession } from '@/types/session';
 
 type QuickFilter = 'all' | 'owner_finance' | 'cash_deal' | 'under80' | 'under100k' | '100k-200k' | '200k-300k';
 type SortField = 'price' | 'percentOfArv' | 'discount' | 'monthlyPayment';
@@ -28,7 +29,7 @@ interface ProfileData {
 }
 
 export default function InvestorDashboard() {
-  const { status } = useSession();
+  const { data: session, status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -179,13 +180,32 @@ export default function InvestorDashboard() {
       if (!res.ok) throw new Error(`Profile fetch failed: ${res.status}`);
       const data = await res.json();
 
+      const isAdmin = (session as unknown as ExtendedSession)?.user?.role === 'admin';
+
       if (!data.profile) {
+        if (isAdmin) {
+          // Admin has no buyer profile - show empty state with defaults
+          setProfile({
+            id: '',
+            firstName: 'Admin',
+            lastName: '',
+            city: 'Memphis',
+            state: 'TN',
+            isInvestor: true,
+            dealTypePreference: 'all',
+            likedPropertyIds: [],
+          });
+          setLikedProperties([]);
+          setLoading(false);
+          setFetchKey(prev => prev + 1);
+          return;
+        }
         router.push('/auth/setup');
         return;
       }
 
-      // If not an investor, redirect to regular dashboard
-      if (!data.profile.isInvestor) {
+      // If not an investor, redirect to regular dashboard (skip for admins)
+      if (!data.profile.isInvestor && !isAdmin) {
         router.push('/dashboard');
         return;
       }
@@ -430,6 +450,18 @@ export default function InvestorDashboard() {
 
             {/* Right: Actions */}
             <div className="flex items-center gap-1.5">
+              {(session as unknown as ExtendedSession)?.user?.role === 'admin' && (
+                <Link
+                  href="/admin"
+                  className="px-2.5 py-1 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 rounded-lg flex items-center gap-1 transition-all"
+                  title="Back to Admin"
+                >
+                  <svg className="w-3 h-3 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+                  </svg>
+                  <span className="text-purple-400 text-[10px] font-bold">ADMIN</span>
+                </Link>
+              )}
               <Link
                 href="/dashboard/liked"
                 className="relative w-8 h-8 bg-white/5 hover:bg-white/10 rounded-full flex items-center justify-center transition-all border border-white/10"

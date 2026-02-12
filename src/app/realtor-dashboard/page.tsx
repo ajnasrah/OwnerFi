@@ -16,7 +16,7 @@ export default function RealtorDashboardHub() {
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/auth');
-    } else if (status === 'authenticated' && (session as unknown as ExtendedSession)?.user?.role !== 'realtor') {
+    } else if (status === 'authenticated' && (session as unknown as ExtendedSession)?.user?.role !== 'realtor' && (session as unknown as ExtendedSession)?.user?.role !== 'admin') {
       router.push('/');
     }
   }, [status, session, router]);
@@ -57,6 +57,11 @@ export default function RealtorDashboardHub() {
           </Link>
 
           <div className="flex items-center gap-2">
+            {(session as unknown as ExtendedSession)?.user?.role === 'admin' && (
+              <Link href="/admin" className="text-sm text-emerald-400 hover:text-emerald-300 transition-colors mr-2">
+                ← Admin
+              </Link>
+            )}
             <button
               onClick={() => {
                 trackEvent('auth_logout', { method: 'realtor_dashboard' });

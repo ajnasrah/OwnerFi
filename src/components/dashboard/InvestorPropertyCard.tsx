@@ -46,14 +46,9 @@ export function InvestorPropertyCard({ deal, isLiked, onToggleLike, onHide, isPr
     setImageLoading(true);
   }, [images.length]);
 
-  const handleViewDetails = () => {
-    if (deal.url) {
-      window.open(deal.url, '_blank', 'noopener');
-    } else {
-      const query = encodeURIComponent(`${deal.address} ${deal.city} ${deal.state}`);
-      window.open(`https://www.google.com/search?q=${query}`, '_blank', 'noopener');
-    }
-  };
+  const detailsUrl = deal.url
+    ? deal.url
+    : `https://www.google.com/search?q=${encodeURIComponent(`${deal.address} ${deal.city} ${deal.state}`)}`;
 
   return (
     <article className="bg-slate-800/60 border border-slate-700/50 rounded-xl overflow-hidden hover:border-slate-600/70 transition-all duration-200 hover:shadow-lg hover:shadow-black/20 group">
@@ -89,7 +84,7 @@ export function InvestorPropertyCard({ deal, isLiked, onToggleLike, onHide, isPr
             <button
               onClick={goPrev}
               aria-label="Previous image"
-              className="absolute left-1.5 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center rounded-full bg-black/50 text-white sm:opacity-0 sm:group-hover:opacity-100 transition-opacity hover:bg-black/70 active:scale-90 z-10"
+              className="absolute left-1.5 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80 active:scale-90 transition-all z-10"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
@@ -98,7 +93,7 @@ export function InvestorPropertyCard({ deal, isLiked, onToggleLike, onHide, isPr
             <button
               onClick={goNext}
               aria-label="Next image"
-              className="absolute right-1.5 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center rounded-full bg-black/50 text-white sm:opacity-0 sm:group-hover:opacity-100 transition-opacity hover:bg-black/70 active:scale-90 z-10"
+              className="absolute right-1.5 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80 active:scale-90 transition-all z-10"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
@@ -149,22 +144,35 @@ export function InvestorPropertyCard({ deal, isLiked, onToggleLike, onHide, isPr
           )}
         </div>
 
-        {/* Like button - top right */}
-        <button
-          onClick={(e) => { e.stopPropagation(); onToggleLike(); }}
-          aria-label={isLiked ? 'Unlike property' : 'Like property'}
-          className="absolute top-2.5 right-2.5 w-9 h-9 flex items-center justify-center rounded-full bg-black/40 backdrop-blur-sm hover:bg-black/60 transition-all active:scale-90 z-10"
-        >
-          {isLiked ? (
-            <svg className="w-5 h-5 text-red-500 fill-current" viewBox="0 0 24 24">
-              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-            </svg>
-          ) : (
-            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-            </svg>
+        {/* Top right: Like + Hide buttons */}
+        <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5 z-10">
+          {onHide && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onHide(); }}
+              aria-label="Hide property"
+              className="w-9 h-9 flex items-center justify-center rounded-full bg-black/40 backdrop-blur-sm hover:bg-red-600/80 transition-all active:scale-90"
+            >
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
           )}
-        </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); onToggleLike(); }}
+            aria-label={isLiked ? 'Unlike property' : 'Like property'}
+            className="w-9 h-9 flex items-center justify-center rounded-full bg-black/40 backdrop-blur-sm hover:bg-black/60 transition-all active:scale-90"
+          >
+            {isLiked ? (
+              <svg className="w-5 h-5 text-red-500 fill-current" viewBox="0 0 24 24">
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+              </svg>
+            ) : (
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+              </svg>
+            )}
+          </button>
+        </div>
 
         {/* Photo count badge - bottom right */}
         {images.length > 1 && (
@@ -188,20 +196,10 @@ export function InvestorPropertyCard({ deal, isLiked, onToggleLike, onHide, isPr
 
       {/* Info Section */}
       <div className="p-3.5">
-        {/* Address + Hide button */}
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0 flex-1">
-            <h3 className="text-sm font-semibold text-white truncate">{deal.address}</h3>
-            <p className="text-xs text-slate-400 mt-0.5">{deal.city}, {deal.state} {deal.zipCode}</p>
-          </div>
-          {onHide && (
-            <button
-              onClick={(e) => { e.stopPropagation(); onHide(); }}
-              className="shrink-0 mt-0.5 px-2 py-1 bg-red-600/20 hover:bg-red-600/40 border border-red-500/30 text-red-400 text-[10px] font-semibold rounded-md transition-all active:scale-95"
-            >
-              Hide
-            </button>
-          )}
+        {/* Address */}
+        <div className="min-w-0">
+          <h3 className="text-sm font-semibold text-white truncate">{deal.address}</h3>
+          <p className="text-xs text-slate-400 mt-0.5">{deal.city}, {deal.state} {deal.zipCode}</p>
         </div>
 
         {/* Specs row */}
@@ -274,16 +272,18 @@ export function InvestorPropertyCard({ deal, isLiked, onToggleLike, onHide, isPr
           )}
         </div>
 
-        {/* View Details button */}
-        <button
-          onClick={handleViewDetails}
+        {/* View Details link */}
+        <a
+          href={detailsUrl}
+          target="_blank"
+          rel="noopener noreferrer"
           className="w-full mt-3 px-3 py-2 bg-slate-700/50 hover:bg-slate-600/50 border border-slate-600/50 text-white text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 group-hover:border-emerald-500/30"
         >
-          View Details
+          More Info
           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
           </svg>
-        </button>
+        </a>
       </div>
     </article>
   );

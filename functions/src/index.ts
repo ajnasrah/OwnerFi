@@ -61,6 +61,11 @@ function transformToTypesense(docId: string, data: FirebaseFirestore.DocumentDat
     rentEstimate = parseInt(rentEstimate, 10) || undefined;
   }
 
+  // Calculate percentOfArv if not stored
+  const zestimate = data.zestimate || data.estimate || 0;
+  const price = data.price || data.listPrice || 0;
+  const percentOfArv = data.percentOfArv || (zestimate > 0 ? Math.round((price / zestimate) * 1000) / 10 : undefined);
+
   return {
     id: docId,
     address: data.streetAddress || data.address?.split(',')[0]?.trim() || '',
@@ -70,7 +75,7 @@ function transformToTypesense(docId: string, data: FirebaseFirestore.DocumentDat
     description: data.description || '',
     location: lat && lng ? [lat, lng] : undefined,
     dealType,
-    listPrice: data.price || data.listPrice || 0,
+    listPrice: price,
     bedrooms: data.bedrooms || 0,
     bathrooms: data.bathrooms || 0,
     squareFeet: (data.squareFeet || data.squareFoot) ? Math.round(data.squareFeet || data.squareFoot) : undefined,
@@ -80,18 +85,41 @@ function transformToTypesense(docId: string, data: FirebaseFirestore.DocumentDat
     primaryImage: data.primaryImage || data.firstPropertyImage || data.hiResImageLink || data.mediumImageLink || data.imgSrc || '',
     galleryImages: data.propertyImages || data.imageUrls || undefined,
     createdAt: data.createdAt?.toMillis?.() || Date.now(),
+    updatedAt: data.updatedAt?.toMillis?.() || undefined,
     nearbyCities: data.nearbyCities || [],
     ownerFinanceKeywords: data.matchedKeywords || [],
+    // Owner finance fields
     monthlyPayment: data.monthlyPayment || undefined,
     downPaymentAmount: data.downPaymentAmount || undefined,
-    zpid: data.zpid ? String(data.zpid) : undefined,
-    zestimate: data.zestimate || data.estimate || undefined,
+    downPaymentPercent: data.downPaymentPercent || undefined,
+    interestRate: data.interestRate || undefined,
+    termYears: data.termYears || data.loanTermYears || undefined,
+    balloonYears: data.balloonYears || undefined,
+    financingType: data.financingType || undefined,
+    ownerFinanceVerified: data.ownerFinanceVerified || data.isOwnerFinance || false,
+    // Cash deal fields
+    zestimate: zestimate || undefined,
     rentEstimate,
-    percentOfArv: data.percentOfArv || undefined,
-    needsWork: data.needsWork || undefined,
+    percentOfArv,
+    discountPercent: data.discountPercentage || data.discount || undefined,
+    needsWork: data.needsWork || false,
     isLand: data.isLand || LAND_TYPES.has((data.homeType || data.propertyType || '').toLowerCase()) || false,
+    // Status & metadata
     manuallyVerified: data.manuallyVerified || undefined,
+    homeStatus: data.homeStatus || data.status || undefined,
     sourceType: data.source || undefined,
+    // URLs & IDs
+    zpid: data.zpid ? String(data.zpid) : undefined,
+    url: data.url || data.hdpUrl || undefined,
+    // Agent/Contact info
+    agentName: data.agentName || data.listingAgentName || undefined,
+    agentPhone: data.agentPhoneNumber || data.agentPhone || data.brokerPhoneNumber || undefined,
+    agentEmail: data.agentEmail || data.listingAgentEmail || undefined,
+    // Cash flow
+    annualTaxAmount: data.annualTaxAmount || data.taxAmount || undefined,
+    propertyTaxRate: data.propertyTaxRate || undefined,
+    monthlyHoa: data.hoa || data.hoaFees || undefined,
+    daysOnZillow: data.daysOnZillow || undefined,
   };
 }
 

@@ -153,6 +153,26 @@ export function transformPropertyForTypesense(
     financingType: property.ownerFinance?.financingType || undefined,
 
     primaryImage: (property as any).primaryImage || property.images?.primary || property.imageUrl || undefined,
+    galleryImages: (property as any).propertyImages || property.images?.gallery || (property as any).imageUrls || undefined,
+
+    // Agent/Contact info
+    agentName: (property as any).agentName || undefined,
+    agentPhone: (property as any).agentPhoneNumber || (property as any).agentPhone || undefined,
+    agentEmail: (property as any).agentEmail || undefined,
+
+    // Loan terms
+    downPaymentPercent: property.ownerFinance?.downPaymentPercent || undefined,
+    interestRate: property.ownerFinance?.interestRate || undefined,
+    termYears: property.ownerFinance?.termYears || (property as any).loanTermYears || undefined,
+    balloonYears: property.ownerFinance?.balloonYears || undefined,
+
+    // Cash flow / rental fields
+    rentEstimate: (property as any).rentEstimate || (property as any).rentZestimate || undefined,
+    percentOfArv: (property as any).percentOfArv || undefined,
+
+    // URLs
+    url: (property as any).url || (property as any).hdpUrl || undefined,
+    zpid: (property as any).zpid ? String((property as any).zpid) : undefined,
 
     createdAt: timestampToUnix(property.createdAt),
     updatedAt: timestampToUnix(property.updatedAt),

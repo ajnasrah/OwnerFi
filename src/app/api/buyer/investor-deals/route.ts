@@ -255,7 +255,6 @@ async function searchTypesense(
     `state:=${state}`,
     cityFilter,
     dealTypeClause,
-    'isLand:!=true',
   ];
 
   if (!client) throw new Error('Typesense client is null');
@@ -407,11 +406,6 @@ async function searchFirestore(
         seenIds.add(doc.id);
 
         const data = doc.data();
-
-        // Filter out land properties
-        if (data.isLand === true || LAND_TYPES.has(((data.homeType as string) || (data.propertyType as string) || '').toLowerCase())) {
-          continue;
-        }
 
         const price = (data.price as number) || (data.listPrice as number) || 0;
         const arv = (data.estimate as number) || (data.zestimate as number) || 0;

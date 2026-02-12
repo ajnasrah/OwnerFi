@@ -100,6 +100,20 @@ export default function AdminHub() {
       title: 'Admin Panel',
       description: 'Properties, realtors, buyers in bulk',
       color: 'purple',
+    },
+    {
+      href: '/dashboard/investor',
+      icon: '🏘️',
+      title: 'Buyer Experience',
+      description: 'Preview the investor deals dashboard',
+      color: 'amber',
+    },
+    {
+      href: '/realtor-dashboard',
+      icon: '🤝',
+      title: 'Realtor Experience',
+      description: 'Preview buyer leads & agreements',
+      color: 'indigo',
     }
   ];
 
@@ -109,7 +123,9 @@ export default function AdminHub() {
     purple: { border: 'hover:border-purple-500/50', shadow: 'hover:shadow-purple-500/10', text: 'text-purple-400', bg: 'from-purple-400 to-purple-600' },
     pink: { border: 'hover:border-pink-500/50', shadow: 'hover:shadow-pink-500/10', text: 'text-pink-400', bg: 'from-pink-400 to-pink-600' },
     yellow: { border: 'hover:border-yellow-500/50', shadow: 'hover:shadow-yellow-500/10', text: 'text-yellow-400', bg: 'from-yellow-400 to-yellow-600' },
-    cyan: { border: 'hover:border-cyan-500/50', shadow: 'hover:shadow-cyan-500/10', text: 'text-cyan-400', bg: 'from-cyan-400 to-cyan-600' }
+    cyan: { border: 'hover:border-cyan-500/50', shadow: 'hover:shadow-cyan-500/10', text: 'text-cyan-400', bg: 'from-cyan-400 to-cyan-600' },
+    amber: { border: 'hover:border-amber-500/50', shadow: 'hover:shadow-amber-500/10', text: 'text-amber-400', bg: 'from-amber-400 to-amber-600' },
+    indigo: { border: 'hover:border-indigo-500/50', shadow: 'hover:shadow-indigo-500/10', text: 'text-indigo-400', bg: 'from-indigo-400 to-indigo-600' }
   };
 
   return (

@@ -101,6 +101,13 @@ export default function Dashboard() {
       });
 
       if (!profileData.profile) {
+        // Admins may not have a buyer profile - redirect to investor view instead
+        if (session && isExtendedSession(session) && session.user.role === 'admin') {
+          console.log('🔄 [DASHBOARD] Admin has no buyer profile, redirecting to investor dashboard');
+          redirecting = true;
+          router.push('/dashboard/investor');
+          return;
+        }
         console.log('🔄 [DASHBOARD] No profile found, redirecting to setup');
         redirecting = true;
         router.push('/auth/setup');
@@ -447,6 +454,19 @@ export default function Dashboard() {
 
             {/* Right: Action Buttons */}
             <div className="flex items-center gap-1.5">
+              {/* Admin Dashboard Button - Only show for admins */}
+              {session && isExtendedSession(session) && session.user.role === 'admin' && (
+                <Link
+                  href="/admin"
+                  className="px-2.5 py-1 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 rounded-lg flex items-center gap-1 transition-all"
+                  title="Back to Admin"
+                >
+                  <svg className="w-3 h-3 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+                  </svg>
+                  <span className="text-purple-400 text-[10px] font-bold">ADMIN</span>
+                </Link>
+              )}
               {/* Realtor Dashboard Button - Only show for realtors */}
               {session && isExtendedSession(session) && session.user.role === 'realtor' && (
                 <Link

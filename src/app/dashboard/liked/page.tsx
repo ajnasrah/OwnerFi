@@ -224,9 +224,15 @@ export default function LikedProperties() {
                       <div className="bg-blue-600 text-white px-2 py-1 rounded-lg text-xs font-bold">
                         {formatPropertyType(property.propertyType)}
                       </div>
-                      <div className="bg-emerald-600 text-white px-2 py-1 rounded-lg text-xs font-bold">
-                        Owner Finance
-                      </div>
+                      {(property as any).source === 'cash_deal' ? (
+                        <div className="bg-amber-600 text-white px-2 py-1 rounded-lg text-xs font-bold">
+                          Cash Deal
+                        </div>
+                      ) : (
+                        <div className="bg-emerald-600 text-white px-2 py-1 rounded-lg text-xs font-bold">
+                          Owner Finance
+                        </div>
+                      )}
                     </div>
                     <div className="absolute top-3 right-3 bg-gradient-to-r from-red-500 to-red-600 text-white px-3 py-2 rounded-xl text-sm font-bold shadow-xl border border-red-400/30">
                       ❤️ SAVED
@@ -377,7 +383,7 @@ export default function LikedProperties() {
                         rel="noopener noreferrer"
                         className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white py-2 px-3 rounded-lg transition-all hover:scale-105 font-bold text-sm text-center"
                       >
-                        CONTACT
+                        ZILLOW
                       </a>
 
                       <button

@@ -193,14 +193,15 @@ export default function RealtorDashboard() {
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/auth');
-    } else if (status === 'authenticated' && (session as unknown as ExtendedSession)?.user?.role !== 'realtor') {
+    } else if (status === 'authenticated' && (session as unknown as ExtendedSession)?.user?.role !== 'realtor' && (session as unknown as ExtendedSession)?.user?.role !== 'admin') {
       router.push('/');
     }
   }, [status, session, router]);
 
   // Load data
   useEffect(() => {
-    if (status === 'authenticated' && (session as unknown as ExtendedSession)?.user?.role === 'realtor') {
+    const role = (session as unknown as ExtendedSession)?.user?.role;
+    if (status === 'authenticated' && (role === 'realtor' || role === 'admin')) {
       loadDashboardData();
       loadAgreements();
     }
@@ -632,6 +633,11 @@ export default function RealtorDashboard() {
           </div>
 
           <div className="flex items-center gap-2">
+            {(session as unknown as ExtendedSession)?.user?.role === 'admin' && (
+              <Link href="/admin" className="text-sm text-emerald-400 hover:text-emerald-300 transition-colors">
+                ← Admin
+              </Link>
+            )}
             <Link
               href="/dashboard/settings"
               className="text-slate-400 hover:text-white transition-colors p-1.5"

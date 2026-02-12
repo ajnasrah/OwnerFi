@@ -9,19 +9,19 @@ export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions as unknown as Parameters<typeof getServerSession>[0]) as ExtendedSession;
     
-    if (!session?.user || session.user.role !== 'realtor') {
+    if (!session?.user || (session.user.role !== 'realtor' && session.user.role !== 'admin')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Get current user data
     const userData = await FirebaseDB.getDocument('users', session.user.id);
-    
+
     if (!userData) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
     const realtorData = (userData as UserWithRealtorData).realtorData || {};
-    
+
     return NextResponse.json({
       success: true,
       data: {
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions as unknown as Parameters<typeof getServerSession>[0]) as ExtendedSession;
     
-    if (!session?.user || session.user.role !== 'realtor') {
+    if (!session?.user || (session.user.role !== 'realtor' && session.user.role !== 'admin')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -119,7 +119,7 @@ export async function DELETE(request: NextRequest) {
     const session = await  
     getServerSession(authOptions as unknown as Parameters<typeof getServerSession>[0]) as ExtendedSession;
     
-    if (!session?.user || session.user.role !== 'realtor') {
+    if (!session?.user || (session.user.role !== 'realtor' && session.user.role !== 'admin')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

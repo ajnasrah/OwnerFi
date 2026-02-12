@@ -16,7 +16,7 @@ export async function requireRole(requiredRole: 'buyer' | 'realtor'): Promise<Ex
     }
   }
   
-  if (session.user.role !== requiredRole) {
+  if (session.user.role !== requiredRole && session.user.role !== 'admin') {
     // Wrong role - redirect to their appropriate dashboard
     if (session.user.role === 'buyer') {
       redirect('/dashboard');
@@ -39,7 +39,7 @@ export async function getSessionWithRole(requiredRole: 'buyer' | 'realtor'): Pro
     throw new Error('Not authenticated');
   }
   
-  if (session.user.role !== requiredRole) {
+  if (session.user.role !== requiredRole && session.user.role !== 'admin') {
     throw new Error(`Access denied. Required role: ${requiredRole}, current role: ${session.user.role}`);
   }
   
@@ -49,17 +49,20 @@ export async function getSessionWithRole(requiredRole: 'buyer' | 'realtor'): Pro
 // Check if current user can access a route
 export function canAccessRoute(userRole: string | undefined, route: string): boolean {
   if (!userRole) return false;
-  
+
+  // Admins can access all routes
+  if (userRole === 'admin') return true;
+
   // Buyer routes
   if (route.startsWith('/dashboard')) {
     return userRole === 'buyer';
   }
-  
-  // Realtor routes  
+
+  // Realtor routes
   if (route.startsWith('/realtor')) {
     return userRole === 'realtor';
   }
-  
+
   // Public routes
   return true;
 }

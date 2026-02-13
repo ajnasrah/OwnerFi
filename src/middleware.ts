@@ -31,7 +31,9 @@ const BYPASS_PATHS = [
   '/api/gohighlevel/webhook/', // GoHighLevel webhooks (different path)
   '/api/stripe/webhook',      // Stripe payment webhooks
   '/api/cron/',               // All cron jobs
+  '/api/v2/scraper/',         // Scraper v2 cron endpoints
   '/api/workers/',            // Background workers
+  '/api/admin/',              // Admin API endpoints
   '/_next/',                  // Next.js internals
   '/favicon.ico',
   '/robots.txt',

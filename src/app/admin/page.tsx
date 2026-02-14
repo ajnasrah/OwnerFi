@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { ExtendedSession } from '@/types/session';
@@ -9,6 +9,8 @@ import { trackEvent } from '@/components/analytics/AnalyticsProvider';
 
 interface Stats {
   totalProperties: number;
+  ownerFinanceProperties: number;
+  cashDealProperties: number;
   totalBuyers: number;
   totalRealtors: number;
   pendingDisputes: number;
@@ -18,7 +20,7 @@ export default function AdminHub() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [stats, setStats] = useState<Stats | null>(null);
-  const [, setLoading] = useState(true);
+  const [statsLoading, setStatsLoading] = useState(true);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -28,14 +30,9 @@ export default function AdminHub() {
     }
   }, [status, session, router]);
 
-  useEffect(() => {
-    if (status === 'authenticated') {
-      loadStats();
-    }
-  }, [status]);
-
-  const loadStats = async () => {
+  const loadStats = useCallback(async () => {
     try {
+      setStatsLoading(true);
       const res = await fetch('/api/admin/stats');
       if (res.ok) {
         const data = await res.json();
@@ -44,9 +41,15 @@ export default function AdminHub() {
     } catch (error) {
       console.error('Failed to load stats:', error);
     } finally {
-      setLoading(false);
+      setStatsLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (status === 'authenticated') {
+      loadStats();
+    }
+  }, [status, loadStats]);
 
   if (status !== 'authenticated' || (session as unknown as ExtendedSession)?.user?.role !== 'admin') {
     return (
@@ -62,9 +65,23 @@ export default function AdminHub() {
     {
       href: '/dashboard',
       icon: '🏠',
-      title: 'Properties',
+      title: 'Buyer Dashboard',
       description: 'Browse properties with the swiper',
       color: 'blue',
+    },
+    {
+      href: '/dashboard/investor',
+      icon: '📊',
+      title: 'Investor Dashboard',
+      description: 'View investor deals, filters & alerts',
+      color: 'amber',
+    },
+    {
+      href: '/realtor-dashboard',
+      icon: '🏡',
+      title: 'Realtor Dashboard',
+      description: 'View buyer leads, agreements & credits',
+      color: 'indigo',
     },
     {
       href: '/admin/cash-deals',
@@ -100,21 +117,24 @@ export default function AdminHub() {
       title: 'Admin Panel',
       description: 'Properties, realtors, buyers in bulk',
       color: 'purple',
-    },
-    {
-      href: '/dashboard/investor',
-      icon: '🏘️',
-      title: 'Buyer Experience',
-      description: 'Preview the investor deals dashboard',
-      color: 'amber',
-    },
-    {
-      href: '/realtor-dashboard',
-      icon: '🤝',
-      title: 'Realtor Experience',
-      description: 'Preview buyer leads & agreements',
-      color: 'indigo',
     }
+  ];
+
+  const quickLinks = [
+    { href: '/admin/realtors', label: 'Realtors' },
+    { href: '/admin/scraper', label: 'Scraper Upload' },
+    { href: '/admin/manual-upload', label: 'Zillow Upload' },
+    { href: '/admin/logs', label: 'System Logs' },
+    { href: '/admin/ghl-logs', label: 'GHL Logs' },
+    { href: '/admin/costs', label: 'API Costs' },
+    { href: '/admin/analytics', label: 'Analytics' },
+    { href: '/admin/youtube-analytics', label: 'YouTube' },
+    { href: '/admin/blog', label: 'Blog' },
+    { href: '/admin/articles', label: 'Articles' },
+    { href: '/admin/workflow-failures', label: 'Workflow Failures' },
+    { href: '/admin/late-failures', label: 'Late Failures' },
+    { href: '/admin/ab-tests', label: 'A/B Tests' },
+    { href: '/admin/add-credits-manual', label: 'Add Credits' },
   ];
 
   const colorClasses: Record<string, { border: string; shadow: string; text: string; bg: string }> = {
@@ -153,27 +173,48 @@ export default function AdminHub() {
           <p className="text-slate-400">What would you like to do?</p>
         </div>
 
-        {stats && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
-            <div className="bg-slate-800/50 rounded-xl p-4 text-center border border-slate-700/50">
-              <div className="text-2xl font-bold text-white">{stats.totalProperties}</div>
-              <div className="text-slate-400 text-sm">Properties</div>
-            </div>
-            <div className="bg-slate-800/50 rounded-xl p-4 text-center border border-slate-700/50">
-              <div className="text-2xl font-bold text-white">{stats.totalBuyers}</div>
-              <div className="text-slate-400 text-sm">Buyers</div>
-            </div>
-            <div className="bg-slate-800/50 rounded-xl p-4 text-center border border-slate-700/50">
-              <div className="text-2xl font-bold text-white">{stats.totalRealtors}</div>
-              <div className="text-slate-400 text-sm">Realtors</div>
-            </div>
-            <div className="bg-slate-800/50 rounded-xl p-4 text-center border border-slate-700/50">
-              <div className="text-2xl font-bold text-emerald-400">{stats.pendingDisputes}</div>
-              <div className="text-slate-400 text-sm">Disputes</div>
-            </div>
-          </div>
-        )}
+        {/* Stats */}
+        <div className="grid grid-cols-3 md:grid-cols-6 gap-3 mb-8">
+          {statsLoading ? (
+            Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="bg-slate-800/50 rounded-xl p-4 text-center border border-slate-700/50 animate-pulse">
+                <div className="h-7 w-12 bg-slate-700 rounded mx-auto mb-1" />
+                <div className="h-4 w-16 bg-slate-700/50 rounded mx-auto" />
+              </div>
+            ))
+          ) : stats ? (
+            <>
+              <div className="bg-slate-800/50 rounded-xl p-4 text-center border border-slate-700/50">
+                <div className="text-2xl font-bold text-white">{stats.totalProperties}</div>
+                <div className="text-slate-400 text-xs">Properties</div>
+              </div>
+              <div className="bg-slate-800/50 rounded-xl p-4 text-center border border-slate-700/50">
+                <div className="text-2xl font-bold text-amber-400">{stats.ownerFinanceProperties}</div>
+                <div className="text-slate-400 text-xs">Owner Finance</div>
+              </div>
+              <div className="bg-slate-800/50 rounded-xl p-4 text-center border border-slate-700/50">
+                <div className="text-2xl font-bold text-yellow-400">{stats.cashDealProperties}</div>
+                <div className="text-slate-400 text-xs">Cash Deals</div>
+              </div>
+              <div className="bg-slate-800/50 rounded-xl p-4 text-center border border-slate-700/50">
+                <div className="text-2xl font-bold text-white">{stats.totalBuyers}</div>
+                <div className="text-slate-400 text-xs">Buyers</div>
+              </div>
+              <div className="bg-slate-800/50 rounded-xl p-4 text-center border border-slate-700/50">
+                <div className="text-2xl font-bold text-white">{stats.totalRealtors}</div>
+                <div className="text-slate-400 text-xs">Realtors</div>
+              </div>
+              <div className="bg-slate-800/50 rounded-xl p-4 text-center border border-slate-700/50">
+                <div className="text-2xl font-bold text-emerald-400">{stats.pendingDisputes}</div>
+                <div className="text-slate-400 text-xs">Disputes</div>
+              </div>
+            </>
+          ) : (
+            <div className="col-span-full text-center text-slate-500 text-sm py-2">Failed to load stats</div>
+          )}
+        </div>
 
+        {/* Main Cards */}
         <div className="grid md:grid-cols-2 gap-6">
           {mainCards.map((card) => {
             const colors = colorClasses[card.color];
@@ -196,6 +237,22 @@ export default function AdminHub() {
               </Link>
             );
           })}
+        </div>
+
+        {/* Quick Links */}
+        <div className="mt-10">
+          <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3">Quick Links</h3>
+          <div className="flex flex-wrap gap-2">
+            {quickLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="px-3 py-1.5 bg-slate-800/60 border border-slate-700/50 rounded-lg text-sm text-slate-300 hover:text-white hover:border-slate-500/50 hover:bg-slate-700/50 transition-all"
+              >
+                {link.label}
+              </Link>
+            ))}
+          </div>
         </div>
       </main>
     </div>

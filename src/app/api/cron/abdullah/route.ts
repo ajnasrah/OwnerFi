@@ -52,7 +52,12 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    if (!HEYGEN_API_KEY) {
+    // Determine video provider
+    const { videoProvider } = await import('@/lib/env-config');
+    const activeProvider = videoProvider;
+    console.log(`🎥 Video provider: ${activeProvider}`);
+
+    if (activeProvider === 'heygen' && !HEYGEN_API_KEY) {
       return NextResponse.json(
         { success: false, error: 'HEYGEN_API_KEY not configured' },
         { status: 500 }
@@ -120,73 +125,119 @@ export async function GET(request: NextRequest) {
     const workflowId = queueItem.id;
     console.log(`   Workflow ID: ${workflowId}`);
 
-    // Update with caption and title for webhooks
-    await updateWorkflowStatus(workflowId, 'abdullah', {
-      caption: script.caption,
-      title: script.title,
-      status: 'heygen_processing'
-    } as any);
+    let videoId: string;
+    let agentId: string;
 
-    // Step 3: Generate HeyGen video with agent rotation
-    console.log('\n🎥 Step 3: Sending to HeyGen (with agent rotation)...');
-    const webhookUrl = getBrandWebhookUrl('abdullah', 'heygen');
+    if (activeProvider === 'synthesia') {
+      // Step 3: Generate Synthesia video
+      console.log('\n🎥 Step 3: Sending to Synthesia...');
+      const { generateSynthesiaVideo } = await import('@/lib/synthesia-client');
+      const { getSynthesiaAgentForBrand, buildSynthesiaClipConfig } = await import('@/config/synthesia-agents');
 
-    // Use new agent rotation function
-    const { request: videoRequest, agentId } = await buildAbdullahVideoRequestWithAgent(script, workflowId);
+      const synthAgent = getSynthesiaAgentForBrand('abdullah');
+      const clip = buildSynthesiaClipConfig(synthAgent, script.script);
 
-    const fullRequest = {
-      ...videoRequest,
-      webhook_url: webhookUrl,
-      test: false
-    };
-
-    console.log(`   Webhook: ${webhookUrl}`);
-    console.log(`   Agent: ${agentId}`);
-
-    const response = await circuitBreakers.heygen.execute(async () => {
-      return await fetchWithTimeout(
-        'https://api.heygen.com/v2/video/generate',
+      const result = await generateSynthesiaVideo(
         {
-          method: 'POST',
-          headers: {
-            'accept': 'application/json',
-            'content-type': 'application/json',
-            'x-api-key': HEYGEN_API_KEY!
-          },
-          body: JSON.stringify(fullRequest)
+          title: script.title,
+          aspectRatio: '9:16',
+          clips: [clip],
+          callbackId: `abdullah:${workflowId}`,
         },
-        TIMEOUTS.HEYGEN_API
+        'abdullah',
+        workflowId
       );
-    });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`❌ HeyGen API error: ${response.status}`);
-      console.error(`   ${errorText}`);
+      if (!result.success || !result.video_id) {
+        await updateWorkflowStatus(workflowId, 'abdullah', {
+          status: 'failed',
+          error: result.error || 'Synthesia video generation failed'
+        } as any);
+        throw new Error(result.error || 'Synthesia video generation failed');
+      }
+
+      videoId = result.video_id;
+      agentId = synthAgent.id;
 
       await updateWorkflowStatus(workflowId, 'abdullah', {
-        status: 'failed',
-        error: `HeyGen error: ${response.status}`
+        caption: script.caption,
+        title: script.title,
+        synthesiaVideoId: videoId,
+        videoProvider: 'synthesia',
+        agentId,
+        status: 'synthesia_processing'
       } as any);
 
-      throw new Error(`HeyGen API error: ${response.status}`);
+      console.log(`✅ Synthesia video ID: ${videoId}`);
+    } else {
+      // Step 3: Generate HeyGen video with agent rotation
+      console.log('\n🎥 Step 3: Sending to HeyGen (with agent rotation)...');
+
+      await updateWorkflowStatus(workflowId, 'abdullah', {
+        caption: script.caption,
+        title: script.title,
+        status: 'heygen_processing'
+      } as any);
+
+      const webhookUrl = getBrandWebhookUrl('abdullah', 'heygen');
+      const { request: videoRequest, agentId: heygenAgentId } = await buildAbdullahVideoRequestWithAgent(script, workflowId);
+
+      const fullRequest = {
+        ...videoRequest,
+        webhook_url: webhookUrl,
+        test: false
+      };
+
+      console.log(`   Webhook: ${webhookUrl}`);
+      console.log(`   Agent: ${heygenAgentId}`);
+
+      const response = await circuitBreakers.heygen.execute(async () => {
+        return await fetchWithTimeout(
+          'https://api.heygen.com/v2/video/generate',
+          {
+            method: 'POST',
+            headers: {
+              'accept': 'application/json',
+              'content-type': 'application/json',
+              'x-api-key': HEYGEN_API_KEY!
+            },
+            body: JSON.stringify(fullRequest)
+          },
+          TIMEOUTS.HEYGEN_API
+        );
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`❌ HeyGen API error: ${response.status}`);
+        console.error(`   ${errorText}`);
+
+        await updateWorkflowStatus(workflowId, 'abdullah', {
+          status: 'failed',
+          error: `HeyGen error: ${response.status}`
+        } as any);
+
+        throw new Error(`HeyGen API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (!data.data || !data.data.video_id) {
+        console.error('❌ HeyGen response missing video_id:', data);
+        throw new Error('HeyGen did not return video_id');
+      }
+
+      videoId = data.data.video_id;
+      agentId = heygenAgentId;
+
+      await updateWorkflowStatus(workflowId, 'abdullah', {
+        heygenVideoId: videoId,
+        videoProvider: 'heygen',
+        agentId
+      } as any);
+
+      console.log(`✅ HeyGen video ID: ${videoId}`);
     }
-
-    const data = await response.json();
-
-    if (!data.data || !data.data.video_id) {
-      console.error('❌ HeyGen response missing video_id:', data);
-      throw new Error('HeyGen did not return video_id');
-    }
-
-    const heygenVideoId = data.data.video_id;
-    console.log(`✅ HeyGen video ID: ${heygenVideoId}`);
-
-    // Update workflow with HeyGen video ID and agent used
-    await updateWorkflowStatus(workflowId, 'abdullah', {
-      heygenVideoId,
-      agentId
-    } as any);
 
     const duration = Date.now() - startTime;
 
@@ -194,8 +245,8 @@ export async function GET(request: NextRequest) {
     console.log(`🏁 ABDULLAH CRON COMPLETED (${duration}ms)`);
     console.log(`   Theme: ${theme}`);
     console.log(`   Workflow ID: ${workflowId}`);
-    console.log(`   HeyGen Video ID: ${heygenVideoId}`);
-    console.log(`   Webhooks will handle: HeyGen → Submagic → Late posting`);
+    console.log(`   Video ID: ${videoId} (${activeProvider})`);
+    console.log(`   Webhooks will handle: ${activeProvider} → Submagic → Late posting`);
     console.log('='.repeat(60) + '\n');
 
     return NextResponse.json({
@@ -203,10 +254,11 @@ export async function GET(request: NextRequest) {
       theme,
       title: script.title,
       workflowId,
-      heygenVideoId,
+      videoId,
+      provider: activeProvider,
       message: `Abdullah ${theme} video created successfully`,
       next_steps: [
-        '⏳ HeyGen is generating video (webhooks will notify when complete)',
+        `⏳ ${activeProvider} is generating video (webhooks will notify when complete)`,
         '⏳ Submagic will add captions and effects',
         '⏳ Video will auto-post to Late.so at optimal time'
       ],

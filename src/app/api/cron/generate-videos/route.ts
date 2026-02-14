@@ -316,10 +316,10 @@ async function generateGazaVideo() {
 
     // Result type: { videoId: string; agentId: string; script: string }
     if (result.videoId) {
-      // FIX: Correct function signature - status is inside updates object
       await updateWorkflowStatus(workflowId, brand as any, {
         status: 'heygen_processing',
-        heygenVideoId: result.videoId
+        heygenVideoId: result.videoId,
+        videoProvider: 'heygen'
       });
 
       console.log(`   ✅ Video generation started: ${result.videoId}`);
@@ -330,7 +330,6 @@ async function generateGazaVideo() {
         article: article.title.substring(0, 60)
       };
     } else {
-      // FIX: Correct function signature - status is inside updates object
       await updateWorkflowStatus(workflowId, brand as any, {
         status: 'failed',
         error: 'Video generation failed - no videoId returned'
@@ -364,6 +363,8 @@ async function generateRealtorVideo() {
 
   const brand = 'realtors';
   const HEYGEN_API_KEY = process.env.HEYGEN_API_KEY;
+  const { videoProvider } = await import('@/lib/env-config');
+  const activeProvider = videoProvider;
 
   try {
     // Check daily limit (3 videos per day for realtors)
@@ -431,89 +432,127 @@ async function generateRealtorVideo() {
     const workflowId = queueItem.id;
     console.log(`   📝 Workflow ID: ${workflowId}`);
 
-    // Update workflow with caption
-    await updateWorkflowStatus(workflowId, brand as any, {
-      caption: script.caption,
-      title: script.title,
-      status: 'heygen_processing'
-    } as any);
+    let videoId: string;
+    let agentId: string;
 
-    // Build HeyGen request with agent rotation
-    console.log(`   🎥 Sending to HeyGen...`);
-    const webhookUrl = getBrandWebhookUrl('realtors', 'heygen');
-    const { request: videoRequest, agentId } = await buildRealtorVideoRequestWithAgent(script, workflowId);
+    if (activeProvider === 'synthesia') {
+      // Synthesia path
+      console.log(`   🎥 Sending to Synthesia...`);
+      const { generateSynthesiaVideo } = await import('@/lib/synthesia-client');
+      const { getSynthesiaAgentForBrand, buildSynthesiaClipConfig } = await import('@/config/synthesia-agents');
 
-    const fullRequest = {
-      ...videoRequest,
-      webhook_url: webhookUrl,
-      test: false
-    };
+      const synthAgent = getSynthesiaAgentForBrand('realtors');
+      const clip = buildSynthesiaClipConfig(synthAgent, script.script);
 
-    console.log(`   Webhook: ${webhookUrl}`);
-    console.log(`   Agent: ${agentId}`);
-
-    const response = await circuitBreakers.heygen.execute(async () => {
-      return await fetchWithTimeout(
-        'https://api.heygen.com/v2/video/generate',
+      const result = await generateSynthesiaVideo(
         {
-          method: 'POST',
-          headers: {
-            'accept': 'application/json',
-            'content-type': 'application/json',
-            'x-api-key': HEYGEN_API_KEY!
-          },
-          body: JSON.stringify(fullRequest)
+          title: script.title,
+          aspectRatio: '9:16',
+          clips: [clip],
+          callbackId: `realtors:${workflowId}`,
         },
-        TIMEOUTS.HEYGEN_API
+        'realtors',
+        workflowId
       );
-    });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`   ❌ HeyGen API error: ${response.status}`);
-      console.error(`   ${errorText}`);
+      if (!result.success || !result.video_id) {
+        await updateWorkflowStatus(workflowId, brand as any, {
+          status: 'failed',
+          error: result.error || 'Synthesia video generation failed'
+        } as any);
+        return { success: false, error: result.error || 'Synthesia failed' };
+      }
+
+      videoId = result.video_id;
+      agentId = synthAgent.id;
 
       await updateWorkflowStatus(workflowId, brand as any, {
-        status: 'failed',
-        error: `HeyGen error: ${response.status}`
+        caption: script.caption,
+        title: script.title,
+        synthesiaVideoId: videoId,
+        videoProvider: 'synthesia',
+        agentId,
+        status: 'synthesia_processing'
       } as any);
+    } else {
+      // HeyGen path (original)
+      console.log(`   🎥 Sending to HeyGen...`);
 
-      return {
-        success: false,
-        error: `HeyGen API error: ${response.status}`
-      };
-    }
-
-    const data = await response.json();
-
-    if (!data.data || !data.data.video_id) {
-      console.error('   ❌ HeyGen response missing video_id:', data);
       await updateWorkflowStatus(workflowId, brand as any, {
-        status: 'failed',
-        error: 'HeyGen did not return video_id'
+        caption: script.caption,
+        title: script.title,
+        status: 'heygen_processing'
       } as any);
-      return {
-        success: false,
-        error: 'HeyGen did not return video_id'
+
+      const webhookUrl = getBrandWebhookUrl('realtors', 'heygen');
+      const { request: videoRequest, agentId: heygenAgentId } = await buildRealtorVideoRequestWithAgent(script, workflowId);
+
+      const fullRequest = {
+        ...videoRequest,
+        webhook_url: webhookUrl,
+        test: false
       };
+
+      console.log(`   Webhook: ${webhookUrl}`);
+      console.log(`   Agent: ${heygenAgentId}`);
+
+      const response = await circuitBreakers.heygen.execute(async () => {
+        return await fetchWithTimeout(
+          'https://api.heygen.com/v2/video/generate',
+          {
+            method: 'POST',
+            headers: {
+              'accept': 'application/json',
+              'content-type': 'application/json',
+              'x-api-key': HEYGEN_API_KEY!
+            },
+            body: JSON.stringify(fullRequest)
+          },
+          TIMEOUTS.HEYGEN_API
+        );
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`   ❌ HeyGen API error: ${response.status}`);
+
+        await updateWorkflowStatus(workflowId, brand as any, {
+          status: 'failed',
+          error: `HeyGen error: ${response.status}`
+        } as any);
+
+        return { success: false, error: `HeyGen API error: ${response.status}` };
+      }
+
+      const data = await response.json();
+
+      if (!data.data || !data.data.video_id) {
+        await updateWorkflowStatus(workflowId, brand as any, {
+          status: 'failed',
+          error: 'HeyGen did not return video_id'
+        } as any);
+        return { success: false, error: 'HeyGen did not return video_id' };
+      }
+
+      videoId = data.data.video_id;
+      agentId = heygenAgentId;
+
+      await updateWorkflowStatus(workflowId, brand as any, {
+        heygenVideoId: videoId,
+        videoProvider: 'heygen',
+        agentId
+      } as any);
     }
 
-    const heygenVideoId = data.data.video_id;
-
-    // Update workflow with HeyGen video ID
-    await updateWorkflowStatus(workflowId, brand as any, {
-      heygenVideoId,
-      agentId
-    } as any);
-
-    console.log(`   ✅ Video generation started: ${heygenVideoId}`);
+    console.log(`   ✅ Video generation started (${activeProvider}): ${videoId}`);
 
     return {
       success: true,
       workflowId,
-      videoId: heygenVideoId,
+      videoId,
       topic: script.topicId,
-      category
+      category,
+      provider: activeProvider
     };
 
   } catch (error) {

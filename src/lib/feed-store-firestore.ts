@@ -44,12 +44,15 @@ export interface WorkflowQueueItem {
   id: string;
   articleId: string;
   brand: Brand;
-  status: 'pending' | 'heygen_processing' | 'submagic_processing' | 'posting' | 'completed' | 'failed' | 'video_processing_failed';
+  status: 'pending' | 'heygen_processing' | 'synthesia_processing' | 'submagic_processing' | 'posting' | 'completed' | 'failed' | 'video_processing_failed';
   articleTitle: string;
   workflowId?: string;
+  videoProvider?: 'heygen' | 'synthesia';
   heygenVideoId?: string;
   heygenVideoUrl?: string;      // Direct HeyGen video URL (before R2 upload)
   heygenVideoR2Url?: string;    // Video URL after R2 upload
+  synthesiaVideoId?: string;
+  synthesiaVideoUrl?: string;   // Synthesia video URL (from R2)
   submagicVideoId?: string;
   submagicProjectId?: string;   // Submagic project ID
   submagicDownloadUrl?: string; // Submagic download URL
@@ -1023,16 +1026,20 @@ export interface BenefitWorkflowItem {
   benefitId: string;
   audience: 'seller' | 'buyer';
   benefitTitle: string;
-  status: 'pending' | 'heygen_processing' | 'submagic_processing' | 'posting' | 'completed' | 'failed' | 'video_processing_failed';
+  status: 'pending' | 'heygen_processing' | 'synthesia_processing' | 'submagic_processing' | 'posting' | 'completed' | 'failed' | 'video_processing_failed';
+  videoProvider?: 'heygen' | 'synthesia';
   heygenVideoId?: string;
   heygenVideoUrl?: string;
   heygenVideoR2Url?: string;
+  synthesiaVideoId?: string;
+  synthesiaVideoUrl?: string;
   submagicVideoId?: string;     // Submagic video/project ID (same as submagicProjectId)
   submagicProjectId?: string;
   finalVideoUrl?: string;
   latePostId?: string; // Late API post ID
   caption?: string;
   title?: string;
+  agentId?: string;
   error?: string;
   createdAt: number;
   updatedAt: number;

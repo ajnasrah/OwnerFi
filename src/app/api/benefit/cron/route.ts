@@ -65,13 +65,11 @@ export async function GET(request: NextRequest) {
 
     console.log(`✅ Need to generate ${videosNeeded} video(s) today`);
 
-    // Get API key
-    const HEYGEN_API_KEY = process.env.HEYGEN_API_KEY;
-    if (!HEYGEN_API_KEY) {
-      throw new Error('HEYGEN_API_KEY not configured');
-    }
+    // Determine video provider
+    const { videoProvider } = await import('@/lib/env-config');
+    const activeProvider = videoProvider;
+    console.log(`🎥 Video provider: ${activeProvider}`);
 
-    const generator = new BenefitVideoGenerator(HEYGEN_API_KEY);
     const results: any[] = [];
 
     // Generate ONE video per cron run (5 runs per day = 5 videos)
@@ -111,25 +109,77 @@ export async function GET(request: NextRequest) {
     console.log(`📝 Created workflow: ${workflow.id}`);
 
     try {
-      // Generate video - returns { videoId, agentId }
-      const result = await generator.generateVideo(benefit, workflow.id);
+      let videoId: string;
+      let agentId: string;
 
-      // CRITICAL FIX: Update workflow with video ID AND status atomically
-      await updateBenefitWorkflow(workflow.id, {
-        heygenVideoId: result.videoId,
-        agentId: result.agentId,
-        status: 'heygen_processing',  // ✅ Set status HERE after getting video ID
-        caption: generateBenefitCaption(benefit),
-        title: generateBenefitTitle(benefit)
-      });
+      if (activeProvider === 'synthesia') {
+        // Synthesia path
+        const { generateSynthesiaVideo } = await import('@/lib/synthesia-client');
+        const { getSynthesiaAgentForBrand, buildSynthesiaClipConfig } = await import('@/config/synthesia-agents');
 
-      console.log(`✅ Video initiated - Workflow ID: ${workflow.id}`);
+        // Generate script inline for Synthesia (reuse benefit content)
+        const script = benefit.shortDescription
+          ? `Think you can't buy a home? ${benefit.shortDescription} See what's possible at Owner-Fy dot A Eye.`
+          : benefit.title;
+
+        const synthAgent = getSynthesiaAgentForBrand('benefit');
+        const clip = buildSynthesiaClipConfig(synthAgent, script);
+
+        const result = await generateSynthesiaVideo(
+          {
+            title: generateBenefitTitle(benefit),
+            aspectRatio: '9:16',
+            clips: [clip],
+            callbackId: `benefit:${workflow.id}`,
+          },
+          'benefit',
+          workflow.id
+        );
+
+        if (!result.success || !result.video_id) {
+          throw new Error(result.error || 'Synthesia video generation failed');
+        }
+
+        videoId = result.video_id;
+        agentId = synthAgent.id;
+
+        await updateBenefitWorkflow(workflow.id, {
+          synthesiaVideoId: videoId,
+          videoProvider: 'synthesia',
+          agentId,
+          status: 'synthesia_processing',
+          caption: generateBenefitCaption(benefit),
+          title: generateBenefitTitle(benefit)
+        });
+      } else {
+        // HeyGen path (original)
+        const HEYGEN_API_KEY = process.env.HEYGEN_API_KEY;
+        if (!HEYGEN_API_KEY) throw new Error('HEYGEN_API_KEY not configured');
+
+        const generator = new BenefitVideoGenerator(HEYGEN_API_KEY);
+        const result = await generator.generateVideo(benefit, workflow.id);
+
+        videoId = result.videoId;
+        agentId = result.agentId;
+
+        await updateBenefitWorkflow(workflow.id, {
+          heygenVideoId: videoId,
+          videoProvider: 'heygen',
+          agentId,
+          status: 'heygen_processing',
+          caption: generateBenefitCaption(benefit),
+          title: generateBenefitTitle(benefit)
+        });
+      }
+
+      console.log(`✅ Video initiated (${activeProvider}) - Workflow ID: ${workflow.id}`);
 
       results.push({
         benefit_id: benefit.id,
         benefit_title: benefit.title,
-        video_id: result.videoId,
-        workflow_id: workflow.id
+        video_id: videoId,
+        workflow_id: workflow.id,
+        provider: activeProvider
       });
 
     } catch (error) {
@@ -143,7 +193,7 @@ export async function GET(request: NextRequest) {
 
     const duration = Date.now() - startTime;
     console.log(`\n🎉 Benefit video generation complete in ${duration}ms`);
-    console.log(`   ⚡ Next: HeyGen → Submagic → Late API (automatic via webhooks)`);
+    console.log(`   ⚡ Next: ${activeProvider} → Submagic → Late API (automatic via webhooks)`);
 
     const stats = await BenefitScheduler.getStats();
 

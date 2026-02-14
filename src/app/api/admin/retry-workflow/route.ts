@@ -113,6 +113,9 @@ function determineRetryStage(status: string): string {
   if (status === 'heygen_processing') {
     return 'heygen';
   }
+  if (status === 'synthesia_processing') {
+    return 'heygen'; // Reset to pending for re-generation
+  }
   if (status === 'submagic_processing') {
     return 'submagic';
   }
@@ -158,9 +161,9 @@ async function retrySubmagic(
 ): Promise<NextResponse> {
   console.log(`   Retrying from Submagic stage...`);
 
-  if (!workflow.heygenVideoId && !workflow.finalVideoUrl) {
+  if (!workflow.heygenVideoId && !workflow.synthesiaVideoId && !workflow.finalVideoUrl && !workflow.synthesiaVideoUrl && !workflow.heygenVideoUrl) {
     return NextResponse.json(
-      { success: false, error: 'No HeyGen video URL found. Cannot retry Submagic.' },
+      { success: false, error: 'No video URL found. Cannot retry Submagic.' },
       { status: 400 }
     );
   }

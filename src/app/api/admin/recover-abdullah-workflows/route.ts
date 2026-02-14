@@ -1,7 +1,7 @@
 /**
  * Recovery API for Stuck Abdullah Workflows
  *
- * Recovers workflows stuck in "heygen_processing" by manually triggering Submagic
+ * Recovers workflows stuck in "heygen_processing" or "synthesia_processing" by manually triggering Submagic
  *
  * Usage:
  *   POST https://ownerfi.ai/api/admin/recover-abdullah-workflows
@@ -36,24 +36,31 @@ export async function POST(request: NextRequest) {
       throw new Error('SUBMAGIC_API_KEY not configured');
     }
 
-    if (!HEYGEN_API_KEY) {
-      throw new Error('HEYGEN_API_KEY not configured');
-    }
-
-    // Get all stuck Abdullah workflows (status = heygen_processing with heygenVideoId)
+    // Get all stuck Abdullah workflows (heygen_processing OR synthesia_processing)
     console.log('🔍 Finding stuck workflows...');
     const workflowsRef = collection(db, 'abdullah_workflow_queue');
-    const q = query(
+
+    // Check both HeyGen and Synthesia stuck workflows
+    const qHeygen = query(
       workflowsRef,
       where('status', '==', 'heygen_processing'),
       orderBy('createdAt', 'desc')
     );
+    const qSynthesia = query(
+      workflowsRef,
+      where('status', '==', 'synthesia_processing'),
+      orderBy('createdAt', 'desc')
+    );
 
-    const snapshot = await getDocs(q);
+    const [heygenSnapshot, synthesiaSnapshot] = await Promise.all([
+      getDocs(qHeygen),
+      getDocs(qSynthesia)
+    ]);
 
-    console.log(`\n📊 Found ${snapshot.size} workflows in "heygen_processing" status\n`);
+    const totalFound = heygenSnapshot.size + synthesiaSnapshot.size;
+    console.log(`\n📊 Found ${totalFound} stuck workflows (${heygenSnapshot.size} HeyGen, ${synthesiaSnapshot.size} Synthesia)\n`);
 
-    if (snapshot.empty) {
+    if (totalFound === 0) {
       return NextResponse.json({
         success: true,
         message: 'No stuck workflows found',
@@ -64,17 +71,21 @@ export async function POST(request: NextRequest) {
 
     const stuckWorkflows: any[] = [];
 
-    snapshot.forEach(docSnap => {
+    heygenSnapshot.forEach(docSnap => {
       const data = docSnap.data();
       if (data.heygenVideoId) {
-        stuckWorkflows.push({
-          id: docSnap.id,
-          ...data
-        });
+        stuckWorkflows.push({ id: docSnap.id, ...data });
       }
     });
 
-    console.log(`⚠️  ${stuckWorkflows.length} workflows have HeyGen video IDs (stuck after HeyGen completion)\n`);
+    synthesiaSnapshot.forEach(docSnap => {
+      const data = docSnap.data();
+      if (data.synthesiaVideoId) {
+        stuckWorkflows.push({ id: docSnap.id, ...data, _provider: 'synthesia' });
+      }
+    });
+
+    console.log(`⚠️  ${stuckWorkflows.length} workflows have video IDs (stuck after video completion)\n`);
 
     if (stuckWorkflows.length === 0) {
       return NextResponse.json({

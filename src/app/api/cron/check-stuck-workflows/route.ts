@@ -32,6 +32,7 @@ const PARALLEL_QUERY_BATCH_SIZE = 6; // Process all 6 brands in parallel
 const MAX_STAGE_DURATION_MINUTES = {
   pending: 30,              // 30 min - should start quickly or fail
   heygen_processing: 20,    // 20 min - HeyGen usually completes in 5-10 min
+  synthesia_processing: 20, // 20 min - Synthesia usually completes in 5-10 min
   submagic_processing: 25,  // 25 min - Submagic usually completes in 10-15 min
   video_processing: 15,     // 15 min - video processing should be quick
   posting: 10,              // 10 min - posting to Late should be fast
@@ -79,6 +80,13 @@ export async function GET(request: NextRequest) {
       const heygenResults = await checkHeyGenWorkflows();
       results.heygen = heygenResults;
 
+      // 2b. Check Synthesia processing workflows
+      console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('2️⃣b CHECKING SYNTHESIA PROCESSING');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+      const synthesiaResults = await checkSynthesiaWorkflows();
+      (results as any).synthesia = synthesiaResults;
+
       // 3. Check SubMagic processing workflows (~60-120s)
       console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       console.log('3️⃣  CHECKING SUBMAGIC PROCESSING');
@@ -106,6 +114,7 @@ export async function GET(request: NextRequest) {
       console.log(`📊 Summary:`);
       console.log(`   Pending: ${results.pending.started}/${results.pending.checked} started`);
       console.log(`   HeyGen: ${results.heygen.advanced}/${results.heygen.checked} advanced`);
+      console.log(`   Synthesia: ${(results as any).synthesia?.advanced || 0}/${(results as any).synthesia?.checked || 0} advanced`);
       console.log(`   SubMagic: ${results.submagic.completed}/${results.submagic.checked} completed`);
       console.log(`   Posting: ${results.posting.retried}/${results.posting.checked} retried`);
       console.log(`   Timed Out: ${timeoutResults.failed}/${timeoutResults.checked} auto-failed`);
@@ -519,6 +528,146 @@ async function checkHeyGenWorkflows() {
 }
 
 // ============================================================================
+// 2b. CHECK SYNTHESIA PROCESSING WORKFLOWS
+// ============================================================================
+
+async function checkSynthesiaWorkflows() {
+  const { db } = await import('@/lib/firebase');
+  const { collection, getDocs, query, where, limit: firestoreLimit, updateDoc, doc } = await import('firebase/firestore');
+  const { getAllBrandIds } = await import('@/lib/brand-utils');
+  const { getSynthesiaVideoStatus } = await import('@/lib/synthesia-client');
+  const { downloadAndUploadToR2 } = await import('@/lib/video-storage');
+
+  if (!db) {
+    console.error('❌ Firebase not initialized');
+    return { checked: 0, advanced: 0, failed: 0 };
+  }
+
+  const SUBMAGIC_API_KEY = process.env.SUBMAGIC_API_KEY;
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://ownerfi.ai';
+
+  if (!SUBMAGIC_API_KEY) {
+    console.error('❌ SUBMAGIC_API_KEY not configured');
+    return { checked: 0, advanced: 0, failed: 0 };
+  }
+
+  let checked = 0;
+  let advanced = 0;
+  let failed = 0;
+
+  const brands = [...getAllBrandIds()];
+
+  for (const brand of brands) {
+    try {
+      const collectionName = `${brand}_workflow_queue`;
+      console.log(`📂 Checking ${collectionName} for Synthesia...`);
+
+      const q = query(
+        collection(db, collectionName),
+        where('status', '==', 'synthesia_processing'),
+        firestoreLimit(10)
+      );
+
+      const snapshot = await getDocs(q);
+      console.log(`   Found ${snapshot.size} Synthesia processing`);
+      checked += snapshot.size;
+
+      for (const workflowDoc of snapshot.docs) {
+        const data = workflowDoc.data();
+        const workflowId = workflowDoc.id;
+        const videoId = data.synthesiaVideoId;
+
+        if (!videoId) continue;
+
+        try {
+          const statusResult = await getSynthesiaVideoStatus(videoId);
+          console.log(`   🎬 ${workflowId}: ${statusResult.status}`);
+
+          if (statusResult.status === 'complete' && statusResult.download) {
+            // Download presigned URL to R2 immediately (URLs expire!)
+            const r2VideoUrl = await downloadAndUploadToR2(
+              statusResult.download,
+              '', // No auth header needed for presigned URLs
+              `synthesia-videos/${videoId}.mp4`
+            );
+
+            // Send to SubMagic
+            const webhookUrl = `${baseUrl}/api/webhooks/submagic/${brand}`;
+            const title = (data.articleTitle || data.title || data.topic || `Video ${workflowId}`)
+              .replace(/&#8217;/g, "'")
+              .replace(/&#8216;/g, "'")
+              .replace(/&#8211;/g, "-")
+              .replace(/&#8212;/g, "-")
+              .replace(/&amp;/g, "&")
+              .replace(/&quot;/g, '"')
+              .substring(0, 50);
+
+            const submagicResponse = await fetch('https://api.submagic.co/v1/projects', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'x-api-key': SUBMAGIC_API_KEY
+              },
+              body: JSON.stringify({
+                title,
+                language: 'en',
+                videoUrl: r2VideoUrl,
+                templateName: 'Hormozi 2',
+                magicBrolls: true,
+                magicBrollsPercentage: 75,
+                magicZooms: true,
+                webhookUrl
+              })
+            });
+
+            if (submagicResponse.ok) {
+              const submagicData = await submagicResponse.json();
+              const projectId = submagicData.id || submagicData.project_id || submagicData.projectId;
+
+              await updateDoc(doc(db, collectionName, workflowId), {
+                status: 'submagic_processing',
+                submagicVideoId: projectId,
+                synthesiaVideoUrl: r2VideoUrl,
+                updatedAt: Date.now()
+              });
+
+              console.log(`   ✅ ${workflowId}: Advanced to SubMagic (ID: ${projectId})`);
+              advanced++;
+            } else {
+              const errorText = await submagicResponse.text().catch(() => 'Unable to read error');
+              console.error(`   ❌ ${workflowId}: SubMagic API failed (${submagicResponse.status}): ${errorText}`);
+
+              await updateDoc(doc(db, collectionName, workflowId), {
+                status: 'failed',
+                error: `SubMagic API error: ${submagicResponse.status} - ${errorText}`,
+                synthesiaVideoUrl: r2VideoUrl,
+                updatedAt: Date.now()
+              });
+              failed++;
+            }
+          } else if (statusResult.status === 'failed') {
+            await updateDoc(doc(db, collectionName, workflowId), {
+              status: 'failed',
+              error: 'Synthesia video generation failed',
+              updatedAt: Date.now()
+            });
+            console.log(`   ❌ ${workflowId}: Synthesia failed`);
+            failed++;
+          }
+        } catch (error) {
+          console.error(`   ❌ ${workflowId}:`, error);
+          failed++;
+        }
+      }
+    } catch (err) {
+      console.error(`   ❌ Error querying ${brand}:`, err);
+    }
+  }
+
+  return { checked, advanced, failed };
+}
+
+// ============================================================================
 // 3. CHECK SUBMAGIC PROCESSING WORKFLOWS
 // ============================================================================
 
@@ -575,7 +724,11 @@ async function checkSubMagicWorkflows() {
             { headers: { 'x-api-key': SUBMAGIC_API_KEY } }
           );
 
-          if (!submagicResponse.ok) continue;
+          if (!submagicResponse.ok) {
+            const errorText = await submagicResponse.text().catch(() => 'Unable to read error');
+            console.error(`   ❌ ${workflowId}: Submagic API error (${submagicResponse.status}): ${errorText}`);
+            continue;
+          }
 
           const submagicData = await submagicResponse.json();
           const status = submagicData.status;
@@ -825,7 +978,7 @@ async function autoFailTimedOutWorkflows() {
 
   // Check all brands
   const brands = [...getAllBrandIds()];
-  const statuses = ['heygen_processing', 'submagic_processing', 'video_processing', 'posting'] as const;
+  const statuses = ['heygen_processing', 'synthesia_processing', 'submagic_processing', 'video_processing', 'posting'] as const;
 
   for (const brand of brands) {
     const collectionName = `${brand}_workflow_queue`;

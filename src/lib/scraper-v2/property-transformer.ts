@@ -315,6 +315,14 @@ export function transformProperty(
 }
 
 /**
+ * Minimum listing price to filter out garbage data ($1 auctions,
+ * "contact for price" placeholders, data entry errors).
+ * Properties below this threshold are a liability risk — they show
+ * as fake "99% discount" deals and trigger false SMS alerts.
+ */
+const MIN_LISTING_PRICE = 10_000;
+
+/**
  * Validate that a property has minimum required data
  * Also filters out rentals, sold, and other non-FOR_SALE listings
  */
@@ -336,6 +344,11 @@ export function validateProperty(property: TransformedProperty): {
   const status = property.homeStatus?.toUpperCase();
   if (status && status !== 'FOR_SALE') {
     return { valid: false, reason: `Not for sale (status: ${status})` };
+  }
+
+  // Reject unrealistically low prices ($1 auctions, placeholder prices, data errors)
+  if (!property.price || property.price < MIN_LISTING_PRICE) {
+    return { valid: false, reason: `Price too low ($${property.price || 0} < $${MIN_LISTING_PRICE} minimum)` };
   }
 
   return { valid: true };
@@ -442,6 +455,9 @@ export function createUnifiedPropertyDoc(
 
     // ===== LAND DETECTION =====
     isLand: filterResult.isLand || false,
+
+    // ===== DATA QUALITY FLAGS =====
+    suspiciousDiscount: filterResult.suspiciousDiscount || false,
 
     // ===== FINANCING TERMS (initially null - can be updated later) =====
     downPaymentAmount: null,

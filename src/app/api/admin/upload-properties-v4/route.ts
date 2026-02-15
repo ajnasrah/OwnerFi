@@ -494,8 +494,8 @@ function mapRowToProperty(
     return { property: null, failedRow: failedRowData };
   }
 
-  if (price <= 0) {
-    failedRowData.reason = 'Invalid or missing price';
+  if (price < 10000) {
+    failedRowData.reason = `Price too low ($${price} < $10,000 minimum)`;
     return { property: null, failedRow: failedRowData };
   }
 
@@ -802,7 +802,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Basic validation
-        if (!property.address || !property.city || property.price <= 0) {
+        if (!property.address || !property.city || property.price < 10000) {
           results.errors.push({
             row: i,
             data: values,

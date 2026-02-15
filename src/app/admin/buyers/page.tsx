@@ -91,7 +91,7 @@ export default function AdminBuyers() {
   useEffect(() => {
     if (status === 'loading') return;
     if (status === 'unauthenticated' || (session?.user as { role?: string } | undefined)?.role !== 'admin') {
-      router.push('/');
+      router.replace('/');
     }
     // Note: loadBuyers is called by the other useEffect that watches status
     // eslint-disable-next-line react-hooks/exhaustive-deps

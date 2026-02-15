@@ -36,6 +36,9 @@ export interface FilterResult {
   // Land detection
   isLand: boolean;
 
+  // Suspicious discount warning (price < 50% of Zestimate — likely bad data)
+  suspiciousDiscount: boolean;
+
   // UNIFIED: Deal types array for single collection
   dealTypes: ('owner_finance' | 'cash_deal')[];
   isOwnerFinance: boolean;
@@ -92,6 +95,10 @@ export function runUnifiedFilter(
   // This prevents false positives from keyword matching alone
   const passesCashDeal = meetsDiscountCriteria;
 
+  // Flag suspicious discounts: price < 50% of Zestimate is almost always bad data
+  // (auctions, tax sales, data errors). These still save but get flagged for review.
+  const suspiciousDiscount = !!(price && price > 0 && zestimate && zestimate > 0 && price < zestimate * 0.5);
+
   // Determine cash deal reason
   let cashDealReason: 'discount' | 'needs_work' | 'both' | undefined;
   if (passesCashDeal) {
@@ -135,6 +142,9 @@ export function runUnifiedFilter(
 
     // Land detection
     isLand,
+
+    // Suspicious discount warning
+    suspiciousDiscount,
 
     // UNIFIED: New fields for single collection
     dealTypes,

@@ -20,7 +20,7 @@ export default function BuyCreditsPage() {
 
   useEffect(() => {
     if (status === 'unauthenticated') {
-      router.push('/auth');
+      router.replace('/auth');
     }
   }, [status, router]);
 

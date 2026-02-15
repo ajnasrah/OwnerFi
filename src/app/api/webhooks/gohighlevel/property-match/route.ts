@@ -15,12 +15,6 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import {
-  collection,
-  addDoc,
-  serverTimestamp,
-  doc,
-} from 'firebase/firestore';
 import { getAdminDb } from '@/lib/firebase-admin';
 import { formatPropertyMatchSMS } from '@/lib/sms-templates';
 import { fetchWithTimeout, ServiceTimeouts } from '@/lib/fetch-with-timeout';
@@ -36,7 +30,7 @@ function verifyWebhookSignature(payload: string, signature: string | null): bool
   if (!WEBHOOK_SECRET) {
     // In development, allow requests without signature if secret not configured
     if (process.env.NODE_ENV === 'development') {
-      console.warn('⚠️ [SECURITY] PROPERTY_MATCH_WEBHOOK_SECRET not set - skipping signature validation in dev');
+      console.warn('[SECURITY] PROPERTY_MATCH_WEBHOOK_SECRET not set - skipping signature validation in dev');
       return true;
     }
     return false;
@@ -96,27 +90,17 @@ interface PropertyMatchWebhookPayload {
   trigger: 'new_property_added' | 'buyer_criteria_changed' | 'manual_trigger';
 }
 
-interface WebhookLog {
-  id?: string;
-  type: 'property_match_notification';
-  status: 'pending' | 'sent' | 'failed';
-  buyerId: string;
-  propertyId: string;
-  buyerPhone: string;
-  payload: PropertyMatchWebhookPayload;
-  goHighLevelResponse?: unknown;
-  errorMessage?: string;
-  sentAt?: string;
-  createdAt: ReturnType<typeof serverTimestamp>;
-  processingTimeMs?: number;
-}
-
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
-  const db = await getAdminDb();
 
   try {
-    console.log('🔔 [GoHighLevel] Property match webhook received');
+    const db = await getAdminDb();
+    if (!db) {
+      console.error('[GoHighLevel] Firebase Admin not initialized');
+      return NextResponse.json({ success: false, error: 'Database not available' }, { status: 500 });
+    }
+
+    console.log('[GoHighLevel] Property match webhook received');
 
     // Get raw body for signature validation
     const rawBody = await request.text();
@@ -126,7 +110,7 @@ export async function POST(request: NextRequest) {
 
     // SECURITY: Verify webhook signature
     if (!verifyWebhookSignature(rawBody, signature)) {
-      console.error('🚫 [SECURITY] Invalid webhook signature');
+      console.error('[SECURITY] Invalid webhook signature');
       return NextResponse.json(
         { error: 'Invalid webhook signature' },
         { status: 401 }
@@ -147,34 +131,33 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    console.log(`📱 [GoHighLevel] Sending notification to ${payload.buyerName} (${payload.buyerPhone})`);
-    console.log(`🏠 [GoHighLevel] Property: ${payload.propertyAddress}, ${payload.propertyCity}`);
+    console.log(`[GoHighLevel] Sending notification to ${payload.buyerName} (${payload.buyerPhone})`);
+    console.log(`[GoHighLevel] Property: ${payload.propertyAddress}, ${payload.propertyCity}`);
 
-    // Create webhook log entry (PENDING)
-    const logEntry: WebhookLog = {
+    // Create webhook log entry (PENDING) using Admin SDK
+    const logRef = await db.collection('webhookLogs').add({
       type: 'property_match_notification',
       status: 'pending',
       buyerId: payload.buyerId,
       propertyId: payload.propertyId,
       buyerPhone: payload.buyerPhone,
       payload: payload,
-      createdAt: serverTimestamp(),
-    };
+      createdAt: new Date(),
+    });
+    console.log(`[GoHighLevel] Webhook log created: ${logRef.id}`);
 
-    const logRef = await addDoc(collection(db, 'webhookLogs'), logEntry);
-    console.log(`📝 [GoHighLevel] Webhook log created: ${logRef.id}`);
-
-    // Forward to GoHighLevel webhook URL (you'll configure this in GoHighLevel)
-    const goHighLevelWebhookUrl = process.env.GOHIGHLEVEL_WEBHOOK_URL;
+    // Forward to GoHighLevel webhook URL
+    const goHighLevelWebhookUrl = process.env.GOHIGHLEVEL_WEBHOOK_URL?.trim();
 
     if (!goHighLevelWebhookUrl) {
-      console.warn('⚠️ [GoHighLevel] GOHIGHLEVEL_WEBHOOK_URL not configured in environment');
+      console.warn('[GoHighLevel] GOHIGHLEVEL_WEBHOOK_URL not configured in environment');
 
       // Update log as failed
-      await updateWebhookLog(logRef.id, {
+      await logRef.update({
         status: 'failed',
         errorMessage: 'GOHIGHLEVEL_WEBHOOK_URL not configured',
         processingTimeMs: Date.now() - startTime,
+        updatedAt: new Date(),
       });
 
       return NextResponse.json({
@@ -234,7 +217,7 @@ export async function POST(request: NextRequest) {
       timestamp: new Date().toISOString(),
     };
 
-    console.log(`🚀 [GoHighLevel] Forwarding to: ${goHighLevelWebhookUrl}`);
+    console.log(`[GoHighLevel] Forwarding to: ${goHighLevelWebhookUrl}`);
 
     const goHighLevelResponse = await fetchWithTimeout(goHighLevelWebhookUrl, {
       method: 'POST',
@@ -253,14 +236,15 @@ export async function POST(request: NextRequest) {
       throw new Error(`GoHighLevel returned ${goHighLevelResponse.status}: ${JSON.stringify(responseData)}`);
     }
 
-    console.log(`✅ [GoHighLevel] Webhook forwarded successfully`);
+    console.log('[GoHighLevel] Webhook forwarded successfully');
 
     // Update log as sent
-    await updateWebhookLog(logRef.id, {
+    await logRef.update({
       status: 'sent',
       sentAt: new Date().toISOString(),
       goHighLevelResponse: responseData,
       processingTimeMs: Date.now() - startTime,
+      updatedAt: new Date(),
     });
 
     return NextResponse.json({
@@ -274,30 +258,13 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error('❌ [GoHighLevel] Webhook failed:', errorMessage);
+    console.error('[GoHighLevel] Webhook failed:', errorMessage);
 
     return NextResponse.json({
       success: false,
       error: errorMessage,
       processingTimeMs: Date.now() - startTime,
     }, { status: 500 });
-  }
-}
-
-// Helper function to update webhook log
-async function updateWebhookLog(logId: string, updates: Partial<WebhookLog>) {
-  const db = await getAdminDb();
-
-  try {
-    const logRef = doc(db, 'webhookLogs', logId);
-    const { updateDoc } = await import('firebase/firestore');
-
-    await updateDoc(logRef, {
-      ...updates,
-      updatedAt: serverTimestamp(),
-    });
-  } catch (error) {
-    console.error('Failed to update webhook log:', error);
   }
 }
 
@@ -319,31 +286,27 @@ export async function GET(request: NextRequest) {
     }
 
     const db = await getAdminDb();
-    const { searchParams } = new URL(request.url);
-
-    const buyerId = searchParams.get('buyerId');
-    const limit = parseInt(searchParams.get('limit') || '50');
-
-    // Build query
-    const { query, where, orderBy, limit: queryLimit, getDocs } = await import('firebase/firestore');
-
-    let logsQuery = query(
-      collection(db, 'webhookLogs'),
-      orderBy('createdAt', 'desc'),
-      queryLimit(limit)
-    );
-
-    // Filter by buyer if specified
-    if (buyerId) {
-      logsQuery = query(
-        collection(db, 'webhookLogs'),
-        where('buyerId', '==', buyerId),
-        orderBy('createdAt', 'desc'),
-        queryLimit(limit)
-      );
+    if (!db) {
+      return NextResponse.json({ success: false, error: 'Database not available' }, { status: 500 });
     }
 
-    const snapshot = await getDocs(logsQuery);
+    const { searchParams } = new URL(request.url);
+    const buyerId = searchParams.get('buyerId');
+    const limitParam = parseInt(searchParams.get('limit') || '50');
+
+    // Build query using Admin SDK
+    let logsQuery: FirebaseFirestore.Query = db.collection('webhookLogs')
+      .orderBy('createdAt', 'desc')
+      .limit(limitParam);
+
+    if (buyerId) {
+      logsQuery = db.collection('webhookLogs')
+        .where('buyerId', '==', buyerId)
+        .orderBy('createdAt', 'desc')
+        .limit(limitParam);
+    }
+
+    const snapshot = await logsQuery.get();
     const logs = snapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data(),

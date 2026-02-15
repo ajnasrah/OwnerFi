@@ -7,6 +7,7 @@
 import { BuyerProfile } from './firebase-models';
 import { PropertyListing } from './property-schema';
 import { fetchWithTimeout, ServiceTimeouts } from './fetch-with-timeout';
+import { getAdminDb } from './firebase-admin';
 import crypto from 'crypto';
 
 interface PropertyMatchNotificationOptions {
@@ -25,6 +26,9 @@ interface PropertyMatchNotificationOptions {
 export async function sendPropertyMatchNotification(
   options: PropertyMatchNotificationOptions
 ): Promise<{ success: boolean; logId?: string; error?: string }> {
+  let claimAcquired = false;
+  let claimId = '';
+
   try {
     const { buyer, property, trigger, baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://ownerfi.ai' } = options;
 
@@ -47,47 +51,43 @@ export async function sendPropertyMatchNotification(
     }
 
     // Check if buyer was already notified about this property (deduplication)
-    // Use Firestore transaction for atomic claim to prevent race conditions
-    const claimId = `${buyer.id}_${property.id}`;
-    let claimAcquired = false;
+    // Use Firestore admin transaction for atomic claim to prevent race conditions
+    claimId = `${buyer.id}_${property.id}`;
 
     try {
-      const { doc, runTransaction } = await import('firebase/firestore');
-      const { db } = await import('@/lib/firebase');
+      const db = await getAdminDb();
+      if (db) {
+        const claimRef = db.collection('sms_notification_claims').doc(claimId);
 
-      const claimRef = doc(db, 'sms_notification_claims', claimId);
+        const claimResult = await db.runTransaction(async (transaction) => {
+          const claimDoc = await transaction.get(claimRef);
 
-      // Use transaction for atomic read-then-write to prevent race conditions
-      const claimResult = await runTransaction(db, async (transaction) => {
-        const claimDoc = await transaction.get(claimRef);
+          if (claimDoc.exists) {
+            return { alreadyClaimed: true };
+          }
 
-        if (claimDoc.exists()) {
-          // Claim already exists - another request got there first
-          return { alreadyClaimed: true };
-        }
+          transaction.set(claimRef, {
+            buyerId: buyer.id,
+            propertyId: property.id,
+            claimedAt: new Date(),
+            status: 'pending'
+          });
 
-        // Create claim atomically within transaction
-        transaction.set(claimRef, {
-          buyerId: buyer.id,
-          propertyId: property.id,
-          claimedAt: new Date(),
-          status: 'pending'
+          return { alreadyClaimed: false };
         });
 
-        return { alreadyClaimed: false };
-      });
+        if (claimResult.alreadyClaimed) {
+          console.log(`[GoHighLevel] Buyer ${buyer.id} already notified about property ${property.id} (claim exists)`);
+          return {
+            success: false,
+            error: 'Buyer already notified about this property',
+          };
+        }
 
-      if (claimResult.alreadyClaimed) {
-        console.log(`[GoHighLevel] Buyer ${buyer.id} already notified about property ${property.id} (claim exists)`);
-        return {
-          success: false,
-          error: 'Buyer already notified about this property',
-        };
+        claimAcquired = true;
       }
 
-      claimAcquired = true;
-
-      // Double-check the in-memory array as backup
+      // In-memory array backup check
       if (buyer.notifiedPropertyIds?.includes(property.id)) {
         console.log(`[GoHighLevel] Buyer ${buyer.id} already notified (in-memory check)`);
         return {
@@ -168,27 +168,29 @@ export async function sendPropertyMatchNotification(
 
     console.log(`[GoHighLevel] Notification sent successfully. Log ID: ${result.logId}`);
 
-    // Track notification in buyer profile and update claim status
+    // Track notification in buyer profile and update claim status using Admin SDK
     try {
-      const { doc, updateDoc, arrayUnion, increment } = await import('firebase/firestore');
-      const { db } = await import('@/lib/firebase');
+      const db = await getAdminDb();
+      if (db) {
+        const { FieldValue } = await import('firebase-admin/firestore');
 
-      // Update buyer profile
-      await updateDoc(doc(db, 'buyerProfiles', buyer.id), {
-        notifiedPropertyIds: arrayUnion(property.id),
-        lastNotifiedAt: new Date(),
-        notificationCount: increment(1)
-      });
-
-      // Update claim status to sent
-      if (claimAcquired) {
-        await updateDoc(doc(db, 'sms_notification_claims', claimId), {
-          status: 'sent',
-          sentAt: new Date()
+        // Update buyer profile
+        await db.collection('buyerProfiles').doc(buyer.id).update({
+          notifiedPropertyIds: FieldValue.arrayUnion(property.id),
+          lastNotifiedAt: new Date(),
+          notificationCount: FieldValue.increment(1),
         });
-      }
 
-      console.log(`[GoHighLevel] Tracked notification for buyer ${buyer.id}`);
+        // Update claim status to sent
+        if (claimAcquired) {
+          await db.collection('sms_notification_claims').doc(claimId).update({
+            status: 'sent',
+            sentAt: new Date(),
+          });
+        }
+
+        console.log(`[GoHighLevel] Tracked notification for buyer ${buyer.id}`);
+      }
     } catch (err) {
       console.warn('[GoHighLevel] Failed to track notification in buyer profile:', err);
       // Don't fail the notification if tracking fails
@@ -206,10 +208,11 @@ export async function sendPropertyMatchNotification(
     // Clean up claim on failure so it can be retried
     if (claimAcquired) {
       try {
-        const { doc, deleteDoc } = await import('firebase/firestore');
-        const { db } = await import('@/lib/firebase');
-        await deleteDoc(doc(db, 'sms_notification_claims', claimId));
-        console.log(`[GoHighLevel] Cleaned up failed claim for ${claimId}`);
+        const db = await getAdminDb();
+        if (db) {
+          await db.collection('sms_notification_claims').doc(claimId).delete();
+          console.log(`[GoHighLevel] Cleaned up failed claim for ${claimId}`);
+        }
       } catch (cleanupErr) {
         console.warn('[GoHighLevel] Failed to clean up claim:', cleanupErr);
       }
@@ -334,7 +337,6 @@ export function shouldNotifyBuyer(
   }
 
   // Check location match
-  const _buyerCity = buyer.preferredCity || buyer.city; // Reserved for future city-level filtering
   const buyerState = buyer.preferredState || buyer.state;
 
   if (property.state !== buyerState) {

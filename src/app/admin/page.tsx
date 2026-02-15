@@ -24,9 +24,9 @@ export default function AdminHub() {
 
   useEffect(() => {
     if (status === 'unauthenticated') {
-      router.push('/auth');
+      router.replace('/auth');
     } else if (status === 'authenticated' && (session as unknown as ExtendedSession)?.user?.role !== 'admin') {
-      router.push('/');
+      router.replace('/');
     }
   }, [status, session, router]);
 
@@ -65,22 +65,22 @@ export default function AdminHub() {
     {
       href: '/dashboard',
       icon: '🏠',
-      title: 'Buyer Dashboard',
-      description: 'Browse properties with the swiper',
+      title: 'Buyer Experience',
+      description: 'Preview the buyer dashboard & property swiper',
       color: 'blue',
     },
     {
       href: '/dashboard/investor',
       icon: '📊',
-      title: 'Investor Dashboard',
-      description: 'View investor deals, filters & alerts',
+      title: 'Investor Experience',
+      description: 'Preview investor deals, filters & alerts',
       color: 'amber',
     },
     {
       href: '/realtor-dashboard',
       icon: '🏡',
-      title: 'Realtor Dashboard',
-      description: 'View buyer leads, agreements & credits',
+      title: 'Realtor Experience',
+      description: 'Preview the realtor dashboard, leads & credits',
       color: 'indigo',
     },
     {

@@ -197,15 +197,34 @@ export async function runAllInOneScraper(
 
   let imagesMerged = 0;
   for (const prop of allDetailedProperties) {
-    if (!prop.imgSrc && prop.zpid) {
-      const searchItem = searchByZpid.get(String(prop.zpid));
-      if (searchItem?.imgSrc) {
-        prop.imgSrc = searchItem.imgSrc;
-        imagesMerged++;
-      }
+    const searchItem = prop.zpid ? searchByZpid.get(String(prop.zpid)) : null;
+    if (!searchItem) continue;
+
+    // Merge primary image
+    if (!prop.imgSrc && searchItem.imgSrc) {
+      prop.imgSrc = searchItem.imgSrc;
+      imagesMerged++;
+    }
+
+    // Merge gallery images (responsivePhotos, photos, images)
+    if (!prop.responsivePhotos && searchItem.responsivePhotos) {
+      prop.responsivePhotos = searchItem.responsivePhotos;
+    }
+    if (!prop.photos && searchItem.photos) {
+      prop.photos = searchItem.photos;
+    }
+    if (!prop.images && searchItem.images) {
+      prop.images = searchItem.images;
+    }
+    // Also merge hi-res image links
+    if (!prop.desktopWebHdpImageLink && searchItem.desktopWebHdpImageLink) {
+      prop.desktopWebHdpImageLink = searchItem.desktopWebHdpImageLink;
+    }
+    if (!prop.hiResImageLink && searchItem.hiResImageLink) {
+      prop.hiResImageLink = searchItem.hiResImageLink;
     }
   }
-  console.log(`[APIFY] Merged ${imagesMerged} images from search results`);
+  console.log(`[APIFY] Merged ${imagesMerged} primary images + gallery data from search results`);
 
   return allDetailedProperties;
 }

@@ -400,6 +400,12 @@ async function runUnifiedScraper(): Promise<{
         // Log result
         logFilterResult(property.fullAddress, filterResult, property.price, property.estimate);
 
+        // Warn on suspicious discounts (price < 50% Zestimate)
+        if (filterResult.suspiciousDiscount) {
+          const pct = filterResult.discountPercentage?.toFixed(1);
+          console.warn(`   [WARNING] ${property.fullAddress} — suspicious ${pct}% discount ($${property.price} vs $${property.estimate} Zestimate)`);
+        }
+
         // Skip if no filters passed (neither owner finance nor cash deal)
         if (!filterResult.shouldSave) {
           metrics.filteredOut++;
@@ -452,7 +458,8 @@ async function runUnifiedScraper(): Promise<{
 
           // Collect for Abdullah's SMS alerts (regional cash deals under 80% only)
           // Skip land properties - Zestimate is unreliable for land (based on SFR comps)
-          if (isRegionalProperty && property.price && property.estimate && !filterResult.isLand) {
+          // Skip suspicious discounts (< 50% Zestimate) - likely bad data
+          if (isRegionalProperty && property.price && property.estimate && !filterResult.isLand && !filterResult.suspiciousDiscount) {
             abdullahCashDeals.push({
               streetAddress: property.streetAddress || property.fullAddress || '',
               askingPrice: property.price,
@@ -463,7 +470,8 @@ async function runUnifiedScraper(): Promise<{
 
           // Collect for investor subscriber alerts (nationwide)
           // Skip land properties - Zestimate is unreliable for land (based on SFR comps)
-          if (property.price && property.estimate && !filterResult.isLand) {
+          // Skip suspicious discounts (< 50% Zestimate) - likely bad data
+          if (property.price && property.estimate && !filterResult.isLand && !filterResult.suspiciousDiscount) {
             investorAlertDeals.push({
               streetAddress: property.streetAddress || property.fullAddress || '',
               askingPrice: property.price,
@@ -517,10 +525,11 @@ async function runUnifiedScraper(): Promise<{
         }
 
         // Collect for Typesense indexing
-        const propertyId = String(zpid);
+        // Use zpid_ prefix to match Cloud Function and admin sync ID format
+        const propertyId = `zpid_${zpid}`;
         typesenseProperties.push({
           id: propertyId,
-          zpid: propertyId,
+          zpid: String(zpid),
           address: property.streetAddress || property.fullAddress || '',
           city: property.city || '',
           state: property.state || '',

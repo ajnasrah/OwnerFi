@@ -154,7 +154,7 @@ export async function GET(request: NextRequest) {
     };
 
     // Get available buyer leads using buyer profile city
-    const availableLeads = await getMatchedBuyerLeads(realtorData, { searchQuery, cityFilter });
+    const availableLeads = await getMatchedBuyerLeads(realtorData, { searchQuery, cityFilter }, session.user.id);
 
     // Get owned buyers (purchased by this realtor)
     const ownedBuyers = await getOwnedBuyers(session.user.id);
@@ -388,7 +388,7 @@ async function getMatchedBuyerLeads(realtorData: {
     nearbyCities?: Array<{ name?: string } | string>;
   };
   serviceCities?: string[];
-}, filters?: { searchQuery?: string; cityFilter?: string }): Promise<Array<{
+}, filters?: { searchQuery?: string; cityFilter?: string }, realtorUserId?: string): Promise<Array<{
   id: string;
   firstName: string;
   lastName: string;
@@ -436,7 +436,8 @@ async function getMatchedBuyerLeads(realtorData: {
     
     
     // Get matches from consolidated system (increased limit from 50 to 200)
-    const leads = await ConsolidatedLeadSystem.findAvailableLeads(realtorProfile, 200);
+    // Pass realtorUserId so the system doesn't filter out this realtor's own reserved leads
+    const leads = await ConsolidatedLeadSystem.findAvailableLeads(realtorProfile, 200, realtorUserId);
 
     // Convert Timestamp to Date for compatibility
     let convertedLeads = leads.map((lead: {

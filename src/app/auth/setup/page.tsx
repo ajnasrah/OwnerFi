@@ -73,7 +73,7 @@ export default function AuthSetup() {
     }
 
     // No verified phone and not authenticated with phone - redirect to auth
-    router.push('/auth');
+    router.replace('/auth');
   }, [router, session, status]);
 
   const handleSubmit = async (e: React.FormEvent) => {

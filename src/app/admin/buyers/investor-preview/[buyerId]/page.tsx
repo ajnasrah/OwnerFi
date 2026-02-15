@@ -52,9 +52,9 @@ export default function InvestorPreview() {
   // Auth check - admin only
   useEffect(() => {
     if (status === 'unauthenticated') {
-      router.push('/');
+      router.replace('/');
     } else if (status === 'authenticated' && (session?.user as { role?: string })?.role !== 'admin') {
-      router.push('/');
+      router.replace('/');
     }
   }, [status, session, router]);
 
@@ -71,13 +71,13 @@ export default function InvestorPreview() {
       setLoading(true);
       const profileRes = await fetch(`/api/admin/buyers/profile/${buyerId}`);
       if (!profileRes.ok) {
-        router.push('/admin/buyers');
+        router.replace('/admin/buyers');
         return;
       }
       const profileData = await profileRes.json();
 
       if (!profileData.profile) {
-        router.push('/admin/buyers');
+        router.replace('/admin/buyers');
         return;
       }
 
@@ -89,7 +89,7 @@ export default function InvestorPreview() {
         setActiveFilter(profileData.profile.dealTypePreference);
       }
     } catch {
-      router.push('/admin/buyers');
+      router.replace('/admin/buyers');
     } finally {
       setLoading(false);
     }

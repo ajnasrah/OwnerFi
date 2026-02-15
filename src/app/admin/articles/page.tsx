@@ -41,13 +41,13 @@ export default function ArticlesPage() {
   // Auth check
   useEffect(() => {
     if (authStatus === 'unauthenticated') {
-      router.push('/auth');
+      router.replace('/auth');
     }
 
     if (authStatus === 'authenticated') {
       const userRole = (session?.user as { role?: string })?.role;
       if (userRole !== 'admin') {
-        router.push('/');
+        router.replace('/');
       }
     }
   }, [authStatus, session, router]);

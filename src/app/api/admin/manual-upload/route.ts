@@ -149,6 +149,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Reject garbage prices ($1 auctions, placeholder prices, data errors)
+    if (!enhancedPropertyData.price || enhancedPropertyData.price < 10000) {
+      return NextResponse.json(
+        { error: `Price too low ($${enhancedPropertyData.price || 0} < $10,000 minimum). This is likely an auction or placeholder listing.` },
+        { status: 400 }
+      );
+    }
+
     // Add to unified properties collection
     // Use zpid_ prefix for document ID to match migration pattern
     const docId = enhancedPropertyData.zpid

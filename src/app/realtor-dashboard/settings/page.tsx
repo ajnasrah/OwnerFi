@@ -31,9 +31,9 @@ export default function RealtorSettings() {
     if (sessionCheckPaused) return;
 
     if (status === 'unauthenticated') {
-      router.push('/auth');
+      router.replace('/auth');
     } else if (status === 'authenticated' && (session as unknown as ExtendedSession)?.user?.role !== 'realtor' && (session as unknown as ExtendedSession)?.user?.role !== 'admin') {
-      router.push('/auth');
+      router.replace('/auth');
     }
   }, [status, session, router, sessionCheckPaused]);
 

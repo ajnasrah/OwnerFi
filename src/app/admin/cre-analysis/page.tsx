@@ -27,9 +27,9 @@ export default function CREAnalysisPage() {
   // Auth check
   useEffect(() => {
     if (status === 'unauthenticated') {
-      router.push('/auth');
+      router.replace('/auth');
     } else if (status === 'authenticated' && (session?.user as { role?: string })?.role !== 'admin') {
-      router.push('/');
+      router.replace('/');
     }
   }, [status, session, router]);
 

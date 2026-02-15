@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import type { InvestorDeal } from '@/app/api/buyer/investor-deals/route';
 
 interface InvestorPropertyCardProps {
@@ -31,6 +31,74 @@ export function InvestorPropertyCard({ deal, isLiked, onToggleLike, onHide, isPr
 
   const currentImage = images[currentIndex] || '/placeholder-house.jpg';
   const isCurrentError = imageError.has(currentIndex);
+
+  // Touch swipe state
+  const touchStartX = useRef(0);
+  const touchStartY = useRef(0);
+  const touchStartTime = useRef(0);
+  const isSwiping = useRef(false);
+  const recentlySwipedRef = useRef(false);
+  const imageContainerRef = useRef<HTMLDivElement>(null);
+  const imagesLengthRef = useRef(images.length);
+  imagesLengthRef.current = images.length;
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    if (imagesLengthRef.current < 2) return;
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+    touchStartTime.current = Date.now();
+    isSwiping.current = false;
+  }, []);
+
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (imagesLengthRef.current < 2 || !isSwiping.current) return;
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    const absDx = Math.abs(dx);
+    const elapsed = Date.now() - touchStartTime.current;
+
+    if (absDx < 30) return; // Too small to count as a swipe
+
+    // Velocity = pixels per millisecond
+    const velocity = absDx / Math.max(elapsed, 1);
+    // Fast swipe (>0.8 px/ms) skips more images: 1 base + extra per velocity tier
+    let skip = 1;
+    if (velocity > 2.0) skip = 5;
+    else if (velocity > 1.5) skip = 4;
+    else if (velocity > 1.0) skip = 3;
+    else if (velocity > 0.8) skip = 2;
+
+    // Block the Zillow link click that follows touchEnd
+    recentlySwipedRef.current = true;
+    setTimeout(() => { recentlySwipedRef.current = false; }, 300);
+
+    const len = imagesLengthRef.current;
+    if (dx < 0) {
+      // Swipe left → next images
+      setCurrentIndex(i => Math.min(i + skip, len - 1));
+    } else {
+      // Swipe right → previous images
+      setCurrentIndex(i => Math.max(i - skip, 0));
+    }
+    setImageLoading(true);
+    isSwiping.current = false;
+  }, []);
+
+  // Non-passive touchmove listener so we can preventDefault to block page scroll during swipe
+  useEffect(() => {
+    const node = imageContainerRef.current;
+    if (!node) return;
+    const onTouchMove = (e: TouchEvent) => {
+      if (imagesLengthRef.current < 2) return;
+      const dx = Math.abs(e.touches[0].clientX - touchStartX.current);
+      const dy = Math.abs(e.touches[0].clientY - touchStartY.current);
+      if (dx > 10 && dx > dy) {
+        isSwiping.current = true;
+        e.preventDefault();
+      }
+    };
+    node.addEventListener('touchmove', onTouchMove, { passive: false });
+    return () => node.removeEventListener('touchmove', onTouchMove);
+  }, []);
 
   const goTo = useCallback((index: number, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -83,14 +151,20 @@ export function InvestorPropertyCard({ deal, isLiked, onToggleLike, onHide, isPr
 
   return (
     <article className={`bg-slate-800/60 border border-slate-700/50 rounded-xl overflow-hidden hover:border-slate-600/70 transition-all duration-200 hover:shadow-lg hover:shadow-black/20 group ${hiding ? 'opacity-50 scale-95 pointer-events-none' : ''}`}>
-      {/* Image Section with Gallery — tappable to open Zillow */}
-      <div className="relative aspect-[4/3] bg-slate-700">
+      {/* Image Section with Gallery — tappable to open Zillow, swipeable */}
+      <div
+        ref={imageContainerRef}
+        className="relative aspect-[4/3] bg-slate-700"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
         <a
           href={detailsUrl}
           target="_blank"
           rel="noopener noreferrer"
           className="absolute inset-0 z-[1] cursor-pointer"
           aria-label="View all photos on Zillow"
+          onClick={(e) => { if (recentlySwipedRef.current) e.preventDefault(); }}
         />
         {!isCurrentError ? (
           <Image

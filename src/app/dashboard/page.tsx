@@ -73,7 +73,7 @@ export default function Dashboard() {
   // Auth check - allow both buyers and realtors to access
   useEffect(() => {
     if (status === 'unauthenticated') {
-      router.push('/auth');
+      router.replace('/auth');
     }
     // Realtors can now access buyer dashboard to search properties
   }, [status, router]);
@@ -105,19 +105,19 @@ export default function Dashboard() {
         if (session && isExtendedSession(session) && session.user.role === 'admin') {
           console.log('🔄 [DASHBOARD] Admin has no buyer profile, redirecting to investor dashboard');
           redirecting = true;
-          router.push('/dashboard/investor');
+          router.replace('/dashboard/investor');
           return;
         }
         console.log('🔄 [DASHBOARD] No profile found, redirecting to setup');
         redirecting = true;
-        router.push('/auth/setup');
+        router.replace('/auth/setup');
         return;
       }
 
       // Redirect investors to their dedicated dashboard
       if (profileData.profile.isInvestor === true) {
         redirecting = true;
-        router.push('/dashboard/investor');
+        router.replace('/dashboard/investor');
         return;
       }
 
@@ -482,7 +482,7 @@ export default function Dashboard() {
               )}
               <Link
                 href="/dashboard/liked"
-                className="relative w-8 h-8 bg-white/10 backdrop-blur-xl hover:bg-white/20 rounded-full flex items-center justify-center transition-all border border-white/20"
+                className="hidden md:flex relative w-8 h-8 bg-white/10 backdrop-blur-xl hover:bg-white/20 rounded-full items-center justify-center transition-all border border-white/20"
               >
                 <span className="text-sm">❤️</span>
                 {likedProperties.length > 0 && (
@@ -493,13 +493,13 @@ export default function Dashboard() {
               </Link>
               <Link
                 href="/dashboard/settings"
-                className="w-8 h-8 bg-white/10 backdrop-blur-xl hover:bg-white/20 rounded-full flex items-center justify-center transition-all border border-white/20"
+                className="hidden md:flex w-8 h-8 bg-white/10 backdrop-blur-xl hover:bg-white/20 rounded-full items-center justify-center transition-all border border-white/20"
               >
                 <span className="text-sm">⚙️</span>
               </Link>
               <button
                 onClick={() => setShowTutorial(true)}
-                className="w-8 h-8 bg-white/10 backdrop-blur-xl hover:bg-white/20 rounded-full flex items-center justify-center transition-all border border-white/20"
+                className="hidden md:flex w-8 h-8 bg-white/10 backdrop-blur-xl hover:bg-white/20 rounded-full items-center justify-center transition-all border border-white/20"
                 title="Show Help"
               >
                 <span className="text-sm">❓</span>
@@ -509,7 +509,7 @@ export default function Dashboard() {
                   trackEvent('auth_logout', { method: 'dashboard' });
                   signOut({ callbackUrl: '/auth/signout' });
                 }}
-                className="w-8 h-8 bg-red-500/20 backdrop-blur-xl hover:bg-red-500/30 rounded-full flex items-center justify-center transition-all border border-red-500/40"
+                className="hidden md:flex w-8 h-8 bg-red-500/20 backdrop-blur-xl hover:bg-red-500/30 rounded-full items-center justify-center transition-all border border-red-500/40"
                 title="Logout"
               >
                 <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -530,6 +530,7 @@ export default function Dashboard() {
         favorites={likedProperties}
         passedIds={[]}
         isLoading={loading}
+        bottomOffset="md:bottom-0 bottom-14"
       />
 
       {/* Filter Upgrade Modal - One-time prompt for old users */}

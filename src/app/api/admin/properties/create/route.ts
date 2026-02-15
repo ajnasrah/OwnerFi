@@ -51,6 +51,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Reject garbage prices ($1 auctions, placeholder prices, data errors)
+    if (Number(body.listPrice) < 10000) {
+      return NextResponse.json(
+        { error: `Price too low ($${body.listPrice} < $10,000 minimum)` },
+        { status: 400 }
+      );
+    }
+
     // Calculate financials automatically
     const financials = calculatePropertyFinancials({
       listPrice: Number(body.listPrice),

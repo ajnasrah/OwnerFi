@@ -65,7 +65,7 @@ export default function AdminRealtors() {
   useEffect(() => {
     if (status === 'loading') return;
     if (status === 'unauthenticated' || (session?.user as { role?: string })?.role !== 'admin') {
-      router.push('/');
+      router.replace('/');
     } else {
       loadRealtors();
     }

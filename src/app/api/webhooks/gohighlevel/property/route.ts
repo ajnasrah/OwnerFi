@@ -531,7 +531,7 @@ export async function POST(request: NextRequest) {
         }
       });
     } else {
-      // NEW PROPERTY: Need minimum required fields (but price is optional)
+      // NEW PROPERTY: Need minimum required fields
       if (!payload.propertyAddress || payload.propertyAddress.trim().length === 0) {
         validationErrors.push('propertyAddress is required for new properties');
       }
@@ -541,7 +541,10 @@ export async function POST(request: NextRequest) {
       if (!payload.state) {
         validationErrors.push('state is required for new properties');
       }
-      // Price is now OPTIONAL - properties can be listed without financial data
+      // Reject garbage prices ($1 auctions, placeholder prices, data errors)
+      if (price < 10000) {
+        validationErrors.push(`Price too low ($${price} < $10,000 minimum)`);
+      }
     }
 
     if (validationErrors.length > 0) {

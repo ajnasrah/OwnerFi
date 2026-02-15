@@ -23,7 +23,7 @@ import {
   serverTimestamp
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { requireRole } from '@/lib/auth-helpers';
+import { requireAuth } from '@/lib/auth-helpers';
 import {
   ErrorResponses,
   createSuccessResponse,
@@ -52,10 +52,10 @@ interface PassPropertyRequest {
 }
 
 export async function POST(request: NextRequest) {
-  // Standardized authentication - allow buyers, realtors, and admins to pass properties
-  const authResult = await requireRole(request, ['buyer', 'realtor', 'admin']);
+  // Authentication — any authenticated user can hide/pass properties
+  const authResult = await requireAuth(request);
   if ('error' in authResult) {
-    console.error('[pass-property] Auth failed - user not authenticated or wrong role');
+    console.error('[pass-property] Auth failed - user not authenticated');
     return authResult.error;
   }
   const { session } = authResult;
@@ -188,8 +188,8 @@ export async function POST(request: NextRequest) {
 
 // DELETE endpoint to clear all passed properties
 export async function DELETE(request: NextRequest) {
-  // Standardized authentication
-  const authResult = await requireRole(request, ['buyer', 'realtor', 'admin']);
+  // Authentication — any authenticated user can clear passed properties
+  const authResult = await requireAuth(request);
   if ('error' in authResult) {
     return authResult.error;
   }

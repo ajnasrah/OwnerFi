@@ -76,9 +76,9 @@ export default function BuyerPreview() {
   // Auth check - only admin can access
   useEffect(() => {
     if (status === 'unauthenticated') {
-      router.push('/');
+      router.replace('/');
     } else if (status === 'authenticated' && (session?.user as { role?: string })?.role !== 'admin') {
-      router.push('/');
+      router.replace('/');
     }
   }, [status, session, router]);
 
@@ -99,7 +99,7 @@ export default function BuyerPreview() {
       const profileData = await profileRes.json();
 
       if (!profileData.profile) {
-        router.push('/admin/buyers');
+        router.replace('/admin/buyers');
         return;
       }
 

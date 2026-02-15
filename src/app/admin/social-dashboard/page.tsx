@@ -221,18 +221,18 @@ export default function SocialMediaDashboard() {
   // Auth check
   useEffect(() => {
     if (authStatus === 'unauthenticated') {
-      router.push('/auth');
+      router.replace('/auth');
     }
 
     if (authStatus === 'authenticated') {
       const userRole = (session?.user as { role?: string })?.role;
       if (userRole !== 'admin') {
         if (userRole === 'buyer') {
-          router.push('/dashboard');
+          router.replace('/dashboard');
         } else if (userRole === 'realtor') {
-          router.push('/realtor-dashboard');
+          router.replace('/realtor-dashboard');
         } else {
-          router.push('/auth');
+          router.replace('/auth');
         }
       }
     }

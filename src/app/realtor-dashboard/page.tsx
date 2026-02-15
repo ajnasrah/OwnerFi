@@ -15,9 +15,9 @@ export default function RealtorDashboardHub() {
   // Auth check
   useEffect(() => {
     if (status === 'unauthenticated') {
-      router.push('/auth');
+      router.replace('/auth');
     } else if (status === 'authenticated' && (session as unknown as ExtendedSession)?.user?.role !== 'realtor' && (session as unknown as ExtendedSession)?.user?.role !== 'admin') {
-      router.push('/');
+      router.replace('/');
     }
   }, [status, session, router]);
 
@@ -77,19 +77,21 @@ export default function RealtorDashboardHub() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-4 py-12">
+      <main className="max-w-4xl mx-auto px-4 py-12 pb-20 md:pb-12">
         {/* Welcome Section */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-white mb-3">
+        <div className="text-center mb-6 md:mb-12">
+          <h1 className="text-2xl md:text-4xl font-bold text-white mb-2 md:mb-3">
             Welcome, {realtorName.split(' ')[0]}
           </h1>
-          <p className="text-slate-300 text-lg">
+          <p className="text-slate-300 text-sm md:text-lg">
             What would you like to do today?
           </p>
+          {/* Mobile hint */}
+          <p className="text-slate-500 text-xs mt-2 md:hidden">Use the tabs below to navigate</p>
         </div>
 
-        {/* Hub Cards */}
-        <div className="grid md:grid-cols-2 gap-6">
+        {/* Hub Cards - hidden on mobile, tab bar handles nav */}
+        <div className="hidden md:grid md:grid-cols-2 gap-6">
 
           {/* View Buyer Leads */}
           <Link
@@ -182,15 +184,25 @@ export default function RealtorDashboardHub() {
 
         </div>
 
-        {/* Quick Actions */}
-        <div className="mt-12 text-center">
+        {/* Mobile Quick Actions */}
+        <div className="md:hidden mt-4 space-y-3">
+          <Link
+            href="/buy-credits"
+            className="block w-full text-center bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/30 text-emerald-400 px-6 py-3 rounded-xl font-semibold transition-all"
+          >
+            Buy Credits
+          </Link>
+        </div>
+
+        {/* Desktop Quick Actions */}
+        <div className="hidden md:block mt-12 text-center">
           <p className="text-slate-400 text-sm mb-4">Need more leads?</p>
           <div className="flex justify-center">
             <Link
               href="/buy-credits"
               className="bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/30 text-emerald-400 px-8 py-3 rounded-xl font-semibold transition-all hover:scale-105"
             >
-              💳 Buy Credits
+              Buy Credits
             </Link>
           </div>
         </div>

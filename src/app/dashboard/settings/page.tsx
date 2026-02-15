@@ -43,7 +43,7 @@ export default function BuyerSettings() {
 
   useEffect(() => {
     if (status === 'unauthenticated') {
-      router.push('/auth');
+      router.replace('/auth');
     }
 
     // Allow buyers, realtors, and admins
@@ -51,11 +51,11 @@ export default function BuyerSettings() {
       const userRole = (session as unknown as ExtendedSession)?.user?.role;
       // Redirect admins to admin dashboard instead of blocking them
       if (userRole === 'admin') {
-        router.push('/admin');
+        router.replace('/admin');
         return;
       }
       if (userRole !== 'buyer' && userRole !== 'realtor') {
-        router.push('/auth');
+        router.replace('/auth');
       }
     }
   }, [status, router, session]);
@@ -262,7 +262,7 @@ export default function BuyerSettings() {
               )}
               <Link
                 href="/dashboard/liked"
-                className="w-9 h-9 bg-slate-800/50 hover:bg-slate-700/50 rounded-xl flex items-center justify-center transition-all duration-200 hover:scale-105"
+                className="hidden md:flex w-9 h-9 bg-slate-800/50 hover:bg-slate-700/50 rounded-xl items-center justify-center transition-all duration-200 hover:scale-105"
               >
                 <span className="text-lg">❤️</span>
               </Link>
@@ -271,7 +271,7 @@ export default function BuyerSettings() {
                   trackEvent('auth_logout', { method: 'settings_button' });
                   signOut({ callbackUrl: '/auth/signout' });
                 }}
-                className="w-9 h-9 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-xl flex items-center justify-center transition-all duration-200 hover:scale-105 group"
+                className="hidden md:flex w-9 h-9 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-xl items-center justify-center transition-all duration-200 hover:scale-105 group"
                 title="Sign Out"
               >
                 <svg className="w-5 h-5 text-red-400 group-hover:text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -284,7 +284,7 @@ export default function BuyerSettings() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-4 pb-8">
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-4 pb-20 md:pb-8">
         {/* Compact Hero Section */}
         <div className="mb-4 text-center">
           <h1 className="text-2xl font-black text-white flex items-center justify-center gap-2">
@@ -675,6 +675,20 @@ export default function BuyerSettings() {
                 <span>Reset All Skipped Properties</span>
               </span>
             )}
+          </button>
+        </div>
+
+        {/* Sign Out - visible on mobile since header logout is hidden */}
+        <div className="mt-3 md:hidden">
+          <button
+            type="button"
+            onClick={() => {
+              trackEvent('auth_logout', { method: 'settings_page' });
+              signOut({ callbackUrl: '/auth/signout' });
+            }}
+            className="w-full bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 py-3 px-4 rounded-xl font-semibold text-sm transition-all"
+          >
+            Sign Out
           </button>
         </div>
       </main>

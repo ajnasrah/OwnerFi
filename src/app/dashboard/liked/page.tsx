@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ExtendedSession, isExtendedSession } from '@/types/session';
 
 import { PropertyListing } from '@/lib/property-schema';
 import { trackEvent } from '@/components/analytics/AnalyticsProvider';
@@ -17,7 +16,7 @@ type Property = PropertyListing & {
 
 
 export default function LikedProperties() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
 
   const [properties, setProperties] = useState<Property[]>([]);
@@ -28,7 +27,7 @@ export default function LikedProperties() {
   // Auth check - allow all authenticated users (buyer, admin, realtor)
   useEffect(() => {
     if (status === 'unauthenticated') {
-      router.push('/auth');
+      router.replace('/auth');
     }
   }, [status, router]);
 
@@ -129,22 +128,8 @@ export default function LikedProperties() {
             </p>
           </div>
 
-          {/* Mobile Navigation Buttons */}
-          <div className="md:hidden flex gap-2">
-            <Link
-              href={isInvestor ? '/dashboard/investor' : '/dashboard'}
-              className="bg-slate-600 hover:bg-slate-500 text-white px-3 py-2 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1"
-            >
-              <span>←</span>
-              <span>Back</span>
-            </Link>
-            <Link
-              href="/how-owner-finance-works"
-              className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-2 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1"
-            >
-              <span>📚</span>
-              <span>Learn</span>
-            </Link>
+          {/* Mobile Navigation Buttons - hidden, tab bar handles nav */}
+          <div className="hidden">
           </div>
 
           <div className="hidden md:flex items-center space-x-6">
@@ -187,7 +172,7 @@ export default function LikedProperties() {
         </div>
       </header>
 
-      <main className="px-4 pb-8 pt-6">
+      <main className="px-4 pb-20 md:pb-8 pt-6">
         <div className="max-w-7xl mx-auto">
           {/* Error State */}
           {error && (

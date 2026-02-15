@@ -45,7 +45,7 @@ export class ConsolidatedLeadSystem {
   /**
    * Find available buyer leads for a realtor based on location and language matching
    */
-  static async findAvailableLeads(realtorProfile: RealtorMatchProfile, limit = 50): Promise<LeadMatch[]> {
+  static async findAvailableLeads(realtorProfile: RealtorMatchProfile, limit = 50, currentRealtorUserId?: string): Promise<LeadMatch[]> {
     try {
       console.log(`\n🔍 [LEAD MATCHING] ===== Starting Lead Search =====`);
       console.log(`   Realtor cities: ${realtorProfile.cities.join(', ')}`);
@@ -94,12 +94,13 @@ export class ConsolidatedLeadSystem {
           continue;
         }
 
-        // Skip if lead is reserved by another realtor (reservation not expired)
+        // Skip if lead is reserved by ANOTHER realtor (reservation not expired)
+        // Allow the current realtor to still see their own reserved leads
         const buyerAny = buyer as any;
-        if (buyerAny.reservedBy) {
+        if (buyerAny.reservedBy && buyerAny.reservedBy !== currentRealtorUserId) {
           const reservedAt = buyerAny.reservedAt?.toMillis?.() || buyerAny.reservedAt?.getTime?.() || 0;
           if ((now - reservedAt) < RESERVATION_EXPIRY_MS) {
-            // Reservation is still active, skip this lead
+            // Reservation is still active and belongs to another realtor, skip this lead
             continue;
           }
         }

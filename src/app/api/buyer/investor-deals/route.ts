@@ -266,7 +266,7 @@ async function searchTypesense(
       filter_by: filters.join(' && '),
       sort_by: 'listPrice:asc',
       per_page: 250,
-      include_fields: 'id,address,city,state,zipCode,bedrooms,bathrooms,squareFeet,yearBuilt,listPrice,monthlyPayment,downPaymentAmount,downPaymentPercent,interestRate,termYears,balloonYears,propertyType,primaryImage,galleryImages,dealType,zestimate,rentEstimate,needsWork,percentOfArv,isLand',
+      include_fields: 'id,address,city,state,zipCode,bedrooms,bathrooms,squareFeet,yearBuilt,listPrice,monthlyPayment,downPaymentAmount,downPaymentPercent,interestRate,termYears,balloonYears,propertyType,primaryImage,galleryImages,dealType,zestimate,rentEstimate,needsWork,percentOfArv,isLand,url,zpid',
     });
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -340,7 +340,7 @@ async function searchTypesense(
       propertyType: (doc.propertyType as string) || undefined,
       zestimate: arv > 0 ? arv : undefined,
       rentEstimate: (doc.rentEstimate as number) || undefined,
-      url: `https://www.zillow.com/homedetails/${doc.id}_zpid/`,
+      url: (doc.url as string) || (doc.zpid ? `https://www.zillow.com/homedetails/${doc.zpid}_zpid/` : undefined) || undefined,
     } as InvestorDeal;
   }).filter(Boolean) as InvestorDeal[];
 }
@@ -471,9 +471,9 @@ async function searchFirestore(
           propertyType: (data.homeType as string) || (data.propertyType as string) || undefined,
           zestimate: arv > 0 ? arv : undefined,
           rentEstimate: (data.rentEstimate as number) || undefined,
-          url: ((data.url as string)?.startsWith('http') ? data.url as string : data.url ? `https://www.zillow.com${data.url}` : null)
-            || (data.hdpUrl ? `https://www.zillow.com${data.hdpUrl}` : null)
-            || `https://www.zillow.com/homedetails/${doc.id}_zpid/`,
+          url: ((data.url as string)?.startsWith('http') ? data.url as string : data.url ? `https://www.zillow.com${data.url}` : undefined)
+            || (data.hdpUrl ? `https://www.zillow.com${data.hdpUrl}` : undefined)
+            || undefined,
         });
       }
     }

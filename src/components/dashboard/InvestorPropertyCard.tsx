@@ -16,12 +16,18 @@ export function InvestorPropertyCard({ deal, isLiked, onToggleLike, onHide, isPr
   const [imageError, setImageError] = useState<Set<number>>(new Set());
   const [imageLoading, setImageLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [hiding, setHiding] = useState(false);
 
   // Build gallery: use galleryImages if available, otherwise fall back to primary
   const images = (deal.galleryImages && deal.galleryImages.length > 0)
     ? deal.galleryImages
     : deal.imgSrc ? [deal.imgSrc] : [];
   const hasMultiple = images.length > 1;
+
+  // DEBUG: log gallery data so we can see what the API is actually returning
+  if (typeof window !== 'undefined' && isPriority) {
+    console.log(`[Gallery Debug] ${deal.address}: galleryImages=${deal.galleryImages?.length ?? 'undefined'}, imgSrc=${deal.imgSrc ? 'yes' : 'no'}, total=${images.length}, hasMultiple=${hasMultiple}`);
+  }
 
   const currentImage = images[currentIndex] || '/placeholder-house.jpg';
   const isCurrentError = imageError.has(currentIndex);
@@ -46,14 +52,46 @@ export function InvestorPropertyCard({ deal, isLiked, onToggleLike, onHide, isPr
     setImageLoading(true);
   }, [images.length]);
 
-  const detailsUrl = deal.url
-    ? deal.url
-    : `https://www.google.com/search?q=${encodeURIComponent(`${deal.address} ${deal.city} ${deal.state}`)}`;
+  // Build the details URL — prefer Zillow search by address (always works, even for sold/delisted properties)
+  // Direct Zillow URLs (/homedetails/ZPID_zpid/) break when listings are removed
+  const zillowSearchUrl = `https://www.zillow.com/homes/${encodeURIComponent(`${deal.address}, ${deal.city}, ${deal.state}`.trim())}_rb/`;
+  const detailsUrl = zillowSearchUrl;
+
+  // Explicit click handler for More Info — belt-and-suspenders approach
+  const handleMoreInfoClick = useCallback((e: React.MouseEvent<HTMLAnchorElement>) => {
+    // Let the native <a> tag handle it first, but if something blocks it,
+    // force open via window.open
+    try {
+      const win = window.open(detailsUrl, '_blank', 'noopener,noreferrer');
+      if (win) {
+        // window.open succeeded, prevent the <a> from also navigating
+        e.preventDefault();
+      }
+      // If window.open returns null (blocked by popup blocker), let the <a> tag handle it naturally
+    } catch {
+      // If window.open throws, let the <a> tag handle it naturally
+    }
+  }, [detailsUrl]);
+
+  // Hide handler with visual feedback
+  const handleHide = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (hiding || !onHide) return;
+    setHiding(true);
+    onHide();
+  }, [hiding, onHide]);
 
   return (
-    <article className="bg-slate-800/60 border border-slate-700/50 rounded-xl overflow-hidden hover:border-slate-600/70 transition-all duration-200 hover:shadow-lg hover:shadow-black/20 group">
-      {/* Image Section with Gallery */}
+    <article className={`bg-slate-800/60 border border-slate-700/50 rounded-xl overflow-hidden hover:border-slate-600/70 transition-all duration-200 hover:shadow-lg hover:shadow-black/20 group ${hiding ? 'opacity-50 scale-95 pointer-events-none' : ''}`}>
+      {/* Image Section with Gallery — tappable to open Zillow */}
       <div className="relative aspect-[4/3] bg-slate-700">
+        <a
+          href={detailsUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="absolute inset-0 z-[1] cursor-pointer"
+          aria-label="View all photos on Zillow"
+        />
         {!isCurrentError ? (
           <Image
             src={currentImage}
@@ -144,11 +182,11 @@ export function InvestorPropertyCard({ deal, isLiked, onToggleLike, onHide, isPr
           )}
         </div>
 
-        {/* Top right: Like + Hide buttons */}
+        {/* Top right: Hide + Like buttons */}
         <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5 z-10">
           {onHide && (
             <button
-              onClick={(e) => { e.stopPropagation(); onHide(); }}
+              onClick={handleHide}
               aria-label="Hide property"
               className="w-9 h-9 flex items-center justify-center rounded-full bg-black/40 backdrop-blur-sm hover:bg-red-600/80 transition-all active:scale-90"
             >
@@ -272,15 +310,16 @@ export function InvestorPropertyCard({ deal, isLiked, onToggleLike, onHide, isPr
           )}
         </div>
 
-        {/* View Details link */}
+        {/* View Details link — uses <a> tag with onClick fallback for maximum compatibility */}
         <a
           href={detailsUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="w-full mt-3 px-3 py-2 bg-slate-700/50 hover:bg-slate-600/50 border border-slate-600/50 text-white text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 group-hover:border-emerald-500/30"
+          onClick={handleMoreInfoClick}
+          className="block w-full mt-3 px-3 py-2.5 bg-emerald-600/80 hover:bg-emerald-500/90 text-white text-sm font-semibold rounded-lg transition-all text-center cursor-pointer select-none active:scale-[0.98]"
         >
-          More Info
-          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          View on Zillow
+          <svg className="w-3.5 h-3.5 ml-1.5 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
           </svg>
         </a>

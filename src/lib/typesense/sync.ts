@@ -171,7 +171,7 @@ export function transformPropertyForTypesense(
     percentOfArv: (property as any).percentOfArv || undefined,
 
     // URLs
-    url: (property as any).url || (property as any).hdpUrl || undefined,
+    url: (property as any).url || ((property as any).hdpUrl ? ((property as any).hdpUrl.startsWith('http') ? (property as any).hdpUrl : `https://www.zillow.com${(property as any).hdpUrl}`) : undefined),
     zpid: (property as any).zpid ? String((property as any).zpid) : undefined,
 
     createdAt: timestampToUnix(property.createdAt),
@@ -449,7 +449,7 @@ export async function indexRawFirestoreProperty(
       financingType: data.financingType || undefined,
       // IDs and URLs
       zpid: data.zpid ? String(data.zpid) : undefined,
-      url: data.url || data.hdpUrl || undefined,
+      url: data.url || (data.hdpUrl ? (data.hdpUrl.startsWith('http') ? data.hdpUrl : `https://www.zillow.com${data.hdpUrl}`) : undefined),
       // Images
       primaryImage: data.firstPropertyImage || data.imgSrc || data.imageUrl || undefined,
       galleryImages: data.propertyImages || data.imageUrls || undefined,

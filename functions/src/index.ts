@@ -110,7 +110,7 @@ function transformToTypesense(docId: string, data: FirebaseFirestore.DocumentDat
     sourceType: data.source || undefined,
     // URLs & IDs
     zpid: data.zpid ? String(data.zpid) : undefined,
-    url: data.url || data.hdpUrl || undefined,
+    url: data.url || (data.hdpUrl ? (data.hdpUrl.startsWith('http') ? data.hdpUrl : `https://www.zillow.com${data.hdpUrl}`) : undefined),
     // Agent/Contact info
     agentName: data.agentName || data.listingAgentName || undefined,
     agentPhone: data.agentPhoneNumber || data.agentPhone || data.brokerPhoneNumber || undefined,
@@ -136,6 +136,13 @@ export const onPropertyCreate = onDocumentCreated('properties/{propertyId}', asy
   // Skip if not active or doesn't have required data
   if (data.isActive === false) {
     console.log(`Skipping inactive property: ${docId}`);
+    return;
+  }
+
+  // Skip garbage prices ($1 auctions, placeholder prices, data errors)
+  const price = data.price || data.listPrice || 0;
+  if (price < 10000) {
+    console.log(`Skipping property with garbage price ($${price}): ${docId}`);
     return;
   }
 

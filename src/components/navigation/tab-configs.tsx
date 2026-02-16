@@ -21,17 +21,13 @@ export function getAdminTabs(): TabItem[] {
   ];
 }
 
-// ── Realtor tabs (3-4) ──
-export function getRealtorTabs(opts: { isInvestor: boolean }): TabItem[] {
-  const tabs: TabItem[] = [
+// ── Realtor tabs (3) ──
+export function getRealtorTabs(): TabItem[] {
+  return [
     { key: 'leads', label: 'Leads', href: '/realtor-dashboard/buyers', icon: UsersIcon, matchPaths: ['/realtor-dashboard'] },
-    { key: 'properties', label: 'Properties', href: '/dashboard', icon: HomeIcon },
+    { key: 'deals', label: 'Deals', href: '/dashboard/investor', icon: ChartIcon },
+    { key: 'settings', label: 'Settings', href: '/dashboard/settings', icon: GearIcon },
   ];
-  if (opts.isInvestor) {
-    tabs.push({ key: 'deals', label: 'Deals', href: '/dashboard/investor', icon: ChartIcon });
-  }
-  tabs.push({ key: 'settings', label: 'Settings', href: '/dashboard/settings', icon: GearIcon });
-  return tabs;
 }
 
 // ── Buyer tabs (3) ──

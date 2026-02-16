@@ -229,7 +229,7 @@ export const costs = {
 };
 
 // Video Provider Configuration
-export const videoProvider = optionalEnv('VIDEO_PROVIDER', 'heygen') as 'heygen' | 'synthesia';
+export const videoProvider = optionalEnv('VIDEO_PROVIDER', 'synthesia') as 'heygen' | 'synthesia';
 
 // Feature Flags
 export const features = {

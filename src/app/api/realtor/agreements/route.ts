@@ -68,28 +68,44 @@ export async function GET(request: NextRequest) {
         }),
         timeZone: (agreement as unknown as { timeZone?: string }).timeZone || REFERRING_COMPANY_DEFAULTS.TIME_ZONE,
 
-        // Section 1: Referring Company (Realtor - refers the buyer to OwnerFi)
-        referringCompanyName: agreement.realtorCompany || 'Independent Agent',
-        referringCompanyAddress: '',
-        referringCompanyPhone: agreement.realtorPhone,
-        referringCompanyLicense: agreement.realtorLicenseNumber || '',
+        // Section 1: Referring Company
+        // For re-referrals: Agent A (who is passing the lead)
+        // For original agreements: OwnerFi (who found and refers the buyer)
+        referringCompanyName: agreement.isReReferral
+          ? (agreement.referringAgentCompany || 'Independent Agent')
+          : REFERRING_COMPANY_DEFAULTS.COMPANY_NAME,
+        referringCompanyAddress: agreement.isReReferral
+          ? ''
+          : REFERRING_COMPANY_DEFAULTS.COMPANY_ADDRESS,
+        referringCompanyPhone: agreement.isReReferral
+          ? (agreement.referringAgentPhone || '')
+          : REFERRING_COMPANY_DEFAULTS.COMPANY_PHONE,
+        referringCompanyLicense: agreement.isReReferral
+          ? (agreement.referringAgentLicenseNumber || '')
+          : REFERRING_COMPANY_DEFAULTS.COMPANY_LICENSE,
         referringCompanyFederalId: '',
-        referringLicenseeName: agreement.realtorName,
-        referringLicenseePhone: agreement.realtorPhone,
-        referringLicenseeEmail: agreement.realtorEmail,
+        referringLicenseeName: agreement.isReReferral
+          ? (agreement.referringAgentName || 'Agent')
+          : REFERRING_COMPANY_DEFAULTS.LICENSEE_NAME,
+        referringLicenseePhone: agreement.isReReferral
+          ? (agreement.referringAgentPhone || '')
+          : REFERRING_COMPANY_DEFAULTS.LICENSEE_PHONE,
+        referringLicenseeEmail: agreement.isReReferral
+          ? (agreement.referringAgentEmail || '')
+          : REFERRING_COMPANY_DEFAULTS.LICENSEE_EMAIL,
         referringRelocationDirector: 'N/A',
         referringRelocationEmail: 'N/A',
 
-        // Section 2: Receiving Company / Paying Referral Fee (OwnerFi)
-        receivingCompanyName: REFERRING_COMPANY_DEFAULTS.COMPANY_NAME,
-        receivingCompanyAddress: REFERRING_COMPANY_DEFAULTS.COMPANY_ADDRESS,
-        receivingCompanyPhone: REFERRING_COMPANY_DEFAULTS.COMPANY_PHONE,
-        receivingCompanyLicense: REFERRING_COMPANY_DEFAULTS.COMPANY_LICENSE,
-        receivingLicenseeName: REFERRING_COMPANY_DEFAULTS.LICENSEE_NAME,
-        receivingLicenseePhone: REFERRING_COMPANY_DEFAULTS.LICENSEE_PHONE,
-        receivingLicenseeEmail: REFERRING_COMPANY_DEFAULTS.LICENSEE_EMAIL,
-        receivingRelocationDirector: REFERRING_COMPANY_DEFAULTS.RELOCATION_DIRECTOR,
-        receivingRelocationEmail: REFERRING_COMPANY_DEFAULTS.RELOCATION_EMAIL,
+        // Section 2: Receiving Company / Paying Referral Fee (Agent B for re-referrals, Realtor for originals)
+        receivingCompanyName: agreement.realtorCompany || 'Independent Agent',
+        receivingCompanyAddress: '',
+        receivingCompanyPhone: agreement.realtorPhone,
+        receivingCompanyLicense: agreement.realtorLicenseNumber || '',
+        receivingLicenseeName: agreement.realtorName,
+        receivingLicenseePhone: agreement.realtorPhone,
+        receivingLicenseeEmail: agreement.realtorEmail,
+        receivingRelocationDirector: 'N/A',
+        receivingRelocationEmail: 'N/A',
 
         // Section 3: Prospect (Buyer)
         prospectName: [agreement.buyerFirstName, agreement.buyerLastName].filter(Boolean).join(' ') || 'Unknown',

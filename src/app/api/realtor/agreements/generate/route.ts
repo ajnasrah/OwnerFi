@@ -195,28 +195,28 @@ export async function POST(request: NextRequest) {
       expirationDate,
       timeZone: REFERRING_COMPANY_DEFAULTS.TIME_ZONE,
 
-      // Section 1: COMPANY REFERRING THE BUYER OR SELLER (Realtor - refers buyer to OwnerFi)
-      referringCompanyName: user.realtorData.company || 'Independent Agent',
-      referringCompanyAddress: '', // Realtor will fill in when signing
-      referringCompanyPhone: user.realtorData.phone,
-      referringCompanyLicense: user.realtorData.licenseNumber || '',
-      referringCompanyFederalId: '',
-      referringLicenseeName: realtorName,
-      referringLicenseePhone: user.realtorData.phone,
-      referringLicenseeEmail: user.realtorData.email,
-      referringRelocationDirector: 'N/A',
-      referringRelocationEmail: 'N/A',
+      // Section 1: COMPANY REFERRING THE BUYER OR SELLER (OwnerFi - finds and refers the buyer)
+      referringCompanyName: REFERRING_COMPANY_DEFAULTS.COMPANY_NAME,
+      referringCompanyAddress: REFERRING_COMPANY_DEFAULTS.COMPANY_ADDRESS,
+      referringCompanyPhone: REFERRING_COMPANY_DEFAULTS.COMPANY_PHONE,
+      referringCompanyLicense: REFERRING_COMPANY_DEFAULTS.COMPANY_LICENSE,
+      referringCompanyFederalId: REFERRING_COMPANY_DEFAULTS.COMPANY_FEDERAL_ID || '',
+      referringLicenseeName: REFERRING_COMPANY_DEFAULTS.LICENSEE_NAME,
+      referringLicenseePhone: REFERRING_COMPANY_DEFAULTS.LICENSEE_PHONE,
+      referringLicenseeEmail: REFERRING_COMPANY_DEFAULTS.LICENSEE_EMAIL,
+      referringRelocationDirector: REFERRING_COMPANY_DEFAULTS.RELOCATION_DIRECTOR,
+      referringRelocationEmail: REFERRING_COMPANY_DEFAULTS.RELOCATION_EMAIL,
 
-      // Section 2: COMPANY AGREEING TO PAY REFERRAL FEE (OwnerFi)
-      receivingCompanyName: REFERRING_COMPANY_DEFAULTS.COMPANY_NAME,
-      receivingCompanyAddress: REFERRING_COMPANY_DEFAULTS.COMPANY_ADDRESS,
-      receivingCompanyPhone: REFERRING_COMPANY_DEFAULTS.COMPANY_PHONE,
-      receivingCompanyLicense: REFERRING_COMPANY_DEFAULTS.COMPANY_LICENSE,
-      receivingLicenseeName: REFERRING_COMPANY_DEFAULTS.LICENSEE_NAME,
-      receivingLicenseePhone: REFERRING_COMPANY_DEFAULTS.LICENSEE_PHONE,
-      receivingLicenseeEmail: REFERRING_COMPANY_DEFAULTS.LICENSEE_EMAIL,
-      receivingRelocationDirector: REFERRING_COMPANY_DEFAULTS.RELOCATION_DIRECTOR,
-      receivingRelocationEmail: REFERRING_COMPANY_DEFAULTS.RELOCATION_EMAIL,
+      // Section 2: COMPANY AGREEING TO PAY REFERRAL FEE (Realtor's brokerage - receives referral, pays fee)
+      receivingCompanyName: user.realtorData.company || 'Independent Agent',
+      receivingCompanyAddress: '', // Realtor will fill in when signing
+      receivingCompanyPhone: user.realtorData.phone,
+      receivingCompanyLicense: user.realtorData.licenseNumber || '',
+      receivingLicenseeName: realtorName,
+      receivingLicenseePhone: user.realtorData.phone,
+      receivingLicenseeEmail: user.realtorData.email,
+      receivingRelocationDirector: 'N/A',
+      receivingRelocationEmail: 'N/A',
 
       // Section 3: NAME OF PARTY BEING REFERRED (Buyer)
       prospectName: buyerFullName,
@@ -244,21 +244,21 @@ export async function POST(request: NextRequest) {
       realtorUserId: session.user.id,
       buyerId: leadId,
 
-      // Section 1: Referring Company (Realtor - refers buyer to OwnerFi)
-      referringCompanyName: user.realtorData.company || 'Independent Agent',
-      referringCompanyAddress: '',
-      referringCompanyPhone: user.realtorData.phone,
-      referringCompanyLicense: user.realtorData.licenseNumber || null,
-      referringLicenseeName: realtorName,
-      referringLicenseePhone: user.realtorData.phone,
-      referringLicenseeEmail: user.realtorData.email,
+      // Section 1: Referring Company (OwnerFi - finds and refers the buyer)
+      referringCompanyName: REFERRING_COMPANY_DEFAULTS.COMPANY_NAME,
+      referringCompanyAddress: REFERRING_COMPANY_DEFAULTS.COMPANY_ADDRESS,
+      referringCompanyPhone: REFERRING_COMPANY_DEFAULTS.COMPANY_PHONE,
+      referringCompanyLicense: REFERRING_COMPANY_DEFAULTS.COMPANY_LICENSE,
+      referringLicenseeName: REFERRING_COMPANY_DEFAULTS.LICENSEE_NAME,
+      referringLicenseePhone: REFERRING_COMPANY_DEFAULTS.LICENSEE_PHONE,
+      referringLicenseeEmail: REFERRING_COMPANY_DEFAULTS.LICENSEE_EMAIL,
 
-      // Section 2: Receiving Company / Paying (OwnerFi) - RF-701 fields
-      receivingCompanyName: REFERRING_COMPANY_DEFAULTS.COMPANY_NAME,
-      receivingLicenseeName: REFERRING_COMPANY_DEFAULTS.LICENSEE_NAME,
-      receivingLicenseePhone: REFERRING_COMPANY_DEFAULTS.LICENSEE_PHONE,
-      receivingLicenseeEmail: REFERRING_COMPANY_DEFAULTS.LICENSEE_EMAIL,
-      receivingCompanyLicense: REFERRING_COMPANY_DEFAULTS.COMPANY_LICENSE,
+      // Section 2: Receiving Company / Paying Fee (Realtor's brokerage)
+      receivingCompanyName: user.realtorData.company || 'Independent Agent',
+      receivingLicenseeName: realtorName,
+      receivingLicenseePhone: user.realtorData.phone,
+      receivingLicenseeEmail: user.realtorData.email,
+      receivingCompanyLicense: user.realtorData.licenseNumber || null,
 
       // Realtor fields (for interface compatibility)
       realtorName,

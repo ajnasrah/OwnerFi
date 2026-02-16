@@ -458,6 +458,16 @@ export default function InvestorDashboard() {
 
             {/* Right: Actions */}
             <div className="flex items-center gap-1.5">
+              <Link
+                href="/dashboard"
+                className="px-2.5 py-1 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg flex items-center gap-1 transition-all"
+                title="Back to Dashboard"
+              >
+                <svg className="w-3 h-3 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+                </svg>
+                <span className="text-slate-300 text-[10px] font-bold">HOME</span>
+              </Link>
               {(session as unknown as ExtendedSession)?.user?.role === 'admin' && (
                 <Link
                   href="/admin"

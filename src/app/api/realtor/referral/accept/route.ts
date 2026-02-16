@@ -349,6 +349,21 @@ export async function POST(request: NextRequest) {
       realtorLicenseNumber: agentB.realtorData.licenseNumber || '',
       realtorLicenseState: agentB.realtorData.licenseState || '',
 
+      // RF-701 Section 1: Referring Company (Agent A - refers the buyer to Agent B)
+      referringCompanyName: agentA?.realtorData?.company || originalAgreement.realtorCompany || 'Independent Agent',
+      referringCompanyPhone: agentA?.realtorData?.phone || originalAgreement.realtorPhone || '',
+      referringCompanyLicense: agentA?.realtorData?.licenseNumber || originalAgreement.realtorLicenseNumber || '',
+      referringLicenseeName: referringAgentNameForAgreement,
+      referringLicenseePhone: agentA?.realtorData?.phone || originalAgreement.realtorPhone || '',
+      referringLicenseeEmail: agentA?.email || originalAgreement.realtorEmail || '',
+
+      // RF-701 Section 2: Receiving Company / Paying Fee (Agent B's brokerage)
+      receivingCompanyName: agentB.realtorData.company || 'Independent Agent',
+      receivingLicenseeName: `${agentB.realtorData.firstName.trim()} ${agentB.realtorData.lastName.trim()}`,
+      receivingLicenseePhone: agentB.realtorData.phone || agentB.phone || '',
+      receivingLicenseeEmail: agentB.email,
+      receivingCompanyLicense: agentB.realtorData.licenseNumber || '',
+
       // Buyer/Lead details (from original agreement)
       buyerFirstName: originalAgreement.buyerFirstName,
       buyerLastName: originalAgreement.buyerLastName,

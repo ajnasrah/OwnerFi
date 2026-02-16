@@ -359,6 +359,20 @@ export interface ReferralAgreement {
   commissionEarned?: number;
   closingDate?: Timestamp;
 
+  // RF-701 Section 1 & 2 fields (stored for rendering agreement)
+  referringCompanyName?: string;
+  referringCompanyAddress?: string;
+  referringCompanyPhone?: string;
+  referringCompanyLicense?: string;
+  referringLicenseeName?: string;
+  referringLicenseePhone?: string;
+  referringLicenseeEmail?: string;
+  receivingCompanyName?: string;
+  receivingLicenseeName?: string;
+  receivingLicenseePhone?: string;
+  receivingLicenseeEmail?: string;
+  receivingCompanyLicense?: string;
+
   // Re-referral fields (Agent A referring to Agent B)
   isReReferral?: boolean;                    // true if this is a re-referral from another agent
   originalAgreementId?: string;              // ID of the original OwnerFi agreement

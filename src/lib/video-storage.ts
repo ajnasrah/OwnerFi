@@ -171,7 +171,7 @@ export async function downloadAndUploadToR2(
   // Upload to R2
   const { S3Client, PutObjectCommand } = await import('@aws-sdk/client-s3');
 
-  const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
+  const accountId = process.env.CLOUDFLARE_ACCOUNT_ID || process.env.R2_ACCOUNT_ID;
   const accessKeyId = process.env.R2_ACCESS_KEY_ID;
   const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
 
@@ -352,7 +352,7 @@ export async function uploadSubmagicVideo(
   // Upload to R2 with retry logic
   const { S3Client, PutObjectCommand } = await import('@aws-sdk/client-s3');
 
-  const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
+  const accountId = process.env.CLOUDFLARE_ACCOUNT_ID || process.env.R2_ACCOUNT_ID;
   const accessKeyId = process.env.R2_ACCESS_KEY_ID;
   const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
 
@@ -482,7 +482,7 @@ export async function uploadVideoToR2(
 
   const { S3Client, PutObjectCommand } = await import('@aws-sdk/client-s3');
 
-  const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
+  const accountId = process.env.CLOUDFLARE_ACCOUNT_ID || process.env.R2_ACCOUNT_ID;
   const accessKeyId = process.env.R2_ACCESS_KEY_ID;
   const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
 
@@ -557,7 +557,7 @@ export async function deleteExpiredVideos(): Promise<{
   // ===== CLOUDFLARE R2 CLEANUP =====
   console.log('☁️  Cleaning up R2...');
   try {
-    const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
+    const accountId = process.env.CLOUDFLARE_ACCOUNT_ID || process.env.R2_ACCOUNT_ID;
     const accessKeyId = process.env.R2_ACCESS_KEY_ID;
     const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
     const bucketName = process.env.R2_BUCKET_NAME || 'ownerfi-podcast-videos';

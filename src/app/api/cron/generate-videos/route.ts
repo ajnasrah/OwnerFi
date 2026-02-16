@@ -222,13 +222,12 @@ async function generateArticleVideos() {
 // ============================================================================
 
 async function generateGazaVideo() {
-  const { db } = await import('@/lib/firebase');
-  const { collection, query, where, getDocs, limit: firestoreLimit } = await import('firebase/firestore');
-  const { getCollectionName, getAndLockArticle, addWorkflowToQueue, updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
-  const { createGazaVideoGenerator } = await import('@/lib/gaza-video-generator');
-  const { getBrandConfig } = await import('@/config/brand-configs');
+  const { getAndLockArticle, addWorkflowToQueue, updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
+  const { getBrandWebhookUrl } = await import('@/lib/brand-utils');
+  const { videoProvider } = await import('@/lib/env-config');
 
   const brand = 'gaza';
+  const activeProvider = videoProvider;
 
   try {
     // Check daily limit (5 videos per day)
@@ -248,6 +247,7 @@ async function generateGazaVideo() {
     const maxPerDay = 5;
 
     console.log(`   Videos generated today: ${videosToday}/${maxPerDay}`);
+    console.log(`   Video provider: ${activeProvider}`);
 
     if (videosToday >= maxPerDay) {
       console.log(`   ⏭️  Daily limit reached (${maxPerDay}/day)`);
@@ -273,8 +273,59 @@ async function generateGazaVideo() {
 
     console.log(`   ✅ Article: "${article.title.substring(0, 50)}..."`);
 
-    // Create workflow entry using correct function signature
-    // Use date-based articleId for deduplication (not timestamp)
+    // Generate script using OpenAI (same as gaza-video-generator)
+    const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+    let script: string;
+
+    if (OPENAI_API_KEY) {
+      const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+      const todayName = days[new Date().getDay()];
+      const dailyThemes: Record<string, { theme: string; emotion: string }> = {
+        'Monday': { theme: 'Breaking News', emotion: 'Urgency / Concern' },
+        'Tuesday': { theme: 'Human Stories', emotion: 'Sadness / Empathy' },
+        'Wednesday': { theme: 'Humanitarian Crisis', emotion: 'Grief / Despair' },
+        'Thursday': { theme: 'Aid & Relief', emotion: 'Hope / Determination' },
+        'Friday': { theme: 'Voices from Gaza', emotion: 'Compassion / Solidarity' },
+        'Saturday': { theme: 'World Response', emotion: 'Frustration / Hope' },
+        'Sunday': { theme: 'Call to Action', emotion: 'Heartbreak / Urgency' }
+      };
+      const todayTheme = dailyThemes[todayName];
+
+      const prompt = `You are creating a short-form news video script about the Gaza humanitarian crisis.
+TONE: Somber, empathetic, urgent but respectful. NEVER sensationalize suffering.
+EMOTION TODAY: ${todayTheme.emotion}
+THEME: ${todayTheme.theme}
+
+ARTICLE:
+Title: ${article.title}
+Content: ${(article.content || article.description || '').substring(0, 1500)}
+
+STRUCTURE: Hook (3-5s) → Story (15-20s) → Impact (5-10s). 30 seconds max (~90 words).
+Return ONLY the script text - no labels, brackets, or formatting.`;
+
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${OPENAI_API_KEY}` },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages: [
+            { role: 'system', content: 'You are a news script writer for Gaza humanitarian crisis coverage. Serious, empathetic, respectful. Never sensationalize suffering.' },
+            { role: 'user', content: prompt }
+          ],
+          temperature: 0.7,
+          max_tokens: 300
+        })
+      });
+
+      const data = await response.json();
+      script = data.choices?.[0]?.message?.content?.trim() || `Breaking news from Gaza. ${article.title}. The humanitarian crisis continues as civilians desperately need aid.`;
+    } else {
+      script = `Breaking news from Gaza. ${article.title}. The humanitarian crisis continues as civilians desperately need aid. Families are struggling to survive. Share this to spread awareness.`;
+    }
+
+    console.log(`   📝 Script: ${script.substring(0, 80)}...`);
+
+    // Create workflow entry
     const todayStr = new Date().toISOString().split('T')[0];
     const articleId = `gaza_${article.id}_${todayStr}`;
 
@@ -294,53 +345,93 @@ async function generateGazaVideo() {
     }
 
     const workflowId = queueItem.id;
+    let videoId: string;
+    let agentId: string;
 
-    // Generate video using Gaza-specific generator
-    console.log(`   🎬 Generating Gaza video...`);
+    if (activeProvider === 'synthesia') {
+      // Synthesia path
+      console.log(`   🎥 Sending to Synthesia...`);
+      const { generateSynthesiaVideo } = await import('@/lib/synthesia-client');
+      const { getSynthesiaAgentForBrand, buildSynthesiaClipConfig } = await import('@/config/synthesia-agents');
 
-    const generator = createGazaVideoGenerator();
+      const synthAgent = getSynthesiaAgentForBrand('gaza');
+      const clip = buildSynthesiaClipConfig(synthAgent, script);
 
-    // generateVideo signature: (article, workflowId, backgroundImageUrl?, agentOptions?)
-    const result = await generator.generateVideo(
-      {
-        id: article.id,
-        title: article.title,
-        content: article.content || article.description,
-        link: article.link,
-        description: article.description
-      },
-      workflowId,
-      undefined, // backgroundImageUrl
-      {} // agentOptions - Gaza uses default settings
-    );
+      const result = await generateSynthesiaVideo(
+        {
+          title: article.title.substring(0, 50),
+          aspectRatio: '9:16',
+          clips: [clip],
+          callbackId: `gaza:${workflowId}`,
+        },
+        'gaza',
+        workflowId
+      );
 
-    // Result type: { videoId: string; agentId: string; script: string }
-    if (result.videoId) {
+      if (!result.success || !result.video_id) {
+        await updateWorkflowStatus(workflowId, brand as any, {
+          status: 'failed',
+          error: result.error || 'Synthesia video generation failed'
+        } as any);
+        return { success: false, error: result.error || 'Synthesia failed' };
+      }
+
+      videoId = result.video_id;
+      agentId = synthAgent.id;
+
+      await updateWorkflowStatus(workflowId, brand as any, {
+        caption: `${article.title}\n\n#Gaza #Palestine #HumanitarianCrisis #FreePalestine #GazaRelief`,
+        title: article.title.substring(0, 50),
+        synthesiaVideoId: videoId,
+        videoProvider: 'synthesia',
+        agentId,
+        status: 'synthesia_processing'
+      } as any);
+    } else {
+      // HeyGen path (legacy)
+      console.log(`   🎥 Sending to HeyGen...`);
+      const { createGazaVideoGenerator } = await import('@/lib/gaza-video-generator');
+      const generator = createGazaVideoGenerator();
+
+      const result = await generator.generateVideo(
+        {
+          id: article.id,
+          title: article.title,
+          content: article.content || article.description,
+          link: article.link,
+          description: article.description
+        },
+        workflowId,
+        undefined,
+        {}
+      );
+
+      if (!result.videoId) {
+        await updateWorkflowStatus(workflowId, brand as any, {
+          status: 'failed',
+          error: 'Video generation failed - no videoId returned'
+        });
+        return { success: false, error: 'Video generation failed - no videoId returned' };
+      }
+
+      videoId = result.videoId;
+      agentId = result.agentId;
+
       await updateWorkflowStatus(workflowId, brand as any, {
         status: 'heygen_processing',
-        heygenVideoId: result.videoId,
+        heygenVideoId: videoId,
         videoProvider: 'heygen'
       });
-
-      console.log(`   ✅ Video generation started: ${result.videoId}`);
-      return {
-        success: true,
-        workflowId,
-        videoId: result.videoId,
-        article: article.title.substring(0, 60)
-      };
-    } else {
-      await updateWorkflowStatus(workflowId, brand as any, {
-        status: 'failed',
-        error: 'Video generation failed - no videoId returned'
-      });
-
-      console.error(`   ❌ Video generation failed: no videoId returned`);
-      return {
-        success: false,
-        error: 'Video generation failed - no videoId returned'
-      };
     }
+
+    console.log(`   ✅ Video generation started (${activeProvider}): ${videoId}`);
+    return {
+      success: true,
+      workflowId,
+      videoId,
+      article: article.title.substring(0, 60),
+      provider: activeProvider
+    };
 
   } catch (error) {
     console.error(`   ❌ Error generating Gaza video:`, error);

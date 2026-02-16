@@ -90,7 +90,7 @@ export async function checkSynthesiaQuota(
   try {
     // Check our budget system
     const { canAfford } = await import('./cost-tracker');
-    const budgetCheck = await canAfford('heygen', 1); // Share budget pool with heygen for trial
+    const budgetCheck = await canAfford('heygen', 1); // Share budget pool with heygen
 
     if (!budgetCheck.allowed) {
       console.warn(`Synthesia budget check failed: ${budgetCheck.reason}`);
@@ -99,13 +99,10 @@ export async function checkSynthesiaQuota(
 
     return { allowed: true };
   } catch (error) {
-    console.error('Error checking Synthesia quota:', error);
-    // Allow on transient errors
-    const msg = error instanceof Error ? error.message : String(error);
-    if (msg.includes('timeout') || msg.includes('network')) {
-      return { allowed: true, reason: `Quota check failed (transient): ${msg}` };
-    }
-    return { allowed: false, reason: `Quota check error: ${msg}` };
+    // Fail-open: budget check errors should NOT block video generation
+    // Cost tracking infrastructure issues shouldn't stop production workflows
+    console.error('Error checking Synthesia quota (proceeding anyway):', error);
+    return { allowed: true, reason: `Quota check failed (proceeding): ${error instanceof Error ? error.message : String(error)}` };
   }
 }
 

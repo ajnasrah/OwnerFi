@@ -49,12 +49,7 @@ export default function BuyerSettings() {
     // Allow buyers, realtors, and admins
     if (status === 'authenticated') {
       const userRole = (session as unknown as ExtendedSession)?.user?.role;
-      // Redirect admins to admin dashboard instead of blocking them
-      if (userRole === 'admin') {
-        router.replace('/admin');
-        return;
-      }
-      if (userRole !== 'buyer' && userRole !== 'realtor') {
+      if (userRole !== 'buyer' && userRole !== 'realtor' && userRole !== 'admin') {
         router.replace('/auth');
       }
     }

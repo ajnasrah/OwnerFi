@@ -98,7 +98,7 @@ export async function GET(request: NextRequest) {
       };
     };
 
-    if (!user || user.role !== 'realtor') {
+    if (!user || (user.role !== 'realtor' && user.role !== 'admin')) {
       return NextResponse.json(
         { error: 'Realtor profile not found. Please complete your registration.' },
         { status: 400 }

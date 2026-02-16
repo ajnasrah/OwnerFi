@@ -63,13 +63,6 @@ export default function AdminHub() {
 
   const mainCards = [
     {
-      href: '/dashboard',
-      icon: '🏠',
-      title: 'Buyer Experience',
-      description: 'Preview the buyer dashboard & property swiper',
-      color: 'blue',
-    },
-    {
       href: '/dashboard/investor',
       icon: '📊',
       title: 'Investor Experience',

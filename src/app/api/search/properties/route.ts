@@ -144,7 +144,7 @@ async function searchWithTypesense(params: SearchParams) {
 
   const searchParams = {
     q: params.q || '*',
-    query_by: 'address,city,description,nearbyCities',
+    query_by: 'address,city,state,zipCode,description,nearbyCities',
     filter_by: filters.join(' && '),
     sort_by: params.sort || 'listPrice:asc',
     page: params.page || 1,

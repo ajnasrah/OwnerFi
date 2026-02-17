@@ -13,7 +13,7 @@ import { convertToDirectImageUrl } from '../lib/image-utils';
 import { trackEvent } from '@/components/analytics/AnalyticsProvider';
 
 // Lazy load tab components
-const PropertiesTab = lazy(() => import('../components/PropertiesTab'));
+const PropertySearchTab = lazy(() => import('../components/PropertySearchTab'));
 
 // Extended Property interface for admin with legacy imageUrl field
 interface AdminProperty extends PropertyListing {
@@ -1206,7 +1206,7 @@ export default function AdminDashboard() {
           {/* Properties Tab */}
           {activeTab === 'properties' && (
             <Suspense fallback={<div className="flex items-center justify-center py-12"><div className="text-slate-400">Loading properties...</div></div>}>
-              <PropertiesTab
+              <PropertySearchTab
                 setEditingProperty={setEditingProperty as any}
                 setEditForm={setEditForm as any}
               />

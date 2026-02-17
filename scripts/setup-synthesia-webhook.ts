@@ -30,7 +30,7 @@ async function main() {
   const webhookUrl = `${baseUrl}/api/webhooks/synthesia/ownerfi`;
 
   const headers = {
-    'Authorization': apiKey,
+    'Authorization': apiKey.trim(),
     'Content-Type': 'application/json',
     'Accept': 'application/json',
   };

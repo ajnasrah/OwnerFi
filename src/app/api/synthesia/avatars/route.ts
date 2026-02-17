@@ -24,7 +24,7 @@ export async function GET() {
     }
 
     const headers = {
-      'Authorization': key,
+      'Authorization': key.trim(),
       'Accept': 'application/json',
     };
 

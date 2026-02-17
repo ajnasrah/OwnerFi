@@ -69,7 +69,7 @@ function getSynthesiaHeaders(): Record<string, string> {
     throw new Error('SYNTHESIA_API_KEY not configured');
   }
   return {
-    'Authorization': key,
+    'Authorization': key.trim(),
     'Content-Type': 'application/json',
     'Accept': 'application/json',
   };
@@ -139,7 +139,8 @@ export async function generateSynthesiaVideo(
       input: request.clips.map(clip => {
         const avatarSettings: Record<string, unknown> = {
           horizontalAlign: 'center',
-          scale: 1.5,
+          verticalAlign: 'center',
+          scale: 2.0,
           style: 'rectangular',
         };
 

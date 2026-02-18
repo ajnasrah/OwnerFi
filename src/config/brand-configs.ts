@@ -165,7 +165,7 @@ export const OWNERFI_CONFIG: BrandConfig = {
   },
 
   content: {
-    youtubeCategory: 'NEWS_POLITICS',
+    youtubeCategory: 'HOWTO_STYLE', // Real estate education/how-to content
     defaultHashtags: ['#realestate', '#ownerfinancing', '#property', '#investment', '#homeownership'],
     captionStyle: 'professional',
   },
@@ -183,7 +183,7 @@ export const OWNERFI_CONFIG: BrandConfig = {
   },
 
   scheduling: {
-    timezone: 'America/New_York',
+    timezone: 'America/Chicago', // CST - consistent with all other brands and posting functions
     postingHours: [8, 12, 19],
     maxPostsPerDay: 3,
   },
@@ -219,7 +219,7 @@ export const BENEFIT_CONFIG: BrandConfig = {
   },
 
   content: {
-    youtubeCategory: 'NEWS_POLITICS',
+    youtubeCategory: 'HOWTO_STYLE', // Educational owner financing content
     defaultHashtags: ['#OwnerFinancing', '#RealEstate', '#Homeownership', '#Investment', '#OwnerFi'],
     captionStyle: 'educational',
   },
@@ -271,7 +271,7 @@ export const ABDULLAH_CONFIG: BrandConfig = {
   },
 
   content: {
-    youtubeCategory: 'NEWS_POLITICS',
+    youtubeCategory: 'PEOPLE_BLOGS', // Personal brand content
     defaultHashtags: ['#Abdullah', '#Mindset', '#Business', '#Entrepreneur', '#Growth'],
     captionStyle: 'casual',
   },

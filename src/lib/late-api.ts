@@ -235,8 +235,7 @@ export async function postToLate(request: LatePostRequest): Promise<LatePostResp
       }
     }
 
-    // Add to cache BEFORE posting (optimistic - will be accurate after successful post)
-    recentPostsCache.set(postHash, now);
+    // NOTE: Cache is set AFTER successful posting (below) to avoid blocking retries on failure
   }
 
   // Get profile ID for brand
@@ -386,14 +385,13 @@ export async function postToLate(request: LatePostRequest): Promise<LatePostResp
 
             // YouTube Shorts
             if (p.platform === 'youtube') {
-              // Category mapping by brand
+              // Get category from unified posting helper (uses brand config as source of truth)
               let category = 'People & Blogs'; // Default
-              if (request.brand === 'carz') {
-                category = 'Autos & Vehicles';
-              } else if (request.brand === 'ownerfi' || request.brand === 'benefit') {
-                category = 'Howto & Style'; // Best fit for real estate content
-              } else if (request.brand === 'gaza') {
-                category = 'News & Politics'; // Gaza humanitarian news
+              try {
+                const { getYouTubeCategoryForBrand } = require('@/lib/unified-posting');
+                category = getYouTubeCategoryForBrand(request.brand);
+              } catch {
+                // Fallback if import fails
               }
 
               platformConfig.platformSpecificData = {
@@ -508,6 +506,12 @@ export async function postToLate(request: LatePostRequest): Promise<LatePostResp
           console.log('   Post ID:', postId);
           if (data.scheduledFor) {
             console.log('   Scheduled for:', data.scheduledFor);
+          }
+
+          // Add to dedup cache AFTER successful posting to avoid blocking retries on failure
+          if (request.videoUrl) {
+            const successHash = generatePostHash(request.videoUrl, request.caption);
+            recentPostsCache.set(successHash, Date.now());
           }
 
           // Track Late cost

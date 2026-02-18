@@ -10,7 +10,6 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
-import { postToLate } from '@/lib/late-api';
 import { circuitBreakers, fetchWithTimeout, TIMEOUTS } from '@/lib/api-utils';
 import {
   validateBrand,
@@ -644,34 +643,47 @@ async function processVideoAndPost(
       title = workflow.title || workflow.articleTitle || 'Viral Video';
     }
 
-    console.log(`📱 [${brandConfig.displayName}] Posting to GetLate's scheduling queue`);
+    console.log(`📱 [${brandConfig.displayName}] Posting via unified posting (YouTube direct API + Late.dev)`);
 
-    // Use GetLate's queue system
-    const postResult = await postToLate({
+    // Use unified posting: YouTube via direct API (bypasses quota), other platforms via Late.dev
+    const { postToAllPlatforms, getYouTubeCategoryForBrand } = await import('@/lib/unified-posting');
+
+    const unifiedResult = await postToAllPlatforms({
       videoUrl: publicVideoUrl,
       caption,
       title,
       platforms: platforms as any[],
       brand: brand as any,
       useQueue: true,
-      timezone: brandConfig.scheduling.timezone
+      timezone: brandConfig.scheduling.timezone,
+      youtubeCategory: getYouTubeCategoryForBrand(brand),
+      youtubePrivacy: 'public',
+      youtubeMadeForKids: false,
+      existingYoutubeVideoId: workflow.youtubeVideoId,
+      existingLatePostId: workflow.latePostId,
     });
 
-    if (postResult.success) {
-      console.log(`✅ [${brandConfig.displayName}] Posted to GetLate queue successfully!`);
-      console.log(`   Post ID: ${postResult.postId}`);
-      console.log(`   Scheduled for: ${postResult.scheduledFor || 'Next available queue slot'}`);
-      console.log(`   Platforms: ${postResult.platforms?.join(', ') || platforms.join(', ')}`);
+    if (unifiedResult.success) {
+      console.log(`✅ [${brandConfig.displayName}] Posted successfully!`);
+      if (unifiedResult.youtube?.videoId) {
+        console.log(`   YouTube Video ID: ${unifiedResult.youtube.videoId}`);
+      }
+      if (unifiedResult.otherPlatforms?.postId) {
+        console.log(`   Late.dev Post ID: ${unifiedResult.otherPlatforms.postId}`);
+      }
+      console.log(`   Total platforms: ${unifiedResult.totalPublished}`);
 
-      await updateWorkflowForBrand(brand, workflowId, {
+      const completionUpdate: Record<string, any> = {
         status: 'completed',
-        latePostId: postResult.postId,
         completedAt: Date.now(),
-        scheduledFor: postResult.scheduledFor,
-        platformsUsed: postResult.platforms?.length || platforms.length,
-      });
+        platformsUsed: unifiedResult.totalPublished,
+      };
+      if (unifiedResult.otherPlatforms?.postId) completionUpdate.latePostId = unifiedResult.otherPlatforms.postId;
+      if (unifiedResult.youtube?.videoId) completionUpdate.youtubeVideoId = unifiedResult.youtube.videoId;
+
+      await updateWorkflowForBrand(brand, workflowId, completionUpdate);
     } else {
-      throw new Error(`GetLate posting failed: ${postResult.error}`);
+      throw new Error(`Posting failed: ${unifiedResult.errors.join(', ')}`);
     }
 
   } catch (error) {

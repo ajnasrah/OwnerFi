@@ -332,6 +332,9 @@ export function sanitizeBrandInput(input: string): Brand | null {
     'gaza': 'gaza',
     'palestine': 'gaza',
     'freepalestine': 'gaza',
+    'realtors': 'realtors',
+    'realtor': 'realtors',
+    'agents': 'realtors',
   };
 
   return variations[normalized] || null;

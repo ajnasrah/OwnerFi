@@ -54,42 +54,53 @@ export async function POST(request: NextRequest) {
     // Get brand platforms
     const platforms = getBrandPlatforms(validatedBrand, false);
 
-    // Post using GetLate's queue system
-    const { postToLate } = await import('@/lib/late-api');
-    const lateResult = await postToLate({
+    // Post using unified posting: YouTube via direct API + other platforms via Late.dev
+    const { postToAllPlatforms, getYouTubeCategoryForBrand } = await import('@/lib/unified-posting');
+
+    const unifiedResult = await postToAllPlatforms({
       videoUrl: finalVideoUrl,
       caption,
       title,
       platforms: platforms as any[],
-      brand: validatedBrand,
-      useQueue: true, // ✅ Use GetLate's queue system
-      timezone: brandConfig.scheduling.timezone
+      brand: validatedBrand as any,
+      useQueue: true,
+      timezone: brandConfig.scheduling.timezone,
+      youtubeCategory: getYouTubeCategoryForBrand(validatedBrand),
+      youtubePrivacy: 'public',
+      youtubeMadeForKids: false,
     });
 
-    if (!lateResult.success) {
+    if (!unifiedResult.success) {
       return NextResponse.json(
-        { success: false, error: `Late posting failed: ${lateResult.error}` },
+        { success: false, error: `Posting failed: ${unifiedResult.errors.join(', ')}` },
         { status: 500 }
       );
     }
 
-    const postId = lateResult.postId;
+    const postId = unifiedResult.otherPlatforms?.postId;
+    const youtubeVideoId = unifiedResult.youtube?.videoId;
 
-    console.log(`✅ Posted to Late: ${postId}`);
+    console.log(`✅ Posted successfully`);
+    if (youtubeVideoId) console.log(`   YouTube: ${youtubeVideoId}`);
+    if (postId) console.log(`   Late.dev: ${postId}`);
 
     // Update workflow as completed
-    await updateWorkflowStatus(workflowId, validatedBrand, {
+    const completionUpdate: Record<string, any> = {
       status: 'completed',
       finalVideoUrl: finalVideoUrl,
-      latePostId: postId,
       completedAt: Date.now(),
-      submagicSkipped: true, // Mark that Submagic was intentionally skipped
-      error: null
-    });
+      submagicSkipped: true,
+      error: null,
+    };
+    if (postId) completionUpdate.latePostId = postId;
+    if (youtubeVideoId) completionUpdate.youtubeVideoId = youtubeVideoId;
+
+    await updateWorkflowStatus(workflowId, validatedBrand, completionUpdate);
 
     return NextResponse.json({
       success: true,
       postId,
+      youtubeVideoId,
       finalVideoUrl,
       message: 'Workflow completed with HeyGen video (Submagic skipped)'
     });

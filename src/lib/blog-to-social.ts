@@ -13,24 +13,11 @@ import { uploadVideoToR2 } from './video-storage';
 import { PLATFORM_OPTIMAL_HOURS } from '@/config/platform-optimal-times';
 
 /**
- * Platform optimal times (targeting 25-40 year old demographic)
- */
-const OPTIMAL_POSTING_TIMES = {
-  // All times in CST (primary audience timezone)
-  instagram: [8, 12, 17, 19, 21], // 8 AM, 12 PM, 5 PM, 7 PM, 9 PM - peak engagement times
-  facebook: [9, 12, 13, 15, 18], // 9 AM, 12 PM, 1 PM, 3 PM, 6 PM - lunch & after work
-  linkedin: [7, 8, 12, 17, 18], // 7-8 AM commute, 12 PM lunch, 5-6 PM after work
-  twitter: [8, 12, 15, 17, 19], // Throughout day, peaks at 8 AM, 12 PM, 5 PM, 7 PM
-  threads: [8, 12, 17, 19, 21], // Same as Instagram (Meta owns both)
-  tiktok: [7, 11, 19, 21, 22], // 7 AM commute, 11 AM break, 7-10 PM prime time
-  youtube: [14, 18, 19, 20], // 2 PM, 6-8 PM prime viewing hours
-};
-
-/**
  * Get optimal posting time for platform on a specific day
+ * Uses the shared PLATFORM_OPTIMAL_HOURS from config (single source of truth)
  */
 function getOptimalTimeForPlatform(platform: string, dayOffset: number = 0): Date {
-  const times = OPTIMAL_POSTING_TIMES[platform.toLowerCase() as keyof typeof OPTIMAL_POSTING_TIMES] || [19];
+  const times = PLATFORM_OPTIMAL_HOURS[platform.toLowerCase()] || [19];
 
   // Use the best time (last in array = prime time)
   const hour = times[times.length - 1];

@@ -10,7 +10,6 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { postToLate } from '@/lib/late-api';
 import { getBrandConfig } from '@/config/brand-configs';
 import { getBrandPlatforms, getBrandStoragePath, validateBrand } from '@/lib/brand-utils';
 
@@ -499,6 +498,18 @@ async function getCaptionAndTitle(
   } else if (brand === 'carz') {
     caption = workflow.caption || workflow.articleTitle || 'Electric vehicle news and updates! ⚡';
     title = workflow.title || workflow.articleTitle || 'EV News';
+  } else if (brand === 'benefit') {
+    caption = workflow.caption || workflow.articleTitle || 'Maximize your benefits with owner financing! 🏡';
+    title = workflow.title || workflow.articleTitle || 'Owner Finance Benefits';
+  } else if (brand === 'gaza') {
+    caption = workflow.caption || workflow.articleTitle || 'Breaking news from Gaza. Help families in need. 🇵🇸';
+    title = workflow.title || workflow.articleTitle || 'Gaza News Update';
+  } else if (brand === 'realtors') {
+    caption = workflow.caption || workflow.articleTitle || 'Grow your real estate business with owner financing! 🏠';
+    title = workflow.title || workflow.articleTitle || 'Realtor Tips';
+  } else if (brand === 'abdullah') {
+    caption = workflow.caption || workflow.articleTitle || 'Daily mindset and business insights 💡';
+    title = workflow.title || workflow.articleTitle || 'Abdullah';
   } else {
     caption = workflow.caption || workflow.articleTitle || 'Check out this video! 🔥';
     title = workflow.title || workflow.articleTitle || 'Viral Video';

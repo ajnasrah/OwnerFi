@@ -202,16 +202,26 @@ export async function postToAllPlatforms(options: UnifiedPostOptions): Promise<U
 
 /**
  * Get YouTube category for a brand
+ * Maps brand config youtubeCategory codes to YouTube display names
  */
 export function getYouTubeCategoryForBrand(brand: string): string {
-  const categoryMap: Record<string, string> = {
-    'carz': 'Autos & Vehicles',
-    'ownerfi': 'Howto & Style',
-    'benefit': 'Howto & Style',
-    'abdullah': 'People & Blogs',
-    'personal': 'People & Blogs',
-    'gaza': 'News & Politics',
+  // Map brand config codes to YouTube category display names
+  const codeToCategory: Record<string, string> = {
+    'AUTOS_VEHICLES': 'Autos & Vehicles',
+    'NEWS_POLITICS': 'News & Politics',
+    'HOWTO_STYLE': 'Howto & Style',
+    'PEOPLE_BLOGS': 'People & Blogs',
+    'EDUCATION': 'Education',
+    'ENTERTAINMENT': 'Entertainment',
   };
 
-  return categoryMap[brand] || 'People & Blogs';
+  try {
+    const { getBrandConfig } = require('@/config/brand-configs');
+    const config = getBrandConfig(brand);
+    const code = config.content.youtubeCategory;
+    return codeToCategory[code] || code || 'People & Blogs';
+  } catch {
+    // Fallback if brand config not found
+    return 'People & Blogs';
+  }
 }

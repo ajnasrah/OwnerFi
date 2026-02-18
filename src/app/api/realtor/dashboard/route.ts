@@ -93,8 +93,10 @@ export async function GET(request: NextRequest) {
         isOnTrial: boolean;
         serviceArea?: {
           primaryCity: { name: string; state: string };
+          nearbyCities?: Array<{ name: string; state: string }>;
           totalCitiesServed: number;
         };
+        serviceCities?: string[];
       };
     };
 
@@ -105,38 +107,34 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get buyer profile to determine service area (realtors fill this out in settings)
-    // Query by userId since buyer profiles have their own IDs (buyer_timestamp_...)
-    const buyerProfiles = await FirebaseDB.queryDocuments('buyerProfiles', [
-      { field: 'userId', operator: '==', value: session.user.id }
-    ]);
+    // Get service area from realtorData (saved by settings page via /api/realtor/profile)
+    const realtorServiceArea = user.realtorData?.serviceArea as {
+      primaryCity?: { name: string; state: string };
+      nearbyCities?: Array<{ name: string; state: string }>;
+    } | undefined;
+    const realtorServiceCities = (user.realtorData as Record<string, unknown> | undefined)?.serviceCities as string[] | undefined;
 
-    const profile = buyerProfiles.length > 0 ? buyerProfiles[0] as {
-      preferredCity?: string;
-      preferredState?: string;
-      firstName?: string;
-      lastName?: string;
-    } : null;
-
-    // Use buyer profile city as service area
-    const serviceCity = profile?.preferredCity || 'Not set';
-    const serviceState = profile?.preferredState || 'Not set';
+    const serviceCity = realtorServiceArea?.primaryCity?.name || 'Not set';
+    const serviceState = realtorServiceArea?.primaryCity?.state || 'Not set';
 
     console.log(`\n📊 [REALTOR DASHBOARD] ===== Loading Dashboard =====`);
     console.log(`   User ID: ${session.user.id}`);
-    console.log(`   Profile found: ${profile ? 'YES' : 'NO'}`);
-    console.log(`   Raw preferredCity: "${profile?.preferredCity}"`);
-    console.log(`   Raw preferredState: "${profile?.preferredState}"`);
+    console.log(`   realtorData.serviceArea found: ${realtorServiceArea ? 'YES' : 'NO'}`);
     console.log(`   Service city: "${serviceCity}"`);
     console.log(`   Service state: "${serviceState}"`);
 
-    // Get nearby cities from buyer profile's pre-computed filter
-    let nearbyCities: string[] = (profile as any)?.filter?.nearbyCities || [];
-    console.log(`   Filter nearbyCities count: ${nearbyCities.length}`);
+    // Get nearby cities from realtorData service area
+    let nearbyCities: string[] = realtorServiceArea?.nearbyCities?.map(c => c.name) || [];
 
-    // Fallback: compute nearby cities if filter is empty but we have a valid city
+    // Also include serviceCities (array of "City, ST" strings) if available
+    if (nearbyCities.length === 0 && realtorServiceCities && realtorServiceCities.length > 0) {
+      nearbyCities = realtorServiceCities.map((city: string) => city.split(',')[0]?.trim());
+    }
+    console.log(`   Nearby cities count: ${nearbyCities.length}`);
+
+    // Fallback: compute nearby cities if none saved but we have a valid city
     if (nearbyCities.length === 0 && serviceCity !== 'Not set' && serviceState !== 'Not set') {
-      console.log(`⚠️ [REALTOR DASHBOARD] No filter found for ${serviceCity}, ${serviceState} - computing nearby cities`);
+      console.log(`⚠️ [REALTOR DASHBOARD] No service area configured for ${serviceCity}, ${serviceState} - computing nearby cities`);
       const computedCities = getCitiesWithinRadiusComprehensive(serviceCity, serviceState, 30);
       nearbyCities = computedCities.map(c => c.name);
       console.log(`✅ [REALTOR DASHBOARD] Computed ${nearbyCities.length} nearby cities for ${serviceCity}`);
@@ -144,12 +142,12 @@ export async function GET(request: NextRequest) {
 
     // Create simplified realtor data structure
     const realtorData = {
-      firstName: user.realtorData?.firstName || profile?.firstName || 'Realtor',
-      lastName: user.realtorData?.lastName || profile?.lastName || '',
+      firstName: user.realtorData?.firstName || 'Realtor',
+      lastName: user.realtorData?.lastName || '',
       credits: user.realtorData?.credits || 0,
       serviceArea: {
         primaryCity: { name: serviceCity, state: serviceState },
-        nearbyCities: nearbyCities // Use pre-computed nearby cities from filter
+        nearbyCities: nearbyCities
       }
     };
 

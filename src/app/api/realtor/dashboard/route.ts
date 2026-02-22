@@ -4,12 +4,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSessionWithRole } from '@/lib/auth-utils';
 import { FirebaseDB } from '@/lib/firebase-db';
-import { RealtorDataHelper, ValidatedCity } from '@/lib/realtor-models';
 import { logError, logInfo } from '@/lib/logger';
 import { getCitiesWithinRadiusComprehensive } from '@/lib/comprehensive-cities';
-
-// Constants
-const FREE_PENDING_LIMIT = 3;
 
 interface LeadData {
   id: string;
@@ -70,7 +66,6 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const searchQuery = searchParams.get('search')?.toLowerCase() || '';
     const cityFilter = searchParams.get('city')?.toLowerCase() || '';
-    const statusFilter = searchParams.get('status') || 'all'; // all, available, pending, accepted
 
     // Enforce realtor role only
     const session = await getSessionWithRole('realtor');
@@ -200,87 +195,6 @@ export async function GET(request: NextRequest) {
       { error: 'Failed to load dashboard data' },
       { status: 500 }
     );
-  }
-}
-
-// Get available buyer leads for this realtor
-async function getAvailableLeads(userId: string, realtorData: Record<string, unknown>): Promise<LeadData[]> {
-  try {
-    // PERFORMANCE FIX: Added limit to prevent unbounded query
-    const allBuyers = await FirebaseDB.getCompleteBuyers(100);
-
-    // Get already purchased leads to filter them out
-    const purchasedLeads = await FirebaseDB.queryDocuments(
-      'leadPurchases',
-      [{ field: 'realtorUserId', operator: '==', value: userId }]
-    );
-    // PERFORMANCE FIX: Use Set for O(1) lookups instead of O(n) array.includes()
-    const purchasedBuyerIds = new Set(
-      (purchasedLeads as Array<{ buyerId: string; [key: string]: unknown }>)
-        .map((p: { buyerId: string; [key: string]: unknown }) => p.buyerId)
-    );
-
-    // Get realtor's service cities
-    const serviceCities = RealtorDataHelper.getAllCitiesServed(realtorData as { serviceArea: { primaryCity: ValidatedCity; nearbyCities: ValidatedCity[] } });
-    const serviceCityNames = serviceCities.map(city => city.name.toLowerCase());
-    const realtorState = (realtorData as { serviceArea: { primaryCity: { stateCode: string } } }).serviceArea.primaryCity.stateCode;
-
-    const availableLeads = [];
-
-    for (const buyer of allBuyers) {
-      // Skip if already purchased by this realtor (O(1) lookup with Set)
-      if (purchasedBuyerIds.has(buyer.id)) {
-        continue;
-      }
-
-      // Skip if buyer is inactive
-      if (buyer.isActive === false) {
-        continue;
-      }
-
-      // Match by location (buyer's preferred city must be in realtor's service area)
-      const buyerCity = buyer.preferredCity?.toLowerCase();
-      const buyerState = buyer.preferredState;
-
-      // Check if buyer is in realtor's service area
-      const isInServiceArea = 
-        buyerState === realtorState && // Same state
-        serviceCityNames.includes(buyerCity); // City is served
-
-      if (!isInServiceArea) {
-        continue;
-      }
-
-      // Calculate basic match percentage (for now, simple 85% for in-area matches)
-      const matchPercentage = 85;
-
-      // Format the lead data
-      const leadData = {
-        id: buyer.id,
-        firstName: buyer.firstName,
-        lastName: buyer.lastName,
-        email: buyer.email,
-        phone: buyer.phone,
-        city: buyer.preferredCity,
-        state: buyer.preferredState,
-        minBedrooms: buyer.minBedrooms,
-        minBathrooms: buyer.minBathrooms,
-        languages: buyer.languages || ['English'],
-        createdAt: buyer.createdAt?.toDate ? buyer.createdAt.toDate().toISOString() : new Date().toISOString(),
-        matchPercentage,
-        propertyMatches: 5 // Placeholder - would need to calculate real property matches
-      };
-
-      availableLeads.push(leadData);
-    }
-
-    // Sort by creation date (newest first)
-    availableLeads.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-
-    return availableLeads.slice(0, 20); // Limit to 20 most recent
-
-  } catch (error) {
-    return [];
   }
 }
 
@@ -438,6 +352,7 @@ async function getMatchedBuyerLeads(realtorData: {
     const leads = await ConsolidatedLeadSystem.findAvailableLeads(realtorProfile, 200, realtorUserId);
 
     // Convert Timestamp to Date for compatibility
+    // SECURITY: Redact email/phone — these are only revealed after agreement signing
     let convertedLeads = leads.map((lead: {
       id: string;
       firstName: string;
@@ -454,6 +369,8 @@ async function getMatchedBuyerLeads(realtorData: {
       createdAt?: { toDate?: () => Date };
     }) => ({
       ...lead,
+      email: '',
+      phone: '',
       createdAt: lead.createdAt?.toDate ? lead.createdAt.toDate() : new Date()
     }));
 

@@ -165,6 +165,7 @@ export async function GET(request: NextRequest) {
           id: agreement.id,
           agreementNumber: agreement.agreementNumber,
           status: agreement.status,
+          buyerId: agreement.buyerId,
           buyerFirstName: agreement.buyerFirstName,
           buyerLastName: agreement.buyerLastName,
           buyerCity: agreement.buyerCity,

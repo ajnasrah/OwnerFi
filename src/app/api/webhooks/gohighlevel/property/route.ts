@@ -63,13 +63,7 @@ function verifyWebhookSignature(
   }
 
   try {
-    // Check if GoHighLevel is sending the raw secret as the signature
-    // This is a common pattern for GHL webhooks
-    if (signature === GHL_WEBHOOK_SECRET) {
-      return { valid: true };
-    }
-
-    // GoHighLevel might send signature in different formats
+    // HMAC signature verification only (no raw secret comparison)
     const expectedSignature = crypto
       .createHmac('sha256', GHL_WEBHOOK_SECRET)
       .update(payload)
@@ -877,15 +871,15 @@ export async function POST(request: NextRequest) {
         }
       });
 
-      // Index to Typesense for search
+      // Sync to Typesense (awaited to ensure consistency)
       try {
         const { indexRawFirestoreProperty } = await import('@/lib/typesense/sync');
-        console.log(`🔍 Indexing property ${propertyId} to Typesense`);
-        indexRawFirestoreProperty(propertyId, cleanPropertyData, targetCollection).catch(err => {
-          console.error('Failed to index property to Typesense:', err);
-        });
-      } catch (error) {
-        console.error('Error triggering Typesense indexing:', error);
+        console.log(`[GHL-WEBHOOK] Indexing property ${propertyId} to Typesense`);
+        await indexRawFirestoreProperty(propertyId, cleanPropertyData, targetCollection);
+        console.log(`[GHL-WEBHOOK] Successfully indexed property ${propertyId} to Typesense`);
+      } catch (typesenseError) {
+        console.error(`[GHL-WEBHOOK] Failed to sync property to Typesense:`, typesenseError);
+        // Don't fail the webhook - Cloud Functions will catch up
       }
 
       // Auto-add to rotation queue

@@ -130,68 +130,71 @@ async function fallbackToDirectFetch(payload: TaskPayload): Promise<{ taskName: 
   const workerUrl = `${baseUrl}/api/workers/process-video`;
   const secret = process.env.CLOUD_TASKS_SECRET || process.env.CRON_SECRET;
 
-  // Retry with exponential backoff (non-blocking but with error tracking)
+  // FIXED: Await the retry logic instead of fire-and-forget.
+  // The unawaited IIFE was silently swallowing errors, leaving workflows
+  // stuck in video_processing forever with no error recorded.
   const maxRetries = 3;
   let lastError: Error | undefined;
 
-  // Use setImmediate-style async to not block webhook response
-  (async () => {
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      try {
-        // Add timeout to prevent hanging
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
-
-        const response = await fetch(workerUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Cloud-Tasks-Worker': secret || '',
-          },
-          body: JSON.stringify(payload),
-          signal: controller.signal,
-        });
-
-        clearTimeout(timeoutId);
-
-        if (response.ok) {
-          console.log(`✅ [FALLBACK] Worker API called successfully for ${payload.workflowId} (attempt ${attempt})`);
-          return; // Success, exit retry loop
-        }
-
-        lastError = new Error(`HTTP ${response.status}: ${response.statusText}`);
-        console.warn(`⚠️  [FALLBACK] Worker API returned ${response.status} for ${payload.workflowId} (attempt ${attempt})`);
-
-      } catch (err) {
-        lastError = err instanceof Error ? err : new Error(String(err));
-        console.error(`❌ [FALLBACK] Worker API call failed for ${payload.workflowId} (attempt ${attempt}):`, lastError.message);
-      }
-
-      // Wait before retry with jitter (except on last attempt)
-      if (attempt < maxRetries) {
-        const baseDelay = Math.pow(2, attempt) * 1000; // 2s, 4s
-        const jitter = Math.random() * 1000; // 0-1s jitter
-        await new Promise(resolve => setTimeout(resolve, baseDelay + jitter));
-      }
-    }
-
-    // All retries failed - CRITICAL: Mark workflow as failed to prevent it from being stuck
-    console.error(`🚨 [FALLBACK CRITICAL] All ${maxRetries} attempts failed for ${payload.workflowId}:`, lastError?.message);
-
-    // Update workflow status to failed so it can be recovered
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
-      await updateWorkflowStatus(payload.workflowId, payload.brand as any, {
-        status: 'failed',
-        error: `Cloud Tasks fallback failed after ${maxRetries} attempts: ${lastError?.message}`,
-        failedAt: Date.now(),
-        retryable: true, // Mark as retryable so recovery cron can pick it up
-      } as any);
-      console.log(`📝 [FALLBACK] Marked workflow ${payload.workflowId} as failed (retryable)`);
-    } catch (updateError) {
-      console.error(`❌ [FALLBACK] Failed to update workflow status:`, updateError);
+      // Add timeout to prevent hanging
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
+
+      const response = await fetch(workerUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Cloud-Tasks-Worker': secret || '',
+        },
+        body: JSON.stringify(payload),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (response.ok) {
+        console.log(`✅ [FALLBACK] Worker API called successfully for ${payload.workflowId} (attempt ${attempt})`);
+        return {
+          taskName: 'inline-processing-with-retry',
+          scheduleTime: new Date(),
+        };
+      }
+
+      lastError = new Error(`HTTP ${response.status}: ${response.statusText}`);
+      console.warn(`⚠️  [FALLBACK] Worker API returned ${response.status} for ${payload.workflowId} (attempt ${attempt})`);
+
+    } catch (err) {
+      lastError = err instanceof Error ? err : new Error(String(err));
+      console.error(`❌ [FALLBACK] Worker API call failed for ${payload.workflowId} (attempt ${attempt}):`, lastError.message);
     }
-  })();
+
+    // Wait before retry with jitter (except on last attempt)
+    if (attempt < maxRetries) {
+      const baseDelay = Math.pow(2, attempt) * 1000; // 2s, 4s
+      const jitter = Math.random() * 1000; // 0-1s jitter
+      await new Promise(resolve => setTimeout(resolve, baseDelay + jitter));
+    }
+  }
+
+  // All retries failed - CRITICAL: Mark workflow as failed to prevent it from being stuck
+  console.error(`🚨 [FALLBACK CRITICAL] All ${maxRetries} attempts failed for ${payload.workflowId}:`, lastError?.message);
+
+  // Update workflow status to failed so it can be recovered
+  try {
+    const { updateWorkflowStatus } = await import('@/lib/feed-store-firestore');
+    await updateWorkflowStatus(payload.workflowId, payload.brand as any, {
+      status: 'failed',
+      error: `Cloud Tasks fallback failed after ${maxRetries} attempts: ${lastError?.message}`,
+      failedAt: Date.now(),
+      statusChangedAt: Date.now(),
+      retryable: true, // Mark as retryable so recovery cron can pick it up
+    } as any);
+    console.log(`📝 [FALLBACK] Marked workflow ${payload.workflowId} as failed (retryable)`);
+  } catch (updateError) {
+    console.error(`❌ [FALLBACK] Failed to update workflow status:`, updateError);
+  }
 
   return {
     taskName: 'inline-processing-with-retry',

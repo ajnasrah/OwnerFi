@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 const ATTENTION_QUESTIONS = [
   "Need help buying a home?",
@@ -23,21 +23,8 @@ export default function FloatingChatbotButton({ onClick }: FloatingChatbotButton
   const [showQuestion, setShowQuestion] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
-  const [usedQuestions, setUsedQuestions] = useState<Set<number>>(new Set());
-
-  const getRandomQuestion = () => {
-    const availableQuestions = ATTENTION_QUESTIONS.map((_, index) => index)
-      .filter(index => !usedQuestions.has(index));
-    
-    // Reset if all questions have been used
-    if (availableQuestions.length === 0) {
-      setUsedQuestions(new Set());
-      return Math.floor(Math.random() * ATTENTION_QUESTIONS.length);
-    }
-    
-    const randomIndex = Math.floor(Math.random() * availableQuestions.length);
-    return availableQuestions[randomIndex];
-  };
+  // Use ref to track used questions to avoid re-render loops
+  const usedQuestionsRef = useRef<Set<number>>(new Set());
 
   const hideQuestion = () => {
     setShowQuestion(false);
@@ -45,41 +32,49 @@ export default function FloatingChatbotButton({ onClick }: FloatingChatbotButton
   };
 
   useEffect(() => {
+    const getRandomQuestion = () => {
+      const used = usedQuestionsRef.current;
+      const availableQuestions = ATTENTION_QUESTIONS.map((_, index) => index)
+        .filter(index => !used.has(index));
+
+      // Reset if all questions have been used
+      if (availableQuestions.length === 0) {
+        usedQuestionsRef.current = new Set();
+        return Math.floor(Math.random() * ATTENTION_QUESTIONS.length);
+      }
+
+      const randomIndex = Math.floor(Math.random() * availableQuestions.length);
+      return availableQuestions[randomIndex];
+    };
+
     let hideTimer: NodeJS.Timeout;
     const initialTimer: NodeJS.Timeout = setTimeout(() => {
       const questionIndex = getRandomQuestion();
-      setUsedQuestions(prev => new Set(prev).add(questionIndex));
+      usedQuestionsRef.current.add(questionIndex);
       setCurrentQuestion(questionIndex);
       setIsAnimating(true);
       setShowQuestion(true);
-      
+
       // Auto-hide after 10 seconds
       hideTimer = setTimeout(hideQuestion, 10000);
     }, 5000);
 
     const interval: NodeJS.Timeout = setInterval(() => {
       const questionIndex = getRandomQuestion();
-      setUsedQuestions(prev => new Set(prev).add(questionIndex));
+      usedQuestionsRef.current.add(questionIndex);
       setCurrentQuestion(questionIndex);
       setIsAnimating(true);
       setShowQuestion(true);
-      
-      // Auto-hide after 10 seconds  
-      hideTimer = setTimeout(hideQuestion, 10000);
-      
-    }, 15000);
 
-    // Clear any existing timers first
-    clearTimeout(hideTimer);
-    clearTimeout(initialTimer);
-    clearInterval(interval);
+      // Auto-hide after 10 seconds
+      hideTimer = setTimeout(hideQuestion, 10000);
+    }, 15000);
 
     return () => {
       clearTimeout(initialTimer);
       clearTimeout(hideTimer);
       clearInterval(interval);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

@@ -148,7 +148,13 @@ export default function BuyerSettings() {
       // Extract city and state from the city string (e.g., "Dallas, TX")
       const cityParts = formData.city.trim().split(',');
       const city = cityParts[0]?.trim() || formData.city.trim();
-      const state = cityParts[1]?.trim() || 'TX'; // Default to TX if no state provided
+      const state = cityParts[1]?.trim();
+      if (!state) {
+        setError('Please include the state (e.g. "Dallas, TX")');
+        trackFormError('missing_state');
+        setSaving(false);
+        return;
+      }
 
       // Get user's name and phone from session to pass to API
       const userSession = session as unknown as ExtendedSession;

@@ -118,7 +118,12 @@ export default function RealtorSettings() {
     try {
       const cityParts = targetCity.split(',');
       const city = cityParts[0]?.trim().toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
-      const state = cityParts[1]?.trim().toUpperCase() || 'TX';
+      const state = cityParts[1]?.trim().toUpperCase();
+      if (!state) {
+        setError('Please include the state (e.g. "Little Rock, AR")');
+        setSuccessMessage('');
+        return;
+      }
 
       const cities = getCitiesWithinRadiusComprehensive(city, state, 30);
       setNearbyCities(cities);

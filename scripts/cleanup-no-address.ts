@@ -59,6 +59,12 @@ async function main() {
       continue;
     }
 
+    // Placeholder/privacy-listed address from Zillow
+    if (/\b(undisclosed|hidden|private|not\s*disclosed|no\s+address|confidential|unlisted|restricted)\b/i.test(addr)) {
+      toDelete.push({ id: doc.id, reason: `Placeholder address (addr="${addr}")`, price: d.price || 0 });
+      continue;
+    }
+
     // No city or state
     if (!city || !state) {
       toDelete.push({ id: doc.id, reason: `Missing city="${city}" state="${state}" (addr="${addr}")`, price: d.price || 0 });

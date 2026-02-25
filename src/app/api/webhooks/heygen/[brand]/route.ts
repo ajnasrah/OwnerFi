@@ -160,7 +160,8 @@ export async function POST(request: NextRequest, context: RouteContext) {
       try {
         await updateWorkflowForBrand(brand, workflowId, {
           heygenVideoUrl: event_data.url,
-          heygenCompletedAt: Date.now()
+          heygenCompletedAt: Date.now(),
+          statusChangedAt: Date.now(),
         });
         console.log(`✅ [${brandConfig.displayName}] HeyGen video URL saved successfully`);
       } catch (saveError) {
@@ -202,7 +203,8 @@ export async function POST(request: NextRequest, context: RouteContext) {
           await updateWorkflowForBrand(brand, workflowId, {
             status: 'failed',
             error: `Submagic trigger failed: ${err instanceof Error ? err.message : 'Unknown error'}`,
-            failedAt: Date.now()
+            failedAt: Date.now(),
+            statusChangedAt: Date.now(),
           });
           console.log(`✅ [${brandConfig.displayName}] Marked workflow ${workflowId} as failed due to Submagic error (recoverable - HeyGen URL saved)`);
         } catch (updateErr) {
@@ -246,6 +248,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
         status: 'failed',
         error: 'HeyGen generation failed',
         failedAt: Date.now(),
+        statusChangedAt: Date.now(),
       });
 
       // Send failure alert
@@ -383,7 +386,10 @@ async function triggerSubmagicProcessing(
     // Check if URL is accessible
     try {
       console.log(`🔍 [${brandConfig.displayName}] Validating HeyGen video URL...`);
-      const headResponse = await fetch(heygenVideoUrl, { method: 'HEAD' });
+      const headController = new AbortController();
+      const headTimeout = setTimeout(() => headController.abort(), 10_000); // 10s timeout
+      const headResponse = await fetch(heygenVideoUrl, { method: 'HEAD', signal: headController.signal });
+      clearTimeout(headTimeout);
       if (!headResponse.ok) {
         console.warn(`⚠️  [${brandConfig.displayName}] HeyGen video URL returned ${headResponse.status}`);
       } else {
@@ -471,14 +477,20 @@ async function triggerSubmagicProcessing(
     console.log(`   Title: ${title}`);
     console.log(`   Config:`, JSON.stringify(submagicConfig, null, 2));
 
+    const submagicController = new AbortController();
+    const submagicTimeout = setTimeout(() => submagicController.abort(), 30_000); // 30s timeout
+
     const response = await fetch('https://api.submagic.co/v1/projects', {
       method: 'POST',
       headers: {
         'x-api-key': SUBMAGIC_API_KEY,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(submagicConfig)
+      body: JSON.stringify(submagicConfig),
+      signal: submagicController.signal,
     });
+
+    clearTimeout(submagicTimeout);
 
     console.log(`📡 [${brandConfig.displayName}] Submagic API response status: ${response.status}`);
 
@@ -514,7 +526,9 @@ async function triggerSubmagicProcessing(
       // Save the error but keep the HeyGen video
       await updateWorkflowForBrand(brand, workflowId, {
         status: 'failed',
-        error: `Submagic API call failed - no project ID received. Status: ${response.status}. Response keys: ${Object.keys(data || {}).join(', ')}`
+        error: `Submagic API call failed - no project ID received. Status: ${response.status}. Response keys: ${Object.keys(data || {}).join(', ')}`,
+        failedAt: Date.now(),
+        statusChangedAt: Date.now(),
       });
 
       throw new Error(`Submagic API call failed - no project ID received. Response: ${JSON.stringify(data)}`);
@@ -546,6 +560,7 @@ async function triggerSubmagicProcessing(
       status: 'submagic_processing',
       submagicVideoId: projectId,
       submagicProjectId: projectId,
+      statusChangedAt: Date.now(),
     });
 
     // NOTE: We do NOT call /export here!
@@ -559,6 +574,7 @@ async function triggerSubmagicProcessing(
       status: 'failed',
       error: error instanceof Error ? error.message : 'Unknown error triggering Submagic',
       failedAt: Date.now(),
+      statusChangedAt: Date.now(),
     });
 
     await sendFailureAlert(

@@ -3,6 +3,7 @@ import { ApifyClient } from 'apify-client';
 import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { transformProperty, validateProperty } from '@/lib/scraper-v2/property-transformer';
+import { withCronLock } from '@/lib/cron-lock';
 
 // Initialize Firebase Admin
 if (!getApps().length) {
@@ -17,7 +18,7 @@ if (!getApps().length) {
 
 const db = getFirestore();
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   console.log('🔄 [QUEUE CRON] Starting queue processor');
 
   const startTime = Date.now();
@@ -36,6 +37,8 @@ export async function GET(request: NextRequest) {
     errors: [] as Array<{ zpid?: number; address?: string; error: string; stage: string }>,
   };
 
+  // Use cron lock to prevent concurrent execution
+  const result = await withCronLock('process-scraper-queue', async () => {
   try {
     // Reset stuck processing items (older than 10 minutes)
     const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
@@ -389,4 +392,16 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
+  }); // End withCronLock
+
+  // If lock wasn't acquired, return early
+  if (result === null) {
+    return NextResponse.json({
+      success: false,
+      message: 'Another instance is already running',
+      skipped: true
+    }, { status: 200 });
+  }
+
+  return result;
 }

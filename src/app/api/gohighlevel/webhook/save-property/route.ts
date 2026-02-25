@@ -41,14 +41,7 @@ function verifyWebhookSignature(
   }
 
   try {
-    // Check if GoHighLevel is sending the raw secret as the signature
-    if (signature === GHL_WEBHOOK_SECRET) {
-      logInfo('GoHighLevel sent raw secret as signature');
-      return true;
-    }
-
-    // GoHighLevel might send signature in different formats
-    // Try HMAC signature verification
+    // HMAC signature verification only (no raw secret comparison)
     const expectedSignature = crypto
       .createHmac('sha256', GHL_WEBHOOK_SECRET)
       .update(payload)

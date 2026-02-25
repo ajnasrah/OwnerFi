@@ -127,7 +127,10 @@
       "maxDuration": 300
     },
     "src/app/api/webhooks/heygen/[brand]/route.ts": {
-      "maxDuration": 60
+      "maxDuration": 120
+    },
+    "src/app/api/webhooks/synthesia/[brand]/route.ts": {
+      "maxDuration": 120
     },
     "src/app/api/v2/scraper/run/route.ts": {
       "maxDuration": 600

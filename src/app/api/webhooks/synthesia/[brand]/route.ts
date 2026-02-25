@@ -180,6 +180,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
           error: `R2 upload failed: ${r2Error instanceof Error ? r2Error.message : 'Unknown error'}`,
           synthesiaVideoUrl: eventData.download, // Save presigned URL for manual recovery
           failedAt: Date.now(),
+          statusChangedAt: Date.now(),
         });
 
         return NextResponse.json({
@@ -194,6 +195,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
       await updateWorkflowForBrand(brand, workflowId, {
         synthesiaVideoUrl: r2VideoUrl,
         synthesiaCompletedAt: Date.now(),
+        statusChangedAt: Date.now(),
       });
 
       // STEP 2: Trigger Submagic processing with R2 URL
@@ -215,6 +217,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
           status: 'failed',
           error: `Submagic trigger failed: ${submagicErr instanceof Error ? submagicErr.message : 'Unknown error'}`,
           failedAt: Date.now(),
+          statusChangedAt: Date.now(),
         });
 
         return NextResponse.json({
@@ -248,6 +251,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
         status: 'failed',
         error: 'Synthesia generation failed',
         failedAt: Date.now(),
+        statusChangedAt: Date.now(),
       });
 
       return NextResponse.json({
@@ -413,6 +417,9 @@ async function triggerSubmagicProcessing(
   console.log(`   Video URL: ${videoUrl}`);
   console.log(`   Webhook URL: ${submagicWebhookUrl}`);
 
+  const submagicController = new AbortController();
+  const submagicTimeout = setTimeout(() => submagicController.abort(), 30_000); // 30s timeout
+
   const response = await fetch('https://api.submagic.co/v1/projects', {
     method: 'POST',
     headers: {
@@ -420,7 +427,10 @@ async function triggerSubmagicProcessing(
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(submagicConfig),
+    signal: submagicController.signal,
   });
+
+  clearTimeout(submagicTimeout);
 
   if (!response.ok) {
     const errorText = await response.text();
@@ -449,6 +459,7 @@ async function triggerSubmagicProcessing(
     status: 'submagic_processing',
     submagicVideoId: projectId,
     submagicProjectId: projectId,
+    statusChangedAt: Date.now(),
   });
 }
 

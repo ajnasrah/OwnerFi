@@ -238,6 +238,18 @@ async function main() {
         detail: `Firestore doc has no valid address`,
       });
       hasIssue = true;
+    } else if (/\b(undisclosed|hidden|private|not\s*disclosed|no\s+address|confidential|unlisted|restricted)\b/i.test(fsAddress)) {
+      statNoAddress++;
+      findings.push({
+        typesenseId: id,
+        address: tsAddress,
+        listPrice: tsListPrice,
+        dealType: tsDealType,
+        reason: 'NO_ADDRESS',
+        severity: 'REMOVE',
+        detail: `Placeholder address: "${fsAddress}"`,
+      });
+      hasIssue = true;
     }
 
     // Check 6: Is it flagged suspiciousDiscount?

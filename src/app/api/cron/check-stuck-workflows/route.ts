@@ -23,19 +23,21 @@ export const maxDuration = 300; // 5 minutes (max needed for SubMagic + posting 
 
 // Performance: Brand-level timeout to prevent one slow brand from blocking others
 const BRAND_PROCESSING_TIMEOUT_MS = 45_000; // 45 seconds per brand (conservative)
-const PARALLEL_QUERY_BATCH_SIZE = 6; // Process all 6 brands in parallel
+const PARALLEL_QUERY_BATCH_SIZE = 7; // Process all 7 brands in parallel
 
 // ============================================================================
 // WORKFLOW TIMEOUT CONFIGURATION
 // Auto-fail workflows stuck longer than these durations (in minutes)
 // ============================================================================
 const MAX_STAGE_DURATION_MINUTES = {
-  pending: 30,              // 30 min - should start quickly or fail
-  heygen_processing: 20,    // 20 min - HeyGen usually completes in 5-10 min
-  synthesia_processing: 20, // 20 min - Synthesia usually completes in 5-10 min
-  submagic_processing: 25,  // 25 min - Submagic usually completes in 10-15 min
-  video_processing: 15,     // 15 min - video processing should be quick
-  posting: 10,              // 10 min - posting to Late should be fast
+  pending: 15,              // 15 min - should start quickly or fail
+  heygen_processing: 15,    // 15 min - HeyGen completes in 5-10 min
+  synthesia_processing: 15, // 15 min - Synthesia completes in 5-10 min
+  submagic_processing: 15,  // 15 min - Submagic completes in 5-10 min
+  video_processing: 10,     // 10 min - R2 upload + posting
+  posting: 10,              // 10 min - posting to Late
+  exporting: 15,            // 15 min - Submagic export phase
+  export_failed: 15,        // 15 min - stuck in export_failed (should be retried or fail)
 } as const;
 
 // Max retry attempts before permanent failure
@@ -186,7 +188,7 @@ async function checkPendingWorkflows() {
     return { checked: 0, started: 0, failed: 0 };
   }
 
-  // Check all 6 brands
+  // Check all 7 brands
   const brands = [...getAllBrandIds()];
 
   // PARALLEL: Query all brands simultaneously (2-3x faster!)
@@ -216,7 +218,8 @@ async function checkPendingWorkflows() {
 
           snapshot.forEach(doc => {
             const data = doc.data();
-            const stuckMinutes = Math.round((Date.now() - (data.createdAt || 0)) / 60000);
+            const pendingTimestamp = data.statusChangedAt || data.updatedAt || data.createdAt || 0;
+            const stuckMinutes = Math.round((Date.now() - pendingTimestamp) / 60000);
 
             // Only start if stuck > 5 minutes
             if (stuckMinutes > 5) {
@@ -311,7 +314,7 @@ async function checkHeyGenWorkflows() {
   let advanced = 0;
   let failed = 0;
 
-  // Check all 6 brands
+  // Check all 7 brands
   const brands = [...getAllBrandIds()];
 
   for (const brand of brands) {
@@ -404,6 +407,7 @@ async function checkHeyGenWorkflows() {
                 status: 'submagic_processing',
                 submagicVideoId: projectId,
                 heygenVideoUrl: publicHeygenUrl,
+                statusChangedAt: Date.now(),
                 updatedAt: Date.now()
               });
 
@@ -418,6 +422,7 @@ async function checkHeyGenWorkflows() {
                 status: 'failed',
                 error: `SubMagic API error: ${submagicResponse.status} - ${errorText}`,
                 heygenVideoUrl: publicHeygenUrl,
+                statusChangedAt: Date.now(),
                 updatedAt: Date.now()
               });
               failed++;
@@ -426,6 +431,7 @@ async function checkHeyGenWorkflows() {
             await updateDoc(doc(db, collectionName, workflowId), {
               status: 'failed',
               error: 'HeyGen failed',
+              statusChangedAt: Date.now(),
               updatedAt: Date.now()
             });
             console.log(`   ❌ ${workflowId}: Failed`);
@@ -507,6 +513,7 @@ async function checkHeyGenWorkflows() {
               status: 'submagic_processing',
               submagicVideoId: projectId,
               recoveredAt: Date.now(),
+              statusChangedAt: Date.now(),
               updatedAt: Date.now()
             });
 
@@ -628,6 +635,7 @@ async function checkSynthesiaWorkflows() {
                 status: 'submagic_processing',
                 submagicVideoId: projectId,
                 synthesiaVideoUrl: r2VideoUrl,
+                statusChangedAt: Date.now(),
                 updatedAt: Date.now()
               });
 
@@ -641,6 +649,7 @@ async function checkSynthesiaWorkflows() {
                 status: 'failed',
                 error: `SubMagic API error: ${submagicResponse.status} - ${errorText}`,
                 synthesiaVideoUrl: r2VideoUrl,
+                statusChangedAt: Date.now(),
                 updatedAt: Date.now()
               });
               failed++;
@@ -649,6 +658,7 @@ async function checkSynthesiaWorkflows() {
             await updateDoc(doc(db, collectionName, workflowId), {
               status: 'failed',
               error: 'Synthesia video generation failed',
+              statusChangedAt: Date.now(),
               updatedAt: Date.now()
             });
             console.log(`   ❌ ${workflowId}: Synthesia failed`);
@@ -664,6 +674,97 @@ async function checkSynthesiaWorkflows() {
     }
   }
 
+  // RECOVERY: Check failed + video_processing_failed workflows with synthesiaVideoUrl
+  // Mirrors the HeyGen recovery path — checks both statuses for consistency
+  console.log('\n🔥 CHECKING FAILED WORKFLOWS WITH SYNTHESIA URL (RECOVERY)...');
+  for (const brand of brands) {
+    try {
+      const collectionName = `${brand}_workflow_queue`;
+
+      // Query both 'failed' and 'video_processing_failed' statuses
+      const qFailed = query(
+        collection(db, collectionName),
+        where('status', '==', 'failed'),
+        firestoreLimit(20)
+      );
+      const qVpf = query(
+        collection(db, collectionName),
+        where('status', '==', 'video_processing_failed'),
+        firestoreLimit(20)
+      );
+
+      const [failedSnap, vpfSnap] = await Promise.all([getDocs(qFailed), getDocs(qVpf)]);
+      const allDocs = [...failedSnap.docs, ...vpfSnap.docs];
+      const snapshot = { docs: allDocs, size: allDocs.length } as any;
+      let recoverable = 0;
+
+      for (const workflowDoc of snapshot.docs) {
+        const data = workflowDoc.data();
+        const workflowId = workflowDoc.id;
+
+        // Only recover workflows that have a Synthesia video URL but never reached Submagic
+        if (data.synthesiaVideoUrl && !data.submagicVideoId && data.retryable !== false) {
+          console.log(`   🔥 RECOVERY: ${workflowId} has synthesiaVideoUrl, advancing to Submagic...`);
+
+          const webhookUrl = `${baseUrl}/api/webhooks/submagic/${brand}`;
+          const title = (data.articleTitle || data.title || data.topic || `Video ${workflowId}`)
+            .replace(/&#8217;/g, "'")
+            .replace(/&#8216;/g, "'")
+            .replace(/&#8211;/g, "-")
+            .replace(/&#8212;/g, "-")
+            .replace(/&amp;/g, "&")
+            .replace(/&quot;/g, '"')
+            .substring(0, 50);
+
+          const submagicResponse = await fetch('https://api.submagic.co/v1/projects', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-api-key': SUBMAGIC_API_KEY
+            },
+            body: JSON.stringify({
+              title,
+              language: 'en',
+              videoUrl: data.synthesiaVideoUrl,
+              templateName: 'Hormozi 2',
+              magicBrolls: true,
+              magicBrollsPercentage: 75,
+              magicZooms: true,
+              webhookUrl
+            })
+          });
+
+          if (submagicResponse.ok) {
+            const submagicData = await submagicResponse.json();
+            const projectId = submagicData.id || submagicData.project_id || submagicData.projectId;
+
+            await updateDoc(doc(db, collectionName, workflowId), {
+              status: 'submagic_processing',
+              submagicVideoId: projectId,
+              recoveredAt: Date.now(),
+              statusChangedAt: Date.now(),
+              updatedAt: Date.now()
+            });
+
+            console.log(`   ✅ RECOVERED ${workflowId}: Advanced to SubMagic (ID: ${projectId})`);
+            advanced++;
+            recoverable++;
+          } else {
+            const errorText = await submagicResponse.text().catch(() => 'Unable to read error');
+            console.error(`   ❌ ${workflowId}: SubMagic API failed (${submagicResponse.status}): ${errorText}`);
+            failed++;
+          }
+        }
+      }
+
+      if (recoverable > 0) {
+        console.log(`   📂 ${collectionName}: recovered ${recoverable} Synthesia workflows`);
+      }
+    } catch (err) {
+      console.error(`   ❌ Error recovering ${brand}:`, err);
+    }
+  }
+
   return { checked, advanced, failed };
 }
 
@@ -675,6 +776,7 @@ async function checkSubMagicWorkflows() {
   const { db } = await import('@/lib/firebase');
   const { collection, getDocs, query, where, limit: firestoreLimit, updateDoc, doc } = await import('firebase/firestore');
   const { getAllBrandIds, getBrandPlatforms } = await import('@/lib/brand-utils');
+  const { getBrandConfig } = await import('@/config/brand-configs');
   const { uploadSubmagicVideo } = await import('@/lib/video-storage');
   const { postToLate } = await import('@/lib/late-api');
 
@@ -693,7 +795,7 @@ async function checkSubMagicWorkflows() {
   let completed = 0;
   let failed = 0;
 
-  // Check all 6 brands
+  // Check all 7 brands
   const brands = [...getAllBrandIds()];
 
   for (const brand of brands) {
@@ -775,6 +877,7 @@ async function checkSubMagicWorkflows() {
               status: 'posting',
               finalVideoUrl: publicVideoUrl,
               retryCount: (data.retryCount || 0) + 1,
+              statusChangedAt: Date.now(),
               updatedAt: Date.now()
             });
 
@@ -794,6 +897,7 @@ async function checkSubMagicWorkflows() {
                 status: 'completed',
                 latePostId: postResult.postId,
                 completedAt: Date.now(),
+                statusChangedAt: Date.now(),
                 updatedAt: Date.now()
               });
 
@@ -804,6 +908,7 @@ async function checkSubMagicWorkflows() {
             await updateDoc(doc(db, collectionName, workflowId), {
               status: 'failed',
               error: 'SubMagic failed',
+              statusChangedAt: Date.now(),
               updatedAt: Date.now()
             });
             console.log(`   ❌ ${workflowId}: Failed`);
@@ -816,6 +921,154 @@ async function checkSubMagicWorkflows() {
       }
     } catch (err) {
       console.error(`   ❌ Error querying ${brand}:`, err);
+    }
+  }
+
+  // Also check 'exporting' workflows — poll Submagic for download URL
+  console.log('\n📤 CHECKING EXPORTING WORKFLOWS...');
+  for (const brand of brands) {
+    try {
+      const collectionName = `${brand}_workflow_queue`;
+      const qExporting = query(
+        collection(db, collectionName),
+        where('status', '==', 'exporting'),
+        firestoreLimit(10)
+      );
+
+      const exportingSnapshot = await getDocs(qExporting);
+      if (exportingSnapshot.size > 0) {
+        console.log(`   📂 ${collectionName}: ${exportingSnapshot.size} exporting`);
+      }
+      checked += exportingSnapshot.size;
+
+      for (const workflowDoc of exportingSnapshot.docs) {
+        const data = workflowDoc.data();
+        const workflowId = workflowDoc.id;
+        const projectId = data.submagicVideoId || data.submagicProjectId;
+
+        if (!projectId) continue;
+
+        try {
+          const pollController = new AbortController();
+          const pollTimeout = setTimeout(() => pollController.abort(), 15_000);
+
+          const submagicResponse = await fetch(
+            `https://api.submagic.co/v1/projects/${projectId}`,
+            { headers: { 'x-api-key': SUBMAGIC_API_KEY }, signal: pollController.signal }
+          );
+
+          clearTimeout(pollTimeout);
+
+          if (!submagicResponse.ok) continue;
+
+          const submagicData = await submagicResponse.json();
+          const downloadUrl = submagicData.media_url || submagicData.video_url || submagicData.downloadUrl || submagicData.download_url;
+
+          if (downloadUrl) {
+            console.log(`   ✅ ${workflowId}: Export complete — has download URL`);
+
+            // Upload to R2 and advance to posting
+            const publicVideoUrl = await uploadSubmagicVideo(downloadUrl);
+
+            await updateDoc(doc(db, collectionName, workflowId), {
+              status: 'video_processing',
+              submagicDownloadUrl: downloadUrl,
+              finalVideoUrl: publicVideoUrl,
+              statusChangedAt: Date.now(),
+              updatedAt: Date.now()
+            });
+
+            completed++;
+          }
+          // else: still exporting, will be picked up next cron run or timeout
+        } catch (error) {
+          console.error(`   ❌ ${workflowId} export poll:`, error);
+        }
+      }
+    } catch (err) {
+      console.error(`   ❌ Error checking exporting for ${brand}:`, err);
+    }
+  }
+
+  // Also check 'export_failed' workflows — retry the export
+  console.log('\n🔄 CHECKING EXPORT_FAILED WORKFLOWS (RETRY)...');
+  for (const brand of brands) {
+    try {
+      const collectionName = `${brand}_workflow_queue`;
+      const qExportFailed = query(
+        collection(db, collectionName),
+        where('status', '==', 'export_failed'),
+        firestoreLimit(10)
+      );
+
+      const failedSnapshot = await getDocs(qExportFailed);
+      if (failedSnapshot.size > 0) {
+        console.log(`   📂 ${collectionName}: ${failedSnapshot.size} export_failed`);
+      }
+
+      for (const workflowDoc of failedSnapshot.docs) {
+        const data = workflowDoc.data();
+        const workflowId = workflowDoc.id;
+        const projectId = data.submagicVideoId || data.submagicProjectId;
+        const retryCount = data.exportRetries || 0;
+
+        if (!projectId || retryCount >= 3) {
+          if (retryCount >= 3) {
+            // Permanently fail after 3 export retries
+            await updateDoc(doc(db, collectionName, workflowId), {
+              status: 'failed',
+              error: `Export permanently failed after ${retryCount} retries`,
+              failedAt: Date.now(),
+              statusChangedAt: Date.now(),
+              updatedAt: Date.now()
+            });
+            console.log(`   ❌ ${workflowId}: Permanently failed (${retryCount} export retries)`);
+            failed++;
+          }
+          continue;
+        }
+
+        try {
+          const brandConfig = getBrandConfig(brand as any);
+          const retryController = new AbortController();
+          const retryTimeout = setTimeout(() => retryController.abort(), 15_000);
+
+          const exportResponse = await fetch(`https://api.submagic.co/v1/projects/${projectId}/export`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-api-key': SUBMAGIC_API_KEY
+            },
+            body: JSON.stringify({
+              webhookUrl: brandConfig.webhooks.submagic
+            }),
+            signal: retryController.signal,
+          });
+
+          clearTimeout(retryTimeout);
+
+          if (exportResponse.ok) {
+            await updateDoc(doc(db, collectionName, workflowId), {
+              status: 'exporting',
+              exportRetries: retryCount + 1,
+              exportTriggeredAt: Date.now(),
+              statusChangedAt: Date.now(),
+              updatedAt: Date.now()
+            });
+            console.log(`   🔄 ${workflowId}: Export retried (attempt ${retryCount + 1})`);
+            completed++;
+          } else {
+            const errorText = await exportResponse.text().catch(() => '');
+            console.error(`   ❌ ${workflowId}: Export retry failed (${exportResponse.status}): ${errorText}`);
+            failed++;
+          }
+        } catch (error) {
+          console.error(`   ❌ ${workflowId} export retry:`, error);
+          failed++;
+        }
+      }
+    } catch (err) {
+      console.error(`   ❌ Error checking export_failed for ${brand}:`, err);
     }
   }
 
@@ -841,7 +1094,7 @@ async function checkPostingWorkflows() {
   let retried = 0;
   let failed = 0;
 
-  // Check all 6 brands
+  // Check all 7 brands
   const brands = [...getAllBrandIds()];
 
   for (const brand of brands) {
@@ -879,7 +1132,7 @@ async function checkPostingWorkflows() {
         const videoUrl = data.finalVideoUrl;
 
         // CRITICAL FIX: Skip workflows with no valid timestamp to avoid false positives
-        const timestamp = data.updatedAt || data.createdAt;
+        const timestamp = data.statusChangedAt || data.updatedAt || data.createdAt;
         if (!timestamp || timestamp <= 0) {
           console.log(`   ⚠️  ${workflowId}: No valid timestamp - skipping`);
           continue;
@@ -936,6 +1189,7 @@ async function checkPostingWorkflows() {
                 status: 'completed',
                 latePostId: postResult.postId,
                 completedAt: Date.now(),
+                statusChangedAt: Date.now(),
                 updatedAt: Date.now()
               });
 
@@ -978,7 +1232,7 @@ async function autoFailTimedOutWorkflows() {
 
   // Check all brands
   const brands = [...getAllBrandIds()];
-  const statuses = ['heygen_processing', 'synthesia_processing', 'submagic_processing', 'video_processing', 'posting'] as const;
+  const statuses = ['pending', 'heygen_processing', 'synthesia_processing', 'submagic_processing', 'video_processing', 'posting', 'exporting', 'export_failed'] as const;
 
   for (const brand of brands) {
     const collectionName = `${brand}_workflow_queue`;
@@ -1026,17 +1280,19 @@ async function autoFailTimedOutWorkflows() {
               console.log(`      ❌ PERMANENTLY FAILED (max retries exceeded)`);
               failed++;
             } else {
-              // Requeue for retry - reset to pending with incremented retry count
+              // Stay in current stage so the stage-specific checker
+              // (HeyGen/Synthesia/Submagic) re-polls the external API.
+              // DO NOT reset statusChangedAt — that would restart the timeout
+              // clock and create an infinite loop. Only update retryCount so
+              // we eventually hit MAX_RETRY_ATTEMPTS and permanently fail.
               await updateDoc(doc(db, collectionName, workflowId), {
-                status: 'pending',
-                error: `Auto-requeued: Timed out in ${status} after ${stuckMinutes} minutes`,
+                error: `Auto-retry: Timed out in ${status} after ${stuckMinutes} minutes (attempt ${retryCount + 1}/${MAX_RETRY_ATTEMPTS})`,
                 retryCount: retryCount + 1,
                 lastRetryAt: Date.now(),
-                statusChangedAt: Date.now(),
                 updatedAt: Date.now()
               });
 
-              console.log(`      🔄 REQUEUED for retry (attempt ${retryCount + 1}/${MAX_RETRY_ATTEMPTS})`);
+              console.log(`      🔄 RETRY ${retryCount + 1}/${MAX_RETRY_ATTEMPTS} — staying in ${status} for stage checker to re-poll`);
               requeued++;
             }
           }

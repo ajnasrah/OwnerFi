@@ -243,10 +243,11 @@ export function transformProperty(
     ? getNearbyCityNamesForProperty(propertyCity, state, 35, 100)
     : [];
 
-  // Parse numeric values
-  const price = typeof raw.price === 'string'
-    ? parseInt(raw.price.replace(/[^0-9]/g, ''), 10) || 0
-    : raw.price || 0;
+  // Parse numeric values (guard against NaN and invalid strings)
+  const rawPrice = typeof raw.price === 'string'
+    ? parseInt(raw.price.replace(/[^0-9]/g, ''), 10)
+    : raw.price;
+  const price = (rawPrice != null && !isNaN(rawPrice) && rawPrice >= 0) ? rawPrice : 0;
 
   const estimate = raw.zestimate || raw.homeValue || raw.estimate || 0;
   const rentEstimate = raw.rentZestimate || raw.rentEstimate || 0;
@@ -330,12 +331,20 @@ export function validateProperty(property: TransformedProperty): {
   valid: boolean;
   reason?: string;
 } {
-  if (!property.zpid) {
-    return { valid: false, reason: 'Missing zpid' };
+  if (!property.zpid || property.zpid === 0) {
+    return { valid: false, reason: 'Missing or zero ZPID' };
   }
   if (!property.fullAddress || property.fullAddress.trim() === ', ,') {
     return { valid: false, reason: 'Missing address' };
   }
+
+  // Reject placeholder/privacy-listed addresses from Zillow
+  const PLACEHOLDER_ADDRESS_RE = /\b(undisclosed|hidden|private|not\s*disclosed|no\s+address|confidential|unlisted|restricted)\b/i;
+  const streetPart = property.streetAddress || property.fullAddress.split(',')[0] || '';
+  if (PLACEHOLDER_ADDRESS_RE.test(streetPart)) {
+    return { valid: false, reason: `Placeholder address: "${streetPart.trim()}"` };
+  }
+
   if (!property.city || !property.state) {
     return { valid: false, reason: 'Missing city or state' };
   }

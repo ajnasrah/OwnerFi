@@ -80,13 +80,15 @@ export function runUnifiedFilter(
   const needsWorkKeywords = needsWorkResult.matchedKeywords;
 
   // Calculate discount percentage
-  let discountPercentage: number | undefined;
+  let discountPercentage: number = 0;
   let eightyPercentOfZestimate: number | undefined;
   let meetsDiscountCriteria = false;
 
   if (price && price > 0 && zestimate && zestimate > 0) {
     eightyPercentOfZestimate = zestimate * 0.8;
     discountPercentage = ((zestimate - price) / zestimate) * 100;
+    // Guard against Infinity/NaN
+    if (!isFinite(discountPercentage)) discountPercentage = 0;
     meetsDiscountCriteria = price < eightyPercentOfZestimate;
   }
 

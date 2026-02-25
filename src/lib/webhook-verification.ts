@@ -44,18 +44,16 @@ export function verifyHeyGenWebhook(
   // Get brand-specific secret
   const webhookSecret = getHeyGenSecret(brand);
 
-  // Check if webhook secret is configured FIRST
-  // If no secret is set, we can't verify - allow through
+  // Fail-closed: reject if secret not configured
   if (!webhookSecret) {
-    console.warn(`⚠️  HEYGEN_WEBHOOK_SECRET_${brand.toUpperCase()} not set - skipping verification`);
-    return { valid: true };
+    console.error(`❌ HEYGEN_WEBHOOK_SECRET_${brand.toUpperCase()} not set - rejecting webhook`);
+    return { valid: false, error: 'Webhook secret not configured' };
   }
 
-  // Check if signature is provided
+  // Fail-closed: reject if no signature provided
   if (!signature) {
-    // HeyGen may not be sending signatures - log warning but allow through
-    console.warn(`⚠️  [${brand}] HeyGen webhook has no signature header - allowing through`);
-    return { valid: true };
+    console.error(`❌ [${brand}] HeyGen webhook has no signature header - rejecting`);
+    return { valid: false, error: 'No signature provided' };
   }
 
   try {

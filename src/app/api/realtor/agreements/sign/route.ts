@@ -112,16 +112,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if expired (handle missing expirationDate for older agreements)
+    // Check if expired - never auto-extend with a fallback date
     const now = new Date();
-    let expirationDate: Date;
+    let expirationDate: Date | null;
     try {
       expirationDate = agreement.expirationDate?.toDate?.()
-        || (agreement.expirationDate instanceof Date ? agreement.expirationDate : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)); // Default 30 days if missing
+        || (agreement.expirationDate instanceof Date ? agreement.expirationDate : null);
     } catch {
-      // If expirationDate parsing fails, default to 30 days from now
-      expirationDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+      expirationDate = null;
     }
+
+    if (!expirationDate) {
+      return NextResponse.json(
+        { error: 'Agreement has no valid expiration date' },
+        { status: 400 }
+      );
+    }
+
     if (now > expirationDate) {
       // Update status to expired
       await FirebaseDB.updateDocument(COLLECTIONS.REFERRAL_AGREEMENTS, agreementId, {

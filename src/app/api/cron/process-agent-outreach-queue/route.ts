@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { indexRawFirestoreProperty } from '@/lib/typesense/sync';
+import { withCronLock } from '@/lib/cron-lock';
+
+export const maxDuration = 300;
 
 // Initialize Firebase Admin
 if (!getApps().length) {
@@ -70,6 +73,8 @@ export async function GET(request: NextRequest) {
 
   console.log('🔄 [AGENT OUTREACH QUEUE] Auth passed, starting processing');
 
+  // Use cron lock to prevent concurrent execution
+  const result = await withCronLock('process-agent-outreach-queue', async () => {
   try {
     // Reset stuck processing items (older than 30 minutes)
     const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
@@ -323,7 +328,7 @@ export async function GET(request: NextRequest) {
               homeStatus: 'FOR_SALE',
             };
 
-            const propertyRef = await db.collection('properties').doc(`zpid_${property.zpid}`).set(propertyData);
+            await db.collection('properties').doc(`zpid_${property.zpid}`).set(propertyData);
             console.log(`   💰 Saved to properties: ${property.address} (${discountPercent}% discount)`);
 
             // Sync to Typesense
@@ -426,4 +431,16 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
+  }); // End withCronLock
+
+  // If lock wasn't acquired, return early
+  if (result === null) {
+    return NextResponse.json({
+      success: false,
+      message: 'Another instance is already running',
+      skipped: true
+    }, { status: 200 });
+  }
+
+  return result;
 }

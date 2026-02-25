@@ -35,11 +35,6 @@ export const PropertyCard = React.memo(function PropertyCard({ property, isFavor
       (propertyRecord.zillowImageUrl as string | undefined) ||
       (propertyRecord.images as string[] | undefined)?.[0];
 
-    // Debug: log image resolution
-    if (typeof window !== 'undefined') {
-      console.log('[PropertyCard] Image for', property.address, ':', imageUrl ? imageUrl.substring(0, 80) : 'NONE');
-    }
-
     if (!imageUrl || typeof imageUrl !== 'string' || imageUrl.trim() === '' || imageError) {
       return '/placeholder-house.jpg';
     }

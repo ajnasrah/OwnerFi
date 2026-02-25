@@ -28,6 +28,9 @@ export async function GET(request: NextRequest) {
     const userAgent = request.headers.get('user-agent');
     const isVercelCron = userAgent === 'vercel-cron/1.0';
 
+    if (!CRON_SECRET) {
+      return NextResponse.json({ error: 'CRON_SECRET not configured' }, { status: 500 });
+    }
     if (authHeader !== `Bearer ${CRON_SECRET}` && !isVercelCron) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

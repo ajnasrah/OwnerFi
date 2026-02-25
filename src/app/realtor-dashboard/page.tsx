@@ -20,6 +20,13 @@ export default function RealtorDashboardHub() {
     }
   }, [status, session, router]);
 
+  // On mobile, skip the hub and go straight to buyer leads
+  useEffect(() => {
+    if (status === 'authenticated' && window.innerWidth < 768) {
+      router.replace('/realtor-dashboard/buyers');
+    }
+  }, [status, router]);
+
   if (status === 'loading') {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center">

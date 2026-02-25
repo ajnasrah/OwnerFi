@@ -7,10 +7,18 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminDb } from '@/lib/firebase-admin';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/lib/auth';
 
 const SUBMAGIC_API_KEY = process.env.SUBMAGIC_API_KEY;
 
 export async function GET(request: NextRequest) {
+  // Auth check - admin only
+  const session = await getServerSession(authOptions as unknown as Parameters<typeof getServerSession>[0]);
+  if (!session?.user || (session.user as any).role !== 'admin') {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const brand = searchParams.get('brand') || 'all';

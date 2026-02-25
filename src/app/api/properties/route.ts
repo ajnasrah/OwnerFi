@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 100);
+    const limit = Math.min(parseInt(searchParams.get('limit') || '20', 10) || 20, 100);
 
     // Try Typesense first for speed
     const typesenseClient = getTypesenseSearchClient();

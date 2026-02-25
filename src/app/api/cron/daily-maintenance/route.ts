@@ -99,6 +99,29 @@ export async function GET(request: NextRequest) {
       const youtubeResult = await syncYouTubeAnalytics();
       results.youtubeSync = youtubeResult;
 
+      // 7. Cleanup expired webhook idempotency records + DLQ entries
+      console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('7️⃣  WEBHOOK IDEMPOTENCY + DLQ CLEANUP');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+      try {
+        const { cleanupExpiredIdempotencyRecords } = await import('@/lib/webhook-idempotency');
+        const idempotencyResult = await cleanupExpiredIdempotencyRecords();
+        console.log(`   ✅ Idempotency records cleaned: ${idempotencyResult?.deleted || 0}`);
+        (results as any).idempotencyCleanup = idempotencyResult;
+      } catch (err) {
+        console.error('   ❌ Idempotency cleanup failed:', err);
+        (results as any).idempotencyCleanup = { error: (err as Error).message };
+      }
+      try {
+        const { cleanupOldDLQEntries } = await import('@/lib/webhook-dlq');
+        const dlqResult = await cleanupOldDLQEntries();
+        console.log(`   ✅ DLQ entries cleaned: ${dlqResult?.deleted || 0}`);
+        (results as any).dlqCleanup = dlqResult;
+      } catch (err) {
+        console.error('   ❌ DLQ cleanup failed:', err);
+        (results as any).dlqCleanup = { error: (err as Error).message };
+      }
+
       const duration = Date.now() - startTime;
 
       console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');

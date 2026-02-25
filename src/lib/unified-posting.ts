@@ -186,13 +186,20 @@ export async function postToAllPlatforms(options: UnifiedPostOptions): Promise<U
     }
   }
 
-  // Determine overall success
+  // Determine overall success - at least one platform must have published
   result.success = result.totalPublished > 0 || (result.youtube?.success ?? false);
 
+  // Track partial failures so callers can decide how to handle them
+  const totalRequested = options.platforms.length;
+  const hasPartialFailure = result.success && result.errors.length > 0;
+
   console.log(`\n📊 Posting Summary:`);
-  console.log(`   YouTube: ${result.youtube?.success ? `✅ (${result.youtube.videoId})` : '❌'}`);
-  console.log(`   Late.dev: ${result.otherPlatforms?.success ? `✅ (${result.otherPlatforms.postId})` : '❌'}`);
-  console.log(`   Total platforms: ${result.totalPublished}`);
+  console.log(`   YouTube: ${result.youtube?.success ? `✅ (${result.youtube.videoId})` : hasYouTube ? '❌' : 'N/A'}`);
+  console.log(`   Late.dev: ${result.otherPlatforms?.success ? `✅ (${result.otherPlatforms.postId})` : latePlatforms.length > 0 ? '❌' : 'N/A'}`);
+  console.log(`   Total platforms: ${result.totalPublished}/${totalRequested}`);
+  if (hasPartialFailure) {
+    console.warn(`   ⚠️  PARTIAL FAILURE: ${result.totalPublished}/${totalRequested} platforms succeeded`);
+  }
   if (result.errors.length > 0) {
     console.log(`   Errors: ${result.errors.join(', ')}`);
   }

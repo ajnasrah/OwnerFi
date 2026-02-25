@@ -240,9 +240,9 @@ export async function GET(request: NextRequest) {
     const countOnly = searchParams.get('countOnly') === 'true';
     const city = searchParams.get('city')?.toLowerCase();
     const state = searchParams.get('state')?.toUpperCase();
-    const radius = parseInt(searchParams.get('radius') || '0');
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = Math.min(parseInt(searchParams.get('limit') || '200'), 500);
+    const radius = Math.max(0, parseInt(searchParams.get('radius') || '0', 10) || 0);
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10) || 1);
+    const limit = Math.min(Math.max(1, parseInt(searchParams.get('limit') || '200', 10) || 200), 500);
 
     // Fetch from unified properties collection only
     const propertiesCollection = collection(db, 'properties');

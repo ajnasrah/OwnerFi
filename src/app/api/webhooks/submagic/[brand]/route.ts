@@ -32,20 +32,13 @@ const SUBMAGIC_WEBHOOK_SECRET = process.env.SUBMAGIC_WEBHOOK_SECRET;
  */
 function verifyWebhookSignature(payload: string, signature: string | null): boolean {
   if (!SUBMAGIC_WEBHOOK_SECRET) {
-    // No secret configured - skip verification
-    // This is acceptable if Submagic doesn't support webhook signatures
-    console.warn('⚠️ [SECURITY] SUBMAGIC_WEBHOOK_SECRET not set - webhook verification SKIPPED');
-    console.warn('   To enable verification, set SUBMAGIC_WEBHOOK_SECRET in environment');
-    return true;
+    console.error('❌ [SECURITY] SUBMAGIC_WEBHOOK_SECRET not set - rejecting webhook');
+    return false;
   }
 
   if (!signature) {
-    // Secret is configured but no signature received
-    // This could mean Submagic doesn't send signatures, or it's a spoofed request
-    console.warn('⚠️ [SECURITY] No signature in webhook but SUBMAGIC_WEBHOOK_SECRET is set');
-    console.warn('   If Submagic doesn\'t support signatures, remove SUBMAGIC_WEBHOOK_SECRET');
-    // Allow for now but log warning - Submagic may not send signatures
-    return true;
+    console.error('❌ [SECURITY] No signature in webhook - rejecting');
+    return false;
   }
 
   // Try different signature formats that Submagic might use
@@ -234,6 +227,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
         await updateWorkflowForBrand(brand, workflowId, {
           exportTriggeredAt: Date.now(),
           status: 'exporting',
+          statusChangedAt: Date.now(),
         });
 
         // Retry logic for export trigger (max 3 attempts)
@@ -245,6 +239,9 @@ export async function POST(request: NextRequest, context: RouteContext) {
           try {
             console.log(`   Attempt ${attempt}/${maxRetries} to trigger export...`);
 
+            const exportController = new AbortController();
+            const exportTimeout = setTimeout(() => exportController.abort(), 30_000); // 30s timeout
+
             exportResponse = await fetch(`https://api.submagic.co/v1/projects/${submagicProjectId}/export`, {
               method: 'POST',
               headers: {
@@ -253,8 +250,11 @@ export async function POST(request: NextRequest, context: RouteContext) {
               },
               body: JSON.stringify({
                 webhookUrl: brandConfig.webhooks.submagic // Webhook will be called again when export completes
-              })
+              }),
+              signal: exportController.signal,
             });
+
+            clearTimeout(exportTimeout);
 
             if (exportResponse.ok) {
               console.log(`✅ [${brandConfig.displayName}] Export triggered successfully on attempt ${attempt}`);
@@ -286,6 +286,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
                 error: `Failed to trigger Submagic export after ${maxRetries} attempts: ${exportError}`,
                 exportRetries: (workflow.exportRetries || 0) + 1,
                 lastExportAttempt: Date.now(),
+                statusChangedAt: Date.now(),
               });
 
               return NextResponse.json({
@@ -325,6 +326,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
       await updateWorkflowForBrand(brand, workflowId, {
         submagicDownloadUrl: downloadUrl,  // Save the original Submagic URL
         status: 'video_processing',        // New intermediate status
+        statusChangedAt: Date.now(),
       });
 
       console.log(`💾 [${brandConfig.displayName}] Submagic URL saved, triggering async processing...`);
@@ -360,6 +362,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
         status: 'failed',
         error: 'Submagic processing failed',
         failedAt: Date.now(),
+        statusChangedAt: Date.now(),
       });
 
       await sendFailureAlert(brand, workflowId, workflow, 'Submagic processing failed');
@@ -614,6 +617,7 @@ async function processVideoAndPost(
     await updateWorkflowForBrand(brand, workflowId, {
       status: 'posting',
       finalVideoUrl: publicVideoUrl,
+      statusChangedAt: Date.now(),
     });
 
     console.log(`💾 [${brandConfig.displayName}] Status set to "posting" with video URL saved`);
@@ -676,6 +680,7 @@ async function processVideoAndPost(
       const completionUpdate: Record<string, any> = {
         status: 'completed',
         completedAt: Date.now(),
+        statusChangedAt: Date.now(),
         platformsUsed: unifiedResult.totalPublished,
       };
       if (unifiedResult.otherPlatforms?.postId) completionUpdate.latePostId = unifiedResult.otherPlatforms.postId;
@@ -693,6 +698,7 @@ async function processVideoAndPost(
       status: 'failed',
       error: error instanceof Error ? error.message : 'Unknown error in video processing',
       failedAt: Date.now(),
+      statusChangedAt: Date.now(),
     });
 
     await sendFailureAlert(
@@ -766,8 +772,21 @@ async function triggerAsyncVideoProcessing(
 
   } catch (error) {
     console.error(`❌ [${brand}] Error creating Cloud Task:`, error);
-    // Don't throw - webhook should still succeed even if task creation fails
-    // The cron job will pick up stuck workflows as a failsafe
+
+    // Cloud Tasks failed — mark workflow as failed so it doesn't sit in
+    // video_processing forever. The cron recovery can retry from failed state.
+    try {
+      await updateWorkflowForBrand(brand as any, workflowId, {
+        status: 'failed',
+        error: `Cloud Tasks creation failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        failedAt: Date.now(),
+        statusChangedAt: Date.now(),
+        submagicDownloadUrl: videoUrl, // Preserve URL for recovery
+      });
+      console.log(`📝 [${brand}] Marked workflow ${workflowId} as failed (recoverable — has submagicDownloadUrl)`);
+    } catch (updateErr) {
+      console.error(`❌ [${brand}] Failed to update workflow status:`, updateErr);
+    }
   }
 }
 

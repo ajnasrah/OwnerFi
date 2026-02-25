@@ -47,33 +47,22 @@ export class ConsolidatedLeadSystem {
    */
   static async findAvailableLeads(realtorProfile: RealtorMatchProfile, limit = 50, currentRealtorUserId?: string): Promise<LeadMatch[]> {
     try {
-      console.log(`\n🔍 [LEAD MATCHING] ===== Starting Lead Search =====`);
-      console.log(`   Realtor cities: ${realtorProfile.cities.join(', ')}`);
-      console.log(`   Realtor state: "${realtorProfile.state}"`);
-      console.log(`   Realtor languages: ${realtorProfile.languages.join(', ')}`);
+      console.log(`[LEAD MATCHING] State="${realtorProfile.state}"`);
 
-      // Check for invalid state
       if (!realtorProfile.state || realtorProfile.state === 'Not set' || realtorProfile.state === 'Unknown') {
-        console.log(`   ❌ Invalid state "${realtorProfile.state}" - realtor profile may be incomplete`);
-        console.log(`🔍 [LEAD MATCHING] ===== End Lead Search (no valid state) =====\n`);
+        console.log(`[LEAD MATCHING] Invalid state "${realtorProfile.state}"`);
         return [];
       }
 
-      // 🚀 PERFORMANCE: Increased limit to 500 to ensure we don't miss qualified leads
-      // Filter by state at database level to reduce processing
+      // All available buyers in the realtor's state
       const availableBuyers = await FirebaseDB.queryDocuments<BuyerProfile>('buyerProfiles', [
         { field: 'isAvailableForPurchase', operator: '==', value: true },
         { field: 'isActive', operator: '==', value: true },
         { field: 'profileComplete', operator: '==', value: true },
         { field: 'preferredState', operator: '==', value: realtorProfile.state }
-      ], 500); // Increased from 100 to 500
+      ], 500);
 
-      console.log(`   Query returned: ${availableBuyers.length} buyers with state="${realtorProfile.state}"`);
-      if (availableBuyers.length > 0) {
-        console.log(`   Sample buyers: ${availableBuyers.slice(0, 3).map(b => `${b.firstName} in ${b.preferredCity}`).join(', ')}`);
-      } else {
-        console.log(`   ⚠️ No buyers found in state "${realtorProfile.state}" with isAvailableForPurchase=true, isActive=true, profileComplete=true`);
-      }
+      console.log(`[LEAD MATCHING] ${availableBuyers.length} buyers in ${realtorProfile.state}`);
 
       // Get all user IDs with realtor role to filter them out
       const realtorUsers = await FirebaseDB.queryDocuments('users', [
@@ -132,13 +121,7 @@ export class ConsolidatedLeadSystem {
       // Sort by match score (highest first)
       matches.sort((a, b) => b.matchScore - a.matchScore);
 
-      console.log(`   Final matches: ${matches.length} buyers`);
-      if (matches.length === 0 && availableBuyers.length > 0) {
-        console.log(`   ⚠️ Had ${availableBuyers.length} buyers but none matched cities: ${realtorProfile.cities.slice(0, 5).join(', ')}`);
-      }
-      console.log(`🔍 [LEAD MATCHING] ===== End Lead Search =====\n`);
-
-      // Return top matches only
+      console.log(`[LEAD MATCHING] Returning ${matches.length} leads`);
       return matches.slice(0, limit);
 
     } catch (error) {
@@ -149,73 +132,42 @@ export class ConsolidatedLeadSystem {
   
   /**
    * Calculate match score between buyer and realtor
-   * Matching is now STATE-LEVEL (not city-level) to maximize lead visibility
+   * State-level matching — realtors are licensed statewide
    */
-  private static calculateMatch(buyer: BuyerProfile, realtor: RealtorMatchProfile): {
+  private static calculateMatch(buyer: BuyerProfile, _realtor: RealtorMatchProfile): {
     isMatch: boolean;
     score: number;
     reasons: string[];
   } {
-    let score = 0;
+    let score = 50;
     const reasons: string[] = [];
 
-    // State match is already enforced at the database query level
-    // All buyers passed here are in the same state as the realtor
     const buyerCity = buyer.preferredCity || buyer.city || '';
     const buyerState = buyer.preferredState || buyer.state || '';
+    reasons.push(`${buyerCity}, ${buyerState}`);
 
-    // Base score for state match (always true at this point)
-    score += 40;
-    reasons.push(`Same state: ${buyerState}`);
-
-    // Bonus for city match (buyer is in realtor's service area)
-    const realtorCities = realtor.cities.map(c => c.toLowerCase());
-    const cityMatch = realtorCities.includes(buyerCity.toLowerCase());
-
-    if (cityMatch) {
-      score += 20;
-      reasons.push(`In service area: ${buyerCity}`);
-    } else {
-      reasons.push(`Outside service area: ${buyerCity}`);
-    }
-
-    // Language match (bonus, not required)
-    const buyerLanguages = buyer.languages || ['English'];
-    const languageMatch = buyerLanguages.some(lang =>
-      realtor.languages.map(rl => rl.toLowerCase()).includes(lang.toLowerCase())
-    );
-
-    if (languageMatch) {
-      score += 20;
-      const commonLangs = buyerLanguages.filter(lang =>
-        realtor.languages.map(rl => rl.toLowerCase()).includes(lang.toLowerCase())
-      );
-      reasons.push(`Common languages: ${commonLangs.join(', ')}`);
-    }
-
-    // Activity bonus - Buyer has liked properties
+    // Activity bonus
     if (buyer.likedPropertyIds && buyer.likedPropertyIds.length > 0) {
-      score += 10;
-      reasons.push(`Active buyer (${buyer.likedPropertyIds.length} liked properties)`);
+      score += 20;
+      reasons.push(`${buyer.likedPropertyIds.length} liked properties`);
     }
 
     // Recent activity bonus
     if (buyer.lastActiveAt) {
       const daysSinceActive = (Date.now() - buyer.lastActiveAt.toMillis()) / (1000 * 60 * 60 * 24);
       if (daysSinceActive <= 7) {
-        score += 10;
-        reasons.push('Active within last week');
+        score += 20;
+        reasons.push('Active this week');
       } else if (daysSinceActive <= 30) {
-        score += 5;
-        reasons.push('Active within last month');
+        score += 10;
+        reasons.push('Active this month');
       }
     }
 
-    // All buyers in the same state are now a match
     return {
       isMatch: true,
-      score: Math.min(score, 100), // Cap at 100
-      reasons: reasons
+      score: Math.min(score, 100),
+      reasons,
     };
   }
   
@@ -319,7 +271,7 @@ export class ConsolidatedLeadSystem {
       // Parse location
       const cityParts = data.city.split(',');
       const city = cityParts[0]?.trim();
-      const state = cityParts[1]?.trim() || 'TX';
+      const state = cityParts[1]?.trim() || '';
 
       // Generate filter BEFORE creating profile
       let filter = undefined;

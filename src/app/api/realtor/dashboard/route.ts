@@ -5,7 +5,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSessionWithRole } from '@/lib/auth-utils';
 import { FirebaseDB } from '@/lib/firebase-db';
 import { logError, logInfo } from '@/lib/logger';
-import { getCitiesWithinRadiusComprehensive } from '@/lib/comprehensive-cities';
 
 interface LeadData {
   id: string;
@@ -102,47 +101,24 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get service area from realtorData (saved by settings page via /api/realtor/profile)
+    // Get service area — only the state matters for lead matching
     const realtorServiceArea = user.realtorData?.serviceArea as {
       primaryCity?: { name: string; state: string };
-      nearbyCities?: Array<{ name: string; state: string }>;
     } | undefined;
-    const realtorServiceCities = (user.realtorData as Record<string, unknown> | undefined)?.serviceCities as string[] | undefined;
 
     const serviceCity = realtorServiceArea?.primaryCity?.name || 'Not set';
     const serviceState = realtorServiceArea?.primaryCity?.state || 'Not set';
 
-    console.log(`\n📊 [REALTOR DASHBOARD] ===== Loading Dashboard =====`);
-    console.log(`   User ID: ${session.user.id}`);
-    console.log(`   realtorData.serviceArea found: ${realtorServiceArea ? 'YES' : 'NO'}`);
-    console.log(`   Service city: "${serviceCity}"`);
-    console.log(`   Service state: "${serviceState}"`);
-
-    // Get nearby cities from realtorData service area
-    let nearbyCities: string[] = realtorServiceArea?.nearbyCities?.map(c => c.name) || [];
-
-    // Also include serviceCities (array of "City, ST" strings) if available
-    if (nearbyCities.length === 0 && realtorServiceCities && realtorServiceCities.length > 0) {
-      nearbyCities = realtorServiceCities.map((city: string) => city.split(',')[0]?.trim());
-    }
-    console.log(`   Nearby cities count: ${nearbyCities.length}`);
-
-    // Fallback: compute nearby cities if none saved but we have a valid city
-    if (nearbyCities.length === 0 && serviceCity !== 'Not set' && serviceState !== 'Not set') {
-      console.log(`⚠️ [REALTOR DASHBOARD] No service area configured for ${serviceCity}, ${serviceState} - computing nearby cities`);
-      const computedCities = getCitiesWithinRadiusComprehensive(serviceCity, serviceState, 30);
-      nearbyCities = computedCities.map(c => c.name);
-      console.log(`✅ [REALTOR DASHBOARD] Computed ${nearbyCities.length} nearby cities for ${serviceCity}`);
-    }
+    console.log(`[REALTOR DASHBOARD] User=${session.user.id} City=${serviceCity} State=${serviceState}`);
 
     // Create simplified realtor data structure
+    // Lead matching is STATE-LEVEL — realtors see all buyers in their state
     const realtorData = {
       firstName: user.realtorData?.firstName || 'Realtor',
       lastName: user.realtorData?.lastName || '',
       credits: user.realtorData?.credits || 0,
       serviceArea: {
         primaryCity: { name: serviceCity, state: serviceState },
-        nearbyCities: nearbyCities
       }
     };
 
@@ -165,7 +141,7 @@ export async function GET(request: NextRequest) {
         credits: realtorData.credits,
         serviceArea: {
           primaryCity: serviceCity,
-          totalCitiesServed: nearbyCities.length || 1
+          totalCitiesServed: 1
         }
       }
     };
@@ -180,7 +156,6 @@ export async function GET(request: NextRequest) {
         credits: realtorData.credits,
         serviceCity,
         serviceState,
-        nearbyCitiesCount: nearbyCities.length
       }
     });
 
@@ -293,13 +268,11 @@ async function getTransactionHistory(userId: string): Promise<Transaction[]> {
   }
 }
 
-// UPDATED: Get matched buyer leads using consolidated system
+// Get matched buyer leads — all available buyers in the realtor's state
 async function getMatchedBuyerLeads(realtorData: {
   serviceArea?: {
     primaryCity?: { name: string; state: string };
-    nearbyCities?: Array<{ name?: string } | string>;
   };
-  serviceCities?: string[];
 }, filters?: { searchQuery?: string; cityFilter?: string }, realtorUserId?: string): Promise<Array<{
   id: string;
   firstName: string;
@@ -317,38 +290,16 @@ async function getMatchedBuyerLeads(realtorData: {
 }>> {
   try {
     const { ConsolidatedLeadSystem } = await import('@/lib/consolidated-lead-system');
-    
-    // Extract service cities from realtor data
-    const serviceArea = realtorData.serviceArea || {};
-    let cities: string[] = [];
-    
-    // Get primary city and nearby cities from serviceArea
-    if (serviceArea.primaryCity?.name) {
-      cities = [serviceArea.primaryCity.name];
-      
-      // Add all nearby cities from service area
-      if (serviceArea.nearbyCities && serviceArea.nearbyCities.length > 0) {
-        const nearbyCities = (serviceArea.nearbyCities as Array<{ name?: string } | string>).map((c: { name?: string } | string) => 
-          typeof c === 'string' ? c : ((c as { name?: string }).name || 'Unknown')
-        );
-        cities.push(...nearbyCities);
-      }
-    }
-    
-    // Also check if cities are saved directly in serviceCities field
-    if (realtorData.serviceCities && realtorData.serviceCities.length > 0) {
-      cities = (realtorData.serviceCities as string[]).map((city: string) => city.split(',')[0]?.trim());
-    }
-    
+
+    const state = realtorData.serviceArea?.primaryCity?.state || 'Unknown';
+    const primaryCity = realtorData.serviceArea?.primaryCity?.name || '';
+
     const realtorProfile = {
-      cities: cities,
-      languages: ['English'], // Default - can be extended later  
-      state: serviceArea.primaryCity?.state || 'Unknown'
+      cities: primaryCity ? [primaryCity] : [],
+      languages: ['English'],
+      state,
     };
-    
-    
-    // Get matches from consolidated system (increased limit from 50 to 200)
-    // Pass realtorUserId so the system doesn't filter out this realtor's own reserved leads
+
     const leads = await ConsolidatedLeadSystem.findAvailableLeads(realtorProfile, 200, realtorUserId);
 
     // Convert Timestamp to Date for compatibility

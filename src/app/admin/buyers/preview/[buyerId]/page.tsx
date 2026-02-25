@@ -110,7 +110,7 @@ export default function BuyerPreview() {
         lastName: profileData.profile.lastName,
         phone: profileData.profile.phone,
         city: profileData.profile.preferredCity || profileData.profile.city,
-        state: profileData.profile.preferredState || profileData.profile.state || 'TX',
+        state: profileData.profile.preferredState || profileData.profile.state || '',
         likedProperties: profileData.profile.likedPropertyIds || [],
       };
 

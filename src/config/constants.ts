@@ -149,7 +149,8 @@ export const RATE_LIMITS = {
   OPENAI_TOKENS_PER_MINUTE: 90_000,
 
   // Circuit breaker thresholds (prevents cascading failures)
-  CIRCUIT_BREAKER_THRESHOLD: 5, // failures before opening circuit
+  // Threshold of 10 prevents a single failing post (with 5 retries) from opening the breaker
+  CIRCUIT_BREAKER_THRESHOLD: 10, // failures before opening circuit
   CIRCUIT_BREAKER_TIMEOUT: 60_000, // 1 minute cooldown before retry
 } as const;
 

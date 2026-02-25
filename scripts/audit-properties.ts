@@ -70,6 +70,8 @@ async function main() {
     }
     if (!addr || addr === '(no address)' || addr.trim() === '' || addr.trim() === ', ,') {
       issues.push({ id, address: addr, category: 'MISSING_ADDRESS', detail: 'No address data', price, severity: 'critical' });
+    } else if (/\b(undisclosed|hidden|private|not\s*disclosed|no\s+address|confidential|unlisted|restricted)\b/i.test(addr)) {
+      issues.push({ id, address: addr, category: 'MISSING_ADDRESS', detail: `Placeholder address: "${addr}"`, price, severity: 'critical' });
     }
 
     // === PRICE ANOMALIES ===

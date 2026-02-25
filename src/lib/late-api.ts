@@ -477,9 +477,15 @@ export async function postToLate(request: LatePostRequest): Promise<LatePostResp
           console.log(`🔍 Late API Response Body:`, responseText);
 
           if (!response.ok) {
-            // Check for rate limit
+            // Check for rate limit — parse actual Retry-After header
             if (response.status === 429) {
-              throw new RateLimitError('Late API rate limit exceeded', 60);
+              const retryAfterHeader = response.headers.get('Retry-After');
+              let retryAfterSeconds = 60; // default fallback
+              if (retryAfterHeader) {
+                const parsed = parseInt(retryAfterHeader, 10);
+                retryAfterSeconds = isNaN(parsed) ? 60 : parsed;
+              }
+              throw new RateLimitError('Late API rate limit exceeded', retryAfterSeconds);
             }
 
             throw new Error(`Late API error: ${response.status} - ${responseText}`);
@@ -781,13 +787,19 @@ async function logLateFailure(data: {
       return;
     }
 
+    const logController = new AbortController();
+    const logTimeout = setTimeout(() => logController.abort(), 10_000); // 10s timeout
+
     const response = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/admin/late-failures`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(data),
+      signal: logController.signal,
     });
+
+    clearTimeout(logTimeout);
 
     if (!response.ok) {
       console.error('Failed to log Late failure:', await response.text());

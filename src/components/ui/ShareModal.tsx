@@ -21,6 +21,16 @@ export function ShareModal({ property, isOpen, onClose }: ShareModalProps) {
     }
   }, [property.id]);
 
+  // Close on Escape key
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const getShareText = () => {
@@ -91,6 +101,9 @@ export function ShareModal({ property, isOpen, onClose }: ShareModalProps) {
 
   return (
     <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Share property"
       className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center"
       onClick={onClose}
     >

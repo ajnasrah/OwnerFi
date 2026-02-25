@@ -1568,8 +1568,10 @@ ${script.caption}`;
                 <button
                   onClick={async () => {
                     try {
-                      const response = await fetch('/api/cron/gaza?force=true', {
-                        headers: { 'Authorization': `Bearer ${process.env.NEXT_PUBLIC_CRON_SECRET || ''}` }
+                      const response = await fetch('/api/admin/trigger-cron', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ cronPath: '/api/cron/gaza?force=true' })
                       });
                       const data = await response.json();
                       alert(data.success ? `Video workflow started: ${data.workflow_id}` : `Error: ${data.error || data.message}`);

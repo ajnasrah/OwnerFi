@@ -101,6 +101,7 @@ export async function POST(request: NextRequest) {
       await updateWorkflowForBrand(brand, workflowId, {
         status: 'video_processing',
         processingStartedAt: Date.now(),
+        statusChangedAt: Date.now(),
       });
 
       // Step 1: Get video download URL
@@ -137,6 +138,7 @@ export async function POST(request: NextRequest) {
         finalVideoUrl: publicVideoUrl,
         uploadCompletedAt: Date.now(),
         status: 'posting',
+        statusChangedAt: Date.now(),
       });
       console.log(`💾 Video URL saved and status set to "posting"`);
 
@@ -279,9 +281,12 @@ export async function POST(request: NextRequest) {
         const completionUpdate: Record<string, any> = {
           status: 'completed',
           completedAt: Date.now(),
+          statusChangedAt: Date.now(),
         };
         if (postResult.postId) completionUpdate.latePostId = postResult.postId;
         if (postResult.youtubeVideoId) completionUpdate.youtubeVideoId = postResult.youtubeVideoId;
+        if (postResult.error) completionUpdate.partialPostingErrors = postResult.error;
+        if (postResult.platforms) completionUpdate.platformsPosted = postResult.platforms;
 
         await updateWorkflowForBrand(brand, workflowId, completionUpdate);
 
@@ -323,6 +328,7 @@ export async function POST(request: NextRequest) {
         status: 'failed',
         error: error instanceof Error ? error.message : 'Unknown error in video processing',
         failedAt: Date.now(),
+        statusChangedAt: Date.now(),
       });
 
       // Re-throw to trigger Cloud Tasks retry
@@ -455,12 +461,18 @@ async function fetchVideoUrlFromSubmagic(submagicProjectId: string): Promise<str
     throw new Error('Submagic API key not configured');
   }
 
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 30_000); // 30s timeout
+
   const response = await fetch(
     `https://api.submagic.co/v1/projects/${submagicProjectId}`,
     {
-      headers: { 'x-api-key': SUBMAGIC_API_KEY }
+      headers: { 'x-api-key': SUBMAGIC_API_KEY },
+      signal: controller.signal,
     }
   );
+
+  clearTimeout(timeout);
 
   if (!response.ok) {
     const errorText = await response.text().catch(() => 'Unable to read error');

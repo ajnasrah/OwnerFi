@@ -62,26 +62,38 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
+    // Validate we have both city and state
+    const cityName = cityParts[0]?.trim();
+    const statePart = cityParts[1]?.trim();
+    if (!cityName || !statePart) {
+      return NextResponse.json(
+        { error: 'Please provide city in "City, State" format' },
+        { status: 400 }
+      );
+    }
+
     // Create service area in the format the dashboard expects
     const serviceArea = {
       primaryCity: {
-        name: cityParts[0]?.trim() || 'Dallas',
-        state: cityParts[1]?.trim() || 'TX'
+        name: cityName,
+        state: statePart
       },
-      nearbyCities: (serviceCities as string[]).map((city: string) => ({
-        name: city.split(',')[0]?.trim() || city,
-        state: city.split(',')[1]?.trim() || 'TX'
-      })),
+      nearbyCities: (serviceCities as string[]).map((city: string) => {
+        const parts = city.split(',');
+        return {
+          name: parts[0]?.trim() || city,
+          state: parts[1]?.trim() || statePart
+        };
+      }),
       radiusMiles: 30,
       totalCitiesServed: totalCitiesServed,
       lastUpdated: new Date()
     };
 
     // Update realtor data in user document
+    const existingRealtorData = (userData as UserWithRealtorData).realtorData || {};
     const updatedRealtorData = {
-      ...(userData as UserWithRealtorData).realtorData || {},
-      firstName: (userData as UserWithRealtorData).email?.split('@')[0] || '',
-      lastName: '',
+      ...existingRealtorData,
       email: (userData as UserWithRealtorData).email,
       serviceArea: serviceArea,
       // ALSO save in the format dashboard expects

@@ -145,9 +145,8 @@ export async function getErrorLogs(filters?: {
     // Order by timestamp desc
     query = query.orderBy('timestamp', 'desc');
 
-    if (filters?.limit) {
-      query = query.limit(filters.limit);
-    }
+    // Always apply a limit to prevent OOM on large collections
+    query = query.limit(filters?.limit || 1000);
 
     const snapshot = await query.get();
 
@@ -185,7 +184,7 @@ export async function getErrorStats(brand?: Brand): Promise<{
       query = query.where('brand', '==', brand);
     }
 
-    const snapshot = await query.get();
+    const snapshot = await query.limit(10000).get();
     const logs = snapshot.docs.map((doc) => doc.data() as ErrorLogEntry);
 
     const now = Date.now();

@@ -105,11 +105,11 @@ export async function isWebhookProcessed(
       previousResponse: record.response,
     };
   } catch (error) {
-    console.error('Error checking webhook idempotency:', error);
-    // CRITICAL: Fail CLOSED to prevent duplicates - better to skip than double-process
-    // If Firebase is down, we'd rather miss a webhook than create duplicate posts
-    console.warn('⚠️  Idempotency check failed - blocking processing to prevent duplicates');
-    return { processed: true, previousResponse: { error: 'Idempotency check failed - blocked for safety' } };
+    // TRADE-OFF: During Firebase outages, allow webhooks through rather than blocking
+    // the entire pipeline. This risks occasional duplicate processing but prevents total
+    // pipeline shutdown. Downstream idempotency checks provide additional protection.
+    console.error('❌ [CRITICAL] Idempotency check failed - allowing through with warning. Error:', error);
+    return { processed: false, previousResponse: null };
   }
 }
 

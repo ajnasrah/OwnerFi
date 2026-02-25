@@ -12,7 +12,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const isInvestor = pathname.startsWith('/dashboard/investor');
   const isRealtor = (session as unknown as ExtendedSession)?.user?.role === 'realtor';
 
@@ -27,7 +27,8 @@ export default function DashboardLayout({
   return (
     <>
       {children}
-      <BottomTabBar tabs={tabs} />
+      {/* Don't render tabs until session is loaded to avoid flashing wrong tabs */}
+      {status !== 'loading' && <BottomTabBar tabs={tabs} />}
     </>
   );
 }

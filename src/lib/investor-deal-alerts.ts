@@ -178,9 +178,9 @@ export async function sendInvestorDealAlerts(
   for (const deal of deals) {
     if (!deal.zestimate || deal.zestimate <= 0) continue;
     const percentOfArv = Math.round((deal.askingPrice / deal.zestimate) * 100);
-    // Generate a stable deal ID from zpid or address
-    const addrFallback = deal.streetAddress?.replace(/\s+/g, '_');
-    const dealId = deal.zpid || addrFallback;
+    // Generate a stable deal ID from zpid or address+city+state
+    const addrFallback = deal.streetAddress ? `${deal.streetAddress}_${deal.city || ''}_${deal.state || ''}`.replace(/\s+/g, '_') : null;
+    const dealId = deal.zpid ? String(deal.zpid) : addrFallback;
     if (!dealId) continue; // Skip deals with no identifiable ID
 
     for (const buyer of subscribers) {
@@ -200,12 +200,14 @@ export async function sendInvestorDealAlerts(
         totalSent++;
         notifiedBuyers.add(buyer.id);
 
-        // Track in buyer profile (non-blocking)
-        db.collection('buyerProfiles').doc(buyer.id).update({
-          dealAlertNotifiedPropertyIds: admin.firestore.FieldValue.arrayUnion(dealId),
-        }).catch((err) => {
-          console.warn(`[INVESTOR-ALERT] Failed to track notification for ${buyer.id}:`, err);
-        });
+        // Track in buyer profile - await to ensure dedup data persists
+        try {
+          await db.collection('buyerProfiles').doc(buyer.id).update({
+            dealAlertNotifiedPropertyIds: admin.firestore.FieldValue.arrayUnion(dealId),
+          });
+        } catch (err) {
+          console.error(`[INVESTOR-ALERT] Failed to track notification for buyer ${buyer.id}:`, err);
+        }
       } else {
         totalFailed++;
       }

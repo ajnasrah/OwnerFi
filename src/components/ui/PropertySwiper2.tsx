@@ -28,9 +28,10 @@ export const PropertySwiper2 = memo(function PropertySwiper2({
   bottomOffset = 'bottom-0',
 }: PropertySwiper2Props) {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null);
+  const [dragStart, setDragStart] = useState<{ x: number; y: number; time: number } | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
+  const [swipeLocked, setSwipeLocked] = useState<'horizontal' | 'vertical' | null>(null);
   const [animating, setAnimating] = useState(false);
   const [showAction, setShowAction] = useState<'like' | 'pass' | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -49,6 +50,7 @@ export const PropertySwiper2 = memo(function PropertySwiper2({
   // Reset state when index changes
   useEffect(() => {
     setDragOffset({ x: 0, y: 0 });
+    setSwipeLocked(null);
     setAnimating(false);
   }, [currentIndex]);
 
@@ -57,8 +59,9 @@ export const PropertySwiper2 = memo(function PropertySwiper2({
     if (animating) return;
 
     const point = 'touches' in e ? e.touches[0] : e;
-    setDragStart({ x: point.clientX, y: point.clientY });
+    setDragStart({ x: point.clientX, y: point.clientY, time: Date.now() });
     setIsDragging(true);
+    setSwipeLocked(null);
   };
 
   // Handle touch/mouse move
@@ -69,10 +72,18 @@ export const PropertySwiper2 = memo(function PropertySwiper2({
     const deltaX = point.clientX - dragStart.x;
     const deltaY = point.clientY - dragStart.y;
 
+    // Lock swipe direction after 10px of movement
+    if (!swipeLocked && (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10)) {
+      setSwipeLocked(Math.abs(deltaX) > Math.abs(deltaY) ? 'horizontal' : 'vertical');
+    }
+
+    // Only track horizontal swipes for card navigation
+    if (swipeLocked === 'vertical') return;
+
     setDragOffset({ x: deltaX, y: deltaY });
 
     // Show action indicator based on drag direction
-    if (Math.abs(deltaX) > 50) {
+    if (Math.abs(deltaX) > 80) {
       setShowAction(deltaX > 0 ? 'like' : 'pass');
     } else {
       setShowAction(null);
@@ -85,10 +96,15 @@ export const PropertySwiper2 = memo(function PropertySwiper2({
 
     setIsDragging(false);
 
-    const threshold = 100; // Swipe threshold for navigation
     const absX = Math.abs(dragOffset.x);
+    const elapsed = dragStart ? Date.now() - dragStart.time : 1000;
+    const velocity = absX / Math.max(elapsed, 1); // px per ms
 
-    if (absX > threshold && currentProperty) {
+    // Require EITHER a fast flick (velocity > 0.5 px/ms) OR a long drag (> 35% screen width)
+    const screenThreshold = window.innerWidth * 0.35;
+    const isIntentionalSwipe = swipeLocked === 'horizontal' && (velocity > 0.5 || absX > screenThreshold);
+
+    if (isIntentionalSwipe && currentProperty) {
       // Swipe detected - just navigate, don't like/pass
       setAnimating(true);
 
@@ -104,11 +120,13 @@ export const PropertySwiper2 = memo(function PropertySwiper2({
         setAnimating(false);
         setDragOffset({ x: 0, y: 0 });
         setShowAction(null);
+        setSwipeLocked(null);
       }, 200);
     } else {
       // Not enough swipe - reset
       setDragOffset({ x: 0, y: 0 });
       setShowAction(null);
+      setSwipeLocked(null);
     }
 
     setDragStart(null);

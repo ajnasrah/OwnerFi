@@ -589,8 +589,13 @@ async function runUnifiedScraper(): Promise<{
 
         // Commit batch if needed
         if (batchCount >= BATCH_LIMIT) {
-          await propertiesBatch.commit();
-          console.log(`[BATCH] Committed ${batchCount} to properties`);
+          try {
+            await propertiesBatch.commit();
+            console.log(`[BATCH] Committed ${batchCount} to properties`);
+          } catch (batchError: any) {
+            console.error(`[BATCH] Failed to commit ${batchCount} properties:`, batchError);
+            metrics.errors.push({ zpid: 0, address: 'batch-commit', error: `Batch commit failed: ${batchError?.message}`, stage: 'firestore-write' });
+          }
           propertiesBatch = db.batch();
           batchCount = 0;
         }
@@ -606,8 +611,13 @@ async function runUnifiedScraper(): Promise<{
 
     // Commit remaining batch
     if (batchCount > 0) {
-      await propertiesBatch.commit();
-      console.log(`[BATCH] Committed final ${batchCount} to properties`);
+      try {
+        await propertiesBatch.commit();
+        console.log(`[BATCH] Committed final ${batchCount} to properties`);
+      } catch (batchError: any) {
+        console.error(`[BATCH] Failed to commit final ${batchCount} properties:`, batchError);
+        metrics.errors.push({ zpid: 0, address: 'final-batch-commit', error: `Final batch commit failed: ${batchError?.message}`, stage: 'firestore-write' });
+      }
     }
 
     // ===== STEP 5: INDEX TO TYPESENSE =====

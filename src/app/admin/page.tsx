@@ -80,7 +80,7 @@ export default function AdminHub() {
       href: '/admin/cash-deals',
       icon: '💰',
       title: 'Cash Deals',
-      description: 'Investor deals under $300K',
+      description: 'Investor cash deals',
       color: 'yellow',
     },
     {

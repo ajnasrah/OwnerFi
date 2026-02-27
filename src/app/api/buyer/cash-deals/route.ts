@@ -69,7 +69,7 @@ export async function GET(request: NextRequest) {
     const profile = buyerSnapshot.docs[0].data();
     const searchCity = profile.preferredCity || profile.city;
     const searchState = profile.preferredState || profile.state;
-    const maxPrice = profile.maxPrice || 300000;
+    const maxPrice = profile.maxPrice;
     const searchRadius = profile.searchRadius || 30;
     const { searchParams } = new URL(request.url);
     const excludeLand = searchParams.get('excludeLand') === 'true';
@@ -130,7 +130,7 @@ async function searchCashDealsTypesense(
   client: any,
   city: string,
   state: string,
-  maxPrice: number,
+  maxPrice: number | undefined,
   _radius: number // TODO: Implement geo radius search
 ): Promise<CashDeal[]> {
   // Build filter: cash deals OR properties that need work (investor specials)
@@ -138,10 +138,12 @@ async function searchCashDealsTypesense(
   const filters = [
     'isActive:=true',
     `state:=${state}`,
-    `listPrice:<=${maxPrice}`,
     // Cash deals OR investor/fixer properties
     '(dealType:=[cash_deal, both] || needsWork:=true)',
   ];
+  if (maxPrice !== undefined) {
+    filters.push(`listPrice:<=${maxPrice}`);
+  }
 
   const result = await client.collections(TYPESENSE_COLLECTIONS.PROPERTIES)
     .documents()
@@ -200,7 +202,7 @@ async function searchCashDealsTypesense(
 async function searchCashDealsFirestore(
   city: string,
   state: string,
-  maxPrice: number
+  maxPrice: number | undefined
 ): Promise<CashDeal[]> {
   if (!db) return [];
 
@@ -239,8 +241,8 @@ async function searchCashDealsFirestore(
       const arv = (data.estimate as number) || (data.zestimate as number) || (data.arv as number) || 0;
       const needsWork = data.needsWork === true;
 
-      // Skip if over max price
-      if (price > maxPrice) return;
+      // Skip if over max price (only if buyer set a max)
+      if (maxPrice !== undefined && price > maxPrice) return;
 
       // Calculate ARV percentage - use null when no ARV data (matches Typesense behavior)
       const percentOfArv = arv > 0 ? Math.round((price / arv) * 100) : null;

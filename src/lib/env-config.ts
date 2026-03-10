@@ -78,6 +78,12 @@ export const apiKeys = {
   // Synthesia - Video Generation (trial)
   get synthesia() { return optionalEnv('SYNTHESIA_API_KEY'); },
 
+  // Creatify - Video Generation (replaces HeyGen + Synthesia + Submagic)
+  creatify: {
+    get apiId() { return optionalEnv('CREATIFY_API_ID'); },
+    get apiKey() { return optionalEnv('CREATIFY_API_KEY'); },
+  },
+
   // ElevenLabs - Voice Synthesis (optional)
   get elevenlabs() { return optionalEnv('ELEVENLABS_API_KEY'); },
 
@@ -229,7 +235,7 @@ export const costs = {
 };
 
 // Video Provider Configuration
-export const videoProvider = optionalEnv('VIDEO_PROVIDER', 'synthesia') as 'heygen' | 'synthesia';
+export const videoProvider = optionalEnv('VIDEO_PROVIDER', 'synthesia') as 'heygen' | 'synthesia' | 'creatify';
 
 // Feature Flags
 export const features = {

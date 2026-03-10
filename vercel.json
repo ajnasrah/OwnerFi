@@ -26,46 +26,6 @@
       "schedule": "*/30 * * * *"
     },
     {
-      "path": "/api/cron/generate-videos",
-      "schedule": "0 8,12,19 * * *"
-    },
-    {
-      "path": "/api/cron/fetch-rss",
-      "schedule": "0 12 * * *"
-    },
-    {
-      "path": "/api/cron/rate-articles",
-      "schedule": "0 13 * * *"
-    },
-    {
-      "path": "/api/benefit/cron",
-      "schedule": "20 8,12,19 * * *"
-    },
-    {
-      "path": "/api/cron/check-google-drive",
-      "schedule": "0 7,11,15,19 * * *"
-    },
-    {
-      "path": "/api/cron/check-stuck-workflows",
-      "schedule": "*/30 14-23,0-4 * * *"
-    },
-    {
-      "path": "/api/cron/daily-maintenance",
-      "schedule": "0 3 * * *"
-    },
-    {
-      "path": "/api/cron/refill-articles",
-      "schedule": "0 */6 * * *"
-    },
-    {
-      "path": "/api/cron/abdullah",
-      "schedule": "0 8,12,19 * * *"
-    },
-    {
-      "path": "/api/cron/generate-blog",
-      "schedule": "0 11 * * *"
-    },
-    {
       "path": "/api/v2/scraper/run",
       "schedule": "0 18 * * *"
     },
@@ -81,36 +41,6 @@
     "src/app/api/process-video/route.ts": {
       "maxDuration": 300
     },
-    "src/app/api/cron/fetch-rss/route.ts": {
-      "maxDuration": 300
-    },
-    "src/app/api/cron/rate-articles/route.ts": {
-      "maxDuration": 300
-    },
-    "src/app/api/cron/generate-videos/route.ts": {
-      "maxDuration": 60
-    },
-    "src/app/api/cron/check-stuck-workflows/route.ts": {
-      "maxDuration": 300
-    },
-    "src/app/api/cron/daily-maintenance/route.ts": {
-      "maxDuration": 300
-    },
-    "src/app/api/property/video-cron/route.ts": {
-      "maxDuration": 60
-    },
-    "src/app/api/property/video-cron-spanish/route.ts": {
-      "maxDuration": 60
-    },
-    "src/app/api/cron/abdullah/route.ts": {
-      "maxDuration": 60
-    },
-    "src/app/api/cron/check-google-drive/route.ts": {
-      "maxDuration": 300
-    },
-    "src/app/api/cron/generate-blog/route.ts": {
-      "maxDuration": 300
-    },
     "src/app/api/cron/refresh-zillow-status/route.ts": {
       "maxDuration": 300
     },
@@ -118,6 +48,9 @@
       "maxDuration": 300
     },
     "src/app/api/cron/process-agent-outreach-queue/route.ts": {
+      "maxDuration": 300
+    },
+    "src/app/api/cron/process-scraper-queue/route.ts": {
       "maxDuration": 300
     },
     "src/app/api/workers/process-video/route.ts": {

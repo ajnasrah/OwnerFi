@@ -1,7 +1,8 @@
 /**
- * Cron Lock for Scraper v2 (Firebase Admin SDK version)
+ * Cron Lock (Firebase Admin SDK)
  *
- * Prevents concurrent execution of scraper crons
+ * Prevents concurrent execution of cron jobs using Firestore.
+ * Used by all cron routes for atomic lock acquisition.
  */
 
 import { getFirebaseAdmin } from './firebase-admin';
@@ -78,6 +79,40 @@ export async function releaseCronLock(cronName: string, instanceId: string): Pro
   }
 }
 
+/**
+ * Execute a function with automatic lock acquisition and release.
+ * Returns null if lock could not be acquired (another instance running).
+ */
+export async function withCronLock<T>(
+  cronName: string,
+  fn: () => Promise<T>
+): Promise<T | null> {
+  let instanceId: string | null;
+
+  try {
+    instanceId = await acquireCronLock(cronName);
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error(`[LOCK] Lock system failed for "${cronName}":`, msg);
+    return null;
+  }
+
+  if (!instanceId) {
+    return null;
+  }
+
+  try {
+    const result = await fn();
+    return result;
+  } finally {
+    await releaseCronLock(cronName, instanceId);
+  }
+}
+
+/**
+ * Same as withCronLock but returns a richer result object.
+ * Used by v2/scraper/run for detailed lock status reporting.
+ */
 export async function withScraperLock<T>(
   cronName: string,
   fn: () => Promise<T>
@@ -86,11 +121,10 @@ export async function withScraperLock<T>(
 
   try {
     instanceId = await acquireCronLock(cronName);
-  } catch (error: any) {
-    // Lock system failure - return locked with error message
-    // This prevents concurrent execution when we can't verify lock status
-    console.error(`[LOCK] Lock system failed for "${cronName}":`, error.message);
-    return { result: null, locked: true, error: error.message };
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error(`[LOCK] Lock system failed for "${cronName}":`, msg);
+    return { result: null, locked: true, error: msg };
   }
 
   if (!instanceId) {

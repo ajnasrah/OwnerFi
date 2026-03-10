@@ -1,25 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ApifyClient } from 'apify-client';
-import { initializeApp, cert, getApps } from 'firebase-admin/app';
-import { getFirestore } from 'firebase-admin/firestore';
+import { getFirebaseAdmin } from '@/lib/scraper-v2/firebase-admin';
+import { withCronLock } from '@/lib/scraper-v2/cron-lock';
 import { hasStrictOwnerFinancing } from '@/lib/owner-financing-filter-strict';
 import { hasNegativeKeywords } from '@/lib/negative-keywords';
 
-// Extend function timeout to 5 minutes
 export const maxDuration = 300;
-
-// Initialize Firebase Admin
-if (!getApps().length) {
-  initializeApp({
-    credential: cert({
-      projectId: process.env.FIREBASE_PROJECT_ID!,
-      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL!,
-    }),
-  });
-}
-
-const db = getFirestore();
 
 /**
  * AGENT OUTREACH SCRAPER
@@ -27,52 +13,35 @@ const db = getFirestore();
  * Finds properties WITHOUT owner financing keywords to ask agents about.
  *
  * Uses the specific Memphis/TN area search URL provided.
- * Filters: $50k-$500k, last 7 days, no multi-family/land/foreclosures/auctions
+ * Filters: $50k-$500k, last 1 day, no multi-family/land/foreclosures/auctions
  */
 
 const SEARCH_CONFIG = {
-  // Daily search - filters to last 1 day (doz=1), no owner finance keywords
   searchUrl: 'https://www.zillow.com/homes/for_sale/?category=SEMANTIC&searchQueryState=%7B%22pagination%22%3A%7B%7D%2C%22isMapVisible%22%3Atrue%2C%22mapBounds%22%3A%7B%22west%22%3A-94.61048517767817%2C%22east%22%3A-86.51356134955317%2C%22south%22%3A30.185278877142437%2C%22north%22%3A40.05475766218434%7D%2C%22mapZoom%22%3A7%2C%22usersSearchTerm%22%3A%22%22%2C%22customRegionId%22%3A%225f8096924aX1-CR1i1r231i2qe0e_1276cg%22%2C%22filterState%22%3A%7B%22sort%22%3A%7B%22value%22%3A%22globalrelevanceex%22%7D%2C%22nc%22%3A%7B%22value%22%3Afalse%7D%2C%22auc%22%3A%7B%22value%22%3Afalse%7D%2C%22fore%22%3A%7B%22value%22%3Afalse%7D%2C%22price%22%3A%7B%22min%22%3A50000%2C%22max%22%3A500000%7D%2C%22mf%22%3A%7B%22value%22%3Afalse%7D%2C%22land%22%3A%7B%22value%22%3Afalse%7D%2C%22apa%22%3A%7B%22value%22%3Afalse%7D%2C%22manu%22%3A%7B%22value%22%3Afalse%7D%2C%2255plus%22%3A%7B%22value%22%3A%22e%22%7D%2C%22doz%22%3A%7B%22value%22%3A%221%22%7D%7D%2C%22isListVisible%22%3Atrue%7D',
   mode: 'pagination' as const,
   maxResults: 1000,
-  detailBatchSize: 100,   // Process fewer at a time to stay under 5min limit
+  detailBatchSize: 100,
 };
+
+const MAX_RUNTIME_MS = 270_000; // 4.5 minutes — leave buffer for 5min Vercel limit
 
 export async function GET(request: NextRequest) {
   const startTime = Date.now();
-  console.log('🏡 [AGENT OUTREACH SCRAPER] Starting at', new Date().toISOString());
+  const { db } = getFirebaseAdmin();
 
-  // Security check
+  // Auth check
   const authHeader = request.headers.get('authorization');
   const cronSecret = process.env.CRON_SECRET;
 
-  // Log request received BEFORE auth check
-  try {
-    await db.collection('cron_logs').add({
-      cron: 'run-agent-outreach-scraper',
-      status: 'request_received',
-      timestamp: new Date(),
-      hasAuthHeader: !!authHeader,
-      hasCronSecret: !!cronSecret,
-    });
-  } catch (e) {
-    console.error('Failed to log request received:', e);
-  }
-
   if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
     console.error('❌ [AGENT OUTREACH SCRAPER] Unauthorized');
-    await db.collection('cron_logs').add({
-      cron: 'run-agent-outreach-scraper',
-      status: 'auth_failed',
-      timestamp: new Date(),
-    });
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  console.log('✅ [AGENT OUTREACH SCRAPER] Auth passed');
+  // Use cron lock to prevent concurrent execution (Apify costs $$$)
+  const result = await withCronLock('run-agent-outreach-scraper', async () => {
+    console.log('🏡 [AGENT OUTREACH SCRAPER] Starting at', new Date().toISOString());
 
-  try {
-    // Log start to cron_logs
     await db.collection('cron_logs').add({
       cron: 'run-agent-outreach-scraper',
       status: 'started',
@@ -94,6 +63,11 @@ export async function GET(request: NextRequest) {
     const { items: searchItems } = await client.dataset(searchRun.defaultDatasetId).listItems();
     console.log(`   Found ${searchItems.length} properties from search`);
 
+    // Timeout check after Apify call
+    if (Date.now() - startTime > MAX_RUNTIME_MS) {
+      throw new Error('Timeout after search scraper — aborting before detail scrape');
+    }
+
     // Get URLs and ZPIDs from search results
     const propertyData: { url: string; zpid: string }[] = [];
 
@@ -105,17 +79,24 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // OPTIMIZATION: Pre-fetch ALL existing ZPIDs in ONE query per collection
-    console.log(`📊 Pre-fetching existing ZPIDs...`);
-
-    const [existingQueueDocs, existingPropertiesDocs] = await Promise.all([
-      db.collection('agent_outreach_queue').select('zpid').get(),
-      db.collection('properties').select('zpid').get(),
-    ]);
-
+    // Check existing ZPIDs using document ID lookups (efficient, no full collection scan)
+    console.log(`📊 Checking for existing ZPIDs...`);
     const existingZpids = new Set<string>();
-    existingQueueDocs.docs.forEach(doc => existingZpids.add(doc.data().zpid));
-    existingPropertiesDocs.docs.forEach(doc => existingZpids.add(String(doc.data().zpid)));
+
+    // Batch check agent_outreach_queue by zpid field (in batches of 10 for Firestore 'in' limit)
+    const allZpids = propertyData.map(p => p.zpid);
+    for (let i = 0; i < allZpids.length; i += 10) {
+      const batch = allZpids.slice(i, i + 10);
+      if (batch.length === 0) continue;
+
+      const [queueSnap, propsSnap] = await Promise.all([
+        db.collection('agent_outreach_queue').where('zpid', 'in', batch).select().get(),
+        db.collection('properties').where('zpid', 'in', batch).select().get(),
+      ]);
+
+      queueSnap.docs.forEach(doc => existingZpids.add(doc.data().zpid || doc.id));
+      propsSnap.docs.forEach(doc => existingZpids.add(String(doc.data().zpid)));
+    }
 
     console.log(`   Existing ZPIDs in system: ${existingZpids.size}`);
 
@@ -126,13 +107,18 @@ export async function GET(request: NextRequest) {
     console.log(`   New properties to scrape: ${urlsToScrape.length}`);
 
     if (urlsToScrape.length === 0) {
-      return NextResponse.json({
+      return {
         success: true,
         duration: `${((Date.now() - startTime) / 1000).toFixed(2)}s`,
         propertiesFound: searchItems.length,
         addedToQueue: 0,
         message: 'No new properties found - all already in system',
-      });
+      };
+    }
+
+    // Timeout check before second Apify call
+    if (Date.now() - startTime > MAX_RUNTIME_MS) {
+      throw new Error('Timeout before detail scraper — aborting');
     }
 
     // STEP 2: Run DETAIL scraper to get agent contact info
@@ -144,12 +130,9 @@ export async function GET(request: NextRequest) {
     console.log(`   Got ${detailItems.length} detailed properties`);
 
     // MERGE: Copy images from search results to detail results
-    // Detail scraper doesn't return images, but search scraper does
     const searchByZpid = new Map<string, any>();
     for (const item of searchItems as any[]) {
-      if (item.zpid) {
-        searchByZpid.set(String(item.zpid), item);
-      }
+      if (item.zpid) searchByZpid.set(String(item.zpid), item);
     }
 
     let imagesMerged = 0;
@@ -173,22 +156,20 @@ export async function GET(request: NextRequest) {
       noAgent: 0,
       hasOwnerFinance: 0,
       negativeKeywords: 0,
-      failedStored: 0,
     };
 
-    // Batch write
     let batch = db.batch();
     let batchCount = 0;
 
-    // Separate batch for failed properties
-    let failedBatch = db.batch();
-    let failedBatchCount = 0;
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days from now
-
     for (const item of detailItems) {
+      // Timeout check during processing
+      if (Date.now() - startTime > MAX_RUNTIME_MS) {
+        console.log('⏰ Approaching timeout, committing current batch and stopping');
+        break;
+      }
+
       const property = item as any;
 
-      // Get URL
       let url = property.addressOrUrlFromInput || property.url;
       if (!url && property.hdpUrl) {
         url = `https://www.zillow.com${property.hdpUrl}`;
@@ -220,57 +201,11 @@ export async function GET(request: NextRequest) {
 
       if (ownerFinanceResult.passes) {
         stats.hasOwnerFinance++;
-        // Store for analysis - these passed owner financing filter
-        const failedDocRef = db.collection('failed_filter_properties').doc();
-        failedBatch.set(failedDocRef, {
-          zpid,
-          url,
-          address: streetAddr,
-          city,
-          state,
-          description: description.substring(0, 2000),
-          filterResult: 'has_owner_financing',
-          matchedKeywords: ownerFinanceResult.matchedKeywords,
-          reason: 'Property has owner financing keywords - skipped from agent outreach',
-          expiresAt,
-          createdAt: new Date(),
-        });
-        failedBatchCount++;
-        stats.failedStored++;
-
-        if (failedBatchCount >= 50) {
-          await failedBatch.commit();
-          failedBatch = db.batch();
-          failedBatchCount = 0;
-        }
         continue;
       }
 
       if (negativeResult.hasNegative) {
         stats.negativeKeywords++;
-        // Store for analysis - these had negative keywords
-        const failedDocRef = db.collection('failed_filter_properties').doc();
-        failedBatch.set(failedDocRef, {
-          zpid,
-          url,
-          address: streetAddr,
-          city,
-          state,
-          description: description.substring(0, 2000),
-          filterResult: 'negative_keywords',
-          matchedKeywords: negativeResult.matches,
-          reason: 'Property has negative keywords (no owner financing, cash only, etc)',
-          expiresAt,
-          createdAt: new Date(),
-        });
-        failedBatchCount++;
-        stats.failedStored++;
-
-        if (failedBatchCount >= 50) {
-          await failedBatch.commit();
-          failedBatch = db.batch();
-          failedBatchCount = 0;
-        }
         continue;
       }
 
@@ -288,18 +223,15 @@ export async function GET(request: NextRequest) {
         stats.potentialOwnerFinance++;
       }
 
-      // Get agent info
       const agentName = property.attributionInfo?.agentName
         || property.agentName
         || property.contactRecipients?.[0]?.displayName
         || 'Agent';
 
-      // Normalize for dedup
       const phoneNormalized = agentPhone.replace(/\D/g, '');
       const addressNormalized = streetAddr.toLowerCase().trim()
         .replace(/[#,\.]/g, '').replace(/\s+/g, ' ');
 
-      // Add to batch
       const docRef = db.collection('agent_outreach_queue').doc();
       batch.set(docRef, {
         zpid,
@@ -318,22 +250,26 @@ export async function GET(request: NextRequest) {
         agentName,
         agentPhone,
         agentEmail: property.attributionInfo?.agentEmail || null,
+        imgSrc: property.imgSrc || null,
         phoneNormalized,
         addressNormalized,
         dealType,
         status: 'pending',
         source: 'agent_outreach_scraper',
         addedAt: new Date(),
-        rawData: property,
       });
 
       batchCount++;
       stats.added++;
 
-      // Commit batch if at 50 (smaller batches to avoid size issues)
       if (batchCount >= 50) {
-        await batch.commit();
-        console.log(`   Committed batch of ${batchCount}`);
+        try {
+          await batch.commit();
+          console.log(`   Committed batch of ${batchCount}`);
+        } catch (batchErr: unknown) {
+          const msg = batchErr instanceof Error ? batchErr.message : String(batchErr);
+          console.error(`   ❌ Batch commit failed: ${msg}`);
+        }
         batch = db.batch();
         batchCount = 0;
       }
@@ -341,14 +277,13 @@ export async function GET(request: NextRequest) {
 
     // Commit remaining
     if (batchCount > 0) {
-      await batch.commit();
-      console.log(`   Committed final batch of ${batchCount}`);
-    }
-
-    // Commit remaining failed properties
-    if (failedBatchCount > 0) {
-      await failedBatch.commit();
-      console.log(`   Committed ${failedBatchCount} failed filter properties for analysis`);
+      try {
+        await batch.commit();
+        console.log(`   Committed final batch of ${batchCount}`);
+      } catch (batchErr: unknown) {
+        const msg = batchErr instanceof Error ? batchErr.message : String(batchErr);
+        console.error(`   ❌ Final batch commit failed: ${msg}`);
+      }
     }
 
     const duration = ((Date.now() - startTime) / 1000).toFixed(2);
@@ -363,9 +298,7 @@ export async function GET(request: NextRequest) {
     console.log(`   - No agent: ${stats.noAgent}`);
     console.log(`   - Has OF keywords: ${stats.hasOwnerFinance}`);
     console.log(`   - Negative keywords: ${stats.negativeKeywords}`);
-    console.log(`   Stored for analysis: ${stats.failedStored} (expires in 7 days)`);
 
-    // Log completion to cron_logs
     await db.collection('cron_logs').add({
       cron: 'run-agent-outreach-scraper',
       status: 'completed',
@@ -373,52 +306,30 @@ export async function GET(request: NextRequest) {
       propertiesFromSearch: searchItems.length,
       propertiesDetailed: stats.total,
       addedToQueue: stats.added,
-      stats: {
-        cashDeals: stats.cashDeals,
-        potentialOwnerFinance: stats.potentialOwnerFinance,
-      },
-      skipped: {
-        noAgent: stats.noAgent,
-        hasOwnerFinance: stats.hasOwnerFinance,
-        negativeKeywords: stats.negativeKeywords,
-      },
+      stats: { cashDeals: stats.cashDeals, potentialOwnerFinance: stats.potentialOwnerFinance },
+      skipped: { noAgent: stats.noAgent, hasOwnerFinance: stats.hasOwnerFinance, negativeKeywords: stats.negativeKeywords },
       timestamp: new Date(),
     });
 
-    return NextResponse.json({
+    return {
       success: true,
       duration: `${duration}s`,
       propertiesFound: stats.total,
       addedToQueue: stats.added,
-      stats: {
-        cashDeals: stats.cashDeals,
-        potentialOwnerFinance: stats.potentialOwnerFinance,
-      },
-      skipped: {
-        noAgent: stats.noAgent,
-        hasOwnerFinance: stats.hasOwnerFinance,
-        negativeKeywords: stats.negativeKeywords,
-      },
-      failedStoredForAnalysis: stats.failedStored,
-      message: `Added ${stats.added} properties to agent outreach queue, stored ${stats.failedStored} failed properties for analysis`,
-    });
+      stats: { cashDeals: stats.cashDeals, potentialOwnerFinance: stats.potentialOwnerFinance },
+      skipped: { noAgent: stats.noAgent, hasOwnerFinance: stats.hasOwnerFinance, negativeKeywords: stats.negativeKeywords },
+      message: `Added ${stats.added} properties to agent outreach queue`,
+    };
+  });
 
-  } catch (error) {
-    console.error('❌ [AGENT OUTREACH SCRAPER] Error:', error);
-
-    // Log error to cron_logs
-    await db.collection('cron_logs').add({
-      cron: 'run-agent-outreach-scraper',
-      status: 'error',
-      error: error.message,
-      stack: error.stack?.substring(0, 500),
-      duration: `${((Date.now() - startTime) / 1000).toFixed(2)}s`,
-      timestamp: new Date(),
-    });
-
+  // Lock not acquired
+  if (result === null) {
     return NextResponse.json({
-      error: error.message,
-      duration: `${((Date.now() - startTime) / 1000).toFixed(2)}s`,
-    }, { status: 500 });
+      success: false,
+      message: 'Another instance is already running',
+      skipped: true,
+    }, { status: 200 });
   }
+
+  return NextResponse.json(result);
 }

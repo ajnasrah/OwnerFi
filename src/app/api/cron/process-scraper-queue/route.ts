@@ -1,24 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ApifyClient } from 'apify-client';
-import { initializeApp, cert, getApps } from 'firebase-admin/app';
-import { getFirestore, FieldValue } from 'firebase-admin/firestore';
+import { getFirebaseAdmin, FieldValue } from '@/lib/scraper-v2/firebase-admin';
 import { transformProperty, validateProperty } from '@/lib/scraper-v2/property-transformer';
-import { withCronLock } from '@/lib/cron-lock';
+import { withCronLock } from '@/lib/scraper-v2/cron-lock';
+import { hasStrictOwnerFinancing } from '@/lib/owner-financing-filter-strict';
 
-// Initialize Firebase Admin
-if (!getApps().length) {
-  initializeApp({
-    credential: cert({
-      projectId: process.env.FIREBASE_PROJECT_ID!,
-      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL!,
-    }),
-  });
-}
+export const maxDuration = 300;
 
-const db = getFirestore();
+export async function GET(request: NextRequest) {
+  const { db } = getFirebaseAdmin();
 
-export async function GET(_request: NextRequest) {
+  // Auth check
+  const authHeader = request.headers.get('authorization');
+  const cronSecret = process.env.CRON_SECRET;
+
+  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+    console.error('❌ [QUEUE CRON] Unauthorized');
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   console.log('🔄 [QUEUE CRON] Starting queue processor');
 
   const startTime = Date.now();
@@ -180,7 +180,6 @@ export async function GET(_request: NextRequest) {
     console.log(`🔍 [DEDUPLICATION] Checked ${zpids.length} zpids, found ${existingZillowZpids.size} existing in zillow_imports`);
 
     // Transform and save to Firebase with error handling and batching
-    const savedProperties: Array<{ docRef: any, data: any, matchedKeywords: string[] }> = [];
     let currentBatch = db.batch();
     let batchOperations = 0;
     const BATCH_LIMIT = 500;
@@ -229,7 +228,6 @@ export async function GET(_request: NextRequest) {
         // Cash deals are for admin research only, saved via /api/cron/process-cash-deals-queue
 
         // ===== STRICT FILTER - ONLY SAVE IF PASSES =====
-        const { hasStrictOwnerFinancing } = await import('@/lib/owner-financing-filter-strict');
         const filterResult = hasStrictOwnerFinancing(propertyData.description);
 
         // SKIP property if it doesn't pass strict filter
@@ -267,12 +265,6 @@ export async function GET(_request: NextRequest) {
           balloonPaymentYears: null,
         });
 
-        // Track saved properties for metrics
-        savedProperties.push({
-          docRef,
-          data: propertyData,
-          matchedKeywords: filterResult.matchedKeywords,
-        });
         batchOperations++;
 
         // Commit batch if we hit the limit
@@ -284,7 +276,7 @@ export async function GET(_request: NextRequest) {
           batchOperations = 0;
         }
 
-      } catch (error: any) {
+      } catch (error: unknown) {
         metrics.transformFailed++;
         const errorMessage = error instanceof Error ? error.message : String(error);
         metrics.errors.push({
@@ -368,7 +360,7 @@ export async function GET(_request: NextRequest) {
       metrics,
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('❌ [QUEUE CRON] Critical Error:', error);
 
     // Log final metrics even on error
@@ -386,7 +378,7 @@ export async function GET(_request: NextRequest) {
 
     return NextResponse.json(
       {
-        error: error.message,
+        error: error instanceof Error ? error.message : String(error),
         metrics,
       },
       { status: 500 }

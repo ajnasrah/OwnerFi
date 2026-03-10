@@ -7,12 +7,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { collection, query, where, getDocs, updateDoc, doc, increment } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import { logInfo, logError } from '@/lib/logger';
+import { getFirebaseAdmin, FieldValue } from '@/lib/scraper-v2/firebase-admin';
 
 const CRON_SECRET = process.env.CRON_SECRET;
-export const maxDuration = 300; // 5 minutes max
+export const maxDuration = 300;
 
 export async function GET(request: NextRequest) {
   const startTime = Date.now();
@@ -20,17 +18,13 @@ export async function GET(request: NextRequest) {
   try {
     // Verify authorization
     const authHeader = request.headers.get('authorization');
-    const isVercelCron = request.headers.get('x-vercel-cron') === '1';
 
-    if (!isVercelCron && authHeader !== `Bearer ${CRON_SECRET}`) {
+    if (!CRON_SECRET || authHeader !== `Bearer ${CRON_SECRET}`) {
       console.error('❌ Unauthorized cron request');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    if (!db) {
-      console.error('❌ Firebase db not available');
-      return NextResponse.json({ error: 'Database not available' }, { status: 500 });
-    }
+    const { db } = getFirebaseAdmin();
 
     console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     console.log('💰 [MONTHLY-CREDITS] Starting monthly credit distribution...');
@@ -38,11 +32,10 @@ export async function GET(request: NextRequest) {
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
     // Get all users with role 'realtor'
-    const realtorsQuery = query(
-      collection(db, 'users'),
-      where('role', '==', 'realtor')
-    );
-    const realtorsSnapshot = await getDocs(realtorsQuery);
+    const realtorsSnapshot = await db
+      .collection('users')
+      .where('role', '==', 'realtor')
+      .get();
 
     console.log(`📊 Found ${realtorsSnapshot.size} realtors`);
 
@@ -55,16 +48,15 @@ export async function GET(request: NextRequest) {
         const realtorData = realtorDoc.data();
         const currentCredits = realtorData.realtorData?.credits || 0;
 
-        // Update credits using increment to avoid race conditions
-        await updateDoc(doc(db, 'users', realtorDoc.id), {
-          'realtorData.credits': increment(1),
+        await realtorDoc.ref.update({
+          'realtorData.credits': FieldValue.increment(1),
           'realtorData.lastFreeCredit': new Date().toISOString(),
-          'realtorData.updatedAt': new Date()
+          'realtorData.updatedAt': new Date(),
         });
 
         console.log(`✅ Gave 1 credit to ${realtorData.email} (${currentCredits} → ${currentCredits + 1})`);
         successCount++;
-      } catch (error) {
+      } catch (error: unknown) {
         console.error(`❌ Failed to give credit to ${realtorDoc.id}:`, error);
         errorCount++;
       }
@@ -72,14 +64,15 @@ export async function GET(request: NextRequest) {
 
     const duration = Date.now() - startTime;
 
-    await logInfo('Monthly realtor credits distributed', {
-      action: 'monthly_credits_cron',
-      metadata: {
-        totalRealtors: realtorsSnapshot.size,
-        successCount,
-        errorCount,
-        durationMs: duration
-      }
+    // Log to cron_logs
+    await db.collection('cron_logs').add({
+      cron: 'monthly-realtor-credits',
+      status: 'completed',
+      timestamp: new Date(),
+      totalRealtors: realtorsSnapshot.size,
+      successCount,
+      errorCount,
+      durationMs: duration,
     });
 
     console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
@@ -96,16 +89,23 @@ export async function GET(request: NextRequest) {
         totalRealtors: realtorsSnapshot.size,
         successCount,
         errorCount,
-        durationMs: duration
-      }
+        durationMs: duration,
+      },
     });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('❌ [MONTHLY-CREDITS] Error:', errorMessage);
 
-  } catch (error) {
-    await logError('Monthly credits cron failed', {
-      action: 'monthly_credits_cron_error'
-    }, error as Error);
-
-    console.error('❌ [MONTHLY-CREDITS] Error:', error);
+    try {
+      const { db } = getFirebaseAdmin();
+      await db.collection('cron_logs').add({
+        cron: 'monthly-realtor-credits',
+        status: 'error',
+        error: errorMessage,
+        durationMs: Date.now() - startTime,
+        timestamp: new Date(),
+      });
+    } catch { /* ignore logging failure */ }
 
     return NextResponse.json(
       { error: 'Failed to distribute monthly credits' },

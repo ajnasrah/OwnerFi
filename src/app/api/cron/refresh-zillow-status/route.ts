@@ -1,22 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ApifyClient } from 'apify-client';
-import { initializeApp, cert, getApps } from 'firebase-admin/app';
-import { getFirestore } from 'firebase-admin/firestore';
+import { getFirebaseAdmin } from '@/lib/scraper-v2/firebase-admin';
+import { withCronLock } from '@/lib/scraper-v2/cron-lock';
 import { sanitizeDescription } from '@/lib/description-sanitizer';
 import { hasStrictOwnerFinancing } from '@/lib/owner-financing-filter-strict';
-
-// Initialize Firebase Admin
-if (!getApps().length) {
-  initializeApp({
-    credential: cert({
-      projectId: process.env.FIREBASE_PROJECT_ID!,
-      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL!,
-    }),
-  });
-}
-
-const db = getFirestore();
 
 // Type for Apify Zillow scraper response
 interface ZillowApifyItem {
@@ -101,11 +88,9 @@ interface PropertyDoc {
  */
 export async function GET(request: NextRequest) {
   const startTime = Date.now();
-  const runId = `run_${Date.now()}`;
+  const { db } = getFirebaseAdmin();
 
-  console.log(`🔄 [CRON ${runId}] Starting Zillow status refresh`);
-
-  // Security check
+  // Auth check
   const authHeader = request.headers.get('authorization');
   const cronSecret = process.env.CRON_SECRET;
 
@@ -113,6 +98,11 @@ export async function GET(request: NextRequest) {
     console.error('❌ Unauthorized request');
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
+
+  // Use cron lock to prevent concurrent execution (Apify costs $$$)
+  const lockResult = await withCronLock('refresh-zillow-status', async () => {
+    const runId = `run_${Date.now()}`;
+    console.log(`🔄 [CRON ${runId}] Starting Zillow status refresh`);
 
   // Log cron start
   const logRef = db.collection('cron_logs').doc(runId);
@@ -557,4 +547,15 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
+  }); // End withCronLock
+
+  if (lockResult === null) {
+    return NextResponse.json({
+      success: false,
+      message: 'Another instance is already running',
+      skipped: true,
+    }, { status: 200 });
+  }
+
+  return lockResult;
 }

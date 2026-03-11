@@ -2,13 +2,12 @@ name: Daily Video Pipeline
 
 on:
   schedule:
-    # EN at 11:00am CDT (UTC-5) = 16:00 UTC
+    # EN at 10:00am CST / 11:00am CDT = 16:00 UTC
     - cron: '0 16 * * *'
-    # ES at 11:30am CDT (UTC-5) = 16:30 UTC
+    # ES at 10:30am CST / 11:30am CDT = 16:30 UTC
     - cron: '30 16 * * *'
     # R2 cleanup every Sunday at midnight UTC
     - cron: '0 0 * * 0'
-    # Note: During CST (Nov-Mar), video runs at 10:00/10:30am local.
   workflow_dispatch:
     inputs:
       lang:
@@ -34,7 +33,7 @@ jobs:
     - uses: actions/checkout@v4
     - uses: actions/setup-node@v4
       with:
-        node-version: '22'
+        node-version: '20'
         cache: 'npm'
     - run: npm ci
     - name: Cleanup old R2 card images
@@ -58,7 +57,7 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '22'
+        node-version: '20'
         cache: 'npm'
 
     - name: Install dependencies
@@ -69,7 +68,8 @@ jobs:
       if: github.event.schedule != '30 16 * * *'
       run: |
         sudo apt-get update
-        sudo apt-get install -y libgbm1 libnss3 libatk-bridge2.0-0 libxcomposite1 libxrandr2 libxdamage1 libcups2 libdrm2 libpango-1.0-0 libcairo2 libasound2t64
+        sudo apt-get install -y libgbm1 libnss3 libatk-bridge2.0-0 libxcomposite1 libxrandr2 libxdamage1 libcups2 libdrm2 libpango-1.0-0 libcairo2 libasound2t64 || \
+        sudo apt-get install -y libgbm1 libnss3 libatk-bridge2.0-0 libxcomposite1 libxrandr2 libxdamage1 libcups2 libdrm2 libpango-1.0-0 libcairo2 libasound2
 
     - name: Determine language
       id: lang

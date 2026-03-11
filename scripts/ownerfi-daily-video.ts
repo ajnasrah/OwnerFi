@@ -402,11 +402,24 @@ async function postToLate(videoUrl: string, caption: string, title?: string): Pr
 
   console.log(`Posting to Late.dev: ${platforms.map((p: any) => p.platform).join(', ')}`);
 
+  // Truncate caption for Twitter's 280 char limit
+  const twitterMaxChars = 280;
+  const twitterPlatform = platforms.find((p: any) => p.platform === 'twitter');
+  if (twitterPlatform && caption.length > twitterMaxChars) {
+    // Give Twitter a trimmed caption (drop hashtags, keep core message)
+    const lines = caption.split('\n\n');
+    const coreCaption = lines[0]; // Caption without hashtags
+    (twitterPlatform as any).platformSpecificData.content =
+      coreCaption.length <= twitterMaxChars ? coreCaption : coreCaption.slice(0, twitterMaxChars - 3) + '...';
+    console.log(`  Twitter caption trimmed to ${(twitterPlatform as any).platformSpecificData.content.length} chars`);
+  }
+
   const body: Record<string, unknown> = {
     content: caption,
     platforms,
     mediaItems: [{ type: 'video', url: videoUrl }],
     publishNow: true,
+    timezone: 'America/Chicago', // CST — consistent with all other brand posting
   };
   if (title) body.title = title;
 

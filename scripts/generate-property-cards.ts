@@ -442,10 +442,21 @@ function buildCardHTML(property: Property): string {
 
 function getDb() {
   if (getApps().length === 0) {
+    // Normalize private key: strip wrapping quotes, convert literal \n to newlines
+    let privateKey = process.env.FIREBASE_PRIVATE_KEY || '';
+    privateKey = privateKey.replace(/^["']|["']$/g, ''); // strip wrapping quotes
+    privateKey = privateKey.replace(/\\n/g, '\n');        // literal \n → newline
+
+    if (!privateKey.includes('-----BEGIN')) {
+      console.error('FIREBASE_PRIVATE_KEY does not look like a valid PEM key');
+      console.error('First 40 chars:', privateKey.slice(0, 40));
+      process.exit(1);
+    }
+
     initializeApp({
       credential: cert({
         projectId: process.env.FIREBASE_PROJECT_ID!,
-        privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+        privateKey,
         clientEmail: process.env.FIREBASE_CLIENT_EMAIL!,
       }),
     });

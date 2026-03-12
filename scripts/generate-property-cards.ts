@@ -87,13 +87,16 @@ function buildCardHTML(property: Property): string {
   const location = `${property.city}, ${property.state}${property.zipCode ? ' ' + property.zipCode : ''}`;
 
   const dealTypes = property.dealType || [];
-  const isCashDeal = dealTypes.includes('cash_deal');
+  // Video always narrates owner financing — show "Owner Finance" badge
+  // unless the property is cash-deal ONLY (no owner_finance in dealTypes)
+  const isOwnerFinance = dealTypes.includes('owner_finance');
+  const isCashDealOnly = !isOwnerFinance && dealTypes.includes('cash_deal');
 
   // Financing type badge config (matches PropertyCard.tsx exactly)
-  const badgeText = isCashDeal ? 'Cash Deal' : 'Owner Finance';
-  const badgeBg = isCashDeal ? 'background: #eab308;' : 'background: #059669;';
-  const badgeColor = isCashDeal ? 'color: #000;' : 'color: #fff;';
-  const badgeIcon = isCashDeal ? '💵' : '💰';
+  const badgeText = isCashDealOnly ? 'Cash Deal' : 'Owner Finance';
+  const badgeBg = isCashDealOnly ? 'background: #eab308;' : 'background: #059669;';
+  const badgeColor = isCashDealOnly ? 'color: #000;' : 'color: #fff;';
+  const badgeIcon = isCashDealOnly ? '💵' : '💰';
 
   return `<!DOCTYPE html>
 <html>

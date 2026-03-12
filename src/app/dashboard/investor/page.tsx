@@ -456,11 +456,11 @@ export default function InvestorDashboard() {
               <span className="text-slate-500 text-xs">Dashboard</span>
             </div>
 
-            {/* Right: Actions */}
+            {/* Right: Actions — HOME/ADMIN hidden on mobile (bottom tabs handle nav) */}
             <div className="flex items-center gap-1.5">
               <Link
                 href="/dashboard"
-                className="px-2.5 py-1 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg flex items-center gap-1 transition-all"
+                className="hidden md:flex px-2.5 py-1 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg items-center gap-1 transition-all"
                 title="Back to Dashboard"
               >
                 <svg className="w-3 h-3 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -471,7 +471,7 @@ export default function InvestorDashboard() {
               {(session as unknown as ExtendedSession)?.user?.role === 'admin' && (
                 <Link
                   href="/admin"
-                  className="px-2.5 py-1 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 rounded-lg flex items-center gap-1 transition-all"
+                  className="hidden md:flex px-2.5 py-1 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 rounded-lg items-center gap-1 transition-all"
                   title="Back to Admin"
                 >
                   <svg className="w-3 h-3 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

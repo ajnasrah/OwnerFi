@@ -3,7 +3,7 @@
 import { usePathname } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { BottomTabBar } from '@/components/navigation/BottomTabBar';
-import { getBuyerTabs, getInvestorTabs, getRealtorTabs } from '@/components/navigation/tab-configs';
+import { getBuyerTabs, getInvestorTabs, getRealtorTabs, getAdminTabs } from '@/components/navigation/tab-configs';
 import { ExtendedSession } from '@/types/session';
 
 export default function DashboardLayout({
@@ -13,16 +13,20 @@ export default function DashboardLayout({
 }) {
   const pathname = usePathname();
   const { data: session, status } = useSession();
+  const userRole = (session as unknown as ExtendedSession)?.user?.role;
+  const isAdmin = userRole === 'admin';
+  const isRealtor = userRole === 'realtor';
   const isInvestor = pathname.startsWith('/dashboard/investor');
-  const isRealtor = (session as unknown as ExtendedSession)?.user?.role === 'realtor';
 
+  // Admins always keep admin tabs so they can navigate back
   // Realtors always see realtor tabs (with Leads, Deals, Settings)
-  // so they can navigate back to buyer leads from any page
-  const tabs = isRealtor
-    ? getRealtorTabs()
-    : isInvestor
-      ? getInvestorTabs({ likedCount: 0 })
-      : getBuyerTabs({ likedCount: 0 });
+  const tabs = isAdmin
+    ? getAdminTabs()
+    : isRealtor
+      ? getRealtorTabs()
+      : isInvestor
+        ? getInvestorTabs({ likedCount: 0 })
+        : getBuyerTabs({ likedCount: 0 });
 
   return (
     <>

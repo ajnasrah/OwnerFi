@@ -85,31 +85,28 @@ export function InvestorFilterBar({
         })}
       </div>
 
-      {/* Row 2: Price filters + land toggle + sort */}
-      <div className="flex items-center gap-1.5">
-        {/* Price filter chips */}
-        <div className="flex-1 flex items-center gap-1.5 overflow-x-auto scrollbar-hide" role="toolbar" aria-label="Price filters">
-          {PRICE_FILTERS.map((option) => (
-            <button
-              key={option.key}
-              onClick={() => onFilterChange(option.key)}
-              aria-pressed={activeFilter === option.key}
-              className={`flex-shrink-0 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${
-                activeFilter === option.key
-                  ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/25'
-                  : 'bg-slate-700/60 text-slate-300 hover:bg-slate-600/60 border border-slate-600/50'
-              }`}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
+      {/* Row 2: Price filters — scrollable, tall enough for thumb taps */}
+      <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide" role="toolbar" aria-label="Price filters">
+        {PRICE_FILTERS.map((option) => (
+          <button
+            key={option.key}
+            onClick={() => onFilterChange(option.key)}
+            aria-pressed={activeFilter === option.key}
+            className={`flex-shrink-0 px-3 py-2 rounded-xl text-xs font-semibold transition-all whitespace-nowrap ${
+              activeFilter === option.key
+                ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/25'
+                : 'bg-slate-700/60 text-slate-300 hover:bg-slate-600/60 border border-slate-600/50'
+            }`}
+          >
+            {option.label}
+          </button>
+        ))}
 
         {/* Hide Land toggle */}
         <button
           onClick={() => onExcludeLandChange(!excludeLand)}
           aria-pressed={excludeLand}
-          className={`flex-shrink-0 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${
+          className={`flex-shrink-0 px-3 py-2 rounded-xl text-xs font-semibold transition-all whitespace-nowrap ${
             excludeLand
               ? 'bg-amber-600 text-white shadow-lg shadow-amber-600/25'
               : 'bg-slate-700/60 text-slate-300 hover:bg-slate-600/60 border border-slate-600/50'
@@ -117,35 +114,35 @@ export function InvestorFilterBar({
         >
           {excludeLand ? 'Land Hidden' : 'Hide Land'}
         </button>
+      </div>
 
-        {/* Sort dropdown */}
-        <div className="flex items-center gap-1 flex-shrink-0">
-          <select
-            value={sortBy}
-            onChange={(e) => onSortChange(e.target.value as SortField, sortOrder)}
-            aria-label="Sort by"
-            className="bg-slate-700/60 border border-slate-600/50 rounded-lg px-1.5 py-1.5 text-xs text-white focus:border-emerald-500 focus:outline-none"
-          >
-            {SORT_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>{option.label}</option>
-            ))}
-          </select>
-          <button
-            onClick={() => onSortChange(sortBy, sortOrder === 'asc' ? 'desc' : 'asc')}
-            className="w-7 h-7 flex items-center justify-center bg-slate-700/60 border border-slate-600/50 rounded-lg text-slate-300 hover:text-white hover:bg-slate-600/60 transition-all"
-            aria-label={sortOrder === 'asc' ? 'Switch to descending' : 'Switch to ascending'}
-          >
-            {sortOrder === 'asc' ? (
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 15l7-7 7 7" />
-              </svg>
-            ) : (
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
-              </svg>
-            )}
-          </button>
-        </div>
+      {/* Row 3: Sort — separate row so it's not cramped */}
+      <div className="flex items-center gap-1.5">
+        <select
+          value={sortBy}
+          onChange={(e) => onSortChange(e.target.value as SortField, sortOrder)}
+          aria-label="Sort by"
+          className="bg-slate-700/60 border border-slate-600/50 rounded-xl px-3 py-2 text-xs text-white focus:border-emerald-500 focus:outline-none"
+        >
+          {SORT_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>Sort: {option.label}</option>
+          ))}
+        </select>
+        <button
+          onClick={() => onSortChange(sortBy, sortOrder === 'asc' ? 'desc' : 'asc')}
+          className="w-9 h-9 flex items-center justify-center bg-slate-700/60 border border-slate-600/50 rounded-xl text-slate-300 hover:text-white hover:bg-slate-600/60 transition-all"
+          aria-label={sortOrder === 'asc' ? 'Switch to descending' : 'Switch to ascending'}
+        >
+          {sortOrder === 'asc' ? (
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 15l7-7 7 7" />
+            </svg>
+          ) : (
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+            </svg>
+          )}
+        </button>
       </div>
     </div>
   );

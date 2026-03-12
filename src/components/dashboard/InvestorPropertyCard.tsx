@@ -23,12 +23,6 @@ export function InvestorPropertyCard({ deal, isLiked, onToggleLike, onHide, isPr
     ? deal.galleryImages
     : deal.imgSrc ? [deal.imgSrc] : [];
   const hasMultiple = images.length > 1;
-
-  // DEBUG: log gallery data so we can see what the API is actually returning
-  if (typeof window !== 'undefined' && isPriority) {
-    console.log(`[Gallery Debug] ${deal.address}: galleryImages=${deal.galleryImages?.length ?? 'undefined'}, imgSrc=${deal.imgSrc ? 'yes' : 'no'}, total=${images.length}, hasMultiple=${hasMultiple}`);
-  }
-
   const currentImage = images[currentIndex] || '/placeholder-house.jpg';
   const isCurrentError = imageError.has(currentIndex);
 
@@ -190,24 +184,24 @@ export function InvestorPropertyCard({ deal, isLiked, onToggleLike, onHide, isPr
           <div className="absolute inset-0 bg-slate-700 animate-pulse" />
         )}
 
-        {/* Gallery navigation arrows */}
+        {/* Gallery navigation arrows — 44px touch targets */}
         {hasMultiple && (
           <>
             <button
               onClick={goPrev}
               aria-label="Previous image"
-              className="absolute left-1.5 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80 active:scale-90 transition-all z-10"
+              className="absolute left-1 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center rounded-full bg-black/50 text-white hover:bg-black/70 active:scale-90 transition-all z-10"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
               </svg>
             </button>
             <button
               onClick={goNext}
               aria-label="Next image"
-              className="absolute right-1.5 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80 active:scale-90 transition-all z-10"
+              className="absolute right-1 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center rounded-full bg-black/50 text-white hover:bg-black/70 active:scale-90 transition-all z-10"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
               </svg>
             </button>
@@ -256,13 +250,13 @@ export function InvestorPropertyCard({ deal, isLiked, onToggleLike, onHide, isPr
           )}
         </div>
 
-        {/* Top right: Hide + Like buttons */}
-        <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5 z-10">
+        {/* Top right: Hide + Like buttons — 44px min touch targets for driving safety */}
+        <div className="absolute top-2 right-2 flex items-center gap-2 z-10">
           {onHide && (
             <button
               onClick={handleHide}
               aria-label="Hide property"
-              className="w-9 h-9 flex items-center justify-center rounded-full bg-black/40 backdrop-blur-sm hover:bg-red-600/80 transition-all active:scale-90"
+              className="w-11 h-11 flex items-center justify-center rounded-full bg-black/50 backdrop-blur-sm hover:bg-red-600/80 transition-all active:scale-90"
             >
               <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -272,14 +266,14 @@ export function InvestorPropertyCard({ deal, isLiked, onToggleLike, onHide, isPr
           <button
             onClick={(e) => { e.stopPropagation(); onToggleLike(); }}
             aria-label={isLiked ? 'Unlike property' : 'Like property'}
-            className="w-9 h-9 flex items-center justify-center rounded-full bg-black/40 backdrop-blur-sm hover:bg-black/60 transition-all active:scale-90"
+            className="w-11 h-11 flex items-center justify-center rounded-full bg-black/50 backdrop-blur-sm hover:bg-black/60 transition-all active:scale-90"
           >
             {isLiked ? (
-              <svg className="w-5 h-5 text-red-500 fill-current" viewBox="0 0 24 24">
+              <svg className="w-6 h-6 text-red-500 fill-current" viewBox="0 0 24 24">
                 <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
               </svg>
             ) : (
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
               </svg>
             )}
@@ -300,9 +294,20 @@ export function InvestorPropertyCard({ deal, isLiked, onToggleLike, onHide, isPr
 
         {/* Price overlay - bottom of image */}
         <div className="absolute bottom-2.5 left-2.5 z-10">
-          <div className="text-2xl font-black text-white drop-shadow-lg">
+          <div className="text-3xl sm:text-2xl font-black text-white drop-shadow-lg">
             ${(deal.price || 0).toLocaleString()}
           </div>
+          {/* Key metric right under price for at-a-glance driving */}
+          {deal.dealType === 'owner_finance' && deal.monthlyPayment != null && (
+            <div className="text-sm font-bold text-emerald-400 drop-shadow-lg">
+              ${deal.monthlyPayment.toLocaleString()}/mo
+            </div>
+          )}
+          {deal.dealType === 'cash_deal' && deal.percentOfArv != null && (
+            <div className={`text-sm font-bold drop-shadow-lg ${deal.percentOfArv <= 70 ? 'text-green-400' : deal.percentOfArv <= 85 ? 'text-amber-400' : 'text-orange-400'}`}>
+              {deal.percentOfArv}% of Zestimate
+            </div>
+          )}
         </div>
       </div>
 
@@ -310,12 +315,12 @@ export function InvestorPropertyCard({ deal, isLiked, onToggleLike, onHide, isPr
       <div className="p-3.5">
         {/* Address */}
         <div className="min-w-0">
-          <h3 className="text-sm font-semibold text-white truncate">{deal.address}</h3>
-          <p className="text-xs text-slate-400 mt-0.5">{deal.city}, {deal.state} {deal.zipCode}</p>
+          <h3 className="text-base sm:text-sm font-bold text-white truncate">{deal.address}</h3>
+          <p className="text-sm sm:text-xs text-slate-400 mt-0.5">{deal.city}, {deal.state} {deal.zipCode}</p>
         </div>
 
         {/* Specs row */}
-        <div className="flex items-center gap-3 mt-2.5 text-xs text-slate-300">
+        <div className="flex items-center gap-3 mt-2.5 text-sm sm:text-xs text-slate-300">
           <span className="flex items-center gap-1">
             <svg className="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -384,13 +389,13 @@ export function InvestorPropertyCard({ deal, isLiked, onToggleLike, onHide, isPr
           )}
         </div>
 
-        {/* View Details link — uses <a> tag with onClick fallback for maximum compatibility */}
+        {/* View Details link — 44px+ height for easy thumb tap */}
         <a
           href={detailsUrl}
           target="_blank"
           rel="noopener noreferrer"
           onClick={handleMoreInfoClick}
-          className="block w-full mt-3 px-3 py-2.5 bg-emerald-600/80 hover:bg-emerald-500/90 text-white text-sm font-semibold rounded-lg transition-all text-center cursor-pointer select-none active:scale-[0.98]"
+          className="block w-full mt-3 px-3 py-3 bg-emerald-600/80 hover:bg-emerald-500/90 text-white text-sm font-bold rounded-xl transition-all text-center cursor-pointer select-none active:scale-[0.98]"
         >
           View on Zillow
           <svg className="w-3.5 h-3.5 ml-1.5 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">

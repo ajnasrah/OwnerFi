@@ -377,9 +377,10 @@ export async function postToLate(request: LatePostRequest): Promise<LatePostResp
               platformConfig.platformSpecificData.contentType = contentType;
             }
 
-            // Facebook: Support Feed or Story
+            // Facebook: Use 'reel' for video posts (9:16 vertical), 'feed' for images
             if (p.platform === 'facebook') {
-              const contentType = request.postTypes?.facebook || 'feed';
+              const defaultType = request.videoUrl ? 'reel' : 'feed';
+              const contentType = request.postTypes?.facebook || defaultType;
               platformConfig.platformSpecificData.contentType = contentType;
             }
 

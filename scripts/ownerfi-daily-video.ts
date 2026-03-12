@@ -391,7 +391,7 @@ async function postToLate(videoUrl: string, caption: string, title?: string): Pr
     const config: any = { platform, accountId: account._id, platformSpecificData: {} };
     if (platform === 'instagram') config.platformSpecificData.contentType = 'reel';
     if (platform === 'tiktok') config.platformSpecificData.privacy = 'public';
-    if (platform === 'facebook') config.platformSpecificData.contentType = 'feed';
+    if (platform === 'facebook') config.platformSpecificData.contentType = 'reel';
     return config;
   }).filter(Boolean);
 

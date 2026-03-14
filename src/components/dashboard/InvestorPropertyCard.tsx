@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { useState, useCallback, useRef, useEffect } from 'react';
 import type { InvestorDeal } from '@/app/api/buyer/investor-deals/route';
+import { OWNER_FINANCE_BADGE, CASH_DEAL_BADGE } from '@/lib/deal-badge';
 
 interface InvestorPropertyCardProps {
   deal: InvestorDeal;
@@ -232,19 +233,31 @@ export function InvestorPropertyCard({ deal, isLiked, onToggleLike, onHide, isPr
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
 
         {/* Deal type badge - top left */}
-        <div className="absolute top-2.5 left-2.5 z-10">
+        <div className="absolute top-2.5 left-2.5 z-10 flex flex-wrap gap-1.5">
           {deal.dealType === 'owner_finance' ? (
-            <span className="px-2.5 py-1 text-xs font-bold bg-emerald-600/90 text-white rounded-lg backdrop-blur-sm">
-              Owner Finance
+            <span className={`px-2.5 py-1 text-xs font-bold ${OWNER_FINANCE_BADGE.bg}/90 ${OWNER_FINANCE_BADGE.textColor} rounded-lg backdrop-blur-sm`}>
+              {OWNER_FINANCE_BADGE.text}
             </span>
           ) : (
-            <span className="px-2.5 py-1 text-xs font-bold bg-amber-600/90 text-white rounded-lg backdrop-blur-sm">
-              Cash Deal
+            <span className={`px-2.5 py-1 text-xs font-bold ${CASH_DEAL_BADGE.bg}/90 ${CASH_DEAL_BADGE.textColor} rounded-lg backdrop-blur-sm`}>
+              {CASH_DEAL_BADGE.text}
               {deal.percentOfArv != null && ` · ${deal.percentOfArv}%`}
             </span>
           )}
+          {/* Show secondary badge when property qualifies for both deal types */}
+          {deal.qualifiesForBoth && (
+            deal.dealType === 'owner_finance' ? (
+              <span className={`px-2 py-1 text-[10px] font-bold ${CASH_DEAL_BADGE.bg}/70 ${CASH_DEAL_BADGE.textColor} rounded-lg backdrop-blur-sm`}>
+                + Cash {deal.percentOfArv != null && `${deal.percentOfArv}%`}
+              </span>
+            ) : (
+              <span className={`px-2 py-1 text-[10px] font-bold ${OWNER_FINANCE_BADGE.bg}/70 ${OWNER_FINANCE_BADGE.textColor} rounded-lg backdrop-blur-sm`}>
+                + Owner Fin
+              </span>
+            )
+          )}
           {deal.needsWork && (
-            <span className="ml-1.5 px-2 py-1 text-xs font-bold bg-red-600/90 text-white rounded-lg backdrop-blur-sm">
+            <span className="px-2 py-1 text-xs font-bold bg-red-600/90 text-white rounded-lg backdrop-blur-sm">
               Fixer
             </span>
           )}

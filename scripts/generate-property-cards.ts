@@ -86,13 +86,12 @@ function buildCardHTML(property: Property): string {
   })();
   const location = `${property.city}, ${property.state}${property.zipCode ? ' ' + property.zipCode : ''}`;
 
+  // Badge config — video always narrates owner financing, so prioritize OF badge
+  // Uses same logic as getVideoBadgeCSS() in src/lib/deal-badge.ts
   const dealTypes = property.dealType || [];
-  // Video always narrates owner financing — show "Owner Finance" badge
-  // unless the property is cash-deal ONLY (no owner_finance in dealTypes)
   const isOwnerFinance = dealTypes.includes('owner_finance');
   const isCashDealOnly = !isOwnerFinance && dealTypes.includes('cash_deal');
 
-  // Financing type badge config (matches PropertyCard.tsx exactly)
   const badgeText = isCashDealOnly ? 'Cash Deal' : 'Owner Finance';
   const badgeBg = isCashDealOnly ? 'background: #eab308;' : 'background: #059669;';
   const badgeColor = isCashDealOnly ? 'color: #000;' : 'color: #fff;';

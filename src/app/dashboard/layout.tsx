@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { BottomTabBar } from '@/components/navigation/BottomTabBar';
@@ -16,7 +17,22 @@ export default function DashboardLayout({
   const userRole = (session as unknown as ExtendedSession)?.user?.role;
   const isAdmin = userRole === 'admin';
   const isRealtor = userRole === 'realtor';
-  const isInvestor = pathname.startsWith('/dashboard/investor');
+
+  // Determine investor status from profile, not just pathname
+  const [isInvestor, setIsInvestor] = useState(pathname.startsWith('/dashboard/investor'));
+
+  useEffect(() => {
+    if (status !== 'authenticated' || isAdmin || isRealtor) return;
+
+    fetch('/api/buyer/profile')
+      .then(res => res.json())
+      .then(data => {
+        if (data.profile?.isInvestor === true) {
+          setIsInvestor(true);
+        }
+      })
+      .catch(() => {});
+  }, [status, isAdmin, isRealtor]);
 
   // Admins always keep admin tabs so they can navigate back
   // Realtors always see realtor tabs (with Leads, Deals, Settings)

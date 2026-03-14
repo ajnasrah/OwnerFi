@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { PropertyListing } from '@/lib/property-schema';
 import { LEGAL_DISCLAIMERS, LEGAL_COLORS, AGENT_CONTACT_DISCLAIMER } from '@/lib/legal-disclaimers';
 import { ShareModal } from './ShareModal';
+import { CASH_DEAL_BADGE, getFinancingBadge } from '@/lib/deal-badge';
 
 interface PropertyCardProps {
   property: PropertyListing;
@@ -101,34 +102,41 @@ export const PropertyCard = React.memo(function PropertyCard({ property, isFavor
         <div className="absolute top-0 left-0 right-0 p-3 flex items-start justify-between z-10">
           {/* Left Side Badges */}
           <div className="flex gap-2 flex-wrap">
-            {/* Cash Deal Badge - for properties below ARV (show instead of financing type) */}
-            {(property as Record<string, unknown>).dealType === 'cash_deal' ? (
-              <div className="bg-yellow-500 backdrop-blur-sm text-black px-3 py-1.5 rounded-full text-xs font-bold shadow-lg flex items-center gap-1.5">
-                <span className="text-sm">💵</span>
-                <span>Cash Deal {(property as Record<string, unknown>).percentOfArv ? `• ${(property as Record<string, unknown>).percentOfArv}% of Zest` : ''}</span>
-              </div>
-            ) : (
-              /* Financing Type Badge - Dynamic based on detected keywords */
-              (() => {
-                const propertyRecord = property as Record<string, unknown>;
-                const financingType = (propertyRecord.financingType as string | undefined) || (propertyRecord.financingTypeLabel as string | undefined) || 'Owner Finance';
-                const badgeConfig: Record<string, { bg: string; icon: string }> = {
-                  'Owner Finance': { bg: 'bg-emerald-600', icon: '💰' },
-                  'Seller Finance': { bg: 'bg-blue-600', icon: '🤝' },
-                  'Rent to Own': { bg: 'bg-purple-600', icon: '🏠' },
-                  'Contract for Deed': { bg: 'bg-orange-600', icon: '📜' },
-                  'Assumable Loan': { bg: 'bg-teal-600', icon: '🔄' },
-                  'Creative Financing': { bg: 'bg-yellow-600', icon: '💡' },
-                };
-                const config = badgeConfig[financingType] || badgeConfig['Owner Finance'];
+            {(() => {
+              const propertyRecord = property as Record<string, unknown>;
+              const dealType = propertyRecord.dealType as string | undefined;
+              const isCashDealOnly = dealType === 'cash_deal';
+              const isBoth = dealType === 'both';
+
+              if (isCashDealOnly) {
+                // Pure cash deal — no owner finance component
                 return (
-                  <div className={`${config.bg} backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg flex items-center gap-1.5`}>
-                    <span className="text-sm">{config.icon}</span>
-                    <span>{financingType}</span>
+                  <div className={`${CASH_DEAL_BADGE.bg} backdrop-blur-sm ${CASH_DEAL_BADGE.textColor} px-3 py-1.5 rounded-full text-xs font-bold shadow-lg flex items-center gap-1.5`}>
+                    <span className="text-sm">{CASH_DEAL_BADGE.icon}</span>
+                    <span>{CASH_DEAL_BADGE.text} {propertyRecord.percentOfArv ? `• ${propertyRecord.percentOfArv}% of Zest` : ''}</span>
                   </div>
                 );
-              })()
-            )}
+              }
+
+              // Owner finance (or "both") — show financing type badge
+              const financingType = (propertyRecord.financingType as string | undefined) || (propertyRecord.financingTypeLabel as string | undefined) || 'Owner Finance';
+              const config = getFinancingBadge(financingType);
+              return (
+                <>
+                  <div className={`${config.bg} backdrop-blur-sm ${config.textColor} px-3 py-1.5 rounded-full text-xs font-bold shadow-lg flex items-center gap-1.5`}>
+                    <span className="text-sm">{config.icon}</span>
+                    <span>{config.text}</span>
+                  </div>
+                  {/* "Both" deals: also show cash deal indicator */}
+                  {isBoth && (
+                    <div className={`${CASH_DEAL_BADGE.bg}/80 backdrop-blur-sm ${CASH_DEAL_BADGE.textColor} px-2.5 py-1 rounded-full text-[10px] font-bold shadow-lg flex items-center gap-1`}>
+                      <span className="text-xs">{CASH_DEAL_BADGE.icon}</span>
+                      <span>+ Cash Deal</span>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
             {/* Agent Verified Badge - for GHL imported properties */}
             {((property as Record<string, unknown>).source === 'gohighlevel' || (property as Record<string, unknown>).manuallyVerified === true) && (
               <div className="bg-amber-500 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg flex items-center gap-1.5">

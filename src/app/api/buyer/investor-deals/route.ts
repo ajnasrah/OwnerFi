@@ -29,6 +29,9 @@ export interface InvestorDeal {
   imgSrc: string;
   galleryImages?: string[];
   dealType: 'owner_finance' | 'cash_deal';
+  /** True when property qualifies as BOTH owner finance AND cash deal
+   *  (e.g. GHL outreach confirmed OF + price < 80% Zestimate) */
+  qualifiesForBoth?: boolean;
   isLiked: boolean;
   // Owner finance specific
   monthlyPayment?: number;
@@ -320,6 +323,7 @@ async function searchTypesense(
       imgSrc: (doc.primaryImage as string) || '',
       galleryImages: (doc.galleryImages as string[]) || undefined,
       dealType,
+      qualifiesForBoth: rawDealType === 'both' || undefined,
       isLiked: false, // Set later after profile lookup
       // Owner finance (use ?? to preserve 0 as a valid value)
       monthlyPayment: (doc.monthlyPayment as number) ?? undefined,

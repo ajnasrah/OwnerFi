@@ -63,7 +63,7 @@ function transformToTypesense(docId: string, data: FirebaseFirestore.DocumentDat
 
   // Calculate percentOfArv if not stored
   const zestimate = data.zestimate || data.estimate || 0;
-  const price = data.price || data.listPrice || 0;
+  const price = data.listPrice || data.price || 0;
   const percentOfArv = data.percentOfArv || (zestimate > 0 ? Math.round((price / zestimate) * 1000) / 10 : undefined);
 
   return {
@@ -140,7 +140,7 @@ export const onPropertyCreate = onDocumentCreated('properties/{propertyId}', asy
   }
 
   // Skip garbage prices ($1 auctions, placeholder prices, data errors)
-  const price = data.price || data.listPrice || 0;
+  const price = data.listPrice || data.price || 0;
   if (price < 10000) {
     console.log(`Skipping property with garbage price ($${price}): ${docId}`);
     return;

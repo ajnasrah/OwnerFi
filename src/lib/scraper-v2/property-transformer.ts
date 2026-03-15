@@ -244,9 +244,11 @@ export function transformProperty(
     : [];
 
   // Parse numeric values (guard against NaN and invalid strings)
-  const rawPrice = typeof raw.price === 'string'
-    ? parseInt(raw.price.replace(/[^0-9]/g, ''), 10)
-    : raw.price;
+  // Prefer listPrice (actual asking price on Zillow) over price (can be tax-assessed or stale)
+  const rawPriceSource = raw.listPrice || raw.price;
+  const rawPrice = typeof rawPriceSource === 'string'
+    ? parseInt(rawPriceSource.replace(/[^0-9]/g, ''), 10)
+    : rawPriceSource;
   const price = (rawPrice != null && !isNaN(rawPrice) && rawPrice >= 0) ? rawPrice : 0;
 
   const estimate = raw.zestimate || raw.homeValue || raw.estimate || 0;

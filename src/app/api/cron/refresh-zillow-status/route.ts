@@ -409,7 +409,7 @@ export async function GET(request: NextRequest) {
       // Build update data
       const updateData: Record<string, unknown> = {
         homeStatus: newStatus,
-        price: result.price || result.listPrice || 0,
+        price: result.listPrice || result.price || 0,
         listPrice: result.listPrice || result.price || 0,
         daysOnZillow: result.daysOnZillow || 0,
         description: sanitizeDescription(result.description),

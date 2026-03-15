@@ -5,10 +5,9 @@ import { useSession } from 'next-auth/react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { InvestorPropertyCard } from '@/components/dashboard/InvestorPropertyCard';
-import { InvestorFilterBar, getFilterParams } from '@/components/dashboard/InvestorFilterBar';
+import { InvestorFilterBar, getFilterParams, type DealTypeFilter, type PriceFilter } from '@/components/dashboard/InvestorFilterBar';
 import type { InvestorDeal } from '@/app/api/buyer/investor-deals/route';
 
-type QuickFilter = 'all' | 'owner_finance' | 'cash_deal' | 'under80' | 'under100k' | '100k-200k' | '200k-300k';
 type SortField = 'price' | 'percentOfArv' | 'discount' | 'monthlyPayment';
 
 interface BuyerProfile {
@@ -42,10 +41,12 @@ export default function InvestorPreview() {
   const [likedProperties, setLikedProperties] = useState<string[]>([]);
 
   // Filters
-  const [activeFilter, setActiveFilter] = useState<QuickFilter>('all');
+  const [dealType, setDealType] = useState<DealTypeFilter>('all');
+  const [priceFilter, setPriceFilter] = useState<PriceFilter>('none');
   const [sortBy, setSortBy] = useState<SortField>('price');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [excludeLand, setExcludeLand] = useState(true);
+  const [showHidden, setShowHidden] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const PAGE_SIZE = 24;
 
@@ -86,7 +87,7 @@ export default function InvestorPreview() {
 
       // Set initial filter from buyer's deal type preference
       if (profileData.profile.dealTypePreference && profileData.profile.dealTypePreference !== 'all') {
-        setActiveFilter(profileData.profile.dealTypePreference);
+        setDealType(profileData.profile.dealTypePreference);
       }
     } catch {
       router.replace('/admin/buyers');
@@ -103,7 +104,7 @@ export default function InvestorPreview() {
     const fetchDeals = async () => {
       setDealsLoading(true);
       try {
-        const filterParams = getFilterParams(activeFilter, excludeLand);
+        const filterParams = getFilterParams(dealType, priceFilter, excludeLand);
         const searchParams = new URLSearchParams({
           dealType: filterParams.dealType,
           sortBy,
@@ -146,7 +147,7 @@ export default function InvestorPreview() {
 
     fetchDeals();
     return () => abortController.abort();
-  }, [profile, activeFilter, sortBy, sortOrder, excludeLand, currentPage]);
+  }, [profile, dealType, priceFilter, sortBy, sortOrder, excludeLand, currentPage]);
 
   // Like toggle - UI only, no server calls (admin preview)
   const toggleLike = useCallback((dealId: string) => {
@@ -158,10 +159,9 @@ export default function InvestorPreview() {
   // Stats for filter bar
   const stats = useMemo(() => ({
     total: breakdown.total,
-    avgPrice: deals.length > 0 ? deals.reduce((sum, d) => sum + d.price, 0) / deals.length : 0,
     ownerFinance: breakdown.ownerFinance,
     cashDeal: breakdown.cashDeal,
-  }), [deals, breakdown]);
+  }), [breakdown]);
 
   const city = profile?.preferredCity || profile?.city || '';
   const state = profile?.preferredState || profile?.state || '';
@@ -240,8 +240,10 @@ export default function InvestorPreview() {
       <main className="max-w-7xl mx-auto px-4 py-4">
         {/* Filter Bar */}
         <InvestorFilterBar
-          activeFilter={activeFilter}
-          onFilterChange={(filter) => { setActiveFilter(filter); setCurrentPage(1); }}
+          dealType={dealType}
+          onDealTypeChange={(dt) => { setDealType(dt); setCurrentPage(1); }}
+          priceFilter={priceFilter}
+          onPriceFilterChange={(pf) => { setPriceFilter(pf); setCurrentPage(1); }}
           sortBy={sortBy}
           sortOrder={sortOrder}
           onSortChange={(newSortBy, newSortOrder) => {
@@ -251,6 +253,8 @@ export default function InvestorPreview() {
           }}
           excludeLand={excludeLand}
           onExcludeLandChange={(exclude) => { setExcludeLand(exclude); setCurrentPage(1); }}
+          showHidden={showHidden}
+          onShowHiddenChange={(show) => { setShowHidden(show); setCurrentPage(1); }}
           stats={stats}
         />
 
@@ -276,7 +280,7 @@ export default function InvestorPreview() {
               No properties match the current filters in <span className="text-emerald-400">{city}</span>.
             </p>
             <button
-              onClick={() => { setActiveFilter('all'); setCurrentPage(1); }}
+              onClick={() => { setDealType('all'); setPriceFilter('none'); setCurrentPage(1); }}
               className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold rounded-lg transition-all"
             >
               Show All Deals

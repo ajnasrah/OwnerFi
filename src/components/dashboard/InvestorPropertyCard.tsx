@@ -18,6 +18,7 @@ export function InvestorPropertyCard({ deal, isLiked, onToggleLike, onHide, isPr
   const [imageLoading, setImageLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [hiding, setHiding] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   // Build gallery: use galleryImages if available, otherwise fall back to primary
   const images = (deal.galleryImages && deal.galleryImages.length > 0)
@@ -327,9 +328,32 @@ export function InvestorPropertyCard({ deal, isLiked, onToggleLike, onHide, isPr
       {/* Info Section */}
       <div className="p-3.5">
         {/* Address */}
-        <div className="min-w-0">
-          <h3 className="text-base sm:text-sm font-bold text-white truncate">{deal.address}</h3>
-          <p className="text-sm sm:text-xs text-slate-400 mt-0.5">{deal.city}, {deal.state} {deal.zipCode}</p>
+        <div className="min-w-0 flex items-start gap-1.5">
+          <div className="min-w-0 flex-1">
+            <h3 className="text-base sm:text-sm font-bold text-white truncate">{deal.address}</h3>
+            <p className="text-sm sm:text-xs text-slate-400 mt-0.5">{deal.city}, {deal.state} {deal.zipCode}</p>
+          </div>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              const fullAddress = `${deal.address}, ${deal.city}, ${deal.state} ${deal.zipCode}`;
+              navigator.clipboard.writeText(fullAddress);
+              setCopied(true);
+              setTimeout(() => setCopied(false), 1500);
+            }}
+            className="flex-shrink-0 mt-0.5 p-1.5 rounded-md text-slate-400 hover:text-white hover:bg-slate-700/50 transition-colors"
+            title="Copy full address"
+          >
+            {copied ? (
+              <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            ) : (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+            )}
+          </button>
         </div>
 
         {/* Specs row */}

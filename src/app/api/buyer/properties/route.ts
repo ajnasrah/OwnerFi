@@ -84,7 +84,7 @@ async function searchWithTypesense(params: {
         filter_by: filters.join(' && '),
         sort_by: 'monthlyPayment:asc,listPrice:asc',
         per_page: Math.min(params.limit, 250),
-        include_fields: 'id,address,city,state,zipCode,bedrooms,bathrooms,squareFeet,yearBuilt,listPrice,monthlyPayment,downPaymentAmount,propertyType,primaryImage,nearbyCities,ownerFinanceKeywords,financingType,description,sourceType,manuallyVerified,zestimate,rentEstimate',
+        include_fields: 'id,address,city,state,zipCode,bedrooms,bathrooms,squareFeet,yearBuilt,listPrice,monthlyPayment,downPaymentAmount,propertyType,primaryImage,nearbyCities,ownerFinanceKeywords,financingType,description,sourceType,manuallyVerified,zestimate,rentEstimate,homeStatus',
       });
 
     // Debug: log first result to see what fields are returned
@@ -95,7 +95,14 @@ async function searchWithTypesense(params: {
     }
 
     // Transform Typesense results to PropertyListing format
-    const properties = (result.hits || []).map((hit: Record<string, unknown>) => {
+    // Filter out PENDING/SOLD properties first (homeStatus is optional, so missing = ok)
+    const properties = (result.hits || [])
+      .filter((hit: Record<string, unknown>) => {
+        const doc = hit.document as Record<string, unknown>;
+        const status = ((doc?.homeStatus as string) || '').toUpperCase();
+        return !status || status === 'FOR_SALE';
+      })
+      .map((hit: Record<string, unknown>) => {
       const doc = hit.document;
       // Get image from multiple possible fields
       const imageUrl = doc.primaryImage || doc.imgSrc || doc.firstPropertyImage || doc.imageUrl || '';
@@ -449,7 +456,8 @@ export async function GET(request: NextRequest) {
         matchedKeywords: data.matchedKeywords || [],
         monthlyPayment: data.monthlyPayment || null,
         downPaymentAmount: data.downPaymentAmount || null,
-        isActive: data.isActive !== false && data.status !== 'sold' && data.status !== 'pending',
+        isActive: data.isActive !== false && data.status !== 'sold' && data.status !== 'pending'
+          && (!data.homeStatus || (data.homeStatus as string).toUpperCase() === 'FOR_SALE'),
       } as PropertyListing & {
         id: string;
         source: string;
@@ -458,8 +466,11 @@ export async function GET(request: NextRequest) {
       };
     });
 
+    // Filter out non-active properties (PENDING, SOLD, etc.)
+    const activeProperties = allFetchedProperties.filter(p => p.isActive !== false);
+
     // Filter out passed properties (unless includePassed=true)
-    const allPropertiesBeforeFilter = allFetchedProperties;
+    const allPropertiesBeforeFilter = activeProperties;
     const allProperties = includePassed
       ? allPropertiesBeforeFilter // Show all properties including passed ones
       : allPropertiesBeforeFilter.filter(p => !passedPropertyIds.includes(p.id)); // Filter out passed

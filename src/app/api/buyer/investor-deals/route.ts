@@ -119,6 +119,7 @@ export async function GET(request: NextRequest) {
     const rawMaxArvPercent = searchParams.get('maxArvPercent') ? Number(searchParams.get('maxArvPercent')) : undefined;
     const maxArvPercent = rawMaxArvPercent !== undefined && isFinite(rawMaxArvPercent) ? rawMaxArvPercent : undefined;
     const excludeLand = searchParams.get('excludeLand') === 'true';
+    const showHidden = searchParams.get('showHidden') === 'true';
     const page = Math.max(1, Number(searchParams.get('page') || '1') || 1);
     const pageSize = Math.min(48, Math.max(1, Number(searchParams.get('pageSize') || '24') || 24));
 
@@ -147,9 +148,9 @@ export async function GET(request: NextRequest) {
       allDeals = await searchFirestore(nearbyCities, searchState, dealTypeFilter);
     }
 
-    // Mark liked properties and filter out passed properties (O(1) Set lookups)
+    // Filter by passed status and mark liked properties (O(1) Set lookups)
     allDeals = allDeals
-      .filter(deal => !passedPropertyIds.has(deal.id))
+      .filter(deal => showHidden ? passedPropertyIds.has(deal.id) : !passedPropertyIds.has(deal.id))
       .map(deal => ({
         ...deal,
         isLiked: likedPropertyIds.has(deal.id),
@@ -269,12 +270,17 @@ async function searchTypesense(
       filter_by: filters.join(' && '),
       sort_by: 'listPrice:asc',
       per_page: 250,
-      include_fields: 'id,address,city,state,zipCode,bedrooms,bathrooms,squareFeet,yearBuilt,listPrice,monthlyPayment,downPaymentAmount,downPaymentPercent,interestRate,termYears,balloonYears,propertyType,primaryImage,galleryImages,dealType,zestimate,rentEstimate,needsWork,percentOfArv,isLand,url,zpid',
+      include_fields: 'id,address,city,state,zipCode,bedrooms,bathrooms,squareFeet,yearBuilt,listPrice,monthlyPayment,downPaymentAmount,downPaymentPercent,interestRate,termYears,balloonYears,propertyType,primaryImage,galleryImages,dealType,zestimate,rentEstimate,needsWork,percentOfArv,isLand,url,zpid,homeStatus',
     });
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return (result.hits || []).map((hit: any) => {
     const doc = hit.document as Record<string, unknown>;
+
+    // Skip non-FOR_SALE properties (PENDING, SOLD, etc.)
+    const homeStatus = ((doc.homeStatus as string) || '').toUpperCase();
+    if (homeStatus && homeStatus !== 'FOR_SALE') return null;
+
     const price = (doc.listPrice as number) || 0;
     const arv = (doc.zestimate as number) || 0;
     // Use pre-indexed percentOfArv if available, otherwise compute
@@ -410,6 +416,10 @@ async function searchFirestore(
         seenIds.add(doc.id);
 
         const data = doc.data();
+
+        // Skip non-FOR_SALE properties (PENDING, SOLD, FOR_RENT, etc.)
+        const homeStatus = ((data.homeStatus as string) || '').toUpperCase();
+        if (homeStatus && homeStatus !== 'FOR_SALE') continue;
 
         const price = (data.price as number) || (data.listPrice as number) || 0;
         const arv = (data.estimate as number) || (data.zestimate as number) || 0;

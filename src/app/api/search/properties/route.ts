@@ -92,7 +92,9 @@ async function searchWithTypesense(params: SearchParams) {
   }
 
   // Build filter string
-  const filters: string[] = ['isActive:=true'];
+  const filters: string[] = [
+    'isActive:=true',
+  ];
 
   if (params.state) {
     filters.push(`state:=${params.state}`);
@@ -159,11 +161,19 @@ async function searchWithTypesense(params: SearchParams) {
     .search(searchParams);
   const searchTime = Date.now() - startTime;
 
+  // Filter out PENDING/SOLD properties post-query (homeStatus is optional, missing = ok)
+  const filteredProperties = (result.hits || [])
+    .filter(hit => {
+      const status = ((hit.document as Record<string, unknown>)?.homeStatus as string || '').toUpperCase();
+      return !status || status === 'FOR_SALE';
+    })
+    .map(hit => hit.document);
+
   return {
-    properties: result.hits?.map(hit => hit.document) || [],
-    total: result.found || 0,
+    properties: filteredProperties,
+    total: filteredProperties.length,
     page: params.page || 1,
-    totalPages: Math.ceil((result.found || 0) / (params.limit || 20)),
+    totalPages: Math.ceil(filteredProperties.length / (params.limit || 20)),
     facets: result.facet_counts?.reduce((acc, facet) => {
       acc[facet.field_name] = facet.counts.map(c => ({
         value: c.value,
@@ -234,21 +244,27 @@ async function queryFirestoreCollection(
     const propertiesQuery = query(collection(db, collectionName), ...queryConstraints);
     const snapshot = await getDocs(propertiesQuery);
 
-    return snapshot.docs.map(doc => {
-      const data = doc.data();
-      // Determine deal type from flags
-      let docDealType: 'owner_finance' | 'cash_deal' | 'both' = 'owner_finance';
-      if (data.isOwnerFinance && data.isCashDeal) {
-        docDealType = 'both';
-      } else if (data.isCashDeal) {
-        docDealType = 'cash_deal';
-      }
-      return {
-        id: doc.id,
-        ...data,
-        dealType: docDealType,
-      };
-    }) as FirestoreProperty[];
+    return snapshot.docs
+      .filter(doc => {
+        // Skip non-FOR_SALE properties (PENDING, SOLD, etc.)
+        const status = ((doc.data().homeStatus as string) || '').toUpperCase();
+        return !status || status === 'FOR_SALE';
+      })
+      .map(doc => {
+        const data = doc.data();
+        // Determine deal type from flags
+        let docDealType: 'owner_finance' | 'cash_deal' | 'both' = 'owner_finance';
+        if (data.isOwnerFinance && data.isCashDeal) {
+          docDealType = 'both';
+        } else if (data.isCashDeal) {
+          docDealType = 'cash_deal';
+        }
+        return {
+          id: doc.id,
+          ...data,
+          dealType: docDealType,
+        };
+      }) as FirestoreProperty[];
   } catch (error) {
     console.warn(`[Firestore] Failed to query ${collectionName}:`, error);
     return [];

@@ -68,23 +68,24 @@ interface PropertyDoc {
 }
 
 /**
- * COST-OPTIMIZED Zillow Status Refresh Cron
+ * Zillow Status Refresh Cron
  *
- * COST OPTIMIZATION:
- * - 7-day rotation target (not daily) to minimize Apify credits
- * - Skips properties checked within last 3 days
- * - Dynamic batch size: ~18 properties/run for 6,000 total
+ * Checks properties on Zillow to catch PENDING/SOLD status changes quickly.
+ *
+ * OPTIMIZATION:
+ * - 3-day rotation target to catch status changes fast
+ * - Skips properties checked within last 24 hours
+ * - Dynamic batch size based on total properties
  * - Max 100 properties/run to cap costs
  *
  * FEATURES:
  * 1. Error logging to Firestore (cron_logs collection)
  * 2. Syncs lastStatusCheck to unified 'properties' collection
  * 3. Timeout protection - stops at 4.5 min
- * 4. Priority: never checked → >7 days → 3-7 days → skip fresh
+ * 4. Priority: never checked → >3 days → 1-3 days → skip fresh
  *
  * TARGETS: properties (unified) + agent_outreach_queue
  * RUNS: Every 30 minutes
- * COST: ~860 properties/day (vs 7,200 before) = 88% savings
  */
 export async function GET(request: NextRequest) {
   const startTime = Date.now();
@@ -116,7 +117,7 @@ export async function GET(request: NextRequest) {
   try {
     // Configuration
     const MAX_RUNTIME_MS = 270000; // 4.5 minutes (leave buffer for 5min Vercel limit)
-    const TARGET_ROTATION_DAYS = 7; // Check every property once per 7 days
+    const TARGET_ROTATION_DAYS = 3; // Check every property once per 3 days
     const RUNS_PER_DAY = 48; // Every 30 minutes
     const MIN_BATCH_SIZE = 10; // Minimum to process per run
     const MAX_BATCH_SIZE = 100; // Maximum to keep Apify costs reasonable
@@ -181,34 +182,34 @@ export async function GET(request: NextRequest) {
     // STEP 2: Filter to only properties that NEED checking (cost optimization)
     // ============================================
     const now = Date.now();
+    const ONE_DAY_MS = 1 * 24 * 60 * 60 * 1000;
     const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
-    const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 
     // Categorize properties by staleness
     const neverChecked = allProperties.filter(p => !p.lastCheck);
-    const over7Days = allProperties.filter(p => {
+    const over3Days = allProperties.filter(p => {
       if (!p.lastCheck) return false;
-      return (now - p.lastCheck.getTime()) > SEVEN_DAYS_MS;
+      return (now - p.lastCheck.getTime()) > THREE_DAYS_MS;
     });
-    const threeTo7Days = allProperties.filter(p => {
+    const oneTo3Days = allProperties.filter(p => {
       if (!p.lastCheck) return false;
       const age = now - p.lastCheck.getTime();
-      return age > THREE_DAYS_MS && age <= SEVEN_DAYS_MS;
+      return age > ONE_DAY_MS && age <= THREE_DAYS_MS;
     });
     const fresh = allProperties.filter(p => {
       if (!p.lastCheck) return false;
-      return (now - p.lastCheck.getTime()) <= THREE_DAYS_MS;
+      return (now - p.lastCheck.getTime()) <= ONE_DAY_MS;
     });
 
     console.log(`📊 Property freshness breakdown:`);
     console.log(`   Never checked: ${neverChecked.length}`);
-    console.log(`   >7 days old: ${over7Days.length}`);
-    console.log(`   3-7 days old: ${threeTo7Days.length}`);
-    console.log(`   Fresh (<3 days): ${fresh.length} (SKIPPING)`);
+    console.log(`   >3 days old: ${over3Days.length}`);
+    console.log(`   1-3 days old: ${oneTo3Days.length}`);
+    console.log(`   Fresh (<1 day): ${fresh.length} (SKIPPING)`);
 
-    // Build priority queue: never checked → >7 days → 3-7 days
-    // SKIP fresh properties entirely to save Apify credits
-    const needsChecking = [...neverChecked, ...over7Days, ...threeTo7Days];
+    // Build priority queue: never checked → >3 days → 1-3 days
+    // SKIP fresh properties (checked within last 24h) to save Apify credits
+    const needsChecking = [...neverChecked, ...over3Days, ...oneTo3Days];
 
     // Sort by lastCheck (null/oldest first)
     needsChecking.sort((a, b) => {
@@ -514,7 +515,7 @@ export async function GET(request: NextRequest) {
     console.log(`   Synced to properties: ${totalSynced}`);
     console.log(`   Duration: ${(duration / 1000).toFixed(1)}s`);
 
-    // Calculate backlog percentage (properties not checked in last 7 days)
+    // Calculate backlog percentage (properties not checked in last 3 days)
     const backlogPercent = needsChecking.length > 0 ? (needsChecking.length / allProperties.length) * 100 : 0;
 
     return NextResponse.json({

@@ -174,8 +174,12 @@ async function executePropertySearch(args: Record<string, unknown>): Promise<str
     if (!client) return JSON.stringify({ error: 'Search unavailable', found: 0, properties: [] });
 
     const filters: string[] = ['isActive:=true'];
-    if (args.city) filters.push(`city:=${args.city}`);
-    if (args.state) filters.push(`state:=${args.state}`);
+    // Capitalize city name for case-sensitive Typesense filter (e.g. "houston" → "Houston")
+    if (args.city) {
+      const city = String(args.city).split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+      filters.push(`city:=${city}`);
+    }
+    if (args.state) filters.push(`state:=${String(args.state).toUpperCase()}`);
     if (args.minPrice) filters.push(`listPrice:>=${args.minPrice}`);
     if (args.maxPrice) filters.push(`listPrice:<=${args.maxPrice}`);
     if (args.minBeds) filters.push(`bedrooms:>=${args.minBeds}`);
@@ -353,20 +357,22 @@ export async function POST(request: Request) {
           // If model wants to search properties, execute and get formatted response
           if (hasToolCalls) {
             const toolCalls = Object.values(toolCallMap);
-            const toolResults: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [];
 
+            // Build ONE assistant message with ALL tool calls (OpenAI requires this structure)
+            const assistantToolCalls = toolCalls.map(tc => ({
+              id: tc.id, type: 'function' as const, function: { name: tc.name, arguments: tc.args }
+            }));
+
+            const toolResults: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
+              { role: 'assistant', content: null, tool_calls: assistantToolCalls } as OpenAI.Chat.Completions.ChatCompletionMessageParam,
+            ];
+
+            // Execute each tool call and add results
             for (const tc of toolCalls) {
               if (tc.name === 'search_properties') {
                 let args: Record<string, unknown> = {};
                 try { args = JSON.parse(tc.args); } catch { /* use empty */ }
                 const result = await executePropertySearch(args);
-
-                // Build proper tool call messages
-                toolResults.push({
-                  role: 'assistant',
-                  content: null,
-                  tool_calls: [{ id: tc.id, type: 'function', function: { name: tc.name, arguments: tc.args } }]
-                } as OpenAI.Chat.Completions.ChatCompletionMessageParam);
                 toolResults.push({
                   role: 'tool',
                   tool_call_id: tc.id,
@@ -375,7 +381,7 @@ export async function POST(request: Request) {
               }
             }
 
-            if (toolResults.length > 0) {
+            if (toolResults.length > 1) { // > 1 because the assistant message is always there
               // Second pass: stream the formatted response with search results
               const secondStream = await openai.chat.completions.create({
                 model: 'gpt-4o-mini',

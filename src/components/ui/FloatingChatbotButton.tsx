@@ -34,19 +34,21 @@ export default function FloatingChatbotButton({ onClick, bottomClass }: Floating
       return available[Math.floor(Math.random() * available.length)];
     };
 
+    const hideBubble = () => { setBubbleVisible(false); setIsAnimating(false); };
+
+    let hideTimer: NodeJS.Timeout;
     const showBubble = () => {
+      clearTimeout(hideTimer); // Clear any pending hide from previous cycle
       const qi = getRandomQuestion();
       usedQuestionsRef.current.add(qi);
       setCurrentQuestion(qi);
       setIsAnimating(true);
       setBubbleVisible(true);
+      hideTimer = setTimeout(hideBubble, 10000);
     };
 
-    const hideBubble = () => { setBubbleVisible(false); setIsAnimating(false); };
-
-    let hideTimer: NodeJS.Timeout;
-    const initialTimer = setTimeout(() => { showBubble(); hideTimer = setTimeout(hideBubble, 10000); }, 4000);
-    const interval = setInterval(() => { showBubble(); hideTimer = setTimeout(hideBubble, 10000); }, 12000);
+    const initialTimer = setTimeout(showBubble, 4000);
+    const interval = setInterval(showBubble, 12000);
 
     return () => { clearTimeout(initialTimer); clearTimeout(hideTimer); clearInterval(interval); };
   }, []);

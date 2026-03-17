@@ -128,7 +128,13 @@ function loadSession(): { messages: Message[]; history: Array<{role: string, con
     const raw = sessionStorage.getItem(SESSION_KEY);
     if (!raw) return null;
     const data = JSON.parse(raw);
-    if (data.messages?.length > 0) return data;
+    if (data.messages?.length > 0) {
+      // Clear any stuck streaming flags from interrupted sessions
+      data.messages = data.messages.map((m: Message) => ({ ...m, isStreaming: false }));
+      // Remove empty assistant messages (from interrupted streams)
+      data.messages = data.messages.filter((m: Message) => m.content.trim() !== '' || m.role === 'user');
+      return data;
+    }
   } catch { /* ignore */ }
   return null;
 }
@@ -165,6 +171,7 @@ export default function Chatbot({ isOpen, onClose, bottomClass }: ChatbotProps) 
   const msgCountRef = useRef(0); // Avoids stale closure for suggestions
   const autoSendRef = useRef(false); // Flag for voice auto-send
   const inputRef = useRef<HTMLInputElement>(null);
+  const isRestartingRef = useRef(false); // Prevents double greeting on restart
 
   // Keep msgCountRef in sync
   useEffect(() => {
@@ -224,7 +231,7 @@ export default function Chatbot({ isOpen, onClose, bottomClass }: ChatbotProps) 
 
   // Load session or show greeting when opened
   useEffect(() => {
-    if (!isOpen || messages.length > 0) return;
+    if (!isOpen || messages.length > 0 || isRestartingRef.current) return;
 
     const saved = loadSession();
     if (saved) {
@@ -293,24 +300,32 @@ export default function Chatbot({ isOpen, onClose, bottomClass }: ChatbotProps) 
 
   const restartConversation = () => {
     clearSession();
-    setMessages([]);
+    isRestartingRef.current = true; // Prevent the useEffect from also adding a greeting
     setConversationHistory([]);
     setSuggestions(STARTER_QUESTIONS);
     setInputMessage('');
-    // Trigger fresh greeting on next render
-    setTimeout(() => {
-      const hour = new Date().getHours();
-      let timeGreeting = 'Hey there';
-      if (hour < 12) timeGreeting = 'Good morning';
-      else if (hour < 17) timeGreeting = 'Good afternoon';
-      else timeGreeting = 'Good evening';
 
-      setMessages([{
-        role: 'assistant',
-        content: `${timeGreeting}! Fresh start. I'm Sarah — what can I help you with?`,
-        timestamp: Date.now()
-      }]);
-    }, 100);
+    // Abort any in-flight request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    setIsLoading(false);
+
+    const hour = new Date().getHours();
+    let timeGreeting = 'Hey there';
+    if (hour < 12) timeGreeting = 'Good morning';
+    else if (hour < 17) timeGreeting = 'Good afternoon';
+    else timeGreeting = 'Good evening';
+
+    setMessages([{
+      role: 'assistant',
+      content: `${timeGreeting}! Fresh start. I'm Sarah — what can I help you with?`,
+      timestamp: Date.now()
+    }]);
+
+    // Reset the flag after React processes the state update
+    setTimeout(() => { isRestartingRef.current = false; }, 0);
   };
 
   const sendMessage = useCallback(async (overrideMessage?: string) => {
@@ -323,7 +338,13 @@ export default function Chatbot({ isOpen, onClose, bottomClass }: ChatbotProps) 
       timestamp: Date.now()
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    // Clean up any stuck streaming messages from a previous aborted request
+    setMessages(prev => {
+      const cleaned = prev.map(m =>
+        m.isStreaming ? { ...m, isStreaming: false } : m
+      );
+      return [...cleaned, userMessage];
+    });
     setInputMessage('');
     setIsLoading(true);
     setSuggestions([]);

@@ -5,12 +5,34 @@ function getOpenAIClient() {
   if (!process.env.OPENAI_API_KEY) {
     throw new Error('OpenAI API key not configured');
   }
-  return new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-  });
+  return new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 }
 
-const OWNERFI_CONTEXT = `You are Sarah, OwnerFi's friendly property specialist. You're warm, knowledgeable, and genuinely helpful — like a friend who happens to know everything about owner financing and the OwnerFi platform.
+function buildSystemPrompt(userContext?: UserContext): string {
+  let personalized = '';
+  if (userContext) {
+    const parts: string[] = [];
+    if (userContext.firstName) parts.push(`The user's name is ${userContext.firstName}.`);
+    if (userContext.city && userContext.state) parts.push(`They're browsing from ${userContext.city}, ${userContext.state}.`);
+    else if (userContext.city) parts.push(`They're browsing from ${userContext.city}.`);
+    if (userContext.isInvestor) parts.push('They have Investor Mode enabled — they can see cash deals.');
+    if (userContext.likedCount && userContext.likedCount > 0) parts.push(`They have ${userContext.likedCount} saved/liked properties.`);
+    if (userContext.currentPage) {
+      const pageMap: Record<string, string> = {
+        '/dashboard': 'the property swiper dashboard',
+        '/dashboard/investor': 'the investor dashboard',
+        '/dashboard/liked': 'their favorites/liked properties page',
+        '/dashboard/settings': 'the settings page',
+      };
+      const pageName = pageMap[userContext.currentPage] || userContext.currentPage;
+      parts.push(`They're currently on ${pageName}.`);
+    }
+    if (parts.length > 0) {
+      personalized = `\n\nCURRENT USER CONTEXT:\n${parts.join(' ')}\nUse this context to personalize your responses. For example, greet them by name, reference their city, or suggest relevant features based on their page.\n`;
+    }
+  }
+
+  return `You are Sarah, OwnerFi's friendly property specialist. You're warm, knowledgeable, and genuinely helpful — like a friend who happens to know everything about owner financing and the OwnerFi platform.
 
 PERSONALITY:
 - Warm and conversational, never robotic or stiff
@@ -19,7 +41,7 @@ PERSONALITY:
 - When relevant, tell users which page to visit (e.g. "Head to your Settings page to change that")
 - If someone seems ready, encourage them to sign up or browse
 - Ask clarifying questions when the user's needs aren't clear
-
+${personalized}
 LANGUAGE:
 - If the user writes in Spanish, respond fully in Spanish. Same for any other language.
 - Match the user's language naturally. Do not ask them what language they prefer — just mirror them.
@@ -51,7 +73,6 @@ DASHBOARD FEATURES:
 - Each property shows: photos, address, price, beds/baths/sqft, estimated monthly payment, down payment, interest rate, and term
 - Change search city anytime in Settings (/dashboard/settings)
 - Filter by: price range, bedrooms, bathrooms, square footage, property type
-- View photos, details, pricing, estimated monthly payments
 - Save favorites and review them anytime at /dashboard/liked
 - First-time tutorial walks you through everything — click the ? button to replay it
 
@@ -63,19 +84,18 @@ INVESTOR FEATURES:
 - Hide land properties toggle (default: on, since land values are less reliable)
 - Deal Alert SMS ($5/month): get instant text notifications when new deals match your criteria in your city
 - Customize your ARV threshold (e.g., only alert me if property is under 80% of ARV)
-- Can hide/pass on reviewed properties, and toggle "Show Hidden" to see them again
 - Cancel anytime from billing settings
 
-OWNER FINANCING EXPLAINED (keep it simple for users):
+OWNER FINANCING EXPLAINED:
 Owner financing means the seller is your lender. Instead of getting a bank loan, you pay the seller directly over time — like buying a car from a private seller with monthly payments.
 
 Benefits: flexible terms, faster closing, credit-friendly, less paperwork, negotiable down payment.
 
 4 DEAL TYPES (safest to riskiest):
-1. Seller Finance (Safest) — Seller owns the home free and clear. You get the deed at closing and make monthly payments to the seller. Best option for buyers.
-2. Subject-To — You take over the seller's existing mortgage payments. The loan stays in their name but you get the property. Lower upfront cost but more complex.
+1. Seller Finance (Safest) — Seller owns the home free and clear. You get the deed at closing and make monthly payments to the seller.
+2. Subject-To — You take over the seller's existing mortgage payments. The loan stays in their name but you get the property.
 3. Contract for Deed — You make payments but don't receive the deed until fully paid off. Higher risk for the buyer.
-4. Lease-to-Own — Rent with an option to buy later. Not technically owner financing, but a stepping stone to homeownership.
+4. Lease-to-Own — Rent with an option to buy later. Not technically owner financing, but a stepping stone.
 
 IMPORTANT THINGS BUYERS SHOULD KNOW:
 - No escrow — buyers pay property taxes, insurance, and HOA directly
@@ -83,7 +103,6 @@ IMPORTANT THINGS BUYERS SHOULD KNOW:
 - ALWAYS use a licensed real estate attorney and get title insurance
 - Monthly payments shown on OwnerFi do NOT include taxes, insurance, or HOA
 - All listing info is agent-reported, not verified by OwnerFi — always do your own due diligence
-- OwnerFi does not represent either party in the transaction
 
 PRICING:
 - Browsing & searching: 100% FREE forever
@@ -91,60 +110,123 @@ PRICING:
 - Investor Deal Alert SMS: $5/month (optional, cancel anytime)
 - No hidden fees
 
+PROPERTY SEARCH:
+You have access to a search_properties tool. When users ask about specific properties or what's available, USE IT to search our listings and share real results. Present 3-5 properties naturally in your response with key details (address, price, beds/baths, monthly payment if available). Always mention they can see more on their dashboard.
+
 COMMON QUESTIONS:
-Q: Do I need good credit?
-A: Not necessarily! That's the beauty of owner financing — the seller sets the credit requirements, and many are flexible. Some don't check credit at all.
-
-Q: How much is the down payment?
-A: It varies by property and seller. Some ask for 5-10%, others are negotiable. Each listing shows the seller's requested terms when available.
-
-Q: Is this legitimate/safe?
-A: Owner financing has been around for decades and is completely legal. The key is using a real estate attorney, getting title insurance, and having everything in writing.
-
-Q: How is this different from renting?
-A: With owner financing, you're BUYING the home and building equity. With renting, your money goes to the landlord. Owner financing is a path to actual homeownership.
-
-Q: What states do you cover?
-A: We have properties nationwide, with especially strong coverage in Texas, Florida, and Georgia. New listings are added daily.
-
-Q: Can I use OwnerFi on my phone?
-A: Absolutely! OwnerFi works great on mobile — swipe through properties, save favorites, and get deal alerts right from your phone.
-
-Q: I'm a realtor — can I partner with OwnerFi?
-A: Yes! Visit /for-realtors or email support@ownerfi.ai. We offer access to pre-screened buyer leads.
-
-Q: What's ARV?
-A: ARV stands for After-Repair Value — it's the estimated value of a property after renovations. Investors look for properties priced well below ARV to flip or wholesale for profit.
-
-Q: I can't log in / forgot my password
-A: If you signed up with your phone number, just enter it again on the sign-in page (/auth) and we'll send a new verification code. For email login issues, try resetting your password or reach out to support@ownerfi.ai.
-
-Q: There are no properties in my area
-A: We're adding new cities and listings every day! Try expanding your search to nearby cities in your Settings (/dashboard/settings). You can also set up Deal Alerts to get notified the moment new properties appear in your area.
-
-Q: How do I contact the seller?
-A: Each listing shows the listing agent's contact info. OwnerFi doesn't broker deals — you'll reach out to the seller or their agent directly from the property details.
-
-Q: Can I negotiate the terms?
-A: Absolutely! Owner financing terms are almost always negotiable — down payment, interest rate, monthly payment, and term length are all up for discussion between you and the seller.
+Q: Do I need good credit? A: Not necessarily! The seller sets the credit requirements, and many are flexible.
+Q: How much is the down payment? A: Varies by property/seller. Some ask 5-10%, others are negotiable.
+Q: Is this legitimate/safe? A: Owner financing has been around for decades and is completely legal. Use an attorney and get title insurance.
+Q: How is this different from renting? A: You're BUYING the home and building equity. With renting, your money goes to the landlord.
+Q: What states do you cover? A: Nationwide, with strong coverage in Texas, Florida, and Georgia. New listings daily.
+Q: I can't log in? A: Enter your phone number again at /auth for a new verification code, or email support@ownerfi.ai.
+Q: No properties in my area? A: Try nearby cities in Settings (/dashboard/settings). We add new listings daily!
+Q: How do I contact the seller? A: Each listing shows the agent's contact info. Reach out directly from the property details.
+Q: Can I negotiate terms? A: Absolutely! Down payment, interest rate, monthly payment, and term length are all negotiable.
 
 ESCALATION — WHEN TO SUGGEST HUMAN SUPPORT:
-If the user has a problem you can't solve (account issues, billing problems, bug reports, complaints, or anything you're unsure about), always offer to connect them with the team:
-- Email: support@ownerfi.ai
-- Contact page: /contact
-- Say something like: "I want to make sure you get the right help — our team at support@ownerfi.ai can look into that for you directly."
+If you can't solve it (account issues, billing, bugs, complaints), offer: support@ownerfi.ai or /contact.
 
 RESPONSE RULES:
 - Keep responses 2-4 sentences for simple questions, up to 5-6 for complex topics
 - Always end with a follow-up question or suggested next step when natural
-- Be honest about what OwnerFi does and doesn't do
-- Never provide specific legal, financial, or tax advice — suggest consulting a professional
-- If asked about a specific property listing, explain you can't look up individual properties but they can search on the dashboard
-- If someone is frustrated or confused, be extra patient and break it down step by step
-- Use natural conversational language — avoid bullet points and formal formatting in chat
-- Don't repeat the same information unless asked
-- Don't use emojis excessively — one per message max if appropriate
-- When mentioning a page, include the path (e.g. "your Settings page at /dashboard/settings") so users can navigate there`;
+- Never provide specific legal, financial, or tax advice
+- Use natural conversational language — avoid bullet points in chat (except when listing properties)
+- When mentioning a page, include the path so users can navigate there
+- When you use search_properties and find results, present them conversationally with key details`;
+}
+
+interface UserContext {
+  firstName?: string;
+  city?: string;
+  state?: string;
+  isInvestor?: boolean;
+  likedCount?: number;
+  currentPage?: string;
+}
+
+const SEARCH_TOOL: OpenAI.Chat.Completions.ChatCompletionTool = {
+  type: 'function',
+  function: {
+    name: 'search_properties',
+    description: 'Search OwnerFi property listings. Use when the user asks about available properties, wants to see homes in a city, or asks about specific criteria like price/beds/baths.',
+    parameters: {
+      type: 'object',
+      properties: {
+        city: { type: 'string', description: 'City name (e.g. "Houston")' },
+        state: { type: 'string', description: 'Two-letter state code (e.g. "TX")' },
+        dealType: { type: 'string', enum: ['owner_finance', 'cash_deal'], description: 'Type of deal to search for' },
+        minPrice: { type: 'number', description: 'Minimum price in dollars' },
+        maxPrice: { type: 'number', description: 'Maximum price in dollars' },
+        minBeds: { type: 'integer', description: 'Minimum bedrooms' },
+        minBaths: { type: 'number', description: 'Minimum bathrooms' },
+      },
+      required: []
+    }
+  }
+};
+
+// Execute property search via Typesense
+async function executePropertySearch(args: Record<string, unknown>): Promise<string> {
+  try {
+    const { getTypesenseSearchClient, TYPESENSE_COLLECTIONS } = await import('@/lib/typesense/client');
+    const client = getTypesenseSearchClient();
+    if (!client) return JSON.stringify({ error: 'Search unavailable', found: 0, properties: [] });
+
+    const filters: string[] = ['isActive:=true'];
+    if (args.city) filters.push(`city:=${args.city}`);
+    if (args.state) filters.push(`state:=${args.state}`);
+    if (args.minPrice) filters.push(`listPrice:>=${args.minPrice}`);
+    if (args.maxPrice) filters.push(`listPrice:<=${args.maxPrice}`);
+    if (args.minBeds) filters.push(`bedrooms:>=${args.minBeds}`);
+    if (args.minBaths) filters.push(`bathrooms:>=${args.minBaths}`);
+    if (args.dealType === 'owner_finance') {
+      filters.push('dealType:=[owner_finance, both]');
+    } else if (args.dealType === 'cash_deal') {
+      filters.push('dealType:=[cash_deal, both]');
+    }
+
+    const result = await client
+      .collections(TYPESENSE_COLLECTIONS.PROPERTIES)
+      .documents()
+      .search({
+        q: '*',
+        query_by: 'address,city,state,zipCode',
+        filter_by: filters.join(' && '),
+        sort_by: 'createdAt:desc',
+        page: 1,
+        per_page: 5
+      });
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const properties = (result.hits || []).map((hit: any) => {
+      const d = hit.document;
+      return {
+        address: d.address,
+        city: d.city,
+        state: d.state,
+        price: d.listPrice,
+        beds: d.bedrooms,
+        baths: d.bathrooms,
+        sqft: d.squareFeet,
+        monthlyPayment: d.monthlyPayment,
+        downPayment: d.downPaymentAmount,
+        interestRate: d.interestRate,
+        dealType: d.dealType,
+        propertyType: d.propertyType,
+      };
+    });
+
+    return JSON.stringify({
+      found: result.found || 0,
+      showing: properties.length,
+      properties
+    });
+  } catch (error) {
+    console.error('[chatbot] Search error:', error);
+    return JSON.stringify({ error: 'Search temporarily unavailable', found: 0, properties: [] });
+  }
+}
 
 // Sanitize conversation history to prevent injection
 function sanitizeHistory(history: unknown[]): Array<{role: 'user' | 'assistant', content: string}> {
@@ -161,7 +243,7 @@ function sanitizeHistory(history: unknown[]): Array<{role: 'user' | 'assistant',
     )
     .map(msg => ({
       role: msg.role as 'user' | 'assistant',
-      content: msg.content.slice(0, 1000) // Limit each history message
+      content: msg.content.slice(0, 1000)
     }));
 }
 
@@ -170,106 +252,182 @@ export async function POST(request: Request) {
     const body = await request.json();
     const message = typeof body.message === 'string' ? body.message.slice(0, 1000) : '';
     const conversationHistory = sanitizeHistory(body.conversationHistory || []);
+    const userContext: UserContext | undefined = body.userContext && typeof body.userContext === 'object'
+      ? {
+          firstName: typeof body.userContext.firstName === 'string' ? body.userContext.firstName : undefined,
+          city: typeof body.userContext.city === 'string' ? body.userContext.city : undefined,
+          state: typeof body.userContext.state === 'string' ? body.userContext.state : undefined,
+          isInvestor: typeof body.userContext.isInvestor === 'boolean' ? body.userContext.isInvestor : undefined,
+          likedCount: typeof body.userContext.likedCount === 'number' ? body.userContext.likedCount : undefined,
+          currentPage: typeof body.userContext.currentPage === 'string' ? body.userContext.currentPage : undefined,
+        }
+      : undefined;
 
     if (!message.trim()) {
       return NextResponse.json({ error: 'Message is required' }, { status: 400 });
     }
 
     if (!process.env.OPENAI_API_KEY) {
-      return NextResponse.json(
-        { error: 'OpenAI API key not configured' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'OpenAI API key not configured' }, { status: 500 });
     }
 
-    // Rate limit by IP (10 requests per minute)
+    // Rate limit
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-               request.headers.get('x-real-ip') ||
-               'unknown';
-
+               request.headers.get('x-real-ip') || 'unknown';
     const { rateLimit } = await import('@/lib/rate-limiter');
     const rateLimitCheck = await rateLimit(`chatbot:${ip}`, 10, 60);
-
     if (!rateLimitCheck.allowed) {
       return NextResponse.json({
-        reply: `You're sending messages pretty fast! Give me ${rateLimitCheck.retryAfter || 30} seconds and try again. In the meantime, you can browse properties on the dashboard.`,
+        reply: `You're sending messages pretty fast! Give me ${rateLimitCheck.retryAfter || 30} seconds and try again.`,
         rateLimited: true,
-      }, { status: 200 }); // Return 200 so client handles it cleanly
+      }, { status: 200 });
     }
 
     // Budget check
     const { estimateTokens, calculateCost, checkBudget, trackUsage } = await import('@/lib/openai-budget-tracker');
+    const systemPrompt = buildSystemPrompt(userContext);
 
-    const messages = [
-      { role: 'system' as const, content: OWNERFI_CONTEXT },
+    const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
+      { role: 'system', content: systemPrompt },
       ...conversationHistory.slice(-10),
-      { role: 'user' as const, content: message }
+      { role: 'user', content: message }
     ];
 
     const estimatedInputTokens = estimateTokens(JSON.stringify(messages));
-    const estimatedOutputTokens = 400;
-    const estimatedCost = calculateCost(estimatedInputTokens, estimatedOutputTokens, 'gpt-4o-mini');
-
+    const estimatedCost = calculateCost(estimatedInputTokens, 500, 'gpt-4o-mini');
     const dailyBudgetCheck = await checkBudget(estimatedCost, 'daily');
     if (!dailyBudgetCheck.allowed) {
       return NextResponse.json({
-        reply: "I'm taking a quick break due to high demand! In the meantime, check out our How It Works page at /how-owner-finance-works, or email support@ownerfi.ai if you need help.",
+        reply: "I'm taking a quick break due to high demand! Check out /how-owner-finance-works or email support@ownerfi.ai.",
         budgetExceeded: true
       });
     }
 
-    // Stream the response
     const openai = getOpenAIClient();
-
-    const stream = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: messages as OpenAI.Chat.Completions.ChatCompletionMessageParam[],
-      max_tokens: 400,
-      temperature: 0.5,
-      stream: true,
-    });
-
     const encoder = new TextEncoder();
-    let fullResponse = '';
+    let totalInputTokens = estimatedInputTokens;
+    let totalOutputTokens = 0;
 
     const readable = new ReadableStream({
       async start(controller) {
+        let fullResponse = '';
         try {
+          // First pass: stream with tools available
+          const stream = await openai.chat.completions.create({
+            model: 'gpt-4o-mini',
+            messages,
+            tools: [SEARCH_TOOL],
+            max_tokens: 500,
+            temperature: 0.5,
+            stream: true,
+          });
+
+          // Collect tool calls if any
+          const toolCallMap: Record<number, { id: string; name: string; args: string }> = {};
+          let hasToolCalls = false;
+
           for await (const chunk of stream) {
-            const content = chunk.choices[0]?.delta?.content;
-            if (content) {
-              fullResponse += content;
-              controller.enqueue(encoder.encode(content));
+            const delta = chunk.choices[0]?.delta;
+
+            // Stream text content directly
+            if (delta?.content) {
+              fullResponse += delta.content;
+              controller.enqueue(encoder.encode(delta.content));
+            }
+
+            // Accumulate tool call fragments
+            if (delta?.tool_calls) {
+              hasToolCalls = true;
+              for (const tc of delta.tool_calls) {
+                const idx = tc.index ?? 0;
+                if (!toolCallMap[idx]) {
+                  toolCallMap[idx] = { id: tc.id || '', name: '', args: '' };
+                }
+                if (tc.id) toolCallMap[idx].id = tc.id;
+                if (tc.function?.name) toolCallMap[idx].name = tc.function.name;
+                if (tc.function?.arguments) toolCallMap[idx].args += tc.function.arguments;
+              }
             }
           }
+
+          // If model wants to search properties, execute and get formatted response
+          if (hasToolCalls) {
+            const toolCalls = Object.values(toolCallMap);
+            const toolResults: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [];
+
+            for (const tc of toolCalls) {
+              if (tc.name === 'search_properties') {
+                let args: Record<string, unknown> = {};
+                try { args = JSON.parse(tc.args); } catch { /* use empty */ }
+                const result = await executePropertySearch(args);
+
+                // Build proper tool call messages
+                toolResults.push({
+                  role: 'assistant',
+                  content: null,
+                  tool_calls: [{ id: tc.id, type: 'function', function: { name: tc.name, arguments: tc.args } }]
+                } as OpenAI.Chat.Completions.ChatCompletionMessageParam);
+                toolResults.push({
+                  role: 'tool',
+                  tool_call_id: tc.id,
+                  content: result
+                } as OpenAI.Chat.Completions.ChatCompletionMessageParam);
+              }
+            }
+
+            if (toolResults.length > 0) {
+              // Second pass: stream the formatted response with search results
+              const secondStream = await openai.chat.completions.create({
+                model: 'gpt-4o-mini',
+                messages: [...messages, ...toolResults],
+                max_tokens: 600,
+                temperature: 0.5,
+                stream: true,
+              });
+
+              for await (const chunk of secondStream) {
+                const content = chunk.choices[0]?.delta?.content;
+                if (content) {
+                  fullResponse += content;
+                  controller.enqueue(encoder.encode(content));
+                }
+              }
+
+              totalInputTokens += estimateTokens(JSON.stringify(toolResults));
+            }
+          }
+
+          if (!fullResponse.trim()) {
+            const fallback = "I hit a snag — could you try that again? Or reach out to support@ownerfi.ai.";
+            controller.enqueue(encoder.encode(fallback));
+            fullResponse = fallback;
+          }
+
+          totalOutputTokens = estimateTokens(fullResponse);
+
         } catch (error) {
           console.error('[chatbot] Stream error:', error);
           if (!fullResponse) {
-            const fallback = "I hit a snag — could you try asking that again? Or if you need immediate help, reach out to support@ownerfi.ai.";
+            const fallback = "I hit a snag — could you try asking that again?";
             controller.enqueue(encoder.encode(fallback));
-            fullResponse = fallback;
           }
         } finally {
           controller.close();
 
-          // Track usage in background (don't block the stream)
-          const actualInputTokens = estimateTokens(JSON.stringify(messages));
-          const actualOutputTokens = estimateTokens(fullResponse);
-          const actualCost = calculateCost(actualInputTokens, actualOutputTokens, 'gpt-4o-mini');
-
+          // Track usage in background
+          const actualCost = calculateCost(totalInputTokens, totalOutputTokens, 'gpt-4o-mini');
           trackUsage({
-            inputTokens: actualInputTokens,
-            outputTokens: actualOutputTokens,
-            totalTokens: actualInputTokens + actualOutputTokens,
+            inputTokens: totalInputTokens,
+            outputTokens: totalOutputTokens,
+            totalTokens: totalInputTokens + totalOutputTokens,
             estimatedCost: actualCost,
             model: 'gpt-4o-mini',
             timestamp: Date.now()
           }).catch(err => console.error('[chatbot] Usage tracking error:', err));
 
-          // Track in main cost system
           import('@/lib/cost-tracker').then(({ trackCost, calculateOpenAICost }) => {
-            const cost = calculateOpenAICost(actualInputTokens, actualOutputTokens);
-            trackCost('ownerfi', 'openai', 'chatbot_message', actualInputTokens + actualOutputTokens, cost)
+            const cost = calculateOpenAICost(totalInputTokens, totalOutputTokens);
+            trackCost('ownerfi', 'openai', 'chatbot_message', totalInputTokens + totalOutputTokens, cost)
               .catch(err => console.error('[chatbot] Cost tracking error:', err));
           }).catch(() => {});
         }
@@ -287,8 +445,8 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('Chatbot API error:', error);
     return NextResponse.json(
-      { reply: "Something went wrong on my end. Try again in a moment, or email support@ownerfi.ai for help!" },
-      { status: 200 } // Graceful — client always gets a message
+      { reply: "Something went wrong on my end. Try again, or email support@ownerfi.ai!" },
+      { status: 200 }
     );
   }
 }

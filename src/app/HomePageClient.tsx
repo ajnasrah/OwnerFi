@@ -8,6 +8,7 @@ import { Language, translations } from '@/lib/translations'
 
 export default function HomePageClient() {
   const [isChatbotOpen, setIsChatbotOpen] = useState(false)
+  const [chatPrefill, setChatPrefill] = useState<string | undefined>()
   const [language, setLanguage] = useState<Language>('en')
 
   // Apply translations to the page when language changes
@@ -336,10 +337,11 @@ export default function HomePageClient() {
         <Chatbot
           isOpen={isChatbotOpen}
           onClose={() => setIsChatbotOpen(false)}
+          initialMessage={chatPrefill}
         />
       ) : (
         <FloatingChatbotButton
-          onClick={() => setIsChatbotOpen(true)}
+          onClick={(prefill) => { setChatPrefill(prefill); setIsChatbotOpen(true); }}
         />
       )}
     </>

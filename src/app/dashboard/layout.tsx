@@ -20,6 +20,7 @@ export default function DashboardLayout({
   const isAdmin = userRole === 'admin';
   const isRealtor = userRole === 'realtor';
   const [isChatbotOpen, setIsChatbotOpen] = useState(false);
+  const [chatPrefill, setChatPrefill] = useState<string | undefined>();
 
   // Determine investor status from profile, not just pathname
   const [isInvestor, setIsInvestor] = useState(pathname.startsWith('/dashboard/investor'));
@@ -55,9 +56,9 @@ export default function DashboardLayout({
 
       {/* Chatbot — available on all dashboard pages, pushed above mobile tab bar */}
       {isChatbotOpen ? (
-        <Chatbot isOpen={isChatbotOpen} onClose={() => setIsChatbotOpen(false)} bottomClass="bottom-6 md:bottom-6 max-md:bottom-20" />
+        <Chatbot isOpen={isChatbotOpen} onClose={() => setIsChatbotOpen(false)} bottomClass="bottom-6 md:bottom-6 max-md:bottom-20" initialMessage={chatPrefill} />
       ) : (
-        <FloatingChatbotButton onClick={() => setIsChatbotOpen(true)} bottomClass="bottom-6 md:bottom-6 max-md:bottom-20" />
+        <FloatingChatbotButton onClick={(prefill) => { setChatPrefill(prefill); setIsChatbotOpen(true); }} bottomClass="bottom-6 md:bottom-6 max-md:bottom-20" />
       )}
     </>
   );

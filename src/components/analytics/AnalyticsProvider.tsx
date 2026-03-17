@@ -46,7 +46,17 @@ export type AnalyticsEvent =
   | 'tutorial_complete'
   | 'tutorial_skip'
   // Session engagement
-  | 'session_properties_viewed';
+  | 'session_properties_viewed'
+  // Chatbot tracking
+  | 'chatbot_open'
+  | 'chatbot_message_sent'
+  | 'chatbot_message_received'
+  | 'chatbot_suggestion'
+  | 'chatbot_voice'
+  | 'chatbot_speak'
+  | 'chatbot_feedback'
+  | 'chatbot_restart'
+  | 'chatbot_email_transcript';
 
 interface EventData {
   [key: string]: string | number | boolean;

@@ -190,6 +190,22 @@ function detectListStructureNegation(text: string): NegativeDetectionResult | nu
     };
   }
 
+  // Handle typo periods before conjunctions in lists:
+  // "no wholesale, assignment. or owner finance" (period should be comma)
+  // Only match when a comma-separated list OR single item precedes the typo period,
+  // to avoid false negatives like "Not the typical property. And owner financing available"
+  const typoPeriodPattern = /\b(no|not)\b(?:[^.!?]{0,100},\s*\w+|\s+\w+)\.\s*(?:or|and)\s+(owner|seller|creative)[\s\-/_]*(financing?|finance|carry|terms)/i;
+
+  const typoPeriodMatch = text.match(typoPeriodPattern);
+  if (typoPeriodMatch) {
+    return {
+      isNegative: true,
+      confidence: 'high',
+      reason: 'Negation applies to list containing financing term',
+      matchedPattern: typoPeriodMatch[0],
+    };
+  }
+
   return null;
 }
 

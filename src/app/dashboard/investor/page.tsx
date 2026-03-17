@@ -274,6 +274,7 @@ export default function InvestorDashboard() {
 
         const res = await fetch(`/api/buyer/investor-deals?${params}`, {
           signal: abortController.signal,
+          cache: 'no-store', // City is server-side — URL doesn't change on city switch
         });
         if (!res.ok) throw new Error(`Deals fetch failed: ${res.status}`);
         const data = await res.json();

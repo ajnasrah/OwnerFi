@@ -219,7 +219,10 @@ export async function GET(request: NextRequest) {
       breakdown,
       searchCriteria: { city: searchCity, state: searchState, radiusMiles: profile.filter?.radiusMiles || 30, nearbyCitiesCount: nearbyCities.length },
     });
-    response.headers.set('Cache-Control', 'private, max-age=60, stale-while-revalidate=120');
+    // No browser caching — city is determined server-side from the profile,
+    // so the URL doesn't change when the user switches cities.
+    // Caching would serve stale deals from the old city.
+    response.headers.set('Cache-Control', 'private, no-cache, no-store, must-revalidate');
     return response;
 
   } catch (error) {

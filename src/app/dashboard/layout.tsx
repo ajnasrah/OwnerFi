@@ -6,6 +6,8 @@ import { useSession } from 'next-auth/react';
 import { BottomTabBar } from '@/components/navigation/BottomTabBar';
 import { getBuyerTabs, getInvestorTabs, getRealtorTabs, getAdminTabs } from '@/components/navigation/tab-configs';
 import { ExtendedSession } from '@/types/session';
+import Chatbot from '@/components/ui/Chatbot';
+import FloatingChatbotButton from '@/components/ui/FloatingChatbotButton';
 
 export default function DashboardLayout({
   children,
@@ -17,6 +19,7 @@ export default function DashboardLayout({
   const userRole = (session as unknown as ExtendedSession)?.user?.role;
   const isAdmin = userRole === 'admin';
   const isRealtor = userRole === 'realtor';
+  const [isChatbotOpen, setIsChatbotOpen] = useState(false);
 
   // Determine investor status from profile, not just pathname
   const [isInvestor, setIsInvestor] = useState(pathname.startsWith('/dashboard/investor'));
@@ -49,6 +52,13 @@ export default function DashboardLayout({
       {children}
       {/* Don't render tabs until session is loaded to avoid flashing wrong tabs */}
       {status !== 'loading' && <BottomTabBar tabs={tabs} />}
+
+      {/* Chatbot — available on all dashboard pages, pushed above mobile tab bar */}
+      {isChatbotOpen ? (
+        <Chatbot isOpen={isChatbotOpen} onClose={() => setIsChatbotOpen(false)} bottomClass="bottom-6 md:bottom-6 max-md:bottom-20" />
+      ) : (
+        <FloatingChatbotButton onClick={() => setIsChatbotOpen(true)} bottomClass="bottom-6 md:bottom-6 max-md:bottom-20" />
+      )}
     </>
   );
 }

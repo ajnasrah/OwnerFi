@@ -65,6 +65,15 @@ module.exports = {
         '2xl': '1rem',
         '3xl': '1.5rem',
       },
+      keyframes: {
+        slideUp: {
+          '0%': { opacity: '0', transform: 'translateY(16px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+      },
+      animation: {
+        'slide-up': 'slideUp 0.3s ease-out',
+      },
       zIndex: {
         '0': '0',
         '10': '10',

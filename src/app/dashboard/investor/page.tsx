@@ -240,6 +240,7 @@ export default function InvestorDashboard() {
       // Set initial filter from preference
       if (profileData.dealTypePreference && profileData.dealTypePreference !== 'all') {
         setDealType(profileData.dealTypePreference);
+        setCurrentPage(1);
       }
     } catch {
       setError('Failed to load your profile. Please try refreshing the page.');

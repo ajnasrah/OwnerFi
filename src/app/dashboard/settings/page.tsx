@@ -243,7 +243,7 @@ export default function BuyerSettings() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
                 </svg>
               </div>
-              <span className="text-lg font-bold hidden sm:block">Settings</span>
+              <span className="text-lg font-bold hidden sm:block">Profile</span>
             </Link>
 
             {/* Action Buttons */}

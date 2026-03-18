@@ -217,7 +217,7 @@ export default function RealtorSettings() {
             </div>
             <span className="text-base font-bold text-white">OwnerFi</span>
           </Link>
-          <span className="text-slate-400 text-xs">Settings</span>
+          <span className="text-slate-400 text-xs">Profile</span>
         </div>
       </header>
 

@@ -152,7 +152,7 @@ export default function LikedProperties() {
                 <div className="w-12 h-12 bg-slate-700/50 hover:bg-slate-600/50 rounded-xl flex items-center justify-center transition-colors group-hover:scale-110">
                   <span className="text-slate-300 text-xl">⚙</span>
                 </div>
-                <span className="text-xs font-bold text-slate-400 mt-1">SETTINGS</span>
+                <span className="text-xs font-bold text-slate-400 mt-1">PROFILE</span>
               </Link>
             </div>
 
@@ -353,6 +353,22 @@ export default function LikedProperties() {
                         Property info from listing agent • OwnerFi does not verify • Conduct your own due diligence
                       </p>
                     </div>
+
+                    {/* Chat CTA */}
+                    <button
+                      onClick={() => {
+                        // Dispatch event to open chatbot with property context
+                        window.dispatchEvent(new CustomEvent('openChatbot', {
+                          detail: { message: `I'm interested in the property at ${property.address}, ${property.city}, ${property.state} (listed at $${property.listPrice?.toLocaleString()}). Can you tell me more about it?` }
+                        }));
+                      }}
+                      className="w-full mb-3 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 active:from-emerald-700 active:to-emerald-800 text-white py-3 px-4 rounded-xl transition-all hover:scale-[1.02] active:scale-[0.98] font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                      </svg>
+                      ASK ABOUT THIS PROPERTY
+                    </button>
 
                     <div className="grid grid-cols-3 gap-2">
                       <button

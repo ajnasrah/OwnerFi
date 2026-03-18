@@ -26,7 +26,7 @@ export function getRealtorTabs(): TabItem[] {
   return [
     { key: 'leads', label: 'Leads', href: '/realtor-dashboard/buyers', icon: UsersIcon, matchPaths: ['/realtor-dashboard'] },
     { key: 'deals', label: 'Deals', href: '/dashboard/investor', icon: ChartIcon },
-    { key: 'settings', label: 'Settings', href: '/dashboard/settings', icon: GearIcon },
+    { key: 'settings', label: 'Profile', href: '/dashboard/settings', icon: GearIcon },
   ];
 }
 
@@ -35,7 +35,7 @@ export function getBuyerTabs(opts: { likedCount: number }): TabItem[] {
   return [
     { key: 'browse', label: 'Browse', href: '/dashboard', icon: HomeIcon },
     { key: 'saved', label: 'Saved', href: '/dashboard/liked', icon: HeartIcon, badge: opts.likedCount },
-    { key: 'settings', label: 'Settings', href: '/dashboard/settings', icon: GearIcon },
+    { key: 'settings', label: 'Profile', href: '/dashboard/settings', icon: GearIcon },
   ];
 }
 
@@ -44,6 +44,6 @@ export function getInvestorTabs(opts: { likedCount: number }): TabItem[] {
   return [
     { key: 'deals', label: 'Deals', href: '/dashboard/investor', icon: ChartIcon },
     { key: 'saved', label: 'Saved', href: '/dashboard/liked', icon: HeartIcon, badge: opts.likedCount },
-    { key: 'settings', label: 'Settings', href: '/dashboard/settings', icon: GearIcon },
+    { key: 'settings', label: 'Profile', href: '/dashboard/settings', icon: GearIcon },
   ];
 }

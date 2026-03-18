@@ -296,9 +296,9 @@ export default function RealtorDashboard() {
             <Link
               href="/dashboard/settings"
               className="text-slate-400 hover:text-white transition-colors p-1.5"
-              title="Settings"
+              title="Profile"
             >
-              Settings
+              Profile
             </Link>
             <button
               onClick={() => {

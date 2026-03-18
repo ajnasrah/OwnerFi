@@ -158,18 +158,14 @@ export default function Dashboard() {
 
       setProperties(ownerFinanceProps);
 
-      // Check if tutorial should be shown - ONLY for first time users
+      // Show tutorial for users who haven't completed it yet
       const tutorialCompleted = localStorage.getItem('buyerTutorialCompleted');
-      const isNewAccount = localStorage.getItem('isNewBuyerAccount');
 
-      // Show tutorial ONLY for new accounts that haven't seen it
-      if (propertiesData.properties?.length > 0) {
-        if (isNewAccount === 'true' && !tutorialCompleted) {
-          // First time user who hasn't completed tutorial
-          setShowTutorial(true);
-          localStorage.removeItem('isNewBuyerAccount');
-        }
-        // Once completed, never show automatically again (user can click ? to see it)
+      if (propertiesData.properties?.length > 0 && !tutorialCompleted) {
+        // Show tutorial for any user who hasn't seen it —
+        // not just brand-new accounts (catches users who signed up before tutorial existed)
+        setShowTutorial(true);
+        localStorage.removeItem('isNewBuyerAccount');
       }
     } catch {
       // Error loading properties
@@ -500,7 +496,7 @@ export default function Dashboard() {
               </Link>
               <button
                 onClick={() => setShowTutorial(true)}
-                className="hidden md:flex w-8 h-8 bg-white/10 backdrop-blur-xl hover:bg-white/20 rounded-full items-center justify-center transition-all border border-white/20"
+                className="flex w-8 h-8 bg-white/10 backdrop-blur-xl hover:bg-white/20 active:bg-white/30 rounded-full items-center justify-center transition-all border border-white/20"
                 title="Show Help"
               >
                 <span className="text-sm">❓</span>

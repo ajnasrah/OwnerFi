@@ -161,9 +161,25 @@ export default function AdminHub() {
       </header>
 
       <main className="max-w-5xl mx-auto px-4 py-8 pb-20">
-        <div className="text-center mb-8">
+        <div className="text-center mb-6">
           <h1 className="text-3xl font-bold text-white mb-2">Welcome, {adminName.split(' ')[0]}</h1>
           <p className="text-slate-400">What would you like to do?</p>
+        </div>
+
+        {/* Mobile quick-access — always visible without scrolling */}
+        <div className="flex gap-2 mb-6 md:hidden">
+          <Link
+            href="/dashboard/investor"
+            className="flex-1 flex items-center justify-center gap-2 py-3 bg-amber-500/20 border border-amber-500/40 rounded-xl text-amber-400 font-bold text-sm active:scale-95 transition-all"
+          >
+            <span>📊</span> Investor Dashboard
+          </Link>
+          <Link
+            href="/dashboard"
+            className="flex-1 flex items-center justify-center gap-2 py-3 bg-emerald-500/20 border border-emerald-500/40 rounded-xl text-emerald-400 font-bold text-sm active:scale-95 transition-all"
+          >
+            <span>🏠</span> Buyer Dashboard
+          </Link>
         </div>
 
         {/* Stats */}

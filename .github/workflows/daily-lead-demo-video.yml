@@ -1,0 +1,59 @@
+name: Daily Lead Demo Video
+
+on:
+  schedule:
+    # 8:00 AM CDT = 13:00 UTC (8:00 AM CST = 14:00 UTC during standard time)
+    - cron: '0 13 * * *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run (script preview, no video/post)'
+        required: false
+        default: 'false'
+        type: boolean
+
+jobs:
+  lead-demo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    environment: NEXT_PUBLIC_FIREBASE_API_KEY
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    # Puppeteer needs system libs for headless Chrome
+    - name: Install Puppeteer system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libgbm1 libnss3 libatk-bridge2.0-0 libxcomposite1 libxrandr2 libxdamage1 libcups2 libdrm2 libpango-1.0-0 libcairo2 libasound2t64 || \
+        sudo apt-get install -y libgbm1 libnss3 libatk-bridge2.0-0 libxcomposite1 libxrandr2 libxdamage1 libcups2 libdrm2 libpango-1.0-0 libcairo2 libasound2
+
+    - name: Run lead demo video pipeline
+      run: |
+        DRY_FLAG=""
+        if [ "${{ inputs.dry_run }}" = "true" ]; then DRY_FLAG="--dry-run"; fi
+        npx tsx scripts/realtor-lead-demo-video.ts $DRY_FLAG
+      env:
+        # Cloudflare R2 (screen images)
+        CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+        R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+        R2_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}
+        R2_PUBLIC_URL: ${{ secrets.R2_PUBLIC_URL }}
+        # OpenAI (script generation)
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        # Creatify (video rendering)
+        CREATIFY_API_ID: ${{ secrets.CREATIFY_API_ID }}
+        CREATIFY_API_KEY: ${{ secrets.CREATIFY_API_KEY }}
+        # Late.dev (social media posting)
+        LATE_API_KEY: ${{ secrets.LATE_API_KEY }}
+        LATE_OWNERFI_PROFILE_ID: ${{ secrets.LATE_OWNERFI_PROFILE_ID }}

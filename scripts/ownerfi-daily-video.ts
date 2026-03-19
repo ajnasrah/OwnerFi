@@ -384,7 +384,7 @@ async function postToLate(videoUrl: string, caption: string, title?: string): Pr
   const accounts = Array.isArray(accountsData) ? accountsData : accountsData.accounts || [];
 
   // Map platforms
-  const targetPlatforms = ['instagram', 'tiktok', 'facebook', 'linkedin', 'twitter', 'threads', 'bluesky'];
+  const targetPlatforms = ['instagram', 'tiktok', 'youtube', 'facebook', 'linkedin', 'twitter', 'threads', 'bluesky'];
   const platforms = targetPlatforms.map(platform => {
     const account = accounts.find((a: any) => a.platform.toLowerCase() === platform);
     if (!account) { console.log(`  Skipping ${platform} — no account connected`); return null; }
@@ -392,6 +392,15 @@ async function postToLate(videoUrl: string, caption: string, title?: string): Pr
     if (platform === 'instagram') config.platformSpecificData.contentType = 'reel';
     if (platform === 'tiktok') config.platformSpecificData.privacy = 'public';
     if (platform === 'facebook') config.platformSpecificData.contentType = 'reel';
+    if (platform === 'youtube') {
+      config.platformSpecificData = {
+        title: title || caption.substring(0, 100),
+        category: 'People & Blogs',
+        privacy: 'public',
+        madeForKids: false,
+        short: true,
+      };
+    }
     return config;
   }).filter(Boolean);
 

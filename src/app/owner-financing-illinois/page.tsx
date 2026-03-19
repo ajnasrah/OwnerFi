@@ -33,7 +33,7 @@ function generateLocalBusinessSchema() {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
     "name": "OwnerFi Illinois",
-    "description": "Owner financed properties marketplace in Illinois",
+    "description": "Discover owner financed properties in Illinois",
     "url": "https://ownerfi.ai/owner-financing-illinois",
     "areaServed": {
       "@type": "State",

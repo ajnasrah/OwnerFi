@@ -65,55 +65,40 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if city setup is required
-    const requiresSetup = primaryCityQuery === 'Setup Required';
-    
-    let serviceArea;
-    if (requiresSetup) {
-      // Create placeholder service area that requires setup
-      serviceArea = {
-        primaryCity: {
-          name: 'Setup Required',
-          state: 'Setup Required',
-          stateCode: 'XX',
-          placeId: 'setup-required',
-          coordinates: { lat: 0, lng: 0 },
-          formattedAddress: 'Setup Required'
-        },
-        nearbyCities: [],
-        radiusMiles: 30,
-        totalCitiesServed: 0,
-        lastUpdated: Timestamp.now(),
-        // setupRequired: true
-      };
-    } else {
-      // Parse city manually (for existing functionality)
-      const cityParts = primaryCityQuery.split(',');
-      const cityName = cityParts[0]?.trim() || primaryCityQuery;
-      const statePart = cityParts[1]?.trim();
-      
-      if (!cityName || !statePart) {
-        return NextResponse.json(
-          { error: 'Please provide both city and state in the format: City, State' },
-          { status: 400 }
-        );
-      }
-      
-      serviceArea = {
-        primaryCity: {
-          name: cityName,
-          state: statePart,
-          stateCode: statePart.length === 2 ? statePart : statePart.substring(0, 2).toUpperCase(),
-          placeId: 'manual-' + Date.now(),
-          coordinates: { lat: 0, lng: 0 },
-          formattedAddress: `${cityName}, ${statePart}, USA`
-        },
-        nearbyCities: [],
-        radiusMiles: 30,
-        totalCitiesServed: 1,
-        lastUpdated: Timestamp.now()
-      };
+    // Require a real city — reject placeholder values
+    if (!primaryCityQuery || primaryCityQuery === 'Setup Required') {
+      return NextResponse.json(
+        { error: 'Please select your primary city to complete registration.' },
+        { status: 400 }
+      );
     }
+
+    // Parse city manually
+    const cityParts = primaryCityQuery.split(',');
+    const cityName = cityParts[0]?.trim() || primaryCityQuery;
+    const statePart = cityParts[1]?.trim();
+
+    if (!cityName || !statePart) {
+      return NextResponse.json(
+        { error: 'Please provide both city and state in the format: City, State' },
+        { status: 400 }
+      );
+    }
+
+    const serviceArea = {
+      primaryCity: {
+        name: cityName,
+        state: statePart,
+        stateCode: statePart.length === 2 ? statePart : statePart.substring(0, 2).toUpperCase(),
+        placeId: 'manual-' + Date.now(),
+        coordinates: { lat: 0, lng: 0 },
+        formattedAddress: `${cityName}, ${statePart}, USA`
+      },
+      nearbyCities: [],
+      radiusMiles: 30,
+      totalCitiesServed: 1,
+      lastUpdated: Timestamp.now()
+    };
 
     // Hash password
     const hashedPassword = await hash(password, 12);
@@ -149,7 +134,7 @@ export async function POST(request: NextRequest) {
 
     // Fire webhook to GHL/LeadConnector (fire-and-forget — never block signup)
     const GHL_REALTOR_SIGNUP_WEBHOOK_URL = process.env.GHL_REALTOR_SIGNUP_WEBHOOK_URL;
-    if (GHL_REALTOR_SIGNUP_WEBHOOK_URL && !requiresSetup) {
+    if (GHL_REALTOR_SIGNUP_WEBHOOK_URL) {
       fetch(GHL_REALTOR_SIGNUP_WEBHOOK_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

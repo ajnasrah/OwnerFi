@@ -33,7 +33,7 @@ function generateLocalBusinessSchema() {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
     "name": "OwnerFi Connecticut",
-    "description": "Owner financed properties marketplace in Connecticut",
+    "description": "Discover owner financed properties in Connecticut",
     "url": "https://ownerfi.ai/owner-financing-connecticut",
     "areaServed": {
       "@type": "State",

@@ -33,7 +33,7 @@ function generateLocalBusinessSchema() {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
     "name": "OwnerFi Colorado",
-    "description": "Owner financed properties marketplace in Colorado",
+    "description": "Discover owner financed properties in Colorado",
     "url": "https://ownerfi.ai/owner-financing-colorado",
     "areaServed": {
       "@type": "State",

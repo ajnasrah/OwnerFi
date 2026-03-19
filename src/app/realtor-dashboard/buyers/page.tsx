@@ -49,7 +49,7 @@ export default function RealtorDashboard() {
 
   // Dispute modal state
   const [disputeModal, setDisputeModal] = useState<DisputeModalState>({
-    buyer: null, reason: '', description: '', submitting: false,
+    buyer: null, reason: '', description: '', submitting: false, success: false,
   });
 
   // Referral modal state
@@ -104,7 +104,8 @@ export default function RealtorDashboard() {
       const result = await response.json();
 
       if (result.success) {
-        closeDisputeModal();
+        trackEvent('lead_dispute_submitted', { reason: current.reason });
+        setDisputeModal(prev => ({ ...prev, submitting: false, success: true }));
         queryClient.invalidateQueries({ queryKey: ['realtor-dashboard'] });
       } else {
         alert(result.error || 'Failed to submit dispute');
@@ -294,7 +295,7 @@ export default function RealtorDashboard() {
               </Link>
             )}
             <Link
-              href="/dashboard/settings"
+              href="/realtor-dashboard/settings"
               className="text-slate-400 hover:text-white transition-colors p-1.5"
               title="Profile"
             >
@@ -402,6 +403,7 @@ export default function RealtorDashboard() {
           {activeTab === 'owned' && (
             <OwnedLeadsTab
               ownedBuyers={dashboardData.ownedBuyers}
+              agreements={signedAgreements}
               onOpenDispute={openDisputeModal}
             />
           )}
@@ -417,6 +419,7 @@ export default function RealtorDashboard() {
         modal={agreementActions.modal}
         onUpdateField={agreementActions.updateField}
         onSign={agreementActions.signAgreement}
+        onRetry={agreementActions.retry}
         onClose={agreementActions.close}
       />
 

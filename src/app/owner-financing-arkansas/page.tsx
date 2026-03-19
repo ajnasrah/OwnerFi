@@ -33,7 +33,7 @@ function generateLocalBusinessSchema() {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
     "name": "OwnerFi Arkansas",
-    "description": "Owner financed properties marketplace in Arkansas",
+    "description": "Discover owner financed properties in Arkansas",
     "url": "https://ownerfi.ai/owner-financing-arkansas",
     "areaServed": {
       "@type": "State",

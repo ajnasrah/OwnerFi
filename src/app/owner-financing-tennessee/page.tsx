@@ -33,7 +33,7 @@ function generateLocalBusinessSchema() {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
     "name": "OwnerFi Tennessee",
-    "description": "Owner financed properties marketplace in Tennessee",
+    "description": "Discover owner financed properties in Tennessee",
     "url": "https://ownerfi.ai/owner-financing-tennessee",
     "areaServed": {
       "@type": "State",

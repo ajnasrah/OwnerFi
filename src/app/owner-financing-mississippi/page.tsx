@@ -33,7 +33,7 @@ function generateLocalBusinessSchema() {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
     "name": "OwnerFi Mississippi",
-    "description": "Owner financed properties marketplace in Mississippi",
+    "description": "Discover owner financed properties in Mississippi",
     "url": "https://ownerfi.ai/owner-financing-mississippi",
     "areaServed": {
       "@type": "State",

@@ -33,7 +33,7 @@ function generateLocalBusinessSchema() {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
     "name": "OwnerFi Delaware",
-    "description": "Owner financed properties marketplace in Delaware",
+    "description": "Discover owner financed properties in Delaware",
     "url": "https://ownerfi.ai/owner-financing-delaware",
     "areaServed": {
       "@type": "State",

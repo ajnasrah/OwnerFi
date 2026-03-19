@@ -33,7 +33,7 @@ function generateLocalBusinessSchema() {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
     "name": "OwnerFi Alaska",
-    "description": "Owner financed properties marketplace in Alaska",
+    "description": "Discover owner financed properties in Alaska",
     "url": "https://ownerfi.ai/owner-financing-alaska",
     "areaServed": {
       "@type": "State",

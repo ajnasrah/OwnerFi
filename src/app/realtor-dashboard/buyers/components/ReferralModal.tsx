@@ -91,16 +91,16 @@ export function ReferralModal({
               <h4 className="text-purple-400 font-medium mb-2">Fee Breakdown</h4>
               <div className="space-y-1 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-slate-400">You receive:</span>
+                  <span className="text-slate-400">Agent B pays (of their commission):</span>
+                  <span className="text-purple-400 font-medium">{modal.feePercent}%</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">You receive (70% of referral):</span>
                   <span className="text-white font-medium">{(modal.feePercent * 0.7).toFixed(1)}%</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">OwnerFi fee (30%):</span>
-                  <span className="text-white font-medium">{(modal.feePercent * 0.3).toFixed(1)}%</span>
-                </div>
-                <div className="flex justify-between border-t border-slate-600 pt-1 mt-1">
-                  <span className="text-slate-400">Agent B pays:</span>
-                  <span className="text-purple-400 font-medium">{modal.feePercent}%</span>
+                  <span className="text-slate-400">OwnerFi&apos;s share (30% of referral):</span>
+                  <span className="text-slate-500">{(modal.feePercent * 0.3).toFixed(1)}%</span>
                 </div>
               </div>
             </div>
@@ -235,7 +235,7 @@ export function ReferralModal({
                 </div>
                 <button
                   onClick={onSendText}
-                  disabled={!modal.sharePhone || modal.sharePhone.length < 10}
+                  disabled={!modal.sharePhone || modal.sharePhone.replace(/\D/g, '').length < 10}
                   className="w-full bg-green-500 hover:bg-green-600 text-white py-3 px-4 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Open Messages App

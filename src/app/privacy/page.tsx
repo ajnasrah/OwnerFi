@@ -142,17 +142,17 @@ export default function PrivacyPolicy() {
               <h2 className="text-2xl font-semibold text-primary-text mb-4">2. How We Use Your Information</h2>
 
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                <p className="font-bold text-blue-800 mb-2">🎯 Primary Purpose: Connecting You With Agents</p>
+                <p className="font-bold text-blue-800 mb-2">🎯 Primary Purpose: Referring You to Licensed Agents</p>
                 <p className="text-blue-700">
-                  We use your information primarily to <strong>connect you with licensed real estate agents</strong> who can help you view properties, make offers, and navigate the purchase process.
+                  We use your information primarily to <strong>refer you to licensed real estate agents</strong> in your area who can help you view properties, write offers, and represent you through the purchase process.
                 </p>
               </div>
 
               <p className="mb-3">We use your information to:</p>
               <ul className="list-disc ml-6 space-y-1">
-                <li>connect you with licensed real estate agents</li>
+                <li>refer you to licensed real estate agents in your area</li>
                 <li>allow agents to contact you</li>
-                <li>send property matches</li>
+                <li>show you properties that may offer owner financing</li>
                 <li>provide account services</li>
                 <li>improve the Service</li>
                 <li>maintain security and fraud detection</li>
@@ -431,7 +431,7 @@ export default function PrivacyPolicy() {
                   <p className="mb-3">We use your information to:</p>
                   <ul className="list-disc ml-6 space-y-1 mb-4">
                     <li>Verify your real estate license eligibility</li>
-                    <li>Match you with buyer leads in your service area</li>
+                    <li>Show you buyer leads in your service area</li>
                     <li>Facilitate referral agreement execution</li>
                     <li>Process and track referral fee obligations</li>
                     <li>Provide lead contact information upon agreement signing</li>

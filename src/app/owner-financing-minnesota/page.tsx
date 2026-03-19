@@ -33,7 +33,7 @@ function generateLocalBusinessSchema() {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
     "name": "OwnerFi Minnesota",
-    "description": "Owner financed properties marketplace in Minnesota",
+    "description": "Discover owner financed properties in Minnesota",
     "url": "https://ownerfi.ai/owner-financing-minnesota",
     "areaServed": {
       "@type": "State",

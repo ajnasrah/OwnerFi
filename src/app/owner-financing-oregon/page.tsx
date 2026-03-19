@@ -33,7 +33,7 @@ function generateLocalBusinessSchema() {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
     "name": "OwnerFi Oregon",
-    "description": "Owner financed properties marketplace in Oregon",
+    "description": "Discover owner financed properties in Oregon",
     "url": "https://ownerfi.ai/owner-financing-oregon",
     "areaServed": {
       "@type": "State",

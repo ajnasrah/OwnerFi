@@ -123,14 +123,14 @@ function generateServiceSchema() {
   return {
     "@context": "https://schema.org",
     "@type": "Service",
-    "name": "Owner Finance Property Marketplace",
+    "name": "Owner Finance Property Discovery Platform",
     "provider": {
       "@type": "Organization",
       "name": "OwnerFi"
     },
-    "serviceType": "Real Estate Marketplace",
+    "serviceType": "Real Estate Discovery Platform",
     "areaServed": ["Texas", "Florida", "Georgia"],
-    "description": "Connect buyers with owner financed properties. No bank financing needed.",
+    "description": "Discover owner financed properties across the US. Browse homes, get referred to licensed agents. No bank financing needed.",
     "offers": {
       "@type": "AggregateOffer",
       "priceCurrency": "USD",
@@ -436,9 +436,9 @@ export default async function HomePage() {
                       3
                     </div>
                     <div className="text-4xl mb-4 mt-2">🏡</div>
-                    <h3 className="text-base font-bold text-white mb-2" data-translate="howItWorks.step3Title">Connect & Buy</h3>
+                    <h3 className="text-base font-bold text-white mb-2" data-translate="howItWorks.step3Title">Get Referred & Buy</h3>
                     <p className="text-sm text-slate-300" data-translate="howItWorks.step3Text">
-                      Found your dream home? We connect you directly with sellers. No bank needed.
+                      Found your dream home? We refer you to a licensed agent in your area to represent you. No bank needed.
                     </p>
                   </div>
                 </div>
@@ -472,7 +472,7 @@ export default async function HomePage() {
                     ))}
                   </div>
                   <p className="text-slate-200 mb-4 italic" data-translate="testimonials.testimonial1">
-                    "I was stuck renting for years because of my credit. OwnerFi helped me find a home I could actually buy. Now I'm a homeowner!"
+                    "I was stuck renting for years because of my credit. OwnerFi showed me owner-finance homes I never knew existed. Now I'm a homeowner!"
                   </p>
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-blue-500 rounded-full flex items-center justify-center text-white font-bold">

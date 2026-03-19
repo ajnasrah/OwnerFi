@@ -33,7 +33,7 @@ function generateLocalBusinessSchema() {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
     "name": "OwnerFi Florida",
-    "description": "Owner financed properties marketplace in Florida",
+    "description": "Discover owner financed properties in Florida",
     "url": "https://ownerfi.ai/owner-financing-florida",
     "areaServed": {
       "@type": "State",

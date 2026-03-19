@@ -33,7 +33,7 @@ function generateLocalBusinessSchema() {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
     "name": "OwnerFi Ohio",
-    "description": "Owner financed properties marketplace in Ohio",
+    "description": "Discover owner financed properties in Ohio",
     "url": "https://ownerfi.ai/owner-financing-ohio",
     "areaServed": {
       "@type": "State",

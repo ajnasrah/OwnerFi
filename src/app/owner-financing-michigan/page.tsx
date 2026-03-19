@@ -33,7 +33,7 @@ function generateLocalBusinessSchema() {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
     "name": "OwnerFi Michigan",
-    "description": "Owner financed properties marketplace in Michigan",
+    "description": "Discover owner financed properties in Michigan",
     "url": "https://ownerfi.ai/owner-financing-michigan",
     "areaServed": {
       "@type": "State",

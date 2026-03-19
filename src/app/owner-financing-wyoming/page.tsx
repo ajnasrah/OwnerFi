@@ -33,7 +33,7 @@ function generateLocalBusinessSchema() {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
     "name": "OwnerFi Wyoming",
-    "description": "Owner financed properties marketplace in Wyoming",
+    "description": "Discover owner financed properties in Wyoming",
     "url": "https://ownerfi.ai/owner-financing-wyoming",
     "areaServed": {
       "@type": "State",

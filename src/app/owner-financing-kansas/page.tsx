@@ -33,7 +33,7 @@ function generateLocalBusinessSchema() {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
     "name": "OwnerFi Kansas",
-    "description": "Owner financed properties marketplace in Kansas",
+    "description": "Discover owner financed properties in Kansas",
     "url": "https://ownerfi.ai/owner-financing-kansas",
     "areaServed": {
       "@type": "State",

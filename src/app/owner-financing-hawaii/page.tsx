@@ -33,7 +33,7 @@ function generateLocalBusinessSchema() {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
     "name": "OwnerFi Hawaii",
-    "description": "Owner financed properties marketplace in Hawaii",
+    "description": "Discover owner financed properties in Hawaii",
     "url": "https://ownerfi.ai/owner-financing-hawaii",
     "areaServed": {
       "@type": "State",

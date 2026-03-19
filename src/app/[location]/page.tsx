@@ -242,7 +242,7 @@ function generateLocalBusinessSchema(location: LocationData) {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
     "name": `OwnerFi ${location.displayName}`,
-    "description": `Owner financed properties marketplace in ${location.displayName}`,
+    "description": `Discover owner financed properties in ${location.displayName}`,
     "url": `https://ownerfi.ai/${location.name}`,
     "areaServed": location.type === 'state' ? {
       "@type": "State",

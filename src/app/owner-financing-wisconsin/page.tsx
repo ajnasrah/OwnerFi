@@ -33,7 +33,7 @@ function generateLocalBusinessSchema() {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
     "name": "OwnerFi Wisconsin",
-    "description": "Owner financed properties marketplace in Wisconsin",
+    "description": "Discover owner financed properties in Wisconsin",
     "url": "https://ownerfi.ai/owner-financing-wisconsin",
     "areaServed": {
       "@type": "State",

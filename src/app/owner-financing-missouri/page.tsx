@@ -33,7 +33,7 @@ function generateLocalBusinessSchema() {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
     "name": "OwnerFi Missouri",
-    "description": "Owner financed properties marketplace in Missouri",
+    "description": "Discover owner financed properties in Missouri",
     "url": "https://ownerfi.ai/owner-financing-missouri",
     "areaServed": {
       "@type": "State",

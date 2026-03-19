@@ -33,7 +33,7 @@ function generateLocalBusinessSchema() {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
     "name": "OwnerFi Nebraska",
-    "description": "Owner financed properties marketplace in Nebraska",
+    "description": "Discover owner financed properties in Nebraska",
     "url": "https://ownerfi.ai/owner-financing-nebraska",
     "areaServed": {
       "@type": "State",

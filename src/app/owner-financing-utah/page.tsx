@@ -33,7 +33,7 @@ function generateLocalBusinessSchema() {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
     "name": "OwnerFi Utah",
-    "description": "Owner financed properties marketplace in Utah",
+    "description": "Discover owner financed properties in Utah",
     "url": "https://ownerfi.ai/owner-financing-utah",
     "areaServed": {
       "@type": "State",

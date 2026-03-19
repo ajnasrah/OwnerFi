@@ -33,7 +33,7 @@ function generateLocalBusinessSchema() {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
     "name": "OwnerFi Washington",
-    "description": "Owner financed properties marketplace in Washington",
+    "description": "Discover owner financed properties in Washington",
     "url": "https://ownerfi.ai/owner-financing-washington",
     "areaServed": {
       "@type": "State",

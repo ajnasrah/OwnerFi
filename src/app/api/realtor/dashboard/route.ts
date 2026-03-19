@@ -182,24 +182,24 @@ async function getOwnedBuyers(userId: string): Promise<OwnedBuyer[]> {
       [{ field: 'realtorUserId', operator: '==', value: userId }]
     );
 
-    const ownedBuyers = [];
+    // Fetch all buyer details in parallel instead of sequentially
+    const buyerResults = await Promise.all(
+      purchases.map(async (purchase) => {
+        const buyerData = await FirebaseDB.getDocument('buyerProfiles', (purchase as { buyerId: string; [key: string]: unknown }).buyerId);
+        const buyer = buyerData as {
+          id: string;
+          firstName: string;
+          lastName: string;
+          email: string;
+          phone: string;
+          preferredCity: string;
+          preferredState: string;
+          [key: string]: unknown;
+        } | null;
 
-    for (const purchase of purchases) {
-      // Get buyer details
-      const buyerData = await FirebaseDB.getDocument('buyerProfiles', (purchase as { buyerId: string; [key: string]: unknown }).buyerId);
-      const buyer = buyerData as {
-        id: string;
-        firstName: string;
-        lastName: string;
-        email: string;
-        phone: string;
-        preferredCity: string;
-        preferredState: string;
-        [key: string]: unknown;
-      };
+        if (!buyer) return null;
 
-      if (buyer) {
-        const ownedBuyer = {
+        return {
           id: buyer.id,
           firstName: buyer.firstName,
           lastName: buyer.lastName,
@@ -210,10 +210,10 @@ async function getOwnedBuyers(userId: string): Promise<OwnedBuyer[]> {
           purchasedAt: (purchase as { purchasedAt?: { toDate: () => Date }; [key: string]: unknown }).purchasedAt?.toDate ? (purchase as { purchasedAt: { toDate: () => Date }; [key: string]: unknown }).purchasedAt.toDate().toISOString() : new Date().toISOString(),
           status: (purchase as { status?: string; [key: string]: unknown }).status || 'purchased'
         };
+      })
+    );
 
-        ownedBuyers.push(ownedBuyer);
-      }
-    }
+    const ownedBuyers = buyerResults.filter((b): b is NonNullable<typeof b> => b !== null);
 
     // Sort by purchase date (most recent first)
     ownedBuyers.sort((a, b) => new Date(b.purchasedAt).getTime() - new Date(a.purchasedAt).getTime());
@@ -221,6 +221,7 @@ async function getOwnedBuyers(userId: string): Promise<OwnedBuyer[]> {
     return ownedBuyers;
 
   } catch (error) {
+    console.error('[realtor-dashboard] Failed to load owned buyers:', error);
     return [];
   }
 }
@@ -264,6 +265,7 @@ async function getTransactionHistory(userId: string): Promise<Transaction[]> {
     }));
 
   } catch (error) {
+    console.error('[realtor-dashboard] Failed to load transaction history:', error);
     return [];
   }
 }

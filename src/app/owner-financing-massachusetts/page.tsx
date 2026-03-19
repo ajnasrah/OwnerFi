@@ -33,7 +33,7 @@ function generateLocalBusinessSchema() {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
     "name": "OwnerFi Massachusetts",
-    "description": "Owner financed properties marketplace in Massachusetts",
+    "description": "Discover owner financed properties in Massachusetts",
     "url": "https://ownerfi.ai/owner-financing-massachusetts",
     "areaServed": {
       "@type": "State",

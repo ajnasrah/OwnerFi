@@ -33,7 +33,7 @@ function generateLocalBusinessSchema() {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
     "name": "OwnerFi South Dakota",
-    "description": "Owner financed properties marketplace in South Dakota",
+    "description": "Discover owner financed properties in South Dakota",
     "url": "https://ownerfi.ai/owner-financing-south-dakota",
     "areaServed": {
       "@type": "State",

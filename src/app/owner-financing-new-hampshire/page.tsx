@@ -33,7 +33,7 @@ function generateLocalBusinessSchema() {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
     "name": "OwnerFi New Hampshire",
-    "description": "Owner financed properties marketplace in New Hampshire",
+    "description": "Discover owner financed properties in New Hampshire",
     "url": "https://ownerfi.ai/owner-financing-new-hampshire",
     "areaServed": {
       "@type": "State",

@@ -176,6 +176,20 @@ export function useAgreementActions() {
     }
   }, [queryClient]);
 
+  const retry = useCallback(() => {
+    const current = modalRef.current;
+    if (current.leadId && current.buyerName) {
+      acceptLead(current.leadId, current.buyerName);
+    } else if (current.agreementId) {
+      openPendingAgreement({
+        id: current.agreementId,
+        agreementNumber: current.agreementNumber || '',
+        referralFeePercent: current.terms?.referralFeePercent || 30,
+        expirationDate: current.terms?.expirationDate || '',
+      });
+    }
+  }, [acceptLead, openPendingAgreement]);
+
   const close = useCallback(() => setModal(INITIAL_STATE), []);
 
   const updateField = useCallback(
@@ -184,5 +198,5 @@ export function useAgreementActions() {
     []
   );
 
-  return { modal, setModal, acceptLead, openPendingAgreement, signAgreement, close, updateField };
+  return { modal, setModal, acceptLead, openPendingAgreement, signAgreement, retry, close, updateField };
 }

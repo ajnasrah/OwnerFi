@@ -33,7 +33,7 @@ function generateLocalBusinessSchema() {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
     "name": "OwnerFi South Carolina",
-    "description": "Owner financed properties marketplace in South Carolina",
+    "description": "Discover owner financed properties in South Carolina",
     "url": "https://ownerfi.ai/owner-financing-south-carolina",
     "areaServed": {
       "@type": "State",

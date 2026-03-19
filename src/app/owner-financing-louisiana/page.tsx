@@ -33,7 +33,7 @@ function generateLocalBusinessSchema() {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
     "name": "OwnerFi Louisiana",
-    "description": "Owner financed properties marketplace in Louisiana",
+    "description": "Discover owner financed properties in Louisiana",
     "url": "https://ownerfi.ai/owner-financing-louisiana",
     "areaServed": {
       "@type": "State",

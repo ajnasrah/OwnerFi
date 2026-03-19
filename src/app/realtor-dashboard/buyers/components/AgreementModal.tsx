@@ -6,10 +6,11 @@ interface AgreementModalProps {
   modal: AgreementModalState;
   onUpdateField: (updates: Partial<AgreementModalState>) => void;
   onSign: () => void;
+  onRetry: () => void;
   onClose: () => void;
 }
 
-export function AgreementModal({ modal, onUpdateField, onSign, onClose }: AgreementModalProps) {
+export function AgreementModal({ modal, onUpdateField, onSign, onRetry, onClose }: AgreementModalProps) {
   if (!modal.isOpen) return null;
 
   return (
@@ -46,7 +47,15 @@ export function AgreementModal({ modal, onUpdateField, onSign, onClose }: Agreem
           {/* Error State */}
           {modal.error && (
             <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-4 mb-4">
-              <p className="text-red-400">{modal.error}</p>
+              <p className="text-red-400 mb-3">{modal.error}</p>
+              {!modal.agreementHTML && (
+                <button
+                  onClick={onRetry}
+                  className="bg-red-500/30 hover:bg-red-500/40 text-red-300 py-2 px-4 rounded-lg text-sm font-medium transition-colors"
+                >
+                  Try Again
+                </button>
+              )}
             </div>
           )}
 
@@ -188,7 +197,7 @@ export function AgreementModal({ modal, onUpdateField, onSign, onClose }: Agreem
 
                 <div className="flex gap-2 mt-6">
                   <a
-                    href={`sms:${modal.buyerDetails.phone}?body=${encodeURIComponent("Hi, I see you're interested in owner finance properties through OwnerFi. I'd love to help you find your perfect home!")}`}
+                    href={`sms:${modal.buyerDetails.phone}?body=${encodeURIComponent("Hi, I see you're interested in owner finance properties through OwnerFi. I'd love to help you with your home search and represent you!")}`}
                     className="flex-1 bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg font-medium transition-colors text-center"
                   >
                     Text Now

@@ -33,7 +33,7 @@ function generateLocalBusinessSchema() {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
     "name": "OwnerFi Kentucky",
-    "description": "Owner financed properties marketplace in Kentucky",
+    "description": "Discover owner financed properties in Kentucky",
     "url": "https://ownerfi.ai/owner-financing-kentucky",
     "areaServed": {
       "@type": "State",

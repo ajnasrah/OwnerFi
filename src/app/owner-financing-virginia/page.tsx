@@ -33,7 +33,7 @@ function generateLocalBusinessSchema() {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
     "name": "OwnerFi Virginia",
-    "description": "Owner financed properties marketplace in Virginia",
+    "description": "Discover owner financed properties in Virginia",
     "url": "https://ownerfi.ai/owner-financing-virginia",
     "areaServed": {
       "@type": "State",

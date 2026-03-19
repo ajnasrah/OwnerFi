@@ -33,7 +33,7 @@ function generateLocalBusinessSchema() {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
     "name": "OwnerFi New Jersey",
-    "description": "Owner financed properties marketplace in New Jersey",
+    "description": "Discover owner financed properties in New Jersey",
     "url": "https://ownerfi.ai/owner-financing-new-jersey",
     "areaServed": {
       "@type": "State",

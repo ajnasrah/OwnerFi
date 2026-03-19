@@ -44,15 +44,15 @@ export const translations = {
       step1Text: "Tell us your max monthly payment and down payment. We'll only show homes you can afford.",
       step2Title: "Swipe Through Homes",
       step2Text: "Swipe right on homes you love, left on ones you don't. Just like your favorite dating app!",
-      step3Title: "Connect & Buy",
-      step3Text: "Found your dream home? We connect you directly with sellers. No bank needed.",
+      step3Title: "Get Referred & Buy",
+      step3Text: "Found your dream home? We refer you to a licensed buying agent in your area to write an offer and represent you. No bank needed.",
     },
 
     // Testimonials Section
     testimonials: {
       title: "Real People, Real Homes",
       subtitle: "Join thousands who found their dream home",
-      testimonial1: "I was stuck renting for years because of my credit. OwnerFi helped me find a home I could actually buy. Now I'm a homeowner!",
+      testimonial1: "I was stuck renting for years because of my credit. OwnerFi showed me owner-finance homes I never knew existed. Now I'm a homeowner!",
       name1: "Sarah M.",
       location1: "Houston, TX",
       testimonial2: "The app is so easy to use. Swiping through houses felt natural and fun. Found my home in just 2 weeks!",

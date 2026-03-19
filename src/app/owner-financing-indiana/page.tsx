@@ -33,7 +33,7 @@ function generateLocalBusinessSchema() {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
     "name": "OwnerFi Indiana",
-    "description": "Owner financed properties marketplace in Indiana",
+    "description": "Discover owner financed properties in Indiana",
     "url": "https://ownerfi.ai/owner-financing-indiana",
     "areaServed": {
       "@type": "State",

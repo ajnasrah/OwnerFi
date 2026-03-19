@@ -132,7 +132,7 @@ export default function RealtorDashboardHub() {
 
           {/* Profile */}
           <Link
-            href="/dashboard/settings"
+            href="/realtor-dashboard/settings"
             className="group bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-8 hover:border-purple-500/50 transition-all duration-300 hover:shadow-xl hover:shadow-purple-500/10 hover:scale-[1.02]"
           >
             <div className="text-center">
@@ -143,7 +143,7 @@ export default function RealtorDashboardHub() {
                 Profile
               </h2>
               <p className="text-slate-300 mb-4">
-                Manage your search preferences and property filters
+                Manage your service area and city preferences
               </p>
               <div className="inline-flex items-center gap-2 text-purple-400 font-semibold">
                 <span>View Profile</span>

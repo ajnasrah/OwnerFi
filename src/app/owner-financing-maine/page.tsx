@@ -33,7 +33,7 @@ function generateLocalBusinessSchema() {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
     "name": "OwnerFi Maine",
-    "description": "Owner financed properties marketplace in Maine",
+    "description": "Discover owner financed properties in Maine",
     "url": "https://ownerfi.ai/owner-financing-maine",
     "areaServed": {
       "@type": "State",

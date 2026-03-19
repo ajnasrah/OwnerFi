@@ -33,7 +33,7 @@ function generateLocalBusinessSchema() {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
     "name": "OwnerFi Montana",
-    "description": "Owner financed properties marketplace in Montana",
+    "description": "Discover owner financed properties in Montana",
     "url": "https://ownerfi.ai/owner-financing-montana",
     "areaServed": {
       "@type": "State",

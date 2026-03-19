@@ -70,12 +70,12 @@ function generateServiceSchema() {
   return {
     "@context": "https://schema.org",
     "@type": "Service",
-    "name": "Rent to Own Home Marketplace",
+    "name": "Rent to Own Home Discovery Platform",
     "provider": {
       "@type": "Organization",
       "name": "OwnerFi"
     },
-    "serviceType": "Real Estate Marketplace",
+    "serviceType": "Real Estate Discovery Platform",
     "areaServed": "United States",
     "description": "Find rent to own and owner financed homes without bank financing",
     "offers": {

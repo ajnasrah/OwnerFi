@@ -33,7 +33,7 @@ function generateLocalBusinessSchema() {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
     "name": "OwnerFi Rhode Island",
-    "description": "Owner financed properties marketplace in Rhode Island",
+    "description": "Discover owner financed properties in Rhode Island",
     "url": "https://ownerfi.ai/owner-financing-rhode-island",
     "areaServed": {
       "@type": "State",

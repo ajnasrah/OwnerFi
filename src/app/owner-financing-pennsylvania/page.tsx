@@ -33,7 +33,7 @@ function generateLocalBusinessSchema() {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
     "name": "OwnerFi Pennsylvania",
-    "description": "Owner financed properties marketplace in Pennsylvania",
+    "description": "Discover owner financed properties in Pennsylvania",
     "url": "https://ownerfi.ai/owner-financing-pennsylvania",
     "areaServed": {
       "@type": "State",

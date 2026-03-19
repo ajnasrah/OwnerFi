@@ -33,7 +33,7 @@ function generateLocalBusinessSchema() {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
     "name": "OwnerFi Maryland",
-    "description": "Owner financed properties marketplace in Maryland",
+    "description": "Discover owner financed properties in Maryland",
     "url": "https://ownerfi.ai/owner-financing-maryland",
     "areaServed": {
       "@type": "State",

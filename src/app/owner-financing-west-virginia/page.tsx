@@ -33,7 +33,7 @@ function generateLocalBusinessSchema() {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
     "name": "OwnerFi West Virginia",
-    "description": "Owner financed properties marketplace in West Virginia",
+    "description": "Discover owner financed properties in West Virginia",
     "url": "https://ownerfi.ai/owner-financing-west-virginia",
     "areaServed": {
       "@type": "State",

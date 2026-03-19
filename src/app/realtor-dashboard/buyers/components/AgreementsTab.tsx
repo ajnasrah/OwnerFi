@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { Agreement } from '../types';
 
 interface AgreementsTabProps {
@@ -10,6 +11,22 @@ interface AgreementsTabProps {
   onOpenReferralModal: (agreement: Agreement) => void;
 }
 
+async function openAgreementInNewTab(agreementId: string) {
+  const res = await fetch(`/api/realtor/agreements?id=${agreementId}`);
+  const data = await res.json();
+  if (!data.success || !data.agreementHTML) {
+    alert('Failed to load agreement. Please try again.');
+    return;
+  }
+  const win = window.open('', '_blank');
+  if (!win) {
+    alert('Please allow pop-ups to view the agreement.');
+    return;
+  }
+  win.document.write(`<!DOCTYPE html><html><head><title>Referral Agreement</title><style>body{font-family:Arial,sans-serif;max-width:800px;margin:0 auto;padding:20px}@media print{button{display:none!important}}</style></head><body>${data.agreementHTML}<div style="text-align:center;margin-top:24px"><button onclick="window.print()" style="padding:10px 24px;font-size:16px;cursor:pointer;background:#10b981;color:white;border:none;border-radius:8px">Print / Save as PDF</button></div></body></html>`);
+  win.document.close();
+}
+
 export function AgreementsTab({
   agreements,
   pendingAgreements,
@@ -17,6 +34,7 @@ export function AgreementsTab({
   onCompletePendingSignature,
   onOpenReferralModal,
 }: AgreementsTabProps) {
+  const [loadingId, setLoadingId] = useState<string | null>(null);
   if (agreements.length === 0) {
     return (
       <div className="text-center py-16">
@@ -108,6 +126,18 @@ export function AgreementsTab({
                     )}
                   </div>
                 )}
+                {/* View Agreement button */}
+                <button
+                  onClick={async () => {
+                    setLoadingId(agreement.id);
+                    await openAgreementInNewTab(agreement.id);
+                    setLoadingId(null);
+                  }}
+                  disabled={loadingId === agreement.id}
+                  className="w-full mt-2 bg-slate-700 hover:bg-slate-600 text-slate-300 py-2 px-3 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+                >
+                  {loadingId === agreement.id ? 'Loading...' : 'View Agreement'}
+                </button>
                 {/* Refer button */}
                 {!agreement.isReReferral && agreement.canBeReReferred !== false && (
                   <button

@@ -33,7 +33,7 @@ function generateLocalBusinessSchema() {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
     "name": "OwnerFi Nevada",
-    "description": "Owner financed properties marketplace in Nevada",
+    "description": "Discover owner financed properties in Nevada",
     "url": "https://ownerfi.ai/owner-financing-nevada",
     "areaServed": {
       "@type": "State",

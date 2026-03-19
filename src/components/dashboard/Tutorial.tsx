@@ -12,7 +12,7 @@ const tutorialSteps = [
   {
     title: "Welcome to OwnerFi",
     subtitle: "Home buying, simplified.",
-    content: "We find homes you can buy directly from the owner — no bank approval, no mortgage hassle. Just flexible payments between you and the seller.",
+    content: "We show you homes that may offer owner financing — no bank approval, no mortgage hassle. When you find one you like, we refer you to a licensed buying agent in your area.",
     visual: (
       <div className="flex items-center justify-center gap-2 sm:gap-3 my-4">
         <div className="flex flex-col items-center">
@@ -95,7 +95,7 @@ const tutorialSteps = [
             <div className="w-1.5 h-1.5 bg-green-300 rounded-full animate-pulse"></div>
           </div>
           <p className="text-white text-sm leading-snug">
-            Hi! I can help you find homes, explain owner financing, or answer any questions.
+            Hi! I can help you browse homes, explain owner financing, or answer any questions.
           </p>
           <div className="absolute -bottom-1.5 left-8 w-3 h-3 bg-emerald-600 transform rotate-45"></div>
         </div>

@@ -154,11 +154,11 @@ export default function AboutPage() {
                 <span className="text-blue-400 text-xl">🤝</span>
               </div>
               <div>
-                <h3 className="text-xl font-semibold text-white mb-3">Direct Connections</h3>
+                <h3 className="text-xl font-semibold text-white mb-3">No Bank Required</h3>
                 <p className="text-slate-300 leading-relaxed">
-                  By connecting buyers directly with property owners, we eliminate the bureaucracy and 
-                  inflexibility of traditional lending. This creates opportunities for creative financing 
-                  solutions that work for both parties.
+                  Owner financing eliminates the bureaucracy and inflexibility of traditional lending.
+                  We show buyers properties where creative financing may be possible, and refer them to
+                  licensed buying agents in their area to represent them through the process.
                 </p>
               </div>
             </div>
@@ -168,10 +168,10 @@ export default function AboutPage() {
                 <span className="text-purple-400 text-xl">⚡</span>
               </div>
               <div>
-                <h3 className="text-xl font-semibold text-white mb-3">Technology-Powered Matching</h3>
+                <h3 className="text-xl font-semibold text-white mb-3">Technology-Powered Discovery</h3>
                 <p className="text-slate-300 leading-relaxed">
-                  Our platform uses advanced algorithms to match buyers with properties based on their specific 
-                  needs and circumstances, not just their credit score. We find the right opportunities for the right people.
+                  Our platform uses data and technology to show buyers owner-finance properties based on their budget
+                  and preferences. When they find one they like, we refer them to a licensed buying agent in their area to write an offer.
                 </p>
               </div>
             </div>

@@ -33,7 +33,7 @@ function generateLocalBusinessSchema() {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
     "name": "OwnerFi North Dakota",
-    "description": "Owner financed properties marketplace in North Dakota",
+    "description": "Discover owner financed properties in North Dakota",
     "url": "https://ownerfi.ai/owner-financing-north-dakota",
     "areaServed": {
       "@type": "State",

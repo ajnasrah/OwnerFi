@@ -594,7 +594,7 @@ export default function CollapsibleFAQ() {
 
         <div className="bg-yellow-100 border border-yellow-300 rounded-lg p-3 mt-4">
           <p className="text-yellow-800 text-xs leading-relaxed">
-            <strong>Plain English:</strong> OwnerFi is just a website that shows property information we found and connects you with real estate agents. We're just letting you know what possible owner finance deals are out there - we don't guarantee these houses are still available or that sellers will actually offer owner financing. We don't guarantee anything is accurate. We're not your broker, lawyer, or lender. If something goes wrong with a property deal, that's between you and the people you're actually working with - not us. You're responsible for checking everything yourself and getting professional help.
+            <strong>Plain English:</strong> OwnerFi is just a website that shows property information we found and refers you to licensed buying agents in your area. We're just letting you know what possible owner finance deals are out there - we don't guarantee these houses are still available or that sellers will actually offer owner financing. We don't guarantee anything is accurate. We're not your broker, lawyer, or lender. If something goes wrong with a property deal, that's between you and the people you're actually working with - not us. You're responsible for checking everything yourself and getting professional help.
           </p>
         </div>
       </div>

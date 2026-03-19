@@ -33,7 +33,7 @@ function generateLocalBusinessSchema() {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
     "name": "OwnerFi Oklahoma",
-    "description": "Owner financed properties marketplace in Oklahoma",
+    "description": "Discover owner financed properties in Oklahoma",
     "url": "https://ownerfi.ai/owner-financing-oklahoma",
     "areaServed": {
       "@type": "State",

@@ -33,7 +33,7 @@ function generateLocalBusinessSchema() {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
     "name": "OwnerFi Vermont",
-    "description": "Owner financed properties marketplace in Vermont",
+    "description": "Discover owner financed properties in Vermont",
     "url": "https://ownerfi.ai/owner-financing-vermont",
     "areaServed": {
       "@type": "State",

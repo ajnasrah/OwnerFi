@@ -33,7 +33,7 @@ function generateLocalBusinessSchema() {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
     "name": "OwnerFi Idaho",
-    "description": "Owner financed properties marketplace in Idaho",
+    "description": "Discover owner financed properties in Idaho",
     "url": "https://ownerfi.ai/owner-financing-idaho",
     "areaServed": {
       "@type": "State",

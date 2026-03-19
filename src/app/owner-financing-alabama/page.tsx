@@ -33,7 +33,7 @@ function generateLocalBusinessSchema() {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
     "name": "OwnerFi Alabama",
-    "description": "Owner financed properties marketplace in Alabama",
+    "description": "Discover owner financed properties in Alabama",
     "url": "https://ownerfi.ai/owner-financing-alabama",
     "areaServed": {
       "@type": "State",

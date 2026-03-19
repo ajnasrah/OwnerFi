@@ -33,7 +33,7 @@ function generateLocalBusinessSchema() {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
     "name": "OwnerFi New Mexico",
-    "description": "Owner financed properties marketplace in New Mexico",
+    "description": "Discover owner financed properties in New Mexico",
     "url": "https://ownerfi.ai/owner-financing-new-mexico",
     "areaServed": {
       "@type": "State",

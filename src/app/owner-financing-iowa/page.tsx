@@ -33,7 +33,7 @@ function generateLocalBusinessSchema() {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
     "name": "OwnerFi Iowa",
-    "description": "Owner financed properties marketplace in Iowa",
+    "description": "Discover owner financed properties in Iowa",
     "url": "https://ownerfi.ai/owner-financing-iowa",
     "areaServed": {
       "@type": "State",

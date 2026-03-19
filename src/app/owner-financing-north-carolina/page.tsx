@@ -33,7 +33,7 @@ function generateLocalBusinessSchema() {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
     "name": "OwnerFi North Carolina",
-    "description": "Owner financed properties marketplace in North Carolina",
+    "description": "Discover owner financed properties in North Carolina",
     "url": "https://ownerfi.ai/owner-financing-north-carolina",
     "areaServed": {
       "@type": "State",

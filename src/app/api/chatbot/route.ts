@@ -209,35 +209,37 @@ const SEARCH_TOOL: OpenAI.Chat.Completions.ChatCompletionTool = {
 // Execute property search via Typesense
 async function executeLeadSearch(args: Record<string, unknown>): Promise<string> {
   try {
-    const { getTypesenseSearchClient, TYPESENSE_COLLECTIONS } = await import('@/lib/typesense/client');
-    const client = getTypesenseSearchClient();
-    if (!client) return JSON.stringify({ error: 'Lead search unavailable', found: 0, leads: [] });
+    const { ConsolidatedLeadSystem } = await import('@/lib/consolidated-lead-system');
 
-    const filters: string[] = ['isAvailableForPurchase:=true'];
-    if (args.city) {
-      const city = String(args.city).split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
-      filters.push(`preferredCity:=${city}`);
-    }
-    if (args.state) filters.push(`preferredState:=${String(args.state).toUpperCase()}`);
+    const city = args.city ? String(args.city).split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ') : '';
+    const state = args.state ? String(args.state).toUpperCase() : '';
 
-    const result = await client
-      .collections(TYPESENSE_COLLECTIONS.BUYER_LEADS)
-      .documents()
-      .search({
-        q: '*',
-        query_by: 'preferredCity,preferredState',
-        filter_by: filters.join(' && '),
-        sort_by: 'createdAt:desc',
-        page: 1,
-        per_page: 10
-      });
+    const realtorProfile = {
+      cities: city ? [city] : [],
+      languages: ['English'],
+      state: state || 'Unknown',
+    };
+
+    const leads = await ConsolidatedLeadSystem.findAvailableLeads(realtorProfile, 50);
+
+    // Filter by city if specified
+    const filtered = city
+      ? leads.filter((l: { city?: string; preferredCity?: string }) =>
+          (l.city || l.preferredCity || '').toLowerCase() === city.toLowerCase()
+        )
+      : leads;
+
+    const count = filtered.length;
+    const totalInState = leads.length;
 
     return JSON.stringify({
-      found: result.found || 0,
-      leads: (result.hits || []).length,
-      message: result.found && result.found > 0
-        ? `There are ${result.found} available buyer lead(s) in this area. The realtor can view and accept them at /realtor-dashboard/buyers.`
-        : 'No available buyer leads in this area right now. New leads are added regularly — check back soon or adjust your service area in Settings.'
+      found: count,
+      totalInState,
+      message: count > 0
+        ? `There are ${count} available buyer lead(s) in ${city || 'this area'}${totalInState > count ? ` (${totalInState} total in ${state || 'the state'})` : ''}. View and accept them at /realtor-dashboard/buyers.`
+        : totalInState > 0
+          ? `No leads specifically in ${city} right now, but there are ${totalInState} available leads in ${state || 'your state'}. Check /realtor-dashboard/buyers to see all available leads.`
+          : 'No available buyer leads in this area right now. New leads are added regularly — check back soon or adjust your service area in Settings.'
     });
   } catch (error) {
     console.error('[chatbot] Lead search error:', error);

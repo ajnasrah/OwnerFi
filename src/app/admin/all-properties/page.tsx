@@ -72,9 +72,21 @@ export default function AllPropertiesPage() {
 
       const res = await fetch(`/api/search/properties?${params}`);
       if (res.ok) {
-        const data = await res.json();
+        const json = await res.json();
+        // API wraps response in { success, data: { properties, total, ... } }
+        const data = json.data || json;
+        // Normalize Typesense field names to our Property interface
+        const normalized = (data.properties || []).map((p: any) => ({
+          ...p,
+          imgSrc: p.imgSrc || p.primaryImage || '',
+          sqft: p.sqft || p.squareFeet || 0,
+          beds: p.beds || p.bedrooms || 0,
+          baths: p.baths || p.bathrooms || 0,
+          dealTypes: p.dealTypes || (p.dealType ? [p.dealType] : []),
+          daysOnMarket: p.daysOnMarket || p.daysOnZillow || 0,
+        }));
         setResults({
-          properties: data.properties || [],
+          properties: normalized,
           total: data.total || 0,
           page: data.page || searchPage,
           totalPages: data.totalPages || 0,

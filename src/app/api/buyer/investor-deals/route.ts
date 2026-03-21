@@ -158,19 +158,21 @@ export async function GET(request: NextRequest) {
         isLiked: likedPropertyIds.has(deal.id),
       }));
 
-    // Apply client-requested filters (needed for Firestore fallback path;
-    // Typesense path pushes these into the query for accuracy)
+    // Apply client-requested filters
+    // Price and land filters are pushed to Typesense query, but needed for Firestore fallback
     if (typesenseError) {
       if (minPrice !== undefined) allDeals = allDeals.filter(d => d.price >= minPrice);
       if (maxPrice !== undefined) allDeals = allDeals.filter(d => d.price <= maxPrice);
-      if (maxArvPercent !== undefined) {
-        allDeals = allDeals.filter(d =>
-          d.percentOfArv !== null && d.percentOfArv !== undefined && d.percentOfArv <= maxArvPercent
-        );
-      }
       if (excludeLand) {
         allDeals = allDeals.filter(d => !d.isLand);
       }
+    }
+    // ARV filter always applied client-side (percentOfArv is optional in Typesense,
+    // filtering at query level would exclude properties missing the field entirely)
+    if (maxArvPercent !== undefined) {
+      allDeals = allDeals.filter(d =>
+        d.percentOfArv !== null && d.percentOfArv !== undefined && d.percentOfArv <= maxArvPercent
+      );
     }
 
     // Count by deal type in single pass (before sorting/pagination)
@@ -276,8 +278,10 @@ async function searchTypesense(
   ];
 
   // Push filters into Typesense query for accurate results and pagination
+  // NOTE: For optional boolean fields, use !=true instead of =false
+  // because =false excludes documents where the field is missing/null
   if (extraFilters?.excludeLand) {
-    filters.push('isLand:=false');
+    filters.push('isLand:!=true');
   }
   if (extraFilters?.minPrice !== undefined) {
     filters.push(`listPrice:>=${extraFilters.minPrice}`);
@@ -285,9 +289,10 @@ async function searchTypesense(
   if (extraFilters?.maxPrice !== undefined) {
     filters.push(`listPrice:<=${extraFilters.maxPrice}`);
   }
-  if (extraFilters?.maxArvPercent !== undefined) {
-    filters.push(`percentOfArv:<=${extraFilters.maxArvPercent}`);
-  }
+  // NOTE: percentOfArv is optional — only filter when user explicitly selects <80% Zest.
+  // Properties without percentOfArv will be excluded, which is correct behavior
+  // (no ARV data = can't confirm it's a deal). Keep as client-side post-filter
+  // to avoid dropping properties that have ARV in Firestore but not yet in Typesense.
 
   if (!client) throw new Error('Typesense client is null');
 

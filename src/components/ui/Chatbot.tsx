@@ -449,8 +449,8 @@ export default function Chatbot({ isOpen, onClose, bottomClass, initialMessage }
         {/* Header */}
         <div className="bg-gradient-to-r from-[#00BC7D] to-[#009B66] px-4 py-3 flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-white/10 rounded-full flex items-center justify-center flex-shrink-0">
-              <svg width="22" height="22" viewBox="0 0 100 100" fill="none"><defs><linearGradient id="cg" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse"><stop offset="0%" stopColor="#fff"/><stop offset="100%" stopColor="#fff"/></linearGradient></defs><circle cx="50" cy="50" r="45" stroke="url(#cg)" strokeWidth="7" fill="none"/><ellipse cx="50" cy="50" rx="42" ry="22" stroke="url(#cg)" strokeWidth="5.5" fill="none" transform="rotate(-25 50 50)"/><ellipse cx="50" cy="50" rx="22" ry="42" stroke="url(#cg)" strokeWidth="5.5" fill="none" transform="rotate(-25 50 50)"/></svg>
+            <div className="w-9 h-9 bg-white rounded-full flex items-center justify-center flex-shrink-0 shadow-sm">
+              <svg width="20" height="20" viewBox="0 0 100 100" fill="none"><defs><linearGradient id="cg" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse"><stop offset="0%" stopColor="#00BC7D"/><stop offset="100%" stopColor="#3B82F6"/></linearGradient></defs><circle cx="50" cy="50" r="45" stroke="url(#cg)" strokeWidth="8" fill="none"/><ellipse cx="50" cy="50" rx="42" ry="22" stroke="url(#cg)" strokeWidth="6.5" fill="none" transform="rotate(-25 50 50)"/><ellipse cx="50" cy="50" rx="22" ry="42" stroke="url(#cg)" strokeWidth="6.5" fill="none" transform="rotate(-25 50 50)"/></svg>
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2">

@@ -98,9 +98,7 @@ export default function FloatingChatbotButton({ onClick, bottomClass }: Floating
         }`}
       >
         <div className={`absolute inset-0 rounded-full bg-[#00BC7D]/30 animate-ping ${isAnimating ? 'opacity-100' : 'opacity-0'}`}></div>
-        <svg className="w-6 h-6 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-        </svg>
+        <svg width="26" height="26" viewBox="0 0 100 100" fill="none" className="relative z-10"><circle cx="50" cy="50" r="45" stroke="#fff" strokeWidth="8" fill="none"/><ellipse cx="50" cy="50" rx="42" ry="22" stroke="#fff" strokeWidth="6.5" fill="none" transform="rotate(-25 50 50)"/><ellipse cx="50" cy="50" rx="22" ry="42" stroke="#fff" strokeWidth="6.5" fill="none" transform="rotate(-25 50 50)"/></svg>
         <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
           <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
         </div>

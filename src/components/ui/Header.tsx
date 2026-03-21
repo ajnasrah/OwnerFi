@@ -19,9 +19,9 @@ export function Header({ className = '' }: HeaderProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2.5 group">
-            <OwnerfiLogo size={34} />
-            <span className="text-xl font-bold text-white tracking-tight group-hover:text-[#00BC7D] transition-colors duration-200">
+          <Link href="/" className="flex items-center gap-3 group">
+            <OwnerfiLogo size={40} />
+            <span className="text-2xl font-bold text-white tracking-tight group-hover:text-[#00BC7D] transition-colors duration-200">
               Ownerfi
             </span>
           </Link>

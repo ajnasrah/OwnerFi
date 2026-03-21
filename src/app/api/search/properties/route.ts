@@ -169,11 +169,17 @@ async function searchWithTypesense(params: SearchParams) {
     })
     .map(hit => hit.document);
 
+  // Use Typesense's found count for accurate pagination
+  // Subtract filtered-out properties for a closer estimate
+  const typesenseTotal = result.found ?? filteredProperties.length;
+  const filteredOutCount = (result.hits || []).length - filteredProperties.length;
+  const estimatedTotal = Math.max(0, typesenseTotal - filteredOutCount);
+
   return {
     properties: filteredProperties,
-    total: filteredProperties.length,
+    total: estimatedTotal,
     page: params.page || 1,
-    totalPages: Math.ceil(filteredProperties.length / (params.limit || 20)),
+    totalPages: Math.ceil(estimatedTotal / (params.limit || 20)),
     facets: result.facet_counts?.reduce((acc, facet) => {
       acc[facet.field_name] = facet.counts.map(c => ({
         value: c.value,

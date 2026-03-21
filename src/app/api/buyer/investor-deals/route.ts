@@ -135,7 +135,9 @@ export async function GET(request: NextRequest) {
     try {
       const client = getTypesenseSearchClient();
       if (client) {
-        allDeals = await searchTypesense(client, nearbyCities, searchState, dealTypeFilter);
+        allDeals = await searchTypesense(client, nearbyCities, searchState, dealTypeFilter, {
+          minPrice, maxPrice, maxArvPercent, excludeLand,
+        });
       } else {
         throw new Error('Typesense not available');
       }
@@ -156,16 +158,19 @@ export async function GET(request: NextRequest) {
         isLiked: likedPropertyIds.has(deal.id),
       }));
 
-    // Apply client-requested filters
-    if (minPrice !== undefined) allDeals = allDeals.filter(d => d.price >= minPrice);
-    if (maxPrice !== undefined) allDeals = allDeals.filter(d => d.price <= maxPrice);
-    if (maxArvPercent !== undefined) {
-      allDeals = allDeals.filter(d =>
-        d.percentOfArv !== null && d.percentOfArv !== undefined && d.percentOfArv <= maxArvPercent
-      );
-    }
-    if (excludeLand) {
-      allDeals = allDeals.filter(d => !d.isLand);
+    // Apply client-requested filters (needed for Firestore fallback path;
+    // Typesense path pushes these into the query for accuracy)
+    if (typesenseError) {
+      if (minPrice !== undefined) allDeals = allDeals.filter(d => d.price >= minPrice);
+      if (maxPrice !== undefined) allDeals = allDeals.filter(d => d.price <= maxPrice);
+      if (maxArvPercent !== undefined) {
+        allDeals = allDeals.filter(d =>
+          d.percentOfArv !== null && d.percentOfArv !== undefined && d.percentOfArv <= maxArvPercent
+        );
+      }
+      if (excludeLand) {
+        allDeals = allDeals.filter(d => !d.isLand);
+      }
     }
 
     // Count by deal type in single pass (before sorting/pagination)
@@ -238,6 +243,12 @@ async function searchTypesense(
   nearbyCities: string[],
   state: string,
   dealTypeFilter: 'all' | 'owner_finance' | 'cash_deal',
+  extraFilters?: {
+    minPrice?: number;
+    maxPrice?: number;
+    maxArvPercent?: number;
+    excludeLand?: boolean;
+  },
 ): Promise<InvestorDeal[]> {
   // Build deal type filter
   let dealTypeClause: string;
@@ -264,20 +275,51 @@ async function searchTypesense(
     dealTypeClause,
   ];
 
+  // Push filters into Typesense query for accurate results and pagination
+  if (extraFilters?.excludeLand) {
+    filters.push('isLand:=false');
+  }
+  if (extraFilters?.minPrice !== undefined) {
+    filters.push(`listPrice:>=${extraFilters.minPrice}`);
+  }
+  if (extraFilters?.maxPrice !== undefined) {
+    filters.push(`listPrice:<=${extraFilters.maxPrice}`);
+  }
+  if (extraFilters?.maxArvPercent !== undefined) {
+    filters.push(`percentOfArv:<=${extraFilters.maxArvPercent}`);
+  }
+
   if (!client) throw new Error('Typesense client is null');
-  const result = await client.collections(TYPESENSE_COLLECTIONS.PROPERTIES)
-    .documents()
-    .search({
-      q: '*',
-      query_by: 'city,address',
-      filter_by: filters.join(' && '),
-      sort_by: 'listPrice:asc',
-      per_page: 250,
-      include_fields: 'id,address,city,state,zipCode,bedrooms,bathrooms,squareFeet,yearBuilt,listPrice,monthlyPayment,downPaymentAmount,downPaymentPercent,interestRate,termYears,balloonYears,propertyType,primaryImage,galleryImages,dealType,zestimate,rentEstimate,needsWork,percentOfArv,isLand,url,zpid,homeStatus',
-    });
+
+  // Paginate through Typesense to avoid 250 cap silently dropping results
+  const perPage = 250;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let allHits: any[] = [];
+  let page = 1;
+
+  while (allHits.length < 1000) { // Safety cap at 1000
+    const result = await client.collections(TYPESENSE_COLLECTIONS.PROPERTIES)
+      .documents()
+      .search({
+        q: '*',
+        query_by: 'city,address',
+        filter_by: filters.join(' && '),
+        sort_by: 'listPrice:asc',
+        per_page: perPage,
+        page,
+        include_fields: 'id,address,city,state,zipCode,bedrooms,bathrooms,squareFeet,yearBuilt,listPrice,monthlyPayment,downPaymentAmount,downPaymentPercent,interestRate,termYears,balloonYears,propertyType,primaryImage,galleryImages,dealType,zestimate,rentEstimate,needsWork,percentOfArv,isLand,url,zpid,homeStatus',
+      });
+
+    const hits = result.hits || [];
+    if (hits.length === 0) break;
+    allHits = allHits.concat(hits);
+    if (hits.length < perPage) break; // Last page
+    page++;
+    if (page > 4) break; // Safety: max 4 pages (1000 results)
+  }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (result.hits || []).map((hit: any) => {
+  return allHits.map((hit: any) => {
     const doc = hit.document as Record<string, unknown>;
 
     // Skip non-FOR_SALE properties (PENDING, SOLD, etc.)

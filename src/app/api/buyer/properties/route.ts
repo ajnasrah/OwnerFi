@@ -34,6 +34,7 @@ import { getTypesenseSearchClient, TYPESENSE_COLLECTIONS } from '@/lib/typesense
 async function searchWithTypesense(params: {
   city: string;
   state: string;
+  nearbyCities?: string[];
   buyerFilters: {
     minBedrooms?: number;
     maxBedrooms?: number;
@@ -76,11 +77,20 @@ async function searchWithTypesense(params: {
       filters.push(`listPrice:<=${params.buyerFilters.maxPrice}`);
     }
 
+    // Use exact city filter instead of fuzzy text search for accurate results
+    if (params.nearbyCities && params.nearbyCities.length > 0) {
+      const escapedCities = params.nearbyCities.map(c => '`' + c.replace(/`/g, '') + '`');
+      filters.push(`city:=[${escapedCities.join(',')}]`);
+    } else {
+      // Fallback: filter by exact search city
+      filters.push(`city:=\`${params.city.replace(/`/g, '')}\``);
+    }
+
     const result = await client.collections(TYPESENSE_COLLECTIONS.PROPERTIES)
       .documents()
       .search({
-        q: params.city,
-        query_by: 'city,nearbyCities,address',
+        q: '*',
+        query_by: 'city,address',
         filter_by: filters.join(' && '),
         sort_by: 'monthlyPayment:asc,listPrice:asc',
         per_page: Math.min(params.limit, 250),
@@ -291,6 +301,7 @@ export async function GET(request: NextRequest) {
     const typesenseResults = await searchWithTypesense({
       city: searchCity,
       state: searchState,
+      nearbyCities: nearbyCityNames.size > 0 ? Array.from(nearbyCityNames) : undefined,
       buyerFilters,
       limit: pageSize * 3, // Fetch extra for filtering
     });

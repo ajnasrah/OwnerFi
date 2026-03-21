@@ -100,25 +100,10 @@ export default function Dashboard() {
         hasCity: !!profileData.profile?.city || !!profileData.profile?.preferredCity
       });
 
-      // Admins always go to investor dashboard
-      if (session && isExtendedSession(session) && session.user.role === 'admin') {
-        console.log('🔄 [DASHBOARD] Admin user, redirecting to investor dashboard');
-        redirecting = true;
-        router.replace('/dashboard/investor');
-        return;
-      }
-
       if (!profileData.profile) {
         console.log('🔄 [DASHBOARD] No profile found, redirecting to setup');
         redirecting = true;
         router.replace('/auth/setup');
-        return;
-      }
-
-      // Redirect investors to their dedicated dashboard
-      if (profileData.profile.isInvestor === true) {
-        redirecting = true;
-        router.replace('/dashboard/investor');
         return;
       }
 

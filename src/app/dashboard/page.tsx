@@ -343,11 +343,8 @@ export default function Dashboard() {
           <div className="text-center max-w-sm w-full flex flex-col justify-center min-h-0">
             {/* Animated Logo/Icon */}
             <div className="mb-6">
-              <div className="w-16 h-16 mx-auto mb-3 relative">
-                <div className="absolute inset-0 bg-gradient-to-br from-[#00BC7D] to-blue-500 rounded-3xl animate-pulse"></div>
-                <div className="absolute inset-2 bg-[#111625] rounded-2xl flex items-center justify-center">
-                  <span className="text-2xl font-black">🏠</span>
-                </div>
+              <div className="w-16 h-16 mx-auto mb-3 flex items-center justify-center animate-pulse">
+                <svg width="48" height="48" viewBox="0 0 100 100" fill="none"><defs><linearGradient id="ld" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse"><stop offset="0%" stopColor="#00BC7D"/><stop offset="100%" stopColor="#3B82F6"/></linearGradient></defs><circle cx="50" cy="50" r="45" stroke="url(#ld)" strokeWidth="7" fill="none"/><ellipse cx="50" cy="50" rx="42" ry="22" stroke="url(#ld)" strokeWidth="5.5" fill="none" transform="rotate(-25 50 50)"/><ellipse cx="50" cy="50" rx="22" ry="42" stroke="url(#ld)" strokeWidth="5.5" fill="none" transform="rotate(-25 50 50)"/></svg>
               </div>
 
               {/* Animated Spinner */}
@@ -395,7 +392,7 @@ export default function Dashboard() {
     return (
       <div className="h-screen overflow-hidden bg-[#111625] flex flex-col items-center justify-center p-4">
         <div className="text-center">
-          <div className="text-4xl mb-4">🏠</div>
+          <div className="mb-4 flex justify-center"><svg width="48" height="48" viewBox="0 0 100 100" fill="none"><defs><linearGradient id="nf" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse"><stop offset="0%" stopColor="#00BC7D"/><stop offset="100%" stopColor="#3B82F6"/></linearGradient></defs><circle cx="50" cy="50" r="45" stroke="url(#nf)" strokeWidth="7" fill="none"/><ellipse cx="50" cy="50" rx="42" ry="22" stroke="url(#nf)" strokeWidth="5.5" fill="none" transform="rotate(-25 50 50)"/><ellipse cx="50" cy="50" rx="22" ry="42" stroke="url(#nf)" strokeWidth="5.5" fill="none" transform="rotate(-25 50 50)"/></svg></div>
           <h2 className="text-xl font-bold text-white mb-4">NO HOMES FOUND</h2>
           <p className="text-slate-300 mb-6 text-base">
             No properties in <span className="text-[#00BC7D]">{profile?.city}</span> match your criteria.

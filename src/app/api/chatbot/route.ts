@@ -169,6 +169,22 @@ interface UserContext {
   currentPage?: string;
 }
 
+const SEARCH_LEADS_TOOL: OpenAI.Chat.Completions.ChatCompletionTool = {
+  type: 'function',
+  function: {
+    name: 'search_leads',
+    description: 'Search for available buyer leads in a city. Use ONLY when a REALTOR asks about leads, buyers, or referrals in a specific area. Do NOT use for property listings.',
+    parameters: {
+      type: 'object',
+      properties: {
+        city: { type: 'string', description: 'City name (e.g. "Memphis")' },
+        state: { type: 'string', description: 'Two-letter state code (e.g. "TN")' },
+      },
+      required: []
+    }
+  }
+};
+
 const SEARCH_TOOL: OpenAI.Chat.Completions.ChatCompletionTool = {
   type: 'function',
   function: {
@@ -191,6 +207,44 @@ const SEARCH_TOOL: OpenAI.Chat.Completions.ChatCompletionTool = {
 };
 
 // Execute property search via Typesense
+async function executeLeadSearch(args: Record<string, unknown>): Promise<string> {
+  try {
+    const { getTypesenseSearchClient, TYPESENSE_COLLECTIONS } = await import('@/lib/typesense/client');
+    const client = getTypesenseSearchClient();
+    if (!client) return JSON.stringify({ error: 'Lead search unavailable', found: 0, leads: [] });
+
+    const filters: string[] = ['isAvailableForPurchase:=true'];
+    if (args.city) {
+      const city = String(args.city).split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+      filters.push(`preferredCity:=${city}`);
+    }
+    if (args.state) filters.push(`preferredState:=${String(args.state).toUpperCase()}`);
+
+    const result = await client
+      .collections(TYPESENSE_COLLECTIONS.BUYER_LEADS)
+      .documents()
+      .search({
+        q: '*',
+        query_by: 'preferredCity,preferredState',
+        filter_by: filters.join(' && '),
+        sort_by: 'createdAt:desc',
+        page: 1,
+        per_page: 10
+      });
+
+    return JSON.stringify({
+      found: result.found || 0,
+      leads: (result.hits || []).length,
+      message: result.found && result.found > 0
+        ? `There are ${result.found} available buyer lead(s) in this area. The realtor can view and accept them at /realtor-dashboard/buyers.`
+        : 'No available buyer leads in this area right now. New leads are added regularly — check back soon or adjust your service area in Settings.'
+    });
+  } catch (error) {
+    console.error('[chatbot] Lead search error:', error);
+    return JSON.stringify({ error: 'Lead search temporarily unavailable', found: 0, leads: [] });
+  }
+}
+
 async function executePropertySearch(args: Record<string, unknown>): Promise<string> {
   try {
     const { getTypesenseSearchClient, TYPESENSE_COLLECTIONS } = await import('@/lib/typesense/client');
@@ -345,7 +399,7 @@ export async function POST(request: Request) {
           const stream = await openai.chat.completions.create({
             model: 'gpt-4o-mini',
             messages,
-            tools: [SEARCH_TOOL],
+            tools: [SEARCH_TOOL, SEARCH_LEADS_TOOL],
             max_tokens: 500,
             temperature: 0.5,
             stream: true,
@@ -394,10 +448,12 @@ export async function POST(request: Request) {
 
             // Execute each tool call and add results
             for (const tc of toolCalls) {
-              if (tc.name === 'search_properties') {
+              if (tc.name === 'search_properties' || tc.name === 'search_leads') {
                 let args: Record<string, unknown> = {};
                 try { args = JSON.parse(tc.args); } catch { /* use empty */ }
-                const result = await executePropertySearch(args);
+                const result = tc.name === 'search_leads'
+                  ? await executeLeadSearch(args)
+                  : await executePropertySearch(args);
                 toolResults.push({
                   role: 'tool',
                   tool_call_id: tc.id,

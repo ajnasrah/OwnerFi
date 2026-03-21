@@ -60,36 +60,40 @@ export default function AllPropertiesPage() {
     if (authStatus === 'authenticated' && (session as unknown as ExtendedSession)?.user?.role !== 'admin') router.replace('/');
   }, [authStatus, session, router]);
 
-  const search = useCallback(async (searchQuery: string, searchPage: number, sort: string) => {
+  const search = useCallback(async (searchQuery: string, searchPage: number, _sort: string) => {
     setLoading(true);
     try {
+      // Use /api/admin/properties — proven working endpoint with Typesense search
       const params = new URLSearchParams({
-        q: searchQuery || '*',
         page: String(searchPage),
         limit: String(PAGE_SIZE),
-        sort,
       });
+      // Pass search query as city param (Typesense searches city, address, nearbyCities)
+      if (searchQuery) params.set('city', searchQuery);
 
-      const res = await fetch(`/api/search/properties?${params}`);
+      const res = await fetch(`/api/admin/properties?${params}`);
       if (res.ok) {
-        const json = await res.json();
-        // API wraps response in { success, data: { properties, total, ... } }
-        const data = json.data || json;
-        // Normalize Typesense field names to our Property interface
+        const data = await res.json();
+        // Normalize field names from admin API to our Property interface
         const normalized = (data.properties || []).map((p: any) => ({
           ...p,
-          imgSrc: p.imgSrc || p.primaryImage || '',
-          sqft: p.sqft || p.squareFeet || 0,
-          beds: p.beds || p.bedrooms || 0,
-          baths: p.baths || p.bathrooms || 0,
-          dealTypes: p.dealTypes || (p.dealType ? [p.dealType] : []),
-          daysOnMarket: p.daysOnMarket || p.daysOnZillow || 0,
+          address: p.address || p.streetAddress || p.fullAddress || '',
+          imgSrc: p.imageUrl || p.firstPropertyImage || p.zillowImageUrl || '',
+          galleryImages: p.imageUrls || p.propertyImages || [],
+          sqft: p.squareFeet || p.squareFoot || 0,
+          beds: p.bedrooms || 0,
+          baths: p.bathrooms || 0,
+          listPrice: p.listPrice || p.price || 0,
+          zestimate: p.estimatedValue || p.zestimate || 0,
+          dealTypes: p.dealTypes || [],
+          zpid: p.zpid || '',
+          homeType: p.homeType || p.propertyType || '',
         }));
         setResults({
           properties: normalized,
           total: data.total || 0,
           page: data.page || searchPage,
-          totalPages: data.totalPages || 0,
+          totalPages: Math.ceil((data.total || 0) / PAGE_SIZE),
         });
       }
     } catch (err) {

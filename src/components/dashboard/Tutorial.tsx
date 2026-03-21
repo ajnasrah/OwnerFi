@@ -90,7 +90,7 @@ const tutorialSteps = [
       <div className="my-4 flex flex-col items-center">
         <div className="bg-[#00BC7D] rounded-2xl px-5 py-3 max-w-[240px] relative mb-3">
           <div className="flex items-center gap-2 mb-1.5">
-            <span className="text-sm">👩</span>
+            <svg width="16" height="16" viewBox="0 0 100 100" fill="none"><circle cx="50" cy="50" r="45" stroke="#fff" strokeWidth="8" fill="none"/><ellipse cx="50" cy="50" rx="42" ry="22" stroke="#fff" strokeWidth="6.5" fill="none" transform="rotate(-25 50 50)"/><ellipse cx="50" cy="50" rx="22" ry="42" stroke="url(#fl)" strokeWidth="6.5" fill="none" transform="rotate(-25 50 50)"/></svg>
             <span className="text-[11px] font-semibold text-white">Sarah</span>
             <div className="w-1.5 h-1.5 bg-green-300 rounded-full animate-pulse"></div>
           </div>
